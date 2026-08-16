@@ -505,15 +505,16 @@ async function stampSectionRun(tenantId: string, section: 'coverage' | 'out_of_d
 analyticsRouter.get('/gaps/pipeline', requireAdmin, async (_req: Request, res: Response) => {
   const tenantId = getTenantId()
   try {
-    const [runs, docs, pendingChanges] = await Promise.all([
+    const [runs, docs, pendingRows] = await Promise.all([
       (prisma as any).gapsSectionRun.findMany({ where: { tenant_id: tenantId } }),
       (prisma as any).policyDocument.findMany({
         where:  { tenant_id: tenantId, published_at: { not: null } },
         select: { policy_id: true, published_at: true },
       }),
-      (prisma as any).policyDocumentChange.count({
-        where: { published: false, reverted: false, document: { tenant_id: tenantId } },
-      }).catch(() => 0),
+      (prisma as any).policyDocumentChange.findMany({
+        where:  { published: false, reverted: false, document: { tenant_id: tenantId } },
+        select: { document_id: true },
+      }).catch(() => []),
     ])
     const ranAt = new Map((runs as any[]).map(r => [r.section, r.ran_at as Date]))
     const lastPublish = (docs as any[]).reduce<Date | null>((m, d) => (!m || d.published_at > m ? d.published_at : m), null)
@@ -522,7 +523,9 @@ analyticsRouter.get('/gaps/pipeline', requireAdmin, async (_req: Request, res: R
       const staleCount = ran ? (docs as any[]).filter(d => d.published_at > ran).length : 0
       return { section, ran_at: ran, stale_policy_count: staleCount, stale: !!ran && staleCount > 0 }
     })
-    ok(res, { sections, pending_changes: pendingChanges, last_publish_at: lastPublish })
+    const pendingChanges  = (pendingRows as any[]).length
+    const pendingPolicies = new Set((pendingRows as any[]).map(r => r.document_id)).size
+    ok(res, { sections, pending_changes: pendingChanges, pending_policies: pendingPolicies, last_publish_at: lastPublish })
   } catch (e: any) {
     err(res, 'FETCH_FAILED', e.message, 500)
   }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
@@ -78,6 +79,40 @@ function StepStatusPill({ info }: { info?: PipelineSection }) {
   return <span className="shrink-0 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-700">Up to date · ran {fmtDay(info.ran_at)}</span>
 }
 
+// Hover "i": reminds the tenant of the run → adopt → review and publish cycle.
+function StepInfoDot() {
+  return (
+    <span className="group relative inline-flex shrink-0">
+      <Info size={13} className="cursor-help text-neutral-mid/50 group-hover:text-teal" />
+      <span className="pointer-events-none absolute left-1/2 top-full z-30 mt-1.5 hidden w-72 -translate-x-1/2 rounded-lg border border-gray-200 bg-white p-3 text-left text-[11px] font-normal normal-case leading-relaxed text-neutral-dark shadow-lg group-hover:block">
+        Run the analysis, adopt the changes you want, then <span className="font-semibold">approve and publish them in Adopted changes to review on the Policies page</span>. Analyses always read the published version of your policies, so publish before re-running or moving to the next step.
+      </span>
+    </span>
+  )
+}
+
+// Live ticker: how many policies have adopted changes waiting to be reviewed and
+// published on /policies. Refreshed with the pipeline (and polled every minute).
+function PublishTicker({ count }: { count: number }) {
+  if (!count) return null
+  return (
+    <Link href="/policies" className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800 transition-colors hover:bg-amber-200">
+      {count === 1 ? '1 policy to publish' : `${count} policies to publish`}
+    </Link>
+  )
+}
+
+// The full status cluster next to each step heading: pill + info hover + ticker.
+function StepMeta({ info, pendingPolicies }: { info?: PipelineSection; pendingPolicies: number }) {
+  return (
+    <span className="flex shrink-0 items-center gap-1.5">
+      <StepStatusPill info={info} />
+      <StepInfoDot />
+      <PublishTicker count={pendingPolicies} />
+    </span>
+  )
+}
+
 // Amber banner shown above a section's content when policies have been published
 // since that section's analysis last ran.
 function StaleBanner({ info }: { info?: PipelineSection }) {
@@ -137,6 +172,9 @@ export default function GapsPage() {
   useEffect(() => {
     if (planLoading || locked) return
     loadPipeline()
+    // Keep the "policies to publish" ticker live while the page is open.
+    const t = setInterval(loadPipeline, 60_000)
+    return () => clearInterval(t)
   }, [planLoading, locked, loadPipeline])
 
   const stepInfo = useCallback(
@@ -147,9 +185,10 @@ export default function GapsPage() {
   // Gate any of the four analysis runs behind a warning when adopted changes are still
   // awaiting review — analyses read the published version, so those drafts are invisible.
   const confirmRun = useCallback((run: () => void) => {
-    if (pipeline && pipeline.pending_changes > 0) setPendingRun({ run })
-    else run()
-  }, [pipeline])
+    // Guardrail on every run: remind the tenant that analyses read the PUBLISHED
+    // version, and that adopted changes must be approved and published on /policies.
+    setPendingRun({ run })
+  }, [])
 
   async function reopenGap(referenceKey: string) {
     setCompletedOverride(prev => { const n = new Set(prev); n.delete(referenceKey); return n })
@@ -438,22 +477,36 @@ export default function GapsPage() {
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
             <div className="flex items-start gap-3">
-              <AlertCircle size={22} className="mt-0.5 shrink-0 text-amber-500" />
+              <AlertCircle size={22} className={`mt-0.5 shrink-0 ${(pipeline?.pending_changes ?? 0) > 0 ? 'text-amber-500' : 'text-teal'}`} />
               <div>
-                <h2 className="text-lg font-bold text-neutral-dark">Adopted changes are still awaiting review</h2>
-                <p className="mt-1 text-sm leading-relaxed text-neutral-mid">
-                  This analysis reads the published version of your policies. {pipeline?.pending_changes === 1
-                    ? '1 adopted change is waiting'
-                    : `${pipeline?.pending_changes ?? 0} adopted changes are waiting`} in Adopted changes to review and will not be seen by this run. For the best results, review and publish them first, then run the analysis.
-                </p>
+                {(pipeline?.pending_changes ?? 0) > 0 ? (
+                  <>
+                    <h2 className="text-lg font-bold text-neutral-dark">Adopted changes are still awaiting review</h2>
+                    <p className="mt-1 text-sm leading-relaxed text-neutral-mid">
+                      This analysis reads the published version of your policies. {pipeline?.pending_changes === 1
+                        ? '1 adopted change is waiting'
+                        : `${pipeline?.pending_changes ?? 0} adopted changes are waiting`} in Adopted changes to review and will not be seen by this run. For the best results, review and publish them first, then run the analysis.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-lg font-bold text-neutral-dark">Before you run this analysis</h2>
+                    <p className="mt-1 text-sm leading-relaxed text-neutral-mid">
+                      Analyses read the published version of your policies. After the run, adopt the changes you want,
+                      then <span className="font-semibold text-neutral-dark">approve and publish them in Adopted changes to review on the Policies page</span> so
+                      your policies are updated and the next step sees them.
+                    </p>
+                  </>
+                )}
               </div>
             </div>
             <div className="mt-5 flex flex-wrap items-center justify-end gap-3">
               <button onClick={() => setPendingRun(null)} className="text-sm font-medium text-neutral-mid hover:text-neutral-dark">Cancel</button>
-              <a href="/policies" className="rounded-btn border border-teal/30 bg-white px-4 py-2 text-sm font-semibold text-teal hover:bg-teal-light/30">Go to review</a>
+              <a href="/policies" className="rounded-btn border border-teal/30 bg-white px-4 py-2 text-sm font-semibold text-teal hover:bg-teal-light/30">Go to Policies</a>
               <button
                 onClick={() => { const r = pendingRun.run; setPendingRun(null); r() }}
-                className="rounded-btn bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark">Run anyway
+                className="rounded-btn bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark">
+                {(pipeline?.pending_changes ?? 0) > 0 ? 'Run anyway' : 'Run analysis'}
               </button>
             </div>
           </div>
@@ -518,7 +571,7 @@ export default function GapsPage() {
               <div key={s.key} className="flex items-center gap-2">
                 <StepChip step={s.step} />
                 <span className="text-xs font-semibold text-neutral-dark">{s.name}</span>
-                <StepStatusPill info={stepInfo(s.key)} />
+                <StepMeta info={stepInfo(s.key)} pendingPolicies={pipeline?.pending_policies ?? 0} />
               </div>
             ))}
           </div>
@@ -576,7 +629,7 @@ export default function GapsPage() {
           <ShieldAlert size={16} className="shrink-0 text-red-500" />
           <StepChip step={1} />
           <h2 className="text-sm font-semibold text-neutral-dark">Regulation coverage{data.analysed && (gapRegs.length + partialRegs.length) > 0 && <span className="ml-1.5 font-normal text-neutral-mid">({gapRegs.length + partialRegs.length})</span>}</h2>
-          <StepStatusPill info={stepInfo('coverage')} />
+          <StepMeta info={stepInfo('coverage')} pendingPolicies={pipeline?.pending_policies ?? 0} />
           <ChevronDown size={15} className={`ml-auto shrink-0 text-neutral-mid transition-transform ${showCoverage ? 'rotate-180' : ''}`} />
         </button>
 
@@ -680,13 +733,13 @@ export default function GapsPage() {
       </div>
 
       {/* ── Out-of-date content (policy lint) — under Regulation coverage ─── */}
-      {session?.accessToken && <PolicyHealthSection token={session.accessToken} userId={userId} stepInfo={stepInfo('out_of_date')} confirmRun={confirmRun} onRunComplete={loadPipeline} />}
+      {session?.accessToken && <PolicyHealthSection token={session.accessToken} userId={userId} stepInfo={stepInfo('out_of_date')} confirmRun={confirmRun} onRunComplete={loadPipeline} pendingPolicies={pipeline?.pending_policies ?? 0} />}
 
       {/* ── Cross-policy consistency ──────────────────────────────────────── */}
-      {session?.accessToken && <PolicyConsistencySection token={session.accessToken} userId={userId} stepInfo={stepInfo('consistency')} confirmRun={confirmRun} onRunComplete={loadPipeline} />}
+      {session?.accessToken && <PolicyConsistencySection token={session.accessToken} userId={userId} stepInfo={stepInfo('consistency')} confirmRun={confirmRun} onRunComplete={loadPipeline} pendingPolicies={pipeline?.pending_policies ?? 0} />}
 
       {/* ── CQC wording alignment ─────────────────────────────────────────── */}
-      {session?.accessToken && <PolicyWordingAlignmentSection token={session.accessToken} userId={userId} stepInfo={stepInfo('wording')} confirmRun={confirmRun} onRunComplete={loadPipeline} />}
+      {session?.accessToken && <PolicyWordingAlignmentSection token={session.accessToken} userId={userId} stepInfo={stepInfo('wording')} confirmRun={confirmRun} onRunComplete={loadPipeline} pendingPolicies={pipeline?.pending_policies ?? 0} />}
 
       {session?.accessToken && <RecentlyUpdatedSection token={session.accessToken} />}
 
@@ -886,7 +939,7 @@ function RecentlyUpdatedSection({ token }: { token: string }) {
   )
 }
 
-function PolicyHealthSection({ token, userId, stepInfo, confirmRun, onRunComplete }: { token: string; userId: string; stepInfo?: PipelineSection; confirmRun: (run: () => void) => void; onRunComplete: () => void }) {
+function PolicyHealthSection({ token, userId, stepInfo, confirmRun, onRunComplete, pendingPolicies }: { token: string; userId: string; stepInfo?: PipelineSection; confirmRun: (run: () => void) => void; onRunComplete: () => void; pendingPolicies: number }) {
   const [data, setData] = useState<LintData | null>(null)
   const [loading, setLoading] = useState(true)
   const [scanning, setScanning] = useState(false)
@@ -934,7 +987,7 @@ function PolicyHealthSection({ token, userId, stepInfo, confirmRun, onRunComplet
             {data.policies_with_issues} {data.policies_with_issues === 1 ? 'policy' : 'policies'}
           </span>
         )}
-        <StepStatusPill info={stepInfo} />
+        <StepMeta info={stepInfo} pendingPolicies={pendingPolicies} />
         <ChevronDown size={15} className={`ml-auto shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
@@ -1237,7 +1290,7 @@ type Conflict = ConsistencyData['conflicts'][number]
 
 const CSEV: Record<string, string> = { high: 'bg-rose-50 text-rose-700', medium: 'bg-amber-50 text-amber-700', low: 'bg-slate-100 text-slate-600' }
 
-function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunComplete }: { token: string; userId: string; stepInfo?: PipelineSection; confirmRun: (run: () => void) => void; onRunComplete: () => void }) {
+function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunComplete, pendingPolicies }: { token: string; userId: string; stepInfo?: PipelineSection; confirmRun: (run: () => void) => void; onRunComplete: () => void; pendingPolicies: number }) {
   const [data, setData] = useState<ConsistencyData | null>(null)
   const [loading, setLoading] = useState(true)
   const [running, setRunning] = useState(false)
@@ -1300,7 +1353,7 @@ function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunCo
         {data?.analysed && conflicts.length > 0 && (
           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-neutral-mid">{conflicts.length} conflict{conflicts.length === 1 ? '' : 's'}</span>
         )}
-        <StepStatusPill info={stepInfo} />
+        <StepMeta info={stepInfo} pendingPolicies={pendingPolicies} />
         <ChevronDown size={15} className={`ml-auto shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
@@ -1378,7 +1431,7 @@ function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunCo
 // ── CQC wording alignment: its own analysis, checked per policy over the whole library ──
 type WordingData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['wordingAlignment']>>
 
-function PolicyWordingAlignmentSection({ token, userId, stepInfo, confirmRun, onRunComplete }: { token: string; userId: string; stepInfo?: PipelineSection; confirmRun: (run: () => void) => void; onRunComplete: () => void }) {
+function PolicyWordingAlignmentSection({ token, userId, stepInfo, confirmRun, onRunComplete, pendingPolicies }: { token: string; userId: string; stepInfo?: PipelineSection; confirmRun: (run: () => void) => void; onRunComplete: () => void; pendingPolicies: number }) {
   const [data, setData]       = useState<WordingData | null>(null)
   const [loading, setLoading] = useState(true)
   const [running, setRunning] = useState(false)
@@ -1438,7 +1491,7 @@ function PolicyWordingAlignmentSection({ token, userId, stepInfo, confirmRun, on
         {analysed > 0 && withSuggestions.length > 0 && (
           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-neutral-mid">{data!.total_suggestions} suggestion{data!.total_suggestions === 1 ? '' : 's'} · {withSuggestions.length} polic{withSuggestions.length === 1 ? 'y' : 'ies'}</span>
         )}
-        <StepStatusPill info={stepInfo} />
+        <StepMeta info={stepInfo} pendingPolicies={pendingPolicies} />
         <ChevronDown size={15} className={`ml-auto shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 

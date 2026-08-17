@@ -715,24 +715,37 @@ meRouter.post('/tts', async (req: Request, res: Response) => {
   try {
     let buffer: Buffer | null = null
 
-    const cached = await (prisma as any).ttsCache.findUnique({ where: { content_hash: hash } })
-    if (cached) {
-      try { buffer = await downloadFile(cached.s3_key) } catch { buffer = null }  // fall through to regenerate if the file vanished
+    // Cache lookup is best-effort — if tts_cache or S3 is unavailable we simply
+    // synthesise again rather than failing the request.
+    try {
+      const cached = await (prisma as any).ttsCache?.findUnique({ where: { content_hash: hash } })
+      if (cached) {
+        try { buffer = await downloadFile(cached.s3_key) } catch { buffer = null }  // regenerate if the file vanished
+      }
+    } catch (e: any) {
+      console.warn('[me/tts] cache lookup unavailable:', e?.message ?? e)
     }
 
     if (!buffer) {
       buffer = await synthesizeSpeech(text)
-      const s3Key = await uploadTtsAudio(hash, buffer)
-      await (prisma as any).ttsCache.upsert({
-        where:  { content_hash: hash },
-        update: { s3_key: s3Key, voice_id: voice, char_count: text.length },
-        create: { content_hash: hash, voice_id: voice, s3_key: s3Key, char_count: text.length },
-      }).catch(() => {})
+      // Storing the result is also best-effort: audio still plays if it fails,
+      // it just gets billed again next time.
+      try {
+        const s3Key = await uploadTtsAudio(hash, buffer)
+        await (prisma as any).ttsCache.upsert({
+          where:  { content_hash: hash },
+          update: { s3_key: s3Key, voice_id: voice, char_count: text.length },
+          create: { content_hash: hash, voice_id: voice, s3_key: s3Key, char_count: text.length },
+        })
+      } catch (e: any) {
+        console.warn('[me/tts] could not cache audio:', e?.message ?? e)
+      }
     }
 
     res.setHeader('Content-Type', 'audio/mpeg')
+    res.setHeader('Content-Length', String(buffer.length))
     res.setHeader('Cache-Control', 'private, max-age=86400')
-    res.send(buffer)
+    res.end(buffer)
   } catch (e: any) {
     console.error('[me/tts] failed:', e?.message ?? e)
     err(res, 'TTS_FAILED', 'Could not generate audio. Please try again.', 502)

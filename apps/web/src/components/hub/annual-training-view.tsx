@@ -9,6 +9,7 @@ import { createApiClient, apiAssetUrl } from '@/lib/api-client'
 import { TrainingRatingCard } from '@/components/hub/training-rating-card'
 import { SuggestTranslation, InlineEditableText } from '@/components/hub/suggest-translation'
 import { ListenButton } from '@/components/hub/listen-button'
+import { joinSpoken, speakOverview, speakQuestion } from '@/lib/speech'
 import { persistentCache, hubKey } from '@/lib/page-cache'
 import { TrainingCertificate } from '@/components/training-certificate'
 import {
@@ -499,11 +500,13 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                       {learnActive.duration_minutes ? <span className="inline-flex items-center gap-1 rounded-full bg-neutral-light px-2 py-0.5 text-[11px] font-medium text-neutral-mid"><Clock size={11} /> About {learnActive.duration_minutes} min</span> : null}
                     </div>
                     {(() => {
-                      const overviewText = [
-                        learnActive.learning?.summary,
-                        ...(Array.isArray(learnActive.learning?.outcomes) ? learnActive.learning.outcomes : []),
-                        ...(sections.length === 0 && Array.isArray(learnActive.learning?.key_points) ? learnActive.learning.key_points : []),
-                      ].filter(Boolean).join('. ')
+                      // Read the on-screen headings too, so the bullets don't
+                      // arrive with no idea what they are a list of.
+                      const overviewText = speakOverview({
+                        summary:   learnActive.learning?.summary,
+                        outcomes:  Array.isArray(learnActive.learning?.outcomes) ? learnActive.learning.outcomes : [],
+                        keyPoints: sections.length === 0 && Array.isArray(learnActive.learning?.key_points) ? learnActive.learning.key_points : [],
+                      })
                       return <div className="mb-3"><ListenButton token={token} text={overviewText} /></div>
                     })()}
                     {(() => {
@@ -580,12 +583,24 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                 /* ── Baseline knowledge check (before the lesson) ── */
                 <div className="rounded-xl border border-gray-200 bg-white p-5">
                   <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal"><Lightbulb size={13} /> Before you start</p>
-                  <p className="text-base font-bold text-neutral-dark">A quick knowledge check</p>
-                  <p className="mb-4 mt-1 text-sm text-neutral-mid">{baselineQs.length} quick questions before the lesson. They do not affect your result; they help show how much this course teaches you.</p>
+                  {(() => {
+                    const intro = `${baselineQs.length} quick questions before the lesson. They do not affect your result; they help show how much this course teaches you.`
+                    return (<>
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="text-base font-bold text-neutral-dark">A quick knowledge check</p>
+                        <ListenButton token={token} text={joinSpoken(['A quick knowledge check', intro])} className="mt-0.5" />
+                      </div>
+                      <p className="mb-4 mt-1 text-sm text-neutral-mid">{intro}</p>
+                    </>)
+                  })()}
                   <div className="space-y-4">
                     {baselineQs.map((q: any, qi: number) => (
                       <div key={q.id}>
-                        <p className="mb-2 text-sm font-medium text-neutral-dark">{qi + 1}. {q.text}</p>
+                        <div className="mb-2 flex items-start justify-between gap-3">
+                          <p className="text-sm font-medium text-neutral-dark">{qi + 1}. {q.text}</p>
+                          {/* Reads the question and then each answer option by number */}
+                          <ListenButton token={token} text={speakQuestion(q.text, q.options, { questionLabel: `Question ${qi + 1}` })} />
+                        </div>
                         <div className="space-y-1.5">
                           {q.options.map((opt: string, oi: number) => (
                             <button key={oi} onClick={() => setBaselineSel(s => ({ ...s, [q.id]: oi }))}
@@ -631,7 +646,16 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                           const lc = learnActive?.lang_code
                           return (
                           <div className="mt-3 rounded-lg border border-teal/20 bg-teal-light/20 p-3">
-                            <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-teal"><Lightbulb size={12} /> In practice</p>
+                            <div className="mb-1 flex items-start justify-between gap-3">
+                              <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-teal"><Lightbulb size={12} /> In practice</p>
+                              {/* The answer is only spoken once the learner has revealed it on screen */}
+                              <ListenButton token={token} text={joinSpoken([
+                                'In practice',
+                                sec.scenario.situation,
+                                sec.scenario.prompt,
+                                revealed[sec.id] && sec.scenario.answer ? `The answer. ${sec.scenario.answer}` : null,
+                              ])} />
+                            </div>
                             <p className="text-sm text-neutral-dark"><InlineEditableText token={token} langCode={lc} contextLabel={`${name} — scenario`} source={ssrc?.situation ?? ''} current={sec.scenario.situation} kind="lesson" editable={sedit} /></p>
                             {sec.scenario.prompt && <p className="mt-1.5 text-sm font-medium text-neutral-dark"><InlineEditableText token={token} langCode={lc} contextLabel={`${name} — scenario`} source={ssrc?.prompt ?? ''} current={sec.scenario.prompt} kind="lesson" editable={sedit} /></p>}
                             {revealed[sec.id]
@@ -644,7 +668,10 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                     ) : (
                       <>
                         {sec.heading && <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">{sec.heading}</p>}
-                        <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Lightbulb size={14} className="text-teal" /> Quick check</p>
+                        <div className="mb-2 flex items-start justify-between gap-3">
+                          <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Lightbulb size={14} className="text-teal" /> Quick check</p>
+                          <ListenButton token={token} text={speakQuestion(sec.check.question, sec.check.options, { lead: 'Quick check' })} className="mt-0.5" />
+                        </div>
                         <p className="mb-2 text-sm font-medium text-neutral-dark">{sec.check.question}</p>
                         <div className="space-y-1.5">
                           {sec.check.options.map((opt: string, oi: number) => {
@@ -712,6 +739,9 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                   <div key={q.id} className="rounded-xl border border-gray-200 bg-white p-4">
                     <div className="mb-2 flex items-start justify-between gap-2">
                       <p className="text-sm font-medium text-neutral-dark">{qi + 1}. {qd.text}</p>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                      {/* Speaks whichever language is currently on screen for this question */}
+                      <ListenButton token={token} text={speakQuestion(qd.text, qd.options, { questionLabel: `Question ${qi + 1}` })} />
                       {secondLang && (
                         <button
                           type="button"
@@ -723,6 +753,7 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                           <Globe size={11} /> {qLang[q.id] ? '1st language' : secondLang.name}
                         </button>
                       )}
+                      </div>
                     </div>
                     <div className="space-y-1.5">
                       {qd.options.map((opt: string, oi: number) => (

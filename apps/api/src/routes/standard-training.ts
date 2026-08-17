@@ -13,7 +13,7 @@ import { neutraliseModuleVoice } from '../services/training/neutraliseVoice'
 import { generateModuleIllustration, generateSectionImage, illustrationUrl } from '../services/training/moduleImage'
 import { runModuleQa } from '../services/training/moduleQa'
 import { callClaude } from '../services/ai/claude'
-import { normaliseActivities } from '../lib/training-activities'
+import { normaliseActivities, alignActivitySections } from '../lib/training-activities'
 import { STANDARDS_CATALOGUE, normaliseStandards } from '../data/training-standards'
 import { genToken, genPassword, hashPassword, contentHash, buildSnapshot } from '../lib/review-links'
 import { ensureTrainingTopicsSeeded } from './training'
@@ -350,8 +350,9 @@ standardTrainingRouter.post('/modules/:id/draft-activities', async (req: Request
     const parsed = JSON.parse(raw.slice(jsonStart, jsonEnd + 1))
     // One activity per section — if the model doubles up, keep the first.
     const seen = new Set<number>()
-    const activities = normaliseActivities(
-      (Array.isArray(parsed) ? parsed : []).map((a: any, i: number) => ({ ...a, id: `act${Date.now()}${i}` })),
+    const activities = alignActivitySections(
+      normaliseActivities((Array.isArray(parsed) ? parsed : []).map((a: any, i: number) => ({ ...a, id: `act${Date.now()}${i}` }))),
+      sections.length,
     ).filter(a => {
       if (a.after_section == null) return true
       if (seen.has(a.after_section)) return false

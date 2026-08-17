@@ -35,6 +35,28 @@ export type Activity = {
 const str = (v: any): string => String(v ?? '').trim()
 const strs = (v: any): string[] => (Array.isArray(v) ? v.map(str).filter(Boolean) : [])
 
+// A 0-based section index, or null for "after the last section".
+const sectionIndex = (v: any): number | null => {
+  if (v === null || v === undefined || v === '') return null
+  const n = Number(v)
+  return Number.isInteger(n) && n >= 0 ? n : null
+}
+
+// Models are asked for 0-based indexes but often answer 1-based. If nothing is
+// pinned to section 0 and something is pinned one past the end, the whole set is
+// off by one — shift it back rather than dropping activities to the end of the
+// lesson. Anything still out of range is pinned to the last section.
+export function alignActivitySections(activities: Activity[], sectionCount: number): Activity[] {
+  if (!sectionCount) return activities
+  const pinned = activities.map(a => a.after_section).filter((n): n is number => n != null)
+  const looksOneBased = pinned.length > 0 && Math.min(...pinned) >= 1 && Math.max(...pinned) >= sectionCount
+  return activities.map(a => {
+    if (a.after_section == null) return a
+    const shifted = looksOneBased ? a.after_section - 1 : a.after_section
+    return { ...a, after_section: Math.max(0, Math.min(shifted, sectionCount - 1)) }
+  })
+}
+
 // Answers travel to the client because these are formative — they are not part
 // of the graded assessment, which still has its `correct` fields stripped.
 export function normaliseActivities(raw: any): Activity[] {
@@ -50,7 +72,10 @@ export function normaliseActivities(raw: any): Activity[] {
       type,
       title:         str(a?.title),
       instructions:  str(a?.instructions),
-      after_section: Number.isInteger(a?.after_section) && a.after_section >= 0 ? a.after_section : null,
+      // Coerce, don't just test: a model returning "2" as a string would otherwise
+      // fall through to null and the activity would drift to the end of the lesson
+      // instead of following its section.
+      after_section: sectionIndex(a?.after_section),
     }
 
     if (type === 'order') {

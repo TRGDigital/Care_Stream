@@ -176,11 +176,34 @@ export function ActivitiesEditor({ value, onChange, sectionHeadings, onDraft }: 
         </div>
       ))}
 
-      {value.length > 0 && (
-        <p className="text-[11px] text-neutral-mid">
-          {value.length} {value.length === 1 ? 'activity' : 'activities'} across {sectionHeadings.length} sections — roughly {value.length * 2} minutes of extra learning time.
-          Worth adding that to <strong>Duration</strong> above, since it feeds the CPD hours.
-        </p>
+      {sectionHeadings.length > 0 && (
+        <div className="rounded-lg border border-gray-100 bg-neutral-light/40 p-3">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">
+            Which sections end with an activity
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {sectionHeadings.map((h, si) => {
+              const has = value.some(a => a.after_section === si)
+              return (
+                <span key={si} title={h || `Section ${si + 1}`}
+                  className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${has ? 'bg-teal-light text-teal' : 'border border-dashed border-gray-300 text-neutral-mid'}`}>
+                  {si + 1}. {(h || `Section ${si + 1}`).slice(0, 28)}{has ? ' ✓' : ' —'}
+                </span>
+              )
+            })}
+            {value.some(a => a.after_section == null) && (
+              <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium text-amber-700">
+                {value.filter(a => a.after_section == null).length} at the end of the lesson
+              </span>
+            )}
+          </div>
+          {value.length > 0 && (
+            <p className="mt-2 text-[11px] text-neutral-mid">
+              {value.length} {value.length === 1 ? 'activity' : 'activities'} — roughly {value.length * 2} minutes of extra learning time.
+              Worth adding that to <strong>Duration</strong> above, since it feeds the CPD hours.
+            </p>
+          )}
+        </div>
       )}
 
       {error && <p className="text-xs font-medium text-red-600">{error}</p>}

@@ -682,6 +682,18 @@ export function createPlatformClient(token: string) {
           total_candidates: number
           dry_run: boolean
         }>('/standard-training/bulk-approve', token, { method: 'POST', body: JSON.stringify(data) }),
+      // Fill in the observed competency checklist on practical modules that have none,
+      // from the curated library. Only writes learning_content.practical_checklist, so
+      // it never un-publishes a module. Pass dry_run to preview.
+      applyPracticalChecklists: (data: { scope?: 'universal' | 'setting' | 'all'; care_setting?: string; overwrite?: boolean; dry_run?: boolean } = {}) =>
+        adminFetch<{
+          updated: Array<{ id: string; name: string; items: number }>
+          skipped: Array<{ id: string; name: string; reason: string }>
+          no_checklist_available: string[]
+          total_practical_modules: number
+          library_size: number
+          dry_run: boolean
+        }>('/standard-training/practical-checklists/apply', token, { method: 'POST', body: JSON.stringify(data) }),
     },
 
     // Programmes = diplomas / pathways: an ordered set of published standard modules

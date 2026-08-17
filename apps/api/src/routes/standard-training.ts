@@ -18,6 +18,7 @@ import { STANDARDS_CATALOGUE, normaliseStandards } from '../data/training-standa
 import { genToken, genPassword, hashPassword, contentHash, buildSnapshot } from '../lib/review-links'
 import { ensureTrainingTopicsSeeded } from './training'
 import { renewalMonthsFor, TOPIC_GROUP_LABELS } from '../data/training-topics'
+import { checklistForTitle, PRACTICAL_CHECKLIST_COUNT } from '../data/practical-checklists'
 import { CARE_SETTINGS, SETTING_LABELS } from '../lib/care-setting'
 import { siteUrl } from '../lib/urls'
 import { submitUrlsForIndexing } from '../services/ralfyindex/indexer'
@@ -663,6 +664,77 @@ standardTrainingRouter.post('/bulk-approve', async (req: Request, res: Response)
   } catch (e: any) {
     console.error('[std-training/bulk-approve] failed:', e?.message ?? e)
     err(res, 'BULK_APPROVE_FAILED', e.message, 500)
+  }
+})
+
+// POST /admin/standard-training/practical-checklists/apply — fill in the observed
+// competency checklist on every module that requires a practical assessment but has
+// none recorded, from the curated library.
+//
+// Only writes learning_content.practical_checklist. It does NOT touch the lesson,
+// the questions or the approval state, so applying this to published modules does
+// not un-publish them — the checklist is assessment scaffolding for the manager,
+// not taught content the learner is examined on.
+//
+// `overwrite` (default false) leaves any existing checklist alone.
+standardTrainingRouter.post('/practical-checklists/apply', async (req: Request, res: Response) => {
+  const dryRun    = req.body?.dry_run === true
+  const overwrite = req.body?.overwrite === true
+  const scope     = req.body?.scope === 'setting' ? 'setting' : req.body?.scope === 'all' ? 'all' : 'universal'
+  const careSetting = scope === 'setting' ? String(req.body?.care_setting ?? '') : null
+  if (scope === 'setting' && !careSetting) { err(res, 'VALIDATION_ERROR', 'care_setting is required for a setting scope.'); return }
+
+  try {
+    await ensureTrainingTopicsSeeded()
+    const topics = await (prisma as any).trainingTopic.findMany({
+      where: {
+        tenant_id: null, is_active: true, requires_practical: true,
+        ...(scope === 'universal' ? { care_setting: null } : scope === 'setting' ? { care_setting: careSetting } : {}),
+      },
+      select: { id: true, title: true },
+    })
+    if (!(topics as any[]).length) { ok(res, { updated: [], skipped: [], no_checklist_available: [], dry_run: dryRun }); return }
+
+    const modules = await (prisma as any).trainingModule.findMany({
+      where:  { tenant_id: null, source: 'ai_generated', topic_id: { in: (topics as any[]).map(t => t.id) } },
+      select: { id: true, name: true, topic_id: true, learning_content: true, requires_practical: true },
+    })
+    const titleByTopic = new Map<string, string>((topics as any[]).map(t => [t.id, t.title]))
+
+    const updated: Array<{ id: string; name: string; items: number }> = []
+    const skipped: Array<{ id: string; name: string; reason: string }> = []
+    const noChecklist: string[] = []
+
+    for (const m of (modules as any[])) {
+      const lc = (m.learning_content ?? {}) as any
+      const existing = Array.isArray(lc.practical_checklist) ? lc.practical_checklist.filter(Boolean) : []
+      if (existing.length > 0 && !overwrite) {
+        skipped.push({ id: m.id, name: m.name, reason: `already has ${existing.length} item(s)` })
+        continue
+      }
+      // Match on the topic title first (canonical), falling back to the module name.
+      const items = checklistForTitle(titleByTopic.get(m.topic_id) ?? '') ?? checklistForTitle(m.name)
+      if (!items) { noChecklist.push(titleByTopic.get(m.topic_id) ?? m.name); continue }
+
+      if (!dryRun) {
+        await (prisma as any).trainingModule.update({
+          where: { id: m.id },
+          data:  { learning_content: { ...lc, practical_checklist: items } },
+        }).catch((e: any) => { skipped.push({ id: m.id, name: m.name, reason: e?.message ?? 'update failed' }) })
+      }
+      updated.push({ id: m.id, name: m.name, items: items.length })
+    }
+
+    ok(res, {
+      updated, skipped,
+      no_checklist_available: noChecklist,
+      total_practical_modules: (modules as any[]).length,
+      library_size: PRACTICAL_CHECKLIST_COUNT,
+      dry_run: dryRun,
+    })
+  } catch (e: any) {
+    console.error('[std-training/practical-checklists] failed:', e?.message ?? e)
+    err(res, 'CHECKLIST_APPLY_FAILED', e.message, 500)
   }
 })
 

@@ -11,7 +11,7 @@ import { ActivitiesToolbar } from '@/components/platform/activities-editor'
 import { CourseSpecification } from '@/components/course-specification'
 import { ModulePreviewPlayer } from '@/components/training/module-preview-player'
 import { PlatformShell } from '@/components/platform-shell'
-import { Loader2, Sparkles, CheckCircle2, Circle, FileText, Pencil, Plus, Trash2, RefreshCw, ChevronLeft, ShieldAlert, Image as ImageIcon, Calendar, History, AlertTriangle, ShieldCheck, Share2, Wand2, Eye, Info, ChevronDown } from 'lucide-react'
+import { Loader2, Sparkles, CheckCircle2, Circle, FileText, Pencil, Plus, Trash2, RefreshCw, ChevronLeft, ShieldAlert, Image as ImageIcon, Calendar, History, AlertTriangle, ShieldCheck, Share2, Wand2, Eye, Info, ChevronDown, ClipboardCheck } from 'lucide-react'
 
 const FREQ_LABEL: Record<string, string> = { annual: 'Annual', biennial: 'Every 2 years', triennial: 'Every 3 years', once: 'One-off', adhoc: 'Ad-hoc' }
 const FREQS = ['annual', 'biennial', 'triennial', 'once', 'adhoc']
@@ -57,6 +57,7 @@ export default function StandardTrainingPage() {
   const [settings, setSettings] = useState<{ key: string; label: string }[]>([])
   const [activeSetting, setActiveSetting] = useState<string | null>(null) // null = the universal "All settings" base; 'ANNUAL' = the CPD set
   const [bulkOpen, setBulkOpen] = useState(false)
+  const [checklistBusy, setChecklistBusy] = useState(false)
   useEffect(() => {
     const applyFromUrl = () => {
       if (window.location.hash === '#annual' || new URLSearchParams(window.location.search).get('tab') === 'annual') {
@@ -111,6 +112,36 @@ export default function StandardTrainingPage() {
     api.standardTraining.catalogue().then(d => { setGroups(d.groups); setTopics(d.topics); setSettings(d.settings ?? []) }).catch(() => {}).finally(() => setLoading(false))
   }
   useEffect(() => { load() }, [token]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fill the observed competency checklist on practical modules in the current tab.
+  // Previews first so the counts are seen before anything is written.
+  async function applyChecklists() {
+    if (!api || checklistBusy) return
+    const scope: 'universal' | 'setting' | 'all' =
+      activeSetting === 'ANNUAL' ? 'all' : activeSetting ? 'setting' : 'universal'
+    const careSetting = scope === 'setting' ? activeSetting! : undefined
+    setChecklistBusy(true)
+    try {
+      const pre = await api.standardTraining.applyPracticalChecklists({ scope, care_setting: careSetting, dry_run: true })
+      if (!pre.updated.length) {
+        const parts = [`No practical modules in this tab need a checklist.`]
+        if (pre.skipped.length) parts.push(`${pre.skipped.length} already have one.`)
+        if (pre.no_checklist_available.length) parts.push(`No curated checklist yet for: ${pre.no_checklist_available.join(', ')}.`)
+        alert(parts.join(' '))
+        return
+      }
+      const lines = pre.updated.map(u => `• ${u.name} (${u.items} items)`).join('\n')
+      const extra = pre.no_checklist_available.length
+        ? `\n\nNo curated checklist yet for: ${pre.no_checklist_available.join(', ')}`
+        : ''
+      if (!confirm(`Add an observed competency checklist to ${pre.updated.length} module(s)?\n\n${lines}${extra}\n\nThe lesson, questions and approval state are not changed.`)) return
+      const r = await api.standardTraining.applyPracticalChecklists({ scope, care_setting: careSetting })
+      load()
+      alert(`Done — checklists added to ${r.updated.length} module(s).${r.skipped.length ? ` ${r.skipped.length} skipped.` : ''}`)
+    } catch (e: any) {
+      alert(e?.message ?? 'Could not apply the checklists.')
+    } finally { setChecklistBusy(false) }
+  }
 
   async function generate(topicId: string) {
     if (!api || busy) return
@@ -287,6 +318,16 @@ export default function StandardTrainingPage() {
               <ShieldCheck size={13} /> Bulk approve drafts
             </button>
           )}
+          <button
+            onClick={applyChecklists}
+            disabled={checklistBusy}
+            title="Fill in the observed competency checklist on every practical module in this tab that has none. Does not change the lesson, questions or approval state."
+            className="flex shrink-0 items-center gap-1.5 rounded-lg border border-teal/30 bg-teal/5 px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal/10 disabled:opacity-50"
+          >
+            {checklistBusy
+              ? <><Loader2 size={13} className="animate-spin" /> Applying…</>
+              : <><ClipboardCheck size={13} /> Fill practical checklists</>}
+          </button>
           {!activeSetting && topics.some(t => !t.care_setting && t.module) && (
             <button
               onClick={neutraliseAll}

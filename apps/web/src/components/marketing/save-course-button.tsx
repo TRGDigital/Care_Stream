@@ -39,11 +39,11 @@ export function SaveCourseButton({
       onClick={() => savedCourses.toggle({ slug, title })}
       aria-pressed={saved}
       title={saved ? 'Saved — click to remove' : 'Save this course for later'}
-      className={`inline-flex flex-shrink-0 items-center justify-center gap-2 rounded-btn border text-sm font-semibold transition-colors ${
-        compact ? 'h-[42px] w-[42px]' : 'px-3 py-2.5'
+      className={`inline-flex flex-shrink-0 items-center justify-center gap-2 rounded-btn border font-semibold transition-colors ${
+        compact ? 'h-[42px] w-[42px] text-sm' : 'px-4 py-3 text-sm md:text-base'
       } ${styles} ${className}`}
     >
-      {saved ? <BookmarkCheck size={17} /> : <Bookmark size={17} />}
+      {saved ? <BookmarkCheck size={compact ? 17 : 19} /> : <Bookmark size={compact ? 17 : 19} />}
       {!compact && <span className="hidden lg:inline">{saved ? 'Saved' : 'Save'}</span>}
       <span className="sr-only">{saved ? `${title} is saved for later` : `Save ${title} for later`}</span>
     </button>

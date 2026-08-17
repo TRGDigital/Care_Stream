@@ -58,25 +58,25 @@ export function CourseStickyBar({
         } ${className}`}
       >
         <div className="bg-neutral-dark shadow-elevated">
-          <div className="mx-auto flex max-w-content items-center gap-3 px-4 py-2.5 md:gap-5 md:px-6">
+          <div className="mx-auto flex max-w-content items-center gap-3.5 px-4 py-3.5 md:gap-6 md:px-6 md:py-4">
             {/* Course thumbnail */}
-            <div className="hidden h-12 w-[4.5rem] flex-shrink-0 overflow-hidden rounded-md bg-white/10 sm:block">
+            <div className="hidden h-14 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-white/10 sm:block md:h-[4.5rem] md:w-28">
               {imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={imageUrl} alt="" className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
-                  <GraduationCap size={22} className="text-white/60" />
+                  <GraduationCap size={28} className="text-white/60" />
                 </div>
               )}
             </div>
 
             {/* Title + meta */}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold leading-tight text-white md:text-base">{title}</p>
-              <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-white/70">
+              <p className="truncate text-base font-bold leading-tight text-white md:text-xl">{title}</p>
+              <p className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[13px] text-white/75 md:text-sm">
                 <span className="inline-flex items-center gap-1.5">
-                  <Clock size={12} className="flex-shrink-0" /> {durationLabel} to complete
+                  <Clock size={14} className="flex-shrink-0" /> {durationLabel} to complete
                 </span>
                 {priceLabel && (
                   <>
@@ -91,7 +91,7 @@ export function CourseStickyBar({
 
             <Link
               href={href}
-              className="flex-shrink-0 rounded-btn bg-blue-600 px-4 py-2.5 text-center text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700 md:px-7"
+              className="flex-shrink-0 rounded-btn bg-blue-600 px-5 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700 md:px-8 md:text-base"
             >
               {ctaLabel}
             </Link>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { GraduationCap, ArrowRight, Search, X, ShoppingCart, Plus, Minus, Clock, ShieldCheck } from 'lucide-react'
+import { GraduationCap, ArrowRight, Search, X, ShoppingCart, Plus, Minus, Clock, ShieldCheck, Award } from 'lucide-react'
 import { SiteImage } from '@/components/site-image'
 import { useCart } from '@/lib/cart-store'
 import { UNIT_PENCE, gbp, estimatedMinutes, formatDuration, TRAINING_ACCREDITED } from '@/lib/training-commerce'
@@ -74,16 +74,24 @@ export function ModuleCard({ t, accent, settingLabel }: { t: LibraryTopic; accen
           <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-teal">
             {frequencyLabel(t.frequency)}
           </span>
-          {TRAINING_ACCREDITED && (
-            <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-teal px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow">
-              <ShieldCheck size={11} /> CPD Certified
+          {/* Right-hand badges stack, so the certificate mark never collides with
+              the CPD or setting badge. "Certificate" is the completion certificate
+              every course issues for CQC evidence — not an accreditation claim. */}
+          <div className="absolute right-3 top-3 flex flex-col items-end gap-1.5">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-neutral-dark shadow">
+              <Award size={12} className="text-teal" /> Certificate
             </span>
-          )}
-          {accent && settingLabel && !TRAINING_ACCREDITED && (
-            <span className="absolute right-3 top-3 rounded-full bg-blue-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow">
-              For {settingLabel}
-            </span>
-          )}
+            {TRAINING_ACCREDITED && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-teal px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow">
+                <ShieldCheck size={11} /> CPD Certified
+              </span>
+            )}
+            {accent && settingLabel && !TRAINING_ACCREDITED && (
+              <span className="rounded-full bg-blue-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow">
+                For {settingLabel}
+              </span>
+            )}
+          </div>
         </div>
       </Link>
       <div className="flex flex-1 flex-col p-5 sm:p-6">

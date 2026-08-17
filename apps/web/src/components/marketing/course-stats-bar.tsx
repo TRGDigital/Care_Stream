@@ -65,9 +65,9 @@ export function CourseStatsBar({ durationMinutes, cpdAccredited = false }: { dur
   return (
     <div className="relative z-20 mx-auto -mt-14 max-w-4xl px-6 md:-mt-16">
       <div className="grid grid-cols-1 items-center gap-6 rounded-2xl border border-gray-100 bg-white p-6 shadow-elevated sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-gray-100">
-        {/* Avg. duration */}
-        <div className="sm:pr-6">
-          <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-neutral-mid">
+        {/* Avg. duration — centred within its column */}
+        <div className="text-center sm:pr-6">
+          <p className="flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-wide text-neutral-mid">
             <Clock size={13} className="text-teal" /> Avg. Duration
           </p>
           <p className="mt-1.5 text-sm font-semibold text-neutral-dark">{formatDuration(durationMinutes)}</p>
@@ -88,7 +88,7 @@ export function CourseStatsBar({ durationMinutes, cpdAccredited = false }: { dur
           <div className="text-center">
             <p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">Course Published by</p>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-color.png" alt="CareStream" className="mx-auto mt-1.5 h-7 w-auto" />
+            <img src="/logo-color.png" alt="CareStream" className="mx-auto mt-2 h-12 w-auto" />
           </div>
           {cpdAccredited && (
             <div className="flex items-center gap-2 border-l border-gray-100 pl-4">

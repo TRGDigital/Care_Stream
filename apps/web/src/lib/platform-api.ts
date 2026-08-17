@@ -671,6 +671,17 @@ export function createPlatformClient(token: string) {
         adminFetch<{ activities: any[] }>(`/standard-training/modules/${id}/draft-activities`, token, { method: 'POST', body: JSON.stringify({ types, section }) }),
       regenerateQuestions: (id: string) => adminFetch<{ module: any; generated: number; avoided: number }>(`/standard-training/modules/${id}/regenerate-questions`, token, { method: 'POST' }),
       setShare: (id: string, data: { enabled: boolean; password?: string }) => adminFetch<{ share_enabled: boolean; share_token: string | null; share_password: string | null; share_url: string | null }>(`/standard-training/modules/${id}/share`, token, { method: 'POST', body: JSON.stringify(data) }),
+      // Attest + publish every draft in one scope with a single named attestation.
+      // include_annual defaults false, so the Annual Training (CPD) set is untouched.
+      // Pass dry_run to preview exactly what would be approved and what would skip.
+      bulkApprove: (data: { reviewer_name: string; reviewer_role: string; scope?: 'universal' | 'setting'; care_setting?: string; include_annual?: boolean; dry_run?: boolean }) =>
+        adminFetch<{
+          approved: Array<{ id: string; name: string }>
+          skipped:  Array<{ id: string; name: string; reason: string }>
+          excluded_annual: string[]
+          total_candidates: number
+          dry_run: boolean
+        }>('/standard-training/bulk-approve', token, { method: 'POST', body: JSON.stringify(data) }),
     },
 
     // Programmes = diplomas / pathways: an ordered set of published standard modules

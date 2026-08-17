@@ -575,6 +575,97 @@ standardTrainingRouter.post('/modules/:id/approve', async (req: Request, res: Re
   ok(res, { module: updated })
 })
 
+// POST /admin/standard-training/bulk-approve — attest and publish every draft module
+// in one scope with a single named attestation, skipping any that fail the QA hard
+// checks. The per-module governance record written is identical to approving them
+// one at a time; this only saves re-typing the reviewer each time.
+//
+// Scope is deliberately narrow and explicit:
+//   scope 'universal'  → topics with care_setting = NULL  (the "All settings" tab)
+//   scope 'setting'    → topics for one care_setting
+// `include_annual` defaults to FALSE, so the Annual Training (CPD) set is never
+// touched by accident — those are promoted and attested individually.
+standardTrainingRouter.post('/bulk-approve', async (req: Request, res: Response) => {
+  const name = String(req.body?.reviewer_name ?? '').trim()
+  const role = String(req.body?.reviewer_role ?? '').trim()
+  if (!name || !role) { err(res, 'ATTESTATION_REQUIRED', 'A reviewer name and role are required to attest and publish.', 422); return }
+
+  const scope = req.body?.scope === 'setting' ? 'setting' : 'universal'
+  const careSetting = scope === 'setting' ? String(req.body?.care_setting ?? '') : null
+  if (scope === 'setting' && !careSetting) { err(res, 'VALIDATION_ERROR', 'care_setting is required for a setting scope.'); return }
+  const includeAnnual = req.body?.include_annual === true
+  const dryRun = req.body?.dry_run === true
+
+  try {
+    await ensureTrainingTopicsSeeded()
+    const topics = await (prisma as any).trainingTopic.findMany({
+      where:  { tenant_id: null, is_active: true, ...(scope === 'setting' ? { care_setting: careSetting } : { care_setting: null }) },
+      select: { id: true, title: true, is_annual: true },
+    })
+    // is_annual marks the Annual Training (CPD) set — excluded unless explicitly asked for.
+    const topicIds = (topics as any[]).filter(t => includeAnnual || !t.is_annual).map(t => t.id)
+    const excluded = (topics as any[]).filter(t => !includeAnnual && t.is_annual).map(t => t.title)
+    if (!topicIds.length) { ok(res, { approved: [], skipped: [], excluded_annual: excluded, total_candidates: 0 }); return }
+
+    const modules = await (prisma as any).trainingModule.findMany({
+      where: { tenant_id: null, source: 'ai_generated', approved: false, topic_id: { in: topicIds } },
+    })
+
+    const approved: Array<{ id: string; name: string }> = []
+    const skipped:  Array<{ id: string; name: string; reason: string }> = []
+
+    for (const m of (modules as any[])) {
+      const qa = runModuleQa(m)
+      if (!qa.ok_to_approve) {
+        skipped.push({
+          id: m.id, name: m.name,
+          reason: qa.checks.filter(c => c.status === 'fail').map(c => c.label).join(', ') || 'failed quality checks',
+        })
+        continue
+      }
+      if (dryRun) { approved.push({ id: m.id, name: m.name }); continue }
+      try {
+        await (prisma as any).trainingModule.update({
+          where: { id: m.id },
+          data: {
+            approved: true, approved_at: new Date(), approved_by: name,
+            attested_by_name: name, attested_by_role: role, attested_at: new Date(),
+            // Bulk approval is an INTERNAL named attestation, never an independent
+            // external review — that must be claimed per module via a review link.
+            independently_reviewed: false,
+          },
+        })
+        approved.push({ id: m.id, name: m.name })
+      } catch (e: any) {
+        skipped.push({ id: m.id, name: m.name, reason: e?.message ?? 'update failed' })
+      }
+    }
+
+    // Index the public training pages for what was just published (best-effort).
+    if (!dryRun && approved.length) {
+      try {
+        const pub = await (prisma as any).trainingModule.findMany({
+          where: { id: { in: approved.map(a => a.id) } }, select: { topic_id: true },
+        })
+        const ids = (pub as any[]).map(p => p.topic_id).filter(Boolean)
+        const tops = ids.length ? await (prisma as any).trainingTopic.findMany({ where: { id: { in: ids } }, select: { title: true } }) : []
+        const urls = (tops as any[]).map(t => `${siteUrl()}/staff-training/${trainingPageSlug(t.title)}`)
+        if (urls.length) await submitUrlsForIndexing(urls, { source: 'page' })
+      } catch { /* never block a publish on an indexing hiccup */ }
+    }
+
+    ok(res, {
+      approved, skipped,
+      excluded_annual: excluded,
+      total_candidates: (modules as any[]).length,
+      dry_run: dryRun,
+    })
+  } catch (e: any) {
+    console.error('[std-training/bulk-approve] failed:', e?.message ?? e)
+    err(res, 'BULK_APPROVE_FAILED', e.message, 500)
+  }
+})
+
 // ─── External review links ────────────────────────────────────────────────────
 
 // POST /admin/standard-training/modules/:id/review-link — create a password-protected,

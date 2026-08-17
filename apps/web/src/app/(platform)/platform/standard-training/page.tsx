@@ -11,7 +11,7 @@ import { ActivitiesToolbar } from '@/components/platform/activities-editor'
 import { CourseSpecification } from '@/components/course-specification'
 import { ModulePreviewPlayer } from '@/components/training/module-preview-player'
 import { PlatformShell } from '@/components/platform-shell'
-import { Loader2, Sparkles, CheckCircle2, Circle, FileText, Pencil, Plus, Trash2, RefreshCw, ChevronLeft, ShieldAlert, Image as ImageIcon, Calendar, History, AlertTriangle, ShieldCheck, Share2, Wand2, Eye } from 'lucide-react'
+import { Loader2, Sparkles, CheckCircle2, Circle, FileText, Pencil, Plus, Trash2, RefreshCw, ChevronLeft, ShieldAlert, Image as ImageIcon, Calendar, History, AlertTriangle, ShieldCheck, Share2, Wand2, Eye, Info, ChevronDown } from 'lucide-react'
 
 const FREQ_LABEL: Record<string, string> = { annual: 'Annual', biennial: 'Every 2 years', triennial: 'Every 3 years', once: 'One-off', adhoc: 'Ad-hoc' }
 const FREQS = ['annual', 'biennial', 'triennial', 'once', 'adhoc']
@@ -56,6 +56,7 @@ export default function StandardTrainingPage() {
   const [groups, setGroups] = useState<Record<string, string>>({})
   const [settings, setSettings] = useState<{ key: string; label: string }[]>([])
   const [activeSetting, setActiveSetting] = useState<string | null>(null) // null = the universal "All settings" base; 'ANNUAL' = the CPD set
+  const [bulkOpen, setBulkOpen] = useState(false)
   useEffect(() => {
     const applyFromUrl = () => {
       if (window.location.hash === '#annual' || new URLSearchParams(window.location.search).get('tab') === 'annual') {
@@ -175,9 +176,62 @@ export default function StandardTrainingPage() {
   return (
     <PlatformShell>
       <h1 className="text-2xl font-bold text-neutral-dark">Standard Training</h1>
-      <p className="mb-5 mt-1 max-w-3xl text-sm text-neutral-mid">
+      <p className="mb-4 mt-1 max-w-3xl text-sm text-neutral-mid">
         Generate standard annual-training modules (grounded in the anonymised <strong>policy seeds</strong>). Review and <strong>publish</strong> them, and every tenant can assign them to staff at <strong>no AI-generation cost</strong>. Tenants who want policy-specific versions use &ldquo;Tailor to our policies&rdquo; (metered).
       </p>
+
+      {/* How the three tiers relate. Kept collapsed by default so it explains the
+          model to anyone new to this console without pushing the library down the page. */}
+      <details className="group mb-6 max-w-4xl rounded-xl border border-teal/25 bg-teal-light/15 open:bg-teal-light/20">
+        <summary className="flex cursor-pointer list-none items-center gap-2 p-4 text-sm font-semibold text-teal-dark">
+          <Info size={15} className="shrink-0 text-teal" />
+          How Standard Training, Annual Training (CPD) and Diplomas fit together
+          <ChevronDown size={15} className="ml-auto shrink-0 text-teal transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="space-y-4 border-t border-teal/20 px-4 pb-4 pt-4 text-sm text-neutral-dark">
+          <div>
+            <p className="font-semibold text-teal-dark">1 · Standard Training — the everyday library</p>
+            <p className="mt-1 text-neutral-mid">
+              What tenants pull from for <strong>ad-hoc training</strong> in their own account. Every published module here
+              is available to assign to any staff member at no AI-generation cost. This is the breadth layer: a module
+              for each mandatory, statutory, clinical and role-specific topic a service needs to cover.
+              The <strong>All settings</strong> tab holds the universal modules that apply everywhere; each setting tab
+              holds only that setting&apos;s specialist modules.
+            </p>
+          </div>
+
+          <div>
+            <p className="font-semibold text-teal-dark">2 · Annual Training (CPD) — the deepened, accredited set</p>
+            <p className="mt-1 text-neutral-mid">
+              A module promoted into the Annual Training set is <strong>built up before it goes to CPD for approval</strong>,
+              not simply copied. Promoting one means adding to it: more lesson sections, more interactive elements
+              (order / sort / match activities), a longer and more demanding question bank, a pre-course baseline check
+              and a practical checklist where the topic needs observed competence. A standard module is not CPD-ready as
+              it stands — the depth is what the accreditation is assessing, so the work is in the bulking out.
+              These carry the CPD branding and CPD hours on the certificate.
+            </p>
+          </div>
+
+          <div>
+            <p className="font-semibold text-teal-dark">3 · Diplomas &amp; Pathways — combinations, with their own certificate</p>
+            <p className="mt-1 text-neutral-mid">
+              A diploma or pathway pulls <strong>several published modules together into one programme</strong> with its own
+              completion rule, a <strong>synoptic assessment</strong> spanning more than one unit, a reflective account, and a
+              single combined certificate showing cumulative hours, measured learning gain and a transcript of every unit.
+              Progress is derived from the learner&apos;s ordinary training records, so a unit taken inside a diploma is the
+              same record as one taken on its own — it still renews on its own cycle and still counts once.
+              Build these under <strong>Diplomas &amp; Pathways</strong>.
+            </p>
+          </div>
+
+          <p className="rounded-lg border border-teal/20 bg-white/70 p-3 text-xs text-neutral-mid">
+            <strong className="text-neutral-dark">Published is not CPD accredited.</strong> A module only needs to be
+            published to be used in a diploma, so programmes can be built and piloted from the current library now and
+            gain CPD branding later, as their units are accredited, with no rebuild. Until a programme&apos;s units are all
+            accredited its certificate shows &ldquo;learning hours&rdquo; rather than &ldquo;CPD hours&rdquo;.
+          </p>
+        </div>
+      </details>
 
       {/* Library governance summary — across every setting. */}
       {!loading && (
@@ -223,6 +277,16 @@ export default function StandardTrainingPage() {
               ? <>Showing modules specific to <strong>{activeLabel}</strong>. The universal modules under <strong>All settings</strong> also apply here.</>
               : <>Universal (cross-over) modules — these apply to <strong>every</strong> setting. Setting-specific modules live under each setting tab.</>}
           </p>
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+          {activeSetting !== 'ANNUAL' && (
+            <button
+              onClick={() => setBulkOpen(true)}
+              title="Attest and publish every draft in this tab with one named attestation. The Annual Training (CPD) set is never included."
+              className="flex shrink-0 items-center gap-1.5 rounded-lg border border-teal/30 bg-teal/5 px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal/10"
+            >
+              <ShieldCheck size={13} /> Bulk approve drafts
+            </button>
+          )}
           {!activeSetting && topics.some(t => !t.care_setting && t.module) && (
             <button
               onClick={neutraliseAll}
@@ -235,7 +299,19 @@ export default function StandardTrainingPage() {
                 : <><Wand2 size={13} /> Neutralise voice (all)</>}
             </button>
           )}
+          </div>
         </div>
+      )}
+
+      {bulkOpen && api && (
+        <BulkApprovePanel
+          api={api}
+          scope={activeSetting && activeSetting !== 'ANNUAL' ? 'setting' : 'universal'}
+          careSetting={activeSetting && activeSetting !== 'ANNUAL' ? activeSetting : undefined}
+          scopeLabel={activeSetting && activeSetting !== 'ANNUAL' ? activeLabel : 'All settings (universal)'}
+          onClose={() => setBulkOpen(false)}
+          onDone={() => { setBulkOpen(false); load() }}
+        />
       )}
 
       {loading ? (
@@ -781,6 +857,141 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// ─── Bulk approve ─────────────────────────────────────────────────────────────
+// One named attestation applied to every draft in the current tab. Previews first
+// (dry run) so you see exactly what would publish and what would be skipped, and
+// why, before anything is written. The Annual Training (CPD) set is never included.
+function BulkApprovePanel({
+  api, scope, careSetting, scopeLabel, onClose, onDone,
+}: {
+  api: any
+  scope: 'universal' | 'setting'
+  careSetting?: string
+  scopeLabel: string
+  onClose: () => void
+  onDone: () => void
+}) {
+  const [name, setName] = useState('')
+  const [role, setRole] = useState('')
+  const [busy, setBusy] = useState<'preview' | 'apply' | null>(null)
+  const [preview, setPreview] = useState<any>(null)
+  const [result, setResult] = useState<any>(null)
+  const [error, setError] = useState('')
+
+  const base = { scope, care_setting: careSetting, include_annual: false }
+
+  async function run(dry: boolean) {
+    if (!name.trim() || !role.trim()) { setError('Enter the reviewer name and role first.'); return }
+    setBusy(dry ? 'preview' : 'apply'); setError('')
+    try {
+      const r = await api.standardTraining.bulkApprove({ ...base, reviewer_name: name.trim(), reviewer_role: role.trim(), dry_run: dry })
+      if (dry) setPreview(r); else { setResult(r); setPreview(null) }
+    } catch (e: any) {
+      setError(e?.message ?? 'Failed.')
+    } finally { setBusy(null) }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4">
+      <div className="my-8 w-full max-w-2xl rounded-xl border border-gray-200 bg-white p-5 shadow-card">
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold text-neutral-dark">Bulk approve drafts</h2>
+            <p className="mt-0.5 text-sm text-neutral-mid">
+              Scope: <strong>{scopeLabel}</strong>. The Annual Training (CPD) set is excluded.
+            </p>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="shrink-0 text-xl leading-none text-neutral-mid hover:text-neutral-dark">&times;</button>
+        </div>
+
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+          This writes the same named attestation to every module it publishes, exactly as approving them one by one
+          does. It is an <strong>internal</strong> attestation — it never marks a module as independently reviewed.
+          Modules failing a quality hard-check are skipped, not published.
+        </div>
+
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="Reviewer name"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20" />
+          <input value={role} onChange={e => setRole(e.target.value)} placeholder="Reviewer role / qualification"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20" />
+        </div>
+
+        {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button onClick={() => run(true)} disabled={!!busy}
+            className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-neutral-dark hover:bg-neutral-light disabled:opacity-50">
+            {busy === 'preview' ? <><Loader2 size={14} className="animate-spin" /> Checking…</> : <><Eye size={14} /> Preview</>}
+          </button>
+          {preview && preview.approved.length > 0 && (
+            <button onClick={() => run(false)} disabled={!!busy}
+              className="inline-flex items-center gap-1.5 rounded-md bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50">
+              {busy === 'apply' ? <><Loader2 size={14} className="animate-spin" /> Publishing…</> : <><ShieldCheck size={14} /> Attest &amp; publish {preview.approved.length}</>}
+            </button>
+          )}
+        </div>
+
+        {(preview || result) && (() => {
+          const r = result ?? preview
+          return (
+            <div className="mt-4 space-y-3 text-sm">
+              {result && (
+                <p className="rounded-lg border border-green-200 bg-green-50 p-3 font-medium text-green-800">
+                  Published {result.approved.length} module{result.approved.length === 1 ? '' : 's'}.
+                  {result.skipped.length > 0 && ` ${result.skipped.length} skipped.`}
+                </p>
+              )}
+              {!result && (
+                <p className="text-neutral-mid">
+                  {r.total_candidates} draft{r.total_candidates === 1 ? '' : 's'} in scope · <strong className="text-neutral-dark">{r.approved.length} would publish</strong>
+                  {r.skipped.length > 0 && <> · {r.skipped.length} would be skipped</>}
+                </p>
+              )}
+
+              {r.excluded_annual?.length > 0 && (
+                <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 p-3 text-xs text-indigo-900">
+                  <strong>Excluded (Annual Training / CPD set — handle separately):</strong> {r.excluded_annual.join(', ')}
+                </div>
+              )}
+
+              {r.approved.length > 0 && (
+                <div>
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-green-700">
+                    {result ? 'Published' : 'Will publish'} ({r.approved.length})
+                  </p>
+                  <div className="max-h-48 overflow-y-auto rounded-md border border-gray-100 p-2 text-xs text-neutral-dark">
+                    {r.approved.map((m: any) => <p key={m.id}>✓ {m.name}</p>)}
+                  </div>
+                </div>
+              )}
+
+              {r.skipped.length > 0 && (
+                <div>
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
+                    Skipped — fix these, then run again ({r.skipped.length})
+                  </p>
+                  <div className="max-h-48 space-y-1 overflow-y-auto rounded-md border border-amber-100 bg-amber-50/40 p-2 text-xs">
+                    {r.skipped.map((m: any) => (
+                      <p key={m.id} className="text-neutral-dark">✗ {m.name} — <span className="text-amber-700">{m.reason}</span></p>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {result && (
+                <button onClick={onDone} className="rounded-md bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark">
+                  Done — refresh the library
+                </button>
+              )}
+            </div>
+          )
+        })()}
+      </div>
     </div>
   )
 }

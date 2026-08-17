@@ -20,6 +20,11 @@ export const suggestionsRouter = Router()
 
 type Category = 'setup' | 'compliance' | 'training' | 'engagement' | 'onboarding' | 'features'
 
+interface SuggestionDetail {
+  label: string
+  href?: string | null
+}
+
 interface Suggestion {
   key:       string
   category:  Category
@@ -28,6 +33,8 @@ interface Suggestion {
   body:      string
   cta_label: string
   href:      string
+  details?:  SuggestionDetail[]   // up to 5 named items the tenant can act on
+  more?:     number               // how many further items exist beyond the 5 shown
 }
 
 const DAY = 86_400_000
@@ -69,6 +76,22 @@ function joinOr(items: string[]): string {
 
 // Workforce credential types + status derivation — mirrors routes/workforce.ts.
 const CREDENTIAL_TYPES = ['dbs', 'right_to_work', 'passport', 'professional_registration', 'reference'] as const
+
+// Readable credential names for detail labels.
+const CREDENTIAL_LABELS: Record<string, string> = {
+  dbs:                       'DBS check',
+  right_to_work:             'Right to work',
+  passport:                  'Passport',
+  professional_registration: 'Professional registration',
+  reference:                 'Reference',
+}
+
+// UK short date for detail labels, e.g. "12 Aug" (fixed month names — locale-proof).
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+function ukDate(d: Date | string): string {
+  const dt = new Date(d)
+  return `${dt.getDate()} ${MONTHS[dt.getMonth()]}`
+}
 
 function credentialStatus(type: string, present: boolean, expiresAt: Date | null, now: number): string {
   if (!present) return 'missing' // reference "outstanding" also counts as missing in the register summary
@@ -148,6 +171,9 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
       f2fSessionCount,
       creditUsage,
       workforceUsers, supervisionRows, credentialRows,
+      // take-5 detail rows for the named-specifics drawer
+      trainingNotStartedRows, trainingExpiredRows, staffNoTrainingRows,
+      staffNotInHubRows, staffNoRoleRows, pendingDocRows,
     ] = await Promise.all([
       (prisma as any).suggestionDismissal.findMany({
         where:  { tenant_id: tenantId, dismissed_at: { gte: cut30 } },
@@ -184,11 +210,11 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
       }),
       trainingOnly ? null : (prisma as any).policyDocument.findMany({
         where:  { tenant_id: tenantId, published_at: { not: null } },
-        select: { published_at: true },
+        select: { policy_id: true, published_at: true },
       }),
       trainingOnly ? null : (prisma as any).policy.findMany({
         where:  { tenant_id: tenantId, status: 'active' },
-        select: { created_at: true },
+        select: { name: true, created_at: true },
       }),
       trainingOnly ? null : policiesDueForReview(tenantId),
       trainingOnly ? null : (prisma as any).user.groupBy({
@@ -202,13 +228,18 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
       }),
       trainingOnly ? null : (prisma as any).onboardingEnrollment.findMany({
         where:  { tenant_id: tenantId, completed_at: null },
-        select: { id: true, user_id: true, enrolled_at: true },
+        select: {
+          id: true, user_id: true, enrolled_at: true,
+          user: { select: { name: true } }, flow: { select: { name: true } },
+        },
       }),
       trainingOnly ? null : (prisma as any).cqcStaffDelivery.count({ where: { tenant_id: tenantId } }),
       trainingOnly ? null : (prisma as any).auditRun.count({ where: { tenant_id: tenantId, created_at: { gte: monthStart } } }),
       hasF2F ? (prisma as any).faceToFaceSession.count({ where: { tenant_id: tenantId } }) : null,
       hasCreditLimit ? getAiCreditUsage(tenantId) : null,
-      hasWorkforce ? (prisma as any).user.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { id: true } }) : null,
+      hasWorkforce ? (prisma as any).user.findMany({
+        where: { tenant_id: tenantId, is_active: true }, orderBy: { name: 'asc' }, select: { id: true, name: true },
+      }) : null,
       hasWorkforce ? (prisma as any).staffSupervision.findMany({
         where:  { tenant_id: tenantId },
         select: { user_id: true, type: true, held_on: true, next_due: true },
@@ -217,38 +248,155 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
         where:  { tenant_id: tenantId },
         select: { user_id: true, type: true, expires_at: true },
       }) : null,
+      // Detail rows — same filters as the counts above, capped at 5 each.
+      (prisma as any).trainingEnrollment.findMany({
+        where:   { tenant_id: tenantId, status: { in: ['not_started', 'pending'] }, created_at: { lt: cut21 } },
+        orderBy: { created_at: 'asc' },
+        take:    5,
+        select:  { user_id: true, user: { select: { name: true } }, module: { select: { name: true } } },
+      }),
+      (prisma as any).trainingEnrollment.findMany({
+        where:   { tenant_id: tenantId, OR: [{ status: 'expired' }, { expires_at: { lt: now } }] },
+        orderBy: { expires_at: 'asc' },
+        take:    5,
+        select:  { user_id: true, expires_at: true, user: { select: { name: true } }, module: { select: { name: true } } },
+      }),
+      trainingOnly ? null : (prisma as any).user.findMany({
+        where:   { tenant_id: tenantId, is_active: true, role: 'staff', training_enrollments: { none: {} } },
+        orderBy: { name: 'asc' }, take: 5, select: { id: true, name: true },
+      }),
+      (prisma as any).user.findMany({
+        where:   { tenant_id: tenantId, is_active: true, role: 'staff', first_login_at: null },
+        orderBy: { name: 'asc' }, take: 5, select: { id: true, name: true },
+      }),
+      (prisma as any).user.findMany({
+        where:   { tenant_id: tenantId, is_active: true, role: 'staff', OR: [{ job_role: null }, { job_role: '' }] },
+        orderBy: { name: 'asc' }, take: 5, select: { id: true, name: true },
+      }),
+      // Docs with unpublished adopted changes (id → policy_id, for names in rule 2)
+      trainingOnly ? null : (prisma as any).policyDocument.findMany({
+        where:  { tenant_id: tenantId, changes: { some: { published: false, reverted: false } } },
+        select: { id: true, policy_id: true },
+      }),
     ])
 
-    // Rule 14 needs the latest progress per open onboarding enrollment (dependent query).
-    let onboardingStalled = 0
-    if (!trainingOnly && incompleteOnboarding && (incompleteOnboarding as any[]).length > 0) {
-      const rows = incompleteOnboarding as any[]
-      const prog = await (prisma as any).onboardingProgress.groupBy({
+    // ── Shared prep (in-memory, over rows already loaded) ─────────────────────
+
+    // Rule 2 — docs with unpublished adopted changes, most changes first
+    const changeGroups = (pendingChangeGroups as any[]) ?? []
+    const pendingByDoc = new Map<string, number>(changeGroups.map(g => [g.document_id, g._count?._all ?? 0]))
+    const pendingTopDocs = ((pendingDocRows as any[]) ?? [])
+      .map(d => ({ policy_id: d.policy_id as string, count: pendingByDoc.get(d.id) ?? 0 }))
+      .filter(d => d.count > 0)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+
+    // Rule 3 — staleness per section (mirrors GET /analytics/gaps/pipeline)
+    const runs   = (gapsRuns as any[]) ?? []
+    const ranAt  = new Map<string, Date>(runs.map(r => [r.section, r.ran_at]))
+    const docs   = (publishedDocs as any[]) ?? []
+    const added  = (activePolicyDates as any[]) ?? []
+    const staleSections: Array<{ section: string; count: number }> = []
+    for (const section of ['coverage', 'out_of_date', 'wording', 'consistency']) {
+      const ran = ranAt.get(section)
+      if (!ran) continue
+      const count = docs.filter(d => d.published_at > ran).length + added.filter(p => p.created_at > ran).length
+      if (count > 0) staleSections.push({ section, count })
+    }
+    const worstStale = staleSections.length > 0
+      ? staleSections.reduce((a, b) => (b.count > a.count ? b : a))
+      : null
+    let staleItems: Array<{ policy_id?: string; name?: string; date: Date }> = []
+    if (worstStale) {
+      const ran = ranAt.get(worstStale.section)!
+      staleItems = [
+        ...docs.filter(d => d.published_at > ran).map(d => ({ policy_id: d.policy_id as string, date: d.published_at as Date })),
+        ...added.filter(p => p.created_at > ran).map(p => ({ name: p.name as string, date: p.created_at as Date })),
+      ]
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 5)
+    }
+
+    // Rule 13 — held job roles with no active onboarding flow, largest first
+    const flows = (activeFlows as any[]) ?? []
+    const coversAll = flows.some(f => (f.job_roles ?? []).length === 0)
+    const coveredRoles = new Set<string>(flows.flatMap(f => (f.job_roles ?? []) as string[]))
+    const uncoveredRoles = coversAll ? [] : (((roleGroups as any[]) ?? [])
+      .filter(g => g.job_role && !coveredRoles.has(g.job_role))
+      .sort((a, b) => (b._count?._all ?? 0) - (a._count?._all ?? 0)))
+    const topUncovered = uncoveredRoles[0] ?? null
+
+    // ── Dependent lookups (batched, only when their rule can fire) ────────────
+    // Latest progress per open onboarding enrollment (rule 14), policy names for
+    // the pending/stale detail items (rules 2-3), members of the top uncovered
+    // role (rule 13). No per-item round trips.
+    const openOnboarding = (!trainingOnly && incompleteOnboarding) ? (incompleteOnboarding as any[]) : []
+    const detailPolicyIds = Array.from(new Set([
+      ...pendingTopDocs.map(d => d.policy_id),
+      ...staleItems.map(i => i.policy_id),
+    ].filter(Boolean))) as string[]
+    const [progressGroups, namedPolicyRows, roleMemberRows] = await Promise.all([
+      openOnboarding.length > 0 ? (prisma as any).onboardingProgress.groupBy({
         by:    ['enrollment_id'],
-        where: { enrollment_id: { in: rows.map(r => r.id) } },
+        where: { enrollment_id: { in: openOnboarding.map(r => r.id) } },
         _max:  { completed_at: true },
-      })
+      }) : null,
+      detailPolicyIds.length > 0 ? (prisma as any).policy.findMany({
+        where:  { id: { in: detailPolicyIds }, tenant_id: tenantId },
+        select: { id: true, name: true },
+      }) : null,
+      (!trainingOnly && topUncovered) ? (prisma as any).user.findMany({
+        where:   { tenant_id: tenantId, is_active: true, role: 'staff', job_role: topUncovered.job_role },
+        orderBy: { name: 'asc' }, take: 5, select: { id: true, name: true },
+      }) : null,
+    ])
+    const policyNameById = new Map<string, string>(((namedPolicyRows as any[]) ?? []).map(p => [p.id, p.name]))
+
+    // Rule 14 — open onboarding enrollments with no progress in 14+ days
+    let onboardingStalled = 0
+    const stalledItems: Array<{ user_id: string; name: string; flow: string; anchor: number }> = []
+    if (openOnboarding.length > 0) {
       const lastByEnrollment = new Map<string, Date | null>(
-        (prog as any[]).map(p => [p.enrollment_id, p._max?.completed_at ?? null]),
+        ((progressGroups as any[]) ?? []).map(p => [p.enrollment_id, p._max?.completed_at ?? null]),
       )
       const stalledUsers = new Set<string>()
-      for (const e of rows) {
+      for (const e of openOnboarding) {
         const last = lastByEnrollment.get(e.id) ?? null
         const anchor = last ?? e.enrolled_at
-        if (new Date(anchor).getTime() < cut14.getTime()) stalledUsers.add(e.user_id)
+        const anchorMs = new Date(anchor).getTime()
+        if (anchorMs < cut14.getTime()) {
+          if (!stalledUsers.has(e.user_id)) {
+            stalledItems.push({
+              user_id: e.user_id,
+              name:    e.user?.name ?? 'Staff member',
+              flow:    e.flow?.name ?? 'Onboarding',
+              anchor:  anchorMs,
+            })
+          }
+          stalledUsers.add(e.user_id)
+        }
       }
       onboardingStalled = stalledUsers.size
+      stalledItems.sort((a, b) => a.anchor - b.anchor) // longest stalled first
     }
 
     const suggestions: Suggestion[] = []
-    const push = (key: string, category: Category, title: string, body: string, cta_label: string, href: string) =>
-      suggestions.push({ key, category, priority: 0, title, body, cta_label, href })
+    // details: up to 5 named items; total: the rule's full count (drives `more`).
+    const push = (key: string, category: Category, title: string, body: string, cta_label: string, href: string,
+                  details?: SuggestionDetail[], total?: number) => {
+      const s: Suggestion = { key, category, priority: 0, title, body, cta_label, href }
+      if (details && details.length > 0) {
+        s.details = details.slice(0, 5)
+        const more = Math.max(0, (total ?? s.details.length) - s.details.length)
+        if (more > 0) s.more = more
+      }
+      suggestions.push(s)
+    }
 
     // ── COMPLIANCE ────────────────────────────────────────────────────────────
 
     if (!trainingOnly) {
       // Rule 2 — adopted but unpublished changes
-      const changeGroups = (pendingChangeGroups as any[]) ?? []
       const pendingChanges = changeGroups.reduce((sum, g) => sum + (g._count?._all ?? 0), 0)
       const pendingDocs    = changeGroups.length
       if (pendingChanges > 0) {
@@ -257,35 +405,33 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
           `${pendingDocs} ${pendingDocs === 1 ? 'policy' : 'policies'} ` +
           `${pendingChanges === 1 ? 'is' : 'are'} waiting to be approved and published. ` +
           'Analyses cannot see them until you publish.',
-          'Review and publish', '/policies')
+          'Review and publish', '/policies',
+          pendingTopDocs.map(d => ({
+            label: `${policyNameById.get(d.policy_id) ?? 'Policy'}: ${d.count} ${d.count === 1 ? 'change' : 'changes'}`,
+            href:  null,
+          })), pendingDocs)
       }
 
       // Rule 3 — a gaps section is stale (mirrors GET /analytics/gaps/pipeline staleness)
-      const runs   = (gapsRuns as any[]) ?? []
-      const ranAt  = new Map<string, Date>(runs.map(r => [r.section, r.ran_at]))
-      const docs   = (publishedDocs as any[]) ?? []
-      const added  = (activePolicyDates as any[]) ?? []
-      const staleSections: Array<{ section: string; count: number }> = []
-      for (const section of ['coverage', 'out_of_date', 'wording', 'consistency']) {
-        const ran = ranAt.get(section)
-        if (!ran) continue
-        const count = docs.filter(d => d.published_at > ran).length + added.filter(p => p.created_at > ran).length
-        if (count > 0) staleSections.push({ section, count })
-      }
-      if (staleSections.length > 0) {
-        const worst = staleSections.reduce((a, b) => (b.count > a.count ? b : a))
+      if (worstStale) {
         push('gaps_stale', 'compliance', 'Your Gap Analysis is out of date',
-          `${worst.count} ${worst.count === 1 ? 'policy has' : 'policies have'} changed since your ` +
-          `${SECTION_LABELS[worst.section]} analysis last ran. Re-run it to see your improvement.`,
-          'Re-run in Gaps', '/gaps')
+          `${worstStale.count} ${worstStale.count === 1 ? 'policy has' : 'policies have'} changed since your ` +
+          `${SECTION_LABELS[worstStale.section]} analysis last ran. Re-run it to see your improvement.`,
+          'Re-run in Gaps', '/gaps',
+          staleItems.map(i => ({
+            label: `${i.name ?? (i.policy_id ? policyNameById.get(i.policy_id) : null) ?? 'Policy'}: updated ${ukDate(i.date)}`,
+            href:  null,
+          })), worstStale.count)
       }
 
       // Rule 4 — policies due their scheduled review
-      const due = (dueReview as any)?.policies?.length ?? 0
+      const duePolicies = ((dueReview as any)?.policies ?? []) as any[]
+      const due = duePolicies.length
       if (due > 0) {
         push('policies_due_review', 'compliance', 'Policies due for review',
           `${due} ${due === 1 ? 'policy is due its' : 'policies are due their'} scheduled review.`,
-          'Open Policies', '/policies')
+          'Open Policies', '/policies',
+          duePolicies.slice(0, 5).map(p => ({ label: `${p.name}: due ${ukDate(p.next_review_due)}`, href: null })), due)
       }
 
       // Rule 5 — coverage ran but the other pipeline checks never have
@@ -310,13 +456,15 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
           arr.push(r)
         }
         let supervisionsOverdue = 0, appraisalsOverdue = 0, noSupervision = 0, noAppraisal = 0
+        const supOverdueItems: SuggestionDetail[] = [], supNeverItems: SuggestionDetail[] = []
+        const appOverdueItems: SuggestionDetail[] = [], appNeverItems: SuggestionDetail[] = []
         for (const u of users) {
           const s = supervisionStatus(byUserType.get(`${u.id}|supervision`) ?? [], nowMs)
           const a = supervisionStatus(byUserType.get(`${u.id}|appraisal`) ?? [], nowMs)
-          if (s === 'overdue') supervisionsOverdue++
-          if (s === 'none')    noSupervision++
-          if (a === 'overdue') appraisalsOverdue++
-          if (a === 'none')    noAppraisal++
+          if (s === 'overdue') { supervisionsOverdue++; supOverdueItems.push({ label: `${u.name}: overdue`, href: `/staff/${u.id}` }) }
+          if (s === 'none')    { noSupervision++;       supNeverItems.push({ label: `${u.name}: never recorded`, href: `/staff/${u.id}` }) }
+          if (a === 'overdue') { appraisalsOverdue++;   appOverdueItems.push({ label: `${u.name}: overdue`, href: `/staff/${u.id}` }) }
+          if (a === 'none')    { noAppraisal++;         appNeverItems.push({ label: `${u.name}: never recorded`, href: `/staff/${u.id}` }) }
         }
 
         // Rule 19 — supervisions overdue / never recorded
@@ -332,7 +480,8 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
           }
           push('supervisions_overdue', 'compliance', 'Supervisions overdue',
             `${body} CQC expects regular, documented supervisions.`,
-            'Open Supervisions', '/workforce?tab=supervisions')
+            'Open Supervisions', '/workforce?tab=supervisions',
+            [...supOverdueItems, ...supNeverItems], supervisionsOverdue + noSupervision)
         }
 
         // Rule 20 — appraisals overdue / never recorded
@@ -346,7 +495,8 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
           } else {
             body = `${noAppraisal} staff ${noAppraisal === 1 ? 'member has' : 'have'} never had an appraisal recorded.`
           }
-          push('appraisals_overdue', 'compliance', 'Appraisals overdue', body, 'Open Supervisions', '/workforce?tab=supervisions')
+          push('appraisals_overdue', 'compliance', 'Appraisals overdue', body, 'Open Supervisions', '/workforce?tab=supervisions',
+            [...appOverdueItems, ...appNeverItems], appraisalsOverdue + noAppraisal)
         }
 
         // Rule 21 — workforce register: expired / expiring / missing documents
@@ -356,13 +506,28 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
           credByUser.get(c.user_id)!.set(c.type, c)
         }
         let expired = 0, expiring = 0, missing = 0
+        // rank: expired first, then missing, then expiring; dated items soonest first
+        const credItems: Array<{ rank: number; time: number; label: string; href: string }> = []
         for (const u of users) {
           for (const type of CREDENTIAL_TYPES) {
             const row = credByUser.get(u.id)?.get(type) ?? null
             const status = credentialStatus(type, !!row, row?.expires_at ?? null, nowMs)
-            if (status === 'expired')       expired++
-            else if (status === 'expiring') expiring++
-            else if (status === 'missing')  missing++
+            if (status === 'expired') {
+              expired++
+              credItems.push({
+                rank: 0, time: new Date(row.expires_at).getTime(),
+                label: `${u.name}: ${CREDENTIAL_LABELS[type]} expired ${ukDate(row.expires_at)}`, href: `/staff/${u.id}`,
+              })
+            } else if (status === 'expiring') {
+              expiring++
+              credItems.push({
+                rank: 2, time: new Date(row.expires_at).getTime(),
+                label: `${u.name}: ${CREDENTIAL_LABELS[type]} expires ${ukDate(row.expires_at)}`, href: `/staff/${u.id}`,
+              })
+            } else if (status === 'missing') {
+              missing++
+              credItems.push({ rank: 1, time: 0, label: `${u.name}: ${CREDENTIAL_LABELS[type]} missing`, href: `/staff/${u.id}` })
+            }
           }
         }
         if (expired > 0 || expiring > 0 || missing > 0) {
@@ -372,8 +537,10 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
           if (missing > 0)  parts.push(`${missing} ${parts.length === 0 ? (missing === 1 ? 'document is' : 'documents are') : (missing === 1 ? 'is' : 'are')} missing`)
           const list = parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`
           const tail = missing > 0 ? 'from your workforce register' : 'in your workforce register'
+          credItems.sort((a, b) => a.rank - b.rank || a.time - b.time)
           push('workforce_records', 'compliance', 'Workforce records need attention',
-            `${list} ${tail}.`, 'Open Workforce Compliance', '/workforce')
+            `${list} ${tail}.`, 'Open Workforce Compliance', '/workforce',
+            credItems.slice(0, 5).map(i => ({ label: i.label, href: i.href })), expired + expiring + missing)
         }
       }
     }
@@ -386,7 +553,11 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
       push('training_not_started', 'training', 'Training not started',
         `${n} assigned ${n === 1 ? 'module has' : 'modules have'} not been started after 3 weeks. ` +
         'Send a reminder in one click.',
-        'Open Training', '/training')
+        'Open Training', '/training',
+        ((trainingNotStartedRows as any[]) ?? []).map(r => ({
+          label: `${r.user?.name ?? 'Staff member'}: ${r.module?.name ?? 'Module'}`,
+          href:  `/staff/${r.user_id}`,
+        })), n)
     }
 
     // Rule 7 — expired or overdue training
@@ -394,7 +565,12 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
     if (expiredStaff > 0) {
       push('training_expired', 'training', 'Expired or overdue training',
         `${expiredStaff} staff ${expiredStaff === 1 ? 'member has' : 'have'} expired statutory training.`,
-        'Open Training', '/training')
+        'Open Training', '/training',
+        ((trainingExpiredRows as any[]) ?? []).map(r => ({
+          label: `${r.user?.name ?? 'Staff member'}: ${r.module?.name ?? 'Module'}` +
+                 (r.expires_at ? `, expired ${ukDate(r.expires_at)}` : ''),
+          href:  `/staff/${r.user_id}`,
+        })), expiredStaff)
     }
 
     // Rule 8 — active staff with no training at all (full tier)
@@ -402,7 +578,8 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
       const n = staffNoTraining as number
       push('staff_no_training', 'training', 'Staff with no training',
         `${n} active staff ${n === 1 ? 'member has' : 'have'} no training assigned at all.`,
-        'Assign training', '/training')
+        'Assign training', '/training',
+        ((staffNoTrainingRows as any[]) ?? []).map(u => ({ label: u.name, href: `/staff/${u.id}` })), n)
     }
 
     // Rule 9 — unused monthly annual-training allocation (skipped on unlimited plans)
@@ -423,7 +600,8 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
       push('staff_not_in_hub', 'engagement', 'Staff not in the hub',
         `${neverIn} of your ${staffTotal} staff ${neverIn === 1 ? 'has' : 'have'} never signed in. ` +
         'Email them passwordless links or print a QR sheet in one click.',
-        'Open Staff', '/staff')
+        'Open Staff', '/staff',
+        ((staffNotInHubRows as any[]) ?? []).map(u => ({ label: u.name, href: `/staff/${u.id}` })), neverIn)
     }
 
     // Rule 11 — the hub has gone quiet (full tier)
@@ -440,35 +618,29 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
       push('staff_no_role', 'engagement', 'Staff missing job roles',
         `${n} staff ${n === 1 ? 'member has' : 'have'} no job role set. ` +
         'Roles drive their training, onboarding and CQC practice questions.',
-        'Open Staff', '/staff')
+        'Open Staff', '/staff',
+        ((staffNoRoleRows as any[]) ?? []).map(u => ({ label: u.name, href: `/staff/${u.id}` })), n)
     }
 
     // ── ONBOARDING ────────────────────────────────────────────────────────────
 
     if (!trainingOnly) {
       // Rule 13 — a held job role with no active onboarding flow covering it
-      const flows = (activeFlows as any[]) ?? []
-      const coversAll = flows.some(f => (f.job_roles ?? []).length === 0)
-      if (!coversAll) {
-        const covered = new Set<string>(flows.flatMap(f => (f.job_roles ?? []) as string[]))
-        const uncovered = ((roleGroups as any[]) ?? [])
-          .filter(g => g.job_role && !covered.has(g.job_role))
-          .sort((a, b) => (b._count?._all ?? 0) - (a._count?._all ?? 0))
-        if (uncovered.length > 0) {
-          const top = uncovered[0]
-          const n = top._count?._all ?? 0
-          push('roles_without_onboarding', 'onboarding', 'Roles without onboarding',
-            `You have ${n} ${top.job_role} but no onboarding flow for that role. ` +
-            'Adopt a ready-made flow in two clicks.',
-            'Open Onboarding', '/onboarding')
-        }
+      if (topUncovered) {
+        const n = topUncovered._count?._all ?? 0
+        push('roles_without_onboarding', 'onboarding', 'Roles without onboarding',
+          `You have ${n} ${topUncovered.job_role} but no onboarding flow for that role. ` +
+          'Adopt a ready-made flow in two clicks.',
+          'Open Onboarding', '/onboarding',
+          ((roleMemberRows as any[]) ?? []).map(u => ({ label: u.name, href: `/staff/${u.id}` })), n)
       }
 
       // Rule 14 — onboarding enrollments with no progress in 14+ days
       if (onboardingStalled > 0) {
         push('onboarding_stalled', 'onboarding', 'Onboarding stalled',
           `${onboardingStalled} staff ${onboardingStalled === 1 ? 'member has' : 'have'} made no onboarding progress in two weeks.`,
-          'Open Onboarding', '/onboarding')
+          'Open Onboarding', '/onboarding',
+          stalledItems.slice(0, 5).map(i => ({ label: `${i.name}: ${i.flow}`, href: `/staff/${i.user_id}` })), onboardingStalled)
       }
     }
 

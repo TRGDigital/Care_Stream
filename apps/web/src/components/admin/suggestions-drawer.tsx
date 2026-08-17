@@ -8,7 +8,8 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Lightbulb, Loader2, RefreshCw, X } from 'lucide-react'
+import { usePathname } from 'next/navigation'
+import { ArrowRight, Lightbulb, Loader2, MapPin, RefreshCw, X } from 'lucide-react'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 
@@ -20,6 +21,8 @@ type Suggestion = {
   body: string
   cta_label: string
   href: string
+  details?: Array<{ label: string; href?: string | null }>
+  more?: number
 }
 
 const CATEGORY_STYLE: Record<Suggestion['category'], { label: string; chip: string }> = {
@@ -31,9 +34,18 @@ const CATEGORY_STYLE: Record<Suggestion['category'], { label: string; chip: stri
   setup:      { label: 'Setup',      chip: 'bg-gray-100 text-neutral-mid' },
 }
 
-const SHOW = 5   // advice, not a nag list
+const SHOW = 5          // advice, not a nag list
+const SHOW_ON_PAGE = 3  // page-context items shown above the global list
+
+// Does this suggestion's destination match the page the admin is on?
+function isForPage(s: Suggestion, pathname: string | null): boolean {
+  if (!pathname) return false
+  const target = s.href.split('?')[0]
+  return pathname === target || pathname.startsWith(target + '/')
+}
 
 export function SuggestionsButton({ token, tenantId }: { token: string; tenantId: string }) {
+  const pathname = usePathname()
   const cacheKey = `admin-suggestions-${tenantId}`
   const [open,   setOpen]   = useState(false)
   const [items,  setItems]  = useState<Suggestion[]>(() => persistentCache.get<Suggestion[]>(cacheKey) ?? [])
@@ -64,7 +76,52 @@ export function SuggestionsButton({ token, tenantId }: { token: string; tenantId
     try { await createApiClient(token).suggestions.dismiss(key) } catch { /* it will reappear on next load */ }
   }
 
-  const top = items.slice(0, SHOW)
+  // Page context: what's actionable right here floats to the top, but never
+  // buries the global priority list beneath it.
+  const forPage = items.filter(s => isForPage(s, pathname)).slice(0, SHOW_ON_PAGE)
+  const forPageKeys = new Set(forPage.map(s => s.key))
+  const rest = items.filter(s => !forPageKeys.has(s.key)).slice(0, SHOW)
+  const shownCount = forPage.length + rest.length
+
+  function SuggestionCard({ s }: { s: Suggestion }) {
+    const style = CATEGORY_STYLE[s.category] ?? CATEGORY_STYLE.setup
+    return (
+      <div className="rounded-xl border border-gray-100 p-4 shadow-sm">
+        <div className="flex items-start justify-between gap-2">
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${style.chip}`}>{style.label}</span>
+          <button
+            onClick={() => dismiss(s.key)}
+            title="Hide for 30 days"
+            aria-label={`Hide suggestion: ${s.title}`}
+            className="rounded p-0.5 text-neutral-mid/50 hover:text-neutral-dark"
+          >
+            <X size={14} />
+          </button>
+        </div>
+        <p className="mt-2 text-sm font-bold text-neutral-dark">{s.title}</p>
+        <p className="mt-1 text-xs leading-relaxed text-neutral-mid">{s.body}</p>
+        {Array.isArray(s.details) && s.details.length > 0 && (
+          <ul className="mt-2 space-y-1 border-l-2 border-gray-100 pl-3">
+            {s.details.map((d, i) => (
+              <li key={i} className="text-xs leading-snug text-neutral-dark">
+                {d.href ? (
+                  <Link href={d.href} onClick={() => setOpen(false)} className="hover:text-teal hover:underline">{d.label}</Link>
+                ) : d.label}
+              </li>
+            ))}
+            {(s.more ?? 0) > 0 && <li className="text-xs italic text-neutral-mid">and {s.more} more</li>}
+          </ul>
+        )}
+        <Link
+          href={s.href}
+          onClick={() => setOpen(false)}
+          className="mt-3 inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark"
+        >
+          {s.cta_label} <ArrowRight size={12} />
+        </Link>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -110,42 +167,27 @@ export function SuggestionsButton({ token, tenantId }: { token: string; tenantId
                 <div className="rounded-lg border border-red-100 bg-red-50 p-4 text-sm text-red-700">
                   Couldn&rsquo;t load your suggestions. <button onClick={load} className="font-semibold underline">Retry</button>
                 </div>
-              ) : top.length === 0 ? (
+              ) : shownCount === 0 ? (
                 <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
                   Nothing to suggest right now. Your account is in good shape; check back after your next batch of work.
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {top.map(s => {
-                    const style = CATEGORY_STYLE[s.category] ?? CATEGORY_STYLE.setup
-                    return (
-                      <div key={s.key} className="rounded-xl border border-gray-100 p-4 shadow-sm">
-                        <div className="flex items-start justify-between gap-2">
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${style.chip}`}>{style.label}</span>
-                          <button
-                            onClick={() => dismiss(s.key)}
-                            title="Hide for 30 days"
-                            aria-label={`Hide suggestion: ${s.title}`}
-                            className="rounded p-0.5 text-neutral-mid/50 hover:text-neutral-dark"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                        <p className="mt-2 text-sm font-bold text-neutral-dark">{s.title}</p>
-                        <p className="mt-1 text-xs leading-relaxed text-neutral-mid">{s.body}</p>
-                        <Link
-                          href={s.href}
-                          onClick={() => setOpen(false)}
-                          className="mt-3 inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark"
-                        >
-                          {s.cta_label} <ArrowRight size={12} />
-                        </Link>
-                      </div>
-                    )
-                  })}
-                  {total > SHOW && (
+                  {forPage.length > 0 && (
+                    <>
+                      <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-teal">
+                        <MapPin size={12} /> For this page
+                      </p>
+                      {forPage.map(s => <SuggestionCard key={s.key} s={s} />)}
+                      {rest.length > 0 && (
+                        <p className="pt-1 text-[11px] font-bold uppercase tracking-wide text-neutral-mid">Across your account</p>
+                      )}
+                    </>
+                  )}
+                  {rest.map(s => <SuggestionCard key={s.key} s={s} />)}
+                  {total > shownCount && (
                     <p className="pt-1 text-center text-xs text-neutral-mid">
-                      {total - SHOW} more suggestion{total - SHOW === 1 ? '' : 's'} will appear as you clear these.
+                      {total - shownCount} more suggestion{total - shownCount === 1 ? '' : 's'} will appear as you clear these.
                     </p>
                   )}
                 </div>

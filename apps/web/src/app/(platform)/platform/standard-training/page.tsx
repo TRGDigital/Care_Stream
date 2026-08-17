@@ -557,6 +557,7 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
           onGenerateImage={async (i) => { await saveEdits(); await api.standardTraining.generateSectionImage(id, i); load() }}
           activities={m.learning_content?.activities ?? []}
           onActivitiesChange={next => setLearning('activities', next)}
+          onDraftActivity={async (sectionIndex) => (await api.standardTraining.draftActivities(id, undefined, sectionIndex)).activities}
         />
 
         <div className="mt-4">

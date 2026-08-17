@@ -319,6 +319,57 @@ Rules:
 - Plain, concrete British English in short sentences — this is translated into 60+ languages, so every string must stand on its own and never depend on the wording of another.
 - Do not reuse the wording of existing quiz questions.`
 
+// Single-section drafting. The model sees ONE section — its teaching text, its
+// scenario and the quick check that has just been asked — so the exercise
+// practises that section's point instead of the course in general, and cannot
+// simply restate the question the learner has already answered.
+const SECTION_ACTIVITY_PROMPT = `You write interactive exercises for UK adult social care e-learning.
+
+You will be given ONE section of a course: what it teaches, its worked scenario, and the quick check question the learner has just answered. Write a single interactive activity that the learner does immediately after that quick check, to practise THAT section's learning point.
+
+Choose whichever ONE of these three types genuinely suits the section:
+- "order" — put the steps of a procedure into the correct sequence. Only where the order really matters.
+- "sort"  — put items into the right category. Only where the categories are genuinely distinct.
+- "match" — match a term to its meaning. Good where the section introduces vocabulary.
+
+Return ONLY a JSON array containing exactly one object, no prose and no markdown fences:
+[{ "type": "match", "title": "Short instruction-style title", "instructions": "One sentence telling the learner what to do.",
+   "pairs": [{ "term": "…", "definition": "…" }] }]
+For "sort" use "bins": [{ "id": "bin1", "name": "…", "note": "…" }] and "items": [{ "text": "…", "bin": "bin1" }].
+For "order" use "steps": ["…"] in the CORRECT order.
+
+Rules:
+- Ground it ONLY in this section's content. Never introduce a rule the section does not teach, and never contradict it.
+- Do NOT restate the quick check. The learner has just answered that question — the activity must test the same knowledge a different way, with different wording and different examples.
+- Do NOT reuse the scenario's situation as an item or a step.
+- match: 4 to 6 pairs. Definitions must not repeat the term word-for-word.
+- sort: exactly 3 bins and 5 to 6 items, spread so no bin is empty. Items must be concrete — a competent worker should not be able to argue for two bins.
+- order: 4 to 6 steps of one real procedure.
+- Plain, concrete British English in short sentences. This is translated into 60+ languages, so every string must stand on its own and never depend on the wording of another.
+- If this section honestly supports none of the three types — it teaches values, attitudes or why something matters, with no sequence and no clean categories — return an empty array [] rather than inventing a contrived exercise.`
+
+// Everything the model needs about one section: what it teaches, its scenario,
+// and the quick check just asked (with the right answer marked, so the activity
+// cannot contradict it or simply repeat it).
+function sectionBrief(s: any, index: number): string {
+  const opts: string[] = Array.isArray(s?.check?.options) ? s.check.options.map((o: any) => String(o)) : []
+  const correct = Number.isInteger(s?.check?.correct) ? s.check.correct : -1
+  const parts = [
+    `Section ${index + 1}: ${String(s?.heading ?? '')}`,
+    `What it teaches:\n${String(s?.body ?? '')}`,
+  ]
+  if (s?.scenario?.situation) {
+    parts.push(`Worked scenario (do not reuse this situation):\n${String(s.scenario.situation)}\n${String(s.scenario.prompt ?? '')}\n${String(s.scenario.answer ?? '')}`)
+  }
+  if (s?.check?.question) {
+    parts.push(
+      `Quick check the learner has just answered (do not restate it):\n${String(s.check.question)}\n` +
+      opts.map((o, i) => `  ${i === correct ? '(correct)' : '         '} ${o}`).join('\n'),
+    )
+  }
+  return parts.join('\n\n').slice(0, 8_000)
+}
+
 standardTrainingRouter.post('/modules/:id/draft-activities', async (req: Request, res: Response) => {
   const module = await (prisma as any).trainingModule.findFirst({
     where:  { id: req.params.id, tenant_id: null },
@@ -333,27 +384,46 @@ standardTrainingRouter.post('/modules/:id/draft-activities', async (req: Request
   const sections = (Array.isArray(learn.sections) ? learn.sections : []) as any[]
   if (!sections.length) { err(res, 'NO_LESSON', 'This module has no lesson sections to build activities from.', 400); return }
 
-  const lesson = sections
-    .map((s: any, i: number) => `Section ${i} — ${String(s?.heading ?? '')}\n${String(s?.body ?? '')}`)
-    .join('\n\n')
-    .slice(0, 24_000)
+  // Optional: draft for ONE section, grounded in that section's own lesson text,
+  // scenario and quick check rather than the whole course.
+  const one = Number.isInteger(req.body?.section) ? Number(req.body.section) : null
+  if (one != null && (one < 0 || one >= sections.length)) { err(res, 'VALIDATION_ERROR', 'That section does not exist.', 400); return }
+
+  const lesson = one != null
+    ? sectionBrief(sections[one], one)
+    : sections
+        .map((s: any, i: number) => `Section ${i} — ${String(s?.heading ?? '')}\n${String(s?.body ?? '')}`)
+        .join('\n\n')
+        .slice(0, 24_000)
 
   try {
     const raw = await callClaude(
-      ACTIVITY_PROMPT,
-      `Course: ${module.name}\n\nThis lesson has ${sections.length} sections (indexes 0 to ${sections.length - 1}). Work through them in order and produce one activity for each section that genuinely suits one, skipping any that do not. Use only these types: ${wanted.join(', ')}.\n\nLesson content:\n"""\n${lesson}\n"""`,
-      { maxTokens: 8000, temperature: 0.4, feature: 'training_activities' },
+      one != null ? SECTION_ACTIVITY_PROMPT : ACTIVITY_PROMPT,
+      one != null
+        ? `Course: ${module.name}\n\nWrite one activity for this section${wanted.length < 3 ? `, using only these types: ${wanted.join(', ')}` : ''}.\n\n"""\n${lesson}\n"""`
+        : `Course: ${module.name}\n\nThis lesson has ${sections.length} sections (indexes 0 to ${sections.length - 1}). Work through them in order and produce one activity for each section that genuinely suits one, skipping any that do not. Use only these types: ${wanted.join(', ')}.\n\nLesson content:\n"""\n${lesson}\n"""`,
+      { maxTokens: one != null ? 2000 : 8000, temperature: 0.4, feature: 'training_activities' },
     )
     const jsonStart = raw.indexOf('[')
     const jsonEnd   = raw.lastIndexOf(']')
     if (jsonStart < 0 || jsonEnd < jsonStart) throw new Error('no JSON array in the response')
     const parsed = JSON.parse(raw.slice(jsonStart, jsonEnd + 1))
+    const rawList = (Array.isArray(parsed) ? parsed : []).map((a: any, i: number) => ({ ...a, id: `act${Date.now()}${i}` }))
+
+    if (one != null) {
+      // The section owns the placement — the model is never asked for an index.
+      const drafted = normaliseActivities(rawList.map((a: any) => ({ ...a, after_section: one }))).slice(0, 1)
+      if (!drafted.length) {
+        err(res, 'NO_FIT', 'This section does not suit an order, sort or match exercise — it may be teaching values or principles rather than a procedure. Try writing one by hand, or leave it without.', 422)
+        return
+      }
+      ok(res, { activities: drafted })
+      return
+    }
+
     // One activity per section — if the model doubles up, keep the first.
     const seen = new Set<number>()
-    const activities = alignActivitySections(
-      normaliseActivities((Array.isArray(parsed) ? parsed : []).map((a: any, i: number) => ({ ...a, id: `act${Date.now()}${i}` }))),
-      sections.length,
-    ).filter(a => {
+    const activities = alignActivitySections(normaliseActivities(rawList), sections.length).filter(a => {
       if (a.after_section == null) return true
       if (seen.has(a.after_section)) return false
       seen.add(a.after_section)

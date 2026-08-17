@@ -124,17 +124,42 @@ function ActivityFields({ a, patch }: { a: Activity; patch: (next: Partial<Activ
 
 // ─── the slot inside a section card ───────────────────────────────────────────
 
-export function SectionActivity({ sectionIndex, activities, onChange }: {
+export function SectionActivity({ sectionIndex, activities, onChange, onDraft }: {
   sectionIndex: number
   activities: Activity[]
   onChange: (next: Activity[]) => void
+  /** Drafts an activity from THIS section's lesson text, scenario and quick check. */
+  onDraft?: (sectionIndex: number) => Promise<Activity[]>
 }) {
   const idx = activities.findIndex(a => a.after_section === sectionIndex)
   const a = idx >= 0 ? activities[idx] : null
+  const [drafting, setDrafting] = useState(false)
+  const [error, setError] = useState('')
 
   const patch = (next: Partial<Activity>) => onChange(activities.map((x, j) => (j === idx ? { ...x, ...next } : x)))
   const remove = () => onChange(activities.filter((_, j) => j !== idx))
   const add = (type: Activity['type']) => onChange([...activities, blankActivity(type, sectionIndex)])
+
+  async function draft() {
+    if (!onDraft) return
+    setDrafting(true); setError('')
+    try {
+      const [fresh] = await onDraft(sectionIndex)
+      if (!fresh) { setError('Nothing usable came back — try again.'); return }
+      // Replaces this section's activity if it already has one.
+      onChange(idx >= 0 ? activities.map((x, j) => (j === idx ? fresh : x)) : [...activities, fresh])
+    }
+    catch (e: any) { setError(e?.message ?? 'Could not draft an activity — try again.') }
+    finally { setDrafting(false) }
+  }
+
+  const draftBtn = onDraft && (
+    <button onClick={draft} disabled={drafting}
+      className="inline-flex items-center gap-1 rounded-lg bg-amber-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-amber-700 disabled:opacity-50">
+      {drafting ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+      {drafting ? 'Drafting…' : a ? 'Replace with a new AI draft' : 'Draft this one with AI'}
+    </button>
+  )
 
   return (
     <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50/40 p-3">
@@ -145,6 +170,7 @@ export function SectionActivity({ sectionIndex, activities, onChange }: {
         {a && (
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-amber-700">{TYPE_LABEL[a.type]}</span>
+            {draftBtn}
             <button onClick={remove} className="rounded p-1 text-neutral-mid hover:text-red-500" title="Remove this activity"><Trash2 size={13} /></button>
           </div>
         )}
@@ -154,7 +180,8 @@ export function SectionActivity({ sectionIndex, activities, onChange }: {
         ? <ActivityFields a={a} patch={patch} />
         : (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-neutral-mid">Nothing yet — optional, but it&apos;s what staff do after the quick check.</span>
+            {draftBtn}
+            <span className="text-[11px] text-neutral-mid">or write one:</span>
             {(['match', 'sort', 'order'] as const).map(t => (
               <button key={t} onClick={() => add(t)} className="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-white px-2.5 py-1 text-[11px] font-medium text-amber-700 hover:border-amber-400">
                 <Plus size={11} /> {TYPE_LABEL[t]}
@@ -162,6 +189,8 @@ export function SectionActivity({ sectionIndex, activities, onChange }: {
             ))}
           </div>
         )}
+
+      {error && <p className="mt-2 text-[11px] font-medium text-red-600">{error}</p>}
     </div>
   )
 }

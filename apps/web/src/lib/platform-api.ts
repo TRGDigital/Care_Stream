@@ -665,10 +665,70 @@ export function createPlatformClient(token: string) {
       generateSectionImage: (id: string, index: number) => adminFetch<{ image_url: string | null }>(`/standard-training/modules/${id}/sections/${index}/generate-image`, token, { method: 'POST' }),
       // Drafts interactive activities from the module's own lesson sections. Returns
       // them for review — saving happens with the normal module update.
-      draftActivities: (id: string, types?: Array<'order' | 'sort' | 'match'>) =>
-        adminFetch<{ activities: any[] }>(`/standard-training/modules/${id}/draft-activities`, token, { method: 'POST', body: JSON.stringify({ types }) }),
+      // Pass a section index to draft one activity from THAT section's lesson text,
+      // scenario and quick check; omit it to fill every empty section in one pass.
+      draftActivities: (id: string, types?: Array<'order' | 'sort' | 'match'>, section?: number) =>
+        adminFetch<{ activities: any[] }>(`/standard-training/modules/${id}/draft-activities`, token, { method: 'POST', body: JSON.stringify({ types, section }) }),
       regenerateQuestions: (id: string) => adminFetch<{ module: any; generated: number; avoided: number }>(`/standard-training/modules/${id}/regenerate-questions`, token, { method: 'POST' }),
       setShare: (id: string, data: { enabled: boolean; password?: string }) => adminFetch<{ share_enabled: boolean; share_token: string | null; share_password: string | null; share_url: string | null }>(`/standard-training/modules/${id}/share`, token, { method: 'POST', body: JSON.stringify(data) }),
+    },
+
+    // Programmes = diplomas / pathways: an ordered set of published standard modules
+    // behind one completion rule, one synoptic assessment and one certificate.
+    standardProgrammes: {
+      list: () => adminFetch<{
+        groups: Record<string, string>
+        settings: Array<{ key: string; label: string }>
+        tenants: Array<{ id: string; name: string; account_number: string }>
+        templates: Array<{ slug: string; name: string; unit_count: number }>
+        programmes: Array<{
+          id: string; slug: string; name: string; description: string; kind: string
+          group_key: string | null; care_setting: string | null; is_active: boolean
+          approved: boolean; approved_at: string | null
+          attested_by_name: string | null; attested_by_role: string | null; attested_at: string | null
+          cpd_accredited: boolean; independently_reviewed: boolean
+          sequential: boolean; require_practical: boolean; require_reflection: boolean
+          pilot_tenant_ids: string[]
+          synoptic_count: number; synoptic_pass_mark: number
+          renewal_months: number | null; price_pence: number | null
+          unit_count: number; units_missing: number
+          duration_minutes: number | null; cpd_hours: number | null
+          outcomes_count: number; standards_count: number
+          illustration_url: string | null
+          qa_hard_fails: number; qa_warnings: number
+          enrolled: number; completed: number
+        }>
+      }>('/standard-programmes', token),
+      availableModules: () => adminFetch<{
+        groups: Record<string, string>
+        modules: Array<{ id: string; name: string; group_key: string | null; duration_minutes: number | null; requires_practical: boolean; cpd_accredited: boolean; attested_by_name: string | null }>
+      }>('/standard-programmes/available-modules', token),
+      full: (id: string) => adminFetch<{
+        programme: any
+        qa: { checks: Array<{ key: string; label: string; status: 'pass' | 'warn' | 'fail'; detail: string }>; hard_fails: number; warnings: number; ok_to_approve: boolean }
+        standards_catalogue: Array<{ framework: string; label: string; items: Array<{ code: string; label: string }> }>
+        groups: Record<string, string>
+        settings: Array<{ key: string; label: string }>
+      }>(`/standard-programmes/${id}/full`, token),
+      create: (data: { name: string; description?: string; kind?: string; group_key?: string | null; care_setting?: string | null }) =>
+        adminFetch<{ programme: any }>('/standard-programmes', token, { method: 'POST', body: JSON.stringify(data) }),
+      update: (id: string, data: any) =>
+        adminFetch<{ programme: any }>(`/standard-programmes/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
+      setUnits: (id: string, units: Array<{ module_id: string; is_optional?: boolean }>) =>
+        adminFetch<{ units: any[]; qa: any }>(`/standard-programmes/${id}/units`, token, { method: 'PUT', body: JSON.stringify({ units }) }),
+      generateSynoptic: (id: string, count?: number) =>
+        adminFetch<{ questions: Array<{ id: string; text: string; options: string[]; correct: number; draws_on: string[] }> }>(`/standard-programmes/${id}/synoptic/generate`, token, { method: 'POST', body: JSON.stringify({ count }) }),
+      approve: (id: string, opts: { approved?: boolean; reviewer_name?: string; reviewer_role?: string } = {}) =>
+        adminFetch<{ programme: any }>(`/standard-programmes/${id}/approve`, token, { method: 'POST', body: JSON.stringify({ approved: opts.approved !== false, reviewer_name: opts.reviewer_name, reviewer_role: opts.reviewer_role }) }),
+      remove: (id: string) => adminFetch<{ deleted: boolean }>(`/standard-programmes/${id}`, token, { method: 'DELETE' }),
+      // Assemble a programme from a named template, matching units against the
+      // published library by title. Reports which units matched and which are missing.
+      fromTemplate: (slug: string) => adminFetch<{
+        programme: any
+        matched: Array<{ wanted: string; used: string; module_id: string; is_optional: boolean }>
+        missing: string[]
+        replaced: boolean
+      }>('/standard-programmes/from-template', token, { method: 'POST', body: JSON.stringify({ slug }) }),
     },
 
     basketAnalytics: () =>

@@ -6,7 +6,7 @@
 // (currently blank) space for the CPD-Accredited badge once approval lands.
 
 import { useMemo, useState } from 'react'
-import { Clock, Globe, Search, CheckCircle2 } from 'lucide-react'
+import { Clock, Globe, Search, CheckCircle2, Award } from 'lucide-react'
 import { COURSE_LANGUAGES } from '@/lib/languages'
 
 function formatDuration(min?: number | null): string {
@@ -63,18 +63,32 @@ function LanguageChecker() {
 
 export function CourseStatsBar({ durationMinutes, cpdAccredited = false }: { durationMinutes?: number | null; cpdAccredited?: boolean }) {
   return (
-    <div className="relative z-20 mx-auto -mt-14 max-w-4xl px-6 md:-mt-16">
-      <div className="grid grid-cols-1 items-center gap-6 rounded-2xl border border-gray-100 bg-white p-6 shadow-elevated sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-gray-100">
+    <div className="relative z-20 mx-auto -mt-14 max-w-5xl px-6 md:-mt-16">
+      {/* Four across on desktop; two-up on small screens (dividers only once the
+          row is genuinely four wide, or they land between wrapped rows). The
+          language column is weighted wider — it holds a live text input, so equal
+          quarters would squeeze the field and wrap its label. */}
+      <div className="grid grid-cols-1 items-center gap-6 rounded-2xl border border-gray-100 bg-white p-6 shadow-elevated sm:grid-cols-2 md:grid-cols-[0.85fr_1fr_1.45fr_1fr] md:gap-0 md:divide-x md:divide-gray-100">
         {/* Avg. duration — centred within its column */}
-        <div className="text-center sm:pr-6">
+        <div className="text-center md:pr-5">
           <p className="flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-wide text-neutral-mid">
             <Clock size={13} className="text-teal" /> Avg. Duration
           </p>
           <p className="mt-1.5 text-sm font-semibold text-neutral-dark">{formatDuration(durationMinutes)}</p>
         </div>
 
+        {/* Completion certificate — the same mark the course cards carry. This is
+            the certificate issued on completion for CQC evidence, NOT an
+            accreditation claim (that stays behind cpdAccredited, below). */}
+        <div className="text-center md:px-5">
+          <p className="flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-wide text-neutral-mid">
+            <Award size={13} className="text-teal" /> Certificate
+          </p>
+          <p className="mt-1.5 text-sm font-semibold text-neutral-dark">For every staff member</p>
+        </div>
+
         {/* Available languages — live checker */}
-        <div className="sm:px-6">
+        <div className="md:px-5">
           <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-neutral-mid">
             <Globe size={13} className="text-teal" /> Available Languages (60+)
           </p>
@@ -84,7 +98,7 @@ export function CourseStatsBar({ durationMinutes, cpdAccredited = false }: { dur
         </div>
 
         {/* Publisher, and the CPD-Accredited mark once a course is approved */}
-        <div className="flex items-center justify-center gap-4 sm:pl-6">
+        <div className="flex items-center justify-center gap-4 md:pl-5">
           <div className="text-center">
             <p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">Course Published by</p>
             {/* eslint-disable-next-line @next/next/no-img-element */}

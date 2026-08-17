@@ -18,6 +18,7 @@ import { getOrCreateLesson } from '../lib/remediation'
 import { trackAiAction, getPlanFeatures } from '../lib/plan-limits'
 import { illustrationUrl } from '../services/training/moduleImage'
 import { pickImageSource } from '../services/training/coverMatch'
+import { buildProgrammeState, syncProgrammeStatus } from '../services/training/programme'
 import { getAuditsDue } from '../services/audits/due'
 import { getPendingAuditApprovals, getRecentApprovedAudits, managerApproveAudit, rejectAudit } from '../services/audits/approval'
 import { getMyActions, countMyOpenActions, setMyActionStatus, getExternalActions, countOpenExternalActions, setExternalActionStatus } from '../services/audits/action-plan'
@@ -224,7 +225,11 @@ meRouter.get('/counts', async (req: Request, res: Response) => {
   if ((req as any).user.role === 'admin') {
     actionsCount += await countOpenExternalActions(tenantId).catch(() => 0)
   }
-  ok(res, { training, induction, cqc, followup, annual, audits, actions: actionsCount })
+  // Diplomas / pathways still to finish (any programme enrolment not yet complete).
+  const programmes = await (prisma as any).trainingProgrammeEnrollment.count({
+    where: { tenant_id: tenantId, user_id: userId, status: { not: 'complete' } },
+  }).catch(() => 0)
+  ok(res, { training, induction, cqc, followup, annual, audits, actions: actionsCount, programmes })
 })
 
 // ─── Care manager: policies awaiting their approval (Policy Change Adoption) ──
@@ -961,6 +966,19 @@ meRouter.post('/annual-training/:enrollmentId/submit', async (req: Request, res:
         }).catch((e: any) => console.error('[annual-training/submit] completion email failed:', e?.message ?? e))
       }
     })().catch((e: any) => console.error('[annual-training/submit] completion notify failed:', e?.message ?? e))
+
+    // Advance any programme (diploma / pathway) this module is a unit of. Progress
+    // itself is derived, so this only refreshes the cached status — fire and forget.
+    ;(async () => {
+      const progEnrs = await (prisma as any).trainingProgrammeEnrollment.findMany({
+        where:   { tenant_id: tenantId, user_id: userId, status: { not: 'complete' }, programme: { units: { some: { module_id: enr.module_id } } } },
+        include: { programme: { include: { units: { orderBy: { order: 'asc' } } } } },
+      })
+      for (const pe of (progEnrs as any[])) {
+        await syncProgrammeStatus(tenantId, userId, pe.programme, pe)
+          .catch((e: any) => console.error('[annual-training/submit] programme sync failed:', e?.message ?? e))
+      }
+    })().catch((e: any) => console.error('[annual-training/submit] programme sync failed:', e?.message ?? e))
   }
   ok(res, { passed, score, correct, total, pass_mark: passMark })
 })
@@ -1065,6 +1083,281 @@ meRouter.get('/annual-training/:enrollmentId/certificate', async (req: Request, 
     cpd: { accredited: !!enr.module.cpd_accredited, hours: cpdHours, provider_number: process.env.CPD_PROVIDER_NUMBER ?? null },
     baseline: enr.baseline_at ? { score: enr.baseline_score, total: enr.baseline_total } : null,
     reflection: enr.reflection ?? null,
+  })
+})
+
+// ─── Programmes (diplomas / pathways) ─────────────────────────────────────────
+// A programme is a container over the learner's ordinary annual-training records:
+// unit progress is derived from their TrainingEnrollment rows, and only the synoptic
+// assessment, the reflective account and the certificate live on the programme
+// enrolment itself.
+
+// GET /me/programmes — the learner's programmes with derived progress.
+meRouter.get('/programmes', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+
+  const [enrolments, user, tenant] = await Promise.all([
+    (prisma as any).trainingProgrammeEnrollment.findMany({
+      where:   { tenant_id: tenantId, user_id: userId },
+      include: { programme: { include: { units: { orderBy: { order: 'asc' } } } } },
+      orderBy: { created_at: 'asc' },
+    }),
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true, translation_glossary: true } }).catch(() => null),
+  ])
+
+  let items = await Promise.all((enrolments as any[]).map(async (e) => {
+    const state = await buildProgrammeState(tenantId, userId, e.programme, e)
+    const synoptic = Array.isArray(e.programme.synoptic_questions) ? e.programme.synoptic_questions.length : 0
+    return {
+      enrollment_id:      e.id,
+      programme_id:       e.programme.id,
+      name:               e.programme.name,
+      description:        e.programme.description,
+      kind:               e.programme.kind,
+      status:             e.status,
+      due_date:           e.due_date,
+      completed_at:       e.completed_at,
+      expires_at:         e.expires_at,
+      units_total:        state.units_total,
+      units_complete:     state.units_complete,
+      percent:            state.percent,
+      cpd_minutes_done:   state.cpd_minutes_done,
+      can_take_synoptic:  state.can_take_synoptic,
+      synoptic_count:     synoptic,
+      synoptic_score:     e.synoptic_score,
+      has_reflection:     !!e.reflection,
+      complete:           state.complete,
+      blocking:           state.blocking,
+      illustration_url:   illustrationUrl(e.programme.illustration_key),
+    }
+  }))
+
+  // Translate the learner-visible strings into their language, on a budget, exactly
+  // as the annual-training list does. English is always the fallback.
+  const { code: lang, name: langName } = hubContentLang(user, req.query, tenant?.custom_languages)
+  if (lang !== 'eng' && items.length) {
+    const texts = items.flatMap(i => [i.name, i.description])
+    items = await withTranslationBudget(
+      translateTextsBatch(texts, lang, langName, tenant?.translation_glossary, tenantId)
+        .then(out => items.map((it, i) => ({ ...it, name: out[i * 2] ?? it.name, description: out[i * 2 + 1] ?? it.description }))),
+      12_000, items,
+    )
+  }
+
+  ok(res, { items, lang_code: lang })
+})
+
+// GET /me/programmes/:enrollmentId — the programme view: its units with their live
+// state, the outcomes, and whether the final assessment is unlocked.
+meRouter.get('/programmes/:enrollmentId', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+
+  const [enr, user, tenant] = await Promise.all([
+    (prisma as any).trainingProgrammeEnrollment.findFirst({
+      where:   { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
+      include: { programme: { include: { units: { orderBy: { order: 'asc' } } } } },
+    }),
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true } }),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true, translation_glossary: true } }).catch(() => null),
+  ])
+  if (!enr) { err(res, 'NOT_FOUND', 'Programme not found', 404); return }
+
+  const p = enr.programme
+  const state = await buildProgrammeState(tenantId, userId, p, enr)
+  const synopticBank = Array.isArray(p.synoptic_questions) ? p.synoptic_questions : []
+
+  const payload: any = {
+    enrollment_id: enr.id,
+    name: p.name,
+    description: p.description,
+    kind: p.kind,
+    sequential: p.sequential,
+    require_practical: p.require_practical,
+    require_reflection: p.require_reflection,
+    synoptic_pass_mark: p.synoptic_pass_mark,
+    synoptic_count: synopticBank.length,
+    synoptic_score: enr.synoptic_score,
+    synoptic_at: enr.synoptic_at,
+    reflection: enr.reflection ?? null,
+    outcomes: Array.isArray(p.outcomes) ? p.outcomes : [],
+    standards: Array.isArray(p.standards) ? p.standards : [],
+    cpd_accredited: p.cpd_accredited,
+    independently_reviewed: p.independently_reviewed,
+    status: enr.status,
+    completed_at: enr.completed_at,
+    expires_at: enr.expires_at,
+    due_date: enr.due_date,
+    illustration_url: illustrationUrl(p.illustration_key),
+    progress: {
+      units_total: state.units_total, units_complete: state.units_complete, percent: state.percent,
+      cpd_minutes_done: state.cpd_minutes_done, average_score: state.average_score,
+      gain_before: state.gain_before, gain_before_total: state.gain_before_total,
+      practical_outstanding: state.practical_outstanding,
+      units_ready: state.units_ready, can_take_synoptic: state.can_take_synoptic,
+      complete: state.complete, blocking: state.blocking,
+    },
+    units: state.units.map(u => ({
+      module_id: u.module_id, order: u.order, is_optional: u.is_optional, name: u.name,
+      duration_minutes: u.duration_minutes, requires_practical: u.requires_practical,
+      enrollment_id: u.enrollment_id, status: u.status, score: u.score,
+      completed_at: u.completed_at, expires_at: u.expires_at,
+      practical_signed: u.practical_signed, locked: u.locked,
+    })),
+    // The final assessment is only served once every required unit is done — you
+    // cannot see the synoptic questions before earning the right to sit them.
+    synoptic: state.can_take_synoptic
+      ? synopticBank.map((q: any) => ({ id: q.id, text: q.text, options: q.options }))
+      : [],
+  }
+
+  const { code: lang, name: langName } = hubContentLang(user, req.query, tenant?.custom_languages)
+  payload.lang_code = lang
+  if (lang !== 'eng') {
+    const gloss = tenant?.translation_glossary
+    // One batch for the prose, one for the synoptic questions (which need the
+    // question-aware translator so options stay aligned).
+    const texts: string[] = [payload.name, payload.description, ...payload.outcomes, ...payload.units.map((u: any) => u.name)]
+    const [translated, synQs] = await Promise.all([
+      withTranslationBudget(translateTextsBatch(texts, lang, langName, gloss, tenantId), 14_000, texts),
+      payload.synoptic.length
+        ? withTranslationBudget(
+            translateQuestionsBatch(payload.synoptic, lang, langName, gloss, tenantId)
+              .then(qs => qs.map((q, i) => ({ id: payload.synoptic[i].id, text: q.text, options: q.options }))),
+            16_000, payload.synoptic,
+          )
+        : Promise.resolve([] as Array<{ id: string; text: string; options: string[] }>),
+    ])
+    let k = 0
+    payload.name        = translated[k++] ?? payload.name
+    payload.description = translated[k++] ?? payload.description
+    payload.outcomes    = payload.outcomes.map((o: string) => translated[k++] || o)
+    payload.units       = payload.units.map((u: any) => ({ ...u, name: translated[k++] || u.name }))
+    if (synQs.length) payload.synoptic = synQs
+  }
+
+  ok(res, payload)
+})
+
+// POST /me/programmes/:enrollmentId/synoptic — grade the cross-module final
+// assessment. Body: { answers: { [question_id]: optionIndex } }
+meRouter.post('/programmes/:enrollmentId/synoptic', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const enr = await (prisma as any).trainingProgrammeEnrollment.findFirst({
+    where:   { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
+    include: { programme: { include: { units: { orderBy: { order: 'asc' } } } } },
+  })
+  if (!enr) { err(res, 'NOT_FOUND', 'Programme not found', 404); return }
+
+  const p = enr.programme
+  const bank = Array.isArray(p.synoptic_questions) ? p.synoptic_questions : []
+  if (!bank.length) { err(res, 'NO_SYNOPTIC', 'This programme has no final assessment.', 400); return }
+
+  // Re-check eligibility server-side: the units must genuinely be finished.
+  const state = await buildProgrammeState(tenantId, userId, p, enr)
+  if (!state.units_ready) { err(res, 'UNITS_OUTSTANDING', 'Finish every unit before sitting the final assessment.', 422); return }
+
+  const answers = (req.body?.answers ?? {}) as Record<string, unknown>
+  let correct = 0
+  for (const q of bank) {
+    const picked = Number(answers[q.id])
+    if (Number.isInteger(picked) && picked === q.correct) correct++
+  }
+  const score = Math.round((correct / bank.length) * 100)
+  const passMark = p.synoptic_pass_mark ?? 80
+  const passed = score >= passMark
+
+  // Record the attempt either way — a fail is evidence too, and the learner retries.
+  const updated = await (prisma as any).trainingProgrammeEnrollment.update({
+    where: { id: enr.id },
+    data:  { synoptic_score: score, synoptic_total: bank.length, synoptic_at: new Date(), synoptic_answers: answers as any },
+  })
+  const { state: after } = await syncProgrammeStatus(tenantId, userId, p, updated)
+
+  ok(res, {
+    passed, score, correct, total: bank.length, pass_mark: passMark,
+    programme_complete: after.complete, blocking: after.blocking,
+  })
+})
+
+// POST /me/programmes/:enrollmentId/reflection — the programme-level reflective account.
+meRouter.post('/programmes/:enrollmentId/reflection', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const text = String(req.body?.text ?? '').trim().slice(0, 5000)
+  if (!text) { err(res, 'VALIDATION_ERROR', 'Write something before saving.'); return }
+
+  const enr = await (prisma as any).trainingProgrammeEnrollment.findFirst({
+    where:   { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
+    include: { programme: { include: { units: { orderBy: { order: 'asc' } } } } },
+  })
+  if (!enr) { err(res, 'NOT_FOUND', 'Programme not found', 404); return }
+
+  const updated = await (prisma as any).trainingProgrammeEnrollment.update({
+    where: { id: enr.id }, data: { reflection: text, reflection_at: new Date() },
+  })
+  const { state } = await syncProgrammeStatus(tenantId, userId, enr.programme, updated)
+  ok(res, { saved: true, programme_complete: state.complete, blocking: state.blocking })
+})
+
+// GET /me/programmes/:enrollmentId/certificate — diploma certificate data. Carries
+// what a single-module certificate cannot: cumulative CPD hours substantiated by
+// real time on the lesson, learning gain summed across every unit, and the units
+// themselves as a transcript.
+meRouter.get('/programmes/:enrollmentId/certificate', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const enr = await (prisma as any).trainingProgrammeEnrollment.findFirst({
+    where:   { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
+    include: { programme: { include: { units: { orderBy: { order: 'asc' } } } } },
+  })
+  if (!enr) { err(res, 'NOT_FOUND', 'No certificate yet.', 404); return }
+
+  const p = enr.programme
+  const state = await buildProgrammeState(tenantId, userId, p, enr)
+  if (!state.complete) { err(res, 'NOT_COMPLETE', 'This programme is not complete yet.', 404); return }
+
+  const [tenant, user] = await Promise.all([
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true, logo_url: true } }),
+    (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true, job_role: true } }),
+  ])
+
+  const cpdMinutes = state.cpd_minutes_done
+  ok(res, {
+    staff_name: user?.name ?? '',
+    staff_role: user?.job_role ?? null,
+    programme_name: p.name,
+    kind: p.kind,
+    org_name: tenant?.name ?? '',
+    logo_url: tenant?.logo_url ?? null,
+    completed_at: enr.completed_at,
+    expires_at: enr.expires_at,
+    cpd: {
+      accredited: !!p.cpd_accredited,
+      hours: cpdMinutes ? Math.round((cpdMinutes / 60) * 10) / 10 : null,
+      provider_number: process.env.CPD_PROVIDER_NUMBER ?? null,
+      // Active time actually spent on the lessons — substantiates the CPD hours.
+      verified_hours: state.learn_seconds ? Math.round((state.learn_seconds / 3600) * 10) / 10 : null,
+    },
+    independently_reviewed: !!p.independently_reviewed,
+    attested_by_name: p.attested_by_name,
+    attested_by_role: p.attested_by_role,
+    synoptic: { score: enr.synoptic_score, total: enr.synoptic_total, pass_mark: p.synoptic_pass_mark },
+    average_unit_score: state.average_score,
+    learning_gain: state.gain_before != null && state.gain_before_total
+      ? { before: state.gain_before, before_total: state.gain_before_total, after: state.average_score }
+      : null,
+    reflection: enr.reflection ?? null,
+    practical_signed_count: state.units.filter(u => u.requires_practical && u.practical_signed).length,
+    outcomes: Array.isArray(p.outcomes) ? p.outcomes : [],
+    standards: Array.isArray(p.standards) ? p.standards : [],
+    // Transcript: every unit, its score and when it was earned.
+    units: state.units
+      .filter(u => u.status === 'complete')
+      .map(u => ({ name: u.name, score: u.score, completed_at: u.completed_at, duration_minutes: u.duration_minutes, practical_signed: u.practical_signed })),
   })
 })
 

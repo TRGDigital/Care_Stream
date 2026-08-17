@@ -1831,6 +1831,113 @@ model TrainingAnswer {
   @@map("training_answers")
 }
 
+// ─── Training programmes (diplomas / pathways) ─────────────────────────────────
+// A programme is a *container*: an ordered set of existing TrainingModules sitting
+// behind one completion rule, one synoptic (cross-module) assessment and one
+// certificate. Unit progress is deliberately NOT duplicated here — it is derived
+// from the learner's ordinary TrainingEnrollment rows, so the existing player,
+// translation pipeline, baseline check, reflection, practical sign-off, licensing
+// and renewal machinery all keep working unchanged.
+//
+// Naming: "Diploma" here is a CareStream programme, NOT an Ofqual-regulated
+// qualification. Never label one with an RQF level. The certificate carries the
+// same disclaimer as the single-module certificate.
+model TrainingProgramme {
+  id                     String    @id @default(uuid())
+  tenant_id              String?                              // null = shared platform template; non-null = a tenant's copy
+  slug                   String
+  name                   String
+  description            String
+  kind                   String    @default("diploma")        // diploma | pathway | award
+  group_key              String?                              // catalogue grouping (mirrors TrainingTopic.group_key)
+  care_setting           String?                              // nursing_home | care_home | … ; NULL = all settings
+  job_roles              String[]  @default([])               // empty = applies to all roles
+  sort_order             Int       @default(0)
+  is_active              Boolean   @default(true)
+  // Pilot gate: empty = every tenant sees it once published; non-empty = ONLY these
+  // tenant ids do. Lets a new diploma be published and tested in a sandbox tenant
+  // without exposing it to real clients.
+  pilot_tenant_ids       String[]  @default([])
+  // ── Completion rule ──
+  sequential             Boolean   @default(false)            // true = units must be completed in order
+  synoptic_questions     Json?                                // cross-module final assessment: Array<{ id, text, options, correct }>
+  synoptic_pass_mark     Int       @default(80)
+  require_practical      Boolean   @default(false)            // every requires_practical unit must also be signed off
+  require_reflection     Boolean   @default(true)             // programme-level reflective account
+  renewal_months         Int?                                 // NULL = does not expire
+  // ── Presentation / evidence base ──
+  outcomes               Json?                                // programme-level learning outcomes (string[])
+  standards              Json?                                // mapped external standards [{ framework, code, label }]
+  duration_minutes       Int?                                 // cached: sum of unit durations + synoptic allowance → CPD hours
+  illustration_key       String?
+  // ── CPD governance (mirrors TrainingModule) ──
+  approved               Boolean   @default(false)
+  approved_at            DateTime?
+  approved_by            String?
+  attested_by_name       String?
+  attested_by_role       String?
+  attested_at            DateTime?
+  cpd_accredited         Boolean   @default(false)
+  independently_reviewed Boolean   @default(false)
+  // ── Shop SKU (training-only tier / public shop) ──
+  price_pence            Int?
+  created_at             DateTime  @default(now())
+  updated_at             DateTime  @updatedAt
+  units                  TrainingProgrammeUnit[]
+  enrollments            TrainingProgrammeEnrollment[]
+
+  @@unique([tenant_id, slug])
+  @@index([tenant_id, is_active])
+  @@map("training_programmes")
+}
+
+// One unit = one existing TrainingModule placed at a position in a programme.
+model TrainingProgrammeUnit {
+  id           String            @id @default(uuid())
+  programme_id String
+  module_id    String
+  order        Int
+  is_optional  Boolean           @default(false)
+  created_at   DateTime          @default(now())
+  programme    TrainingProgramme @relation(fields: [programme_id], references: [id], onDelete: Cascade)
+
+  @@unique([programme_id, module_id])
+  @@index([programme_id, order])
+  @@map("training_programme_units")
+}
+
+// A learner's run at a programme. Unit progress is derived from TrainingEnrollment;
+// this row only holds what is genuinely programme-level: the synoptic assessment,
+// the reflective account and the certificate.
+model TrainingProgrammeEnrollment {
+  id               String            @id @default(uuid())
+  tenant_id        String
+  user_id          String
+  programme_id     String
+  status           String            @default("not_started") // not_started | in_progress | awaiting_synoptic | complete | expired
+  renewal_count    Int               @default(0)
+  started_at       DateTime?
+  completed_at     DateTime?
+  due_date         DateTime?
+  expires_at       DateTime?
+  synoptic_score   Int?
+  synoptic_total   Int?
+  synoptic_at      DateTime?
+  synoptic_answers Json?
+  reflection       String?
+  reflection_at    DateTime?
+  certificate_url  String?
+  assigned_by      String?
+  created_at       DateTime          @default(now())
+  updated_at       DateTime          @updatedAt
+  programme        TrainingProgramme @relation(fields: [programme_id], references: [id])
+
+  @@unique([tenant_id, user_id, programme_id, renewal_count])
+  @@index([tenant_id, user_id])
+  @@index([programme_id])
+  @@map("training_programme_enrollments")
+}
+
 // ─── Training Delivery ────────────────────────────────────────────────────────
 
 model TrainingDeliveryRule {

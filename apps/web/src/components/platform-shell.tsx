@@ -34,6 +34,7 @@ const NAV_GROUPS: Array<{ title: string | null; items: Array<{ href: string; lab
       { href: '/platform/standard-training#annual', label: 'Annual Training (CPD)', Icon: Award },
       { href: '/platform/basket-analytics', label: 'Basket Analytics', Icon: ShoppingCart   },
       { href: '/platform/standard-training', label: 'Standard Training', Icon: GraduationCap },
+      { href: '/platform/programmes',        label: 'Diplomas & Pathways', Icon: Award        },
       { href: '/platform/cpd-review',       label: 'CPD Review',       Icon: Award           },
     ],
   },

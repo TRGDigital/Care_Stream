@@ -749,6 +749,32 @@ export function createApiClient(token: string) {
       },
     },
 
+    // Diplomas / pathways the home can put staff on. Enrolling creates the ordinary
+    // unit training records, so a programme never sits outside the training matrix.
+    programmes: {
+      list: () => apiFetch<{ programmes: Array<{
+        id: string; slug: string; name: string; description: string; kind: string
+        group_key: string | null; care_setting: string | null; job_roles: string[]
+        unit_count: number; required_count: number
+        synoptic_count: number; synoptic_pass_mark: number
+        sequential: boolean; require_practical: boolean; require_reflection: boolean
+        duration_minutes: number | null; cpd_hours: number | null
+        outcomes: string[]; standards: Array<{ framework: string; code: string; label: string }>
+        cpd_accredited: boolean; independently_reviewed: boolean
+        attested_by_name: string | null; attested_by_role: string | null
+        renewal_months: number | null; illustration_url: string | null
+        enrolled: number; complete: number; in_progress: number
+      }> }>('/programmes', token),
+      staff: (id: string) => apiFetch<{
+        programme: { id: string; name: string; kind: string }
+        staff: Array<{ enrollment_id: string; user_id: string; name: string; job_role: string | null; status: string; due_date: string | null; completed_at: string | null; expires_at: string | null; synoptic_score: number | null; has_reflection: boolean; units_complete: number; units_total: number; percent: number; cpd_minutes_done: number; average_score: number | null; practical_outstanding: number; blocking: string[] }>
+      }>(`/programmes/${id}/staff`, token),
+      enrol: (id: string, data: { user_ids: string[]; due_date?: string | null }) =>
+        apiFetch<{ enrolled: number; units_created: number }>(`/programmes/${id}/enrol`, token, { method: 'POST', body: JSON.stringify(data) }),
+      removeEnrolment: (enrollmentId: string) =>
+        apiFetch<{ removed: boolean; note: string }>(`/programmes/enrolments/${enrollmentId}`, token, { method: 'DELETE' }),
+    },
+
     audits: {
       templates: () => apiFetch<{ templates: any[]; rooms: string[]; staff: string[]; recent_subjects: Record<string, string[]>; me: { name: string | null; job_role: string | null } }>('/audits/templates', token),
       actionPlans: () => apiFetch<{ plans: Array<{ run_id: string; audit_name: string; subject: string | null; status: 'draft' | 'approved'; total: number; open: number }> }>('/audits/action-plans', token),
@@ -815,7 +841,7 @@ export function createApiClient(token: string) {
       profile: () => apiFetch<{ first_language: string; second_language: string | null; second_language_name: string | null; comms_always_first_language: boolean; allow_language_switching: boolean; can_suggest_translations: boolean }>('/me/profile', token),
       suggestTranslation: (data: { source_text: string; suggested_text: string; lang_code: string; machine_text?: string; content_kind?: string; context_label?: string }) =>
         apiFetch<{ status: 'pending' | 'approved' }>('/me/translation-suggestion', token, { method: 'POST', body: JSON.stringify(data) }),
-      counts: () => apiFetch<{ training: number; induction: number; cqc: number; followup: number; annual: number; audits: number; actions: number }>('/me/counts', token),
+      counts: () => apiFetch<{ training: number; induction: number; cqc: number; followup: number; annual: number; audits: number; actions: number; programmes: number }>('/me/counts', token),
       actions: () => apiFetch<{ actions: Array<{ id: string; description: string; priority: string; due_date: string | null; status: string; done_at: string | null; run_id: string; audit_name: string }> }>('/me/actions', token),
       setActionStatus: (id: string, status: 'open' | 'in_progress' | 'done') => apiFetch<{ actions: Array<{ id: string; description: string; priority: string; due_date: string | null; status: string; done_at: string | null; run_id: string; audit_name: string }> }>(`/me/actions/${encodeURIComponent(id)}`, token, { method: 'PATCH', body: JSON.stringify({ status }) }),
       externalActions: () => apiFetch<{ actions: Array<{ id: string; description: string; priority: string; due_date: string | null; status: string; done_at: string | null; run_id: string; audit_name: string; external_name: string | null }> }>('/me/external-actions', token),
@@ -853,6 +879,40 @@ export function createApiClient(token: string) {
         submitBaseline: (id: string, answers: Record<string, number>) => apiFetch<{ score: number; total: number; already_done: boolean }>(`/me/annual-training/${id}/baseline`, token, { method: 'POST', body: JSON.stringify({ answers }) }),
         saveReflection: (id: string, text: string) => apiFetch<{ saved: boolean }>(`/me/annual-training/${id}/reflection`, token, { method: 'POST', body: JSON.stringify({ text }) }),
         evaluate: (id: string, data: { confidence: number | null; usefulness: number | null; comment?: string }) => apiFetch<{ saved: boolean }>(`/me/annual-training/${id}/evaluate`, token, { method: 'POST', body: JSON.stringify(data) }),
+      },
+      // Programmes = diplomas / pathways. Unit progress is derived from the learner's
+      // ordinary annual-training records, so units are taken in the normal player.
+      programmes: {
+        list: (lang?: '2') => apiFetch<{ lang_code: string; items: Array<{ enrollment_id: string; programme_id: string; name: string; description: string; kind: string; status: string; due_date: string | null; completed_at: string | null; expires_at: string | null; units_total: number; units_complete: number; percent: number; cpd_minutes_done: number; can_take_synoptic: boolean; synoptic_count: number; synoptic_score: number | null; has_reflection: boolean; complete: boolean; blocking: string[]; illustration_url: string | null }> }>(`/me/programmes${lang ? `?lang=${lang}` : ''}`, token),
+        get: (id: string, lang?: '2') => apiFetch<{
+          enrollment_id: string; name: string; description: string; kind: string
+          sequential: boolean; require_practical: boolean; require_reflection: boolean
+          synoptic_pass_mark: number; synoptic_count: number; synoptic_score: number | null; synoptic_at: string | null
+          reflection: string | null
+          outcomes: string[]; standards: Array<{ framework: string; code: string; label: string }>
+          cpd_accredited: boolean; independently_reviewed: boolean
+          status: string; completed_at: string | null; expires_at: string | null; due_date: string | null
+          illustration_url: string | null; lang_code?: string
+          progress: { units_total: number; units_complete: number; percent: number; cpd_minutes_done: number; average_score: number | null; gain_before: number | null; gain_before_total: number | null; practical_outstanding: number; units_ready: boolean; can_take_synoptic: boolean; complete: boolean; blocking: string[] }
+          units: Array<{ module_id: string; order: number; is_optional: boolean; name: string; duration_minutes: number | null; requires_practical: boolean; enrollment_id: string | null; status: string; score: number | null; completed_at: string | null; expires_at: string | null; practical_signed: boolean; locked: boolean }>
+          synoptic: Array<{ id: string; text: string; options: string[] }>
+        }>(`/me/programmes/${id}${lang ? `?lang=${lang}` : ''}`, token),
+        submitSynoptic: (id: string, answers: Record<string, number>) =>
+          apiFetch<{ passed: boolean; score: number; correct: number; total: number; pass_mark: number; programme_complete: boolean; blocking: string[] }>(`/me/programmes/${id}/synoptic`, token, { method: 'POST', body: JSON.stringify({ answers }) }),
+        saveReflection: (id: string, text: string) =>
+          apiFetch<{ saved: boolean; programme_complete: boolean; blocking: string[] }>(`/me/programmes/${id}/reflection`, token, { method: 'POST', body: JSON.stringify({ text }) }),
+        certificate: (id: string) => apiFetch<{
+          staff_name: string; staff_role: string | null; programme_name: string; kind: string
+          org_name: string; logo_url: string | null; completed_at: string; expires_at: string | null
+          cpd: { accredited: boolean; hours: number | null; provider_number: string | null; verified_hours: number | null }
+          independently_reviewed: boolean; attested_by_name: string | null; attested_by_role: string | null
+          synoptic: { score: number | null; total: number | null; pass_mark: number }
+          average_unit_score: number | null
+          learning_gain: { before: number; before_total: number; after: number | null } | null
+          reflection: string | null; practical_signed_count: number
+          outcomes: string[]; standards: Array<{ framework: string; code: string; label: string }>
+          units: Array<{ name: string; score: number | null; completed_at: string | null; duration_minutes: number | null; practical_signed: boolean }>
+        }>(`/me/programmes/${id}/certificate`, token),
       },
       followUp: (lang?: '2') => apiFetch<{ items: Array<{ source: 'training' | 'induction'; enrollment_id: string; ref: string; topic: string; text: string; options: string[]; image_url: string | null }> }>(`/me/follow-up${lang ? `?lang=${lang}` : ''}`, token),
       followUpLesson: (p: { source: string; ref: string; enrollment_id: string; lang?: '2' }) =>

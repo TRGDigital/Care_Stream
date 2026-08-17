@@ -23,12 +23,18 @@ export type TrainingCertificateProps = {
   cpdHours?:         number | null
   cpdProviderNumber?: string | null
   independentlyReviewed?: boolean
+  // Pre-course knowledge check vs the final score — the evidence that learning
+  // happened, not just that a course was clicked through.
+  baseline?:         { score: number | null; total: number | null } | null
 }
 
 export function TrainingCertificate({
   staffName, moduleName, orgName, orgLogoUrl, score, completedAt, expiresAt, requiresPractical, practicalNote,
-  cpdAccredited, cpdHours, cpdProviderNumber, independentlyReviewed,
+  cpdAccredited, cpdHours, cpdProviderNumber, independentlyReviewed, baseline,
 }: TrainingCertificateProps) {
+  const gainPct = baseline?.score != null && baseline?.total
+    ? Math.round((baseline.score / baseline.total) * 100)
+    : null
   return (
     <div className="cert-sheet relative overflow-hidden rounded-2xl border border-teal/20 bg-white shadow-card">
       {/* Brand header band */}
@@ -90,6 +96,14 @@ export function TrainingCertificate({
             <p className="mt-0.5 text-[10px] uppercase tracking-wide text-neutral-mid">Renews</p>
           </div>
         </div>
+
+        {/* Measured learning gain — already captured per enrolment, so print it. */}
+        {gainPct != null && score != null && (
+          <p className="mx-auto mt-4 max-w-md rounded-lg border border-teal/25 bg-teal-light/25 px-4 py-2.5 text-xs text-neutral-dark">
+            <span className="font-semibold text-teal-dark">Measured learning gain: </span>
+            scored {gainPct}% on the pre-course check, then {score}% on the final assessment.
+          </p>
+        )}
 
         {cpdAccredited && (
           <div className="mx-auto mt-5 flex max-w-md items-center justify-center gap-3 rounded-lg border border-teal/30 bg-teal-light/30 px-4 py-2.5">

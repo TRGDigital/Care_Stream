@@ -45,6 +45,8 @@ import { lpPublicRouter } from './routes/lp-public'
 import { agentActionsRouter } from './routes/agent-actions'
 import { cronRouter } from './routes/cron'
 import { standardTrainingRouter } from './routes/standard-training'
+import { standardProgrammesRouter } from './routes/standard-programmes'
+import { programmesRouter } from './routes/programmes'
 import { seedTrainingModulesIfEmpty } from './lib/seed-training'
 import { sendRenewalReminders } from './services/training/renewalReminders'
 import { requireAuth } from './middleware/auth'
@@ -101,6 +103,7 @@ app.use('/auth', authRouter)
 // Must be mounted BEFORE requireAuth so it isn't rejected as an unauthenticated request.
 app.use('/admin/onboarding-templates', onboardingTemplatesRouter)
 app.use('/admin/standard-training', standardTrainingRouter)
+app.use('/admin/standard-programmes', standardProgrammesRouter)
 app.use('/admin/policy-seeds', policySeedsRouter)
 app.use('/admin/platform-glossary', platformGlossaryRouter)
 app.use('/admin/translation-changes', platformTranslationChangesRouter)
@@ -180,6 +183,7 @@ app.use('/knowledge', knowledgeRouter)
 app.use('/sites', sitesRouter)
 app.use('/onboarding', onboardingRouter)
 app.use('/training', trainingRouter)
+app.use('/programmes', programmesRouter)
 app.use('/face-to-face', faceToFaceRouter)
 app.use('/workforce', workforceRouter)
 app.use('/cqc-questions', cqcQuestionsRouter)

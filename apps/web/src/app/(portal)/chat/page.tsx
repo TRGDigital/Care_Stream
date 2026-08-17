@@ -11,6 +11,7 @@ import { useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { AuditsView } from '@/components/hub/audits-view'
 import { AnnualTrainingView, TakeModule, CertView } from '@/components/hub/annual-training-view'
+import { ProgrammesView } from '@/components/hub/programmes-view'
 import { CqcView } from '@/components/hub/cqc-view'
 import { PoliciesView } from '@/components/hub/policies-view'
 import { AuditApprovalsView } from '@/components/hub/audit-approvals-view'
@@ -346,7 +347,7 @@ function ChatPageInner() {
   const { data: session }                              = useSession()
   const userId                                         = session?.user?.email ?? 'guest'
 
-  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'cqc' | 'progress' | 'f2f' | 'supervisions' | 'policies' | 'audit-approvals' | 'actions'>('chat')
+  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'diplomas' | 'cqc' | 'progress' | 'f2f' | 'supervisions' | 'policies' | 'audit-approvals' | 'actions'>('chat')
   const [policyApprovals, setPolicyApprovals]          = useState<{ is_manager: boolean; count: number }>({ is_manager: false, count: 0 })
   const [dueReviewCount, setDueReviewCount]            = useState(0)   // policies past their review date (admins)
   const [auditApprovals, setAuditApprovals]            = useState<{ is_manager: boolean; count: number }>({ is_manager: false, count: 0 })
@@ -404,7 +405,7 @@ function ChatPageInner() {
   // Voice: dictate in the chosen reply language, else the staff member's own language.
   const { supported: speechSupported, state: speechState, start: startSpeech, stop: stopSpeech } =
     useSpeech((text) => setInput(prev => (prev.trim() ? prev + ' ' + text : text)), bcp47(replyLang || firstLang))
-  const [navCounts,    setNavCounts]                    = useState<{ induction: number; training: number; cqc: number; followup: number; annual: number; audits: number; actions: number }>({ induction: 0, training: 0, cqc: 0, followup: 0, annual: 0, audits: 0, actions: 0 })
+  const [navCounts,    setNavCounts]                    = useState<{ induction: number; training: number; cqc: number; followup: number; annual: number; audits: number; actions: number; programmes: number }>({ induction: 0, training: 0, cqc: 0, followup: 0, annual: 0, audits: 0, actions: 0, programmes: 0 })
   const [savedPolicies, setSavedPolicies]               = useState<Array<{ policy_id: string; title: string }>>([])
   const [sidebarPolicy, setSidebarPolicy]               = useState<string | null>(null)
   const [pinnedPolicy,  setPinnedPolicy]                = useState<{ id: string; title: string } | null>(null)
@@ -441,7 +442,7 @@ function ChatPageInner() {
   const searchParams = useSearchParams()
   useEffect(() => {
     const v = searchParams.get('view')
-    if (v === 'induction' || v === 'training' || v === 'annual' || v === 'followup' || v === 'audits' || v === 'cqc' || v === 'progress' || v === 'policies' || v === 'audit-approvals' || v === 'actions') {
+    if (v === 'induction' || v === 'training' || v === 'annual' || v === 'diplomas' || v === 'followup' || v === 'audits' || v === 'cqc' || v === 'progress' || v === 'policies' || v === 'audit-approvals' || v === 'actions') {
       if (!hubLocked(v)) setView(v)
     }
   }, [searchParams]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -552,7 +553,7 @@ function ChatPageInner() {
   useEffect(() => {
     if (!session?.accessToken) return
     createApiClient(session.accessToken).me.counts()
-      .then(c => { const v = { induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits, actions: c.actions ?? 0 }; setNavCounts(v); try { localStorage.setItem(`cs_counts_${userId}`, JSON.stringify(v)) } catch { /* ignore */ } })
+      .then(c => { const v = { induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits, actions: c.actions ?? 0, programmes: c.programmes ?? 0 }; setNavCounts(v); try { localStorage.setItem(`cs_counts_${userId}`, JSON.stringify(v)) } catch { /* ignore */ } })
       .catch(() => {})
   }, [session?.accessToken, view]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -947,6 +948,16 @@ function ChatPageInner() {
             Annual Training
             {navCounts.annual > 0 && <NavBadge count={navCounts.annual} className="bg-teal" />}
           </button>
+          {navCounts.programmes > 0 && (
+            <button
+              onClick={() => setView('diplomas')}
+              className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'diplomas' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+            >
+              <Award size={15} />
+              My Diplomas
+              <NavBadge count={navCounts.programmes} className="bg-teal-dark" />
+            </button>
+          )}
           <button
             onClick={() => setView('followup')}
             className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'followup' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
@@ -1179,21 +1190,28 @@ function ChatPageInner() {
         {/* Annual Training view */}
         {view === 'annual' && session?.accessToken && (
           <AnnualTrainingView token={session.accessToken} userId={userId} secondLang={secondLang} reviewer={isReviewer} onTalkToPolicy={talkToPolicy} onChange={() => {
-            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits, actions: c.actions ?? 0 })).catch(() => {})
+            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits, actions: c.actions ?? 0, programmes: c.programmes ?? 0 })).catch(() => {})
+          }} />
+        )}
+
+        {/* My Diplomas view — programmes over the same annual-training records */}
+        {view === 'diplomas' && session?.accessToken && (
+          <ProgrammesView token={session.accessToken} secondLang={secondLang} onTalkToPolicy={talkToPolicy} onChange={() => {
+            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits, actions: c.actions ?? 0, programmes: c.programmes ?? 0 })).catch(() => {})
           }} />
         )}
 
         {/* Follow-up view */}
         {view === 'followup' && session?.accessToken && (
           <FollowUpView token={session.accessToken} userId={userId} secondLang={secondLang} onTalkToPolicy={talkToPolicy} onChange={() => {
-            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits, actions: c.actions ?? 0 })).catch(() => {})
+            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits, actions: c.actions ?? 0, programmes: c.programmes ?? 0 })).catch(() => {})
           }} />
         )}
 
         {/* CQC Prep view */}
         {view === 'cqc' && session?.accessToken && (
           <CqcView token={session.accessToken} secondLang={secondLang} onChange={() => {
-            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits, actions: c.actions ?? 0 })).catch(() => {})
+            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits, actions: c.actions ?? 0, programmes: c.programmes ?? 0 })).catch(() => {})
           }} />
         )}
 
@@ -1215,7 +1233,7 @@ function ChatPageInner() {
         {/* My actions (audit action-plan items assigned to me) */}
         {view === 'actions' && session?.accessToken && (
           <MyActionsView token={session.accessToken} userId={userId} isAdmin={isAdmin} onChange={() => {
-            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits, actions: c.actions ?? 0 })).catch(() => {})
+            createApiClient(session.accessToken).me.counts().then(c => setNavCounts({ induction: c.induction, training: c.training, cqc: c.cqc, followup: c.followup, annual: c.annual, audits: c.audits, actions: c.actions ?? 0, programmes: c.programmes ?? 0 })).catch(() => {})
           }} />
         )}
 

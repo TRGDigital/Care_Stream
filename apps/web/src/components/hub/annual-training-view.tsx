@@ -844,16 +844,14 @@ export function CertView({ token, id, onExit, backLabel = 'Annual Training' }: {
           cpdHours={c.cpd?.hours}
           cpdProviderNumber={c.cpd?.provider_number}
           independentlyReviewed={c.independently_reviewed}
+          baseline={c.baseline}
         />
 
-        {/* Learning gain + reflection — subtle, sits under the certificate */}
-        {(c.baseline || c.reflection) && (
+        {/* Reflection sits under the certificate. Learning gain is now printed ON the
+            cert-sheet itself — the print CSS isolates .cert-sheet, so anything out
+            here is screen-only and would be lost from the saved PDF. */}
+        {c.reflection && (
           <div className="mt-4 space-y-3">
-            {c.baseline && (
-              <div className="rounded-lg border border-teal/20 bg-teal-light/20 p-3 text-sm text-neutral-dark">
-                <span className="font-semibold text-teal">Learning gain: </span>before this course you scored {c.baseline.score} of {c.baseline.total} on the quick knowledge check. Final result: {c.score}%.
-              </div>
-            )}
             {c.reflection && (
               <div className="rounded-lg border border-gray-200 bg-white p-3">
                 <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-teal">Your reflection</p>

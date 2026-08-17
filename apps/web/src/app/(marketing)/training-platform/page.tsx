@@ -286,7 +286,7 @@ export default async function TrainingPlatformPage() {
         heading="Training your staff will actually recognise as yours."
         sub="See adhoc policy training, face to face management and the training matrix working together in a live demo."
         primary={{ label: 'Book a demo', href: '/demo' }}
-        secondary={{ label: 'See CPD Annual Training', href: '/staff-training' }}
+        secondary={{ label: 'See Annual Training', href: '/staff-training' }}
       />
     </>
   )

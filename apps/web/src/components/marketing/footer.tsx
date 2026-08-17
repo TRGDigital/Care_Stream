@@ -15,7 +15,7 @@ const PRODUCT = [
   { href: '/who-its-for',          label: 'Who It\'s For' },
   { href: '/cqc-compliance',       label: 'CQC & Compliance' },
   { href: '/training-platform',    label: 'Training' },
-  { href: '/staff-training',       label: 'CPD Annual Training' },
+  { href: '/staff-training',       label: 'Annual Training' },
   { href: '/regulatory-knowledge', label: 'Regulatory Knowledge' },
   { href: '/demo',                 label: 'Book a Demo' },
 ]

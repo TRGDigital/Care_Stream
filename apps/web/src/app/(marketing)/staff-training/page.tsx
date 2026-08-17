@@ -204,18 +204,12 @@ export default async function StaffTrainingPage() {
                 <span className="inline-flex items-center gap-2 rounded-full bg-teal-light px-3 py-1 text-xs font-bold uppercase tracking-widest text-teal">
                   <ShieldCheck size={14} /> CQC-aligned training for care teams
                 </span>
-                {/* CPD badge — swap in the official CPD Certified logo once approval lands */}
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-brand/40 bg-white px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide text-amber-brand shadow-sm">
-                  <span className="rounded bg-amber-brand px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-white">CPD</span>
-                  Approved
-                </span>
               </div>
               <h1 className="mb-6 max-w-xl text-4xl font-extrabold leading-[1.05] tracking-tight text-neutral-dark md:text-5xl lg:text-6xl">
                 Annual training your team completes, not just ticks off
               </h1>
               <ul className="mb-8 space-y-3">
                 {[
-                  'CPD approved courses, recognised professional development for your team',
                   'Ready made courses for every mandatory subject, built for real learning',
                   'One licence per staff member, allocated in one click',
                   'Completed in the hub in over 60 languages',
@@ -306,7 +300,7 @@ export default async function StaffTrainingPage() {
                   supported on Monday morning.
                 </p>
                 <p>
-                  CareStream&apos;s CPD annual training courses are built for retention: short lessons, real
+                  CareStream&apos;s annual training courses are built for retention: short lessons, real
                   care scenarios, quick checks along the way, and a follow up loop that returns to
                   anything a learner got wrong until they truly know it.
                 </p>
@@ -323,7 +317,7 @@ export default async function StaffTrainingPage() {
               <div className="card-lift rounded-2xl bg-teal-gradient p-6 shadow-teal-glow">
                 <div className="mb-3 flex items-center gap-3">
                   <span className="text-2xl">🎓</span>
-                  <p className="text-xs font-bold uppercase tracking-widest text-white/60">CPD annual training with CareStream</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-white/60">Annual training with CareStream</p>
                 </div>
                 <p className="leading-relaxed text-white">Bitesize lessons with scenarios and checks, measured learning gain, automatic renewals, and certificates and evidence that build themselves.</p>
               </div>
@@ -346,7 +340,7 @@ export default async function StaffTrainingPage() {
 
           <div className="grid gap-6 md:grid-cols-3">
             {[
-              { step: '01', Icon: GraduationCap, title: 'Choose your courses', body: 'Pick from the library of ready made CPD annual training courses below and buy a licence for each staff member who needs one. Volume discounts apply automatically.' },
+              { step: '01', Icon: GraduationCap, title: 'Choose your courses', body: 'Pick from the library of ready made annual training courses below and buy a licence for each staff member who needs one. Volume discounts apply automatically.' },
               { step: '02', Icon: Users, title: 'Allocate in one click', body: 'Assign the course from your console. Your staff member is emailed straight away and the course appears in their own hub, in their first language.' },
               { step: '03', Icon: BarChart2, title: 'Track completion and evidence', body: 'Watch completion, scores and learning gain as they happen. Certificates land on the staff record automatically and you are emailed the moment each course is passed.' },
             ].map(({ step, Icon, title, body }) => (
@@ -417,7 +411,7 @@ export default async function StaffTrainingPage() {
               />
               <SiteImage
                 src="/reporting-completion-email.jpg"
-                alt="The completion email sent to admins the moment a staff member passes, showing score, CPD time, learning gain and a link to the certificate"
+                alt="The completion email sent to admins the moment a staff member passes, showing score, learning time, learning gain and a link to the certificate"
                 width={1100}
                 height={1025}
                 className="h-auto w-full rounded-2xl border border-gray-100 shadow-card"

@@ -15,12 +15,12 @@ type MenuItem = {
   desc: string
   Icon: LucideIcon
   badge?: string
-  highlight?: boolean   // stand-out entry (blue) — used for CPD Annual Training
+  highlight?: boolean   // stand-out entry (blue) — used for Annual Training
 }
 
 const SERVICES: MenuItem[] = [
   { href: '/training-platform',     label: 'Training',              desc: 'Adhoc modules built from your own policies, face to face sessions and the full training matrix', Icon: GraduationCap },
-  { href: '/staff-training',        label: 'CPD Annual Training',   desc: 'Ready made annual courses to buy and complete in the staff hub', Icon: BookOpen, highlight: true },
+  { href: '/staff-training',        label: 'Annual Training',       desc: 'Ready made annual courses to buy and complete in the staff hub', Icon: BookOpen, highlight: true },
   { href: '/hr-policies',           label: 'HR Policies',           desc: 'Staff handbook access in any language',                  Icon: Users },
   { href: '/care-audits',           label: 'Care Audits',           desc: 'Guided digital audits with AI recommendations',          Icon: ClipboardList },
   { href: '/cqc-compliance',        label: 'CQC & Compliance',      desc: 'Readiness tracking and evidence management',             Icon: Shield },

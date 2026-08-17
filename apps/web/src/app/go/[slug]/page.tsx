@@ -130,7 +130,7 @@ export default async function GoLandingPage({
 
   const bullets = [
     'CQC-aligned, mapped to the Care Certificate framework',
-    'CPD approved — recognised professional development for your team',
+    'Ready made courses built for real learning, not box ticking',
     'Completed in the hub in over 60 languages',
     'A certificate for every staff member, for your CQC evidence',
   ]

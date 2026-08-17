@@ -61,7 +61,25 @@ export function DisplaySettings() {
   const [open, setOpen]         = useState(false)
   const [scale, setScale]       = useState<FontScale>('100')
   const [contrast, setContrast] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  // Fixed-position popover coords, computed from the button so it escapes the
+  // sidebar's overflow clipping (which was cutting the panel off).
+  const [pos, setPos]           = useState<{ top?: number; bottom?: number; left: number }>({ top: 0, left: 0 })
+  const ref    = useRef<HTMLDivElement>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
+
+  // Anchor the panel to the button: open downward when there's room, upward
+  // otherwise, and keep it within the viewport horizontally.
+  function toggleOpen() {
+    if (open) { setOpen(false); return }
+    const r = btnRef.current?.getBoundingClientRect()
+    if (r) {
+      const PANEL_H = 260, PANEL_W = 240, GAP = 8
+      const left = Math.min(r.left, window.innerWidth - PANEL_W - 12)
+      if (window.innerHeight - r.bottom >= PANEL_H + GAP) setPos({ top: r.bottom + GAP, left })
+      else setPos({ bottom: window.innerHeight - r.top + GAP, left })
+    }
+    setOpen(true)
+  }
 
   // Hydrate from localStorage on mount (the layout has already applied these to
   // <html>; here we just sync the control's own state to match).
@@ -101,9 +119,10 @@ export function DisplaySettings() {
   }
 
   return (
-    <div className="relative" ref={ref}>
+    <div ref={ref}>
       <button
-        onClick={() => setOpen(o => !o)}
+        ref={btnRef}
+        onClick={toggleOpen}
         aria-haspopup="dialog"
         aria-expanded={open}
         className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${open ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
@@ -116,7 +135,8 @@ export function DisplaySettings() {
         <div
           role="dialog"
           aria-label="Display settings"
-          className="absolute bottom-full left-0 z-50 mb-2 w-60 rounded-xl border border-gray-200 bg-white p-3 shadow-elevated"
+          style={{ top: pos.top, bottom: pos.bottom, left: pos.left }}
+          className="fixed z-[60] w-60 rounded-xl border border-gray-200 bg-white p-3 shadow-elevated"
         >
           {/* Font size stepper */}
           <div>

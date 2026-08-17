@@ -286,6 +286,8 @@ const ACTIVITY_PROMPT = `You write interactive exercises for UK adult social car
 
 You will be given a course's lesson sections. Produce interactive activities that make the learner DO something, in addition to the reading and the multiple-choice questions they already have. Ground every activity in the lesson content you are given — never introduce rules the course does not teach.
 
+Work through the lesson SECTION BY SECTION. For each section, choose the activity type that genuinely suits what that section teaches, and produce one activity for it. The learner should meet an exercise after most sections, so the course keeps a rhythm of read → check → do.
+
 Return ONLY a JSON array, no prose and no markdown fences:
 [
   {
@@ -308,7 +310,9 @@ Return ONLY a JSON array, no prose and no markdown fences:
   }
 ]
 Rules:
-- "after_section" is the 0-based index of the lesson section the activity follows. Put each activity after the section that teaches it.
+- "after_section" is the 0-based index of the lesson section the activity follows. Put each activity after the section that teaches it, and never give one section two activities.
+- SKIP a section when nothing fits it honestly. A section about values, attitudes or why something matters usually has no real sequence and no categories a competent worker could not argue either way — a contrived exercise is worse than none, so leave that section out rather than forcing one.
+- VARY the type as the course goes on. Never use the same type for more than two sections in a row, and use at least two different types across the course where the content allows.
 - match: 4 to 6 pairs. Terms must be distinct; definitions must not give the term away word-for-word.
 - sort: exactly 3 bins and 5 to 6 items, spread across the bins so no bin is empty. Each item names one bin id. Items must be concrete and unambiguous — a competent worker should not be able to argue for two bins.
 - order: 4 to 6 steps of ONE real procedure, in the correct sequence. Only use a procedure where the order genuinely matters.
@@ -324,7 +328,7 @@ standardTrainingRouter.post('/modules/:id/draft-activities', async (req: Request
 
   const wanted: string[] = Array.isArray(req.body?.types) && req.body.types.length
     ? req.body.types.filter((t: any) => ['order', 'sort', 'match'].includes(String(t)))
-    : ['match', 'sort']
+    : ['order', 'sort', 'match']
   const learn    = (module.learning_content ?? {}) as any
   const sections = (Array.isArray(learn.sections) ? learn.sections : []) as any[]
   if (!sections.length) { err(res, 'NO_LESSON', 'This module has no lesson sections to build activities from.', 400); return }
@@ -337,16 +341,23 @@ standardTrainingRouter.post('/modules/:id/draft-activities', async (req: Request
   try {
     const raw = await callClaude(
       ACTIVITY_PROMPT,
-      `Course: ${module.name}\n\nProduce exactly one activity of each of these types: ${wanted.join(', ')}.\n\nLesson content:\n"""\n${lesson}\n"""`,
-      { maxTokens: 3000, temperature: 0.4, feature: 'training_activities' },
+      `Course: ${module.name}\n\nThis lesson has ${sections.length} sections (indexes 0 to ${sections.length - 1}). Work through them in order and produce one activity for each section that genuinely suits one, skipping any that do not. Use only these types: ${wanted.join(', ')}.\n\nLesson content:\n"""\n${lesson}\n"""`,
+      { maxTokens: 8000, temperature: 0.4, feature: 'training_activities' },
     )
     const jsonStart = raw.indexOf('[')
     const jsonEnd   = raw.lastIndexOf(']')
     if (jsonStart < 0 || jsonEnd < jsonStart) throw new Error('no JSON array in the response')
     const parsed = JSON.parse(raw.slice(jsonStart, jsonEnd + 1))
+    // One activity per section — if the model doubles up, keep the first.
+    const seen = new Set<number>()
     const activities = normaliseActivities(
       (Array.isArray(parsed) ? parsed : []).map((a: any, i: number) => ({ ...a, id: `act${Date.now()}${i}` })),
-    )
+    ).filter(a => {
+      if (a.after_section == null) return true
+      if (seen.has(a.after_section)) return false
+      seen.add(a.after_section)
+      return true
+    })
     if (!activities.length) { err(res, 'GENERATION_FAILED', 'Nothing usable came back — try again.', 502); return }
     ok(res, { activities })
   } catch (e: any) {

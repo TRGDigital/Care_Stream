@@ -66,7 +66,14 @@ export function ActivitiesEditor({ value, onChange, sectionHeadings, onDraft }: 
   async function draft() {
     if (!onDraft) return
     setDrafting(true); setError('')
-    try { onChange([...value, ...(await onDraft())]) }
+    try {
+      // Only fill the gaps — a section that already has an activity keeps the one
+      // you wrote, so drafting twice never doubles anything up.
+      const taken = new Set(value.map(a => a.after_section).filter(s => s != null))
+      const fresh = (await onDraft()).filter(a => a.after_section == null || !taken.has(a.after_section))
+      if (!fresh.length) setError('Nothing new to add — every section already has an activity.')
+      else onChange([...value, ...fresh])
+    }
     catch (e: any) { setError(e?.message ?? 'Could not draft activities — try again.') }
     finally { setDrafting(false) }
   }
@@ -168,6 +175,13 @@ export function ActivitiesEditor({ value, onChange, sectionHeadings, onDraft }: 
           )}
         </div>
       ))}
+
+      {value.length > 0 && (
+        <p className="text-[11px] text-neutral-mid">
+          {value.length} {value.length === 1 ? 'activity' : 'activities'} across {sectionHeadings.length} sections — roughly {value.length * 2} minutes of extra learning time.
+          Worth adding that to <strong>Duration</strong> above, since it feeds the CPD hours.
+        </p>
+      )}
 
       {error && <p className="text-xs font-medium text-red-600">{error}</p>}
 

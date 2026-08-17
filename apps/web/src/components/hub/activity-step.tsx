@@ -14,7 +14,7 @@
 // and staff take these on phones.
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CheckCircle2, Lightbulb, RotateCcw, XCircle } from 'lucide-react'
+import { ArrowDown, ArrowRight, CheckCircle2, Info, Lightbulb, MousePointerClick, MoveVertical, RotateCcw, XCircle } from 'lucide-react'
 import { ListenButton } from '@/components/hub/listen-button'
 import { joinSpoken } from '@/lib/speech'
 
@@ -42,6 +42,35 @@ function seededShuffle<T>(items: T[], seed: string): T[] {
     ;[out[i], out[j]] = [out[j], out[i]]
   }
   return out
+}
+
+// How each type works, in plain language — shown in the "i" panel and used as
+// the on-screen cue between the question and the answers.
+const HOW_TO: Record<Activity['type'], { cue: string; detail: string[] }> = {
+  order: {
+    cue: 'Drag a row, or use the arrows to move it',
+    detail: [
+      'The steps below are in the wrong order.',
+      'Move them until they read in the order you would actually do them: drag a row by its handle, or use the ▲ and ▼ buttons if that is easier.',
+      'Press "Check my answers" when you are happy. Rows that are in the right place turn green; you can keep going until they all are.',
+    ],
+  },
+  sort: {
+    cue: 'Tap an item, then tap the box it belongs in',
+    detail: [
+      'Each item at the top belongs in one of the boxes below.',
+      'Tap an item to pick it up, then tap the box you want to put it in. You can drag it instead if you prefer a mouse.',
+      'Tap an item you have already placed to take it back out. Press "Check my answers" when everything is placed.',
+    ],
+  },
+  match: {
+    cue: 'Tap a term on the left, then its meaning on the right',
+    detail: [
+      'Every term on the left matches one meaning on the right.',
+      'Tap a term to select it, then tap the meaning that goes with it. A correct pair turns green and stays put.',
+      'If you pick the wrong meaning it flashes red and nothing is lost — just try another.',
+    ],
+  },
 }
 
 const CARD  = 'rounded-lg border px-3 py-2 text-left text-sm transition-colors'
@@ -84,6 +113,7 @@ function OrderActivity({ act, onAttempt }: { act: Activity; onAttempt: () => voi
 
   return (
     <>
+      <Cue type="order" />
       <ul className="space-y-2">
         {order.map((stepIdx, pos) => {
           const state = !checked ? '' : stepIdx === pos ? RIGHT : WRONG
@@ -160,9 +190,16 @@ function SortActivity({ act, onAttempt }: { act: Activity; onAttempt: () => void
 
   return (
     <>
-      <div className="mb-4 flex flex-wrap gap-2">
+      <Cue type="sort" />
+      <div className="mb-2 flex flex-wrap gap-2">
         {loose.length ? loose.map(i => tile(i, false))
           : <p className="text-sm text-neutral-mid">Everything placed — check your answers.</p>}
+      </div>
+      {/* Points from the items down into the boxes they get sorted into */}
+      <div aria-hidden="true" className="mb-2 flex items-center justify-center gap-2 text-amber-brand">
+        <span className="h-px w-10 bg-amber-brand/25" />
+        <ArrowDown size={16} />
+        <span className="h-px w-10 bg-amber-brand/25" />
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         {bins.map(bin => (
@@ -227,7 +264,14 @@ function MatchActivity({ act, onAttempt }: { act: Activity; onAttempt: () => voi
 
   return (
     <>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <Cue type="match" />
+      <div className="relative grid gap-3 sm:grid-cols-2">
+        {/* Points from the terms across to the meanings they belong to */}
+        <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-8 hidden -translate-x-1/2 sm:block">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full border border-amber-brand/40 bg-white text-amber-brand shadow-sm">
+            <ArrowRight size={14} />
+          </span>
+        </div>
         <div>
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">Term</p>
           <div className="flex flex-col gap-2">
@@ -268,6 +312,55 @@ function MatchActivity({ act, onAttempt }: { act: Activity; onAttempt: () => voi
             : { ok: false, text: `${solved.length} of ${pairs.length} matched.` }}
       />
     </>
+  )
+}
+
+// ─── shared cue + help ────────────────────────────────────────────────────────
+
+// The one-line "what do I do here" that sits between the instructions and the
+// thing the learner has to act on.
+function Cue({ type }: { type: Activity['type'] }) {
+  const Icon = type === 'order' ? MoveVertical : type === 'sort' ? ArrowDown : ArrowRight
+  return (
+    <p className="mb-3 flex items-center gap-2 rounded-lg bg-amber-brand/[0.07] px-3 py-2 text-xs font-semibold text-amber-brand">
+      <Icon size={14} className="shrink-0" /> {HOW_TO[type].cue}
+    </p>
+  )
+}
+
+// "How this works" — opens on hover, on keyboard focus and on tap, so it is
+// reachable however the learner is using the page.
+function HowToButton({ type }: { type: Activity['type'] }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <span className="relative inline-flex"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        aria-expanded={open}
+        aria-label="How to use this exercise"
+        className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-amber-brand/40 text-amber-brand transition-colors hover:bg-amber-brand hover:text-white"
+      >
+        <Info size={12} />
+      </button>
+      {open && (
+        <span role="tooltip"
+          className="absolute left-0 top-7 z-30 w-72 rounded-xl border border-gray-200 bg-white p-3 text-left shadow-elevated sm:w-80">
+          <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-amber-brand">How this works</span>
+          {HOW_TO[type].detail.map((d, i) => (
+            <span key={i} className="mb-1.5 block text-xs leading-relaxed text-neutral-dark last:mb-0">{d}</span>
+          ))}
+          <span className="mt-2 block border-t border-gray-100 pt-2 text-[11px] text-neutral-mid">
+            Nothing here is marked — it will not change your score.
+          </span>
+        </span>
+      )}
+    </span>
   )
 }
 
@@ -321,18 +414,23 @@ export function ActivityStep({ token, act, onAttempt }: { token?: string; act: A
     // Amber outline so an activity is visibly a different kind of step from the
     // teaching sections and quick checks around it — and the same colour the
     // author sees against that section in the module editor.
-    <div className="overflow-hidden rounded-xl border-2 border-amber-brand/45 bg-white shadow-[0_1px_3px_rgba(232,133,10,0.12)]">
-      <div className="border-b border-amber-brand/15 bg-amber-brand/[0.06] px-5 py-2.5">
-        <div className="flex items-start justify-between gap-3">
-          <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-amber-brand">
-            <Lightbulb size={13} /> Try it yourself
-          </p>
-          {token && <ListenButton token={token} text={spoken} />}
-        </div>
+    // No overflow-hidden: the "How this works" panel has to escape the card.
+    <div className="rounded-xl border-2 border-amber-brand/45 bg-white shadow-[0_1px_3px_rgba(232,133,10,0.12)]">
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-t-[10px] border-b border-amber-brand/15 bg-amber-brand/[0.06] px-5 py-2.5">
+        <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-amber-brand">
+          <Lightbulb size={13} /> Try it yourself
+          <HowToButton type={act.type} />
+        </p>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-brand ring-1 ring-amber-brand/25">
+          <MousePointerClick size={12} /> CareStream Interactive
+        </span>
       </div>
 
       <div className="p-5">
-        {act.title && <p className="text-base font-bold text-neutral-dark">{act.title}</p>}
+        <div className="mb-1 flex items-start justify-between gap-3">
+          {act.title && <p className="text-base font-bold text-neutral-dark">{act.title}</p>}
+          {token && <ListenButton token={token} text={spoken} className="mt-0.5" />}
+        </div>
         {act.instructions && <p className="mb-4 mt-1 text-sm text-neutral-mid">{act.instructions}</p>}
         {act.type === 'order' && <OrderActivity act={act} onAttempt={attempted} />}
         {act.type === 'sort'  && <SortActivity  act={act} onAttempt={attempted} />}

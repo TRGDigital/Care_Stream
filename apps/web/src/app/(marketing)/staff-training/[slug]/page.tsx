@@ -42,6 +42,7 @@ type ModuleDetail = {
   frequency: string
   requires_practical: boolean
   duration_minutes?: number | null
+  cpd_accredited?: boolean
   description: string | null
   summary: string | null
   outcomes: string[]
@@ -344,7 +345,7 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
       </section>
 
       {/* Floating stats bar straddling the hero and the section below */}
-      <CourseStatsBar durationMinutes={m.duration_minutes} />
+      <CourseStatsBar durationMinutes={m.duration_minutes} cpdAccredited={m.cpd_accredited} />
 
       {/* ── What it covers ────────────────────────────────────────────────── */}
       <section className="bg-white py-24">

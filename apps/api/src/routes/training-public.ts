@@ -121,7 +121,7 @@ publicTrainingRouter.get('/standard-modules/:slug', async (req: Request, res: Re
 
     const modules = await (prisma as any).trainingModule.findMany({
       where:   { tenant_id: null, source: 'ai_generated', topic_id: topic.id },
-      select:  { approved: true, description: true, frequency: true, duration_minutes: true, illustration_key: true, learning_content: true, standards: true },
+      select:  { approved: true, description: true, frequency: true, duration_minutes: true, illustration_key: true, learning_content: true, standards: true, cpd_accredited: true },
       orderBy: [{ approved: 'desc' }, { created_at: 'desc' }],
     })
     const m = (modules as any[])[0]
@@ -157,6 +157,7 @@ publicTrainingRouter.get('/standard-modules/:slug', async (req: Request, res: Re
       frequency:          m?.frequency ?? topic.default_frequency,
       requires_practical: topic.requires_practical,
       duration_minutes:   m?.duration_minutes ?? null,
+      cpd_accredited:     !!m?.cpd_accredited,
       description:        m?.description ?? null,
       summary:            typeof lc.summary === 'string' ? lc.summary : null,
       outcomes:           Array.isArray(lc.outcomes) ? lc.outcomes.map(String).slice(0, 6) : [],

@@ -8,7 +8,6 @@
 import { useMemo, useState } from 'react'
 import { Clock, Globe, Search, CheckCircle2 } from 'lucide-react'
 import { COURSE_LANGUAGES } from '@/lib/languages'
-import { TRAINING_ACCREDITED } from '@/lib/training-commerce'
 
 function formatDuration(min?: number | null): string {
   if (!min || min <= 0) return '45 to 90 minutes'
@@ -62,7 +61,7 @@ function LanguageChecker() {
   )
 }
 
-export function CourseStatsBar({ durationMinutes }: { durationMinutes?: number | null }) {
+export function CourseStatsBar({ durationMinutes, cpdAccredited = false }: { durationMinutes?: number | null; cpdAccredited?: boolean }) {
   return (
     <div className="relative z-20 mx-auto -mt-14 max-w-4xl px-6 md:-mt-16">
       <div className="grid grid-cols-1 items-center gap-6 rounded-2xl border border-gray-100 bg-white p-6 shadow-elevated sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-gray-100">
@@ -84,18 +83,19 @@ export function CourseStatsBar({ durationMinutes }: { durationMinutes?: number |
           </div>
         </div>
 
-        {/* CPD-Accredited — reserved space, shown once accreditation lands */}
-        <div className="flex items-center justify-center sm:pl-6">
-          {TRAINING_ACCREDITED ? (
-            <div className="flex items-center gap-3">
+        {/* Publisher, and the CPD-Accredited mark once a course is approved */}
+        <div className="flex items-center justify-center gap-4 sm:pl-6">
+          <div className="text-center">
+            <p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">Course Published by</p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-color.png" alt="CareStream" className="mx-auto mt-1.5 h-7 w-auto" />
+          </div>
+          {cpdAccredited && (
+            <div className="flex items-center gap-2 border-l border-gray-100 pl-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/cpd-approved.png" alt="CPD Certification Service" className="h-10 w-auto" />
-              <p className="text-sm text-neutral-dark">This course is <span className="font-bold">CPD-Accredited</span></p>
+              <img src="/cpd-approved.png" alt="CPD Certification Service" className="h-9 w-auto" />
+              <p className="text-xs leading-tight text-neutral-dark">CPD<br /><span className="font-bold">Accredited</span></p>
             </div>
-          ) : (
-            // Intentionally blank until CPD approval is granted — keeps the
-            // column's space reserved so the layout does not shift later.
-            <div aria-hidden className="h-10 w-full" />
           )}
         </div>
       </div>

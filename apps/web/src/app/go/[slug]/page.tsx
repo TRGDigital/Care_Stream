@@ -34,6 +34,7 @@ type Module = {
   group_label?: string
   frequency?: string | null
   duration_minutes?: number | null
+  cpd_accredited?: boolean
   summary?: string | null
   outcomes?: string[]
   sections?: Section[]
@@ -296,7 +297,7 @@ export default async function GoLandingPage({
       </section>
 
       {/* Floating stats bar straddling the hero and the section below */}
-      <CourseStatsBar durationMinutes={estimatedMinutes(m.group_key, m.duration_minutes)} />
+      <CourseStatsBar durationMinutes={estimatedMinutes(m.group_key, m.duration_minutes)} cpdAccredited={m.cpd_accredited} />
 
       {/* Key numbers banner */}
       <section className="border-b border-gray-100 bg-neutral-dark">

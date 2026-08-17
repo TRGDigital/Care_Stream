@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, platformAssetUrl } from '@/lib/platform-api'
 import { SectionsEditor } from '@/components/training-sections-editor'
-import { ActivitiesEditor } from '@/components/platform/activities-editor'
+import { ActivitiesToolbar } from '@/components/platform/activities-editor'
 import { CourseSpecification } from '@/components/course-specification'
 import { ModulePreviewPlayer } from '@/components/training/module-preview-player'
 import { PlatformShell } from '@/components/platform-shell'
@@ -542,19 +542,22 @@ function Review({ token, id, onBack }: { token: string; id: string; onBack: () =
           <button onClick={() => setLearning('outcomes', [...(m.learning_content?.outcomes ?? []), ''])} className="inline-flex items-center gap-1 text-xs font-medium text-teal hover:underline"><Plus size={12} /> Add outcome</button>
         </div>
 
-        <label className="mb-1 block text-xs font-medium text-neutral-mid">Lesson sections — teach → scenario → quick check</label>
-        <SectionsEditor value={m.learning_content?.sections ?? []} onChange={next => setLearning('sections', next)} assetUrl={platformAssetUrl} imageHint="free" onGenerateImage={async (i) => { await saveEdits(); await api.standardTraining.generateSectionImage(id, i); load() }} />
-
-        <div className="mt-4">
-          <label className="mb-1 block text-xs font-medium text-neutral-mid">Interactive activities — extra practice between the sections</label>
-          <p className="mb-2 text-[11px] text-neutral-mid">Additional to the lesson and the assessment; nothing is replaced. Staff must have a go before moving on, but these are not marked and do not affect the pass mark.</p>
-          <ActivitiesEditor
-            value={m.learning_content?.activities ?? []}
-            onChange={next => setLearning('activities', next)}
-            sectionHeadings={(m.learning_content?.sections ?? []).map((s: any) => String(s?.heading ?? ''))}
-            onDraft={async () => (await api.standardTraining.draftActivities(id)).activities}
-          />
-        </div>
+        <label className="mb-1 block text-xs font-medium text-neutral-mid">Lesson sections — teach → scenario → quick check → activity</label>
+        <ActivitiesToolbar
+          activities={m.learning_content?.activities ?? []}
+          onChange={next => setLearning('activities', next)}
+          sectionHeadings={(m.learning_content?.sections ?? []).map((s: any) => String(s?.heading ?? ''))}
+          onDraft={async () => (await api.standardTraining.draftActivities(id)).activities}
+        />
+        <SectionsEditor
+          value={m.learning_content?.sections ?? []}
+          onChange={next => setLearning('sections', next)}
+          assetUrl={platformAssetUrl}
+          imageHint="free"
+          onGenerateImage={async (i) => { await saveEdits(); await api.standardTraining.generateSectionImage(id, i); load() }}
+          activities={m.learning_content?.activities ?? []}
+          onActivitiesChange={next => setLearning('activities', next)}
+        />
 
         <div className="mt-4">
           <label className="mb-1 block text-xs font-medium text-neutral-mid">Key points (recap)</label>

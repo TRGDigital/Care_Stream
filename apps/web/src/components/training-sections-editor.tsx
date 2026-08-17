@@ -6,6 +6,7 @@
 
 import { useState } from 'react'
 import { Plus, Trash2, Lightbulb, Sparkles, Loader2, Image as ImageIcon } from 'lucide-react'
+import { SectionActivity, type Activity } from '@/components/platform/activities-editor'
 
 export type LessonSection = {
   heading: string
@@ -21,12 +22,16 @@ function blankSection(): LessonSection {
   return { heading: '', body: '', scenario: { situation: '', prompt: '', answer: '' }, check: { question: '', options: ['', '', '', ''], correct: 0 } }
 }
 
-export function SectionsEditor({ value, onChange, onGenerateImage, assetUrl, imageHint }: {
+export function SectionsEditor({ value, onChange, onGenerateImage, assetUrl, imageHint, activities, onActivitiesChange }: {
   value: LessonSection[]
   onChange: (next: LessonSection[]) => void
   onGenerateImage?: (index: number) => Promise<void>  // saves + generates + reloads
   assetUrl?: (path: string | null | undefined) => string | null
   imageHint?: string  // e.g. "free" or "uses 1 AI credit"
+  // Interactive activities, edited in the section they end. Omitted on screens
+  // that don't author them (the tenant review screen), where nothing renders.
+  activities?: Activity[]
+  onActivitiesChange?: (next: Activity[]) => void
 }) {
   const sections = Array.isArray(value) ? value : []
   const [imgBusy, setImgBusy] = useState<number | null>(null)
@@ -96,6 +101,11 @@ export function SectionsEditor({ value, onChange, onGenerateImage, assetUrl, ima
               ))}
             </div>
           </div>
+
+          {/* Interactive activity — what staff do once the quick check is done */}
+          {activities && onActivitiesChange && (
+            <SectionActivity sectionIndex={i} activities={activities} onChange={onActivitiesChange} />
+          )}
         </div>
       ))}
       <button onClick={() => onChange([...sections, blankSection()])} className="inline-flex items-center gap-1 text-xs font-medium text-teal hover:underline"><Plus size={12} /> Add section</button>

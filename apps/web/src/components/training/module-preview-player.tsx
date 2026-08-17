@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react'
 import { apiAssetUrl } from '@/lib/api-client'
 import { ChevronLeft } from 'lucide-react'
 import { CourseSummarySheet, PracticalChecklistSheet } from '@/components/training/course-printables'
+import { ActivityStep, type Activity as PreviewActivity } from '@/components/hub/activity-step'
 
 const FREQ_LABEL: Record<string, string> = { annual: 'Annual', biennial: 'Every 2 years', triennial: 'Every 3 years', once: 'One-off', adhoc: 'Ad-hoc' }
 
@@ -45,7 +46,9 @@ export type PreviewModule = {
     glossary?: PreviewGlossaryEntry[] | null
     baseline?: PreviewBaselineQuestion[] | null
     practical_checklist?: string[] | null
+    activities?: PreviewActivity[] | null
   } | null
+  activities?: PreviewActivity[] | null
 }
 
 export function ModulePreviewPlayer({ m, name, onBack }: { m: PreviewModule; name: string; onBack: () => void }) {
@@ -60,10 +63,20 @@ export function ModulePreviewPlayer({ m, name, onBack }: { m: PreviewModule; nam
   const references = lc?.references ?? m.references ?? []
   const baseline = lc?.baseline ?? m.baseline ?? []
   const practicalChecklist = lc?.practical_checklist ?? m.practical_checklist ?? []
-  type StepT = { type: 'overview' } | { type: 'baseline' } | { type: 'section'; i: number } | { type: 'question'; i: number } | { type: 'done' }
+  // Interactive activities sit after the section they are pinned to, exactly as
+  // they do in the staff hub, so the preview shows the real running order.
+  const activities: PreviewActivity[] = (lc?.activities ?? m.activities ?? []) as PreviewActivity[]
+  type StepT = { type: 'overview' } | { type: 'baseline' } | { type: 'section'; i: number } | { type: 'activity'; i: number } | { type: 'question'; i: number } | { type: 'done' }
   const steps: StepT[] = [{ type: 'overview' }]
   if (baseline.length) steps.push({ type: 'baseline' })
-  sections.forEach((_, i) => steps.push({ type: 'section', i }))
+  sections.forEach((_, i) => {
+    steps.push({ type: 'section', i })
+    activities.forEach((a, ai) => { if (a.after_section === i) steps.push({ type: 'activity', i: ai }) })
+  })
+  activities.forEach((a, ai) => {
+    const pinned = a.after_section != null && a.after_section < sections.length
+    if (!pinned) steps.push({ type: 'activity', i: ai })
+  })
   questions.forEach((_, i) => steps.push({ type: 'question', i }))
   steps.push({ type: 'done' })
 
@@ -75,6 +88,7 @@ export function ModulePreviewPlayer({ m, name, onBack }: { m: PreviewModule; nam
     cur.type === 'overview' ? 'Overview' :
     cur.type === 'baseline' ? 'Before you start' :
     cur.type === 'section' ? `Section ${cur.i + 1} of ${sections.length}` :
+    cur.type === 'activity' ? 'Try it yourself' :
     cur.type === 'question' ? `Question ${cur.i + 1} of ${questions.length}` :
     'Complete'
 
@@ -172,6 +186,10 @@ export function ModulePreviewPlayer({ m, name, onBack }: { m: PreviewModule; nam
             ))}
           </div>
         </div>
+      )}
+
+      {cur?.type === 'activity' && activities[cur.i] && (
+        <ActivityStep act={activities[cur.i]} />
       )}
 
       {cur?.type === 'section' && sections[cur.i] && (

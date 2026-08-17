@@ -302,7 +302,10 @@ function Footer({ onCheck, onReset, result, checkDisabled }: {
 
 // ─── the step ─────────────────────────────────────────────────────────────────
 
-export function ActivityStep({ token, act, onAttempt }: { token: string; act: Activity; onAttempt: () => void }) {
+// token is optional: the platform preview renders the same activity without a
+// staff session, so there is nobody to bill the Listen audio to.
+export function ActivityStep({ token, act, onAttempt }: { token?: string; act: Activity; onAttempt?: () => void }) {
+  const attempted = onAttempt ?? (() => {})
   const spoken = joinSpoken([
     act.title,
     act.instructions,
@@ -321,13 +324,13 @@ export function ActivityStep({ token, act, onAttempt }: { token: string; act: Ac
           <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal">
             <Lightbulb size={13} /> Try it yourself
           </p>
-          <ListenButton token={token} text={spoken} />
+          {token && <ListenButton token={token} text={spoken} />}
         </div>
         {act.title && <p className="text-base font-bold text-neutral-dark">{act.title}</p>}
         {act.instructions && <p className="mb-4 mt-1 text-sm text-neutral-mid">{act.instructions}</p>}
-        {act.type === 'order' && <OrderActivity act={act} onAttempt={onAttempt} />}
-        {act.type === 'sort'  && <SortActivity  act={act} onAttempt={onAttempt} />}
-        {act.type === 'match' && <MatchActivity act={act} onAttempt={onAttempt} />}
+        {act.type === 'order' && <OrderActivity act={act} onAttempt={attempted} />}
+        {act.type === 'sort'  && <SortActivity  act={act} onAttempt={attempted} />}
+        {act.type === 'match' && <MatchActivity act={act} onAttempt={attempted} />}
         <p className="mt-4 border-t border-gray-100 pt-3 text-xs text-neutral-mid">
           This exercise is here to help you practise — it is not marked and does not affect your result.
         </p>

@@ -7,6 +7,7 @@ import { SiteImage } from '@/components/site-image'
 import { useCart } from '@/lib/cart-store'
 import { UNIT_PENCE, gbp, estimatedMinutes, formatDuration, TRAINING_ACCREDITED } from '@/lib/training-commerce'
 import { CartButton } from './cart-button'
+import { SaveCourseButton } from './save-course-button'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -103,25 +104,30 @@ export function ModuleCard({ t, accent, settingLabel }: { t: LibraryTopic; accen
           </Link>
         </div>
 
-        {/* Add to basket / quantity stepper */}
-        {inCart ? (
-          <div className="flex items-center justify-between rounded-xl border border-teal/40 bg-teal-light/50 p-1.5">
-            <div className="flex items-center">
-              <button type="button" onClick={() => cart.setQty(t.slug, inCart.qty - 1)} className="flex h-9 w-9 items-center justify-center rounded-lg text-teal hover:bg-white" aria-label="Fewer"><Minus size={15} /></button>
-              <span className="w-10 text-center text-sm font-bold text-neutral-dark">{inCart.qty}</span>
-              <button type="button" onClick={() => cart.setQty(t.slug, inCart.qty + 1)} className="flex h-9 w-9 items-center justify-center rounded-lg text-teal hover:bg-white" aria-label="More"><Plus size={15} /></button>
-            </div>
-            <span className="pr-2 text-xs font-semibold text-teal">In basket</span>
+        {/* Add to basket / quantity stepper, with Save alongside */}
+        <div className="flex items-stretch gap-2">
+          <div className="min-w-0 flex-1">
+            {inCart ? (
+              <div className="flex h-full items-center justify-between rounded-xl border border-teal/40 bg-teal-light/50 p-1.5">
+                <div className="flex items-center">
+                  <button type="button" onClick={() => cart.setQty(t.slug, inCart.qty - 1)} className="flex h-9 w-9 items-center justify-center rounded-lg text-teal hover:bg-white" aria-label="Fewer"><Minus size={15} /></button>
+                  <span className="w-10 text-center text-sm font-bold text-neutral-dark">{inCart.qty}</span>
+                  <button type="button" onClick={() => cart.setQty(t.slug, inCart.qty + 1)} className="flex h-9 w-9 items-center justify-center rounded-lg text-teal hover:bg-white" aria-label="More"><Plus size={15} /></button>
+                </div>
+                <span className="pr-2 text-xs font-semibold text-teal">In basket</span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => cart.add({ slug: t.slug, title: t.title, unitPence: UNIT_PENCE })}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition-colors hover:bg-blue-700"
+              >
+                <ShoppingCart size={15} /> Add to basket
+              </button>
+            )}
           </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => cart.add({ slug: t.slug, title: t.title, unitPence: UNIT_PENCE })}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition-colors hover:bg-blue-700"
-          >
-            <ShoppingCart size={15} /> Add to basket
-          </button>
-        )}
+          <SaveCourseButton slug={t.slug} title={t.title} compact className="rounded-xl" />
+        </div>
         <p className="mt-2 text-center text-[11px] text-neutral-mid">Bulk discounts from 10+ licences</p>
       </div>
     </div>

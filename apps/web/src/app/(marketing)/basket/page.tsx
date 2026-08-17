@@ -2,14 +2,68 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Minus, Plus, Trash2, ShoppingCart, ShieldCheck, Loader2, ArrowLeft } from 'lucide-react'
+import { Minus, Plus, Trash2, ShoppingCart, ShieldCheck, Loader2, ArrowLeft, Bookmark, X } from 'lucide-react'
 import { useCart, trackBasketEvent } from '@/lib/cart-store'
-import { gbp, DISCOUNT_TIERS, discountPctForQty, TRAINING_ACCREDITED } from '@/lib/training-commerce'
+import { useSavedCourses } from '@/lib/saved-courses'
+import { gbp, UNIT_PENCE, DISCOUNT_TIERS, discountPctForQty, TRAINING_ACCREDITED } from '@/lib/training-commerce'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
+// Courses bookmarked from a course page or a library card. Kept next to the basket
+// because this is where the volume-discount maths lives — moving one more course
+// across is often what tips an order into the next discount tier.
+function SavedForLater() {
+  const { items: saved, savedCourses } = useSavedCourses()
+  const { items: cartItems, cart } = useCart()
+  if (saved.length === 0) return null
+
+  return (
+    <section className="mt-10">
+      <h2 className="mb-1 flex items-center gap-2 text-xl font-extrabold text-neutral-dark">
+        <Bookmark size={18} className="text-teal" /> Saved for later
+      </h2>
+      <p className="mb-4 text-sm text-neutral-mid">
+        Courses you bookmarked while browsing. They stay on this device until you clear your browser.
+      </p>
+      <div className="space-y-3">
+        {saved.map((s) => {
+          const alreadyInBasket = cartItems.some((i) => i.slug === s.slug)
+          return (
+            <div key={s.slug} className="flex flex-wrap items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-card sm:flex-nowrap sm:gap-4">
+              <div className="min-w-0 flex-1">
+                <Link href={`/staff-training/${s.slug}`} className="block truncate font-bold text-neutral-dark hover:text-teal">{s.title}</Link>
+                <p className="text-sm text-neutral-mid">{gbp(UNIT_PENCE)} per licence</p>
+              </div>
+              {alreadyInBasket ? (
+                <span className="rounded-xl bg-teal-light px-4 py-2.5 text-sm font-semibold text-teal">Already in basket</span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => { cart.add({ slug: s.slug, title: s.title, unitPence: UNIT_PENCE }); savedCourses.remove(s.slug) }}
+                  className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                >
+                  <ShoppingCart size={15} /> Move to basket
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => savedCourses.remove(s.slug)}
+                className="text-neutral-mid transition-colors hover:text-red-500"
+                aria-label={`Remove ${s.title} from saved courses`}
+              >
+                <X size={17} />
+              </button>
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
 export default function BasketPage() {
   const { items, totalQty, gross, discount, pct, net, cart } = useCart()
+  const { items: saved } = useSavedCourses()
   const [email, setEmail] = useState('')
   const [org, setOrg] = useState('')
   const [busy, setBusy] = useState(false)
@@ -41,11 +95,18 @@ export default function BasketPage() {
 
   if (items.length === 0) {
     return (
-      <div className="mx-auto max-w-2xl px-6 py-24 text-center">
-        <ShoppingCart size={40} className="mx-auto text-neutral-mid" />
-        <h1 className="mt-4 text-2xl font-extrabold text-neutral-dark">Your basket is empty</h1>
-        <p className="mt-2 text-neutral-mid">Browse the training library and add the courses your team needs.</p>
-        <Link href="/staff-training" className="mt-6 inline-flex items-center gap-2 rounded-btn bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700">Browse training</Link>
+      <div className="mx-auto max-w-2xl px-6 py-24">
+        <div className="text-center">
+          <ShoppingCart size={40} className="mx-auto text-neutral-mid" />
+          <h1 className="mt-4 text-2xl font-extrabold text-neutral-dark">Your basket is empty</h1>
+          <p className="mt-2 text-neutral-mid">
+            {saved.length > 0
+              ? 'Your saved courses are below — move any of them across when you are ready to buy.'
+              : 'Browse the training library and add the courses your team needs.'}
+          </p>
+          <Link href="/staff-training" className="mt-6 inline-flex items-center gap-2 rounded-btn bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700">Browse training</Link>
+        </div>
+        <SavedForLater />
       </div>
     )
   }
@@ -89,6 +150,8 @@ export default function BasketPage() {
               <p className="mt-3 text-sm text-neutral-mid">Add <strong className="text-neutral-dark">{nextTier.min - totalQty}</strong> more licence{nextTier.min - totalQty === 1 ? '' : 's'} to unlock <strong className="text-teal">{nextTier.pct}% off</strong>.</p>
             )}
           </div>
+
+          <SavedForLater />
         </div>
 
         {/* Summary */}

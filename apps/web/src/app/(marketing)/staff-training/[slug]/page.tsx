@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { CourseStatsBar } from '@/components/marketing/course-stats-bar'
+import { CourseStickyBar } from '@/components/marketing/course-sticky-bar'
 import { SiteImage } from '@/components/site-image'
 import { HomeFaq } from '@/components/marketing/home-faq'
 import { pageMetadata } from '@/lib/page-meta'
@@ -346,6 +347,16 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
 
       {/* Floating stats bar straddling the hero and the section below */}
       <CourseStatsBar durationMinutes={m.duration_minutes} cpdAccredited={m.cpd_accredited} />
+
+      {/* Sticky course bar — slides in under the nav once the hero is scrolled past */}
+      <CourseStickyBar
+        slug={m.slug}
+        title={m.title}
+        href={buyHref}
+        durationLabel={formatDuration(estimatedMinutes(m.group_key, m.duration_minutes))}
+        priceLabel={`£${unitPrice} per staff member`}
+        imageUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : null}
+      />
 
       {/* ── What it covers ────────────────────────────────────────────────── */}
       <section className="bg-white py-24">

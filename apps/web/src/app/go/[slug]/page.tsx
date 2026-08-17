@@ -16,6 +16,7 @@ import { GoogleCloud, OpenAI, Claude, Supabase, Pinecone, GoogleAds, Aws } from 
 import { WhyChooseCareStream } from '@/components/marketing/why-choose-carestream'
 import { TrainingCpdFeatures } from '@/components/marketing/training-cpd-features'
 import { CourseStatsBar } from '@/components/marketing/course-stats-bar'
+import { CourseStickyBar } from '@/components/marketing/course-sticky-bar'
 import { TrainingFollowUpLoop } from '@/components/marketing/training-follow-up-loop'
 import { TrainingVideo } from '@/components/marketing/training-video'
 import { estimatedMinutes, formatDuration } from '@/lib/training-commerce'
@@ -298,6 +299,20 @@ export default async function GoLandingPage({
 
       {/* Floating stats bar straddling the hero and the section below */}
       <CourseStatsBar durationMinutes={estimatedMinutes(m.group_key, m.duration_minutes)} cpdAccredited={m.cpd_accredited} />
+
+      {/* Sticky course bar — pinned to the top once the hero is scrolled past. There's
+          no sticky nav on the ad pages, so it sits at top-0; below lg the bottom
+          GoStickyCta already keeps a CTA on screen, so this one is desktop-only. */}
+      <CourseStickyBar
+        slug={slug}
+        title={m.title}
+        href={buyHref}
+        durationLabel={formatDuration(estimatedMinutes(m.group_key, m.duration_minutes))}
+        priceLabel={`£${unitPrice} per staff member`}
+        imageUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : null}
+        topClassName="top-0"
+        className="max-lg:hidden"
+      />
 
       {/* Key numbers banner */}
       <section className="border-b border-gray-100 bg-neutral-dark">

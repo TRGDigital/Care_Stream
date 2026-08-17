@@ -48,6 +48,7 @@ const RULE_KEYS = new Set([
   'staff_not_in_hub', 'hub_quiet', 'staff_no_role',
   'roles_without_onboarding', 'onboarding_stalled',
   'cqc_prep_unused', 'no_audit_this_month', 'f2f_unused', 'credits_low',
+  'audit_actions_overdue', 'audit_actions_unassigned', 'audits_ongoing', 'audits_required', 'audits_missed',
 ])
 
 // Rules the training-only gateway tier still gets (everything else needs full CareStream).
@@ -91,6 +92,24 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 function ukDate(d: Date | string): string {
   const dt = new Date(d)
   return `${dt.getDate()} ${MONTHS[dt.getMonth()]}`
+}
+
+// Start of the current schedule period for an audit template's frequency
+// (null = 'periodic'/unknown, which has no schedule to be due or missed).
+function periodStart(freq: string, d: Date): Date | null {
+  const y = d.getFullYear(), m = d.getMonth()
+  if (freq === 'daily')     return new Date(y, m, d.getDate())
+  if (freq === 'weekly')    { const dow = (d.getDay() + 6) % 7; return new Date(y, m, d.getDate() - dow) }
+  if (freq === 'monthly')   return new Date(y, m, 1)
+  if (freq === 'quarterly') return new Date(y, Math.floor(m / 3) * 3, 1)
+  return null
+}
+function prevPeriodStart(freq: string, cur: Date): Date | null {
+  if (freq === 'daily')     return new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() - 1)
+  if (freq === 'weekly')    return new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() - 7)
+  if (freq === 'monthly')   return new Date(cur.getFullYear(), cur.getMonth() - 1, 1)
+  if (freq === 'quarterly') return new Date(cur.getFullYear(), cur.getMonth() - 3, 1)
+  return null
 }
 
 function credentialStatus(type: string, present: boolean, expiresAt: Date | null, now: number): string {
@@ -168,6 +187,7 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
       dueReview,
       roleGroups, activeFlows, incompleteOnboarding,
       cqcDeliveryCount, auditsThisMonth,
+      openActionRows, ongoingRunRows, auditLastCompletedGroups,
       f2fSessionCount,
       creditUsage,
       workforceUsers, supervisionRows, credentialRows,
@@ -235,6 +255,27 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
       }),
       trainingOnly ? null : (prisma as any).cqcStaffDelivery.count({ where: { tenant_id: tenantId } }),
       trainingOnly ? null : (prisma as any).auditRun.count({ where: { tenant_id: tenantId, created_at: { gte: monthStart } } }),
+      // Open audit-plan actions (who owns them, are they done) — modest volume.
+      trainingOnly ? null : (prisma as any).auditAction.findMany({
+        where:  { tenant_id: tenantId, status: { not: 'done' } },
+        select: {
+          id: true, run_id: true, description: true, due_date: true,
+          assigned_to: true, is_external: true, external_name: true,
+          run: { select: { action_plan_status: true, template: { select: { name: true } } } },
+        },
+      }),
+      // Audits started more than 2 days ago and never completed.
+      trainingOnly ? null : (prisma as any).auditRun.findMany({
+        where:   { tenant_id: tenantId, status: 'in_progress', created_at: { lt: new Date(nowMs - 2 * DAY) } },
+        orderBy: { created_at: 'asc' },
+        select:  { id: true, created_at: true, auditor_name: true, template: { select: { name: true } } },
+      }),
+      // Last completed run per template — drives required (due this period) and missed (skipped last period).
+      trainingOnly ? null : (prisma as any).auditRun.groupBy({
+        by:    ['template_id'],
+        where: { tenant_id: tenantId, status: 'completed' },
+        _max:  { completed_at: true },
+      }),
       hasF2F ? (prisma as any).faceToFaceSession.count({ where: { tenant_id: tenantId } }) : null,
       hasCreditLimit ? getAiCreditUsage(tenantId) : null,
       hasWorkforce ? (prisma as any).user.findMany({
@@ -335,7 +376,8 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
       ...pendingTopDocs.map(d => d.policy_id),
       ...staleItems.map(i => i.policy_id),
     ].filter(Boolean))) as string[]
-    const [progressGroups, namedPolicyRows, roleMemberRows] = await Promise.all([
+    const auditTemplateIds = ((auditLastCompletedGroups as any[]) ?? []).map(g => g.template_id)
+    const [progressGroups, namedPolicyRows, roleMemberRows, auditTemplateRows] = await Promise.all([
       openOnboarding.length > 0 ? (prisma as any).onboardingProgress.groupBy({
         by:    ['enrollment_id'],
         where: { enrollment_id: { in: openOnboarding.map(r => r.id) } },
@@ -348,6 +390,10 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
       (!trainingOnly && topUncovered) ? (prisma as any).user.findMany({
         where:   { tenant_id: tenantId, is_active: true, role: 'staff', job_role: topUncovered.job_role },
         orderBy: { name: 'asc' }, take: 5, select: { id: true, name: true },
+      }) : null,
+      auditTemplateIds.length > 0 ? (prisma as any).auditTemplate.findMany({
+        where:  { id: { in: auditTemplateIds } },
+        select: { id: true, name: true, frequency: true, is_active: true },
       }) : null,
     ])
     const policyNameById = new Map<string, string>(((namedPolicyRows as any[]) ?? []).map(p => [p.id, p.name]))
@@ -381,6 +427,9 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
     }
 
     const suggestions: Suggestion[] = []
+    // Set when the per-template schedule rules fire, so the generic
+    // no-audit-this-month nudge does not double up on them.
+    let auditScheduleFired = false
     // details: up to 5 named items; total: the rule's full count (drives `more`).
     const push = (key: string, category: Category, title: string, body: string, cta_label: string, href: string,
                   details?: SuggestionDetail[], total?: number) => {
@@ -543,6 +592,88 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
             credItems.slice(0, 5).map(i => ({ label: i.label, href: i.href })), expired + expiring + missing)
         }
       }
+
+      // ── Audits: action plans, ongoing runs, and the schedule ────────────────
+
+      const actions = (openActionRows as any[]) ?? []
+      const actionOwner = (a: any) =>
+        a.is_external ? (a.external_name || 'external contractor') : (a.assigned_to || 'unassigned')
+      const actionLabel = (a: any) =>
+        a.description.length > 60 ? `${a.description.slice(0, 57)}...` : a.description
+
+      // Rule: overdue action-plan items. Approved plans only, matching what
+      // staff see in the hub; a draft plan is not yet operative.
+      const overdueActions = actions
+        .filter(a => a.run?.action_plan_status === 'approved' && a.due_date && new Date(a.due_date).getTime() < nowMs)
+        .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+      if (overdueActions.length > 0) {
+        const n = overdueActions.length
+        const unowned = overdueActions.filter(a => !a.assigned_to && !a.is_external).length
+        push('audit_actions_overdue', 'compliance', 'Audit actions overdue',
+          `${n} ${n === 1 ? 'action' : 'actions'} from your audit action plans ${n === 1 ? 'is' : 'are'} past ${n === 1 ? 'its' : 'their'} due date.` +
+          (unowned > 0 ? ` ${unowned} of them ${unowned === 1 ? 'has' : 'have'} no one assigned.` : ''),
+          'Open Monthly Audits', '/audits',
+          overdueActions.slice(0, 5).map(a => ({ label: `${actionLabel(a)}: due ${ukDate(a.due_date)}, ${actionOwner(a)}`, href: `/audits/${a.run_id}` })), n)
+      }
+
+      // Rule: open actions nobody owns (any plan stage — assigning owners is
+      // exactly what a draft plan is waiting for).
+      const unassignedActions = actions.filter(a => !a.assigned_to && !a.is_external)
+      if (unassignedActions.length > 0) {
+        const n = unassignedActions.length
+        push('audit_actions_unassigned', 'compliance', 'Audit actions with no owner',
+          `${n} open audit ${n === 1 ? 'action has' : 'actions have'} no one assigned to complete ${n === 1 ? 'it' : 'them'}.`,
+          'Open Monthly Audits', '/audits',
+          unassignedActions.slice(0, 5).map(a => ({ label: `${actionLabel(a)}: ${a.run?.template?.name ?? 'audit'}`, href: `/audits/${a.run_id}` })), n)
+      }
+
+      // Rule: audits started but never completed (older than 2 days).
+      const ongoing = (ongoingRunRows as any[]) ?? []
+      if (ongoing.length > 0) {
+        const n = ongoing.length
+        push('audits_ongoing', 'compliance', 'Audits still in progress',
+          `${n} ${n === 1 ? 'audit was' : 'audits were'} started but ${n === 1 ? 'has' : 'have'} not been completed.`,
+          'Open Monthly Audits', '/audits',
+          ongoing.slice(0, 5).map(r => ({
+            label: `${r.template?.name ?? 'Audit'}: started ${ukDate(r.created_at)}${r.auditor_name ? `, ${r.auditor_name}` : ''}`,
+            href:  `/audits/${r.id}`,
+          })), n)
+      }
+
+      // Rules: required (due this period, not yet completed) and missed (no
+      // completed run last period) — computed per template the tenant actually
+      // uses (has completed at least once), from its frequency.
+      const templateById = new Map(((auditTemplateRows as any[]) ?? []).map(t => [t.id, t]))
+      const requiredItems: Array<{ label: string; last: number }> = []
+      const missedItems:   Array<{ label: string; last: number }> = []
+      for (const g of ((auditLastCompletedGroups as any[]) ?? [])) {
+        const t = templateById.get(g.template_id)
+        const last = g._max?.completed_at ? new Date(g._max.completed_at) : null
+        if (!t || !t.is_active || !last) continue
+        const curStart = periodStart(t.frequency, now)
+        if (!curStart) continue
+        const prevStart = prevPeriodStart(t.frequency, curStart)
+        const item = { label: `${t.name}: ${t.frequency} audit, last completed ${ukDate(last)}`, last: last.getTime() }
+        if (prevStart && last.getTime() < prevStart.getTime()) missedItems.push(item)
+        else if (last.getTime() < curStart.getTime()) requiredItems.push(item)
+      }
+      requiredItems.sort((a, b) => a.last - b.last)
+      missedItems.sort((a, b) => a.last - b.last)
+      if (requiredItems.length > 0) {
+        const n = requiredItems.length
+        push('audits_required', 'compliance', 'Audits due',
+          `${n} of your regular audits ${n === 1 ? 'is' : 'are'} due and ${n === 1 ? 'has' : 'have'} not been completed this period.`,
+          'Open Monthly Audits', '/audits',
+          requiredItems.slice(0, 5).map(i => ({ label: i.label })), n)
+      }
+      if (missedItems.length > 0) {
+        const n = missedItems.length
+        push('audits_missed', 'compliance', 'Audits missed',
+          `${n} regular ${n === 1 ? 'audit was' : 'audits were'} missed last period.`,
+          'Open Monthly Audits', '/audits',
+          missedItems.slice(0, 5).map(i => ({ label: i.label })), n)
+      }
+      auditScheduleFired = requiredItems.length > 0 || missedItems.length > 0
     }
 
     // ── TRAINING ──────────────────────────────────────────────────────────────
@@ -655,8 +786,9 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
           'Open CQC Staff Prep', '/cqc-questions')
       }
 
-      // Rule 16 — no audit run this calendar month
-      if ((auditsThisMonth as number) === 0) {
+      // Rule 16 — no audit run this calendar month. Suppressed when the
+      // per-template required/missed rules already cover the schedule.
+      if ((auditsThisMonth as number) === 0 && !auditScheduleFired) {
         push('no_audit_this_month', 'features', 'No audit this month',
           'You have not run a monthly audit yet this month.',
           'Open Monthly Audits', '/audits')

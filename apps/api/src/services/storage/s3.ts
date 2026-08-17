@@ -186,6 +186,19 @@ export async function uploadCertificateFile(params: {
   return s3Key
 }
 
+// Cached text-to-speech audio for the hub "Listen" feature. Shared across
+// tenants (annual training modules are standard content), keyed by a content
+// hash so identical text reuses the same file. Retrieved via downloadFile.
+export async function uploadTtsAudio(hash: string, buffer: Buffer): Promise<string> {
+  const s3Key = `tts/${hash}.mp3`
+  if (USE_LOCAL) { localWrite(s3Key, buffer); return s3Key }
+  await getS3().send(new PutObjectCommand({
+    Bucket: BUCKET, Key: s3Key, Body: buffer, ContentType: 'audio/mpeg',
+    ServerSideEncryption: 'AES256',
+  }))
+  return s3Key
+}
+
 export async function deleteFile(s3Key: string): Promise<void> {
   if (USE_LOCAL) { try { fs.rmSync(localPath(s3Key), { force: true }) } catch { /* ignore */ } return }
   try { await getS3().send(new DeleteObjectCommand({ Bucket: BUCKET, Key: s3Key })) } catch { /* ignore */ }

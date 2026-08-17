@@ -912,6 +912,19 @@ model GapsSectionRun {
   @@map("gaps_section_runs")
 }
 
+// Cached ElevenLabs text-to-speech for the hub "Listen" feature. Keyed by a
+// hash of voice + text so each unique passage is generated (and billed) once;
+// the audio itself lives in S3 at tts/{content_hash}.mp3.
+model TtsCache {
+  content_hash String   @id
+  voice_id     String
+  s3_key       String
+  char_count   Int      @default(0)
+  created_at   DateTime @default(now())
+
+  @@map("tts_cache")
+}
+
 // CareStream Suggestions: a tenant dismissing a suggestion hides that rule for
 // 30 days (tenant-wide, not per-user). Re-dismissing refreshes the timestamp.
 model SuggestionDismissal {

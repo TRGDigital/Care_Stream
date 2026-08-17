@@ -7,6 +7,7 @@ import { TenantAgentTools } from '@/components/agent/tenant-agent-tools'
 import { PwaRegister } from '@/components/pwa/pwa-register'
 import { InstallPrompt } from '@/components/pwa/install-prompt'
 import { NotificationsOptIn } from '@/components/pwa/notifications-optin'
+import { HubPrefsApplier } from '@/components/hub/hub-prefs-applier'
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions)
@@ -14,6 +15,7 @@ export default async function PortalLayout({ children }: { children: React.React
 
   return (
     <AuthSessionProvider session={session}>
+      <HubPrefsApplier />
       <TenantAgentTools />
       <PwaRegister />
       <InstallPrompt />

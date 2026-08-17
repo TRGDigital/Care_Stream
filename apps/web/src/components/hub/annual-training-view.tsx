@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createApiClient, apiAssetUrl } from '@/lib/api-client'
 import { TrainingRatingCard } from '@/components/hub/training-rating-card'
 import { SuggestTranslation, InlineEditableText } from '@/components/hub/suggest-translation'
+import { ListenButton } from '@/components/hub/listen-button'
 import { persistentCache, hubKey } from '@/lib/page-cache'
 import { TrainingCertificate } from '@/components/training-certificate'
 import {
@@ -498,6 +499,14 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                       {learnActive.duration_minutes ? <span className="inline-flex items-center gap-1 rounded-full bg-neutral-light px-2 py-0.5 text-[11px] font-medium text-neutral-mid"><Clock size={11} /> About {learnActive.duration_minutes} min</span> : null}
                     </div>
                     {(() => {
+                      const overviewText = [
+                        learnActive.learning?.summary,
+                        ...(Array.isArray(learnActive.learning?.outcomes) ? learnActive.learning.outcomes : []),
+                        ...(sections.length === 0 && Array.isArray(learnActive.learning?.key_points) ? learnActive.learning.key_points : []),
+                      ].filter(Boolean).join('. ')
+                      return <div className="mb-3"><ListenButton token={token} text={overviewText} /></div>
+                    })()}
+                    {(() => {
                       const ov = learnActive?.can_suggest ? learnActive.source_overview : null
                       const editable = !!(learnActive?.can_suggest && ov)
                       const lc = learnActive?.lang_code
@@ -602,9 +611,12 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                           const editable = !!(learnActive?.can_suggest && src)
                           return (<>
                             {sec.heading && (
-                              <p className="mb-1.5 text-base font-bold text-neutral-dark">
-                                <InlineEditableText token={token} langCode={learnActive?.lang_code} contextLabel={`${name} — lesson`} source={src?.heading ?? ''} current={sec.heading} kind="lesson" editable={editable} />
-                              </p>
+                              <div className="mb-1.5 flex items-start justify-between gap-3">
+                                <p className="text-base font-bold text-neutral-dark">
+                                  <InlineEditableText token={token} langCode={learnActive?.lang_code} contextLabel={`${name} — lesson`} source={src?.heading ?? ''} current={sec.heading} kind="lesson" editable={editable} />
+                                </p>
+                                <ListenButton token={token} text={[sec.heading, sec.body].filter(Boolean).join('. ')} className="mt-0.5" />
+                              </div>
                             )}
                             {sec.body && (
                               <p className="text-sm leading-relaxed text-neutral-dark">

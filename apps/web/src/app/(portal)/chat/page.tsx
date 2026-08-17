@@ -21,6 +21,7 @@ import { ProgressView } from '@/components/hub/progress-view'
 import { MyActionsView } from '@/components/hub/my-actions-view'
 import { SuggestTranslation } from '@/components/hub/suggest-translation'
 import { SupervisionsHubView } from '@/components/hub/supervisions-view'
+import { DisplaySettings } from '@/components/hub/display-settings'
 import Link from 'next/link'
 import { createApiClient, apiAssetUrl, type Citation } from '@/lib/api-client'
 import { persistentCache, hubKey } from '@/lib/page-cache'
@@ -1043,6 +1044,11 @@ function ChatPageInner() {
             My Progress
           </button>
           )}
+
+          {/* Accessibility: text size + high contrast (available to every hub user, reviewers included) */}
+          <div className="mt-1 border-t border-gray-100 pt-2">
+            <DisplaySettings />
+          </div>
         </div>
 
         {/* Scrollable secondary area: saved policies + chat history. On roomy screens the nav

@@ -292,3 +292,34 @@ a, button { transition: all 0.18s ease; }
 /* Offset anchored headings so they don't hide under the sticky nav. */
 .prose :is(h2, h3, h4)[id] { scroll-margin-top: 6rem; }
 html { scroll-behavior: smooth; }
+
+/* ── Staff hub high-contrast mode ─────────────────────────────────────────────
+   Scoped to the (portal) hub via the data-hub-contrast attribute the hub sets on
+   <html>. Darkens muted greys and strengthens faint borders so hub content meets
+   a higher contrast bar. Conservative — colour only, no layout shift. */
+
+/* Muted mauve body text → near-black. */
+html[data-hub-contrast="1"] .text-neutral-mid { color: #2A2338 !important; }
+html[data-hub-contrast="1"] .text-neutral-mid\/70 { color: #3A3049 !important; }
+
+/* Faint Tailwind greys → darker. */
+html[data-hub-contrast="1"] .text-gray-300,
+html[data-hub-contrast="1"] .text-gray-400 { color: #4b5563 !important; }
+html[data-hub-contrast="1"] .text-gray-500 { color: #374151 !important; }
+html[data-hub-contrast="1"] .text-gray-600 { color: #1f2937 !important; }
+
+/* Low-opacity white text (on dark surfaces) → full white. */
+html[data-hub-contrast="1"] .text-white\/50,
+html[data-hub-contrast="1"] .text-white\/60,
+html[data-hub-contrast="1"] .text-white\/70,
+html[data-hub-contrast="1"] .text-white\/80 { color: #fff !important; }
+
+/* Faint borders → stronger. */
+html[data-hub-contrast="1"] .border-gray-100,
+html[data-hub-contrast="1"] .border-gray-200 { border-color: #9ca3af !important; }
+html[data-hub-contrast="1"] .border-gray-300 { border-color: #6b7280 !important; }
+
+/* Lift heavily-faded, non-interactive muted content so it stays legible.
+   (Excludes the disabled/locked buttons which use opacity to signal state.) */
+html[data-hub-contrast="1"] .opacity-50:not(button):not([disabled]),
+html[data-hub-contrast="1"] .opacity-60:not(button):not([disabled]) { opacity: 0.85 !important; }

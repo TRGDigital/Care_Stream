@@ -833,6 +833,17 @@ export function createApiClient(token: string) {
         apiFetch<{ subscribed: boolean }>('/me/push/subscribe', token, { method: 'POST', body: JSON.stringify(sub) }),
       pushUnsubscribe: (endpoint: string) =>
         apiFetch<{ subscribed: boolean }>('/me/push/unsubscribe', token, { method: 'POST', body: JSON.stringify({ endpoint }) }),
+      // Text-to-speech for the "Listen" option. Returns MP3 audio as a Blob
+      // (cached server-side, so repeat plays of the same text are free).
+      tts: async (text: string): Promise<Blob> => {
+        const res = await fetch(`${API_URL}/me/tts`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body:    JSON.stringify({ text }),
+        })
+        if (!res.ok) throw new Error(res.status === 503 ? 'TTS_NOT_CONFIGURED' : `TTS_${res.status}`)
+        return res.blob()
+      },
       annualTraining: {
         list: (lang?: '2') => apiFetch<{ items: Array<{ enrollment_id: string; module_id: string; name: string; frequency: string; requires_practical: boolean; group_key: string | null; image_key: string | null; status: string; completed_at: string | null; expires_at: string | null; due_date: string | null; state: string }> }>(`/me/annual-training${lang ? `?lang=${lang}` : ''}`, token),
         get: (id: string, lang?: '2') => apiFetch<{ name: string; pass_mark: number; requires_practical: boolean; frequency: string; duration_minutes: number | null; illustration_url: string | null; learning: { summary: string; outcomes: string[]; key_points: string[]; sections: Array<{ id: string; heading: string; body: string; scenario: { situation: string; prompt: string; answer: string }; check: { question: string; options: string[]; correct: number } }> }; references?: Array<{ title: string; source: string; url?: string }>; glossary?: Array<{ term: string; definition: string }>; baseline?: { questions: Array<{ id: string; text: string; options: string[] }>; done: boolean; score: number | null; total: number | null }; reflection?: string | null; questions: Array<{ id: string; text: string; options: string[] }>; policies: Array<{ policy_id: string; title: string }>; answers: Array<{ question_id: string; answer_text: string; is_correct: boolean }>; status: string; lang_code?: string; can_suggest?: boolean; source_questions?: Array<{ text: string; options: string[] }>; source_sections?: Array<{ heading: string; body: string; situation: string; prompt: string; answer: string; check_question: string; check_options: string[] }>; source_overview?: { summary: string; outcomes: string[]; key_points: string[] } }>(`/me/annual-training/${id}${lang ? `?lang=${lang}` : ''}`, token),

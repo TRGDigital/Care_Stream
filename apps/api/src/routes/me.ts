@@ -9,7 +9,10 @@ import { buildStaffRecord } from '../lib/staff-record'
 import { translateBundle, translateText, translateQuestionsBatch, translateTextsBatch, formatPolicyHtml, getEnglishPolicyHtml, policyHtmlEndsCleanly, translateHtmlPreservingTags, generatePolicyQuestions, mapLimit, withTranslationBudget, hubContentLang } from '../lib/translate'
 import { overrideHash } from '../lib/overrides'
 import { languageNameForCode } from '../data/languages'
-import { downloadExtractedText } from '../services/storage/s3'
+import { downloadExtractedText, downloadFile, uploadTtsAudio } from '../services/storage/s3'
+import { synthesizeSpeech, ttsConfigured, ttsVoiceId } from '../services/tts/elevenlabs'
+import { createHash } from 'crypto'
+import { z as zTts } from 'zod'
 import { getOrCreateLesson } from '../lib/remediation'
 import { trackAiAction, getPlanFeatures } from '../lib/plan-limits'
 import { illustrationUrl } from '../services/training/moduleImage'
@@ -691,6 +694,50 @@ function annualState(e: any, now: Date): string {
 // A module is "takeable as a lesson" if it has scenario-based learning_content
 // sections — true for AI annual modules AND statutory modules built with a lesson.
 const moduleHasLesson = (m: any) => Array.isArray(m?.learning_content?.sections) && m.learning_content.sections.length > 0
+
+// POST /me/tts — text-to-speech for the hub "Listen" option (annual training
+// accessibility). Returns MP3 audio. Cached in S3 by a hash of voice + text so
+// ElevenLabs is billed once per unique passage; every later request (any staff
+// member, any tenant) is served the stored file for free.
+const TtsSchema = zTts.object({ text: zTts.string().min(1).max(6000) })
+
+meRouter.post('/tts', async (req: Request, res: Response) => {
+  if (!ttsConfigured()) { err(res, 'TTS_NOT_CONFIGURED', 'Audio is not available yet.', 503); return }
+
+  const parsed = TtsSchema.safeParse(req.body)
+  if (!parsed.success) { err(res, 'VALIDATION_ERROR', 'Text is required (up to 6000 characters).', 400); return }
+
+  const text  = parsed.data.text.replace(/\s+/g, ' ').trim().slice(0, 6000)
+  if (!text) { err(res, 'VALIDATION_ERROR', 'Text is required.', 400); return }
+  const voice = ttsVoiceId()
+  const hash  = createHash('sha256').update(`${voice}\n${text}`).digest('hex')
+
+  try {
+    let buffer: Buffer | null = null
+
+    const cached = await (prisma as any).ttsCache.findUnique({ where: { content_hash: hash } })
+    if (cached) {
+      try { buffer = await downloadFile(cached.s3_key) } catch { buffer = null }  // fall through to regenerate if the file vanished
+    }
+
+    if (!buffer) {
+      buffer = await synthesizeSpeech(text)
+      const s3Key = await uploadTtsAudio(hash, buffer)
+      await (prisma as any).ttsCache.upsert({
+        where:  { content_hash: hash },
+        update: { s3_key: s3Key, voice_id: voice, char_count: text.length },
+        create: { content_hash: hash, voice_id: voice, s3_key: s3Key, char_count: text.length },
+      }).catch(() => {})
+    }
+
+    res.setHeader('Content-Type', 'audio/mpeg')
+    res.setHeader('Cache-Control', 'private, max-age=86400')
+    res.send(buffer)
+  } catch (e: any) {
+    console.error('[me/tts] failed:', e?.message ?? e)
+    err(res, 'TTS_FAILED', 'Could not generate audio. Please try again.', 502)
+  }
+})
 
 // GET /me/annual-training — the staff member's assigned annual (AI) modules.
 meRouter.get('/annual-training', async (req: Request, res: Response) => {

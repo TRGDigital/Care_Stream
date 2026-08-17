@@ -6,6 +6,7 @@ import {
   Users, MessageSquare, ArrowRight, Star,
 } from 'lucide-react'
 import { PageCta, SectionLabel } from '@/components/marketing/ui'
+import { CourseStatsBar } from '@/components/marketing/course-stats-bar'
 import { SiteImage } from '@/components/site-image'
 import { HomeFaq } from '@/components/marketing/home-faq'
 import { pageMetadata } from '@/lib/page-meta'
@@ -341,6 +342,9 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
           </div>
         </div>
       </section>
+
+      {/* Floating stats bar straddling the hero and the section below */}
+      <CourseStatsBar durationMinutes={m.duration_minutes} />
 
       {/* ── What it covers ────────────────────────────────────────────────── */}
       <section className="bg-white py-24">

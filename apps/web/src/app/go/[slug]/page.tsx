@@ -15,6 +15,7 @@ import { SiteImage } from '@/components/site-image'
 import { GoogleCloud, OpenAI, Claude, Supabase, Pinecone, GoogleAds, Aws } from '@/components/marketing/tech-logos'
 import { WhyChooseCareStream } from '@/components/marketing/why-choose-carestream'
 import { TrainingCpdFeatures } from '@/components/marketing/training-cpd-features'
+import { CourseStatsBar } from '@/components/marketing/course-stats-bar'
 import { TrainingFollowUpLoop } from '@/components/marketing/training-follow-up-loop'
 import { TrainingVideo } from '@/components/marketing/training-video'
 import { estimatedMinutes, formatDuration } from '@/lib/training-commerce'
@@ -293,6 +294,9 @@ export default async function GoLandingPage({
           </div>
         </div>
       </section>
+
+      {/* Floating stats bar straddling the hero and the section below */}
+      <CourseStatsBar durationMinutes={estimatedMinutes(m.group_key, m.duration_minutes)} />
 
       {/* Key numbers banner */}
       <section className="border-b border-gray-100 bg-neutral-dark">

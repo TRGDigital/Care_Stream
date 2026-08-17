@@ -83,8 +83,11 @@ export function SuggestionsButton({ token, tenantId }: { token: string; tenantId
   const rest = items.filter(s => !forPageKeys.has(s.key)).slice(0, SHOW)
   const shownCount = forPage.length + rest.length
 
-  function SuggestionCard({ s }: { s: Suggestion }) {
+  function SuggestionCard({ s, onPage }: { s: Suggestion; onPage?: boolean }) {
     const style = CATEGORY_STYLE[s.category] ?? CATEGORY_STYLE.setup
+    // No "go to the page you are already on" button; a tab deep-link (?tab=)
+    // keeps its button because it still switches the admin to the right tab.
+    const showCta = !onPage || s.href.includes('?')
     return (
       <div className="rounded-xl border border-gray-100 p-4 shadow-sm">
         <div className="flex items-start justify-between gap-2">
@@ -112,13 +115,17 @@ export function SuggestionsButton({ token, tenantId }: { token: string; tenantId
             {(s.more ?? 0) > 0 && <li className="text-xs italic text-neutral-mid">and {s.more} more</li>}
           </ul>
         )}
-        <Link
-          href={s.href}
-          onClick={() => setOpen(false)}
-          className="mt-3 inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark"
-        >
-          {s.cta_label} <ArrowRight size={12} />
-        </Link>
+        {showCta ? (
+          <Link
+            href={s.href}
+            onClick={() => setOpen(false)}
+            className="mt-3 inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark"
+          >
+            {s.cta_label} <ArrowRight size={12} />
+          </Link>
+        ) : (
+          <p className="mt-2.5 text-[11px] italic text-neutral-mid">You are on the right page for this one.</p>
+        )}
       </div>
     )
   }
@@ -178,7 +185,7 @@ export function SuggestionsButton({ token, tenantId }: { token: string; tenantId
                       <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-teal">
                         <MapPin size={12} /> For this page
                       </p>
-                      {forPage.map(s => <SuggestionCard key={s.key} s={s} />)}
+                      {forPage.map(s => <SuggestionCard key={s.key} s={s} onPage />)}
                       {rest.length > 0 && (
                         <p className="pt-1 text-[11px] font-bold uppercase tracking-wide text-neutral-mid">Across your account</p>
                       )}

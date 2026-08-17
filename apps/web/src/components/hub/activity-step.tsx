@@ -318,14 +318,20 @@ export function ActivityStep({ token, act, onAttempt }: { token?: string; act: A
   ])
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-      <div className="p-5">
-        <div className="mb-1 flex items-start justify-between gap-3">
-          <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-teal">
+    // Amber outline so an activity is visibly a different kind of step from the
+    // teaching sections and quick checks around it — and the same colour the
+    // author sees against that section in the module editor.
+    <div className="overflow-hidden rounded-xl border-2 border-amber-brand/45 bg-white shadow-[0_1px_3px_rgba(232,133,10,0.12)]">
+      <div className="border-b border-amber-brand/15 bg-amber-brand/[0.06] px-5 py-2.5">
+        <div className="flex items-start justify-between gap-3">
+          <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-amber-brand">
             <Lightbulb size={13} /> Try it yourself
           </p>
           {token && <ListenButton token={token} text={spoken} />}
         </div>
+      </div>
+
+      <div className="p-5">
         {act.title && <p className="text-base font-bold text-neutral-dark">{act.title}</p>}
         {act.instructions && <p className="mb-4 mt-1 text-sm text-neutral-mid">{act.instructions}</p>}
         {act.type === 'order' && <OrderActivity act={act} onAttempt={attempted} />}

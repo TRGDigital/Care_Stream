@@ -499,7 +499,7 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
               {/* Progress bar */}
               <div className="mb-4">
                 <div className="mb-1 flex items-center justify-between text-xs text-neutral-mid">
-                  <span className="font-medium text-neutral-dark">{label}</span>
+                  <span className={`font-medium ${curAct ? 'text-amber-brand' : 'text-neutral-dark'}`}>{label}</span>
                   <span>{progressPct}% complete</span>
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100"><div className="h-2 rounded-full bg-teal transition-all duration-300" style={{ width: `${progressPct}%` }} /></div>

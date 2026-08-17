@@ -13,6 +13,7 @@ import { downloadExtractedText, downloadFile, uploadTtsAudio } from '../services
 import { synthesizeSpeech, ttsConfigured, ttsVoiceId } from '../services/tts/elevenlabs'
 import { createHash } from 'crypto'
 import { z as zTts } from 'zod'
+import { normaliseActivities, collectActivityTexts, applyActivityTexts, type Activity } from '../lib/training-activities'
 import { getOrCreateLesson } from '../lib/remediation'
 import { trackAiAction, getPlanFeatures } from '../lib/plan-limits'
 import { illustrationUrl } from '../services/training/moduleImage'
@@ -831,6 +832,10 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
     check: { question: String(s?.check?.question ?? ''), options: Array.isArray(s?.check?.options) ? s.check.options.map((o: any) => String(o)) : [], correct: Number.isInteger(s?.check?.correct) ? s.check.correct : 0 },
   })).filter((s: any) => s.body || s.heading)
   let questions = (Array.isArray(m.questions) ? m.questions : []).map(({ correct: _c, ...q }: any) => ({ ...q, options: Array.isArray(q.options) ? q.options : [] }))
+  // Interactive activities (order / sort / match). Additional to the sections and
+  // the assessment, never a replacement — a course with none behaves exactly as
+  // it does today. Answers stay in the payload because these are formative.
+  let activities: Activity[] = normaliseActivities(learn.activities)
   // English source of the quiz questions + lesson sections, snapshotted before
   // translation so the hub can offer a "suggest a better translation" control
   // keyed to the source string.
@@ -854,6 +859,7 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
       // per-field round-trips. Reassembled below in the exact same order.
       const texts: string[] = [summary, ...outcomes, ...keyPoints]
       for (const sec of sections as any[]) texts.push(sec.heading, sec.body, sec.scenario.situation, sec.scenario.prompt, sec.scenario.answer)
+      for (const act of activities) texts.push(...collectActivityTexts(act))
       const qs = [
         ...(questions as any[]).map((q: any) => ({ text: q.text ?? '', options: q.options })),
         ...(sections as any[]).map((sec: any) => ({ text: sec.check.question ?? '', options: sec.check.options })),
@@ -870,12 +876,15 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
         const heading = tTexts[p++], body = tTexts[p++], situation = tTexts[p++], prompt = tTexts[p++], answer = tTexts[p++]
         return { ...sec, heading, body, scenario: { situation, prompt, answer } }
       })
+      const cursor = { i: p }
+      const acts = activities.map(a => applyActivityTexts(a, tTexts, cursor))
+      p = cursor.i
       let qi = 0
       const newQs = (questions as any[]).map((q: any) => { const t = tQs[qi++]; return { ...q, text: t.text, options: t.options } })
       const secsFull = secs.map((sec: any) => { const t = tQs[qi++]; return { ...sec, check: { ...sec.check, question: t.text, options: t.options } } })
-      return { summary: s, outcomes: oc, keyPoints: kp, questions: newQs, sections: secsFull }
+      return { summary: s, outcomes: oc, keyPoints: kp, questions: newQs, sections: secsFull, activities: acts }
     })(), 25_000, null)
-    if (translated) { summary = translated.summary; outcomes = translated.outcomes; keyPoints = translated.keyPoints; questions = translated.questions; sections = translated.sections }
+    if (translated) { summary = translated.summary; outcomes = translated.outcomes; keyPoints = translated.keyPoints; questions = translated.questions; sections = translated.sections; activities = translated.activities }
   }
 
   // CPD enrichment: references, glossary and the pre-course baseline check
@@ -889,6 +898,7 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
     duration_minutes: m.duration_minutes ?? null,
     illustration_url: illustrationUrl(m.illustration_key),
     learning: { summary, outcomes, key_points: keyPoints, sections },
+    activities,
     references, glossary,
     baseline: { questions: baselineQs, done: enr.baseline_at != null, score: enr.baseline_score ?? null, total: enr.baseline_total ?? null },
     reflection: enr.reflection ?? null,

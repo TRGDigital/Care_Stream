@@ -663,6 +663,10 @@ export function createPlatformClient(token: string) {
       resolveReviewItem: (linkId: string, ref: string, resolved: boolean) => adminFetch<{ item_feedback: any[] }>(`/standard-training/review-links/${linkId}/resolve`, token, { method: 'POST', body: JSON.stringify({ ref, resolved }) }),
       generateImage: (id: string) => adminFetch<{ illustration_url: string | null }>(`/standard-training/modules/${id}/generate-image`, token, { method: 'POST' }),
       generateSectionImage: (id: string, index: number) => adminFetch<{ image_url: string | null }>(`/standard-training/modules/${id}/sections/${index}/generate-image`, token, { method: 'POST' }),
+      // Drafts interactive activities from the module's own lesson sections. Returns
+      // them for review — saving happens with the normal module update.
+      draftActivities: (id: string, types?: Array<'order' | 'sort' | 'match'>) =>
+        adminFetch<{ activities: any[] }>(`/standard-training/modules/${id}/draft-activities`, token, { method: 'POST', body: JSON.stringify({ types }) }),
       regenerateQuestions: (id: string) => adminFetch<{ module: any; generated: number; avoided: number }>(`/standard-training/modules/${id}/regenerate-questions`, token, { method: 'POST' }),
       setShare: (id: string, data: { enabled: boolean; password?: string }) => adminFetch<{ share_enabled: boolean; share_token: string | null; share_password: string | null; share_url: string | null }>(`/standard-training/modules/${id}/share`, token, { method: 'POST', body: JSON.stringify(data) }),
     },

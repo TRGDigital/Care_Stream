@@ -12,6 +12,8 @@ import { generateAnnualModuleDraft, normaliseQuestion } from '../services/traini
 import { neutraliseModuleVoice } from '../services/training/neutraliseVoice'
 import { generateModuleIllustration, generateSectionImage, illustrationUrl } from '../services/training/moduleImage'
 import { runModuleQa } from '../services/training/moduleQa'
+import { callClaude } from '../services/ai/claude'
+import { normaliseActivities } from '../lib/training-activities'
 import { STANDARDS_CATALOGUE, normaliseStandards } from '../data/training-standards'
 import { genToken, genPassword, hashPassword, contentHash, buildSnapshot } from '../lib/review-links'
 import { ensureTrainingTopicsSeeded } from './training'
@@ -273,6 +275,83 @@ standardTrainingRouter.post('/modules/:id/regenerate-questions', async (req: Req
   } catch (e: any) {
     console.error('[std-training/regenerate-questions] failed:', e?.message ?? e)
     err(res, 'GENERATION_FAILED', e.message, 500)
+  }
+})
+
+// POST /admin/standard-training/modules/:id/draft-activities — draft interactive
+// activities from the course's own lesson content. Returns them for review; it
+// deliberately does NOT save, so the platform editor can show them, let you edit
+// the wording, and only then write them with the normal module PATCH.
+const ACTIVITY_PROMPT = `You write interactive exercises for UK adult social care e-learning.
+
+You will be given a course's lesson sections. Produce interactive activities that make the learner DO something, in addition to the reading and the multiple-choice questions they already have. Ground every activity in the lesson content you are given — never introduce rules the course does not teach.
+
+Return ONLY a JSON array, no prose and no markdown fences:
+[
+  {
+    "type": "match",
+    "title": "Short instruction-style title",
+    "instructions": "One sentence telling the learner what to do.",
+    "after_section": 0,
+    "pairs": [{ "term": "A term the course uses", "definition": "Its plain-English meaning, one sentence" }]
+  },
+  {
+    "type": "sort",
+    "title": "…", "instructions": "…", "after_section": 2,
+    "bins":  [{ "id": "bin1", "name": "Short category name", "note": "A few words on what belongs here" }],
+    "items": [{ "text": "A specific, realistic item", "bin": "bin1" }]
+  },
+  {
+    "type": "order",
+    "title": "…", "instructions": "…", "after_section": 1,
+    "steps": ["The steps of a procedure, IN THE CORRECT ORDER"]
+  }
+]
+Rules:
+- "after_section" is the 0-based index of the lesson section the activity follows. Put each activity after the section that teaches it.
+- match: 4 to 6 pairs. Terms must be distinct; definitions must not give the term away word-for-word.
+- sort: exactly 3 bins and 5 to 6 items, spread across the bins so no bin is empty. Each item names one bin id. Items must be concrete and unambiguous — a competent worker should not be able to argue for two bins.
+- order: 4 to 6 steps of ONE real procedure, in the correct sequence. Only use a procedure where the order genuinely matters.
+- Plain, concrete British English in short sentences — this is translated into 60+ languages, so every string must stand on its own and never depend on the wording of another.
+- Do not reuse the wording of existing quiz questions.`
+
+standardTrainingRouter.post('/modules/:id/draft-activities', async (req: Request, res: Response) => {
+  const module = await (prisma as any).trainingModule.findFirst({
+    where:  { id: req.params.id, tenant_id: null },
+    select: { id: true, name: true, learning_content: true },
+  })
+  if (!module) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+
+  const wanted: string[] = Array.isArray(req.body?.types) && req.body.types.length
+    ? req.body.types.filter((t: any) => ['order', 'sort', 'match'].includes(String(t)))
+    : ['match', 'sort']
+  const learn    = (module.learning_content ?? {}) as any
+  const sections = (Array.isArray(learn.sections) ? learn.sections : []) as any[]
+  if (!sections.length) { err(res, 'NO_LESSON', 'This module has no lesson sections to build activities from.', 400); return }
+
+  const lesson = sections
+    .map((s: any, i: number) => `Section ${i} — ${String(s?.heading ?? '')}\n${String(s?.body ?? '')}`)
+    .join('\n\n')
+    .slice(0, 24_000)
+
+  try {
+    const raw = await callClaude(
+      ACTIVITY_PROMPT,
+      `Course: ${module.name}\n\nProduce exactly one activity of each of these types: ${wanted.join(', ')}.\n\nLesson content:\n"""\n${lesson}\n"""`,
+      { maxTokens: 3000, temperature: 0.4, feature: 'training_activities' },
+    )
+    const jsonStart = raw.indexOf('[')
+    const jsonEnd   = raw.lastIndexOf(']')
+    if (jsonStart < 0 || jsonEnd < jsonStart) throw new Error('no JSON array in the response')
+    const parsed = JSON.parse(raw.slice(jsonStart, jsonEnd + 1))
+    const activities = normaliseActivities(
+      (Array.isArray(parsed) ? parsed : []).map((a: any, i: number) => ({ ...a, id: `act${Date.now()}${i}` })),
+    )
+    if (!activities.length) { err(res, 'GENERATION_FAILED', 'Nothing usable came back — try again.', 502); return }
+    ok(res, { activities })
+  } catch (e: any) {
+    console.error('[std-training/draft-activities] failed:', e?.message ?? e)
+    err(res, 'GENERATION_FAILED', 'Could not draft activities — try again.', 502)
   }
 })
 

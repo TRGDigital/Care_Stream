@@ -9,6 +9,7 @@ import { createApiClient, apiAssetUrl } from '@/lib/api-client'
 import { TrainingRatingCard } from '@/components/hub/training-rating-card'
 import { SuggestTranslation, InlineEditableText } from '@/components/hub/suggest-translation'
 import { ListenButton } from '@/components/hub/listen-button'
+import { ActivityStep, type Activity as HubActivity } from '@/components/hub/activity-step'
 import { joinSpoken, speakOverview, speakQuestion } from '@/lib/speech'
 import { persistentCache, hubKey } from '@/lib/page-cache'
 import { TrainingCertificate } from '@/components/training-certificate'
@@ -215,6 +216,7 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
   const [step, setStep] = useState(0)  // 0 = overview, 1..N = sections (paginated lesson)
   const [sel, setSel] = useState<Record<string, number>>({})
   const [checkSel, setCheckSel] = useState<Record<string, number>>({})  // in-lesson knowledge checks
+  const [actDone, setActDone] = useState<Record<string, boolean>>({})   // interactive activities attempted
   const [revealed, setRevealed] = useState<Record<string, boolean>>({})  // scenario answers revealed
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<any>(null)
@@ -318,6 +320,9 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
   for (const q of (data2?.questions ?? [])) q2ById[q.id] = q  // per-question 2nd-language lookup
   const answered = qs.filter(q => sel[q.id] != null).length
   const sections: any[] = Array.isArray(learnActive.learning?.sections) ? learnActive.learning.sections : []
+  // Interactive activities, in addition to the sections — a course without any
+  // behaves exactly as it always has.
+  const activities: HubActivity[] = Array.isArray(learnActive.activities) ? learnActive.activities : []
 
   // Result
   if (result) {
@@ -453,13 +458,20 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
           // has one, a separate quick-check step (keeping the same section image).
           // A pre-lesson baseline check (if set on the module and not yet done) sits
           // between the overview and the first section.
-          type LStep = { type: 'overview' } | { type: 'baseline' } | { type: 'teach'; i: number } | { type: 'check'; i: number }
+          type LStep = { type: 'overview' } | { type: 'baseline' } | { type: 'teach'; i: number } | { type: 'check'; i: number } | { type: 'activity'; i: number }
           const baselineQs: any[] = (data.status !== 'complete' && data.baseline?.done === false && Array.isArray(data.baseline?.questions)) ? data.baseline.questions : []
           const lessonSteps: LStep[] = [{ type: 'overview' }]
           if (baselineQs.length > 0) lessonSteps.push({ type: 'baseline' })
           sections.forEach((sc: any, i: number) => {
             lessonSteps.push({ type: 'teach', i })
             if (sc.check?.question && Array.isArray(sc.check.options) && sc.check.options.length > 0) lessonSteps.push({ type: 'check', i })
+            // Activities pinned to this section follow its teaching and quick check.
+            activities.forEach((a, ai) => { if (a.after_section === i) lessonSteps.push({ type: 'activity', i: ai }) })
+          })
+          // Anything not pinned to a section (or pinned past the end) closes the lesson.
+          activities.forEach((a, ai) => {
+            const pinned = a.after_section != null && a.after_section < sections.length
+            if (!pinned) lessonSteps.push({ type: 'activity', i: ai })
           })
           const totalStages = lessonSteps.length + 1   // + assessment
           const idx         = Math.min(step, lessonSteps.length - 1)
@@ -471,10 +483,14 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
           // On a quick-check step, the learner must answer before they can move on.
           // On the baseline step, every question needs an answer first.
           const baselineAnswered = baselineQs.filter((q: any) => baselineSel[q.id] != null).length
-          const needsAnswer = (cur.type === 'check' && picked === undefined) || (cur.type === 'baseline' && baselineAnswered < baselineQs.length)
+          const curAct = cur.type === 'activity' ? activities[cur.i] : null
+          const needsAnswer = (cur.type === 'check' && picked === undefined)
+            || (cur.type === 'baseline' && baselineAnswered < baselineQs.length)
+            || (!!curAct && !actDone[curAct.id])
           const isRight     = sec ? picked === sec.check?.correct : false
           const label       = cur.type === 'overview' ? 'Overview'
             : cur.type === 'baseline' ? 'Before you start'
+            : cur.type === 'activity' ? 'Try it yourself'
             : cur.type === 'teach' ? `Section ${cur.i + 1} of ${sections.length}`
             : `Section ${cur.i + 1} — quick check`
 
@@ -614,6 +630,9 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                     ))}
                   </div>
                 </div>
+              ) : curAct ? (
+                /* ── Interactive activity — extra to the sections, never instead of them ── */
+                <ActivityStep token={token} act={curAct} onAttempt={() => setActDone(d => ({ ...d, [curAct.id]: true }))} />
               ) : sec ? (
                 /* ── Section step (teach OR check), same image on both ── */
                 <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
@@ -709,8 +728,8 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                 {cur.type === 'baseline'
                   ? <button onClick={() => { submitBaselineAnswers(); if (isLastLearn) { flushLearnTime(); setPhase('assess') } else setStep(step + 1) }} disabled={needsAnswer} title={needsAnswer ? 'Answer every question to continue' : undefined} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-40 disabled:hover:bg-teal">Continue to the lesson →</button>
                   : isLastLearn
-                  ? <button onClick={() => { flushLearnTime(); setPhase('assess') }} disabled={needsAnswer} title={needsAnswer ? 'Answer the question to continue' : undefined} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-40 disabled:hover:bg-teal">Start assessment ({qs.length}) →</button>
-                  : <button onClick={() => setStep(step + 1)} disabled={needsAnswer} title={needsAnswer ? 'Answer the question to continue' : undefined} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-40 disabled:hover:bg-teal">Next →</button>}
+                  ? <button onClick={() => { flushLearnTime(); setPhase('assess') }} disabled={needsAnswer} title={needsAnswer ? (curAct ? 'Have a go, then check your answers to continue' : 'Answer the question to continue') : undefined} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-40 disabled:hover:bg-teal">Start assessment ({qs.length}) →</button>
+                  : <button onClick={() => setStep(step + 1)} disabled={needsAnswer} title={needsAnswer ? (curAct ? 'Have a go, then check your answers to continue' : 'Answer the question to continue') : undefined} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-40 disabled:hover:bg-teal">Next →</button>}
               </div>
             </div>
           )

@@ -15,24 +15,37 @@ import { buildProgrammeState, enrolOnProgramme, programmeDurationMinutes } from 
 import { illustrationUrl } from '../services/training/moduleImage'
 import { notifyStaffAllocation } from '../lib/notify'
 import { checkAnnualLicenseLimit, PlanLimitError } from '../lib/plan-limits'
+import { facilityTypeToSetting } from '../lib/care-setting'
 
 export const programmesRouter = Router()
 
 const PROGRAMME_INCLUDE = { units: { orderBy: { order: 'asc' as const } } }
 
-// Published platform programmes this tenant may see. A programme with a non-empty
-// pilot_tenant_ids is visible ONLY to those tenants — so a new diploma can be
-// published and tested in a sandbox tenant without reaching real clients.
-function visibleWhere(tenantId: string) {
+// Published platform programmes this tenant may see. Two gates:
+//  • pilot_tenant_ids — non-empty means ONLY those tenants, so a new diploma can be
+//    published and piloted in a sandbox tenant without reaching real clients.
+//  • care_setting — NULL means every setting; otherwise only tenants of that setting
+//    (a Complex Care diploma should not appear for a dental practice).
+function visibleWhere(tenantId: string, setting: string | null) {
   return {
     tenant_id: null, approved: true, is_active: true,
-    OR: [{ pilot_tenant_ids: { isEmpty: true } }, { pilot_tenant_ids: { has: tenantId } }],
+    AND: [
+      { OR: [{ pilot_tenant_ids: { isEmpty: true } }, { pilot_tenant_ids: { has: tenantId } }] },
+      { OR: [{ care_setting: null }, ...(setting ? [{ care_setting: setting }] : [])] },
+    ],
   }
 }
 
-async function publishedProgrammes(tenantId: string) {
+// The tenant's setting slug, derived from its facility type (same mapping the
+// standard module library uses).
+async function tenantSetting(tenantId: string): Promise<string | null> {
+  const t = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { facility_type: true } }).catch(() => null)
+  return t ? facilityTypeToSetting(t.facility_type) : null
+}
+
+async function publishedProgrammes(tenantId: string, setting: string | null) {
   return (prisma as any).trainingProgramme.findMany({
-    where:   visibleWhere(tenantId),
+    where:   visibleWhere(tenantId, setting),
     orderBy: [{ sort_order: 'asc' }, { name: 'asc' }],
     include: PROGRAMME_INCLUDE,
   })
@@ -42,7 +55,7 @@ async function publishedProgrammes(tenantId: string) {
 programmesRouter.get('/', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   try {
-    const programmes = await publishedProgrammes(tenantId)
+    const programmes = await publishedProgrammes(tenantId, await tenantSetting(tenantId))
     const ids = (programmes as any[]).map(p => p.id)
 
     const moduleIds = [...new Set((programmes as any[]).flatMap(p => p.units.map((u: any) => u.module_id)))]
@@ -96,7 +109,7 @@ programmesRouter.get('/', requireAdmin, async (req: Request, res: Response) => {
 programmesRouter.get('/:id/staff', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   const programme = await (prisma as any).trainingProgramme.findFirst({
-    where: { id: req.params.id, ...visibleWhere(tenantId) }, include: PROGRAMME_INCLUDE,
+    where: { id: req.params.id, ...visibleWhere(tenantId, await tenantSetting(tenantId)) }, include: PROGRAMME_INCLUDE,
   })
   if (!programme) { err(res, 'NOT_FOUND', 'Programme not found', 404); return }
 
@@ -144,7 +157,7 @@ programmesRouter.post('/:id/enrol', requireAdmin, async (req: Request, res: Resp
   if (!userIds.length) { err(res, 'VALIDATION_ERROR', 'user_ids required'); return }
 
   const programme = await (prisma as any).trainingProgramme.findFirst({
-    where: { id: req.params.id, ...visibleWhere(tenantId) }, include: PROGRAMME_INCLUDE,
+    where: { id: req.params.id, ...visibleWhere(tenantId, await tenantSetting(tenantId)) }, include: PROGRAMME_INCLUDE,
   })
   if (!programme) { err(res, 'NOT_FOUND', 'Programme not found or not published', 404); return }
   if (!programme.units.length) { err(res, 'NO_UNITS', 'This programme has no units yet.', 422); return }

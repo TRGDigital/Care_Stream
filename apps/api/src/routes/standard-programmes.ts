@@ -88,7 +88,11 @@ standardProgrammesRouter.get('/', async (_req: Request, res: Response) => {
       groups:   TOPIC_GROUP_LABELS,
       settings: CARE_SETTINGS.map(s => ({ key: s, label: SETTING_LABELS[s] })),
       tenants,
-      templates: DIPLOMA_TEMPLATES.map(t => ({ slug: t.slug, name: t.name, unit_count: t.units.length })),
+      templates: DIPLOMA_TEMPLATES.map(t => ({
+        slug: t.slug, name: t.name, kind: t.kind, care_setting: t.care_setting ?? null,
+        unit_count: t.units.length,
+        required_count: t.units.filter(u => !u.is_optional).length,
+      })),
       programmes: (programmes as any[]).map(p => {
         const unitModules = p.units.map((u: any) => byId.get(u.module_id)).filter(Boolean)
         const qa = runProgrammeQa(p, unitModules)
@@ -110,6 +114,10 @@ standardProgrammesRouter.get('/', async (_req: Request, res: Response) => {
           cpd_hours: minutes ? Math.round((minutes / 60) * 10) / 10 : null,
           outcomes_count: Array.isArray(p.outcomes) ? p.outcomes.length : 0,
           standards_count: Array.isArray(p.standards) ? p.standards.length : 0,
+          // CPD accreditation progress: how many units are accredited. Publishing does
+          // NOT need this — it only governs whether the certificate can carry CPD branding.
+          cpd_units: unitModules.filter((m: any) => m?.cpd_accredited).length,
+          cpd_ready: unitModules.length > 0 && unitModules.every((m: any) => m?.cpd_accredited),
           illustration_url: illustrationUrl(p.illustration_key),
           qa_hard_fails: qa.hard_fails, qa_warnings: qa.warnings,
           enrolled: enrolBy.get(p.id)?.total ?? 0,
@@ -454,6 +462,7 @@ standardProgrammesRouter.post('/from-template', async (req: Request, res: Respon
       description: template.description,
       kind: template.kind,
       group_key: template.group_key ?? null,
+      care_setting: template.care_setting ?? null,
       outcomes: template.outcomes,
       standards: normaliseStandards(template.standards ?? []),
       sequential: !!template.sequential,

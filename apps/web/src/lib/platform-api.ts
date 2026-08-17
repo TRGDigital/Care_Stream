@@ -680,7 +680,7 @@ export function createPlatformClient(token: string) {
         groups: Record<string, string>
         settings: Array<{ key: string; label: string }>
         tenants: Array<{ id: string; name: string; account_number: string }>
-        templates: Array<{ slug: string; name: string; unit_count: number }>
+        templates: Array<{ slug: string; name: string; kind: string; care_setting: string | null; unit_count: number; required_count: number }>
         programmes: Array<{
           id: string; slug: string; name: string; description: string; kind: string
           group_key: string | null; care_setting: string | null; is_active: boolean
@@ -694,6 +694,7 @@ export function createPlatformClient(token: string) {
           unit_count: number; units_missing: number
           duration_minutes: number | null; cpd_hours: number | null
           outcomes_count: number; standards_count: number
+          cpd_units: number; cpd_ready: boolean
           illustration_url: string | null
           qa_hard_fails: number; qa_warnings: number
           enrolled: number; completed: number

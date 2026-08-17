@@ -104,7 +104,12 @@ export function ProgrammeCertificate({
           </div>
           <div>
             <p className="text-lg font-bold text-teal">{cpd?.hours != null ? cpd.hours : '—'}</p>
-            <p className="mt-0.5 text-[10px] uppercase tracking-wide text-neutral-mid">CPD hours</p>
+            {/* Only call them CPD hours once the programme is actually accredited.
+                Until then they are learning hours — true either way, and it avoids
+                implying accreditation the units do not yet carry. */}
+            <p className="mt-0.5 text-[10px] uppercase tracking-wide text-neutral-mid">
+              {cpd?.accredited ? 'CPD hours' : 'Learning hours'}
+            </p>
           </div>
           <div>
             <p className="text-lg font-bold text-teal">{synoptic?.score != null ? `${synoptic.score}%` : '—'}</p>

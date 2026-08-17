@@ -143,20 +143,38 @@ export default function ProgrammesPage() {
               Assembles the programme from your published standard library, matching units by title.
               Anything not published yet is reported so you can fill the gap.
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {data.templates.map((t: any) => (
-                <button
-                  key={t.slug}
-                  onClick={() => buildFromTemplate(t.slug)}
-                  disabled={busy === `tpl:${t.slug}`}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-teal/40 bg-white px-3 py-2 text-sm font-medium text-teal-dark hover:bg-teal-light/40 disabled:opacity-50"
-                >
-                  {busy === `tpl:${t.slug}` ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                  {t.name}
-                  <span className="text-xs font-normal text-neutral-mid">{t.unit_count} units</span>
-                </button>
-              ))}
-            </div>
+            {/* Grouped so the three kinds read as three decisions, not one long list:
+                universal diplomas sell to everyone, setting-specific ones only appear
+                for tenants of that setting, pathways are the shorter routes. */}
+            {[
+              { key: 'universal', label: 'Universal diplomas — every setting', test: (t: any) => t.kind === 'diploma' && !t.care_setting },
+              { key: 'setting',   label: 'Setting-specific diplomas',          test: (t: any) => t.kind === 'diploma' && !!t.care_setting },
+              { key: 'pathway',   label: 'Pathways — shorter, focused routes',  test: (t: any) => t.kind !== 'diploma' },
+            ].map(group => {
+              const items = data.templates.filter(group.test)
+              if (!items.length) return null
+              return (
+                <div key={group.key} className="mt-3">
+                  <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">{group.label}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {items.map((t: any) => (
+                      <button
+                        key={t.slug}
+                        onClick={() => buildFromTemplate(t.slug)}
+                        disabled={busy === `tpl:${t.slug}`}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-teal/40 bg-white px-3 py-2 text-left text-sm font-medium text-teal-dark hover:bg-teal-light/40 disabled:opacity-50"
+                      >
+                        {busy === `tpl:${t.slug}` ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                        {t.name}
+                        <span className="text-xs font-normal text-neutral-mid">
+                          {t.required_count} req{t.unit_count > t.required_count ? ` +${t.unit_count - t.required_count}` : ''}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
 
@@ -204,6 +222,12 @@ export default function ProgrammesPage() {
                     <span><strong className="text-neutral-dark">{p.synoptic_count}</strong> final-assessment Qs</span>
                     <span>{p.outcomes_count} outcomes · {p.standards_count} standards</span>
                     {p.price_pence != null && <span>£{(p.price_pence / 100).toFixed(2)}</span>}
+                    {/* CPD accreditation progress. Publishing never depends on this —
+                        it only governs whether the certificate carries CPD branding. */}
+                    <span className={p.cpd_ready ? 'font-medium text-teal' : ''}>
+                      CPD {p.cpd_units}/{p.unit_count - p.units_missing} units
+                      {p.cpd_ready ? ' — ready' : ''}
+                    </span>
                     {p.enrolled > 0 && <span><strong className="text-neutral-dark">{p.enrolled}</strong> enrolled · {p.completed} complete</span>}
                   </div>
                 </div>

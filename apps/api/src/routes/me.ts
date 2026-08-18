@@ -19,6 +19,7 @@ import { trackAiAction, getPlanFeatures } from '../lib/plan-limits'
 import { illustrationUrl } from '../services/training/moduleImage'
 import { pickImageSource } from '../services/training/coverMatch'
 import { buildProgrammeState, syncProgrammeStatus } from '../services/training/programme'
+import { notifyReviewerActivity } from '../lib/reviewer-alerts'
 import { getAuditsDue } from '../services/audits/due'
 import { getPendingAuditApprovals, getRecentApprovedAudits, managerApproveAudit, rejectAudit } from '../services/audits/approval'
 import { getMyActions, countMyOpenActions, setMyActionStatus, getExternalActions, countOpenExternalActions, setExternalActionStatus } from '../services/audits/action-plan'
@@ -808,6 +809,7 @@ meRouter.get('/annual-training', async (req: Request, res: Response) => {
 meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   const userId   = (req as any).user.sub
+  // Reviewer (CPD assessor) opened a course — deduped per course, fire and forget.
   const [enr, user, tenant] = await Promise.all([
     (prisma as any).trainingEnrollment.findFirst({
       where:   { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
@@ -817,6 +819,7 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true, translation_glossary: true } }).catch(() => null),
   ])
   if (!enr || !(enr.module?.source === 'ai_generated' || moduleHasLesson(enr.module))) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+  notifyReviewerActivity(userId, 'open', `opened "${enr.module.name}"`, 'They are working through the course in the hub.', enr.module_id).catch(() => {})
 
   const m = enr.module
 
@@ -985,6 +988,10 @@ meRouter.post('/annual-training/:enrollmentId/submit', async (req: Request, res:
           .catch((e: any) => console.error('[annual-training/submit] programme sync failed:', e?.message ?? e))
       }
     })().catch((e: any) => console.error('[annual-training/submit] programme sync failed:', e?.message ?? e))
+
+    // Reviewer (CPD assessor) passed a course — always alerted, never throttled.
+    notifyReviewerActivity(userId, 'complete', `completed "${enr.module.name}" with ${score}%`,
+      `Pass mark ${passMark}%. Their certificate has been issued.`).catch(() => {})
   }
   ok(res, { passed, score, correct, total, pass_mark: passMark })
 })

@@ -1193,3 +1193,47 @@ export async function sendActionPlanExternalEmail(opts: { to: string; orgName: s
 
   await sgMail.send({ to: opts.to, from, subject: `External contractor actions to track — ${opts.orgName}`, html })
 }
+
+// ─── CPD assessor activity alert ─────────────────────────────────────────────
+// While a course is with the CPD Certification Service, tell us the moment their
+// assessor actually starts looking. Sent to REVIEWER_ALERT_EMAIL.
+
+export async function sendReviewerActivityEmail(opts: {
+  to: string
+  reviewerName: string
+  reviewerEmail: string
+  event: string            // human-readable: what they just did
+  detail?: string | null   // optional second line
+  when: Date
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) return
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const stamp = opts.when.toLocaleString('en-GB', { timeZone: 'Europe/London', dateStyle: 'medium', timeStyle: 'short' })
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">CPD assessor activity</p>
+
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 20px">
+      <strong>${opts.event}</strong>
+    </p>
+
+    <div style="background:#f8f6fb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 18px;margin:0 0 24px">
+      <p style="margin:0 0 4px;font-size:13px;color:#374151"><strong>Who:</strong> ${opts.reviewerName} (${opts.reviewerEmail})</p>
+      <p style="margin:0 0 4px;font-size:13px;color:#374151"><strong>When:</strong> ${stamp}</p>
+      ${opts.detail ? `<p style="margin:0;font-size:13px;color:#374151">${opts.detail}</p>` : ''}
+    </div>
+
+    <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0 0 8px">
+      You are receiving this because a reviewer account is active. Alerts are grouped so a single
+      session does not send repeatedly.
+    </p>
+  `)
+
+  await sgMail.send({
+    to: opts.to,
+    from: { email: from, name: 'CareStream' },
+    subject: `CPD assessor: ${opts.event}`,
+    html,
+  })
+}

@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express'
 import { z } from 'zod'
 import crypto from 'crypto'
 import { prisma } from '../db/client'
+import { notifyReviewerActivity } from '../lib/reviewer-alerts'
 import { hashPassword, verifyPassword } from '../services/auth/password'
 import { generateAccessToken, verifyAccessToken } from '../services/auth/tokens'
 import { issueRefreshToken, rotateRefreshToken } from '../lib/refresh-tokens'
@@ -310,6 +311,8 @@ async function respondWithSession(res: Response, user: any): Promise<void> {
     data:  { failed_login_attempts: 0, locked_until: null, last_login_at: now, ...(user.first_login_at ? {} : { first_login_at: now }) },
   })
   await writeAuditLog({ tenant_id: user.tenant_id, user_id: user.id, event_type: 'login', entity_type: 'user', entity_id: user.id })
+  // Reviewer (CPD assessor) sign-in alert — fire and forget, never blocks login.
+  notifyReviewerActivity(user.id, 'signin', 'signed in to the hub').catch(() => {})
   // Hard gate for the card-up-front trial: a tenant that hasn't started a Stripe
   // subscription yet (and isn't already active) must add a card before using the app.
   const needsBilling = user.tenant?.tier !== 'training_only' && user.tenant.subscription_status !== 'active' && !user.tenant.stripe_subscription_id

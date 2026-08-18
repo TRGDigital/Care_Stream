@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { applyRoleNames } from '@/lib/policy-names'
-import { X, Loader2, CheckCircle2, Check, Plus, FileText, Sparkles, Mail, Scale, FilePlus2, FilePenLine, GraduationCap, Search, BookOpen, ChevronDown, HelpCircle, EyeOff } from 'lucide-react'
+import { X, Loader2, CheckCircle2, Check, Plus, FileText, Sparkles, Mail, Scale, FilePlus2, FilePenLine, GraduationCap, Search, BookOpen, ChevronDown, HelpCircle, EyeOff, Info } from 'lucide-react'
 
 type Detail = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gapDetail']>>
 
@@ -23,6 +23,19 @@ type HighlightItem = { i: number; quote: string; placement: string; label?: stri
 const SHOW_PAID_CTA = false
 
 const normText = (s: string) => (s || '').toLowerCase().replace(/\s+/g, ' ').trim()
+
+// Hover "i", matching the StepInfoDot pattern on /gaps. Left-anchored so it does
+// not clip against the modal's edge.
+function InfoDot({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="group relative inline-flex shrink-0 align-middle">
+      <Info size={12} className="cursor-help text-neutral-mid/60 group-hover:text-teal" />
+      <span className="pointer-events-none absolute left-0 top-full z-40 mt-1.5 hidden w-72 rounded-lg border border-gray-200 bg-white p-3 text-left text-[11px] font-normal normal-case leading-relaxed text-neutral-dark shadow-lg group-hover:block">
+        {children}
+      </span>
+    </span>
+  )
+}
 
 // Tolerant normalisation for anchor matching: unify curly quotes and dashes (the extracted
 // text the AI quotes from and the rendered HTML often differ on these), then collapse space.
@@ -994,7 +1007,14 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                                 )}
                                 {(adoptAsNewSection || r.placement === 'new_section') && (
                                   <div className="mb-2">
-                                    <label className="text-[10px] font-bold uppercase tracking-wide text-neutral-mid">Section heading{adoptAsNewSection ? ' (added at the end of the policy)' : ''}</label>
+                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-neutral-mid">
+                                      Section heading
+                                      {adoptAsNewSection && (
+                                        <InfoDot>
+                                          This wording will be added as a <span className="font-semibold">new section at the bottom of your {detail.target_policy?.name ?? 'policy'}</span>, under the heading you set here — above the review dates and sign-off. Nothing already in the policy is changed or replaced. Like any adopted change it goes to <span className="font-semibold">Adopted changes to review</span> on the Policies page, and appears in the policy once you approve and publish it.
+                                        </InfoDot>
+                                      )}
+                                    </label>
                                     <input value={adoptTitle} onChange={e => setAdoptTitle(e.target.value)} className="mt-0.5 w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm focus:border-teal focus:outline-none" />
                                   </div>
                                 )}

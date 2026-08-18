@@ -442,6 +442,11 @@ export default function PoliciesPage() {
           token={session.accessToken}
           policy={previewPolicy}
           onClose={() => setPreviewPolicy(null)}
+          onRename={async name => {
+            const p = policies.find(x => x.id === previewPolicy.id)
+            if (p) await renamePolicy(p, name)
+            setPreviewPolicy(prev => (prev ? { ...prev, name } : prev))
+          }}
         />
       )}
       {reviewTarget && session?.accessToken && (
@@ -903,11 +908,16 @@ function PolicyActions({
 }
 
 // ─── Policy Preview (how it renders for staff) ────────────────────────────────
-function PolicyPreviewModal({ token, policy, onClose }: {
+function PolicyPreviewModal({ token, policy, onClose, onRename }: {
   token: string
   policy: { id: string; name: string }
   onClose: () => void
+  onRename?: (name: string) => void | Promise<void>
 }) {
+  // Held locally so the heading updates the moment it is saved, without waiting for the
+  // list behind the modal to refetch.
+  const [name, setName] = useState(policy.name)
+  const [renaming, setRenaming] = useState<string | null>(null)
   const [data, setData]     = useState<{ name: string; status: string; cached: boolean; html: string; raw: string; has_raw: boolean } | null>(null)
   const [editNote, setEditNote] = useState('')
   const [loading, setLoad]  = useState(true)
@@ -921,12 +931,48 @@ function PolicyPreviewModal({ token, policy, onClose }: {
       .finally(() => setLoad(false))
   }, [token, policy.id])
 
+  function commitRename() {
+    const next = (renaming ?? '').trim().replace(/\s+/g, ' ')
+    setRenaming(null)
+    if (!next || next === name) return
+    setName(next)              // optimistic; the parent rolls the list back if it fails
+    void onRename?.(next)
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-8" onClick={onClose}>
       <div className="w-full max-w-3xl rounded-xl bg-white shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-3 border-b border-gray-100 px-6 py-4">
           <div className="min-w-0">
-            <h2 className="truncate text-base font-semibold text-neutral-dark">{policy.name}</h2>
+            {renaming !== null ? (
+              <input
+                autoFocus
+                value={renaming}
+                maxLength={200}
+                onChange={e => setRenaming(e.target.value)}
+                onBlur={() => { commitRename() }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter')  { e.preventDefault(); commitRename() }
+                  if (e.key === 'Escape') { e.preventDefault(); setRenaming(null) }
+                }}
+                className="w-full rounded-md border border-purple-300 px-2 py-1 text-base font-semibold text-neutral-dark focus:outline-none focus:ring-1 focus:ring-purple-300"
+              />
+            ) : (
+              <div className="group/title flex min-w-0 items-center gap-2">
+                <h2 className="truncate text-base font-semibold text-neutral-dark">{name}</h2>
+                {onRename && (
+                  <button
+                    type="button"
+                    aria-label={`Rename ${name}`}
+                    title="Rename this policy"
+                    onClick={() => setRenaming(name)}
+                    className="shrink-0 rounded p-0.5 text-neutral-mid opacity-0 transition-opacity hover:text-purple-600 focus:opacity-100 group-hover/title:opacity-100"
+                  >
+                    <Pencil size={13} />
+                  </button>
+                )}
+              </div>
+            )}
             <p className="mt-0.5 text-xs text-neutral-mid">How this policy looks to your staff (letterhead, contacts &amp; footers removed). Spotted a typo? Click any line to correct it.</p>
           </div>
           <button onClick={onClose} className="shrink-0 text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>

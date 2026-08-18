@@ -1,4 +1,5 @@
 import express from 'express'
+import { classifyProviderError, alertProviderIssue } from './lib/provider-errors'
 import cors from 'cors'
 import helmet from 'helmet'
 import { authRouter } from './routes/auth'
@@ -216,6 +217,10 @@ function scheduleMidnightReminders(): void {
 // Async handlers must use try/catch and call next(err), but this catches anything that slips through.
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('[express-error]', err?.message ?? err)
+  // The response here is already generic, so nothing leaks — but a provider failure that
+  // reaches this handler would otherwise be invisible, so still raise the internal alert.
+  const issue = classifyProviderError(err?.message)
+  if (issue) void alertProviderIssue({ issue, rawMessage: String(err?.message ?? err), context: 'Unhandled express error' })
   if (!res.headersSent) res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred.' } })
 })
 

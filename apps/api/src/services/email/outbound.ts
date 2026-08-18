@@ -1198,6 +1198,69 @@ export async function sendActionPlanExternalEmail(opts: { to: string; orgName: s
 // While a course is with the CPD Certification Service, tell us the moment their
 // assessor actually starts looking. Sent to REVIEWER_ALERT_EMAIL.
 
+// Internal alert: an AI provider refused a request. Sent to the team, never to a tenant.
+// Deliberately carries the RAW provider message — the whole point is that we see the detail
+// the tenant was shielded from.
+export async function sendProviderCreditAlert(opts: {
+  to: string
+  issue: 'credit' | 'rate_limit' | 'upstream'
+  rawMessage: string
+  context: string
+  when: Date
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) return
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const stamp = opts.when.toLocaleString('en-GB', { timeZone: 'Europe/London', dateStyle: 'medium', timeStyle: 'short' })
+
+  const headline: Record<string, string> = {
+    credit:     'An AI provider account has run out of credit',
+    rate_limit: 'An AI provider is rate limiting us',
+    upstream:   'An AI provider returned an error',
+  }
+  const action: Record<string, string> = {
+    credit:     'Analyses, policy previews and the AI assistant will keep failing until the account is topped up. This needs a person.',
+    rate_limit: 'This usually clears on its own. Worth watching if it repeats.',
+    upstream:   'Check the raw message below — it may be a key, a model name or a provider outage.',
+  }
+  const tone: Record<string, string> = { credit: '#b91c1c', rate_limit: '#b45309', upstream: '#b45309' }
+
+  // Escape the provider text: it is untrusted input being placed into HTML.
+  const safeRaw = String(opts.rawMessage)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+  const html = emailWrapper(`
+    <p style="color:${tone[opts.issue]};font-size:15px;font-weight:700;margin:0 0 16px">${headline[opts.issue]}</p>
+
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 20px">
+      ${action[opts.issue]}
+    </p>
+
+    <div style="background:#f8f6fb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 18px;margin:0 0 20px">
+      <p style="margin:0 0 4px;font-size:13px;color:#374151"><strong>Where:</strong> ${opts.context}</p>
+      <p style="margin:0 0 4px;font-size:13px;color:#374151"><strong>When:</strong> ${stamp}</p>
+      <p style="margin:0;font-size:13px;color:#374151"><strong>Type:</strong> ${opts.issue}</p>
+    </div>
+
+    <p style="color:#6b7280;font-size:13px;margin:0 0 6px"><strong>Raw provider message</strong> (tenants never see this):</p>
+    <div style="background:#111827;border-radius:8px;padding:12px 14px;margin:0 0 24px">
+      <code style="color:#e5e7eb;font-size:12px;line-height:1.5;word-break:break-word">${safeRaw}</code>
+    </div>
+
+    <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0 0 8px">
+      The tenant saw a neutral message instead, with no supplier, account or link in it.
+      Repeat alerts of the same type are grouped so an outage does not flood your inbox.
+    </p>
+  `)
+
+  await sgMail.send({
+    to: opts.to,
+    from: { email: from, name: 'CareStream' },
+    subject: `CareStream: ${headline[opts.issue]}`,
+    html,
+  })
+}
+
 export async function sendReviewerActivityEmail(opts: {
   to: string
   reviewerName: string

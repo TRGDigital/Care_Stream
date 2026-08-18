@@ -128,7 +128,7 @@ function sessionRef(id: string): string {
 }
 
 const RETURN_LABEL: Record<'induction' | 'training' | 'followup' | 'annual' | 'audits', string> = {
-  induction: 'My Induction', training: 'My Training', followup: 'Follow-up', annual: 'Annual Training', audits: 'Audits',
+  induction: 'My Induction', training: 'My Training', followup: 'Follow-up', annual: 'CPD Approved Courses', audits: 'Audits',
 }
 
 const CATEGORY_LABELS: Record<DocumentCategory, { title: string; subtitle: string }> = {
@@ -583,7 +583,12 @@ function ChatPageInner() {
       }
       warm('induction',   () => api.onboarding.myEnrollments().then(d => d.enrollments))
       warm('my-training', () => api.training.myEnrollments().then(d => d.enrollments))
-      warm('annual',      () => api.me.annualTraining.list().then(d => d.items))
+      // The CPD area caches CPD-tier items only; the same fetch also warms the
+      // pre-built courses cache for My Training, so one request feeds both.
+      warm('annual',      () => api.me.annualTraining.list().then(d => {
+        persistentCache.set(hubKey('prebuilt-courses', userId), d.items.filter((it: any) => it.tier !== 'cpd'))
+        return d.items.filter((it: any) => it.tier === 'cpd')
+      }))
       if (canAudit && !trainingOnly) warm('audits', () => Promise.all([api.audits.templates(), api.audits.runs()]).then(([tp, r]) => ({ templates: tp.templates ?? [], runs: r.runs ?? [], rooms: tp.rooms ?? [] })))
     }, 500)
     return () => clearTimeout(t)
@@ -945,7 +950,7 @@ function ChatPageInner() {
             className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'annual' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
           >
             <GraduationCap size={15} />
-            Annual Training
+            CPD Approved Courses
             {navCounts.annual > 0 && <NavBadge count={navCounts.annual} className="bg-teal" />}
           </button>
           {navCounts.programmes > 0 && (
@@ -2172,6 +2177,10 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
   // A statutory module that has a scenario lesson plays through the rich stepped
   // player (same as Annual training), via the annual TakeModule/CertView.
   const [taking,     setTaking]      = useState<{ mode: 'take'; id: string; name: string } | { mode: 'cert'; id: string } | null>(null)
+  // Pre-built courses (platform library, rich lesson player) also live under My
+  // Training — CPD approved courses have their own hub area. Fetched from the same
+  // endpoint as CPD courses and split by tier.
+  const [courses, setCourses] = useState<any[]>(persistentCache.get<any[]>(hubKey('prebuilt-courses', userId)) ?? [])
   // Per-question second-language aid: flip an individual question into the 2nd
   // language to understand it; the rest of the module stays in the first language.
   const [langByQ, setLangByQ] = useState<Record<string, boolean>>({})
@@ -2254,6 +2263,13 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
     })
   }
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    api.me.annualTraining.list()
+      .then(d => { const c = d.items.filter((it: any) => it.tier !== 'cpd'); setCourses(c); persistentCache.set(hubKey('prebuilt-courses', userId), c) })
+      .catch(() => {})
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   if (taking?.mode === 'take') return <TakeModule token={token} id={taking.id} name={taking.name} backLabel="My Training" secondLang={secondLang} switchArea="training" onExit={(toCert) => { setTaking(toCert ? { mode: 'cert', id: taking.id } : null); load() }} />
   if (taking?.mode === 'cert') return <CertView token={token} id={taking.id} backLabel="My Training" onExit={() => { setTaking(null); load() }} />
 
@@ -2265,7 +2281,7 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
     )
   }
 
-  if (enrollments.length === 0) {
+  if (enrollments.length === 0 && courses.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 py-16 text-center">
         <Brain size={36} className="text-gray-200" />
@@ -2279,6 +2295,48 @@ function TrainingView({ token, userId, secondLang = null }: { token: string; use
     <div className="flex-1 overflow-y-auto px-4 py-6">
       <div className="mx-auto max-w-5xl">
         <h2 className="mb-4 text-xl font-bold text-neutral-dark">My Training</h2>
+
+        {/* Pre-built courses — full lesson-and-assessment courses from the CareStream
+            library. Open in the same rich player; passing issues a certificate. */}
+        {courses.length > 0 && (
+          <div className="mb-6">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Courses</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {courses.map((it: any) => {
+                const done = it.status === 'complete' && it.state !== 'overdue' && it.state !== 'due_soon'
+                return (
+                  <div key={it.enrollment_id} className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3.5 shadow-sm">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-neutral-dark">{it.name}</p>
+                      <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-neutral-mid">
+                        {done
+                          ? <span className="rounded-full bg-green-50 px-1.5 py-0.5 font-medium text-green-600">Completed</span>
+                          : it.state === 'overdue'
+                            ? <span className="rounded-full bg-red-50 px-1.5 py-0.5 font-medium text-red-600">Overdue</span>
+                            : it.state === 'due_soon'
+                              ? <span className="rounded-full bg-amber-50 px-1.5 py-0.5 font-medium text-amber-600">Renewal due</span>
+                              : it.status === 'in_progress'
+                                ? <span className="rounded-full bg-amber-50 px-1.5 py-0.5 font-medium text-amber-600">In progress</span>
+                                : <span className="rounded-full bg-gray-100 px-1.5 py-0.5 font-medium">To do</span>}
+                        {it.requires_practical && <span className="rounded-full bg-amber-50 px-1.5 py-0.5 font-medium text-amber-600">+ practical</span>}
+                      </p>
+                    </div>
+                    {done ? (
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <button onClick={() => setTaking({ mode: 'cert', id: it.enrollment_id })} className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-dark hover:bg-neutral-light">Certificate</button>
+                        <button onClick={() => setTaking({ mode: 'take', id: it.enrollment_id, name: it.name })} className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-dark hover:bg-neutral-light">Review</button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setTaking({ mode: 'take', id: it.enrollment_id, name: it.name })} className="shrink-0 rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90">
+                        {it.status === 'in_progress' ? 'Continue' : it.state === 'overdue' || it.state === 'due_soon' ? 'Renew' : 'Start'}
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Snapshot */}
         {(() => {

@@ -72,22 +72,26 @@ publicTrainingRouter.get('/standard-modules', async (_req: Request, res: Respons
       // before a module is formally approved. Approved versions are preferred.
       (prisma as any).trainingModule.findMany({
         where:   { tenant_id: null, source: 'ai_generated' },
-        select:  { id: true, topic_id: true, approved: true, description: true, frequency: true, duration_minutes: true, pass_mark: true, illustration_key: true },
+        select:  { id: true, topic_id: true, approved: true, description: true, frequency: true, duration_minutes: true, pass_mark: true, illustration_key: true, tier: true, cpd_accredited: true },
         orderBy: [{ approved: 'desc' }, { created_at: 'desc' }],
       }),
     ])
-    // First module per topic (approved preferred, then most recent) for text and
-    // meta; first module that has a cover (approved preferred) for the image.
+    // Each topic is described by its DESIGNATED module (shop_module_id — switched by
+    // us when a CPD version is genuinely accredited), falling back to the pre-built
+    // one. Never "newest module wins": a topic can carry an unaccredited CPD draft
+    // alongside its pre-built module, and drafts must not leak onto the public page.
+    const moduleById = new Map<string, any>((modules as any[]).map(m => [m.id, m]))
     const textByTopic = new Map<string, any>()
     const coverByTopic = new Map<string, any>()
     for (const m of (modules as any[])) {
-      if (!m.topic_id) continue
+      if (!m.topic_id || (m.tier ?? 'prebuilt') !== 'prebuilt') continue
       if (!textByTopic.has(m.topic_id)) textByTopic.set(m.topic_id, m)
       if (m.illustration_key && !coverByTopic.has(m.topic_id)) coverByTopic.set(m.topic_id, m)
     }
     const items = (topics as any[]).map(t => {
-      const txt   = textByTopic.get(t.id)
-      const cover = coverByTopic.get(t.id)
+      const designated = t.shop_module_id ? moduleById.get(t.shop_module_id) : null
+      const txt   = designated ?? textByTopic.get(t.id)
+      const cover = (designated?.illustration_key ? designated : null) ?? coverByTopic.get(t.id)
       return {
         slug:               slugify(t.title),
         title:              t.title,
@@ -99,6 +103,7 @@ publicTrainingRouter.get('/standard-modules', async (_req: Request, res: Respons
         description:        txt?.description ?? null,
         duration_minutes:   txt?.duration_minutes ?? null,
         pass_mark:          txt?.pass_mark ?? null,
+        cpd_accredited:     !!txt?.cpd_accredited,
         illustration_url:   cover ? illustrationUrl(cover.illustration_key) : null,
       }
     })
@@ -119,8 +124,12 @@ publicTrainingRouter.get('/standard-modules/:slug', async (req: Request, res: Re
     const topic = (topics as any[]).find(t => slugify(t.title) === slug)
     if (!topic) { res.status(404).json({ error: 'not found' }); return }
 
+    // The page describes the topic's designated module (shop_module_id), falling
+    // back to the pre-built one — never an unaccredited CPD draft.
     const modules = await (prisma as any).trainingModule.findMany({
-      where:   { tenant_id: null, source: 'ai_generated', topic_id: topic.id },
+      where:   topic.shop_module_id
+        ? { id: topic.shop_module_id }
+        : { tenant_id: null, source: 'ai_generated', tier: 'prebuilt', topic_id: topic.id },
       select:  { approved: true, description: true, frequency: true, duration_minutes: true, illustration_key: true, learning_content: true, standards: true, cpd_accredited: true },
       orderBy: [{ approved: 'desc' }, { created_at: 'desc' }],
     })
@@ -182,8 +191,12 @@ publicTrainingRouter.get('/standard-modules/:slug/demo', async (req: Request, re
     const topic = (topics as any[]).find(t => slugify(t.title) === slug)
     if (!topic) { res.status(404).json({ error: 'not found' }); return }
 
+    // Demo content comes from the topic's designated module (else pre-built) —
+    // same rule as the course page it sits on.
     const modules = await (prisma as any).trainingModule.findMany({
-      where:   { tenant_id: null, source: 'ai_generated', topic_id: topic.id },
+      where:   topic.shop_module_id
+        ? { id: topic.shop_module_id }
+        : { tenant_id: null, source: 'ai_generated', tier: 'prebuilt', topic_id: topic.id },
       select:  { learning_content: true, questions: true },
       orderBy: [{ approved: 'desc' }, { created_at: 'desc' }],
     })
@@ -528,7 +541,7 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
     }
     if (!items.length) { res.status(400).json({ error: 'No items on the payment' }); return }
 
-    const topics = await (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true }, select: { id: true, title: true } })
+    const topics = await (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true }, select: { id: true, title: true, shop_module_id: true } })
     const bySlug = new Map((topics as any[]).map(t => [slugify(t.title), t] as const))
     const renewalDue = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
 
@@ -575,12 +588,23 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
     }
 
     // One pooled licence per seat, per module, all tagged with the Stripe payment id.
+    // module_id records the EXACT module bought — the topic's designated shop module
+    // (falling back to its pre-built one) — so allocation never resolves by topic and
+    // a purchase can never land on the other tier once a topic carries both.
     let totalLicences = 0
     for (const it of items) {
       const topic = bySlug.get(it.slug)
+      let moduleId: string | null = topic?.shop_module_id ?? null
+      if (!moduleId && topic?.id) {
+        const m = await (prisma as any).trainingModule.findFirst({
+          where:  { tenant_id: null, source: 'ai_generated', tier: 'prebuilt', approved: true, is_active: true, topic_id: topic.id },
+          select: { id: true },
+        })
+        moduleId = m?.id ?? null
+      }
       await (prisma as any).trainingLicense.createMany({
         data: Array.from({ length: it.qty }, () => ({
-          tenant_id: tenantId, topic_id: topic?.id ?? null, module_slug: it.slug, module_name: topic?.title ?? it.slug,
+          tenant_id: tenantId, topic_id: topic?.id ?? null, module_id: moduleId, module_slug: it.slug, module_name: topic?.title ?? it.slug,
           price_pence: TRAINING_LICENCE_PENCE, currency: 'gbp', stripe_payment_id: s.paymentId, renewal_due_at: renewalDue,
         })),
       })

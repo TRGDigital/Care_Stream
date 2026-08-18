@@ -579,11 +579,16 @@ export function createApiClient(token: string) {
       deallocateLicence: (id: string) =>
         apiFetch<{ deallocated: boolean }>(`/training/licences/${id}/deallocate`, token, { method: 'POST' }),
 
-      // ── Annual training (AI catalogue) ──
-      catalogue: () => apiFetch<{
+      // ── AI catalogue (standard-module shelf; tier 'prebuilt' by default, 'cpd' for the CPD Approved Courses page) ──
+      catalogue: (tier?: 'prebuilt' | 'cpd') => apiFetch<{
         groups: Record<string, string>
         topics: Array<{ id: string; title: string; group_key: string; default_frequency: string; requires_practical: boolean; image_key: string | null; aliases: string[]; archived?: boolean; module: null | { id: string; name: string; approved: boolean; frequency: string; requires_practical: boolean; pass_mark: number; question_count: number; illustration_url: string | null }; standard_module: null | { id: string; name: string; approved: boolean; frequency: string; requires_practical: boolean; pass_mark: number; question_count: number; illustration_url: string | null } }>
-      }>('/training/catalogue', token),
+      }>(`/training/catalogue${tier ? `?tier=${tier}` : ''}`, token),
+      // The pre-built standard library as this tenant sees it (read-only, assignable).
+      prebuilt: () => apiFetch<{
+        groups: Record<string, string>
+        modules: Array<{ id: string; name: string; description: string; group_key: string | null; frequency: string; requires_practical: boolean; duration_minutes: number | null; pass_mark: number; question_count: number; illustration_url: string | null; assigned: number; complete: number }>
+      }>('/training/prebuilt', token),
       generateModule: (topicId: string) =>
         apiFetch<{ module: any }>('/training/catalogue/generate', token, { method: 'POST', body: JSON.stringify({ topic_id: topicId }) }),
       setTopicArchived: (id: string, archived: boolean) =>
@@ -871,10 +876,10 @@ export function createApiClient(token: string) {
         return res.blob()
       },
       annualTraining: {
-        list: (lang?: '2') => apiFetch<{ items: Array<{ enrollment_id: string; module_id: string; name: string; frequency: string; requires_practical: boolean; group_key: string | null; image_key: string | null; status: string; completed_at: string | null; expires_at: string | null; due_date: string | null; state: string }> }>(`/me/annual-training${lang ? `?lang=${lang}` : ''}`, token),
+        list: (lang?: '2') => apiFetch<{ items: Array<{ enrollment_id: string; module_id: string; name: string; tier: 'prebuilt' | 'cpd'; frequency: string; requires_practical: boolean; group_key: string | null; image_key: string | null; status: string; completed_at: string | null; expires_at: string | null; due_date: string | null; state: string }> }>(`/me/annual-training${lang ? `?lang=${lang}` : ''}`, token),
         get: (id: string, lang?: '2') => apiFetch<{ name: string; pass_mark: number; requires_practical: boolean; frequency: string; duration_minutes: number | null; illustration_url: string | null; learning: { summary: string; outcomes: string[]; key_points: string[]; sections: Array<{ id: string; heading: string; body: string; scenario: { situation: string; prompt: string; answer: string }; check: { question: string; options: string[]; correct: number } }> }; references?: Array<{ title: string; source: string; url?: string }>; glossary?: Array<{ term: string; definition: string }>; baseline?: { questions: Array<{ id: string; text: string; options: string[] }>; done: boolean; score: number | null; total: number | null }; reflection?: string | null; questions: Array<{ id: string; text: string; options: string[] }>; policies: Array<{ policy_id: string; title: string }>; answers: Array<{ question_id: string; answer_text: string; is_correct: boolean }>; status: string; lang_code?: string; can_suggest?: boolean; source_questions?: Array<{ text: string; options: string[] }>; source_sections?: Array<{ heading: string; body: string; situation: string; prompt: string; answer: string; check_question: string; check_options: string[] }>; source_overview?: { summary: string; outcomes: string[]; key_points: string[] } }>(`/me/annual-training/${id}${lang ? `?lang=${lang}` : ''}`, token),
         submit: (id: string) => apiFetch<{ passed: boolean; score: number; correct: number; total: number; pass_mark: number }>(`/me/annual-training/${id}/submit`, token, { method: 'POST' }),
-        certificate: (id: string) => apiFetch<{ staff_name: string; module_name: string; org_name: string; logo_url: string | null; completed_at: string; expires_at: string | null; frequency: string; requires_practical: boolean; score: number; independently_reviewed: boolean; cpd: { accredited: boolean; hours: number | null; provider_number: string | null }; baseline?: { score: number | null; total: number | null } | null; reflection?: string | null }>(`/me/annual-training/${id}/certificate`, token),
+        certificate: (id: string) => apiFetch<{ staff_name: string; module_name: string; org_name: string; logo_url: string | null; tier?: 'prebuilt' | 'cpd'; completed_at: string; expires_at: string | null; frequency: string; requires_practical: boolean; score: number; independently_reviewed: boolean; cpd: { accredited: boolean; hours: number | null; provider_number: string | null }; baseline?: { score: number | null; total: number | null } | null; reflection?: string | null }>(`/me/annual-training/${id}/certificate`, token),
         recordLearnTime: (id: string, seconds: number) => apiFetch<{ recorded: number }>(`/me/annual-training/${id}/learn-time`, token, { method: 'POST', body: JSON.stringify({ seconds }) }),
         submitBaseline: (id: string, answers: Record<string, number>) => apiFetch<{ score: number; total: number; already_done: boolean }>(`/me/annual-training/${id}/baseline`, token, { method: 'POST', body: JSON.stringify({ answers }) }),
         saveReflection: (id: string, text: string) => apiFetch<{ saved: boolean }>(`/me/annual-training/${id}/reflection`, token, { method: 'POST', body: JSON.stringify({ text }) }),

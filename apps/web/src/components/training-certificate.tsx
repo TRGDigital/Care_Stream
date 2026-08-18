@@ -26,11 +26,14 @@ export type TrainingCertificateProps = {
   // Pre-course knowledge check vs the final score — the evidence that learning
   // happened, not just that a course was clicked through.
   baseline?:         { score: number | null; total: number | null } | null
+  // Which shelf the course came from — drives the header band. The CPD logo block
+  // itself still gates on cpdAccredited, never on tier alone.
+  tier?:             'prebuilt' | 'cpd'
 }
 
 export function TrainingCertificate({
   staffName, moduleName, orgName, orgLogoUrl, score, completedAt, expiresAt, requiresPractical, practicalNote,
-  cpdAccredited, cpdHours, cpdProviderNumber, independentlyReviewed, baseline,
+  cpdAccredited, cpdHours, cpdProviderNumber, independentlyReviewed, baseline, tier,
 }: TrainingCertificateProps) {
   const gainPct = baseline?.score != null && baseline?.total
     ? Math.round((baseline.score / baseline.total) * 100)
@@ -41,7 +44,7 @@ export function TrainingCertificate({
       <div className="flex items-center justify-between bg-gradient-to-r from-teal-dark via-teal to-teal-dark px-8 py-5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo-white.png" alt="CareStream" className="h-16 w-auto object-contain" />
-        <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/85">Annual Training</span>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/85">{tier === 'cpd' ? 'CPD Approved Course' : 'Staff Training'}</span>
       </div>
 
       <div className="relative px-10 pb-9 pt-7 text-center">

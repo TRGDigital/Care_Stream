@@ -213,10 +213,19 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
 
   // Live / archived modules. Archived ones are hidden from the compliance grid,
   // assignment and delivery, but the tenant can restore them at any time.
-  const [view,      setView]      = useState<'live' | 'archived'>('live')
+  const [view,      setView]      = useState<'live' | 'prebuilt' | 'archived'>('live')
+  // The pre-built standard library (platform-owned, read-only, assignable) —
+  // fetched lazily the first time the tab is opened.
+  const [prebuilt,       setPrebuilt]       = useState<any[] | null>(null)
+  const [prebuiltGroups, setPrebuiltGroups] = useState<Record<string, string>>({})
+  const [assignPrebuilt, setAssignPrebuilt] = useState<any | null>(null)
   const [archived,  setArchived]  = useState<Module[]>([])
   const [archiving, setArchiving] = useState<string | null>(null)
   useEffect(() => { api.training.archivedModules().then(d => setArchived(d.modules as Module[])).catch(() => {}) }, [api])
+  useEffect(() => {
+    if (view !== 'prebuilt' || prebuilt !== null) return
+    api.training.prebuilt().then(d => { setPrebuilt(d.modules); setPrebuiltGroups(d.groups) }).catch(() => setPrebuilt([]))
+  }, [view, prebuilt, api])
 
   async function archiveModule(m: Module) {
     setArchiving(m.id)
@@ -675,7 +684,7 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
       {/* Live / Archived — tenants keep only the modules relevant to them live, and archive the rest. */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5 text-sm font-medium">
-          {([['live', 'Live', modules.length], ['archived', 'Archived', archived.length]] as const).map(([key, label, count]) => (
+          {([['live', 'Live policy training', modules.length], ['prebuilt', 'Live pre-built training', prebuilt?.length ?? 0], ['archived', 'Archived', archived.length]] as const).map(([key, label, count]) => (
             <button
               key={key}
               onClick={() => setView(key)}
@@ -690,12 +699,15 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
         </div>
         <p className="text-xs text-neutral-mid">
           {view === 'live'
-            ? 'Archive modules you don’t need to keep only the relevant ones live. Archived modules aren’t shown to staff and can be restored anytime.'
-            : 'These modules are hidden from staff. Restore any to move it back into the live list.'}
+            ? 'Your own training modules — generated from your uploaded policies (using your AI credits) and fully editable. Archive any you don’t need; archived modules aren’t shown to staff and can be restored anytime.'
+            : view === 'prebuilt'
+              ? 'Built by CareStream and ready to assign to your staff — these don’t use any of your AI credits. The choice of tier is always yours: pre-built is a legitimate pick for a refresher, with CPD approved courses available separately above.'
+              : 'These modules are hidden from staff. Restore any to move it back into the live list.'}
         </p>
       </div>
 
       {/* Search — the list now includes every standard/annual topic, so make it findable. */}
+      {view !== 'prebuilt' &&
       <div className="mb-4 flex items-center gap-3">
         <div className="relative flex-1 max-w-md">
           <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-mid" />
@@ -716,6 +728,8 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
         )}
       </div>
 
+      }
+
       {view === 'live' && (<>
         {search && totalMatches === 0 && (
           <div className="rounded-card border border-dashed border-gray-200 bg-white px-6 py-12 text-center">
@@ -728,6 +742,54 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
         {statutory.length  > 0 && renderGroup('Statutory modules', 'text-teal', statutory)}
         {specialist.length > 0 && renderGroup('Specialist modules', 'text-indigo-500', specialist)}
       </>)}
+
+      {view === 'prebuilt' && (
+        prebuilt === null ? (
+          <div className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 animate-pulse rounded-xl bg-gray-100" />)}</div>
+        ) : prebuilt.length === 0 ? (
+          <div className="rounded-card border border-dashed border-gray-200 bg-white px-6 py-12 text-center">
+            <p className="font-medium text-neutral-dark">No pre-built modules for your setting yet</p>
+            <p className="mt-1 text-sm text-neutral-mid">CareStream publishes these centrally — check back shortly.</p>
+          </div>
+        ) : (
+          <div className="mb-6 space-y-6">
+            {Object.keys(prebuiltGroups).map(gk => {
+              const items = prebuilt.filter(m => m.group_key === gk)
+              if (!items.length) return null
+              return (
+                <div key={gk}>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-mid">{prebuiltGroups[gk]}</p>
+                  <div className="divide-y divide-gray-100 rounded-card border border-gray-100 bg-white shadow-card">
+                    {items.map(m => (
+                      <div key={m.id} className="flex flex-wrap items-center gap-3 px-5 py-3.5">
+                        {m.illustration_url && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={apiAssetUrl(m.illustration_url) ?? ''} alt="" className="h-10 w-16 shrink-0 rounded-md border border-gray-100 object-cover" />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-neutral-dark">{m.name}</p>
+                          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-neutral-mid">
+                            {m.duration_minutes ? <span>{m.duration_minutes} min</span> : null}
+                            <span>· {m.question_count} questions</span>
+                            {m.requires_practical && <span className="rounded-full bg-amber-50 px-1.5 py-0.5 font-medium text-amber-600">+ practical</span>}
+                            {m.assigned > 0 && <span className="text-teal">· {m.complete}/{m.assigned} completed</span>}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setAssignPrebuilt(m)}
+                          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal/90"
+                        >
+                          <Users size={14} /> Assign
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )
+      )}
 
       {view === 'archived' && (
         archivedMatches.length === 0 ? (
@@ -777,6 +839,20 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
           alreadyAssigned={assignedByModule[assignFor.id] ?? new Set()}
           onClose={() => setAssignFor(null)}
           onAssigned={() => { onAssigned(); setAssignFor(null) }}
+        />
+      )}
+
+      {/* Assigning a pre-built (platform) module — same modal, platform module id.
+          Each staff × module assignment uses one plan allocation, same as any
+          AI-course assignment. */}
+      {assignPrebuilt && (
+        <PerModuleAssignModal
+          api={api}
+          module={assignPrebuilt as unknown as Module}
+          staff={staff}
+          alreadyAssigned={new Set(enrollments.filter(e => e.module_id === assignPrebuilt.id && e.status !== 'expired').map(e => e.user_id))}
+          onClose={() => setAssignPrebuilt(null)}
+          onAssigned={() => { onAssigned(); setPrebuilt(null); setAssignPrebuilt(null) }}
         />
       )}
     </div>
@@ -1694,12 +1770,21 @@ export default function TrainingPage() {
 
   // Annual training (AI modules) — derived from the enrolments themselves, since
   // these modules aren't in the manual `modules` list.
-  const annualEnrollments = enrollments.filter(e => e.module?.source === 'ai_generated')
-  const annualModuleMap = new Map<string, { id: string; name: string; requires_practical?: boolean }>()
-  for (const e of annualEnrollments) if (e.module && !annualModuleMap.has(e.module.id)) annualModuleMap.set(e.module.id, { id: e.module.id, name: e.module.name, requires_practical: e.module.requires_practical })
-  const annualModules = [...annualModuleMap.values()].sort((a, b) => a.name.localeCompare(b.name))
-  const annualStaffIds = new Set(annualEnrollments.map(e => e.user_id))
-  const annualStaff = staff.filter(s => annualStaffIds.has(s.id))
+  // AI-course grids, split by tier: pre-built (platform library + the tenant's own
+  // tailored copies) vs CPD approved courses. Same topic can legitimately appear in
+  // both grids — a tenant may assign both tiers, and each is its own record.
+  const aiEnrollments = enrollments.filter(e => e.module?.source === 'ai_generated')
+  const aiGridFor = (wantCpd: boolean) => {
+    const list = aiEnrollments.filter(e => ((e.module?.tier ?? 'prebuilt') === 'cpd') === wantCpd)
+    const map = new Map<string, { id: string; name: string; requires_practical?: boolean }>()
+    for (const e of list) if (e.module && !map.has(e.module.id)) map.set(e.module.id, { id: e.module.id, name: e.module.name, requires_practical: e.module.requires_practical })
+    const gridStaffIds = new Set(list.map(e => e.user_id))
+    return { modules: [...map.values()].sort((a, b) => a.name.localeCompare(b.name)), staff: staff.filter(s => gridStaffIds.has(s.id)) }
+  }
+  const aiGrids = [
+    { key: 'prebuilt', title: 'Pre-built training',    ...aiGridFor(false) },
+    { key: 'cpd',      title: 'CPD approved courses',  ...aiGridFor(true) },
+  ]
 
   // Summary stats
   const now = new Date()
@@ -1745,7 +1830,7 @@ export default function TrainingPage() {
         </div>
         <div className="flex items-center gap-2">
           <Link href="/training/annual" className="flex items-center gap-2 rounded-lg border border-teal/40 bg-teal-light/30 px-4 py-2 text-sm font-medium text-teal hover:bg-teal-light/50">
-            Annual training modules
+            CPD approved courses
           </Link>
           {SHOW_DIPLOMAS && (
             <Link href="/training/diplomas" className="flex items-center gap-2 rounded-lg border border-teal/40 bg-teal-light/30 px-4 py-2 text-sm font-medium text-teal hover:bg-teal-light/50">
@@ -1920,20 +2005,20 @@ export default function TrainingPage() {
         </div>
       )}
 
-      {/* Annual training compliance grid */}
-      {annualModules.length > 0 && (
-        <div className="mt-6">
+      {/* AI-course compliance grids — one per tier (pre-built, then CPD approved) */}
+      {aiGrids.filter(g => g.modules.length > 0).map(g => (
+        <div className="mt-6" key={g.key}>
           <div className="mb-2 flex items-center gap-2">
             <GraduationCap size={16} className="text-teal" />
-            <h2 className="text-sm font-semibold text-neutral-dark">Annual training</h2>
-            <span className="rounded-full bg-teal/10 px-2 py-0.5 text-xs font-medium text-teal">{annualStaff.length} staff · {annualModules.length} module{annualModules.length === 1 ? '' : 's'}</span>
+            <h2 className="text-sm font-semibold text-neutral-dark">{g.title}</h2>
+            <span className="rounded-full bg-teal/10 px-2 py-0.5 text-xs font-medium text-teal">{g.staff.length} staff · {g.modules.length} module{g.modules.length === 1 ? '' : 's'}</span>
           </div>
           <div className="overflow-x-auto rounded-card border border-gray-100 bg-white shadow-card">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100">
                   <th className="sticky left-0 z-10 bg-white px-5 py-3 text-left text-xs font-medium text-neutral-mid min-w-[180px]">Staff member</th>
-                  {annualModules.map(m => (
+                  {g.modules.map(m => (
                     <th key={m.id} className="px-3 py-3 text-center text-xs font-medium text-neutral-mid min-w-[90px] max-w-[120px]">
                       <div className="flex flex-col items-center gap-1">
                         {m.requires_practical && <span className="rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600">+ prac</span>}
@@ -1944,13 +2029,13 @@ export default function TrainingPage() {
                 </tr>
               </thead>
               <tbody>
-                {annualStaff.map(s => (
+                {g.staff.map(s => (
                   <tr key={s.id} className="border-b border-gray-50 last:border-0 hover:bg-neutral-light/30">
                     <td className="sticky left-0 z-10 bg-white px-5 py-3">
                       <p className="font-medium text-neutral-dark">{s.name}</p>
                       <p className="text-xs text-neutral-mid">{s.job_role ?? s.email}</p>
                     </td>
-                    {annualModules.map(m => {
+                    {g.modules.map(m => {
                       const enrollment = enrollmentMap[s.id]?.[m.id]
                       return (
                         <td key={m.id} className="px-3 py-3 text-center">
@@ -1974,7 +2059,7 @@ export default function TrainingPage() {
             </div>
           </div>
         </div>
-      )}
+      ))}
 
       {/* Face-to-face training matrix (only for plans with the feature) */}
       <F2FComplianceMatrix token={session?.accessToken ?? ''} enabled={!f2fLocked} userId={userId} />

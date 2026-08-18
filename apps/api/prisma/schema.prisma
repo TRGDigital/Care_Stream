@@ -242,6 +242,7 @@ model TrainingLicense {
   tenant_id           String
   user_id             String?                              // staff member it's allocated to; null = bought but not yet allocated
   topic_id            String?                              // the standard topic/module licensed
+  module_id           String?                              // the EXACT module bought (snapshotted at purchase) — allocation never resolves by topic, so a licence can never land on the wrong tier
   module_slug         String                               // snapshot (survives topic edits)
   module_name         String                               // snapshot for display + renewal emails
   price_pence         Int       @default(2599)
@@ -1021,7 +1022,9 @@ model TrainingTopic {
 
   @@index([tenant_id])
   @@map("training_topics")
-  is_annual           Boolean  @default(false) // one of the Annual (CPD) set sold in the training shop
+  is_annual           Boolean  @default(false) // sold in the training shop (legacy name; the "CPD set" concept now lives on TrainingModule.tier)
+  shop_module_id      String?                  // the module this topic's public page describes and the shop sells — an explicit designation, switched by us when a CPD version is genuinely accredited
+  has_cpd_version     Boolean  @default(false) // derived: a tier='cpd' copy exists for this topic (kept in step on copy/delete)
 }
 
 // Per-tenant archived annual-training topics — hides a catalogue topic from THIS
@@ -1702,6 +1705,13 @@ model TrainingModule {
   questions_version   Int                       @default(0)
   // ── AI-generated annual modules (teach-then-assess) ──
   source              String                    @default("manual")  // 'manual' | 'ai_generated'
+  // Which shelf a PLATFORM module sits on. 'prebuilt' = the standard library every
+  // tenant can assign ad-hoc at no AI cost; 'cpd' = a deepened COPY of a pre-built
+  // module being taken through (or holding) CPD accreditation. Set at copy time and
+  // independent of cpd_accredited — a CPD copy exists before it is approved. A
+  // module NEVER changes tier; the tenant chooses which tier to assign.
+  tier                String                    @default("prebuilt") // 'prebuilt' | 'cpd'
+  source_module_id    String?                                       // for a CPD copy: the pre-built module it was copied from (lineage, never routing)
   approved            Boolean                   @default(true)       // draft (false) until reviewed
   approved_at         DateTime?
   approved_by         String?

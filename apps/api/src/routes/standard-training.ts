@@ -78,7 +78,7 @@ standardTrainingRouter.get('/', async (_req: Request, res: Response) => {
       (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true }, orderBy: { sort_order: 'asc' } }),
       (prisma as any).trainingModule.findMany({
         where:  { tenant_id: null, source: 'ai_generated' },
-        select: { id: true, name: true, topic_id: true, approved: true, approved_at: true, created_at: true, frequency: true, requires_practical: true, pass_mark: true, duration_minutes: true, group_key: true, image_key: true, illustration_key: true, cpd_accredited: true, questions: true, learning_content: true, policy_refs: true, standards: true, attested_by_name: true, attested_by_role: true, attested_at: true, share_enabled: true, share_token: true, share_password: true },
+        select: { id: true, name: true, topic_id: true, approved: true, approved_at: true, created_at: true, frequency: true, requires_practical: true, pass_mark: true, duration_minutes: true, group_key: true, image_key: true, illustration_key: true, cpd_accredited: true, questions: true, learning_content: true, policy_refs: true, standards: true, attested_by_name: true, attested_by_role: true, attested_at: true, share_enabled: true, share_token: true, share_password: true, tier: true, source_module_id: true },
       }),
     ])
     // Latest external review status per module (so the catalogue can flag reviewer changes).
@@ -96,28 +96,45 @@ standardTrainingRouter.get('/', async (_req: Request, res: Response) => {
         reviewByModule.set(l.module_id, { review_status: l.status, review_changes_open: open })
       }
     }
-    const byTopic = new Map<string, any>()
-    for (const m of (modules as any[])) {
-      if (!m.topic_id) continue
+    // A topic can now carry TWO platform modules — the pre-built one and its CPD
+    // copy. The topic list shows the pre-built module only; CPD copies are returned
+    // as their own list for the CPD Approved tab.
+    const summarise = (m: any) => {
       const qa = runModuleQa(m)
       const secs = Array.isArray(m.learning_content?.sections) ? m.learning_content.sections : []
       const sectionImages = secs.filter((s: any) => s?.image_key).length
-      byTopic.set(m.topic_id, {
+      return {
         id: m.id, name: m.name, topic_id: m.topic_id, approved: m.approved, approved_at: m.approved_at, created_at: m.created_at,
         frequency: m.frequency, requires_practical: m.requires_practical, pass_mark: m.pass_mark, duration_minutes: m.duration_minutes,
         group_key: m.group_key, illustration_url: illustrationUrl(m.illustration_key), cpd_accredited: !!m.cpd_accredited,
+        tier: m.tier ?? 'prebuilt', source_module_id: m.source_module_id ?? null,
         image_count: (m.illustration_key ? 1 : 0) + sectionImages, image_slots: 1 + secs.length,
         question_count: Array.isArray(m.questions) ? m.questions.length : 0,
         standards_count: Array.isArray(m.standards) ? m.standards.length : 0,
         attested_by_name: m.attested_by_name, attested_by_role: m.attested_by_role, attested_at: m.attested_at,
         qa_hard_fails: qa.hard_fails, qa_warnings: qa.warnings,
         ...(reviewByModule.get(m.id) ?? { review_status: null, review_changes_open: 0 }),
-      })
+      }
     }
+    const byTopic = new Map<string, any>()          // pre-built module per topic
+    const cpdByTopic = new Map<string, any>()       // CPD copy per topic (at most one)
+    for (const m of (modules as any[])) {
+      if (!m.topic_id) continue
+      if ((m.tier ?? 'prebuilt') === 'cpd') cpdByTopic.set(m.topic_id, summarise(m))
+      else byTopic.set(m.topic_id, summarise(m))
+    }
+    const topicById = new Map<string, any>((topics as any[]).map(t => [t.id, t]))
     ok(res, {
       groups: TOPIC_GROUP_LABELS,
       settings: CARE_SETTINGS.map(s => ({ key: s, label: SETTING_LABELS[s] })),
-      topics: (topics as any[]).map(t => ({ ...t, module: byTopic.get(t.id) ?? null })),
+      topics: (topics as any[]).map(t => ({ ...t, module: byTopic.get(t.id) ?? null, cpd_module_id: cpdByTopic.get(t.id)?.id ?? null })),
+      // The CPD shelf: each copy with its topic title and a derived accreditation
+      // state — draft → published (awaiting CPD) → accredited.
+      cpd_modules: [...cpdByTopic.values()].map(m => ({
+        ...m,
+        topic_title: topicById.get(m.topic_id)?.title ?? m.name,
+        cpd_state: m.cpd_accredited ? 'accredited' : m.approved ? 'awaiting_cpd' : 'draft',
+      })).sort((a, b) => a.name.localeCompare(b.name)),
     })
   } catch (e: any) {
     err(res, 'FETCH_FAILED', e.message, 500)
@@ -166,6 +183,77 @@ standardTrainingRouter.post('/generate', async (req: Request, res: Response) => 
   } catch (e: any) {
     console.error('[standard-training/generate] failed:', e?.message ?? e)
     err(res, 'GENERATION_FAILED', e.message, 500)
+  }
+})
+
+// POST /admin/standard-training/modules/:id/create-cpd-copy — duplicate a published
+// pre-built module onto the CPD shelf as an unpublished draft, ready to be deepened
+// (more sections, more questions, interactive elements) and taken to CPD.
+//
+// The copy is a NEW module: the pre-built original keeps serving ad-hoc training
+// unchanged, and a module never changes tier. One CPD copy per topic.
+standardTrainingRouter.post('/modules/:id/create-cpd-copy', async (req: Request, res: Response) => {
+  try {
+    const orig = await (prisma as any).trainingModule.findFirst({
+      where: { id: req.params.id, tenant_id: null, source: 'ai_generated' },
+    })
+    if (!orig) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+    if ((orig.tier ?? 'prebuilt') !== 'prebuilt') { err(res, 'WRONG_TIER', 'Only a pre-built module can be copied to the CPD shelf.', 422); return }
+    if (!orig.approved) { err(res, 'NOT_PUBLISHED', 'Publish the pre-built module first — the CPD copy starts from its reviewed content.', 422); return }
+
+    if (orig.topic_id) {
+      const existing = await (prisma as any).trainingModule.findFirst({
+        where: { tenant_id: null, source: 'ai_generated', tier: 'cpd', topic_id: orig.topic_id }, select: { id: true, name: true },
+      })
+      if (existing) { err(res, 'ALREADY_EXISTS', `A CPD copy of this topic already exists ("${existing.name}").`, 409); return }
+    }
+
+    const copy = await (prisma as any).trainingModule.create({
+      data: {
+        tenant_id: null,
+        slug: `${orig.slug}-cpd`.slice(0, 80),
+        name: orig.name,
+        description: orig.description,
+        category: orig.category,
+        questions: orig.questions,
+        is_annual: orig.is_annual,
+        sort_order: orig.sort_order,
+        care_setting: orig.care_setting,
+        source: 'ai_generated',
+        tier: 'cpd',
+        source_module_id: orig.id,
+        // A copy is always a draft: it must be deepened, re-attested and published
+        // on its own merits before any tenant sees it.
+        approved: false, approved_at: null, approved_by: null,
+        attested_by_name: null, attested_by_role: null, attested_at: null,
+        cpd_accredited: false, independently_reviewed: false,
+        share_enabled: false, share_token: null, share_password: null,
+        learning_content: orig.learning_content,
+        requires_practical: orig.requires_practical,
+        frequency: orig.frequency,
+        renewal_months: orig.renewal_months,
+        pass_mark: orig.pass_mark,
+        duration_minutes: orig.duration_minutes,
+        image_key: orig.image_key,
+        illustration_key: orig.illustration_key,   // shared artwork; regenerating on the copy writes its own
+        policy_refs: orig.policy_refs,
+        topic_id: orig.topic_id,
+        group_key: orig.group_key,
+        standards: orig.standards,
+      },
+    })
+
+    // Keep the derived topic flag in step.
+    if (orig.topic_id) {
+      await (prisma as any).trainingTopic.update({ where: { id: orig.topic_id }, data: { has_cpd_version: true } })
+        .catch((e: any) => console.error('[create-cpd-copy] has_cpd_version update failed:', e?.message ?? e))
+    }
+
+    ok(res, { module: { ...copy, illustration_url: illustrationUrl(copy.illustration_key) } })
+  } catch (e: any) {
+    if (e?.code === 'P2002') { err(res, 'DUPLICATE', 'A CPD copy with that slug already exists.', 409); return }
+    console.error('[standard-training/create-cpd-copy] failed:', e?.message ?? e)
+    err(res, 'COPY_FAILED', e.message, 500)
   }
 })
 
@@ -609,7 +697,9 @@ standardTrainingRouter.post('/bulk-approve', async (req: Request, res: Response)
     if (!topicIds.length) { ok(res, { approved: [], skipped: [], excluded_annual: excluded, total_candidates: 0 }); return }
 
     const modules = await (prisma as any).trainingModule.findMany({
-      where: { tenant_id: null, source: 'ai_generated', approved: false, topic_id: { in: topicIds } },
+      // tier 'prebuilt' only — a CPD copy is attested individually as part of its
+      // accreditation journey and must never be swept up by a bulk publish.
+      where: { tenant_id: null, source: 'ai_generated', approved: false, tier: 'prebuilt', topic_id: { in: topicIds } },
     })
 
     const approved: Array<{ id: string; name: string }> = []

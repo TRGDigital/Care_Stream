@@ -94,7 +94,7 @@ function AnnualList({ token, userId, onOpen, onCert, secondLang = null, reviewer
 
   useEffect(() => {
     api.me.annualTraining.list()
-      .then(d => { setItems(d.items); persistentCache.set(ck, d.items); setError(false) })
+      .then(d => { const its = reviewer ? d.items : d.items.filter((it: any) => it.tier === 'cpd'); setItems(its); persistentCache.set(ck, its); setError(false) })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -115,15 +115,15 @@ function AnnualList({ token, userId, onOpen, onCert, secondLang = null, reviewer
       <AlertTriangle size={32} className="text-amber-400" />
       <p className="font-medium text-neutral-dark">Couldn&apos;t load your annual training</p>
       <p className="text-sm text-neutral-mid">Please check your connection and try again.</p>
-      <button onClick={() => { setLoading(true); setError(false); api.me.annualTraining.list().then(d => { setItems(d.items); persistentCache.set(ck, d.items) }).catch(() => setError(true)).finally(() => setLoading(false)) }} className="rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90">Retry</button>
+      <button onClick={() => { setLoading(true); setError(false); api.me.annualTraining.list().then(d => { const its = reviewer ? d.items : d.items.filter((it: any) => it.tier === 'cpd'); setItems(its); persistentCache.set(ck, its) }).catch(() => setError(true)).finally(() => setLoading(false)) }} className="rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90">Retry</button>
     </div>
   )
 
   if (!items.length) return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 py-16 text-center">
       <GraduationCap size={36} className="text-gray-300" />
-      <p className="font-medium text-neutral-dark">No annual training assigned</p>
-      <p className="text-sm text-neutral-mid">When your manager assigns annual training, it&apos;ll appear here for you to complete.</p>
+      <p className="font-medium text-neutral-dark">No CPD approved courses assigned</p>
+      <p className="text-sm text-neutral-mid">When your manager assigns a CPD approved course, it&apos;ll appear here for you to complete.</p>
     </div>
   )
 
@@ -174,10 +174,10 @@ function AnnualList({ token, userId, onOpen, onCert, secondLang = null, reviewer
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
       <div className="mx-auto max-w-5xl">
-        <h2 className="mb-1 flex items-center gap-2 text-xl font-bold text-neutral-dark"><GraduationCap size={20} className="text-teal" /> {reviewer ? 'Annual Training — CPD Review' : 'Annual Training'}</h2>
+        <h2 className="mb-1 flex items-center gap-2 text-xl font-bold text-neutral-dark"><GraduationCap size={20} className="text-teal" /> {reviewer ? 'CPD Review' : 'CPD Approved Courses'}</h2>
         <p className="mb-5 text-sm text-neutral-mid">{reviewer
           ? 'Open each module to go through it as a learner (lesson, scenarios, assessment and live follow-ups), then add your notes and status below it.'
-          : 'Training tailored to your home’s policies. Read the lesson, pass the assessment, get your certificate.'}</p>
+          : 'Your CPD courses — richer lessons with interactive activities. Read the lesson, pass the assessment, get your certificate.'}</p>
         {todo.length > 0 && <div className="mb-6"><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-mid">To complete</p><div className="space-y-2">{todo.map(Card)}</div></div>}
         {renew.length > 0 && <div className="mb-6"><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-600">Due for renewal</p><div className="space-y-2">{renew.map(Card)}</div></div>}
         {done.length > 0 && <div className="mb-4"><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Completed</p><div className="space-y-2">{done.map(Card)}</div></div>}
@@ -203,7 +203,7 @@ function Scale({ label, low, high, value, onChange }: { label: string; low: stri
 
 // ─── Take a module (learn → assess → result) ──────────────────────────────────
 
-export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel = 'Annual Training', secondLang = null, switchArea = 'annual' }: { token: string; id: string; name: string; onExit: (toCert: boolean) => void; onTalkToPolicy?: (policyId: string, title: string) => void; backLabel?: string; secondLang?: { name: string } | null; switchArea?: 'annual' | 'training' }) {
+export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel = 'CPD Approved Courses', secondLang = null, switchArea = 'annual' }: { token: string; id: string; name: string; onExit: (toCert: boolean) => void; onTalkToPolicy?: (policyId: string, title: string) => void; backLabel?: string; secondLang?: { name: string } | null; switchArea?: 'annual' | 'training' }) {
   const api = createApiClient(token)
   const [data, setData] = useState<any>(null)            // first-language module (the default)
   const [data2, setData2] = useState<any>(null)          // second-language version, fetched lazily + cached
@@ -812,7 +812,7 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
 
 // ─── Certificate ──────────────────────────────────────────────────────────────
 
-export function CertView({ token, id, onExit, backLabel = 'Annual Training' }: { token: string; id: string; onExit: () => void; backLabel?: string }) {
+export function CertView({ token, id, onExit, backLabel = 'CPD Approved Courses' }: { token: string; id: string; onExit: () => void; backLabel?: string }) {
   const api = createApiClient(token)
   const [c, setC] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -845,6 +845,7 @@ export function CertView({ token, id, onExit, backLabel = 'Annual Training' }: {
           cpdProviderNumber={c.cpd?.provider_number}
           independentlyReviewed={c.independently_reviewed}
           baseline={c.baseline}
+          tier={c.tier}
         />
 
         {/* Reflection sits under the certificate. Learning gain is now printed ON the

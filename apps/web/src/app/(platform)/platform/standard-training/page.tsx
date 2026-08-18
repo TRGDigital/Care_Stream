@@ -69,6 +69,7 @@ export default function StandardTrainingPage() {
     return () => window.removeEventListener('hashchange', applyFromUrl)
   }, [])
   const [topics, setTopics] = useState<any[]>([])
+  const [cpdModules, setCpdModules] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)
   const [reviewId, setReviewId] = useState<string | null>(null)
@@ -109,7 +110,7 @@ export default function StandardTrainingPage() {
   function load() {
     if (!api) return
     setLoading(true)
-    api.standardTraining.catalogue().then(d => { setGroups(d.groups); setTopics(d.topics); setSettings(d.settings ?? []) }).catch(() => {}).finally(() => setLoading(false))
+    api.standardTraining.catalogue().then(d => { setGroups(d.groups); setTopics(d.topics); setCpdModules(d.cpd_modules ?? []); setSettings(d.settings ?? []) }).catch(() => {}).finally(() => setLoading(false))
   }
   useEffect(() => { load() }, [token]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -141,6 +142,21 @@ export default function StandardTrainingPage() {
     } catch (e: any) {
       alert(e?.message ?? 'Could not apply the checklists.')
     } finally { setChecklistBusy(false) }
+  }
+
+  // Duplicate a published pre-built module onto the CPD shelf as a draft copy.
+  async function createCpdCopy(moduleId: string, name: string) {
+    if (!api || busy) return
+    if (!confirm(`Create a CPD copy of “${name}”?\n\nThe pre-built module keeps serving ad-hoc training unchanged. The copy lands on the CPD Approved shelf as a draft, ready to be deepened (more sections, more questions, interactive elements) and taken to CPD.`)) return
+    setBusy(moduleId)
+    try {
+      const { module } = await api.standardTraining.createCpdCopy(moduleId)
+      load()
+      setActiveSetting('ANNUAL')
+      setReviewId(module.id)
+    } catch (e: any) {
+      alert(e?.message ?? 'Could not create the CPD copy.')
+    } finally { setBusy(null) }
   }
 
   async function generate(topicId: string) {
@@ -187,7 +203,7 @@ export default function StandardTrainingPage() {
 
   // Universal (care_setting = null) topics form the cross-over base shown under every
   // setting; a setting tab shows only that setting's own topics. Count both for tabs.
-  const settingCount = (key: string | null) => topics.filter(t => key === 'ANNUAL' ? t.is_annual : key ? t.care_setting === key : !t.care_setting).length
+  const settingCount = (key: string | null) => key === 'ANNUAL' ? cpdModules.length : topics.filter(t => key ? t.care_setting === key : !t.care_setting).length
 
   // Library-wide governance summary (across every setting).
   const allModules = topics.map(t => t.module).filter(Boolean) as any[]
@@ -198,11 +214,11 @@ export default function StandardTrainingPage() {
   const renewalModules = allModules.filter(m => m.approved && m.approved_at && renewalDueMs(m.approved_at) <= renewalHorizonMs)
   const overdueCount = renewalModules.filter(m => renewalDueMs(m.approved_at) <= Date.now()).length
 
-  // 'ANNUAL' = the Annual (CPD) tab: the 10 modules sold in the training shop, across all settings.
+  // 'ANNUAL' = the CPD Approved shelf: deepened copies of pre-built modules, across all settings.
   const visibleTopics = topics.filter(t =>
-    activeSetting === 'ANNUAL' ? t.is_annual : activeSetting ? t.care_setting === activeSetting : !t.care_setting)
+    activeSetting === 'ANNUAL' ? false : activeSetting ? t.care_setting === activeSetting : !t.care_setting)
   const byGroup = Object.keys(groups).map(g => ({ key: g, label: groups[g], items: visibleTopics.filter(t => t.group_key === g) })).filter(g => g.items.length)
-  const activeLabel = activeSetting === 'ANNUAL' ? 'Annual training' : settings.find(s => s.key === activeSetting)?.label ?? 'All settings'
+  const activeLabel = activeSetting === 'ANNUAL' ? 'CPD Approved' : settings.find(s => s.key === activeSetting)?.label ?? 'All settings'
 
   return (
     <PlatformShell>
@@ -216,30 +232,32 @@ export default function StandardTrainingPage() {
       <details className="group mb-6 max-w-4xl rounded-xl border border-teal/25 bg-teal-light/15 open:bg-teal-light/20">
         <summary className="flex cursor-pointer list-none items-center gap-2 p-4 text-sm font-semibold text-teal-dark">
           <Info size={15} className="shrink-0 text-teal" />
-          How Standard Training, Annual Training (CPD) and Diplomas fit together
+          How Pre-built Training, CPD Approved Courses and Diplomas fit together
           <ChevronDown size={15} className="ml-auto shrink-0 text-teal transition-transform group-open:rotate-180" />
         </summary>
         <div className="space-y-4 border-t border-teal/20 px-4 pb-4 pt-4 text-sm text-neutral-dark">
           <div>
-            <p className="font-semibold text-teal-dark">1 · Standard Training — the everyday library</p>
+            <p className="font-semibold text-teal-dark">1 · Pre-built training — the everyday library</p>
             <p className="mt-1 text-neutral-mid">
-              What tenants pull from for <strong>ad-hoc training</strong> in their own account. Every published module here
-              is available to assign to any staff member at no AI-generation cost. This is the breadth layer: a module
-              for each mandatory, statutory, clinical and role-specific topic a service needs to cover.
-              The <strong>All settings</strong> tab holds the universal modules that apply everywhere; each setting tab
-              holds only that setting&apos;s specialist modules.
+              What tenants pull from for <strong>ad-hoc training</strong> in their own account, alongside the training they
+              generate from their own policies. Every published module here is available to assign to any staff member at
+              no AI-generation cost. This is the breadth layer: a module for each mandatory, statutory, clinical and
+              role-specific topic a service needs to cover. The <strong>All settings</strong> tab holds the universal
+              modules that apply everywhere; each setting tab holds only that setting&apos;s specialist modules.
+              A pre-built module <strong>stays pre-built</strong> — the tenant chooses which tier to assign, and picking
+              pre-built (say, for a quick refresher) is a legitimate choice the system never overrides.
             </p>
           </div>
 
           <div>
-            <p className="font-semibold text-teal-dark">2 · Annual Training (CPD) — the deepened, accredited set</p>
+            <p className="font-semibold text-teal-dark">2 · CPD Approved — deepened copies, on their own shelf</p>
             <p className="mt-1 text-neutral-mid">
-              A module promoted into the Annual Training set is <strong>built up before it goes to CPD for approval</strong>,
-              not simply copied. Promoting one means adding to it: more lesson sections, more interactive elements
-              (order / sort / match activities), a longer and more demanding question bank, a pre-course baseline check
-              and a practical checklist where the topic needs observed competence. A standard module is not CPD-ready as
-              it stands — the depth is what the accreditation is assessing, so the work is in the bulking out.
-              These carry the CPD branding and CPD hours on the certificate.
+              A CPD course starts as a <strong>copy</strong> of a published pre-built module (the <em>CPD copy</em> button
+              on its row). The copy is then built up before it goes to CPD for approval: more lesson sections, more
+              interactive elements (order / sort / match activities), a longer and more demanding question bank, a
+              pre-course baseline check and a practical checklist where the topic needs observed competence — the depth
+              is what the accreditation assesses. The pre-built original keeps serving ad-hoc training unchanged, and a
+              module never changes shelf. Once accredited, the copy carries CPD branding and CPD hours on its certificate.
             </p>
           </div>
 
@@ -284,7 +302,7 @@ export default function StandardTrainingPage() {
           tab holds only that setting's specific modules. */}
       {!loading && (
         <div className="mb-5 flex flex-wrap gap-1.5 border-b border-gray-200 pb-3">
-          {[{ key: null as string | null, label: 'All settings' }, { key: 'ANNUAL' as string | null, label: 'Annual training' }, ...settings].map(tab => {
+          {[{ key: null as string | null, label: 'All settings' }, { key: 'ANNUAL' as string | null, label: 'CPD Approved' }, ...settings].map(tab => {
             const active = activeSetting === tab.key
             const count = settingCount(tab.key)
             return (
@@ -357,6 +375,57 @@ export default function StandardTrainingPage() {
 
       {loading ? (
         <div className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 animate-pulse rounded-xl bg-gray-100" />)}</div>
+      ) : activeSetting === 'ANNUAL' ? (
+        /* ── The CPD shelf: deepened copies of pre-built modules ─────────────── */
+        cpdModules.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center">
+            <p className="text-sm font-medium text-neutral-dark">No CPD copies yet</p>
+            <p className="mx-auto mt-1 max-w-lg text-xs text-neutral-mid">
+              A CPD course starts as a <strong>copy</strong> of a published pre-built module. Find the module under
+              its setting tab and use <strong>CPD copy</strong> — the copy lands here as a draft to be deepened
+              (more sections, more questions, interactive elements) and taken through CPD accreditation.
+              The pre-built original keeps serving ad-hoc training unchanged.
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+            {cpdModules.map((m, i) => (
+              <div key={m.id} className={`flex flex-wrap items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-gray-50' : ''}`}>
+                {m.cpd_state === 'accredited' ? <ShieldCheck size={16} className="shrink-0 text-violet-600" /> : m.cpd_state === 'awaiting_cpd' ? <History size={16} className="shrink-0 text-blue-500" /> : <FileText size={16} className="shrink-0 text-amber-500" />}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-neutral-dark">{m.name}</p>
+                  <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-neutral-mid">
+                    {m.cpd_state === 'accredited'
+                      ? <span className="rounded-full bg-violet-50 px-1.5 py-0.5 font-semibold text-violet-700">CPD accredited</span>
+                      : m.cpd_state === 'awaiting_cpd'
+                        ? <span className="rounded-full bg-blue-50 px-1.5 py-0.5 font-medium text-blue-600">Published — awaiting CPD accreditation</span>
+                        : <span className="rounded-full bg-amber-50 px-1.5 py-0.5 font-medium text-amber-600">Draft — being deepened</span>}
+                    {m.requires_practical && <span className="rounded-full bg-amber-50 px-1.5 py-0.5 font-medium text-amber-600">Practical also required</span>}
+                    <span>· {m.question_count} questions</span>
+                    {m.duration_minutes ? <span>· {m.duration_minutes} min ({(m.duration_minutes / 60).toFixed(1)} CPD h)</span> : null}
+                    <span className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium ${m.image_count >= m.image_slots ? 'bg-green-50 text-green-600' : m.image_count > 0 ? 'bg-amber-50 text-amber-600' : 'bg-gray-100 text-neutral-mid'}`}><ImageIcon size={10} /> {m.image_count}/{m.image_slots} images</span>
+                    {m.qa_hard_fails > 0 ? <span className="flex items-center gap-0.5 text-red-500"><ShieldAlert size={11} /> {m.qa_hard_fails} QA issue{m.qa_hard_fails === 1 ? '' : 's'}</span> : null}
+                  </p>
+                  <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-gray-400">
+                    <span className="flex items-center gap-1"><Calendar size={11} /> Copied {fmtDate(m.created_at)}{m.approved_at ? ` · Published ${fmtDate(m.approved_at)}` : ''}</span>
+                    {m.attested_by_name ? <span className="flex items-center gap-0.5 text-green-600"><ShieldCheck size={11} /> Approved by {m.attested_by_name}{m.attested_by_role ? `, ${m.attested_by_role}` : ''}</span> : null}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => openPreview(m.id)}
+                    disabled={!!previewLoading}
+                    title="Open the course exactly as tenant staff see it."
+                    className="flex items-center gap-1 rounded-lg border border-teal/30 bg-teal/5 px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal/10 disabled:opacity-50"
+                  >
+                    {previewLoading === m.id ? <Loader2 size={13} className="animate-spin" /> : <Eye size={13} />} Preview as staff
+                  </button>
+                  <button onClick={() => setReviewId(m.id)} className="flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"><Pencil size={12} /> {m.approved ? 'Edit' : 'Deepen & review'}</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
       ) : byGroup.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center">
           <p className="text-sm font-medium text-neutral-dark">No {activeLabel}-specific modules yet</p>
@@ -395,6 +464,10 @@ export default function StandardTrainingPage() {
                         )}
                       </div>
                       <div className="flex items-center gap-1.5">
+                        {/* CPD shelf: copy a published pre-built module, or show its existing copy. */}
+                        {m?.approved && (t.cpd_module_id
+                          ? <button onClick={() => { setActiveSetting('ANNUAL'); setReviewId(t.cpd_module_id) }} title="This topic already has a CPD copy — open it on the CPD Approved shelf." className="flex items-center gap-1 rounded-lg border border-violet-200 bg-violet-50 px-2.5 py-1.5 text-xs font-semibold text-violet-700 hover:bg-violet-100"><ShieldCheck size={12} /> CPD copy ✓</button>
+                          : <button onClick={() => createCpdCopy(m.id, t.title)} disabled={busy === m.id} title="Duplicate this module onto the CPD Approved shelf as a draft, ready to be deepened and taken to CPD. The pre-built original is unchanged." className="flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-violet-300 hover:text-violet-700 disabled:opacity-50">{busy === m.id ? <Loader2 size={13} className="animate-spin" /> : <Plus size={12} />} CPD copy</button>)}
                         {/* Per-module neutralise — only for universal modules (the cross-over base). */}
                         {m && !t.care_setting && (
                           <button

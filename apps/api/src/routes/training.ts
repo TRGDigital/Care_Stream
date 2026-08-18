@@ -77,14 +77,18 @@ trainingRouter.get('/catalogue', requireAdmin, async (req: Request, res: Respons
     const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { facility_type: true } })
     const setting = facilityTypeToSetting(tenant?.facility_type)
     const settingOr = [{ care_setting: null }, { care_setting: setting }]
-    const sel = { id: true, name: true, topic_id: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, illustration_key: true, cpd_accredited: true, questions: true, created_at: true }
+    // Which shelf of the platform library this catalogue shows. Default 'prebuilt'
+    // (the free standard library); the CPD Approved Courses page passes tier=cpd.
+    // A topic can carry one module of each tier, and the two never mix in one list.
+    const wantTier = req.query.tier === 'cpd' ? 'cpd' : 'prebuilt'
+    const sel = { id: true, name: true, topic_id: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, illustration_key: true, cpd_accredited: true, questions: true, created_at: true, tier: true }
     const [topics, modules, standard, hidden] = await Promise.all([
       (prisma as any).trainingTopic.findMany({ where: { is_active: true, OR: [{ tenant_id: tenantId }, { AND: [{ tenant_id: null }, { OR: settingOr }] }] }, orderBy: { sort_order: 'asc' } }),
       (prisma as any).trainingModule.findMany({ where: { tenant_id: tenantId, source: 'ai_generated' }, select: sel }),
       // Platform standard library — scoped to this tenant's setting (+ universal). Fetched
       // regardless of approval so unapproved modules can still lend the topic a thumbnail;
       // only APPROVED ones are shared as assignable standard modules below.
-      (prisma as any).trainingModule.findMany({ where: { tenant_id: null, source: 'ai_generated', OR: settingOr }, select: sel }),
+      (prisma as any).trainingModule.findMany({ where: { tenant_id: null, source: 'ai_generated', tier: wantTier, OR: settingOr }, select: sel }),
       // This tenant's archived topics — hidden from their Annual list, restorable anytime.
       (prisma as any).trainingTopicHidden.findMany({ where: { tenant_id: tenantId }, select: { topic_id: true } }),
     ])
@@ -102,6 +106,48 @@ trainingRouter.get('/catalogue', requireAdmin, async (req: Request, res: Respons
     ok(res, {
       groups: TOPIC_GROUP_LABELS,
       topics: (topics as any[]).map(t => ({ ...t, archived: hiddenIds.has(t.id), module: moduleByTopic.get(t.id) ?? null, standard_module: standardByTopic.get(t.id) ?? null, thumb_url: thumbByTopic.get(t.id) ?? null })),
+    })
+  } catch (e: any) {
+    err(res, 'FETCH_FAILED', e.message, 500)
+  }
+})
+
+// GET /training/prebuilt — the pre-built standard library as this tenant sees it:
+// published platform modules (tier 'prebuilt'), universal + their care setting,
+// read-only, with this tenant's own assignment counts per module. Feeds the
+// "Live pre-built training" tab; assignment itself goes through POST /training/enroll.
+trainingRouter.get('/prebuilt', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  try {
+    const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { facility_type: true } })
+    const setting = facilityTypeToSetting(tenant?.facility_type)
+    const [modules, counts] = await Promise.all([
+      (prisma as any).trainingModule.findMany({
+        where:   { tenant_id: null, source: 'ai_generated', tier: 'prebuilt', approved: true, is_active: true, OR: [{ care_setting: null }, { care_setting: setting }] },
+        select:  { id: true, name: true, description: true, group_key: true, frequency: true, requires_practical: true, duration_minutes: true, pass_mark: true, illustration_key: true, questions: true },
+        orderBy: [{ group_key: 'asc' }, { name: 'asc' }],
+      }),
+      (prisma as any).trainingEnrollment.groupBy({
+        by: ['module_id', 'status'], where: { tenant_id: tenantId }, _count: { _all: true },
+      }).catch(() => []),
+    ])
+    const byModule = new Map<string, { assigned: number; complete: number }>()
+    for (const c of (counts as any[])) {
+      const cur = byModule.get(c.module_id) ?? { assigned: 0, complete: 0 }
+      cur.assigned += c._count._all
+      if (c.status === 'complete') cur.complete += c._count._all
+      byModule.set(c.module_id, cur)
+    }
+    ok(res, {
+      groups: TOPIC_GROUP_LABELS,
+      modules: (modules as any[]).map(m => ({
+        id: m.id, name: m.name, description: m.description, group_key: m.group_key,
+        frequency: m.frequency, requires_practical: m.requires_practical,
+        duration_minutes: m.duration_minutes, pass_mark: m.pass_mark,
+        question_count: Array.isArray(m.questions) ? m.questions.length : 0,
+        illustration_url: illustrationUrl(m.illustration_key),
+        ...(byModule.get(m.id) ?? { assigned: 0, complete: 0 }),
+      })),
     })
   } catch (e: any) {
     err(res, 'FETCH_FAILED', e.message, 500)
@@ -505,7 +551,7 @@ trainingRouter.get('/compliance', async (req: Request, res: Response) => {
       }),
       (prisma as any).trainingEnrollment.findMany({
         where:   { tenant_id: tenantId },
-        include: { module: { select: { id: true, slug: true, name: true, category: true, sort_order: true, source: true, requires_practical: true } } },
+        include: { module: { select: { id: true, slug: true, name: true, category: true, sort_order: true, source: true, requires_practical: true, tier: true } } },
         orderBy: { created_at: 'asc' },
       }),
     ])
@@ -632,6 +678,24 @@ trainingRouter.post('/enroll', requireAdmin, async (req: Request, res: Response)
 
 // ─── Training licences (training-only gateway tier) ───────────────────────────
 
+// The module a licence entitles its holder to. The licence's own module_id — set
+// at purchase — is the answer; the topic fallback exists only for legacy licences
+// that predate the backfill, and is restricted to tier='prebuilt' (the only tier
+// that existed when they were bought), then healed onto the licence so the lookup
+// never runs twice.
+async function resolveLicenceModule(lic: { id: string; module_id?: string | null; topic_id?: string | null }): Promise<string | null> {
+  if (lic.module_id) return lic.module_id
+  if (!lic.topic_id) return null
+  const module = await (prisma as any).trainingModule.findFirst({
+    where:  { tenant_id: null, source: 'ai_generated', tier: 'prebuilt', approved: true, is_active: true, topic_id: lic.topic_id },
+    select: { id: true },
+  })
+  if (!module) return null
+  await (prisma as any).trainingLicense.update({ where: { id: lic.id }, data: { module_id: module.id } })
+    .catch((e: any) => console.error('[resolveLicenceModule] heal failed:', e?.message ?? e))
+  return module.id
+}
+
 // GET /training/licences — purchased licences + summary + the staff they can go to.
 trainingRouter.get('/licences', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
@@ -744,14 +808,14 @@ trainingRouter.post('/licences/:id/allocate', requireAdmin, async (req: Request,
 
     await (prisma as any).trainingLicense.update({ where: { id: lic.id }, data: { user_id: userId } })
 
-    // Enrol them on the published standard module for the licence's topic.
-    if (lic.topic_id) {
-      const module = await (prisma as any).trainingModule.findFirst({ where: { tenant_id: null, source: 'ai_generated', approved: true, is_active: true, topic_id: lic.topic_id }, select: { id: true } })
-      if (module) {
-        const exists = await (prisma as any).trainingEnrollment.findFirst({ where: { tenant_id: tenantId, user_id: userId, module_id: module.id, status: { not: 'expired' } }, select: { id: true } })
-        if (!exists) {
-          await (prisma as any).trainingEnrollment.create({ data: { tenant_id: tenantId, user_id: userId, module_id: module.id, status: 'not_started', assigned_by: adminId } })
-        }
+    // Enrol them on the EXACT module the licence was bought for. The tenant chose a
+    // tier at purchase; a topic lookup here could silently swap it for the other
+    // tier once a topic carries both a pre-built module and a CPD copy.
+    const moduleId = await resolveLicenceModule(lic)
+    if (moduleId) {
+      const exists = await (prisma as any).trainingEnrollment.findFirst({ where: { tenant_id: tenantId, user_id: userId, module_id: moduleId, status: { not: 'expired' } }, select: { id: true } })
+      if (!exists) {
+        await (prisma as any).trainingEnrollment.create({ data: { tenant_id: tenantId, user_id: userId, module_id: moduleId, status: 'not_started', assigned_by: adminId } })
       }
     }
     ok(res, { allocated: true })
@@ -766,11 +830,14 @@ trainingRouter.post('/licences/:id/deallocate', requireAdmin, async (req: Reques
     if (!lic) { err(res, 'NOT_FOUND', 'Licence not found', 404); return }
     const priorUser = lic.user_id
     await (prisma as any).trainingLicense.update({ where: { id: lic.id }, data: { user_id: null } })
-    // Expire the (incomplete) enrolment so it leaves their list, keeping any completed record.
-    if (priorUser && lic.topic_id) {
-      const module = await (prisma as any).trainingModule.findFirst({ where: { tenant_id: null, source: 'ai_generated', approved: true, topic_id: lic.topic_id }, select: { id: true } })
-      if (module) {
-        await (prisma as any).trainingEnrollment.updateMany({ where: { tenant_id: tenantId, user_id: priorUser, module_id: module.id, status: { not: 'complete' } }, data: { status: 'expired' } })
+    // Expire the (incomplete) enrolment so it leaves their list, keeping any completed
+    // record. Resolves the SAME module the allocation created, via the licence's own
+    // module_id — allocate and deallocate can never disagree about which module a
+    // licence meant.
+    if (priorUser) {
+      const moduleId = await resolveLicenceModule(lic)
+      if (moduleId) {
+        await (prisma as any).trainingEnrollment.updateMany({ where: { tenant_id: tenantId, user_id: priorUser, module_id: moduleId, status: { not: 'complete' } }, data: { status: 'expired' } })
       }
     }
     ok(res, { deallocated: true })

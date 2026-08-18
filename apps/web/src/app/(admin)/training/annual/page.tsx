@@ -53,7 +53,7 @@ export default function AnnualTrainingPage() {
   function load() {
     if (!api) return
     setLoading(true); setError('')
-    api.training.catalogue().then(d => { setGroups(d.groups); setTopics(d.topics) }).catch(e => setError(e?.message ?? 'Could not load the catalogue')).finally(() => setLoading(false))
+    api.training.catalogue('cpd').then(d => { setGroups(d.groups); setTopics(d.topics) }).catch(e => setError(e?.message ?? 'Could not load the catalogue')).finally(() => setLoading(false))
   }
   useEffect(() => { load() }, [session?.accessToken]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -70,16 +70,16 @@ export default function AnnualTrainingPage() {
   return (
     <div>
       <Link href="/training" className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ArrowLeft size={14} /> Training</Link>
-      <h1 className="text-2xl font-bold text-neutral-dark">Annual training modules</h1>
+      <h1 className="text-2xl font-bold text-neutral-dark">CPD approved courses</h1>
       <p className="mb-4 mt-1 max-w-3xl text-sm text-neutral-mid">
-        Annual training your staff complete in the hub, in their first language. Assign a ready-made <strong>standard</strong> module — professionally maintained for you, free to assign.
+        Deepened courses your staff complete in the hub, in their first language — richer lessons, interactive elements and a fuller assessment than the pre-built library, built for CPD accreditation. Each shows its accreditation status; the <strong>CPD approved</strong> badge appears on a course (and its certificate) once its accreditation is granted.
       </p>
 
       {/* How this works — explainer accordion */}
       <div className="mb-6 overflow-hidden rounded-card border border-teal/30 bg-teal-light/10">
         <button onClick={() => setHelpOpen(o => !o)} className="flex w-full items-center gap-2.5 px-4 py-3 text-left hover:bg-teal-light/20">
           <Info size={16} className="shrink-0 text-teal" />
-          <span className="flex-1 text-sm font-semibold text-neutral-dark">How annual training modules work</span>
+          <span className="flex-1 text-sm font-semibold text-neutral-dark">How CPD approved courses work</span>
           {helpOpen ? <ChevronUp size={16} className="text-teal" /> : <ChevronDown size={16} className="text-teal" />}
         </button>
         {helpOpen && (
@@ -305,7 +305,7 @@ function ReviewModule({ api, id, onBack, onAssign }: { api: ReturnType<typeof cr
 
   return (
     <div className="mx-auto max-w-3xl pb-16">
-      <button onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> Annual Training</button>
+      <button onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> CPD approved courses</button>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${m.approved ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}`}>{m.approved ? 'Published' : 'Draft'}</span>
@@ -482,14 +482,14 @@ function AssignModule({ api, moduleId, moduleName, onBack }: { api: ReturnType<t
     <div className="mx-auto max-w-xl py-16 text-center">
       <CheckCircle2 size={36} className="mx-auto mb-3 text-green-500" />
       <p className="text-lg font-semibold text-neutral-dark">Assigned to {done} staff member{done === 1 ? '' : 's'}</p>
-      <p className="mt-1 text-sm text-neutral-mid">They&apos;ll see &ldquo;{moduleName}&rdquo; in their hub Annual Training, in their first language.</p>
+      <p className="mt-1 text-sm text-neutral-mid">They&apos;ll see &ldquo;{moduleName}&rdquo; in their hub under CPD Approved Courses, in their first language.</p>
       <Button onClick={onBack} size="md" className="mt-5">Back to catalogue</Button>
     </div>
   )
 
   return (
     <div className="mx-auto max-w-2xl pb-16">
-      <button onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> Annual Training</button>
+      <button onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> CPD approved courses</button>
       <h1 className="text-xl font-bold text-neutral-dark">Assign: {moduleName}</h1>
       <p className="mb-4 mt-1 text-sm text-neutral-mid">Pick staff individually, or tap a role to select everyone in it.</p>
 
@@ -535,7 +535,7 @@ function ViewStandardModule({ api, id, name, onBack }: { api: ReturnType<typeof 
   if (loading) {
     return (
       <div className="mx-auto max-w-3xl">
-        <button onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> Annual Training</button>
+        <button onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> CPD approved courses</button>
         <div className="space-y-4">{[1, 2].map(i => <div key={i} className="h-24 animate-pulse rounded-card bg-gray-100" />)}</div>
       </div>
     )
@@ -543,7 +543,7 @@ function ViewStandardModule({ api, id, name, onBack }: { api: ReturnType<typeof 
   if (error || !m) {
     return (
       <div className="mx-auto max-w-3xl">
-        <button onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> Annual Training</button>
+        <button onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> CPD approved courses</button>
         <div className="rounded-card border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error || 'Module not found'}</div>
       </div>
     )

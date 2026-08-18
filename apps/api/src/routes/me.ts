@@ -196,7 +196,7 @@ meRouter.get('/counts', async (req: Request, res: Response) => {
   const meUser = await (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true } }).catch(() => null)
   const [tEnr, induction, cqc, tWrong, oWrong, actions] = await Promise.all([
     // Split into My Training (manual modules) vs Annual Training (AI modules).
-    (prisma as any).trainingEnrollment.findMany({ where: { tenant_id: tenantId, user_id: userId }, select: { status: true, expires_at: true, module: { select: { source: true, approved: true } } } }).catch(() => []),
+    (prisma as any).trainingEnrollment.findMany({ where: { tenant_id: tenantId, user_id: userId }, select: { status: true, expires_at: true, module: { select: { source: true, approved: true, tier: true } } } }).catch(() => []),
     (prisma as any).onboardingEnrollment.count({ where: { tenant_id: tenantId, user_id: userId, completed_at: null } }).catch(() => 0),
     (prisma as any).cqcStaffDelivery.count({ where: { tenant_id: tenantId, user_id: userId, status: 'pending' } }).catch(() => 0),
     // Direct counts of outstanding wrong answers (was fetch-all-rows-and-sum).
@@ -205,8 +205,13 @@ meRouter.get('/counts', async (req: Request, res: Response) => {
     countMyOpenActions(tenantId, meUser?.name ?? '', userId),
   ])
   const outstanding = (e: any) => ['not_started', 'in_progress'].includes(e.status) || (e.status === 'complete' && e.expires_at && new Date(e.expires_at) < now)
-  const training = (tEnr as any[]).filter(e => e.module?.source !== 'ai_generated' && outstanding(e)).length
-  const annual   = (tEnr as any[]).filter(e => e.module?.source === 'ai_generated' && e.module?.approved && outstanding(e)).length
+  // Tier split: the 'annual' badge key now means CPD Approved Courses (platform
+  // tier='cpd' only); everything else — the tenant's own modules AND pre-built
+  // platform courses — counts into My Training. Keys unchanged so cached clients
+  // keep working across the deploy.
+  const isCpd    = (e: any) => e.module?.tier === 'cpd' && e.module?.approved
+  const training = (tEnr as any[]).filter(e => !isCpd(e) && (e.module?.source !== 'ai_generated' || e.module?.approved) && outstanding(e)).length
+  const annual   = (tEnr as any[]).filter(e => isCpd(e) && outstanding(e)).length
   const followup = (tWrong as number) + (oWrong as number)
   // Audits badge: admins see all due audits; "Staff + Audits" members see only
   // those due among their allocated templates.
@@ -766,7 +771,7 @@ meRouter.get('/annual-training', async (req: Request, res: Response) => {
   const [enrollments, user, tenant, ratings] = await Promise.all([
     (prisma as any).trainingEnrollment.findMany({
       where:   { tenant_id: tenantId, user_id: userId },
-      include: { module: { select: { id: true, name: true, source: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, illustration_key: true } } },
+      include: { module: { select: { id: true, name: true, source: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, illustration_key: true, tier: true } } },
     }),
     (prisma as any).user.findUnique({ where: { id: userId }, select: { first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, is_reviewer: true } }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { custom_languages: true, translation_glossary: true } }).catch(() => null),
@@ -779,6 +784,7 @@ meRouter.get('/annual-training', async (req: Request, res: Response) => {
     .filter(e => e.module?.source === 'ai_generated' && e.module?.approved)
     .map(e => ({
       enrollment_id: e.id, module_id: e.module.id, name: e.module.name,
+      tier: e.module.tier ?? 'prebuilt',
       frequency: e.module.frequency, requires_practical: e.module.requires_practical,
       group_key: e.module.group_key, image_key: e.module.image_key,
       illustration_url: illustrationUrl(e.module.illustration_key),
@@ -1065,7 +1071,7 @@ meRouter.get('/annual-training/:enrollmentId/certificate', async (req: Request, 
   const [enr, tenant, user] = await Promise.all([
     (prisma as any).trainingEnrollment.findFirst({
       where:   { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
-      include: { module: { select: { name: true, requires_practical: true, frequency: true, questions: true, duration_minutes: true, cpd_accredited: true, independently_reviewed: true } }, answers: { select: { question_id: true, is_correct: true } } },
+      include: { module: { select: { name: true, requires_practical: true, frequency: true, questions: true, duration_minutes: true, cpd_accredited: true, independently_reviewed: true, tier: true } }, answers: { select: { question_id: true, is_correct: true } } },
     }),
     (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true, logo_url: true } }),
     (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true } }),
@@ -1077,6 +1083,7 @@ meRouter.get('/annual-training/:enrollmentId/certificate', async (req: Request, 
   const cpdHours = enr.module.duration_minutes ? Math.round((enr.module.duration_minutes / 60) * 10) / 10 : null
   ok(res, {
     staff_name: user?.name ?? '', module_name: enr.module.name, org_name: tenant?.name ?? '', logo_url: tenant?.logo_url ?? null,
+    tier: enr.module.tier ?? 'prebuilt',
     completed_at: enr.completed_at, expires_at: enr.expires_at, frequency: enr.module.frequency,
     requires_practical: enr.module.requires_practical, score: total ? Math.round((correct / total) * 100) : 0,
     independently_reviewed: !!enr.module.independently_reviewed,

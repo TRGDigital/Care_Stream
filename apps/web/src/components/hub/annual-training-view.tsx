@@ -13,9 +13,10 @@ import { ActivityStep, type Activity as HubActivity } from '@/components/hub/act
 import { joinSpoken, speakOverview, speakQuestion } from '@/lib/speech'
 import { persistentCache, hubKey } from '@/lib/page-cache'
 import { TrainingCertificate } from '@/components/training-certificate'
+import { downloadElementAsPdf, safeFileName } from '@/lib/download-pdf'
 import {
   GraduationCap, CheckCircle2, Circle, Loader2, ChevronLeft, ChevronDown, ChevronUp, Award, ShieldAlert,
-  Clock, AlertTriangle, BookOpen, Printer, RefreshCw, MessageSquare, FileText, Lightbulb, Globe, Languages,
+  Clock, AlertTriangle, BookOpen, Printer, RefreshCw, MessageSquare, FileText, Lightbulb, Globe, Languages, Download,
 } from 'lucide-react'
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D']
@@ -818,7 +819,18 @@ export function CertView({ token, id, onExit, backLabel = 'CPD Approved Courses'
   const [loading, setLoading] = useState(true)
   useEffect(() => { api.me.annualTraining.certificate(id).then(setC).catch(() => {}).finally(() => setLoading(false)) }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const certRef = useRef<HTMLDivElement>(null)
+  const [saving, setSaving] = useState(false)
+
   function print() { document.body.classList.add('printing-cert'); window.print(); setTimeout(() => document.body.classList.remove('printing-cert'), 600) }
+
+  async function download() {
+    if (!certRef.current || saving) return
+    setSaving(true)
+    try { await downloadElementAsPdf(certRef.current, safeFileName(`${c?.module_name ?? 'Certificate'} - ${c?.staff_name ?? ''}`)) }
+    catch { print() }
+    finally { setSaving(false) }
+  }
 
   if (loading) return <div className="flex-1 p-6"><div className="h-64 animate-pulse rounded-xl bg-gray-100" /></div>
   if (!c) return <div className="flex-1 p-6"><button onClick={onExit} className="text-sm text-teal">← Back</button><p className="mt-4 text-sm text-neutral-mid">Certificate not available.</p></div>
@@ -828,9 +840,15 @@ export function CertView({ token, id, onExit, backLabel = 'CPD Approved Courses'
       <div className="mx-auto max-w-2xl">
         <div className="mb-3 flex items-center justify-between print:hidden">
           <button onClick={onExit} className="inline-flex items-center gap-1 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> {backLabel}</button>
-          <button onClick={print} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-neutral-dark hover:border-teal/40 hover:text-teal"><Printer size={14} /> Print / save PDF</button>
+          <div className="flex items-center gap-2">
+            <button onClick={print} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-neutral-dark hover:border-teal/40 hover:text-teal"><Printer size={14} /> Print</button>
+            <button onClick={download} disabled={saving} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-50">
+              {saving ? <><Loader2 size={14} className="animate-spin" /> Preparing…</> : <><Download size={14} /> Download PDF</>}
+            </button>
+          </div>
         </div>
 
+        <div ref={certRef}>
         <TrainingCertificate
           staffName={c.staff_name}
           moduleName={c.module_name}
@@ -847,6 +865,7 @@ export function CertView({ token, id, onExit, backLabel = 'CPD Approved Courses'
           baseline={c.baseline}
           tier={c.tier}
         />
+        </div>
 
         {/* Reflection sits under the certificate. Learning gain is now printed ON the
             cert-sheet itself — the print CSS isolates .cert-sheet, so anything out

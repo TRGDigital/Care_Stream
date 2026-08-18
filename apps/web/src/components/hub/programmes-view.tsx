@@ -6,11 +6,12 @@
 // view only adds what is genuinely programme-level: the unit map, the cross-unit
 // final assessment, the reflective account and the diploma certificate.
 
-import { useEffect, useState } from 'react'
-import { Award, GraduationCap, Lock, CheckCircle2, Clock, AlertCircle, ArrowLeft, Printer, TrendingUp } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Award, GraduationCap, Lock, CheckCircle2, Clock, AlertCircle, ArrowLeft, Printer, TrendingUp, Download, Loader2 } from 'lucide-react'
 import { createApiClient } from '@/lib/api-client'
 import { TakeModule } from '@/components/hub/annual-training-view'
 import { ProgrammeCertificate } from '@/components/programme-certificate'
+import { downloadElementAsPdf, safeFileName } from '@/lib/download-pdf'
 
 function fmt(d?: string | null) {
   return d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''
@@ -553,10 +554,21 @@ function ProgrammeCertView({ token, id, onExit }: { token: string; id: string; o
       .catch(e => setError(e?.message ?? 'No certificate yet.'))
   }, [token, id])
 
+  const certRef = useRef<HTMLDivElement>(null)
+  const [saving, setSaving] = useState(false)
+
   function print() {
     document.body.classList.add('printing-cert')
     window.print()
     setTimeout(() => document.body.classList.remove('printing-cert'), 600)
+  }
+
+  async function download() {
+    if (!certRef.current || saving) return
+    setSaving(true)
+    try { await downloadElementAsPdf(certRef.current, safeFileName(`${data?.programme_name ?? 'Certificate'} - ${data?.staff_name ?? ''}`)) }
+    catch { print() }
+    finally { setSaving(false) }
   }
 
   if (error) return <div className="mx-auto max-w-2xl p-6 text-sm text-red-600">{error}</div>
@@ -568,11 +580,17 @@ function ProgrammeCertView({ token, id, onExit }: { token: string; id: string; o
         <button onClick={onExit} className="inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-neutral-dark">
           <ArrowLeft size={14} /> Back
         </button>
-        <button onClick={print} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-dark">
-          <Printer size={14} /> Print / save PDF
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={print} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-neutral-dark hover:bg-neutral-light">
+            <Printer size={14} /> Print
+          </button>
+          <button onClick={download} disabled={saving} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">
+            {saving ? <><Loader2 size={14} className="animate-spin" /> Preparing…</> : <><Download size={14} /> Download PDF</>}
+          </button>
+        </div>
       </div>
 
+      <div ref={certRef}>
       <ProgrammeCertificate
         staffName={data.staff_name}
         staffRole={data.staff_role}
@@ -595,6 +613,7 @@ function ProgrammeCertView({ token, id, onExit }: { token: string; id: string; o
         units={data.units}
         reflection={data.reflection}
       />
+      </div>
     </div>
   )
 }

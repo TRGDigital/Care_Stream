@@ -6,20 +6,38 @@
 // Both follow the CourseSpecification pattern: fixed overlay, Close + Print buttons,
 // and the `.spec-sheet` class + body.printing-spec for print isolation.
 
-import { X, Printer } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { X, Printer, Download, Loader2 } from 'lucide-react'
+import { downloadElementAsPdf, safeFileName } from '@/lib/download-pdf'
 
 function printSheet() { document.body.classList.add('printing-spec'); window.print(); setTimeout(() => document.body.classList.remove('printing-spec'), 600) }
 
 function SheetShell({ label, name, onClose, children }: { label: string; name: string; onClose: () => void; children: React.ReactNode }) {
+  const sheetRef = useRef<HTMLDivElement>(null)
+  const [saving, setSaving] = useState(false)
+
+  async function download() {
+    if (!sheetRef.current || saving) return
+    setSaving(true)
+    try { await downloadElementAsPdf(sheetRef.current, safeFileName(`${name} - ${label}`)) }
+    catch { printSheet() }   // fall back to the print dialog if the renderer fails
+    finally { setSaving(false) }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 print:bg-white print:p-0">
       <div className="my-6 w-full max-w-3xl">
         <div className="mb-3 flex items-center justify-between print:hidden">
           <button onClick={onClose} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-neutral-dark hover:bg-neutral-light"><X size={14} /> Close</button>
-          <button onClick={printSheet} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-dark"><Printer size={14} /> Print / save PDF</button>
+          <div className="flex items-center gap-2">
+            <button onClick={printSheet} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-neutral-dark hover:bg-neutral-light"><Printer size={14} /> Print</button>
+            <button onClick={download} disabled={saving} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">
+              {saving ? <><Loader2 size={14} className="animate-spin" /> Preparing…</> : <><Download size={14} /> Download PDF</>}
+            </button>
+          </div>
         </div>
 
-        <div className="spec-sheet rounded-xl border border-gray-200 bg-white p-8 shadow-card">
+        <div ref={sheetRef} className="spec-sheet rounded-xl border border-gray-200 bg-white p-8 shadow-card">
           <div className="mb-4 flex items-center justify-between border-b-2 border-teal pb-3">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-teal">{label}</p>

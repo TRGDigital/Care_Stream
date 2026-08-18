@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { applyRoleNames } from '@/lib/policy-names'
-import { X, Loader2, CheckCircle2, Check, Plus, FileText, Sparkles, Mail, Scale, FilePlus2, FilePenLine, GraduationCap, Search, BookOpen, ChevronDown, HelpCircle, EyeOff, Info } from 'lucide-react'
+import { X, Loader2, CheckCircle2, Check, Plus, FileText, Sparkles, Mail, Scale, FilePlus2, FilePenLine, GraduationCap, Search, BookOpen, ChevronDown, HelpCircle, EyeOff, Info, RotateCcw } from 'lucide-react'
 
 type Detail = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gapDetail']>>
 
@@ -940,26 +940,34 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                       {adoption?.enabled && pendingCount !== null && pendingCount > 0 && detail.target_policy && (
                         <p className="-mt-1 flex items-center gap-1.5 rounded-md bg-teal-50 px-2.5 py-1.5 text-xs text-teal-900"><FilePenLine size={12} className="shrink-0" /> {pendingCount} change{pendingCount === 1 ? '' : 's'} adopted into your {detail.target_policy.name} draft. Review and publish it from <a href="/policies" className="font-semibold underline hover:no-underline">Policies</a>.</p>
                       )}
-                      {missing.map((r, i) => (
-                        <div key={i} className="rounded-lg border border-amber-200 bg-amber-50/50 p-4">
+                      {missing.map((r, i) => {
+                        const decided   = decisions[r.requirement]
+                        const isIgnored = decided?.decision === 'ignored'
+                        return (
+                        <div key={i} className={isIgnored
+                          ? 'rounded-lg border border-gray-200 bg-gray-100 p-4 opacity-70 grayscale transition'
+                          : 'rounded-lg border border-amber-200 bg-amber-50/50 p-4'}>
                           <div className="flex items-start gap-2">
-                            <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour((r.match_index ?? 1) - 1)}`}>{displayNumOf(r)}</span>
-                            <p className="text-sm font-medium text-neutral-dark">{r.requirement}</p>
+                            <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${isIgnored ? 'bg-gray-300 text-gray-600' : quoteColour((r.match_index ?? 1) - 1)}`}>{displayNumOf(r)}</span>
+                            <p className={`text-sm font-medium ${isIgnored ? 'text-neutral-mid line-through decoration-neutral-300' : 'text-neutral-dark'}`}>{r.requirement}</p>
                           </div>
-                          {decisions[r.requirement] && (
-                            <div className="mt-1.5 flex flex-wrap items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
-                              <span className="text-xs font-medium text-neutral-dark">
-                                {decisions[r.requirement].decision === 'ignored'
-                                  ? 'Ignored. This will not be suggested again.'
-                                  : <>Added as a new section{decisions[r.requirement].section_title ? <> — <span className="font-semibold">{decisions[r.requirement].section_title}</span></> : null}. The original passage will be left alone.</>}
+                          {decided && (
+                            <div className={`mt-2 flex flex-wrap items-center gap-2 rounded-md border px-3 py-2 ${isIgnored ? 'border-gray-300 bg-white/70' : 'border-gray-200 bg-gray-50'}`}>
+                              {isIgnored
+                                ? <EyeOff size={14} className="shrink-0 text-neutral-mid" />
+                                : <Check size={14} className="shrink-0 text-green-600" />}
+                              <span className="text-xs font-medium text-neutral-mid">
+                                {isIgnored
+                                  ? 'Ignored. This will not be suggested again when the analysis re-runs.'
+                                  : <>Added as a new section{decided.section_title ? <> — <span className="font-semibold text-neutral-dark">{decided.section_title}</span></> : null}. The original passage is left alone.</>}
                               </span>
                               <button onClick={() => undoDecision(r.requirement)} disabled={decidingReq === r.requirement}
-                                className="ml-auto text-xs font-semibold text-teal hover:underline disabled:opacity-50">
-                                {decidingReq === r.requirement ? 'Working…' : 'Undo'}
+                                className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-btn border border-teal/40 bg-white px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30 disabled:opacity-50">
+                                {decidingReq === r.requirement ? <><Loader2 size={13} className="animate-spin" /> Working…</> : <><RotateCcw size={13} /> Undo</>}
                               </button>
                             </div>
                           )}
-                          <p className="mt-1.5 text-xs text-amber-700">
+                          <p className={`mt-1.5 text-xs ${isIgnored ? 'text-neutral-mid' : 'text-amber-700'}`}>
                             {r.placement === 'add_under_heading'
                               ? <>Add a <span className="font-semibold">new subsection</span> under <span className="font-semibold">highlight {displayNumOf(r)}</span> (a heading) in your {detail.target_policy?.name ?? 'policy'} (right).</>
                               : r.placement === 'new_section'
@@ -994,7 +1002,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                           )}
 
                           {/* Adopt into the policy (beta) */}
-                          {adoption?.enabled && detail.target_policy && r.suggested_addition && (
+                          {!isIgnored && adoption?.enabled && detail.target_policy && r.suggested_addition && (
                             adoptedReqs.has(r.requirement) ? (
                               <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-green-700"><Check size={13} /> Adopted into your {detail.target_policy.name} draft</p>
                             ) : adoptingReq === r.requirement ? (
@@ -1069,7 +1077,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                             )
                           )}
                         </div>
-                      ))}
+                      )})}
                     </div>
                   )}
 

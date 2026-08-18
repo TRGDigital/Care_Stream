@@ -693,7 +693,7 @@ export function createPlatformClient(token: string) {
       // it never un-publishes a module. Pass dry_run to preview.
       applyPracticalChecklists: (data: { scope?: 'universal' | 'setting' | 'all'; care_setting?: string; overwrite?: boolean; dry_run?: boolean } = {}) =>
         adminFetch<{
-          updated: Array<{ id: string; name: string; items: number }>
+          updated: Array<{ id: string; name: string; tier: string; items: number }>
           skipped: Array<{ id: string; name: string; reason: string }>
           no_checklist_available: string[]
           total_practical_modules: number

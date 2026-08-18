@@ -10,6 +10,7 @@ import { SectionsEditor } from '@/components/training-sections-editor'
 import { ActivitiesToolbar } from '@/components/platform/activities-editor'
 import { CourseSpecification } from '@/components/course-specification'
 import { CpdSubmissionSheet, CPD_DOCS, type CpdDoc } from '@/components/training/cpd-submission-pack'
+import { PracticalChecklistSheet } from '@/components/training/course-printables'
 import { ModulePreviewPlayer } from '@/components/training/module-preview-player'
 import { PlatformShell } from '@/components/platform-shell'
 import { Loader2, Sparkles, CheckCircle2, Circle, FileText, Pencil, Plus, Trash2, RefreshCw, ChevronLeft, ShieldAlert, Image as ImageIcon, Calendar, History, AlertTriangle, ShieldCheck, Share2, Wand2, Eye, Info, ChevronDown, ClipboardCheck } from 'lucide-react'
@@ -64,6 +65,9 @@ export default function StandardTrainingPage() {
   const [packFor, setPackFor] = useState<any | null>(null)
   const [packDoc, setPackDoc] = useState<CpdDoc | null>(null)
   const [packLoading, setPackLoading] = useState<string | null>(null)
+  // Observed competency checklist, viewable from any module that needs a practical.
+  const [checklistFor, setChecklistFor] = useState<any | null>(null)
+  const [checklistLoading, setChecklistLoading] = useState<string | null>(null)
   const [checklistBusy, setChecklistBusy] = useState(false)
   useEffect(() => {
     const applyFromUrl = () => {
@@ -138,7 +142,7 @@ export default function StandardTrainingPage() {
         alert(parts.join(' '))
         return
       }
-      const lines = pre.updated.map(u => `• ${u.name} (${u.items} items)`).join('\n')
+      const lines = pre.updated.map(u => `• ${u.name} [${u.tier}] (${u.items} items)`).join('\n')
       const extra = pre.no_checklist_available.length
         ? `\n\nNo curated checklist yet for: ${pre.no_checklist_available.join(', ')}`
         : ''
@@ -159,6 +163,14 @@ export default function StandardTrainingPage() {
     try { const { module } = await api.standardTraining.moduleFull(moduleId); setPackFor(module); setPackDoc(doc) }
     catch (e: any) { alert(e?.message ?? 'Could not open the document.') }
     finally { setPackLoading(null) }
+  }
+
+  async function openChecklist(moduleId: string) {
+    if (!api || checklistLoading) return
+    setChecklistLoading(moduleId)
+    try { const { module } = await api.standardTraining.moduleFull(moduleId); setChecklistFor(module) }
+    catch (e: any) { alert(e?.message ?? 'Could not open the checklist.') }
+    finally { setChecklistLoading(null) }
   }
 
   // Duplicate a published pre-built module onto the CPD shelf as a draft copy.
@@ -418,6 +430,10 @@ export default function StandardTrainingPage() {
         </div>
       )}
 
+      {checklistFor && (
+        <PracticalChecklistSheet m={checklistFor} onClose={() => setChecklistFor(null)} />
+      )}
+
       {packFor && packDoc && (
         <CpdSubmissionSheet doc={packDoc} m={packFor} onClose={() => { setPackFor(null); setPackDoc(null) }} />
       )}
@@ -472,6 +488,16 @@ export default function StandardTrainingPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-1.5">
+                  {m.requires_practical && (
+                    <button
+                      onClick={() => openChecklist(m.id)}
+                      disabled={!!checklistLoading}
+                      title="Open the observed competency checklist for a manager to complete alongside the knowledge assessment."
+                      className="flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal disabled:opacity-50"
+                    >
+                      {checklistLoading === m.id ? <Loader2 size={13} className="animate-spin" /> : <ClipboardCheck size={13} />} Practical checklist
+                    </button>
+                  )}
                   <button
                     onClick={() => openPreview(m.id)}
                     disabled={!!previewLoading}
@@ -561,6 +587,16 @@ export default function StandardTrainingPage() {
                             className="flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal disabled:opacity-50"
                           >
                             {neutralising === m.id ? <Loader2 size={13} className="animate-spin" /> : <Wand2 size={13} />}
+                          </button>
+                        )}
+                        {m && t.requires_practical && (
+                          <button
+                            onClick={() => openChecklist(m.id)}
+                            disabled={!!checklistLoading}
+                            title="Open the observed competency checklist for this module."
+                            className="flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal disabled:opacity-50"
+                          >
+                            {checklistLoading === m.id ? <Loader2 size={13} className="animate-spin" /> : <ClipboardCheck size={13} />}
                           </button>
                         )}
                         {m && (

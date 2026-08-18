@@ -789,13 +789,17 @@ standardTrainingRouter.post('/practical-checklists/apply', async (req: Request, 
     })
     if (!(topics as any[]).length) { ok(res, { updated: [], skipped: [], no_checklist_available: [], dry_run: dryRun }); return }
 
+    // Deliberately spans BOTH tiers: a topic's pre-built course and its CPD copy
+    // each need their own observed competency checklist, and this only ever ADDS
+    // one where none exists. (Contrast with generate, which must never cross tiers
+    // because it replaces content.)
     const modules = await (prisma as any).trainingModule.findMany({
       where:  { tenant_id: null, source: 'ai_generated', topic_id: { in: (topics as any[]).map(t => t.id) } },
-      select: { id: true, name: true, topic_id: true, learning_content: true, requires_practical: true },
+      select: { id: true, name: true, topic_id: true, learning_content: true, requires_practical: true, tier: true },
     })
     const titleByTopic = new Map<string, string>((topics as any[]).map(t => [t.id, t.title]))
 
-    const updated: Array<{ id: string; name: string; items: number }> = []
+    const updated: Array<{ id: string; name: string; tier: string; items: number }> = []
     const skipped: Array<{ id: string; name: string; reason: string }> = []
     const noChecklist: string[] = []
 
@@ -816,7 +820,7 @@ standardTrainingRouter.post('/practical-checklists/apply', async (req: Request, 
           data:  { learning_content: { ...lc, practical_checklist: items } },
         }).catch((e: any) => { skipped.push({ id: m.id, name: m.name, reason: e?.message ?? 'update failed' }) })
       }
-      updated.push({ id: m.id, name: m.name, items: items.length })
+      updated.push({ id: m.id, name: m.name, tier: m.tier ?? 'prebuilt', items: items.length })
     }
 
     ok(res, {

@@ -945,7 +945,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                         const isIgnored = decided?.decision === 'ignored'
                         return (
                         <div key={i} className={isIgnored
-                          ? 'rounded-lg border border-gray-200 bg-gray-100 p-4 opacity-70 grayscale transition'
+                          ? 'rounded-lg border border-gray-200 bg-gray-100 p-4 transition'
                           : 'rounded-lg border border-amber-200 bg-amber-50/50 p-4'}>
                           <div className="flex items-start gap-2">
                             <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${isIgnored ? 'bg-gray-300 text-gray-600' : quoteColour((r.match_index ?? 1) - 1)}`}>{displayNumOf(r)}</span>
@@ -962,7 +962,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                                   : <>Added as a new section{decided.section_title ? <> — <span className="font-semibold text-neutral-dark">{decided.section_title}</span></> : null}. The original passage is left alone.</>}
                               </span>
                               <button onClick={() => undoDecision(r.requirement)} disabled={decidingReq === r.requirement}
-                                className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-btn border border-teal/40 bg-white px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30 disabled:opacity-50">
+                                className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-btn border border-teal bg-white px-3 py-1.5 text-xs font-bold text-teal hover:bg-teal-light/40 disabled:opacity-50">
                                 {decidingReq === r.requirement ? <><Loader2 size={13} className="animate-spin" /> Working…</> : <><RotateCcw size={13} /> Undo</>}
                               </button>
                             </div>

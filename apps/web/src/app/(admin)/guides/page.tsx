@@ -753,6 +753,26 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <Tip>The example wording is guidance for you to review, adapt and approve — not legal advice. Prefer it done for you? Use &ldquo;Request this policy&rdquo; and our team can write and supply it.</Tip>
         </SectionBlock>
 
+        <SectionBlock title="Three ways to deal with a suggestion">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            You are never forced to take a suggestion as written. Each one in the left-hand column offers three choices, and CareStream <strong>remembers what you decided</strong> — so re-running the analysis does not keep proposing something you have already dealt with.
+          </p>
+          <div className="space-y-2">
+            <Step n={1}><strong>Adopt into [policy]</strong>: use the suggestion as intended. You can edit the wording first, and insert your own names and job titles from the chips underneath. On a replacement, it swaps the highlighted paragraph in full.</Step>
+            <Step n={2}><strong>Add as new section</strong>: for when the wording is good but the replacement does not work for you. Instead of changing your existing paragraph, the wording is added as a <strong>new section at the bottom of the policy</strong>, under a heading CareStream suggests and you can edit. Your original wording is left exactly as it is.</Step>
+            <Step n={3}><strong>Ignore</strong>: you do not want it. The suggestion turns grey and will not be raised again on future runs.</Step>
+          </div>
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            Both <strong>Add as new section</strong> and <strong>Ignore</strong> can be reversed at any time — a decided suggestion shows an <strong>Undo</strong> button, and undoing puts it straight back into your outstanding list.
+          </p>
+          <ul className="ml-1 space-y-1.5 text-sm text-neutral-dark">
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Decisions are per policy</strong>: ignoring a requirement on one policy does not silence the same requirement if a later analysis routes it to a different policy.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>A new section still goes through review</strong>: like any adopted change it lands in <strong>Adopted changes to review</strong> on the Policies page, and only appears in the policy once you approve and publish it.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Where it sits</strong>: a new section is placed at the end of the policy, above the review dates and sign-off, so the document still closes properly.</span></li>
+          </ul>
+          <Tip>Use <strong>Add as new section</strong> when your existing paragraph is worded the way your service actually works and you do not want it rewritten &mdash; you keep your wording and still evidence the requirement. Use <strong>Ignore</strong> when the requirement genuinely does not apply to your service, so your outstanding list reflects real work rather than noise.</Tip>
+        </SectionBlock>
+
         <SectionBlock title="CQC wording alignment (Single Assessment Framework)">
           <p className="text-sm text-neutral-dark leading-relaxed">
             Covering the rules is one thing; reading the way CQC expects is another. Alongside what&rsquo;s missing, CareStream checks whether a policy is written the <strong>person-centred, outcomes-focused</strong> way the CQC <strong>Single Assessment Framework</strong> looks for, not just whether it is procedurally correct. In the Coverage detail for a regulation, a <strong>CQC wording alignment</strong> section runs automatically for the policy shown.

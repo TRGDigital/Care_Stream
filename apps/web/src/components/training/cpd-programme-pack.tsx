@@ -36,7 +36,7 @@ function Shell({ docLabel, name, kind, onClose, children }: { docLabel: string; 
     if (!sheetRef.current || saving) return
     setSaving(true)
     try {
-      await downloadElementAsPdf(sheetRef.current, safeFileName(`${name} — ${docLabel}`))
+      await downloadElementAsPdf(sheetRef.current, safeFileName(`${name} - ${docLabel}`))
     } catch {
       // Fall back to the print dialog if the renderer fails for any reason.
       printSheet()
@@ -109,7 +109,7 @@ function AssessmentDoc({ p }: { p: any }) {
       <H>Is the programme assessed?</H>
       <p className="text-sm text-neutral-dark">
         <strong>Assessed at two levels, not attendance based.</strong> Each unit carries its own assessment which must be
-        passed individually, and the programme then closes with a <strong>synoptic assessment</strong> — questions that
+        passed individually, and the programme then closes with a <strong>synoptic assessment</strong>, questions that
         deliberately require knowledge from more than one unit at once. Passing every unit alone does not complete the
         programme.
       </p>
@@ -117,14 +117,14 @@ function AssessmentDoc({ p }: { p: any }) {
       <H>Assessment at a glance</H>
       <div>
         <Row label="Units">{required.length} required{units.length > required.length ? `, plus ${units.length - required.length} optional` : ''}</Row>
-        <Row label="Unit assessment">Multiple choice, four options, single best answer — each unit passed on its own merits</Row>
+        <Row label="Unit assessment">Multiple choice, four options, single best answer, each unit passed on its own merits</Row>
         <Row label="Unit pass mark">{required[0]?.pass_mark ?? 80}% per unit</Row>
         <Row label="Synoptic assessment">{synoptic.length} questions spanning two or more units each</Row>
-        <Row label="Synoptic pass mark">{p?.synoptic_pass_mark ?? 80}% — {toPass} of {synoptic.length} correct</Row>
+        <Row label="Synoptic pass mark">{p?.synoptic_pass_mark ?? 80}%, {toPass} of {synoptic.length} correct</Row>
         {hours != null && <Row label="Taught volume">{hours} hours across the units</Row>}
         {p?.require_practical && practical.length > 0 && <Row label="Observed competency">{practical.length} unit{practical.length === 1 ? '' : 's'} additionally require a manager-signed observation</Row>}
-        {p?.require_reflection && <Row label="Reflective account">Required — a written statement of intended change in practice</Row>}
-        <Row label="Order">{p?.sequential ? 'Sequential — units unlock in order' : 'Any order — the participant chooses'}</Row>
+        {p?.require_reflection && <Row label="Reflective account">Required, a written statement of intended change in practice</Row>}
+        <Row label="Order">{p?.sequential ? 'Sequential, units unlock in order' : 'Any order, the participant chooses'}</Row>
         <Row label="Attempts">Unlimited on both unit and synoptic assessments</Row>
       </div>
 
@@ -143,7 +143,7 @@ function AssessmentDoc({ p }: { p: any }) {
           <li key={u.module_id}>
             {u.name}
             {u.is_optional ? <span className="text-neutral-mid"> (optional)</span> : null}
-            {u.duration_minutes ? <span className="text-neutral-mid"> — {u.duration_minutes} min</span> : null}
+            {u.duration_minutes ? <span className="text-neutral-mid">, {u.duration_minutes} min</span> : null}
             {u.question_count ? <span className="text-neutral-mid">, {u.question_count} questions</span> : null}
             {u.requires_practical ? <span className="text-amber-700"> · observed assessment required</span> : null}
           </li>
@@ -163,13 +163,13 @@ function AssessmentDoc({ p }: { p: any }) {
       </p>
       <p className="mt-1.5 text-sm text-neutral-dark">
         There is no cap on attempts and no penalty, because the objective is competence rather than a single passing score.
-        Repeated failure is visible to the employer, who can intervene with support — in a care setting that is a competence
+        Repeated failure is visible to the employer, who can intervene with support. In a care setting that is a competence
         and safeguarding matter, not an administrative one.
       </p>
 
       {synoptic.length > 0 && (
         <>
-          <H>Synoptic assessment — questions and answers</H>
+          <H>Synoptic assessment: questions and answers</H>
           <p className="mb-2 text-xs text-neutral-mid">Correct answer marked ✓. Each question names the units it draws upon.</p>
           <ol className="list-decimal space-y-2.5 pl-5 text-sm text-neutral-dark">
             {synoptic.map((q: any, i: number) => (
@@ -249,7 +249,7 @@ function FeedbackDoc({ p }: { p: any }) {
       <H>How feedback drives continuous improvement</H>
       <ul className="list-disc space-y-1 pl-5 text-sm text-neutral-dark">
         <li><strong>Per-unit scores</strong> are compared across the {required.length} required units, so a single weak unit is visible rather than averaged away.</li>
-        <li><strong>Synoptic performance by question</strong> shows which combinations of units participants struggle to connect — usually a sign that a link between units needs teaching more explicitly.</li>
+        <li><strong>Synoptic performance by question</strong> shows which combinations of units participants struggle to connect, usually a sign that a link between units needs teaching more explicitly.</li>
         <li><strong>Measured learning gain</strong> across the programme (pre-course checks versus final scores) evidences whether it teaches, independently of satisfaction.</li>
         <li><strong>Free-text comments</strong> are reviewed for recurring themes and fed into the scheduled content review.</li>
         <li>Units and the programme are <strong>re-attested by a named competent person</strong> on review; material change re-enters the approval process.</li>
@@ -315,16 +315,16 @@ function CertificateDoc({ p }: { p: any }) {
           <div className="mx-auto mt-5 flex max-w-md items-center justify-center rounded-lg border-2 border-dashed border-teal/60 bg-teal-light/20 px-4 py-4">
             <div className="text-center">
               <p className="text-xs font-bold uppercase tracking-wider text-teal-dark">CPD Certified logo</p>
-              <p className="mt-0.5 text-[10px] text-neutral-mid">Placeholder — logo and provider number to be applied on accreditation</p>
+              <p className="mt-0.5 text-[10px] text-neutral-mid">Placeholder: logo and provider number to be applied on accreditation</p>
               <p className="mt-1 text-[10px] font-medium text-neutral-dark">
-                &ldquo;CPD Certified · {hours != null ? `${hours} CPD hours` : 'N CPD hours'} · The CPD Certification Service — Provider [number]&rdquo;
+                &ldquo;CPD Certified · {hours != null ? `${hours} CPD hours` : 'N CPD hours'} · The CPD Certification Service, Provider [number]&rdquo;
               </p>
             </div>
           </div>
 
           {units.length > 0 && (
             <div className="mt-5 text-left">
-              <p className="mb-1.5 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-teal">Units completed — transcript</p>
+              <p className="mb-1.5 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-teal">Units completed: transcript</p>
               <div className="overflow-hidden rounded-lg border border-gray-100">
                 <table className="w-full text-[10px]">
                   <thead className="bg-neutral-light/50 text-neutral-mid">
@@ -363,13 +363,13 @@ function NavigationDoc({ p }: { p: any }) {
   const kind = (KIND_LABEL[p?.kind] ?? 'programme').toLowerCase()
 
   const steps: Array<{ t: string; d: string }> = [
-    { t: `Receive the ${kind}`, d: `Your manager enrols you. It appears in your CareStream hub under My Diplomas, showing every unit and your progress through them. Nothing to install — it runs in a web browser on a phone, tablet or computer.` },
+    { t: `Receive the ${kind}`, d: `Your manager enrols you. It appears in your CareStream hub under My Diplomas, showing every unit and your progress through them. Nothing to install. It runs in a web browser on a phone, tablet or computer.` },
     { t: 'See what it involves', d: `Opening it shows what you will be able to do at the end, the ${required.length} units you need to complete${units.length > required.length ? `, any optional extras` : ''}${hours != null ? `, and roughly how long it takes (about ${hours} hours in total)` : ''}. You are not expected to do it in one sitting.` },
     { t: 'Work through the units', d: p?.sequential
-        ? 'Units unlock in order — finish one to open the next. Each is a full course: a short lesson taught in sections, interactive activities, then its own assessment.'
+        ? 'Units unlock in order, finish one to open the next. Each is a full course: a short lesson taught in sections, interactive activities, then its own assessment.'
         : 'Take the units in whatever order suits you. Each is a full course: a short lesson taught in sections, interactive activities, then its own assessment.' },
     { t: 'Pass each unit', d: 'Each unit ends with its own multiple-choice assessment. Passing issues a certificate for that unit straight away and ticks it off your progress. Your progress is saved at every step.' },
-    ...(p?.require_practical ? [{ t: 'Complete observed assessments', d: 'Some units also need a manager or senior colleague to watch you carry out the task at work and sign a checklist. Ask your manager to arrange this — the programme cannot complete without it.' }] : []),
+    ...(p?.require_practical ? [{ t: 'Complete observed assessments', d: 'Some units also need a manager or senior colleague to watch you carry out the task at work and sign a checklist. Ask your manager to arrange this, as the programme cannot complete without it.' }] : []),
     ...(synoptic.length ? [{ t: 'Take the final assessment', d: `Once every required unit is done, the final assessment unlocks: ${synoptic.length} questions that bring together more than one unit at a time. You need ${p?.synoptic_pass_mark ?? 80}% to pass, and you can retake it as often as you need.` }] : []),
     ...(p?.require_reflection ? [{ t: 'Write your reflective account', d: 'In your own words, what will you do differently at work because of this programme? A real example is worth more than a general statement. This is required to complete.' }] : []),
     { t: 'Get your certificate', d: `Your ${kind} certificate is issued automatically and saved to your record, listing every unit with its score. You can view, print or download it at any time.` },
@@ -382,7 +382,7 @@ function NavigationDoc({ p }: { p: any }) {
         <li>Works in any modern web browser on a phone, tablet or computer.</li>
         <li>Your progress saves automatically, unit by unit. Stop and resume whenever you like.</li>
         <li>Available in over 60 languages, and text can be read aloud.</li>
-        <li>Units you have already completed elsewhere in your training count towards this {kind} — you will not be asked to repeat them.</li>
+        <li>Units you have already completed elsewhere in your training count towards this {kind}, so you will not be asked to repeat them.</li>
         {hours != null ? <li>Allow roughly {hours} hours in total, spread over as long as you need.</li> : null}
       </ul>
 
@@ -405,14 +405,14 @@ function NavigationDoc({ p }: { p: any }) {
           <li key={u.module_id}>
             {u.name}
             {u.is_optional ? <span className="text-neutral-mid"> (optional)</span> : null}
-            {u.duration_minutes ? <span className="text-neutral-mid"> — about {u.duration_minutes} minutes</span> : null}
+            {u.duration_minutes ? <span className="text-neutral-mid">, about {u.duration_minutes} minutes</span> : null}
           </li>
         ))}
       </ol>
 
       <H>If you do not pass something</H>
       <p className="text-sm text-neutral-dark">
-        Nothing is lost and there is no penalty. For a unit, review its lesson and retake the assessment — as many times as
+        Nothing is lost and there is no penalty. For a unit, review its lesson and retake the assessment, as many times as
         you need. Anything you got wrong comes back a few days later as a short refresher question, so the gap closes rather
         than being forgotten. For the final assessment, you can revisit any unit before trying again. Your manager can see
         if you are stuck and will offer support.
@@ -422,7 +422,7 @@ function NavigationDoc({ p }: { p: any }) {
       <ul className="list-disc space-y-1 pl-5 text-sm text-neutral-dark">
         <li>Ask your manager or whoever enrolled you.</li>
         <li>Use the in-hub assistant to ask about your workplace policies at any time.</li>
-        <li>If something is unclear or looks wrong, say so in the feedback box at the end of the unit — it is read.</li>
+        <li>If something is unclear or looks wrong, say so in the feedback box at the end of the unit, and it is read.</li>
       </ul>
     </>
   )

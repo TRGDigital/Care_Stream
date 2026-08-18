@@ -45,7 +45,7 @@ function Shell({ docLabel, courseName, onClose, children }: { docLabel: string; 
     if (!sheetRef.current || saving) return
     setSaving(true)
     try {
-      await downloadElementAsPdf(sheetRef.current, safeFileName(`${courseName} — ${docLabel}`))
+      await downloadElementAsPdf(sheetRef.current, safeFileName(`${courseName} - ${docLabel}`))
     } catch {
       // Fall back to the print dialog if the renderer fails for any reason.
       printSheet()
@@ -123,10 +123,10 @@ function AssessmentDoc({ m }: { m: any }) {
       <div>
         <Row label="Format">Single-best-answer multiple choice, four options per question</Row>
         <Row label="Number of questions">{questions.length}</Row>
-        <Row label="Pass mark">{passMark}% — {toPass} of {questions.length} correct</Row>
+        <Row label="Pass mark">{passMark}%, {toPass} of {questions.length} correct</Row>
         <Row label="Delivery">Online, in the participant&apos;s own language (60+ languages supported)</Row>
         <Row label="Attempts">Unlimited; the lesson may be reviewed between attempts</Row>
-        <Row label="Time limit">None — the course is self-paced</Row>
+        <Row label="Time limit">None, the course is self-paced</Row>
         {baseline.length > 0 && <Row label="Pre-course knowledge check">{baseline.length} questions, taken before teaching begins, to evidence measured learning gain</Row>}
         {activities.length > 0 && <Row label="Formative activities">{activities.length} interactive exercises (sequencing, categorising, matching) plus a knowledge check after each teaching section</Row>}
         {checklist.length > 0 && <Row label="Observed competency">{checklist.length}-point checklist completed by a manager or competent assessor, in addition to the knowledge assessment</Row>}
@@ -134,10 +134,10 @@ function AssessmentDoc({ m }: { m: any }) {
 
       <H>How the assessment is structured</H>
       <ol className="list-decimal space-y-1 pl-5 text-sm text-neutral-dark">
-        {baseline.length > 0 && <li><strong>Pre-course check</strong> — {baseline.length} questions establish the participant&apos;s starting knowledge. Scored but never gates progress.</li>}
-        <li><strong>Teach then check</strong> — {sections.length} teaching sections, each ending in a formative knowledge check with immediate feedback. These do not count toward the final result.</li>
-        <li><strong>Final assessment</strong> — {questions.length} questions drawn from the bank below, order randomised per participant.</li>
-        <li><strong>Result</strong> — scored immediately. {passMark}% or above passes and issues a certificate.</li>
+        {baseline.length > 0 && <li><strong>Pre-course check</strong>: {baseline.length} questions establish the participant&apos;s starting knowledge. Scored but never gates progress.</li>}
+        <li><strong>Teach then check</strong>: {sections.length} teaching sections, each ending in a formative knowledge check with immediate feedback. These do not count toward the final result.</li>
+        <li><strong>Final assessment</strong>: {questions.length} questions drawn from the bank below, order randomised per participant.</li>
+        <li><strong>Result</strong>: scored immediately. {passMark}% or above passes and issues a certificate.</li>
       </ol>
 
       <H>What happens on a fail</H>
@@ -153,7 +153,7 @@ function AssessmentDoc({ m }: { m: any }) {
       </ol>
       <p className="mt-2 text-sm text-neutral-dark">
         Repeated failure is visible to the employer on the training record and in the compliance matrix, so the manager can
-        intervene with additional support — for a care provider this is a safeguarding and competence matter, not simply an
+        intervene with additional support. For a care provider this is a safeguarding and competence matter, not simply an
         administrative one. There is no cap on attempts, because the objective is competence rather than a single passing score.
       </p>
 
@@ -177,7 +177,7 @@ function AssessmentDoc({ m }: { m: any }) {
         </>
       )}
 
-      <H>Final assessment — questions and answers</H>
+      <H>Final assessment: questions and answers</H>
       <p className="mb-2 text-xs text-neutral-mid">Correct answer marked ✓. Presented in randomised order to each participant.</p>
       <ol className="list-decimal space-y-2.5 pl-5 text-sm text-neutral-dark">
         {questions.map((q: any, i: number) => (
@@ -217,14 +217,14 @@ function FeedbackDoc({ m }: { m: any }) {
     <>
       <H>How feedback is captured</H>
       <p className="text-sm text-neutral-dark">
-        Feedback is collected <strong>in the course itself</strong>, on the result screen immediately after the assessment —
+        Feedback is collected <strong>in the course itself</strong>, on the result screen immediately after the assessment,
         not by a separate document or external survey link. Capturing it at the point of completion, while the experience is
         fresh, gives a materially higher response rate than emailing a form afterwards.
       </p>
       <div className="mt-2">
         <Row label="Format">In-product form, shown automatically on completion</Row>
         <Row label="When">Immediately after the final assessment, before the certificate</Row>
-        <Row label="Required?">Optional — participants may skip, so responses are honest rather than compelled</Row>
+        <Row label="Required?">Optional, participants may skip, so responses are honest rather than compelled</Row>
         <Row label="Language">Presented in the participant&apos;s own language</Row>
         <Row label="Stored against">The individual completion record, so feedback is traceable to course and cohort</Row>
       </div>
@@ -264,7 +264,7 @@ function FeedbackDoc({ m }: { m: any }) {
       <H>How feedback drives continuous improvement</H>
       <ul className="list-disc space-y-1 pl-5 text-sm text-neutral-dark">
         <li><strong>Confidence and usefulness scores</strong> are aggregated per course, so a course scoring poorly on either is identified without waiting for complaints.</li>
-        <li><strong>Free-text comments</strong> are reviewed for recurring themes — wording that confuses, examples that do not match practice, sections that feel too long.</li>
+        <li><strong>Free-text comments</strong> are reviewed for recurring themes: wording that confuses, examples that do not match practice, sections that feel too long.</li>
         <li><strong>Assessment analytics</strong> sit alongside the feedback: a question the majority answer incorrectly usually indicates a teaching or wording problem in the course, not a cohort problem, and is rewritten.</li>
         <li><strong>Measured learning gain</strong> (pre-course check versus final score) shows whether the course actually teaches, independently of whether participants enjoyed it.</li>
         <li>Courses are <strong>reviewed on a scheduled cycle</strong> and re-attested by a named competent person; feedback gathered since the last review is considered as part of that review, and any material change re-enters the approval process.</li>
@@ -336,9 +336,9 @@ function CertificateDoc({ m }: { m: any }) {
           <div className="mx-auto mt-5 flex max-w-sm items-center justify-center gap-3 rounded-lg border-2 border-dashed border-teal/60 bg-teal-light/20 px-4 py-4">
             <div className="text-center">
               <p className="text-xs font-bold uppercase tracking-wider text-teal-dark">CPD Certified logo</p>
-              <p className="mt-0.5 text-[10px] text-neutral-mid">Placeholder — logo and provider number to be applied on accreditation</p>
+              <p className="mt-0.5 text-[10px] text-neutral-mid">Placeholder: logo and provider number to be applied on accreditation</p>
               <p className="mt-1 text-[10px] font-medium text-neutral-dark">
-                &ldquo;CPD Certified · {hours != null ? `${hours} CPD hours` : 'N CPD hours'} · The CPD Certification Service — Provider [number]&rdquo;
+                &ldquo;CPD Certified · {hours != null ? `${hours} CPD hours` : 'N CPD hours'} · The CPD Certification Service, Provider [number]&rdquo;
               </p>
             </div>
           </div>
@@ -365,14 +365,14 @@ function NavigationDoc({ m }: { m: any }) {
   const mins       = m?.duration_minutes
 
   const steps: Array<{ t: string; d: string }> = [
-    { t: 'Receive the course', d: 'Your manager assigns the course. You are notified and it appears in your CareStream hub. No installation is needed — it runs in a web browser on a phone, tablet or computer.' },
+    { t: 'Receive the course', d: 'Your manager assigns the course. You are notified and it appears in your CareStream hub. No installation is needed. It runs in a web browser on a phone, tablet or computer.' },
     { t: 'Sign in', d: 'Open the link and sign in. Your hub opens on your assigned training. Everything is shown in your own language; you can switch language at any point without losing your place.' },
     { t: 'Open the course', d: 'Select the course to see its overview: what it covers, what you will be able to do afterwards, and roughly how long it takes' + (mins ? ` (about ${mins} minutes)` : '') + '. You can stop at any point and your progress is saved.' },
-    ...(baseline.length ? [{ t: 'Quick knowledge check', d: `Before teaching begins you answer ${baseline.length} short questions. This is not a test you can fail — it records what you already know, so your improvement can be measured at the end.` }] : []),
+    ...(baseline.length ? [{ t: 'Quick knowledge check', d: `Before teaching begins you answer ${baseline.length} short questions. This is not a test you can fail. It records what you already know, so your improvement can be measured at the end.` }] : []),
     { t: 'Work through the lesson', d: `The lesson is split into ${sections.length} short sections. Each teaches one idea, shows a real care scenario, then asks a quick check question. Answer it and you are told immediately whether you were right, with an explanation either way.` },
-    ...(activities.length ? [{ t: 'Complete the activities', d: `${activities.length} interactive exercises are spread through the lesson — putting steps in the right order, sorting items into categories, or matching a term to its meaning. They practise what the section just taught.` }] : []),
+    ...(activities.length ? [{ t: 'Complete the activities', d: `${activities.length} interactive exercises are spread through the lesson: putting steps in the right order, sorting items into categories, or matching a term to its meaning. They practise what the section just taught.` }] : []),
     { t: 'Take the assessment', d: `When the lesson is finished you take the final assessment: ${questions.length} multiple-choice questions, four options each, one best answer. There is no time limit and you can go back and change an answer before submitting.` },
-    { t: 'See your result', d: `You need ${m?.pass_mark ?? 80}% to pass and your score is shown straight away. If you do not pass, you can review the lesson and retake it as many times as you need — see "If you do not pass" below.` },
+    { t: 'See your result', d: `You need ${m?.pass_mark ?? 80}% to pass and your score is shown straight away. If you do not pass, you can review the lesson and retake it as many times as you need. See "If you do not pass" below.` },
     { t: 'Give feedback and reflect', d: 'You are asked two quick rating questions and invited to write a short note on what you will do differently at work. Both are optional but valuable.' },
     { t: 'Get your certificate', d: 'On passing, your certificate is issued automatically and saved to your training record. You can view, print or download it at any time, and your manager can see it as evidence of your training.' },
   ]
@@ -381,7 +381,7 @@ function NavigationDoc({ m }: { m: any }) {
     <>
       <H>Before you start</H>
       <ul className="list-disc space-y-1 pl-5 text-sm text-neutral-dark">
-        <li>Works in any modern web browser on a phone, tablet or computer — nothing to install.</li>
+        <li>Works in any modern web browser on a phone, tablet or computer, with nothing to install.</li>
         <li>Your progress saves automatically. You can stop and pick up exactly where you left off.</li>
         <li>Available in over 60 languages. Change language at any point without losing your place.</li>
         <li>Text can be read aloud if you prefer to listen rather than read.</li>
@@ -413,7 +413,7 @@ function NavigationDoc({ m }: { m: any }) {
       <ul className="list-disc space-y-1 pl-5 text-sm text-neutral-dark">
         <li>Ask your manager or the person who assigned the course.</li>
         <li>Use the in-hub assistant to ask a question about your workplace policies at any time.</li>
-        <li>If something in the course is unclear or looks wrong, say so in the feedback box at the end — it is read.</li>
+        <li>If something in the course is unclear or looks wrong, say so in the feedback box at the end, and it is read.</li>
       </ul>
     </>
   )

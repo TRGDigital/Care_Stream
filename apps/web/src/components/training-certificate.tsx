@@ -113,7 +113,7 @@ export function TrainingCertificate({
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-teal text-[9px] font-bold leading-tight text-teal">CPD</span>
             <div className="text-left">
               <p className="text-xs font-semibold text-teal-dark">CPD Certified{cpdHours != null ? ` · ${cpdHours} CPD hour${cpdHours === 1 ? '' : 's'}` : ''}</p>
-              <p className="text-[10px] text-neutral-mid">{cpdProviderNumber ? `The CPD Certification Service — Provider ${cpdProviderNumber}` : 'Accredited continuing professional development'}</p>
+              <p className="text-[10px] text-neutral-mid">{cpdProviderNumber ? `The CPD Certification Service, Provider ${cpdProviderNumber}` : 'Accredited continuing professional development'}</p>
             </div>
           </div>
         )}

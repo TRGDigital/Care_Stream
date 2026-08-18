@@ -937,6 +937,32 @@ model SuggestionDismissal {
   @@map("suggestion_dismissals")
 }
 
+// A tenant's decision about one coverage suggestion, so a later analysis does not
+// keep proposing something they have already dealt with.
+//
+//   'ignored'      — they do not want it; never surface it again for this policy
+//   'new_section'  — they liked the wording but not the replacement it proposed, so
+//                    it was adopted as its own section instead. Suppressed because the
+//                    text IS now in the policy, just not where the suggestion wanted it.
+//
+// Keyed by requirement text (what the AI proposed), scoped to the regulation and the
+// policy it targeted, so the same requirement against a different policy is separate.
+model CoverageSuggestionDecision {
+  id            String   @id @default(uuid())
+  tenant_id     String
+  reference_key String                    // the regulation
+  policy_id     String?                   // the policy it targeted (null = unrouted)
+  requirement   String                    // the requirement text, normalised on write
+  decision      String                    // 'ignored' | 'new_section'
+  section_title String?                   // heading used, when adopted as a new section
+  decided_by    String?
+  decided_at    DateTime @default(now())
+
+  @@unique([tenant_id, reference_key, policy_id, requirement])
+  @@index([tenant_id, reference_key])
+  @@map("coverage_suggestion_decisions")
+}
+
 // ─── AI Prompt Versions ───────────────────────────────────────────────────────
 
 // Snapshot of each prompt before it is overwritten via the platform admin UI.

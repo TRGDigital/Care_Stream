@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { applyRoleNames } from '@/lib/policy-names'
-import { X, Loader2, CheckCircle2, Check, Plus, FileText, Sparkles, Mail, Scale, FilePlus2, FilePenLine, GraduationCap, Search, BookOpen, ChevronDown, HelpCircle } from 'lucide-react'
+import { X, Loader2, CheckCircle2, Check, Plus, FileText, Sparkles, Mail, Scale, FilePlus2, FilePenLine, GraduationCap, Search, BookOpen, ChevronDown, HelpCircle, EyeOff } from 'lucide-react'
 
 type Detail = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['gapDetail']>>
 
@@ -466,6 +466,13 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   const [adoptTitle,   setAdoptTitle]   = useState('')
   const [adoptBusy,    setAdoptBusy]    = useState(false)
   const [adoptErr,     setAdoptErr]     = useState('')
+  // Per-suggestion decisions ('ignored' / 'new_section'), persisted server-side so a
+  // later analysis stops proposing something already dealt with. Keyed by requirement.
+  const [decisions,    setDecisions]    = useState<Record<string, { decision: string; section_title?: string | null }>>({})
+  const [decidingReq,  setDecidingReq]  = useState<string | null>(null)
+  // When true the open adopt panel is forced to new_section, whatever the
+  // suggestion originally proposed.
+  const [adoptAsNewSection, setAdoptAsNewSection] = useState(false)
   const [adoptedReqs,  setAdoptedReqs]  = useState<Set<string>>(new Set())
   const [adoptedContent, setAdoptedContent] = useState<Record<string, { new_text: string; section_title?: string }>>({})
   const [pendingCount, setPendingCount] = useState<number | null>(null)
@@ -489,7 +496,19 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
       .catch(() => {})
   }, [accepted, adoption?.enabled, detail?.target_policy, token])
 
+  // A short H2-style heading derived from the requirement text, as a starting point
+  // the tenant can edit. Requirements read like sentences, so trim to the first
+  // clause and drop a leading verb phrase.
+  function headingFromRequirement(req: string): string {
+    let t = String(req || '').split(/[.;:]/)[0].trim()
+    t = t.replace(/^(the (policy|provider|service) (must|should|will|needs to)\s+)/i, '')
+         .replace(/^(must|should|will|needs to|ensure that|ensure|include|state|describe|set out|cover)\s+/i, '')
+    t = t.charAt(0).toUpperCase() + t.slice(1)
+    return t.length > 80 ? t.slice(0, 77).trimEnd() + '…' : t
+  }
+
   function openAdopt(r: { requirement: string; suggested_addition?: string | null; section_title?: string | null }) {
+    setAdoptAsNewSection(false)
     setAdoptingReq(r.requirement)
     setAdoptText(r.suggested_addition ?? '')
     setAdoptTitle(r.section_title ?? '')
@@ -506,17 +525,69 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
     requestAnimationFrame(() => { ta.focus(); const pos = start + name.length; ta.setSelectionRange(pos, pos) })
   }
 
+  // Ignore a suggestion outright. Recorded so re-running the analysis does not
+  // propose it again; reversible.
+  async function ignoreSuggestion(requirement: string) {
+    setDecidingReq(requirement)
+    try {
+      const res = await createApiClient(token).analytics.setCoverageDecision(referenceKey, {
+        requirement, decision: 'ignored', policy_id: detail?.target_policy?.id ?? null,
+      })
+      const map: Record<string, { decision: string; section_title?: string | null }> = {}
+      for (const dec of res.decisions) map[dec.requirement] = { decision: dec.decision, section_title: dec.section_title }
+      setDecisions(map)
+    } catch (e: any) { setAdoptErr(e.message ?? 'Could not ignore that suggestion.') }
+    finally { setDecidingReq(null) }
+  }
+
+  async function undoDecision(requirement: string) {
+    setDecidingReq(requirement)
+    try {
+      const res = await createApiClient(token).analytics.clearCoverageDecision(referenceKey, requirement, detail?.target_policy?.id ?? null)
+      const map: Record<string, { decision: string; section_title?: string | null }> = {}
+      for (const dec of res.decisions) map[dec.requirement] = { decision: dec.decision, section_title: dec.section_title }
+      setDecisions(map)
+    } catch (e: any) { setAdoptErr(e.message ?? 'Could not undo that.') }
+    finally { setDecidingReq(null) }
+  }
+
+  // "Add as new section": the tenant likes the wording but not the replacement it
+  // proposed. Opens the adopt panel forced to new_section, with a suggested H2
+  // heading they can edit. Adopting then records the decision, so the analysis
+  // stops trying to replace the original passage.
+  function openAsNewSection(r: { requirement: string; suggested_addition?: string | null; section_title?: string | null }) {
+    setAdoptingReq(r.requirement)
+    setAdoptAsNewSection(true)
+    setAdoptText(r.suggested_addition ?? '')
+    setAdoptTitle(r.section_title || headingFromRequirement(r.requirement))
+    setAdoptErr('')
+  }
+
   async function doAdopt(r: { requirement: string; placement?: string | null; location_quote?: string | null }) {
     if (!detail?.target_policy || !adoptText.trim()) return
     setAdoptBusy(true); setAdoptErr('')
     try {
       const res = await createApiClient(token).analytics.adoptSuggestion({
         policy_id: detail.target_policy.id, reference_key: detail.reference_key, requirement: r.requirement,
-        placement: r.placement ?? 'new_section', old_text: r.location_quote ?? '', new_text: adoptText.trim(),
-        section_title: r.placement === 'new_section' ? (adoptTitle.trim() || undefined) : undefined,
+        placement: adoptAsNewSection ? 'new_section' : (r.placement ?? 'new_section'),
+        old_text: adoptAsNewSection ? '' : (r.location_quote ?? ''),
+        new_text: adoptText.trim(),
+        section_title: (adoptAsNewSection || r.placement === 'new_section') ? (adoptTitle.trim() || undefined) : undefined,
       })
       setAdoptedReqs(s => new Set(s).add(r.requirement))
       setAdoptedContent(m => ({ ...m, [r.requirement]: { new_text: adoptText.trim(), section_title: adoptTitle.trim() || undefined } }))
+      // Adopted as its own section rather than as the replacement it proposed:
+      // record that, so the analysis stops trying to replace the original passage.
+      if (adoptAsNewSection) {
+        createApiClient(token).analytics.setCoverageDecision(referenceKey, {
+          requirement: r.requirement, decision: 'new_section',
+          policy_id: detail.target_policy.id, section_title: adoptTitle.trim() || null,
+        }).then(res => {
+          const map: Record<string, { decision: string; section_title?: string | null }> = {}
+          for (const dec of res.decisions) map[dec.requirement] = { decision: dec.decision, section_title: dec.section_title }
+          setDecisions(map)
+        }).catch(() => {})
+      }
       setPendingCount(res.pending)
       setAdoptingReq(null)
       // Honest outcomes: placed_at_end = it IS adopted and pending, just added as its own
@@ -591,7 +662,14 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
     if (!accepted) return   // don't fetch the remediation detail until the disclaimer is accepted
     let live = true
     createApiClient(token).analytics.gapDetail(referenceKey)
-      .then(d => { if (!live) return; setDetail(d); if (d.effective_status === 'covered') onVerdictCovered(referenceKey) })
+      .then(d => {
+        if (!live) return
+        setDetail(d)
+        const map: Record<string, { decision: string; section_title?: string | null }> = {}
+        for (const dec of ((d as any).decisions ?? [])) map[dec.requirement] = { decision: dec.decision, section_title: dec.section_title }
+        setDecisions(map)
+        if (d.effective_status === 'covered') onVerdictCovered(referenceKey)
+      })
       .catch(e => { if (live) setError(e.message ?? 'Could not build the detail.') })
       .finally(() => { if (live) setLoading(false) })
     return () => { live = false }
@@ -855,6 +933,19 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                             <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${quoteColour((r.match_index ?? 1) - 1)}`}>{displayNumOf(r)}</span>
                             <p className="text-sm font-medium text-neutral-dark">{r.requirement}</p>
                           </div>
+                          {decisions[r.requirement] && (
+                            <div className="mt-1.5 flex flex-wrap items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+                              <span className="text-xs font-medium text-neutral-dark">
+                                {decisions[r.requirement].decision === 'ignored'
+                                  ? 'Ignored. This will not be suggested again.'
+                                  : <>Added as a new section{decisions[r.requirement].section_title ? <> — <span className="font-semibold">{decisions[r.requirement].section_title}</span></> : null}. The original passage will be left alone.</>}
+                              </span>
+                              <button onClick={() => undoDecision(r.requirement)} disabled={decidingReq === r.requirement}
+                                className="ml-auto text-xs font-semibold text-teal hover:underline disabled:opacity-50">
+                                {decidingReq === r.requirement ? 'Working…' : 'Undo'}
+                              </button>
+                            </div>
+                          )}
                           <p className="mt-1.5 text-xs text-amber-700">
                             {r.placement === 'add_under_heading'
                               ? <>Add a <span className="font-semibold">new subsection</span> under <span className="font-semibold">highlight {displayNumOf(r)}</span> (a heading) in your {detail.target_policy?.name ?? 'policy'} (right).</>
@@ -895,15 +986,15 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                               <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-green-700"><Check size={13} /> Adopted into your {detail.target_policy.name} draft</p>
                             ) : adoptingReq === r.requirement ? (
                               <div className="mt-2 rounded-md border border-teal-200 bg-teal-50/40 p-3">
-                                {r.placement === 'amend' && r.location_quote && (
+                                {!adoptAsNewSection && r.placement === 'amend' && r.location_quote && (
                                   <div className="mb-2">
                                     <p className="text-[10px] font-bold uppercase tracking-wide text-neutral-mid">Replacing this paragraph</p>
                                     <p className="mt-0.5 rounded bg-white/70 px-2 py-1 text-xs text-neutral-mid line-through decoration-neutral-300">{r.location_quote}</p>
                                   </div>
                                 )}
-                                {r.placement === 'new_section' && (
+                                {(adoptAsNewSection || r.placement === 'new_section') && (
                                   <div className="mb-2">
-                                    <label className="text-[10px] font-bold uppercase tracking-wide text-neutral-mid">Section heading</label>
+                                    <label className="text-[10px] font-bold uppercase tracking-wide text-neutral-mid">Section heading{adoptAsNewSection ? ' (added at the end of the policy)' : ''}</label>
                                     <input value={adoptTitle} onChange={e => setAdoptTitle(e.target.value)} className="mt-0.5 w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm focus:border-teal focus:outline-none" />
                                   </div>
                                 )}
@@ -935,10 +1026,26 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                                 </div>
                               </div>
                             ) : (
-                              <button onClick={() => openAdopt(r)}
-                                className="mt-2 inline-flex items-center gap-1.5 rounded-btn border border-teal/40 bg-white px-3 py-1.5 text-xs font-medium text-teal hover:bg-teal-light/30">
-                                <FilePenLine size={13} /> Adopt into {detail.target_policy.name}
-                              </button>
+                              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                                <button onClick={() => openAdopt(r)}
+                                  className="inline-flex items-center gap-1.5 rounded-btn border border-teal/40 bg-white px-3 py-1.5 text-xs font-medium text-teal hover:bg-teal-light/30">
+                                  <FilePenLine size={13} /> Adopt into {detail.target_policy.name}
+                                </button>
+                                {/* Likes the wording, not the replacement: add it as its own
+                                    section at the end instead, under an editable heading. */}
+                                {r.placement !== 'new_section' && (
+                                  <button onClick={() => openAsNewSection(r)}
+                                    title="Keep your existing wording and add this as a new section at the end of the policy, under its own heading."
+                                    className="inline-flex items-center gap-1.5 rounded-btn border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal">
+                                    <Plus size={13} /> Add as new section
+                                  </button>
+                                )}
+                                <button onClick={() => ignoreSuggestion(r.requirement)} disabled={decidingReq === r.requirement}
+                                  title="Do not apply this. It will not be suggested again when the analysis re-runs."
+                                  className="inline-flex items-center gap-1.5 rounded-btn border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-mid hover:border-gray-300 hover:text-neutral-dark disabled:opacity-50">
+                                  {decidingReq === r.requirement ? <Loader2 size={13} className="animate-spin" /> : <EyeOff size={13} />} Ignore
+                                </button>
+                              </div>
                             )
                           )}
                         </div>

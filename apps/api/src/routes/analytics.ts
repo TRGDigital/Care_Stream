@@ -1237,9 +1237,71 @@ analyticsRouter.post('/gaps/:reference_key/detail', requireAdmin, async (req: Re
   }
   try {
     const detail = await getGapDetail(tenantId, String(req.params.reference_key), req.query.force === '1')
-    ok(res, detail)
+    ok(res, { ...detail, decisions: await coverageDecisionsFor(tenantId, String(req.params.reference_key)) })
   } catch (e: any) {
     err(res, 'DETAIL_FAILED', e.message ?? 'Could not build the coverage detail.', 500)
+  }
+})
+
+// A tenant's decisions about individual coverage suggestions, keyed by requirement
+// so the modal can move them out of the outstanding list and offer an undo.
+async function coverageDecisionsFor(tenantId: string, referenceKey: string) {
+  const rows = await (prisma as any).coverageSuggestionDecision.findMany({
+    where:  { tenant_id: tenantId, reference_key: referenceKey },
+    select: { requirement: true, decision: true, section_title: true, policy_id: true, decided_by: true, decided_at: true },
+  }).catch(() => [])
+  return (rows as any[]).map(r => ({
+    requirement: r.requirement, decision: r.decision, section_title: r.section_title,
+    policy_id: r.policy_id, decided_by: r.decided_by, decided_at: r.decided_at,
+  }))
+}
+
+// POST /analytics/gaps/:reference_key/decision
+// Record that a suggestion has been dealt with, so later analyses stop proposing it.
+//   decision 'ignored'     — the tenant does not want it
+//   decision 'new_section' — the wording was adopted as its own section instead of
+//                            replacing the passage the suggestion targeted
+analyticsRouter.post('/gaps/:reference_key/decision', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const requirement = String(req.body?.requirement ?? '').trim()
+  const decision    = String(req.body?.decision ?? '')
+  const policyId    = req.body?.policy_id ? String(req.body.policy_id) : null
+  const sectionTitle= req.body?.section_title ? String(req.body.section_title).slice(0, 300) : null
+  if (!requirement) { err(res, 'VALIDATION_ERROR', 'requirement is required'); return }
+  if (!['ignored', 'new_section'].includes(decision)) { err(res, 'VALIDATION_ERROR', 'decision must be ignored or new_section'); return }
+
+  try {
+    const where = { tenant_id: tenantId, reference_key: String(req.params.reference_key), policy_id: policyId, requirement }
+    const existing = await (prisma as any).coverageSuggestionDecision.findFirst({ where, select: { id: true } })
+    if (existing) {
+      await (prisma as any).coverageSuggestionDecision.update({
+        where: { id: existing.id },
+        data:  { decision, section_title: sectionTitle, decided_by: (req as any).user.sub, decided_at: new Date() },
+      })
+    } else {
+      await (prisma as any).coverageSuggestionDecision.create({
+        data: { ...where, decision, section_title: sectionTitle, decided_by: (req as any).user.sub },
+      })
+    }
+    ok(res, { decisions: await coverageDecisionsFor(tenantId, String(req.params.reference_key)) })
+  } catch (e: any) {
+    err(res, 'DECISION_FAILED', e.message ?? 'Could not record that decision.', 500)
+  }
+})
+
+// DELETE /analytics/gaps/:reference_key/decision — undo, so it is proposed again.
+analyticsRouter.delete('/gaps/:reference_key/decision', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const requirement = String(req.query.requirement ?? '').trim()
+  const policyId    = req.query.policy_id ? String(req.query.policy_id) : null
+  if (!requirement) { err(res, 'VALIDATION_ERROR', 'requirement is required'); return }
+  try {
+    await (prisma as any).coverageSuggestionDecision.deleteMany({
+      where: { tenant_id: tenantId, reference_key: String(req.params.reference_key), policy_id: policyId, requirement },
+    })
+    ok(res, { decisions: await coverageDecisionsFor(tenantId, String(req.params.reference_key)) })
+  } catch (e: any) {
+    err(res, 'DECISION_FAILED', e.message ?? 'Could not undo that decision.', 500)
   }
 })
 

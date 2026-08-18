@@ -35,7 +35,7 @@ const MAX_AGE_MS = 10 * 60 * 1000
 // cache where the Navigation Timing API is unavailable.
 let reloadChecked = false
 let isReload = false
-function wasHardReload(): boolean {
+export function wasHardReload(): boolean {
   if (reloadChecked) return isReload
   reloadChecked = true
   try {

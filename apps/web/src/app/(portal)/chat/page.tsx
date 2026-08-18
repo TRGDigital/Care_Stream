@@ -25,7 +25,7 @@ import { SupervisionsHubView } from '@/components/hub/supervisions-view'
 import { DisplaySettings } from '@/components/hub/display-settings'
 import Link from 'next/link'
 import { createApiClient, apiAssetUrl, type Citation } from '@/lib/api-client'
-import { persistentCache, hubKey } from '@/lib/page-cache'
+import { persistentCache, hubKey, wasHardReload } from '@/lib/page-cache'
 
 // useLayoutEffect runs before the browser paints; on the server it no-ops (and
 // would warn), so fall back to useEffect there. Used to hydrate the sidebar from
@@ -487,6 +487,10 @@ function ChatPageInner() {
   // before paint (useLayoutEffect) and batches all three setStates → no flash of
   // empty, no staggered stages. The fetches below then silently revalidate.
   useIsoLayoutEffect(() => {
+    // These mirror server state, so a hard reload — the user explicitly asking for
+    // current numbers — must not paint yesterday's badges over it. Chat history and
+    // the language preference below are the user's own state, so they still restore.
+    if (wasHardReload()) return
     try { const c = JSON.parse(localStorage.getItem(`cs_counts_${userId}`) || 'null'); if (c) setNavCounts(c) } catch { /* ignore */ }
     try { const s = JSON.parse(localStorage.getItem(`cs_saved_${userId}`)  || 'null'); if (Array.isArray(s)) setSavedPolicies(s) } catch { /* ignore */ }
     try { const l = JSON.parse(localStorage.getItem(`cs_langs_${userId}`)  || 'null'); if (Array.isArray(l)) setLangList(l) } catch { /* ignore */ }

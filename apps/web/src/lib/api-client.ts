@@ -587,7 +587,8 @@ export function createApiClient(token: string) {
       // The pre-built standard library as this tenant sees it (read-only, assignable).
       prebuilt: () => apiFetch<{
         groups: Record<string, string>
-        modules: Array<{ id: string; name: string; description: string; group_key: string | null; frequency: string; requires_practical: boolean; duration_minutes: number | null; pass_mark: number; question_count: number; illustration_url: string | null; assigned: number; complete: number }>
+        modules: Array<{ id: string; name: string; description: string; group_key: string | null; frequency: string; requires_practical: boolean; duration_minutes: number | null; pass_mark: number; question_count: number; practical_checklist: string[]; illustration_url: string | null; assigned: number; complete: number }>
+        coverage: { published: number; topics_in_scope: number; awaiting_publish: number }
       }>('/training/prebuilt', token),
       generateModule: (topicId: string) =>
         apiFetch<{ module: any }>('/training/catalogue/generate', token, { method: 'POST', body: JSON.stringify({ topic_id: topicId }) }),
@@ -959,15 +960,19 @@ export function createApiClient(token: string) {
       trainingMonth: (month: string) => apiFetch<{
         month: string
         f2f:    Array<{ session_id: string; date: string; title: string; duration_hours: number; start_time: string | null; end_time: string | null; location: string | null; attendees: Array<{ user_id: string; name: string; status: string; owed_pay: boolean; hourly_rate: number | null }> }>
-        adhoc:  Array<{ user_id: string; name: string; title: string; allocated_at: string; completed_at: string | null; status: string }>
-        annual: Array<{ user_id: string; name: string; title: string; allocated_at: string; completed_at: string | null; status: string }>
+        adhoc:    Array<{ user_id: string; name: string; title: string; allocated_at: string; completed_at: string | null; status: string }>
+        prebuilt: Array<{ user_id: string; name: string; title: string; allocated_at: string; completed_at: string | null; status: string }>
+        cpd:      Array<{ user_id: string; name: string; title: string; allocated_at: string; completed_at: string | null; status: string }>
+        annual:   Array<{ user_id: string; name: string; title: string; allocated_at: string; completed_at: string | null; status: string }>
       }>(`/face-to-face/training-month?month=${encodeURIComponent(month)}`, token),
       // Same shape as trainingMonth, but over an explicit inclusive date range (weekly payroll).
       trainingRange: (from: string, to: string) => apiFetch<{
         month: string; period: string
         f2f:    Array<{ session_id: string; date: string; title: string; duration_hours: number; start_time: string | null; end_time: string | null; location: string | null; attendees: Array<{ user_id: string; name: string; status: string; owed_pay: boolean; hourly_rate: number | null }> }>
-        adhoc:  Array<{ user_id: string; name: string; title: string; allocated_at: string; completed_at: string | null; status: string }>
-        annual: Array<{ user_id: string; name: string; title: string; allocated_at: string; completed_at: string | null; status: string }>
+        adhoc:    Array<{ user_id: string; name: string; title: string; allocated_at: string; completed_at: string | null; status: string }>
+        prebuilt: Array<{ user_id: string; name: string; title: string; allocated_at: string; completed_at: string | null; status: string }>
+        cpd:      Array<{ user_id: string; name: string; title: string; allocated_at: string; completed_at: string | null; status: string }>
+        annual:   Array<{ user_id: string; name: string; title: string; allocated_at: string; completed_at: string | null; status: string }>
       }>(`/face-to-face/training-month?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, token),
       payrollEmail: (to: string, month_label: string, pdf_base64: string) =>
         apiFetch<{ sent: string }>('/face-to-face/payroll/email', token, { method: 'POST', body: JSON.stringify({ to, month_label, pdf_base64 }) }),

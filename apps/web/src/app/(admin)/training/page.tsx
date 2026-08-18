@@ -12,9 +12,10 @@ import { gbp, UNIT_PENCE, DISCOUNT_TIERS, discountPctForQty } from '@/lib/traini
 import {
   AlertCircle, CheckCircle2, ChevronDown, Clock, GraduationCap, History,
   Info, Lock, Loader2, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, Users, Eye,
-  Search, X, Archive, RotateCcw, ShoppingCart, Minus,
+  Search, X, Archive, RotateCcw, ShoppingCart, Minus, ClipboardCheck,
 } from 'lucide-react'
 import { ModulePreviewPlayer } from '@/components/training/module-preview-player'
+import { PracticalChecklistSheet } from '@/components/training/course-printables'
 import { FaceToFaceManager } from '@/components/admin/face-to-face/face-to-face-manager'
 
 // Diplomas & pathways are being built out over the coming months, so the entry
@@ -216,16 +217,28 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
   const [view,      setView]      = useState<'live' | 'prebuilt' | 'archived'>('live')
   // The pre-built standard library (platform-owned, read-only, assignable) —
   // fetched lazily the first time the tab is opened.
-  const [prebuilt,       setPrebuilt]       = useState<any[] | null>(null)
-  const [prebuiltGroups, setPrebuiltGroups] = useState<Record<string, string>>({})
+  // Cached across mounts so switching tabs (or leaving and coming back) is instant;
+  // it still revalidates in the background on first open.
+  const prebuiltCached = persistentCache.get<{ modules: any[]; groups: Record<string, string>; coverage: any }>('admin-prebuilt')
+  const [prebuilt,       setPrebuilt]       = useState<any[] | null>(prebuiltCached?.modules ?? null)
+  const [prebuiltGroups, setPrebuiltGroups] = useState<Record<string, string>>(prebuiltCached?.groups ?? {})
+  const [prebuiltCover,  setPrebuiltCover]  = useState<any>(prebuiltCached?.coverage ?? null)
   const [assignPrebuilt, setAssignPrebuilt] = useState<any | null>(null)
+  const [practicalSheet, setPracticalSheet] = useState<any | null>(null)
   const [archived,  setArchived]  = useState<Module[]>([])
   const [archiving, setArchiving] = useState<string | null>(null)
   useEffect(() => { api.training.archivedModules().then(d => setArchived(d.modules as Module[])).catch(() => {}) }, [api])
+  const [prebuiltFetched, setPrebuiltFetched] = useState(false)
   useEffect(() => {
-    if (view !== 'prebuilt' || prebuilt !== null) return
-    api.training.prebuilt().then(d => { setPrebuilt(d.modules); setPrebuiltGroups(d.groups) }).catch(() => setPrebuilt([]))
-  }, [view, prebuilt, api])
+    if (view !== 'prebuilt' || prebuiltFetched) return
+    setPrebuiltFetched(true)
+    api.training.prebuilt()
+      .then(d => {
+        setPrebuilt(d.modules); setPrebuiltGroups(d.groups); setPrebuiltCover(d.coverage)
+        persistentCache.set('admin-prebuilt', { modules: d.modules, groups: d.groups, coverage: d.coverage })
+      })
+      .catch(() => setPrebuilt(prev => prev ?? []))
+  }, [view, prebuiltFetched, api])
 
   async function archiveModule(m: Module) {
     setArchiving(m.id)
@@ -753,6 +766,15 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
           </div>
         ) : (
           <div className="mb-6 space-y-6">
+            {prebuiltCover && prebuiltCover.awaiting_publish > 0 && (
+              <p className="rounded-lg border border-gray-200 bg-neutral-light/40 px-3 py-2 text-xs text-neutral-mid">
+                Showing <strong className="text-neutral-dark">{prebuiltCover.published}</strong> published courses.
+                A further <strong className="text-neutral-dark">{prebuiltCover.awaiting_publish}</strong> of
+                the {prebuiltCover.topics_in_scope} topics for your service don&apos;t have a published CareStream
+                course yet — they appear under <strong>Live policy training</strong> so you can build your own from
+                your policies in the meantime.
+              </p>
+            )}
             {Object.keys(prebuiltGroups).map(gk => {
               const items = prebuilt.filter(m => m.group_key === gk)
               if (!items.length) return null
@@ -775,6 +797,15 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
                             {m.assigned > 0 && <span className="text-teal">· {m.complete}/{m.assigned} completed</span>}
                           </p>
                         </div>
+                        {m.requires_practical && (
+                          <button
+                            onClick={() => setPracticalSheet(m)}
+                            title="Print the observed competency checklist for a manager to complete alongside the knowledge module."
+                            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"
+                          >
+                            <ClipboardCheck size={14} /> Practical checklist
+                          </button>
+                        )}
                         <button
                           onClick={() => setAssignPrebuilt(m)}
                           className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal/90"
@@ -845,6 +876,10 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
       {/* Assigning a pre-built (platform) module — same modal, platform module id.
           Each staff × module assignment uses one plan allocation, same as any
           AI-course assignment. */}
+      {practicalSheet && (
+        <PracticalChecklistSheet m={practicalSheet} onClose={() => setPracticalSheet(null)} />
+      )}
+
       {assignPrebuilt && (
         <PerModuleAssignModal
           api={api}

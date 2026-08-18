@@ -591,7 +591,7 @@ faceToFaceRouter.get('/training-month', requireAdmin, async (req: Request, res: 
       (prisma as any).faceToFaceSession.findMany({ where: { tenant_id: tenantId, session_date: { gte: start, lt: end } }, include: { attendance: true }, orderBy: { session_date: 'asc' } }),
       (prisma as any).trainingEnrollment.findMany({
         where: { tenant_id: tenantId, OR: [{ created_at: { gte: start, lt: end } }, { completed_at: { gte: start, lt: end } }] },
-        include: { module: { select: { name: true, source: true } } },
+        include: { module: { select: { name: true, source: true, tier: true } } },
       }),
     ])
     const userIds = new Set<string>()
@@ -607,13 +607,22 @@ faceToFaceRouter.get('/training-month', requireAdmin, async (req: Request, res: 
       start_time: s.start_time ?? null, end_time: s.end_time ?? null, location: s.location ?? null,
       attendees: (s.attendance ?? []).map((a: any) => ({ user_id: a.user_id, name: nm(a.user_id), status: a.status, owed_pay: a.owed_pay, hourly_rate: rate(a.user_id) })).sort((a: any, b: any) => a.name.localeCompare(b.name)),
     }))
-    const adhoc: any[] = [], annual: any[] = []
+    // Split by tier: the tenant's own policy training, the pre-built library, and
+    // CPD approved courses. `annual` is kept as the pre-built + CPD union so older
+    // clients keep rendering something sensible across the deploy.
+    const adhoc: any[] = [], prebuilt: any[] = [], cpd: any[] = []
     for (const e of enrollments as any[]) {
       const row = { user_id: e.user_id, name: nm(e.user_id), title: e.module?.name ?? 'Training', allocated_at: e.created_at, completed_at: e.completed_at, status: e.status }
-      if (e.module?.source === 'ai_generated') annual.push(row); else adhoc.push(row)
+      if (e.module?.source !== 'ai_generated') adhoc.push(row)
+      else if ((e.module?.tier ?? 'prebuilt') === 'cpd') cpd.push(row)
+      else prebuilt.push(row)
     }
     const sortRows = (a: any, b: any) => a.name.localeCompare(b.name) || a.title.localeCompare(b.title)
-    ok(res, { month: `${y}-${String(mo + 1).padStart(2, '0')}`, period: periodLabel, f2f, adhoc: adhoc.sort(sortRows), annual: annual.sort(sortRows) })
+    ok(res, {
+      month: `${y}-${String(mo + 1).padStart(2, '0')}`, period: periodLabel, f2f,
+      adhoc: adhoc.sort(sortRows), prebuilt: prebuilt.sort(sortRows), cpd: cpd.sort(sortRows),
+      annual: [...prebuilt, ...cpd].sort(sortRows),
+    })
   } catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }
 })
 

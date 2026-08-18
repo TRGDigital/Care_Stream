@@ -39,7 +39,7 @@ export function FaceToFaceManager({ token }: { token?: string }) {
   // Past/today sessions with staff still not marked attended or absent.
   const [unmarked, setUnmarked] = useState<any[]>(cached?.unmarked ?? [])
   const [markBusy, setMarkBusy] = useState<string | null>(null)  // `${sessionId}:${userId}` in flight
-  const [training, setTraining] = useState<{ adhoc: any[]; annual: any[] } | null>(null)  // adhoc/annual allocations + completions for the visible month
+  const [training, setTraining] = useState<{ adhoc: any[]; prebuilt: any[]; cpd: any[] } | null>(null)  // policy / pre-built / CPD allocations + completions for the visible month
   const [payrollOpen, setPayrollOpen] = useState(false)
   const [evidenceLogOpen, setEvidenceLogOpen] = useState(false)
   const [dayDetail, setDayDetail] = useState<string | null>(null)   // open the per-day overlay
@@ -49,10 +49,12 @@ export function FaceToFaceManager({ token }: { token?: string }) {
   // Paint from cache instantly, then revalidate.
   useEffect(() => {
     if (!api) return
-    const tmKey = `${cacheKey}-tm-${year}-${pad(month + 1)}`
-    const c = persistentCache.get<{ adhoc: any[]; annual: any[] }>(tmKey)
-    if (c) setTraining(c)
-    api.faceToFace.trainingMonth(`${year}-${pad(month + 1)}`).then(d => { const v = { adhoc: d.adhoc, annual: d.annual }; setTraining(v); persistentCache.set(tmKey, v) }).catch(() => {})
+    const tmKey = `${cacheKey}-tm2-${year}-${pad(month + 1)}`
+    // Cache key is versioned so a stale pre-tier entry (adhoc/annual) is ignored
+    // rather than rendering an empty pre-built column.
+    const c = persistentCache.get<{ adhoc: any[]; prebuilt: any[]; cpd: any[] }>(tmKey)
+    if (c && Array.isArray((c as any).prebuilt)) setTraining(c)
+    api.faceToFace.trainingMonth(`${year}-${pad(month + 1)}`).then(d => { const v = { adhoc: d.adhoc, prebuilt: d.prebuilt ?? d.annual, cpd: d.cpd ?? [] }; setTraining(v); persistentCache.set(tmKey, v) }).catch(() => {})
   }, [api, year, month, cacheKey])
 
   async function loadUnmarked() {
@@ -99,17 +101,17 @@ export function FaceToFaceManager({ token }: { token?: string }) {
     return m
   }, [sessions])
 
-  // Adhoc/annual training bucketed by day: allocated (+N) and completed (✓N) counts.
+  // Training bucketed by day, per tier: allocated (+N) and completed (✓N) counts.
   const byDayTraining = useMemo(() => {
-    const m = new Map<string, { adhocAlloc: number; adhocComp: number; annualAlloc: number; annualComp: number }>()
-    const get = (k: string) => { let v = m.get(k); if (!v) { v = { adhocAlloc: 0, adhocComp: 0, annualAlloc: 0, annualComp: 0 }; m.set(k, v) } return v }
-    const add = (rows: any[], type: 'adhoc' | 'annual') => {
+    const m = new Map<string, { adhocAlloc: number; adhocComp: number; annualAlloc: number; annualComp: number; cpdAlloc: number; cpdComp: number }>()
+    const get = (k: string) => { let v = m.get(k); if (!v) { v = { adhocAlloc: 0, adhocComp: 0, annualAlloc: 0, annualComp: 0, cpdAlloc: 0, cpdComp: 0 }; m.set(k, v) } return v }
+    const add = (rows: any[], type: 'adhoc' | 'annual' | 'cpd') => {
       for (const r of rows ?? []) {
         if (r.allocated_at) get(keyOf(r.allocated_at))[`${type}Alloc` as const]++
         if (r.completed_at) get(keyOf(r.completed_at))[`${type}Comp` as const]++
       }
     }
-    if (training) { add(training.adhoc, 'adhoc'); add(training.annual, 'annual') }
+    if (training) { add(training.adhoc, 'adhoc'); add(training.prebuilt, 'annual'); add(training.cpd, 'cpd') }
     return m
   }, [training])
 
@@ -198,10 +200,12 @@ export function FaceToFaceManager({ token }: { token?: string }) {
                       const t = byDayTraining.get(c.key); if (!t) return null
                       const chip = (cls: string, txt: string) => <span className={`block truncate rounded px-1.5 py-0.5 text-[10px] font-semibold ${cls}`}>{txt}</span>
                       return <>
-                        {t.adhocAlloc > 0  && chip('bg-orange-100 text-orange-700', `Adhoc +${t.adhocAlloc}`)}
-                        {t.adhocComp > 0   && chip('bg-orange-50 text-orange-600 ring-1 ring-orange-200', `Adhoc ✓${t.adhocComp}`)}
-                        {t.annualAlloc > 0 && chip('bg-indigo-100 text-indigo-700', `Annual +${t.annualAlloc}`)}
-                        {t.annualComp > 0  && chip('bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200', `Annual ✓${t.annualComp}`)}
+                        {t.adhocAlloc > 0  && chip('bg-orange-100 text-orange-700', `Policy +${t.adhocAlloc}`)}
+                        {t.adhocComp > 0   && chip('bg-orange-50 text-orange-600 ring-1 ring-orange-200', `Policy ✓${t.adhocComp}`)}
+                        {t.annualAlloc > 0 && chip('bg-indigo-100 text-indigo-700', `Pre-built +${t.annualAlloc}`)}
+                        {t.annualComp > 0  && chip('bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200', `Pre-built ✓${t.annualComp}`)}
+                        {t.cpdAlloc > 0    && chip('bg-violet-100 text-violet-700', `CPD +${t.cpdAlloc}`)}
+                        {t.cpdComp > 0     && chip('bg-violet-50 text-violet-600 ring-1 ring-violet-200', `CPD ✓${t.cpdComp}`)}
                       </>
                     })()}
                   </div>
@@ -214,8 +218,9 @@ export function FaceToFaceManager({ token }: { token?: string }) {
       {/* Legend */}
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-mid">
         <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-teal/30" /> Face-to-face</span>
-        <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-orange-200" /> Adhoc training</span>
-        <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-indigo-200" /> Annual training</span>
+        <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-orange-200" /> Policy training</span>
+        <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-indigo-200" /> Pre-built training</span>
+        <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-violet-200" /> CPD approved courses</span>
         <span className="text-neutral-mid/80">+N allocated · ✓N completed</span>
       </div>
       {loading && <p className="mt-3 text-center text-sm text-neutral-mid">Loading…</p>}
@@ -306,7 +311,7 @@ export function FaceToFaceManager({ token }: { token?: string }) {
 function DayDetail({ dayKey, sessions, training, onClose, onNew, onOpenSession }: {
   dayKey: string
   sessions: Session[]
-  training: { adhoc: any[]; annual: any[] } | null
+  training: { adhoc: any[]; prebuilt: any[]; cpd: any[] } | null
   onClose: () => void
   onNew: () => void
   onOpenSession: (id: string) => void
@@ -320,7 +325,8 @@ function DayDetail({ dayKey, sessions, training, onClose, onNew, onOpenSession }
   }).sort((a, b) => a.name.localeCompare(b.name))
 
   const adhoc = eventsFor(training?.adhoc ?? [])
-  const annual = eventsFor(training?.annual ?? [])
+  const annual = eventsFor(training?.prebuilt ?? [])
+  const cpd = eventsFor(training?.cpd ?? [])
   const nothing = sessions.length === 0 && adhoc.length === 0 && annual.length === 0
 
   const KindTag = ({ kind }: { kind: 'Allocated' | 'Completed' }) =>
@@ -374,19 +380,27 @@ function DayDetail({ dayKey, sessions, training, onClose, onNew, onOpenSession }
           </div>
         )}
 
-        {/* Adhoc training */}
+        {/* Policy training — the tenant's own modules */}
         {adhoc.length > 0 && (
           <div className="mb-4">
-            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-orange-600">Adhoc training</p>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-orange-600">Policy training</p>
             <EventList rows={adhoc} color="text-orange-600" />
           </div>
         )}
 
-        {/* Annual training */}
+        {/* Pre-built training */}
         {annual.length > 0 && (
           <div className="mb-4">
-            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-indigo-600">Annual training</p>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-indigo-600">Pre-built training</p>
             <EventList rows={annual} color="text-indigo-600" />
+          </div>
+        )}
+
+        {/* CPD approved courses */}
+        {cpd.length > 0 && (
+          <div className="mb-4">
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-violet-600">CPD approved courses</p>
+            <EventList rows={cpd} color="text-violet-600" />
           </div>
         )}
 
@@ -1023,7 +1037,7 @@ function PayrollModal({ api, year, month, onClose }: {
   const [y, setY] = useState(year)
   const [m, setM] = useState(month)   // 0-based
   const [weekAnchor, setWeekAnchor] = useState<string>(() => ymd(new Date()))   // any day in the target week
-  const [data, setData] = useState<{ f2f: any[]; adhoc: any[]; annual: any[] } | null>(null)
+  const [data, setData] = useState<{ f2f: any[]; adhoc: any[]; prebuilt: any[]; cpd: any[] } | null>(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy]   = useState<'pdf' | 'email' | null>(null)
   const [email, setEmail] = useState('')
@@ -1041,7 +1055,7 @@ function PayrollModal({ api, year, month, onClose }: {
   useEffect(() => {
     setLoading(true)
     const req = period === 'weekly' ? api.faceToFace.trainingRange(fromStr, toStr) : api.faceToFace.trainingMonth(monthStr)
-    req.then(d => setData({ f2f: d.f2f, adhoc: d.adhoc, annual: d.annual })).catch(() => setData(null)).finally(() => setLoading(false))
+    req.then(d => setData({ f2f: d.f2f, adhoc: d.adhoc, prebuilt: d.prebuilt ?? d.annual, cpd: d.cpd ?? [] })).catch(() => setData(null)).finally(() => setLoading(false))
   }, [period, monthStr, fromStr, toStr]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // The "Owed pay" tick drives payment. We only withhold it if the person was
@@ -1101,8 +1115,9 @@ function PayrollModal({ api, year, month, onClose }: {
       const payable = pay(r.status, r.owed_pay) === 'Yes'
       rows.push(['Face-to-face', r.name, r.title, d(r.date), r.hours, r.status, '', '', pay(r.status, r.owed_pay), payable ? hoursOwed(r) : '', typeof r.rate === 'number' ? (r.rate / 100).toFixed(2) : '', payable && costPence(r) ? (costPence(r) / 100).toFixed(2) : ''])
     }
-    for (const r of (data?.adhoc ?? [])) rows.push(['Adhoc', r.name, r.title, '', '', '', d(r.allocated_at), d(r.completed_at), '', '', '', ''])
-    for (const r of (data?.annual ?? [])) rows.push(['Annual', r.name, r.title, '', '', '', d(r.allocated_at), d(r.completed_at), '', '', '', ''])
+    for (const r of (data?.adhoc ?? [])) rows.push(['Policy', r.name, r.title, '', '', '', d(r.allocated_at), d(r.completed_at), '', '', '', ''])
+    for (const r of (data?.prebuilt ?? [])) rows.push(['Pre-built', r.name, r.title, '', '', '', d(r.allocated_at), d(r.completed_at), '', '', '', ''])
+    for (const r of (data?.cpd ?? [])) rows.push(['CPD approved', r.name, r.title, '', '', '', d(r.allocated_at), d(r.completed_at), '', '', '', ''])
     const csv = [header, ...rows].map(row => row.map(esc).join(',')).join('\r\n')
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -1145,10 +1160,11 @@ function PayrollModal({ api, year, month, onClose }: {
         )}
 
         {loading ? <p className="text-sm text-neutral-mid">Loading…</p> : (
-          <div className="mb-4 grid grid-cols-3 gap-2 text-center text-xs">
+          <div className="mb-4 grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
             <div className="rounded-lg border-2 border-blue-500 bg-blue-50 p-2"><p className="text-lg font-bold text-blue-700">{f2fRows.length}</p>Face-to-face{totalHoursOwed > 0 && <span className="mt-0.5 block font-semibold text-amber-700">{f2fRows.filter((r: any) => pay(r.status, r.owed_pay) === 'Yes').length} payable · {totalHoursOwed}h{anyRates && totalCostPence > 0 ? ` · ${gbp(totalCostPence)}` : ''}</span>}</div>
-            <div className="rounded-lg border border-gray-200 p-2"><p className="text-lg font-bold text-orange-600">{data?.adhoc.length ?? 0}</p>Adhoc</div>
-            <div className="rounded-lg border border-gray-200 p-2"><p className="text-lg font-bold text-indigo-600">{data?.annual.length ?? 0}</p>Annual</div>
+            <div className="rounded-lg border border-gray-200 p-2"><p className="text-lg font-bold text-orange-600">{data?.adhoc.length ?? 0}</p>Policy</div>
+            <div className="rounded-lg border border-gray-200 p-2"><p className="text-lg font-bold text-indigo-600">{data?.prebuilt.length ?? 0}</p>Pre-built</div>
+            <div className="rounded-lg border border-gray-200 p-2"><p className="text-lg font-bold text-violet-600">{data?.cpd.length ?? 0}</p>CPD approved</div>
           </div>
         )}
 
@@ -1209,7 +1225,7 @@ function PayrollModal({ api, year, month, onClose }: {
             )}
           </div>
 
-          <h2 style={sectionTitle}>Adhoc training</h2>
+          <h2 style={sectionTitle}>Policy training</h2>
           {(data?.adhoc.length ?? 0) === 0 ? <p style={{ fontSize: 12, color: '#6b7280' }}>None this month.</p> : (
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead><tr><th style={th}>Staff</th><th style={th}>Training</th><th style={th}>Allocated</th><th style={th}>Completed</th></tr></thead>
@@ -1219,11 +1235,21 @@ function PayrollModal({ api, year, month, onClose }: {
             </table>
           )}
 
-          <h2 style={sectionTitle}>Annual training</h2>
-          {(data?.annual.length ?? 0) === 0 ? <p style={{ fontSize: 12, color: '#6b7280' }}>None this month.</p> : (
+          <h2 style={sectionTitle}>Pre-built training</h2>
+          {(data?.prebuilt.length ?? 0) === 0 ? <p style={{ fontSize: 12, color: '#6b7280' }}>None this month.</p> : (
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead><tr><th style={th}>Staff</th><th style={th}>Training</th><th style={th}>Allocated</th><th style={th}>Completed</th></tr></thead>
-              <tbody>{(data?.annual ?? []).map((r: any, i: number) => (
+              <tbody>{(data?.prebuilt ?? []).map((r: any, i: number) => (
+                <tr key={i}><td style={td}>{r.name}</td><td style={td}>{r.title}</td><td style={td}>{dateStr(r.allocated_at)}</td><td style={td}>{dateStr(r.completed_at)}</td></tr>
+              ))}</tbody>
+            </table>
+          )}
+
+          <h2 style={sectionTitle}>CPD approved courses</h2>
+          {(data?.cpd.length ?? 0) === 0 ? <p style={{ fontSize: 12, color: '#6b7280' }}>None this month.</p> : (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead><tr><th style={th}>Staff</th><th style={th}>Course</th><th style={th}>Allocated</th><th style={th}>Completed</th></tr></thead>
+              <tbody>{(data?.cpd ?? []).map((r: any, i: number) => (
                 <tr key={i}><td style={td}>{r.name}</td><td style={td}>{r.title}</td><td style={td}>{dateStr(r.allocated_at)}</td><td style={td}>{dateStr(r.completed_at)}</td></tr>
               ))}</tbody>
             </table>

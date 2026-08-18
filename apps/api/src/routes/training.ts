@@ -121,15 +121,16 @@ trainingRouter.get('/prebuilt', requireAdmin, async (req: Request, res: Response
   try {
     const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { facility_type: true } })
     const setting = facilityTypeToSetting(tenant?.facility_type)
-    const [modules, counts] = await Promise.all([
+    const [modules, counts, topicsInScope] = await Promise.all([
       (prisma as any).trainingModule.findMany({
         where:   { tenant_id: null, source: 'ai_generated', tier: 'prebuilt', approved: true, is_active: true, OR: [{ care_setting: null }, { care_setting: setting }] },
-        select:  { id: true, name: true, description: true, group_key: true, frequency: true, requires_practical: true, duration_minutes: true, pass_mark: true, illustration_key: true, questions: true },
+        select:  { id: true, name: true, description: true, group_key: true, frequency: true, requires_practical: true, duration_minutes: true, pass_mark: true, illustration_key: true, questions: true, learning_content: true },
         orderBy: [{ group_key: 'asc' }, { name: 'asc' }],
       }),
       (prisma as any).trainingEnrollment.groupBy({
         by: ['module_id', 'status'], where: { tenant_id: tenantId }, _count: { _all: true },
       }).catch(() => []),
+      (prisma as any).trainingTopic.count({ where: { tenant_id: null, is_active: true, OR: [{ care_setting: null }, { care_setting: setting }] } }).catch(() => 0),
     ])
     const byModule = new Map<string, { assigned: number; complete: number }>()
     for (const c of (counts as any[])) {
@@ -145,9 +146,15 @@ trainingRouter.get('/prebuilt', requireAdmin, async (req: Request, res: Response
         frequency: m.frequency, requires_practical: m.requires_practical,
         duration_minutes: m.duration_minutes, pass_mark: m.pass_mark,
         question_count: Array.isArray(m.questions) ? m.questions.length : 0,
+        // Observed competency checklist, so the practical sheet can print without
+        // a second round-trip for the full module.
+        practical_checklist: Array.isArray((m.learning_content as any)?.practical_checklist) ? (m.learning_content as any).practical_checklist : [],
         illustration_url: illustrationUrl(m.illustration_key),
         ...(byModule.get(m.id) ?? { assigned: 0, complete: 0 }),
       })),
+      // Why the count may be lower than the topic list: a topic only appears here
+      // once its platform module is generated AND published.
+      coverage: { published: (modules as any[]).length, topics_in_scope: topicsInScope, awaiting_publish: Math.max(0, topicsInScope - (modules as any[]).length) },
     })
   } catch (e: any) {
     err(res, 'FETCH_FAILED', e.message, 500)

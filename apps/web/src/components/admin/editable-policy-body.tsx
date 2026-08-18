@@ -46,7 +46,8 @@ type EditState = Located & {
   el: HTMLElement
   value: string
   top: number
-  hasPending: boolean  // a gap suggestion is anchored to this block
+  hasPending: boolean     // a gap suggestion is anchored to this block
+  sourceDiffers: boolean  // the stored wording is not quite what the preview displays
 }
 
 // Collapse whitespace so a DOM block and its source line compare equal regardless of how
@@ -87,6 +88,23 @@ function segments(raw: string, unit: 'line' | 'block'): Array<{ text: string; st
   return out
 }
 
+// How a DOM block and a source segment are compared, loosest last.
+//
+// The preview is rendered by an AI formatter that quietly tidies the extracted text — most
+// often re-spacing run-together words ("toensure" -> "to ensure"). So the words on screen are
+// not always the words in the source, and an exact comparison declines exactly the paragraphs
+// that contain typos, which are the ones a tenant most wants to fix.
+//
+// Stripping whitespace makes those two spellings identical; stripping punctuation and case
+// absorbs the rest (curly quotes, dashes, capitalisation). Each tier still demands a UNIQUE
+// match, so a looser key can widen what we recognise but can never make an ambiguous
+// replacement acceptable.
+const MATCH_KEYS: Array<(s: string) => string> = [
+  s => s,                                        // exact wording
+  s => s.toLowerCase().replace(/\s+/g, ''),      // formatter re-spaced a run-together word
+  s => s.toLowerCase().replace(/[^a-z0-9]/g, ''), // ...or changed punctuation, quotes or case
+]
+
 // Find the exact substring of `raw` that produced this block.
 //
 // A LINE is the primary unit for every block type. Extracted policy text separates most
@@ -106,16 +124,20 @@ function findSource(raw: string, el: HTMLElement): Located | null {
   const target = plainTextOf(el)
   if (!target || target.length < 2) return null
 
-  for (const unit of ['line', 'block'] as const) {
-    const hits = segments(raw, unit).filter(seg => norm(stripLeader(seg.text)) === target)
-    if (hits.length !== 1) continue
-    const { text, start } = hits[0]
-    const end = start + text.length
-    const prefix = start > 0 ? raw[start - 1] : ''
-    const suffix = end < raw.length ? raw[end] : ''
-    const source = prefix + text + suffix
-    if (raw.split(source).length - 1 !== 1) continue   // still repeats — cannot replace safely
-    return { source, prefix, body: text, suffix }
+  for (const key of MATCH_KEYS) {
+    const wanted = key(target)
+    if (!wanted) continue
+    for (const unit of ['line', 'block'] as const) {
+      const hits = segments(raw, unit).filter(seg => key(norm(stripLeader(seg.text))) === wanted)
+      if (hits.length !== 1) continue
+      const { text, start } = hits[0]
+      const end = start + text.length
+      const prefix = start > 0 ? raw[start - 1] : ''
+      const suffix = end < raw.length ? raw[end] : ''
+      const source = prefix + text + suffix
+      if (raw.split(source).length - 1 !== 1) continue   // still repeats — cannot replace safely
+      return { source, prefix, body: text, suffix }
+    }
   }
   return null
 }
@@ -216,6 +238,10 @@ export default function EditablePolicyBody({
         value: source.body,
         top: el.offsetTop,
         hasPending: !!el.dataset.csGap || !!el.querySelector('[data-cs-item]'),
+        // The preview's formatter tidies the extracted text, so what is stored can differ
+        // slightly from what is displayed. Say so, or the editor looks like it corrupted the
+        // text when it opens on "toensure" for a paragraph that reads "to ensure" on screen.
+        sourceDiffers: norm(stripLeader(source.body)) !== plainTextOf(el),
       })
     }
 
@@ -282,6 +308,13 @@ export default function EditablePolicyBody({
             <Pencil className="h-3.5 w-3.5" />
             Correct the wording
           </div>
+
+          {edit.sourceDiffers && (
+            <p className="mb-2 rounded-md bg-blue-50 px-2.5 py-2 text-[11px] leading-relaxed text-blue-800">
+              This is the wording as stored in the policy. The preview tidies some spacing and
+              punctuation automatically, so it can read slightly differently above.
+            </p>
+          )}
 
           {edit.hasPending && (
             <p className="mb-2 flex items-start gap-2 rounded-md bg-amber-50 px-2.5 py-2 text-[11px] leading-relaxed text-amber-800">

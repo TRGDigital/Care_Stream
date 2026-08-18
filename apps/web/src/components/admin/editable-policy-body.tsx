@@ -35,12 +35,17 @@ import { createApiClient } from '@/lib/api-client'
 // because we cannot reliably map it back to a single source block.
 const EDITABLE = 'p, li, h2, h3, h4'
 
-type EditState = {
+type Located = {
+  source: string   // exact substring of `raw` to replace, delimiters included
+  prefix: string   // newline before the block (kept out of the editor, restored on save)
+  body: string     // the words the tenant actually edits
+  suffix: string   // newline after the block
+}
+
+type EditState = Located & {
   el: HTMLElement
-  oldText: string      // exact source substring — what the server matches on
   value: string
   top: number
-  height: number
   hasPending: boolean  // a gap suggestion is anchored to this block
 }
 
@@ -59,29 +64,60 @@ function plainTextOf(el: HTMLElement): string {
 // Strip the markdown-ish leaders the renderer consumed, so source and DOM text compare equal.
 const stripLeader = (line: string) => line.replace(/^\s*(#{1,6}\s+|[-*+]\s+|\d+[.)]\s+)/, '')
 
+// Split `raw` into addressable segments, keeping each one's offset so we can widen it to
+// include its delimiters later.
+function segments(raw: string, unit: 'line' | 'block'): Array<{ text: string; start: number }> {
+  const out: Array<{ text: string; start: number }> = []
+  if (unit === 'line') {
+    let start = 0
+    for (const line of raw.split('\n')) {
+      out.push({ text: line, start })
+      start += line.length + 1
+    }
+    return out
+  }
+  const re = /\n{2,}/g
+  let idx = 0
+  let m: RegExpExecArray | null
+  while ((m = re.exec(raw))) {
+    out.push({ text: raw.slice(idx, m.index), start: idx })
+    idx = m.index + m[0].length
+  }
+  out.push({ text: raw.slice(idx), start: idx })
+  return out
+}
+
 // Find the exact substring of `raw` that produced this block.
 //
-// Paragraphs and headings are their own source block; list items are one line inside a
-// block. Both are returned verbatim (leader included) because the server replaces the exact
-// string. Returns null when the block cannot be matched unambiguously — better to disable
-// editing than to rewrite the wrong text.
-function findSource(raw: string, el: HTMLElement): string | null {
+// A LINE is the primary unit for every block type. Extracted policy text separates most
+// paragraphs with a single newline — blank lines are rare and inconsistent — so splitting
+// paragraphs on blank lines lumps a dozen of them into one segment that can never match a
+// single <p>. Blank-line blocks are tried second, for documents whose paragraphs genuinely
+// wrap across several lines.
+//
+// The match is then widened to include its surrounding newlines. Replacement is a plain
+// string substitution, so a bare short heading like "Introduction" would otherwise be
+// rejected for also occurring mid-sentence elsewhere; "\nIntroduction\n" is line-anchored
+// and unique. The delimiters are kept out of the editor and restored on save.
+//
+// Returns null when the block cannot be matched unambiguously — better to decline than to
+// rewrite the wrong text.
+function findSource(raw: string, el: HTMLElement): Located | null {
   const target = plainTextOf(el)
   if (!target || target.length < 2) return null
 
-  const isListItem = el.tagName === 'LI'
-  const candidates: string[] = isListItem
-    ? raw.split('\n')                     // a list item is a single line
-    : raw.split(/\n{2,}/)                 // paragraphs/headings are blank-line separated
-
-  const matches = candidates.filter(c => norm(stripLeader(c)) === target)
-  if (matches.length !== 1) return null   // absent, or repeated — refuse either way
-
-  const source = matches[0]
-  // The server refuses ambiguous replacements too, but checking here means the block simply
-  // is not offered for editing rather than failing after the tenant has typed.
-  if (raw.split(source).length - 1 !== 1) return null
-  return source
+  for (const unit of ['line', 'block'] as const) {
+    const hits = segments(raw, unit).filter(seg => norm(stripLeader(seg.text)) === target)
+    if (hits.length !== 1) continue
+    const { text, start } = hits[0]
+    const end = start + text.length
+    const prefix = start > 0 ? raw[start - 1] : ''
+    const suffix = end < raw.length ? raw[end] : ''
+    const source = prefix + text + suffix
+    if (raw.split(source).length - 1 !== 1) continue   // still repeats — cannot replace safely
+    return { source, prefix, body: text, suffix }
+  }
+  return null
 }
 
 export default function EditablePolicyBody({
@@ -175,11 +211,10 @@ export default function EditablePolicyBody({
       }
       setError('')
       setEdit({
+        ...source,
         el,
-        oldText: source,
-        value: source,
+        value: source.body,
         top: el.offsetTop,
-        height: el.offsetHeight,
         hasPending: !!el.dataset.csGap || !!el.querySelector('[data-cs-item]'),
       })
     }
@@ -202,17 +237,22 @@ export default function EditablePolicyBody({
     ta.setSelectionRange(ta.value.length, ta.value.length)
     ta.style.height = 'auto'
     ta.style.height = `${Math.max(ta.scrollHeight, 64)}px`
-  }, [edit?.oldText])
+  }, [edit?.source])
 
   async function save() {
     if (!edit || !policyId || !token) return
     const next = edit.value
-    if (norm(next) === norm(edit.oldText)) { closeEditor(); return }
+    if (norm(next) === norm(edit.body)) { closeEditor(); return }
     if (!next.trim()) { setError('The wording can’t be left empty. Delete the section through the policy review instead.'); return }
     setSaving(true)
     setError('')
     try {
-      const r = await createApiClient(token).policies.minorEdit(policyId, { old_text: edit.oldText, new_text: next })
+      // The delimiters travel with the replacement so the line stays a line — the tenant
+      // never sees or edits them.
+      const r = await createApiClient(token).policies.minorEdit(policyId, {
+        old_text: edit.source,
+        new_text: edit.prefix + next + edit.suffix,
+      })
       closeEditor()
       onSaved?.(r.version, r.propagated)
     } catch (e: any) {

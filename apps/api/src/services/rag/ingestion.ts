@@ -361,12 +361,16 @@ export async function republishPolicyContent(tenantId: string, policyId: string,
   // 2. Invalidate the cached formatted HTML so the next preview re-formats the new content.
   await (prisma as any).policyTranslation.deleteMany({ where: { policy_id: policyId } }).catch(() => {})
 
-  // 3. Re-index Pinecone: clear the active vectors, re-chunk/embed, stage, then activate.
-  await deletePolicyVectors(tenantId, policyId).catch((e: any) => console.error('[republish] delete vectors failed', e?.message))
+  // 3. Re-index Pinecone. Embed BEFORE clearing the active vectors: embedding is the step
+  // that fails (an OpenAI outage or an exhausted quota returns 429), and deleting first left
+  // the policy with no vectors at all — invisible to staff Q&A and the AI assistant — with no
+  // way to rebuild them until the quota returned. Stale vectors are recoverable; absent ones
+  // are not. So nothing is destroyed until the replacement is in hand.
   const chunks = chunkText(content)
   if (chunks.length) {
     const embeddings = await embedTexts(chunks.map(c => c.text))
     const regs = await Promise.all(chunks.map(c => detectRegulations(c.text)))
+    await deletePolicyVectors(tenantId, policyId).catch((e: any) => console.error('[republish] delete vectors failed', e?.message))
     const vectors: PolicyVector[] = chunks.map((chunk, i) => ({
       id: `${policyId}_c${chunk.chunkIndex}`,
       values: embeddings[i],
@@ -379,6 +383,9 @@ export async function republishPolicyContent(tenantId: string, policyId: string,
     }))
     await upsertPolicyVectors(tenantId, policyId, vectors)
     await activateStagedVectors(tenantId, policyId)
+  } else {
+    // Genuinely empty content — clearing is correct here, there is nothing to replace with.
+    await deletePolicyVectors(tenantId, policyId).catch((e: any) => console.error('[republish] delete vectors failed', e?.message))
   }
 
   // 4. Bump the policy version integer (stays active; the old version is archived above).

@@ -19,10 +19,17 @@ import { sendProviderCreditAlert } from '../services/email/outbound'
 export type ProviderIssue = 'credit' | 'rate_limit' | 'upstream'
 
 // Billing/quota exhaustion — the account is out of money or over its cap. Needs a human.
-const CREDIT_RE = /insufficient_quota|no credits remaining|billing|add credits|quota exceeded|exceeded your current quota|payment required|credit balance (is )?too low|purchase credits/i
+// No "billing" here, in any form. CareStream has its own billing page, so "couldn't load your
+// billing details" would be rewritten into an internal error and the tenant would never learn
+// what actually went wrong. The provider phrasings below are specific enough on their own —
+// OpenAI's quota message is caught by "exceeded your current quota".
+const CREDIT_RE = /insufficient_quota|no credits remaining|add credits|quota exceeded|exceeded your current quota|payment required|credit balance (is )?too low|purchase credits/i
 
 // Temporary provider throttling. Recovers on its own, so it is not a billing alert.
-const RATE_LIMIT_RE = /rate.?limit|too many requests|429|overloaded|capacity/i
+// Not bare "capacity": this codebase says "Mental Capacity Act" constantly, and a failure
+// mentioning it would otherwise be reported to the tenant as the service being busy. 429 is
+// word-bounded so it cannot match inside a longer number.
+const RATE_LIMIT_RE = /rate.?limit|too many requests|\b429\b|overloaded|at capacity|server capacity/i
 
 // Anything else that names a provider, an account or an API — never for tenant eyes.
 const UPSTREAM_RE = /platform\.openai\.com|console\.anthropic\.com|api\.openai\.com|api\.anthropic\.com|openai|anthropic|pinecone|sendgrid|api key|apikey|authentication.*failed.*api|invalid_request_error|\bsk-[a-z0-9-]/i

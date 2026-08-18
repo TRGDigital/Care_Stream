@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import EditablePolicyBody from '@/components/admin/editable-policy-body'
+import SlowLoadHint from '@/components/admin/slow-load-hint'
 import { persistentCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -898,7 +899,14 @@ function PolicyPreviewModal({ token, policy, onClose }: {
 
         <div className="max-h-[70vh] overflow-y-auto px-6 py-5">
           {loading ? (
-            <div className="flex items-center gap-2 py-16 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Rendering the policy…</div>
+            <div className="flex flex-col items-center gap-2.5 py-16">
+              <div className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Rendering the policy…</div>
+              <SlowLoadHint stages={[
+                { after: 3,  text: 'Formatting the document so it reads cleanly on screen — letterhead, contacts and footers stripped out. This happens once per policy, then it’s saved for next time.' },
+                { after: 12, text: 'Longer policies take a little more time. It hasn’t stalled.' },
+                { after: 25, text: 'Still going. Closing this would discard the work, so it’s worth waiting.' },
+              ]} />
+            </div>
           ) : error ? (
             <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
           ) : !data?.has_raw ? (

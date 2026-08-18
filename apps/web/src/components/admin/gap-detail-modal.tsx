@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import EditablePolicyBody from './editable-policy-body'
+import SlowLoadHint from './slow-load-hint'
 import { applyRoleNames } from '@/lib/policy-names'
 import { X, Loader2, CheckCircle2, Check, Plus, FileText, Sparkles, Mail, Scale, FilePlus2, FilePenLine, GraduationCap, Search, BookOpen, ChevronDown, HelpCircle, EyeOff, Info, RotateCcw } from 'lucide-react'
 
@@ -825,6 +826,11 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
           <div className="flex flex-col items-center justify-center gap-3 px-6 py-16">
             <Loader2 size={26} className="animate-spin text-teal" />
             <p className="text-sm text-neutral-mid">Loading recommendations…</p>
+            <SlowLoadHint stages={[
+              { after: 3,  text: 'Searching every one of your policies for wording that already covers this, then drafting the suggestions.' },
+              { after: 10, text: 'Longer policies take a little more time. This hasn’t stalled — refreshing would start it over.' },
+              { after: 25, text: 'Still going. It hasn’t stalled, and the result is worth waiting for rather than re-running.' },
+            ]} />
           </div>
         ) : error ? (
           <div className="m-6 rounded-md border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
@@ -1196,7 +1202,13 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                     </div>
 
                     {previewLoad ? (
-                      <div className="flex items-center gap-2 py-10 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Loading policy…</div>
+                      <div className="flex flex-col items-center gap-2 py-10">
+                        <div className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Loading policy…</div>
+                        <SlowLoadHint stages={[
+                          { after: 3,  text: 'Formatting the document so it reads cleanly on screen. This happens once per policy, then it’s saved for next time.' },
+                          { after: 12, text: 'Longer policies take a little more time. It hasn’t stalled.' },
+                        ]} />
+                      </div>
                     ) : previewErr ? (
                       <div className="rounded-md border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{previewErr}</div>
                     ) : html ? (

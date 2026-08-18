@@ -159,11 +159,18 @@ export default function EditablePolicyBody({
     }
     function onClick(e: Event) {
       if (edit) return
+      // Releasing a drag-selection fires a click. Opening the editor there would discard the
+      // selection the tenant just made to copy, so treat a live selection as "not an edit".
+      const sel = window.getSelection()
+      if (sel && !sel.isCollapsed && sel.toString().trim()) return
       const el = blockFrom(e.target)
       if (!el) return
       const source = findSource(raw, el)
       if (!source) {
-        setError('This part of the policy can’t be corrected in place — its wording appears more than once, or it isn’t plain text.')
+        // Most often this is a suggestion block the gap modal has drawn into the preview:
+        // it is not in the policy yet, so there is nothing to correct. The other cause is
+        // wording that repeats, which cannot be replaced unambiguously.
+        setError('That can’t be corrected here — it’s either suggested wording that hasn’t been adopted into the policy yet, or wording that appears more than once.')
         return
       }
       setError('')

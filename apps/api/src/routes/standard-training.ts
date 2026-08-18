@@ -171,10 +171,14 @@ standardTrainingRouter.post('/generate', async (req: Request, res: Response) => 
       // a rebuild preserves any existing image. Changing the image is a separate action.
       policy_refs: draft.policy_refs,
       topic_id: topic.id,
+      tier: 'prebuilt',
       group_key: topic.group_key,
       care_setting: topic.care_setting ?? null,  // inherit the topic's setting (NULL = universal)
     }
-    const existing = await (prisma as any).trainingModule.findFirst({ where: { tenant_id: null, source: 'ai_generated', topic_id: topic.id } })
+    // Scoped to tier 'prebuilt': a topic can carry BOTH a pre-built module and a
+    // CPD copy, and generating the pre-built one must never overwrite the CPD
+    // course (which is separately deepened, attested and accredited).
+    const existing = await (prisma as any).trainingModule.findFirst({ where: { tenant_id: null, source: 'ai_generated', tier: 'prebuilt', topic_id: topic.id } })
     const module = existing
       ? await (prisma as any).trainingModule.update({ where: { id: existing.id }, data })
       : await (prisma as any).trainingModule.create({ data: { tenant_id: null, slug: `std-${kebab(topic.title)}`, ...data } })

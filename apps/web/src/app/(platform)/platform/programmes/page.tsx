@@ -11,9 +11,10 @@ import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
+import { CpdProgrammeSheet, CPD_PROG_DOCS, type CpdProgDoc } from '@/components/training/cpd-programme-pack'
 import {
   Loader2, Sparkles, CheckCircle2, Circle, Plus, Trash2, ChevronLeft, ChevronUp, ChevronDown,
-  AlertTriangle, ShieldCheck, Award, GraduationCap, Wand2, Clock, X,
+  AlertTriangle, ShieldCheck, Award, GraduationCap, Wand2, Clock, X, FileText,
 } from 'lucide-react'
 
 const INPUT = 'w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20'
@@ -267,6 +268,8 @@ function ProgrammeEditor({
   const [busy, setBusy] = useState('')
   const [reviewer, setReviewer] = useState({ name: '', role: '' })
   const [draftSynoptic, setDraftSynoptic] = useState<any[] | null>(null)
+  // CPD accreditation submission pack — generated from this programme's live structure.
+  const [packDoc, setPackDoc] = useState<CpdProgDoc | null>(null)
 
   function load() {
     api.standardProgrammes.full(id).then(setFull).catch((e: any) => onMessage({ tone: 'err', text: e?.message ?? 'Could not load.' }))
@@ -560,6 +563,35 @@ function ProgrammeEditor({
           )
         })()}
       </div>
+
+      {/* CPD submission pack */}
+      <div className="rounded-lg border border-violet-200 bg-violet-50/40 p-4">
+        <p className="mb-1 text-sm font-semibold text-violet-900">CPD submission pack</p>
+        <p className="mb-3 text-xs text-neutral-mid">
+          The four documents the CPD Certification Service asks for, generated from this programme&apos;s own
+          structure — so a submission can never drift from what participants actually receive. Open one, then
+          Print / save PDF.
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {CPD_PROG_DOCS.map(d => (
+            <button
+              key={d.key}
+              onClick={() => setPackDoc(d.key)}
+              title={d.hint}
+              className="inline-flex items-center gap-1 rounded-lg border border-violet-200 bg-white px-2.5 py-1.5 text-xs font-medium text-violet-800 hover:bg-violet-100"
+            >
+              <FileText size={12} /> {d.label}
+            </button>
+          ))}
+        </div>
+        {units.length === 0 && (
+          <p className="mt-2 text-xs text-amber-700">Add units first — the documents describe the units and the synoptic assessment.</p>
+        )}
+      </div>
+
+      {packDoc && (
+        <CpdProgrammeSheet doc={packDoc} p={{ ...p, units }} onClose={() => setPackDoc(null)} />
+      )}
 
       {/* Publish */}
       <div className="rounded-lg border border-gray-200 bg-white p-4">

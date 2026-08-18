@@ -267,7 +267,7 @@ function CertificateDoc({ p }: { p: any }) {
     <>
       <H>Certificate issued to participants</H>
       <p className="text-sm text-neutral-dark">
-        Yes. A single {kind.toLowerCase()} certificate is issued <strong>automatically on completion</strong> of the whole
+        A single {kind.toLowerCase()} certificate is issued <strong>automatically on completion</strong> of the whole
         programme and stored on the participant&apos;s record. Individual unit certificates are issued as each unit is
         passed; the {kind.toLowerCase()} certificate is additional to those and carries a full transcript.
       </p>

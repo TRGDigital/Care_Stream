@@ -281,7 +281,7 @@ function CertificateDoc({ m }: { m: any }) {
     <>
       <H>Certificate issued to participants</H>
       <p className="text-sm text-neutral-dark">
-        Yes. A certificate is issued <strong>automatically on passing</strong> the assessment and is stored on the
+        A certificate is issued <strong>automatically on passing</strong> the assessment and is stored on the
         participant&apos;s training record, where both they and their employer can view, print or download it at any time.
         A certificate is never issued for attendance alone.
       </p>

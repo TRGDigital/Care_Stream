@@ -66,13 +66,12 @@ const QUIET_MS: Record<ProviderIssue, number> = {
 // better than a table write on every error.
 const lastAlert = new Map<string, number>()
 
-function shouldAlert(issue: ProviderIssue, force = false): boolean {
+// Only reports whether we are due — it must NOT record the send. Marking here would burn the
+// quiet period on an alert that then failed to send, silencing the next real one.
+function isDue(issue: ProviderIssue, force = false): boolean {
   if (force) return true
   const prev = lastAlert.get(issue) ?? 0
-  const now = Date.now()
-  if (now - prev < QUIET_MS[issue]) return false
-  lastAlert.set(issue, now)
-  return true
+  return Date.now() - prev >= QUIET_MS[issue]
 }
 
 /**
@@ -86,16 +85,18 @@ export async function alertProviderIssue(opts: {
   force?: boolean           // bypass throttling (used by the test endpoint)
 }): Promise<boolean> {
   const to = process.env.PROVIDER_ALERT_EMAIL || 'lenny@trgdigital.co.uk'
-  if (!shouldAlert(opts.issue, opts.force)) return false
+  if (!isDue(opts.issue, opts.force)) return false
   try {
-    await sendProviderCreditAlert({
+    const sent = await sendProviderCreditAlert({
       to,
       issue: opts.issue,
       rawMessage: opts.rawMessage,
       context: opts.context ?? 'Unknown',
       when: new Date(),
     })
-    return true
+    // Start the quiet period only once it genuinely went out.
+    if (sent) lastAlert.set(opts.issue, Date.now())
+    return sent
   } catch (e: any) {
     console.error('[provider-alert] failed to send:', e?.message)
     return false

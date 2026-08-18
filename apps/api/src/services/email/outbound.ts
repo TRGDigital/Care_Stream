@@ -1201,15 +1201,20 @@ export async function sendActionPlanExternalEmail(opts: { to: string; orgName: s
 // Internal alert: an AI provider refused a request. Sent to the team, never to a tenant.
 // Deliberately carries the RAW provider message — the whole point is that we see the detail
 // the tenant was shielded from.
+// Returns whether the mail was actually handed to SendGrid. Callers need to know: an alert
+// that silently did nothing is worse than no alert, because it looks like one was sent.
 export async function sendProviderCreditAlert(opts: {
   to: string
   issue: 'credit' | 'rate_limit' | 'upstream'
   rawMessage: string
   context: string
   when: Date
-}): Promise<void> {
+}): Promise<boolean> {
   ensureInitialised()
-  if (!process.env.SENDGRID_API_KEY) return
+  if (!process.env.SENDGRID_API_KEY) {
+    console.error('[provider-alert] SENDGRID_API_KEY is not set — alert NOT sent:', opts.rawMessage)
+    return false
+  }
   const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
   const stamp = opts.when.toLocaleString('en-GB', { timeZone: 'Europe/London', dateStyle: 'medium', timeStyle: 'short' })
 
@@ -1259,6 +1264,7 @@ export async function sendProviderCreditAlert(opts: {
     subject: `CareStream: ${headline[opts.issue]}`,
     html,
   })
+  return true
 }
 
 export async function sendReviewerActivityEmail(opts: {

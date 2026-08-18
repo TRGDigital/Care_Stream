@@ -103,6 +103,35 @@ adminRouter.post('/training-onboarding-email/test', async (req: Request, res: Re
   }
 })
 
+// ─── POST /admin/provider-alert/test ─────────────────────────────────────────
+// Send a sample of the internal alert raised when an AI provider refuses a request
+// (out of credit, rate limited, or otherwise failing), so the wording and routing can be
+// checked without waiting for a real outage. Reports honestly whether it actually sent:
+// the sender no-ops when SENDGRID_API_KEY is unset, and a silent no-op that reported
+// success would be worse than no alert at all.
+
+adminRouter.post('/provider-alert/test', async (req: Request, res: Response) => {
+  const to = String(req.body?.to ?? '').trim()
+  if (to && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) { res.status(400).json({ error: 'A valid "to" email address is required' }); return }
+  const issue = ['credit', 'rate_limit', 'upstream'].includes(String(req.body?.issue))
+    ? (String(req.body.issue) as 'credit' | 'rate_limit' | 'upstream')
+    : 'credit'
+  try {
+    const { alertProviderIssue } = await import('../lib/provider-errors')
+    if (to) process.env.PROVIDER_ALERT_EMAIL = to   // this request only
+    const sent = await alertProviderIssue({
+      issue,
+      rawMessage: '429 You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.',
+      context: 'Sample sent from the platform admin — not a real outage',
+      force: true,
+    })
+    res.json({ data: { sent, to: to || process.env.PROVIDER_ALERT_EMAIL || 'lenny@trgdigital.co.uk', issue,
+      note: sent ? undefined : 'Not sent — SENDGRID_API_KEY is not configured on this deployment.' } })
+  } catch (e: any) {
+    res.status(500).json({ error: e?.message ?? 'send failed' })
+  }
+})
+
 // ─── POST /admin/training-completion-email/test ──────────────────────────────
 // Send a sample of the staff-completion notification (sent to tenant admins when
 // a staff member passes a module) so the platform owner can review it.

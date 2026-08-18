@@ -11,7 +11,7 @@ import SlowLoadHint from '@/components/admin/slow-load-hint'
 import { persistentCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search, GraduationCap, Trash2, Copy, Loader2, CheckCircle2, Eye, FileText, FilePenLine, CalendarClock } from 'lucide-react'
+import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search, GraduationCap, Trash2, Copy, Loader2, CheckCircle2, Eye, FileText, FilePenLine, CalendarClock, Pencil} from 'lucide-react'
 import { PolicyChangesModal } from '@/components/admin/policy-changes-modal'
 
 // Upload modals are lazy-loaded — only fetched when a dialog is opened.
@@ -243,6 +243,22 @@ export default function PoliciesPage() {
     const api = createApiClient(session.accessToken)
     try { await api.policies.retry(id) } catch (e: any) { alert(e?.message ?? 'Retry failed.') }
     load()
+  }
+
+  // Renaming only changes the display name. The vector index stores the FILENAME, so there
+  // is nothing to re-index — the rename is immediate everywhere the policy is referred to.
+  async function renamePolicy(p: any, name: string) {
+    if (!session?.accessToken) return
+    const trimmed = name.trim().replace(/\s+/g, ' ')
+    if (!trimmed || trimmed === p.name) return
+    const api = createApiClient(session.accessToken)
+    const before = p.name
+    setPolicies(prev => prev.map(x => x.id === p.id ? { ...x, name: trimmed } : x))
+    try { await api.policies.update(p.id, { name: trimmed }) }
+    catch (e: any) {
+      setPolicies(prev => prev.map(x => x.id === p.id ? { ...x, name: before } : x))
+      alert(e?.message ?? 'Could not rename that policy.')
+    }
   }
 
   async function toggleGeneric(p: any) {
@@ -582,7 +598,7 @@ export default function PoliciesPage() {
             onRetry={p => retry(p.id)}
             onArchive={p => archive(p.id, p.name)}
             onDelete={p => permanentDelete(p.id, p.name)}
-            onToggleGeneric={toggleGeneric} onPreview={p => setPreviewPolicy({ id: p.id, name: p.name })} docSummary={docByPolicy} onReview={p => setReviewTarget({ id: p.id, name: p.name })}
+            onToggleGeneric={toggleGeneric} onRename={renamePolicy} onPreview={p => setPreviewPolicy({ id: p.id, name: p.name })} docSummary={docByPolicy} onReview={p => setReviewTarget({ id: p.id, name: p.name })}
           />
           <PolicyGroup
             heading="Staff Handbooks"
@@ -592,7 +608,7 @@ export default function PoliciesPage() {
             onRetry={p => retry(p.id)}
             onArchive={p => archive(p.id, p.name)}
             onDelete={p => permanentDelete(p.id, p.name)}
-            onToggleGeneric={toggleGeneric} onPreview={p => setPreviewPolicy({ id: p.id, name: p.name })} docSummary={docByPolicy} onReview={p => setReviewTarget({ id: p.id, name: p.name })}
+            onToggleGeneric={toggleGeneric} onRename={renamePolicy} onPreview={p => setPreviewPolicy({ id: p.id, name: p.name })} docSummary={docByPolicy} onReview={p => setReviewTarget({ id: p.id, name: p.name })}
           />
           <PolicyGroup
             heading="CQC Reports"
@@ -602,7 +618,7 @@ export default function PoliciesPage() {
             onRetry={p => retry(p.id)}
             onArchive={p => archive(p.id, p.name)}
             onDelete={p => permanentDelete(p.id, p.name)}
-            onToggleGeneric={toggleGeneric} onPreview={p => setPreviewPolicy({ id: p.id, name: p.name })} docSummary={docByPolicy} onReview={p => setReviewTarget({ id: p.id, name: p.name })}
+            onToggleGeneric={toggleGeneric} onRename={renamePolicy} onPreview={p => setPreviewPolicy({ id: p.id, name: p.name })} docSummary={docByPolicy} onReview={p => setReviewTarget({ id: p.id, name: p.name })}
           />
           {/* Custom categories — shown only when they actually contain documents. */}
           {Array.from(new Set(visiblePolicies.map(p => p.document_category as string)))
@@ -618,7 +634,7 @@ export default function PoliciesPage() {
                 onRetry={p => retry(p.id)}
                 onArchive={p => archive(p.id, p.name)}
                 onDelete={p => permanentDelete(p.id, p.name)}
-            onToggleGeneric={toggleGeneric} onPreview={p => setPreviewPolicy({ id: p.id, name: p.name })} docSummary={docByPolicy} onReview={p => setReviewTarget({ id: p.id, name: p.name })}
+            onToggleGeneric={toggleGeneric} onRename={renamePolicy} onPreview={p => setPreviewPolicy({ id: p.id, name: p.name })} docSummary={docByPolicy} onReview={p => setReviewTarget({ id: p.id, name: p.name })}
               />
             ))}
         </div>
@@ -639,6 +655,7 @@ function PolicyGroup({
   onArchive,
   onDelete,
   onToggleGeneric,
+  onRename,
   onPreview,
   docSummary = {},
   onReview,
@@ -652,10 +669,14 @@ function PolicyGroup({
   onArchive:    (p: any) => void
   onDelete:     (p: any) => void
   onToggleGeneric: (p: any) => void
+  onRename?:    (p: any, name: string) => void | Promise<void>
   onPreview:    (p: any) => void
   docSummary?:  Record<string, { pending: number; version: string; published_at: string | null }>
   onReview?:    (p: any) => void
 }) {
+  // Which row is being renamed, and its in-progress value. Held here rather than per-row so
+  // only one name can be open at a time.
+  const [renaming, setRenaming] = useState<{ id: string; value: string } | null>(null)
   return (
     <div className="rounded-card bg-white shadow-card">
       <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
@@ -691,8 +712,36 @@ function PolicyGroup({
               {policies.map((p: any) => (
                 <tr key={p.id} className="border-b border-gray-50 last:border-0 hover:bg-neutral-light/50">
                   <td className="px-6 py-4 font-medium text-neutral-dark">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <span className="truncate">{p.name}</span>
+                    <div className="group/name flex min-w-0 items-center gap-2">
+                      {renaming && renaming.id === p.id ? (
+                        <input
+                          autoFocus
+                          value={renaming.value}
+                          maxLength={200}
+                          onChange={e => setRenaming({ id: p.id, value: e.target.value })}
+                          onBlur={() => { void onRename?.(p, renaming.value); setRenaming(null) }}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter')  { e.preventDefault(); void onRename?.(p, renaming.value); setRenaming(null) }
+                            if (e.key === 'Escape') { e.preventDefault(); setRenaming(null) }
+                          }}
+                          className="min-w-0 flex-1 rounded-md border border-purple-300 px-2 py-1 text-sm font-medium text-neutral-dark focus:outline-none focus:ring-1 focus:ring-purple-300"
+                        />
+                      ) : (
+                        <>
+                          <span className="truncate">{p.name}</span>
+                          {onRename && (
+                            <button
+                              type="button"
+                              aria-label={`Rename ${p.name}`}
+                              title="Rename this policy"
+                              onClick={() => setRenaming({ id: p.id, value: p.name ?? '' })}
+                              className="shrink-0 rounded p-0.5 text-neutral-mid opacity-0 transition-opacity hover:text-purple-600 focus:opacity-100 group-hover/name:opacity-100"
+                            >
+                              <Pencil size={12} />
+                            </button>
+                          )}
+                        </>
+                      )}
                       {p.generic_onboarding && <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700"><GraduationCap size={9} /> Onboarding</span>}
                       {docSummary[p.id] && (docSummary[p.id].pending > 0
                         ? <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700"><FilePenLine size={9} /> {docSummary[p.id].pending} to review</span>

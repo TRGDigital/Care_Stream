@@ -342,17 +342,34 @@ policiesRouter.post('/', requireAdmin, uploadMiddleware, async (req: Request, re
 })
 
 // ─── PATCH /policies/:id ──────────────────────────────────────────────────────
-// Update editable policy flags — currently the "generic onboarding policy" flag,
-// which controls whether this policy is offered on the Onboarding page as an
+// Update editable policy fields — its display name, and the "generic onboarding policy"
+// flag which controls whether this policy is offered on the Onboarding page as an
 // allocatable one-step read-policy flow.
 policiesRouter.patch('/:id', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
-  const existing = await (prisma as any).policy.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId }, select: { id: true } })
+  const existing = await (prisma as any).policy.findFirst({
+    where: { id: String(req.params.id), tenant_id: tenantId }, select: { id: true, name: true },
+  })
   if (!existing) { err(res, 'NOT_FOUND', 'Policy not found', 404); return }
   const data: Record<string, any> = {}
   if (typeof req.body?.generic_onboarding === 'boolean') data.generic_onboarding = req.body.generic_onboarding
+  if (typeof req.body?.name === 'string') {
+    const name = req.body.name.trim().replace(/\s+/g, ' ')
+    if (!name)            { err(res, 'INVALID_NAME', 'Give the policy a name.', 400); return }
+    if (name.length > 200) { err(res, 'INVALID_NAME', 'That name is too long — keep it under 200 characters.', 400); return }
+    if (name !== existing.name) data.name = name
+  }
   if (Object.keys(data).length === 0) { err(res, 'NO_CHANGES', 'Nothing to update', 400); return }
   const policy = await (prisma as any).policy.update({ where: { id: existing.id }, data })
+  // Renaming changes how this policy is referred to across gaps, training and staff search,
+  // so it belongs in the audit trail with what it was called before.
+  if (data.name) {
+    await writeAuditLog({
+      tenant_id: tenantId, user_id: req.user!.sub, event_type: 'policy_rename',
+      entity_type: 'policy', entity_id: existing.id,
+      metadata: { from: existing.name, to: data.name },
+    }).catch(() => {})
+  }
   ok(res, { policy })
 })
 

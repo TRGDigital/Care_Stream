@@ -680,7 +680,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'policy-gap-detection',
     icon:    ShieldAlert,
     title:   'Policy Gap Detection',
-    summary: 'The guided four-step pipeline, regulation coverage, what to add, out-of-date content, cross-policy consistency, CQC wording, resumable runs, the policy update matrix, legal-change tracking, gap training, and policy updates with admin, care manager and external approvals — Professional & Enterprise',
+    summary: 'The guided four-step pipeline, regulation coverage, what to add, out-of-date content, cross-policy consistency, CQC wording, resumable runs, the policy update matrix, legal-change tracking, gap training, correcting typos and renaming policies yourself, and policy updates with admin, care manager and external approvals — Professional & Enterprise',
     content: (
       <div className="space-y-5">
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
@@ -771,6 +771,39 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Where it sits</strong>: a new section is placed at the end of the policy, above the review dates and sign-off, so the document still closes properly.</span></li>
           </ul>
           <Tip>Use <strong>Add as new section</strong> when your existing paragraph is worded the way your service actually works and you do not want it rewritten &mdash; you keep your wording and still evidence the requirement. Use <strong>Ignore</strong> when the requirement genuinely does not apply to your service, so your outstanding list reflects real work rather than noise.</Tip>
+        </SectionBlock>
+
+        <SectionBlock title="Fixing typos and missing words yourself">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            Gap detection finds what is <em>missing</em> against the regulations. It will not flag a spelling mistake or a dropped word, because nothing is legally absent &mdash; but those are exactly the things you notice while reading a policy properly. You can now correct them yourself, without re-uploading the document.
+          </p>
+          <div className="space-y-2">
+            <Step n={1}><strong>Hover any line</strong> of the policy &mdash; a paragraph, a heading or a bullet. It tints, and a small pencil appears beside it.</Step>
+            <Step n={2}><strong>Click it</strong> to open that line for editing, with spellcheck on. Fix the word.</Step>
+            <Step n={3}><strong>Save the correction.</strong> Press <strong>Save correction</strong>, or Ctrl/Cmd + Enter. Press Escape to cancel.</Step>
+          </div>
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            This works in <strong>two places</strong>: in the policy shown beside a gap on the <strong>Gaps</strong> page, and on the <strong>Policies</strong> page when you open <strong>Policy preview</strong>. Only administrators can do it &mdash; staff reading policies in the hub, and anyone reviewing one through an external review link, see the policy exactly as it is.
+          </p>
+          <ul className="ml-1 space-y-1.5 text-sm text-neutral-dark">
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>No approval needed, and it is live straight away</strong>: a wording correction is not a policy change, so it does not go to your care manager or external reviewer. It updates the version staff read immediately and takes a point version &mdash; 3.0 becomes 3.1.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Staff keep their acknowledgements</strong>: nobody is asked to re-read a policy because a typo was fixed.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>It is still recorded</strong>: every correction is kept with who made it and when, sits in the policy&rsquo;s version history, and can be undone like any other change.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Changes waiting for approval are untouched</strong>: if you have adopted gap fixes that have not been published yet, correcting a typo does not push them live early.</span></li>
+          </ul>
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            Two things you may see. If a paragraph already has a suggested change attached to it, you get a short warning &mdash; rewording it can stop that suggestion fitting, so adopt the suggestion first where you can. And the editor sometimes opens showing slightly different spacing from the text above it: the preview tidies the document for reading, while the editor shows the wording as it is actually stored. That stored wording is the one worth correcting.
+          </p>
+          <Tip>You cannot edit a suggestion that has not been adopted yet &mdash; that wording is not in your policy until you adopt it, so there is nothing to correct. Adopt it first, publish, then fix any wording you want to change.</Tip>
+        </SectionBlock>
+
+        <SectionBlock title="Renaming a policy">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            On the <strong>Policies</strong> page, hover a policy in the list and a pencil appears next to its name. Click it, type the new name, then press Enter to save or Escape to cancel. Uploaded documents are often named after the file they came from, so this is the quickest way to make your list read the way your service actually refers to its policies.
+          </p>
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            Renaming changes the display name only &mdash; the document, its content, its version history and its approvals are all untouched, and nothing needs re-analysing. The new name is used everywhere the policy is referred to, including gap suggestions and staff search, and the change is recorded with the previous name.
+          </p>
         </SectionBlock>
 
         <SectionBlock title="CQC wording alignment (Single Assessment Framework)">

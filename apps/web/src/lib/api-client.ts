@@ -232,7 +232,7 @@ export function createApiClient(token: string) {
         }).then(r => r.json()),
       archive: (id: string) =>
         apiFetch<any>(`/policies/${id}`, token, { method: 'DELETE' }),
-      update: (id: string, data: { generic_onboarding?: boolean }) =>
+      update: (id: string, data: { generic_onboarding?: boolean; name?: string }) =>
         apiFetch<{ policy: any }>(`/policies/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       version: (id: string, formData: FormData) =>
         fetch(`${API_URL}/policies/${id}/version`, {

@@ -34,21 +34,21 @@ CREATE INDEX IF NOT EXISTS training_modules_topic_tier_idx
 
 -- Every licence points at the one platform module its topic has.
 UPDATE training_licenses l
-SET    module_id = m.id
+SET    module_id = m.id::text
 FROM   training_modules m
 WHERE  l.module_id IS NULL
   AND  l.topic_id IS NOT NULL
-  AND  m.topic_id  = l.topic_id
+  AND  m.topic_id::text = l.topic_id::text
   AND  m.tenant_id IS NULL
   AND  m.source    = 'ai_generated';
 
 -- Every platform topic's public page describes its one existing module.
 UPDATE training_topics t
-SET    shop_module_id = m.id
+SET    shop_module_id = m.id::text
 FROM   training_modules m
 WHERE  t.shop_module_id IS NULL
   AND  t.tenant_id IS NULL
-  AND  m.topic_id  = t.id
+  AND  m.topic_id::text = t.id::text
   AND  m.tenant_id IS NULL
   AND  m.source    = 'ai_generated';
 

@@ -9,6 +9,7 @@ import { createPlatformClient, platformAssetUrl } from '@/lib/platform-api'
 import { SectionsEditor } from '@/components/training-sections-editor'
 import { ActivitiesToolbar } from '@/components/platform/activities-editor'
 import { CourseSpecification } from '@/components/course-specification'
+import { CpdSubmissionSheet, CPD_DOCS, type CpdDoc } from '@/components/training/cpd-submission-pack'
 import { ModulePreviewPlayer } from '@/components/training/module-preview-player'
 import { PlatformShell } from '@/components/platform-shell'
 import { Loader2, Sparkles, CheckCircle2, Circle, FileText, Pencil, Plus, Trash2, RefreshCw, ChevronLeft, ShieldAlert, Image as ImageIcon, Calendar, History, AlertTriangle, ShieldCheck, Share2, Wand2, Eye, Info, ChevronDown, ClipboardCheck } from 'lucide-react'
@@ -59,6 +60,10 @@ export default function StandardTrainingPage() {
   const [bulkOpen, setBulkOpen] = useState(false)
   // Work-state filter: the library is ~98 rows, so surface what still needs doing.
   const [buildFilter, setBuildFilter] = useState<'all' | 'todo' | 'draft' | 'published'>('all')
+  // CPD accreditation submission pack — opened per CPD course, printed to PDF.
+  const [packFor, setPackFor] = useState<any | null>(null)
+  const [packDoc, setPackDoc] = useState<CpdDoc | null>(null)
+  const [packLoading, setPackLoading] = useState<string | null>(null)
   const [checklistBusy, setChecklistBusy] = useState(false)
   useEffect(() => {
     const applyFromUrl = () => {
@@ -144,6 +149,16 @@ export default function StandardTrainingPage() {
     } catch (e: any) {
       alert(e?.message ?? 'Could not apply the checklists.')
     } finally { setChecklistBusy(false) }
+  }
+
+  // The submission documents are generated from the course's own content, so the
+  // full module is fetched before opening one.
+  async function openPack(moduleId: string, doc: CpdDoc) {
+    if (!api || packLoading) return
+    setPackLoading(`${doc}:${moduleId}`)
+    try { const { module } = await api.standardTraining.moduleFull(moduleId); setPackFor(module); setPackDoc(doc) }
+    catch (e: any) { alert(e?.message ?? 'Could not open the document.') }
+    finally { setPackLoading(null) }
   }
 
   // Duplicate a published pre-built module onto the CPD shelf as a draft copy.
@@ -403,6 +418,10 @@ export default function StandardTrainingPage() {
         </div>
       )}
 
+      {packFor && packDoc && (
+        <CpdSubmissionSheet doc={packDoc} m={packFor} onClose={() => { setPackFor(null); setPackDoc(null) }} />
+      )}
+
       {bulkOpen && api && (
         <BulkApprovePanel
           api={api}
@@ -462,6 +481,25 @@ export default function StandardTrainingPage() {
                     {previewLoading === m.id ? <Loader2 size={13} className="animate-spin" /> : <Eye size={13} />} Preview as staff
                   </button>
                   <button onClick={() => setReviewId(m.id)} className="flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"><Pencil size={12} /> {m.approved ? 'Edit' : 'Deepen & review'}</button>
+                </div>
+
+                {/* CPD accreditation submission pack — the four documents the CPD
+                    Certification Service asks for, generated from this course. */}
+                <div className="w-full border-t border-gray-50 pt-2.5">
+                  <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-mid">CPD submission pack</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {CPD_DOCS.map(d => (
+                      <button
+                        key={d.key}
+                        onClick={() => openPack(m.id, d.key)}
+                        disabled={!!packLoading}
+                        title={d.hint}
+                        className="inline-flex items-center gap-1 rounded-lg border border-violet-200 bg-violet-50/60 px-2.5 py-1.5 text-xs font-medium text-violet-800 hover:bg-violet-100 disabled:opacity-50"
+                      >
+                        {packLoading === `${d.key}:${m.id}` ? <Loader2 size={12} className="animate-spin" /> : <FileText size={12} />} {d.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}

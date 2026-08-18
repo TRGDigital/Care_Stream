@@ -323,3 +323,23 @@ html[data-hub-contrast="1"] .border-gray-300 { border-color: #6b7280 !important;
    (Excludes the disabled/locked buttons which use opacity to signal state.) */
 html[data-hub-contrast="1"] .opacity-50:not(button):not([disabled]),
 html[data-hub-contrast="1"] .opacity-60:not(button):not([disabled]) { opacity: 0.85 !important; }
+
+/* Click-to-edit proofreading (EditablePolicyBody). Only inside a surface that opted in,
+   so the staff hub and external reviewer views are never hinted as editable. */
+.cs-editable-policy .policy-content p,
+.cs-editable-policy .policy-content li,
+.cs-editable-policy .policy-content h2,
+.cs-editable-policy .policy-content h3,
+.cs-editable-policy .policy-content h4 { cursor: text; border-radius: 4px; transition: background-color .12s ease, box-shadow .12s ease; }
+.cs-editable-policy .policy-content .cs-edit-hover {
+  background-color: rgba(147, 51, 234, .06);
+  box-shadow: 0 0 0 4px rgba(147, 51, 234, .06);
+}
+/* A pencil in the gutter, so the affordance reads as "edit" rather than "selected". */
+.cs-editable-policy .policy-content .cs-edit-hover { position: relative; }
+.cs-editable-policy .policy-content .cs-edit-hover::after {
+  content: '✎';
+  position: absolute; top: 0; right: -1.15rem;
+  font-size: .8rem; line-height: 1.6; color: #9333ea; opacity: .75;
+}
+@media print { .cs-editable-policy .policy-content .cs-edit-hover::after { display: none; } }

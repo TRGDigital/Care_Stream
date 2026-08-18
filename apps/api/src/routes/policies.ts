@@ -15,6 +15,7 @@ import { writeAuditLog } from '../lib/audit'
 import { ok, err } from '../lib/response'
 import { checkPolicyLimit, remainingPolicySlots, PlanLimitError, trackAiAction } from '../lib/plan-limits'
 import { getEnglishPolicyHtml, getPolicyBaselineHtml } from '../lib/translate'
+import { applyMinorEdit } from '../services/analytics/policy-adoption'
 
 export const policiesRouter = Router()
 
@@ -631,6 +632,56 @@ policiesRouter.get('/:id/preview', requireAdmin, async (req: Request, res: Respo
     ok(res, { policy_id: policyId, name: policy.name || policy.filename, status: policy.status, cached, html: html ?? '', raw: raw ?? '', has_raw: !!raw })
   } catch (e: any) {
     err(res, 'PREVIEW_FAILED', e.message ?? 'Preview failed', 500)
+  }
+})
+
+// ─── POST /policies/:id/minor-edit ────────────────────────────────────────────
+// Proofreading fix from the policy reader (typo, missing word). Applied straight to the
+// live document as a recorded `amend` change — no approval chain, no acknowledgement
+// reset — because a spelling correction is not a policy change. See applyMinorEdit for
+// why it bypasses the draft rather than publishing it.
+const MinorEditSchema = z.object({
+  old_text: z.string().min(1).max(20000),
+  new_text: z.string().min(1).max(20000),
+})
+
+policiesRouter.post('/:id/minor-edit', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const policyId = String(req.params.id)
+  const parsed = MinorEditSchema.safeParse(req.body)
+  if (!parsed.success) { err(res, 'INVALID_INPUT', 'Provide the original and corrected wording.', 400); return }
+
+  try {
+    const policy = await (prisma as any).policy.findFirst({ where: { id: policyId, tenant_id: tenantId }, select: { id: true } })
+    if (!policy) { err(res, 'POLICY_NOT_FOUND', 'Policy not found.', 404); return }
+
+    const result = await applyMinorEdit(tenantId, policyId, {
+      old_text: parsed.data.old_text,
+      new_text: parsed.data.new_text,
+      applied_by: req.user!.sub,
+    })
+    if (!result) { err(res, 'POLICY_NOT_FOUND', 'Policy not found.', 404); return }
+    if ('error' in result) {
+      const messages: Record<string, string> = {
+        not_found:  'That wording is no longer in the policy — it may have changed since this page loaded. Refresh and try again.',
+        ambiguous:  'That exact wording appears more than once in this policy, so it cannot be corrected in place. Edit the surrounding paragraph instead.',
+        unchanged:  'Nothing was changed.',
+        no_old_text:'Nothing was selected to correct.',
+        too_large:  'That is a substantial rewrite rather than a wording correction — make this change through the policy gaps review instead.',
+      }
+      err(res, 'MINOR_EDIT_REJECTED', messages[result.error] ?? 'That correction could not be applied.', 409)
+      return
+    }
+
+    await writeAuditLog({
+      tenant_id: tenantId, user_id: req.user!.sub, event_type: 'policy_minor_edit',
+      entity_type: 'policy', entity_id: policyId,
+      metadata: { version: result.version, propagated: result.propagated },
+    }).catch(() => {})
+
+    ok(res, { version: result.version, propagated: result.propagated })
+  } catch (e: any) {
+    err(res, 'MINOR_EDIT_FAILED', e.message ?? 'Could not save that correction.', 500)
   }
 })
 

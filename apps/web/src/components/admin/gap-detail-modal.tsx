@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
+import EditablePolicyBody from './editable-policy-body'
 import { applyRoleNames } from '@/lib/policy-names'
 import { X, Loader2, CheckCircle2, Check, Plus, FileText, Sparkles, Mail, Scale, FilePlus2, FilePenLine, GraduationCap, Search, BookOpen, ChevronDown, HelpCircle, EyeOff, Info, RotateCcw } from 'lucide-react'
 
@@ -466,6 +467,13 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
 
   // Coverage tab (policy preview + highlight) — loaded lazily.
   const [html,        setHtml]        = useState<string | null>(null)
+  const [rawText,     setRawText]     = useState('')
+  // While a wording correction is open, the rebuild effect below must not re-assert the
+  // preview HTML — that would move the block out from under the editing card mid-typing.
+  const [editingBlock, setEditingBlock] = useState(false)
+  // false = the correction saved but the live copy (staff hub, AI chat) did not re-sync, so
+  // staff would still read the old wording. Silence here would be misleading.
+  const [editPropagated, setEditPropagated] = useState<boolean | null>(null)
   const [previewErr,  setPreviewErr]  = useState('')
   const [previewLoad, setPreviewLoad] = useState(false)
   const [policySearch, setPolicySearch] = useState('')
@@ -693,7 +701,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
     if (!detail?.target_policy || html !== null || previewLoad) return
     setPreviewLoad(true)
     createApiClient(token).policies.preview(detail.target_policy.id)
-      .then(d => setHtml(d.html || ''))
+      .then(d => { setHtml(d.html || ''); setRawText(d.raw || '') })
       .catch(e => setPreviewErr(e.message ?? 'Could not load the policy.'))
       .finally(() => setPreviewLoad(false))
   }, [detail, html, previewLoad, token])
@@ -711,6 +719,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   useEffect(() => {
     const root = previewRef.current
     if (!root || !html || !detail) return
+    if (editingBlock) return   // a correction is open — leave the DOM alone until it closes
     // Adopted suggestions show as the applied change (green) in the preview, so the tenant
     // sees the wording land in the policy; the rest still show as "where to add" markers.
     const adopted = new Map<number, { new_text: string; section_title?: string; placement: string }>()
@@ -757,7 +766,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
     } else {
       setMatchCount(null)
     }
-  }, [html, detail, policySearch, adoptedReqs, adoptedContent, adoption, safResult])
+  }, [html, detail, policySearch, adoptedReqs, adoptedContent, adoption, safResult, editingBlock])
 
   async function markCompleted() {
     setCompleting(true)
@@ -1191,7 +1200,31 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
                     ) : previewErr ? (
                       <div className="rounded-md border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{previewErr}</div>
                     ) : html ? (
-                      <div ref={previewRef} className="policy-content prose prose-sm max-w-none rounded-lg border border-gray-100 bg-white p-4" />
+                      <>
+                      {editPropagated === false && (
+                        <p className="mb-2 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                          Your correction was saved, but the live copy staff read didn’t re-sync.
+                          Staff and the AI assistant may still see the old wording until it does —
+                          re-publish this policy from Policies to push it through.
+                        </p>
+                      )}
+                      <EditablePolicyBody
+                        contentRef={previewRef}
+                        className="policy-content prose prose-sm max-w-none rounded-lg border border-gray-100 bg-white p-4"
+                        editable
+                        raw={rawText}
+                        policyId={detail?.target_policy?.id}
+                        token={token}
+                        onEditingChange={setEditingBlock}
+                        onSaved={(_v, propagated) => {
+                          // Re-fetch so the pane shows the corrected wording (and the coverage
+                          // highlights re-anchor against it) rather than the text we just replaced.
+                          setHtml(null)
+                          setRawText('')
+                          setEditPropagated(propagated)
+                        }}
+                      />
+                      </>
                     ) : (
                       <p className="text-sm text-neutral-mid">This policy isn&rsquo;t ready to preview yet.</p>
                     )}

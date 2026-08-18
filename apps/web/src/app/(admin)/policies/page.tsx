@@ -6,6 +6,7 @@ import { useEffect, useState, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import EditablePolicyBody from '@/components/admin/editable-policy-body'
 import { persistentCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -858,6 +859,7 @@ function PolicyPreviewModal({ token, policy, onClose }: {
   onClose: () => void
 }) {
   const [data, setData]     = useState<{ name: string; status: string; cached: boolean; html: string; raw: string; has_raw: boolean } | null>(null)
+  const [editNote, setEditNote] = useState('')
   const [loading, setLoad]  = useState(true)
   const [error, setError]   = useState('')
   const [showRaw, setShowRaw] = useState(false)
@@ -875,7 +877,7 @@ function PolicyPreviewModal({ token, policy, onClose }: {
         <div className="flex items-start justify-between gap-3 border-b border-gray-100 px-6 py-4">
           <div className="min-w-0">
             <h2 className="truncate text-base font-semibold text-neutral-dark">{policy.name}</h2>
-            <p className="mt-0.5 text-xs text-neutral-mid">How this policy looks to your staff (letterhead, contacts &amp; footers removed).</p>
+            <p className="mt-0.5 text-xs text-neutral-mid">How this policy looks to your staff (letterhead, contacts &amp; footers removed). Spotted a typo? Click any line to correct it.</p>
           </div>
           <button onClick={onClose} className="shrink-0 text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
         </div>
@@ -890,6 +892,10 @@ function PolicyPreviewModal({ token, policy, onClose }: {
           </div>
         )}
 
+        {editNote && (
+          <p className="border-b border-gray-100 bg-green-50 px-6 py-2 text-xs text-green-800">{editNote}</p>
+        )}
+
         <div className="max-h-[70vh] overflow-y-auto px-6 py-5">
           {loading ? (
             <div className="flex items-center gap-2 py-16 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Rendering the policy…</div>
@@ -900,7 +906,26 @@ function PolicyPreviewModal({ token, policy, onClose }: {
           ) : showRaw ? (
             <pre className="whitespace-pre-wrap break-words rounded-lg bg-neutral-light/50 p-4 text-xs leading-relaxed text-neutral-dark">{data.raw}</pre>
           ) : data.html ? (
-            <div className="policy-content" dangerouslySetInnerHTML={{ __html: data.html }} />
+            <EditablePolicyBody
+              className="policy-content"
+              editable
+              html={data.html}
+              raw={data.raw}
+              policyId={policy.id}
+              token={token}
+              onSaved={(_v, propagated) => {
+                setEditNote(propagated
+                  ? 'Correction saved and live.'
+                  : 'Correction saved, but the copy staff read didn’t re-sync — re-publish this policy to push it through.')
+                // Re-render from the corrected text rather than the wording we just replaced.
+                setData(null)
+                setLoad(true)
+                createApiClient(token).policies.preview(policy.id)
+                  .then(d => setData(d))
+                  .catch((e: any) => setError(e.message ?? 'Could not load the preview.'))
+                  .finally(() => setLoad(false))
+              }}
+            />
           ) : (
             <p className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800">Could not render this policy. Try &ldquo;Original text&rdquo; to see the source.</p>
           )}

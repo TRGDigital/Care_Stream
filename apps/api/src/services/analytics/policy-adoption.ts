@@ -944,6 +944,97 @@ export async function publishDocument(tenantId: string, policyId: string, publis
   return { version: nextVersion, published: res.count ?? 0, reindexed }
 }
 
+// ─── Minor edits (tenant proofreading) ───────────────────────────────────────────
+//
+// A tenant reading their policy spots a typo or a missing word — the sort of thing gap
+// analysis will never flag, because nothing is legally missing. This applies that fix as
+// an ordinary `amend` change so it inherits the audit trail, the revert and the version
+// history, but SKIPS the approval chain: a spelling correction does not need a care
+// manager and an external reviewer to sign it off, and it must not reset staff
+// acknowledgements.
+//
+// Two things make this safe:
+//  1. It is recorded as a PolicyDocumentChange. rebuildDraft() replays original_content +
+//     every active change, so an edit written only to draft_content would be silently
+//     erased at the next publish. Recording it means it survives.
+//  2. It is applied to published_content DIRECTLY rather than by publishing the draft.
+//     The draft may hold gap adoptions still awaiting approval, and pushing those live as
+//     a side effect of fixing a typo would be a serious hole in the approval process.
+export async function applyMinorEdit(tenantId: string, policyId: string, input: {
+  old_text: string
+  new_text: string
+  applied_by: string
+}): Promise<{ version: string; propagated: boolean; occurrences: number } | { error: string } | null> {
+  const oldText = String(input.old_text ?? '')
+  const newText = String(input.new_text ?? '')
+  if (!oldText.trim()) return { error: 'no_old_text' }
+  if (oldText === newText) return { error: 'unchanged' }
+  // A minor edit is a proofreading fix, not a rewrite. Anything this large is either a
+  // mis-mapped block or a change that genuinely belongs in the reviewed pipeline.
+  if (newText.length > oldText.length * 3 + 500) return { error: 'too_large' }
+
+  const doc = await getOrInitDocument(tenantId, policyId)
+  if (!doc || doc.tenant_id !== tenantId) return null
+
+  // The live document is what staff read. Before this policy has ever been published that
+  // is the uploaded original, NOT the draft — see note 2 above.
+  const liveBase = (doc.published_content as string) || (doc.original_content as string) || ''
+  const occurrences = liveBase.split(oldText).length - 1
+  if (occurrences === 0) {
+    // The paragraph moved or was rewritten since the page was loaded.
+    return { error: 'not_found' }
+  }
+  if (occurrences > 1) {
+    // applyChange replaces every occurrence, which is right for a lint term fix but wrong
+    // here — the tenant selected one specific paragraph. Refuse rather than edit text they
+    // did not look at.
+    return { error: 'ambiguous' }
+  }
+
+  const applied = applyChange(liveBase, 'amend', oldText, newText)
+  if (!applied.applied) return { error: 'not_found' }
+
+  // Point release: 3.0 -> 3.1. Publishing a reviewed change set bumps the major, so a
+  // proofreading pass reads as a minor revision of the same version, which is what a
+  // version history is meant to convey.
+  const policy = await (prisma as any).policy.findUnique({ where: { id: policyId }, select: { version: true } })
+  const cur = String(doc.version || `${Number(policy?.version) || 1}.0`)
+  const [majRaw, minRaw] = cur.split('.')
+  const maj = Number.isFinite(parseInt(majRaw, 10)) ? parseInt(majRaw, 10) : (Number(policy?.version) || 1)
+  const min = Number.isFinite(parseInt(minRaw, 10)) ? parseInt(minRaw, 10) : 0
+  const nextVersion = `${maj}.${min + 1}`
+
+  // published:true — it is already live, so it must not sit in the pending-approval count.
+  await (prisma as any).policyDocumentChange.create({
+    data: {
+      document_id: doc.id, tenant_id: tenantId, reference_key: '',
+      requirement: 'Wording correction', placement: 'amend',
+      old_text: oldText, new_text: newText, section_title: '',
+      applied_by: input.applied_by, published: true, minor: true,
+    },
+  })
+  // Keep the working copy in step so the next publish does not resurrect the typo.
+  await rebuildDraft(doc.id)
+
+  await (prisma as any).policyDocument.update({
+    where: { id: doc.id },
+    data: { published_content: applied.content, published_at: new Date(), published_by: input.applied_by, version: nextVersion },
+  })
+  await (prisma as any).policyDocumentVersion.create({
+    data: {
+      tenant_id: tenantId, policy_id: policyId, version: nextVersion,
+      content: applied.content, change_count: 1, published_by: input.applied_by,
+    },
+  }).catch(() => {})
+
+  // Staff read the propagated copy (S3 text, format cache, Pinecone), so a correction that
+  // is not propagated leaves both the hub and the AI chat quoting the typo.
+  const propagated = await propagatePublishedContent(tenantId, policyId, applied.content)
+  await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { content_propagated: propagated } }).catch(() => {})
+
+  return { version: nextVersion, propagated, occurrences }
+}
+
 // Push published content live (S3 + format cache + search index), retrying transient failures.
 // Returns true if it landed, false if it exhausted its retries (caller records + surfaces this).
 async function propagatePublishedContent(tenantId: string, policyId: string, content: string): Promise<boolean> {

@@ -8,6 +8,7 @@ type AuditEventType =
   | 'policy_upload'
   | 'policy_bulk_upload'
   | 'policy_archive'
+  | 'policy_minor_edit'
   | 'policy_delete'
   | 'policy_update'
   | 'policy_version_swap'

@@ -57,6 +57,8 @@ export default function StandardTrainingPage() {
   const [settings, setSettings] = useState<{ key: string; label: string }[]>([])
   const [activeSetting, setActiveSetting] = useState<string | null>(null) // null = the universal "All settings" base; 'ANNUAL' = the CPD set
   const [bulkOpen, setBulkOpen] = useState(false)
+  // Work-state filter: the library is ~98 rows, so surface what still needs doing.
+  const [buildFilter, setBuildFilter] = useState<'all' | 'todo' | 'draft' | 'published'>('all')
   const [checklistBusy, setChecklistBusy] = useState(false)
   useEffect(() => {
     const applyFromUrl = () => {
@@ -217,7 +219,18 @@ export default function StandardTrainingPage() {
   // 'ANNUAL' = the CPD Approved shelf: deepened copies of pre-built modules, across all settings.
   const visibleTopics = topics.filter(t =>
     activeSetting === 'ANNUAL' ? false : activeSetting ? t.care_setting === activeSetting : !t.care_setting)
-  const byGroup = Object.keys(groups).map(g => ({ key: g, label: groups[g], items: visibleTopics.filter(t => t.group_key === g) })).filter(g => g.items.length)
+  const matchesBuild = (t: any) => buildFilter === 'all'
+    || (buildFilter === 'todo'      && !t.module)
+    || (buildFilter === 'draft'     && !!t.module && !t.module.approved)
+    || (buildFilter === 'published' && !!t.module && t.module.approved)
+  const filteredTopics = visibleTopics.filter(matchesBuild)
+  const buildCounts = {
+    all:       visibleTopics.length,
+    todo:      visibleTopics.filter((t: any) => !t.module).length,
+    draft:     visibleTopics.filter((t: any) => !!t.module && !t.module.approved).length,
+    published: visibleTopics.filter((t: any) => !!t.module && t.module.approved).length,
+  }
+  const byGroup = Object.keys(groups).map(g => ({ key: g, label: groups[g], items: filteredTopics.filter(t => t.group_key === g) })).filter(g => g.items.length)
   const activeLabel = activeSetting === 'ANNUAL' ? 'CPD Approved' : settings.find(s => s.key === activeSetting)?.label ?? 'All settings'
 
   return (
@@ -316,6 +329,34 @@ export default function StandardTrainingPage() {
               </button>
             )
           })}
+        </div>
+      )}
+
+      {!loading && activeSetting !== 'ANNUAL' && (
+        <div className="mb-4 flex flex-wrap items-center gap-1.5">
+          <span className="mr-1 text-xs font-medium text-neutral-mid">Show:</span>
+          {([
+            ['all',       'All'],
+            ['todo',      'Needs building'],
+            ['draft',     'Draft'],
+            ['published', 'Published'],
+          ] as const).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setBuildFilter(key)}
+              className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
+                buildFilter === key ? 'bg-neutral-dark text-white' : 'bg-gray-100 text-neutral-mid hover:bg-gray-200'
+              }`}
+            >
+              {label}
+              <span className={`rounded-full px-1.5 text-[10px] ${buildFilter === key ? 'bg-white/20' : 'bg-white text-neutral-mid'}`}>{buildCounts[key]}</span>
+            </button>
+          ))}
+          {buildFilter === 'todo' && buildCounts.todo > 0 && (
+            <span className="ml-1 text-xs text-neutral-mid">
+              These topics have no course yet — tenants see them under <strong>Live policy training</strong> until one is published.
+            </span>
+          )}
         </div>
       )}
 
@@ -426,6 +467,11 @@ export default function StandardTrainingPage() {
             ))}
           </div>
         )
+      ) : byGroup.length === 0 && buildFilter !== 'all' ? (
+        <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center">
+          <p className="text-sm font-medium text-neutral-dark">Nothing in “{buildFilter === 'todo' ? 'Needs building' : buildFilter === 'draft' ? 'Draft' : 'Published'}” for {activeLabel}</p>
+          <p className="mx-auto mt-1 max-w-md text-xs text-neutral-mid">Switch the filter to <strong>All</strong> to see the rest of this tab.</p>
+        </div>
       ) : byGroup.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center">
           <p className="text-sm font-medium text-neutral-dark">No {activeLabel}-specific modules yet</p>

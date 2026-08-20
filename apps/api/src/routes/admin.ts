@@ -23,6 +23,7 @@ import { upsertRegulationVectors, deleteRegulationVector, deleteAllTenantPolicyV
 import type { RegulationVector } from '../services/vector/pinecone'
 import { ok, err } from '../lib/response'
 import { blogImagePublicUrl, siteUrl } from '../lib/urls'
+import { USE_CASES, USE_CASE_POST_LIMIT, parseUseCaseSlugs, useCaseLabel } from '../lib/use-cases'
 import { submitUrlsForIndexing, countIndexedPages, ralfyIndexBalance } from '../services/ralfyindex/indexer'
 import { authLimiter } from '../middleware/rateLimiter'
 import { sendRenewalReminders } from '../services/training/renewalReminders'
@@ -3140,6 +3141,26 @@ adminRouter.get('/blog/posts', async (_req: Request, res: Response) => {
   ok(res, { posts, total: posts.length })
 })
 
+// The user cases a post can be allocated to, each with what is already allocated,
+// so the console can show remaining capacity and disable the ones that are full.
+adminRouter.get('/blog/use-cases', async (_req: Request, res: Response) => {
+  const posts = await (prisma as any).blogPost.findMany({
+    where:   { use_case_slugs: { isEmpty: false } },
+    select:  { id: true, title: true, slug: true, status: true, use_case_slugs: true },
+    orderBy: { created_at: 'asc' },
+  })
+  const useCases = USE_CASES.map(uc => {
+    const allocated = posts.filter((p: any) => (p.use_case_slugs ?? []).includes(uc.slug))
+    return {
+      ...uc,
+      count:     allocated.length,
+      remaining: Math.max(0, USE_CASE_POST_LIMIT - allocated.length),
+      posts:     allocated.map((p: any) => ({ id: p.id, title: p.title, slug: p.slug, status: p.status })),
+    }
+  })
+  ok(res, { useCases, limit: USE_CASE_POST_LIMIT })
+})
+
 adminRouter.post('/blog/posts', async (req: Request, res: Response) => {
   const { title, slug } = req.body ?? {}
   if (!title?.trim()) { err(res, 'VALIDATION_ERROR', 'Title is required.'); return }
@@ -3147,6 +3168,12 @@ adminRouter.post('/blog/posts', async (req: Request, res: Response) => {
 
   const existing = await (prisma as any).blogPost.findUnique({ where: { slug: slug.trim() } })
   if (existing) { err(res, 'CONFLICT', `A post with slug "${slug}" already exists.`, 409); return }
+
+  const full = await useCasesOverCapacity(parseUseCaseSlugs(req.body?.use_case_slugs))
+  if (full.length) {
+    err(res, 'USE_CASE_FULL', `${full.map(useCaseLabel).join(' and ')} already ${full.length > 1 ? 'have' : 'has'} ${USE_CASE_POST_LIMIT} posts. Remove one before allocating another.`, 409)
+    return
+  }
 
   const post = await (prisma as any).blogPost.create({ data: buildPostData(req.body) })
   if (post.status === 'published' && post.slug) {
@@ -3160,6 +3187,13 @@ adminRouter.patch('/blog/posts/:id', async (req: Request, res: Response) => {
   if (slug) {
     const clash = await (prisma as any).blogPost.findFirst({ where: { slug: slug.trim(), NOT: { id: req.params.id } } })
     if (clash) { err(res, 'CONFLICT', `Slug "${slug}" is already in use.`, 409); return }
+  }
+  if (req.body?.use_case_slugs !== undefined) {
+    const full = await useCasesOverCapacity(parseUseCaseSlugs(req.body.use_case_slugs), String(req.params.id))
+    if (full.length) {
+      err(res, 'USE_CASE_FULL', `${full.map(useCaseLabel).join(' and ')} already ${full.length > 1 ? 'have' : 'has'} ${USE_CASE_POST_LIMIT} posts. Remove one before allocating another.`, 409)
+      return
+    }
   }
   const post = await (prisma as any).blogPost.update({
     where: { id: req.params.id },
@@ -3431,7 +3465,7 @@ function buildPostData(body: any) {
     content, author_id, category, publication_date, status,
     is_featured, read_time_minutes, cta_text, cta_url, cta_type,
     special_message, special_message_color, key_info_title, key_info_content,
-    faqs, sources,
+    faqs, sources, use_case_slugs,
   } = body ?? {}
 
   return {
@@ -3459,7 +3493,21 @@ function buildPostData(body: any) {
     ...(key_info_content     !== undefined && { key_info_content:      key_info_content?.trim() || null }),
     ...(faqs                 !== undefined && { faqs:                  Array.isArray(faqs) ? faqs.filter((f: any) => f.question?.trim() || f.answer?.trim()) : null }),
     ...(sources              !== undefined && { sources:               Array.isArray(sources) ? sources.map((s: any) => ({ label: (s.label ?? '').trim(), url: (s.url ?? '').trim() })).filter((s: any) => s.url) : null }),
+    ...(use_case_slugs       !== undefined && { use_case_slugs:        parseUseCaseSlugs(use_case_slugs) }),
   }
+}
+
+// A user case page shows three posts, so a user case can hold three. Checked on
+// create and update against everything else already allocated, excluding the post
+// being saved so re-saving an allocated post is never blocked by itself.
+async function useCasesOverCapacity(slugs: string[], exceptPostId?: string) {
+  if (!slugs.length) return [] as string[]
+  const rows = await (prisma as any).blogPost.findMany({
+    where:  { use_case_slugs: { hasSome: slugs }, ...(exceptPostId ? { NOT: { id: exceptPostId } } : {}) },
+    select: { use_case_slugs: true },
+  })
+  return slugs.filter(slug =>
+    rows.filter((r: any) => (r.use_case_slugs ?? []).includes(slug)).length >= USE_CASE_POST_LIMIT)
 }
 
 // ─── Onboarding email drip (platform Email Marketing) ─────────────────────────

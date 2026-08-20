@@ -295,6 +295,7 @@ export interface BlogPost {
   key_info_content:      string | null
   faqs:                  Array<{ question: string; answer: string }> | null
   sources:               Array<{ label: string; url: string }> | null
+  use_case_slugs:        string[]
   created_at:            string
   updated_at:            string
   author:                { id: string; name: string; photo_url: string | null } | null
@@ -585,6 +586,14 @@ export async function uploadBlogImage(token: string, file: File): Promise<string
   const body = await res.json()
   if (!res.ok || !body.success) throw new Error(body.error?.message ?? `Upload failed ${res.status}`)
   return body.data.url as string
+}
+
+export interface UseCaseAllocation {
+  slug:      string
+  label:     string
+  count:     number
+  remaining: number
+  posts:     Array<{ id: string; title: string; slug: string; status: string }>
 }
 
 export function createPlatformClient(token: string) {
@@ -1030,6 +1039,11 @@ export function createPlatformClient(token: string) {
         adminFetch<{ author: BlogAuthor }>(`/blog/authors/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       deleteAuthor: (id: string) =>
         adminFetch<{ deleted: boolean }>(`/blog/authors/${id}`, token, { method: 'DELETE' }),
+
+      // The /uses/* user cases a post can be allocated to, with what is already
+      // allocated to each so the form can show remaining capacity.
+      useCases: () =>
+        adminFetch<{ useCases: UseCaseAllocation[]; limit: number }>('/blog/use-cases', token),
     },
 
     sitePages: {

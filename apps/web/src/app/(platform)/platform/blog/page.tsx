@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
-import { createPlatformClient, uploadBlogImage, fetchTrainingSeoIndex, type BlogAuthor, type BlogPost, type SitePage, type Collection, type FeaturePage } from '@/lib/platform-api'
+import { createPlatformClient, uploadBlogImage, fetchTrainingSeoIndex, type BlogAuthor, type BlogPost, type SitePage, type Collection, type FeaturePage, type UseCaseAllocation } from '@/lib/platform-api'
 import { EMPTY_FEATURE_CONTENT, type FeaturePageContent } from '@/lib/feature-content'
 import { slotsForPath, type SlotDef } from '@/lib/page-slots'
 import { PlatformShell } from '@/components/platform-shell'
@@ -338,6 +338,7 @@ const EMPTY_POST = {
   key_info_title: '', key_info_content: '',
   faqs: EMPTY_FAQS,
   sources: [] as Array<{ label: string; url: string }>,
+  use_case_slugs: [] as string[],
 }
 
 // Resize/compress an image in the browser before upload so it stays well under
@@ -404,8 +405,27 @@ function PostForm({
       ? initial.faqs
       : EMPTY_FAQS
     merged.sources = Array.isArray(initial?.sources) ? initial.sources : []
+    merged.use_case_slugs = Array.isArray((initial as any)?.use_case_slugs) ? (initial as any).use_case_slugs : []
     return merged
   })
+
+  // User case allocation. Capacity is read from the server rather than counted in
+  // the browser, so two people editing at once cannot both fill the last slot.
+  const [useCases, setUseCases] = useState<UseCaseAllocation[]>([])
+  useEffect(() => {
+    if (!token) return
+    let live = true
+    createPlatformClient(token).blog.useCases()
+      .then(r => { if (live) setUseCases(r.useCases) })
+      .catch(() => { if (live) setUseCases([]) })
+    return () => { live = false }
+  }, [token])
+
+  const allocated: string[] = form.use_case_slugs ?? []
+  const toggleUseCase = (slug: string) =>
+    set('use_case_slugs', allocated.includes(slug)
+      ? allocated.filter((s: string) => s !== slug)
+      : [...allocated, slug])
   const set    = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }))
   const setFaq = (i: number, field: 'question' | 'answer', val: string) =>
     set('faqs', (form.faqs as any[]).map((f, idx) => idx === i ? { ...f, [field]: val } : f))
@@ -540,6 +560,62 @@ function PostForm({
             <label htmlFor="is_featured" className="cursor-pointer text-sm text-neutral-dark">Featured on homepage</label>
           </div>
         </div>
+      </AccordionSection>
+
+      {/* ── User case ────────────────────────────────────── */}
+      <AccordionSection
+        title="User case"
+        description="Allocate this post to the /uses/ pages that should link to it. Each user case shows three posts, so three is the limit."
+        defaultOpen
+      >
+        {useCases.length === 0 ? (
+          <p className="text-sm text-neutral-mid">Loading user cases&hellip;</p>
+        ) : (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {useCases.map(uc => {
+              const picked    = allocated.includes(uc.slug)
+              // Capacity counts every post except this one, so an already-allocated
+              // post never reads as blocked by its own slot.
+              const usedByOthers = uc.posts.filter(p => p.id !== initial?.id).length
+              const full      = !picked && usedByOthers >= 3
+              return (
+                <label
+                  key={uc.slug}
+                  className={`flex items-start gap-2.5 rounded-lg border px-3 py-2.5 transition ${
+                    picked ? 'border-teal bg-teal/5'
+                           : full ? 'cursor-not-allowed border-gray-200 bg-neutral-light/60 opacity-60'
+                                  : 'cursor-pointer border-gray-200 bg-white hover:border-teal/50'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={picked}
+                    disabled={full}
+                    onChange={() => toggleUseCase(uc.slug)}
+                    className="mt-0.5 h-4 w-4 accent-teal disabled:cursor-not-allowed"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium text-neutral-dark">{uc.label}</span>
+                    <span className="block text-xs text-neutral-mid">
+                      {usedByOthers} of 3 allocated{full ? ' — full' : ''}
+                    </span>
+                    {uc.posts.filter(p => p.id !== initial?.id).length > 0 && (
+                      <span className="mt-1 block text-xs text-neutral-mid/80">
+                        {uc.posts.filter(p => p.id !== initial?.id).map(p => p.title).join(' · ')}
+                      </span>
+                    )}
+                  </span>
+                </label>
+              )
+            })}
+          </div>
+        )}
+        {allocated.length > 1 && (
+          <p className="mt-3 text-xs text-neutral-mid">
+            This post is allocated to {allocated.length} user cases. That is allowed — a post that genuinely
+            serves two pages is better linked twice than written twice.
+          </p>
+        )}
       </AccordionSection>
 
       {/* ── Media ────────────────────────────────────────── */}

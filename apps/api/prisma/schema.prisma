@@ -1257,11 +1257,13 @@ model BlogPost {
   key_info_content      String?
   faqs                  Json?
   sources               Json?                             // [{ label, url }] authoritative citations rendered + emitted as schema.org citation
+  use_case_slugs        String[]    @default([])          // /uses/* pages this post is allocated to; each user case shows at most USE_CASE_POST_LIMIT posts
   created_at            DateTime    @default(now())
   updated_at            DateTime    @updatedAt
   author                BlogAuthor? @relation(fields: [author_id], references: [id])
 
   @@index([status, publication_date])
+  @@index([use_case_slugs], type: Gin)
   @@map("blog_posts")
 }
 

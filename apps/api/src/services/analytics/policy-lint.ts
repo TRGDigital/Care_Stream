@@ -13,6 +13,7 @@ import {
   type TextSignal, type LintSeverity, type LintCategory,
   signalMatches, SEVERITY_WEIGHT, defaultSignalSeeds,
 } from './policy-lint-signals'
+import { isPolicyDocument, documentKind, DOCUMENT_KIND_LABEL } from '../../lib/document-kind'
 
 export interface LintFinding {
   signal_key:    string
@@ -52,12 +53,13 @@ function compile(row: any): TextSignal {
 }
 
 async function loadActiveSignals(): Promise<TextSignal[]> {
-  // Seed the catalogue from the code default on first use, so a scan works even before anyone
-  // opens the platform editor. Idempotent (skipDuplicates on the unique signal_key).
-  const total = await (prisma as any).policyLintSignal.count()
-  if (total === 0) {
-    await (prisma as any).policyLintSignal.createMany({ data: defaultSignalSeeds(), skipDuplicates: true }).catch(() => {})
-  }
+  // Top the catalogue up from the code defaults on every load, not only when the table is
+  // empty. The signals are a platform catalogue: when a new one is curated (PHE closing, NHS
+  // Digital merging into NHS England) every tenant should get it without a manual SQL step,
+  // and without it a client who scanned last year would never see a newly-superseded body.
+  // skipDuplicates keys on signal_key, so an admin's edits to an existing signal are kept.
+  // Note: a signal an admin DELETED will reappear — deactivate (is_active false) instead.
+  await (prisma as any).policyLintSignal.createMany({ data: defaultSignalSeeds(), skipDuplicates: true }).catch(() => {})
   // Only ACTIVE and APPROVED signals affect tenants. A new or newly-edited signal stays
   // Pending until a platform admin has reviewed and approved it.
   const rows = await (prisma as any).policyLintSignal.findMany({
@@ -73,10 +75,21 @@ async function loadActiveSignals(): Promise<TextSignal[]> {
 
 // A headline 0-100 quality score. Each DISTINCT firing signal costs its severity weight (so a
 // policy saying "COVID" ten times isn't punished ten times); score = 100 - Σweight*5, floored.
+//
+// Review currency is excluded from the score. A missing review date is an empty metadata
+// field, not a defect in the document, and letting it score meant 223 of Ferndale's 361
+// policies were marked down for the same blank field — which buried the ones that had a real
+// content problem.
 function scoreFromFindings(findings: LintFinding[]): number {
-  const penalty = findings.reduce((sum, f) => sum + (SEVERITY_WEIGHT[f.severity] ?? 1), 0)
+  const penalty = findings
+    .filter(f => f.kind !== 'review_currency')
+    .reduce((sum, f) => sum + (SEVERITY_WEIGHT[f.severity] ?? 1), 0)
   return Math.max(0, 100 - penalty * 5)
 }
+
+// Content problems: what is actually wrong with the words in the document. "Flagged" in the
+// out-of-date section counts these only.
+const contentFindings = (findings: LintFinding[]): LintFinding[] => findings.filter(f => f.kind !== 'review_currency')
 
 // Is a finding's stale wording still present in the draft? Mirrors detection: phrases match
 // case-insensitively, acronyms/tokens match case-sensitively and word-bounded.
@@ -98,12 +111,16 @@ function findingResolvedInDraft(f: LintFinding, draft: string, adoptedRefs: Set<
 // Lint a single policy's text + row. Pure function (no I/O) so it's easy to test.
 export function lintPolicyText(
   text: string,
-  policy: { last_reviewed_at?: Date | null; review_interval_days?: number | null },
+  policy: { name?: string | null; last_reviewed_at?: Date | null; review_interval_days?: number | null },
   signals: TextSignal[],
   now: number = Date.now(),
 ): LintFinding[] {
   const findings: LintFinding[] = []
   const body = text ?? ''
+  // Structure rules describe what a POLICY should contain. A blank Subject Access Request
+  // form, a specimen letter and a medication exam paper are none of them defective for
+  // having no "policy statement, purpose or scope" — they are not policies.
+  const isPolicy = isPolicyDocument(policy.name ?? '', body.trim().length)
 
   // 1. Catalogue text signals (superseded refs, placeholders, time-bound wording).
   for (const s of signals) {
@@ -120,15 +137,17 @@ export function lintPolicyText(
     })
   }
 
-  // 2. Structural rules (computed, still zero-AI).
-  if (body.trim().length < 600) {
+  // 2. Structural rules (computed, still zero-AI) — policies only.
+  if (!isPolicy) {
+    // not a policy: no structure rules apply
+  } else if (body.trim().length < 600) {
     findings.push({
       signal_key: 'thin-content', category: 'structure', severity: 'medium',
       label: 'Very little content',
       detail: 'The extracted policy text is under ~600 characters, which usually means a stub, a cover sheet, or a failed text extraction rather than a complete policy.',
       superseded_by: null, source_urls: [], kind: 'structure', count: 1, terms: [], samples: [],
     })
-  } else if (!/policy statement|purpose|scope|\baim\b/i.test(body)) {
+  } else if (!/policy statement|purpose|scope|\baim\b|introduction/i.test(body)) {
     findings.push({
       signal_key: 'missing-purpose-scope', category: 'structure', severity: 'medium',
       label: 'No policy statement, purpose or scope',
@@ -232,8 +251,19 @@ export async function getTenantLint(tenantId: string) {
   // Policies the admin has marked updated are hidden until the next scan re-flags them.
   const resolved = await resolvedPolicyIds(tenantId, 'out_of_date')
 
+  // Review currency is reported separately from content problems: it is one blank field per
+  // policy, fixed in one action, and when it sat in the findings list it accounted for 254 of
+  // Ferndale's 320 findings and made 308 of 361 policies look defective.
+  const reviewNeeded = (rows as any[])
+    .filter(r => Array.isArray(r.findings) && (r.findings as LintFinding[]).some(f => f.kind === 'review_currency'))
+    .map(r => {
+      const f = (r.findings as LintFinding[]).find(x => x.kind === 'review_currency')!
+      return { policy_id: r.policy_id, policy_name: r.policy_name, state: f.label === 'Overdue for review' ? 'overdue' as const : 'never_set' as const }
+    })
+    .sort((a, b) => a.policy_name.localeCompare(b.policy_name))
+
   let withIssues = (rows as any[])
-    .filter(r => Array.isArray(r.findings) && r.findings.length > 0 && !resolved.has(r.policy_id))
+    .filter(r => Array.isArray(r.findings) && contentFindings(r.findings as LintFinding[]).length > 0 && !resolved.has(r.policy_id))
     .map(r => ({ policy_id: r.policy_id, policy_name: r.policy_name, score: r.score, findings: (r.findings as LintFinding[]).map(enrich), scanned_at: new Date(r.scanned_at).toISOString() }))
     .sort((a, b) => a.score - b.score)   // worst first
 
@@ -266,15 +296,24 @@ export async function getTenantLint(tenantId: string) {
       if (!adoptedRefs.size) continue
       p.findings = p.findings.filter(f => !findingResolvedInDraft(f, doc.draft_content ?? '', adoptedRefs))
     }
-    withIssues = withIssues.filter(p => p.findings.length > 0)
+    withIssues = withIssues.filter(p => contentFindings(p.findings).length > 0)
   }
 
   // Count distinct superseded-reference / high signals across the library for the summary.
+  // Review currency is excluded — it has its own block below.
   let highCount = 0, mediumCount = 0
-  for (const p of withIssues) for (const f of p.findings) {
+  for (const p of withIssues) for (const f of contentFindings(p.findings)) {
     if (f.severity === 'high') highCount++
     else if (f.severity === 'medium') mediumCount++
   }
+
+  // Documents in the library that are not policies (forms, specimen letters, exam papers,
+  // charts). Surfaced so an admin can see why they are not being judged as policies.
+  const nonPolicy = (rows as any[])
+    .map(r => ({ policy_id: r.policy_id, policy_name: r.policy_name as string, kind: documentKind(r.policy_name ?? '') }))
+    .filter(d => d.kind !== 'policy')
+    .map(d => ({ ...d, kind_label: DOCUMENT_KIND_LABEL[d.kind] }))
+    .sort((a, b) => a.policy_name.localeCompare(b.policy_name))
 
   return {
     scanned,
@@ -284,5 +323,13 @@ export async function getTenantLint(tenantId: string) {
     high_findings: highCount,
     medium_findings: mediumCount,
     policies: withIssues,
+    // One blank field per policy, fixed in one action — kept out of the flagged count.
+    review_currency: {
+      never_set: reviewNeeded.filter(r => r.state === 'never_set').length,
+      overdue:   reviewNeeded.filter(r => r.state === 'overdue').length,
+      policies:  reviewNeeded,
+    },
+    // Documents that are not policies, and so are exempt from the structure rules.
+    non_policy_documents: nonPolicy,
   }
 }

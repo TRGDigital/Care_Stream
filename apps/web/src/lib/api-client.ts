@@ -1113,6 +1113,16 @@ export function createApiClient(token: string) {
           policy_id: string; policy_name: string; score: number; scanned_at: string
           findings: Array<{ signal_key: string; category: string; severity: 'high' | 'medium' | 'low'; label: string; detail: string; superseded_by: string | null; source_urls?: string[]; kind: 'text' | 'structure' | 'review_currency'; count: number; terms: string[]; samples: Array<{ match: string; index: number }> }>
         }>
+        // Review dates are reported apart from content problems: one blank field per policy,
+        // fixed in one action, so they no longer flag a policy as out of date.
+        review_currency?: {
+          never_set: number
+          overdue: number
+          policies: Array<{ policy_id: string; policy_name: string; state: 'never_set' | 'overdue' }>
+        }
+        // Documents that are not policies (forms, letters, exam papers, charts), and so are
+        // exempt from the structure rules.
+        non_policy_documents?: Array<{ policy_id: string; policy_name: string; kind: string; kind_label: string }>
       }>('/analytics/policy-lint', token),
       policyLintScan: () => apiFetch<{ scanned: number; with_issues: number }>('/analytics/policy-lint/scan', token, { method: 'POST' }),
       // Cross-policy consistency (Phase 4).
@@ -1125,6 +1135,11 @@ export function createApiClient(token: string) {
           id: string; key: string; set_type: 'duplicate' | 'topic'; set_label: string
           topic: string; summary: string; severity: 'high' | 'medium' | 'low'; resolution: string
           positions: Array<{ policy_id: string; policy_name: string; statement: string; quote: string }>
+          // From the verification pass: whether the correct value is fixed by law (and what
+          // it is), or is the service's to choose, plus why this survived verification.
+          kind?: 'legal' | 'organisational'
+          legal_value?: string
+          why?: string
         }>
       }>('/analytics/consistency', token),
       consistencyResolve: (key: string) => apiFetch<{ resolution: string }>('/analytics/consistency/resolve', token, { method: 'POST', body: JSON.stringify({ key }) }),

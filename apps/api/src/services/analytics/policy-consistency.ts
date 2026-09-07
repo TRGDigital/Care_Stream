@@ -19,6 +19,7 @@ import { checkAiCreditLimit, logAiCredit } from '../../lib/plan-limits'
 import { embedTexts } from '../rag/embedder'
 import { contentSimilarity, asSignature } from '../../lib/content-similarity'
 import { mapLimit } from '../../lib/translate'
+import { isPolicyDocument } from '../../lib/document-kind'
 
 const HAIKU = 'claude-haiku-4-5-20251001'
 
@@ -231,39 +232,48 @@ export async function getCachedSets(tenantId: string): Promise<ComparisonSet[]> 
   return (row?.sets as ComparisonSet[]) ?? []
 }
 
-// Which policies (that appear in a comparison set) still need claim extraction? Batched so the
-// route can run it with progress rather than holding one long request open.
+// Every active POLICY document is a claim source, not only those in a title-based comparison
+// set. Contradictions do not respect policy titles: the subject access deadline in the GDPR
+// employee-data policy contradicts the one in the Privacy Policy, and no title cluster ever
+// put those two together. Forms, specimen letters, exam papers and charts are excluded — a
+// blank form's "value" is a field to be filled in, not a commitment that can contradict.
+export async function claimSourcePolicies(tenantId: string): Promise<Array<{ id: string; name: string }>> {
+  const rows = await (prisma as any).policy.findMany({
+    where: { tenant_id: tenantId, status: 'active' }, select: { id: true, name: true },
+  })
+  return (rows as any[]).filter(p => isPolicyDocument(p.name ?? '')).map(p => ({ id: p.id, name: p.name as string }))
+}
+
+// Which policies still need claim extraction? Batched so the route can run it with progress
+// rather than holding one long request open.
 export async function pendingClaimPolicies(tenantId: string): Promise<Array<{ id: string; name: string }>> {
-  const sets = await getCachedSets(tenantId)
-  const inSet = new Map<string, string>()
-  for (const s of sets) for (const p of s.policies) inSet.set(p.id, p.name)
-  if (inSet.size === 0) return []
-  const cached = await (prisma as any).policyClaim.findMany({ where: { tenant_id: tenantId, policy_id: { in: [...inSet.keys()] } }, select: { policy_id: true } })
+  const sources = await claimSourcePolicies(tenantId)
+  if (!sources.length) return []
+  const cached = await (prisma as any).policyClaim.findMany({
+    where: { tenant_id: tenantId, policy_id: { in: sources.map(s => s.id) } }, select: { policy_id: true },
+  })
   const have = new Set((cached as any[]).map(c => c.policy_id))
   // We can't cheaply know here whether a cached copy is stale (hash) without the text, so we treat
   // "has a row" as done for batching; extractPolicyClaims re-checks the hash and skips if unchanged.
-  return [...inSet.entries()].filter(([id]) => !have.has(id)).map(([id, name]) => ({ id, name }))
+  return sources.filter(s => !have.has(s.id))
 }
 
 export async function extractClaimsBatch(tenantId: string, batch: Array<{ id: string; name: string }>): Promise<void> {
   await mapLimit(batch, 3, (p) => extractPolicyClaims(tenantId, p).catch(() => []))
 }
 
-// Read-only progress snapshot for resumable runs: of the policies in the cached
-// comparison sets, how many already have extracted claims. Counts only — no AI. Used by
-// GET /analytics/gaps/run-state so an interrupted run can offer "Resume" without
-// rebuilding the sets or re-extracting cached claims.
+// Read-only progress snapshot for resumable runs: how many claim-source policies already have
+// extracted claims. Counts only — no AI. Used by GET /analytics/gaps/run-state so an
+// interrupted run can offer "Resume" without re-extracting cached claims.
 export async function consistencyRunState(tenantId: string): Promise<{ total: number; analysed: number; remaining: number }> {
-  const sets = await getCachedSets(tenantId)
-  const ids = new Set<string>()
-  for (const s of sets) for (const p of s.policies) ids.add(p.id)
-  const total = ids.size
+  const sources = await claimSourcePolicies(tenantId)
+  const total = sources.length
   if (!total) return { total: 0, analysed: 0, remaining: 0 }
   const cached = await (prisma as any).policyClaim.findMany({
-    where: { tenant_id: tenantId, policy_id: { in: [...ids] } }, select: { policy_id: true },
+    where: { tenant_id: tenantId, policy_id: { in: sources.map(s => s.id) } }, select: { policy_id: true },
   })
   const have = new Set((cached as any[]).map((c: any) => c.policy_id))
-  const analysed = [...ids].filter(id => have.has(id)).length
+  const analysed = sources.filter(s => have.has(s.id)).length
   return { total, analysed, remaining: total - analysed }
 }
 
@@ -279,104 +289,235 @@ export interface PolicyConflict {
   severity:   'high' | 'medium' | 'low'
   resolution: string        // one reconciled wording to replace the conflicting passage in EVERY policy
   positions:  ConflictPosition[]
+  // Set by the verification pass.
+  kind?:        'legal' | 'organisational'  // is the correct value fixed by law, or the home's to choose?
+  legal_value?: string                       // for 'legal': what the law actually requires
+  why?:         string                       // why this survived verification, in one sentence
 }
 
 const DETECT_SYSTEM =
   'You compare policies from the SAME UK care service to find GENUINE contradictions — where two or more policies give DIFFERENT, INCOMPATIBLE instructions about the SAME specific point. You are strict: report only real conflicts, never a difference of wording, scope, or level of detail. A false conflict is worse than a missed one.'
 
-const normName = (s: string) => (s || '').toLowerCase().replace(/\s+/g, ' ').trim()
+const VERIFY_SYSTEM =
+  'You are a strict second reviewer of a reported contradiction between policies of one UK care service. You read the FULL passages and decide whether the two policies really address the same point and really disagree. Respond only with valid JSON.'
 
-function detectPrompt(members: Array<{ name: string; claims: PolicyClaim[] }>): string {
-  const blocks = members.map(m => [
-    `POLICY: ${m.name}`,
-    ...m.claims.slice(0, 18).map(c => `- (${c.kind}) ${c.topic} — ${c.statement} | "${c.quote}"`),
+const normName = (s: string) => (s || '').toLowerCase().replace(/\s+/g, ' ').trim()
+const normText = (s: string) => (s || '').toLowerCase().replace(/[‘’]/g, "'").replace(/\s+/g, ' ').trim()
+
+// The passage around a quote, so detection and verification read the claim IN CONTEXT rather
+// than as a one-line paraphrase. Falls back to best-sentence overlap when the model's "quote"
+// was not truly verbatim, and to the quote itself when the policy text is unavailable.
+function passageAround(quote: string, text: string, window = 450): string {
+  if (!text) return quote
+  const q = normText(quote)
+  let idx = q.length >= 8 ? normText(text).indexOf(q) : -1
+  if (idx < 0) {
+    const qWords = new Set(q.replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length >= 4))
+    if (!qWords.size) return quote
+    let best = -1, bestScore = 0, pos = 0
+    for (const s of text.split(/(?<=[.!?])\s+|\n+/)) {
+      const sw = new Set(normText(s).replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length >= 4))
+      let hit = 0
+      for (const w of qWords) if (sw.has(w)) hit++
+      const score = hit / qWords.size
+      if (score > bestScore) { bestScore = score; best = pos }
+      pos += s.length + 1
+    }
+    if (bestScore < 0.5) return quote
+    idx = best
+  }
+  return text.slice(Math.max(0, idx - window), Math.min(text.length, idx + q.length + window)).replace(/\s+/g, ' ')
+}
+
+// ── Claim-topic grouping ─────────────────────────────────────────────────────────
+// Group every extracted claim by what it is ABOUT, across the whole library, instead of
+// comparing whole policies that happen to share a title stem. Title clustering could never
+// see that the subject-access deadline in one policy contradicts the one in another, because
+// those two policies have nothing in common but the point in dispute.
+const CLAIM_TOPIC_MIN = 0.80    // cosine on "topic: statement"
+const MAX_GROUP_CLAIMS = 16     // beyond this a group is too broad to compare usefully
+
+type IndexedClaim = PolicyClaim & { policy_id: string; policy_name: string }
+
+async function buildClaimTopicGroups(claims: IndexedClaim[]): Promise<IndexedClaim[][]> {
+  if (claims.length < 2) return []
+  const vectors: number[][] = []
+  for (let i = 0; i < claims.length; i += 200) {
+    const slice = claims.slice(i, i + 200).map(c => `${c.topic}: ${c.statement}`.slice(0, 400))
+    vectors.push(...await embedTexts(slice))
+  }
+  const parent = claims.map((_, i) => i)
+  const find = (x: number): number => { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x] } return x }
+  for (let i = 0; i < claims.length; i++) {
+    for (let j = i + 1; j < claims.length; j++) {
+      if (claims[i].policy_id === claims[j].policy_id) continue   // a policy cannot contradict itself
+      if (find(i) === find(j)) continue
+      if (cosine(vectors[i], vectors[j]) >= CLAIM_TOPIC_MIN) parent[find(i)] = find(j)
+    }
+  }
+  const byRoot = new Map<number, number[]>()
+  claims.forEach((_, i) => {
+    const r = find(i)
+    if (!byRoot.has(r)) byRoot.set(r, [])
+    byRoot.get(r)!.push(i)
+  })
+  return [...byRoot.values()]
+    .filter(g => new Set(g.map(i => claims[i].policy_id)).size >= 2)
+    .map(g => g.slice(0, MAX_GROUP_CLAIMS).map(i => claims[i]))
+}
+
+function detectPrompt(group: IndexedClaim[], passages: string[]): string {
+  const items = group.map((c, i) => [
+    `[${i + 1}] POLICY: ${c.policy_name}`,
+    `    CLAIM (${c.kind}): ${c.topic} — ${c.statement}`,
+    `    QUOTE: "${c.quote}"`,
+    `    CONTEXT: ${passages[i]}`,
   ].join('\n')).join('\n\n')
   return [
-    `Below are ${members.length} policies from ONE care home and the specific claims extracted from each. Find every GENUINE contradiction between them.`,
+    'Below are claims on ONE topic from several policies of the SAME care home, each with the surrounding passage. Find every GENUINE contradiction.',
     '',
-    'A contradiction = the SAME specific point (same duty, timeframe, location, role, definition, threshold) is given DIFFERENT, incompatible values in two or more of these policies. For example: one says report within 24 hours, another within 72; one stores sharps boxes in the clinic, another leaves the location as an unfilled placeholder; one names the Registered Manager, another the Deputy.',
+    'A contradiction = the SAME specific point (same duty, timeframe, location, role, definition, threshold, same situation and scope) is given DIFFERENT, incompatible values in two or more of these policies, so that staff following one would breach the other.',
     '',
     'DO NOT report:',
-    '- Wording or terminology differences ("residents" vs "people receiving care"; "reduce the incidence" vs "reduce the frequency").',
-    '- Compatible or overlapping statements ("supervisor or manager" vs "duty manager" — both are managers).',
+    '- Wording or terminology differences ("residents" vs "people receiving care").',
+    '- Compatible or overlapping statements ("30 days" vs "30 calendar days"; a shorter break inside a longer allowance; "enhanced DBS" vs "enhanced DBS plus barred list"; "the home" vs "the Registered Manager").',
     '- One policy simply saying more, less, or nothing on a point (silence is not a contradiction).',
-    '- Different points that merely share words.',
+    '- Different situations (day shift vs night shift; staff vs residents; a form vs the policy it implements).',
+    '- An unfilled template placeholder with no competing value.',
     'When in any doubt, DO NOT report it.',
     '',
-    'For each genuine contradiction return: topic (the point in dispute), summary (one sentence), severity (high|medium|low), resolution, and positions — for EACH conflicting policy, its exact name from the list, its claim (statement), and a short VERBATIM quote copied from that policy.',
-    'resolution = ONE correct, reconciled wording that should REPLACE the conflicting passage in EVERY one of these policies so they all agree. Write it as one or two clear, self-contained sentences that would read naturally in any of the policies, using the value that is correct and compliant with UK care regulation and best practice. If you are genuinely unsure which value is correct, choose the safer or stricter option.',
+    'For each genuine contradiction return: topic (the point in dispute), summary (one sentence), severity (high|medium|low), and items (the numbers of the claims involved, at least two from DIFFERENT policies).',
     '',
-    'POLICIES AND CLAIMS:',
-    blocks,
+    'CLAIMS ON THIS TOPIC:',
+    items,
     '',
-    'Return ONLY JSON: {"conflicts":[{"topic":"...","summary":"...","severity":"...","resolution":"...","positions":[{"policy_name":"...","statement":"...","quote":"..."}]}]}',
+    'Return ONLY JSON: {"conflicts":[{"topic":"...","summary":"...","severity":"...","items":[1,2]}]}',
   ].join('\n')
 }
 
-async function detectSetConflicts(set: ComparisonSet, claimsByPolicy: Map<string, PolicyClaim[]>): Promise<PolicyConflict[]> {
-  const members = set.policies
-    .map(p => ({ id: p.id, name: p.name, claims: (claimsByPolicy.get(p.id) ?? []).filter(c => !isReviewMetaClaim(c)) }))
-    .filter(m => m.claims.length > 0)
-  if (members.length < 2) return []
-  const idByName = new Map(members.map(m => [normName(m.name), m.id]))
+// Every candidate must survive a second reader that sees the FULL passages. This is the step
+// that removes "30 days vs 30 calendar days" and "day shift vs night shift" — of the 13
+// conflicts on Ferndale's screen before this change, 12 failed here.
+async function verifyConflict(c: PolicyConflict, textById: Map<string, string>): Promise<PolicyConflict | null> {
+  const passages = c.positions.map((p, i) =>
+    `[${i + 1}] ${p.policy_name}\nCLAIM: ${p.statement}\nPASSAGE: ${passageAround(p.quote, textById.get(p.policy_id) ?? '', 700)}`).join('\n\n')
+  const user = `A first reviewer reported this contradiction between policies of the same care home:
+POINT: ${c.topic}
+SUMMARY: ${c.summary}
 
+The FULL passages from each policy:
+${passages}
+
+Decide strictly, reading the passages rather than the summary:
+1. same_point: do these passages address the SAME specific point — same duty, same situation, same scope? Different situations (day vs night shift, staff vs residents, one form vs the policy it implements, general statement vs specific case) are NOT the same point.
+2. incompatible: if same_point, are the values genuinely incompatible, so that staff following one policy would breach the other? "30 days" vs "30 calendar days", a shorter break inside a longer allowance, or one policy being merely more specific, are COMPATIBLE.
+3. kind: "legal" if the correct value is fixed by UK law or statutory guidance — put it in legal_value (e.g. "one calendar month for subject access requests, UK GDPR Article 12"). Otherwise "organisational": the home must choose.
+4. why: one sentence.
+
+Return ONLY JSON: {"same_point":true|false,"incompatible":true|false,"kind":"legal|organisational","legal_value":"<or empty>","why":"<one sentence>"}`
+  try {
+    const out = await callClaude(VERIFY_SYSTEM, user, { maxTokens: 400, temperature: 0, feature: 'policy_consistency' })
+    const p = JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1))
+    if (!(p?.same_point === true && p?.incompatible === true)) return null
+    return {
+      ...c,
+      kind: p.kind === 'legal' ? 'legal' : 'organisational',
+      legal_value: String(p.legal_value ?? '').trim().slice(0, 300),
+      why: String(p.why ?? '').trim().slice(0, 300),
+    }
+  } catch (e: any) {
+    console.error('[consistency] verification failed', c.id, e?.message)
+    return null   // fail CLOSED: an unverified conflict is not shown to the client
+  }
+}
+
+async function detectGroupConflicts(group: IndexedClaim[], gi: number, textById: Map<string, string>): Promise<PolicyConflict[]> {
+  const passages = group.map(c => passageAround(c.quote, textById.get(c.policy_id) ?? '', 350))
   let parsed: any
   try {
-    const out = await callClaude(DETECT_SYSTEM, detectPrompt(members), { maxTokens: 2600, temperature: 0, feature: 'policy_consistency' })
+    const out = await callClaude(DETECT_SYSTEM, detectPrompt(group, passages), { maxTokens: 1400, temperature: 0, feature: 'policy_consistency' })
     parsed = JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1))
   } catch (e: any) {
-    console.error('[consistency] detection failed for set', set.id, e?.message)
+    console.error('[consistency] detection failed for group', gi, e?.message)
     return []
   }
-
   const out: PolicyConflict[] = []
   ;(Array.isArray(parsed?.conflicts) ? parsed.conflicts : []).forEach((c: any, i: number) => {
-    const positions: ConflictPosition[] = (Array.isArray(c?.positions) ? c.positions : [])
-      .map((p: any) => {
-        const pid = idByName.get(normName(String(p?.policy_name ?? '')))
-        if (!pid) return null
-        return { policy_id: pid, policy_name: members.find(m => m.id === pid)!.name, statement: String(p?.statement ?? '').trim(), quote: String(p?.quote ?? '').trim() }
-      })
-      .filter(Boolean) as ConflictPosition[]
-    // Need at least two DISTINCT policies genuinely in conflict.
-    const distinct = new Set(positions.map(p => p.policy_id))
-    if (distinct.size < 2) return
-    const severity = ['high', 'medium', 'low'].includes(c?.severity) ? c.severity : 'medium'
+    const idx: number[] = (Array.isArray(c?.items) ? c.items : [])
+      .map((n: any) => Number(n) - 1).filter((n: number) => Number.isInteger(n) && n >= 0 && n < group.length)
+    const positions: ConflictPosition[] = idx.map(n => ({
+      policy_id: group[n].policy_id, policy_name: group[n].policy_name,
+      statement: group[n].statement, quote: group[n].quote,
+    }))
+    if (new Set(positions.map(p => p.policy_id)).size < 2) return
     out.push({
-      id: `${set.id}-${i}`, set_type: set.type, set_label: set.label,
+      id: `topic-${gi}-${i}`, set_type: 'topic', set_label: String(c?.topic ?? '').trim() || 'Related policies',
       topic: String(c?.topic ?? '').trim() || 'Inconsistency', summary: String(c?.summary ?? '').trim(),
-      severity, resolution: String(c?.resolution ?? '').trim(), positions,
+      severity: ['high', 'medium', 'low'].includes(c?.severity) ? c.severity : 'medium',
+      resolution: '', positions,
     })
   })
   return out
 }
 
-// Run detection across all cached comparison sets and store the conflicts.
+// Detect across claim-topic groups, verify every candidate against the full passages, and
+// store only what survives.
 export async function runDetection(tenantId: string): Promise<{ conflicts: number; sets: number }> {
   await checkAiCreditLimit(tenantId)
-  const sets = await getCachedSets(tenantId)
-  const allIds = [...new Set(sets.flatMap(s => s.policies.map(p => p.id)))]
-  const rows = await (prisma as any).policyClaim.findMany({ where: { tenant_id: tenantId, policy_id: { in: allIds } }, select: { policy_id: true, claims: true } })
-  const claimsByPolicy = new Map<string, PolicyClaim[]>((rows as any[]).map(r => [r.policy_id, (r.claims as PolicyClaim[]) ?? []]))
-
-  const results = await mapLimit(sets, 3, async (set) => {
-    const cs = await detectSetConflicts(set, claimsByPolicy).catch(() => [])
-    if (cs.length) await logAiCredit(tenantId, 'policy_consistency', set.id)
-    return cs
+  const sources = await claimSourcePolicies(tenantId)
+  const nameById = new Map(sources.map(s => [s.id, s.name]))
+  const rows = await (prisma as any).policyClaim.findMany({
+    where: { tenant_id: tenantId, policy_id: { in: sources.map(s => s.id) } },
+    select: { policy_id: true, claims: true },
   })
+
+  const claims: IndexedClaim[] = []
+  for (const r of rows as any[]) {
+    for (const c of ((r.claims as PolicyClaim[]) ?? [])) {
+      if (isReviewMetaClaim(c) || !c.topic || !c.statement) continue
+      claims.push({ ...c, policy_id: r.policy_id, policy_name: nameById.get(r.policy_id) ?? 'a policy' })
+    }
+  }
+
+  const groups = await buildClaimTopicGroups(claims)
+  if (!groups.length) {
+    await (prisma as any).policyConsistency.upsert({
+      where:  { tenant_id: tenantId },
+      update: { conflicts: [], analysed_at: new Date() },
+      create: { tenant_id: tenantId, conflicts: [], analysed_at: new Date() },
+    }).catch(() => {})
+    return { conflicts: 0, sets: 0 }
+  }
+
+  // Policy text for the passages, fetched once per policy that appears in any group.
+  const needed = [...new Set(groups.flat().map(c => c.policy_id))]
+  const textById = new Map<string, string>()
+  await mapLimit(needed, 6, async (pid: string) => {
+    const t = await downloadExtractedText(tenantId, pid).catch(() => null)
+    if (t) textById.set(pid, t)
+  })
+
+  const candidates = (await mapLimit(groups, 3, (g: IndexedClaim[], i: number) =>
+    detectGroupConflicts(g, i, textById).catch(() => []))).flat()
+
+  const verified = (await mapLimit(candidates, 3, (c: PolicyConflict) =>
+    verifyConflict(c, textById).catch(() => null))).filter(Boolean) as PolicyConflict[]
+
   const rank = { high: 0, medium: 1, low: 2 } as const
-  const conflicts = results.flat()
+  const conflicts = verified
     // Belt-and-braces: drop any conflict that is really about a policy's own review date/cycle
     // or version, even if a review-date claim slipped past the claim-level filter.
     .filter(c => !REVIEW_META.test(`${c.topic} ${c.summary}`))
     .sort((a, b) => rank[a.severity] - rank[b.severity])
+
+  if (candidates.length) await logAiCredit(tenantId, 'policy_consistency', `${groups.length}-groups`)
 
   await (prisma as any).policyConsistency.upsert({
     where:  { tenant_id: tenantId },
     update: { conflicts, analysed_at: new Date() },
     create: { tenant_id: tenantId, conflicts, analysed_at: new Date() },
   }).catch(() => {})
-  return { conflicts: conflicts.length, sets: sets.length }
+  return { conflicts: conflicts.length, sets: groups.length }
 }
 
 // A stable key for a conflict (topic + the policies involved) so a dismissal survives re-runs,
@@ -394,14 +535,23 @@ const RECONCILE_SYSTEM =
   'You reconcile a contradiction between policies from ONE UK care service into a single correct wording that every one of those policies should adopt, so they stop disagreeing.'
 
 function reconcilePrompt(c: PolicyConflict): string {
+  // Two different kinds of answer. Where the law fixes the value, say so and cite it. Where
+  // it does not — who the Data Protection Officer is, how often appraisals happen — the home
+  // must choose; a model picking one silently would put an invented decision into policies.
+  const legal = c.kind === 'legal' && c.legal_value
+    ? `The correct value is fixed by law or statutory guidance: ${c.legal_value}. Use that value and name the source in the wording.`
+    : 'The correct value is NOT fixed by law — it is a decision for the service. Write the wording with the value the service must confirm shown in square brackets, for example [the Registered Manager] or [annually], so the manager fills it in and every policy then agrees. Do not invent or silently pick one of the existing values.'
   return [
     `Point in dispute: ${c.topic}`,
     c.summary ? `Summary: ${c.summary}` : '',
+    c.why ? `Why this is a genuine conflict: ${c.why}` : '',
     '',
     'The policies currently say:',
     ...c.positions.map(p => `- ${p.policy_name}: ${p.statement}${p.quote ? ` | "${p.quote}"` : ''}`),
     '',
-    'Write ONE correct, reconciled wording that should REPLACE the conflicting passage in EVERY one of these policies so they all agree. It must be self-contained (one or two clear sentences), read naturally in any of the policies, and use the value that is correct and compliant with UK care regulation and best practice. If you are genuinely unsure which value is correct, choose the safer or stricter option.',
+    legal,
+    '',
+    'Write ONE reconciled wording that should REPLACE the conflicting passage in EVERY one of these policies so they all agree. It must be self-contained (one or two clear sentences) and read naturally in any of them.',
     'Return ONLY JSON: {"resolution":"..."}',
   ].filter(Boolean).join('\n')
 }

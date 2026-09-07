@@ -1,59 +1,92 @@
-// Content-based regulation coverage — candidate-selection edition.
+// Content-based regulation coverage — two-question edition.
 //
-// Earlier this did a pure "regulation → top-5 nearest chunks" vector sweep and asked
-// Claude to judge coverage from those 5 excerpts. Near-neighbour regulations poisoned
-// each other's samples: a Mental Health Act 1983 query pulled Mental Capacity Act / DoLS
-// chunks (its nearest neighbours) and the home's actual MHA policy never surfaced, so a
-// held policy was reported as a gap.
+// History, because it explains every guard in here. The first version matched on policy
+// NAMES; it called a held policy covered on a title coincidence. The second did a pure
+// "regulation → top-5 nearest chunks" vector sweep; near-neighbour regulations poisoned each
+// other's samples (a Mental Health Act query pulled Mental Capacity Act chunks) so real
+// policies were reported as gaps. The third kept that sweep but bolted on three tightening
+// layers — "BE STRICT", "when in doubt choose gap", and a skeptic that had to confirm every
+// non-gap verdict from a 1,000-character excerpt. Those layers over-corrected badly: on a
+// 361-policy library the page came back 0 covered / 42 partial / 33 gap, calling DoLS,
+// Safeguarding and the Mental Capacity Act gaps while the policies sat in the library. The
+// cause was not the model. It was asking a completeness question ("does this meet all twelve
+// required elements?") from about 2% of a document, with instructions to fail when unsure.
 //
-// Now, for each active regulation we:
-//   1. CANDIDATE-SELECT the home's policies whose title/type match the regulation's
-//      curated signals (expected_policy_titles, match_terms, official_name).
-//   2. RETRIEVE a diversified excerpt set — one best chunk per DISTINCT policy from a
-//      wide vector pass, PLUS a targeted per-policy pull for any candidate the wide pass
-//      missed, so the candidate's own content always reaches the judge.
-//   3. JUDGE from those excerpts, with the regulation's `distinguish_from` list injected
-//      as an explicit "do not count these as coverage" boundary.
+// So we now ask TWO questions, in order, each with evidence that can actually answer it:
+//   1. SUBJECT (Haiku) — "is there a policy whose subject IS this regulation?" Evidence is,
+//      per shortlisted policy, its title, its opening (where a policy declares itself) and
+//      its best-matching passages. The regulation's `distinguish_from` list is injected so
+//      an MHA policy still cannot satisfy the MCA. A "gap" now means one thing only: no
+//      policy in the library is about this. Nothing else can produce a gap.
+//   2. ELEMENTS (Sonnet) — only for a policy that passed question 1, read the WHOLE policy
+//      against the regulation's curated `required_elements`. All met → covered. Some missing
+//      → partial, and the reason says which, so the row is actionable rather than a shrug.
+//
+// The skeptic is gone: its job (rejecting wrong-subject matches) is done by title
+// shortlisting plus question 1, and it was the direct cause of 22 of the 33 false gaps.
+// Cost is unchanged at two AI calls per regulation.
+//
+// A "partial" here means "the policy that owns this subject is missing elements". The
+// drill-in (gap-detail.ts) then checks whether another policy in the library covers those
+// elements and promotes to covered if so — that promotion already existed and still writes
+// back, so summary and drill-in agree.
+//
 // Results are cached in regulation_coverage and read by GET /analytics/gaps.
 
 import { prisma } from '../../db/client'
 import { embedTexts } from '../rag/embedder'
 import { queryVectors, getTenantNamespace } from '../vector/pinecone'
 import { callClaude } from '../ai/claude'
+import { downloadExtractedText } from '../storage/s3'
 import { mapLimit } from '../../lib/translate'
 import { facilityTypeToSetting } from '../../lib/care-setting'
 import { resolveServiceProfile, regulationAppliesToTenant } from '../../lib/service-triggers'
+import { isPolicyDocument } from '../../lib/document-kind'
 
 const HAIKU = 'claude-haiku-4-5-20251001'
+const SONNET = 'claude-sonnet-4-5'
 
-// Editable in the platform console (/prompts, usage "regulation_coverage"). Placeholders:
-// {{official_name}}, {{summary}}, {{care_home_context}}, {{excerpts}}.
-// The `distinguish_from` boundary is appended programmatically after this template is
-// filled, so it applies even to an older edited prompt that predates the field.
-export const DEFAULT_REGULATION_COVERAGE_PROMPT = `You are a UK care-home compliance auditor. Judge ONLY from the policy extracts provided whether this care home has a policy that substantively addresses the regulation. Do not rely on outside knowledge or assume coverage that is not shown in the extracts.
+// How much of a policy the elements pass reads. Policies in a commercial pack run to tens of
+// thousands of characters; the old 12k cap was itself a source of false "missing element".
+const POLICY_TEXT_CAP = 60_000
+
+// Question 1: SUBJECT. Editable in the platform console (/prompts, usage
+// "regulation_coverage"). Placeholders: {{official_name}}, {{summary}}, {{care_home_context}},
+// {{expected_titles}}, {{documents}}. The `distinguish_from` boundary is appended
+// programmatically after the template is filled, so it applies even to an edited prompt.
+export const DEFAULT_REGULATION_COVERAGE_PROMPT = `You are a UK care-home compliance auditor. Decide whether this care home HOLDS A POLICY WHOSE SUBJECT IS the regulation below. This is a question about what each document is ABOUT, not about whether it is complete — completeness is judged separately.
 
 REGULATION: {{official_name}}
-WHAT IT REQUIRES: {{summary}}
+WHAT IT IS ABOUT: {{summary}}
 IN A CARE HOME: {{care_home_context}}
+A POLICY ON THIS SUBJECT IS TYPICALLY CALLED: {{expected_titles}}
 
-POLICY EXTRACTS FROM THIS HOME (each tagged with its policy title):
-{{excerpts}}
+DOCUMENTS FROM THIS HOME (title, opening text, and the passages most relevant to the regulation):
+{{documents}}
 
-Decide how well this home's policies address the regulation:
-- "covered"  — a policy clearly and substantively addresses it
-- "partial"  — the topic is touched on but is incomplete for what the regulation requires
-- "gap"      — it is not addressed in these extracts
+Rules:
+- "direct": the document's subject IS this regulation. Its title or opening declares it, or the regulation is the document's main purpose.
+- "section": no document is dedicated to it, but one contains a substantial dedicated section on it (several paragraphs of provisions), not a passing mention.
+- "none": no document is about it. A document that merely cites the regulation, shares generic words, or is about a different regulation is "none".
 
-Pick the single policy title that best evidences your decision (or leave empty for a gap).
+Answer "direct" or "section" when a document genuinely is about the subject EVEN IF it looks incomplete. Pick the single best document and copy its title exactly.
 
 Respond with ONLY minified JSON, no markdown or preamble:
-{"status":"covered|partial|gap","confidence":0-100,"policy":"<best-matching policy title, or empty>","reason":"<one short sentence>"}`
+{"relevance":"direct|section|none","policy":"<exact title, or empty>","why":"<one short sentence>"}`
 
-// Read the live prompt from the DB (falls back to the default if not yet seeded).
+// The placeholder that tells us a stored prompt was written for THIS judge. An older edited
+// prompt (built around {{excerpts}} and a covered/partial/gap verdict) cannot drive the
+// subject question, so we ignore it rather than silently filling a template that no longer
+// fits — that would reintroduce the very failure this rewrite fixes.
+const SUBJECT_PROMPT_MARKER = '{{documents}}'
+
+// Read the live prompt from the DB, falling back to the default when there is no row or the
+// stored row predates this judge.
 async function getCoveragePrompt(): Promise<string> {
   try {
     const row = await (prisma as any).aiPrompt.findUnique({ where: { usage: 'regulation_coverage' } })
-    return (row?.content as string) || DEFAULT_REGULATION_COVERAGE_PROMPT
+    const stored = row?.content as string | undefined
+    return stored && stored.includes(SUBJECT_PROMPT_MARKER) ? stored : DEFAULT_REGULATION_COVERAGE_PROMPT
   } catch {
     return DEFAULT_REGULATION_COVERAGE_PROMPT
   }
@@ -143,15 +176,16 @@ function candidateScore(reg: Reg, pol: Pol): number {
 
 const CANDIDATE_MIN = 0.5   // below this a policy is not a candidate
 const MAX_CANDIDATES = 4    // per regulation, top-scoring
-const WIDE_K = 20           // diversified vector pass depth
-const MAX_EXCERPT_POLICIES = 10
-// #2 Semantic relevance floor: a NON-candidate policy (one with no curated title/term
-// signal) is only shown to the judge if its best chunk is at least this cosine-similar
-// to the regulation. Below this it is topically unrelated, so it can't be named as
-// coverage on incidental word overlap alone. Candidates always pass — a title/term
-// match is itself a strong signal — and are precision-checked by the skeptic instead.
+const WIDE_K = 24           // diversified vector pass depth
+const MAX_SHORTLIST = 8     // documents shown to the subject question
+const CHUNKS_PER_DOC = 2    // best-matching passages per shortlisted document
+// Semantic relevance floor: a NON-candidate policy (one with no curated title/term signal)
+// only reaches the subject question if its best chunk is at least this cosine-similar to the
+// regulation. Below that it is topically unrelated. Candidates always pass — a title/term
+// match is itself a strong signal — and the subject question applies the precision.
 const RELEVANCE_FLOOR = 0.3
 const COVERAGE_BATCH = 12   // regulations analysed per batched request
+const MAX_ELEMENTS = 12     // curated required_elements assessed per regulation
 
 // Resolve the regulations that actually apply to THIS service — scoped by the tenant's
 // care setting and its self-declared service profile. Out-of-scope regs never become
@@ -177,48 +211,74 @@ async function getScopedRegulations(tenantId: string): Promise<Reg[]> {
 
 type Excerpt = { policy_id: string; title: string; text: string; score: number }
 
-// #1 Adversarial confirmation. A first-pass "covered"/"partial" verdict must survive a
-// strict, independent second reviewer whose only job is to REFUTE the match. This kills
-// plausible-but-wrong matches the recall-oriented judge lets through. Fails OPEN — a
-// transient error on the skeptic keeps the original verdict rather than dropping a real
-// match — so it can only ever remove a match a skeptic actively rejects.
-async function confirmMatch(reg: Reg, evidence: Excerpt, status: 'covered' | 'partial'): Promise<boolean> {
-  try {
-    const elems = reg.required_elements?.length
-      ? `\nThe regulation specifically requires: ${reg.required_elements.slice(0, 8).join('; ')}.` : ''
-    const skeptic = `You are a STRICT second compliance reviewer. A first reviewer judged that a care home's policy titled "${evidence.title}" ${status === 'covered' ? 'covers' : 'partly covers'} the regulation "${reg.official_name}". Your job is to CHALLENGE that.
-
-REGULATION: ${reg.official_name} — ${reg.summary}${elems}
-
-EXTRACT FROM THE NAMED POLICY:
-"""${evidence.text.slice(0, 1000)}"""
-
-Does this extract genuinely and substantively concern ${reg.official_name}? Answer false if it is only incidentally related, merely shares generic words, or is really about a different subject. Default to false when unsure.
-
-Respond with ONLY minified JSON: {"genuine":true|false,"why":"<short>"}`
-    const t = await callClaude('Respond only with valid JSON.', skeptic, { model: HAIKU, maxTokens: 120, feature: 'regulation_coverage' })
-    const p = JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1))
-    return p.genuine === true
-  } catch {
-    return true   // fail open — never destroy a match because the skeptic call errored
+// Full policy text, memoised for the life of one batch so a policy shortlisted for several
+// regulations is fetched from storage once.
+function makeTextLoader(tenantId: string) {
+  const cache = new Map<string, Promise<string | null>>()
+  return (policyId: string): Promise<string | null> => {
+    if (!cache.has(policyId)) cache.set(policyId, downloadExtractedText(tenantId, policyId).catch(() => null))
+    return cache.get(policyId)!
   }
 }
 
-// Analyse a SINGLE regulation against the tenant's policy corpus. Pure (no writes) so it
-// can be run in batches. Three precision layers: a semantic floor gates what the judge
-// sees, the judge is grounded in the curated required_elements, and a skeptic confirms
-// every non-gap verdict before it stands.
+type ElementFinding = { requirement: string; met: boolean; note: string }
+
+// QUESTION 2 — completeness. Does the policy that owns this subject meet the regulation's
+// curated required elements? Reads the WHOLE policy (to POLICY_TEXT_CAP), because this is the
+// question the old judge could never answer honestly from a 700-character excerpt.
+// Returns [] when there are no curated elements or the call fails; the caller treats that as
+// "the policy exists and is on the subject", never as evidence of a gap.
+async function assessElements(reg: Reg, policyName: string, policyText: string): Promise<ElementFinding[]> {
+  const elements = (reg.required_elements ?? []).filter(Boolean).slice(0, MAX_ELEMENTS)
+  if (!elements.length || !policyText.trim()) return []
+  const user = `REGULATION: ${reg.official_name}
+WHAT IT REQUIRES: ${String(reg.summary ?? '').slice(0, 1500)}
+
+REQUIRED ELEMENTS:
+${elements.map((e, i) => `${i + 1}. ${e}`).join('\n')}
+
+THE HOME'S POLICY "${policyName}" (verbatim, may be truncated):
+"""
+${policyText.slice(0, POLICY_TEXT_CAP)}
+"""
+
+For EACH required element decide whether THIS policy substantively addresses it. "met" needs actual provisions (who does what, when, how), not a bare mention of the topic. If an element applies only in a circumstance that the policy states does not apply to this home (for example tenancies, supported living, or a service it does not provide), treat it as met and say so in the note. Do not add or invent elements. Keep the same order.
+
+Respond with ONLY minified JSON: {"elements":[{"n":1,"met":true|false,"note":"<short: what the policy provides, or what is missing>"}]}`
+  try {
+    const text = await callClaude('Respond only with valid JSON.', user, { model: SONNET, maxTokens: 1800, temperature: 0, feature: 'regulation_coverage' })
+    const parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1))
+    const out: ElementFinding[] = elements.map(e => ({ requirement: e, met: false, note: '' }))
+    for (const r of (Array.isArray(parsed.elements) ? parsed.elements : [])) {
+      const i = Number(r.n) - 1
+      if (out[i]) { out[i].met = !!r.met; out[i].note = String(r.note ?? '').slice(0, 200) }
+    }
+    return out
+  } catch {
+    return []
+  }
+}
+
+// Trim the leading boilerplate off a curated element so several fit in the reason line.
+const shortRequirement = (s: string) =>
+  s.replace(/^(the )?policy must (require|state|establish|contain|specify|include|define|prohibit|identify|mandate|ensure)?\s*/i, '')
+   .replace(/^(a|an|the)\s+/i, '')
+   .slice(0, 110)
+
+// Analyse a SINGLE regulation against the tenant's policy corpus. Pure (no writes) so it can
+// be run in batches. Two questions in order: is a policy ABOUT this (subject), and if so does
+// it meet the curated required elements (completeness). Only the first can produce a gap.
 async function analyseOne(
   reg: Reg, emb: number[], policies: Pol[], nameById: Map<string, string>,
-  namespace: string, promptTemplate: string,
+  namespace: string, promptTemplate: string, loadText: (id: string) => Promise<string | null>,
 ): Promise<CoverageRow> {
-  const fallback: CoverageRow = {
-    reference_key: reg.reference_key, status: 'gap', confidence: 0,
-    evidence_policy_id: null, evidence_policy_name: null,
-    reason: 'No policy content addressing this was found.',
-  }
+  const noPolicy = (reason: string): CoverageRow => ({
+    reference_key: reg.reference_key, status: 'gap', confidence: null,
+    evidence_policy_id: null, evidence_policy_name: null, reason: reason.slice(0, 300),
+  })
   try {
-    // 1. Candidate policies by curated title/term/name signal.
+    // 1. Shortlist: curated title/term/name candidates first, then vector neighbours that
+    //    clear the semantic floor.
     const candidates = policies
       .map(p => ({ p, score: candidateScore(reg, p) }))
       .filter(c => c.score >= CANDIDATE_MIN)
@@ -227,94 +287,101 @@ async function analyseOne(
       .map(c => c.p)
     const candidateIds = new Set(candidates.map(c => c.id))
 
-    // 2. Diversified wide pass — best chunk per DISTINCT policy.
-    const wide = await queryVectors(namespace, emb, WIDE_K)
-    const bestByPolicy = new Map<string, Excerpt>()
-    for (const m of wide) {
+    const chunks = new Map<string, Excerpt[]>()
+    const add = (pid: string, title: string, text: string, score: number) => {
+      const arr = chunks.get(pid) ?? []
+      arr.push({ policy_id: pid, title, text, score })
+      chunks.set(pid, arr)
+    }
+    for (const m of await queryVectors(namespace, emb, WIDE_K)) {
       const pid = String(m.metadata.policy_id ?? '')
       if (!pid) continue
-      const title = nameById.get(pid) ?? policyTitle(m.metadata.source_filename)
-      const text  = String(m.metadata.chunk_text ?? '')
-      const score = m.score ?? 0
-      const prev  = bestByPolicy.get(pid)
-      if (!prev || score > prev.score) bestByPolicy.set(pid, { policy_id: pid, title, text, score })
+      add(pid, nameById.get(pid) ?? policyTitle(m.metadata.source_filename), String(m.metadata.chunk_text ?? ''), m.score ?? 0)
     }
-
-    // 3. Targeted pull for any candidate the wide pass missed, so its content is seen.
-    const missing = candidates.filter(c => !bestByPolicy.has(c.id))
-    await Promise.all(missing.map(async c => {
-      const hit = await queryVectors(namespace, emb, 2, { policy_id: c.id })
-      if (hit.length) {
-        const m = hit[0]
-        bestByPolicy.set(c.id, {
-          policy_id: c.id, title: nameById.get(c.id) ?? policyTitle(m.metadata.source_filename),
-          text: String(m.metadata.chunk_text ?? ''), score: m.score ?? 0,
-        })
+    // Targeted pull for any curated candidate the wide pass missed, so its content is seen.
+    await Promise.all(candidates.filter(c => !chunks.has(c.id)).map(async c => {
+      for (const m of await queryVectors(namespace, emb, CHUNKS_PER_DOC, { policy_id: c.id })) {
+        add(c.id, nameById.get(c.id) ?? policyTitle(m.metadata.source_filename), String(m.metadata.chunk_text ?? ''), m.score ?? 0)
       }
     }))
 
-    if (!bestByPolicy.size) return fallback
+    const bestScore = (pid: string) => Math.max(0, ...(chunks.get(pid) ?? []).map(c => c.score))
+    const shortlist = [...chunks.keys()]
+      // Forms, specimen letters, exam papers and charts live in the same library but can
+      // never BE the subject of a regulation. Offering one as evidence is how an answer
+      // sheet came to be named as coverage.
+      .filter(pid => isPolicyDocument(nameById.get(pid) ?? ''))
+      .filter(pid => candidateIds.has(pid) || bestScore(pid) >= RELEVANCE_FLOOR)
+      .sort((a, b) => (Number(candidateIds.has(b)) - Number(candidateIds.has(a))) || (bestScore(b) - bestScore(a)))
+      .slice(0, MAX_SHORTLIST)
 
-    // 4. Order excerpts: candidates first (by vector score), then remaining diversified
-    //    policies that clear the SEMANTIC FLOOR. A vector-only policy that is merely a
-    //    near-neighbour (below the floor) is dropped before the judge ever sees it.
-    const all = [...bestByPolicy.values()]
-    const ordered = [
-      ...all.filter(x => candidateIds.has(x.policy_id)).sort((a, b) => b.score - a.score),
-      ...all.filter(x => !candidateIds.has(x.policy_id) && x.score >= RELEVANCE_FLOOR).sort((a, b) => b.score - a.score),
-    ].slice(0, MAX_EXCERPT_POLICIES)
+    if (!shortlist.length) return noPolicy('No policy in the library is about this.')
 
-    if (!ordered.length) return fallback   // no candidate, nothing above the floor → gap
-
-    const excerpts = ordered
-      .map((x, j) => `[${j + 1}] (${x.title}) ${x.text.slice(0, 700)}`)
-      .join('\n\n')
+    // 2. QUESTION 1 — subject. Per document: title, opening, best-matching passages.
+    const documents = await Promise.all(shortlist.map(async (pid, i) => {
+      const full = await loadText(pid)
+      const passages = (chunks.get(pid) ?? [])
+        .sort((a, b) => b.score - a.score).slice(0, CHUNKS_PER_DOC)
+        .map(c => c.text.slice(0, 1600)).join('\n...\n')
+      return [
+        `[${i + 1}] TITLE: ${nameById.get(pid) ?? ''}`,
+        `OPENING: ${(full ?? '').slice(0, 1500).replace(/\s+/g, ' ')}`,
+        `MOST RELEVANT PASSAGES: ${passages.replace(/[ \t]+/g, ' ')}`,
+      ].join('\n')
+    }))
 
     let user = fillTemplate(promptTemplate, {
       official_name:     reg.official_name,
-      summary:           reg.summary,
-      care_home_context: reg.care_home_context,
-      excerpts,
+      summary:           String(reg.summary ?? '').slice(0, 1200),
+      care_home_context: String(reg.care_home_context ?? '').slice(0, 800),
+      expected_titles:   (reg.expected_policy_titles ?? []).join(' / ') || '(no typical title)',
+      documents:         documents.join('\n\n'),
     })
-    // #3 Ground the judge in the curated required elements, not just the summary — so
-    // "partial" means "misses THESE specific requirements", not a vague impression.
-    if (reg.required_elements?.length) {
-      user += `\n\nThe specific required elements of ${reg.official_name} are:\n${reg.required_elements.slice(0, 12).map(e => `- ${e}`).join('\n')}\nJudge coverage by whether a policy substantively addresses THESE elements, not merely the general topic.`
-    }
     // Inject the disambiguation boundary regardless of the (editable) template shape.
     if (reg.distinguish_from?.length) {
-      user += `\n\nDO NOT COUNT AS COVERAGE — these are different, related regulations that must not be confused with ${reg.official_name}: ${reg.distinguish_from.join('; ')}. A policy that only addresses those does NOT cover ${reg.official_name}.`
-    }
-    // Strictness: reject incidental / generic-word matches. Better a false "gap"
-    // than pointing a home at a policy that doesn't really concern this regulation.
-    user += `\n\nBE STRICT. Judge "covered" or "partial" ONLY if a policy DIRECTLY and SUBSTANTIVELY addresses the specific subject of ${reg.official_name}. A policy that merely shares generic words (e.g. "planning", "care", "management", "general", "quality"), or mentions the topic only in passing, does NOT count — judge it "gap". If no extract genuinely concerns this regulation, judge "gap". When in doubt, choose "gap".`
-
-    const text = await callClaude('Respond only with valid JSON.', user, { model: HAIKU, maxTokens: 250, feature: 'regulation_coverage' })
-    const parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1))
-    let status: CoverageRow['status'] = ['covered', 'partial', 'gap'].includes(parsed.status) ? parsed.status : 'gap'
-    let evidence: Excerpt | null = status === 'gap' ? null : (ordered.find(x => x.title === parsed.policy) ?? ordered[0])
-    let confidence = typeof parsed.confidence === 'number' ? Math.max(0, Math.min(100, Math.round(parsed.confidence))) : null
-    let reason = typeof parsed.reason === 'string' ? parsed.reason.slice(0, 300) : null
-
-    // #1 A non-gap verdict must survive the skeptic. If it can't, it becomes a gap.
-    if (status !== 'gap' && evidence) {
-      const genuine = await confirmMatch(reg, evidence, status)
-      if (!genuine) {
-        status = 'gap'; evidence = null; confidence = null
-        reason = 'A second review found no held policy genuinely addresses this.'
-      }
+      user += `\n\nDO NOT COUNT these as the same subject — they are different, related regulations that must not be confused with ${reg.official_name}: ${reg.distinguish_from.join('; ')}. A document about those is "none".`
     }
 
-    return {
+    const raw = await callClaude('Respond only with valid JSON.', user, { model: HAIKU, maxTokens: 250, temperature: 0, feature: 'regulation_coverage' })
+    const parsed = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1))
+    const relevance: string = ['direct', 'section'].includes(parsed.relevance) ? parsed.relevance : 'none'
+    const why = typeof parsed.why === 'string' ? parsed.why.trim() : ''
+
+    if (relevance === 'none') return noPolicy(why || 'No policy in the library is about this.')
+
+    const named = String(parsed.policy ?? '').trim().toLowerCase()
+    const evidenceId = shortlist.find(pid => (nameById.get(pid) ?? '').trim().toLowerCase() === named) ?? shortlist[0]
+    const evidenceName = nameById.get(evidenceId) ?? ''
+    const base = {
       reference_key:        reg.reference_key,
-      status,
-      confidence,
-      evidence_policy_id:   evidence?.policy_id ?? null,
-      evidence_policy_name: evidence?.title ?? null,
-      reason,
+      evidence_policy_id:   evidenceId,
+      evidence_policy_name: evidenceName,
+    }
+
+    // 3. QUESTION 2 — completeness, against the whole policy.
+    const fullText = (await loadText(evidenceId)) ?? (chunks.get(evidenceId) ?? []).map(c => c.text).join('\n')
+    const findings = await assessElements(reg, evidenceName, fullText)
+
+    if (!findings.length) {
+      // No curated elements to assess, or the elements pass failed. What we can honestly say
+      // is that a policy on this subject exists.
+      return { ...base, status: 'covered', confidence: null, reason: (why || `${evidenceName} addresses this.`).slice(0, 300) }
+    }
+    const missing = findings.filter(f => !f.met)
+    const confidence = Math.round(((findings.length - missing.length) / findings.length) * 100)
+    if (!missing.length) {
+      return { ...base, status: 'covered', confidence, reason: `${evidenceName} addresses all ${findings.length} required elements.`.slice(0, 300) }
+    }
+    const listed = missing.slice(0, 3).map(m => shortRequirement(m.requirement)).join('; ')
+    const more = missing.length > 3 ? ` (and ${missing.length - 3} more)` : ''
+    return {
+      ...base, status: 'partial', confidence,
+      reason: `${evidenceName} covers ${findings.length - missing.length} of ${findings.length} required elements. Still to add: ${listed}${more}`.slice(0, 300),
     }
   } catch {
-    return fallback
+    // An error is not evidence of a gap. Say so plainly, so a re-run is the obvious action
+    // rather than the home believing it has no policy.
+    return noPolicy('This could not be analysed. Run the analysis again to retry it.')
   }
 }
 
@@ -374,12 +441,15 @@ export async function analyseCoverageBatch(tenantId: string, batchSize = COVERAG
   const nameById = new Map(policies.map(p => [p.id, p.name]))
   const namespace = getTenantNamespace(tenantId)
   const promptTemplate = await getCoveragePrompt()
+  const loadText = makeTextLoader(tenantId)
 
   const queryTexts = todo.map(r => `${r.official_name}. ${r.summary} ${r.care_home_context}`.slice(0, 1500))
   const embeddings = await embedTexts(queryTexts)
 
-  const rows = await mapLimit(todo, 5, (reg: Reg, i: number) =>
-    analyseOne(reg, embeddings[i], policies, nameById, namespace, promptTemplate))
+  // Concurrency 3 (was 5): each regulation now reads whole policies, so the batch is bounded
+  // by storage and model calls rather than by how many we can start at once.
+  const rows = await mapLimit(todo, 3, (reg: Reg, i: number) =>
+    analyseOne(reg, embeddings[i], policies, nameById, namespace, promptTemplate, loadText))
 
   const now = new Date()
   await Promise.all(rows.map(r =>

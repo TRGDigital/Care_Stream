@@ -21,7 +21,10 @@ import { downloadExtractedText } from '../storage/s3'
 
 const SONNET = 'claude-sonnet-4-5'
 const MAX_REQUIREMENTS = 8
-const POLICY_TEXT_CAP = 12000
+// Matches the cap in regulation-coverage.ts. At the old 12,000 the deep read saw only the
+// first few pages of a long policy and reported requirements as missing that were addressed
+// later in the same document — and this verdict overwrites the summary row.
+const POLICY_TEXT_CAP = 60_000
 const DISCLAIMER =
   'Example wording to review, adapt and approve for your service. This is guidance, not legal or compliance advice.'
 
@@ -703,18 +706,19 @@ export async function getGapDetail(tenantId: string, referenceKey: string, force
     })
   }
 
-  // Verdict: nothing to add → covered across the library. A "partial" whose target
-  // policy actually covers nothing is really a gap (the deep read has the final say).
-  let effectiveStatus: GapDetail['effective_status'] = missingCount === 0 ? 'covered' : originalStatus
-  if (effectiveStatus === 'partial' && inPolicyCount === 0) effectiveStatus = 'gap'
+  // Verdict: nothing left to add → covered across the library.
+  //
+  // A "partial" is NEVER demoted to a gap here. Coverage has already established that a
+  // policy on this subject exists; a policy that owns the subject but meets none of the
+  // curated elements is an incomplete policy, not a missing one, and telling a home it has
+  // no Safeguarding policy because its Safeguarding policy is thin is exactly the failure
+  // this pipeline was rebuilt to remove. "gap" means one thing: no policy is about this.
+  const effectiveStatus: GapDetail['effective_status'] = missingCount === 0 ? 'covered' : originalStatus
   if (effectiveStatus !== cov?.status) {
     const data: any = { status: effectiveStatus }
     if (effectiveStatus === 'covered') {
       data.evidence_policy_name = requirements.find(r => r.already_covered_in)?.already_covered_in ?? evidencePolicy?.name ?? undefined
       data.reason = 'Verified as covered across your policy library.'
-    } else if (effectiveStatus === 'gap') {
-      data.evidence_policy_id = null; data.evidence_policy_name = null
-      data.reason = 'On a full read, this policy does not substantively cover the regulation.'
     }
     await (prisma as any).regulationCoverage.update({
       where: { tenant_id_reference_key: { tenant_id: tenantId, reference_key: referenceKey } }, data,

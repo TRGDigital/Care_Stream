@@ -289,6 +289,62 @@ export const TEXT_SIGNALS: TextSignal[] = [
     phrases: /independent living fund/i, acronyms: ['ILF'],
     supersededBy: 'Local authority adult social care support',
   },
+  {
+    id: 'nhs-digital',
+    category: 'superseded_body', severity: 'medium',
+    label: 'Refers to NHS Digital',
+    detail: 'NHS Digital merged into NHS England in February 2023. Data services, information standards and the Data Security and Protection Toolkit are now NHS England responsibilities.',
+    phrases: /nhs digital/i,
+    supersededBy: 'NHS England',
+    sourceUrls: ['https://digital.nhs.uk/'],
+  },
+  {
+    id: 'public-health-england',
+    category: 'superseded_body', severity: 'medium',
+    label: 'Refers to Public Health England (PHE)',
+    detail: 'PHE closed in 2021. Health protection, outbreak management and infection guidance passed to the UK Health Security Agency (UKHSA); health improvement passed to the Office for Health Improvement and Disparities.',
+    phrases: /public health england/i, acronyms: ['PHE'],
+    supersededBy: 'UK Health Security Agency (UKHSA)',
+    sourceUrls: ['https://www.gov.uk/government/organisations/uk-health-security-agency'],
+  },
+
+  // ── Legislation cited in a superseded form ────────────────────────────────────
+  {
+    id: 'eu-gdpr-only',
+    category: 'superseded_legislation', severity: 'medium',
+    label: 'Cites the EU GDPR rather than the UK GDPR',
+    detail: 'Since 1 January 2021 the regulation that applies in the UK is the UK GDPR, read with the Data Protection Act 2018. A policy citing Regulation (EU) 2016/679 alone names the version that no longer applies here.',
+    phrases: /\(eu\)\s*2016\/679|\beu gdpr\b|eu general data protection regulation/i,
+    supersededBy: 'UK GDPR and the Data Protection Act 2018',
+    sourceUrls: ['https://www.legislation.gov.uk/eur/2016/679/contents'],
+  },
+  {
+    id: 'lps-pending',
+    category: 'superseded_framework', severity: 'medium',
+    label: 'Says the Liberty Protection Safeguards will replace DoLS',
+    detail: 'The Liberty Protection Safeguards were placed in the Mental Capacity (Amendment) Act 2019 but implementation was shelved indefinitely in April 2023. DoLS remain in force, so a policy telling staff LPS is coming describes a change that is not happening.',
+    phrases: /liberty protection safeguards/i, acronyms: ['LPS'],
+    supersededBy: 'Deprivation of Liberty Safeguards (DoLS), which remain in force',
+    sourceUrls: ['https://www.gov.uk/government/publications/liberty-protection-safeguards-factsheets'],
+  },
+  {
+    id: 'ico-notification',
+    category: 'superseded_legislation', severity: 'low',
+    label: 'Refers to notifying or registering with the ICO under the old notification scheme',
+    detail: 'The Data Protection Act 1998 notification register closed in 2018. Controllers now pay a data protection fee under the Data Protection (Charges and Information) Regulations 2018 rather than notifying the ICO.',
+    phrases: /notif(y|ication|ying) (with|to) the (ico|information commissioner)|register(ed|ing)? with the information commissioner/i,
+    supersededBy: 'paying the annual data protection fee to the ICO',
+    sourceUrls: ['https://ico.org.uk/for-organisations/data-protection-fee/'],
+  },
+  {
+    id: 'mha-2007-as-current',
+    category: 'superseded_legislation', severity: 'low',
+    label: 'Cites the Mental Health Act 2007 as the current Act',
+    detail: 'The Mental Health Act 2007 was an amending Act, not a standalone one. The operative statute is the Mental Health Act 1983 as amended, most recently by the Mental Health Act 2025.',
+    phrases: /mental health act 2007/i,
+    supersededBy: 'Mental Health Act 1983 (as amended)',
+    sourceUrls: ['https://www.legislation.gov.uk/ukpga/1983/20/contents'],
+  },
 
   // ── Time-bound emergency guidance ──────────────────────────────────────────────
   // Soft signal: not automatically wrong, but pandemic-era wording should be reviewed for

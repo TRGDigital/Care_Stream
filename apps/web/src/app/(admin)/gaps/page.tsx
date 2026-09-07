@@ -1128,6 +1128,23 @@ function PolicyHealthSection({ token, userId, stepInfo, confirmRun, onRunComplet
             {data.medium_findings > 0 && <span className="text-amber-600">{data.medium_findings} medium</span>}
             {when && <span className="ml-auto text-gray-400">Scanned {when}</span>}
           </div>
+          {/* Review dates are a blank field, not a defect in the wording, so they are counted
+              here rather than flagging every policy that has never had one set. */}
+          {(data.review_currency?.never_set ?? 0) + (data.review_currency?.overdue ?? 0) > 0 && (
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-gray-50 bg-amber-50/40 px-6 py-2.5 text-xs text-neutral-mid">
+              <CalendarClock size={14} className="shrink-0 text-amber-600" />
+              <span>
+                {(data.review_currency?.never_set ?? 0) > 0 && (
+                  <><strong className="text-neutral-dark">{data.review_currency!.never_set}</strong> {data.review_currency!.never_set === 1 ? 'policy has' : 'policies have'} no review date recorded</>
+                )}
+                {(data.review_currency?.never_set ?? 0) > 0 && (data.review_currency?.overdue ?? 0) > 0 && ' · '}
+                {(data.review_currency?.overdue ?? 0) > 0 && (
+                  <><strong className="text-neutral-dark">{data.review_currency!.overdue}</strong> overdue for review</>
+                )}
+                . Set these on the Policies page so currency can be tracked.
+              </span>
+            </div>
+          )}
           <div className="divide-y divide-gray-50">
             {(data.policies ?? []).map(p => {
               const highs = p.findings.filter(f => f.severity === 'high').length

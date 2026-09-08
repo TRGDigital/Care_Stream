@@ -3,6 +3,7 @@ import { downloadFile } from '../services/storage/s3'
 import { prisma } from '../db/client'
 import { illustrationUrl } from '../services/training/moduleImage'
 import { TOPIC_GROUP_LABELS } from '../data/training-topics'
+import { authorityLinksFor } from '../data/training-authority-links'
 import { CARE_SETTINGS, SETTING_LABELS } from '../lib/care-setting'
 import { createTrainingCheckoutSession, createTrainingBasketCheckoutSession, TRAINING_LICENCE_PENCE, retrieveTrainingCheckoutSession } from '../services/billing/stripe'
 import { createLoginLink } from '../lib/login-tokens'
@@ -105,6 +106,9 @@ publicTrainingRouter.get('/standard-modules', async (_req: Request, res: Respons
         pass_mark:          txt?.pass_mark ?? null,
         cpd_accredited:     !!txt?.cpd_accredited,
         illustration_url:   cover ? illustrationUrl(cover.illustration_key) : null,
+        // External framework alignment (Skills for Care / HSE / FSA / NICE),
+        // shown on the marketing pages and cited in CPD submissions.
+        authority_links:    authorityLinksFor(t.title),
       }
     })
     res.json({ data: { groups: TOPIC_GROUP_LABELS, settings: CARE_SETTINGS.map(s => ({ key: s, label: SETTING_LABELS[s] })), topics: items } })
@@ -173,6 +177,7 @@ publicTrainingRouter.get('/standard-modules/:slug', async (req: Request, res: Re
       key_points:         Array.isArray(lc.key_points) ? lc.key_points.map(String).slice(0, 8) : [],
       sections,
       standards,
+      authority_links:    authorityLinksFor(topic.title),
       illustration_url:   cover ? illustrationUrl(cover.illustration_key) : null,
     } } })
   } catch (e: any) {

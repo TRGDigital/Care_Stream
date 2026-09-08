@@ -50,6 +50,7 @@ type ModuleDetail = {
   key_points: string[]
   sections: ModuleSection[]
   standards: string[]
+  authority_links?: Array<{ label: string; url: string }>
   illustration_url: string | null
 }
 
@@ -477,6 +478,18 @@ export default async function TrainingModulePage({ params }: { params: Promise<{
                     : 'Supports the training evidence CQC expects to see for a well-run, safe care setting.'}
                 </p>
               </div>
+              {Array.isArray(m.authority_links) && m.authority_links.length > 0 && (
+                <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
+                  <div className="mb-3 flex items-center gap-2"><ShieldCheck size={18} className="text-teal" /><p className="font-bold text-neutral-dark">Aligned to national guidance</p></div>
+                  <ul className="space-y-2">
+                    {m.authority_links.map((a) => (
+                      <li key={a.url}>
+                        <a href={a.url} target="_blank" rel="noopener noreferrer" className="text-sm leading-snug text-teal hover:underline">{a.label}</a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         </div>

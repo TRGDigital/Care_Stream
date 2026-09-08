@@ -18,6 +18,7 @@ import { STANDARDS_CATALOGUE, normaliseStandards } from '../data/training-standa
 import { genToken, genPassword, hashPassword, contentHash, buildSnapshot } from '../lib/review-links'
 import { ensureTrainingTopicsSeeded } from './training'
 import { renewalMonthsFor, TOPIC_GROUP_LABELS } from '../data/training-topics'
+import { authorityLinksFor } from '../data/training-authority-links'
 import { checklistForTitle, PRACTICAL_CHECKLIST_COUNT } from '../data/practical-checklists'
 import { CARE_SETTINGS, SETTING_LABELS } from '../lib/care-setting'
 import { siteUrl } from '../lib/urls'
@@ -127,7 +128,7 @@ standardTrainingRouter.get('/', async (_req: Request, res: Response) => {
     ok(res, {
       groups: TOPIC_GROUP_LABELS,
       settings: CARE_SETTINGS.map(s => ({ key: s, label: SETTING_LABELS[s] })),
-      topics: (topics as any[]).map(t => ({ ...t, module: byTopic.get(t.id) ?? null, cpd_module_id: cpdByTopic.get(t.id)?.id ?? null })),
+      topics: (topics as any[]).map(t => ({ ...t, module: byTopic.get(t.id) ?? null, cpd_module_id: cpdByTopic.get(t.id)?.id ?? null, authority_links: authorityLinksFor(t.title) })),
       // The CPD shelf: each copy with its topic title and a derived accreditation
       // state — draft → published (awaiting CPD) → accredited.
       cpd_modules: [...cpdByTopic.values()].map(m => ({

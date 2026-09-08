@@ -563,6 +563,14 @@ export default function StandardTrainingPage() {
                           {m?.duration_minutes ? <span>· {m.duration_minutes} min ({(m.duration_minutes / 60).toFixed(1)} CPD h)</span> : null}
                           {m && <span className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-medium ${m.image_count >= m.image_slots ? 'bg-green-50 text-green-600' : m.image_count > 0 ? 'bg-amber-50 text-amber-600' : 'bg-gray-100 text-neutral-mid'}`}><ImageIcon size={10} /> {m.image_count}/{m.image_slots} images</span>}
                         </p>
+                        {Array.isArray((t as any).authority_links) && (t as any).authority_links.length > 0 && (
+                          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-neutral-mid">
+                            <span className="font-medium">Aligned to:</span>
+                            {(t as any).authority_links.map((a: any) => (
+                              <a key={a.url} href={a.url} target="_blank" rel="noopener noreferrer" className="text-teal hover:underline">{a.label}</a>
+                            ))}
+                          </p>
+                        )}
                         {m && (
                           <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-gray-400">
                             <span className="flex items-center gap-1"><Calendar size={11} /> Created {fmtDate(m.created_at)}{m.approved_at ? ` · Published ${fmtDate(m.approved_at)}` : ''}</span>

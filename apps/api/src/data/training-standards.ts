@@ -7,24 +7,30 @@ export type StandardFramework = { framework: string; label: string; items: Stand
 
 export const STANDARDS_CATALOGUE: StandardFramework[] = [
   {
+    // Updated March 2025: 16 standards. Standard 4 gained inclusion and human
+    // rights, standard 9 narrowed to mental health and dementia, standard 10 was
+    // retitled Adult safeguarding, and learning disability and autism moved to a
+    // new standard 16. Codes stay stable; only labels change and CC16 is added.
+    // Source: skillsforcare.org.uk Care Certificate standards, March 2025.
     framework: 'care_certificate',
-    label: 'The Care Certificate (15 standards)',
+    label: 'The Care Certificate (16 standards, March 2025)',
     items: [
       { code: 'CC1',  label: '1. Understand your role' },
       { code: 'CC2',  label: '2. Your personal development' },
       { code: 'CC3',  label: '3. Duty of care' },
-      { code: 'CC4',  label: '4. Equality and diversity' },
+      { code: 'CC4',  label: '4. Equality, diversity, inclusion and human rights' },
       { code: 'CC5',  label: '5. Work in a person-centred way' },
       { code: 'CC6',  label: '6. Communication' },
       { code: 'CC7',  label: '7. Privacy and dignity' },
       { code: 'CC8',  label: '8. Fluids and nutrition' },
-      { code: 'CC9',  label: '9. Awareness of mental health, dementia and learning disability' },
-      { code: 'CC10', label: '10. Safeguarding adults' },
+      { code: 'CC9',  label: '9. Awareness of mental health and dementia' },
+      { code: 'CC10', label: '10. Adult safeguarding' },
       { code: 'CC11', label: '11. Safeguarding children' },
       { code: 'CC12', label: '12. Basic life support' },
       { code: 'CC13', label: '13. Health and safety' },
       { code: 'CC14', label: '14. Handling information' },
       { code: 'CC15', label: '15. Infection prevention and control' },
+      { code: 'CC16', label: '16. Awareness of learning disability and autism' },
     ],
   },
   {

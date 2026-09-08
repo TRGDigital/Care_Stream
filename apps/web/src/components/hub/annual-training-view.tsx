@@ -681,7 +681,7 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                               </div>
                             )}
                             {sec.body && (
-                              <p className="text-sm leading-relaxed text-neutral-dark">
+                              <p className="whitespace-pre-line text-sm leading-relaxed text-neutral-dark">
                                 <InlineEditableText token={token} langCode={learnActive?.lang_code} contextLabel={`${name} — lesson`} source={src?.body ?? ''} current={sec.body} kind="lesson" editable={editable} />
                               </p>
                             )}

@@ -67,7 +67,6 @@ async function main() {
       questions: c.questions,
       questions_version: { increment: 1 },
       learning_content,
-      updated_at: new Date(),
     },
   })
   console.log('\nApplied. The hub, certificate and public pages now read the 2025 content.')

@@ -323,7 +323,7 @@ export const CC_ANNUAL_2025 = {
     { title: 'UK Resuscitation Council guidelines', url: 'https://www.resus.org.uk/library/2021-resuscitation-guidelines', source: 'Resuscitation Council UK' },
     { title: 'Mental Capacity Act 2005 Code of Practice', url: 'https://www.gov.uk/government/publications/mental-capacity-act-code-of-practice', source: 'GOV.UK' },
     { title: 'National infection prevention and control manual for England', url: 'https://www.england.nhs.uk/national-infection-prevention-and-control-manual-nipcm-for-england/', source: 'NHS England' },
-    { label: 'Information Commissioner\'s Office, health and social care guidance', url: 'https://ico.org.uk/for-organisations/' },
+    { title: 'Information Commissioner\'s Office, health and social care guidance', url: 'https://ico.org.uk/for-organisations/', source: 'ICO' },
     { title: 'Oliver McGowan Mandatory Training on Learning Disability and Autism', url: 'https://www.hee.nhs.uk/our-work/learning-disability/current-projects/oliver-mcgowan-mandatory-training-learning-disability-autism', source: 'NHS Health Education England' },
     { title: 'Health and Safety Executive, health and social care services', url: 'https://www.hse.gov.uk/healthservices/index.htm', source: 'GOV.UK' },
     { title: 'Safeguarding adults: Care Act 2014 statutory guidance, chapter 14', url: 'https://www.gov.uk/government/publications/care-act-statutory-guidance/care-and-support-statutory-guidance#safeguarding-1', source: 'GOV.UK' },

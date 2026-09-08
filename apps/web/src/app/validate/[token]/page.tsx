@@ -159,7 +159,7 @@ export default function ValidatePage({ params }: { params: { token: string } }) 
                 )}
                 <div className="p-6">
                   {mod.sections[cur.i].heading && <p className="mb-2 text-base font-bold text-gray-900">{mod.sections[cur.i].heading}</p>}
-                  <div className="prose prose-sm max-w-none text-gray-800" dangerouslySetInnerHTML={{ __html: mod.sections[cur.i].body }} />
+                  <div className="prose prose-sm max-w-none whitespace-pre-line text-gray-800" dangerouslySetInnerHTML={{ __html: mod.sections[cur.i].body }} />
                 </div>
               </div>
             )}

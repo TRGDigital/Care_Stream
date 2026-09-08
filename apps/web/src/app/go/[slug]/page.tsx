@@ -350,7 +350,7 @@ export default async function GoLandingPage({
                         </span>
                         <h3 className="text-2xl font-bold text-neutral-dark">{s.heading}</h3>
                       </div>
-                      <p className="text-lg leading-relaxed text-neutral-mid">{s.body}</p>
+                      <p className="whitespace-pre-line text-lg leading-relaxed text-neutral-mid">{s.body}</p>
                     </div>
                     <div className={flip ? 'lg:order-1' : ''}>
                       {s.image_url ? (

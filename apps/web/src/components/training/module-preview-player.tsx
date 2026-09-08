@@ -200,7 +200,7 @@ export function ModulePreviewPlayer({ m, name, onBack }: { m: PreviewModule; nam
           )}
           <div className="p-6">
             {sections[cur.i].heading && <p className="mb-2 text-base font-bold text-neutral-dark">{sections[cur.i].heading}</p>}
-            <div className="prose prose-sm max-w-none text-neutral-dark" dangerouslySetInnerHTML={{ __html: sections[cur.i].body }} />
+            <div className="prose prose-sm max-w-none whitespace-pre-line text-neutral-dark" dangerouslySetInnerHTML={{ __html: sections[cur.i].body }} />
 
             {/* Scenario — shown as staff see it, with the model answer revealed for reviewers */}
             {sections[cur.i].scenario?.situation && (

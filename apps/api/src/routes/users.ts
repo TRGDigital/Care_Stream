@@ -205,15 +205,22 @@ usersRouter.post('/:id/annual-training/:enrollmentId/practical', async (req: Req
   const signed = req.body?.signed !== false
   const note = typeof req.body?.note === 'string' ? req.body.note.slice(0, 300) : null
 
-  const enr = await (prisma as any).trainingEnrollment.findFirst({ where: { id: req.params.enrollmentId, tenant_id: tenantId, user_id: req.params.id }, select: { id: true } })
+  const enr = await (prisma as any).trainingEnrollment.findFirst({ where: { id: req.params.enrollmentId, tenant_id: tenantId, user_id: req.params.id }, select: { id: true, status: true, certificate_url: true } })
   if (!enr) { err(res, 'NOT_FOUND', 'Enrolment not found.', 404); return }
 
+  // Certificate gating: for requires_practical modules the certificate stays
+  // pending until this sign-off. Recording the observation completes the
+  // evidence pair (knowledge pass + observed competency) and issues it; undoing
+  // the sign-off returns an issued certificate to pending.
+  const certData = signed
+    ? (enr.status === 'complete' && enr.certificate_url === 'pending_practical' ? { certificate_url: 'issued' } : {})
+    : (enr.status === 'complete' && enr.certificate_url === 'issued' ? { certificate_url: 'pending_practical' } : {})
   const updated = await (prisma as any).trainingEnrollment.update({
     where: { id: enr.id },
     data:  signed
-      ? { practical_signed: true, practical_signed_by: reviewer?.name ?? null, practical_signed_at: new Date(), practical_note: note }
-      : { practical_signed: false, practical_signed_by: null, practical_signed_at: null, practical_note: null },
-    select: { practical_signed: true, practical_signed_by: true, practical_signed_at: true, practical_note: true },
+      ? { practical_signed: true, practical_signed_by: reviewer?.name ?? null, practical_signed_at: new Date(), practical_note: note, ...certData }
+      : { practical_signed: false, practical_signed_by: null, practical_signed_at: null, practical_note: null, ...certData },
+    select: { practical_signed: true, practical_signed_by: true, practical_signed_at: true, practical_note: true, certificate_url: true },
   })
   ok(res, { practical: updated })
 })

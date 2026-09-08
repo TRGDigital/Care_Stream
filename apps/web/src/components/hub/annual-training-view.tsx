@@ -222,6 +222,10 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<any>(null)
   const [evalConfidence, setEvalConfidence] = useState<number | null>(null)
+  const [evalContent, setEvalContent] = useState<number | null>(null)
+  const [evalNavigation, setEvalNavigation] = useState<number | null>(null)
+  const [evalAccessibility, setEvalAccessibility] = useState<number | null>(null)
+  const [evalInteractivity, setEvalInteractivity] = useState<number | null>(null)
   const [evalUsefulness, setEvalUsefulness] = useState<number | null>(null)
   const [evalComment, setEvalComment] = useState('')
   const [evalDone, setEvalDone] = useState(false)
@@ -257,7 +261,10 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
   }
   function submitEval() {
     setEvalDone(true)
-    api.me.annualTraining.evaluate(id, { confidence: evalConfidence, usefulness: evalUsefulness, comment: evalComment.trim() || undefined }).catch(() => {})
+    api.me.annualTraining.evaluate(id, {
+      confidence: evalConfidence, usefulness: evalUsefulness, comment: evalComment.trim() || undefined,
+      content: evalContent, navigation: evalNavigation, accessibility: evalAccessibility, interactivity: evalInteractivity,
+    }).catch(() => {})
   }
   // Fire-and-forget: the learner always moves on to the lesson, even if the
   // baseline submission fails. The returned score powers the learning-gain line.
@@ -308,7 +315,12 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
   async function submit() {
     if (submitting) return
     setSubmitting(true)
-    try { const r = await api.me.annualTraining.submit(id); setResult(r) } catch { /* ignore */ } finally { setSubmitting(false) }
+    try { const r = await api.me.annualTraining.submit(id); setResult(r) }
+    catch (e: any) {
+      if (String(e?.code ?? e?.message ?? '').includes('RELEARN_REQUIRED') || String(e?.message ?? '').includes('Revisit the lesson')) {
+        setResult({ passed: false, score: 0, correct: 0, total: 0, pass_mark: 0, relearn_required: true })
+      }
+    } finally { setSubmitting(false) }
   }
 
   if (loading || !data) return <div className="flex-1 space-y-4 overflow-y-auto p-6">{[1, 2].map(i => <div key={i} className="h-28 animate-pulse rounded-xl bg-gray-100" />)}</div>
@@ -337,7 +349,9 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
             <>
               <Award size={44} className="mx-auto mb-3 text-green-500" />
               <h2 className="text-xl font-bold text-neutral-dark">Passed — {result.score}%</h2>
-              <p className="mt-1 text-sm text-neutral-mid">You scored {result.correct}/{result.total}. Your certificate is ready.</p>
+              <p className="mt-1 text-sm text-neutral-mid">{data.requires_practical
+                ? `You scored ${result.correct}/${result.total}. That completes the knowledge component. Your certificate is issued once your manager records your observed competency assessment.`
+                : `You scored ${result.correct}/${result.total}. Your certificate is ready.`}</p>
               {gain && (
                 <div className="mx-auto mt-3 max-w-sm rounded-lg border border-teal/20 bg-teal-light/20 p-2.5 text-xs text-neutral-dark">
                   <span className="font-semibold text-teal">Learning gain: </span>before this course you scored {gain.score} of {gain.total} on the quick check. You have just passed with {result.score}%.
@@ -348,13 +362,17 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
               {/* Post-completion evaluation */}
               {!evalDone ? (
                 <div className="mx-auto mt-5 max-w-sm rounded-xl border border-gray-200 bg-white p-4 text-left">
-                  <p className="mb-3 text-center text-sm font-semibold text-neutral-dark">Quick feedback (optional)</p>
+                  <p className="mb-1 text-center text-sm font-semibold text-neutral-dark">Course feedback</p>
+                  <p className="mb-3 text-center text-xs text-neutral-mid">A required part of completing a CPD course — it shapes how we improve it.</p>
+                  <Scale label="Quality of the course content" low="Poor" high="Excellent" value={evalContent} onChange={setEvalContent} />
+                  <Scale label="Ease of navigation" low="Hard to use" high="Very easy" value={evalNavigation} onChange={setEvalNavigation} />
+                  <Scale label="Accessibility for all learners" low="Poor" high="Excellent" value={evalAccessibility} onChange={setEvalAccessibility} />
+                  <Scale label="Interactivity and engagement" low="Low" high="High" value={evalInteractivity} onChange={setEvalInteractivity} />
                   <Scale label="How confident do you feel using this in your work?" low="Not at all" high="Very confident" value={evalConfidence} onChange={setEvalConfidence} />
                   <Scale label="How useful was this training for your role?" low="Not useful" high="Very useful" value={evalUsefulness} onChange={setEvalUsefulness} />
                   <textarea value={evalComment} onChange={e => setEvalComment(e.target.value)} rows={2} placeholder="Anything unclear or that you'd change? (optional)" className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
                   <div className="mt-3 flex justify-center gap-2">
-                    <button onClick={submitEval} disabled={evalConfidence == null && evalUsefulness == null && !evalComment.trim()} className="rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-50">Submit feedback</button>
-                    <button onClick={() => setEvalDone(true)} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:border-teal/40">Skip</button>
+                    <button onClick={submitEval} disabled={[evalContent, evalNavigation, evalAccessibility, evalInteractivity, evalConfidence, evalUsefulness].some(v => v == null)} className="rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-50">Submit feedback</button>
                   </div>
                 </div>
               ) : (
@@ -382,15 +400,24 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
               </div>
 
               <div className="mt-5 flex justify-center gap-2">
-                <button onClick={() => onExit(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90"><Award size={14} /> View certificate</button>
+                <button onClick={() => onExit(true)} disabled={!evalDone} title={evalDone ? undefined : 'Complete the course feedback above first'} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90 disabled:cursor-not-allowed disabled:opacity-50"><Award size={14} /> View certificate</button>
                 <button onClick={() => onExit(false)} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:border-teal/40">Done</button>
               </div>
             </>
           ) : (
             <>
               <RefreshCw size={40} className="mx-auto mb-3 text-amber-500" />
-              <h2 className="text-xl font-bold text-neutral-dark">Not passed yet — {result.score}%</h2>
-              <p className="mt-1 text-sm text-neutral-mid">You need {result.pass_mark}% ({result.correct}/{result.total} correct). Review the lesson and try the questions again.</p>
+              {result.relearn_required ? (
+                <>
+                  <h2 className="text-xl font-bold text-neutral-dark">Time to revisit the lesson</h2>
+                  <p className="mt-1 text-sm text-neutral-mid">You have used all three assessment attempts. Work back through the lesson — the assessment reopens with fresh attempts once you have.</p>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-xl font-bold text-neutral-dark">Not passed yet — {result.score}%</h2>
+                  <p className="mt-1 text-sm text-neutral-mid">You need {result.pass_mark}% ({result.correct}/{result.total} correct). Review the lesson and try the questions again.{typeof result.attempts_left === 'number' ? ` You have ${result.attempts_left} attempt${result.attempts_left === 1 ? '' : 's'} left before further learning is needed.` : ''}</p>
+                </>
+              )}
               <div className="mt-5 flex justify-center gap-2">
                 <button onClick={() => { setResult(null); setPhase('learn') }} className="rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90">Review &amp; retry</button>
                 <button onClick={() => onExit(false)} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:border-teal/40">Later</button>
@@ -817,7 +844,7 @@ export function CertView({ token, id, onExit, backLabel = 'CPD Approved Courses'
   const api = createApiClient(token)
   const [c, setC] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  useEffect(() => { api.me.annualTraining.certificate(id).then(setC).catch(() => {}).finally(() => setLoading(false)) }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { api.me.annualTraining.certificate(id).then(setC).catch((e: any) => { if (String(e?.code ?? e?.message ?? '').includes('PENDING_PRACTICAL') || String(e?.message ?? '').includes('observed competency')) setC({ __pending_practical: true }) }).finally(() => setLoading(false)) }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const certRef = useRef<HTMLDivElement>(null)
   const [saving, setSaving] = useState(false)
@@ -833,6 +860,16 @@ export function CertView({ token, id, onExit, backLabel = 'CPD Approved Courses'
   }
 
   if (loading) return <div className="flex-1 p-6"><div className="h-64 animate-pulse rounded-xl bg-gray-100" /></div>
+  if (c?.__pending_practical) return (
+    <div className="flex-1 p-6">
+      <button onClick={onExit} className="text-sm text-teal">← Back</button>
+      <div className="mx-auto mt-8 max-w-md rounded-xl border border-amber-200 bg-amber-50 p-5 text-center">
+        <Award size={36} className="mx-auto mb-2 text-amber-500" />
+        <p className="font-semibold text-neutral-dark">Knowledge assessment passed</p>
+        <p className="mt-1 text-sm text-neutral-mid">Your certificate is issued once your manager records your observed competency assessment. Ask your manager to complete the observation and sign it off in CareStream.</p>
+      </div>
+    </div>
+  )
   if (!c) return <div className="flex-1 p-6"><button onClick={onExit} className="text-sm text-teal">← Back</button><p className="mt-4 text-sm text-neutral-mid">Certificate not available.</p></div>
 
   return (
@@ -858,6 +895,9 @@ export function CertView({ token, id, onExit, backLabel = 'CPD Approved Courses'
           completedAt={c.completed_at}
           expiresAt={c.expires_at}
           requiresPractical={c.requires_practical}
+          practicalNote={c.practical?.signed
+            ? `Observed competency assessment verified${c.practical.signed_by ? ` by ${c.practical.signed_by}` : ''}${c.practical.signed_at ? ` on ${new Date(c.practical.signed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}.`
+            : undefined}
           cpdAccredited={c.cpd?.accredited}
           cpdHours={c.cpd?.hours}
           cpdProviderNumber={c.cpd?.provider_number}

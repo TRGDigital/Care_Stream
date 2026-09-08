@@ -940,6 +940,15 @@ meRouter.post('/annual-training/:enrollmentId/submit', async (req: Request, res:
   })
   if (!enr || !(enr.module?.source === 'ai_generated' || moduleHasLesson(enr.module))) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
 
+  // Best practice attempt cap: after three failed attempts the learner is
+  // directed back to the lesson (relearn_required); revisiting it resets the
+  // count via the learn-time route. Assessors expect this arrangement.
+  const MAX_ATTEMPTS = 3
+  if ((enr as any).relearn_required) {
+    err(res, 'RELEARN_REQUIRED', 'You have used all three attempts. Revisit the lesson, then the assessment reopens.', 409)
+    return
+  }
+
   const bank = Array.isArray(enr.module.questions) ? enr.module.questions : []
   const bankIds = new Set(bank.map((q: any) => q.id))
   const total = bank.length
@@ -948,13 +957,29 @@ meRouter.post('/annual-training/:enrollmentId/submit', async (req: Request, res:
   const passMark = enr.module.pass_mark ?? 80
   const passed = score >= passMark
 
+  if (!passed) {
+    const attempts = ((enr as any).assessment_attempts ?? 0) + 1
+    const locked = attempts >= MAX_ATTEMPTS
+    await (prisma as any).trainingEnrollment.update({
+      where: { id: enr.id },
+      data:  { assessment_attempts: attempts, relearn_required: locked, updated_at: new Date() },
+    }).catch((e: any) => console.error('[annual-training/submit] attempt tracking failed:', e?.message ?? e))
+    ok(res, { passed, score, correct, total, pass_mark: passMark, attempts, attempts_left: Math.max(0, MAX_ATTEMPTS - attempts), relearn_required: locked })
+    return
+  }
+
   if (passed) {
     const now = new Date()
     const months = enr.module.renewal_months
     const expiresAt = months ? new Date(now.getFullYear(), now.getMonth() + months, now.getDate()) : null
+    // CPD governance: where a module requires an observed competency assessment,
+    // the certificate is only issued once BOTH parts are evidenced — quiz pass
+    // AND the manager's practical sign-off. Passing the knowledge component
+    // alone leaves the certificate pending; users.ts issues it at sign-off.
+    const needsPractical = !!(enr.module as any).requires_practical && !(enr as any).practical_signed
     await (prisma as any).trainingEnrollment.update({
       where: { id: enr.id },
-      data:  { status: 'complete', completed_at: now, expires_at: expiresAt, certificate_url: 'issued', updated_at: now },
+      data:  { status: 'complete', completed_at: now, expires_at: expiresAt, certificate_url: needsPractical ? 'pending_practical' : 'issued', updated_at: now },
     })
 
     // Notify the tenant admins that the certificate is ready — fire and forget,
@@ -1008,6 +1033,12 @@ meRouter.post('/annual-training/:enrollmentId/learn-time', async (req: Request, 
       where: { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
       data:  { learn_seconds: { increment: secs } },
     }).catch((e: any) => console.error('[me/annual-training/learn-time] failed:', e?.message ?? e))
+    // Directed further learning completed: time back on the lesson after the
+    // three-attempt lock reopens the assessment with a fresh set of attempts.
+    await (prisma as any).trainingEnrollment.updateMany({
+      where: { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId, relearn_required: true },
+      data:  { relearn_required: false, assessment_attempts: 0 },
+    }).catch(() => {})
   }
   ok(res, { recorded: secs })
 })
@@ -1021,9 +1052,16 @@ meRouter.post('/annual-training/:enrollmentId/evaluate', async (req: Request, re
   const confidence = clamp(req.body?.confidence)
   const usefulness = clamp(req.body?.usefulness)
   const comment    = typeof req.body?.comment === 'string' ? req.body.comment.slice(0, 1000) : null
+  // Structured CPD axes: content quality, ease of navigation, accessibility,
+  // interactivity and engagement. Feeds course evaluation and improvement.
+  const content        = clamp(req.body?.content)
+  const navigation     = clamp(req.body?.navigation)
+  const accessibility  = clamp(req.body?.accessibility)
+  const interactivity  = clamp(req.body?.interactivity)
   await (prisma as any).trainingEnrollment.updateMany({
     where: { id: req.params.enrollmentId, tenant_id: tenantId, user_id: userId },
-    data:  { eval_confidence: confidence, eval_usefulness: usefulness, eval_comment: comment, eval_at: new Date() },
+    data:  { eval_confidence: confidence, eval_usefulness: usefulness, eval_comment: comment, eval_at: new Date(),
+             eval_content: content, eval_navigation: navigation, eval_accessibility: accessibility, eval_interactivity: interactivity },
   }).catch((e: any) => console.error('[me/annual-training/evaluate] failed:', e?.message ?? e))
   ok(res, { saved: true })
 })
@@ -1084,6 +1122,18 @@ meRouter.get('/annual-training/:enrollmentId/certificate', async (req: Request, 
     (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true } }),
   ])
   if (!enr || enr.status !== 'complete') { err(res, 'NOT_FOUND', 'No certificate yet.', 404); return }
+  // CPD governance: a requires_practical certificate is not issued until the
+  // manager's observed competency sign-off is recorded (see users.ts).
+  if (enr.module.requires_practical && !enr.practical_signed) {
+    err(res, 'PENDING_PRACTICAL', 'Knowledge assessment passed. The certificate is issued once your manager records your observed competency assessment.', 409)
+    return
+  }
+  // CPD best practice: learner feedback is a required part of completion for
+  // CPD tier courses, so the certificate follows the evaluation.
+  if ((enr.module.tier ?? 'prebuilt') === 'cpd' && !enr.eval_at) {
+    err(res, 'PENDING_FEEDBACK', 'One last step: complete the short course feedback, then your certificate is ready.', 409)
+    return
+  }
   const bank = Array.isArray(enr.module.questions) ? enr.module.questions : []
   const total = bank.length
   const correct = (enr.answers ?? []).filter((a: any) => a.is_correct).length
@@ -1093,6 +1143,9 @@ meRouter.get('/annual-training/:enrollmentId/certificate', async (req: Request, 
     tier: enr.module.tier ?? 'prebuilt',
     completed_at: enr.completed_at, expires_at: enr.expires_at, frequency: enr.module.frequency,
     requires_practical: enr.module.requires_practical, score: total ? Math.round((correct / total) * 100) : 0,
+    // Shown on the certificate so the verification of the observed assessment is
+    // part of the certification evidence itself.
+    practical: enr.module.requires_practical ? { signed: true, signed_by: enr.practical_signed_by ?? null, signed_at: enr.practical_signed_at ?? null } : null,
     independently_reviewed: !!enr.module.independently_reviewed,
     cpd: { accredited: !!enr.module.cpd_accredited, hours: cpdHours, provider_number: process.env.CPD_PROVIDER_NUMBER ?? null },
     baseline: enr.baseline_at ? { score: enr.baseline_score, total: enr.baseline_total } : null,

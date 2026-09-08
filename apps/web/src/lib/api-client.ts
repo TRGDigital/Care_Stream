@@ -886,7 +886,7 @@ export function createApiClient(token: string) {
         recordLearnTime: (id: string, seconds: number) => apiFetch<{ recorded: number }>(`/me/annual-training/${id}/learn-time`, token, { method: 'POST', body: JSON.stringify({ seconds }) }),
         submitBaseline: (id: string, answers: Record<string, number>) => apiFetch<{ score: number; total: number; already_done: boolean }>(`/me/annual-training/${id}/baseline`, token, { method: 'POST', body: JSON.stringify({ answers }) }),
         saveReflection: (id: string, text: string) => apiFetch<{ saved: boolean }>(`/me/annual-training/${id}/reflection`, token, { method: 'POST', body: JSON.stringify({ text }) }),
-        evaluate: (id: string, data: { confidence: number | null; usefulness: number | null; comment?: string }) => apiFetch<{ saved: boolean }>(`/me/annual-training/${id}/evaluate`, token, { method: 'POST', body: JSON.stringify(data) }),
+        evaluate: (id: string, data: { confidence: number | null; usefulness: number | null; comment?: string; content?: number | null; navigation?: number | null; accessibility?: number | null; interactivity?: number | null }) => apiFetch<{ saved: boolean }>(`/me/annual-training/${id}/evaluate`, token, { method: 'POST', body: JSON.stringify(data) }),
       },
       // Programmes = diplomas / pathways. Unit progress is derived from the learner's
       // ordinary annual-training records, so units are taken in the normal player.

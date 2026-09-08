@@ -1838,6 +1838,15 @@ model TrainingEnrollment {
   eval_usefulness     Int?                        // post-completion learner evaluation: 1–5 usefulness/relevance
   eval_comment        String?
   eval_at             DateTime?
+  // CPD structured feedback: the axes assessors expect evaluated (1–5 each).
+  eval_content        Int?                        // content quality
+  eval_navigation     Int?                        // ease of navigation
+  eval_accessibility  Int?                        // accessibility for all learners
+  eval_interactivity  Int?                        // interactivity and engagement
+  // Assessment attempts: best practice caps at three, then directed re-learning
+  // (revisiting the lesson resets the count) before re-assessment.
+  assessment_attempts Int         @default(0)
+  relearn_required    Boolean     @default(false)
   baseline_score      Int?                        // pre-course knowledge check: correct answers (learning gain evidence)
   baseline_total      Int?
   baseline_at         DateTime?

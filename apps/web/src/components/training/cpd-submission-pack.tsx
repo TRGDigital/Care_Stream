@@ -125,7 +125,7 @@ function AssessmentDoc({ m }: { m: any }) {
         <Row label="Number of questions">{questions.length}</Row>
         <Row label="Pass mark">{passMark}%, {toPass} of {questions.length} correct</Row>
         <Row label="Delivery">Online, in the participant&apos;s own language (60+ languages supported)</Row>
-        <Row label="Attempts">Unlimited; the lesson may be reviewed between attempts</Row>
+        <Row label="Attempts">Three. After a third unsuccessful attempt the assessment locks and the participant is returned to the lesson; it reopens once they have worked through the learning content again, with the attempt count reset</Row>
         <Row label="Time limit">None, the course is self-paced</Row>
         {baseline.length > 0 && <Row label="Pre-course knowledge check">{baseline.length} questions, taken before teaching begins, to evidence measured learning gain</Row>}
         {activities.length > 0 && <Row label="Formative activities">{activities.length} interactive exercises (sequencing, categorising, matching) plus a knowledge check after each teaching section</Row>}
@@ -137,7 +137,10 @@ function AssessmentDoc({ m }: { m: any }) {
         {baseline.length > 0 && <li><strong>Pre-course check</strong>: {baseline.length} questions establish the participant&apos;s starting knowledge. Scored but never gates progress.</li>}
         <li><strong>Teach then check</strong>: {sections.length} teaching sections, each ending in a formative knowledge check with immediate feedback. These do not count toward the final result.</li>
         <li><strong>Final assessment</strong>: {questions.length} questions drawn from the bank below, order randomised per participant.</li>
-        <li><strong>Result</strong>: scored immediately. {passMark}% or above passes and issues a certificate.</li>
+        <li><strong>Result</strong>: scored immediately. {passMark}% or above passes the knowledge component.</li>
+        <li><strong>Certificate</strong>: released once the participant has submitted the course feedback
+            {m?.requires_practical ? ' and their manager has recorded the observed competency sign-off' : ''}.
+            {m?.requires_practical ? ' Until then the participant sees the certificate as pending, with what is outstanding.' : ''}</li>
       </ol>
 
       <H>What happens on a fail</H>
@@ -150,11 +153,14 @@ function AssessmentDoc({ m }: { m: any }) {
         <li>Retake the assessment. Question order is re-randomised on each attempt.</li>
         <li>Meet any question they answered incorrectly again through the <strong>follow-up loop</strong>: the topic is
             re-taught in a short targeted lesson and re-asked on a later day, and only clears once answered correctly.</li>
+        <li>After a <strong>third unsuccessful attempt the assessment locks</strong>. The participant is directed back
+            through the learning content, and the assessment only reopens once they have re-engaged with it, at which
+            point the attempt count resets. Repeated attempts on a still-unfamiliar topic are prevented by design.</li>
       </ol>
       <p className="mt-2 text-sm text-neutral-dark">
         Repeated failure is visible to the employer on the training record and in the compliance matrix, so the manager can
         intervene with additional support. For a care provider this is a safeguarding and competence matter, not simply an
-        administrative one. There is no cap on attempts, because the objective is competence rather than a single passing score.
+        administrative one.
       </p>
 
       {baseline.length > 0 && (
@@ -224,30 +230,40 @@ function FeedbackDoc({ m }: { m: any }) {
       <div className="mt-2">
         <Row label="Format">In-product form, shown automatically on completion</Row>
         <Row label="When">Immediately after the final assessment, before the certificate</Row>
-        <Row label="Required?">Optional, participants may skip, so responses are honest rather than compelled</Row>
+        <Row label="Required?">Required. The certificate is released once the feedback is submitted, so every completion carries a response rather than a self-selecting sample</Row>
         <Row label="Language">Presented in the participant&apos;s own language</Row>
         <Row label="Stored against">The individual completion record, so feedback is traceable to course and cohort</Row>
       </div>
 
       <H>The questions asked</H>
       <div className="rounded-lg border border-gray-200 p-4">
-        <p className="mb-3 text-center text-sm font-semibold text-neutral-dark">Quick feedback (optional)</p>
+        <p className="mb-3 text-center text-sm font-semibold text-neutral-dark">Course feedback</p>
 
-        <p className="mb-1.5 text-xs font-medium text-neutral-dark">1. How confident do you feel using this in your work?</p>
-        <div className="mb-1 flex gap-1.5">
-          {[1, 2, 3, 4, 5].map(n => <span key={n} className="flex h-8 flex-1 items-center justify-center rounded-lg border border-gray-300 text-sm font-semibold text-neutral-mid">{n}</span>)}
-        </div>
-        <div className="mb-3 flex justify-between text-[10px] text-neutral-mid"><span>Not at all</span><span>Very confident</span></div>
+        {[
+          { q: 'Quality of the course content', lo: 'Poor', hi: 'Excellent' },
+          { q: 'Ease of navigating the course', lo: 'Difficult', hi: 'Very easy' },
+          { q: 'Accessibility for you as a learner', lo: 'Hard to use', hi: 'Easy to use' },
+          { q: 'Interactivity and engagement', lo: 'Not engaging', hi: 'Very engaging' },
+          { q: 'How confident do you feel using this in your work?', lo: 'Not at all', hi: 'Very confident' },
+          { q: 'How useful was this training for your role?', lo: 'Not useful', hi: 'Very useful' },
+        ].map((row, i) => (
+          <div key={i}>
+            <p className="mb-1.5 text-xs font-medium text-neutral-dark">{i + 1}. {row.q}</p>
+            <div className="mb-1 flex gap-1.5">
+              {[1, 2, 3, 4, 5].map(n => <span key={n} className="flex h-8 flex-1 items-center justify-center rounded-lg border border-gray-300 text-sm font-semibold text-neutral-mid">{n}</span>)}
+            </div>
+            <div className="mb-3 flex justify-between text-[10px] text-neutral-mid"><span>{row.lo}</span><span>{row.hi}</span></div>
+          </div>
+        ))}
 
-        <p className="mb-1.5 text-xs font-medium text-neutral-dark">2. How useful was this training for your role?</p>
-        <div className="mb-1 flex gap-1.5">
-          {[1, 2, 3, 4, 5].map(n => <span key={n} className="flex h-8 flex-1 items-center justify-center rounded-lg border border-gray-300 text-sm font-semibold text-neutral-mid">{n}</span>)}
-        </div>
-        <div className="mb-3 flex justify-between text-[10px] text-neutral-mid"><span>Not useful</span><span>Very useful</span></div>
-
-        <p className="mb-1.5 text-xs font-medium text-neutral-dark">3. Anything unclear or that you&apos;d change? (optional, free text)</p>
+        <p className="mb-1.5 text-xs font-medium text-neutral-dark">7. Anything unclear or that you&apos;d change? (optional, free text)</p>
         <div className="h-14 rounded-lg border border-gray-300 bg-neutral-light/30" />
       </div>
+      <p className="mt-2 text-xs text-neutral-mid">
+        All six ratings must be given before the form can be submitted; the free-text comment is optional. The four
+        course-quality measures were added at the request of the CPD assessor so that content, navigation, accessibility
+        and interactivity are each evidenced separately rather than inferred from a single satisfaction score.
+      </p>
 
       <H>Reflective practice</H>
       <p className="text-sm text-neutral-dark">
@@ -263,7 +279,7 @@ function FeedbackDoc({ m }: { m: any }) {
 
       <H>How feedback drives continuous improvement</H>
       <ul className="list-disc space-y-1 pl-5 text-sm text-neutral-dark">
-        <li><strong>Confidence and usefulness scores</strong> are aggregated per course, so a course scoring poorly on either is identified without waiting for complaints.</li>
+        <li><strong>The six ratings</strong> are aggregated per course, so a course scoring poorly on content, navigation, accessibility, interactivity, confidence or usefulness is identified without waiting for complaints, and it is clear which of those needs the work.</li>
         <li><strong>Free-text comments</strong> are reviewed for recurring themes: wording that confuses, examples that do not match practice, sections that feel too long.</li>
         <li><strong>Assessment analytics</strong> sit alongside the feedback: a question the majority answer incorrectly usually indicates a teaching or wording problem in the course, not a cohort problem, and is rewritten.</li>
         <li><strong>Measured learning gain</strong> (pre-course check versus final score) shows whether the course actually teaches, independently of whether participants enjoyed it.</li>
@@ -281,12 +297,21 @@ function CertificateDoc({ m }: { m: any }) {
     <>
       <H>Certificate issued to participants</H>
       <p className="text-sm text-neutral-dark">
-        A certificate is issued <strong>automatically on passing</strong> the assessment and is stored on the
-        participant&apos;s training record, where both they and their employer can view, print or download it at any time.
-        A certificate is never issued for attendance alone.
+        A certificate is stored on the participant&apos;s training record, where both they and their employer can view,
+        print or download it at any time. A certificate is never issued for attendance alone
+        {m?.requires_practical ? ', and never on the knowledge assessment alone' : ''}.
       </p>
       <div className="mt-2">
-        <Row label="Issued when">The assessment is passed at {m?.pass_mark ?? 80}% or above</Row>
+        <Row label="Issued when">
+          The assessment is passed at {m?.pass_mark ?? 80}% or above, the participant has submitted the course feedback
+          {m?.requires_practical ? ', and a manager or competent assessor has recorded the observed competency sign-off' : ''}
+        </Row>
+        {m?.requires_practical && (
+          <Row label="Until then">
+            The participant sees the certificate as pending, naming what is still outstanding. The sign-off records the
+            assessor&apos;s name and date, and both are printed on the issued certificate
+          </Row>
+        )}
         <Row label="Issued to">The individual participant, on their own record</Row>
         <Row label="Format">On-screen and printable / downloadable as PDF</Row>
         {hours != null && <Row label="CPD hours stated">{hours} hours</Row>}
@@ -332,6 +357,13 @@ function CertificateDoc({ m }: { m: any }) {
             scored 47% on the pre-course check, then 93% on the final assessment.
           </p>
 
+          {m?.requires_practical && (
+            <p className="mx-auto mt-2 max-w-sm rounded-lg border border-teal/25 bg-teal-light/25 px-4 py-2 text-[11px] text-neutral-dark">
+              <span className="font-semibold text-teal-dark">Observed competency assessment: </span>
+              verified by Sample Manager (Registered Manager) on {fmt(new Date().toISOString())}.
+            </p>
+          )}
+
           {/* CPD logo placeholder */}
           <div className="mx-auto mt-5 flex max-w-sm items-center justify-center gap-3 rounded-lg border-2 border-dashed border-teal/60 bg-teal-light/20 px-4 py-4">
             <div className="text-center">
@@ -372,9 +404,12 @@ function NavigationDoc({ m }: { m: any }) {
     { t: 'Work through the lesson', d: `The lesson is split into ${sections.length} short sections. Each teaches one idea, shows a real care scenario, then asks a quick check question. Answer it and you are told immediately whether you were right, with an explanation either way.` },
     ...(activities.length ? [{ t: 'Complete the activities', d: `${activities.length} interactive exercises are spread through the lesson: putting steps in the right order, sorting items into categories, or matching a term to its meaning. They practise what the section just taught.` }] : []),
     { t: 'Take the assessment', d: `When the lesson is finished you take the final assessment: ${questions.length} multiple-choice questions, four options each, one best answer. There is no time limit and you can go back and change an answer before submitting.` },
-    { t: 'See your result', d: `You need ${m?.pass_mark ?? 80}% to pass and your score is shown straight away. If you do not pass, you can review the lesson and retake it as many times as you need. See "If you do not pass" below.` },
-    { t: 'Give feedback and reflect', d: 'You are asked two quick rating questions and invited to write a short note on what you will do differently at work. Both are optional but valuable.' },
-    { t: 'Get your certificate', d: 'On passing, your certificate is issued automatically and saved to your training record. You can view, print or download it at any time, and your manager can see it as evidence of your training.' },
+    { t: 'See your result', d: `You need ${m?.pass_mark ?? 80}% to pass and your score is shown straight away. If you do not pass, you are returned to the lesson and can retake the assessment, up to three attempts. See "If you do not pass" below.` },
+    { t: 'Give feedback and reflect', d: 'You rate the course on six points: content quality, ease of navigation, accessibility, interactivity, how confident you feel using the learning, and how useful it was for your role. You can add a comment, and write a short reflective note on what you will do differently at work, which is kept on your record. The six ratings are required, and the certificate follows.' },
+    ...(m?.requires_practical
+      ? [{ t: 'Complete your observed competency assessment', d: 'This course also has a practical part. Your manager or a competent assessor watches you at work and signs off each point of the observation checklist. Until they record that sign-off, your certificate shows as pending and tells you what is outstanding.' }]
+      : []),
+    { t: 'Get your certificate', d: `Your certificate is saved to your training record once you have passed and given your feedback${m?.requires_practical ? ', and your manager has recorded the observed competency sign-off. The certificate names who verified your observed assessment and when' : ''}. You can view, print or download it at any time.` },
   ]
 
   return (
@@ -404,9 +439,14 @@ function NavigationDoc({ m }: { m: any }) {
       <H>If you do not pass</H>
       <p className="text-sm text-neutral-dark">
         Nothing is lost and there is no penalty. You are shown your score and the score needed, and returned to the lesson to
-        review it. You can retake the assessment straight away, as many times as you need. Anything you answered incorrectly
-        comes back to you a few days later as a short refresher question, so the gap is closed rather than forgotten. If you
-        are repeatedly stuck, your manager can see this and will offer support.
+        review it. You can retake the assessment straight away, and you have three attempts. Anything you answered incorrectly
+        comes back to you a few days later as a short refresher question, so the gap is closed rather than forgotten.
+      </p>
+      <p className="mt-2 text-sm text-neutral-dark">
+        If you do not pass on the third attempt the assessment pauses and you are asked to work through the lesson again.
+        Once you have, it reopens and your attempts start afresh. This is not a penalty: it is there so that a fourth
+        attempt follows some fresh learning rather than more guessing. Your manager can see if you are stuck and will
+        offer support.
       </p>
 
       <H>Getting help</H>

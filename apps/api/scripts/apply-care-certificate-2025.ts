@@ -11,6 +11,7 @@
 
 import { PrismaClient } from '@prisma/client'
 import { CC_ANNUAL_2025 } from '../src/data/care-certificate-annual-2025'
+import { PRACTICAL_CHECKLISTS } from '../src/data/practical-checklists'
 
 const prisma = new PrismaClient()
 const APPLY = process.argv.includes('--apply')
@@ -37,14 +38,27 @@ async function main() {
   console.log(`  questions: ${Array.isArray(m.questions) ? m.questions.length : 0}  ->  ${c.questions.length}`)
   console.log(`  sections:  ${Array.isArray((m.learning_content as any)?.sections) ? (m.learning_content as any).sections.length : 0}  ->  ${c.sections.length}`)
 
+  // Anything the module carries that this file is not the source of — section
+  // image_key above all — survives. An earlier version of this script replaced
+  // learning_content wholesale and silently wiped every section image and the
+  // observed competency checklist along with it.
+  const prev     = (m.learning_content ?? {}) as any
+  const prevSecs = Array.isArray(prev.sections) ? prev.sections : []
+
   const learning_content = {
+    ...prev,
     summary: c.summary,
     outcomes: c.outcomes,
     entry_requirements: c.entry_requirements,
     timings: c.timings,
     baseline: c.baseline,
     references: c.references,
-    sections: c.sections.map(s => ({
+    activities: c.activities,
+    practical_checklist: PRACTICAL_CHECKLISTS['Care Certificate'] ?? prev.practical_checklist ?? [],
+    sections: c.sections.map((s, i) => ({
+      // Keep the existing section's own fields (image_key) and overwrite the
+      // teaching content this file owns.
+      ...(prevSecs[i] ?? {}),
       heading: s.heading,
       minutes: s.minutes,
       body: s.body,
@@ -52,6 +66,10 @@ async function main() {
       check: { question: s.check.question, options: s.check.options, correct: s.check.correct },
     })),
   }
+
+  const keptImages = learning_content.sections.filter((s: any) => s?.image_key).length
+  console.log(`  images:    ${keptImages}/${learning_content.sections.length} section images carried over`)
+  console.log(`  activities: ${Array.isArray(prev.activities) ? prev.activities.length : 0}  ->  ${c.activities.length}`)
 
   if (!APPLY) {
     console.log('\nDry run only. Re-run with --apply to write.')

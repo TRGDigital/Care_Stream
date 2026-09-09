@@ -1,19 +1,33 @@
 // Which policies does this client not have at all?
 //
-// Different question from the one /platform/policy-gaps asks today. That screen compares a
-// tenant against its peers: what do other homes of this care setting hold that this one does
-// not. Useful, but it only finds what somebody else happened to upload. This asks the
-// question the law asks: for every regulation that applies to this service, is there a policy
-// whose subject is that regulation, and if not, what should the policy be called.
+// Different question from the one /platform/policy-gaps asks with its peer comparison. That
+// finds what other homes of the same care setting happened to upload. This asks the question
+// the law asks: for every regulation in scope for this service, is there a policy whose
+// subject is that regulation.
 //
-// That is the exercise that found Gas Safety, Electrical Safety and Asbestos Management
-// missing at Ferndale, none of which any peer held either.
+// The answer comes from ONE source of evidence: the regulation coverage verdict, which is
+// reached by reading the policies' text against the regulation. Nothing here matches on
+// titles.
 //
-// READ ONLY AND FREE. It derives everything from regulation_coverage rows that have already
-// been analysed. Running the analysis itself costs Anthropic credit and is a separate,
-// deliberate action; this function never triggers one. When coverage has never been run it
-// says so rather than reporting "nothing missing", because those two look identical from the
-// data and mean opposite things.
+// An earlier version did. It kept a list of the titles a client already held and filtered
+// those out, as a safety net against bad coverage data. That was a guess dressed as a check,
+// and it failed exactly where a guess fails. Ferndale hold "Concerns And Complaints Policy"
+// and the suggested title was "Complaints Policy"; the names did not match, so the policy
+// they own was reported as missing. Same for "Speaking Up Whistleblowing Policy" against
+// "Whistleblowing Policy", and "End Of Life Care In Care Homes Policy" against "End of Life
+// Care Policy".
+//
+// The content judge does not have this problem. On a fresh run it matched Regulation 16 to
+// "Concerns And Complaints Policy" on what the document says, not what it is called. So the
+// title filter was removed rather than tuned: a second, weaker opinion could only ever
+// overrule a stronger one.
+//
+// What replaces it is honesty about the evidence. A verdict is only as good as the run that
+// produced it, so this reports whether the run is older than the client's own policies, and
+// refuses to present the list as authoritative when it is.
+//
+// READ ONLY AND FREE. Derives everything from coverage rows already analysed; never starts a
+// run, which costs Anthropic credit.
 
 import { prisma } from '../../db/client'
 import { getScopedRegulations, type Reg } from './regulation-coverage'
@@ -26,25 +40,16 @@ export type MissingPolicy = {
 }
 
 export type MissingPolicyReport = {
-  /** False when coverage has never been run for this tenant: the list below means nothing yet. */
+  /** False when coverage has never run: the list means nothing yet, which is not the same as nothing missing. */
   analysed: boolean
   analysed_at: string | null
-  /** In-scope regulations, and how many of them have been analysed so far. */
+  /** True when the list cannot be trusted. `stale_reason` says why, in words fit to show. */
+  stale: boolean
+  stale_reason: string | null
   regulations_in_scope: number
   regulations_analysed: number
   counts: { covered: number; partial: number; gap: number }
   missing: MissingPolicy[]
-}
-
-/** Loose title match, so "Gas Safety Policy" and "gas-safety-policy-v3" are the same thing. */
-function normalise(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/\.[a-z0-9]{2,4}$/, '')
-    .replace(/\bv?\d+(\.\d+)*\b/g, ' ')
-    .replace(/\b(policy|procedure|and|the|of|for|our|20\d\d)\b/g, ' ')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
 }
 
 /** The title to suggest for a regulation with no policy behind it. */
@@ -57,60 +62,74 @@ function suggestedTitle(reg: Reg): string {
   return /policy$/i.test(name) ? name : `${name} Policy`
 }
 
+/** Group by the policy that would answer them: one document, not one per regulation. */
+function groupByTitle(regs: Reg[]): MissingPolicy[] {
+  const grouped = new Map<string, MissingPolicy>()
+  for (const reg of regs) {
+    const title = suggestedTitle(reg)
+    const key = title.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+    if (!key) continue
+    if (!grouped.has(key)) grouped.set(key, { title, regulations: [] })
+    grouped.get(key)!.regulations.push({ reference_key: reg.reference_key, official_name: reg.official_name })
+  }
+  // Most regulations behind it first: that is the one worth writing soonest.
+  return [...grouped.values()].sort((a, b) => b.regulations.length - a.regulations.length)
+}
+
 export async function missingPolicies(tenantId: string): Promise<MissingPolicyReport> {
-  const [regs, coverage, policies] = await Promise.all([
+  const [regs, coverage, newestPolicy, policyCount] = await Promise.all([
     getScopedRegulations(tenantId),
     (prisma as any).regulationCoverage.findMany({
       where: { tenant_id: tenantId },
       select: { reference_key: true, status: true, analysed_at: true },
     }) as Promise<{ reference_key: string; status: string; analysed_at: Date }[]>,
-    (prisma as any).policy.findMany({
+    (prisma as any).policy.findFirst({
       where: { tenant_id: tenantId, status: 'active' },
-      select: { name: true, filename: true },
-    }) as Promise<{ name: string; filename: string }[]>,
+      orderBy: { updated_at: 'desc' },
+      select: { updated_at: true },
+    }) as Promise<{ updated_at: Date } | null>,
+    (prisma as any).policy.count({ where: { tenant_id: tenantId, status: 'active' } }) as Promise<number>,
   ])
 
   const byKey = new Map(coverage.map(c => [c.reference_key, c]))
-  const inScope = regs.filter(r => byKey.has(r.reference_key))
+  const analysedRegs = regs.filter(r => byKey.has(r.reference_key))
   const counts = { covered: 0, partial: 0, gap: 0 }
-  for (const r of inScope) {
+  for (const r of analysedRegs) {
     const s = byKey.get(r.reference_key)!.status
     if (s === 'covered' || s === 'partial' || s === 'gap') counts[s]++
-  }
-
-  // Titles the tenant already holds, so a regulation judged a gap for some other reason does
-  // not produce a "missing" policy they can see on their own shelf.
-  const held = new Set<string>()
-  for (const p of policies) {
-    for (const t of [p.name, p.filename]) {
-      const n = normalise(String(t || ''))
-      if (n) held.add(n)
-    }
-  }
-
-  // One entry per suggested title, carrying every regulation it would answer. Several
-  // regulations often point at the same policy, and a client wants to buy one document, not
-  // one per regulation.
-  const grouped = new Map<string, MissingPolicy>()
-  for (const reg of regs) {
-    if (byKey.get(reg.reference_key)?.status !== 'gap') continue
-    const title = suggestedTitle(reg)
-    const key = normalise(title)
-    if (!key || held.has(key)) continue
-    if (!grouped.has(key)) grouped.set(key, { title, regulations: [] })
-    grouped.get(key)!.regulations.push({ reference_key: reg.reference_key, official_name: reg.official_name })
   }
 
   const analysedAt = coverage.reduce<Date | null>(
     (max, c) => (!max || c.analysed_at > max ? c.analysed_at : max), null)
 
+  // Is this verdict worth showing?
+  //
+  // Three ways it is not. The policies have moved on since the run. The run never covered
+  // every regulation in scope. Or every single regulation came back a gap on a library of
+  // hundreds, which is arithmetically possible and practically never true: it is the
+  // signature of a run made before the coverage judge was fixed, and Ferndale's 6 September
+  // run looks exactly like that.
+  let stale = false
+  let staleReason: string | null = null
+  if (analysedAt && newestPolicy && newestPolicy.updated_at > analysedAt) {
+    stale = true
+    staleReason = 'Policies have changed since this analysis ran, so the list is out of date.'
+  } else if (coverage.length > 0 && analysedRegs.length < regs.length) {
+    stale = true
+    staleReason = `Only ${analysedRegs.length} of ${regs.length} regulations were analysed, so the list is incomplete.`
+  } else if (coverage.length > 0 && counts.gap === analysedRegs.length && policyCount > 20) {
+    stale = true
+    staleReason = `Every regulation came back with no policy, across ${policyCount} policies. That is almost certainly an analysis made before the coverage judge was corrected. Re-run before trusting this.`
+  }
+
   return {
     analysed: coverage.length > 0,
     analysed_at: analysedAt ? analysedAt.toISOString() : null,
+    stale,
+    stale_reason: staleReason,
     regulations_in_scope: regs.length,
-    regulations_analysed: inScope.length,
+    regulations_analysed: analysedRegs.length,
     counts,
-    // Most regulations behind it first: that is the one worth writing soonest.
-    missing: [...grouped.values()].sort((a, b) => b.regulations.length - a.regulations.length),
+    missing: groupByTitle(regs.filter(r => byKey.get(r.reference_key)?.status === 'gap')),
   }
 }

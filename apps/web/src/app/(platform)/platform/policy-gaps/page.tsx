@@ -234,6 +234,12 @@ export default function PolicyGapsPage() {
               </p>
             ) : (
               <>
+                {missingReport.stale && (
+                  <p className="mt-3 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-900">
+                    <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+                    <span><strong>Do not act on this list.</strong> {missingReport.stale_reason}</span>
+                  </p>
+                )}
                 <div className="mt-3 flex flex-wrap gap-2 text-xs">
                   <span className="rounded-full bg-green-50 px-2.5 py-1 font-medium text-green-800">{missingReport.counts.covered} fully covered</span>
                   <span className="rounded-full bg-amber-50 px-2.5 py-1 font-medium text-amber-900">{missingReport.counts.partial} partly covered</span>
@@ -249,7 +255,7 @@ export default function PolicyGapsPage() {
                     <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-neutral-mid">
                       {missingReport.missing.length} {missingReport.missing.length === 1 ? 'policy' : 'policies'} they do not have
                     </p>
-                    <ul className="mt-2 divide-y divide-gray-100 rounded-lg border border-gray-200">
+                    <ul className={`mt-2 divide-y divide-gray-100 rounded-lg border border-gray-200 ${missingReport.stale ? 'opacity-50' : ''}`}>
                       {missingReport.missing.map(m => (
                         <li key={m.title} className="px-3 py-2.5">
                           <div className="flex flex-wrap items-baseline justify-between gap-2">

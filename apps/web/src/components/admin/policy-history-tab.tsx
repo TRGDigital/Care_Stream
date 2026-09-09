@@ -23,6 +23,33 @@ const STAGE: Record<string, string> = { admin: 'Admin', manager: 'Care manager',
 
 const CACHE_KEY = 'policy-history'
 
+// Policy text is stored as it was extracted from the source document, where every line was hard
+// wrapped to that document's page width. Honouring those breaks renders a policy as a ragged
+// column with a sideways scrollbar, which is not what a home wants to put in front of an
+// inspector. This rejoins the lines the source wrapped and keeps the ones the author ended.
+//
+// Whitespace only. Every word survives, because this view is evidence of what the policy said.
+function reflow(text: string): string {
+  return text.replace(/\r\n?/g, '\n').split(/\n{2,}/).map(block => {
+    const lines = block.split('\n').map(l => l.trimEnd())
+    // The widest line shows where the source wrapped. A line stopping well short of it ended
+    // because the author ended it: a heading, or the last line of a paragraph.
+    const width = lines.reduce((m, l) => Math.max(m, l.length), 0)
+    const out: string[] = []
+    for (const line of lines) {
+      const prev = out[out.length - 1]
+      const listItem = /^\s*(?:[•·▪◦*]|[-–—]\s|\(?\d+[.)]\s|\([a-z]\)\s)/.test(line)
+      const wrapped = prev !== undefined && prev.length >= width * 0.75 && !listItem && line.trim() !== ''
+      if (!wrapped) { out.push(line); continue }
+      // A word the original wrap split across two lines.
+      out[out.length - 1] = /[a-z]-$/.test(prev)
+        ? prev.slice(0, -1) + line.trimStart()
+        : prev + ' ' + line.trimStart()
+    }
+    return out.join('\n')
+  }).join('\n\n')
+}
+
 export function PolicyHistoryTab({ token }: { token: string }) {
   // Served from cache first so switching tabs is instant. History changes only when a policy
   // is published, which is rare, so a stale minute costs nothing and a spinner on every tab
@@ -224,7 +251,13 @@ export function PolicyHistoryTab({ token }: { token: string }) {
               <button onClick={() => window.print()} className="text-neutral-mid hover:text-neutral-dark" title="Print this version"><Printer size={15} /></button>
               <button onClick={() => setReading(null)} className="text-neutral-mid hover:text-neutral-dark"><X size={16} /></button>
             </div>
-            <pre className="flex-1 overflow-auto whitespace-pre-wrap px-5 py-4 text-[13px] leading-relaxed text-neutral-dark">{reading.content}</pre>
+            {/* Set as a document, not a terminal dump: proportional type, a readable measure,
+                and break-words so a long unbroken string cannot scroll the panel sideways. */}
+            <div className="flex-1 overflow-y-auto bg-white px-6 py-6">
+              <div className="mx-auto max-w-[68ch] whitespace-pre-wrap break-words text-[14.5px] leading-[1.7] text-neutral-dark">
+                {reflow(reading.content)}
+              </div>
+            </div>
           </div>
         </div>
       )}

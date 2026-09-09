@@ -22,6 +22,7 @@ import { platformTranslationChangesRouter } from './routes/platform-translation-
 import { platformPolicyGapsRouter } from './routes/platform-policy-gaps'
 import { translationSuggestionsRouter } from './routes/translation-suggestions'
 import { settingsRouter } from './routes/settings'
+import { policyPurchasesRouter } from './routes/policy-purchases'
 import { knowledgeRouter } from './routes/knowledge'
 import { sitesRouter } from './routes/sites'
 import { onboardingRouter } from './routes/onboarding'
@@ -179,6 +180,8 @@ app.use('/analytics', analyticsRouter)
 app.use('/suggestions', suggestionsRouter)
 app.use('/regulations', regulationsRouter)
 app.use('/settings', settingsRouter)
+// Buying a policy we write. Authed: only a signed-in admin can start a checkout.
+app.use('/policy-purchases', policyPurchasesRouter)
 app.use('/translation-suggestions', translationSuggestionsRouter)
 app.use('/knowledge', knowledgeRouter)
 app.use('/sites', sitesRouter)

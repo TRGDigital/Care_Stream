@@ -325,6 +325,124 @@ export async function getTrainingReceiptUrl(paymentIntentId: string | null): Pro
   }
 }
 
+// ─── Policy purchases ─────────────────────────────────────────────────────────
+//
+// A client buying a policy we write for them, at POLICY_PENCE each. Deliberately the same
+// shape as the training licence flow above, which is the one-off path already proven in
+// production: hosted Checkout in payment mode, reconciled when the buyer returns, idempotent
+// on the Stripe payment id. Nothing new is invented about taking money.
+//
+// Two differences from training, both on purpose.
+//
+// invoice_creation is enabled. A training purchase shows a receipt; a care home buying a
+// compliance document needs an invoice for their own records, and their /billing page already
+// lists invoices straight from Stripe. Turning this on means the invoice appears there with
+// no local invoice table and no second source of truth.
+//
+// Fulfilment does not happen here. A licence exists the moment it is paid for; a policy has
+// to be written and read by a person before the client sees it. Reconcile records the
+// purchase as paid and the work starts from there.
+
+// £120 a policy. POLICY_PENCE overrides it, as TRAINING_LICENCE_PENCE does for licences, so a
+// real-money smoke test can be run for pennies before this goes near a client.
+export const POLICY_PENCE = Math.max(50, parseInt(process.env.POLICY_PENCE ?? '', 10) || 12000)
+
+let _policyProductId: string | null = null
+async function policyProductId(): Promise<string> {
+  const configured = process.env.STRIPE_POLICY_PRODUCT_ID
+  if (configured) return configured
+  if (_policyProductId) return _policyProductId
+  const stripe = getStripe()
+  const opts = managedPaymentsRequestOptions()
+  const name = 'CareStream Policy'
+  try {
+    const found = await stripe.products.search({ query: `active:'true' AND name:'${name}'`, limit: 1 }, opts)
+    if (found.data[0]) { _policyProductId = found.data[0].id; return _policyProductId }
+  } catch { /* search unavailable on this API version — fall through to create */ }
+  const product = await stripe.products.create({ name, tax_code: PLAN_TAX_CODE, metadata: { kind: 'policy' } }, opts)
+  _policyProductId = product.id
+  return product.id
+}
+
+async function policyPriceId(): Promise<string> {
+  const productId = await policyProductId()
+  const stripe = getStripe()
+  const prices = await stripe.prices.list({ product: productId, active: true, limit: 20 }, managedPaymentsRequestOptions())
+  const price = prices.data.find(p => p.currency === 'gbp' && p.type === 'one_time' && p.unit_amount === POLICY_PENCE)
+  if (price) return price.id
+  const created = await stripe.prices.create({ product: productId, currency: 'gbp', unit_amount: POLICY_PENCE }, managedPaymentsRequestOptions())
+  return created.id
+}
+
+export interface PolicyCheckoutInput {
+  tenantId: string
+  email: string
+  /** Titles being bought, in the order shown to the buyer. */
+  titles: string[]
+  /** Regulation keys per title, so the writer knows what each document must answer. */
+  referenceKeysByTitle: Record<string, string[]>
+}
+
+export async function createPolicyCheckoutSession(input: PolicyCheckoutInput): Promise<string> {
+  const stripe = getStripe()
+  const priceId = await policyPriceId()
+  const titles = input.titles.map(t => t.trim()).filter(Boolean).slice(0, 25)
+  if (!titles.length) throw new Error('No policies selected')
+
+  const params: Stripe.Checkout.SessionCreateParams = {
+    mode:       'payment',
+    line_items: [{ price: priceId, quantity: titles.length }],
+    customer_email: input.email,
+    metadata: {
+      kind:      'policy',
+      tenant_id: input.tenantId,
+      // Titles travel on the session so reconcile can record exactly what was bought without
+      // trusting anything the browser sends back. Stripe caps a metadata value at 500 chars.
+      titles:    JSON.stringify(titles).slice(0, 500),
+      refs:      JSON.stringify(input.referenceKeysByTitle).slice(0, 500),
+    },
+    billing_address_collection: 'required',
+    // The client gets a real Stripe invoice, which their /billing page already lists.
+    invoice_creation: { enabled: true },
+    success_url: `${webUrl()}/gaps?policy_purchase={CHECKOUT_SESSION_ID}`,
+    cancel_url:  `${webUrl()}/gaps?policy_purchase=cancelled`,
+  }
+  if (managedPaymentsEnabled()) (params as any).managed_payments = { enabled: true }
+  const session = await stripe.checkout.sessions.create(params, managedPaymentsRequestOptions())
+  if (!session.url) throw new Error('Stripe did not return a checkout URL')
+  return session.url
+}
+
+export interface PolicyCheckoutResult {
+  paid: boolean
+  paymentId: string
+  tenantId: string | null
+  titles: string[]
+  referenceKeysByTitle: Record<string, string[]>
+}
+
+/** Read back a policy Checkout session to verify payment and recover what was bought. */
+export async function retrievePolicyCheckoutSession(sessionId: string): Promise<PolicyCheckoutResult | null> {
+  const stripe = getStripe()
+  const session = await stripe.checkout.sessions.retrieve(sessionId, managedPaymentsRequestOptions())
+  if (!session) return null
+  const md = (session.metadata ?? {}) as Record<string, string>
+  if (md.kind !== 'policy') return null
+  const paymentId = typeof session.payment_intent === 'string'
+    ? session.payment_intent
+    : (session.payment_intent?.id ?? session.id)
+  const parse = <T,>(raw: string | undefined, fallback: T): T => {
+    try { return raw ? JSON.parse(raw) as T : fallback } catch { return fallback }
+  }
+  return {
+    paid:      session.payment_status === 'paid',
+    paymentId,
+    tenantId:  md.tenant_id ?? null,
+    titles:    parse<string[]>(md.titles, []),
+    referenceKeysByTitle: parse<Record<string, string[]>>(md.refs, {}),
+  }
+}
+
 // ─── Cancel ───────────────────────────────────────────────────────────────────
 // Cancel a tenant's Stripe subscription immediately and mark the tenant cancelled.
 // Used for in-app cancellation and for cleaning up test accounts before deletion.

@@ -294,7 +294,7 @@ function CertificateDoc({ p }: { p: any }) {
           <p className="mt-1 text-[9px] uppercase tracking-[0.25em] text-neutral-mid">Multi-unit programme · assessed knowledge, applied judgement and reflective practice</p>
           <p className="mt-5 text-sm text-neutral-mid">This certifies that</p>
           <p className="mt-1 font-serif text-2xl font-bold text-neutral-dark">Sample Participant</p>
-          <div className="mx-auto mt-2 h-px w-40 bg-gradient-to-r from-transparent via-teal/50 to-transparent" />
+          <div className="mx-auto mt-2 h-px w-40 bg-teal/40" />
           <p className="mt-4 text-sm text-neutral-mid">has successfully completed the</p>
           <p className="mt-1 font-serif text-xl font-semibold text-teal-dark">{p?.name ?? 'Programme name'}</p>
           <p className="mt-2 text-sm text-neutral-mid">for Example Care Home</p>

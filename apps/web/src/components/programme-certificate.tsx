@@ -82,7 +82,7 @@ export function ProgrammeCertificate({
         <p className="mt-7 text-sm text-neutral-mid">This certifies that</p>
         <p className="mt-1 font-serif text-3xl font-bold text-neutral-dark">{staffName}</p>
         {staffRole && <p className="mt-0.5 text-xs text-neutral-mid">{staffRole}</p>}
-        <div className="mx-auto mt-2 h-px w-52 bg-gradient-to-r from-transparent via-teal/50 to-transparent" />
+        <div className="mx-auto mt-2 h-px w-52 bg-teal/40" />
 
         <p className="mt-5 text-sm text-neutral-mid">has successfully completed the</p>
         <p className="mt-1 font-serif text-2xl font-semibold text-teal-dark">{programmeName}</p>

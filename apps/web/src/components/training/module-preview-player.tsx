@@ -13,7 +13,7 @@ import { ActivityStep, type Activity as PreviewActivity } from '@/components/hub
 
 const FREQ_LABEL: Record<string, string> = { annual: 'Annual', biennial: 'Every 2 years', triennial: 'Every 3 years', once: 'One-off', adhoc: 'Ad-hoc' }
 
-export type PreviewReference = { title: string; source?: string | null; url?: string | null }
+export type PreviewReference = { title: string; source?: string | null; url?: string | null; note?: string | null }
 export type PreviewGlossaryEntry = { term: string; definition: string }
 export type PreviewBaselineQuestion = { id: string; text: string; options: string[]; correct: number }
 
@@ -155,6 +155,7 @@ export function ModulePreviewPlayer({ m, name, onBack }: { m: PreviewModule; nam
                       ? <a href={r.url} target="_blank" rel="noopener noreferrer" className="font-medium text-teal hover:underline">{r.title}</a>
                       : <span className="font-medium">{r.title}</span>}
                     {r.source && <span className="text-neutral-mid"> · {r.source}</span>}
+                    {r.note && <span className="mt-0.5 block text-xs leading-relaxed text-neutral-mid">{r.note}</span>}
                   </li>
                 ))}
               </ul>

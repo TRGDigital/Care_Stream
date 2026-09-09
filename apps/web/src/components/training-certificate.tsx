@@ -70,7 +70,7 @@ export function TrainingCertificate({
 
         <p className="mt-7 text-sm text-neutral-mid">This certifies that</p>
         <p className="mt-1 font-serif text-3xl font-bold text-neutral-dark">{staffName}</p>
-        <div className="mx-auto mt-2 h-px w-44 bg-gradient-to-r from-transparent via-teal/50 to-transparent" />
+        <div className="mx-auto mt-2 h-px w-44 bg-teal/40" />
 
         <p className="mt-5 text-sm text-neutral-mid">has successfully completed the annual training module</p>
         <p className="mt-1 text-xl font-semibold text-teal-dark">{moduleName}</p>

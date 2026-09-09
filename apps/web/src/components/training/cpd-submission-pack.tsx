@@ -352,7 +352,11 @@ function CertificateDoc({ m }: { m: any }) {
           <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-teal">Certificate of Completion</p>
           <p className="mt-6 text-sm text-neutral-mid">This certifies that</p>
           <p className="mt-1 font-serif text-2xl font-bold text-neutral-dark">Sample Participant</p>
-          <div className="mx-auto mt-2 h-px w-40 bg-gradient-to-r from-transparent via-teal/50 to-transparent" />
+          {/* A 1px-tall gradient is rendered by html2canvas as a zero-height
+              canvas, and createPattern then throws, taking the whole PDF with
+              it. Solid colour on a hairline, gradients only on boxes with real
+              height. */}
+          <div className="mx-auto mt-2 h-px w-40 bg-teal/40" />
           <p className="mt-4 text-sm text-neutral-mid">has successfully completed</p>
           <p className="mt-1 text-lg font-semibold text-teal-dark">{m?.name ?? 'Course name'}</p>
           <p className="mt-2 text-sm text-neutral-mid">for Example Care Home</p>

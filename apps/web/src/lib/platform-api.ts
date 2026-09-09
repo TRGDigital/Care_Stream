@@ -1194,6 +1194,14 @@ export function createPlatformClient(token: string) {
       // purpose: a person decides a document is fit to carry a care home's name.
       orders: () =>
         adminFetch<{ orders: PolicyOrder[] }>('/policy-gaps/orders', token),
+      // Writing the policy costs Anthropic credit. Delivering is what puts it in the
+      // client's library, so it is a separate, deliberate step after a person has read it.
+      writeOrder: (id: string) =>
+        adminFetch<{ order: PolicyOrder; words: number; sections: number }>(`/policy-gaps/orders/${id}/write`, token, { method: 'POST' }),
+      orderDraft: (id: string) =>
+        adminFetch<{ draft: string | null; title: string; status: string }>(`/policy-gaps/orders/${id}/draft`, token),
+      deliverOrder: (id: string) =>
+        adminFetch<{ order: PolicyOrder; policy_id: string }>(`/policy-gaps/orders/${id}/deliver`, token, { method: 'POST' }),
       setOrderStatus: (id: string, status: string, policy_id?: string) =>
         adminFetch<{ order: PolicyOrder }>(`/policy-gaps/orders/${id}/status`, token, {
           method: 'POST', body: JSON.stringify({ status, policy_id }),

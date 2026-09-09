@@ -5,6 +5,10 @@ import { requirePlatformAdmin } from '../middleware/auth'
 import { facilityTypeToSetting, settingLabel } from '../lib/care-setting'
 import { classifyTenantPolicies, knownPolicyTypes } from '../lib/policy-classifier'
 import { missingPolicies } from '../services/analytics/missing-policies'
+import { writePolicy } from '../services/policy-writer/write-policy'
+import { uploadPolicyFile } from '../services/storage/s3'
+import { enqueueIngestion } from '../workers/queue'
+import { randomUUID } from 'crypto'
 import { startCoverageAnalysis, analyseCoverageBatch, coverageRunState } from '../services/analytics/regulation-coverage'
 
 // Platform-INTERNAL policy gap analysis. Classifies each client's policies into
@@ -307,5 +311,109 @@ platformPolicyGapsRouter.post('/orders/:id/status', async (req: Request, res: Re
     ok(res, { order: updated })
   } catch (e: any) {
     err(res, 'UPDATE_FAILED', e?.message ?? 'could not update that order', 500)
+  }
+})
+
+// ─── Writing the policy ───────────────────────────────────────────────────────
+
+// POST /orders/:id/write — COSTS CREDIT. Writes the policy and holds it as a draft.
+//
+// Nothing reaches the client here. The draft sits on the order until a person has read it and
+// pressed approve, because a document carrying a care home's name should be seen by someone
+// before it carries it.
+platformPolicyGapsRouter.post('/orders/:id/write', async (req: Request, res: Response) => {
+  const id = String(req.params.id)
+  try {
+    const written = await writePolicy(id)
+    const order = await (prisma as any).policyPurchase.update({
+      where: { id },
+      data: {
+        draft_content: written.markdown,
+        drafted_at:    new Date(),
+        drafted_by:    (req as any).user?.email ?? 'platform',
+        status:        'drafted',
+      },
+    })
+    ok(res, { order, words: written.words, sections: written.sections })
+  } catch (e: any) {
+    err(res, 'WRITE_FAILED', e?.message ?? 'could not write that policy', 500)
+  }
+})
+
+// GET /orders/:id/draft — read what was written, so it can be checked before approval.
+platformPolicyGapsRouter.get('/orders/:id/draft', async (req: Request, res: Response) => {
+  try {
+    const order = await (prisma as any).policyPurchase.findUnique({ where: { id: String(req.params.id) } })
+    if (!order) return err(res, 'NOT_FOUND', 'That order was not found', 404)
+    ok(res, { draft: order.draft_content ?? null, title: order.policy_title, status: order.status })
+  } catch (e: any) {
+    err(res, 'DRAFT_FAILED', e?.message ?? 'could not read that draft', 500)
+  }
+})
+
+// POST /orders/:id/deliver — approve the draft and put it in the client's library.
+//
+// This is the moment the client gets what they paid for, so it is the moment the policy
+// becomes a real Policy row: stored like any other, queued for ingestion so it is searchable
+// and so the next coverage run reads it as evidence. Until now it existed only as a draft on
+// the order.
+platformPolicyGapsRouter.post('/orders/:id/deliver', async (req: Request, res: Response) => {
+  const id = String(req.params.id)
+  try {
+    const order = await (prisma as any).policyPurchase.findUnique({ where: { id } })
+    if (!order) return err(res, 'NOT_FOUND', 'That order was not found', 404)
+    if (!order.draft_content) return err(res, 'NO_DRAFT', 'Write the policy before approving it', 409)
+    if (order.status === 'approved') return err(res, 'ALREADY_DELIVERED', 'That policy has already been delivered', 409)
+
+    const policyId = randomUUID()
+    const filename = `${order.policy_title.replace(/[^A-Za-z0-9 ]+/g, '').trim() || 'Policy'}.md`
+    const buffer = Buffer.from(order.draft_content, 'utf8')
+
+    const s3Key = await uploadPolicyFile({
+      tenantId: order.tenant_id,
+      policyId,
+      filename,
+      buffer,
+      mimeType: 'text/markdown',
+    })
+
+    await (prisma as any).policy.create({
+      data: {
+        id:                policyId,
+        tenant_id:         order.tenant_id,
+        name:              order.policy_title,
+        filename,
+        s3_key:            s3Key,
+        document_category: 'internal_policy',
+        version:           1,
+        status:            'processing',
+        uploaded_by:       (req as any).user?.email ?? 'carestream',
+      },
+    })
+
+    // Index it, so it is searchable and the next coverage run sees it as evidence rather than
+    // reporting the same gap we were just paid to close.
+    await enqueueIngestion({
+      policy_id:         policyId,
+      tenant_id:         order.tenant_id,
+      s3_key:            s3Key,
+      document_category: 'internal_policy',
+      filename,
+      mime_type:         'text/markdown',
+      version:           1,
+    }).catch(() => {})
+
+    const updated = await (prisma as any).policyPurchase.update({
+      where: { id },
+      data: {
+        status:      'approved',
+        policy_id:   policyId,
+        approved_at: new Date(),
+        approved_by: (req as any).user?.email ?? 'platform',
+      },
+    })
+    ok(res, { order: updated, policy_id: policyId })
+  } catch (e: any) {
+    err(res, 'DELIVER_FAILED', e?.message ?? 'could not deliver that policy', 500)
   }
 })

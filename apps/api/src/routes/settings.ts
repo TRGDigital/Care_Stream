@@ -102,6 +102,13 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
     { key: 'dignity_champion',    role: 'Dignity champion',                    derived: bySpecialism(/dignity/i) },
     { key: 'caldicott_guardian',  role: 'Caldicott Guardian',                  derived: bySpecialism(/caldicott/i) },
     { key: 'fire_safety_officer', role: 'Fire safety officer',                 derived: bySpecialism(/fire/i) },
+    // Added for the health and safety policy family. The gas, electrical and asbestos
+    // policies all name a Maintenance Lead, and there was no field for one, so the drafts
+    // carried a bare "[name]" that nobody could fill.
+    { key: 'maintenance_lead',    role: 'Maintenance lead',                    derived: byPosition(/maintenance|handyperson|handyman|estates/i) },
+    { key: 'health_safety_lead',  role: 'Health and safety lead',              derived: bySpecialism(/health (?:and|&) safety|(?:^|\b)h&s\b/i) },
+    { key: 'medicines_lead',      role: 'Medicines lead',                      derived: bySpecialism(/medicat|medicine|pharmac/i) },
+    { key: 'data_protection_officer', role: 'Data protection officer',         derived: bySpecialism(/data protection|(?:^|\b)dpo\b/i) },
   ]
   const roleHolders = ROLE_DEFS.map(d => ({ key: d.key, role: d.role, derived: d.derived, manual: manualOf(d.key) }))
 
@@ -255,7 +262,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     const ALLOWED = new Set(['nominated_individual', 'address', 'cqc_location_id', 'cqc_provider_id', 'review_cycle_months', 'version_scheme', 'default_approver', 'show_role_names', 'require_manager_approval', 'require_external_approval', 'require_audit_manager_approval', 'show_readiness_score'])
     // Role-holders can hold MORE THAN ONE person (comma-separated); the tenant picks which
     // one at adoption. These add to the names derived from staff positions/specialisms.
-    const ROLE_KEYS = new Set(['registered_manager', 'safeguarding_lead', 'caldicott_guardian', 'ipc_lead', 'fire_safety_officer', 'dignity_champion'])
+    const ROLE_KEYS = new Set(['registered_manager', 'safeguarding_lead', 'caldicott_guardian', 'ipc_lead', 'fire_safety_officer', 'dignity_champion', 'maintenance_lead', 'health_safety_lead', 'medicines_lead', 'data_protection_officer'])
     const clean: Record<string, string> = {}
     for (const [k, v] of Object.entries(organisation_details as Record<string, unknown>)) {
       if (!(ALLOWED.has(k) || ROLE_KEYS.has(k)) || typeof v !== 'string') continue

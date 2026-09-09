@@ -891,7 +891,7 @@ export default function SettingsPage() {
         {planFeatures?.has_gap_detection && (
         <SettingSection icon={UserRound} title="Organisation details" description="Names and details used to personalise your policies. Set them once and they are referenced across your policies, so if something changes you update it here and the policies follow.">
           <p className="mb-4 text-sm text-neutral-mid">
-            These are your policy <strong>merge fields</strong>. They are used in suggested policy wording and on the sign-off and header of any policy you download. Update them here and re-adopt or re-download to refresh your policies.
+            These are your policy <strong>merge fields</strong>. Role-holder names appear beside the role wherever a policy mentions it, and on the sign-off and header of any policy you download. Update them here and the policies follow, with no need to re-adopt.
           </p>
 
           {/* Show role-holder names in policies — toggle */}

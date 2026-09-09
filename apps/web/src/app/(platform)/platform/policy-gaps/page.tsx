@@ -142,7 +142,10 @@ export default function PolicyGapsPage() {
               <option value="">— select a client —</option>
               {grouped.map(([label, cs]) => (
                 <optgroup key={label} label={label}>
-                  {cs.map(c => <option key={c.id} value={c.id}>{c.name} — {c.classified}/{c.policies} classified</option>)}
+                  {/* CS number first: several tenants share a name (four are some form of
+                      "Ferndale Nursing Home"), so the account number is the only thing that
+                      tells them apart at a glance. */}
+                  {cs.map(c => <option key={c.id} value={c.id}>{c.account_number} · {c.name} — {c.classified}/{c.policies} classified</option>)}
                 </optgroup>
               ))}
             </select>

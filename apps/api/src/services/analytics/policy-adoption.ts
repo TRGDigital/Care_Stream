@@ -166,6 +166,10 @@ const ROLE_MAP: Array<{ key: string; role: string; match: RegExp }> = [
   { key: 'ipc_lead',           role: 'Infection prevention & control lead', match: /infection|(?:^|\b)ipc\b/i },
   { key: 'fire_safety_officer',role: 'Fire safety officer',                 match: /fire/i },
   { key: 'dignity_champion',   role: 'Dignity champion',                    match: /dignity/i },
+  { key: 'maintenance_lead',   role: 'Maintenance lead',                    match: /maintenance|handyperson|handyman|estates/i },
+  { key: 'health_safety_lead', role: 'Health and safety lead',              match: /health (?:and|&) safety|(?:^|\b)h&s\b/i },
+  { key: 'medicines_lead',     role: 'Medicines lead',                      match: /medicat|medicine|pharmac/i },
+  { key: 'data_protection_officer', role: 'Data protection officer',        match: /data protection|(?:^|\b)dpo\b/i },
 ]
 
 async function getOrInitDocument(tenantId: string, policyId: string): Promise<any> {

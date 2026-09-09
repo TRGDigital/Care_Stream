@@ -12,6 +12,13 @@ const ROLE_PHRASES: Array<{ re: RegExp; key: string }> = [
   { re: /\bdignity champion\b/i,                                        key: 'dignity_champion' },
   { re: /\bcaldicott guardian\b/i,                                      key: 'caldicott_guardian' },
   { re: /\bfire safety officer\b/i,                                     key: 'fire_safety_officer' },
+  // The health and safety family. These phrases are matched against the finished document,
+  // so they cover the wording a policy actually uses, not just the settings label. The gas,
+  // electrical and asbestos policies all name a Maintenance Lead.
+  { re: /\bmaintenance (?:lead|manager)\b/i,                            key: 'maintenance_lead' },
+  { re: /\b(?:health (?:and|&) safety lead|h&s lead)\b/i,               key: 'health_safety_lead' },
+  { re: /\b(?:medicines lead|medication lead)\b/i,                      key: 'medicines_lead' },
+  { re: /\b(?:data protection officer|dpo)\b/i,                         key: 'data_protection_officer' },
 ]
 
 export function applyRoleNames(root: HTMLElement, roleNames: RoleNames | undefined) {

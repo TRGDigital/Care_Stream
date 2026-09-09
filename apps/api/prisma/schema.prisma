@@ -2538,3 +2538,13 @@ model BasketEvent {
   @@index([module_slug])
   @@map("basket_events")
 }
+
+// Which named roles a tenant's own policies mention. Refreshed on demand from settings; see
+// apps/api/prisma/migrations/manual_role_mention_scan.sql for why the result is cached.
+model RoleMentionScan {
+  tenant_id  String   @id
+  scanned_at DateTime @default(now())
+  result     Json     @default("{}")
+
+  @@map("role_mention_scan")
+}

@@ -8,6 +8,7 @@ import { normaliseCategories } from '../lib/policy-categories'
 import { effectiveStaffRoles, effectiveSpecialistRoles } from '../data/onboarding-roles'
 import { effectiveLanguages, resolveLanguageName, DEFAULT_LANGUAGES, languageCatalog } from '../data/languages'
 import { runKnowledgeGapJobForTenant } from '../services/knowledge-gaps/digest'
+import { scanRoleMentions, saveRoleMentionScan, getRoleMentionScan } from '../services/analytics/role-mentions'
 import { facilityTypeToSetting } from '../lib/care-setting'
 import { SERVICE_TRIGGERS, resolveServiceProfile, sanitiseServiceProfile } from '../lib/service-triggers'
 import { runCredentialExpiryForTenant } from '../services/workforce/credentialExpiry'
@@ -539,4 +540,37 @@ settingsRouter.delete('/logo', async (req: Request, res: Response) => {
   })
 
   ok(res, { logo_url: null })
+})
+
+// ─── Which named roles do this home's own policies actually mention? ──────────
+//
+// Settings offers twenty four roles. Most homes need a handful, and working out which by
+// reading a form of twenty four boxes is the wrong way round. Their policies already say:
+// "The Falls Lead reviews every fall at the monthly meeting" is a request for a name,
+// written by the home itself.
+//
+// Reading the stored scan is instant. Running one is not: only a dozen of a typical library
+// has its text in Postgres and the rest comes from object storage a policy at a time. So
+// running is an explicit action, never a side effect of opening the page. No AI credit is
+// spent either way; this is a regex sweep over text we already hold.
+
+settingsRouter.get('/role-mentions', async (req: Request, res: Response) => {
+  const user = (req as any).user
+  try {
+    ok(res, { scan: await getRoleMentionScan(user.tenant_id) })
+  } catch (e: any) {
+    err(res, 'SCAN_READ_FAILED', e?.message ?? 'could not read the role scan', 500)
+  }
+})
+
+settingsRouter.post('/role-mentions/scan', async (req: Request, res: Response) => {
+  const user = (req as any).user
+  if (user.role !== 'admin') return err(res, 'FORBIDDEN', 'Only admins can run this', 403)
+  try {
+    const scan = await scanRoleMentions(user.tenant_id)
+    await saveRoleMentionScan(user.tenant_id, scan)
+    ok(res, { scan })
+  } catch (e: any) {
+    err(res, 'SCAN_FAILED', e?.message ?? 'could not scan your policies', 500)
+  }
 })

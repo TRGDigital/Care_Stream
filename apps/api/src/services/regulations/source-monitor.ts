@@ -15,7 +15,20 @@ import { mapLimit } from '../../lib/translate'
 const FETCH_TIMEOUT_MS = 9000
 const UA = 'CareStreamAI-RegulationMonitor/1.0 (+https://www.carestreamai.com)'
 
-async function fingerprintUrl(url: string): Promise<{ fp: string; kind: 'etag' | 'last-modified' | 'hash' | 'skip' | 'error' }> {
+// ETag is NOT used, on evidence. Two consecutive runs 45 minutes apart, with no possible
+// change to UK legislation in between, produced 16 false "changed" verdicts out of 29
+// ETag-fingerprinted URLs — and none at all from the content hash. The reason is that the
+// sources that matter most do not serve a content-derived ETag:
+//
+//   gov.uk, food.gov.uk   etag: W/"4dc9a32f…"      weak: signals semantic equivalence, not
+//                                                  byte equality, and rotates per CDN node
+//   cqc.org.uk            etag: "1788972608-gzip"  a cache-generation timestamp: it changes
+//                                                  when the CDN refreshes, not when the page does
+//
+// Sixteen spurious flags a week would train a reader to ignore the alerts, which is worse
+// than no monitoring because it still looks like it is working. So: Last-Modified first
+// (measured stable on 51 of 52 URLs), then a hash of the page's own text.
+async function fingerprintUrl(url: string): Promise<{ fp: string; kind: 'last-modified' | 'hash' | 'skip' | 'error' }> {
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS)
   try {
@@ -23,11 +36,10 @@ async function fingerprintUrl(url: string): Promise<{ fp: string; kind: 'etag' |
     if (!resp.ok) return { fp: `err:${resp.status}`, kind: 'error' }
 
     const ctype = (resp.headers.get('content-type') || '').toLowerCase()
-    // Prefer strong validators — they change only when the resource does.
-    const etag = resp.headers.get('etag')
-    if (etag) return { fp: `etag:${etag}`, kind: 'etag' }
+
+    // A real modification date, where the source publishes one.
     const lastMod = resp.headers.get('last-modified')
-    if (lastMod) return { fp: `lm:${lastMod}`, kind: 'last-modified' }
+    if (lastMod && !Number.isNaN(Date.parse(lastMod))) return { fp: `lm:${lastMod}`, kind: 'last-modified' }
 
     // Non-HTML (PDFs etc.) — can't reliably fingerprint content; skip (never flags).
     if (!ctype.includes('html') && !ctype.includes('xml')) return { fp: 'skip:non-html', kind: 'skip' }
@@ -37,6 +49,12 @@ async function fingerprintUrl(url: string): Promise<{ fp: string; kind: 'etag' |
       .replace(/<script[\s\S]*?<\/script>/gi, ' ')
       .replace(/<style[\s\S]*?<\/style>/gi, ' ')
       .replace(/<!--[\s\S]*?-->/g, ' ')
+      // Page furniture, not the guidance: navigation, banners and "related content" rotate on
+      // their own schedule and would otherwise read as the regulation having changed.
+      .replace(/<nav[\s\S]*?<\/nav>/gi, ' ')
+      .replace(/<header[\s\S]*?<\/header>/gi, ' ')
+      .replace(/<footer[\s\S]*?<\/footer>/gi, ' ')
+      .replace(/<aside[\s\S]*?<\/aside>/gi, ' ')
       .replace(/<[^>]+>/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
@@ -50,6 +68,12 @@ async function fingerprintUrl(url: string): Promise<{ fp: string; kind: 'etag' |
 }
 
 const isReal = (fp: string) => !fp.startsWith('err:') && !fp.startsWith('skip:')
+
+/** 'lm' | 'h' | 'etag' | 'err' | 'skip' — the method that produced a fingerprint.
+ *  Two fingerprints are only comparable when the same method produced them: changing the
+ *  method (as dropping ETag does) must re-baseline silently, not report every page as
+ *  changed on the next run. */
+const method = (fp: string) => fp.split(':', 1)[0]
 
 export type SourceMonitorSummary = {
   regulations: number; urls_checked: number; changed: number; flagged: number; errors: number
@@ -81,8 +105,12 @@ export async function checkRegulationSources(opts: { referenceKey?: string } = {
         where: { reference_key_url: { reference_key: reg.reference_key, url } },
       }).catch(() => null)
 
-      // A real change = both old and new fingerprints are meaningful and differ.
-      const changed = !!prior && isReal(prior.fingerprint ?? '') && isReal(fp) && prior.fingerprint !== fp
+      // A real change = both fingerprints are meaningful, were produced the SAME way, and differ.
+      const priorFp = prior?.fingerprint ?? ''
+      const changed = !!prior
+        && isReal(priorFp) && isReal(fp)
+        && method(priorFp) === method(fp)
+        && priorFp !== fp
       if (changed) { summary.changed++; regChangedUrl = url }
 
       // Only advance the stored fingerprint on a real read (don't overwrite a good

@@ -540,6 +540,10 @@ model QualityStatement {
   linked_regulations  String[] @default([])           // crosswalk → external_regulations.reference_key[]
   expected_policies   String[] @default([])           // candidate policy types that evidence it
   applies_to_settings String[] @default([])           // care-setting scope; empty = universal
+  /// Where CQC publishes this statement. Watched by the source monitor: a revision to the
+  /// single assessment framework changes how every inspection is judged, and until this
+  /// column existed nothing in the system would have noticed one.
+  source_urls         String[] @default([])
   is_active           Boolean  @default(true)
   created_at          DateTime @default(now())
   updated_at          DateTime @updatedAt
@@ -744,6 +748,9 @@ model PolicyReviewResolution {
 // flag the regulation for review (needs_update) — we never auto-edit content.
 model RegulationSourceCheck {
   id              String    @id @default(uuid())
+  /// 'regulation' | 'quality_statement' | 'lint_signal' — what the source belongs to. The
+  /// monitor watches all three; reference_key alone is not unique across them.
+  subject_kind    String    @default("regulation")
   reference_key   String
   url             String
   fingerprint     String?
@@ -753,7 +760,7 @@ model RegulationSourceCheck {
   /// rather than only that a fingerprint differs.
   content         String?
 
-  @@unique([reference_key, url])
+  @@unique([subject_kind, reference_key, url])
   @@index([reference_key])
   @@map("regulation_source_checks")
 }
@@ -976,6 +983,7 @@ model CoverageSuggestionDecision {
 // See manual_regulation_changes.sql.
 model RegulationChange {
   id            String   @id @default(uuid())
+  subject_kind  String   @default("regulation")
   reference_key String
   official_name String   @default("")
   url           String
@@ -1000,6 +1008,7 @@ model RegulationChange {
 
   @@index([status, detected_at])
   @@index([reference_key, detected_at])
+  @@index([subject_kind, detected_at])
   @@map("regulation_changes")
 }
 

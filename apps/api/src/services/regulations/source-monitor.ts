@@ -98,15 +98,82 @@ export type SourceMonitorSummary = {
   flagged_regs: Array<{ reference_key: string; official_name: string; url: string }>
 }
 
-// Check the source URLs for one regulation (referenceKey) or all active ones.
+export type Subject = {
+  kind: 'regulation' | 'quality_statement' | 'lint_signal'
+  reference_key: string
+  official_name: string
+  source_urls: string[]
+  /** Only regulations carry a review flag; the other two are surfaced through the changes
+   *  page alone, because there is no per-row "needs update" concept on them. */
+  needs_update?: boolean
+}
+
+/** Everything the monitor watches.
+ *
+ *  Regulations were the whole list until the blind spots were counted: the 34 CQC quality
+ *  statements had no source column at all, so a revision to the framework that judges every
+ *  inspection would have gone unnoticed; and the lint signals already carried source URLs
+ *  that nothing read, which is the one place a renamed body SHOULD fire. */
+export async function gatherSubjects(referenceKey?: string): Promise<Subject[]> {
+  const [regs, statements, signals] = await Promise.all([
+    (prisma as any).externalRegulation.findMany({
+      where:  { is_active: true, ...(referenceKey ? { reference_key: referenceKey } : {}) },
+      select: { reference_key: true, official_name: true, source_urls: true, needs_update: true, review_note: true },
+    }),
+    referenceKey ? [] : (prisma as any).qualityStatement.findMany({
+      where:  { is_active: true },
+      select: { reference_key: true, name: true, number: true, source_urls: true },
+    }).catch(() => []),
+    referenceKey ? [] : (prisma as any).policyLintSignal.findMany({
+      where:  { is_active: true },
+      select: { signal_key: true, label: true, source_urls: true },
+    }).catch(() => []),
+  ])
+
+  return [
+    ...(regs as any[]).map(r => ({
+      kind: 'regulation' as const,
+      reference_key: r.reference_key,
+      official_name: r.official_name ?? r.reference_key,
+      source_urls:   r.source_urls ?? [],
+      needs_update:  !!r.needs_update,
+    })),
+    ...(statements as any[]).map(q => ({
+      kind: 'quality_statement' as const,
+      reference_key: q.reference_key,
+      official_name: `Quality statement ${q.number}: ${q.name}`,
+      source_urls:   q.source_urls ?? [],
+    })),
+    ...(signals as any[]).map(l => ({
+      kind: 'lint_signal' as const,
+      reference_key: l.signal_key,
+      official_name: `Stale wording: ${l.label}`,
+      source_urls:   l.source_urls ?? [],
+    })),
+  ]
+}
+
+// Check the source URLs for one regulation (referenceKey) or every watched subject.
 export async function checkRegulationSources(opts: { referenceKey?: string } = {}): Promise<SourceMonitorSummary> {
-  const regs = await (prisma as any).externalRegulation.findMany({
-    where:  { is_active: true, ...(opts.referenceKey ? { reference_key: opts.referenceKey } : {}) },
-    select: { reference_key: true, official_name: true, source_urls: true, needs_update: true, review_note: true },
-  })
+  const regs = await gatherSubjects(opts.referenceKey)
 
   const summary: SourceMonitorSummary = { regulations: 0, urls_checked: 0, changed: 0, flagged: 0, errors: 0, recorded: 0, unchanged_text: 0, flagged_regs: [] }
   const now = new Date()
+
+  // One fetch per URL per run, however many subjects cite it. CQC publishes all 34 quality
+  // statements on a single framework page, and regulations already share URLs (95 source
+  // entries, ~80 distinct), so without this the same page is downloaded repeatedly.
+  const fetched = new Map<string, { fp: string; kind: string; text: string }>()
+  const fetchOnce = async (url: string) => {
+    const hit = fetched.get(url)
+    if (hit) return hit
+    const res = await fingerprintUrl(url)
+    fetched.set(url, res)
+    return res
+  }
+  // And one recorded change per URL per run, for the same reason: 34 statements citing one
+  // changed page is one change, not 34 entries for a person to read.
+  const recordedUrls = new Set<string>()
 
   for (const reg of regs as any[]) {
     const urls: string[] = (reg.source_urls ?? []).filter(Boolean)
@@ -116,11 +183,11 @@ export async function checkRegulationSources(opts: { referenceKey?: string } = {
 
     await mapLimit(urls, 3, async (url: string) => {
       summary.urls_checked++
-      const { fp, kind, text } = await fingerprintUrl(url)
+      const { fp, kind, text } = await fetchOnce(url)
       if (kind === 'error') summary.errors++
 
       const prior = await (prisma as any).regulationSourceCheck.findUnique({
-        where: { reference_key_url: { reference_key: reg.reference_key, url } },
+        where: { subject_kind_reference_key_url: { subject_kind: reg.kind, reference_key: reg.reference_key, url } },
       }).catch(() => null)
 
       // A real change = both fingerprints are meaningful, were produced the SAME way, and differ.
@@ -134,12 +201,19 @@ export async function checkRegulationSources(opts: { referenceKey?: string } = {
       // Record WHAT changed, while both versions are in hand. Only when there is prior text
       // to compare against: the first run after this ships has none, and reporting a whole
       // page as "added" would be noise on every source at once.
-      if (changed && text && prior?.content) {
+      if (changed && text && prior?.content && !recordedUrls.has(url)) {
+        recordedUrls.add(url)
         const diff = diffText(String(prior.content), text)
         if (diff.changed) {
-          const impacted = await resolveImpact(reg.reference_key).catch(() => [])
+          // Only a regulation has tenant coverage behind it. A quality statement or a stale
+          // wording signal changes what we ASK of every tenant, so there is no per-tenant
+          // list to resolve and an empty one is the honest answer.
+          const impacted = reg.kind === 'regulation'
+            ? await resolveImpact(reg.reference_key).catch(() => [])
+            : []
           await (prisma as any).regulationChange.create({
             data: {
+              subject_kind:  reg.kind,
               reference_key: reg.reference_key,
               official_name: reg.official_name ?? '',
               url,
@@ -161,15 +235,17 @@ export async function checkRegulationSources(opts: { referenceKey?: string } = {
       // next diff compares against what we actually last saw.
       const nextFp = isReal(fp) ? fp : (prior?.fingerprint ?? fp)
       await (prisma as any).regulationSourceCheck.upsert({
-        where:  { reference_key_url: { reference_key: reg.reference_key, url } },
+        where:  { subject_kind_reference_key_url: { subject_kind: reg.kind, reference_key: reg.reference_key, url } },
         update: { fingerprint: nextFp, last_checked_at: now, ...(text ? { content: text } : {}), ...(changed ? { last_changed_at: now } : {}) },
-        create: { reference_key: reg.reference_key, url, fingerprint: nextFp, last_checked_at: now, content: text || null, last_changed_at: changed ? now : null },
+        create: { subject_kind: reg.kind, reference_key: reg.reference_key, url, fingerprint: nextFp, last_checked_at: now, content: text || null, last_changed_at: changed ? now : null },
       }).catch(() => {})
     })
 
     // Flag the regulation for review on a change. Don't overwrite a manual note on a
     // reg that's already flagged.
-    if (regChangedUrl) {
+    // Only regulations carry needs_update. Quality statements and stale-wording signals have
+    // no such column, and their change is surfaced through the changes page instead.
+    if (regChangedUrl && reg.kind === 'regulation') {
       const dateStr = now.toISOString().slice(0, 10)
       await (prisma as any).externalRegulation.updateMany({
         where: { reference_key: reg.reference_key },

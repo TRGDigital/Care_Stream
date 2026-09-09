@@ -10,14 +10,5 @@
   "routes": [
     { "src": "/(.*)", "dest": "/src/app.ts" }
   ],
-  "crons": [
-    { "path": "/cron/knowledge-gaps", "schedule": "0 7 * * *" },
-    { "path": "/cron/audit-reminders", "schedule": "0 8 * * *" },
-    { "path": "/cron/credential-expiry", "schedule": "0 8 * * *" },
-    { "path": "/cron/policy-review-reminders", "schedule": "0 8 * * *" },
-    { "path": "/cron/supervision-reminders", "schedule": "0 8 * * *" },
-    { "path": "/cron/licence-renewals", "schedule": "0 9 * * *" },
-    { "path": "/cron/onboarding-emails", "schedule": "0 9,10 * * *" },
-    { "path": "/cron/regulation-source-monitor", "schedule": "0 6 * * 1" }
-  ]
+  "_crons": "Scheduling moved to Postgres (pg_cron) in prisma/migrations/manual_cron_schedules.sql. These Vercel crons stopped silently on 5 June 2026 and went unnoticed for 96 days. Listing them here as well would double-fire every job if Vercel's scheduler ever resumes."
 }

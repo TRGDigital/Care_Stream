@@ -969,6 +969,25 @@ model CoverageSuggestionDecision {
 // ─── AI Prompt Versions ───────────────────────────────────────────────────────
 
 // Snapshot of each prompt before it is overwritten via the platform admin UI.
+// Heartbeat for scheduled jobs. A row that never appears is the signal: eight jobs stopped
+// on 5 June 2026 and nobody found out for 96 days, because nothing recorded that they were
+// meant to have run. See manual_cron_runs.sql.
+model CronRun {
+  id          String    @id @default(uuid())
+  job         String
+  started_at  DateTime  @default(now())
+  finished_at DateTime?
+  ok          Boolean   @default(false)
+  /// Whatever the job returned, so the report can say what was captured, not just "ok".
+  summary     Json?
+  error       String    @default("")
+  duration_ms Int?
+
+  @@index([job, started_at])
+  @@index([started_at])
+  @@map("cron_runs")
+}
+
 model AiPromptVersion {
   id        String   @id @default(uuid())
   prompt_id String

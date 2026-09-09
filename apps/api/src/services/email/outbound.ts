@@ -1,4 +1,5 @@
 // §8.5 — Outbound email via SendGrid.
+// (sendCronReportEmail, the daily scheduled-jobs report, is at the end of this file.)
 // Sets correct thread headers (In-Reply-To, References) so replies land in the same thread.
 
 import sgMail from '@sendgrid/mail'
@@ -1303,6 +1304,89 @@ export async function sendReviewerActivityEmail(opts: {
     to: opts.to,
     from: { email: from, name: 'CareStream' },
     subject: `CPD assessor: ${opts.event}`,
+    html,
+  })
+}
+
+// ─── Scheduled-jobs report to the platform owner ──────────────────────────────
+// Sent daily. Leads with what did NOT run: the failure this exists to catch was eight jobs
+// stopping silently for 96 days, so a green list is the least valuable thing in here.
+export async function sendCronReportEmail(report: {
+  generated_at: string
+  healthy: number
+  problems: number
+  jobs: Array<{
+    job: string; cadence: string; matters: string; status: string
+    last_run_at: string | null; hours_since: number | null; duration_ms: number | null
+    error: string; captured: Array<{ key: string; value: string }>
+  }>
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set — skipping cron report'); return }
+
+  const to   = process.env.OPS_NOTIFY_EMAIL ?? 'lenny@trgdigital.co.uk'
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc  = (s: any) => String(s ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
+
+  const TONE: Record<string, { bg: string; fg: string; word: string }> = {
+    ok:      { bg: '#ecfdf5', fg: '#047857', word: 'Ran' },
+    failed:  { bg: '#fef2f2', fg: '#b91c1c', word: 'Failed' },
+    overdue: { bg: '#fffbeb', fg: '#b45309', word: 'Did not run' },
+    never:   { bg: '#fef2f2', fg: '#b91c1c', word: 'Never run' },
+  }
+
+  const when = (iso: string | null) =>
+    iso ? new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '&mdash;'
+
+  const card = (j: (typeof report.jobs)[number]) => {
+    const tone = TONE[j.status] ?? TONE.failed
+    const captured = j.captured.length
+      ? `<table style="border-collapse:collapse;margin:8px 0 0">${j.captured
+          .map(c => `<tr><td style="padding:2px 14px 2px 0;color:#6b7280;font-size:12px">${esc(c.key)}</td><td style="padding:2px 0;color:${NEUTRAL_DARK};font-size:12px;font-weight:600">${esc(c.value)}</td></tr>`)
+          .join('')}</table>`
+      : ''
+    // Why it matters is shown only when something is wrong. "credential-expiry failed" means
+    // little at 7am; "Enterprise admins were not warned about expiring DBS checks" means a lot.
+    const problem = j.status === 'ok' ? '' :
+      `<p style="margin:6px 0 0;color:${tone.fg};font-size:12px">${esc(j.matters)}${j.error ? ` &middot; ${esc(j.error.slice(0, 200))}` : ''}</p>`
+    return `
+    <div style="border:1px solid #e5e7eb;border-left:4px solid ${tone.fg};border-radius:8px;padding:12px 14px;margin:0 0 10px;background:${tone.bg}">
+      <table style="width:100%;border-collapse:collapse"><tr>
+        <td style="color:${NEUTRAL_DARK};font-size:14px;font-weight:700">${esc(j.job)}</td>
+        <td style="text-align:right;color:${tone.fg};font-size:12px;font-weight:700">${tone.word}</td>
+      </tr></table>
+      <p style="margin:4px 0 0;color:#6b7280;font-size:12px">
+        ${esc(j.cadence)} &middot; last ${when(j.last_run_at)}${j.hours_since !== null ? ` (${j.hours_since}h ago)` : ''}${j.duration_ms !== null ? ` &middot; took ${Math.round(j.duration_ms / 1000)}s` : ''}
+      </p>
+      ${problem}
+      ${captured}
+    </div>`
+  }
+
+  const problems = report.jobs.filter(j => j.status !== 'ok')
+  const healthy  = report.jobs.filter(j => j.status === 'ok')
+
+  const headline = report.problems === 0
+    ? `<p style="color:#047857;font-size:16px;font-weight:700;margin:0 0 4px">All ${report.healthy} scheduled jobs ran</p>`
+    : `<p style="color:#b91c1c;font-size:16px;font-weight:700;margin:0 0 4px">${report.problems} scheduled ${report.problems === 1 ? 'job needs' : 'jobs need'} attention</p>`
+
+  const html = emailWrapper(`
+    ${headline}
+    <p style="color:#374151;font-size:13px;line-height:1.6;margin:0 0 18px">
+      CareStream scheduled jobs, ${when(report.generated_at)}.
+      ${report.problems === 0 ? 'Nothing to do.' : 'The jobs below either failed or have not run when they should have.'}
+    </p>
+    ${problems.map(card).join('')}
+    ${healthy.length ? `<p style="color:#6b7280;font-size:12px;font-weight:700;margin:18px 0 8px;text-transform:uppercase;letter-spacing:.04em">Ran normally</p>` : ''}
+    ${healthy.map(card).join('')}
+    ${emailFooter()}
+  `)
+
+  await sgMail.send({
+    to, from,
+    subject: report.problems === 0
+      ? `CareStream jobs: all ${report.healthy} ran`
+      : `CareStream jobs: ${report.problems} need attention`,
     html,
   })
 }

@@ -805,7 +805,7 @@ export default function GapsPage() {
                       </div>
                       <div className="flex shrink-0 items-center gap-3">
                         <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${reg.status === 'gap' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}>
-                          {reg.status === 'gap' ? 'No policy' : 'Elements to add'}
+                          {reg.status === 'gap' ? 'Gap' : 'Elements to add'}
                         </span>
                         <button
                           onClick={() => setDetailReg({ reference_key: reg.reference_key, official_name: reg.official_name })}

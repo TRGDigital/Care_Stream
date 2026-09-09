@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { MissingPoliciesBanner } from '@/components/admin/missing-policies-banner'
+import { MissingPoliciesAlert, MissingPoliciesBanner } from '@/components/admin/missing-policies-banner'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { usePlanFeatures } from '@/lib/use-plan-features'
@@ -708,6 +708,11 @@ export default function GapsPage() {
           </div>
         </div>
       )}
+
+      {/* Missing policies, said once at the top. The banner that sells them sits below
+          four analysis sections, and a home working through their gaps may never scroll
+          that far. Renders nothing when the analysis is missing, stale, or finds nothing. */}
+      {session?.accessToken && <MissingPoliciesAlert token={session.accessToken} />}
 
       {/* Headline metrics */}
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">

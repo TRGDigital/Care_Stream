@@ -14,9 +14,54 @@
 
 import { useEffect, useState } from 'react'
 import { createApiClient, type MissingPolicyReport, type PolicyPurchase } from '@/lib/api-client'
-import { AlertTriangle, Loader2, ShoppingCart, Check, Clock } from 'lucide-react'
+import { AlertTriangle, Loader2, ShoppingCart, Check, Clock, ChevronDown } from 'lucide-react'
 
 const money = (pence: number) => `£${(pence / 100).toFixed(pence % 100 === 0 ? 0 : 2)}`
+
+// The count, shared by the alert at the top of the page and the banner further down. Both
+// need the same answer and it is the same free read, so it is fetched once per component
+// rather than twice per page.
+export function useMissingCount(token: string): number | null {
+  const [count, setCount] = useState<number | null>(null)
+  useEffect(() => {
+    const api = createApiClient(token)
+    Promise.all([api.gaps.missingPolicies(), api.policyPurchases.list()])
+      .then(([r, p]) => {
+        if (!r.analysed || r.stale) { setCount(null); return }
+        const bought = new Set(p.purchases.map(x => x.policy_title))
+        setCount(r.missing.filter(m => !bought.has(m.title)).length)
+      })
+      .catch(() => setCount(null))
+  }, [token])
+  return count
+}
+
+// A line at the top of the page, because the banner that sells these sits below four analysis
+// sections and a home working through their gaps may never scroll that far. This does not
+// repeat the offer, it just says the policies exist and takes them to it.
+export function MissingPoliciesAlert({ token }: { token: string }) {
+  const count = useMissingCount(token)
+  if (!count) return null
+  return (
+    <button
+      onClick={() => document.getElementById('missing-policies')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+      className="mb-5 flex w-full items-center gap-3 rounded-card border-2 border-teal/40 bg-teal-light/25 px-5 py-3.5 text-left hover:bg-teal-light/40"
+    >
+      <AlertTriangle size={18} className="shrink-0 text-teal" />
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-bold text-neutral-dark">
+          {count === 1
+            ? 'There is one policy the law requires that you do not have'
+            : `There are ${count} policies the law requires that you do not have`}
+        </span>
+        <span className="block text-xs text-neutral-mid">
+          These are not gaps to fill in your existing policies. There is no document at all. Show me
+        </span>
+      </span>
+      <ChevronDown size={16} className="shrink-0 text-teal" />
+    </button>
+  )
+}
 
 export function MissingPoliciesBanner({ token }: { token: string }) {
   const [report, setReport] = useState<MissingPolicyReport | null>(null)
@@ -86,7 +131,7 @@ export function MissingPoliciesBanner({ token }: { token: string }) {
           : 'Paid, we have started'
 
   return (
-    <div className="mb-6 overflow-hidden rounded-card border-2 border-teal/40 bg-white shadow-card">
+    <div id="missing-policies" className="mb-6 scroll-mt-4 overflow-hidden rounded-card border-2 border-teal/40 bg-white shadow-card">
       <div className="border-b border-gray-100 bg-teal-light/25 px-6 py-5">
         <h2 className="text-base font-bold text-neutral-dark">
           We have read your policies against the law, and you are missing{' '}

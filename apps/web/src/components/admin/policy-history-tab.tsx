@@ -13,24 +13,39 @@
 
 import { useEffect, useState } from 'react'
 import { createApiClient, type PolicyHistoryEntry } from '@/lib/api-client'
-import { History, Loader2, FileText, X, Check, Undo2, AlertTriangle, Printer } from 'lucide-react'
+import { persistentCache } from '@/lib/page-cache'
+import { History, Loader2, FileText, X, Check, Undo2, AlertTriangle, Printer, ChevronDown, RefreshCw } from 'lucide-react'
 
 const when = (iso: string) =>
   new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 
 const STAGE: Record<string, string> = { admin: 'Admin', manager: 'Care manager', external: 'External reviewer' }
 
+const CACHE_KEY = 'policy-history'
+
 export function PolicyHistoryTab({ token }: { token: string }) {
-  const [history, setHistory] = useState<PolicyHistoryEntry[] | null>(null)
+  // Served from cache first so switching tabs is instant. History changes only when a policy
+  // is published, which is rare, so a stale minute costs nothing and a spinner on every tab
+  // switch costs attention. Refreshed quietly behind whatever is already on screen, and there
+  // is a manual refresh for anyone who wants to be sure.
+  const [history, setHistory] = useState<PolicyHistoryEntry[] | null>(
+    () => persistentCache.get<PolicyHistoryEntry[]>(CACHE_KEY) ?? null)
   const [error, setError] = useState('')
   const [reading, setReading] = useState<{ title: string; version: string; at: string; content: string } | null>(null)
   const [opening, setOpening] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
+  // Which change rows are expanded, keyed by version id and index.
+  const [shown, setShown] = useState<Set<string>>(new Set())
 
-  useEffect(() => {
+  const load = (manual = false) => {
+    if (manual) setRefreshing(true)
     createApiClient(token).policies.history()
-      .then(r => setHistory(r.history))
+      .then(r => { setHistory(r.history); persistentCache.set(CACHE_KEY, r.history); setError('') })
       .catch((e: Error) => setError(e.message))
-  }, [token])
+      .finally(() => setRefreshing(false))
+  }
+
+  useEffect(() => { load() }, [token])
 
   async function open(versionId: string) {
     setOpening(versionId); setError('')
@@ -67,10 +82,19 @@ export function PolicyHistoryTab({ token }: { token: string }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-neutral-mid">
-        Every change published through CareStream, newest first. Open any version to read the
-        policy exactly as it stood on that date.
-      </p>
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="text-sm text-neutral-mid">
+          Every change published through CareStream, newest first. Open any version to read the
+          policy exactly as it stood on that date.
+        </p>
+        <button
+          onClick={() => load(true)}
+          disabled={refreshing}
+          className="inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold text-teal hover:underline disabled:opacity-40"
+        >
+          {refreshing ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />} Refresh
+        </button>
+      </div>
 
       {history.map(h => (
         <div key={h.policy_id} className="overflow-hidden rounded-card border border-gray-100 bg-white shadow-card">
@@ -105,21 +129,61 @@ export function PolicyHistoryTab({ token }: { token: string }) {
                 </div>
 
                 {v.changes.length > 0 && (
-                  <ul className="mt-2 space-y-1.5">
-                    {v.changes.map((c, i) => (
-                      <li key={i} className="flex gap-2 text-xs leading-relaxed">
-                        {c.reverted
-                          ? <Undo2 size={12} className="mt-0.5 shrink-0 text-neutral-mid" />
-                          : <Check size={12} className="mt-0.5 shrink-0 text-green-600" />}
-                        <span className={c.reverted ? 'text-neutral-mid line-through' : 'text-neutral-dark'}>
-                          {c.section_title ? <strong>{c.section_title}: </strong> : null}
-                          {c.requirement}
-                          {/* Why it changed. The regulation is the answer an inspector wants. */}
-                          {c.regulation && <span className="text-neutral-mid"> · required by {c.regulation}</span>}
-                          {c.reverted && <span className="text-neutral-mid"> · later reverted</span>}
-                        </span>
-                      </li>
-                    ))}
+                  <ul className="mt-2 space-y-2">
+                    {v.changes.map((c, i) => {
+                      const key = `${v.version_id}:${i}`
+                      const open = shown.has(key)
+                      return (
+                        <li key={i} className="text-xs leading-relaxed">
+                          <div className="flex gap-2">
+                            {c.reverted
+                              ? <Undo2 size={12} className="mt-0.5 shrink-0 text-neutral-mid" />
+                              : <Check size={12} className="mt-0.5 shrink-0 text-green-600" />}
+                            <span className={c.reverted ? 'text-neutral-mid line-through' : 'text-neutral-dark'}>
+                              {c.section_title ? <strong>{c.section_title}: </strong> : null}
+                              {c.requirement}
+                              {/* Why it changed. The regulation is the answer an inspector wants. */}
+                              {c.regulation && <span className="text-neutral-mid"> · required by {c.regulation}</span>}
+                              {c.reverted && <span className="text-neutral-mid"> · later reverted</span>}
+                            </span>
+                            {/* The requirement names the problem. The wording is the fix, and
+                                without it a reader cannot tell what the policy now says. */}
+                            {(c.new_text || c.old_text) && (
+                              <button
+                                onClick={() => setShown(prev => {
+                                  const next = new Set(prev)
+                                  if (next.has(key)) next.delete(key); else next.add(key)
+                                  return next
+                                })}
+                                className="ml-auto inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold text-teal hover:underline"
+                              >
+                                {open ? 'Hide wording' : 'See the wording'}
+                                <ChevronDown size={11} className={open ? 'rotate-180 transition-transform' : 'transition-transform'} />
+                              </button>
+                            )}
+                          </div>
+
+                          {open && (
+                            <div className="ml-5 mt-1.5 space-y-1.5">
+                              {c.old_text && (
+                                <div className="rounded-md border border-gray-100 bg-neutral-light/40 px-2.5 py-1.5">
+                                  <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-neutral-mid">Was</p>
+                                  <p className="whitespace-pre-wrap text-neutral-mid">{c.old_text}</p>
+                                </div>
+                              )}
+                              {c.new_text && (
+                                <div className="rounded-md border border-teal/20 bg-teal-light/20 px-2.5 py-1.5">
+                                  <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-teal">
+                                    {c.old_text ? 'Now reads' : 'Added'}
+                                  </p>
+                                  <p className="whitespace-pre-wrap text-neutral-dark">{c.new_text}</p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </li>
+                      )
+                    })}
                   </ul>
                 )}
 

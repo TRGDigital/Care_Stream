@@ -13,6 +13,8 @@ export type PolicyHistoryEntry = {
     changes: Array<{
       requirement: string
       section_title: string | null
+      new_text: string
+      old_text: string
       reference_key: string | null
       regulation: string | null
       reverted: boolean

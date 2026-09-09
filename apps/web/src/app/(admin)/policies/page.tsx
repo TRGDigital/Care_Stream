@@ -516,8 +516,10 @@ export default function PoliciesPage() {
         </div>
       )}
 
-      {/* Adopted changes to review (Policy Change Adoption) */}
-      {(() => {
+      {/* Adopted changes to review (Policy Change Adoption).
+          Not on the History tab: that tab is the record of what has already happened, and a
+          panel of outstanding work sitting above it reads as part of the history. */}
+      {tab !== 'history' && (() => {
         const toReview = reviewSummary.filter(d => d.pending > 0)
         if (!toReview.length) {
           // The summary fetch failed (after a retry) and we have nothing cached to show —

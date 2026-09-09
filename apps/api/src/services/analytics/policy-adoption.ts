@@ -1052,6 +1052,143 @@ export async function applyMinorEdit(tenantId: string, policyId: string, input: 
   return { version: nextVersion, propagated, occurrences }
 }
 
+// ─── Role-holder name changes ─────────────────────────────────────────────────
+//
+// Renaming a role holder in Settings does NOT need to rewrite most policies. Role names are
+// substituted at RENDER time from the live role holders (see policy-names.ts), so a policy
+// that says "Medicines Lead" shows the new name the moment it is saved, everywhere.
+//
+// What does need rewriting is a policy with the person's name WRITTEN INTO the text. That is
+// how CareStream writes a policy ("use each name once, where the role first takes a
+// responsibility") and how an uploaded policy may name somebody without ever using the role
+// phrase. Those keep the old name for ever unless something changes them.
+//
+// Only policies that ALREADY have a document are touched. A name change is not a reason to
+// bring policy documents into existence for a whole library, and without one there is nothing
+// to version.
+
+/** Word-bounded so a short name cannot match inside a longer one. \b is no use here because a
+ *  hyphen and an apostrophe are not word characters, so "Anne" would match inside "Anne-Marie"
+ *  and rewrite it to "Tom-Marie". The boundaries are therefore spelled out:
+ *
+ *  - never adjacent to a letter, digit or hyphen, which is what guards the compound-name case
+ *  - never PRECEDED by an apostrophe, so "Brien" does not match inside "O'Brien"
+ *  - but allowed to be FOLLOWED by one, so a possessive ("Priya Shah's report") still updates
+ *
+ *  Matching is case sensitive on purpose: case-insensitively, a name that is also an ordinary
+ *  word (Bill, Grace, Rose, Mark) would rewrite real sentences. The name is escaped because
+ *  real ones contain regex characters. Covered by rolename.test.mjs. */
+function roleNameRegex(name: string): RegExp {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`(?<![\\p{L}\\p{N}'’-])${escaped}(?![\\p{L}\\p{N}-])`, 'gu')
+}
+
+export type RoleNamePolicyImpact = {
+  policy_id: string
+  policy_name: string
+  occurrences: number
+  /** The sentence around the first mention, so the tenant confirms against what they can see. */
+  snippet: string
+}
+
+/** Which policies have this person's name written into them. Read-only. */
+export async function roleNameImpact(tenantId: string, oldName: string): Promise<RoleNamePolicyImpact[]> {
+  const name = String(oldName ?? '').trim()
+  if (name.length < 2) return []
+
+  const docs = await (prisma as any).policyDocument.findMany({
+    where:  { tenant_id: tenantId },
+    select: { policy_id: true, published_content: true, original_content: true },
+  })
+  if (!docs.length) return []
+
+  const policies = await (prisma as any).policy.findMany({
+    where:  { id: { in: docs.map((d: any) => d.policy_id) }, status: 'active' },
+    select: { id: true, name: true },
+  })
+  const nameById = new Map<string, string>(policies.map((p: any) => [p.id, p.name]))
+
+  const out: RoleNamePolicyImpact[] = []
+  for (const d of docs) {
+    const policyName = nameById.get(d.policy_id)
+    if (!policyName) continue   // archived or deleted since the document was written
+    const text = String(d.published_content || d.original_content || '')
+    if (!text) continue
+    const re = roleNameRegex(name)
+    const matches = [...text.matchAll(re)]
+    if (!matches.length) continue
+    const at = matches[0].index ?? 0
+    const snippet = text.slice(Math.max(0, at - 70), at + name.length + 70).replace(/\s+/g, ' ').trim()
+    out.push({ policy_id: d.policy_id, policy_name: policyName, occurrences: matches.length, snippet })
+  }
+  return out.sort((a, b) => a.policy_name.localeCompare(b.policy_name))
+}
+
+/** Replace a role holder's name throughout one policy, as a published minor revision.
+ *  No approval: renaming the person who holds a role does not change what the policy says. */
+export async function applyRoleNameChange(tenantId: string, policyId: string, input: {
+  role_label: string
+  old_name: string
+  new_name: string
+  applied_by: string
+}): Promise<{ version: string; occurrences: number; propagated: boolean } | { error: string }> {
+  const oldName = String(input.old_name ?? '').trim()
+  const newName = String(input.new_name ?? '').trim()
+  if (!oldName || !newName) return { error: 'no_old_text' }
+  if (oldName === newName) return { error: 'unchanged' }
+
+  // Deliberately NOT getOrInitDocument, unlike applyMinorEdit: see the note above.
+  const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId } })
+  if (!doc || doc.tenant_id !== tenantId) return { error: 'no_document' }
+
+  const liveBase = (doc.published_content as string) || (doc.original_content as string) || ''
+  const re = roleNameRegex(oldName)
+  const occurrences = (liveBase.match(re) ?? []).length
+  if (!occurrences) return { error: 'not_found' }
+
+  // Every occurrence is the same person, so all of them move. This is the case applyMinorEdit
+  // deliberately refuses, because there the tenant had selected one specific paragraph.
+  const content = liveBase.replace(roleNameRegex(oldName), newName)
+
+  // Point release: 2.0 -> 2.1. A reviewed change set bumps the major, so a name correction
+  // reading as a minor revision of the same version is what a history is meant to convey.
+  const policy = await (prisma as any).policy.findUnique({ where: { id: policyId }, select: { version: true } })
+  const cur = String(doc.version || `${Number(policy?.version) || 1}.0`)
+  const [majRaw, minRaw] = cur.split('.')
+  const maj = Number.isFinite(parseInt(majRaw, 10)) ? parseInt(majRaw, 10) : (Number(policy?.version) || 1)
+  const min = Number.isFinite(parseInt(minRaw, 10)) ? parseInt(minRaw, 10) : 0
+  const nextVersion = `${maj}.${min + 1}`
+
+  // published:true — it is already live, so it must not sit in the pending-approval count.
+  await (prisma as any).policyDocumentChange.create({
+    data: {
+      document_id: doc.id, tenant_id: tenantId, reference_key: '',
+      requirement: `${input.role_label} name updated`, placement: 'amend',
+      old_text: oldName, new_text: newName, section_title: '',
+      applied_by: input.applied_by, published: true, minor: true,
+    },
+  })
+  await rebuildDraft(doc.id)
+
+  await (prisma as any).policyDocument.update({
+    where: { id: doc.id },
+    data: { published_content: content, published_at: new Date(), published_by: input.applied_by, version: nextVersion },
+  })
+  await (prisma as any).policyDocumentVersion.create({
+    data: {
+      tenant_id: tenantId, policy_id: policyId, version: nextVersion,
+      content, change_count: 1, published_by: input.applied_by,
+    },
+  }).catch(() => {})
+
+  // Staff read the propagated copy, so a rename that does not propagate leaves the hub and the
+  // AI chat naming somebody who no longer holds the role.
+  const propagated = await propagatePublishedContent(tenantId, policyId, content)
+  await (prisma as any).policyDocument.update({ where: { id: doc.id }, data: { content_propagated: propagated } }).catch(() => {})
+
+  return { version: nextVersion, occurrences, propagated }
+}
+
 // Push published content live (S3 + format cache + search index), retrying transient failures.
 // Returns true if it landed, false if it exhausted its retries (caller records + surfaces this).
 async function propagatePublishedContent(tenantId: string, policyId: string, content: string): Promise<boolean> {

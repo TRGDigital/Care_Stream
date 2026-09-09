@@ -9,6 +9,7 @@ import { effectiveStaffRoles, effectiveSpecialistRoles } from '../data/onboardin
 import { effectiveLanguages, resolveLanguageName, DEFAULT_LANGUAGES, languageCatalog } from '../data/languages'
 import { runKnowledgeGapJobForTenant } from '../services/knowledge-gaps/digest'
 import { scanRoleMentions, saveRoleMentionScan, getRoleMentionScan } from '../services/analytics/role-mentions'
+import { roleNameImpact, applyRoleNameChange } from '../services/analytics/policy-adoption'
 import { facilityTypeToSetting } from '../lib/care-setting'
 import { SERVICE_TRIGGERS, resolveServiceProfile, sanitiseServiceProfile } from '../lib/service-triggers'
 import { runCredentialExpiryForTenant } from '../services/workforce/credentialExpiry'
@@ -561,6 +562,64 @@ settingsRouter.get('/role-mentions', async (req: Request, res: Response) => {
   } catch (e: any) {
     err(res, 'SCAN_READ_FAILED', e?.message ?? 'could not read the role scan', 500)
   }
+})
+
+// ─── Role-holder name changes ─────────────────────────────────────────────────
+//
+// Removing or replacing a named role holder. Most policies need no change at all: role names
+// are substituted at render time, so they show the new name immediately. These two endpoints
+// cover the minority whose text NAMES the person, which would otherwise keep the old name for
+// ever. See the note above roleNameImpact for why documents are never created here.
+
+settingsRouter.post('/role-name/impact', async (req: Request, res: Response) => {
+  const user = (req as any).user
+  if (user.role !== 'admin') return err(res, 'FORBIDDEN', 'Only admins can do this', 403)
+  const oldName = String((req.body ?? {}).old_name ?? '').trim()
+  if (!oldName) return err(res, 'INVALID_INPUT', 'Provide the name being changed', 400)
+  try {
+    const policies = await roleNameImpact(user.tenant_id, oldName)
+    // How many policies mention the ROLE, which update themselves. Read from the cached sweep
+    // rather than re-scanning a whole library to fill in a number on a dialog.
+    const scan = await getRoleMentionScan(user.tenant_id).catch(() => null)
+    const roleKey = String((req.body ?? {}).key ?? '')
+    const mention = scan?.mentions?.find(m => m.key === roleKey) ?? null
+    ok(res, {
+      policies,
+      total_occurrences: policies.reduce((n, p) => n + p.occurrences, 0),
+      role_mentions: mention ? mention.policies : null,
+    })
+  } catch (e: any) {
+    err(res, 'IMPACT_FAILED', e?.message ?? 'could not check your policies', 500)
+  }
+})
+
+settingsRouter.post('/role-name/apply', async (req: Request, res: Response) => {
+  const user = (req as any).user
+  if (user.role !== 'admin') return err(res, 'FORBIDDEN', 'Only admins can do this', 403)
+  const body = (req.body ?? {}) as Record<string, unknown>
+  const oldName   = String(body.old_name ?? '').trim()
+  const newName   = String(body.new_name ?? '').trim()
+  const roleLabel = String(body.role_label ?? 'Role holder').trim().slice(0, 80)
+  const ids       = Array.isArray(body.policy_ids) ? (body.policy_ids as unknown[]).map(String) : []
+  if (!oldName || !newName) return err(res, 'INVALID_INPUT', 'Provide both the old and the new name', 400)
+  if (oldName === newName)  return err(res, 'INVALID_INPUT', 'That is the same name', 400)
+  // Only the policies the tenant was shown and confirmed, never a set derived here.
+  if (!ids.length) return err(res, 'INVALID_INPUT', 'No policies were selected', 400)
+
+  const updated: Array<{ policy_id: string; version: string; occurrences: number; propagated: boolean }> = []
+  const failed:  Array<{ policy_id: string; reason: string }> = []
+  for (const policyId of ids.slice(0, 200)) {
+    try {
+      const r = await applyRoleNameChange(user.tenant_id, policyId, {
+        role_label: roleLabel, old_name: oldName, new_name: newName, applied_by: user.sub,
+      })
+      if ('error' in r) failed.push({ policy_id: policyId, reason: r.error })
+      else updated.push({ policy_id: policyId, ...r })
+    } catch (e: any) {
+      failed.push({ policy_id: policyId, reason: e?.message ?? 'failed' })
+    }
+  }
+  ok(res, { updated, failed })
 })
 
 settingsRouter.post('/role-mentions/scan', async (req: Request, res: Response) => {

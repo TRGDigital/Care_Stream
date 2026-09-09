@@ -15,7 +15,7 @@ import { enqueueIngestion } from '../workers/queue'
 import { writeAuditLog } from '../lib/audit'
 import { ok, err } from '../lib/response'
 import { checkPolicyLimit, remainingPolicySlots, PlanLimitError, trackAiAction } from '../lib/plan-limits'
-import { getEnglishPolicyHtml, getPolicyBaselineHtml } from '../lib/translate'
+import { getEnglishPolicyHtml, getPolicyBaselineHtml, getPolicyVersionHtml } from '../lib/translate'
 import { applyMinorEdit } from '../services/analytics/policy-adoption'
 
 export const policiesRouter = Router()
@@ -642,9 +642,16 @@ policiesRouter.get('/history', requireAdmin, async (req: Request, res: Response)
 // policy actually said on the day, not a summary of what changed.
 policiesRouter.get('/history/:versionId', requireAdmin, async (req: Request, res: Response) => {
   try {
-    const v = await policyVersionContent((req as any).user.tenant_id, String(req.params.versionId))
+    const tenantId = (req as any).user.tenant_id
+    const versionId = String(req.params.versionId)
+    const v = await policyVersionContent(tenantId, versionId)
     if (!v) return err(res, 'NOT_FOUND', 'That version was not found', 404)
-    ok(res, v)
+    // Rendered by the same formatter as the policy preview, so a version reads as a document
+    // rather than as the raw extracted text. The original text still goes back alongside it:
+    // this is an evidence view, so the exact stored wording must stay reachable.
+    const { html, cached } = await getPolicyVersionHtml(tenantId, v.policy_id, versionId, v.content)
+    if (html && !cached) trackAiAction(tenantId, 'policy_format', v.policy_id)
+    ok(res, { ...v, html: html ?? '' })
   } catch (e: any) {
     err(res, 'HISTORY_FAILED', e?.message ?? 'could not read that version', 500)
   }

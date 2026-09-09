@@ -288,7 +288,7 @@ export function createApiClient(token: string) {
       history: () =>
         apiFetch<{ history: PolicyHistoryEntry[] }>('/policies/history', token),
       versionContent: (versionId: string) =>
-        apiFetch<{ policy_name: string; version: string; published_at: string; published_by: string | null; content: string }>(`/policies/history/${versionId}`, token),
+        apiFetch<{ policy_name: string; version: string; published_at: string; published_by: string | null; content: string; html: string }>(`/policies/history/${versionId}`, token),
 
       list: (params?: Record<string, string>) => {
         const qs = params ? '?' + new URLSearchParams(params) : ''

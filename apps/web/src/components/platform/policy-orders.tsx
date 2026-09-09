@@ -74,7 +74,15 @@ export function PolicyOrders({ token }: { token: string }) {
   }
 
 
-  if (!orders) return null
+  if (!orders) {
+    if (!error) return null
+    return (
+      <div className="mb-5 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-5 py-3 text-sm text-red-800">
+        <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+        <span>Could not load the order queue: {error}. Clients may have paid for policies that are not shown here.</span>
+      </div>
+    )
+  }
 
   const owed = orders.filter(o => o.status !== 'approved' && o.status !== 'refunded')
 

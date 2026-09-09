@@ -383,16 +383,51 @@ export interface PolicyCheckoutInput {
   referenceKeysByTitle: Record<string, string[]>
 }
 
+// The tenant's Stripe customer, created and saved if they do not have one yet.
+//
+// This matters for invoices, not for taking the money. Passing customer_email alone makes
+// Stripe create a fresh guest customer per checkout, and the invoice is raised against that
+// guest. The billing page lists invoices for tenant.stripe_customer_id, so a real invoice
+// existed but was invisible: different customer.
+//
+// A tenant on a subscription already has one. A comped or internal account like CS-1001 does
+// not, which is exactly the case the first live test hit.
+export async function ensureTenantCustomer(tenantId: string, email: string): Promise<string | null> {
+  const tenant = await (prisma as any).tenant.findUnique({
+    where: { id: tenantId },
+    select: { stripe_customer_id: true, name: true },
+  })
+  if (!tenant) return null
+  if (tenant.stripe_customer_id) return tenant.stripe_customer_id
+  try {
+    const customer = await getStripe().customers.create(
+      { email, name: tenant.name, metadata: { tenant_id: tenantId } },
+      managedPaymentsRequestOptions(),
+    )
+    await (prisma as any).tenant.update({
+      where: { id: tenantId },
+      data:  { stripe_customer_id: customer.id },
+    })
+    return customer.id
+  } catch {
+    // Never block a sale on this. Worst case the invoice lands on a guest customer, which is
+    // what happened before, and the purchase itself is unaffected.
+    return null
+  }
+}
+
 export async function createPolicyCheckoutSession(input: PolicyCheckoutInput): Promise<string> {
   const stripe = getStripe()
   const priceId = await policyPriceId()
+  const customerId = await ensureTenantCustomer(input.tenantId, input.email)
   const titles = input.titles.map(t => t.trim()).filter(Boolean).slice(0, 25)
   if (!titles.length) throw new Error('No policies selected')
 
   const params: Stripe.Checkout.SessionCreateParams = {
     mode:       'payment',
     line_items: [{ price: priceId, quantity: titles.length }],
-    customer_email: input.email,
+    // Stripe rejects customer and customer_email together, so it is one or the other.
+    ...(customerId ? { customer: customerId } : { customer_email: input.email }),
     metadata: {
       kind:      'policy',
       tenant_id: input.tenantId,

@@ -99,6 +99,14 @@ export function MissingPoliciesBanner({ token }: { token: string }) {
       })
   }, [token])
 
+  if (error && !report) {
+    return (
+      <div className="mb-6 flex items-start gap-2 rounded-card border-2 border-red-200 bg-red-50 px-5 py-4 text-sm text-red-800">
+        <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+        <span>We could not confirm your order: {error}. Your payment is safe. Please contact us and we will sort it out.</span>
+      </div>
+    )
+  }
   if (!report || !report.analysed || report.stale) return null
 
   const bought = new Map(purchases.map(p => [p.policy_title, p]))

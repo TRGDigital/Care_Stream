@@ -35,7 +35,13 @@ type Reg = {
   required_elements: string[]
 }
 
-const SYSTEM = `You write policies for UK adult social care providers.
+/** The writer's standing instructions, editable at /platform/prompts under `policy_writer`.
+ *
+ *  Only the standing instructions live here. The per-policy facts (title, home, address, the
+ *  regulations it must satisfy, the required elements and the home's named role holders) are
+ *  assembled by buildUserMessage below and sent separately, so editing this cannot break the
+ *  contract with the data. */
+export const DEFAULT_POLICY_WRITER_PROMPT = `You write policies for UK adult social care providers.
 
 You are writing a real policy for a real, named home. It will be read by their staff, and by
 a CQC inspector, and it must stand up to both.
@@ -65,6 +71,20 @@ Structure, exactly:
 8. "## Review" — how often this policy is reviewed and by whom.
 
 Return markdown only. No preamble, no closing commentary, no code fences.`
+
+export const POLICY_WRITER_PROMPT_USAGE = 'policy_writer'
+
+/** The edited prompt if a platform admin has saved one, otherwise the default above.
+ *  A blank saved prompt falls back rather than sending the model no instructions at all,
+ *  which would produce a plausible-looking policy with none of the rules that make it safe. */
+async function getPolicyWriterPrompt(): Promise<string> {
+  try {
+    const row = await (prisma as any).aiPrompt.findUnique({ where: { usage: POLICY_WRITER_PROMPT_USAGE } })
+    const stored = typeof row?.content === 'string' ? row.content.trim() : ''
+    if (stored) return stored
+  } catch { /* fall through to the default */ }
+  return DEFAULT_POLICY_WRITER_PROMPT
+}
 
 function buildUserMessage(opts: {
   title: string
@@ -135,7 +155,7 @@ export async function writePolicy(purchaseId: string): Promise<WrittenPolicy> {
   }))
 
   const markdown = (await callClaude(
-    SYSTEM,
+    await getPolicyWriterPrompt(),
     buildUserMessage({
       title:    purchase.policy_title,
       homeName: tenant.name,

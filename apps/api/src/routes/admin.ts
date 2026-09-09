@@ -38,6 +38,7 @@ import crypto from 'crypto'
 import { DEFAULT_QUESTION_GENERATION_PROMPT, DEFAULT_ANSWER_EVALUATION_PROMPT } from './cqc-staff-questions'
 import { DEFAULT_AUDIT_RECOMMENDATIONS_PROMPT, ensurePlatformTemplatesSeeded } from './audits'
 import { DEFAULT_REGULATION_COVERAGE_PROMPT } from '../services/analytics/regulation-coverage'
+import { DEFAULT_POLICY_WRITER_PROMPT } from '../services/policy-writer/write-policy'
 import { defaultSignalSeeds, signalMatches, type TextSignal } from '../services/analytics/policy-lint-signals'
 import { callClaude } from '../services/ai/claude'
 import { snapshotAndAlert } from '../services/regulations/versioning'
@@ -2550,6 +2551,7 @@ const USAGE_LABELS: Record<string, string> = {
   training_module_generation:     'Annual Training — Module Generation',
   training_image_generation:       'Annual Training — Cover Image',
   regulation_coverage:             'Policy Gaps — Regulation Coverage',
+  policy_writer:                   'Policy Writer — Policies we write for clients',
 }
 
 // Seed any missing prompts — checks per-usage so new prompts are added even when others already exist.
@@ -2578,6 +2580,7 @@ async function ensurePromptsSeeded() {
     training_module_generation: DEFAULT_TRAINING_MODULE_PROMPT,
     training_image_generation:  DEFAULT_TRAINING_IMAGE_PROMPT,
     regulation_coverage:        DEFAULT_REGULATION_COVERAGE_PROMPT,
+    policy_writer:              DEFAULT_POLICY_WRITER_PROMPT,
   }
   for (const [usage, content] of Object.entries(inlineDefaults)) {
     const existing = await (prisma as any).aiPrompt.findUnique({ where: { usage } })

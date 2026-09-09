@@ -2563,6 +2563,8 @@ model PolicyPurchase {
   stripe_payment_id String
   status            String    @default("paid")   // paid | drafting | drafted | approved | refunded
   policy_id         String?
+  draft_content     String?   // the written policy, held until a person approves it
+  drafted_by        String?
   drafted_at        DateTime?
   approved_at       DateTime?
   approved_by       String?

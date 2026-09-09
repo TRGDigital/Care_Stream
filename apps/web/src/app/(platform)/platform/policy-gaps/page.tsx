@@ -7,6 +7,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { createPlatformClient, type MissingPolicyReport } from '@/lib/platform-api'
+import { PolicyOrders } from '@/components/platform/policy-orders'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { PlatformShell } from '@/components/platform-shell'
 import { SearchCheck, Loader2, Building2, Sparkles, CheckCircle2, AlertTriangle, EyeOff, Lock, ChevronDown, ChevronRight, Grid3x3, User } from 'lucide-react'
@@ -199,6 +200,8 @@ export default function PolicyGapsPage() {
             </div>
           )}
         </div>
+
+        {token && <PolicyOrders token={token} />}
 
         {/* Missing against legislation, as opposed to missing against peers.
             The peer report below answers "what do similar homes have that this one does not".

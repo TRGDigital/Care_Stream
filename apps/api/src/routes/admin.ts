@@ -43,6 +43,7 @@ import { defaultSignalSeeds, signalMatches, type TextSignal } from '../services/
 import { callClaude } from '../services/ai/claude'
 import { snapshotAndAlert } from '../services/regulations/versioning'
 import { checkRegulationSources } from '../services/regulations/source-monitor'
+import { reviewPendingChanges, DEFAULT_CHANGE_REVIEW_PROMPT } from '../services/regulations/change-review'
 
 export const adminRouter = Router()
 
@@ -2206,6 +2207,60 @@ adminRouter.post('/regulations/check-sources', async (_req: Request, res: Respon
   }
 })
 
+// ─── Detected source changes ─────────────────────────────────────────────────
+// What changed on a regulation's source page, what it means, and which tenants' policies it
+// lands on. NOTE ON ORDER: registered before '/regulations/:id/versions' so 'changes' is
+// never read as a regulation id.
+
+adminRouter.get('/regulations/changes', async (req: Request, res: Response) => {
+  const status = String(req.query.status ?? '')
+  try {
+    const changes = await (prisma as any).regulationChange.findMany({
+      where:   status ? { status } : {},
+      orderBy: { detected_at: 'desc' },
+      take:    200,
+    })
+    ok(res, {
+      changes,
+      counts: {
+        new:       await (prisma as any).regulationChange.count({ where: { status: 'new' } }),
+        notified:  await (prisma as any).regulationChange.count({ where: { status: 'notified' } }),
+        dismissed: await (prisma as any).regulationChange.count({ where: { status: 'dismissed' } }),
+        unreviewed: await (prisma as any).regulationChange.count({ where: { reviewed_at: null } }),
+      },
+    })
+  } catch (e: any) {
+    err(res, 'CHANGES_FAILED', e.message ?? 'Could not read detected changes', 500)
+  }
+})
+
+// Explain any change that has not been reviewed yet. Separate from detection on purpose: a
+// model outage should delay explanations, never lose a detection.
+adminRouter.post('/regulations/changes/review', async (_req: Request, res: Response) => {
+  try {
+    ok(res, await reviewPendingChanges())
+  } catch (e: any) {
+    err(res, 'REVIEW_FAILED', e.message ?? 'Review failed', 500)
+  }
+})
+
+// Dismiss a change, or mark that tenants have been told about it.
+adminRouter.patch('/regulations/changes/:id', async (req: Request, res: Response) => {
+  const status = String((req.body ?? {}).status ?? '')
+  if (!['new', 'dismissed', 'notified'].includes(status)) {
+    return err(res, 'INVALID_INPUT', 'status must be new, dismissed or notified', 400)
+  }
+  try {
+    const updated = await (prisma as any).regulationChange.update({
+      where: { id: String(req.params.id) },
+      data:  { status, ...(status === 'notified' ? { notified_at: new Date() } : {}) },
+    })
+    ok(res, { change: updated })
+  } catch (e: any) {
+    err(res, 'UPDATE_FAILED', e.message ?? 'Could not update that change', 500)
+  }
+})
+
 // ─── GET /admin/regulations/:id/versions ─────────────────────────────────────
 // Change history for a regulation (most recent first) for the console diff view.
 adminRouter.get('/regulations/:id/versions', async (req: Request, res: Response) => {
@@ -2552,6 +2607,7 @@ const USAGE_LABELS: Record<string, string> = {
   training_image_generation:       'Annual Training — Cover Image',
   regulation_coverage:             'Policy Gaps — Regulation Coverage',
   policy_writer:                   'Policy Writer — Policies we write for clients',
+  regulation_change_review:        'Legislation Monitor — Change review',
 }
 
 // Seed any missing prompts — checks per-usage so new prompts are added even when others already exist.
@@ -2581,6 +2637,7 @@ async function ensurePromptsSeeded() {
     training_image_generation:  DEFAULT_TRAINING_IMAGE_PROMPT,
     regulation_coverage:        DEFAULT_REGULATION_COVERAGE_PROMPT,
     policy_writer:              DEFAULT_POLICY_WRITER_PROMPT,
+    regulation_change_review:   DEFAULT_CHANGE_REVIEW_PROMPT,
   }
   for (const [usage, content] of Object.entries(inlineDefaults)) {
     const existing = await (prisma as any).aiPrompt.findUnique({ where: { usage } })

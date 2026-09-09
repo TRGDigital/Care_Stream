@@ -6,6 +6,7 @@ import { clsx } from 'clsx'
 import { clearPlatformToken } from '@/lib/platform-api'
 import {
   LayoutDashboard, Building2, BarChart2, BookOpen, FileText, LogOut, Sparkles, PoundSterling, Newspaper, ShieldCheck, ClipboardCheck, LineChart, UserPlus, GraduationCap, Mail, Lightbulb, Award, Languages, MessageSquareText, SearchCheck, ListChecks, LifeBuoy, ShoppingCart, Milestone,
+  Scale,
 } from 'lucide-react'
 
 // Grouped so related tools sit together: business first, then the training shop,
@@ -42,6 +43,7 @@ const NAV_GROUPS: Array<{ title: string | null; items: Array<{ href: string; lab
     title: 'Policy & Compliance',
     items: [
       { href: '/platform/regulations',     label: 'Regulations',      Icon: BookOpen        },
+      { href: '/platform/regulation-changes', label: 'Legislation Changes', Icon: Scale     },
       { href: '/platform/quality-statements', label: 'CQC Quality Statements', Icon: ListChecks },
       { href: '/platform/policy-lint',     label: 'Policy Stale Signals', Icon: SearchCheck   },
       { href: '/platform/policy-gaps',     label: 'Policy Gaps',      Icon: SearchCheck     },

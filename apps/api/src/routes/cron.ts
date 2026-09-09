@@ -27,6 +27,7 @@ import { sendLicenceRenewalReminders } from '../services/training/licence-renewa
 import { dispatchDue } from '../services/onboarding/dispatch'
 import { seedOnboardingEmails } from '../services/onboarding/seed'
 import { checkRegulationSources } from '../services/regulations/source-monitor'
+import { reviewPendingChanges } from '../services/regulations/change-review'
 import { runCredentialExpiryAllTenants } from '../services/workforce/credentialExpiry'
 import { runSupervisionReminders } from '../services/workforce/supervisionReminders'
 import { runPolicyReviewReminders } from '../services/policies/review-reminders'
@@ -121,7 +122,14 @@ cronRouter.get('/onboarding-emails', (req, res) =>
 // Weekly: fingerprint each regulation's source URLs and flag any whose source page
 // changed for platform-team review (never auto-edits content).
 cronRouter.get('/regulation-source-monitor', (req, res) =>
-  job('regulation-source-monitor', req, res, () => checkRegulationSources()))
+  job('regulation-source-monitor', req, res, async () => {
+    const scan = await checkRegulationSources()
+    // Explain what was found in the same run, so Monday morning brings changes that already
+    // read as English. Reviewed separately from detection, so a model failure here costs the
+    // summaries and not the detections.
+    const review = await reviewPendingChanges().catch(() => ({ reviewed: 0, failed: 0 }))
+    return { ...scan, ...review }
+  }))
 
 // Daily: email training-only admins when their training licences are within 30 days
 // of renewal (one reminder per licence, idempotent via renewal_reminded_at).

@@ -1,4 +1,32 @@
 
+/** One policy's published history, from GET /policies/history. */
+export type PolicyHistoryEntry = {
+  policy_id: string
+  policy_name: string
+  carestream_written: boolean
+  versions: Array<{
+    version_id: string
+    version: string
+    published_at: string
+    published_by: string | null
+    change_count: number
+    changes: Array<{
+      requirement: string
+      section_title: string | null
+      reference_key: string | null
+      regulation: string | null
+      reverted: boolean
+    }>
+    approvals: Array<{
+      stage: string
+      decision: string
+      approver_name: string | null
+      comment: string | null
+      at: string
+    }>
+  }>
+}
+
 /** A regulation in scope with no policy behind it, from GET /analytics/gaps/missing-policies. */
 export type MissingPolicyReport = {
   analysed: boolean
@@ -253,6 +281,13 @@ export function createApiClient(token: string) {
     },
 
     policies: {
+      // What changed, when, why and who signed it off. The version call returns the policy's
+      // full text as published on that date.
+      history: () =>
+        apiFetch<{ history: PolicyHistoryEntry[] }>('/policies/history', token),
+      versionContent: (versionId: string) =>
+        apiFetch<{ policy_name: string; version: string; published_at: string; published_by: string | null; content: string }>(`/policies/history/${versionId}`, token),
+
       list: (params?: Record<string, string>) => {
         const qs = params ? '?' + new URLSearchParams(params) : ''
         return apiFetch<any>(`/policies${qs}`, token)

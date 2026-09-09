@@ -1,3 +1,11 @@
+
+/** Which named roles a home's own policies ask for, from GET /settings/role-mentions. */
+export type RoleMentionScan = {
+  scanned_at: string
+  policies_scanned: number
+  policies_unreadable: number
+  mentions: Array<{ key: string; label: string; policies: number; example: string | null }>
+}
 // Typed fetch client for the CareStreamAI API.
 // All requests attach the NextAuth access token as Bearer.
 // Response envelope: { success, data } | { success: false, error: { code, message } }
@@ -373,6 +381,12 @@ export function createApiClient(token: string) {
         }),
       sendKnowledgeGapDigest: () =>
         apiFetch<{ digest_sent: boolean; refreshers: number }>('/settings/knowledge-gap-digest/send', token, { method: 'POST' }),
+      // Which named roles this home's own policies mention. Reading is instant; scanning
+      // reads every policy's text, so it is a deliberate action.
+      roleMentions: () =>
+        apiFetch<{ scan: RoleMentionScan | null }>('/settings/role-mentions', token),
+      scanRoleMentions: () =>
+        apiFetch<{ scan: RoleMentionScan }>('/settings/role-mentions/scan', token, { method: 'POST' }),
       translationSuggestions: (status?: string) =>
         apiFetch<{ suggestions: TranslationSuggestion[]; pending_count: number }>(`/translation-suggestions${status ? `?status=${status}` : ''}`, token),
       reviewTranslationSuggestion: (id: string, data: { action?: 'approve' | 'reject' | 'pending'; suggested_text?: string }) =>

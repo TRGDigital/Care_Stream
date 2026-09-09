@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { signIn, signOut, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { createApiClient } from '@/lib/api-client'
+import { createApiClient, type RoleMentionScan } from '@/lib/api-client'
 import { usePlanFeatures } from '@/lib/use-plan-features'
 import { persistentCache } from '@/lib/page-cache'
 import { Button } from '@/components/ui/button'
@@ -170,6 +170,11 @@ export default function SettingsPage() {
   const [roleInput,      setRoleInput]      = useState<Record<string, string>>({})
   const [savingOrg,      setSavingOrg]      = useState(false)
   const [orgSaved,       setOrgSaved]       = useState(false)
+  // Which roles this home's own policies ask for. Every role stays listed below whether or
+  // not it appears here; this only marks the ones the documents actually name, so it is
+  // obvious which are worth filling in first.
+  const [roleScan,       setRoleScan]       = useState<RoleMentionScan | null>(null)
+  const [scanningRoles,  setScanningRoles]  = useState(false)
   const [logoUrl,        setLogoUrl]        = useState<string | null>(null)
   const [newEmail,       setNewEmail]       = useState('')
   const [staffRoles,     setStaffRoles]     = useState<string[]>([])
@@ -289,6 +294,7 @@ export default function SettingsPage() {
       .then(([data, sitesData, trainingData]) => {
         setInboundEmail(data.inbound_email)
         setAccountNumber((data as any).account_number ?? '')
+        void loadRoleScan()
         setAllowlist(data.email_allowlist)
         setFacilityType((data as any).facility_type ?? 'care home')
         setServiceProfile((data as any).service_profile ?? {})
@@ -345,6 +351,37 @@ export default function SettingsPage() {
     try { await createApiClient(session.accessToken).settings.update({ room_count: n } as any); setRoomCount(n); setRoomsSaved(true); setTimeout(() => setRoomsSaved(false), 2500) }
     catch (e: any) { setError(e.message ?? 'Failed to save') }
     finally { setSavingRooms(false) }
+  }
+
+  // Which roles this home's own policies ask for.
+  //
+  // Reading a stored scan is instant. Running one reads every policy's text, most of which
+  // lives in object storage rather than the database, so it is an explicit action and never
+  // happens on page load. It spends no AI credit.
+  // Mentioned in a policy, but nobody named for it. These are the ones actually worth
+  // chasing, and they are the reason the scan exists.
+  const needsName = (roleScan?.mentions ?? []).filter(m => {
+    if (m.policies === 0) return false
+    const rh = orgContext.role_holders.find(r => r.key === m.key)
+    return !!rh && rh.derived.length === 0 && roleManual(m.key).length === 0
+  })
+
+  async function loadRoleScan() {
+    if (!session?.accessToken) return
+    try {
+      const r = await createApiClient(session.accessToken).settings.roleMentions()
+      setRoleScan(r.scan)
+    } catch { /* no scan yet is the normal first state; the section offers to run one */ }
+  }
+
+  async function runRoleScan() {
+    if (!session?.accessToken) return
+    setScanningRoles(true)
+    try {
+      const r = await createApiClient(session.accessToken).settings.scanRoleMentions()
+      setRoleScan(r.scan)
+    } catch { /* leaves the previous scan in place rather than blanking the section */ }
+    finally { setScanningRoles(false) }
   }
 
   async function saveOrgDetails(override?: Record<string, string>) {
@@ -990,12 +1027,60 @@ export default function SettingsPage() {
             <div className="mt-6">
               <p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">Role-holders</p>
               <p className="mt-1 text-xs text-neutral-mid">Names appear here automatically when you give a staff member the matching position or specialist role (for example a <strong>Care Manager</strong> becomes the registered manager). You can add extra names too. Where a role is shared, you pick which person when you adopt text into a policy.</p>
+              {/* Every role stays listed below whether or not a policy mentions it, so anyone
+                  can fill in whoever they like. This just marks the ones their own documents
+                  actually ask for, which is a far better guide than a form of twenty four
+                  boxes. Costs no AI credit: it is a text search over policies we already hold. */}
+              <div className="mt-4 rounded-lg border border-gray-200 bg-neutral-light/40 p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-neutral-dark">Roles your policies ask for</p>
+                    <p className="mt-0.5 text-sm text-neutral-mid">
+                      {roleScan
+                        ? `Read ${roleScan.policies_scanned} of your policies. ${roleScan.mentions.filter(m => m.policies > 0).length} roles are named in them.`
+                        : 'We can read your policies and tell you which roles they name, so you know which of these are worth filling in.'}
+                    </p>
+                  </div>
+                  <Button onClick={runRoleScan} disabled={scanningRoles} size="md" variant="secondary">
+                    {scanningRoles ? 'Reading your policies…' : roleScan ? 'Check again' : 'Check my policies'}
+                  </Button>
+                </div>
+                {roleScan && needsName.length > 0 && (
+                  <p className="mt-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                    {needsName.length === 1
+                      ? `1 role is mentioned in your policies but nobody is named: ${needsName[0].label}.`
+                      : `${needsName.length} roles are mentioned in your policies but nobody is named: ${needsName.map(m => m.label).join(', ')}.`}
+                  </p>
+                )}
+                {roleScan && roleScan.policies_unreadable > 0 && (
+                  <p className="mt-2 text-xs text-neutral-mid">
+                    {roleScan.policies_unreadable} policies could not be read, so a role mentioned only in those will not show here.
+                  </p>
+                )}
+              </div>
+
               <div className="mt-3 space-y-4">
                 {orgContext.role_holders.map(rh => {
                   const manual = roleManual(rh.key)
+                  const mention = roleScan?.mentions.find(m => m.key === rh.key)
                   return (
                     <div key={rh.key}>
-                      <label className="mb-1 block text-sm font-medium text-neutral-dark">{rh.role}</label>
+                      <label className="mb-1 flex flex-wrap items-center gap-2 text-sm font-medium text-neutral-dark">
+                        {rh.role}
+                        {mention && mention.policies > 0 && (
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                              manual.length === 0 && rh.derived.length === 0
+                                ? 'bg-amber-100 text-amber-900'
+                                : 'bg-neutral-light text-neutral-mid'
+                            }`}
+                            title={mention.example ? `For example: ${mention.example}` : undefined}
+                          >
+                            in {mention.policies} {mention.policies === 1 ? 'policy' : 'policies'}
+                            {manual.length === 0 && rh.derived.length === 0 ? ' · needs a name' : ''}
+                          </span>
+                        )}
+                      </label>
                       <div className="mb-2 flex gap-2">
                         <input
                           type="text"

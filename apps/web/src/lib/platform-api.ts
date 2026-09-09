@@ -596,6 +596,34 @@ export interface UseCaseAllocation {
   posts:     Array<{ id: string; title: string; slug: string; status: string }>
 }
 
+/** A detected change to a regulation's source page. `impacted` is snapshotted at detection
+ *  from the tenants' own coverage analyses, so it names the actual policy to revise. */
+export type RegulationChange = {
+  id: string
+  reference_key: string
+  official_name: string
+  url: string
+  detected_at: string
+  added_text: string
+  removed_text: string
+  summary: string
+  affects_policies: boolean | null
+  impact_note: string
+  severity: string
+  reviewed_at: string | null
+  impacted: Array<{
+    tenant_id: string
+    tenant_name: string
+    account_number: string
+    policy_id: string | null
+    policy_name: string | null
+    coverage_status: string
+  }>
+  status: string
+  notified_at: string | null
+  notified_count: number
+}
+
 export function createPlatformClient(token: string) {
   return {
     stats: () =>
@@ -938,7 +966,16 @@ export function createPlatformClient(token: string) {
       versions: (id: string) =>
         adminFetch<{ versions: Array<{ id: string; changed_fields: string[]; material: boolean; created_at: string }> }>(`/regulations/${id}/versions`, token),
       checkSources: () =>
-        adminFetch<{ regulations: number; urls_checked: number; changed: number; flagged: number; errors: number; flagged_regs: Array<{ reference_key: string; official_name: string; url: string }> }>('/regulations/check-sources', token, { method: 'POST' }),
+        adminFetch<{ regulations: number; urls_checked: number; changed: number; flagged: number; errors: number; recorded?: number; unchanged_text?: number; flagged_regs: Array<{ reference_key: string; official_name: string; url: string }> }>('/regulations/check-sources', token, { method: 'POST' }),
+
+      /** Detected source-page changes: what changed, what it means, who it lands on. */
+      changes: (status?: string) =>
+        adminFetch<{ changes: RegulationChange[]; counts: { new: number; notified: number; dismissed: number; unreviewed: number } }>(
+          `/regulations/changes${status ? `?status=${encodeURIComponent(status)}` : ''}`, token),
+      reviewChanges: () =>
+        adminFetch<{ reviewed: number; failed: number }>('/regulations/changes/review', token, { method: 'POST' }),
+      setChangeStatus: (id: string, status: 'new' | 'dismissed' | 'notified') =>
+        adminFetch<{ change: RegulationChange }>(`/regulations/changes/${id}`, token, { method: 'PATCH', body: JSON.stringify({ status }) }),
     },
 
     qualityStatements: {

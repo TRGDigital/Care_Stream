@@ -749,6 +749,9 @@ model RegulationSourceCheck {
   fingerprint     String?
   last_checked_at DateTime?
   last_changed_at DateTime?
+  /// The page's extracted text as of the last check. Kept so a change can say WHAT changed
+  /// rather than only that a fingerprint differs.
+  content         String?
 
   @@unique([reference_key, url])
   @@index([reference_key])
@@ -969,6 +972,37 @@ model CoverageSuggestionDecision {
 // ─── AI Prompt Versions ───────────────────────────────────────────────────────
 
 // Snapshot of each prompt before it is overwritten via the platform admin UI.
+// What actually changed on a regulation's source page, and who it lands on.
+// See manual_regulation_changes.sql.
+model RegulationChange {
+  id            String   @id @default(uuid())
+  reference_key String
+  official_name String   @default("")
+  url           String
+  detected_at   DateTime @default(now())
+  /// The diff, capped. Two full documents per change would grow without limit for no
+  /// added answer: the question is always "what is different".
+  added_text    String   @default("")
+  removed_text  String   @default("")
+  /// Null until the AI review has run, so a change is visible immediately and explained
+  /// shortly after.
+  summary          String  @default("")
+  affects_policies Boolean?
+  impact_note      String  @default("")
+  severity         String  @default("")
+  reviewed_at      DateTime?
+  /// Affected tenants and policies, snapshotted at detection: coverage is re-analysed and
+  /// would otherwise rewrite history.
+  impacted       Json     @default("[]")
+  status         String   @default("new")
+  notified_at    DateTime?
+  notified_count Int      @default(0)
+
+  @@index([status, detected_at])
+  @@index([reference_key, detected_at])
+  @@map("regulation_changes")
+}
+
 // Heartbeat for scheduled jobs. A row that never appears is the signal: eight jobs stopped
 // on 5 June 2026 and nobody found out for 96 days, because nothing recorded that they were
 // meant to have run. See manual_cron_runs.sql.

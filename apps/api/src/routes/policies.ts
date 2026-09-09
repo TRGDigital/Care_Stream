@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express'
+import { policyHistory, policyVersionContent } from '../services/analytics/policy-history'
 import { z } from 'zod'
 import { v4 as uuidv4 } from 'uuid'
 import crypto from 'crypto'
@@ -617,6 +618,38 @@ policiesRouter.post('/bulk', requireAdmin, bulkUploadMiddleware, async (req: Req
 // English HTML (same content served in the hub / induction full-copy view), plus
 // the original extracted text so the admin can see what was removed. Uses the
 // cached formatted HTML when present; generates + caches it on demand otherwise.
+// NOTE ON ORDER: registered BEFORE '/:id' below. Express matches in registration order,
+// so with '/:id' first a request for '/history' is handled as a policy whose id is
+// "history". That exact mistake made the platform order queue look empty after a real
+// payment; it is not worth making twice.
+// ─── Version history ──────────────────────────────────────────────────────────
+//
+// What changed, when, why and who signed it off. All of it already existed in the database
+// and was simply never surfaced. Only policies that HAVE a history are returned: history comes
+// from the adoption and approval flow rather than from uploading a file, so most of a library
+// has none, and listing those as empty rows would read as lost history rather than as nothing
+// having happened yet.
+
+policiesRouter.get('/history', requireAdmin, async (req: Request, res: Response) => {
+  try {
+    ok(res, { history: await policyHistory((req as any).user.tenant_id) })
+  } catch (e: any) {
+    err(res, 'HISTORY_FAILED', e?.message ?? 'could not read the policy history', 500)
+  }
+})
+
+// A stored version's full text. This is the part that matters at an inspection: what the
+// policy actually said on the day, not a summary of what changed.
+policiesRouter.get('/history/:versionId', requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const v = await policyVersionContent((req as any).user.tenant_id, String(req.params.versionId))
+    if (!v) return err(res, 'NOT_FOUND', 'That version was not found', 404)
+    ok(res, v)
+  } catch (e: any) {
+    err(res, 'HISTORY_FAILED', e?.message ?? 'could not read that version', 500)
+  }
+})
+
 policiesRouter.get('/:id/preview', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = getTenantId()
   const policyId = String(req.params.id)

@@ -5,6 +5,7 @@
 import { useEffect, useState, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { useSession } from 'next-auth/react'
+import { PolicyHistoryTab } from '@/components/admin/policy-history-tab'
 import { createApiClient } from '@/lib/api-client'
 import EditablePolicyBody from '@/components/admin/editable-policy-body'
 import SlowLoadHint from '@/components/admin/slow-load-hint'
@@ -69,7 +70,7 @@ export default function PoliciesPage() {
   const userId = session?.user?.email ?? 'guest'
   const [policies,       setPolicies]       = useState<any[]>([])
   const [loading,        setLoading]        = useState(true)
-  const [tab,            setTab]            = useState<'active' | 'archived'>('active')
+  const [tab,            setTab]            = useState<'active' | 'archived' | 'history'>('active')
   const [search,         setSearch]         = useState('')
   const [showUpload,     setShowUpload]     = useState(false)
   const [showBulkUpload, setShowBulkUpload] = useState(false)
@@ -334,6 +335,16 @@ export default function PoliciesPage() {
             </span>
           )}
         </button>
+        <button
+          onClick={() => setTab('history')}
+          className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+            tab === 'history'
+              ? 'border-teal text-teal'
+              : 'border-transparent text-neutral-mid hover:text-neutral-dark'
+          }`}
+        >
+          History
+        </button>
       </div>
 
       {/* Possible content duplicates — same policy text under a different name */}
@@ -556,7 +567,7 @@ export default function PoliciesPage() {
       })()}
 
       {/* Search */}
-      {!loading && tabPolicies.length > 0 && (
+      {tab !== 'history' && !loading && tabPolicies.length > 0 && (
         <div className="relative mb-4 max-w-md">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-mid" />
           <input
@@ -574,7 +585,9 @@ export default function PoliciesPage() {
       )}
 
       {/* Content */}
-      {loading ? (
+      {tab === 'history' ? (
+        session?.accessToken ? <PolicyHistoryTab token={session.accessToken} /> : null
+      ) : loading ? (
         <div className="rounded-card bg-white shadow-card px-6 py-6">
           <p className="text-sm text-neutral-mid">Loading…</p>
         </div>

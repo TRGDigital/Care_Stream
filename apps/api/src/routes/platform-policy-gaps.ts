@@ -9,6 +9,7 @@ import { writePolicy } from '../services/policy-writer/write-policy'
 import { uploadPolicyFile } from '../services/storage/s3'
 import { enqueueIngestion } from '../workers/queue'
 import { randomUUID } from 'crypto'
+import { submitForApproval } from '../services/analytics/policy-adoption'
 import { startCoverageAnalysis, analyseCoverageBatch, coverageRunState } from '../services/analytics/regulation-coverage'
 
 // Platform-INTERNAL policy gap analysis. Classifies each client's policies into
@@ -185,6 +186,17 @@ platformPolicyGapsRouter.post('/orders/:id/deliver', async (req: Request, res: R
     if (!order.draft_content) return err(res, 'NO_DRAFT', 'Write the policy before approving it', 409)
     if (order.status === 'approved') return err(res, 'ALREADY_DELIVERED', 'That policy has already been delivered', 409)
 
+    // Policy.uploaded_by is a foreign key to User, so it has to be a real user in THIS tenant.
+    // A platform admin's email is neither, and using one would have failed the constraint the
+    // first time anybody pressed approve. The tenant's own admin owns the document, which is
+    // also the honest answer to "who put this in our library".
+    const owner = await (prisma as any).user.findFirst({
+      where:   { tenant_id: order.tenant_id, role: 'admin', is_active: true },
+      orderBy: { created_at: 'asc' },
+      select:  { id: true },
+    })
+    if (!owner) return err(res, 'NO_ADMIN', 'That client has no active admin to own the policy', 409)
+
     const policyId = randomUUID()
     const filename = `${order.policy_title.replace(/[^A-Za-z0-9 ]+/g, '').trim() || 'Policy'}.md`
     const buffer = Buffer.from(order.draft_content, 'utf8')
@@ -199,20 +211,22 @@ platformPolicyGapsRouter.post('/orders/:id/deliver', async (req: Request, res: R
 
     await (prisma as any).policy.create({
       data: {
-        id:                policyId,
-        tenant_id:         order.tenant_id,
-        name:              order.policy_title,
+        id:                 policyId,
+        tenant_id:          order.tenant_id,
+        name:               order.policy_title,
         filename,
-        s3_key:            s3Key,
-        document_category: 'internal_policy',
-        version:           1,
-        status:            'processing',
-        uploaded_by:       (req as any).user?.email ?? 'carestream',
+        s3_key:             s3Key,
+        document_category:  'internal_policy',
+        version:            1,
+        status:             'processing',
+        uploaded_by:        owner.id,
+        // Provenance, so nobody has to wonder later where this document came from.
+        carestream_written: true,
       },
     })
 
-    // Index it, so it is searchable and the next coverage run sees it as evidence rather than
-    // reporting the same gap we were just paid to close.
+    // Index it, so it is searchable and the next coverage run reads it as evidence rather
+    // than reporting the gap we were just paid to close.
     await enqueueIngestion({
       policy_id:         policyId,
       tenant_id:         order.tenant_id,
@@ -223,6 +237,25 @@ platformPolicyGapsRouter.post('/orders/:id/deliver', async (req: Request, res: R
       version:           1,
     }).catch(() => {})
 
+    // Into the home's own approval chain, not around it.
+    //
+    // A home with "require care manager approval" switched on has decided that nobody
+    // publishes without their care manager seeing it. A policy we wrote and charged for is the
+    // last document that should skip that. Seeding the document and calling the same
+    // submitForApproval an adopted change uses means their two settings decide what happens
+    // next, exactly as they do for everything else: care manager, then external reviewer, or
+    // straight to published when both are off.
+    await (prisma as any).policyDocument.create({
+      data: {
+        tenant_id:        order.tenant_id,
+        policy_id:        policyId,
+        original_content: order.draft_content,
+        draft_content:    order.draft_content,
+        version:          '1.0',
+      },
+    })
+    const approval = await submitForApproval(order.tenant_id, policyId, 'CareStream')
+
     const updated = await (prisma as any).policyPurchase.update({
       where: { id },
       data: {
@@ -232,7 +265,9 @@ platformPolicyGapsRouter.post('/orders/:id/deliver', async (req: Request, res: R
         approved_by: (req as any).user?.email ?? 'platform',
       },
     })
-    ok(res, { order: updated, policy_id: policyId })
+    // approval.status tells the caller where it landed: pending_manager, pending_external or
+    // published. "Delivered" on our side and "live" on theirs are different moments.
+    ok(res, { order: updated, policy_id: policyId, approval: approval?.status ?? 'unknown' })
   } catch (e: any) {
     err(res, 'DELIVER_FAILED', e?.message ?? 'could not deliver that policy', 500)
   }

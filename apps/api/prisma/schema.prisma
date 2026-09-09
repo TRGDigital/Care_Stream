@@ -389,6 +389,7 @@ model Policy {
   policy_type_confidence Float?
   policy_type_at       DateTime?
   section              String?                              // internal-policy section/taxonomy (tenant-configurable)
+  carestream_written   Boolean   @default(false)             // CareStream wrote it and the home paid for it
   generic_onboarding   Boolean   @default(false)             // flagged as a generic onboarding policy → allocatable as a one-step onboarding flow
   tags                 Json      @default("[]")
   uploaded_by          String

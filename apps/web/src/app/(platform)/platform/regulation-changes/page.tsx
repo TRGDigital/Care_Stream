@@ -10,9 +10,9 @@
 import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { PlatformShell } from '@/components/platform-shell'
-import { createPlatformClient, type RegulationChange } from '@/lib/platform-api'
+import { createPlatformClient, type RegulationChange, type MonitoredSource } from '@/lib/platform-api'
 import {
-  AlertTriangle, Check, ExternalLink, Loader2, RefreshCw, Scale, Users, X, ChevronDown,
+  AlertTriangle, Check, ExternalLink, Loader2, RefreshCw, Scale, Users, X, ChevronDown, Radar, EyeOff,
 } from 'lucide-react'
 
 const SEVERITY: Record<string, { label: string; bg: string; fg: string; border: string }> = {
@@ -33,6 +33,12 @@ export default function RegulationChangesPage() {
   const [error, setError]     = useState('')
   const [busy, setBusy]       = useState('')
   const [open, setOpen]       = useState<Set<string>>(new Set())
+  const [view, setView]       = useState<'changes' | 'sources'>('changes')
+  const [sources, setSources] = useState<{
+    sources: MonitoredSource[]
+    totals: { urls: number; regulations: number; with_text: number; not_watched: number }
+    domains: Array<{ domain: string; urls: number; healthy: number }>
+  } | null>(null)
 
   async function load(status: string) {
     if (!token) return
@@ -43,6 +49,14 @@ export default function RegulationChangesPage() {
   }
 
   useEffect(() => { void load(filter) }, [token, filter])
+
+  // Loaded once, on demand: the list only moves when a source URL is edited.
+  useEffect(() => {
+    if (!token || view !== 'sources' || sources) return
+    createPlatformClient(token).regulations.sources()
+      .then(setSources)
+      .catch((e: any) => setError(e?.message ?? 'Could not load monitored sources'))
+  }, [token, view, sources])
 
   async function runReview() {
     if (!token) return
@@ -93,7 +107,19 @@ export default function RegulationChangesPage() {
         </button>
       </div>
 
-      <div className="mt-5 flex flex-wrap gap-1.5">
+      <div className="mt-5 inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5 text-xs font-medium">
+        <button onClick={() => setView('changes')}
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 ${view === 'changes' ? 'bg-white text-neutral-dark shadow-sm' : 'text-neutral-mid'}`}>
+          <Scale size={12} /> Changes
+        </button>
+        <button onClick={() => setView('sources')}
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 ${view === 'sources' ? 'bg-white text-neutral-dark shadow-sm' : 'text-neutral-mid'}`}>
+          <Radar size={12} /> What we monitor
+        </button>
+      </div>
+
+      {view === 'changes' && (
+      <div className="mt-4 flex flex-wrap gap-1.5">
         {([['new', 'To review'], ['notified', 'Tenants told'], ['dismissed', 'Dismissed'], ['', 'All']] as const).map(([value, label]) => (
           <button
             key={value}
@@ -107,6 +133,7 @@ export default function RegulationChangesPage() {
           </button>
         ))}
       </div>
+      )}
 
       {error && (
         <p className="mt-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
@@ -114,7 +141,7 @@ export default function RegulationChangesPage() {
         </p>
       )}
 
-      {!changes ? (
+      {view === 'changes' && (!changes ? (
         <p className="mt-8 flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={15} className="animate-spin" /> Loading…</p>
       ) : changes.length === 0 ? (
         <div className="mt-8 rounded-xl border border-gray-200 bg-white px-6 py-12 text-center">
@@ -228,6 +255,85 @@ export default function RegulationChangesPage() {
             )
           })}
         </div>
+      ))}
+
+      {view === 'sources' && (
+        !sources ? (
+          <p className="mt-8 flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={15} className="animate-spin" /> Loading monitored sources…</p>
+        ) : (
+          <div className="mt-5 space-y-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {[
+                ['URLs watched',     String(sources.totals.urls)],
+                ['Regulations',      String(sources.totals.regulations)],
+                ['Can be explained', `${sources.totals.with_text} of ${sources.totals.urls}`],
+                ['Not watched',      String(sources.totals.not_watched)],
+              ].map(([label, value], i) => (
+                <div key={label} className={`rounded-xl border px-4 py-3 ${i === 3 && sources.totals.not_watched > 0 ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-white'}`}>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-neutral-mid">{label}</p>
+                  <p className={`mt-0.5 text-xl font-bold ${i === 3 && sources.totals.not_watched > 0 ? 'text-red-700' : 'text-neutral-dark'}`}>{value}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* "Can be explained" is the number that matters: a page with no stored text can be
+                detected as changed but never diffed, so it produces an alert with no evidence. */}
+            <p className="text-xs text-neutral-mid">
+              A source is only useful if a change to it can be <strong>explained</strong>, which needs its text stored.
+              Anything counted as not watched returns an error, is a PDF, or has never been reached.
+            </p>
+
+            <div className="flex flex-wrap gap-1.5">
+              {sources.domains.map(d => (
+                <span key={d.domain} className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs text-neutral-dark">
+                  {d.domain} <span className="text-neutral-mid">{d.healthy}/{d.urls}</span>
+                </span>
+              ))}
+            </div>
+
+            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+              <table className="w-full text-left text-xs">
+                <thead className="border-b border-gray-100 bg-neutral-light/50 text-[11px] uppercase tracking-wide text-neutral-mid">
+                  <tr>
+                    <th className="px-4 py-2.5 font-bold">Regulation</th>
+                    <th className="px-4 py-2.5 font-bold">Source</th>
+                    <th className="px-4 py-2.5 font-bold">How a change is spotted</th>
+                    <th className="px-4 py-2.5 font-bold">Last checked</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {sources.sources.map(src => {
+                    const bad = ['error', 'skipped', 'never-checked'].includes(src.signal)
+                    return (
+                      <tr key={`${src.reference_key}-${src.url}`} className={bad ? 'bg-red-50/40' : undefined}>
+                        <td className="px-4 py-2.5 align-top font-medium text-neutral-dark">{src.official_name}</td>
+                        <td className="px-4 py-2.5 align-top">
+                          <a href={src.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-start gap-1 text-purple-600 hover:underline">
+                            <ExternalLink size={10} className="mt-0.5 shrink-0" />
+                            <span className="break-all">{src.url.replace(/^https?:\/\//, '')}</span>
+                          </a>
+                        </td>
+                        <td className="px-4 py-2.5 align-top">
+                          {bad ? (
+                            <span className="inline-flex items-center gap-1 font-semibold text-red-700"><EyeOff size={11} /> Not watched</span>
+                          ) : (
+                            <span className="text-neutral-mid">
+                              {src.signal === 'last-modified' ? 'Publication date' : 'Page text'}
+                              {!src.has_text && <span className="ml-1 text-amber-700">· no text stored</span>}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2.5 align-top whitespace-nowrap text-neutral-mid">
+                          {src.last_checked_at ? when(src.last_checked_at) : 'never'}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
       )}
       </div>
     </PlatformShell>

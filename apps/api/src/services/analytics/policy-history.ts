@@ -22,6 +22,11 @@ export type HistoryApproval = {
 export type HistoryChange = {
   requirement: string
   section_title: string | null
+  /** What the policy now says. The requirement alone ("Refers to Primary Care Trusts") names
+   *  the problem but never shows the fix, which is the thing a reader wants to check. */
+  new_text: string
+  /** What it said before, empty for a new section that replaced nothing. */
+  old_text: string
   /** The regulation that drove it, which is the answer to "why did this change?". */
   reference_key: string | null
   regulation: string | null
@@ -83,6 +88,7 @@ export async function policyHistory(tenantId: string): Promise<PolicyHistory[]> 
           select: {
             document_id: true, requirement: true, section_title: true,
             reference_key: true, reverted: true, applied_at: true, published: true,
+            old_text: true, new_text: true, placement: true,
           },
         })
       : [],
@@ -148,6 +154,10 @@ export async function policyHistory(tenantId: string): Promise<PolicyHistory[]> 
         ? (changesByDoc.get(docId ?? '') ?? []).map((c: any) => ({
             requirement:   c.requirement,
             section_title: c.section_title || null,
+            // Capped: a history page lists what happened, and a reader who wants the whole
+            // thing opens the version itself, which carries the full text.
+            new_text:      String(c.new_text ?? '').slice(0, 1200),
+            old_text:      String(c.old_text ?? '').slice(0, 1200),
             reference_key: c.reference_key || null,
             regulation:    c.reference_key ? (regName.get(c.reference_key) ?? null) : null,
             reverted:      !!c.reverted,

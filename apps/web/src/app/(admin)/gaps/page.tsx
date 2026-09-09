@@ -485,6 +485,17 @@ export default function GapsPage() {
     ? Math.round(((fullyCovered + partialRegs.length * 0.5) / totalRegs) * 100)
     : null
 
+  // Covered, partial and gap are not three equal buckets, and showing them as three numbers
+  // made a good library look like a failure. Two of them mean "you have a policy on this" and
+  // one means "you have nothing". That is the distinction a home cares about, and the only
+  // one that maps to something they can act on.
+  //
+  // A library sitting at eleven of twelve elements on almost every regulation reported as
+  // "0 fully covered", which is true and reads as catastrophic. Partial is a to-do list, not
+  // a failure, so it is counted with the policies that exist and described separately below.
+  const haveAPolicy = fullyCovered + partialRegs.length
+  const haveNothing = gapRegs.length
+
   const scoreColour =
     score == null  ? 'text-neutral-mid' :
     score >= 80    ? 'text-green-600' :
@@ -703,7 +714,9 @@ export default function GapsPage() {
           <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-neutral-mid">Coverage score</p>
           <p className={`text-4xl font-extrabold ${scoreColour}`}>{score == null ? '—' : `${score}%`}</p>
           <p className="mt-1 text-xs text-neutral-mid">
-            {data.analysed ? `${fullyCovered} fully · ${partialRegs.length} partial · ${gapRegs.length} gaps of ${totalRegs}` : 'Not yet analysed'}
+            {data.analysed
+              ? `${haveAPolicy} of ${totalRegs} regulations have a policy behind them${haveNothing > 0 ? ` · ${haveNothing} have nothing` : ''}`
+              : 'Not yet analysed'}
           </p>
         </div>
 
@@ -792,7 +805,7 @@ export default function GapsPage() {
                       </div>
                       <div className="flex shrink-0 items-center gap-3">
                         <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${reg.status === 'gap' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}>
-                          {reg.status === 'gap' ? 'Gap' : 'Partial'}
+                          {reg.status === 'gap' ? 'No policy' : 'Elements to add'}
                         </span>
                         <button
                           onClick={() => setDetailReg({ reference_key: reg.reference_key, official_name: reg.official_name })}
@@ -817,7 +830,7 @@ export default function GapsPage() {
             {coveredRegs.length > 0 && (
               <details className="border-t border-gray-100">
                 <summary className="cursor-pointer px-6 py-3 text-xs font-medium text-neutral-mid hover:text-neutral-dark">
-                  {coveredRegs.length} regulation{coveredRegs.length > 1 ? 's' : ''} fully covered
+                  {coveredRegs.length} regulation{coveredRegs.length > 1 ? 's' : ''} complete, with every element we check in place
                 </summary>
                 <div className="divide-y divide-gray-50">
                   {coveredRegs.map(reg => (

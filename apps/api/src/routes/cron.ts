@@ -6,6 +6,14 @@
 // manual_cron_schedules.sql. The schedule lives in the database because the database is the
 // one component that has to be up for anything else to work.
 //
+// DO NOT add a "crons" block back to apps/api/vercel.json. Both schedulers running would
+// fire every job twice. If Vercel scheduling is ever wanted again, remove the pg_cron jobs
+// first (see step 4 of that migration).
+//
+// Note for anyone tempted to leave a note in vercel.json explaining that: you cannot. Vercel
+// validates the file against a strict schema and fails the BUILD on any unrecognised
+// top-level key, before it prints a single build log. That is what this comment is for.
+//
 // Every job runs through `job()` below, which records a row in cron_runs whether it succeeds
 // or fails. /cron/daily-report then reads EXPECTED jobs against that table, so a job that
 // silently stops appears as a missing row rather than as nothing at all.

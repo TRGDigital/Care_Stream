@@ -9,6 +9,5 @@
   ],
   "routes": [
     { "src": "/(.*)", "dest": "/src/app.ts" }
-  ],
-  "_crons": "Scheduling moved to Postgres (pg_cron) in prisma/migrations/manual_cron_schedules.sql. These Vercel crons stopped silently on 5 June 2026 and went unnoticed for 96 days. Listing them here as well would double-fire every job if Vercel's scheduler ever resumes."
+  ]
 }

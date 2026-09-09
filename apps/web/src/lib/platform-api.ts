@@ -1208,6 +1208,9 @@ export interface MissingPolicyReport {
   /** False when coverage has never run: the list means nothing yet, which is not the same as nothing missing. */
   analysed: boolean
   analysed_at: string | null
+  /** True when the list cannot be trusted; stale_reason says why, in words fit to show. */
+  stale: boolean
+  stale_reason: string | null
   regulations_in_scope: number
   regulations_analysed: number
   counts: { covered: number; partial: number; gap: number }

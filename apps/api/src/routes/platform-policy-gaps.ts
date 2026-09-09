@@ -4,6 +4,8 @@ import { ok, err } from '../lib/response'
 import { requirePlatformAdmin } from '../middleware/auth'
 import { facilityTypeToSetting, settingLabel } from '../lib/care-setting'
 import { classifyTenantPolicies, knownPolicyTypes } from '../lib/policy-classifier'
+import { missingPolicies } from '../services/analytics/missing-policies'
+import { startCoverageAnalysis, analyseCoverageBatch, coverageRunState } from '../services/analytics/regulation-coverage'
 
 // Platform-INTERNAL policy gap analysis. Classifies each client's policies into
 // canonical types, then compares a client against peers of the same care setting
@@ -196,4 +198,53 @@ platformPolicyGapsRouter.post('/types/restore', async (req: Request, res: Respon
   if (!name) return err(res, 'INVALID_INPUT', 'name is required', 400)
   await (prisma as any).policyTypeCuration.deleteMany({ where: { care_setting, name } }).catch(() => {})
   ok(res, { restored: true })
+})
+
+// ─── Missing policies, judged against legislation rather than against peers ────
+//
+// The routes above compare a client to other clients of the same care setting. These compare
+// a client to the law: for every regulation in scope for their service, is there a policy
+// whose subject is that regulation. That is the exercise that found Gas Safety, Electrical
+// Safety and Asbestos Management missing at Ferndale, none of which any peer held either, so
+// peer comparison could never have surfaced them.
+//
+// Read and run are deliberately separate. Reading is free and instant. Running reads every
+// policy the client holds against every regulation and costs Anthropic credit, so it is never
+// a side effect of opening a screen.
+
+// GET /:tenantId/missing-policies — FREE. Reads coverage that has already been analysed.
+platformPolicyGapsRouter.get('/:tenantId/missing-policies', async (req: Request, res: Response) => {
+  try {
+    ok(res, await missingPolicies(String(req.params.tenantId)))
+  } catch (e: any) {
+    err(res, 'ANALYSIS_FAILED', e?.message ?? 'could not build the missing-policy list', 500)
+  }
+})
+
+// GET /:tenantId/coverage/state — how far a run has got, and how much is left to pay for.
+platformPolicyGapsRouter.get('/:tenantId/coverage/state', async (req: Request, res: Response) => {
+  try {
+    ok(res, await coverageRunState(String(req.params.tenantId)))
+  } catch (e: any) {
+    err(res, 'ANALYSIS_FAILED', e?.message ?? 'could not read the run state', 500)
+  }
+})
+
+// POST /:tenantId/coverage/start — COSTS CREDIT. Queues every in-scope regulation.
+platformPolicyGapsRouter.post('/:tenantId/coverage/start', async (req: Request, res: Response) => {
+  try {
+    ok(res, await startCoverageAnalysis(String(req.params.tenantId)))
+  } catch (e: any) {
+    err(res, 'ANALYSIS_FAILED', e?.message ?? 'could not start the analysis', 500)
+  }
+})
+
+// POST /:tenantId/coverage/batch — COSTS CREDIT. One batch; the caller loops until remaining
+// is 0, which is how the tenant-facing /gaps page drives the same service.
+platformPolicyGapsRouter.post('/:tenantId/coverage/batch', async (req: Request, res: Response) => {
+  try {
+    ok(res, await analyseCoverageBatch(String(req.params.tenantId)))
+  } catch (e: any) {
+    err(res, 'ANALYSIS_FAILED', e?.message ?? 'analysis batch failed', 500)
+  }
 })

@@ -166,6 +166,23 @@ const ROLE_MAP: Array<{ key: string; role: string; match: RegExp }> = [
   { key: 'ipc_lead',           role: 'Infection prevention & control lead', match: /infection|(?:^|\b)ipc\b/i },
   { key: 'fire_safety_officer',role: 'Fire safety officer',                 match: /fire/i },
   { key: 'dignity_champion',   role: 'Dignity champion',                    match: /dignity/i },
+  { key: 'maintenance_lead',   role: 'Maintenance lead',                    match: /maintenance|handyperson|handyman|estates/i },
+  { key: 'health_safety_lead', role: 'Health and safety lead',              match: /health (?:and|&) safety|(?:^|\b)h&s\b/i },
+  { key: 'medicines_lead',     role: 'Medicines lead',                      match: /medicat|medicine|pharmac/i },
+  { key: 'data_protection_officer', role: 'Data protection officer',        match: /data protection|(?:^|\b)dpo\b/i },
+  { key: 'deputy_manager',     role: 'Deputy manager',                      match: /deputy (?:manager|home manager)/i },
+  { key: 'moving_handling_lead', role: 'Moving and handling lead',          match: /moving (?:and|&) handling|manual handling/i },
+  { key: 'mental_capacity_lead', role: 'Mental capacity and DoLS lead',     match: /mental capacity|(?:^|\b)mca\b|(?:^|\b)dols\b|liberty protection/i },
+  { key: 'end_of_life_lead',   role: 'End of life care lead',               match: /end of life|palliative/i },
+  { key: 'water_safety_lead',  role: 'Water safety lead (Legionella)',      match: /legionella|water safety/i },
+  { key: 'training_lead',      role: 'Training lead',                       match: /training|learning (?:and|&) development/i },  { key: 'freedom_to_speak_up_guardian', role: 'Freedom to Speak Up Guardian', match: /freedom to speak up|speak ?up guardian|whistleblow/i },
+  { key: 'complaints_lead', role: 'Complaints lead', match: /complaint/i },
+  { key: 'first_aid_lead', role: 'First aid appointed person', match: /first aid/i },
+  { key: 'food_safety_lead', role: 'Food safety and allergen lead', match: /food safety|food hygiene|allergen|catering|chef/i },
+  { key: 'nutrition_hydration_lead', role: 'Nutrition and hydration lead', match: /nutrition|hydration|dietetic/i },
+  { key: 'falls_lead', role: 'Falls lead', match: /falls/i },
+  { key: 'tissue_viability_lead', role: 'Tissue viability lead', match: /tissue viability|pressure (?:ulcer|area|sore)|wound/i },
+  { key: 'business_continuity_lead', role: 'Business continuity lead', match: /business continuity|emergency plan|contingenc/i },
 ]
 
 async function getOrInitDocument(tenantId: string, policyId: string): Promise<any> {

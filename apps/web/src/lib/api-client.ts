@@ -468,6 +468,20 @@ export function createApiClient(token: string) {
         apiFetch<{ scan: RoleMentionScan | null }>('/settings/role-mentions', token),
       scanRoleMentions: () =>
         apiFetch<{ scan: RoleMentionScan }>('/settings/role-mentions/scan', token, { method: 'POST' }),
+
+      /** Which policies have this person's name written into their text. */
+      roleNameImpact: (key: string, old_name: string) =>
+        apiFetch<{
+          policies: Array<{ policy_id: string; policy_name: string; occurrences: number; snippet: string }>
+          total_occurrences: number
+          role_mentions: number | null
+        }>('/settings/role-name/impact', token, { method: 'POST', body: JSON.stringify({ key, old_name }) }),
+
+      roleNameApply: (input: { role_label: string; old_name: string; new_name: string; policy_ids: string[] }) =>
+        apiFetch<{
+          updated: Array<{ policy_id: string; version: string; occurrences: number; propagated: boolean }>
+          failed:  Array<{ policy_id: string; reason: string }>
+        }>('/settings/role-name/apply', token, { method: 'POST', body: JSON.stringify(input) }),
       translationSuggestions: (status?: string) =>
         apiFetch<{ suggestions: TranslationSuggestion[]; pending_count: number }>(`/translation-suggestions${status ? `?status=${status}` : ''}`, token),
       reviewTranslationSuggestion: (id: string, data: { action?: 'approve' | 'reject' | 'pending'; suggested_text?: string }) =>

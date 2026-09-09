@@ -167,6 +167,20 @@ export default function SettingsPage() {
   const [featureFlags,   setFeatureFlags]   = useState<Record<string, boolean>>({})
   const [orgDetails,     setOrgDetails]     = useState<Record<string, string>>({})
   const [orgContext,     setOrgContext]     = useState<{ home_name: string; has_logo: boolean; role_holders: Array<{ key: string; role: string; derived: string[]; manual: string[] }> }>({ home_name: '', has_logo: false, role_holders: [] })
+  // Removing a named role holder: which chip is being checked, and the confirmation for one
+  // whose name is written into policy text.
+  const [checkingName, setCheckingName] = useState<string | null>(null)
+  const [nameChange, setNameChange] = useState<{
+    key: string
+    label: string
+    name: string
+    policies: Array<{ policy_id: string; policy_name: string; occurrences: number; snippet: string }>
+    roleMentions: number | null
+    replaceWith: string
+    busy: boolean
+    error: string
+    done: { updated: Array<{ policy_id: string; version: string }>; failed: Array<{ policy_id: string; reason: string }> } | null
+  } | null>(null)
   const [roleInput,      setRoleInput]      = useState<Record<string, string>>({})
   const [savingOrg,      setSavingOrg]      = useState(false)
   const [orgSaved,       setOrgSaved]       = useState(false)
@@ -410,9 +424,50 @@ export default function SettingsPage() {
     const next = { ...orgDetails, [key]: [...cur, name].join(', ') }
     setOrgDetails(next); setRoleInput(r => ({ ...r, [key]: '' })); saveOrgDetails(next)
   }
-  function removeRoleName(key: string, name: string) {
+  function dropRoleName(key: string, name: string) {
     const next = { ...orgDetails, [key]: roleManual(key).filter(n => n !== name).join(', ') }
     setOrgDetails(next); saveOrgDetails(next)
+  }
+
+  // Removing a role holder is usually invisible to the policies: role names are substituted at
+  // render time, so they show the new holder immediately. The exception is a policy with the
+  // person's name WRITTEN INTO its text, which would keep the old name for ever. Those are
+  // checked first and never changed without the tenant seeing exactly where.
+  async function removeRoleName(key: string, name: string) {
+    setCheckingName(`${key}:${name}`)
+    try {
+      const r = await createApiClient(session!.accessToken as string).settings.roleNameImpact(key, name)
+      if (!r.policies.length) { dropRoleName(key, name); return }
+      const label = orgContext.role_holders.find(h => h.key === key)?.role ?? 'Role holder'
+      setNameChange({ key, label, name, policies: r.policies, roleMentions: r.role_mentions, replaceWith: '', busy: false, error: '', done: null })
+    } catch {
+      // If the check itself fails, removing the name is still what was asked for.
+      dropRoleName(key, name)
+    } finally { setCheckingName(null) }
+  }
+
+  async function confirmNameChange(rewrite: boolean) {
+    const nc = nameChange
+    if (!nc) return
+    if (!rewrite) { dropRoleName(nc.key, nc.name); setNameChange(null); return }
+    const replacement = nc.replaceWith.trim()
+    if (!replacement) { setNameChange({ ...nc, error: 'Enter the name that replaces them.' }); return }
+    setNameChange({ ...nc, busy: true, error: '' })
+    try {
+      const r = await createApiClient(session!.accessToken as string).settings.roleNameApply({
+        role_label: nc.label, old_name: nc.name, new_name: replacement,
+        policy_ids: nc.policies.map(p => p.policy_id),
+      })
+      // The replacement takes the old name's place on the role, so the chip list stays true.
+      const next = {
+        ...orgDetails,
+        [nc.key]: [...roleManual(nc.key).filter(n => n !== nc.name), replacement].join(', '),
+      }
+      setOrgDetails(next); saveOrgDetails(next)
+      setNameChange({ ...nc, busy: false, done: r })
+    } catch (e: any) {
+      setNameChange({ ...nc, busy: false, error: e?.message ?? 'Could not update the policies.' })
+    }
   }
   // Single-value fields use the same add-and-show-below chip pattern for a consistent UI.
   function setScalar(key: string) {
@@ -1107,8 +1162,8 @@ export default function SettingsPage() {
                           {manual.filter(n => !rh.derived.some(d => d.toLowerCase() === n.toLowerCase())).map(name => (
                             <span key={`m-${name}`} className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-neutral-light py-1 pl-3 pr-2 text-sm text-neutral-dark">
                               {name}
-                              <button onClick={() => removeRoleName(rh.key, name)} disabled={savingOrg} className="flex h-4 w-4 items-center justify-center rounded-full text-neutral-mid hover:bg-gray-300 hover:text-neutral-dark disabled:opacity-40" title="Remove">
-                                <X size={10} />
+                              <button onClick={() => removeRoleName(rh.key, name)} disabled={savingOrg || checkingName === `${rh.key}:${name}`} className="flex h-4 w-4 items-center justify-center rounded-full text-neutral-mid hover:bg-gray-300 hover:text-neutral-dark disabled:opacity-40" title="Remove">
+                                {checkingName === `${rh.key}:${name}` ? <Loader2 size={10} className="animate-spin" /> : <X size={10} />}
                               </button>
                             </span>
                           ))}
@@ -1119,6 +1174,111 @@ export default function SettingsPage() {
                 })}
               </div>
               {orgSaved && <p className="mt-3 flex items-center gap-1 text-sm font-medium text-green-600"><Check size={14} /> Saved</p>}
+            </div>
+          )}
+
+          {/* Removing somebody whose name is written into policy text. Never applied without
+              showing which policies and the wording around the name in each. */}
+          {nameChange && (
+            <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-8">
+              <div className="w-full max-w-2xl rounded-xl bg-white shadow-2xl">
+                <div className="flex items-start justify-between gap-3 border-b border-gray-100 px-6 py-4">
+                  <div className="min-w-0">
+                    <h2 className="text-base font-semibold text-neutral-dark">
+                      {nameChange.done ? 'Policies updated' : `${nameChange.name} is named in your policies`}
+                    </h2>
+                    <p className="mt-0.5 text-xs text-neutral-mid">
+                      {nameChange.label}
+                    </p>
+                  </div>
+                  <button onClick={() => setNameChange(null)} className="shrink-0 text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
+                </div>
+
+                <div className="max-h-[60vh] overflow-y-auto px-6 py-5">
+                  {nameChange.done ? (
+                    <div className="space-y-3 text-sm">
+                      <p className="text-neutral-dark">
+                        {nameChange.done.updated.length} {nameChange.done.updated.length === 1 ? 'policy was' : 'policies were'} updated
+                        and given a new version. You can see each change in <strong>Policies &rsaquo; History</strong>.
+                      </p>
+                      <ul className="space-y-1 text-xs text-neutral-mid">
+                        {nameChange.done.updated.map(u => {
+                          const p = nameChange.policies.find(x => x.policy_id === u.policy_id)
+                          return <li key={u.policy_id}>{p?.policy_name ?? u.policy_id} &middot; now version {u.version}</li>
+                        })}
+                      </ul>
+                      {nameChange.done.failed.length > 0 && (
+                        <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                          {nameChange.done.failed.length} could not be updated and still carry the old name.
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <p className="text-sm text-neutral-dark">
+                        <strong>{nameChange.policies.length}</strong> {nameChange.policies.length === 1 ? 'policy has' : 'policies have'} this
+                        name written into the text. Replacing it updates {nameChange.policies.length === 1 ? 'it' : 'them'} and
+                        creates a new version of each. No approval is needed: changing who holds a role does not change what the policy says.
+                      </p>
+
+                      {/* Said plainly, because it is the part that surprises people: most policies
+                          need no change at all. */}
+                      {nameChange.roleMentions !== null && nameChange.roleMentions > 0 && (
+                        <p className="rounded-lg border border-teal/20 bg-teal-light/30 px-3 py-2 text-xs text-teal-dark">
+                          A further {nameChange.roleMentions} {nameChange.roleMentions === 1 ? 'policy mentions' : 'policies mention'} the
+                          role rather than the person. Those show the new name straight away and are not changed here.
+                        </p>
+                      )}
+
+                      <ul className="space-y-2">
+                        {nameChange.policies.map(p => (
+                          <li key={p.policy_id} className="rounded-lg border border-gray-200 px-3 py-2.5">
+                            <p className="text-sm font-medium text-neutral-dark">
+                              {p.policy_name}
+                              <span className="ml-2 text-xs font-normal text-neutral-mid">
+                                {p.occurrences} {p.occurrences === 1 ? 'mention' : 'mentions'}
+                              </span>
+                            </p>
+                            <p className="mt-1 text-xs leading-relaxed text-neutral-mid">&hellip;{p.snippet}&hellip;</p>
+                          </li>
+                        ))}
+                      </ul>
+
+                      <div>
+                        <label className="text-sm font-medium text-neutral-dark">Replace with</label>
+                        <input
+                          autoFocus
+                          value={nameChange.replaceWith}
+                          onChange={e => setNameChange({ ...nameChange, replaceWith: e.target.value })}
+                          placeholder="Name of the person taking this on"
+                          className="mt-1.5 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-purple-300 focus:outline-none focus:ring-1 focus:ring-purple-300"
+                        />
+                        <p className="mt-1 text-xs text-neutral-mid">
+                          Leave this empty and choose &ldquo;Remove only&rdquo; if nobody is taking the role on yet. Your policies will keep the old name until somebody is named.
+                        </p>
+                      </div>
+
+                      {nameChange.error && <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{nameChange.error}</p>}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 px-6 py-3">
+                  {nameChange.done ? (
+                    <Button onClick={() => setNameChange(null)}>Done</Button>
+                  ) : (
+                    <>
+                      <button onClick={() => setNameChange(null)} disabled={nameChange.busy} className="rounded-md px-3 py-2 text-sm font-medium text-neutral-mid hover:text-neutral-dark disabled:opacity-40">Cancel</button>
+                      <button onClick={() => confirmNameChange(false)} disabled={nameChange.busy} className="rounded-md border border-gray-200 px-3 py-2 text-sm font-medium text-neutral-dark hover:border-gray-300 disabled:opacity-40">
+                        Remove only, leave policies
+                      </button>
+                      <Button onClick={() => confirmNameChange(true)} disabled={nameChange.busy}>
+                        {nameChange.busy ? <><Loader2 size={14} className="mr-1.5 inline animate-spin" /> Updating…</> : `Update ${nameChange.policies.length} ${nameChange.policies.length === 1 ? 'policy' : 'policies'}`}
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 

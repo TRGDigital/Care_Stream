@@ -8,6 +8,7 @@ import {
   FileText, Users, MessageSquare, Mail, ClipboardCheck,
   GraduationCap, BarChart2, BookOpen, ShieldAlert, Settings, Zap, ClipboardList,
   LifeBuoy, Upload, CheckCircle, Info, UserPlus, RefreshCw, CalendarDays, Lightbulb, Loader2, Building2, BadgeCheck,
+  UserRound,
 } from 'lucide-react'
 
 function FeatureRequestModal({ open, onClose, token }: { open: boolean; onClose: () => void; token?: string }) {
@@ -2283,6 +2284,80 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Every completed supervision is saved on the staff member&rsquo;s <strong>record page</strong>, listed under their supervisions with a link to <strong>open the full form</strong> and the <strong>next session booked</strong> off it. Any items allocated from an action show a small badge on the record, so you can see at a glance what came out of each session. The register keeps colour-coding the last and next dates so overdue supervisions stand out.
           </p>
           <div className="mt-3"><Tip>Staff can see their own booked and past sessions in their hub under <strong>Supervisions</strong>. You can turn the confirmation and reminder emails on or off under <strong>Settings &rarr; Email communications &rarr; Supervisions &amp; appraisals</strong>.</Tip></div>
+        </SectionBlock>
+      </div>
+    ),
+  },
+  {
+    id:      'role-holders',
+    icon:    UserRound,
+    title:   'Named role holders & changing a name',
+    summary: 'How your policies know who your Medicines Lead is, and what happens when that person changes',
+    content: (
+      <div className="space-y-5">
+        <SectionBlock title="Where the names come from">
+          <p className="text-sm text-neutral-mid">
+            Settings &rsaquo; Organisation details lists the roles a care policy names a person against:
+            Registered manager, Medicines lead, Data protection officer, Deputy manager and so on. Each role can
+            hold more than one person.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Names reach a role two ways. A chip marked <strong>STAFF</strong> comes from a staff member&rsquo;s job role or
+            specialism on their record, so it has no remove button here: change it on their record in <strong>Staff</strong>.
+            A plain chip is one you typed, and can be removed with the <strong>&times;</strong> beside it.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="Most policies update themselves">
+          <p className="text-sm text-neutral-mid">
+            Your policies are written to name the <em>role</em>, and the current holder&rsquo;s name is added when the
+            policy is displayed. So a policy saying &ldquo;the Medicines Lead checks the controlled drugs register&rdquo;
+            shows as &ldquo;the Medicines Lead (Priya Shah)&rdquo; wherever it is read: preview, review, download and the staff hub.
+          </p>
+          <Tip>
+            Change the name in Settings and those policies show the new one immediately. Nothing is rewritten, no new
+            version is created, and there is nothing to approve, because the policy itself never changed.
+          </Tip>
+        </SectionBlock>
+
+        <SectionBlock title="Some policies have the name written in">
+          <p className="text-sm text-neutral-mid">
+            A policy we write for you names the person once, at the point their role first takes a responsibility.
+            A policy you uploaded may name somebody directly without using the role title at all. In both cases the
+            name is part of the text and will not update on its own.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            So when you remove a named person, CareStream checks your policies first. If any of them have that name
+            written in, you are shown <strong>which policies, how many mentions, and the wording around each one</strong>
+            before anything changes. You then choose:
+          </p>
+          <div className="mt-3 rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
+            {[
+              ['Update the policies', 'Replaces the name throughout each policy and saves a new version of each. Every mention moves, not just the first.'],
+              ['Remove only', 'Takes the person off the role but leaves your policies exactly as they are. Use this when nobody has taken the role on yet.'],
+            ].map(([action, desc]) => (
+              <div key={action} className="grid grid-cols-[9rem_1fr] gap-3 px-4 py-3">
+                <span className="font-medium text-neutral-dark">{action}</span>
+                <span className="text-neutral-mid">{desc}</span>
+              </div>
+            ))}
+          </div>
+        </SectionBlock>
+
+        <SectionBlock title="What gets recorded">
+          <p className="text-sm text-neutral-mid">
+            Each updated policy gets a new point version (2.0 becomes 2.1) and an entry in
+            <strong> Policies &rsaquo; History</strong> showing the role, the old name, the new name and the date. Staff
+            see the corrected wording straight away, and so does the AI when answering questions.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            A name change does not go through manager or external approval. Correcting who holds a role is not a change
+            to what the policy requires, in the same way that fixing a typo is not.
+          </p>
+          <Tip>
+            Only policies CareStream already holds a working copy of can be updated this way. Removing a person from a
+            role does not archive them from <strong>Staff</strong>: if they have also left, archive them there separately.
+          </Tip>
         </SectionBlock>
       </div>
     ),

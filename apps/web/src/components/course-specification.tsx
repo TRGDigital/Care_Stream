@@ -110,7 +110,10 @@ export function CourseSpecification({ m, qa, onClose }: { m: any; qa: any; onClo
             <Section title="References and evidence base">
               <ul className="list-disc space-y-0.5 pl-5 text-sm text-neutral-dark">
                 {courseRefs.map((r, i) => (
-                  <li key={i}>{r.title}{r.source ? `, ${r.source}` : ''}{r.url ? <span className="text-xs text-neutral-mid"> ({r.url})</span> : null}</li>
+                  <li key={i}>
+                    {r.title}{r.source ? `, ${r.source}` : ''}{r.url ? <span className="text-xs text-neutral-mid"> ({r.url})</span> : null}
+                    {r.note ? <span className="block text-xs text-neutral-mid">{r.note}</span> : null}
+                  </li>
                 ))}
               </ul>
             </Section>

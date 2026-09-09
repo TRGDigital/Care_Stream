@@ -616,6 +616,7 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                               ? <a href={r.url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-teal hover:underline">{r.title}</a>
                               : <p className="text-sm font-medium text-neutral-dark">{r.title}</p>}
                             <p className="mt-0.5 text-xs text-neutral-mid">{r.source}</p>
+                            {r.note && <p className="mt-1 text-xs leading-relaxed text-neutral-dark">{r.note}</p>}
                           </div>
                         ))}
                       </div>

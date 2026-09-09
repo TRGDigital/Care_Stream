@@ -103,6 +103,7 @@ export function CourseSummarySheet({ m, onClose }: { m: any; onClose: () => void
                 <span className="font-medium">{r.title}</span>
                 {r.source ? `, ${r.source}` : ''}
                 {r.url ? <span className="text-neutral-mid"> ({r.url})</span> : null}
+                {(r as any).note ? <span className="block text-neutral-mid">{(r as any).note}</span> : null}
               </li>
             ))}
           </ul>

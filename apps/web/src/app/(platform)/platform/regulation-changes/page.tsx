@@ -9,6 +9,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
+import { PlatformShell } from '@/components/platform-shell'
 import { createPlatformClient, type RegulationChange } from '@/lib/platform-api'
 import {
   AlertTriangle, Check, ExternalLink, Loader2, RefreshCw, Scale, Users, X, ChevronDown,
@@ -66,7 +67,8 @@ export default function RegulationChangesPage() {
   })
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8">
+    <PlatformShell>
+      <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold text-neutral-dark">
@@ -227,6 +229,7 @@ export default function RegulationChangesPage() {
           })}
         </div>
       )}
-    </div>
+      </div>
+    </PlatformShell>
   )
 }

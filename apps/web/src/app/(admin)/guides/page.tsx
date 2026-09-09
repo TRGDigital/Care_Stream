@@ -937,6 +937,127 @@ const GUIDE_SECTIONS: GuideSection[] = [
     ),
   },
   {
+    id:      'policies-written-for-you',
+    icon:    BadgeCheck,
+    title:   'Policies we write for you',
+    summary: 'When your policies are read against the law and a regulation has no policy behind it at all, we can write that policy for your home. How one is identified, written, delivered and approved, and where it sits in your own sign-off process.',
+    content: (
+      <div className="space-y-5">
+        <p className="text-sm text-neutral-mid">
+          Most of what the Gaps page finds is wording to improve in a policy you already have.
+          Occasionally it finds something different: a regulation that applies to your service
+          with <strong>no policy behind it at all</strong>. You cannot fix that by editing,
+          because there is nothing to edit. Those are the ones we can write for you.
+        </p>
+
+        <SectionBlock title="1. How a missing policy is identified">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            We hold the regulations, standards and guidance that apply to adult social care, and
+            we work out which of them apply to <em>your</em> service rather than to care homes in
+            general. A nursing home is asked different questions from a supported living service.
+          </p>
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            Your policies are then read, properly read, not matched on their titles. That
+            distinction matters. A policy called &ldquo;Medical Gases&rdquo; is about oxygen
+            cylinders, not about the gas supply to your building, and a system that matched names
+            would tick the wrong box and leave you exposed. We look at what each document is
+            actually about.
+          </p>
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            A policy is only reported as missing when nothing in your library covers that
+            regulation&rsquo;s subject. If the analysis is out of date, or has never run, you are
+            told that instead. We would rather say nothing than sell you something on a stale
+            answer.
+          </p>
+          <Tip>
+            The list names the regulations behind each policy. That is the answer to
+            &ldquo;why do we need this?&rdquo; and it is worth reading before you decide.
+          </Tip>
+        </SectionBlock>
+
+        <SectionBlock title="2. Ordering one">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            Missing policies appear on your <strong>Gaps</strong> page, below the four analysis
+            steps, and in your suggestions. Tick the ones you want and order them. Payment is
+            taken on a secure Stripe page; card details never touch CareStream. An invoice is
+            raised and appears on your <strong>Billing</strong> page with the rest.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="3. How it is written">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            Each policy is written for your home, not adapted from a template. It is built around
+            what the regulation actually requires, section by section, so that when you next run
+            your gap analysis the policy answers it.
+          </p>
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            It uses your home&rsquo;s name and the role holders you have named in{' '}
+            <strong>Settings &rarr; Organisation details</strong>. Where you have not named
+            someone, the policy names the role and leaves it at that. It never invents a person,
+            a date, a contractor or a certificate number, and it never leaves a placeholder like
+            &ldquo;[name]&rdquo; in your document. Name someone later and they appear
+            automatically, with no rewrite.
+          </p>
+          <Tip>
+            Filling in Organisation details before you order gives you a better document. The
+            roles your policies actually mention are listed there, so you can see which are worth
+            completing.
+          </Tip>
+        </SectionBlock>
+
+        <SectionBlock title="4. We read it before you see it">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            Nothing reaches you the moment it is written. A person at CareStream reads every
+            policy first and approves it. A document that carries your home&rsquo;s name should be
+            seen by someone before it carries it.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="5. Then it enters your approval process, not ours">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            This is the part worth understanding. When we approve a policy, it is{' '}
+            <strong>delivered</strong>. That is not the same as <strong>live</strong>. A delivered
+            policy goes into exactly the same sign-off process as any other change to your
+            policies, and your own settings decide what happens next.
+          </p>
+          <div className="space-y-2">
+            <Step n={1}>
+              <strong>Require care manager approval is on</strong>: the policy waits in your care
+              manager&rsquo;s Policies hub for their approval before it goes live.
+            </Step>
+            <Step n={2}>
+              <strong>Require external approval is on</strong>: once the internal approvals are
+              in, it goes out on a one-off link to your consultant or trustee. It is live only
+              once they approve.
+            </Step>
+            <Step n={3}>
+              <strong>Both off</strong>: it is published straight away, and still appears in your
+              care manager&rsquo;s hub so they can see what arrived.
+            </Step>
+          </div>
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            You set both in <strong>Settings &rarr; Organisation details</strong>. We do not
+            override them, and we cannot: a policy we wrote goes through your process the same as
+            one you edited yourself.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="6. Afterwards">
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            The policy sits in your library like any other, marked with a small CareStream badge
+            so its origin is never in doubt, and it is indexed so your staff can ask questions
+            about it. Re-run your regulation coverage and the gap it was written to close will
+            close.
+          </p>
+          <p className="text-sm text-neutral-dark leading-relaxed">
+            From then on it is yours. Edit it, review it and version it exactly as you would a
+            policy you wrote.
+          </p>
+        </SectionBlock>
+      </div>
+    ),
+  },
+  {
     id:      'onboarding',
     icon:    UserPlus,
     title:   'Staff onboarding flows',

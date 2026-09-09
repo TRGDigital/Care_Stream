@@ -10,6 +10,8 @@ export type PolicyHistoryEntry = {
     published_at: string
     published_by: string | null
     change_count: number
+    is_current: boolean
+    is_original: boolean
     changes: Array<{
       requirement: string
       section_title: string | null

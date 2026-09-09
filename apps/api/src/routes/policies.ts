@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express'
-import { policyHistory, policyVersionContent } from '../services/analytics/policy-history'
+import { policyHistory, policyVersionContent, policyOriginalContent } from '../services/analytics/policy-history'
 import { z } from 'zod'
 import { v4 as uuidv4 } from 'uuid'
 import crypto from 'crypto'
@@ -644,6 +644,18 @@ policiesRouter.get('/history/:versionId', requireAdmin, async (req: Request, res
   try {
     const tenantId = (req as any).user.tenant_id
     const versionId = String(req.params.versionId)
+
+    // Version 1 is the uploaded original and has no version row, so it is addressed by policy.
+    // Its formatted copy is the baseline render the Out-of-date drill-in already builds, so this
+    // reuses that cache rather than making a second one of the same document.
+    if (versionId.startsWith('original-')) {
+      const policyId = versionId.slice('original-'.length)
+      const o = await policyOriginalContent(tenantId, policyId)
+      if (!o) return err(res, 'NOT_FOUND', 'That version was not found', 404)
+      const { html } = await getPolicyBaselineHtml(tenantId, policyId, o.content)
+      return ok(res, { ...o, html: html ?? '' })
+    }
+
     const v = await policyVersionContent(tenantId, versionId)
     if (!v) return err(res, 'NOT_FOUND', 'That version was not found', 404)
     // Rendered by the same formatter as the policy preview, so a version reads as a document

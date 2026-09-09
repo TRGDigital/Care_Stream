@@ -6,7 +6,7 @@
 // Not exposed to tenants.
 
 import { useEffect, useMemo, useState } from 'react'
-import { createPlatformClient } from '@/lib/platform-api'
+import { createPlatformClient, type MissingPolicyReport } from '@/lib/platform-api'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { PlatformShell } from '@/components/platform-shell'
 import { SearchCheck, Loader2, Building2, Sparkles, CheckCircle2, AlertTriangle, EyeOff, Lock, ChevronDown, ChevronRight, Grid3x3, User } from 'lucide-react'
@@ -30,6 +30,12 @@ export default function PolicyGapsPage() {
   const [matrix, setMatrix] = useState<Matrix | null>(null)
   const [matrixLoading, setMatrixLoading] = useState(false)
   const [expandedType, setExpandedType] = useState<string | null>(null)
+  // Missing against legislation, as opposed to missing against peers. Read is free; the run
+  // costs Anthropic credit, so the two are kept apart on screen as well as in the API.
+  const [missingReport, setMissingReport] = useState<MissingPolicyReport | null>(null)
+  const [missingLoading, setMissingLoading] = useState(false)
+  const [coverageRunning, setCoverageRunning] = useState(false)
+  const [coverageProgress, setCoverageProgress] = useState<{ done: number; total: number } | null>(null)
 
   function loadClients() {
     if (!token) return
@@ -39,6 +45,37 @@ export default function PolicyGapsPage() {
       .finally(() => setLoading(false))
   }
   useEffect(loadClients, [token])
+
+  // Free: reads coverage already analysed. Never starts a run.
+  async function loadMissing(id: string) {
+    if (!token) return
+    setMissingLoading(true); setMissingReport(null)
+    try { setMissingReport(await createPlatformClient(token).policyGaps.missingPolicies(id)) }
+    catch (e: any) { setError(e.message) }
+    finally { setMissingLoading(false) }
+  }
+
+  // COSTS CREDIT. Reads every policy this client holds against every regulation in scope.
+  // Batched, so the progress is honest rather than a spinner over an unknown wait.
+  async function runCoverage() {
+    if (!token || !selected) return
+    if (!window.confirm(
+      'This reads every policy this client holds against every regulation in scope, and spends Anthropic credit to do it.\n\nRun the analysis now?'
+    )) return
+    setCoverageRunning(true); setError('')
+    try {
+      const api = createPlatformClient(token)
+      const { total } = await api.policyGaps.coverageStart(selected)
+      setCoverageProgress({ done: 0, total })
+      for (;;) {
+        const p = await api.policyGaps.coverageBatch(selected)
+        setCoverageProgress({ done: p.analysed, total: p.total })
+        if (p.remaining <= 0) break
+      }
+      await loadMissing(selected)
+    } catch (e: any) { setError(e.message) }
+    finally { setCoverageRunning(false); setCoverageProgress(null) }
+  }
 
   const selectedClient = clients.find(c => c.id === selected)
 
@@ -50,7 +87,7 @@ export default function PolicyGapsPage() {
     finally { setReportLoading(false) }
   }
 
-  function pick(id: string) { setSelected(id); if (id) loadReport(id) }
+  function pick(id: string) { setSelected(id); if (id) { loadReport(id); loadMissing(id) } }
 
   async function classify() {
     if (!token || !selected) return
@@ -162,6 +199,79 @@ export default function PolicyGapsPage() {
             </div>
           )}
         </div>
+
+        {/* Missing against legislation, as opposed to missing against peers.
+            The peer report below answers "what do similar homes have that this one does not".
+            This answers "what does the law require that this one has not written", which is
+            the question that found Gas Safety, Electrical Safety and Asbestos at Ferndale
+            when no peer held them either. */}
+        {selectedClient && (
+          <div className="mb-5 rounded-xl border border-gray-200 bg-white p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-sm font-semibold text-neutral-dark">Missing against legislation</h2>
+                <p className="mt-0.5 text-xs text-neutral-mid">
+                  {missingReport?.analysed
+                    ? `${missingReport.regulations_analysed} of ${missingReport.regulations_in_scope} regulations analysed${missingReport.analysed_at ? ` · last run ${new Date(missingReport.analysed_at).toLocaleDateString('en-GB')}` : ''}`
+                    : 'Not analysed yet for this client.'}
+                </p>
+              </div>
+              <button onClick={runCoverage} disabled={coverageRunning}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+                title="Reads every policy against every regulation in scope. Spends Anthropic credit.">
+                {coverageRunning ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                {coverageRunning
+                  ? (coverageProgress ? `Analysing ${coverageProgress.done}/${coverageProgress.total}…` : 'Analysing…')
+                  : missingReport?.analysed ? 'Re-run analysis (uses credit)' : 'Run analysis (uses credit)'}
+              </button>
+            </div>
+
+            {missingLoading ? (
+              <p className="mt-3 flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={14} className="animate-spin" /> Reading the analysis…</p>
+            ) : !missingReport?.analysed ? (
+              <p className="mt-3 rounded-lg bg-neutral-light px-3 py-2.5 text-sm text-neutral-mid">
+                Nothing has been analysed for this client yet, which is not the same as nothing being missing. Run the analysis to find out.
+              </p>
+            ) : (
+              <>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                  <span className="rounded-full bg-green-50 px-2.5 py-1 font-medium text-green-800">{missingReport.counts.covered} fully covered</span>
+                  <span className="rounded-full bg-amber-50 px-2.5 py-1 font-medium text-amber-900">{missingReport.counts.partial} partly covered</span>
+                  <span className="rounded-full bg-red-50 px-2.5 py-1 font-medium text-red-800">{missingReport.counts.gap} no policy</span>
+                </div>
+
+                {missingReport.missing.length === 0 ? (
+                  <p className="mt-3 flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2.5 text-sm text-green-900">
+                    <CheckCircle2 size={15} /> Every regulation in scope has a policy behind it. Nothing to write for this client.
+                  </p>
+                ) : (
+                  <>
+                    <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-neutral-mid">
+                      {missingReport.missing.length} {missingReport.missing.length === 1 ? 'policy' : 'policies'} they do not have
+                    </p>
+                    <ul className="mt-2 divide-y divide-gray-100 rounded-lg border border-gray-200">
+                      {missingReport.missing.map(m => (
+                        <li key={m.title} className="px-3 py-2.5">
+                          <div className="flex flex-wrap items-baseline justify-between gap-2">
+                            <span className="text-sm font-medium text-neutral-dark">{m.title}</span>
+                            <span className="text-xs text-neutral-mid">
+                              {m.regulations.length === 1 ? '1 regulation' : `${m.regulations.length} regulations`}
+                            </span>
+                          </div>
+                          {/* Naming the regulations matters: it is the evidence for charging
+                              for this policy, and the answer when a client asks why. */}
+                          <p className="mt-1 text-xs text-neutral-mid">
+                            {m.regulations.map(r => r.official_name).join(' · ')}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        )}
 
         {/* Report */}
         {reportLoading ? (

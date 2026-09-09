@@ -1188,8 +1188,30 @@ export function createPlatformClient(token: string) {
         adminFetch<{ setting: string; setting_label: string; client_count: number; type_count: number; types: Array<{ type: string; have_count: number; have_pct: number; missing: Array<{ id: string; name: string }> }>; clients: Array<{ id: string; name: string; have: number; missing: number }> }>(`/policy-gaps/matrix?setting=${encodeURIComponent(setting)}`, token),
       ignoreType: (name: string, care_setting?: string | null) =>
         adminFetch<{ ignored: boolean }>('/policy-gaps/types/ignore', token, { method: 'POST', body: JSON.stringify({ name, care_setting }) }),
+      // Missing policies judged against legislation rather than against peers. Reading is
+      // free; the coverage run costs Anthropic credit, so the two are separate calls.
+      missingPolicies: (tenantId: string) =>
+        adminFetch<MissingPolicyReport>(`/policy-gaps/${tenantId}/missing-policies`, token),
+      coverageState: (tenantId: string) =>
+        adminFetch<{ total: number; analysed: number; remaining: number }>(`/policy-gaps/${tenantId}/coverage/state`, token),
+      coverageStart: (tenantId: string) =>
+        adminFetch<{ total: number }>(`/policy-gaps/${tenantId}/coverage/start`, token, { method: 'POST' }),
+      coverageBatch: (tenantId: string) =>
+        adminFetch<{ done: number; analysed: number; total: number; remaining: number }>(`/policy-gaps/${tenantId}/coverage/batch`, token, { method: 'POST' }),
     },
   }
+}
+
+
+/** Policies a client does not hold, judged against the regulations in scope for their service. */
+export interface MissingPolicyReport {
+  /** False when coverage has never run: the list means nothing yet, which is not the same as nothing missing. */
+  analysed: boolean
+  analysed_at: string | null
+  regulations_in_scope: number
+  regulations_analysed: number
+  counts: { covered: number; partial: number; gap: number }
+  missing: Array<{ title: string; regulations: Array<{ reference_key: string; official_name: string }> }>
 }
 
 export interface TranslationChange {

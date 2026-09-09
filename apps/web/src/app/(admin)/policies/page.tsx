@@ -747,6 +747,15 @@ function PolicyGroup({
                           )}
                         </>
                       )}
+                      {/* Written by us and paid for. Worth marking permanently: in a year
+                          nobody will remember which documents came from where, and an
+                          inspector asking "who wrote this" deserves a straight answer. */}
+                      {p.carestream_written && (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-teal-light/40 px-2 py-0.5 text-[10px] font-semibold text-teal" title="Written for you by CareStream">
+                          <img src="/favicon-32.png" alt="" width={9} height={9} className="rounded-[2px]" />
+                          CareStream
+                        </span>
+                      )}
                       {p.generic_onboarding && <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700"><GraduationCap size={9} /> Onboarding</span>}
                       {docSummary[p.id] && (docSummary[p.id].pending > 0
                         ? <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700"><FilePenLine size={9} /> {docSummary[p.id].pending} to review</span>

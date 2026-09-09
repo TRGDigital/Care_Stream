@@ -133,7 +133,7 @@ export function MissingPoliciesBanner({ token }: { token: string }) {
   }
 
   const statusLabel = (p: PolicyPurchase) =>
-    p.status === 'approved' ? 'Ready in your policies'
+    p.status === 'approved' ? 'Delivered to your policies, and in your approval process'
       : p.status === 'drafted' ? 'Written, with us for final checks'
         : p.status === 'drafting' ? 'Being written'
           : 'Paid, we have started'

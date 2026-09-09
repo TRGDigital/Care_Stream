@@ -2354,9 +2354,14 @@ const GUIDE_SECTIONS: GuideSection[] = [
             A name change does not go through manager or external approval. Correcting who holds a role is not a change
             to what the policy requires, in the same way that fixing a typo is not.
           </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            The check reads <strong>every one of your policies</strong>, not just the ones we hold as editable text. Where a
+            policy names the person but CareStream has no working copy of it yet, you are told so plainly rather than left to
+            assume nothing was found. Those keep the old name until the policy is adopted through Policy Gap Detection.
+          </p>
           <Tip>
-            Only policies CareStream already holds a working copy of can be updated this way. Removing a person from a
-            role does not archive them from <strong>Staff</strong>: if they have also left, archive them there separately.
+            Removing a person from a role does not archive them from <strong>Staff</strong>: if they have also left,
+            archive them there separately.
           </Tip>
         </SectionBlock>
       </div>

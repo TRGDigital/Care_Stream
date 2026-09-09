@@ -596,6 +596,19 @@ export interface UseCaseAllocation {
   posts:     Array<{ id: string; title: string; slug: string; status: string }>
 }
 
+/** One URL the monitor watches. `signal` says how a change would be detected — or that it
+ *  would not be. `has_text` says whether a change could be explained as well as detected. */
+export type MonitoredSource = {
+  reference_key: string
+  official_name: string
+  url: string
+  domain: string
+  signal: 'last-modified' | 'content-hash' | 'error' | 'skipped' | 'never-checked' | 'unknown'
+  has_text: boolean
+  last_checked_at: string | null
+  last_changed_at: string | null
+}
+
 /** A detected change to a regulation's source page. `impacted` is snapshotted at detection
  *  from the tenants' own coverage analyses, so it names the actual policy to revise. */
 export type RegulationChange = {
@@ -967,6 +980,14 @@ export function createPlatformClient(token: string) {
         adminFetch<{ versions: Array<{ id: string; changed_fields: string[]; material: boolean; created_at: string }> }>(`/regulations/${id}/versions`, token),
       checkSources: () =>
         adminFetch<{ regulations: number; urls_checked: number; changed: number; flagged: number; errors: number; recorded?: number; unchanged_text?: number; flagged_regs: Array<{ reference_key: string; official_name: string; url: string }> }>('/regulations/check-sources', token, { method: 'POST' }),
+
+      /** Every URL the monitor watches, and how well each is being watched. */
+      sources: () =>
+        adminFetch<{
+          sources: MonitoredSource[]
+          totals: { urls: number; regulations: number; with_text: number; not_watched: number }
+          domains: Array<{ domain: string; urls: number; healthy: number }>
+        }>('/regulations/sources', token),
 
       /** Detected source-page changes: what changed, what it means, who it lands on. */
       changes: (status?: string) =>

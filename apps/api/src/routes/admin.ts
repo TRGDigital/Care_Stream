@@ -2234,6 +2234,75 @@ adminRouter.get('/regulations/changes', async (req: Request, res: Response) => {
   }
 })
 
+// Every URL the monitor watches, and how well it is being watched. Shown on the changes page
+// because "nothing changed this week" and "we are not actually looking at that page" are
+// indistinguishable from the outside, and the second one is the dangerous state.
+adminRouter.get('/regulations/sources', async (_req: Request, res: Response) => {
+  try {
+    const [checks, regs] = await Promise.all([
+      (prisma as any).regulationSourceCheck.findMany({
+        select: { reference_key: true, url: true, fingerprint: true, last_checked_at: true, last_changed_at: true, content: true },
+      }),
+      (prisma as any).externalRegulation.findMany({
+        where:  { is_active: true },
+        select: { reference_key: true, official_name: true, source_urls: true },
+      }),
+    ])
+
+    const checkByKeyUrl = new Map<string, any>(checks.map((c: any) => [`${c.reference_key} ${c.url}`, c]))
+
+    // Driven from the regulations, not from the checks: a source URL that has never been
+    // checked at all must appear, and it would be invisible if this listed check rows.
+    const sources: any[] = []
+    for (const r of regs as any[]) {
+      for (const url of (r.source_urls ?? []).filter(Boolean)) {
+        const c  = checkByKeyUrl.get(`${r.reference_key} ${url}`)
+        const fp = String(c?.fingerprint ?? '')
+        const signal =
+          !c                        ? 'never-checked'
+          : fp.startsWith('lm:')    ? 'last-modified'
+          : fp.startsWith('h:')     ? 'content-hash'
+          : fp.startsWith('err:')   ? 'error'
+          : fp.startsWith('skip:')  ? 'skipped'
+          : 'unknown'
+        sources.push({
+          reference_key:   r.reference_key,
+          official_name:   r.official_name,
+          url,
+          domain:          (url.match(/^https?:\/\/([^/]+)/) ?? [])[1] ?? '',
+          signal,
+          // A page with no stored text can be detected as changed but never explained.
+          has_text:        !!(c?.content && String(c.content).length > 0),
+          last_checked_at: c?.last_checked_at ?? null,
+          last_changed_at: c?.last_changed_at ?? null,
+        })
+      }
+    }
+    sources.sort((a, b) => a.domain.localeCompare(b.domain) || a.official_name.localeCompare(b.official_name))
+
+    const byDomain = new Map<string, { domain: string; urls: number; healthy: number }>()
+    for (const s of sources) {
+      const d = byDomain.get(s.domain) ?? { domain: s.domain, urls: 0, healthy: 0 }
+      d.urls++
+      if (s.signal === 'last-modified' || s.signal === 'content-hash') d.healthy++
+      byDomain.set(s.domain, d)
+    }
+
+    ok(res, {
+      sources,
+      totals: {
+        urls:        sources.length,
+        regulations: new Set(sources.map(s => s.reference_key)).size,
+        with_text:   sources.filter(s => s.has_text).length,
+        not_watched: sources.filter(s => ['error', 'skipped', 'never-checked'].includes(s.signal)).length,
+      },
+      domains: [...byDomain.values()].sort((a, b) => b.urls - a.urls),
+    })
+  } catch (e: any) {
+    err(res, 'SOURCES_FAILED', e.message ?? 'Could not read monitored sources', 500)
+  }
+})
+
 // Explain any change that has not been reviewed yet. Separate from detection on purpose: a
 // model outage should delay explanations, never lose a detection.
 adminRouter.post('/regulations/changes/review', async (_req: Request, res: Response) => {

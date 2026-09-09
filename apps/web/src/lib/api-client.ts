@@ -1,4 +1,29 @@
 
+/** A regulation in scope with no policy behind it, from GET /analytics/gaps/missing-policies. */
+export type MissingPolicyReport = {
+  analysed: boolean
+  analysed_at: string | null
+  stale: boolean
+  stale_reason: string | null
+  regulations_in_scope: number
+  regulations_analysed: number
+  counts: { covered: number; partial: number; gap: number }
+  missing: Array<{ title: string; regulations: Array<{ reference_key: string; official_name: string }> }>
+}
+
+/** A policy the home has paid us to write. */
+export type PolicyPurchase = {
+  id: string
+  policy_title: string
+  reference_keys: string[]
+  price_pence: number
+  currency: string
+  status: 'paid' | 'drafting' | 'drafted' | 'approved' | 'refunded'
+  policy_id: string | null
+  purchased_at: string
+  approved_at: string | null
+}
+
 /** Which named roles a home's own policies ask for, from GET /settings/role-mentions. */
 export type RoleMentionScan = {
   scanned_at: string
@@ -372,6 +397,23 @@ export function createApiClient(token: string) {
         apiFetch<{ closed: boolean; deactivated_users: number }>('/billing/close-account', token, { method: 'POST' }),
     },
 
+    // Regulations with no policy at all, and buying the policies that fill them.
+    gaps: {
+      missingPolicies: () =>
+        apiFetch<MissingPolicyReport>('/analytics/gaps/missing-policies', token),
+    },
+    policyPurchases: {
+      list: () =>
+        apiFetch<{ purchases: PolicyPurchase[]; price_pence: number }>('/policy-purchases', token),
+      checkout: (titles: string[]) =>
+        apiFetch<{ url: string; titles: string[]; price_pence: number }>('/policy-purchases/checkout', token, {
+          method: 'POST', body: JSON.stringify({ titles }),
+        }),
+      reconcile: (session_id: string) =>
+        apiFetch<{ created: number; purchases: PolicyPurchase[] }>('/policy-purchases/reconcile', token, {
+          method: 'POST', body: JSON.stringify({ session_id }),
+        }),
+    },
     settings: {
       get: () => apiFetch<{ inbound_email: string; account_number: string; policy_sections: string[]; policy_categories: string[]; email_allowlist: string[]; phone_allowlist: string[]; facility_type: string; service_profile: Record<string, boolean>; service_triggers: Array<{ key: string; label: string; desc: string }>; logo_url: string | null; email_preferences: Record<string, boolean>; staff_roles: string[]; specialist_roles: string[]; response_style: 'standard' | 'concise'; branding_signoff: string; languages?: Array<{ code: string; name: string }>; default_language_codes?: string[]; language_catalog?: Array<{ code: string; name: string }>; translation_glossary?: Array<{ term: string; keep: boolean; note: string }>; glossary_excludes?: string[]; platform_glossary?: Array<{ term: string; keep: boolean; note: string }>; translation_suggestions_auto_approve?: boolean; room_count?: number }>('/settings', token),
       update: (data: { email_allowlist?: string[]; phone_allowlist?: string[]; facility_type?: string; service_profile?: Record<string, boolean>; email_preferences?: Record<string, boolean>; staff_roles?: string[]; specialist_roles?: string[]; policy_sections?: string[]; policy_categories?: string[]; response_style?: 'standard' | 'concise'; branding_signoff?: string; add_language?: string; remove_language?: string; translation_glossary?: Array<{ term: string; keep?: boolean; note?: string; exclude?: boolean }>; translation_suggestions_auto_approve?: boolean; room_count?: number }) =>

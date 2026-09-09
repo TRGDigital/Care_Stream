@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
+import { MissingPoliciesBanner } from '@/components/admin/missing-policies-banner'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { usePlanFeatures } from '@/lib/use-plan-features'
@@ -854,6 +855,13 @@ export default function GapsPage() {
 
       {/* ── CQC wording alignment ─────────────────────────────────────────── */}
       {session?.accessToken && <PolicyWordingAlignmentSection token={session.accessToken} userId={userId} stepInfo={stepInfo('wording')} confirmRun={confirmRun} onRunComplete={onRunComplete} pendingPolicies={pipeline?.pending_policies ?? 0} runState={runStateFor('wording')} />}
+
+      {/* ── Policies they do not have at all ───────────────────────────────
+          Below the four analysis sections on purpose. Those list work a home can do itself by
+          editing what it already has; this lists regulations with nothing behind them, which
+          cannot be fixed by editing. Renders nothing when the analysis is missing, stale, or
+          finds nothing. */}
+      {session?.accessToken && <MissingPoliciesBanner token={session.accessToken} />}
 
       {session?.accessToken && <RecentlyUpdatedSection token={session.accessToken} />}
 

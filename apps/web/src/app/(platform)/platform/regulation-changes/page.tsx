@@ -8,7 +8,7 @@
 // policies need revising should be looking at the source text, not at a paraphrase of it.
 
 import { useEffect, useState } from 'react'
-import { useSession } from 'next-auth/react'
+import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, type RegulationChange } from '@/lib/platform-api'
 import {
   AlertTriangle, Check, ExternalLink, Loader2, RefreshCw, Scale, Users, X, ChevronDown,
@@ -24,8 +24,7 @@ const when = (iso: string) =>
   new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 
 export default function RegulationChangesPage() {
-  const { data: session } = useSession()
-  const token = session?.accessToken as string | undefined
+  const token = usePlatformAuth()
 
   const [changes, setChanges] = useState<RegulationChange[] | null>(null)
   const [counts, setCounts]   = useState<{ new: number; notified: number; dismissed: number; unreviewed: number } | null>(null)

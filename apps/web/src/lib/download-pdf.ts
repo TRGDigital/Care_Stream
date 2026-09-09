@@ -28,7 +28,13 @@ export async function downloadElementAsPdf(
   widthPx = 768,
 ): Promise<void> {
   const html2pdf = (await import('html2pdf.js')).default
-  await html2pdf()
+  // Render to a blob and save it ourselves rather than calling .save(). The
+  // bundled FileSaver builds a DETACHED anchor and fires a synthetic MouseEvent
+  // at it; Chrome treats that as an automatic download rather than one the user
+  // asked for, and silently blocks it once a page has already saved a file or
+  // two. An anchor that is actually in the document, clicked normally, is not
+  // subject to that.
+  const blob: Blob = await html2pdf()
     .set({
       margin: [10, 10, 12, 10],
       filename: filename.endsWith('.pdf') ? filename : `${filename}.pdf`,
@@ -39,5 +45,20 @@ export async function downloadElementAsPdf(
       pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', 'li', '.avoid-break'] },
     } as any)
     .from(el)
-    .save()
+    .outputPdf('blob')
+
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename.endsWith('.pdf') ? filename : `${filename}.pdf`
+  a.rel = 'noopener'
+  a.style.display = 'none'
+  document.body.appendChild(a)
+  try {
+    a.click()
+  } finally {
+    document.body.removeChild(a)
+    // Give the browser time to start reading the blob before it is revoked.
+    setTimeout(() => URL.revokeObjectURL(url), 30_000)
+  }
 }

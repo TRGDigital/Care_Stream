@@ -40,15 +40,19 @@ function fmt(d?: string | null): string {
 function Shell({ docLabel, courseName, onClose, children }: { docLabel: string; courseName: string; onClose: () => void; children: React.ReactNode }) {
   const sheetRef = useRef<HTMLDivElement>(null)
   const [saving, setSaving] = useState(false)
+  const [failed, setFailed] = useState<string | null>(null)
 
   async function download() {
     if (!sheetRef.current || saving) return
     setSaving(true)
+    setFailed(null)
     try {
       await downloadElementAsPdf(sheetRef.current, safeFileName(`${courseName} - ${docLabel}`))
-    } catch {
-      // Fall back to the print dialog if the renderer fails for any reason.
-      printSheet()
+    } catch (e: any) {
+      // Say what went wrong rather than quietly opening the print dialog, which
+      // looks like the download button simply does nothing.
+      console.error('[cpd-pack] PDF download failed:', e)
+      setFailed(e?.message ? String(e.message) : 'The PDF could not be generated.')
     } finally { setSaving(false) }
   }
 
@@ -64,6 +68,22 @@ function Shell({ docLabel, courseName, onClose, children }: { docLabel: string; 
             </button>
           </div>
         </div>
+
+        {saving && (
+          <p className="mb-3 rounded-lg border border-teal/25 bg-teal-light/25 px-3 py-2 text-xs text-neutral-dark print:hidden">
+            Building the PDF. A long document can take up to half a minute.
+          </p>
+        )}
+        {failed && (
+          <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 print:hidden">
+            <p className="font-semibold">The download did not complete.</p>
+            <p className="mt-0.5">{failed}</p>
+            <p className="mt-1">
+              If your browser shows a blocked-download icon in the address bar, allow downloads from this site and try
+              again. Print is available as an alternative, choosing &ldquo;Save as PDF&rdquo; as the destination.
+            </p>
+          </div>
+        )}
 
         <div ref={sheetRef} className="spec-sheet rounded-xl border border-gray-200 bg-white p-8 shadow-card">
           <div className="mb-5 flex items-start justify-between gap-4 border-b-2 border-teal pb-3">

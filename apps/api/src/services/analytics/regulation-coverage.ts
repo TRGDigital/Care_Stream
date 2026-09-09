@@ -149,7 +149,7 @@ function termHits(matchTerms: string[], policyTokens: Set<string>): number {
   return hits
 }
 
-type Reg = {
+export type Reg = {
   reference_key: string; official_name: string; summary: string; care_home_context: string
   match_terms: string[]; distinguish_from: string[]; expected_policy_titles: string[]
   applies_to_settings: string[]; required_triggers: string[]; required_elements: string[]
@@ -191,7 +191,7 @@ const MAX_ELEMENTS = 12     // curated required_elements assessed per regulation
 // care setting and its self-declared service profile. Out-of-scope regs never become
 // gaps (we don't recommend, e.g., a Mental Health Act policy to a service that doesn't
 // support people under the Act).
-async function getScopedRegulations(tenantId: string): Promise<Reg[]> {
+export async function getScopedRegulations(tenantId: string): Promise<Reg[]> {
   const allRegulations: Reg[] = await (prisma as any).externalRegulation.findMany({
     where:  { is_active: true },
     select: {

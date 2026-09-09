@@ -19,6 +19,12 @@ const ROLE_PHRASES: Array<{ re: RegExp; key: string }> = [
   { re: /\b(?:health (?:and|&) safety lead|h&s lead)\b/i,               key: 'health_safety_lead' },
   { re: /\b(?:medicines lead|medication lead)\b/i,                      key: 'medicines_lead' },
   { re: /\b(?:data protection officer|dpo)\b/i,                         key: 'data_protection_officer' },
+  { re: /\bdeputy (?:home )?manager\b/i,                                key: 'deputy_manager' },
+  { re: /\b(?:moving (?:and|&) handling|manual handling) lead\b/i,      key: 'moving_handling_lead' },
+  { re: /\b(?:mental capacity lead|mca lead|dols lead)\b/i,             key: 'mental_capacity_lead' },
+  { re: /\b(?:end of life (?:care )?lead|palliative care lead)\b/i,     key: 'end_of_life_lead' },
+  { re: /\b(?:water safety lead|legionella (?:lead|responsible person))\b/i, key: 'water_safety_lead' },
+  { re: /\btraining lead\b/i,                                           key: 'training_lead' },
 ]
 
 export function applyRoleNames(root: HTMLElement, roleNames: RoleNames | undefined) {

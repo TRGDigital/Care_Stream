@@ -109,6 +109,14 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
     { key: 'health_safety_lead',  role: 'Health and safety lead',              derived: bySpecialism(/health (?:and|&) safety|(?:^|\b)h&s\b/i) },
     { key: 'medicines_lead',      role: 'Medicines lead',                      derived: bySpecialism(/medicat|medicine|pharmac/i) },
     { key: 'data_protection_officer', role: 'Data protection officer',         derived: bySpecialism(/data protection|(?:^|\b)dpo\b/i) },
+    // Roles that real care policies name a person against. Each is optional and only ever
+    // surfaces where a policy actually mentions that role, so an unused one costs nothing.
+    { key: 'deputy_manager',      role: 'Deputy manager',                      derived: byPosition(/deputy (?:manager|home manager)/i) },
+    { key: 'moving_handling_lead', role: 'Moving and handling lead',           derived: bySpecialism(/moving (?:and|&) handling|manual handling/i) },
+    { key: 'mental_capacity_lead', role: 'Mental capacity and DoLS lead',      derived: bySpecialism(/mental capacity|(?:^|\b)mca\b|(?:^|\b)dols\b|liberty protection/i) },
+    { key: 'end_of_life_lead',    role: 'End of life care lead',               derived: bySpecialism(/end of life|palliative/i) },
+    { key: 'water_safety_lead',   role: 'Water safety lead (Legionella)',      derived: bySpecialism(/legionella|water safety/i) },
+    { key: 'training_lead',       role: 'Training lead',                       derived: bySpecialism(/training|learning (?:and|&) development/i) },
   ]
   const roleHolders = ROLE_DEFS.map(d => ({ key: d.key, role: d.role, derived: d.derived, manual: manualOf(d.key) }))
 
@@ -262,7 +270,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     const ALLOWED = new Set(['nominated_individual', 'address', 'cqc_location_id', 'cqc_provider_id', 'review_cycle_months', 'version_scheme', 'default_approver', 'show_role_names', 'require_manager_approval', 'require_external_approval', 'require_audit_manager_approval', 'show_readiness_score'])
     // Role-holders can hold MORE THAN ONE person (comma-separated); the tenant picks which
     // one at adoption. These add to the names derived from staff positions/specialisms.
-    const ROLE_KEYS = new Set(['registered_manager', 'safeguarding_lead', 'caldicott_guardian', 'ipc_lead', 'fire_safety_officer', 'dignity_champion', 'maintenance_lead', 'health_safety_lead', 'medicines_lead', 'data_protection_officer'])
+    const ROLE_KEYS = new Set(['registered_manager', 'safeguarding_lead', 'caldicott_guardian', 'ipc_lead', 'fire_safety_officer', 'dignity_champion', 'maintenance_lead', 'health_safety_lead', 'medicines_lead', 'data_protection_officer', 'deputy_manager', 'moving_handling_lead', 'mental_capacity_lead', 'end_of_life_lead', 'water_safety_lead', 'training_lead'])
     const clean: Record<string, string> = {}
     for (const [k, v] of Object.entries(organisation_details as Record<string, unknown>)) {
       if (!(ALLOWED.has(k) || ROLE_KEYS.has(k)) || typeof v !== 'string') continue

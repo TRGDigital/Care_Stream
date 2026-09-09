@@ -170,6 +170,12 @@ const ROLE_MAP: Array<{ key: string; role: string; match: RegExp }> = [
   { key: 'health_safety_lead', role: 'Health and safety lead',              match: /health (?:and|&) safety|(?:^|\b)h&s\b/i },
   { key: 'medicines_lead',     role: 'Medicines lead',                      match: /medicat|medicine|pharmac/i },
   { key: 'data_protection_officer', role: 'Data protection officer',        match: /data protection|(?:^|\b)dpo\b/i },
+  { key: 'deputy_manager',     role: 'Deputy manager',                      match: /deputy (?:manager|home manager)/i },
+  { key: 'moving_handling_lead', role: 'Moving and handling lead',          match: /moving (?:and|&) handling|manual handling/i },
+  { key: 'mental_capacity_lead', role: 'Mental capacity and DoLS lead',     match: /mental capacity|(?:^|\b)mca\b|(?:^|\b)dols\b|liberty protection/i },
+  { key: 'end_of_life_lead',   role: 'End of life care lead',               match: /end of life|palliative/i },
+  { key: 'water_safety_lead',  role: 'Water safety lead (Legionella)',      match: /legionella|water safety/i },
+  { key: 'training_lead',      role: 'Training lead',                       match: /training|learning (?:and|&) development/i },
 ]
 
 async function getOrInitDocument(tenantId: string, policyId: string): Promise<any> {

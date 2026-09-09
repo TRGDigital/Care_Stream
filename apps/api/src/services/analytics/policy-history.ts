@@ -187,6 +187,7 @@ export async function policyVersionContent(tenantId: string, versionId: string) 
     where: { id: v.policy_id }, select: { name: true },
   })
   return {
+    policy_id:    v.policy_id,
     policy_name:  policy?.name ?? 'Policy',
     version:      v.version,
     published_at: v.published_at.toISOString(),

@@ -14,7 +14,9 @@
 import { useEffect, useState } from 'react'
 import { createApiClient, type PolicyHistoryEntry } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
-import { History, Loader2, FileText, X, Check, Undo2, AlertTriangle, Printer, ChevronDown, RefreshCw } from 'lucide-react'
+import EditablePolicyBody from '@/components/admin/editable-policy-body'
+import SlowLoadHint from '@/components/admin/slow-load-hint'
+import { History, Loader2, FileText, X, Check, Undo2, AlertTriangle, Printer, ChevronDown, RefreshCw, Eye } from 'lucide-react'
 
 const when = (iso: string) =>
   new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -58,8 +60,14 @@ export function PolicyHistoryTab({ token }: { token: string }) {
   const [history, setHistory] = useState<PolicyHistoryEntry[] | null>(
     () => persistentCache.get<PolicyHistoryEntry[]>(CACHE_KEY) ?? null)
   const [error, setError] = useState('')
-  const [reading, setReading] = useState<{ title: string; version: string; at: string; content: string } | null>(null)
+  // `loading` is part of the reading state so the overlay opens the instant it is asked for.
+  // The first open of a version formats it, which takes real time, and a spinner inside the
+  // document people are waiting for explains itself where one on a button does not.
+  const [reading, setReading] = useState<
+    { title: string; version: string; at: string; content: string; html: string; loading?: boolean } | null
+  >(null)
   const [opening, setOpening] = useState<string | null>(null)
+  const [showRaw, setShowRaw] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   // Which change rows are expanded, keyed by version id and index.
   const [shown, setShown] = useState<Set<string>>(new Set())
@@ -74,12 +82,13 @@ export function PolicyHistoryTab({ token }: { token: string }) {
 
   useEffect(() => { load() }, [token])
 
-  async function open(versionId: string) {
-    setOpening(versionId); setError('')
+  async function open(versionId: string, title: string, version: string, at: string) {
+    setOpening(versionId); setError(''); setShowRaw(false)
+    setReading({ title, version, at, content: '', html: '', loading: true })
     try {
       const v = await createApiClient(token).policies.versionContent(versionId)
-      setReading({ title: v.policy_name, version: v.version, at: v.published_at, content: v.content })
-    } catch (e: any) { setError(e.message) }
+      setReading({ title: v.policy_name, version: v.version, at: v.published_at, content: v.content, html: v.html ?? '' })
+    } catch (e: any) { setError(e.message); setReading(null) }
     finally { setOpening(null) }
   }
 
@@ -146,7 +155,7 @@ export function PolicyHistoryTab({ token }: { token: string }) {
                   <span className="text-xs text-neutral-mid">{when(v.published_at)}</span>
                   {v.published_by && <span className="text-xs text-neutral-mid">published by {v.published_by}</span>}
                   <button
-                    onClick={() => open(v.version_id)}
+                    onClick={() => open(v.version_id, h.policy_name, v.version, v.published_at)}
                     disabled={opening === v.version_id}
                     className="ml-auto inline-flex items-center gap-1.5 rounded-btn border border-teal/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30 disabled:opacity-40"
                   >
@@ -251,12 +260,37 @@ export function PolicyHistoryTab({ token }: { token: string }) {
               <button onClick={() => window.print()} className="text-neutral-mid hover:text-neutral-dark" title="Print this version"><Printer size={15} /></button>
               <button onClick={() => setReading(null)} className="text-neutral-mid hover:text-neutral-dark"><X size={16} /></button>
             </div>
-            {/* Set as a document, not a terminal dump: proportional type, a readable measure,
-                and break-words so a long unbroken string cannot scroll the panel sideways. */}
-            <div className="flex-1 overflow-y-auto bg-white px-6 py-6">
-              <div className="mx-auto max-w-[68ch] whitespace-pre-wrap break-words text-[14.5px] leading-[1.7] text-neutral-dark">
-                {reflow(reading.content)}
+            {/* Same two views as the policy preview: the formatted document by default, with the
+                exact stored text one click away. A version is evidence, so the original wording
+                must stay reachable even though the formatted render is the readable one. */}
+            {!reading.loading && reading.html && (
+              <div className="flex items-center gap-2 border-b border-gray-100 px-5 py-2.5">
+                <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5 text-xs font-medium">
+                  <button onClick={() => setShowRaw(false)} className={`flex items-center gap-1 rounded-md px-2.5 py-1 ${!showRaw ? 'bg-white text-neutral-dark shadow-sm' : 'text-neutral-mid'}`}><Eye size={12} /> As staff saw it</button>
+                  <button onClick={() => setShowRaw(true)}  className={`flex items-center gap-1 rounded-md px-2.5 py-1 ${showRaw ? 'bg-white text-neutral-dark shadow-sm' : 'text-neutral-mid'}`}><FileText size={12} /> Original text</button>
+                </div>
               </div>
+            )}
+
+            <div className="flex-1 overflow-y-auto bg-white px-6 py-5">
+              {reading.loading ? (
+                <div className="flex flex-col items-center gap-2.5 py-16">
+                  <div className="flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Opening this version…</div>
+                  <SlowLoadHint stages={[
+                    { after: 3,  text: 'Formatting this version so it reads as a document. This happens once per version, then it is saved for next time.' },
+                    { after: 12, text: 'Longer policies take a little more time. It has not stalled.' },
+                    { after: 25, text: 'Still going. Closing this would discard the work, so it is worth waiting.' },
+                  ]} />
+                </div>
+              ) : reading.html && !showRaw ? (
+                <EditablePolicyBody className="policy-content" html={reading.html} />
+              ) : (
+                // The stored text. Line breaks are rejoined where the source document wrapped
+                // them, which changes no words: see reflow above.
+                <div className="mx-auto max-w-[68ch] whitespace-pre-wrap break-words text-[14.5px] leading-[1.7] text-neutral-dark">
+                  {reflow(reading.content)}
+                </div>
+              )}
             </div>
           </div>
         </div>

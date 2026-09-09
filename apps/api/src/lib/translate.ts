@@ -626,6 +626,39 @@ export async function getPolicyBaselineHtml(
   return { html: current && looksFormatted(current) ? current : null }
 }
 
+// Formatted HTML of ONE STORED VERSION's text, so the history overlay reads as a document in
+// the same shape as the policy preview rather than as the raw extracted text.
+//
+// Cached in policy_translations under a version-scoped key. A published version's text never
+// changes, so unlike the live 'eng' render this is paid for once and then read forever; the key
+// cannot collide with a language code, and re-ingesting a policy clears these along with the
+// rest of its cache, which is the right thing for a cache to do.
+export async function getPolicyVersionHtml(
+  tenantId: string, policyId: string, versionId: string, text: string | null,
+): Promise<{ html: string | null; cached: boolean }> {
+  const LANG = `ver_${versionId}`
+  const looksFormatted = (h: string) => /<h[1-6][\s>]/i.test(h)
+  const existing = await (prisma as any).policyTranslation.findUnique({
+    where: { policy_id_lang: { policy_id: policyId, lang: LANG } }, select: { content: true },
+  }).catch(() => null)
+  const current: string | null = existing?.content ?? null
+  if (current && policyHtmlEndsCleanly(current) && looksFormatted(current)) return { html: current, cached: true }
+  if (!text) return { html: current, cached: !!current }
+  const fresh = await formatPolicyHtml(text, 'eng')
+  if (!fresh) return { html: current, cached: !!current }
+  // Same rule as the live preview: only cache a build that actually formatted, so a failed
+  // format retries on the next open instead of sticking as flat paragraphs forever.
+  if (looksFormatted(fresh) || !current) {
+    await (prisma as any).policyTranslation.upsert({
+      where:  { policy_id_lang: { policy_id: policyId, lang: LANG } },
+      update: { content: fresh },
+      create: { tenant_id: tenantId, policy_id: policyId, lang: LANG, content: fresh },
+    }).catch(() => {})
+    return { html: fresh, cached: false }
+  }
+  return { html: current, cached: true }
+}
+
 // Translate a full policy document into the target language, chunk by chunk so
 // long policies don't blow the token budget. Preserves structure; falls back to
 // the original text on any chunk failure. Caller is responsible for caching the

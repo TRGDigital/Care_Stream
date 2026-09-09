@@ -11,7 +11,7 @@ import { downloadExtractedText } from '../storage/s3'
 import { republishPolicyContent } from '../rag/ingestion'
 import { sendPolicyExternalReviewEmail, sendTrainingUpdateEmail } from '../email/outbound'
 import { siteUrl } from '../../lib/urls'
-import { formatPolicyHtml } from '../../lib/translate'
+import { formatPolicyHtml, mapLimit } from '../../lib/translate'
 import { isEmailEnabled } from '../../lib/notify'
 import { sendPushToUsers } from '../../lib/push'
 import { resolvedPolicyIds } from './review-resolutions'
@@ -1091,37 +1091,77 @@ export type RoleNamePolicyImpact = {
   snippet: string
 }
 
-/** Which policies have this person's name written into them. Read-only. */
-export async function roleNameImpact(tenantId: string, oldName: string): Promise<RoleNamePolicyImpact[]> {
+export type RoleNameImpact = {
+  /** Named here AND holding a working copy, so the name can be replaced and versioned. */
+  rewritable: RoleNamePolicyImpact[]
+  /** Named here but with no working copy, so the old name stays until the policy is adopted.
+   *  Reported rather than hidden: silence would read as "nobody is named in these". */
+  others: RoleNamePolicyImpact[]
+  policies_scanned: number
+  policies_unreadable: number
+}
+
+const IMPACT_READ_CONCURRENCY = 8
+// Enough to reach the roles and responsibilities section of any policy we have seen.
+const IMPACT_TEXT_CAP = 120_000
+
+/** Which policies have this person's name written into them. Read-only.
+ *
+ *  Sweeps the WHOLE library, not just the policies with a working copy. Only twelve of
+ *  Ferndale's three hundred and twenty two policies hold their text in Postgres, so checking
+ *  only those would report "no policies affected" while the name sat in three hundred others.
+ *  The rest come from object storage, which is why this is worth a loading state. */
+export async function roleNameImpact(tenantId: string, oldName: string): Promise<RoleNameImpact> {
   const name = String(oldName ?? '').trim()
-  if (name.length < 2) return []
+  const empty: RoleNameImpact = { rewritable: [], others: [], policies_scanned: 0, policies_unreadable: 0 }
+  if (name.length < 2) return empty
+
+  const policies: Array<{ id: string; name: string }> = await (prisma as any).policy.findMany({
+    where:  { tenant_id: tenantId, status: 'active' },
+    select: { id: true, name: true },
+  })
+  if (!policies.length) return empty
 
   const docs = await (prisma as any).policyDocument.findMany({
     where:  { tenant_id: tenantId },
     select: { policy_id: true, published_content: true, original_content: true },
   })
-  if (!docs.length) return []
+  const docTextByPolicy = new Map<string, string>(
+    docs.map((d: any) => [d.policy_id, String(d.published_content || d.original_content || '')]))
 
-  const policies = await (prisma as any).policy.findMany({
-    where:  { id: { in: docs.map((d: any) => d.policy_id) }, status: 'active' },
-    select: { id: true, name: true },
-  })
-  const nameById = new Map<string, string>(policies.map((p: any) => [p.id, p.name]))
+  const rewritable: RoleNamePolicyImpact[] = []
+  const others: RoleNamePolicyImpact[] = []
+  let unreadable = 0
 
-  const out: RoleNamePolicyImpact[] = []
-  for (const d of docs) {
-    const policyName = nameById.get(d.policy_id)
-    if (!policyName) continue   // archived or deleted since the document was written
-    const text = String(d.published_content || d.original_content || '')
-    if (!text) continue
-    const re = roleNameRegex(name)
-    const matches = [...text.matchAll(re)]
-    if (!matches.length) continue
+  await mapLimit(policies, IMPACT_READ_CONCURRENCY, async (p) => {
+    // A document whose content is empty is not a working copy: applyRoleNameChange would find
+    // nothing to replace. Fall through to the stored text so the mention is still reported.
+    const docText = docTextByPolicy.get(p.id) ?? ''
+    let text = docText
+    if (!text) {
+      const s3 = await downloadExtractedText(tenantId, p.id).catch(() => null)
+      if (!s3) { unreadable++; return }
+      text = s3.slice(0, IMPACT_TEXT_CAP)
+    }
+    const matches = [...text.matchAll(roleNameRegex(name))]
+    if (!matches.length) return
     const at = matches[0].index ?? 0
-    const snippet = text.slice(Math.max(0, at - 70), at + name.length + 70).replace(/\s+/g, ' ').trim()
-    out.push({ policy_id: d.policy_id, policy_name: policyName, occurrences: matches.length, snippet })
+    const hit: RoleNamePolicyImpact = {
+      policy_id:   p.id,
+      policy_name: p.name,
+      occurrences: matches.length,
+      snippet:     text.slice(Math.max(0, at - 70), at + name.length + 70).replace(/\s+/g, ' ').trim(),
+    }
+    ;(docText ? rewritable : others).push(hit)
+  })
+
+  const byName = (a: RoleNamePolicyImpact, b: RoleNamePolicyImpact) => a.policy_name.localeCompare(b.policy_name)
+  return {
+    rewritable: rewritable.sort(byName),
+    others:     others.sort(byName),
+    policies_scanned:    policies.length - unreadable,
+    policies_unreadable: unreadable,
   }
-  return out.sort((a, b) => a.policy_name.localeCompare(b.policy_name))
 }
 
 /** Replace a role holder's name throughout one policy, as a published minor revision.

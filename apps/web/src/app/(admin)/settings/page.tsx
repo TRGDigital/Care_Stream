@@ -174,8 +174,13 @@ export default function SettingsPage() {
     key: string
     label: string
     name: string
+    /** The sweep reads the whole library, most of it from object storage, so it is worth showing. */
+    scanning: boolean
     policies: Array<{ policy_id: string; policy_name: string; occurrences: number; snippet: string }>
+    others: Array<{ policy_id: string; policy_name: string; occurrences: number; snippet: string }>
     roleMentions: number | null
+    scanned: number
+    unreadable: number
     replaceWith: string
     busy: boolean
     error: string
@@ -434,16 +439,25 @@ export default function SettingsPage() {
   // person's name WRITTEN INTO its text, which would keep the old name for ever. Those are
   // checked first and never changed without the tenant seeing exactly where.
   async function removeRoleName(key: string, name: string) {
-    setCheckingName(`${key}:${name}`)
+    const label = orgContext.role_holders.find(h => h.key === key)?.role ?? 'Role holder'
+    // Opened straight away: the sweep reads every policy, most from object storage, so leaving
+    // a spinner on a chip would look like nothing was happening.
+    setNameChange({
+      key, label, name, scanning: true, policies: [], others: [], roleMentions: null,
+      scanned: 0, unreadable: 0, replaceWith: '', busy: false, error: '', done: null,
+    })
     try {
       const r = await createApiClient(session!.accessToken as string).settings.roleNameImpact(key, name)
-      if (!r.policies.length) { dropRoleName(key, name); return }
-      const label = orgContext.role_holders.find(h => h.key === key)?.role ?? 'Role holder'
-      setNameChange({ key, label, name, policies: r.policies, roleMentions: r.role_mentions, replaceWith: '', busy: false, error: '', done: null })
+      if (!r.policies.length && !r.others.length) { setNameChange(null); dropRoleName(key, name); return }
+      setNameChange(nc => nc && nc.name === name ? {
+        ...nc, scanning: false, policies: r.policies, others: r.others,
+        roleMentions: r.role_mentions, scanned: r.policies_scanned, unreadable: r.policies_unreadable,
+      } : nc)
     } catch {
       // If the check itself fails, removing the name is still what was asked for.
+      setNameChange(null)
       dropRoleName(key, name)
-    } finally { setCheckingName(null) }
+    }
   }
 
   async function confirmNameChange(rewrite: boolean) {
@@ -1195,7 +1209,15 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="max-h-[60vh] overflow-y-auto px-6 py-5">
-                  {nameChange.done ? (
+                  {nameChange.scanning ? (
+                    <div className="flex flex-col items-center gap-2 py-12 text-center">
+                      <Loader2 size={18} className="animate-spin text-neutral-mid" />
+                      <p className="text-sm text-neutral-mid">Checking every policy for this name…</p>
+                      <p className="max-w-sm text-xs text-neutral-mid">
+                        Most of your policies are stored as files rather than text, so this reads them one at a time.
+                      </p>
+                    </div>
+                  ) : nameChange.done ? (
                     <div className="space-y-3 text-sm">
                       <p className="text-neutral-dark">
                         {nameChange.done.updated.length} {nameChange.done.updated.length === 1 ? 'policy was' : 'policies were'} updated
@@ -1215,11 +1237,17 @@ export default function SettingsPage() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <p className="text-sm text-neutral-dark">
-                        <strong>{nameChange.policies.length}</strong> {nameChange.policies.length === 1 ? 'policy has' : 'policies have'} this
-                        name written into the text. Replacing it updates {nameChange.policies.length === 1 ? 'it' : 'them'} and
-                        creates a new version of each. No approval is needed: changing who holds a role does not change what the policy says.
-                      </p>
+                      {nameChange.policies.length > 0 ? (
+                        <p className="text-sm text-neutral-dark">
+                          <strong>{nameChange.policies.length}</strong> {nameChange.policies.length === 1 ? 'policy has' : 'policies have'} this
+                          name written into the text. Replacing it updates {nameChange.policies.length === 1 ? 'it' : 'them'} and
+                          creates a new version of each. No approval is needed: changing who holds a role does not change what the policy says.
+                        </p>
+                      ) : (
+                        <p className="text-sm text-neutral-dark">
+                          This name appears in your policies, but none of them can be updated automatically yet. See below.
+                        </p>
+                      )}
 
                       {/* Said plainly, because it is the part that surprises people: most policies
                           need no change at all. */}
@@ -1244,6 +1272,38 @@ export default function SettingsPage() {
                         ))}
                       </ul>
 
+                      {/* Named, but with no working copy to edit. Reported rather than left out:
+                          saying nothing here would read as "nobody is named in these". */}
+                      {nameChange.others.length > 0 && (
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
+                          <p className="text-xs font-semibold text-amber-900">
+                            {nameChange.others.length} {nameChange.others.length === 1 ? 'other policy names' : 'other policies name'} this
+                            person and cannot be updated here
+                          </p>
+                          <p className="mt-1 text-xs text-amber-800">
+                            CareStream does not hold an editable copy of {nameChange.others.length === 1 ? 'it' : 'them'} yet, so
+                            {nameChange.others.length === 1 ? ' it keeps' : ' they keep'} the old name until adopted through Policy Gap Detection.
+                          </p>
+                          <ul className="mt-2 space-y-0.5 text-xs text-amber-900">
+                            {nameChange.others.slice(0, 12).map(p => (
+                              <li key={p.policy_id}>
+                                {p.policy_name}
+                                <span className="ml-1.5 text-amber-700">
+                                  {p.occurrences} {p.occurrences === 1 ? 'mention' : 'mentions'}
+                                </span>
+                              </li>
+                            ))}
+                            {nameChange.others.length > 12 && <li>and {nameChange.others.length - 12} more</li>}
+                          </ul>
+                        </div>
+                      )}
+
+                      {nameChange.unreadable > 0 && (
+                        <p className="text-xs text-neutral-mid">
+                          {nameChange.scanned} policies checked. {nameChange.unreadable} could not be read and were not searched.
+                        </p>
+                      )}
+
                       <div>
                         <label className="text-sm font-medium text-neutral-dark">Replace with</label>
                         <input
@@ -1266,15 +1326,20 @@ export default function SettingsPage() {
                 <div className="flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 px-6 py-3">
                   {nameChange.done ? (
                     <Button onClick={() => setNameChange(null)}>Done</Button>
+                  ) : nameChange.scanning ? (
+                    <button onClick={() => setNameChange(null)} className="rounded-md px-3 py-2 text-sm font-medium text-neutral-mid hover:text-neutral-dark">Cancel</button>
                   ) : (
                     <>
                       <button onClick={() => setNameChange(null)} disabled={nameChange.busy} className="rounded-md px-3 py-2 text-sm font-medium text-neutral-mid hover:text-neutral-dark disabled:opacity-40">Cancel</button>
                       <button onClick={() => confirmNameChange(false)} disabled={nameChange.busy} className="rounded-md border border-gray-200 px-3 py-2 text-sm font-medium text-neutral-dark hover:border-gray-300 disabled:opacity-40">
-                        Remove only, leave policies
+                        {nameChange.policies.length ? 'Remove only, leave policies' : 'Remove the name'}
                       </button>
-                      <Button onClick={() => confirmNameChange(true)} disabled={nameChange.busy}>
-                        {nameChange.busy ? <><Loader2 size={14} className="mr-1.5 inline animate-spin" /> Updating…</> : `Update ${nameChange.policies.length} ${nameChange.policies.length === 1 ? 'policy' : 'policies'}`}
-                      </Button>
+                      {/* Offered only where there is something this can actually change. */}
+                      {nameChange.policies.length > 0 && (
+                        <Button onClick={() => confirmNameChange(true)} disabled={nameChange.busy}>
+                          {nameChange.busy ? <><Loader2 size={14} className="mr-1.5 inline animate-spin" /> Updating…</> : `Update ${nameChange.policies.length} ${nameChange.policies.length === 1 ? 'policy' : 'policies'}`}
+                        </Button>
+                      )}
                     </>
                   )}
                 </div>

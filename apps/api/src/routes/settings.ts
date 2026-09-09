@@ -577,15 +577,18 @@ settingsRouter.post('/role-name/impact', async (req: Request, res: Response) => 
   const oldName = String((req.body ?? {}).old_name ?? '').trim()
   if (!oldName) return err(res, 'INVALID_INPUT', 'Provide the name being changed', 400)
   try {
-    const policies = await roleNameImpact(user.tenant_id, oldName)
+    const impact = await roleNameImpact(user.tenant_id, oldName)
     // How many policies mention the ROLE, which update themselves. Read from the cached sweep
-    // rather than re-scanning a whole library to fill in a number on a dialog.
+    // rather than re-scanning a whole library twice to fill in a number on a dialog.
     const scan = await getRoleMentionScan(user.tenant_id).catch(() => null)
     const roleKey = String((req.body ?? {}).key ?? '')
     const mention = scan?.mentions?.find(m => m.key === roleKey) ?? null
     ok(res, {
-      policies,
-      total_occurrences: policies.reduce((n, p) => n + p.occurrences, 0),
+      policies: impact.rewritable,
+      others:   impact.others,
+      total_occurrences: impact.rewritable.reduce((n, p) => n + p.occurrences, 0),
+      policies_scanned:    impact.policies_scanned,
+      policies_unreadable: impact.policies_unreadable,
       role_mentions: mention ? mention.policies : null,
     })
   } catch (e: any) {

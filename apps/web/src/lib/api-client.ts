@@ -473,7 +473,10 @@ export function createApiClient(token: string) {
       roleNameImpact: (key: string, old_name: string) =>
         apiFetch<{
           policies: Array<{ policy_id: string; policy_name: string; occurrences: number; snippet: string }>
+          others:   Array<{ policy_id: string; policy_name: string; occurrences: number; snippet: string }>
           total_occurrences: number
+          policies_scanned: number
+          policies_unreadable: number
           role_mentions: number | null
         }>('/settings/role-name/impact', token, { method: 'POST', body: JSON.stringify({ key, old_name }) }),
 

@@ -145,7 +145,7 @@ export default function PolicyGapsPage() {
           <span className="inline-flex items-center gap-1 rounded-full bg-neutral-dark px-2 py-0.5 text-[11px] font-medium text-white"><Lock size={10} /> Internal</span>
         </div>
         <p className="mb-5 max-w-3xl text-sm text-neutral-mid">
-          Classify a client&rsquo;s policies into canonical types, then compare them against other clients of the <strong>same care setting</strong> to spot policies they&rsquo;re missing, a pipeline for policies we can write and sell. Internal only; no client&rsquo;s policy content is ever shown to another, we compare policy <em>types</em> and peer coverage only.
+          Which policies a client <strong>does not have at all</strong>, so we know what we can write and sell them. Judged against the legislation in scope for their service, with a weaker peer comparison below it. Gaps inside the policies they already hold are their own work and live on their gaps page, not here. Internal only; no client&rsquo;s policy content is ever shown to another.
         </p>
 
         {error && <div className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
@@ -240,11 +240,11 @@ export default function PolicyGapsPage() {
                     <span><strong>Do not act on this list.</strong> {missingReport.stale_reason}</span>
                   </p>
                 )}
-                <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                  <span className="rounded-full bg-green-50 px-2.5 py-1 font-medium text-green-800">{missingReport.counts.covered} fully covered</span>
-                  <span className="rounded-full bg-amber-50 px-2.5 py-1 font-medium text-amber-900">{missingReport.counts.partial} partly covered</span>
-                  <span className="rounded-full bg-red-50 px-2.5 py-1 font-medium text-red-800">{missingReport.counts.gap} no policy</span>
-                </div>
+                <p className="mt-3 text-xs text-neutral-mid">
+                  Read against {missingReport.regulations_in_scope} regulations in scope for this service.
+                  Gaps inside the policies they already hold are their own work and are not shown here;
+                  they are on the client&rsquo;s own gaps page.
+                </p>
 
                 {missingReport.missing.length === 0 ? (
                   <p className="mt-3 flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2.5 text-sm text-green-900">
@@ -299,7 +299,7 @@ export default function PolicyGapsPage() {
             <div className="rounded-xl border border-gray-200 bg-white">
               <div className="flex items-center gap-2 border-b border-gray-100 px-5 py-3">
                 <AlertTriangle size={15} className="text-amber-500" />
-                <h2 className="text-sm font-semibold text-neutral-dark">Missing policies ({report.missing.length})</h2>
+                <h2 className="text-sm font-semibold text-neutral-dark">Also missing compared with similar homes ({report.missing.length})</h2>
                 <span className="text-xs text-neutral-mid">policies peers have that this client doesn&rsquo;t</span>
               </div>
               {report.missing.length === 0 ? (
@@ -318,23 +318,9 @@ export default function PolicyGapsPage() {
               )}
             </div>
 
-            {/* Have */}
-            <div className="rounded-xl border border-gray-200 bg-white">
-              <div className="flex items-center gap-2 border-b border-gray-100 px-5 py-3">
-                <CheckCircle2 size={15} className="text-green-500" />
-                <h2 className="text-sm font-semibold text-neutral-dark">Has ({report.have.length})</h2>
-              </div>
-              {report.have.length === 0 ? (
-                <p className="px-5 py-6 text-sm text-neutral-mid">No classified policies yet, run &ldquo;Classify policies&rdquo; above.</p>
-              ) : (
-                <div className="flex flex-wrap gap-1.5 px-5 py-4">
-                  {report.have.map(t => <span key={t} className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">{t}</span>)}
-                </div>
-              )}
-            </div>
           </div>
         ) : selected ? null : (
-          <p className="rounded-md border border-dashed border-gray-200 bg-white px-4 py-10 text-center text-sm text-neutral-mid">Pick a client above to see which policies they&rsquo;re missing compared to their peers.</p>
+          <p className="rounded-md border border-dashed border-gray-200 bg-white px-4 py-10 text-center text-sm text-neutral-mid">Pick a client above to see which policies they do not have.</p>
         )}
         </>)}
       </div>

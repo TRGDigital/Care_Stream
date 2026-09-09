@@ -2548,3 +2548,30 @@ model RoleMentionScan {
 
   @@map("role_mention_scan")
 }
+
+// A policy a client has paid us to write. Mirrors TrainingLicense, the one-off Checkout flow
+// already proven in production. Unlike a licence, a policy is not delivered on payment: the
+// status carries it from paid, through drafting and our internal read, to approved.
+// See apps/api/prisma/migrations/manual_policy_purchase.sql.
+model PolicyPurchase {
+  id                String    @id @default(uuid()) @db.Uuid
+  tenant_id         String
+  policy_title      String
+  reference_keys    String[]  @default([])
+  price_pence       Int
+  currency          String    @default("gbp")
+  stripe_payment_id String
+  status            String    @default("paid")   // paid | drafting | drafted | approved | refunded
+  policy_id         String?
+  drafted_at        DateTime?
+  approved_at       DateTime?
+  approved_by       String?
+  purchased_at      DateTime  @default(now())
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  @@unique([stripe_payment_id, policy_title], map: "policy_purchase_payment_title_idx")
+  @@index([tenant_id, purchased_at(sort: Desc)], map: "policy_purchase_tenant_idx")
+  @@index([status], map: "policy_purchase_status_idx")
+  @@map("policy_purchase")
+}

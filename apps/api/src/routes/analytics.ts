@@ -3,6 +3,7 @@
 // Advanced metrics are returned only when plan.has_advanced_analytics is true.
 
 import { Router, Request, Response } from 'express'
+import { missingPolicies } from '../services/analytics/missing-policies'
 import { prisma } from '../db/client'
 import { getTenantId } from '../db/tenant-context'
 import { requireAdmin } from '../middleware/auth'
@@ -543,6 +544,20 @@ analyticsRouter.get('/gaps/pipeline', requireAdmin, async (_req: Request, res: R
 // entirely from stored state (counts only — never triggers AI work). Lets the /gaps
 // page offer "Resume" after an interrupted client-driven run instead of the
 // destructive start endpoint, which wipes the finished work.
+// GET /gaps/missing-policies — regulations in scope with no policy behind them at all.
+//
+// Free: derives from coverage already analysed and never starts a run. Scoped to the caller's
+// own tenant. The report says when it should not be trusted, and the banner that reads this
+// renders nothing at all in that case rather than selling against a verdict we doubt.
+analyticsRouter.get('/gaps/missing-policies', async (req: Request, res: Response) => {
+  const user = (req as any).user
+  try {
+    ok(res, await missingPolicies(user.tenant_id))
+  } catch (e: any) {
+    err(res, 'ANALYSIS_FAILED', e?.message ?? 'could not build the missing-policy list', 500)
+  }
+})
+
 analyticsRouter.get('/gaps/run-state', requireAdmin, async (_req: Request, res: Response) => {
   const tenantId = getTenantId()
   try {

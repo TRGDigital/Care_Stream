@@ -1190,6 +1190,14 @@ export function createPlatformClient(token: string) {
         adminFetch<{ ignored: boolean }>('/policy-gaps/types/ignore', token, { method: 'POST', body: JSON.stringify({ name, care_setting }) }),
       // Missing policies judged against legislation rather than against peers. Reading is
       // free; the coverage run costs Anthropic credit, so the two are separate calls.
+      // Policies clients have paid for, and moving one along. Approval is manual on
+      // purpose: a person decides a document is fit to carry a care home's name.
+      orders: () =>
+        adminFetch<{ orders: PolicyOrder[] }>('/policy-gaps/orders', token),
+      setOrderStatus: (id: string, status: string, policy_id?: string) =>
+        adminFetch<{ order: PolicyOrder }>(`/policy-gaps/orders/${id}/status`, token, {
+          method: 'POST', body: JSON.stringify({ status, policy_id }),
+        }),
       missingPolicies: (tenantId: string) =>
         adminFetch<MissingPolicyReport>(`/policy-gaps/${tenantId}/missing-policies`, token),
       coverageState: (tenantId: string) =>
@@ -1215,6 +1223,22 @@ export interface MissingPolicyReport {
   regulations_analysed: number
   counts: { covered: number; partial: number; gap: number }
   missing: Array<{ title: string; regulations: Array<{ reference_key: string; official_name: string }> }>
+}
+
+
+/** A policy a client has paid for, with the client attached. */
+export interface PolicyOrder {
+  id: string
+  tenant_id: string
+  tenant: { id: string; name: string; account_number: string } | null
+  policy_title: string
+  reference_keys: string[]
+  price_pence: number
+  status: 'paid' | 'drafting' | 'drafted' | 'approved' | 'refunded'
+  policy_id: string | null
+  purchased_at: string
+  approved_at: string | null
+  approved_by: string | null
 }
 
 export interface TranslationChange {

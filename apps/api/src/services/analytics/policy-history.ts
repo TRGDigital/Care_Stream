@@ -41,6 +41,12 @@ export type HistoryVersion = {
   change_count: number
   changes: HistoryChange[]
   approvals: HistoryApproval[]
+  /** The version currently in force. Said out loud because the newest row IS the live policy,
+   *  and a reader who opens it expecting superseded text would otherwise be misled. */
+  is_current: boolean
+  /** The uploaded original. Publishing is what writes a version row, so version 1 exists only
+   *  as the document's original_content and has to be reconstructed here. */
+  is_original: boolean
 }
 
 export type PolicyHistory = {
@@ -72,12 +78,23 @@ export async function policyHistory(tenantId: string): Promise<PolicyHistory[]> 
     }),
     (prisma as any).policyDocument.findMany({
       where:  { tenant_id: tenantId, policy_id: { in: policyIds } },
-      select: { id: true, policy_id: true },
+      select: { id: true, policy_id: true, version: true, created_at: true },
     }),
   ])
+
+  // Whether an uploaded original exists, by LENGTH rather than by loading it: a library's worth
+  // of original text would be tens of megabytes on a page that only needs to know it is there.
+  const originals: Array<{ policy_id: string; original_len: number }> = await (prisma as any).$queryRaw`
+    select policy_id::text as policy_id, coalesce(length(original_content), 0)::int as original_len
+    from policy_documents
+    where tenant_id::text = ${tenantId} and policy_id::text = any(${policyIds}::text[])
+  `.catch(() => [])
+  const hasOriginal = new Map<string, boolean>(
+    originals.map(r => [r.policy_id, Number(r.original_len) > 0]))
   const nameById = new Map<string, { id: string; name: string; carestream_written: boolean }>(
     policies.map((p: any) => [p.id, p]))
   const docIdByPolicy = new Map<string, string>(docs.map((d: any) => [d.policy_id, d.id]))
+  const docByPolicy = new Map<string, any>(docs.map((d: any) => [d.policy_id, d]))
   const docIds = [...docIdByPolicy.values()]
 
   const [changes, approvals] = await Promise.all([
@@ -172,11 +189,59 @@ export async function policyHistory(tenantId: string): Promise<PolicyHistory[]> 
             at:            a.created_at.toISOString(),
           }))
         : [],
+      // The newest row is the policy staff are reading right now, not a superseded state.
+      is_current:  isNewest && String(v.version) === String(docByPolicy.get(v.policy_id)?.version ?? ''),
+      is_original: false,
+    })
+  }
+
+  // Version 1 is the uploaded original, and publishing is what writes a version row, so version 1
+  // has no row of its own: without this the list starts at 2 and the earliest text a home can
+  // actually read is the state AFTER its first set of changes. The original still exists as the
+  // document's original_content, so the entry is reconstructed from there and given the id the
+  // content endpoint understands.
+  for (const h of out.values()) {
+    if (!hasOriginal.get(h.policy_id)) continue
+    // Nothing to add if a real version 1 row already exists.
+    if (h.versions.some(v => parseInt(String(v.version), 10) === 1)) continue
+    const doc = docByPolicy.get(h.policy_id)
+    h.versions.push({
+      version_id:   `original-${h.policy_id}`,
+      version:      '1.0',
+      published_at: (doc?.created_at ?? new Date()).toISOString(),
+      published_by: null,
+      change_count: 0,
+      changes:      [],
+      approvals:    [],
+      is_current:   false,
+      is_original:  true,
     })
   }
 
   return [...out.values()].sort((a, b) =>
     (b.versions[0]?.published_at ?? '').localeCompare(a.versions[0]?.published_at ?? ''))
+}
+
+/** The uploaded original, which is version 1 but has no version row of its own. */
+export async function policyOriginalContent(tenantId: string, policyId: string) {
+  const doc = await (prisma as any).policyDocument.findUnique({
+    where:  { policy_id: policyId },
+    select: { tenant_id: true, original_content: true, created_at: true },
+  })
+  if (!doc || doc.tenant_id !== tenantId) return null
+  const content = String(doc.original_content ?? '')
+  if (!content.trim()) return null
+  const policy = await (prisma as any).policy.findUnique({
+    where: { id: policyId }, select: { name: true },
+  })
+  return {
+    policy_id:    policyId,
+    policy_name:  policy?.name ?? 'Policy',
+    version:      '1.0',
+    published_at: (doc.created_at ?? new Date()).toISOString(),
+    published_by: null as string | null,
+    content,
+  }
 }
 
 /** One stored version's full text, for reading a policy as it was on a given date. */

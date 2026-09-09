@@ -153,6 +153,14 @@ export function PolicyHistoryTab({ token }: { token: string }) {
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <span className="text-sm font-medium text-neutral-dark">Version {v.version}</span>
                   <span className="text-xs text-neutral-mid">{when(v.published_at)}</span>
+                  {/* The newest row IS the live policy. Saying so stops a reader opening it and
+                      believing they are looking at superseded text. */}
+                  {v.is_current && (
+                    <span className="rounded-full bg-teal-light/40 px-2 py-0.5 text-[10px] font-semibold text-teal">Current version</span>
+                  )}
+                  {v.is_original && (
+                    <span className="rounded-full bg-neutral-light px-2 py-0.5 text-[10px] font-semibold text-neutral-mid">Uploaded original</span>
+                  )}
                   {v.published_by && <span className="text-xs text-neutral-mid">published by {v.published_by}</span>}
                   <button
                     onClick={() => open(v.version_id, h.policy_name, v.version, v.published_at)}

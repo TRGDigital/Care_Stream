@@ -25,6 +25,14 @@ const ROLE_PHRASES: Array<{ re: RegExp; key: string }> = [
   { re: /\b(?:end of life (?:care )?lead|palliative care lead)\b/i,     key: 'end_of_life_lead' },
   { re: /\b(?:water safety lead|legionella (?:lead|responsible person))\b/i, key: 'water_safety_lead' },
   { re: /\btraining lead\b/i,                                           key: 'training_lead' },
+  { re: /\b(?:freedom to speak up guardian|speak up guardian)\b/i, key: 'freedom_to_speak_up_guardian' },
+  { re: /\bcomplaints (?:lead|manager|officer)\b/i, key: 'complaints_lead' },
+  { re: /\b(?:first aid (?:lead|appointed person)|appointed person for first aid)\b/i, key: 'first_aid_lead' },
+  { re: /\b(?:food safety lead|allergen lead|food safety and allergen lead)\b/i, key: 'food_safety_lead' },
+  { re: /\b(?:nutrition (?:and hydration )?lead|hydration lead)\b/i, key: 'nutrition_hydration_lead' },
+  { re: /\bfalls (?:lead|champion|coordinator)\b/i, key: 'falls_lead' },
+  { re: /\b(?:tissue viability lead|pressure ulcer lead)\b/i, key: 'tissue_viability_lead' },
+  { re: /\b(?:business continuity (?:lead|manager)|emergency planning lead)\b/i, key: 'business_continuity_lead' },
 ]
 
 export function applyRoleNames(root: HTMLElement, roleNames: RoleNames | undefined) {

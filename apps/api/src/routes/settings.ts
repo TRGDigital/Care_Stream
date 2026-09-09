@@ -117,6 +117,14 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
     { key: 'end_of_life_lead',    role: 'End of life care lead',               derived: bySpecialism(/end of life|palliative/i) },
     { key: 'water_safety_lead',   role: 'Water safety lead (Legionella)',      derived: bySpecialism(/legionella|water safety/i) },
     { key: 'training_lead',       role: 'Training lead',                       derived: bySpecialism(/training|learning (?:and|&) development/i) },
+    { key: 'freedom_to_speak_up_guardian', role: 'Freedom to Speak Up Guardian', derived: bySpecialism(/freedom to speak up|speak ?up guardian|whistleblow/i) },
+    { key: 'complaints_lead', role: 'Complaints lead', derived: bySpecialism(/complaint/i) },
+    { key: 'first_aid_lead', role: 'First aid appointed person', derived: bySpecialism(/first aid/i) },
+    { key: 'food_safety_lead', role: 'Food safety and allergen lead', derived: bySpecialism(/food safety|food hygiene|allergen|catering|chef/i) },
+    { key: 'nutrition_hydration_lead', role: 'Nutrition and hydration lead', derived: bySpecialism(/nutrition|hydration|dietetic/i) },
+    { key: 'falls_lead', role: 'Falls lead', derived: bySpecialism(/falls/i) },
+    { key: 'tissue_viability_lead', role: 'Tissue viability lead', derived: bySpecialism(/tissue viability|pressure (?:ulcer|area|sore)|wound/i) },
+    { key: 'business_continuity_lead', role: 'Business continuity lead', derived: bySpecialism(/business continuity|emergency plan|contingenc/i) },
   ]
   const roleHolders = ROLE_DEFS.map(d => ({ key: d.key, role: d.role, derived: d.derived, manual: manualOf(d.key) }))
 
@@ -270,7 +278,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     const ALLOWED = new Set(['nominated_individual', 'address', 'cqc_location_id', 'cqc_provider_id', 'review_cycle_months', 'version_scheme', 'default_approver', 'show_role_names', 'require_manager_approval', 'require_external_approval', 'require_audit_manager_approval', 'show_readiness_score'])
     // Role-holders can hold MORE THAN ONE person (comma-separated); the tenant picks which
     // one at adoption. These add to the names derived from staff positions/specialisms.
-    const ROLE_KEYS = new Set(['registered_manager', 'safeguarding_lead', 'caldicott_guardian', 'ipc_lead', 'fire_safety_officer', 'dignity_champion', 'maintenance_lead', 'health_safety_lead', 'medicines_lead', 'data_protection_officer', 'deputy_manager', 'moving_handling_lead', 'mental_capacity_lead', 'end_of_life_lead', 'water_safety_lead', 'training_lead'])
+    const ROLE_KEYS = new Set(['registered_manager', 'safeguarding_lead', 'caldicott_guardian', 'ipc_lead', 'fire_safety_officer', 'dignity_champion', 'maintenance_lead', 'health_safety_lead', 'medicines_lead', 'data_protection_officer', 'deputy_manager', 'moving_handling_lead', 'mental_capacity_lead', 'end_of_life_lead', 'water_safety_lead', 'training_lead', 'freedom_to_speak_up_guardian', 'complaints_lead', 'first_aid_lead', 'food_safety_lead', 'nutrition_hydration_lead', 'falls_lead', 'tissue_viability_lead', 'business_continuity_lead'])
     const clean: Record<string, string> = {}
     for (const [k, v] of Object.entries(organisation_details as Record<string, unknown>)) {
       if (!(ALLOWED.has(k) || ROLE_KEYS.has(k)) || typeof v !== 'string') continue

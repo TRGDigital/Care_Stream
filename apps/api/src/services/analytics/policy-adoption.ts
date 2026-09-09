@@ -175,7 +175,14 @@ const ROLE_MAP: Array<{ key: string; role: string; match: RegExp }> = [
   { key: 'mental_capacity_lead', role: 'Mental capacity and DoLS lead',     match: /mental capacity|(?:^|\b)mca\b|(?:^|\b)dols\b|liberty protection/i },
   { key: 'end_of_life_lead',   role: 'End of life care lead',               match: /end of life|palliative/i },
   { key: 'water_safety_lead',  role: 'Water safety lead (Legionella)',      match: /legionella|water safety/i },
-  { key: 'training_lead',      role: 'Training lead',                       match: /training|learning (?:and|&) development/i },
+  { key: 'training_lead',      role: 'Training lead',                       match: /training|learning (?:and|&) development/i },  { key: 'freedom_to_speak_up_guardian', role: 'Freedom to Speak Up Guardian', match: /freedom to speak up|speak ?up guardian|whistleblow/i },
+  { key: 'complaints_lead', role: 'Complaints lead', match: /complaint/i },
+  { key: 'first_aid_lead', role: 'First aid appointed person', match: /first aid/i },
+  { key: 'food_safety_lead', role: 'Food safety and allergen lead', match: /food safety|food hygiene|allergen|catering|chef/i },
+  { key: 'nutrition_hydration_lead', role: 'Nutrition and hydration lead', match: /nutrition|hydration|dietetic/i },
+  { key: 'falls_lead', role: 'Falls lead', match: /falls/i },
+  { key: 'tissue_viability_lead', role: 'Tissue viability lead', match: /tissue viability|pressure (?:ulcer|area|sore)|wound/i },
+  { key: 'business_continuity_lead', role: 'Business continuity lead', match: /business continuity|emergency plan|contingenc/i },
 ]
 
 async function getOrInitDocument(tenantId: string, policyId: string): Promise<any> {

@@ -7,8 +7,9 @@
 // regulations with no policy behind them at all, which cannot be fixed by editing, because
 // there is nothing to edit. That is the honest reason it is a purchase rather than a task.
 //
-// Deliberately quiet when there is nothing to say. It renders nothing at all when the
-// analysis has never run, when it is stale, or when nothing is missing. A home that has
+// Deliberately quiet when there is nothing to say: it renders nothing when the analysis has
+// never run, when the verdict itself cannot be believed, or when nothing is missing. A merely
+// DATED analysis still shows, with a note — hiding it once cost Ferndale eleven real gaps. A home that has
 // everything should never see a sales banner, and a home whose analysis we do not trust
 // should certainly not be sold anything on the strength of it.
 
@@ -27,7 +28,7 @@ export function useMissingCount(token: string): number | null {
     const api = createApiClient(token)
     Promise.all([api.gaps.missingPolicies(), api.policyPurchases.list()])
       .then(([r, p]) => {
-        if (!r.analysed || r.stale) { setCount(null); return }
+        if (!r.analysed || !r.usable) { setCount(null); return }
         const bought = new Set(p.purchases.map(x => x.policy_title))
         setCount(r.missing.filter(m => !bought.has(m.title)).length)
       })
@@ -107,7 +108,7 @@ export function MissingPoliciesBanner({ token }: { token: string }) {
       </div>
     )
   }
-  if (!report || !report.analysed || report.stale) return null
+  if (!report || !report.analysed || !report.usable) return null
 
   const bought = new Map(purchases.map(p => [p.policy_title, p]))
   const toBuy = report.missing.filter(m => !bought.has(m.title))
@@ -145,6 +146,13 @@ export function MissingPoliciesBanner({ token }: { token: string }) {
           We have read your policies against the law, and you are missing{' '}
           {toBuy.length === 1 ? 'one policy' : `${toBuy.length} policies`}
         </h2>
+        {/* A dated analysis is still shown, so say plainly that it is dated rather than
+            letting it read as this morning's verdict. */}
+        {report.stale && report.stale_reason && (
+          <p className="mt-2 flex items-start gap-1.5 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-900">
+            <AlertTriangle size={13} className="mt-0.5 shrink-0" /> {report.stale_reason}
+          </p>
+        )}
         <p className="mt-1 text-sm text-neutral-mid">
           Every regulation below applies to your service and has no policy behind it at all.
           This is not wording to improve, it is a document you do not have. We will write each

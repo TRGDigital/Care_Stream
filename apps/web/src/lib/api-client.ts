@@ -35,8 +35,11 @@ export type PolicyHistoryEntry = {
 export type MissingPolicyReport = {
   analysed: boolean
   analysed_at: string | null
+  /** Out of date in some way; `stale_reason` says how. NOT the same as wrong. */
   stale: boolean
   stale_reason: string | null
+  /** False only when the verdict itself cannot be believed, and the list must be hidden. */
+  usable: boolean
   regulations_in_scope: number
   regulations_analysed: number
   counts: { covered: number; partial: number; gap: number }

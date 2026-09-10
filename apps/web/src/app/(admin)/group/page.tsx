@@ -9,7 +9,7 @@ import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
 import { pageCache } from '@/lib/page-cache'
-import { Building2, Users, GraduationCap, ClipboardCheck, ShieldCheck, TrendingUp, AlertTriangle, Loader2, ArrowRight, Check } from 'lucide-react'
+import { Building2, Users, GraduationCap, ClipboardCheck, ShieldCheck, TrendingUp, AlertTriangle, Loader2, ArrowRight, Check, MessageSquareText, Activity } from 'lucide-react'
 
 type Overview = Awaited<ReturnType<ReturnType<typeof createApiClient>['sites']['overview']>>
 
@@ -22,6 +22,19 @@ function pctColour(pct: number | null): string {
 }
 function pctText(pct: number | null): string {
   return pct === null ? '—' : `${pct}%`
+}
+
+// Tiny inline bar sparkline: 8 weekly values, oldest to newest. Scales to its own
+// max so shape (direction) is what reads, exactly what a trend is for.
+function Spark({ values, colour }: { values: number[]; colour: string }) {
+  const max = Math.max(1, ...values)
+  return (
+    <span className="inline-flex h-6 items-end gap-[2px]" title={values.join(' · ')}>
+      {values.map((v, i) => (
+        <span key={i} className={`w-[6px] rounded-sm ${colour}`} style={{ height: `${Math.max(8, Math.round((v / max) * 100))}%`, opacity: v === 0 ? 0.25 : 1 }} />
+      ))}
+    </span>
+  )
 }
 
 function SummaryCard({ label, value, Icon, colour }: { label: string; value: string; Icon: any; colour: string }) {
@@ -105,18 +118,20 @@ export default function GroupPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-neutral-dark">Group overview</h1>
-        <p className="mt-0.5 text-sm text-neutral-mid">Compliance across all {s.sites} homes in your group. Click a home to open it.</p>
+        <h1 className="text-xl font-bold text-neutral-dark">Benchmarking</h1>
+        <p className="mt-0.5 text-sm text-neutral-mid">Compliance, training and hub use across all {s.sites} homes in your group, side by side. Click a home to open it.</p>
       </div>
 
       {/* Group summary */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <SummaryCard label="Homes"      value={String(s.sites)}          Icon={Building2}      colour="text-neutral-dark" />
         <SummaryCard label="Staff"      value={String(s.staff)}          Icon={Users}          colour="text-neutral-dark" />
         <SummaryCard label="Training"   value={pctText(s.training_pct)}   Icon={ShieldCheck}    colour={pctColour(s.training_pct)} />
         <SummaryCard label="Onboarding" value={pctText(s.onboarding_pct)} Icon={GraduationCap}  colour={pctColour(s.onboarding_pct)} />
         <SummaryCard label="Audits"     value={pctText(s.audit_pct)}      Icon={ClipboardCheck} colour={pctColour(s.audit_pct)} />
         <SummaryCard label="Overall"    value={pctText(s.overall_pct)}    Icon={TrendingUp}     colour={pctColour(s.overall_pct)} />
+        <SummaryCard label="Hub questions, 30 days" value={String(s.questions_30d)} Icon={MessageSquareText} colour="text-neutral-dark" />
+        <SummaryCard label="Weekly active staff"    value={pctText(s.wau_pct)}      Icon={Activity}          colour={pctColour(s.wau_pct)} />
       </div>
 
       {/* Benchmarking table */}
@@ -133,6 +148,8 @@ export default function GroupPage() {
                 <th className="px-3 py-3 text-center">Training</th>
                 <th className="px-3 py-3 text-center">Onboarding</th>
                 <th className="px-3 py-3 text-center">Audits</th>
+                <th className="px-3 py-3 text-center">Hub use, 30d</th>
+                <th className="px-3 py-3 text-center">Trend, 8 wks</th>
                 <th className="px-3 py-3 text-center">Overall</th>
                 <th className="px-3 py-3 text-center">Attention</th>
                 <th className="px-5 py-3 text-right"></th>
@@ -153,6 +170,18 @@ export default function GroupPage() {
                   <td className={`px-3 py-3 text-center font-semibold ${pctColour(site.training.pct)}`}>{pctText(site.training.pct)}</td>
                   <td className={`px-3 py-3 text-center font-semibold ${pctColour(site.onboarding.pct)}`}>{pctText(site.onboarding.pct)}</td>
                   <td className={`px-3 py-3 text-center font-semibold ${pctColour(site.audits.pct)}`}>{pctText(site.audits.pct)}</td>
+                  <td className="px-3 py-3 text-center">
+                    <p className="font-semibold text-neutral-dark">{site.hub.questions_30d}<span className="font-normal text-neutral-mid"> qs</span></p>
+                    <p className="text-[11px] text-neutral-mid">
+                      {site.hub.per_staff_30d !== null ? `${site.hub.per_staff_30d}/staff` : '—'}{site.hub.wau_pct !== null ? ` · ${site.hub.wau_pct}% weekly active` : ''}
+                    </p>
+                  </td>
+                  <td className="px-3 py-3 text-center">
+                    <div className="inline-flex flex-col items-center gap-0.5" title="Top: hub questions per week. Bottom: training completions per week.">
+                      <Spark values={site.trend.questions_weekly} colour="bg-teal" />
+                      <Spark values={site.trend.completions_weekly} colour="bg-indigo-400" />
+                    </div>
+                  </td>
                   <td className="px-3 py-3 text-center">
                     <span className={`inline-flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold ${
                       site.overall_pct === null ? 'bg-gray-50 text-gray-300'
@@ -189,7 +218,9 @@ export default function GroupPage() {
           <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-green-500" /> 80%+ strong</span>
           <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-amber-400" /> 60–79% watch</span>
           <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-red-500" /> below 60% act</span>
-          <span className="flex items-center gap-1.5"><AlertTriangle size={12} className="text-amber-700" /> overdue inductions + expired training</span>
+          <span className="flex items-center gap-1.5"><AlertTriangle size={12} className="text-amber-700" /> overdue inductions + overdue &amp; expired training</span>
+          <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-teal" /> hub questions/week</span>
+          <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-indigo-400" /> training completions/week</span>
         </div>
       </div>
     </div>

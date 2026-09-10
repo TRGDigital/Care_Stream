@@ -331,10 +331,10 @@ function SidebarContent({ pathname, trainingOnly, multiSite, hasWorkforce, colla
         ? { ...s, items: [{ href: '/licences', label: 'Licences', Icon: KeyRound }, ...s.items] }
         : s)
     : NAV_SECTIONS
-  // Multi-site (group) accounts get a Group console at the top of Overview.
+  // Multi-site (group) accounts get the Benchmarking console at the top of Overview.
   if (multiSite) {
     sections = sections.map(s => s.heading === 'Overview'
-      ? { ...s, items: [{ href: '/group', label: 'Group', Icon: Building2 }, ...s.items] }
+      ? { ...s, items: [{ href: '/group', label: 'Benchmarking', Icon: Building2 }, ...s.items] }
       : s)
   }
   const allHrefs = sections.flatMap(s => s.items.map(i => i.href))

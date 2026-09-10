@@ -572,13 +572,16 @@ export function createApiClient(token: string) {
           group_root_id: string
           current_tenant_id: string
           is_group: boolean
-          summary: { sites: number; staff: number; training_pct: number | null; onboarding_pct: number | null; audit_pct: number | null; overall_pct: number | null }
+          summary: { sites: number; staff: number; training_pct: number | null; onboarding_pct: number | null; audit_pct: number | null; overall_pct: number | null; questions_30d: number; wau_pct: number | null }
           sites: Array<{
             id: string; name: string; account_number: string; subscription_status: string
             is_current: boolean; is_root: boolean; staff: number
             training:   { complete: number; total: number; pct: number | null }
             onboarding: { complete: number; total: number; overdue: number; pct: number | null }
             audits:     { completed: number; total: number; pct: number | null }
+            training_overdue: number
+            hub: { questions_30d: number; per_staff_30d: number | null; active_askers_7d: number; wau_pct: number | null }
+            trend: { questions_weekly: number[]; completions_weekly: number[] }
             overdue: number; overall_pct: number | null
           }>
         }>('/sites/overview', token),

@@ -10,6 +10,7 @@ import { siteUrl } from '../lib/urls'
 import { sendStaffWelcomeEmail, sendStaffLoginLinkEmail } from '../services/email/outbound'
 import { createLoginLink } from '../lib/login-tokens'
 import { checkUserLimit, PlanLimitError } from '../lib/plan-limits'
+import { agencySpend } from '../services/workforce/agencyAccess'
 import { buildStaffRecord } from '../lib/staff-record'
 import { getMyActions } from '../services/audits/action-plan'
 import { sendProactiveTrainingQuestions } from '../services/training/proactive'
@@ -46,6 +47,7 @@ usersRouter.get('/', async (req: Request, res: Response) => {
       id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true,
       shift_type: true, training_hourly_rate: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, can_suggest_translations: true,
       is_active: true, created_at: true, first_login_at: true, last_login_at: true,
+      is_agency: true, agency_name: true, agency_start: true, agency_end: true, agency_day_rate_pence: true,
     },
     orderBy: { created_at: 'asc' },
   })
@@ -241,6 +243,14 @@ const InviteSchema = z.object({
   comms_always_first_language: z.boolean().optional(),
   allow_language_switching: z.boolean().optional(),
   new_starter:     z.boolean().optional(),   // true → auto-enrol into matching onboarding flows
+  // ─── Agency booking ─────────────────────────────────────────────────────────
+  // A flag, not a different kind of person: they read policies and answer training exactly as
+  // employed staff do. The dates are the booking, and access is withdrawn when it ends.
+  is_agency:       z.boolean().optional(),
+  agency_name:     z.string().max(120).optional(),
+  agency_start:    z.string().datetime().optional(),
+  agency_end:      z.string().datetime().optional(),
+  agency_day_rate_pence: z.number().int().min(0).max(1000000).nullable().optional(),
   audit_template_ids: z.array(z.string().uuid()).optional(),  // "Staff + Audits": audits this member can conduct in the hub
 })
 
@@ -255,6 +265,57 @@ async function resolveAuditTemplateIds(tenantId: string, role: string, ids?: str
   return (rows as any[]).map(r => r.id)
 }
 
+// ─── PATCH /users/:id/agency ─────────────────────────────────────────────────
+// Extend or end an agency booking. Extending is offered first everywhere this appears,
+// because the alternative an admin reaches for is adding the person again, which produces a
+// second record holding half of their training history. Re-booking the same record keeps it.
+usersRouter.patch('/:id/agency', async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const Body = z.object({
+    agency_end:  z.string().datetime().optional(),
+    agency_name: z.string().max(120).optional(),
+    agency_day_rate_pence: z.number().int().min(0).max(1000000).nullable().optional(),
+    /** Bring a lapsed booking back without creating a second record. */
+    reactivate:  z.boolean().optional(),
+  })
+  const parsed = Body.safeParse(req.body)
+  if (!parsed.success) { err(res, 'VALIDATION_ERROR', 'Provide a valid end date', 400); return }
+
+  const user = await (prisma as any).user.findFirst({
+    where: { id: String(req.params.id), tenant_id: tenantId }, select: { id: true, is_agency: true },
+  })
+  if (!user)            { err(res, 'NOT_FOUND', 'Staff member not found', 404); return }
+  if (!user.is_agency)  { err(res, 'NOT_AGENCY', 'That staff member is not an agency worker', 400); return }
+
+  const { agency_end, agency_name, agency_day_rate_pence, reactivate } = parsed.data
+  const updated = await (prisma as any).user.update({
+    where: { id: user.id },
+    data: {
+      ...(agency_end  !== undefined ? { agency_end: new Date(agency_end) } : {}),
+      ...(agency_name !== undefined ? { agency_name } : {}),
+      ...(agency_day_rate_pence !== undefined ? { agency_day_rate_pence } : {}),
+      ...(reactivate ? { is_active: true } : {}),
+      // Cleared on every change, so an extended booking gets its own warning nearer the new
+      // date rather than none at all because the last one was already sent.
+      agency_expiry_warned_at: null,
+    },
+    select: { id: true, name: true, is_active: true, is_agency: true, agency_name: true, agency_start: true, agency_end: true, agency_day_rate_pence: true },
+  })
+  ok(res, { user: updated })
+})
+
+// ─── GET /users/agency/spend ─────────────────────────────────────────────────
+// What agency cover cost, and how much was used. Providers avoid agency because it is
+// expensive, so the number they want is days bought and what they cost, not a headcount.
+usersRouter.get('/agency/spend', async (req: Request, res: Response) => {
+  try {
+    const since = typeof req.query.since === 'string' ? new Date(req.query.since) : undefined
+    ok(res, await agencySpend(req.user!.tenant_id, { since: since && !isNaN(+since) ? since : undefined }))
+  } catch (e: any) {
+    err(res, 'SPEND_FAILED', e?.message ?? 'Could not read agency spend', 500)
+  }
+})
+
 usersRouter.post('/invite', async (req: Request, res: Response) => {
   const parsed = InviteSchema.safeParse(req.body)
   if (!parsed.success) {
@@ -262,12 +323,15 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
     return
   }
 
-  const { name, email, role, job_role, specialisms, phone_number, shift_type, training_hourly_rate, first_language, second_language, comms_always_first_language, allow_language_switching, new_starter } = parsed.data
+  const { name, email, role, job_role, specialisms, phone_number, shift_type, training_hourly_rate, first_language, second_language, comms_always_first_language, allow_language_switching, new_starter, is_agency, agency_name, agency_start, agency_end, agency_day_rate_pence } = parsed.data
   const tenantId = req.user!.tenant_id
   const auditTemplateIds = await resolveAuditTemplateIds(tenantId, role, parsed.data.audit_template_ids)
 
   try {
-    await checkUserLimit(tenantId)
+    // Agency workers do not consume a seat: they are bought in to cover a rota gap, not
+    // employed by the home. Charging for a two week booking would push a home to record them
+    // as ordinary staff, which loses the tracking this exists for.
+    if (!is_agency) await checkUserLimit(tenantId)
   } catch (e) {
     if (e instanceof PlanLimitError) {
       err(res, e.code, e.message, 403)
@@ -312,6 +376,11 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
       second_language: second_language ?? null,
       comms_always_first_language: comms_always_first_language ?? true,
       allow_language_switching: allow_language_switching ?? false,
+      is_agency:       !!is_agency,
+      agency_name:     is_agency ? (agency_name ?? null) : null,
+      agency_start:    is_agency && agency_start ? new Date(agency_start) : null,
+      agency_end:      is_agency && agency_end   ? new Date(agency_end)   : null,
+      agency_day_rate_pence: is_agency ? (agency_day_rate_pence ?? null) : null,
       password_hash:   passwordHash,
       // Manager-provisioned accounts are trusted at creation — the admin vouches for
       // the staff member. Auto-verify so they aren't blocked by the email-verification
@@ -319,7 +388,7 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
       // staff receive no verification email). Without this, invited staff cannot log in.
       email_verified:  true,
     },
-    select: { id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true, shift_type: true, training_hourly_rate: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, can_suggest_translations: true, created_at: true },
+    select: { id: true, is_agency: true, agency_name: true, agency_start: true, agency_end: true, agency_day_rate_pence: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true, shift_type: true, training_hourly_rate: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, can_suggest_translations: true, created_at: true },
   })
 
   // Add the phone number to the tenant's WhatsApp allowlist
@@ -357,17 +426,28 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
   // New starter → auto-enrol into active onboarding flows that match their job
   // role (or flows that apply to all roles). Saves setting up enrolment manually.
   let onboardingEnrolled = 0
-  if (new_starter) {
+  if (new_starter || is_agency) {
     const flows = await (prisma as any).onboardingFlow.findMany({
       where:  { tenant_id: tenantId, is_active: true },
-      select: { id: true, job_roles: true },
+      select: { id: true, job_roles: true, flow_kind: true },
     })
     // A flow applies if it targets all roles, the staff member's position, OR any
     // of their specialist roles — so they get the right primary + secondary flows.
     const tags = [job_role, ...(specialisms ?? [])].filter(Boolean) as string[]
-    const matched = (flows as any[]).filter(f =>
-      !Array.isArray(f.job_roles) || f.job_roles.length === 0 || f.job_roles.some((r: string) => tags.includes(r))
-    )
+    // An agency worker arrives with their statutory training already done by the agency. What
+    // they do not have is YOUR home: where the fire exits are, which cupboard the COSHH
+    // substances live in, which residents need what. So they get local induction flows only.
+    //
+    // This matters because a flow with an empty job_roles list matches EVERYONE, so without
+    // the branch an agency nurse booked for four nights would be enrolled in the full
+    // statutory induction and show as failing it from the day they arrive.
+    const matched = is_agency
+      ? (flows as any[]).filter(f => f.flow_kind === 'local_induction')
+      : (flows as any[]).filter(f =>
+          f.flow_kind !== 'local_induction' && (
+            !Array.isArray(f.job_roles) || f.job_roles.length === 0 || f.job_roles.some((r: string) => tags.includes(r))
+          )
+        )
     if (matched.length > 0) {
       await (prisma as any).onboardingEnrollment.createMany({
         data: matched.map(f => ({ tenant_id: tenantId, flow_id: f.id, user_id: user.id })),

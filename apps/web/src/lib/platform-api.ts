@@ -1286,9 +1286,12 @@ export interface MissingPolicyReport {
   /** False when coverage has never run: the list means nothing yet, which is not the same as nothing missing. */
   analysed: boolean
   analysed_at: string | null
-  /** True when the list cannot be trusted; stale_reason says why, in words fit to show. */
+  /** Out of date in some way; stale_reason says how. NOT the same as wrong. */
   stale: boolean
   stale_reason: string | null
+  /** False only when the verdict itself cannot be believed. Only this should hide or grey
+   *  the list: a merely dated one is still worth acting on. */
+  usable: boolean
   regulations_in_scope: number
   regulations_analysed: number
   counts: { covered: number; partial: number; gap: number }
@@ -1373,7 +1376,8 @@ export interface OnboardingTemplate {
   name:         string
   description:  string | null
   job_roles:    string[]
-  flow_kind:    'primary' | 'secondary'
+  /** 'local_induction' is what agency workers are enrolled in, and only that. */
+  flow_kind:    'primary' | 'secondary' | 'local_induction'
   care_setting: string | null
   difficulties: string[]
   is_active:    boolean

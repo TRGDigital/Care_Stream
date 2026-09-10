@@ -8,7 +8,7 @@ import {
   FileText, Users, MessageSquare, Mail, ClipboardCheck,
   GraduationCap, BarChart2, BookOpen, ShieldAlert, Settings, Zap, ClipboardList,
   LifeBuoy, Upload, CheckCircle, Info, UserPlus, RefreshCw, CalendarDays, Lightbulb, Loader2, Building2, BadgeCheck,
-  UserRound,
+  UserRound, BriefcaseBusiness,
 } from 'lucide-react'
 
 function FeatureRequestModal({ open, onClose, token }: { open: boolean; onClose: () => void; token?: string }) {
@@ -2284,6 +2284,91 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Every completed supervision is saved on the staff member&rsquo;s <strong>record page</strong>, listed under their supervisions with a link to <strong>open the full form</strong> and the <strong>next session booked</strong> off it. Any items allocated from an action show a small badge on the record, so you can see at a glance what came out of each session. The register keeps colour-coding the last and next dates so overdue supervisions stand out.
           </p>
           <div className="mt-3"><Tip>Staff can see their own booked and past sessions in their hub under <strong>Supervisions</strong>. You can turn the confirmation and reminder emails on or off under <strong>Settings &rarr; Email communications &rarr; Supervisions &amp; appraisals</strong>.</Tip></div>
+        </SectionBlock>
+      </div>
+    ),
+  },
+  {
+    id:      'agency-workers',
+    icon:    BriefcaseBusiness,
+    title:   'Agency workers',
+    summary: 'Time-boxed access, a local induction, and what your agency cover is costing you',
+    content: (
+      <div className="space-y-5">
+        <SectionBlock title="Adding an agency worker">
+          <p className="text-sm text-neutral-mid">
+            Add them from <strong>Staff</strong> exactly as you would anyone else, then set <strong>Staff type</strong>
+            to <strong>Agency worker</strong>. You will be asked for the agency, their first and last day, and
+            optionally a day rate.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            They then use CareStream like any other member of staff. They can ask the hub questions in their own
+            language, read your policies and complete what you set them. Everything that is different happens
+            around them rather than to them.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="Their access ends on its own">
+          <p className="text-sm text-neutral-mid">
+            The last day you enter is when their access to the hub runs out. You do not have to remember to
+            switch it off.
+          </p>
+          <div className="mt-3 rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
+            {[
+              ['Three days before', 'We email your admins so you can extend the booking or let it end deliberately, rather than finding out afterwards.'],
+              ['On the last day',   'Nothing changes. They keep working as normal.'],
+              ['24 hours after',    'Access is withdrawn. The delay is on purpose: a night shift that starts on the last booked day finishes the next morning, and nobody should lose the medication policy at 3am.'],
+            ].map(([when, what]) => (
+              <div key={when} className="grid grid-cols-[9.5rem_1fr] gap-3 px-4 py-3">
+                <span className="font-medium text-neutral-dark">{when}</span>
+                <span className="text-neutral-mid">{what}</span>
+              </div>
+            ))}
+          </div>
+          <Tip>
+            Nothing is ever deleted. Their training record and completions stay as evidence, whether the booking
+            ends or you archive them.
+          </Tip>
+        </SectionBlock>
+
+        <SectionBlock title="If they come back, re-book the same person">
+          <p className="text-sm text-neutral-mid">
+            Agency workers often return. Open their record in <strong>Staff</strong> and extend the end date rather
+            than adding them again. Adding them a second time creates a second record, and their training history
+            is then split across the two, which is exactly what an inspector will notice.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="What is deliberately different">
+          <div className="rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
+            {[
+              ['Induction',  'They get your local induction only: fire exits, where things are kept, which residents need what. They arrive with their statutory training already done by their agency, so enrolling them in your full induction would be asking them to repeat it.'],
+              ['Compliance', 'They do not appear on the compliance register. Their DBS, right to work and professional registration are held by the agency, not by you, so chasing you for paperwork you cannot hold would leave the register permanently red.'],
+              ['Supervisions', 'They are not listed for supervisions or appraisals, so they never show as overdue for something nobody intends to book.'],
+              ['Your plan',  'Agency workers do not use one of your staff places. They are covering a gap, not filling a post.'],
+            ].map(([k, v]) => (
+              <div key={k} className="grid grid-cols-[8rem_1fr] gap-3 px-4 py-3">
+                <span className="font-medium text-neutral-dark">{k}</span>
+                <span className="text-neutral-mid">{v}</span>
+              </div>
+            ))}
+          </div>
+          <Tip>
+            You still need evidence that the agency has done those checks. Keep their assurance with your agency
+            paperwork; CareStream is not claiming to hold it for you.
+          </Tip>
+        </SectionBlock>
+
+        <SectionBlock title="What agency cover is costing you">
+          <p className="text-sm text-neutral-mid">
+            Because every booking has dates, CareStream can total how many agency days you have used, broken down
+            by agency. Add a day rate when you book someone and it will cost that up for you too. Leave the rate
+            blank and you still get the days.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Most homes know agency is expensive but cannot say how expensive without going back through invoices.
+            This is that number, without the digging.
+          </p>
         </SectionBlock>
       </div>
     ),

@@ -155,6 +155,9 @@ export default function OnboardingFlowsPage() {
   const tabFlows  = flows.filter(f => (f.care_setting ?? '') === settingTab)
   const primary   = tabFlows.filter(f => f.flow_kind === 'primary')
   const secondary = tabFlows.filter(f => f.flow_kind === 'secondary')
+  // Agency workers are enrolled in these and nothing else: they arrive with their statutory
+  // training already done by the agency, and what they lack is THIS home.
+  const localInduction = tabFlows.filter(f => f.flow_kind === 'local_induction')
   const tabCount  = (v: string) => flows.filter(f => (f.care_setting ?? '') === v).length
 
   return (
@@ -231,6 +234,7 @@ export default function OnboardingFlowsPage() {
           <>
             <FlowGroup title="Primary roles (job roles)" flows={primary} {...{ openId, setOpenId, busy, aiDraft, toggleActive, remove, saveSteps }} />
             <FlowGroup title="Secondary roles (specialisms)" flows={secondary} {...{ openId, setOpenId, busy, aiDraft, toggleActive, remove, saveSteps }} />
+            <FlowGroup title="Local induction (agency workers)" flows={localInduction} {...{ openId, setOpenId, busy, aiDraft, toggleActive, remove, saveSteps }} />
           </>
         )}
         </>)}
@@ -365,7 +369,7 @@ function NewTemplateModal({ defaultSetting, creating, onClose, onCreate }: {
 
         <label className="mb-1 block text-xs font-semibold text-neutral-mid">Type</label>
         <div className="mb-3 flex gap-2">
-          {[['primary', 'Primary (job role)'], ['secondary', 'Secondary (specialism)']].map(([v, label]) => (
+          {[['primary', 'Primary (job role)'], ['secondary', 'Secondary (specialism)'], ['local_induction', 'Local induction (agency)']].map(([v, label]) => (
             <button key={v} type="button" onClick={() => setKind(v)}
               className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium ${kind === v ? 'border-teal bg-teal/10 text-teal' : 'border-gray-300 text-neutral-mid hover:border-teal/40'}`}>
               {label}

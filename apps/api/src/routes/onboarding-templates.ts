@@ -25,6 +25,16 @@ const DIFFICULTY_GUIDE: Record<string, string> = {
 }
 
 // ─── GET / — list all platform templates ──────────────────────────────────────
+/** The kinds a ready-made flow can be.
+ *
+ *  'local_induction' is what agency workers are enrolled in, and ONLY that: they arrive with
+ *  their statutory training already done by their agency, so what they need from a home is the
+ *  home itself. Anything unrecognised falls back to 'primary' rather than being stored, but the
+ *  list is checked rather than a single value being special-cased, because the old
+ *  `x === 'secondary' ? 'secondary' : 'primary'` silently turned every new kind into 'primary'.
+ */
+const FLOW_KINDS = ['primary', 'secondary', 'local_induction']
+
 onboardingTemplatesRouter.get('/', async (_req: Request, res: Response) => {
   const flows = await (prisma as any).onboardingFlow.findMany({
     where:   { tenant_id: null },
@@ -91,7 +101,7 @@ onboardingTemplatesRouter.post('/', async (req: Request, res: Response) => {
       name:         name.trim(),
       description:  description ?? null,
       job_roles:    Array.isArray(job_roles) ? job_roles : [],
-      flow_kind:    flow_kind === 'secondary' ? 'secondary' : 'primary',
+      flow_kind:    FLOW_KINDS.includes(flow_kind) ? flow_kind : 'primary',
       care_setting: isCareSetting(care_setting) ? care_setting : null,
       difficulties: cleanDifficulties(difficulties),
       steps:        buildStepCreate(steps),

@@ -1308,6 +1308,50 @@ export async function sendReviewerActivityEmail(opts: {
   })
 }
 
+// ─── Agency booking about to end ──────────────────────────────────────────────
+// Sent to a home's admins three days before an agency worker's access lapses. The point is
+// that nobody discovers it afterwards: either extend the booking, or let it end knowing that
+// it will. Says plainly that the record is kept, because the fear it answers is "will I lose
+// their training evidence".
+export async function sendAgencyExpiryEmail(opts: {
+  to: string[]; workerName: string; agencyName: string; endsOn: Date; graceHours: number
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set — skipping agency expiry email'); return }
+  if (!opts.to.length) return
+
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc  = (v: any) => String(v ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
+  const when = opts.endsOn.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 6px">
+      ${esc(opts.workerName)}'s access ends on ${esc(when)}
+    </p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 16px">
+      ${esc(opts.workerName)}${opts.agencyName ? ` from ${esc(opts.agencyName)}` : ''} is booked with you until
+      <strong>${esc(when)}</strong>. Their access to the staff hub stays on for a further
+      ${opts.graceHours} hours after that, so a night shift starting on the last booked day is not cut off
+      partway through.
+    </p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 16px">
+      If they are staying, open their record in <strong>Staff</strong> and extend the end date. If they are
+      not, you need do nothing: their access will end on its own.
+    </p>
+    <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0 0 18px">
+      Nothing is deleted either way. Their training record and completions are kept as evidence, and if they
+      come back you can re-book the same record rather than adding them again.
+    </p>
+    ${emailFooter()}
+  `)
+
+  await sgMail.send({
+    to: opts.to, from,
+    subject: `Agency access ends ${when}: ${opts.workerName}`,
+    html,
+  })
+}
+
 // ─── Scheduled-jobs report to the platform owner ──────────────────────────────
 // Sent daily. Leads with what did NOT run: the failure this exists to catch was eight jobs
 // stopping silently for 96 days, so a green list is the least valuable thing in here.

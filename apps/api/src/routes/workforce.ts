@@ -80,8 +80,11 @@ async function requireStaff(tenantId: string, userId: string) {
 workforceRouter.get('/register', async (_req: Request, res: Response) => {
   const tenantId = getTenantId()
   const [users, creds] = await Promise.all([
+    // Agency workers are excluded: their DBS, right to work and registration are held by the
+    // AGENCY, so they would sit permanently red on a register the home cannot fill in. Their
+    // agency's assurance is the evidence, not a certificate in this grid.
     (prisma as any).user.findMany({
-      where:   { tenant_id: tenantId, is_active: true },
+      where:   { tenant_id: tenantId, is_active: true, is_agency: false },
       select:  { id: true, name: true, job_role: true },
       orderBy: { name: 'asc' },
     }),
@@ -263,7 +266,9 @@ function buildCell(records: any[]) {
 workforceRouter.get('/supervisions', async (_req: Request, res: Response) => {
   const tenantId = getTenantId()
   const [users, records] = await Promise.all([
-    (prisma as any).user.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { id: true, name: true, job_role: true }, orderBy: { name: 'asc' } }),
+    // Agency workers do not receive supervisions or appraisals, so listing them here would
+    // show every one of them permanently overdue for something nobody intends to book.
+    (prisma as any).user.findMany({ where: { tenant_id: tenantId, is_active: true, is_agency: false }, select: { id: true, name: true, job_role: true }, orderBy: { name: 'asc' } }),
     (prisma as any).staffSupervision.findMany({ where: { tenant_id: tenantId } }),
   ])
   const byUserType = new Map<string, any[]>()

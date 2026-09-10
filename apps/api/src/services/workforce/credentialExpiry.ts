@@ -80,10 +80,14 @@ export async function runCredentialExpiryForTenant(tenantId: string, opts?: { fo
   })
   if (creds.length === 0) return empty
 
-  // Only flag active staff.
+  // Only flag active staff, and never agency workers: their DBS, right to work and
+  // professional registration are held by the AGENCY, not the home. Chasing a home for
+  // paperwork that is not theirs to hold would leave the register permanently red and teach
+  // them to ignore it.
   const userIds = [...new Set(creds.map((c: any) => c.user_id))]
   const users   = await (prisma as any).user.findMany({
-    where: { id: { in: userIds }, tenant_id: tenantId, is_active: true }, select: { id: true, name: true, email: true },
+    where: { id: { in: userIds }, tenant_id: tenantId, is_active: true, is_agency: false },
+    select: { id: true, name: true, email: true },
   })
   const userById = new Map<string, { name: string; email: string }>(users.map((u: any) => [u.id, { name: u.name, email: u.email }]))
 

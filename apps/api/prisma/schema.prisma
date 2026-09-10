@@ -347,6 +347,18 @@ model User {
   last_login_at          DateTime?                          // updated on every successful login
   last_followup_email_at DateTime?                          // debounce for the "you have follow-up" email
   shift_type             String         @default("any")     // 'any' | 'day' | 'night'
+  // ─── Agency workers ─────────────────────────────────────────────────────────
+  // A flag rather than a separate record: an agency worker reads policies and answers
+  // training exactly as employed staff do. What differs is everything around them — their
+  // access is time boxed, their DBS and right to work are held by the AGENCY so they must not
+  // sit red on the compliance register for ever, they get no supervisions, and they do not
+  // count toward the plan's staff limit because they are not the home's staff.
+  is_agency              Boolean        @default(false)
+  agency_name            String?                            // which agency supplied them
+  agency_start           DateTime?
+  agency_end             DateTime?                          // access cliff; see the grace period in agency-access.ts
+  agency_day_rate_pence  Int?                               // optional, so the spend report can cost a booking
+  agency_expiry_warned_at DateTime?                         // one warning per booking; cleared when extended
   training_hourly_rate   Int?                               // optional GBP pence (e.g. 2000 = £20.00/hr) — used to cost owed-pay training hours on the payroll report
   first_language         String         @default("eng")     // ISO 639-3 — primary language for outbound comms
   second_language        String?                            // optional secondary language

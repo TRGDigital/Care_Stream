@@ -30,6 +30,7 @@ import { checkRegulationSources } from '../services/regulations/source-monitor'
 import { reviewPendingChanges } from '../services/regulations/change-review'
 import { runCredentialExpiryAllTenants } from '../services/workforce/credentialExpiry'
 import { runSupervisionReminders } from '../services/workforce/supervisionReminders'
+import { runAgencyAccess } from '../services/workforce/agencyAccess'
 import { runPolicyReviewReminders } from '../services/policies/review-reminders'
 import { buildCronReport, sendCronReport } from '../services/ops/cron-report'
 
@@ -135,6 +136,12 @@ cronRouter.get('/regulation-source-monitor', (req, res) =>
 // of renewal (one reminder per licence, idempotent via renewal_reminded_at).
 cronRouter.get('/licence-renewals', (req, res) =>
   job('licence-renewals', req, res, () => sendLicenceRenewalReminders()))
+
+// Daily: warn admins three days before an agency booking ends, and withdraw access 24 hours
+// after it has. The grace period exists so a night shift that began on the last booked day is
+// not cut off at 3am, which is the one time an agency nurse most needs the medication policy.
+cronRouter.get('/agency-access', (req, res) =>
+  job('agency-access', req, res, () => runAgencyAccess()))
 
 // Daily, last: email the platform owner what ran, what it captured, and — the point of the
 // whole thing — what was due and did not run at all.

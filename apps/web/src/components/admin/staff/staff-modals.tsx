@@ -471,7 +471,7 @@ export function InviteModal({
   const trainingOnly = (session?.user as any)?.tier === 'training_only'
   const [creds,     setCreds]     = useState<{ userId: string; name: string; email: string; password: string; contact?: StaffContact } | null>(null)
   const [newUserId, setNewUserId] = useState('')
-  const [form,      setForm]      = useState({ name: '', email: '', role: 'staff', job_role: '', shift_type: 'any', training_hourly_rate: '', first_language: 'eng', second_language: '', staff_type: 'existing' })
+  const [form,      setForm]      = useState({ name: '', email: '', role: 'staff', job_role: '', shift_type: 'any', training_hourly_rate: '', first_language: 'eng', second_language: '', staff_type: 'existing', agency_name: '', agency_start: '', agency_end: '', agency_day_rate: '' })
   const [auditIds,  setAuditIds]  = useState<string[]>([])
   const [hasSpecialism, setHasSpecialism] = useState(false)
   const [specialisms, setSpecialisms]     = useState<string[]>([])
@@ -528,6 +528,13 @@ export function InviteModal({
       comms_always_first_language: commsFirstLang,
       allow_language_switching: allowSwitch && !!form.second_language,
       new_starter:     form.staff_type === 'new',
+      is_agency:       form.staff_type === 'agency',
+      agency_name:     form.staff_type === 'agency' ? (form.agency_name || undefined) : undefined,
+      // A date input gives YYYY-MM-DD. The last day should cover the whole of that day rather
+      // than expiring at midnight as it begins.
+      agency_start:    form.staff_type === 'agency' && form.agency_start ? new Date(form.agency_start + 'T00:00:00').toISOString() : undefined,
+      agency_end:      form.staff_type === 'agency' && form.agency_end   ? new Date(form.agency_end   + 'T23:59:59').toISOString() : undefined,
+      agency_day_rate_pence: form.staff_type === 'agency' ? poundsToPence(form.agency_day_rate) : undefined,
     }).catch((err: Error) => { setError(err.message); return null })
 
     setLoading(false)
@@ -598,13 +605,55 @@ export function InviteModal({
                 >
                   <option value="existing">Existing staff member</option>
                   <option value="new">New starter</option>
+                  <option value="agency">Agency worker</option>
                 </select>
                 <p className="mt-1 text-xs text-neutral-mid">
                   {form.staff_type === 'new'
                     ? 'Automatically enrols them in the onboarding flow(s) matching their job role.'
-                    : 'No onboarding is assigned automatically.'}
+                    : form.staff_type === 'agency'
+                      ? 'Time-boxed access, a local induction only, and no seat used on your plan.'
+                      : 'No onboarding is assigned automatically.'}
                 </p>
               </div>
+
+              {/* The booking. Shown only for agency, because for everyone else these would be
+                  four empty boxes with no meaning. */}
+              {form.staff_type === 'agency' && (
+                <div className="sm:col-span-2 rounded-lg border border-amber-200 bg-amber-50/60 p-4">
+                  <p className="text-sm font-semibold text-amber-900">Agency booking</p>
+                  <p className="mt-0.5 text-xs text-amber-800">
+                    Their hub access runs for these dates. We email you three days before it ends, and access
+                    stays on for 24 hours afterwards so a night shift is never cut off partway through.
+                  </p>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <div className="sm:col-span-2">
+                      <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Agency</label>
+                      <input value={form.agency_name} onChange={update('agency_name')}
+                        placeholder="e.g. Newcross Healthcare"
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20" />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-neutral-dark">First day</label>
+                      <input type="date" value={form.agency_start} onChange={update('agency_start')}
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20" />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Last day</label>
+                      <input type="date" value={form.agency_end} onChange={update('agency_end')}
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20" />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Day rate (optional)</label>
+                      <input value={form.agency_day_rate} onChange={update('agency_day_rate')} inputMode="decimal"
+                        placeholder="e.g. 220"
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20" />
+                      <p className="mt-1 text-xs text-neutral-mid">
+                        Only used to total what agency cover is costing you. Leave it blank and we count days instead.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-neutral-dark">Shift pattern</label>
                 <select

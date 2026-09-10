@@ -237,11 +237,22 @@ export default function PolicyGapsPage() {
               </p>
             ) : (
               <>
+                {/* Two different things, and conflating them cost Ferndale eleven real gaps.
+                    Unusable means the verdict cannot be believed, so say so loudly. Dated
+                    means a policy changed after the run, which makes one entry possibly
+                    answered, not the list wrong. */}
                 {missingReport.stale && (
-                  <p className="mt-3 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-900">
-                    <AlertTriangle size={15} className="mt-0.5 shrink-0" />
-                    <span><strong>Do not act on this list.</strong> {missingReport.stale_reason}</span>
-                  </p>
+                  missingReport.usable === false ? (
+                    <p className="mt-3 flex items-start gap-2 rounded-lg border border-red-300 bg-red-50 px-3 py-2.5 text-sm text-red-900">
+                      <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+                      <span><strong>Do not act on this list.</strong> {missingReport.stale_reason}</span>
+                    </p>
+                  ) : (
+                    <p className="mt-3 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-900">
+                      <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+                      <span>{missingReport.stale_reason}</span>
+                    </p>
+                  )
                 )}
                 <p className="mt-3 text-xs text-neutral-mid">
                   Read against {missingReport.regulations_in_scope} regulations in scope for this service.
@@ -258,7 +269,7 @@ export default function PolicyGapsPage() {
                     <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-neutral-mid">
                       {missingReport.missing.length} {missingReport.missing.length === 1 ? 'policy' : 'policies'} they do not have
                     </p>
-                    <ul className={`mt-2 divide-y divide-gray-100 rounded-lg border border-gray-200 ${missingReport.stale ? 'opacity-50' : ''}`}>
+                    <ul className={`mt-2 divide-y divide-gray-100 rounded-lg border border-gray-200 ${missingReport.usable === false ? 'opacity-50' : ''}`}>
                       {missingReport.missing.map(m => (
                         <li key={m.title} className="px-3 py-2.5">
                           <div className="flex flex-wrap items-baseline justify-between gap-2">

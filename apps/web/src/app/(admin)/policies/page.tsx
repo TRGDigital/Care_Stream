@@ -12,7 +12,8 @@ import SlowLoadHint from '@/components/admin/slow-load-hint'
 import { persistentCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search, GraduationCap, Trash2, Copy, Loader2, CheckCircle2, Eye, FileText, FilePenLine, CalendarClock, Pencil} from 'lucide-react'
+import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search, GraduationCap, Trash2, Copy, Loader2, CheckCircle2, Eye, FileText, FilePenLine, CalendarClock, Pencil, Download, Printer} from 'lucide-react'
+import { buildPrintDoc, openPrintDoc, type OrgCtx } from '@/components/admin/policies/policy-print'
 import { PolicyChangesModal } from '@/components/admin/policy-changes-modal'
 
 // Upload modals are lazy-loaded — only fetched when a dialog is opened.
@@ -452,6 +453,7 @@ export default function PoliciesPage() {
         <PolicyPreviewModal
           token={session.accessToken}
           policy={previewPolicy}
+          version={docByPolicy[previewPolicy.id]?.version}
           onClose={() => setPreviewPolicy(null)}
           onRename={async name => {
             const p = policies.find(x => x.id === previewPolicy.id)
@@ -932,9 +934,10 @@ function PolicyActions({
 }
 
 // ─── Policy Preview (how it renders for staff) ────────────────────────────────
-function PolicyPreviewModal({ token, policy, onClose, onRename }: {
+function PolicyPreviewModal({ token, policy, version, onClose, onRename }: {
   token: string
   policy: { id: string; name: string }
+  version?: string
   onClose: () => void
   onRename?: (name: string) => void | Promise<void>
 }) {
@@ -947,6 +950,7 @@ function PolicyPreviewModal({ token, policy, onClose, onRename }: {
   const [loading, setLoad]  = useState(true)
   const [error, setError]   = useState('')
   const [showRaw, setShowRaw] = useState(false)
+  const [org, setOrg]       = useState<OrgCtx | null>(null)
 
   useEffect(() => {
     createApiClient(token).policies.preview(policy.id)
@@ -954,6 +958,18 @@ function PolicyPreviewModal({ token, policy, onClose, onRename }: {
       .catch((e: any) => setError(e.message ?? 'Could not load the preview.'))
       .finally(() => setLoad(false))
   }, [token, policy.id])
+
+  // Letterhead details for print / PDF: the same organisation context the
+  // View / download modal uses, so both produce an identical document.
+  useEffect(() => { createApiClient(token).analytics.adoptionContext().then(setOrg).catch(() => setOrg(null)) }, [token])
+
+  // The preview strips letterhead and footers for on-screen reading; printing puts
+  // them back via the shared print document, logo and sign-off included.
+  function printOrDownload() {
+    if (!data?.html) return
+    const printHtml = buildPrintDoc(name, data.html, version || '1.0', false, org)
+    if (!openPrintDoc(printHtml)) setError('Please allow pop-ups to print or download the policy.')
+  }
 
   function commitRename() {
     const next = (renaming ?? '').trim().replace(/\s+/g, ' ')
@@ -1058,7 +1074,19 @@ function PolicyPreviewModal({ token, policy, onClose, onRename }: {
           )}
         </div>
 
-        <div className="flex justify-end border-t border-gray-100 px-6 py-3">
+        <div className="flex items-center justify-between gap-2 border-t border-gray-100 px-6 py-3">
+          <div className="flex items-center gap-2">
+            <button onClick={printOrDownload} disabled={loading || !data?.html}
+              title="Download as PDF with your letterhead, logo and sign-off block (choose Save as PDF in the dialog)"
+              className="flex items-center gap-1.5 rounded-lg bg-teal px-3.5 py-2 text-sm font-medium text-white hover:bg-teal/90 disabled:opacity-50">
+              <Download size={14} /> Download PDF
+            </button>
+            <button onClick={printOrDownload} disabled={loading || !data?.html}
+              title="Print with your letterhead, logo and sign-off block"
+              className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3.5 py-2 text-sm font-medium text-neutral-mid hover:border-teal hover:text-teal disabled:opacity-50">
+              <Printer size={14} /> Print
+            </button>
+          </div>
           <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-neutral-mid hover:text-neutral-dark">Close</button>
         </div>
       </div>

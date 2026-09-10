@@ -1162,11 +1162,15 @@ function DeliveryTab({ api, modules, staff }: {
     setTriggerLoad(r.id)
     try {
       const res = await api.training.triggerRule(r.id)
-      setTriggerMsg(p => ({ ...p, [r.id]: `Sent to ${res.sent_to} staff member${res.sent_to !== 1 ? 's' : ''}` }))
-      setTimeout(() => setTriggerMsg(p => { const n = { ...p }; delete n[r.id]; return n }), 3000)
+      setTriggerMsg(p => ({ ...p, [r.id]: (res as any).message ?? `Delivered to ${res.sent_to} staff member${res.sent_to !== 1 ? 's' : ''}` }))
+      setTimeout(() => setTriggerMsg(p => { const n = { ...p }; delete n[r.id]; return n }), 8000)
       const logRes = await api.training.sendLog(30)
       setSendLog(logRes.logs)
-    } catch { /* ignore */ } finally { setTriggerLoad(null) }
+    } catch (e: any) {
+      // A refused send (no questions locked, no module) must be seen, not swallowed.
+      setTriggerMsg(p => ({ ...p, [r.id]: e.message ?? 'Send failed' }))
+      setTimeout(() => setTriggerMsg(p => { const n = { ...p }; delete n[r.id]; return n }), 8000)
+    } finally { setTriggerLoad(null) }
   }
 
   async function manualSend() {
@@ -1174,7 +1178,7 @@ function DeliveryTab({ api, modules, staff }: {
     setQsSending(true); setQsResult('')
     try {
       const res = await api.training.manualSend({ module_id: qsModule, target_audience: qsAudience, questions_per_send: qsQCount })
-      setQsResult(`Sent to ${res.sent_to} staff member${res.sent_to !== 1 ? 's' : ''}`)
+      setQsResult((res as any).message ?? `Delivered to ${res.sent_to} staff member${res.sent_to !== 1 ? 's' : ''}`)
       const logRes = await api.training.sendLog(30)
       setSendLog(logRes.logs)
     } catch (e: any) {
@@ -1187,7 +1191,7 @@ function DeliveryTab({ api, modules, staff }: {
     setRtwSending(true); setRtwResult('')
     try {
       const res = await api.training.returnToWork({ user_id: rtwUser, module_id: rtwModule || undefined, notes: rtwNotes || undefined })
-      setRtwResult(`Return-to-work questions sent to ${res.staff_name}`)
+      setRtwResult((res as any).message ?? `Return-to-work questions sent to ${res.staff_name}`)
       setRtwUser(''); setRtwModule(''); setRtwNotes('')
       const logRes = await api.training.sendLog(30)
       setSendLog(logRes.logs)
@@ -1202,7 +1206,7 @@ function DeliveryTab({ api, modules, staff }: {
     setPiSending(true); setPiResult('')
     try {
       const res = await api.training.postIncident({ module_id: piModule, target_audience: piAudience, incident_description: piDesc })
-      setPiResult(`Sent to ${res.sent_to} staff member${res.sent_to !== 1 ? 's' : ''}`)
+      setPiResult((res as any).message ?? `Delivered to ${res.sent_to} staff member${res.sent_to !== 1 ? 's' : ''}`)
       setPiModule(''); setPiDesc('')
       const logRes = await api.training.sendLog(30)
       setSendLog(logRes.logs)

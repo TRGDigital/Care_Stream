@@ -89,6 +89,9 @@ select cron.schedule('cs-licence-renewals',          '0 9 * * *',    $$select pu
 -- Two runs: dispatchDue only sends at 10am UK, which is 09:00 UTC in BST and 10:00 in GMT.
 select cron.schedule('cs-onboarding-emails',         '0 9,10 * * *', $$select public.carestream_cron('onboarding-emails')$$);
 select cron.schedule('cs-regulation-source-monitor', '0 6 * * 1',    $$select public.carestream_cron('regulation-source-monitor')$$);
+-- Every 15 minutes: tenant-defined scheduled training-question rules store their own
+-- send_time (Europe/London), so the route decides what is due; this just wakes it up.
+select cron.schedule('cs-training-delivery',         '*/15 * * * *', $$select public.carestream_cron('training-delivery')$$);
 -- Last, so it reports on the morning's runs rather than yesterday's.
 select cron.schedule('cs-daily-report',              '0 11 * * *',   $$select public.carestream_cron('daily-report')$$);
 

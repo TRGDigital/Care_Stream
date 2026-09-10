@@ -32,6 +32,7 @@ import { runCredentialExpiryAllTenants } from '../services/workforce/credentialE
 import { runSupervisionReminders } from '../services/workforce/supervisionReminders'
 import { runAgencyAccess } from '../services/workforce/agencyAccess'
 import { runPolicyReviewReminders } from '../services/policies/review-reminders'
+import { runScheduledTrainingDelivery } from '../services/training/delivery-schedule'
 import { buildCronReport, sendCronReport } from '../services/ops/cron-report'
 
 export const cronRouter = Router()
@@ -96,6 +97,11 @@ cronRouter.get('/knowledge-gaps', (req, res) =>
 // the same day go in ONE email. Fires once per review cycle (re-armed when a new date is set).
 cronRouter.get('/policy-review-reminders', (req, res) =>
   job('policy-review-reminders', req, res, () => runPolicyReviewReminders({ force: req.query.force === '1' })))
+
+// Every 15 minutes: fire tenant-defined scheduled training-question rules whose
+// send_time has come round (Europe/London), at most once per rule per day.
+cronRouter.get('/training-delivery', (req, res) =>
+  job('training-delivery', req, res, () => runScheduledTrainingDelivery()))
 
 // Daily: email Enterprise admins a digest of staff credentials (DBS, right to
 // work, registration) that have expired or expire within 30 days.

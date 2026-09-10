@@ -73,20 +73,32 @@ async function sendTrainingEmailDirect({
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
+// What happened for one (user, module) pair — so callers can log and report the
+// truth instead of assuming a send happened. 'gated' means the tenant's
+// question_trigger setting isn't 'auto' and the caller didn't force.
+export type ProactiveSendOutcome =
+  | 'sent_whatsapp' | 'sent_email' | 'no_contact'
+  | 'not_enrolled' | 'no_questions' | 'gated' | 'failed'
+export type ProactiveSendResult = { user_id: string; module_id: string; outcome: ProactiveSendOutcome }
+
 export async function sendProactiveTrainingQuestions(
   tenantId:  string,
   userIds:   string[],
   moduleIds: string[],
   force = false,   // bypass the auto-trigger gate (e.g. a manual "send reminder")
-): Promise<void> {
+): Promise<ProactiveSendResult[]> {
   // Load tenant settings + slug
   const tenant = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
     select: { training_settings: true, slug: true, custom_languages: true, translation_glossary: true },
   })
 
+  const results: ProactiveSendResult[] = []
   const settings = (tenant?.training_settings as any) ?? {}
-  if (!force && settings.question_trigger !== 'auto') return
+  if (!force && settings.question_trigger !== 'auto') {
+    for (const u of userIds) for (const m of moduleIds) results.push({ user_id: u, module_id: m, outcome: 'gated' })
+    return results
+  }
 
   const replyTo = `policies@${tenant.slug}.${INBOUND_DOMAIN}`
 
@@ -111,11 +123,12 @@ export async function sendProactiveTrainingQuestions(
         const user       = userById.get(userId)
         const enrollment = enrollmentByKey.get(`${userId}:${moduleId}`)
 
-        if (!user || !enrollment) continue
+        if (!user || !enrollment) { results.push({ user_id: userId, module_id: moduleId, outcome: 'not_enrolled' }); continue }
 
         const questions = (enrollment.module.questions as any[]) ?? []
         if (questions.length === 0) {
           console.log(`[training/proactive] Module ${moduleId} has no questions — skipping`)
+          results.push({ user_id: userId, module_id: moduleId, outcome: 'no_questions' })
           continue
         }
 
@@ -141,6 +154,7 @@ export async function sendProactiveTrainingQuestions(
           const text = fmtQuestionWA(questionForFmt, 0, total, name)
           await sendWhatsAppMessage(user.phone_number as string, text)
           console.log(`[training/proactive] WA question sent: user=${userId} module=${moduleId} lang=${userLang}`)
+          results.push({ user_id: userId, module_id: moduleId, outcome: 'sent_whatsapp' })
         } else if (user.email) {
           const html = fmtQuestionEmail(questionForFmt, 0, total, name)
           await sendTrainingEmailDirect({
@@ -151,15 +165,23 @@ export async function sendProactiveTrainingQuestions(
             firstName,
           })
           console.log(`[training/proactive] Email question sent: user=${userId} module=${moduleId}`)
+          results.push({ user_id: userId, module_id: moduleId, outcome: 'sent_email' })
         } else {
           console.log(`[training/proactive] No contact info for user=${userId}`)
+          results.push({ user_id: userId, module_id: moduleId, outcome: 'no_contact' })
         }
       } catch (e) {
         console.error(`[training/proactive] Failed for user=${userId} module=${moduleId}:`, e)
+        results.push({ user_id: userId, module_id: moduleId, outcome: 'failed' })
       }
     }
   }
 
   // PWA push — one in-hub nudge for the batch (additive; the WhatsApp/email above remain).
-  sendPushToUsers(userIds, { title: 'New training assigned', body: 'Tap to start your training in the hub.', url: '/chat', tag: 'training' }).catch(() => {})
+  // Only nudge people something was actually delivered to.
+  const deliveredTo = [...new Set(results.filter(r => r.outcome === 'sent_whatsapp' || r.outcome === 'sent_email').map(r => r.user_id))]
+  if (deliveredTo.length > 0) {
+    sendPushToUsers(deliveredTo, { title: 'New training assigned', body: 'Tap to start your training in the hub.', url: '/chat', tag: 'training' }).catch(() => {})
+  }
+  return results
 }

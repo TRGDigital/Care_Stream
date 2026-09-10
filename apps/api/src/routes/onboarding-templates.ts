@@ -27,13 +27,14 @@ const DIFFICULTY_GUIDE: Record<string, string> = {
 // ─── GET / — list all platform templates ──────────────────────────────────────
 /** The kinds a ready-made flow can be.
  *
- *  'local_induction' is what agency workers are enrolled in, and ONLY that: they arrive with
- *  their statutory training already done by their agency, so what they need from a home is the
- *  home itself. Anything unrecognised falls back to 'primary' rather than being stored, but the
- *  list is checked rather than a single value being special-cased, because the old
- *  `x === 'secondary' ? 'secondary' : 'primary'` silently turned every new kind into 'primary'.
+ *  Checked against a list rather than special-casing one value, because the previous
+ *  `x === 'secondary' ? 'secondary' : 'primary'` silently turned every unrecognised kind into
+ *  'primary' — which for a flow with no job roles means it then matched every member of staff.
+ *
+ *  Agency suitability is NOT a kind. It is a tick on a flow that already exists, so a home can
+ *  reuse its Care Assistant induction rather than maintaining a second copy of it.
  */
-const FLOW_KINDS = ['primary', 'secondary', 'local_induction']
+const FLOW_KINDS = ['primary', 'secondary']
 
 onboardingTemplatesRouter.get('/', async (_req: Request, res: Response) => {
   const flows = await (prisma as any).onboardingFlow.findMany({
@@ -92,7 +93,7 @@ onboardingTemplatesRouter.get('/feedback', async (req: Request, res: Response) =
 
 // ─── POST / — create a template ───────────────────────────────────────────────
 onboardingTemplatesRouter.post('/', async (req: Request, res: Response) => {
-  const { name, description, job_roles, flow_kind, care_setting, difficulties, steps } = req.body ?? {}
+  const { name, description, job_roles, flow_kind, care_setting, difficulties, steps, agency_suitable } = req.body ?? {}
   if (!name || typeof name !== 'string') return err(res, 'MISSING_FIELD', 'name is required', 400)
 
   const flow = await (prisma as any).onboardingFlow.create({
@@ -102,6 +103,7 @@ onboardingTemplatesRouter.post('/', async (req: Request, res: Response) => {
       description:  description ?? null,
       job_roles:    Array.isArray(job_roles) ? job_roles : [],
       flow_kind:    FLOW_KINDS.includes(flow_kind) ? flow_kind : 'primary',
+      agency_suitable: agency_suitable === true,
       care_setting: isCareSetting(care_setting) ? care_setting : null,
       difficulties: cleanDifficulties(difficulties),
       steps:        buildStepCreate(steps),
@@ -117,12 +119,13 @@ onboardingTemplatesRouter.patch('/:id', async (req: Request, res: Response) => {
   const existing = await (prisma as any).onboardingFlow.findFirst({ where: { id, tenant_id: null } })
   if (!existing) return err(res, 'NOT_FOUND', 'Template not found', 404)
 
-  const { name, description, job_roles, flow_kind, care_setting, difficulties, is_active, steps } = req.body ?? {}
+  const { name, description, job_roles, flow_kind, care_setting, difficulties, is_active, steps, agency_suitable } = req.body ?? {}
   const data: Record<string, any> = {}
   if (name !== undefined)         data.name = String(name).trim()
   if (description !== undefined)  data.description = description
   if (job_roles !== undefined)    data.job_roles = Array.isArray(job_roles) ? job_roles : []
-  if (flow_kind !== undefined)    data.flow_kind = flow_kind === 'secondary' ? 'secondary' : 'primary'
+  if (flow_kind !== undefined)    data.flow_kind = FLOW_KINDS.includes(flow_kind) ? flow_kind : 'primary'
+  if (agency_suitable !== undefined) data.agency_suitable = agency_suitable === true
   if (care_setting !== undefined) data.care_setting = isCareSetting(care_setting) ? care_setting : null
   if (difficulties !== undefined) data.difficulties = cleanDifficulties(difficulties)
   if (is_active !== undefined)    data.is_active = !!is_active

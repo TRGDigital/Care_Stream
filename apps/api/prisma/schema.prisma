@@ -1699,6 +1699,10 @@ model OnboardingFlow {
   description    String?
   job_roles      String[]             @default([])         // empty = applies to all roles
   flow_kind      String               @default("primary")  // primary (job role) | secondary (specialism)
+  /// Ticked flows are offered to agency workers, matched to their job role as usual. A tick on
+  /// the induction a home already maintains beats a parallel set of agency-only flows: one
+  /// action rather than an afternoon, and one copy to keep current rather than two.
+  agency_suitable Boolean             @default(false)
   care_setting   String?                                   // nursing_home | care_home | … ; NULL = all settings
   difficulties   String[]             @default([])         // very_easy | easy | medium | hard — fed into AI question generation
   source_flow_id String?                                   // for a tenant copy: the platform template it was adopted from

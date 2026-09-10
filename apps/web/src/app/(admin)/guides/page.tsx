@@ -2342,7 +2342,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
         <SectionBlock title="What is deliberately different">
           <div className="rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
             {[
-              ['Induction',  'They get your local induction only: fire exits, where things are kept, which residents need what. They arrive with their statutory training already done by their agency, so enrolling them in your full induction would be asking them to repeat it.'],
+              ['Induction',  'They are enrolled only in the flows you have ticked as suitable for agency, and then only where the job role matches, so an agency nurse gets your nurse induction and nothing else. Tick a flow on the Onboarding page. Most homes tick the inductions they already run for care assistants and nurses rather than building separate ones.'],
               ['Compliance', 'They do not appear on the compliance register. Their DBS, right to work and professional registration are held by the agency, not by you, so chasing you for paperwork you cannot hold would leave the register permanently red.'],
               ['Supervisions', 'They are not listed for supervisions or appraisals, so they never show as overdue for something nobody intends to book.'],
               ['Your plan',  'Agency workers do not use one of your staff places. They are covering a gap, not filling a post.'],

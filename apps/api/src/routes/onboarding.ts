@@ -226,7 +226,7 @@ onboardingRouter.post('/flows', requireAdmin, async (req, res) => {
 
 // PATCH /onboarding/flows/:id
 onboardingRouter.patch('/flows/:id', requireAdmin, async (req, res) => {
-  const { name, description, job_roles, is_active, steps } = req.body
+  const { name, description, job_roles, is_active, steps, agency_suitable } = req.body
   try {
     const tenantId = getTenantId()
     const id       = String(req.params.id)
@@ -251,6 +251,8 @@ onboardingRouter.patch('/flows/:id', requireAdmin, async (req, res) => {
         ...(description !== undefined && { description }),
         ...(job_roles   !== undefined && { job_roles }),
         ...(is_active   !== undefined && { is_active }),
+        // A home may tick one of its OWN flows for agency, not only an adopted template.
+        ...(agency_suitable !== undefined && { agency_suitable: agency_suitable === true }),
         ...(steps !== undefined && {
           steps: {
             create: (steps as any[]).map((s, i) => ({
@@ -752,6 +754,9 @@ onboardingRouter.post('/templates/:id/adopt', requireAdmin, async (req, res) => 
         description:    template.description,
         job_roles:      template.job_roles,
         flow_kind:      template.flow_kind,
+        // Carried across on adoption, or a home would tick the template and find their own
+        // copy untouched, with no way to see why agency staff were enrolled in nothing.
+        agency_suitable: template.agency_suitable ?? false,
         care_setting:   template.care_setting,
         source_flow_id: template.id,
         is_active:      true,

@@ -485,11 +485,11 @@ function FlowCard({ flow, open, onToggleOpen, busy, onAiDraft, onRegenerate, onT
           {/* One tick per flow rather than a parallel agency-only set. Whoever wrote this
               induction knows whether it suits somebody here for four nights. */}
           <button onClick={onToggleAgency} disabled={busy}
-            title={flow.agency_suitable ? 'Agency workers are enrolled in this' : 'Offer this to agency workers with a matching job role'}
-            className={`rounded-md border p-1.5 disabled:opacity-50 ${
+            title={flow.agency_suitable ? 'Agency workers with a matching job role are enrolled in this. Click to remove.' : 'Offer this to agency workers with a matching job role'}
+            className={`flex items-center gap-1 rounded-md border px-2.5 py-1.5 text-xs font-medium disabled:opacity-50 ${
               flow.agency_suitable ? 'border-amber-300 bg-amber-50 text-amber-700' : 'border-gray-200 text-neutral-mid hover:border-amber-300 hover:text-amber-700'
             }`}>
-            <BriefcaseBusiness size={13} />
+            <BriefcaseBusiness size={12} /> {flow.agency_suitable ? 'Added for Agency Staff' : 'Add for Agency Staff'}
           </button>
           <button onClick={onToggleActive} disabled={busy} title={flow.is_active ? 'Deactivate' : 'Activate'}
             className="rounded-md border border-gray-200 p-1.5 text-neutral-mid hover:border-teal hover:text-teal disabled:opacity-50">

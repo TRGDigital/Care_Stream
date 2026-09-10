@@ -92,6 +92,8 @@ select cron.schedule('cs-regulation-source-monitor', '0 6 * * 1',    $$select pu
 -- Every 15 minutes: tenant-defined scheduled training-question rules store their own
 -- send_time (Europe/London), so the route decides what is due; this just wakes it up.
 select cron.schedule('cs-training-delivery',         '*/15 * * * *', $$select public.carestream_cron('training-delivery')$$);
+-- Staff 90/30/7-day renewal reminders + the manager renewal/overdue digest.
+select cron.schedule('cs-training-renewals',         '20 8 * * *',   $$select public.carestream_cron('training-renewals')$$);
 -- Last, so it reports on the morning's runs rather than yesterday's.
 select cron.schedule('cs-daily-report',              '0 11 * * *',   $$select public.carestream_cron('daily-report')$$);
 

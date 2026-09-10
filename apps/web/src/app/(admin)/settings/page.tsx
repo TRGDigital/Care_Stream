@@ -1892,7 +1892,7 @@ export default function SettingsPage() {
             </div>
             <OnOffToggle
               name="notifications_enabled"
-              isOn={trainingSettings.notifications_enabled ?? false}
+              isOn={trainingSettings.notifications_enabled ?? true}
               onChange={v => saveTrainingSetting('notifications_enabled', v)}
               disabled={loading || savingTraining === 'notifications_enabled'}
             />
@@ -1926,7 +1926,7 @@ export default function SettingsPage() {
               </div>
               <OnOffToggle
                 name="notify_manager"
-                isOn={trainingSettings.notify_manager ?? false}
+                isOn={trainingSettings.notify_manager ?? true}
                 onChange={v => saveTrainingSetting('notify_manager', v)}
                 disabled={loading || savingTraining === 'notify_manager'}
               />

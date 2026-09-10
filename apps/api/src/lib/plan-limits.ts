@@ -223,8 +223,11 @@ export async function checkUserLimit(tenantId: string): Promise<void> {
   const max = plan?.max_staff_users ?? null
   if (max === null) return
 
+  // Agency workers are excluded. They are not the home's staff: they are bought in to plug a
+  // rota gap, they churn, and charging a seat for a two week booking would push a home to
+  // record them as something else, which loses the very tracking this feature exists for.
   const count = await (prisma as any).user.count({
-    where: { tenant_id: tenantId, is_active: true },
+    where: { tenant_id: tenantId, is_active: true, is_agency: false },
   })
   if (count >= max) {
     throw new PlanLimitError(

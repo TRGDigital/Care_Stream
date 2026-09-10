@@ -411,6 +411,24 @@ export default function StaffPage() {
                           >
                             {u.name}
                           </button>
+                          {/* Agency, and when their access runs out. An admin scanning this
+                              list needs to see a booking about to lapse without opening anyone. */}
+                          {u.is_agency && (
+                            <div className="mt-1 flex flex-wrap items-center gap-1">
+                              <span className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-amber-800"
+                                    title={u.agency_name ? `Agency worker from ${u.agency_name}` : 'Agency worker'}>
+                                Agency{u.agency_name ? ` · ${u.agency_name}` : ''}
+                              </span>
+                              {u.agency_end && (
+                                <span className={`text-[10px] leading-none ${
+                                  new Date(u.agency_end) < new Date() ? 'font-semibold text-red-600' : 'text-neutral-mid'
+                                }`}>
+                                  {new Date(u.agency_end) < new Date() ? 'ended ' : 'until '}
+                                  {new Date(u.agency_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                                </span>
+                              )}
+                            </div>
+                          )}
                           {Array.isArray(u.specialisms) && u.specialisms.length > 0 && (
                             <div className="mt-1 flex flex-wrap gap-1">
                               {u.specialisms.map((s: string) => (

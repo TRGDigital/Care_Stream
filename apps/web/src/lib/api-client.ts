@@ -363,7 +363,16 @@ export function createApiClient(token: string) {
       markFollowedUp: (id: string, note?: string) => apiFetch<{ reviewed: boolean; at: string; by: string | null }>(`/users/${id}/follow-up/review`, token, { method: 'POST', body: JSON.stringify({ note }) }),
       markPractical: (id: string, enrollmentId: string, data: { signed: boolean; note?: string }) =>
         apiFetch<{ practical: { practical_signed: boolean; practical_signed_by: string | null; practical_signed_at: string | null; practical_note: string | null } }>(`/users/${id}/annual-training/${enrollmentId}/practical`, token, { method: 'POST', body: JSON.stringify(data) }),
-      invite: (data: { email: string; name: string; role: string; job_role?: string; specialisms?: string[]; audit_template_ids?: string[]; phone_number?: string; shift_type?: 'any' | 'day' | 'night'; training_hourly_rate?: number | null; first_language?: string; second_language?: string; comms_always_first_language?: boolean; allow_language_switching?: boolean; new_starter?: boolean }) =>
+      /** Extend or end an agency booking. Extending keeps one record for a returning worker,
+       *  rather than a second one holding half their history. */
+      updateAgency: (id: string, data: { agency_end?: string; agency_name?: string; agency_day_rate_pence?: number | null; reactivate?: boolean }) =>
+        apiFetch<{ user: any }>(`/users/${id}/agency`, token, { method: 'PATCH', body: JSON.stringify(data) }),
+      agencySpend: (since?: string) =>
+        apiFetch<{
+          bookings: number; people: number; days: number; cost_pence: number | null; active_now: number
+          by_agency: Array<{ agency: string; bookings: number; days: number; cost_pence: number | null }>
+        }>(`/users/agency/spend${since ? `?since=${encodeURIComponent(since)}` : ''}`, token),
+      invite: (data: { email: string; name: string; role: string; job_role?: string; specialisms?: string[]; audit_template_ids?: string[]; phone_number?: string; shift_type?: 'any' | 'day' | 'night'; training_hourly_rate?: number | null; first_language?: string; second_language?: string; comms_always_first_language?: boolean; allow_language_switching?: boolean; new_starter?: boolean; is_agency?: boolean; agency_name?: string; agency_start?: string; agency_end?: string; agency_day_rate_pence?: number | null }) =>
         apiFetch<{ user: any; temp_password: string; contact: StaffContact; onboarding_enrolled?: number; new_starter?: boolean }>('/users/invite', token, {
           method: 'POST',
           body:   JSON.stringify(data),

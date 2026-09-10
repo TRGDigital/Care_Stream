@@ -689,7 +689,9 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
     setPdfBusy('signin'); setEvidenceMsg('')
     try {
       const html2pdf = (await import('html2pdf.js')).default
-      await html2pdf().set({ margin: [10, 10, 12, 10], filename: `sign-in-${(data.title || 'session').replace(/\s+/g, '-')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, logging: false, width: 760, windowWidth: 760 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } } as any).from(signInRef.current).save()
+      // pagebreak.avoid keeps each attendee row (and the trainer sign-off) whole: a row that
+      // would straddle the A4 boundary is pushed to the next page instead of being sliced.
+      await html2pdf().set({ margin: [10, 10, 12, 10], filename: `sign-in-${(data.title || 'session').replace(/\s+/g, '-')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, logging: false, width: 760, windowWidth: 760 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['css', 'legacy'], avoid: '.signin-row' } } as any).from(signInRef.current).save()
     } catch (e: any) { setEvidenceMsg(e?.message ?? 'Could not generate the sheet.') } finally { setPdfBusy(null) }
   }
   async function makeCertificate(a: any) {
@@ -897,20 +899,26 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
             <tr><td style={{ padding: '2px 0', color: '#6b7280' }}>Location</td><td>{data.location || '—'}</td></tr>
             <tr><td style={{ padding: '2px 0', color: '#6b7280' }}>Delivered by</td><td>{data.delivered_by_name_resolved || '—'}</td></tr>
           </tbody></table>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-            <thead><tr>
-              <th style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '2px solid #e5e7eb', width: 28 }}>#</th>
-              <th style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '2px solid #e5e7eb' }}>Name</th>
-              <th style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '2px solid #e5e7eb' }}>Job role</th>
-              <th style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '2px solid #e5e7eb', width: 220 }}>Signature</th>
-            </tr></thead>
-            <tbody>{att.map((a: any, i: number) => (
-              <tr key={a.user_id}><td style={{ padding: '10px 8px', borderBottom: '1px solid #e5e7eb' }}>{i + 1}</td><td style={{ padding: '10px 8px', borderBottom: '1px solid #e5e7eb' }}>{a.name}</td><td style={{ padding: '10px 8px', borderBottom: '1px solid #e5e7eb' }}>{a.job_role || ''}</td><td style={{ padding: '10px 8px', borderBottom: '1px solid #e5e7eb' }} /></tr>
+          {/* Flex rows rather than a table: html2pdf keeps a .signin-row whole by pushing it
+              to the next page (margin-based), which table rows would ignore. */}
+          <div style={{ fontSize: 12 }}>
+            <div style={{ display: 'flex', fontWeight: 700, borderBottom: '2px solid #e5e7eb' }}>
+              <div style={{ width: 28, padding: '6px 8px' }}>#</div>
+              <div style={{ flex: 1, padding: '6px 8px' }}>Name</div>
+              <div style={{ flex: 1, padding: '6px 8px' }}>Job role</div>
+              <div style={{ width: 220, padding: '6px 8px' }}>Signature</div>
+            </div>
+            {att.map((a: any, i: number) => (
+              <div key={a.user_id} className="signin-row" style={{ display: 'flex', borderBottom: '1px solid #e5e7eb' }}>
+                <div style={{ width: 28, padding: '10px 8px' }}>{i + 1}</div>
+                <div style={{ flex: 1, padding: '10px 8px' }}>{a.name}</div>
+                <div style={{ flex: 1, padding: '10px 8px' }}>{a.job_role || ''}</div>
+                <div style={{ width: 220, padding: '10px 8px' }} />
+              </div>
             ))}
-            {att.length === 0 && <tr><td colSpan={4} style={{ padding: '10px 8px', color: '#6b7280' }}>No staff allocated.</td></tr>}
-            </tbody>
-          </table>
-          <p style={{ marginTop: 18, fontSize: 12 }}>Trainer signature: ______________________________   Date: __________________</p>
+            {att.length === 0 && <div style={{ padding: '10px 8px', color: '#6b7280' }}>No staff allocated.</div>}
+          </div>
+          <p className="signin-row" style={{ marginTop: 18, fontSize: 12 }}>Trainer signature: ______________________________   Date: __________________</p>
         </div>
 
         <div ref={certRef} style={{ width: 1040, height: 725, fontFamily: 'Georgia, "Times New Roman", serif', color: '#1f2937', background: '#fff' }}>

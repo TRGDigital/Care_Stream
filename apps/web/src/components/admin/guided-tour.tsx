@@ -13,7 +13,7 @@
 // licences). Drop screenshots at /public/tour/step-N.png (or to-step-N.png for
 // training only) to replace the icon panels.
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Building2, CheckCircle2, FileText, GraduationCap, KeyRound, ScanSearch, Users, X } from 'lucide-react'
 import { createApiClient } from '@/lib/api-client'
@@ -148,6 +148,17 @@ export function GuidedTour({ token, tenantId, tier, openSignal }: {
   const [i, setI]       = useState(0)
   const [done, setDone] = useState<DoneMap>({})
   const [rect, setRect] = useState<DOMRect | null>(null)
+  const cardRef = useRef<HTMLDivElement | null>(null)
+  const [cardH, setCardH] = useState(0)
+  // Kept in state rather than read during render, so a resize actually re-positions the card.
+  const [viewportH, setViewportH] = useState(0)
+
+  useEffect(() => {
+    const onResize = () => setViewportH(window.innerHeight)
+    onResize()
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   // Real-data ticks, fetched when the tour opens. Failures leave a step
   // unticked rather than erroring — the tour must never block.
@@ -229,6 +240,19 @@ export function GuidedTour({ token, tenantId, tier, openSignal }: {
     return () => window.removeEventListener('resize', measure)
   }, [open, i, steps])
 
+  // The card's ACTUAL height, because steps are not the same height: one with a screenshot,
+  // three bullets and a footer is far taller than the shortest, and a guessed height put the
+  // buttons below the fold with no way to reach them.
+  useEffect(() => {
+    if (!open) return
+    function measureCard() { setCardH(cardRef.current?.offsetHeight ?? 0) }
+    measureCard()
+    // Twice: once now, once after the image has laid out and changed the height.
+    const t = setTimeout(measureCard, 120)
+    window.addEventListener('resize', measureCard)
+    return () => { clearTimeout(t); window.removeEventListener('resize', measureCard) }
+  }, [open, i, viewportH])
+
   if (!open) return null
 
   const step = steps[i]
@@ -236,7 +260,19 @@ export function GuidedTour({ token, tenantId, tier, openSignal }: {
   const pad = 6
   const cardW = 448  // w-md card; wider than the preview so the detail fits
   const cardLeft = rect ? Math.min(rect.right + 24, window.innerWidth - cardW - 16) : 0
-  const cardTop = rect ? Math.min(Math.max(rect.top - 60, 16), Math.max(window.innerHeight - 480, 16)) : 0
+
+  // Always fully on screen. Sit beside the highlighted link where there is room, otherwise
+  // slide up until the bottom edge — and therefore Back, the CTA and Next — is reachable.
+  const MARGIN = 16
+  const vh = viewportH || (typeof window !== 'undefined' ? window.innerHeight : 800)
+  const roomForCard = Math.max(vh - MARGIN * 2, 240)
+  const measured = Math.min(cardH || 520, roomForCard)
+  const cardTop = rect
+    ? Math.min(Math.max(rect.top - 60, MARGIN), Math.max(vh - measured - MARGIN, MARGIN))
+    : 0
+  // Whatever is left between the card's top and the bottom of the screen; the body scrolls
+  // inside that rather than the card running off the end.
+  const cardMaxH = Math.max(vh - cardTop - MARGIN, 240)
 
   const footer = (
     <div className="mt-4 flex items-center justify-between">
@@ -300,7 +336,11 @@ export function GuidedTour({ token, tenantId, tier, openSignal }: {
           >
             {i + 1}
           </span>
-          <div className="absolute max-h-[calc(100vh-2rem)] overflow-y-auto rounded-xl bg-white p-5 shadow-2xl transition-all duration-300" style={{ top: cardTop, left: cardLeft, width: cardW }}>
+          <div
+            ref={cardRef}
+            className="absolute overflow-y-auto overscroll-contain rounded-xl bg-white p-5 shadow-2xl transition-all duration-300"
+            style={{ top: cardTop, left: cardLeft, width: cardW, maxHeight: cardMaxH }}
+          >
             {cardBody}
           </div>
         </>

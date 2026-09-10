@@ -215,7 +215,11 @@ export interface PlatformCosts {
 }
 
 export interface TenantDetail {
-  tenant:               TenantSummary & { email_domain: string; branding_signoff: string }
+  tenant:               TenantSummary & { email_domain: string; branding_signoff: string; parent_tenant_id?: string | null }
+  group?: {
+    parent:   { id: string; name: string; account_number: string } | null
+    children: Array<{ id: string; name: string; account_number: string }>
+  }
   policies:             any[]
   recentQueries:        any[]
   knowledgeCount:       number
@@ -823,6 +827,8 @@ export function createPlatformClient(token: string) {
         adminFetch<TenantDetail>(`/tenants/${id}`, token),
       setEnterpriseDiscount: (id: string, enabled: boolean) =>
         adminFetch<{ tenant: { id: string; enterprise_discount: boolean } }>(`/tenants/${id}/enterprise-discount`, token, { method: 'PATCH', body: JSON.stringify({ enabled }) }),
+      setGroup: (id: string, parentTenantId: string | null) =>
+        adminFetch<{ tenant: { id: string; name: string; parent_tenant_id: string | null } }>(`/tenants/${id}/group`, token, { method: 'PATCH', body: JSON.stringify({ parent_tenant_id: parentTenantId }) }),
       invoices: (id: string) => adminFetch<{
         invoices: Array<{ id: string; date: string; description: string; amount_pence: number; status: string; pdf_url: string | null; hosted_url: string | null }>
         next_billing_date: string | null

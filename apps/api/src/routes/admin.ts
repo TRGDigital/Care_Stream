@@ -18,6 +18,7 @@ import { SERVICE_TRIGGERS, resolveServiceProfile, regulationAppliesToTenant } fr
 import { renderOnboardingEmailHtml } from '../services/onboarding/render'
 import { syncCqcSeedsFromSheets, populateCqcSeedsSheet } from '../services/cqc-seeds/sheets-sync'
 import { prisma } from '../db/client'
+import { writeAuditLog } from '../lib/audit'
 import { embedTexts } from '../services/rag/embedder'
 import { upsertRegulationVectors, deleteRegulationVector, deleteAllTenantPolicyVectors, getTenantVectorStats, getPlatformVectorStats } from '../services/vector/pinecone'
 import type { RegulationVector } from '../services/vector/pinecone'
@@ -770,7 +771,60 @@ adminRouter.get('/tenants/:id', async (req: Request, res: Response) => {
     training_licences = [...byModule.values()]
   }
 
-  ok(res, { tenant, policies, recentQueries, knowledgeCount, manualKnowledgeCount, userCount, queriesThisMonth, handbookCount, storage, training_licences, annual_license })
+  // Group membership: the parent (when this is a sub-tenant) and any children
+  // (when this is a group root), for the Group card on the client detail page.
+  const [groupParent, groupChildren] = await Promise.all([
+    tenant.parent_tenant_id
+      ? (prisma as any).tenant.findUnique({ where: { id: tenant.parent_tenant_id }, select: { id: true, name: true, account_number: true } })
+      : Promise.resolve(null),
+    (prisma as any).tenant.findMany({
+      where: { parent_tenant_id: req.params.id },
+      select: { id: true, name: true, account_number: true },
+      orderBy: { created_at: 'asc' },
+    }),
+  ])
+
+  ok(res, { tenant, policies, recentQueries, knowledgeCount, manualKnowledgeCount, userCount, queriesThisMonth, handbookCount, storage, training_licences, annual_license, group: { parent: groupParent, children: groupChildren } })
+})
+
+// ─── PATCH /admin/tenants/:id/group ──────────────────────────────────────────
+// Platform-only: link a tenant into a group (parent_tenant_id = a root tenant) or
+// unlink it (null). Grouping moves data visibility across organisations — every
+// admin of any site in the group can switch into every other site — so it stays a
+// platform action, with guardrails and an audit row.
+adminRouter.patch('/tenants/:id/group', async (req: Request, res: Response) => {
+  const tenantId = String(req.params.id)
+  const parentId = req.body?.parent_tenant_id === null ? null : String(req.body?.parent_tenant_id ?? '')
+  if (parentId === '') { err(res, 'VALIDATION_ERROR', 'parent_tenant_id must be a tenant id, or null to unlink.'); return }
+  if (parentId === tenantId) { err(res, 'VALIDATION_ERROR', 'A tenant cannot be its own parent.'); return }
+
+  const tenant = await (prisma as any).tenant.findUnique({
+    where: { id: tenantId }, select: { id: true, name: true, parent_tenant_id: true },
+  })
+  if (!tenant) { err(res, 'NOT_FOUND', 'Tenant not found', 404); return }
+
+  if (parentId !== null) {
+    const parent = await (prisma as any).tenant.findUnique({
+      where: { id: parentId }, select: { id: true, name: true, parent_tenant_id: true },
+    })
+    if (!parent) { err(res, 'NOT_FOUND', 'Group root tenant not found', 404); return }
+    // No chains: the parent must itself be a root, and a tenant that already has
+    // children cannot become someone's child.
+    if (parent.parent_tenant_id) { err(res, 'VALIDATION_ERROR', `${parent.name} is itself a sub-tenant — link to its group root instead.`); return }
+    const childCount = await (prisma as any).tenant.count({ where: { parent_tenant_id: tenantId } })
+    if (childCount > 0) { err(res, 'VALIDATION_ERROR', `${tenant.name} is a group root with ${childCount} site${childCount === 1 ? '' : 's'} — unlink those first.`); return }
+  }
+
+  const updated = await (prisma as any).tenant.update({
+    where: { id: tenantId },
+    data:  { parent_tenant_id: parentId },
+    select: { id: true, name: true, parent_tenant_id: true },
+  })
+  writeAuditLog({
+    tenant_id: tenantId, event_type: 'tenant_group_change', entity_type: 'tenant', entity_id: tenantId,
+    metadata: { previous_parent: tenant.parent_tenant_id, new_parent: parentId },
+  }).catch(() => {})
+  ok(res, { tenant: updated })
 })
 
 // ─── PATCH /admin/tenants/:id/enterprise-discount ────────────────────────────

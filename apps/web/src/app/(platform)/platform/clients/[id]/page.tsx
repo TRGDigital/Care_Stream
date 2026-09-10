@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
-import { createPlatformClient, type TenantDetail, type TenantAuditStats, type TenantInsights } from '@/lib/platform-api'
+import { createPlatformClient, type TenantDetail, type TenantAuditStats, type TenantInsights, type TenantSummary } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
 import { Button } from '@/components/ui/button'
 import {
@@ -584,6 +584,11 @@ export default function ClientDetailPage() {
   const [newSubSiteName, setNewSubSiteName] = useState('')
   const [addingSubSite,  setAddingSubSite]  = useState(false)
   const [subSiteError,   setSubSiteError]   = useState('')
+  const [showLinkExisting, setShowLinkExisting] = useState(false)
+  const [linkChoices,    setLinkChoices]    = useState<TenantSummary[] | null>(null)
+  const [linkTarget,     setLinkTarget]     = useState('')
+  const [linking,        setLinking]        = useState(false)
+  const [unlinking,      setUnlinking]      = useState<string | null>(null)
 
   useEffect(() => {
     if (!token || !id) return
@@ -636,6 +641,47 @@ export default function ClientDetailPage() {
 
   function handleReactivate(userId: string) {
     setStaff(prev => prev.map(u => u.id === userId ? { ...u, is_active: true } : u))
+  }
+
+  // Link an EXISTING standalone tenant into this group (vs "Add site", which creates
+  // a brand-new empty one). Grouping lets every group admin switch into every site,
+  // so the confirm spells that out.
+  async function openLinkExisting() {
+    setShowLinkExisting(true); setSubSiteError(''); setLinkTarget('')
+    if (!token || linkChoices) return
+    try {
+      const r = await createPlatformClient(token).tenants.list()
+      setLinkChoices(r.tenants.filter(t => t.id !== id && t.sub_tenant_count === 0))
+    } catch { setLinkChoices([]) }
+  }
+  async function handleLinkExisting() {
+    if (!token || !linkTarget) return
+    const choice = (linkChoices ?? []).find(t => t.id === linkTarget)
+    if (!choice) return
+    if (!confirm(`Link "${choice.name}" (${choice.account_number}) into this group?\n\nAdmins of every site in the group will be able to switch into every other site, and the group console will report across all of them. Billing stays separate per site.`)) return
+    setLinking(true); setSubSiteError('')
+    try {
+      await createPlatformClient(token).tenants.setGroup(choice.id, id)
+      setSubTenants(prev => [...prev, { id: choice.id, name: choice.name, slug: choice.slug, subscription_status: choice.subscription_status, created_at: choice.created_at }])
+      setShowLinkExisting(false); setLinkTarget('')
+    } catch (e: any) {
+      setSubSiteError(e.message ?? 'Failed to link the site.')
+    } finally {
+      setLinking(false)
+    }
+  }
+  async function handleUnlinkSite(s: any) {
+    if (!token) return
+    if (!confirm(`Unlink "${s.name}" from this group?\n\nIt becomes a standalone account again; its admins lose the site switcher and the group console. No data moves or is deleted.`)) return
+    setUnlinking(s.id)
+    try {
+      await createPlatformClient(token).tenants.setGroup(s.id, null)
+      setSubTenants(prev => prev.filter((x: any) => x.id !== s.id))
+    } catch (e: any) {
+      setSubSiteError(e.message ?? 'Failed to unlink the site.')
+    } finally {
+      setUnlinking(null)
+    }
   }
 
   async function handleAddSubSite() {
@@ -1139,14 +1185,50 @@ export default function ClientDetailPage() {
                     <p className="mt-0.5 text-xs text-neutral-mid">Additional care homes or branches on this account</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => { setShowAddSubSite(true); setSubSiteError('') }}
-                  className="flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark"
-                >
-                  <Plus size={12} />
-                  Add site
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={openLinkExisting}
+                    title="Bring an existing standalone account into this group"
+                    className="flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark"
+                  >
+                    <Building2 size={12} />
+                    Link existing
+                  </button>
+                  <button
+                    onClick={() => { setShowAddSubSite(true); setSubSiteError('') }}
+                    className="flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark"
+                  >
+                    <Plus size={12} />
+                    Add site
+                  </button>
+                </div>
               </div>
+
+              {showLinkExisting && (
+                <div className="border-b border-gray-100 px-5 py-4">
+                  <p className="mb-1 text-sm font-medium text-neutral-dark">Link an existing account into this group</p>
+                  <p className="mb-3 text-xs text-neutral-mid">Only standalone accounts can be linked. Admins of every site in the group can switch into every other site; billing stays separate per site.</p>
+                  {subSiteError && <p className="mb-3 text-sm text-red-600">{subSiteError}</p>}
+                  <div className="flex gap-2">
+                    <select
+                      value={linkTarget}
+                      onChange={e => setLinkTarget(e.target.value)}
+                      className="flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal"
+                    >
+                      <option value="">{linkChoices === null ? 'Loading accounts…' : '— choose an account —'}</option>
+                      {(linkChoices ?? []).map(t => (
+                        <option key={t.id} value={t.id}>{t.account_number} · {t.name}</option>
+                      ))}
+                    </select>
+                    <Button onClick={handleLinkExisting} disabled={linking || !linkTarget} size="md">
+                      {linking ? <Loader2 size={14} className="animate-spin" /> : 'Link into group'}
+                    </Button>
+                    <Button variant="secondary" size="md" onClick={() => { setShowLinkExisting(false); setLinkTarget('') }}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               {showAddSubSite && (
                 <div className="border-b border-gray-100 px-5 py-4">
@@ -1202,13 +1284,24 @@ export default function ClientDetailPage() {
                       </div>
                       <p className="text-xs text-neutral-mid">{s.slug}</p>
                     </div>
-                    <Link
-                      href={`/platform/clients/${s.id}`}
-                      className="flex items-center gap-1 text-xs text-teal hover:underline"
-                    >
-                      <ExternalLink size={11} />
-                      View site
-                    </Link>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleUnlinkSite(s)}
+                        disabled={unlinking === s.id}
+                        title="Remove this site from the group — it becomes standalone again"
+                        className="flex items-center gap-1 text-xs text-neutral-mid hover:text-red-600 disabled:opacity-50"
+                      >
+                        {unlinking === s.id ? <Loader2 size={11} className="animate-spin" /> : <X size={11} />}
+                        Unlink
+                      </button>
+                      <Link
+                        href={`/platform/clients/${s.id}`}
+                        className="flex items-center gap-1 text-xs text-teal hover:underline"
+                      >
+                        <ExternalLink size={11} />
+                        View site
+                      </Link>
+                    </div>
                   </div>
                 ))}
 

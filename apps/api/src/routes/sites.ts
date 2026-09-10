@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
+import { Prisma as PrismaNS } from '@prisma/client'
 import { generateAccessToken } from '../services/auth/tokens'
 import { issueRefreshToken } from '../lib/refresh-tokens'
 import { ok, err } from '../lib/response'
@@ -69,12 +70,16 @@ sitesRouter.get('/overview', async (req: Request, res: Response) => {
   const WEEK = 7 * 86_400_000
   const nowMs = Date.now()
   const since8w = new Date(nowMs - 8 * WEEK)
+  // User and QueryRecord are on the tenant-isolation middleware's scoped-model list,
+  // which OVERWRITES a cross-tenant `in` filter with the caller's own tenant — so a
+  // group rollup through those models silently collapses to one site. Raw SQL is the
+  // deliberate bypass: this endpoint derives siteIds from the caller's own group, so
+  // it can never read outside it.
   const [staffGroups, trainingGroups, onboardingRows, auditGroups, queryRows, overdueGroups, completionRows] = await Promise.all([
-    (prisma as any).user.groupBy({
-      by: ['tenant_id'],
-      where: { tenant_id: { in: siteIds }, is_active: true },
-      _count: { _all: true },
-    }),
+    (prisma as any).$queryRaw`
+      SELECT tenant_id, count(*)::int AS n FROM users
+      WHERE tenant_id IN (${PrismaNS.join(siteIds)}) AND is_active = true
+      GROUP BY tenant_id`,
     (prisma as any).trainingEnrollment.groupBy({
       by: ['tenant_id', 'status'],
       where: { tenant_id: { in: siteIds } },
@@ -90,11 +95,12 @@ sitesRouter.get('/overview', async (req: Request, res: Response) => {
       _count: { _all: true },
     }),
     // Hub engagement: questions asked over the trend window, with who asked them
-    // for the weekly-active figure. Uses the (tenant_id, created_at) index.
-    (prisma as any).queryRecord.findMany({
-      where:  { tenant_id: { in: siteIds }, created_at: { gte: since8w } },
-      select: { tenant_id: true, user_id: true, created_at: true },
-    }).catch(() => [] as any[]),
+    // for the weekly-active figure. Raw for the same middleware reason as users;
+    // uses the (tenant_id, created_at) index.
+    (prisma as any).$queryRaw`
+      SELECT tenant_id, user_id, created_at FROM queries
+      WHERE tenant_id IN (${PrismaNS.join(siteIds)}) AND created_at >= ${since8w}`
+      .catch(() => [] as any[]),
     // Overdue training: assigned, past its due date, not complete.
     (prisma as any).trainingEnrollment.groupBy({
       by: ['tenant_id'],
@@ -134,7 +140,7 @@ sitesRouter.get('/overview', async (req: Request, res: Response) => {
   }
 
   const staffByTenant = new Map<string, number>()
-  for (const g of staffGroups) staffByTenant.set(g.tenant_id, g._count._all)
+  for (const g of staffGroups as any[]) staffByTenant.set(g.tenant_id, Number(g.n))
 
   const trainingByTenant = new Map<string, { complete: number; total: number; expired: number }>()
   for (const g of trainingGroups) {

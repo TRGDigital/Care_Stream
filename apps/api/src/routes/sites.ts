@@ -66,7 +66,10 @@ sitesRouter.get('/overview', async (req: Request, res: Response) => {
   })
   const siteIds: string[] = tenants.map((t: any) => t.id)
 
-  const [staffGroups, trainingGroups, onboardingRows, auditGroups] = await Promise.all([
+  const WEEK = 7 * 86_400_000
+  const nowMs = Date.now()
+  const since8w = new Date(nowMs - 8 * WEEK)
+  const [staffGroups, trainingGroups, onboardingRows, auditGroups, queryRows, overdueGroups, completionRows] = await Promise.all([
     (prisma as any).user.groupBy({
       by: ['tenant_id'],
       where: { tenant_id: { in: siteIds }, is_active: true },
@@ -86,7 +89,49 @@ sitesRouter.get('/overview', async (req: Request, res: Response) => {
       where: { tenant_id: { in: siteIds } },
       _count: { _all: true },
     }),
+    // Hub engagement: questions asked over the trend window, with who asked them
+    // for the weekly-active figure. Uses the (tenant_id, created_at) index.
+    (prisma as any).queryRecord.findMany({
+      where:  { tenant_id: { in: siteIds }, created_at: { gte: since8w } },
+      select: { tenant_id: true, user_id: true, created_at: true },
+    }).catch(() => [] as any[]),
+    // Overdue training: assigned, past its due date, not complete.
+    (prisma as any).trainingEnrollment.groupBy({
+      by: ['tenant_id'],
+      where: { tenant_id: { in: siteIds }, status: { in: ['not_started', 'in_progress'] }, due_date: { lt: new Date() } },
+      _count: { _all: true },
+    }).catch(() => [] as any[]),
+    (prisma as any).trainingEnrollment.findMany({
+      where:  { tenant_id: { in: siteIds }, status: 'complete', completed_at: { gte: since8w } },
+      select: { tenant_id: true, completed_at: true },
+    }).catch(() => [] as any[]),
   ])
+
+  // Weekly buckets (oldest first) for the trend charts: hub questions and
+  // training completions per site per week.
+  const bucketOf = (d: Date): number => {
+    const idx = Math.floor((nowMs - d.getTime()) / WEEK)
+    return idx >= 0 && idx < 8 ? 7 - idx : -1
+  }
+  const hubByTenant = new Map<string, { q30: number; askers7: Set<string>; weekly: number[] }>()
+  for (const r of queryRows as any[]) {
+    const h = hubByTenant.get(r.tenant_id) ?? { q30: 0, askers7: new Set<string>(), weekly: Array(8).fill(0) }
+    const t = new Date(r.created_at).getTime()
+    if (t >= nowMs - 30 * 86_400_000) h.q30++
+    if (t >= nowMs - 7 * 86_400_000 && r.user_id) h.askers7.add(r.user_id)
+    const b = bucketOf(new Date(r.created_at))
+    if (b >= 0) h.weekly[b]++
+    hubByTenant.set(r.tenant_id, h)
+  }
+  const overdueByTenant = new Map<string, number>()
+  for (const g of overdueGroups as any[]) overdueByTenant.set(g.tenant_id, g._count._all)
+  const completionsByTenant = new Map<string, number[]>()
+  for (const r of completionRows as any[]) {
+    const w = completionsByTenant.get(r.tenant_id) ?? Array(8).fill(0)
+    const b = bucketOf(new Date(r.completed_at))
+    if (b >= 0) w[b]++
+    completionsByTenant.set(r.tenant_id, w)
+  }
 
   const staffByTenant = new Map<string, number>()
   for (const g of staffGroups) staffByTenant.set(g.tenant_id, g._count._all)
@@ -131,6 +176,9 @@ sitesRouter.get('/overview', async (req: Request, res: Response) => {
     const training   = { complete: tr.complete, total: tr.total, pct: pct(tr.complete, tr.total) }
     const onboarding = { complete: ob.complete, total: ob.total, overdue: ob.overdue, pct: pct(ob.complete, ob.total) }
     const audits     = { completed: au.completed, total: au.total, pct: pct(au.completed, au.total) }
+    const staffCount = staffByTenant.get(t.id) ?? 0
+    const hub = hubByTenant.get(t.id) ?? { q30: 0, askers7: new Set<string>(), weekly: Array(8).fill(0) }
+    const trainingOverdue = overdueByTenant.get(t.id) ?? 0
     return {
       id:                  t.id,
       name:                t.name,
@@ -138,9 +186,22 @@ sitesRouter.get('/overview', async (req: Request, res: Response) => {
       subscription_status: t.subscription_status,
       is_current:          t.id === tenantId,
       is_root:             t.parent_tenant_id === null,
-      staff:               staffByTenant.get(t.id) ?? 0,
+      staff:               staffCount,
       training, onboarding, audits,
-      overdue:             ob.overdue + tr.expired,   // overdue inductions + expired training
+      training_overdue:    trainingOverdue,
+      // Benchmarking: absolute counts are meaningless between a 50-bed home and a
+      // 20-bed one, so hub questions come normalised per active staff member too.
+      hub: {
+        questions_30d:  hub.q30,
+        per_staff_30d:  staffCount > 0 ? Math.round((hub.q30 / staffCount) * 10) / 10 : null,
+        active_askers_7d: hub.askers7.size,
+        wau_pct:        staffCount > 0 ? Math.min(100, Math.round((hub.askers7.size / staffCount) * 100)) : null,
+      },
+      trend: {
+        questions_weekly:   hub.weekly,
+        completions_weekly: completionsByTenant.get(t.id) ?? Array(8).fill(0),
+      },
+      overdue:             ob.overdue + tr.expired + trainingOverdue,   // overdue inductions + expired + overdue training
       overall_pct:         avgDefined([training.pct, onboarding.pct, audits.pct]),
     }
   })
@@ -157,6 +218,8 @@ sitesRouter.get('/overview', async (req: Request, res: Response) => {
     onboarding_pct: pool(s => ({ n: s.onboarding.complete, d: s.onboarding.total })),
     audit_pct:      pool(s => ({ n: s.audits.completed,    d: s.audits.total })),
     overall_pct:    avgDefined(sites.map((s: any) => s.overall_pct)),
+    questions_30d:  sites.reduce((acc: number, x: any) => acc + x.hub.questions_30d, 0),
+    wau_pct:        pool(s => ({ n: s.hub.active_askers_7d, d: s.staff })),
   }
 
   ok(res, { group_root_id: groupRootId, current_tenant_id: tenantId, is_group: sites.length > 1, sites, summary })

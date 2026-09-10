@@ -488,10 +488,14 @@ function ChatPageInner() {
   // empty, no staggered stages. The fetches below then silently revalidate.
   useIsoLayoutEffect(() => {
     // These mirror server state, so a hard reload — the user explicitly asking for
-    // current numbers — must not paint yesterday's badges over it. Chat history and
-    // the language preference below are the user's own state, so they still restore.
-    if (wasHardReload()) return
-    try { const c = JSON.parse(localStorage.getItem(`cs_counts_${userId}`) || 'null'); if (c) setNavCounts(c) } catch { /* ignore */ }
+    // current numbers — must not paint yesterday's badges over it. But anything that
+    // decides whether a sidebar ROW OR SECTION exists must still hydrate: without it,
+    // Saved policies, the Policies row and their neighbours pop in one fetch at a
+    // time after paint, and the chat history keeps shifting downward under the
+    // user's cursor — clicks aimed at a chat land on whatever slid into its place.
+    // So only the pure badge numbers (navCounts) stay server-fresh on hard reload.
+    const hard = wasHardReload()
+    if (!hard) { try { const c = JSON.parse(localStorage.getItem(`cs_counts_${userId}`) || 'null'); if (c) setNavCounts(c) } catch { /* ignore */ } }
     try { const s = JSON.parse(localStorage.getItem(`cs_saved_${userId}`)  || 'null'); if (Array.isArray(s)) setSavedPolicies(s) } catch { /* ignore */ }
     try { const l = JSON.parse(localStorage.getItem(`cs_langs_${userId}`)  || 'null'); if (Array.isArray(l)) setLangList(l) } catch { /* ignore */ }
     try { const p = JSON.parse(localStorage.getItem(`cs_polappr_${userId}`) || 'null'); if (p && typeof p === 'object') setPolicyApprovals(p) } catch { /* ignore */ }

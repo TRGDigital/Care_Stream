@@ -899,6 +899,11 @@ analyticsRouter.post('/gaps/adopt', requireAdmin, async (req: Request, res: Resp
   if (!policy_id || !placement) { err(res, 'VALIDATION_ERROR', 'policy_id and placement are required'); return }
   if (String(placement) === 'amend') {
     if (!old_text) { err(res, 'VALIDATION_ERROR', 'old_text is required for an amend'); return }
+    // A reword applied with unchanged text would create a phantom "change to review" that
+    // does nothing and cannot be meaningfully approved. Say so instead of recording it.
+    if (new_text && String(old_text).trim() === String(new_text).trim()) {
+      err(res, 'VALIDATION_ERROR', 'The new wording is identical to the current wording — edit it before applying, or use the delete option to remove it.'); return
+    }
   } else if (!new_text) {
     err(res, 'VALIDATION_ERROR', 'new_text is required'); return
   }
@@ -1045,8 +1050,12 @@ analyticsRouter.patch('/gaps/policy-change/:changeId', requireAdmin, async (req:
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return }
     throw e
   }
-  const newText = String(req.body?.new_text ?? '').trim()
-  if (!newText) { err(res, 'VALIDATION_ERROR', 'The wording cannot be empty'); return }
+  // remove: an explicit deletion — the amend's new wording becomes empty, which the adopt
+  // path and the renderers already treat as "remove this wording". Only an emptied textarea
+  // WITHOUT the flag is rejected, so an accidental clear still can't wipe a change.
+  const remove = req.body?.remove === true
+  const newText = remove ? '' : String(req.body?.new_text ?? '').trim()
+  if (!newText && !remove) { err(res, 'VALIDATION_ERROR', 'The wording cannot be empty'); return }
   const sectionTitle = typeof req.body?.section_title === 'string' ? req.body.section_title : undefined
   try {
     const r = await editChange(tenantId, String(req.params.changeId), newText, sectionTitle)

@@ -42,7 +42,7 @@ import { DEFAULT_POLICY_WRITER_PROMPT } from '../services/policy-writer/write-po
 import { defaultSignalSeeds, signalMatches, type TextSignal } from '../services/analytics/policy-lint-signals'
 import { callClaude } from '../services/ai/claude'
 import { snapshotAndAlert } from '../services/regulations/versioning'
-import { checkRegulationSources } from '../services/regulations/source-monitor'
+import { checkRegulationSources, gatherSubjects } from '../services/regulations/source-monitor'
 import { reviewPendingChanges, DEFAULT_CHANGE_REVIEW_PROMPT } from '../services/regulations/change-review'
 
 export const adminRouter = Router()
@@ -2241,12 +2241,10 @@ adminRouter.get('/regulations/sources', async (_req: Request, res: Response) => 
   try {
     const [checks, regs] = await Promise.all([
       (prisma as any).regulationSourceCheck.findMany({
-        select: { reference_key: true, url: true, fingerprint: true, last_checked_at: true, last_changed_at: true, content: true },
+        select: { subject_kind: true, reference_key: true, url: true, fingerprint: true, last_checked_at: true, last_changed_at: true, content: true },
       }),
-      (prisma as any).externalRegulation.findMany({
-        where:  { is_active: true },
-        select: { reference_key: true, official_name: true, source_urls: true },
-      }),
+      // The same list the monitor walks, so this page cannot drift from what is watched.
+      gatherSubjects(),
     ])
 
     const checkByKeyUrl = new Map<string, any>(checks.map((c: any) => [`${c.reference_key} ${c.url}`, c]))
@@ -2266,6 +2264,7 @@ adminRouter.get('/regulations/sources', async (_req: Request, res: Response) => 
           : fp.startsWith('skip:')  ? 'skipped'
           : 'unknown'
         sources.push({
+          subject_kind:    r.kind,
           reference_key:   r.reference_key,
           official_name:   r.official_name,
           url,
@@ -2293,6 +2292,11 @@ adminRouter.get('/regulations/sources', async (_req: Request, res: Response) => 
       totals: {
         urls:        sources.length,
         regulations: new Set(sources.map(s => s.reference_key)).size,
+        by_kind: {
+          regulation:        sources.filter(s => s.subject_kind === 'regulation').length,
+          quality_statement: sources.filter(s => s.subject_kind === 'quality_statement').length,
+          lint_signal:       sources.filter(s => s.subject_kind === 'lint_signal').length,
+        },
         with_text:   sources.filter(s => s.has_text).length,
         not_watched: sources.filter(s => ['error', 'skipped', 'never-checked'].includes(s.signal)).length,
       },

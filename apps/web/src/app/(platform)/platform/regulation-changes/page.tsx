@@ -36,7 +36,10 @@ export default function RegulationChangesPage() {
   const [view, setView]       = useState<'changes' | 'sources'>('changes')
   const [sources, setSources] = useState<{
     sources: MonitoredSource[]
-    totals: { urls: number; regulations: number; with_text: number; not_watched: number }
+    totals: {
+      urls: number; regulations: number; with_text: number; not_watched: number
+      by_kind: { regulation: number; quality_statement: number; lint_signal: number }
+    }
     domains: Array<{ domain: string; urls: number; healthy: number }>
   } | null>(null)
 
@@ -279,6 +282,8 @@ export default function RegulationChangesPage() {
             {/* "Can be explained" is the number that matters: a page with no stored text can be
                 detected as changed but never diffed, so it produces an alert with no evidence. */}
             <p className="text-xs text-neutral-mid">
+              {sources.totals.by_kind.regulation} regulation sources, {sources.totals.by_kind.quality_statement} CQC quality statement
+              sources and {sources.totals.by_kind.lint_signal} stale-wording sources.
               A source is only useful if a change to it can be <strong>explained</strong>, which needs its text stored.
               Anything counted as not watched returns an error, is a PDF, or has never been reached.
             </p>
@@ -306,7 +311,14 @@ export default function RegulationChangesPage() {
                     const bad = ['error', 'skipped', 'never-checked'].includes(src.signal)
                     return (
                       <tr key={`${src.reference_key}-${src.url}`} className={bad ? 'bg-red-50/40' : undefined}>
-                        <td className="px-4 py-2.5 align-top font-medium text-neutral-dark">{src.official_name}</td>
+                        <td className="px-4 py-2.5 align-top font-medium text-neutral-dark">
+                          {src.official_name}
+                          {src.subject_kind !== 'regulation' && (
+                            <span className="ml-1.5 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-neutral-mid">
+                              {src.subject_kind === 'quality_statement' ? 'CQC' : 'Wording'}
+                            </span>
+                          )}
+                        </td>
                         <td className="px-4 py-2.5 align-top">
                           <a href={src.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-start gap-1 text-purple-600 hover:underline">
                             <ExternalLink size={10} className="mt-0.5 shrink-0" />

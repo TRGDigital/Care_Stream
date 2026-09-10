@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { applyRoleNames } from '@/lib/policy-names'
-import { X, Loader2, Check, RotateCcw, FileCheck2, GitCompare, Download, Pencil, Send } from 'lucide-react'
+import { X, Loader2, Check, RotateCcw, FileCheck2, GitCompare, Download, Pencil, Send, Eraser } from 'lucide-react'
 
 import { buildPrintDoc, openPrintDoc, type OrgCtx } from '@/components/admin/policies/policy-print'
 
@@ -234,6 +234,17 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
     if (org?.show_role_names) applyRoleNames(root, org.role_names)
   }, [html, doc, tracked, org])
 
+  // Explicit deletion: the amend's new wording becomes empty, so the old wording is removed
+  // from the policy. Tracked view shows it struck through; the clean copy simply omits it.
+  async function removeWording(c: Change) {
+    const excerpt = (c.old_text || '').replace(/\s+/g, ' ').trim()
+    if (!confirm(`Remove this wording from the policy?\n\n"${excerpt.length > 220 ? `${excerpt.slice(0, 220)}…` : excerpt}"\n\nThe removal still goes through your approval steps before it takes effect.`)) return
+    setBusy(c.id); setError('')
+    try { await createApiClient(token).analytics.removePolicyChangeWording(c.id); load() }
+    catch (e: any) { setError(e.message ?? 'Could not remove the wording.') }
+    finally { setBusy(null) }
+  }
+
   async function revert(changeId: string) {
     if (!confirm('Revert this change? It will be removed from the draft.')) return
     setBusy(changeId); setError('')
@@ -421,7 +432,7 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
                   <li key={c.id} className={`rounded-lg border px-3 py-2.5 ${c.published ? 'border-gray-100 bg-white' : c.manager_feedback && !c.feedback_resolved ? 'border-amber-300 bg-amber-50/50' : 'border-green-200 bg-green-50/60'}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="text-[10px] font-bold uppercase tracking-wide text-neutral-mid">{placementLabel(c.placement)}{c.published ? ' · published' : ''}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-neutral-mid">{c.placement === 'amend' && !c.new_text.trim() ? 'Removed wording' : placementLabel(c.placement)}{c.published ? ' · published' : ''}</p>
                         <p className="mt-0.5 text-sm text-neutral-dark">{c.requirement || c.section_title || 'Change'}</p>
                         <p className="mt-0.5 text-xs text-neutral-mid">{c.applied_by || 'Admin'} · {new Date(c.applied_at).toLocaleDateString('en-GB')}</p>
                       </div>
@@ -431,6 +442,12 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
                             className="rounded p-1 text-neutral-mid hover:bg-teal/10 hover:text-teal disabled:opacity-50">
                             <Pencil size={14} />
                           </button>
+                          {c.placement === 'amend' && !!c.old_text && !!c.new_text.trim() && (
+                            <button onClick={() => removeWording(c)} disabled={busy !== null} title="Remove this wording from the policy"
+                              className="rounded p-1 text-neutral-mid hover:bg-amber-50 hover:text-amber-700 disabled:opacity-50">
+                              <Eraser size={14} />
+                            </button>
+                          )}
                           <button onClick={() => revert(c.id)} disabled={busy !== null} title="Revert"
                             className="rounded p-1 text-neutral-mid hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50">
                             {busy === c.id ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}

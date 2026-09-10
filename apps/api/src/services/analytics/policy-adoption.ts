@@ -911,6 +911,9 @@ export async function revertChange(tenantId: string, changeId: string): Promise<
 export async function editChange(tenantId: string, changeId: string, newText: string, sectionTitle?: string): Promise<{ pending: number } | null> {
   const change = await (prisma as any).policyDocumentChange.findUnique({ where: { id: changeId } })
   if (!change || change.tenant_id !== tenantId || change.published) return null
+  // Empty wording is a removal, which only makes sense for an amend (replace old with
+  // nothing). Removing an added section is what revert is for.
+  if (!String(newText).trim() && !(change.placement === 'amend' && change.old_text)) return null
   const data: Record<string, unknown> = { new_text: String(newText) }
   if (typeof sectionTitle === 'string') data.section_title = sectionTitle
   if (change.manager_feedback) data.feedback_resolved = true

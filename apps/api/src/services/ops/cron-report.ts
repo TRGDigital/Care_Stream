@@ -37,6 +37,7 @@ export const SCHEDULED_JOBS: ScheduledJob[] = [
   { job: 'licence-renewals',          cadence: 'daily',  graceHours: 26, matters: 'Training licence holders are warned before renewal' },
   { job: 'regulation-source-monitor', cadence: 'weekly', graceHours: 8 * 24, matters: 'Legislation and guidance pages are fingerprinted so changes get noticed' },
   { job: 'agency-access',             cadence: 'daily',  graceHours: 26, matters: 'Agency bookings are warned before they end, and access is withdrawn after' },
+  { job: 'training-delivery',         cadence: 'daily',  graceHours: 26, matters: 'Scheduled training-question rules actually fire at their set times' },
 ]
 
 export type JobStatus = 'ok' | 'failed' | 'overdue' | 'never'

@@ -1691,28 +1691,47 @@ trainingRouter.post('/delivery-rules/:id/trigger', async (req: Request, res: Res
       where: staffFilter, select: { id: true, name: true },
     })
 
-    let questionIds: string[] = []
-    if (rule.module_id) {
-      const mod = await (prisma as any).trainingModule.findFirst({ where: { id: rule.module_id, tenant_id: tenantId } })
-      if (mod) questionIds = (mod.questions as any[]).slice(0, rule.questions_per_send).map((q: any) => q.id)
+    if (!rule.module_id) { err(res, 'NO_MODULE', 'This rule has no module attached, so there is nothing to send.', 400); return }
+    const mod = await (prisma as any).trainingModule.findFirst({ where: { id: rule.module_id, OR: [{ tenant_id: tenantId }, { tenant_id: null, source: 'ai_generated', approved: true }] } })
+    const questions = ((mod?.questions as any[]) ?? [])
+    if (questions.length === 0) {
+      err(res, 'NO_QUESTIONS', `"${mod?.name ?? 'This module'}" has no locked questions yet, so there is nothing to send. Create and lock its questions first.`, 400); return
     }
+    const questionIds = questions.slice(0, rule.questions_per_send).map((q: any) => q.id)
 
+    let delivered = 0
+    const skipped: Record<string, number> = {}
     if (staff.length > 0) {
+      // An explicit "Send now" bypasses the auto-trigger gate, and the log records the
+      // real outcome per person instead of assuming delivery happened.
+      const outcomes = await sendProactiveTrainingQuestions(tenantId, staff.map((s: any) => s.id), [rule.module_id], true)
+      const byUser = new Map(outcomes.map(o => [o.user_id, o.outcome]))
+      const OUTCOME_NOTE: Record<string, string> = {
+        sent_whatsapp: 'delivered by WhatsApp', sent_email: 'delivered by email',
+        no_contact: 'NOT delivered: no phone or email on file',
+        not_enrolled: 'NOT delivered: not enrolled in this module', no_questions: 'NOT delivered: module has no questions',
+        gated: 'NOT delivered: auto-send is off', failed: 'NOT delivered: send failed',
+      }
+      for (const o of outcomes) {
+        if (o.outcome === 'sent_whatsapp' || o.outcome === 'sent_email') delivered++
+        else skipped[o.outcome] = (skipped[o.outcome] ?? 0) + 1
+      }
       await (prisma as any).trainingSendLog.createMany({
         data: staff.map((s: any) => ({
           id: randomUUID(), tenant_id: tenantId, rule_id: rule.id,
           module_id: rule.module_id ?? null, user_id: s.id,
           question_ids: questionIds, trigger_type: 'manual',
-          triggered_by: adminId, context: `Manual trigger of rule "${rule.name}"`,
+          triggered_by: adminId, context: `Manual trigger of rule "${rule.name}" — ${OUTCOME_NOTE[byUser.get(s.id) ?? 'failed'] ?? byUser.get(s.id)}`,
         })),
       })
-      if (rule.module_id) {
-        sendProactiveTrainingQuestions(tenantId, staff.map((s: any) => s.id), [rule.module_id])
-          .catch((e: any) => console.error('[delivery-rules/trigger] send error:', e))
-      }
     }
 
-    ok(res, { sent_to: staff.length, staff_names: staff.map((s: any) => s.name) })
+    const skippedNote = Object.entries(skipped).map(([k, n]) => `${n} ${k.replace(/_/g, ' ')}`).join(', ')
+    ok(res, {
+      sent_to: delivered, staff_names: staff.map((s: any) => s.name),
+      skipped,
+      message: `Delivered to ${delivered} of ${staff.length} staff${skippedNote ? ` (${skippedNote})` : ''}.`,
+    })
   } catch (e: any) {
     err(res, 'TRIGGER_FAILED', e.message, 500)
   }
@@ -1734,61 +1753,107 @@ trainingRouter.post('/manual-send', async (req: Request, res: Response) => {
     const staff = await (prisma as any).user.findMany({
       where: staffFilter, select: { id: true, name: true },
     })
-    const mod = await (prisma as any).trainingModule.findFirst({ where: { id: module_id, tenant_id: tenantId } })
-    const questionIds = mod
-      ? (mod.questions as any[]).slice(0, Number(questions_per_send) || 3).map((q: any) => q.id)
-      : []
+    const mod = await (prisma as any).trainingModule.findFirst({ where: { id: module_id, OR: [{ tenant_id: tenantId }, { tenant_id: null, source: 'ai_generated', approved: true }] } })
+    const questions = ((mod?.questions as any[]) ?? [])
+    if (questions.length === 0) {
+      err(res, 'NO_QUESTIONS', `"${mod?.name ?? 'This module'}" has no locked questions yet, so there is nothing to send. Create and lock its questions first.`, 400); return
+    }
+    const questionIds = questions.slice(0, Number(questions_per_send) || 3).map((q: any) => q.id)
 
+    let delivered = 0
+    const skipped: Record<string, number> = {}
     if (staff.length > 0) {
+      const outcomes = await sendProactiveTrainingQuestions(tenantId, staff.map((s: any) => s.id), [module_id], true)
+      const byUser = new Map(outcomes.map(o => [o.user_id, o.outcome]))
+      const OUTCOME_NOTE: Record<string, string> = {
+        sent_whatsapp: 'delivered by WhatsApp', sent_email: 'delivered by email',
+        no_contact: 'NOT delivered: no phone or email on file',
+        not_enrolled: 'NOT delivered: not enrolled in this module', no_questions: 'NOT delivered: module has no questions',
+        gated: 'NOT delivered: auto-send is off', failed: 'NOT delivered: send failed',
+      }
+      for (const o of outcomes) {
+        if (o.outcome === 'sent_whatsapp' || o.outcome === 'sent_email') delivered++
+        else skipped[o.outcome] = (skipped[o.outcome] ?? 0) + 1
+      }
       await (prisma as any).trainingSendLog.createMany({
         data: staff.map((s: any) => ({
           id: randomUUID(), tenant_id: tenantId, rule_id: null,
           module_id, user_id: s.id, question_ids: questionIds,
-          trigger_type: 'manual', triggered_by: adminId, context: 'Manual send',
+          trigger_type: 'manual', triggered_by: adminId, context: `Manual send — ${OUTCOME_NOTE[byUser.get(s.id) ?? 'failed'] ?? byUser.get(s.id)}`,
         })),
       })
-      sendProactiveTrainingQuestions(tenantId, staff.map((s: any) => s.id), [module_id])
-        .catch((e: any) => console.error('[manual-send] send error:', e))
     }
 
-    ok(res, { sent_to: staff.length, staff_names: staff.map((s: any) => s.name) })
+    const skippedNote = Object.entries(skipped).map(([k, n]) => `${n} ${k.replace(/_/g, ' ')}`).join(', ')
+    ok(res, { sent_to: delivered, staff_names: staff.map((s: any) => s.name), skipped, message: `Delivered to ${delivered} of ${staff.length} staff${skippedNote ? ` (${skippedNote})` : ''}.` })
   } catch (e: any) {
     err(res, 'TRIGGER_FAILED', e.message, 500)
   }
 })
 
-// POST /training/return-to-work — send refresher pulse to a staff member returning from absence
+// POST /training/return-to-work — send refresher pulse to a staff member returning from absence.
+// A refresher is an explicit admin action, so it bypasses the auto-trigger gate, (re-)enrols
+// the person so the module appears in their hub, and the send log records what actually
+// happened rather than assuming delivery.
 trainingRouter.post('/return-to-work', async (req: Request, res: Response) => {
   if ((req as any).user.role !== 'admin') { err(res, 'FORBIDDEN', 'Admin access required', 403); return }
   const tenantId = (req as any).user.tenant_id
   const adminId  = (req as any).user.sub
   const { user_id, module_id, notes } = req.body ?? {}
-  if (!user_id) { err(res, 'INVALID', 'user_id required', 400); return }
+  if (!user_id)   { err(res, 'INVALID', 'user_id required', 400); return }
+  if (!module_id) { err(res, 'INVALID', 'Choose a module for the refresher.', 400); return }
   try {
     const user = await (prisma as any).user.findFirst({
       where: { id: user_id, tenant_id: tenantId }, select: { id: true, name: true },
     })
     if (!user) { err(res, 'NOT_FOUND', 'Staff member not found', 404); return }
 
-    let questionIds: string[] = []
-    if (module_id) {
-      const mod = await (prisma as any).trainingModule.findFirst({ where: { id: module_id, tenant_id: tenantId } })
-      if (mod) questionIds = (mod.questions as any[]).slice(0, 3).map((q: any) => q.id)
+    const mod = await (prisma as any).trainingModule.findFirst({
+      where: { id: module_id, OR: [{ tenant_id: tenantId }, { tenant_id: null, source: 'ai_generated', approved: true }] },
+    })
+    if (!mod) { err(res, 'NOT_FOUND', 'Module not found', 404); return }
+    const questions = (mod.questions as any[]) ?? []
+    if (questions.length === 0) {
+      err(res, 'NO_QUESTIONS', `"${mod.name}" has no locked questions yet, so there is nothing to send. Create and lock its questions first.`, 400); return
+    }
+    const questionIds = questions.slice(0, 3).map((q: any) => q.id)
+
+    // (Re-)enrol: an open enrollment is reused; a completed one gets a fresh renewal row,
+    // preserving the original completion as evidence. Either way the module shows in their hub.
+    const open = await (prisma as any).trainingEnrollment.findFirst({
+      where: { tenant_id: tenantId, user_id, module_id, status: { in: ['not_started', 'in_progress'] } },
+      select: { id: true },
+    })
+    if (!open) {
+      const last = await (prisma as any).trainingEnrollment.findFirst({
+        where: { tenant_id: tenantId, user_id, module_id }, orderBy: { renewal_count: 'desc' }, select: { renewal_count: true },
+      })
+      await (prisma as any).trainingEnrollment.create({
+        data: {
+          tenant_id: tenantId, user_id, module_id, status: 'not_started',
+          assigned_by: adminId, renewal_count: (last?.renewal_count ?? -1) + 1,
+        },
+      })
     }
 
+    const outcomes = await sendProactiveTrainingQuestions(tenantId, [user_id], [module_id], true)
+    const outcome = outcomes[0]?.outcome ?? 'failed'
+    const OUTCOME_NOTE: Record<string, string> = {
+      sent_whatsapp: 'delivered by WhatsApp', sent_email: 'delivered by email',
+      no_contact: 'NOT delivered: no phone or email on file',
+      not_enrolled: 'NOT delivered: no enrollment', no_questions: 'NOT delivered: module has no questions',
+      gated: 'NOT delivered: auto-send is off', failed: 'NOT delivered: send failed',
+    }
     await (prisma as any).trainingSendLog.create({
       data: {
         id: randomUUID(), tenant_id: tenantId, rule_id: null,
-        module_id: module_id ?? null, user_id,
+        module_id, user_id,
         question_ids: questionIds, trigger_type: 'return_to_work',
-        triggered_by: adminId, context: notes ?? 'Return to work refresher',
+        triggered_by: adminId, context: `${notes ?? 'Return to work refresher'} — ${OUTCOME_NOTE[outcome] ?? outcome}`,
       },
     })
-    if (module_id) {
-      sendProactiveTrainingQuestions(tenantId, [user_id], [module_id])
-        .catch((e: any) => console.error('[return-to-work] send error:', e))
-    }
-    ok(res, { triggered: true, staff_name: user.name })
+    const delivered = outcome === 'sent_whatsapp' || outcome === 'sent_email'
+    ok(res, { triggered: delivered, staff_name: user.name, outcome, message: `${user.name}: ${OUTCOME_NOTE[outcome] ?? outcome}. The module is in their hub under My Training.` })
   } catch (e: any) {
     err(res, 'TRIGGER_FAILED', e.message, 500)
   }
@@ -1811,24 +1876,39 @@ trainingRouter.post('/post-incident', async (req: Request, res: Response) => {
     const staff = await (prisma as any).user.findMany({
       where: staffFilter, select: { id: true, name: true },
     })
-    const mod = await (prisma as any).trainingModule.findFirst({ where: { id: module_id, tenant_id: tenantId } })
-    const questionIds = mod
-      ? (mod.questions as any[]).slice(0, 3).map((q: any) => q.id)
-      : []
+    const mod = await (prisma as any).trainingModule.findFirst({ where: { id: module_id, OR: [{ tenant_id: tenantId }, { tenant_id: null, source: 'ai_generated', approved: true }] } })
+    const questions = ((mod?.questions as any[]) ?? [])
+    if (questions.length === 0) {
+      err(res, 'NO_QUESTIONS', `"${mod?.name ?? 'This module'}" has no locked questions yet, so there is nothing to send. Create and lock its questions first.`, 400); return
+    }
+    const questionIds = questions.slice(0, 3).map((q: any) => q.id)
 
+    let delivered = 0
+    const skipped: Record<string, number> = {}
     if (staff.length > 0) {
+      const outcomes = await sendProactiveTrainingQuestions(tenantId, staff.map((s: any) => s.id), [module_id], true)
+      const byUser = new Map(outcomes.map(o => [o.user_id, o.outcome]))
+      const OUTCOME_NOTE: Record<string, string> = {
+        sent_whatsapp: 'delivered by WhatsApp', sent_email: 'delivered by email',
+        no_contact: 'NOT delivered: no phone or email on file',
+        not_enrolled: 'NOT delivered: not enrolled in this module', no_questions: 'NOT delivered: module has no questions',
+        gated: 'NOT delivered: auto-send is off', failed: 'NOT delivered: send failed',
+      }
+      for (const o of outcomes) {
+        if (o.outcome === 'sent_whatsapp' || o.outcome === 'sent_email') delivered++
+        else skipped[o.outcome] = (skipped[o.outcome] ?? 0) + 1
+      }
       await (prisma as any).trainingSendLog.createMany({
         data: staff.map((s: any) => ({
           id: randomUUID(), tenant_id: tenantId, rule_id: null,
           module_id, user_id: s.id, question_ids: questionIds,
           trigger_type: 'post_incident', triggered_by: adminId,
-          context: incident_description,
+          context: `${incident_description} — ${OUTCOME_NOTE[byUser.get(s.id) ?? 'failed'] ?? byUser.get(s.id)}`,
         })),
       })
-      sendProactiveTrainingQuestions(tenantId, staff.map((s: any) => s.id), [module_id])
-        .catch((e: any) => console.error('[post-incident] send error:', e))
     }
-    ok(res, { sent_to: staff.length, staff_names: staff.map((s: any) => s.name) })
+    const skippedNote = Object.entries(skipped).map(([k, n]) => `${n} ${k.replace(/_/g, ' ')}`).join(', ')
+    ok(res, { sent_to: delivered, staff_names: staff.map((s: any) => s.name), skipped, message: `Delivered to ${delivered} of ${staff.length} staff${skippedNote ? ` (${skippedNote})` : ''}.` })
   } catch (e: any) {
     err(res, 'TRIGGER_FAILED', e.message, 500)
   }

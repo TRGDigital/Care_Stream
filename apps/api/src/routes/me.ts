@@ -27,7 +27,7 @@ import { allocateFromSupervision, type AllocationType } from '../services/superv
 import { sendTrainingCompletionEmail } from '../services/email/outbound'
 import { generateAuditRecommendations } from './audits'
 import { prisma } from '../db/client'
-import { managerApprove, rejectPolicy, getPolicyDocument, getAdoptionContext } from '../services/analytics/policy-adoption'
+import { managerApprove, rejectPolicy, getPolicyDocument, getAdoptionContext, getApprovalState, setExternalRecipient, EXTERNAL_LINK_TTL_DAYS } from '../services/analytics/policy-adoption'
 
 // Friendly policy title from a filename (strip extension + tidy separators).
 function policyTitle(filename: string): string {
@@ -321,6 +321,57 @@ meRouter.get('/policy-approvals/:policyId', async (req: Request, res: Response) 
   }
   const ctx = await getAdoptionContext(tenantId)
   ok(res, { policy_name: policy?.name ?? 'Policy', version: docRes.document.version, html, changes: docRes.changes, show_role_names: ctx.show_role_names, role_names: ctx.role_names })
+})
+
+// ─── Sending a policy to the external approver, from the hub ──────────────────
+// The admin side does this from the changes modal (requireAdmin); the care manager
+// who approved the policy can also do it from the hub's "Awaiting external approval"
+// list. Same service, same one-off link, same email.
+
+// GET /me/policy-approvals/:policyId/external — everything the send overlay shows:
+// who it goes to (defaults from Settings), and the email's subject and message.
+meRouter.get('/policy-approvals/:policyId/external', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  if (!(await isCareManager((req as any).user.sub))) { err(res, 'FORBIDDEN', 'Not a care manager', 403); return }
+  const policyId = String(req.params.policyId)
+  const state = await getApprovalState(tenantId, policyId)
+  if (!state) { err(res, 'NOT_FOUND', 'Not found', 404); return }
+  if (state.status !== 'pending_external') { err(res, 'NOT_PENDING', 'This policy is not waiting on external approval.', 409); return }
+  const [policy, tenant] = await Promise.all([
+    (prisma as any).policy.findFirst({ where: { id: policyId, tenant_id: tenantId }, select: { name: true } }),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } }),
+  ])
+  const doc = await (prisma as any).policyDocument.findUnique({ where: { policy_id: policyId }, select: { id: true } })
+  const changes = doc ? await (prisma as any).policyDocumentChange.count({ where: { document_id: doc.id, reverted: false } }) : 0
+  const policyName = policy?.name ?? 'Policy'
+  ok(res, {
+    policy_name: policyName,
+    org_name: tenant?.name ?? '',
+    changes,
+    reviewer_name:  state.external_name  || state.default_external_name,
+    reviewer_email: state.external_email || state.default_external_email,
+    sent: !!state.external_email,
+    sent_at: state.external_sent_at,
+    link_expired: state.link_expired,
+    link_ttl_days: EXTERNAL_LINK_TTL_DAYS,
+    // Mirrors sendPolicyExternalReviewEmail in services/email/outbound.ts — keep in step.
+    subject: `Please review: ${policyName}`,
+    message: `${tenant?.name ?? 'The home'} would like your approval on an updated policy before it goes live to their team. ${policyName}: ${changes === 1 ? '1 change' : `${changes} changes`} to review. Open the link below to read the policy, then approve it or send your feedback. Nothing goes live until you have had your say.`,
+  })
+})
+
+// POST /me/policy-approvals/:policyId/send-external — set the reviewer and email the link.
+meRouter.post('/policy-approvals/:policyId/send-external', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  if (!(await isCareManager((req as any).user.sub))) { err(res, 'FORBIDDEN', 'Not a care manager', 403); return }
+  const name  = String(req.body?.name ?? '').trim()
+  const email = String(req.body?.email ?? '').trim()
+  if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err(res, 'VALIDATION', 'Please give the reviewer\'s name and a valid email address.', 400); return }
+  try {
+    const r = await setExternalRecipient(tenantId, String(req.params.policyId), name, email)
+    if (!r) { err(res, 'NOT_PENDING', 'This policy is not waiting on external approval.', 409); return }
+    ok(res, { sent: true })
+  } catch (e: any) { err(res, 'SEND_FAILED', e.message ?? 'Could not send the review link.', 500) }
 })
 
 meRouter.post('/policy-approvals/:policyId/approve', async (req: Request, res: Response) => {

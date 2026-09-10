@@ -23,12 +23,32 @@ export const PRIMARY_ROLES: string[] = [
 // Settings → Organisation details, so they are ALWAYS offered in the Specialist
 // role dropdown — even when a tenant has customised its own specialist list —
 // and assigning one to a staff member populates the matching role-holder there.
+// Every title here must match its own derivation pattern in routes/settings.ts
+// ROLE_DEFS, or picking it from the dropdown would fill nothing. Registered manager
+// and Deputy manager are deliberately absent: they are positions, not specialisms.
 export const STATUTORY_LEAD_ROLES: string[] = [
   'Safeguarding lead',
   'Infection prevention & control lead',
   'Dignity champion',
   'Caldicott Guardian',
   'Fire safety officer',
+  'Maintenance lead',
+  'Health and safety lead',
+  'Medicines lead',
+  'Data protection officer',
+  'Moving and handling lead',
+  'Mental capacity and DoLS lead',
+  'End of life care lead',
+  'Water safety lead (Legionella)',
+  'Training lead',
+  'Freedom to Speak Up Guardian',
+  'Complaints lead',
+  'First aid appointed person',
+  'Food safety and allergen lead',
+  'Nutrition and hydration lead',
+  'Falls lead',
+  'Tissue viability lead',
+  'Business continuity lead',
 ]
 
 export const SECONDARY_ROLES: string[] = [

@@ -2363,7 +2363,8 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <p className="text-sm text-neutral-mid">
             Because every booking has dates, CareStream can total how many agency days you have used, broken down
             by agency. Add a day rate when you book someone and it will cost that up for you too. Leave the rate
-            blank and you still get the days.
+            blank and you still get the days. The totals appear on the <strong>Staff</strong> page, in the
+            Agency spend panel above your staff list, whenever you have agency bookings.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
             Most homes know agency is expensive but cannot say how expensive without going back through invoices.

@@ -107,7 +107,7 @@ settingsRouter.get('/', async (req: Request, res: Response) => {
     // Added for the health and safety policy family. The gas, electrical and asbestos
     // policies all name a Maintenance Lead, and there was no field for one, so the drafts
     // carried a bare "[name]" that nobody could fill.
-    { key: 'maintenance_lead',    role: 'Maintenance lead',                    derived: byPosition(/maintenance|handyperson|handyman|estates/i) },
+    { key: 'maintenance_lead',    role: 'Maintenance lead',                    derived: [...new Set([...byPosition(/maintenance|handyperson|handyman|estates/i), ...bySpecialism(/maintenance|estates/i)])] },
     { key: 'health_safety_lead',  role: 'Health and safety lead',              derived: bySpecialism(/health (?:and|&) safety|(?:^|\b)h&s\b/i) },
     { key: 'medicines_lead',      role: 'Medicines lead',                      derived: bySpecialism(/medicat|medicine|pharmac/i) },
     { key: 'data_protection_officer', role: 'Data protection officer',         derived: bySpecialism(/data protection|(?:^|\b)dpo\b/i) },

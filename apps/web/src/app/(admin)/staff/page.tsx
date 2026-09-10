@@ -188,6 +188,17 @@ export default function StaffPage() {
   const [editUser,     setEditUser]    = useState<any | null>(null)
   const [detailUserId, setDetailUserId] = useState<string | null>(null)
   const [resetCreds,   setResetCreds]  = useState<{ userId: string; name: string; email: string; password: string; contact?: StaffContact } | null>(null)
+  const [agencySpend,  setAgencySpend] = useState<{
+    bookings: number; people: number; days: number; cost_pence: number | null; active_now: number
+    by_agency: Array<{ agency: string; bookings: number; days: number; cost_pence: number | null }>
+  } | null>(null)
+
+  // The spend figures only exist for homes that use agency cover, so the call is
+  // only made once an agency worker appears in the list.
+  useEffect(() => {
+    if (!session?.accessToken || agencySpend || !users.some(u => u.is_agency)) return
+    createApiClient(session.accessToken).users.agencySpend().then(setAgencySpend).catch(() => {})
+  }, [session?.accessToken, users, agencySpend])
 
   function load() {
     if (!session?.accessToken) return
@@ -271,6 +282,55 @@ export default function StaffPage() {
           </button>
         ))}
       </div>
+
+      {/* What agency cover is costing. The endpoint has existed since the agency work
+          landed; this is the first screen to show it. Days always count; cost appears
+          only where bookings carry a day rate. */}
+      {tab === 'active' && agencySpend && agencySpend.bookings > 0 && (
+        <div className="mb-5 rounded-xl border border-gray-200 bg-white p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-neutral-dark">Agency spend, last 12 months</h2>
+            {agencySpend.active_now > 0 && (
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
+                {agencySpend.active_now} booked in now
+              </span>
+            )}
+          </div>
+          <div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              ['Days of cover', String(agencySpend.days)],
+              ['Bookings', String(agencySpend.bookings)],
+              ['People', String(agencySpend.people)],
+              ['Cost', agencySpend.cost_pence !== null
+                ? (agencySpend.cost_pence / 100).toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })
+                : '—'],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-lg bg-gray-50 px-3 py-2">
+                <div className="text-lg font-bold text-neutral-dark">{value}</div>
+                <div className="text-xs text-neutral-mid">{label}</div>
+              </div>
+            ))}
+          </div>
+          {agencySpend.by_agency.length > 0 && (
+            <div className="divide-y divide-gray-100 rounded-lg border border-gray-100 text-sm">
+              {agencySpend.by_agency.map(a => (
+                <div key={a.agency} className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-3 py-2">
+                  <span className="truncate font-medium text-neutral-dark">{a.agency}</span>
+                  <span className="text-xs text-neutral-mid">{a.days} {a.days === 1 ? 'day' : 'days'} · {a.bookings} {a.bookings === 1 ? 'booking' : 'bookings'}</span>
+                  <span className="w-20 text-right text-xs font-semibold text-neutral-dark">
+                    {a.cost_pence !== null ? (a.cost_pence / 100).toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }) : '—'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+          {agencySpend.cost_pence === null && (
+            <p className="mt-2 text-xs text-neutral-mid">
+              Add a day rate when you book someone and the cost is totalled here for you. Without a rate you still get the days.
+            </p>
+          )}
+        </div>
+      )}
 
       {tab === 'archived' && (
         <p className="mb-4 flex items-start gap-2 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">

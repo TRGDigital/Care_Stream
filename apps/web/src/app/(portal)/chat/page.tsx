@@ -681,6 +681,10 @@ function ChatPageInner() {
   }
 
   function loadSession(s: StoredSession) {
+    // Opening a past chat must also bring the chat view forward: from any other
+    // view (Audits, Policies…) the conversation otherwise loads invisibly behind it.
+    if (hubLocked('chat')) return
+    setView('chat')
     suppressAutoSaveRef.current = true
     // Backfill timestamp for messages saved before this field existed
     const msgs = s.messages.map(m => m.timestamp ? m : { ...m, timestamp: s.updatedAt })

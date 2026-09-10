@@ -8,18 +8,18 @@
 // themselves off from real data, never from clicks — clients can work in any
 // order, the tour guides, it never locks.
 //
-// Step order per Len: policies → gap analysis → training and onboarding →
+// Step order per Len: policies → organisation details → gap analysis → training and onboarding →
 // staff. Training-only tenants get their own two-step journey (staff →
 // licences). Drop screenshots at /public/tour/step-N.png (or to-step-N.png for
 // training only) to replace the icon panels.
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { CheckCircle2, FileText, GraduationCap, KeyRound, ScanSearch, Users, X } from 'lucide-react'
+import { Building2, CheckCircle2, FileText, GraduationCap, KeyRound, ScanSearch, Users, X } from 'lucide-react'
 import { createApiClient } from '@/lib/api-client'
 
 type TourStep = {
-  key:    'policies' | 'gaps' | 'training' | 'onboarding' | 'staff' | 'licences'
+  key:    'policies' | 'organisation' | 'gaps' | 'training' | 'onboarding' | 'staff' | 'licences'
   title:  string
   desc:   string
   how:    string[]     // "how it works" bullets — the extra detail Len asked for
@@ -39,6 +39,18 @@ const FULL_STEPS: TourStep[] = [
       'You stay in control: edit, version and publish; staff always see the latest published copy.',
     ],
     href: '/policies', cta: 'Go to Policies', Icon: FileText, img: '/tour/step-1.png',
+  },
+  {
+    key: 'organisation', title: 'Tell us who is who',
+    desc: 'Your policies name real people: the registered manager, the medicines lead, the fire safety officer. Set them once here and every policy shows the right name, without anyone editing a document.',
+    how: [
+      'Names appear beside the role wherever a policy mentions it, and on anything you download.',
+      'Most names fill themselves in from your staff records; add anyone else by hand.',
+      'Change a name later and your policies follow, so a role handover is one edit rather than fifty.',
+    ],
+    // No screenshot yet: the panel falls back to the icon, which is why img can name a file
+    // that does not exist without renumbering everything after it.
+    href: '/settings', cta: 'Open Organisation details', Icon: Building2, img: '/tour/step-org.png',
   },
   {
     key: 'gaps', title: 'Run your Gap Analysis',
@@ -157,8 +169,17 @@ export function GuidedTour({ token, tenantId, tier, openSignal }: {
       api.training.compliance(),
       api.onboarding.listFlows(),
       api.users.list(),
-    ]).then(([p, g, t, o, u]) => {
+      api.settings.get(),
+    ]).then(([p, g, t, o, u, s]) => {
+      // Ticked once the home has named anybody or given an address. The names that come from
+      // staff records do not count: this step is asking them to confirm, and a tick they did
+      // not earn tells them there is nothing to do here.
+      const od = s.status === 'fulfilled' ? ((s.value as any)?.organisation_details ?? {}) : {}
+      const named = Object.entries(od).some(([k, v]) =>
+        k !== 'show_role_names' && k !== 'require_manager_approval' && k !== 'require_external_approval'
+        && typeof v === 'string' && v.trim().length > 0)
       setDone({
+        organisation: named,
         policies:   p.status === 'fulfilled' && Number((p.value as any)?.total ?? 0) > 0,
         gaps:       g.status === 'fulfilled' && ((g.value as any)?.sections ?? []).some((s: any) => s?.ran_at),
         training:   t.status === 'fulfilled' && (((t.value as any)?.enrollments ?? []).length > 0),

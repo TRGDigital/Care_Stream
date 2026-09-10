@@ -1738,6 +1738,165 @@ function TrainingOnlyTraining({ token }: { token: string | null }) {
   )
 }
 
+// ─── Staff Progress tab ───────────────────────────────────────────────────────
+// The admin's quick answer to "how is everyone getting on?": per-person progress on
+// allocated training, plus a worklist of what needs chasing — overdue items, expired
+// training and renewals due within 30 days. The same warnings reach admins by email:
+// staff renewal reminders daily at 90/30/7 days, and overdue or expired training
+// resurfacing in Monday's manager digest.
+function StaffProgressTab({ staff, enrollments }: { staff: Staff[]; enrollments: Enrollment[] }) {
+  const now = Date.now()
+  const DAY = 86_400_000
+  type Problem = { staffName: string; module: string; kind: 'overdue' | 'expired' | 'expiring'; days: number }
+
+  const byUser = new Map<string, Enrollment[]>()
+  for (const e of enrollments) {
+    const list = byUser.get(e.user_id) ?? []
+    list.push(e)
+    byUser.set(e.user_id, list)
+  }
+
+  const problems: Problem[] = []
+  const rows = staff.map(s => {
+    const list = byUser.get(s.id) ?? []
+    let complete = 0, inProgress = 0, notStarted = 0, overdue = 0
+    let nextRenewal: number | null = null
+    for (const e of list) {
+      if (e.status === 'complete') {
+        complete++
+        if (e.expires_at) {
+          const t = new Date(e.expires_at).getTime()
+          if (t < now) problems.push({ staffName: s.name, module: e.module.name, kind: 'expired', days: Math.max(1, Math.floor((now - t) / DAY)) })
+          else {
+            if (t < now + 30 * DAY) problems.push({ staffName: s.name, module: e.module.name, kind: 'expiring', days: Math.max(1, Math.ceil((t - now) / DAY)) })
+            if (nextRenewal === null || t < nextRenewal) nextRenewal = t
+          }
+        }
+      } else {
+        if (e.status === 'in_progress') inProgress++
+        else notStarted++
+        if (e.due_date && new Date(e.due_date).getTime() < now) {
+          overdue++
+          problems.push({ staffName: s.name, module: e.module.name, kind: 'overdue', days: Math.max(1, Math.floor((now - new Date(e.due_date).getTime()) / DAY)) })
+        }
+      }
+    }
+    const assigned = list.length
+    return { staff: s, assigned, complete, inProgress, notStarted, overdue, nextRenewal, pct: assigned ? Math.round((complete / assigned) * 100) : null }
+  }).sort((a, b) => (b.overdue - a.overdue) || ((a.pct ?? 101) - (b.pct ?? 101)) || a.staff.name.localeCompare(b.staff.name))
+
+  const KIND_RANK = { expired: 0, overdue: 1, expiring: 2 } as const
+  problems.sort((a, b) => KIND_RANK[a.kind] - KIND_RANK[b.kind] || (a.kind === 'expiring' ? a.days - b.days : b.days - a.days))
+
+  const overdueTotal  = problems.filter(p => p.kind === 'overdue').length
+  const expiredTotal  = problems.filter(p => p.kind === 'expired').length
+  const expiringTotal = problems.filter(p => p.kind === 'expiring').length
+  const assignedAll   = rows.reduce((n, r) => n + r.assigned, 0)
+  const completeAll   = rows.reduce((n, r) => n + r.complete, 0)
+
+  const problemLabel = (p: Problem) =>
+    p.kind === 'overdue' ? `Overdue by ${p.days} day${p.days === 1 ? '' : 's'}`
+    : p.kind === 'expired' ? `Expired ${p.days} day${p.days === 1 ? '' : 's'} ago`
+    : `Renewal due in ${p.days} day${p.days === 1 ? '' : 's'}`
+
+  return (
+    <>
+      <HelpAccordion title="How Staff Progress works">
+        <p><strong className="text-neutral-dark">What this tab does</strong> — one screen answering &ldquo;how is everyone getting on?&rdquo;. Every staff member&rsquo;s progress on the training allocated to them, and a worklist of what needs chasing: overdue training, expired training, and renewals due in the next 30 days.</p>
+        <p><strong className="text-neutral-dark">The same warnings by email</strong> — staff get automatic renewal reminders at 90, 30 and 7 days before expiry, and admins receive the renewal digest; overdue and expired training resurfaces in Monday&rsquo;s digest so nothing stays quietly stuck. Toggle these in Settings &rsaquo; Training notifications.</p>
+        <p><strong className="text-neutral-dark">Fixing what it shows</strong> — chase overdue items with a word or a nudge from the Compliance grid; assign renewals from Assign training; the Delivery tab can resend questions to anyone mid-module.</p>
+      </HelpAccordion>
+
+      <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {[
+          { label: 'Overdue training',        value: overdueTotal,  colour: 'text-red-600',   bg: 'bg-red-50',    note: 'past its due date' },
+          { label: 'Expired training',        value: expiredTotal,  colour: 'text-red-600',   bg: 'bg-red-50',    note: 'renewal has lapsed' },
+          { label: 'Renewals due in 30 days', value: expiringTotal, colour: 'text-amber-600', bg: 'bg-amber-50',  note: 'plan these now' },
+          { label: 'Overall completion',      value: assignedAll ? `${Math.round((completeAll / assignedAll) * 100)}%` : '—', colour: 'text-teal', bg: 'bg-teal-light/30', note: `${completeAll}/${assignedAll} modules complete` },
+        ].map(card => (
+          <div key={card.label} className={`rounded-card ${card.bg} border border-white/60 p-4 shadow-sm`}>
+            <p className="text-xs font-medium text-neutral-mid">{card.label}</p>
+            <p className={`mt-1 text-3xl font-bold ${card.colour}`}>{card.value}</p>
+            <p className="mt-0.5 text-xs text-neutral-mid">{card.note}</p>
+          </div>
+        ))}
+      </div>
+
+      {problems.length > 0 && (
+        <div className="mb-8">
+          <div className="mb-2 flex items-center gap-2">
+            <AlertCircle size={16} className="text-red-500" />
+            <h2 className="text-sm font-semibold text-neutral-dark">Needs attention</h2>
+          </div>
+          <div className="divide-y divide-gray-50 rounded-card border border-gray-100 bg-white shadow-card">
+            {problems.slice(0, 30).map((p, i) => (
+              <div key={i} className="grid grid-cols-[1fr_1fr_auto] items-center gap-4 px-5 py-2.5 text-sm">
+                <span className="truncate font-medium text-neutral-dark">{p.staffName}</span>
+                <span className="truncate text-neutral-mid">{p.module}</span>
+                <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${p.kind === 'expiring' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'}`}>
+                  {problemLabel(p)}
+                </span>
+              </div>
+            ))}
+            {problems.length > 30 && <p className="px-5 py-2.5 text-xs text-neutral-mid">And {problems.length - 30} more — the Compliance grid has every cell.</p>}
+          </div>
+        </div>
+      )}
+
+      <div className="mb-2 flex items-center gap-2">
+        <Users size={16} className="text-teal" />
+        <h2 className="text-sm font-semibold text-neutral-dark">Progress by staff member</h2>
+      </div>
+      {rows.every(r => r.assigned === 0) ? (
+        <div className="rounded-card border border-dashed border-gray-200 bg-white px-6 py-12 text-center">
+          <GraduationCap size={32} className="mx-auto mb-3 text-gray-300" />
+          <p className="font-medium text-neutral-dark">No training assigned yet</p>
+          <p className="mt-1 text-sm text-neutral-mid">Assign modules from the Compliance tab and progress appears here.</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-card border border-gray-100 bg-white shadow-card">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 text-left text-xs font-medium text-neutral-mid">
+                <th className="px-5 py-3">Staff member</th>
+                <th className="px-3 py-3">Progress</th>
+                <th className="px-3 py-3 text-center">Complete</th>
+                <th className="px-3 py-3 text-center">In progress</th>
+                <th className="px-3 py-3 text-center">Not started</th>
+                <th className="px-3 py-3 text-center">Overdue</th>
+                <th className="px-3 py-3">Next renewal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.filter(r => r.assigned > 0).map(r => (
+                <tr key={r.staff.id} className="border-b border-gray-50 last:border-0 hover:bg-neutral-light/30">
+                  <td className="px-5 py-3">
+                    <p className="font-medium text-neutral-dark">{r.staff.name}</p>
+                    <p className="text-xs text-neutral-mid">{r.staff.job_role ?? r.staff.email}</p>
+                  </td>
+                  <td className="px-3 py-3 min-w-[140px]">
+                    <div className="flex items-center gap-2">
+                      <div className="h-1.5 w-24 overflow-hidden rounded-full bg-gray-100">
+                        <div className={`h-full rounded-full ${r.overdue > 0 ? 'bg-red-400' : 'bg-teal'}`} style={{ width: `${r.pct ?? 0}%` }} />
+                      </div>
+                      <span className="text-xs text-neutral-mid">{r.pct}%</span>
+                    </div>
+                  </td>
+                  <td className="px-3 py-3 text-center text-green-600">{r.complete}</td>
+                  <td className="px-3 py-3 text-center text-neutral-dark">{r.inProgress}</td>
+                  <td className="px-3 py-3 text-center text-neutral-mid">{r.notStarted}</td>
+                  <td className={`px-3 py-3 text-center font-semibold ${r.overdue > 0 ? 'text-red-600' : 'text-neutral-mid'}`}>{r.overdue}</td>
+                  <td className="px-3 py-3 text-xs text-neutral-mid">{r.nextRenewal ? new Date(r.nextRenewal).toLocaleDateString('en-GB') : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
+  )
+}
+
 export default function TrainingPage() {
   const { data: session } = useSession()
   const { features } = usePlanFeatures()
@@ -1746,10 +1905,10 @@ export default function TrainingPage() {
   const userId = session?.user?.email ?? 'guest'
   // Deep-linkable: /training?tab=modules|history|delivery|face_to_face opens
   // straight on that tab (used by CareStream Suggestions and other links).
-  const [tab,         setTab]         = useState<'compliance' | 'modules' | 'history' | 'delivery' | 'face_to_face'>(() => {
+  const [tab,         setTab]         = useState<'compliance' | 'modules' | 'history' | 'delivery' | 'face_to_face' | 'progress'>(() => {
     if (typeof window === 'undefined') return 'compliance'
     const t = new URLSearchParams(window.location.search).get('tab')
-    return (['compliance', 'modules', 'history', 'delivery', 'face_to_face'] as const).find(k => k === t) ?? 'compliance'
+    return (['compliance', 'modules', 'history', 'delivery', 'face_to_face', 'progress'] as const).find(k => k === t) ?? 'compliance'
   })
   const [staff,       setStaff]       = useState<Staff[]>([])
   const [modules,     setModules]     = useState<Module[]>([])
@@ -1896,6 +2055,7 @@ export default function TrainingPage() {
           { key: 'modules',    label: 'Adhoc Training Modules & Questions' },
           { key: 'history',    label: 'Question History' },
           { key: 'delivery',   label: 'Schedule Training Questions Delivery' },
+          { key: 'progress',   label: 'Staff Progress' },
           { key: 'face_to_face', label: 'Face-to-face Training' },
         ] as const).map(t => {
           const isFtf = t.key === 'face_to_face'   // distinct colour to set it apart
@@ -1922,6 +2082,7 @@ export default function TrainingPage() {
       {tab === 'modules'  && api && <ModulesTab api={api} modules={modules} staff={staff} enrollments={enrollments} onAssigned={load} />}
       {tab === 'history'  && api && <HistoryTab api={api} modules={modules} />}
       {tab === 'delivery' && api && <DeliveryTab api={api} modules={modules} staff={staff} />}
+      {tab === 'progress' && <StaffProgressTab staff={staff} enrollments={enrollments} />}
       {tab === 'face_to_face' && (f2fLocked ? (
         <UpgradePanel
           title="Face-to-face Training"

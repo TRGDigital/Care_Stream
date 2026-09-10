@@ -66,6 +66,7 @@ function staffReminderEmail(firstName: string, moduleName: string, days: number)
 function managerDigestEmail(
   orgName:  string,
   daysMap:  Record<number, Array<{ name: string; module: string }>>,
+  attention: Array<{ name: string; module: string; problem: string }> = [],
 ): string {
   const sections = THRESHOLDS
     .filter(d => (daysMap[d] ?? []).length > 0)
@@ -78,14 +79,21 @@ function managerDigestEmail(
         <ul style="margin:0;padding-left:20px;color:#374151;font-size:14px">${items}</ul>`
     }).join('')
 
+  const attentionSection = attention.length === 0 ? '' : `
+        <p style="margin:16px 0 4px;font-weight:600;color:#b91c1c">Needs action now</p>
+        <ul style="margin:0;padding-left:20px;color:#374151;font-size:14px">${attention
+          .map(r => `<li style="padding:2px 0">${r.name} — <em>${r.module}</em> · ${r.problem}</li>`)
+          .join('')}</ul>`
+
   return `
 <div style="font-family:Inter,sans-serif;max-width:640px;margin:0 auto;padding:24px">
   <p style="margin:0 0 4px;font-size:20px;font-weight:700;color:#0d9488">Training Renewal Digest</p>
   <p style="margin:0 0 20px;font-size:13px;color:#6b7280">${orgName}</p>
-  <p>The following staff members have training modules expiring soon:</p>
+  ${sections ? '<p>The following staff members have training modules expiring soon:</p>' : ''}
   ${sections}
+  ${attentionSection}
   <p style="margin-top:24px;font-size:13px;color:#6b7280">
-    Staff have been notified automatically. Log in to the training dashboard to view the full compliance grid.
+    Staff have been notified automatically. Log in to the training dashboard and open the Staff Progress tab for the full picture.
   </p>
   <p style="color:#aaa;font-size:12px;margin-top:32px">CareStreamAI Training</p>
 </div>`.trim()
@@ -140,14 +148,16 @@ export async function sendRenewalReminders(): Promise<ReminderResult> {
     const expiresAt   = new Date(enrollment.expires_at)
     const settings    = (enrollment.tenant.training_settings as any) ?? {}
 
-    if (!settings.notifications_enabled) { skipped++; continue }
+    // Default ON: the compliance tab has always told admins these reminders happen
+    // automatically, so an unset flag must mean enabled. An explicit false still opts out.
+    if (settings.notifications_enabled === false) { skipped++; continue }
 
     // Determine which threshold this enrollment falls in
     const threshold = windows.find(w => expiresAt >= w.start && expiresAt <= w.end)
     if (!threshold) { skipped++; continue }
 
     const thresholdKey = `notify_${threshold.days}d` as keyof typeof settings
-    if (!settings[thresholdKey]) { skipped++; continue }
+    if (settings[thresholdKey] === false) { skipped++; continue }
 
     const user      = enrollment.user
     const firstName = (user.name as string ?? '').split(' ')[0] || 'there'
@@ -172,8 +182,8 @@ export async function sendRenewalReminders(): Promise<ReminderResult> {
       errors++
     }
 
-    // Collect for manager digest
-    if (settings.notify_manager) {
+    // Collect for manager digest (default ON; explicit false opts out)
+    if (settings.notify_manager !== false) {
       const tenantId = enrollment.tenant.id as string
       if (!managerDigestMap.has(tenantId)) {
         managerDigestMap.set(tenantId, { tenant: enrollment.tenant, entries: [] })
@@ -186,8 +196,44 @@ export async function sendRenewalReminders(): Promise<ReminderResult> {
     }
   }
 
-  // Send manager digests
-  for (const [tenantId, { tenant, entries }] of managerDigestMap) {
+  // Overdue and expired training, per tenant, for the digest's "needs action now"
+  // section. Included with any renewal digest; on Mondays a digest goes out for these
+  // even when nothing is newly expiring, so standing problems resurface weekly
+  // rather than nagging daily.
+  const isMonday = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'short' }).format(now) === 'Mon'
+  const [overdueRows, expiredRows] = await Promise.all([
+    (prisma as any).trainingEnrollment.findMany({
+      where: { status: { in: ['not_started', 'in_progress'] }, due_date: { lt: now } },
+      include: { module: { select: { name: true } }, user: { select: { name: true, is_active: true } }, tenant: { select: { id: true, name: true, training_settings: true } } },
+    }).catch(() => [] as any[]),
+    (prisma as any).trainingEnrollment.findMany({
+      where: { status: 'complete', expires_at: { lt: now } },
+      include: { module: { select: { name: true } }, user: { select: { name: true, is_active: true } }, tenant: { select: { id: true, name: true, training_settings: true } } },
+    }).catch(() => [] as any[]),
+  ])
+  const attentionByTenant = new Map<string, { tenant: any; items: Array<{ name: string; module: string; problem: string }> }>()
+  const addAttention = (r: any, problem: (days: number) => string, ref: Date) => {
+    if (!r.user?.is_active) return
+    const settings = (r.tenant.training_settings as any) ?? {}
+    if (settings.notifications_enabled === false || settings.notify_manager === false) return
+    const days = Math.max(1, Math.floor((now.getTime() - ref.getTime()) / 86_400_000))
+    const t = attentionByTenant.get(r.tenant.id) ?? { tenant: r.tenant, items: [] }
+    t.items.push({ name: r.user.name, module: r.module.name, problem: problem(days) })
+    attentionByTenant.set(r.tenant.id, t)
+  }
+  for (const r of overdueRows as any[]) addAttention(r, d => `overdue by ${d} day${d === 1 ? '' : 's'}`, new Date(r.due_date))
+  for (const r of expiredRows as any[]) addAttention(r, d => `expired ${d} day${d === 1 ? '' : 's'} ago`, new Date(r.expires_at))
+
+  // Send manager digests: tenants with renewal entries always; tenants with only
+  // "needs action" items on Mondays.
+  const digestTenantIds = new Set<string>(managerDigestMap.keys())
+  if (isMonday) for (const id of attentionByTenant.keys()) digestTenantIds.add(id)
+
+  for (const tenantId of digestTenantIds) {
+    const renewal = managerDigestMap.get(tenantId)
+    const attention = attentionByTenant.get(tenantId)
+    const tenant = renewal?.tenant ?? attention?.tenant
+    const entries = renewal?.entries ?? []
     try {
       const managers = await (prisma as any).user.findMany({
         where:  { tenant_id: tenantId, role: { in: ['admin', 'manager'] }, is_active: true },
@@ -206,7 +252,7 @@ export async function sendRenewalReminders(): Promise<ReminderResult> {
         await sendEmail(
           manager.email as string,
           `Training renewal digest — ${tenant.name}`,
-          managerDigestEmail(tenant.name as string, daysMap),
+          managerDigestEmail(tenant.name as string, daysMap, attention?.items ?? []),
         ).catch(e => console.error('[training/reminders] Manager digest failed:', e))
       }
     } catch (e) {

@@ -33,6 +33,7 @@ import { runSupervisionReminders } from '../services/workforce/supervisionRemind
 import { runAgencyAccess } from '../services/workforce/agencyAccess'
 import { runPolicyReviewReminders } from '../services/policies/review-reminders'
 import { runScheduledTrainingDelivery } from '../services/training/delivery-schedule'
+import { sendRenewalReminders } from '../services/training/renewalReminders'
 import { buildCronReport, sendCronReport } from '../services/ops/cron-report'
 
 export const cronRouter = Router()
@@ -102,6 +103,12 @@ cronRouter.get('/policy-review-reminders', (req, res) =>
 // send_time has come round (Europe/London), at most once per rule per day.
 cronRouter.get('/training-delivery', (req, res) =>
   job('training-delivery', req, res, () => runScheduledTrainingDelivery()))
+
+// Daily: staff renewal reminders at 90/30/7 days before a training expiry, plus the
+// manager digest (renewals daily; overdue and expired training resurface on Mondays).
+// The service existed for months; this is the first thing to actually call it.
+cronRouter.get('/training-renewals', (req, res) =>
+  job('training-renewals', req, res, () => sendRenewalReminders()))
 
 // Daily: email Enterprise admins a digest of staff credentials (DBS, right to
 // work, registration) that have expired or expire within 30 days.

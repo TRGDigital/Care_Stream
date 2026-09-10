@@ -45,6 +45,7 @@ export function PoliciesView({ token, userId, onChange }: { token: string; userI
   useEffect(load, [token])
 
   const [markingId, setMarkingId] = useState<string | null>(null)
+  const [sendExternal, setSendExternal] = useState<Ext | null>(null)
   useEffect(() => {
     createApiClient(token).analytics.policiesDueForReview()
       .then(d => { const l = d?.policies ?? []; setDueReview(l); persistentCache.set(dueKey, l) })
@@ -253,11 +254,32 @@ export function PoliciesView({ token, userId, onChange }: { token: string; userI
                     <p className="text-xs text-neutral-mid">{p.sent ? `Sent to external approver${p.reviewer_name ? ` · ${p.reviewer_name}` : ''}` : 'Ready to send to external approver'}</p>
                   </div>
                 </div>
-                <span className={`shrink-0 rounded-btn border px-3 py-1.5 text-xs font-medium ${p.sent ? 'border-sky-300 bg-white text-sky-700' : 'border-amber-300 bg-white text-amber-700'}`}>{p.sent ? 'Sent' : 'Ready to send'}</span>
+                {p.sent ? (
+                  <span className="shrink-0 rounded-btn border border-sky-300 bg-white px-3 py-1.5 text-xs font-medium text-sky-700">Sent</span>
+                ) : (
+                  <button onClick={() => setSendExternal(p)}
+                    title="Choose the reviewer and send them a one-off link to approve this policy"
+                    className="shrink-0 rounded-btn border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-50">
+                    Ready to send
+                  </button>
+                )}
               </li>
             ))}
           </ul>
         </div>
+      )}
+
+      {sendExternal && (
+        <SendExternalModal
+          token={token}
+          policy={sendExternal}
+          onClose={() => setSendExternal(null)}
+          onSent={reviewerName => {
+            setAwaitingExt(prev => prev.map(x => x.policy_id === sendExternal.policy_id ? { ...x, sent: true, reviewer_name: reviewerName } : x))
+            setSendExternal(null)
+            load()
+          }}
+        />
       )}
 
       {/* Sent back to the admin — policies this care manager returned that are now with the
@@ -308,6 +330,96 @@ export function PoliciesView({ token, userId, onChange }: { token: string; userI
         </div>
       )}
     </div>
+    </div>
+  )
+}
+
+// ─── Send to external approver ──────────────────────────────────────────────
+// The overlay behind "Ready to send": who the review goes to (prefilled from
+// Settings), and the exact subject and message they receive, with a one-off
+// review link created and emailed on send.
+function SendExternalModal({ token, policy, onClose, onSent }: {
+  token: string
+  policy: { policy_id: string; name: string }
+  onClose: () => void
+  onSent: (reviewerName: string) => void
+}) {
+  const [ctx, setCtx]     = useState<Awaited<ReturnType<ReturnType<typeof createApiClient>['me']['policyExternalSendContext']>> | null>(null)
+  const [name, setName]   = useState('')
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [busy, setBusy]   = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    createApiClient(token).me.policyExternalSendContext(policy.policy_id)
+      .then(c => { setCtx(c); setName(c.reviewer_name || ''); setEmail(c.reviewer_email || '') })
+      .catch((e: any) => setError(e.message ?? 'Could not load the send details.'))
+      .finally(() => setLoading(false))
+  }, [token, policy.policy_id])
+
+  async function send() {
+    if (!name.trim() || !email.trim()) { setError('Please give the reviewer’s name and email address.'); return }
+    setBusy(true); setError('')
+    try {
+      await createApiClient(token).me.sendPolicyExternal(policy.policy_id, name.trim(), email.trim())
+      onSent(name.trim())
+    } catch (e: any) { setError(e.message ?? 'Could not send the review link.'); setBusy(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-8" onClick={onClose}>
+      <div className="w-full max-w-lg rounded-xl bg-white shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-start justify-between gap-3 border-b border-gray-100 px-6 py-4">
+          <div>
+            <h2 className="text-base font-semibold text-neutral-dark">Send for external approval</h2>
+            <p className="mt-0.5 text-xs text-neutral-mid">{policy.name}</p>
+          </div>
+          <button onClick={onClose} className="shrink-0 text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
+        </div>
+
+        <div className="space-y-4 px-6 py-5">
+          {loading ? (
+            <div className="flex items-center justify-center gap-2 py-8 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Loading…</div>
+          ) : (
+            <>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-neutral-dark">Reviewer&rsquo;s name</label>
+                  <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Jane Smith"
+                    className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-neutral-dark">Email address</label>
+                  <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="e.g. jane@example.co.uk"
+                    className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+                </div>
+              </div>
+
+              {ctx && (
+                <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">They receive</p>
+                  <p className="mt-2"><span className="text-neutral-mid">Subject:</span> <span className="font-medium text-neutral-dark">{ctx.subject}</span></p>
+                  <p className="mt-2 leading-relaxed text-neutral-dark">{ctx.message}</p>
+                  <p className="mt-2 text-xs text-neutral-mid">The email carries a one-off secure link to read and approve the policy. It expires after {ctx.link_ttl_days} days; you can see progress here once it is sent.</p>
+                </div>
+              )}
+
+              <p className="text-xs text-neutral-mid">Once they approve, the policy is published automatically with their name and the date on the approval record.</p>
+
+              {error && <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+            </>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-2 border-t border-gray-100 px-6 py-3">
+          <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-neutral-mid hover:text-neutral-dark">Cancel</button>
+          <button onClick={send} disabled={busy || loading || !name.trim() || !email.trim()}
+            className="flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal/90 disabled:opacity-50">
+            {busy ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} Send review link
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

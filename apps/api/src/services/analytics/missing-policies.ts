@@ -23,8 +23,8 @@
 // overrule a stronger one.
 //
 // What replaces it is honesty about the evidence. A verdict is only as good as the run that
-// produced it, so this reports whether the run is older than the client's own policies, and
-// refuses to present the list as authoritative when it is.
+// produced it, so this reports whether the run is older than the client's own policies —
+// but reporting that is not the same as hiding the finding. See `usable`.
 //
 // READ ONLY AND FREE. Derives everything from coverage rows already analysed; never starts a
 // run, which costs Anthropic credit.
@@ -43,9 +43,20 @@ export type MissingPolicyReport = {
   /** False when coverage has never run: the list means nothing yet, which is not the same as nothing missing. */
   analysed: boolean
   analysed_at: string | null
-  /** True when the list cannot be trusted. `stale_reason` says why, in words fit to show. */
+  /** True when the list is out of date in some way. `stale_reason` says how, in words fit to
+   *  show the client. Dated is NOT the same as wrong: see `usable`. */
   stale: boolean
   stale_reason: string | null
+  /** False only when the VERDICT ITSELF cannot be believed, and the list must not be shown.
+   *
+   *  These were one flag until Ferndale lost eleven real gaps. Their analysis ran at 07:27,
+   *  a single unrelated policy was published at 10:16, and the whole list vanished — COSHH,
+   *  Gas Safety, Electricity at Work and eight more that they genuinely do not hold.
+   *
+   *  "These regulations have no policy behind them" does not stop being true because someone
+   *  edited a different policy. At worst one of them was just answered. Hiding the lot turns
+   *  a small inaccuracy into a total loss of the finding, which is the worse error. */
+  usable: boolean
   regulations_in_scope: number
   regulations_analysed: number
   counts: { covered: number; partial: number; gap: number }
@@ -111,15 +122,24 @@ export async function missingPolicies(tenantId: string): Promise<MissingPolicyRe
   // run looks exactly like that.
   let stale = false
   let staleReason: string | null = null
-  if (analysedAt && newestPolicy && newestPolicy.updated_at > analysedAt) {
+  let usable = true
+
+  // Unusable: every regulation came back a gap across a library of hundreds. Arithmetically
+  // possible, practically never true — it is the signature of a run made before the coverage
+  // judge was fixed. Showing it would tell a home with 361 policies that it has none.
+  if (coverage.length > 0 && counts.gap === analysedRegs.length && policyCount > 20) {
     stale = true
-    staleReason = 'Policies have changed since this analysis ran, so the list is out of date.'
+    usable = false
+    staleReason = `Every regulation came back with no policy, across ${policyCount} policies. That is almost certainly an analysis made before the coverage judge was corrected. Re-run before trusting this.`
+
+  // Dated, but still worth showing. The gaps found are real gaps; a later policy edit can
+  // only ever have answered one of them, and an incomplete run still found what it found.
+  } else if (analysedAt && newestPolicy && newestPolicy.updated_at > analysedAt) {
+    stale = true
+    staleReason = 'Your policies have changed since this analysis ran, so one of these may already be answered. Re-run the analysis to be sure.'
   } else if (coverage.length > 0 && analysedRegs.length < regs.length) {
     stale = true
-    staleReason = `Only ${analysedRegs.length} of ${regs.length} regulations were analysed, so the list is incomplete.`
-  } else if (coverage.length > 0 && counts.gap === analysedRegs.length && policyCount > 20) {
-    stale = true
-    staleReason = `Every regulation came back with no policy, across ${policyCount} policies. That is almost certainly an analysis made before the coverage judge was corrected. Re-run before trusting this.`
+    staleReason = `Only ${analysedRegs.length} of ${regs.length} regulations were analysed, so there may be more than this.`
   }
 
   return {
@@ -127,6 +147,7 @@ export async function missingPolicies(tenantId: string): Promise<MissingPolicyRe
     analysed_at: analysedAt ? analysedAt.toISOString() : null,
     stale,
     stale_reason: staleReason,
+    usable,
     regulations_in_scope: regs.length,
     regulations_analysed: analysedRegs.length,
     counts,

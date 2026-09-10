@@ -18,6 +18,7 @@ type AuditEventType =
   | 'role_change'
   | 'billing_change'
   | 'tenant_registered'
+  | 'tenant_group_change'
   | 'login'
   | 'login_failed'
   | 'account_locked'

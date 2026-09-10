@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, type OnboardingTemplate, type OnboardingTemplateStep, type OnboardingFeedbackItem, type OnboardingFeedbackSummary } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { Loader2, Plus, Trash2, Sparkles, Check, ChevronDown, ChevronUp, BookOpen, HelpCircle, Power, Lock, LockOpen, X, MessageSquareText, ThumbsUp, ThumbsDown } from 'lucide-react'
+import { Loader2, Plus, Trash2, Sparkles, Check, ChevronDown, ChevronUp, BookOpen, HelpCircle, Power, Lock, LockOpen, X, MessageSquareText, ThumbsUp, BriefcaseBusiness, ThumbsDown } from 'lucide-react'
 
 // Standard policy sections (mirrors api DEFAULT_POLICY_SECTIONS) for the step dropdowns.
 const SECTIONS = [
@@ -134,6 +134,18 @@ export default function OnboardingFlowsPage() {
     } catch (e: any) { setError(e.message) } finally { setBusy(null) }
   }
 
+  async function toggleAgency(f: OnboardingTemplate) {
+    if (!token) return
+    setBusy(f.id)
+    try {
+      const { flow } = await createPlatformClient(token).onboardingTemplates.update(f.id, { agency_suitable: !f.agency_suitable })
+      replaceFlow(flow)
+      setNote(flow.agency_suitable
+        ? `Agency workers with a matching job role will now be enrolled in "${flow.name}".`
+        : `"${flow.name}" is no longer offered to agency workers.`)
+    } catch (e: any) { setError(e.message) } finally { setBusy(null) }
+  }
+
   async function remove(f: OnboardingTemplate) {
     if (!token || !confirm(`Delete the "${f.name}" template? This cannot be undone.`)) return
     setBusy(f.id)
@@ -155,9 +167,6 @@ export default function OnboardingFlowsPage() {
   const tabFlows  = flows.filter(f => (f.care_setting ?? '') === settingTab)
   const primary   = tabFlows.filter(f => f.flow_kind === 'primary')
   const secondary = tabFlows.filter(f => f.flow_kind === 'secondary')
-  // Agency workers are enrolled in these and nothing else: they arrive with their statutory
-  // training already done by the agency, and what they lack is THIS home.
-  const localInduction = tabFlows.filter(f => f.flow_kind === 'local_induction')
   const tabCount  = (v: string) => flows.filter(f => (f.care_setting ?? '') === v).length
 
   return (
@@ -232,9 +241,8 @@ export default function OnboardingFlowsPage() {
           </div>
         ) : (
           <>
-            <FlowGroup title="Primary roles (job roles)" flows={primary} {...{ openId, setOpenId, busy, aiDraft, toggleActive, remove, saveSteps }} />
-            <FlowGroup title="Secondary roles (specialisms)" flows={secondary} {...{ openId, setOpenId, busy, aiDraft, toggleActive, remove, saveSteps }} />
-            <FlowGroup title="Local induction (agency workers)" flows={localInduction} {...{ openId, setOpenId, busy, aiDraft, toggleActive, remove, saveSteps }} />
+            <FlowGroup title="Primary roles (job roles)" flows={primary} {...{ openId, setOpenId, busy, aiDraft, toggleActive, toggleAgency, remove, saveSteps }} />
+            <FlowGroup title="Secondary roles (specialisms)" flows={secondary} {...{ openId, setOpenId, busy, aiDraft, toggleActive, toggleAgency, remove, saveSteps }} />
           </>
         )}
         </>)}
@@ -369,7 +377,7 @@ function NewTemplateModal({ defaultSetting, creating, onClose, onCreate }: {
 
         <label className="mb-1 block text-xs font-semibold text-neutral-mid">Type</label>
         <div className="mb-3 flex gap-2">
-          {[['primary', 'Primary (job role)'], ['secondary', 'Secondary (specialism)'], ['local_induction', 'Local induction (agency)']].map(([v, label]) => (
+          {[['primary', 'Primary (job role)'], ['secondary', 'Secondary (specialism)']].map(([v, label]) => (
             <button key={v} type="button" onClick={() => setKind(v)}
               className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium ${kind === v ? 'border-teal bg-teal/10 text-teal' : 'border-gray-300 text-neutral-mid hover:border-teal/40'}`}>
               {label}
@@ -406,7 +414,7 @@ function NewTemplateModal({ defaultSetting, creating, onClose, onCreate }: {
   )
 }
 
-function FlowGroup({ title, flows, openId, setOpenId, busy, aiDraft, toggleActive, remove, saveSteps }: {
+function FlowGroup({ title, flows, openId, setOpenId, busy, aiDraft, toggleActive, toggleAgency, remove, saveSteps }: {
   title: string
   flows: OnboardingTemplate[]
   openId: string | null
@@ -414,6 +422,7 @@ function FlowGroup({ title, flows, openId, setOpenId, busy, aiDraft, toggleActiv
   busy: string | null
   aiDraft: (f: OnboardingTemplate, keep?: OnboardingTemplateStep[]) => void
   toggleActive: (f: OnboardingTemplate) => void
+  toggleAgency: (f: OnboardingTemplate) => void
   remove: (f: OnboardingTemplate) => void
   saveSteps: (f: OnboardingTemplate, steps: OnboardingTemplateStep[], name: string, description: string, careSetting: string, difficulties: string[]) => void
 }) {
@@ -424,14 +433,14 @@ function FlowGroup({ title, flows, openId, setOpenId, busy, aiDraft, toggleActiv
       <div className="space-y-2">
         {flows.map(f => (
           <FlowCard key={f.id} flow={f} open={openId === f.id} onToggleOpen={() => setOpenId(openId === f.id ? null : f.id)}
-            busy={busy === f.id} onAiDraft={() => aiDraft(f)} onRegenerate={(keep) => aiDraft(f, keep)} onToggleActive={() => toggleActive(f)} onRemove={() => remove(f)} onSave={saveSteps} />
+            busy={busy === f.id} onAiDraft={() => aiDraft(f)} onRegenerate={(keep) => aiDraft(f, keep)} onToggleActive={() => toggleActive(f)} onToggleAgency={() => toggleAgency(f)} onRemove={() => remove(f)} onSave={saveSteps} />
         ))}
       </div>
     </div>
   )
 }
 
-function FlowCard({ flow, open, onToggleOpen, busy, onAiDraft, onRegenerate, onToggleActive, onRemove, onSave }: {
+function FlowCard({ flow, open, onToggleOpen, busy, onAiDraft, onRegenerate, onToggleActive, onToggleAgency, onRemove, onSave }: {
   flow: OnboardingTemplate
   open: boolean
   onToggleOpen: () => void
@@ -439,6 +448,7 @@ function FlowCard({ flow, open, onToggleOpen, busy, onAiDraft, onRegenerate, onT
   onAiDraft: () => void
   onRegenerate: (keep: OnboardingTemplateStep[]) => void
   onToggleActive: () => void
+  onToggleAgency: () => void
   onRemove: () => void
   onSave: (f: OnboardingTemplate, steps: OnboardingTemplateStep[], name: string, description: string, careSetting: string, difficulties: string[]) => void
 }) {
@@ -455,6 +465,11 @@ function FlowCard({ flow, open, onToggleOpen, busy, onAiDraft, onRegenerate, onT
             {flow.is_active ? 'Active' : 'Draft'}
           </span>
           <span className="shrink-0 rounded-full bg-teal-light/40 px-2 py-0.5 text-[10px] font-semibold text-teal">{settingLabel(flow.care_setting)}</span>
+          {flow.agency_suitable && (
+            <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800" title="Agency workers with a matching job role are enrolled in this">
+              Agency
+            </span>
+          )}
           {flow.difficulties.length > 0 && (
             <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
               {flow.difficulties.map(d => DIFFICULTIES.find(x => x.value === d)?.label ?? d).join(', ')}
@@ -466,6 +481,15 @@ function FlowCard({ flow, open, onToggleOpen, busy, onAiDraft, onRegenerate, onT
           <button onClick={onAiDraft} disabled={busy} title="Draft steps with AI"
             className="flex items-center gap-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal hover:text-teal disabled:opacity-50">
             {busy ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} AI draft
+          </button>
+          {/* One tick per flow rather than a parallel agency-only set. Whoever wrote this
+              induction knows whether it suits somebody here for four nights. */}
+          <button onClick={onToggleAgency} disabled={busy}
+            title={flow.agency_suitable ? 'Agency workers are enrolled in this' : 'Offer this to agency workers with a matching job role'}
+            className={`rounded-md border p-1.5 disabled:opacity-50 ${
+              flow.agency_suitable ? 'border-amber-300 bg-amber-50 text-amber-700' : 'border-gray-200 text-neutral-mid hover:border-amber-300 hover:text-amber-700'
+            }`}>
+            <BriefcaseBusiness size={13} />
           </button>
           <button onClick={onToggleActive} disabled={busy} title={flow.is_active ? 'Deactivate' : 'Activate'}
             className="rounded-md border border-gray-200 p-1.5 text-neutral-mid hover:border-teal hover:text-teal disabled:opacity-50">

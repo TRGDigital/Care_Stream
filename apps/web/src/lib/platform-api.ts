@@ -1200,7 +1200,7 @@ export function createPlatformClient(token: string) {
       list: () => adminFetch<{ flows: OnboardingTemplate[] }>('/onboarding-templates', token),
       create: (data: { name: string; description?: string; job_roles?: string[]; flow_kind?: string; care_setting?: string | null; difficulties?: string[] }) =>
         adminFetch<{ flow: OnboardingTemplate }>('/onboarding-templates', token, { method: 'POST', body: JSON.stringify(data) }),
-      update: (id: string, data: Partial<{ name: string; description: string | null; job_roles: string[]; flow_kind: string; care_setting: string | null; difficulties: string[]; is_active: boolean; steps: OnboardingTemplateStep[] }>) =>
+      update: (id: string, data: Partial<{ name: string; description: string | null; job_roles: string[]; flow_kind: string; care_setting: string | null; difficulties: string[]; is_active: boolean; agency_suitable: boolean; steps: OnboardingTemplateStep[] }>) =>
         adminFetch<{ flow: OnboardingTemplate }>(`/onboarding-templates/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       remove: (id: string) =>
         adminFetch<{ deleted: boolean }>(`/onboarding-templates/${id}`, token, { method: 'DELETE' }),
@@ -1376,8 +1376,9 @@ export interface OnboardingTemplate {
   name:         string
   description:  string | null
   job_roles:    string[]
-  /** 'local_induction' is what agency workers are enrolled in, and only that. */
-  flow_kind:    'primary' | 'secondary' | 'local_induction'
+  flow_kind:    'primary' | 'secondary'
+  /** Ticked flows are offered to agency workers, matched to their job role as usual. */
+  agency_suitable: boolean
   care_setting: string | null
   difficulties: string[]
   is_active:    boolean

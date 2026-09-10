@@ -429,25 +429,26 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
   if (new_starter || is_agency) {
     const flows = await (prisma as any).onboardingFlow.findMany({
       where:  { tenant_id: tenantId, is_active: true },
-      select: { id: true, job_roles: true, flow_kind: true },
+      select: { id: true, job_roles: true, agency_suitable: true },
     })
     // A flow applies if it targets all roles, the staff member's position, OR any
     // of their specialist roles — so they get the right primary + secondary flows.
     const tags = [job_role, ...(specialisms ?? [])].filter(Boolean) as string[]
-    // An agency worker arrives with their statutory training already done by the agency. What
-    // they do not have is YOUR home: where the fire exits are, which cupboard the COSHH
-    // substances live in, which residents need what. So they get local induction flows only.
+    // An agency worker gets the flows a home has TICKED as suitable for agency, matched to
+    // their job role as usual, so a nurse gets the nurse induction rather than everything that
+    // happens to be ticked. Ticking the induction a home already maintains beats keeping a
+    // parallel agency-only set in step with it.
     //
-    // This matters because a flow with an empty job_roles list matches EVERYONE, so without
-    // the branch an agency nurse booked for four nights would be enrolled in the full
-    // statutory induction and show as failing it from the day they arrive.
+    // The tick carries the weight because an unticked flow with an empty job_roles list
+    // matches EVERYONE. Without it an agency nurse booked for four nights would be enrolled in
+    // every induction the home runs and show as failing all of them from the day she arrived.
+    const roleMatches = (f: any) =>
+      !Array.isArray(f.job_roles) || f.job_roles.length === 0 || f.job_roles.some((r: string) => tags.includes(r))
+
     const matched = is_agency
-      ? (flows as any[]).filter(f => f.flow_kind === 'local_induction')
-      : (flows as any[]).filter(f =>
-          f.flow_kind !== 'local_induction' && (
-            !Array.isArray(f.job_roles) || f.job_roles.length === 0 || f.job_roles.some((r: string) => tags.includes(r))
-          )
-        )
+      ? (flows as any[]).filter(f => f.agency_suitable && roleMatches(f))
+      : (flows as any[]).filter(roleMatches)
+
     if (matched.length > 0) {
       await (prisma as any).onboardingEnrollment.createMany({
         data: matched.map(f => ({ tenant_id: tenantId, flow_id: f.id, user_id: user.id })),

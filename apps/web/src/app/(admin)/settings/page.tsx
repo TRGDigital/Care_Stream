@@ -5,16 +5,29 @@ import { signIn, signOut, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { createApiClient, type RoleMentionScan } from '@/lib/api-client'
 import { usePlanFeatures } from '@/lib/use-plan-features'
+import { UpgradeOverlay } from '@/components/upgrade-overlay'
 import { persistentCache } from '@/lib/page-cache'
 import { Button } from '@/components/ui/button'
 import {
   AlertTriangle, Bell, BedDouble, BookLock, Building2, Check, ChevronDown, ChevronUp, ClipboardList, Copy, Loader2,
   Mail, Plus, Search, ShieldCheck, SlidersHorizontal, Trash2, Upload, UserRound, X,
+  // `Lock` unaliased resolves to the DOM Web Locks API type, not the icon.
+  Lock as LockIcon,
 } from 'lucide-react'
 
 // Active search query, shared with every SettingSection so non-matching
 // sections hide themselves (mirrors the Help & Guides search).
 const SettingsSearchCtx = createContext('')
+
+// Policies-only buyers need exactly one setting: their logo, which is what puts their
+// branding on the PDF they paid for. Everything else on this page configures the hub,
+// the staff library, audits and AI answers — none of which they have. Locked rather
+// than hidden, so the lock does the same job as the sidebar: it explains what the rest
+// of CareStream is.
+const POLICIES_ONLY_SETTINGS = new Set(['Organisation logo'])
+const SettingsLockCtx = createContext<{ locked: boolean; onLocked: (title: string) => void }>({
+  locked: false, onLocked: () => {},
+})
 
 // ─── Email preference definitions ─────────────────────────────────────────────
 
@@ -57,10 +70,32 @@ function SettingSection({
   children: React.ReactNode
 }) {
   const query = useContext(SettingsSearchCtx)
+  const lock = useContext(SettingsLockCtx)
   const [open, setOpen] = useState(defaultOpen)
+  const isLocked = lock.locked && !POLICIES_ONLY_SETTINGS.has(title)
 
   // Hide sections that don't match the active search (title or description).
   if (query && !`${title} ${description}`.toLowerCase().includes(query)) return null
+
+  if (isLocked) {
+    return (
+      <div data-setting-section className="rounded-card overflow-hidden bg-white/60 shadow-card">
+        <button
+          type="button"
+          onClick={() => lock.onLocked(title)}
+          title="See what CareStream adds"
+          className="flex w-full items-center gap-3 px-6 py-4 text-left transition-colors hover:bg-neutral-light/40"
+        >
+          <Icon size={16} className="shrink-0 text-neutral-mid/50" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-neutral-mid">{title}</p>
+            <p className="mt-0.5 text-xs text-neutral-mid/70">{description}</p>
+          </div>
+          <LockIcon size={14} className="shrink-0 text-neutral-mid/60" />
+        </button>
+      </div>
+    )
+  }
   // While searching, matching sections open so their content is visible.
   const expanded = query ? true : open
 
@@ -150,6 +185,8 @@ function DangerZone({ token }: { token: string }) {
 
 export default function SettingsPage() {
   const { data: session }           = useSession()
+  const policiesOnly                = (session?.user as any)?.tier === 'policies_only'
+  const [lockedSetting, setLockedSetting] = useState<string | null>(null)
   const { features: planFeatures }  = usePlanFeatures()
   const router                      = useRouter()
   const userId = session?.user?.email ?? 'guest'
@@ -908,6 +945,7 @@ export default function SettingsPage() {
       </div>
 
       <SettingsSearchCtx.Provider value={q}>
+      <SettingsLockCtx.Provider value={{ locked: policiesOnly, onLocked: setLockedSetting }}>
       <div ref={sectionsRef} className="space-y-3">
 
         {q && !hasResults && (
@@ -1965,6 +2003,10 @@ export default function SettingsPage() {
         {session?.accessToken && <DangerZone token={session.accessToken} />}
 
       </div>
+      {lockedSetting && (
+        <UpgradeOverlay feature={lockedSetting} onClose={() => setLockedSetting(null)} />
+      )}
+      </SettingsLockCtx.Provider>
       </SettingsSearchCtx.Provider>
     </div>
   )

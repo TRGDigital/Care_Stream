@@ -5,6 +5,7 @@ import {
   ShieldCheck, CheckCircle2, FileText, Scale, RefreshCw, UserCheck, Star, Package,
 } from 'lucide-react'
 import { JsonLd } from '@/components/json-ld'
+import { PolicyIntakeGame } from '@/components/marketing/policy-intake-game'
 
 // The policy shop's product page — ONE page perfected before rollout (Len, 11 Sept).
 // Structure mirrors /staff-training/[slug]: hero with the intake demo as the focal
@@ -53,17 +54,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 const money = (p: number) => `£${(p / 100).toFixed(p % 100 === 0 ? 0 : 2)}`
-
-// Example values for the intake demo card. Deliberately obviously-fictional.
-const DEMO_VALUES: Record<string, string> = {
-  company_legal_name: 'Meadowbrook Care Ltd',
-  trading_name: 'Meadowbrook House',
-  address: '14 Orchard Lane, York, YO1 7EX',
-  cqc_provider_id: '1-101234567',
-  cqc_location_id: '1-2098765432',
-  registered_manager: 'Sarah Ellison',
-  nominated_individual: 'David Okafor',
-}
 
 export default async function PolicyProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -141,37 +131,16 @@ export default async function PolicyProductPage({ params }: { params: Promise<{ 
               </div>
             </div>
 
-            {/* The intake demo: exactly what we collect to write THEIR copy */}
-            <div className="overflow-hidden rounded-2xl bg-white shadow-elevated ring-1 ring-gray-100">
-              <div className="border-b border-gray-100 bg-teal-light/25 px-6 py-4">
-                <p className="text-xs font-bold uppercase tracking-widest text-teal">What we collect to write yours</p>
-                <p className="mt-1 text-sm text-neutral-mid">Takes about three minutes. Asked once, reused for every policy you buy.</p>
-              </div>
-              <div className="space-y-3 px-6 py-5">
-                {sharedFields.map(f => (
-                  <div key={f.key}>
-                    <p className="mb-1 text-xs font-semibold text-neutral-dark">{f.label}</p>
-                    <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-neutral-mid">
-                      {DEMO_VALUES[f.key] ?? f.help ?? '…'}
-                    </div>
-                  </div>
-                ))}
-                {specificFields.length > 0 && (
-                  <div className="rounded-lg border border-teal/30 bg-teal-light/15 px-4 py-3">
-                    <p className="mb-2 text-xs font-bold uppercase tracking-wide text-teal">Specific to this policy</p>
-                    {specificFields.map(f => (
-                      <div key={f.key} className="mb-2 last:mb-0">
-                        <p className="mb-1 text-xs font-semibold text-neutral-dark">{f.label}</p>
-                        <div className="rounded-md border border-teal/30 bg-white px-3 py-2 text-sm text-neutral-mid">{f.help ?? '…'}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <p className="border-t border-gray-100 px-6 py-3 text-xs text-neutral-mid">
-                These details go into the document itself, so it reads as yours, because it is.
-              </p>
-            </div>
+            {/* The gamified intake IS the buying journey: image-led start screen, one
+                question per step with progress, the Buy button as the finale. Shared
+                fields first (the identity everyone has to hand), then this policy's own. */}
+            <PolicyIntakeGame
+              slug={product.slug}
+              title={product.title}
+              pricePence={product.price_pence}
+              fields={[...sharedFields, ...specificFields]}
+              buyHref={`/contact?about=${encodeURIComponent(product.title)}`}
+            />
           </div>
         </div>
       </section>

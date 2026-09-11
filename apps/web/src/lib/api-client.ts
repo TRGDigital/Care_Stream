@@ -996,7 +996,7 @@ export function createApiClient(token: string) {
       auditApprovalDetail: (runId: string) => apiFetch<{ report: { audit_name: string; subject: string | null; subject_room: string | null; subject_scope: string; auditor_name: string | null; auditor_role: string | null; audit_month: string; submitted_by: string | null; submitted_at: string | null; strengths: string | null; improvements: string | null; actions_deadline: string | null; ai_recommendations: string | null; sections: Array<{ title: string; questions: Array<{ id: string; question: string; question_type: string; answer_yn: boolean | null; answer_na: boolean; outcome_text: string | null; actions_text: string | null }> }> } }>(`/me/audit-approvals/${encodeURIComponent(runId)}`, token),
       approveAuditAsManager: (runId: string) => apiFetch<{ status: string }>(`/me/audit-approvals/${encodeURIComponent(runId)}/approve`, token, { method: 'POST' }),
       rejectAuditAsManager: (runId: string, comment: string) => apiFetch<{ status: string }>(`/me/audit-approvals/${encodeURIComponent(runId)}/reject`, token, { method: 'POST', body: JSON.stringify({ comment }) }),
-      documentCategories: () => apiFetch<{ available: string[] }>('/me/document-categories', token),
+      documentCategories: () => apiFetch<{ available: string[]; has_residents?: boolean }>('/me/document-categories', token),
       pushSubscribe: (sub: { endpoint: string; keys: { p256dh: string; auth: string } }) =>
         apiFetch<{ subscribed: boolean }>('/me/push/subscribe', token, { method: 'POST', body: JSON.stringify(sub) }),
       pushUnsubscribe: (endpoint: string) =>

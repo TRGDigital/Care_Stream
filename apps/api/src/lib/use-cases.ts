@@ -27,6 +27,7 @@ export const USE_CASES: UseCase[] = [
   { slug: 'training-calendar',       label: 'Training Calendar' },
   { slug: 'cqc-prep-questions',      label: 'CQC Prep Questions' },
   { slug: 'staff-onboarding',        label: 'Staff Onboarding' },
+  { slug: 'resident-knowledge',      label: 'Resident Knowledge' },
 ]
 
 const BY_SLUG = new Map(USE_CASES.map(u => [u.slug, u]))

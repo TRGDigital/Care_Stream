@@ -118,7 +118,7 @@ export default function KnowledgePage() {
     try {
       const result = await createApiClient(session.accessToken).knowledge.generateAll()
       load()
-      alert(`Done — generated ${result.generated} entries across ${result.policies} policies.`)
+      alert(`Done. Generated ${result.generated} entries across ${result.policies} policies.`)
     } catch (e: any) {
       setError(e.message)
     } finally {
@@ -181,7 +181,10 @@ export default function KnowledgePage() {
           </div>
         </div>
         <p className="mt-3 text-sm text-neutral-mid leading-relaxed">
-          Your knowledge base is the library of approved Q&amp;A pairs that power every response your staff receive from CareStreamAI — across both chat and email. Entries are generated automatically from your uploaded policies, pre-loaded from CareStreamAI&apos;s UK care regulations library, or added manually by your admin team. The more complete and approved your knowledge base, the richer and more accurate the answers CareStreamAI can provide, giving every staff member instant access to the right information whenever they need it.
+          Your knowledge base is the library of approved Q&amp;A pairs that power every response your staff receive from CareStreamAI, across both chat and email. Entries are generated automatically from your uploaded policies, pre-loaded from CareStreamAI&apos;s UK care regulations library, or added manually by your admin team. The more complete and approved your knowledge base, the richer and more accurate the answers CareStreamAI can provide, giving every staff member instant access to the right information whenever they need it.
+        </p>
+        <p className="mt-2 text-sm text-neutral-mid leading-relaxed">
+          You can also add <strong className="text-neutral-dark">resident</strong> entries: what a person likes to be called, their background, the food they enjoy, the routine that settles them at night. Choose the Resident category when you add an entry and it is stored apart from your policies, coloured so you can see it at a glance. Once you have approved one, your staff can ask about that resident by name in the hub, which is a fast way for a new starter or a bank member to learn what the regular team already knows.
         </p>
         <div className="mt-3 flex items-center gap-4">
           <p className="text-xs text-neutral-mid">{total} Q&amp;A pairs in your knowledge base.</p>

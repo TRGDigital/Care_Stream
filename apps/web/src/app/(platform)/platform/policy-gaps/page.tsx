@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPlatformClient, type MissingPolicyReport } from '@/lib/platform-api'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
+import { PolicyOrders } from '@/components/platform/policy-orders'
 import { PlatformShell } from '@/components/platform-shell'
 import { SearchCheck, Loader2, Building2, Sparkles, CheckCircle2, AlertTriangle, EyeOff, Lock, ChevronDown, ChevronRight, Grid3x3, User } from 'lucide-react'
 
@@ -200,7 +201,15 @@ export default function PolicyGapsPage() {
           )}
         </div>
 
-        {/* The paid-order queue moved to its own tab: /platform/paid-policies. */}
+        {/* Orders from SUBSCRIBED clients only. Shop buyers without a full licence
+            (policies_only accounts) have their own queue on the Paid Policies tab —
+            two different customer bases, never mixed. */}
+        <p className="mb-2 rounded-lg border border-blue-100 bg-blue-50 px-4 py-2.5 text-xs text-blue-900">
+          <strong>This queue is full CareStream clients</strong> buying policies from their own gaps page.
+          Standalone shop customers (policies-only accounts, no CareStream licence) are on the{' '}
+          <a href="/platform/paid-policies" className="font-semibold underline">Paid Policies</a> tab.
+        </p>
+        {token && <PolicyOrders token={token} scope="subscribers" />}
 
         {/* Missing against legislation, as opposed to missing against peers.
             The peer report below answers "what do similar homes have that this one does not".

@@ -6,6 +6,8 @@ import { facilityTypeToSetting, settingLabel } from '../lib/care-setting'
 import { classifyTenantPolicies, knownPolicyTypes } from '../lib/policy-classifier'
 import { missingPolicies } from '../services/analytics/missing-policies'
 import { writePolicy } from '../services/policy-writer/write-policy'
+import { verifyPaidPolicyDraft, verificationFailures } from '../services/policy-writer/verify-policy'
+import { writeAuditLog } from '../lib/audit'
 import { uploadPolicyFile } from '../services/storage/s3'
 import { enqueueIngestion } from '../workers/queue'
 import { randomUUID } from 'crypto'
@@ -145,19 +147,40 @@ platformPolicyGapsRouter.post('/orders/:id/status', async (req: Request, res: Re
 platformPolicyGapsRouter.post('/orders/:id/write', async (req: Request, res: Response) => {
   const id = String(req.params.id)
   try {
-    const written = await writePolicy(id)
-    const order = await (prisma as any).policyPurchase.update({
+    // Write, verify, and if verification fails feed the failures back as rewrite
+    // instructions — up to three attempts. The final state is stored either way; a
+    // draft that still fails arrives in the queue with a red checklist, never silently.
+    let written = await writePolicy(id)
+    let attempts = 1
+    await (prisma as any).policyPurchase.update({
       where: { id },
-      data: {
-        draft_content: written.markdown,
-        drafted_at:    new Date(),
-        drafted_by:    (req as any).user?.email ?? 'platform',
-        status:        'drafted',
-      },
+      data: { draft_content: written.markdown, drafted_at: new Date(), drafted_by: (req as any).user?.email ?? 'platform', status: 'drafted' },
     })
-    ok(res, { order, words: written.words, sections: written.sections })
+    let verification = await verifyPaidPolicyDraft(id)
+    while (!verification.passed && attempts < 3) {
+      attempts++
+      written = await writePolicy(id, verificationFailures(verification))
+      await (prisma as any).policyPurchase.update({
+        where: { id },
+        data: { draft_content: written.markdown, drafted_at: new Date(), drafted_by: (req as any).user?.email ?? 'platform' },
+      })
+      verification = await verifyPaidPolicyDraft(id)
+    }
+    const order = await (prisma as any).policyPurchase.findUnique({ where: { id } })
+    ok(res, { order, words: written.words, sections: written.sections, verification, attempts })
   } catch (e: any) {
     err(res, 'WRITE_FAILED', e?.message ?? 'could not write that policy', 500)
+  }
+})
+
+// POST /orders/:id/verify — run (or re-run) the verification gate on the stored draft.
+// For drafts written before the gate existed, or after a manual read raises doubt.
+platformPolicyGapsRouter.post('/orders/:id/verify', async (req: Request, res: Response) => {
+  try {
+    const verification = await verifyPaidPolicyDraft(String(req.params.id))
+    ok(res, { verification })
+  } catch (e: any) {
+    err(res, 'VERIFY_FAILED', e?.message ?? 'could not verify that draft', 500)
   }
 })
 
@@ -185,6 +208,24 @@ platformPolicyGapsRouter.post('/orders/:id/deliver', async (req: Request, res: R
     if (!order) return err(res, 'NOT_FOUND', 'That order was not found', 404)
     if (!order.draft_content) return err(res, 'NO_DRAFT', 'Write the policy before approving it', 409)
     if (order.status === 'approved') return err(res, 'ALREADY_DELIVERED', 'That policy has already been delivered', 409)
+
+    // The gate: nothing ships unverified. A red or missing checklist blocks Approve.
+    // The override exists for judgement calls (e.g. the judge is being over-strict on a
+    // document a person has read and stands behind) — it must carry a reason, and it is
+    // written to the audit log with the overrider's name.
+    const verified = order.verification && (order.verification as any).passed === true
+    if (!verified) {
+      const override = req.body?.override === true
+      const reason = String(req.body?.reason ?? '').trim()
+      if (!override || reason.length < 10) {
+        return err(res, 'VERIFICATION_REQUIRED',
+          'This draft has not passed verification. Fix and re-verify it, or override with a written reason (at least 10 characters).', 409)
+      }
+      writeAuditLog({
+        tenant_id: order.tenant_id, event_type: 'policy_update', entity_type: 'policy', entity_id: id,
+        metadata: { paid_policy_override: true, reason, by: (req as any).user?.email ?? 'platform', title: order.policy_title },
+      }).catch(() => {})
+    }
 
     // Policy.uploaded_by is a foreign key to User, so it has to be a real user in THIS tenant.
     // A platform admin's email is neither, and using one would have failed the constraint the

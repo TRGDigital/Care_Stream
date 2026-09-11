@@ -1265,11 +1265,13 @@ export function createPlatformClient(token: string) {
       // Writing the policy costs Anthropic credit. Delivering is what puts it in the
       // client's library, so it is a separate, deliberate step after a person has read it.
       writeOrder: (id: string) =>
-        adminFetch<{ order: PolicyOrder; words: number; sections: number }>(`/policy-gaps/orders/${id}/write`, token, { method: 'POST' }),
+        adminFetch<{ order: PolicyOrder; words: number; sections: number; verification: PolicyOrderVerification; attempts: number }>(`/policy-gaps/orders/${id}/write`, token, { method: 'POST' }),
+      verifyOrder: (id: string) =>
+        adminFetch<{ verification: PolicyOrderVerification }>(`/policy-gaps/orders/${id}/verify`, token, { method: 'POST' }),
       orderDraft: (id: string) =>
         adminFetch<{ draft: string | null; title: string; status: string }>(`/policy-gaps/orders/${id}/draft`, token),
-      deliverOrder: (id: string) =>
-        adminFetch<{ order: PolicyOrder; policy_id: string }>(`/policy-gaps/orders/${id}/deliver`, token, { method: 'POST' }),
+      deliverOrder: (id: string, opts?: { override: true; reason: string }) =>
+        adminFetch<{ order: PolicyOrder; policy_id: string }>(`/policy-gaps/orders/${id}/deliver`, token, { method: 'POST', body: JSON.stringify(opts ?? {}) }),
       setOrderStatus: (id: string, status: string, policy_id?: string) =>
         adminFetch<{ order: PolicyOrder }>(`/policy-gaps/orders/${id}/status`, token, {
           method: 'POST', body: JSON.stringify({ status, policy_id }),
@@ -1305,6 +1307,18 @@ export interface MissingPolicyReport {
 }
 
 
+/** The verification-gate checklist stored on an order (see api verify-policy.ts). */
+export interface PolicyOrderVerification {
+  passed: boolean
+  checked_at: string
+  checks: {
+    substitution: { passed: boolean; issues: string[] }
+    terminology:  { passed: boolean; issues: string[] }
+    identity:     { passed: boolean; issues: string[] }
+    coverage:     { passed: boolean; issues: string[]; regulations: Array<{ reference_key: string; official_name: string; met: boolean; missing_elements: string[] }> }
+  }
+}
+
 /** A policy a client has paid for, with the client attached. */
 export interface PolicyOrder {
   id: string
@@ -1315,6 +1329,8 @@ export interface PolicyOrder {
   price_pence: number
   status: 'paid' | 'drafting' | 'drafted' | 'approved' | 'refunded'
   policy_id: string | null
+  verification: PolicyOrderVerification | null
+  verified_at: string | null
   purchased_at: string
   approved_at: string | null
   approved_by: string | null

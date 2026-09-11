@@ -192,6 +192,35 @@ export async function sendNewTenantNotification(opts: {
   await sgMail.send({ to, from, subject: `New CareStream account: ${opts.orgName} (${opts.accountNumber})`, html })
 }
 
+// ─── Paid-policy purchase notification to the platform owner ────────────────────
+// Sent when a client's policy purchase is reconciled: work is now owed, and the
+// Paid Policies tab is where it happens.
+export async function sendPolicyPurchaseNotification(opts: {
+  tenantName: string; accountNumber?: string | null; titles: string[]; totalPence: number
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set — skipping policy-purchase notification'); return }
+
+  const to   = process.env.PLATFORM_NOTIFY_EMAIL ?? 'len@carestreamai.com'
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc  = (s: any) => String(s ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 6px">💷 Policy order paid</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 14px">
+      <strong>${esc(opts.tenantName)}</strong>${opts.accountNumber ? ` (${esc(opts.accountNumber)})` : ''} has paid
+      £${(opts.totalPence / 100).toFixed(2)} for ${opts.titles.length} ${opts.titles.length === 1 ? 'policy' : 'policies'}:
+    </p>
+    <ul style="margin:0 0 18px;padding-left:20px;color:#374151;font-size:14px">
+      ${opts.titles.map(t => `<li style="padding:2px 0">${esc(t)}</li>`).join('')}
+    </ul>
+    <p style="color:#9ca3af;font-size:12px;margin:0">Write, verify and approve it in the platform console → Paid Policies.</p>
+    ${emailFooter()}
+  `)
+
+  await sgMail.send({ to, from, subject: `Policy order: ${opts.tenantName} — ${opts.titles.length} ${opts.titles.length === 1 ? 'policy' : 'policies'} paid`, html })
+}
+
 // ─── Feature-request notification to the platform owner ─────────────────────────
 // Sent whenever a client submits a feature request from Help & Guides.
 export async function sendFeatureRequestNotification(opts: {

@@ -20,6 +20,7 @@ import { policySeedsRouter } from './routes/policy-seeds'
 import { platformGlossaryRouter } from './routes/platform-glossary'
 import { platformTranslationChangesRouter } from './routes/platform-translation-changes'
 import { platformPolicyGapsRouter } from './routes/platform-policy-gaps'
+import { platformPolicyImagesRouter } from './routes/platform-policy-images'
 import { translationSuggestionsRouter } from './routes/translation-suggestions'
 import { settingsRouter } from './routes/settings'
 import { policyPurchasesRouter } from './routes/policy-purchases'
@@ -111,6 +112,7 @@ app.use('/admin/policy-seeds', policySeedsRouter)
 app.use('/admin/platform-glossary', platformGlossaryRouter)
 app.use('/admin/translation-changes', platformTranslationChangesRouter)
 app.use('/admin/policy-gaps', platformPolicyGapsRouter)
+app.use('/admin/policy-images', platformPolicyImagesRouter)
 app.use('/admin', adminRouter)
 
 // §8.1 — SendGrid Inbound Parse webhook. Unauthenticated — auth is handled

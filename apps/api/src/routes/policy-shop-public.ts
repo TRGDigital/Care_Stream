@@ -9,6 +9,8 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
+import { downloadFile } from '../services/storage/s3'
+import { shopImageUrl } from '../services/policy-shop/shopImage'
 
 export const policyShopPublicRouter = Router()
 
@@ -75,7 +77,7 @@ export function humaniseElement(element: string): string {
 
 // Title variants a home might use for the same document, so the regulation lookup
 // matches the library's expected titles.
-function titleVariants(title: string): string[] {
+export function titleVariants(title: string): string[] {
   const t = title.trim()
   const variants = new Set<string>([t])
   variants.add(t.replace(/ and /g, ' & '))
@@ -101,7 +103,7 @@ policyShopPublicRouter.get('/products/:slug', async (req: Request, res: Response
       }),
       (prisma as any).externalRegulation.findMany({
         where: { expected_policy_titles: { hasSome: titleVariants(product.title) } },
-        select: { reference_key: true, official_name: true, summary: true, required_elements: true },
+        select: { reference_key: true, official_name: true, summary: true, required_elements: true, image_key: true },
         orderBy: { official_name: 'asc' },
       }).catch(() => [] as any[]),
     ])
@@ -112,7 +114,7 @@ policyShopPublicRouter.get('/products/:slug', async (req: Request, res: Response
     const related = meaningfulBundles.length
       ? await (prisma as any).policyProduct.findMany({
           where: { active: true, slug: { not: product.slug }, bundle_keys: { hasSome: meaningfulBundles } },
-          select: { slug: true, title: true, description: true, price_pence: true, taster: true },
+          select: { slug: true, title: true, description: true, price_pence: true, taster: true, image_key: true },
           orderBy: { sort_order: 'asc' },
           take: 6,
         }).catch(() => [] as any[])
@@ -122,6 +124,7 @@ policyShopPublicRouter.get('/products/:slug', async (req: Request, res: Response
       product: {
         slug: product.slug, title: product.title, description: product.description,
         price_pence: product.price_pence, taster: product.taster,
+        image_url: shopImageUrl(product.image_key),
         // Labels and help only — the page shows WHAT we ask, never anyone's answers.
         intake_fields: ((product.intake_fields as any[]) ?? []).map(f => ({
           key: f.key, label: f.label, help: f.help ?? null, shared: f.shared === true,
@@ -132,14 +135,42 @@ policyShopPublicRouter.get('/products/:slug', async (req: Request, res: Response
         reference_key: r.reference_key,
         official_name: r.official_name,
         summary: r.summary ?? '',
+        image_url: shopImageUrl(r.image_key),
         required_elements_count: Array.isArray(r.required_elements) ? r.required_elements.length : 0,
         // The curated elements are the page's bullet-point key facts, rephrased for a
         // reader rather than for the writer.
         key_facts: (Array.isArray(r.required_elements) ? r.required_elements : []).slice(0, 6).map(humaniseElement),
       })),
-      related,
+      related: (related as any[]).map(r => ({
+        slug: r.slug, title: r.title, description: r.description,
+        price_pence: r.price_pence, taster: r.taster, image_url: shopImageUrl(r.image_key),
+      })),
     })
   } catch (e: any) {
     err(res, 'PRODUCT_FAILED', e?.message ?? 'could not load that policy', 500)
+  }
+})
+
+
+// Serves a stored shop illustration. The filename is a UUID written by our own
+// uploader and the pattern is strict, so it cannot be used for path traversal.
+// These are generic topic illustrations with no tenant data in them.
+const IMAGE_CONTENT_TYPES: Record<string, string> = {
+  png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif',
+}
+
+policyShopPublicRouter.get('/image/:file', async (req: Request, res: Response) => {
+  const file = String(req.params.file ?? '')
+  if (!/^[a-f0-9-]+\.(png|jpe?g|webp|gif)$/i.test(file)) { res.status(400).end(); return }
+  const ext = file.split('.').pop()!.toLowerCase()
+  try {
+    const buffer = await downloadFile(`shop/images/${file}`)
+    res.setHeader('Content-Type', IMAGE_CONTENT_TYPES[ext] ?? 'application/octet-stream')
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+    // helmet sets CORP same-origin globally; the marketing site is another origin.
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+    res.send(buffer)
+  } catch {
+    res.status(404).end()
   }
 })

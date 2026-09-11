@@ -1245,6 +1245,19 @@ export function createPlatformClient(token: string) {
         adminFetch<{ changes: TranslationChange[]; counts: { total: number; pending: number; approved: number; rejected: number } }>(`/translation-changes${status ? `?status=${status}` : ''}`, token),
       remove: (id: string) => adminFetch<{ deleted: boolean }>(`/translation-changes/${id}`, token, { method: 'DELETE' }),
     },
+    // Shop artwork: a hero per policy, one image per piece of legislation. Generation
+    // is one OpenAI image call per press, so each is its own request rather than a batch.
+    policyImages: {
+      list: () =>
+        adminFetch<{
+          policies: Array<{ slug: string; title: string; description: string; price_pence: number; image_url: string | null }>
+          regulations: Array<{ reference_key: string; official_name: string; used_by: number; image_url: string | null }>
+        }>('/policy-images', token),
+      generatePolicy: (slug: string) =>
+        adminFetch<{ slug: string; image_url: string | null }>(`/policy-images/policy/${encodeURIComponent(slug)}`, token, { method: 'POST' }),
+      generateRegulation: (key: string) =>
+        adminFetch<{ reference_key: string; image_url: string | null }>(`/policy-images/regulation/${encodeURIComponent(key)}`, token, { method: 'POST' }),
+    },
     policyGaps: {
       clients: () =>
         adminFetch<{ clients: Array<{ id: string; name: string; account_number: string; setting: string; setting_label: string; policies: number; classified: number }> }>('/policy-gaps', token),

@@ -24,18 +24,23 @@ const full = (u: string | null) => (u ? (/^https?:\/\//.test(u) ? u : `${API_URL
 type Policy = { slug: string; title: string; description: string; price_pence: number; image_url: string | null }
 type Regulation = { reference_key: string; official_name: string; used_by: number; image_url: string | null }
 
+// 16:9 with object-cover, matching how the shop page actually crops these. Judging a
+// landscape illustration on a square thumbnail hides exactly the problem worth seeing.
+// Click through for the uncropped file.
 function Thumb({ url, alt }: { url: string | null; alt: string }) {
+  const box = 'h-16 w-28 shrink-0 overflow-hidden rounded-lg bg-gray-100'
+  if (!url) {
+    return (
+      <div className={`${box} flex items-center justify-center`}>
+        <ImageIcon size={18} className="text-gray-300" />
+      </div>
+    )
+  }
   return (
-    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-gray-100">
-      {url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt={alt} className="h-full w-full object-cover" />
-      ) : (
-        <div className="flex h-full w-full items-center justify-center">
-          <ImageIcon size={18} className="text-gray-300" />
-        </div>
-      )}
-    </div>
+    <a href={url} target="_blank" rel="noreferrer" className={box} title="Open the full image">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={url} alt={alt} className="h-full w-full object-cover" />
+    </a>
   )
 }
 

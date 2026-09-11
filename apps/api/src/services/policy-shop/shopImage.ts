@@ -91,10 +91,65 @@ function build(template: string, topic: string, context: string): string {
 // is how you end up with headless people. 3:2 loses about 5%.
 const SIZE = '1536x1024'
 
-async function generate(template: string, topic: string, context: string): Promise<string> {
+// ── Who is in the picture ─────────────────────────────────────────────────────
+// The model defaults hard to one look: the first run came back with a South Asian
+// woman in scrubs in almost every image. Asking the prompt for "a mix of ethnicities"
+// cannot fix that, because each image is generated on its own with no knowledge of the
+// other 121 — it can only ask a single picture to be mixed.
+//
+// So the variety is imposed here instead. Each image is handed a specific cast, picked
+// from these rotations by a stable hash of its own key, which makes the SET varied by
+// construction. Stable matters: regenerating one image gives it the same people back,
+// so a reshoot does not silently change who is in it.
+//
+// The UK care workforce is one of the most ethnically diverse in the country, so this
+// is what the sector actually looks like, not decoration.
+const CARE_WORKERS = [
+  'a Black British woman in her forties',
+  'a White British man in his thirties',
+  'a South Asian man in his fifties',
+  'a White British woman in her fifties',
+  'a Black African man in his twenties',
+  'an East Asian woman in her thirties',
+  'a South Asian woman in her twenties',
+  'a mixed heritage man in his forties',
+  'a White British woman in her thirties',
+  'a Black Caribbean woman in her fifties',
+  'an East Asian man in his forties',
+  'a South Asian woman in her forties',
+]
+
+const RESIDENTS = [
+  'an older White British woman',
+  'an older Black Caribbean man',
+  'an older South Asian woman',
+  'an older White British man',
+  'an older Black African woman',
+  'an older East Asian man',
+  'an older mixed heritage woman',
+  'an older South Asian man',
+]
+
+// A small stable hash, so the same key always draws the same cast.
+function pick<T>(list: T[], key: string, offset = 0): T {
+  let h = 0
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0
+  return list[(h + offset) % list.length]
+}
+
+function castFor(key: string): string {
+  return '\n\nThe people in this scene: any member of care staff shown is '
+    + `${pick(CARE_WORKERS, key)}, and anyone receiving care is ${pick(RESIDENTS, key, 5)}. `
+    + 'Show their skin tone and presentation clearly through the flat illustration style, '
+    + 'without drawing realistic facial detail. If the scene shows two colleagues rather '
+    + 'than a carer and a resident, make them visibly different from one another.'
+}
+
+
+async function generate(template: string, topic: string, context: string, key: string): Promise<string> {
   const result = await openai.images.generate({
     model:  'gpt-image-1',
-    prompt: build(template, topic, context),
+    prompt: build(template, topic, context) + castFor(key),
     size:   SIZE,
   })
   recordCostUsd('gpt-image-1', imageCostUsd((result as any).usage))
@@ -114,7 +169,7 @@ export async function generatePolicyHeroImage(slug: string): Promise<string> {
     ? product.description
     : `A ${product.title} written for a UK care provider.`
   const key = await generate(await promptFor(POLICY_HERO_PROMPT_USAGE, DEFAULT_POLICY_HERO_PROMPT),
-                             product.title, context)
+                             product.title, context, slug)
   await (prisma as any).policyProduct.update({ where: { id: product.id }, data: { image_key: key } })
   return key
 }
@@ -131,7 +186,7 @@ export async function generateRegulationImage(referenceKey: string): Promise<str
   const context = [reg.care_home_context, reg.summary].filter(Boolean).join(' ')
     || `A UK care regulation: ${reg.official_name}.`
   const key = await generate(await promptFor(POLICY_LAW_PROMPT_USAGE, DEFAULT_POLICY_LAW_PROMPT),
-                             reg.official_name, context)
+                             reg.official_name, context, referenceKey)
   await (prisma as any).externalRegulation.update({ where: { id: reg.id }, data: { image_key: key } })
   return key
 }

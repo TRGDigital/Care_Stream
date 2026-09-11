@@ -29,6 +29,13 @@ function imageCostUsd(usage: any): number {
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
 
+// NOTE: these defaults are the fallback only — Platform Console → AI Prompts overrides
+// them, and the live overrides are what generated the current artwork. They were
+// rewritten on 2026-09-11 after the first 17 heroes came back literal: a whistle for
+// whistleblowing, a brain and scales of justice for mental capacity, and a "Care
+// Planning Policy" caption baked into the frame. Three rules fixed it — illustrate the
+// practice not the words, no icon used as a metaphor, and the frame is edge to edge
+// with no lettering anywhere. Keep this file and the console in step.
 // Both are editable in Platform Console → AI Prompts.
 export const POLICY_HERO_PROMPT_USAGE = 'policy_hero_image_generation'
 export const POLICY_LAW_PROMPT_USAGE  = 'policy_law_image_generation'
@@ -37,8 +44,14 @@ export const DEFAULT_POLICY_HERO_PROMPT = `Create a cover illustration for a UK 
 Policy: "{{topic}}".
 Context: {{summary}}
 
-Style: flat modern vector illustration, soft rounded shapes, warm and friendly, gentle teal and warm-neutral palette, plenty of clean negative space. A calm UK care setting.
-Do NOT include any text, words, letters or logos.
+Illustrate what the policy is ABOUT IN PRACTICE: one ordinary, believable moment in a care setting that the policy governs. Never illustrate the words in its name, and never use a symbol to stand for the idea.
+A whistleblowing policy is a member of staff quietly raising a concern with a manager in private, never a whistle. A mental capacity policy is a carer sitting with a resident, unhurried, helping them make their own decision, never a brain or a floating head. A restraint policy is a calm, unhurried interaction, never anyone being held or confined. A modern slavery policy is careful, respectful recruitment, never chains or captivity.
+
+Do NOT include: scales of justice, gavels, courtrooms, anatomical diagrams, brains, lightbulbs, floating or disembodied body parts, thought bubbles, tick or cross marks, shields, padlocks, or any other icon used as a metaphor. People, rooms and everyday objects only.
+Nothing distressing, coercive or punitive. Nothing done TO a resident against their will. Everyone in the scene is treated with dignity.
+
+Style: flat modern vector illustration, soft rounded shapes, warm and friendly, gentle teal and warm-neutral palette on a light warm-neutral background, plenty of clean negative space. A calm UK care setting.
+The illustration fills the ENTIRE frame, edge to edge. There is no caption, no title bar, no label strip, no banner, no border and no margin of flat colour along any edge. Any lettering anywhere in the image is a failure: no text, words, letters, numbers, captions or logos, including on clipboards, signs, folders or screens within the scene.
 Do NOT show realistic human faces — keep any people stylised, simple and abstract.
 Compose for a WIDE landscape frame: keep the subject centred and away from the top and bottom edges, which are cropped.
 Professional and reassuring, suitable for a care provider buying this policy.`
@@ -47,8 +60,13 @@ export const DEFAULT_POLICY_LAW_PROMPT = `Create an illustration representing a 
 Regulation: "{{topic}}".
 What it requires: {{summary}}
 
-Style: flat modern vector illustration, soft rounded shapes, gentle teal and warm-neutral palette, plenty of clean negative space. Convey the SUBJECT of the regulation through the scene, not through symbols of law such as gavels, scales or courtrooms.
-Do NOT include any text, words, letters, numbers or logos.
+Illustrate the regulation's SUBJECT IN PRACTICE: one ordinary, believable moment in a care setting that complying with it looks like. Never illustrate the words in its name, and never use a symbol to stand for the idea. A safeguarding regulation is a carer listening carefully to a resident, never a shield. A staffing regulation is a handover between two colleagues, never a clock or a rota icon. A records regulation is someone writing up notes, never a filing cabinet of padlocks.
+
+Do NOT include: scales of justice, gavels, courtrooms, legal documents with seals, anatomical diagrams, brains, lightbulbs, floating or disembodied body parts, thought bubbles, tick or cross marks, shields, padlocks, or any other icon used as a metaphor. People, rooms and everyday objects only.
+Nothing distressing, coercive or punitive. Nothing done TO a resident against their will. Everyone in the scene is treated with dignity.
+
+Style: flat modern vector illustration, soft rounded shapes, warm and friendly, gentle teal and warm-neutral palette on a light warm-neutral background, plenty of clean negative space. A calm UK care setting.
+The illustration fills the ENTIRE frame, edge to edge. There is no caption, no title bar, no label strip, no banner, no border and no margin of flat colour along any edge. Any lettering anywhere in the image is a failure: no text, words, letters, numbers, captions or logos, including on clipboards, signs, folders or screens within the scene.
 Do NOT show realistic human faces — keep any people stylised, simple and abstract.
 Compose for a WIDE landscape frame: keep the subject centred and away from the top and bottom edges, which are cropped.
 Calm and authoritative, suitable beside a policy a care provider is buying.`

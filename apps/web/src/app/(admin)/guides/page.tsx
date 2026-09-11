@@ -1553,7 +1553,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
       <div className="space-y-5">
         <SectionBlock title="What the knowledge base is for">
           <p className="text-sm text-neutral-mid">
-            The knowledge base lets you add short, structured facts about your care setting that CareStream always has access to. These are the things unique to <em>your</em> home that would not appear in a standard policy document, and they are exactly what makes chat answers specific to you.
+            The knowledge base lets you add short, structured facts about your care setting that CareStream always has access to. These are the things unique to <em>your</em> home that would not appear in a standard policy document, including what your staff need to know about individual residents, and they are exactly what makes chat answers specific to you.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
             For example, you might have <strong>two COSHH storage cupboards</strong>: one under the stairs for substances in use, and one in the laundry room for unused stock. No policy would spell that out, but it is exactly what a staff member needs to know. Add it here and CareStream will use it when someone asks where COSHH substances are kept. The same applies to your registration number, registered manager, bed capacity, specialism, or emergency escalation contacts.
@@ -1590,10 +1590,38 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <p>The category you choose for a manual entry determines where it is used:</p>
             <ul className="list-disc list-inside space-y-1 ml-2">
               <li><strong>General</strong>: available across all policy and handbook queries via the general knowledge base.</li>
+              <li><strong>Resident</strong>: what your staff need to know about an individual resident. Stored apart from your policies and coloured violet on the page, and answered under the Policies, Procedures &amp; Residents topic in the hub.</li>
               <li><strong>Business Continuity</strong>: appears exclusively in the Business Continuity chat channel. Staff can access it on the portal by selecting the Business Continuity card.</li>
               <li><strong>Policies &amp; Procedures, HR &amp; Staff, Health &amp; Safety, Medication, Infection Control</strong>: all feed into the general knowledge base and appear alongside relevant policy content.</li>
             </ul>
           </div>
+        </SectionBlock>
+        <SectionBlock title="Resident knowledge">
+          <p className="text-sm text-neutral-mid">
+            A policy tells your staff what the home does. Resident entries tell them about the person
+            in front of them: what they like to be called, what they did before they came to you, the
+            food they enjoy, the routine that settles them at night, who visits and when.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Add one the same way as any other entry and choose the <strong>Resident</strong> category.
+            It is kept apart from your policies, coloured so you can see at a glance which entries are
+            about people, and once approved your staff can ask about that resident by name in the hub.
+            That is the fastest way for a new starter, a bank member or someone covering a shift to
+            learn what the regular team already knows.
+          </p>
+          <div className="mt-2 space-y-3">
+            <Step n={1}>Click <strong>Add entry</strong> and set the <strong>Category</strong> to <strong>Resident</strong>.</Step>
+            <Step n={2}>Write the question the way a staff member would ask it, for example &ldquo;Tell me about Peggy Whitcombe&rdquo;, and put everything worth knowing in the answer.</Step>
+            <Step n={3}>Approve it. Until it is approved it is not used in any answer.</Step>
+          </div>
+          <Tip>
+            Once you have approved your first resident entry, the hub&rsquo;s Policies &amp; Procedures card
+            renames itself to <strong>Policies, Procedures &amp; Residents</strong>, so staff know they can ask.
+          </Tip>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Treat these entries as care records: only put in what you would be comfortable any member of
+            staff reading, keep them accurate, and remove them when a resident leaves.
+          </p>
         </SectionBlock>
         <SectionBlock title="How your knowledge shows in chat answers, the source colours">
           <p className="text-sm text-neutral-mid">

@@ -11,6 +11,7 @@ import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { downloadFile } from '../services/storage/s3'
 import { shopImageUrl } from '../services/policy-shop/shopImage'
+import { createShopCheckoutSession, type ShopItem } from '../services/billing/stripe'
 
 export const policyShopPublicRouter = Router()
 
@@ -172,5 +173,46 @@ policyShopPublicRouter.get('/image/:file', async (req: Request, res: Response) =
     res.send(buffer)
   } catch {
     res.status(404).end()
+  }
+})
+
+
+// POST /checkout — start a hosted Stripe Checkout for a shop basket.
+//
+// Unauthenticated on purpose: the whole point of the standalone shop is buying without
+// an account first. The account is provisioned on the way back, once Stripe confirms
+// the money actually arrived.
+//
+// The body carries an email and a list of keys. It does NOT carry prices, and any it
+// did carry would be ignored: every amount is resolved from the catalogue server-side.
+policyShopPublicRouter.post('/checkout', async (req: Request, res: Response) => {
+  const email = String(req.body?.email ?? '').trim().toLowerCase()
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    return err(res, 'INVALID_EMAIL', 'A valid email address is required', 400)
+  }
+
+  const raw = Array.isArray(req.body?.items) ? req.body.items : []
+  const items: ShopItem[] = []
+  for (const entry of raw.slice(0, 30)) {
+    const kind = entry?.kind === 'bundle' ? 'bundle' : 'policy'
+    const key = String(entry?.key ?? '').trim()
+    // Slugs and bundle keys are lowercase kebab in the catalogue; anything else is not
+    // a key we issued.
+    if (!/^[a-z0-9-]{2,80}$/.test(key)) {
+      return err(res, 'INVALID_ITEM', 'That basket contains an item we do not recognise', 400)
+    }
+    items.push({ kind, key })
+  }
+  if (!items.length) return err(res, 'EMPTY_BASKET', 'There is nothing in the basket', 400)
+
+  try {
+    const { url, totalPence } = await createShopCheckoutSession({ email, items })
+    ok(res, { url, total_pence: totalPence })
+  } catch (e: any) {
+    // Price lookup failures are the buyer's problem to see (a policy went inactive
+    // while they browsed); everything else is ours.
+    const msg = e?.message ?? 'could not start checkout'
+    const known = /Unknown or unavailable item|Nothing to buy|below the minimum/.test(msg)
+    err(res, known ? 'BASKET_INVALID' : 'CHECKOUT_FAILED', msg, known ? 400 : 500)
   }
 })

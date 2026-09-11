@@ -10,6 +10,10 @@ export const SUPPORTED_MIME_TYPES = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/vnd.oasis.opendocument.text',
   'text/plain',
+  // The policy writer delivers markdown, and every CareStream-written policy was
+  // being rejected here as an unsupported type. Extracted as UTF-8 like text/plain:
+  // the light markup is harmless to the chunker and keeps headings readable.
+  'text/markdown',
 ] as const
 
 export type SupportedMimeType = typeof SUPPORTED_MIME_TYPES[number]
@@ -29,6 +33,7 @@ export async function extractText(buffer: Buffer, mimeType: SupportedMimeType): 
     case 'application/vnd.oasis.opendocument.text':
       return extractFromOdt(buffer)
     case 'text/plain':
+    case 'text/markdown':
       return buffer.toString('utf-8')
   }
 }

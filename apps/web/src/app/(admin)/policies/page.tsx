@@ -5,6 +5,7 @@
 import { useEffect, useState, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { useSession } from 'next-auth/react'
+import { PolicyOrdersPanel } from '@/components/admin/policy-orders-panel'
 import { PolicyHistoryTab } from '@/components/admin/policy-history-tab'
 import { createApiClient } from '@/lib/api-client'
 import EditablePolicyBody from '@/components/admin/editable-policy-body'
@@ -283,6 +284,11 @@ export default function PoliciesPage() {
 
   return (
     <div>
+      {/* Policy orders sit above the library: a shop buyer's purchase used to be
+          invisible here, and nothing asked for the details it cannot be written
+          without. Renders nothing when there are no orders, so full clients who have
+          never bought one see no change. */}
+      {session?.accessToken && <PolicyOrdersPanel token={session.accessToken} />}
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-neutral-dark">Policies</h1>

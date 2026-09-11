@@ -26,7 +26,7 @@ const TIERS = [
   },
   {
     name: 'Full CareStream',
-    price: 'From £49 a month',
+    price: 'From £85 a month',
     blurb: 'The whole platform: your policies answering questions for staff, on any shift, in any language.',
     points: [
       'Staff ask a question and get the answer from your policies',

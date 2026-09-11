@@ -15,6 +15,10 @@ import { seedTenantKnowledge } from '../services/knowledge/seeder'
 import { sendVerificationEmail, sendPasswordResetEmail, sendStaffLoginLinkEmail, sendNewTenantNotification } from '../services/email/outbound'
 import { createLoginLink, consumeLoginToken, mintLoginToken } from '../lib/login-tokens'
 
+// Tiers bought outright rather than subscribed to. Neither has a Stripe
+// subscription, so neither goes through the card-up-front billing gate.
+const NO_SUBSCRIPTION_TIERS = new Set(['training_only', 'policies_only'])
+
 const VERIFICATION_EXPIRY_MS = 24 * 60 * 60 * 1000 // 24 hours
 const AUTO_LOGIN_TTL_MS      = 15 * 60 * 1000       // verify-email auto-login token: 15 min
 
@@ -278,7 +282,7 @@ authRouter.post('/login', async (req: Request, res: Response) => {
   const refreshToken = await issueRefreshToken(user.id)
 
   // Training-only tenants never go through the card-up-front subscription gate.
-  const needsBilling = user.tenant?.tier !== 'training_only' && user.tenant.subscription_status !== 'active' && !user.tenant.stripe_subscription_id
+  const needsBilling = !NO_SUBSCRIPTION_TIERS.has(user.tenant?.tier ?? '') && user.tenant.subscription_status !== 'active' && !user.tenant.stripe_subscription_id
 
   ok(res, {
     access_token:  accessToken,
@@ -315,7 +319,7 @@ async function respondWithSession(res: Response, user: any): Promise<void> {
   notifyReviewerActivity(user.id, 'signin', 'signed in to the hub').catch(() => {})
   // Hard gate for the card-up-front trial: a tenant that hasn't started a Stripe
   // subscription yet (and isn't already active) must add a card before using the app.
-  const needsBilling = user.tenant?.tier !== 'training_only' && user.tenant.subscription_status !== 'active' && !user.tenant.stripe_subscription_id
+  const needsBilling = !NO_SUBSCRIPTION_TIERS.has(user.tenant?.tier ?? '') && user.tenant.subscription_status !== 'active' && !user.tenant.stripe_subscription_id
   // "Staff + Audits": this member can conduct audits in the hub.
   const auditAccess = user.role === 'admin' || (Array.isArray(user.audit_template_ids) && user.audit_template_ids.length > 0)
   ok(res, {
@@ -573,7 +577,7 @@ authRouter.post('/refresh', async (req: Request, res: Response) => {
 
   // Re-evaluate the billing gate on every refresh so it clears once a card is added.
   // Training-only tenants are exempt — they never subscribe.
-  const needsBilling = user.tenant?.tier !== 'training_only' && user.tenant?.subscription_status !== 'active' && !user.tenant?.stripe_subscription_id
+  const needsBilling = !NO_SUBSCRIPTION_TIERS.has(user.tenant?.tier ?? '') && user.tenant?.subscription_status !== 'active' && !user.tenant?.stripe_subscription_id
   const auditAccess = user.role === 'admin' || (Array.isArray(user.audit_template_ids) && user.audit_template_ids.length > 0)
 
   ok(res, { access_token: accessToken, refresh_token: rotated.refreshToken, needs_billing: needsBilling, audit_access: auditAccess, is_reviewer: !!(user as any).is_reviewer, tier: user.tenant?.tier ?? 'full' })

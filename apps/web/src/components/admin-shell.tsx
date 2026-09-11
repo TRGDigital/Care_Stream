@@ -9,6 +9,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { SiteImage } from '@/components/site-image'
 import { useEffect, useRef, useState } from 'react'
 import { clsx } from 'clsx'
+import { UpgradeOverlay } from './upgrade-overlay'
 import {
   LayoutDashboard, FileText, Users, BarChart2, TrendingUp, ClipboardCheck, CreditCard, MessageSquare, Settings, BookOpen, ShieldAlert, GraduationCap, ShieldCheck,
   Building2, ChevronDown, Check, Loader2, HelpCircle, ClipboardList, Menu, X, Lock, KeyRound, BadgeCheck,
@@ -80,6 +81,11 @@ const NAV_SECTIONS = [
 // greyed with an "Unlock with CareStream" prompt (the upsell). /licences is added
 // once that page exists.
 const TRAINING_ONLY_NAV = new Set(['/dashboard', '/group', '/staff', '/training', '/analytics', '/settings', '/licences', '/billing'])
+// Policies-only buyers came in through the shop with no hub and no subscription. They
+// get Policies, Settings (the organisation details their policies are written from)
+// and Billing (the invoice). Everything else opens the tier overlay instead of being
+// merely greyed out: this tier has never seen CareStream, so the lock is the pitch.
+const POLICIES_ONLY_NAV = new Set(['/policies', '/settings', '/billing'])
 
 interface AdminShellProps {
   userName:   string
@@ -92,6 +98,8 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
   const router          = useRouter()
   const { data: session } = useSession()
   const trainingOnly = session?.user?.tier === 'training_only'
+  const policiesOnly = (session?.user as any)?.tier === 'policies_only'
+  const [lockedFeature, setLockedFeature] = useState<string | null>(null)
   const { features } = usePlanFeatures()
   const hasWorkforce = hasFeature(features, 'has_workforce_compliance')
 
@@ -182,7 +190,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
         'hidden flex-shrink-0 flex-col bg-[#1A0830] transition-[width] duration-200 md:flex print:hidden',
         collapsed ? 'w-16' : 'w-60',
       )}>
-        <SidebarContent pathname={pathname} trainingOnly={trainingOnly} multiSite={multiSite} hasWorkforce={hasWorkforce} collapsed={collapsed} onTour={() => setTourSignal(s => s + 1)} />
+        <SidebarContent pathname={pathname} trainingOnly={trainingOnly} policiesOnly={policiesOnly} onLocked={setLockedFeature} multiSite={multiSite} hasWorkforce={hasWorkforce} collapsed={collapsed} onTour={() => setTourSignal(s => s + 1)} />
       </aside>
 
       {/* Sidebar drawer (mobile < md) */}
@@ -197,7 +205,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
             >
               <X size={20} />
             </button>
-            <SidebarContent pathname={pathname} trainingOnly={trainingOnly} multiSite={multiSite} hasWorkforce={hasWorkforce} onNavigate={() => setMobileNav(false)} onTour={() => { setMobileNav(false); setTourSignal(s => s + 1) }} />
+            <SidebarContent pathname={pathname} trainingOnly={trainingOnly} policiesOnly={policiesOnly} onLocked={setLockedFeature} multiSite={multiSite} hasWorkforce={hasWorkforce} onNavigate={() => setMobileNav(false)} onTour={() => { setMobileNav(false); setTourSignal(s => s + 1) }} />
           </aside>
         </div>
       )}
@@ -319,12 +327,16 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
         />
       )}
 
+      {lockedFeature && (
+        <UpgradeOverlay feature={lockedFeature} onClose={() => setLockedFeature(null)} />
+      )}
+
     </div>
   )
 }
 
 // Sidebar contents — shared by the desktop sidebar and the mobile drawer.
-function SidebarContent({ pathname, trainingOnly, multiSite, hasWorkforce, collapsed, onNavigate, onTour }: { pathname: string; trainingOnly?: boolean; multiSite?: boolean; hasWorkforce?: boolean; collapsed?: boolean; onNavigate?: () => void; onTour?: () => void }) {
+function SidebarContent({ pathname, trainingOnly, policiesOnly, onLocked, multiSite, hasWorkforce, collapsed, onNavigate, onTour }: { pathname: string; trainingOnly?: boolean; policiesOnly?: boolean; onLocked?: (label: string) => void; multiSite?: boolean; hasWorkforce?: boolean; collapsed?: boolean; onNavigate?: () => void; onTour?: () => void }) {
   // Training-only tenants get a Licences item (where they allocate what they bought).
   let sections = trainingOnly
     ? NAV_SECTIONS.map(s => s.heading === 'Admin'
@@ -375,6 +387,22 @@ function SidebarContent({ pathname, trainingOnly, multiSite, hasWorkforce, colla
             {items.map((item) => {
               const { href, label, Icon } = item
               const enterpriseItem = (item as { enterprise?: boolean }).enterprise
+              // Policies-only buyers get a real button: clicking explains the tiers.
+              if (policiesOnly && !POLICIES_ONLY_NAV.has(href)) {
+                return (
+                  <button
+                    key={href}
+                    type="button"
+                    onClick={() => { onLocked?.(label); onNavigate?.() }}
+                    {...tipProps(`${label} — see what CareStream adds`)}
+                    title={collapsed ? undefined : 'See what CareStream adds'}
+                    className={clsx('mb-0.5 flex w-full items-center rounded-md py-2 text-left text-sm font-medium text-white/30 hover:bg-white/5 hover:text-white/60', collapsed ? 'justify-center px-0' : 'gap-3 px-3')}
+                  >
+                    <Icon size={16} className="text-white/20" />
+                    {!collapsed && <><span className="flex-1">{label}</span><Lock size={12} className="text-white/30" /></>}
+                  </button>
+                )
+              }
               // Training-only tenants see non-training features greyed (upsell), not gone.
               if (trainingOnly && !TRAINING_ONLY_NAV.has(href)) {
                 return (

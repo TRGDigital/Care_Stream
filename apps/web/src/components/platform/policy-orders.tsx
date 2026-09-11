@@ -10,8 +10,8 @@
 // home's name turns out to be wrong, that answer needs to exist.
 
 import { useEffect, useState } from 'react'
-import { createPlatformClient, type PolicyOrder } from '@/lib/platform-api'
-import { Loader2, Check, PenLine, AlertTriangle, FileText, X } from 'lucide-react'
+import { createPlatformClient, type PolicyOrder, type PolicyOrderVerification } from '@/lib/platform-api'
+import { Loader2, Check, PenLine, AlertTriangle, FileText, X, ShieldCheck, ShieldAlert } from 'lucide-react'
 
 const money = (p: number) => `£${(p / 100).toFixed(p % 100 === 0 ? 0 : 2)}`
 const when = (iso: string) => new Date(iso).toLocaleDateString('en-GB')
@@ -22,6 +22,41 @@ const STATUS: Record<PolicyOrder['status'], { label: string; cls: string }> = {
   drafted:  { label: 'Needs our read',    cls: 'bg-indigo-50 text-indigo-700' },
   approved: { label: 'Delivered',         cls: 'bg-green-50 text-green-700' },
   refunded: { label: 'Refunded',          cls: 'bg-neutral-light text-neutral-mid' },
+}
+
+// Count what failed, for the row chip and the checklist panel.
+function failureCount(v: PolicyOrderVerification): number {
+  return v.checks.substitution.issues.length + v.checks.terminology.issues.length +
+    v.checks.identity.issues.length + v.checks.coverage.issues.length +
+    v.checks.coverage.regulations.reduce((n, r) => n + r.missing_elements.length, 0)
+}
+
+function VerificationChecklist({ v }: { v: PolicyOrderVerification }) {
+  const row = (label: string, passed: boolean, issues: string[]) => (
+    <div className="flex items-start gap-2 py-1">
+      {passed ? <ShieldCheck size={14} className="mt-0.5 shrink-0 text-green-600" /> : <ShieldAlert size={14} className="mt-0.5 shrink-0 text-red-600" />}
+      <div className="min-w-0">
+        <p className={`text-xs font-semibold ${passed ? 'text-green-700' : 'text-red-700'}`}>{label}</p>
+        {issues.map((i, n) => <p key={n} className="text-xs text-red-700/90">{i}</p>)}
+      </div>
+    </div>
+  )
+  const cov = v.checks.coverage
+  return (
+    <div className={`border-b px-5 py-3 ${v.passed ? 'border-green-100 bg-green-50/60' : 'border-red-100 bg-red-50/60'}`}>
+      <p className={`mb-1 text-xs font-bold uppercase tracking-wide ${v.passed ? 'text-green-700' : 'text-red-700'}`}>
+        {v.passed ? 'Verification passed' : 'Verification FAILED, this must not ship as-is'}
+      </p>
+      {row('No placeholders left in the document', v.checks.substitution.passed, v.checks.substitution.issues)}
+      {row('No outdated organisations or instruments', v.checks.terminology.passed, v.checks.terminology.issues)}
+      {row("The client's name appears in the document", v.checks.identity.passed, v.checks.identity.issues)}
+      {row(
+        cov.passed ? 'Every required regulatory element is addressed' : 'Required regulatory elements are missing',
+        cov.passed,
+        [...cov.issues, ...cov.regulations.filter(r => !r.met).flatMap(r => r.missing_elements.map(m => `${r.official_name}: "${m}" not addressed`))],
+      )}
+    </div>
+  )
 }
 
 export function PolicyOrders({ token }: { token: string }) {
@@ -60,13 +95,31 @@ export function PolicyOrders({ token }: { token: string }) {
     finally { setBusy(null) }
   }
 
+  async function verify(o: PolicyOrder) {
+    setBusy(o.id); setError('')
+    try {
+      await createPlatformClient(token).policyGaps.verifyOrder(o.id)
+      await load()
+    } catch (e: any) { setError(e.message) }
+    finally { setBusy(null) }
+  }
+
   async function deliver(o: PolicyOrder) {
-    if (!window.confirm(
+    const verified = o.verification?.passed === true
+    let opts: { override: true; reason: string } | undefined
+    if (!verified) {
+      // The gate. Overriding is allowed but deliberate: a written reason, recorded in the audit log.
+      const reason = window.prompt(
+        `"${o.policy_title}" has NOT passed verification.\n\nTo deliver it anyway, write the reason (at least 10 characters). This is recorded in the audit log under your name.`
+      )
+      if (!reason || reason.trim().length < 10) return
+      opts = { override: true, reason: reason.trim() }
+    } else if (!window.confirm(
       `Approve "${o.policy_title}" and put it in ${o.tenant?.name ?? 'the client'}'s policy library?\n\nThey will see it immediately.`
     )) return
     setBusy(o.id); setError('')
     try {
-      await createPlatformClient(token).policyGaps.deliverOrder(o.id)
+      await createPlatformClient(token).policyGaps.deliverOrder(o.id, opts)
       setReading(null)
       await load()
     } catch (e: any) { setError(e.message) }
@@ -115,6 +168,13 @@ export function PolicyOrders({ token }: { token: string }) {
                   {o.approved_by ? ` · approved by ${o.approved_by}` : ''}
                 </span>
               </span>
+              {o.status === 'drafted' && (
+                o.verification
+                  ? o.verification.passed
+                    ? <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-semibold text-green-700"><ShieldCheck size={11} /> Verified</span>
+                    : <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700"><ShieldAlert size={11} /> {failureCount(o.verification)} issue{failureCount(o.verification) === 1 ? '' : 's'}</span>
+                  : <span className="shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-semibold text-neutral-mid">Not verified</span>
+              )}
               <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${STATUS[o.status].cls}`}>
                 {STATUS[o.status].label}
               </span>
@@ -124,6 +184,13 @@ export function PolicyOrders({ token }: { token: string }) {
                     className="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-40"
                     title="Writes the policy. Spends Anthropic credit. Nothing reaches the client until you approve it.">
                     {busy === o.id ? <Loader2 size={12} className="animate-spin" /> : <PenLine size={12} />} Write
+                  </button>
+                )}
+                {o.status === 'drafted' && !o.verification && (
+                  <button onClick={() => verify(o)} disabled={busy === o.id}
+                    className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-medium text-indigo-800 hover:bg-indigo-100 disabled:opacity-40"
+                    title="Run the verification gate on this draft. Spends a little Anthropic credit.">
+                    {busy === o.id ? <Loader2 size={12} className="animate-spin" /> : <ShieldCheck size={12} />} Verify
                   </button>
                 )}
                 {o.status === 'drafted' && (
@@ -146,6 +213,9 @@ export function PolicyOrders({ token }: { token: string }) {
               <h3 className="flex-1 text-sm font-semibold text-neutral-dark">{reading.title}</h3>
               <button onClick={() => setReading(null)} className="text-neutral-mid hover:text-neutral-dark"><X size={16} /></button>
             </div>
+            {(() => { const o = orders?.find(x => x.id === reading.id); return o?.verification ? <VerificationChecklist v={o.verification} /> : (
+              <div className="border-b border-amber-100 bg-amber-50/60 px-5 py-2.5 text-xs font-medium text-amber-800">This draft has not been verified. Run Verify before approving.</div>
+            ) })()}
             {/* Deliberately the raw markdown. This is the last read before a care home's name
                 goes on it, and rendered prose hides things a plain read catches: a stray
                 placeholder, a heading that never got filled in, a name that should not be there. */}
@@ -156,7 +226,7 @@ export function PolicyOrders({ token }: { token: string }) {
                 onClick={() => { const o = orders?.find(x => x.id === reading.id); if (o) deliver(o) }}
                 disabled={busy === reading.id}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-xs font-semibold text-white hover:bg-teal/90 disabled:opacity-40">
-                {busy === reading.id ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Approve and deliver
+                {busy === reading.id ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} {orders?.find(x => x.id === reading.id)?.verification?.passed ? 'Approve and deliver' : 'Approve anyway\u2026'}
               </button>
             </div>
           </div>

@@ -47,6 +47,7 @@ const NAV_GROUPS: Array<{ title: string | null; items: Array<{ href: string; lab
       { href: '/platform/quality-statements', label: 'CQC Quality Statements', Icon: ListChecks },
       { href: '/platform/policy-lint',     label: 'Policy Stale Signals', Icon: SearchCheck   },
       { href: '/platform/policy-gaps',     label: 'Policy Gaps',      Icon: SearchCheck     },
+      { href: '/platform/paid-policies',   label: 'Paid Policies',    Icon: FileText        },
       { href: '/platform/policy-seeds',    label: 'Policy Seeds',     Icon: FileText        },
     ],
   },

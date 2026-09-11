@@ -126,7 +126,9 @@ function buildUserMessage(opts: {
 
 export type WrittenPolicy = { markdown: string; words: number; sections: number }
 
-export async function writePolicy(purchaseId: string): Promise<WrittenPolicy> {
+// revisionNotes: verification failures from a previous attempt, fed back so the rewrite
+// fixes precisely what failed rather than rolling the dice again.
+export async function writePolicy(purchaseId: string, revisionNotes: string[] = []): Promise<WrittenPolicy> {
   const purchase = await (prisma as any).policyPurchase.findUnique({ where: { id: purchaseId } })
   if (!purchase) throw new Error('That order was not found')
 
@@ -154,15 +156,20 @@ export async function writePolicy(purchaseId: string): Promise<WrittenPolicy> {
     names: String(od[p.key] ?? '').split(',').map(s => s.trim()).filter(Boolean),
   }))
 
+  const baseMessage = buildUserMessage({
+    title:    purchase.policy_title,
+    homeName: tenant.name,
+    address:  typeof od.address === 'string' ? od.address : null,
+    regs,
+    roleNames,
+  })
+  const userMessage = revisionNotes.length
+    ? `${baseMessage}\n\nA PREVIOUS DRAFT OF THIS POLICY FAILED VERIFICATION. This rewrite must fix every one of these, without weakening anything else:\n${revisionNotes.map(n => `- ${n}`).join('\n')}`
+    : baseMessage
+
   const markdown = (await callClaude(
     await getPolicyWriterPrompt(),
-    buildUserMessage({
-      title:    purchase.policy_title,
-      homeName: tenant.name,
-      address:  typeof od.address === 'string' ? od.address : null,
-      regs,
-      roleNames,
-    }),
+    userMessage,
     // Long enough for the three thousand words the hand-written drafts ran to, and a low
     // temperature because this is a compliance document, not a piece of writing.
     { model: MODEL_SONNET, maxTokens: 8000, temperature: 0.2, feature: 'policy_writer' },

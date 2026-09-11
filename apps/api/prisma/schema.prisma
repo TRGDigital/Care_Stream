@@ -2645,6 +2645,8 @@ model PolicyPurchase {
   draft_content     String?   // the written policy, held until a person approves it
   drafted_by        String?
   drafted_at        DateTime?
+  verification      Json?     // verification gate checklist (see verify-policy.ts); Approve requires passed=true
+  verified_at       DateTime?
   approved_at       DateTime?
   approved_by       String?
   purchased_at      DateTime  @default(now())

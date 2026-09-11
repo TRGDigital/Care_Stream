@@ -23,6 +23,7 @@ import {
   POLICY_PENCE,
 } from '../services/billing/stripe'
 import { missingPolicies } from '../services/analytics/missing-policies'
+import { sendPolicyPurchaseNotification } from '../services/email/outbound'
 
 export const policyPurchasesRouter = Router()
 
@@ -140,6 +141,21 @@ policyPurchasesRouter.post('/reconcile', async (req: Request, res: Response) => 
       where: { tenant_id: user.tenant_id, stripe_payment_id: result.paymentId },
       orderBy: { policy_title: 'asc' },
     })
+
+    // Tell the platform team work is now owed (fire-and-forget; idempotent because
+    // reconcile only reports titles created THIS call — a page refresh creates none).
+    if (created.length > 0) {
+      const tenant = await (prisma as any).tenant.findUnique({
+        where: { id: user.tenant_id }, select: { name: true, account_number: true },
+      }).catch(() => null)
+      sendPolicyPurchaseNotification({
+        tenantName: tenant?.name ?? 'Unknown client',
+        accountNumber: tenant?.account_number ?? null,
+        titles: created,
+        totalPence: created.length * POLICY_PENCE,
+      }).catch(e => console.error('[policy-purchases] notify failed:', e?.message ?? e))
+    }
+
     ok(res, { created: created.length, purchases })
   } catch (e: any) {
     err(res, 'RECONCILE_FAILED', e?.message ?? 'could not confirm that purchase', 500)

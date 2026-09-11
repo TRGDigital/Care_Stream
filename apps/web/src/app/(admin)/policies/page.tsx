@@ -1102,7 +1102,7 @@ function PolicyPreviewModal({ token, policy, version, onClose, onRename }: {
             <button onClick={downloadOriginal} disabled={loading || downloading || !data?.html}
               title="Download the original document as it was uploaded"
               className="flex items-center gap-1.5 rounded-lg bg-teal px-3.5 py-2 text-sm font-medium text-white hover:bg-teal/90 disabled:opacity-50">
-              <Download size={14} /> {downloading ? 'Downloading…' : 'Download'}
+              <Download size={14} /> {downloading ? 'Downloading…' : 'Download PDF'}
             </button>
             <button onClick={printOrDownload} disabled={loading || !data?.html}
               title="Open with your letterhead, logo and sign-off block, then print or choose Save as PDF"

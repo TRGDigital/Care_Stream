@@ -529,6 +529,10 @@ model ExternalRegulation {
   needs_update             Boolean   @default(false) // flagged: the legislation/standard changed, this reg needs updating
   review_note              String    @default("")    // why it needs updating / review notes
   last_reviewed_at         DateTime?                 // when it was last reviewed/updated
+  /// Illustration for this piece of legislation, shown wherever the regulation appears
+  /// on a policy shop page. Keyed by the regulation, not the policy, because 65 policies
+  /// cite only 57 distinct regulations and the same law should not be drawn twice.
+  image_key                String?
   pinecone_vector_id       String?
   last_synced_at           DateTime?
   is_active                Boolean   @default(true)
@@ -2646,6 +2650,9 @@ model PolicyProduct {
   bundle_keys    String[] @default([])      // bundles this product belongs to
   reference_keys String[] @default([])      // regulations the verification gate must cover
   intake_fields  Json     @default("[]")    // [{ key, label, help?, shared? }] — shared fields are asked once per buyer
+  /// Hero illustration for the shop page, generated in /platform/policy-images and
+  /// served via /public/policy-shop/image/<file>. One per policy: it opens the intake.
+  image_key      String?
   sort_order     Int      @default(0)
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt

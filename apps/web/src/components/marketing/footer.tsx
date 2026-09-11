@@ -17,7 +17,6 @@ const PRODUCT = [
   { href: '/training-platform',    label: 'Training' },
   { href: '/staff-training',       label: 'Annual Training' },
   { href: '/regulatory-knowledge', label: 'Regulatory Knowledge' },
-  { href: '/uses/resident-knowledge', label: 'Resident Knowledge' },
   { href: '/demo',                 label: 'Book a Demo' },
 ]
 

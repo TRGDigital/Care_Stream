@@ -99,6 +99,9 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
   const { data: session } = useSession()
   const trainingOnly = session?.user?.tier === 'training_only'
   const policiesOnly = (session?.user as any)?.tier === 'policies_only'
+  // The guided tour walks the full CareStream console. Neither self-serve tier has
+  // most of what it points at, so it is not offered and does not auto-open.
+  const selfServe = trainingOnly || policiesOnly
   const [lockedFeature, setLockedFeature] = useState<string | null>(null)
   const { features } = usePlanFeatures()
   const hasWorkforce = hasFeature(features, 'has_workforce_compliance')
@@ -190,7 +193,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
         'hidden flex-shrink-0 flex-col bg-[#1A0830] transition-[width] duration-200 md:flex print:hidden',
         collapsed ? 'w-16' : 'w-60',
       )}>
-        <SidebarContent pathname={pathname} trainingOnly={trainingOnly} policiesOnly={policiesOnly} onLocked={setLockedFeature} multiSite={multiSite} hasWorkforce={hasWorkforce} collapsed={collapsed} onTour={() => setTourSignal(s => s + 1)} />
+        <SidebarContent pathname={pathname} trainingOnly={trainingOnly} policiesOnly={policiesOnly} selfServe={selfServe} onLocked={setLockedFeature} multiSite={multiSite} hasWorkforce={hasWorkforce} collapsed={collapsed} onTour={() => setTourSignal(s => s + 1)} />
       </aside>
 
       {/* Sidebar drawer (mobile < md) */}
@@ -205,7 +208,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
             >
               <X size={20} />
             </button>
-            <SidebarContent pathname={pathname} trainingOnly={trainingOnly} policiesOnly={policiesOnly} onLocked={setLockedFeature} multiSite={multiSite} hasWorkforce={hasWorkforce} onNavigate={() => setMobileNav(false)} onTour={() => { setMobileNav(false); setTourSignal(s => s + 1) }} />
+            <SidebarContent pathname={pathname} trainingOnly={trainingOnly} policiesOnly={policiesOnly} selfServe={selfServe} onLocked={setLockedFeature} multiSite={multiSite} hasWorkforce={hasWorkforce} onNavigate={() => setMobileNav(false)} onTour={() => { setMobileNav(false); setTourSignal(s => s + 1) }} />
           </aside>
         </div>
       )}
@@ -318,7 +321,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
 
       {/* Guided tour: auto-opens once for brand-new tenants, replayable via the
           sidebar "Take the tour" button on any page. */}
-      {session?.accessToken && (session.user as any)?.tenantId && (
+      {!selfServe && session?.accessToken && (session.user as any)?.tenantId && (
         <GuidedTour
           token={session.accessToken}
           tenantId={(session.user as any).tenantId}
@@ -336,7 +339,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
 }
 
 // Sidebar contents — shared by the desktop sidebar and the mobile drawer.
-function SidebarContent({ pathname, trainingOnly, policiesOnly, onLocked, multiSite, hasWorkforce, collapsed, onNavigate, onTour }: { pathname: string; trainingOnly?: boolean; policiesOnly?: boolean; onLocked?: (label: string) => void; multiSite?: boolean; hasWorkforce?: boolean; collapsed?: boolean; onNavigate?: () => void; onTour?: () => void }) {
+function SidebarContent({ pathname, trainingOnly, policiesOnly, selfServe, onLocked, multiSite, hasWorkforce, collapsed, onNavigate, onTour }: { pathname: string; trainingOnly?: boolean; policiesOnly?: boolean; selfServe?: boolean; onLocked?: (label: string) => void; multiSite?: boolean; hasWorkforce?: boolean; collapsed?: boolean; onNavigate?: () => void; onTour?: () => void }) {
   // Training-only tenants get a Licences item (where they allocate what they bought).
   let sections = trainingOnly
     ? NAV_SECTIONS.map(s => s.heading === 'Admin'
@@ -458,14 +461,16 @@ function SidebarContent({ pathname, trainingOnly, policiesOnly, onLocked, multiS
 
       {/* Back to portal */}
       <div className="border-t border-white/10 px-3 py-3">
-        <button
-          onClick={() => { setTip(null); onTour?.() }}
-          {...tipProps('Take the tour')}
-          className={clsx('mb-0.5 flex w-full items-center rounded-md py-2 text-sm font-medium text-white/60 hover:bg-white/10 hover:text-white', collapsed ? 'justify-center px-0' : 'gap-3 px-3')}
-        >
-          <Compass size={16} className="text-white/50" />
-          {!collapsed && 'Take the tour'}
-        </button>
+        {!selfServe && (
+          <button
+            onClick={() => { setTip(null); onTour?.() }}
+            {...tipProps('Take the tour')}
+            className={clsx('mb-0.5 flex w-full items-center rounded-md py-2 text-sm font-medium text-white/60 hover:bg-white/10 hover:text-white', collapsed ? 'justify-center px-0' : 'gap-3 px-3')}
+          >
+            <Compass size={16} className="text-white/50" />
+            {!collapsed && 'Take the tour'}
+          </button>
+        )}
         <Link
           href="/chat"
           onClick={() => { setTip(null); onNavigate?.() }}

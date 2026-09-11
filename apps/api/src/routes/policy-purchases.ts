@@ -154,11 +154,19 @@ policyPurchasesRouter.post('/:id/intake', async (req: Request, res: Response) =>
 
     if (Object.keys(sharedUpdates).length) {
       const tenant = await (prisma as any).tenant.findUnique({
-        where: { id: user.tenant_id }, select: { organisation_details: true },
+        where: { id: user.tenant_id }, select: { organisation_details: true, name: true },
       })
+      const mergedDetails = { ...((tenant?.organisation_details ?? {}) as any), ...sharedUpdates }
+      // A shop buyer's tenant is created as "Policy customer" because at payment we do
+      // not know who they are. The moment they tell us, use it — otherwise the clients
+      // list fills with identical placeholders. Only ever renames the placeholder.
+      const realName = mergedDetails.company_legal_name || mergedDetails.trading_name || null
+      const renaming = realName && tenant?.name === 'Policy customer'
+        ? { name: String(realName).slice(0, 120) }
+        : {}
       await (prisma as any).tenant.update({
         where: { id: user.tenant_id },
-        data: { organisation_details: { ...((tenant?.organisation_details ?? {}) as object), ...sharedUpdates } },
+        data: { organisation_details: mergedDetails, ...renaming },
       })
     }
     let updated = purchase

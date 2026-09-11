@@ -1356,6 +1356,11 @@ export interface PolicyOrder {
   id: string
   tenant_id: string
   tenant: { id: string; name: string; account_number: string } | null
+  /** From the details they supplied, not the "Policy customer" placeholder. */
+  company: string | null
+  /** Who placed the order: the account's admin. */
+  buyer: { name: string | null; email: string | null } | null
+  registered_manager: string | null
   policy_title: string
   reference_keys: string[]
   price_pence: number

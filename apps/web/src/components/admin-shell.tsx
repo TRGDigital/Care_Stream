@@ -296,8 +296,11 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
             <p className="truncate text-sm font-semibold text-neutral-dark">{tenantName}</p>
           )}
 
-          {/* Live rules-based guidance, right beside the tenant name */}
-          {session?.accessToken && (session.user as any)?.tenantId && (
+          {/* Live rules-based guidance, right beside the tenant name. Not on the
+              self-serve tiers: care suggestions read the full-platform signals (gaps,
+              audits, queries, onboarding) that neither tier has, so they have nothing
+              to say. */}
+          {!selfServe && session?.accessToken && (session.user as any)?.tenantId && (
             <SuggestionsButton token={session.accessToken} tenantId={(session.user as any).tenantId} />
           )}
           </div>

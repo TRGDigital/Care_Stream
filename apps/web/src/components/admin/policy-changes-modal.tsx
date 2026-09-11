@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { applyRoleNames } from '@/lib/policy-names'
-import { X, Loader2, Check, RotateCcw, FileCheck2, GitCompare, Printer, Pencil, Send, Eraser } from 'lucide-react'
+import { X, Loader2, Check, RotateCcw, FileCheck2, GitCompare, Printer, Download, Pencil, Send, Eraser } from 'lucide-react'
 
 import { buildPrintDoc, openPrintDoc, type OrgCtx } from '@/components/admin/policies/policy-print'
 
@@ -223,6 +223,20 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
 
   // Open a print-ready CLEAN copy (no change markers — the filed hard copy) for Save-as-PDF.
   // Built from a detached render so it's always clean regardless of the on-screen toggle.
+  // Two buttons, deliberately. Download saves a file; Print opens the print view.
+  // One button doing both is what left a policy buyer pressing "Download" and getting
+  // a print dialog, because this modal only ever had the print one.
+  const [downloading, setDownloading] = useState(false)
+  async function downloadFile() {
+    setDownloading(true); setError('')
+    try {
+      const ok = await createApiClient(token).policies.downloadOriginal(policyId, policyName)
+      if (!ok) downloadPolicy()   // no original and no generated PDF: fall back to print
+    } catch {
+      downloadPolicy()
+    } finally { setDownloading(false) }
+  }
+
   function downloadPolicy() {
     if (!doc?.document || html === null) return
     const div = document.createElement('div')
@@ -370,6 +384,11 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
+            <button onClick={downloadFile} disabled={!doc?.document || downloading}
+              title="Download the policy as a file"
+              className="inline-flex items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal/90 disabled:opacity-50">
+              <Download size={13} /> {downloading ? 'Downloading…' : 'Download PDF'}
+            </button>
             {!policiesOnly && (
               <button onClick={() => setTracked(t => !t)}
                 title={tracked ? 'Hide the highlights and preview the finished policy' : 'Highlight exactly what changed in this version'}

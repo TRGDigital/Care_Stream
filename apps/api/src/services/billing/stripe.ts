@@ -374,6 +374,133 @@ async function policyPriceId(): Promise<string> {
   return created.id
 }
 
+// ── Policy shop checkout ──────────────────────────────────────────────────────
+// The standalone shop: someone with no CareStream account buying policies or a pack
+// from /care-policies.
+//
+// DELIBERATELY NOT a Stripe product catalogue. Prices live in policy_products and
+// policy_bundles, and are passed per checkout as inline price_data, so the database
+// stays the only place a price is defined and changing one is a single update. The
+// alternative — 71 mirrored Stripe products — is two sources of truth and silent drift
+// the day they disagree.
+//
+// The browser sends SLUGS ONLY. Every amount is looked up here. A posted price, or a
+// quantity chosen to imply one, is ignored: on a live key that distinction is real money.
+
+export type ShopItem = { kind: 'policy' | 'bundle'; key: string }
+
+export interface ShopCheckoutResult {
+  paid: boolean
+  paymentId: string
+  email: string | null
+  amountTotalPence: number
+  items: ShopItem[]
+}
+
+/** Resolve what the buyer actually gets charged, from the catalogue, never from input. */
+async function priceShopItems(items: ShopItem[]): Promise<Array<{
+  item: ShopItem; name: string; pence: number
+}>> {
+  const policySlugs = items.filter(i => i.kind === 'policy').map(i => i.key)
+  const bundleKeys  = items.filter(i => i.kind === 'bundle').map(i => i.key)
+
+  const [products, bundles] = await Promise.all([
+    policySlugs.length
+      ? (prisma as any).policyProduct.findMany({
+          where: { slug: { in: policySlugs }, active: true },
+          select: { slug: true, title: true, price_pence: true },
+        })
+      : [],
+    bundleKeys.length
+      ? (prisma as any).policyBundle.findMany({
+          where: { key: { in: bundleKeys }, active: true },
+          select: { key: true, title: true, price_pence: true },
+        })
+      : [],
+  ])
+
+  const byPolicy = new Map<string, any>((products as any[]).map(p => [p.slug, p]))
+  const byBundle = new Map<string, any>((bundles as any[]).map(b => [b.key, b]))
+
+  const priced: Array<{ item: ShopItem; name: string; pence: number }> = []
+  for (const item of items) {
+    const row = item.kind === 'policy' ? byPolicy.get(item.key) : byBundle.get(item.key)
+    // An unknown or inactive key is refused rather than skipped: quietly dropping it
+    // would charge for a basket that is not the one the buyer agreed to.
+    if (!row) throw new Error(`Unknown or unavailable item: ${item.kind} ${item.key}`)
+    priced.push({ item, name: row.title, pence: row.price_pence })
+  }
+  return priced
+}
+
+export async function createShopCheckoutSession(input: {
+  email: string
+  items: ShopItem[]
+}): Promise<{ url: string; totalPence: number }> {
+  const items = input.items.slice(0, 30)
+  if (!items.length) throw new Error('Nothing to buy')
+  const priced = await priceShopItems(items)
+  const totalPence = priced.reduce((n, p) => n + p.pence, 0)
+  if (totalPence < 50) throw new Error('Basket total is below the minimum Stripe will charge')
+
+  const stripe = getStripe()
+  const opts = managedPaymentsRequestOptions()
+  const params: Stripe.Checkout.SessionCreateParams = {
+    mode: 'payment',
+    line_items: priced.map(p => ({
+      quantity: 1,
+      price_data: {
+        currency: 'gbp',
+        unit_amount: p.pence,
+        product_data: { name: p.name, tax_code: PLAN_TAX_CODE },
+      },
+    })),
+    customer_email: input.email,
+    metadata: {
+      kind: 'policy_shop',
+      // Keys only. A 65-policy pack would blow Stripe's 500-character metadata limit
+      // if expanded, and the expansion belongs to the catalogue anyway — reconcile
+      // reads the pack's contents from the database rather than from this string.
+      items: JSON.stringify(items.map(i => `${i.kind === 'bundle' ? 'b' : 'p'}:${i.key}`)).slice(0, 500),
+    },
+    billing_address_collection: 'required',
+    invoice_creation: { enabled: true },
+    success_url: `${webUrl()}/care-policies/thank-you?session={CHECKOUT_SESSION_ID}`,
+    cancel_url:  `${webUrl()}/care-policies`,
+  }
+  if (managedPaymentsEnabled()) (params as any).managed_payments = { enabled: true }
+
+  const session = await stripe.checkout.sessions.create(params, opts)
+  if (!session.url) throw new Error('Stripe did not return a checkout URL')
+  return { url: session.url, totalPence }
+}
+
+export async function retrieveShopCheckoutSession(sessionId: string): Promise<ShopCheckoutResult | null> {
+  const stripe = getStripe()
+  const session = await stripe.checkout.sessions.retrieve(sessionId, managedPaymentsRequestOptions())
+  if (!session) return null
+  const md = (session.metadata ?? {}) as Record<string, string>
+  if (md.kind !== 'policy_shop') return null
+
+  let items: ShopItem[] = []
+  try {
+    items = (JSON.parse(md.items ?? '[]') as string[]).map(raw => {
+      const [prefix, ...rest] = raw.split(':')
+      return { kind: prefix === 'b' ? 'bundle' : 'policy', key: rest.join(':') } as ShopItem
+    })
+  } catch { items = [] }
+
+  return {
+    paid: session.payment_status === 'paid',
+    paymentId: typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : (session.payment_intent?.id ?? session.id),
+    email: session.customer_details?.email ?? session.customer_email ?? null,
+    amountTotalPence: session.amount_total ?? 0,
+    items,
+  }
+}
+
 export interface PolicyCheckoutInput {
   tenantId: string
   email: string

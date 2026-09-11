@@ -44,6 +44,7 @@ import { publicImageAltsRouter } from './routes/image-alts'
 import { marketingPublicRouter } from './routes/marketing-public'
 import { onboardingPublicRouter } from './routes/onboarding-public'
 import { lpPublicRouter } from './routes/lp-public'
+import { policyShopPublicRouter } from './routes/policy-shop-public'
 import { agentActionsRouter } from './routes/agent-actions'
 import { cronRouter } from './routes/cron'
 import { standardTrainingRouter } from './routes/standard-training'
@@ -131,6 +132,7 @@ app.use('/onboarding', onboardingPublicRouter)
 
 // Public marketing blog — published posts only, no auth. Must be mounted BEFORE requireAuth.
 app.use('/public/blog', publicBlogRouter)
+app.use('/public/policy-shop', policyShopPublicRouter)
 
 // Public training-module illustrations (no tenant data), no auth. Must be mounted BEFORE requireAuth.
 app.use('/public/training', publicTrainingRouter)

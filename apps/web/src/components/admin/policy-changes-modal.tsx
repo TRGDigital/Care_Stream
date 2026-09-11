@@ -1,5 +1,6 @@
 'use client'
 
+import { useSession } from 'next-auth/react'
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { applyRoleNames } from '@/lib/policy-names'
@@ -178,7 +179,16 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
   const [html, setHtml]       = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState('')
+  // A policies-only buyer has no change-adoption, no care manager and no external
+  // reviewer: they bought a finished document. Everything built around reviewing a
+  // revision is noise to them, so it is hidden — for that tier only. Full CareStream
+  // clients see this modal exactly as before.
+  const { data: modalSession } = useSession()
+  const policiesOnly = (modalSession?.user as any)?.tier === 'policies_only'
   const [tracked, setTracked] = useState(true)
+  // ...and the highlights must start off, or they would see mark-up on a document
+  // that has no previous version to differ from.
+  useEffect(() => { if (policiesOnly) setTracked(false) }, [policiesOnly])
   const [busy, setBusy]       = useState<string | null>(null)   // 'publish' | change id
   const [publishedMsg, setPublishedMsg] = useState('')
   const [org, setOrg] = useState<OrgCtx | null>(null)
@@ -353,22 +363,26 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
             <p className="text-[10px] font-bold uppercase tracking-wide text-neutral-mid">Review changes</p>
             <h2 className="mt-0.5 truncate text-lg font-bold text-neutral-dark">{policyName}</h2>
             <p className="mt-0.5 text-xs text-neutral-mid">
-              {doc?.document?.version ? <>Current version {doc.document.version} · </> : null}
-              {pending.length} change{pending.length === 1 ? '' : 's'} to review
+              {doc?.document?.version ? <>Current version {doc.document.version}</> : null}
+              {!policiesOnly && (
+                <>{doc?.document?.version ? ' · ' : ''}{pending.length} change{pending.length === 1 ? '' : 's'} to review</>
+              )}
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            <button onClick={() => setTracked(t => !t)}
-              title={tracked ? 'Hide the highlights and preview the finished policy' : 'Highlight exactly what changed in this version'}
-              className="inline-flex items-center gap-1.5 rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-gray-50">
-              <GitCompare size={13} /> {tracked ? 'Hide changes' : 'View changes'}
-            </button>
+            {!policiesOnly && (
+              <button onClick={() => setTracked(t => !t)}
+                title={tracked ? 'Hide the highlights and preview the finished policy' : 'Highlight exactly what changed in this version'}
+                className="inline-flex items-center gap-1.5 rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-gray-50">
+                <GitCompare size={13} /> {tracked ? 'Hide changes' : 'View changes'}
+              </button>
+            )}
             <button onClick={downloadPolicy} disabled={!doc?.document}
               title="Download the clean policy for print / PDF (letterhead + sign-off)"
               className="inline-flex items-center gap-1.5 rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-gray-50 disabled:opacity-50">
               <Download size={13} /> Download
             </button>
-            {status === 'pending_external' ? (
+            {policiesOnly ? null : status === 'pending_external' ? (
               <div className="flex items-center gap-2">
                 {managerApproved && <span className="hidden items-center gap-1 rounded-btn border border-green-200 bg-green-50 px-2.5 py-1.5 text-xs font-medium text-green-700 sm:inline-flex"><Check size={12} /> Care manager approved</span>}
                 {externalSent ? (
@@ -414,16 +428,20 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
         ) : !doc?.document ? (
           <p className="px-6 py-20 text-center text-sm text-neutral-mid">Nothing adopted into this policy yet.</p>
         ) : (
-          <div className="grid max-h-[84vh] grid-cols-1 divide-y divide-gray-100 overflow-y-auto lg:max-h-[86vh] lg:grid-cols-[1fr_22rem] lg:divide-x lg:divide-y-0">
+          <div className={`grid max-h-[84vh] grid-cols-1 divide-y divide-gray-100 overflow-y-auto lg:max-h-[86vh] lg:divide-x lg:divide-y-0 ${policiesOnly ? '' : 'lg:grid-cols-[1fr_22rem]'}`}>
             {/* Left — the formatted policy with changes applied */}
             <div className="overflow-y-auto px-6 py-5 lg:max-h-[86vh]">
               {tracked
+                && !policiesOnly
                 ? <p className="mb-3 text-xs text-neutral-mid">Highlighted passages are what changed in this version: <span className="rounded bg-green-100 px-1">green</span> = added or replaced wording, <span className="rounded bg-red-50 px-1 text-red-400 line-through">red</span> = removed. Click <strong>Hide changes</strong> to preview the finished policy.</p>
                 : <p className="mb-3 text-xs text-neutral-mid">This is how the finished policy reads with the changes applied. Click <strong>View changes</strong> to highlight exactly what changed.</p>}
               <div ref={previewRef} className="policy-content prose prose-sm max-w-none rounded-lg border border-gray-100 bg-white p-4" />
             </div>
 
-            {/* Right — the change log with revert */}
+            {/* Right — the change log with revert. Not for policies-only buyers: there
+                is no change log, no reviewer and no approval chain on a document they
+                simply bought. */}
+            {!policiesOnly && (
             <div className="overflow-y-auto bg-neutral-light/20 px-5 py-5 lg:max-h-[86vh]">
               <p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">Adopted changes</p>
               {(doc.changes ?? []).length === 0 && <p className="mt-2 text-sm text-neutral-mid">No changes.</p>}
@@ -552,6 +570,7 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
                 </div>
               )}
             </div>
+            )}
           </div>
         )}
 

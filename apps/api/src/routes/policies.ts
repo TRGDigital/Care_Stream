@@ -8,6 +8,7 @@ import { uploadMiddleware, bulkUploadMiddleware } from '../middleware/upload'
 import { prisma } from '../db/client'
 import { getTenantId, tenantContext } from '../db/tenant-context'
 import { uploadPolicyFile, downloadExtractedText, downloadFile } from '../services/storage/s3'
+import { buildPolicyPdf } from '../services/policy/policy-pdf'
 import { extractText, isSupportedMimeType } from '../services/rag/extractor'
 import { backfillSignatures } from '../lib/policy-dedup'
 import { BUILTIN_CATEGORY_KEYS, isValidCategory } from '../lib/policy-categories'
@@ -795,6 +796,65 @@ policiesRouter.patch('/:id/review', requireAdmin, async (req: Request, res: Resp
 // CareStream-written policies have no original (they are markdown we generated), so
 // this reports that rather than serving a .md a care home cannot use. Those need real
 // PDF generation, which is a separate piece of work.
+// GET /:id/pdf -- a generated, text-based PDF for a policy with no uploaded original.
+//
+// CareStream-written policies are markdown we produced, so there is no file to hand
+// back. Rather than send the browser to a print dialog, render one: real text, so it
+// is selectable and searchable, with the tenant's letterhead and the sign-off block.
+//
+// Built from the SAME cached HTML the preview shows, so the PDF and the screen cannot
+// drift apart.
+policiesRouter.get('/:id/pdf', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const policyId = String(req.params.id)
+  try {
+    const policy = await (prisma as any).policy.findFirst({
+      where:  { id: policyId, tenant_id: tenantId },
+      select: { id: true, name: true, filename: true, version: true },
+    })
+    if (!policy) { err(res, 'POLICY_NOT_FOUND', 'Policy not found.', 404); return }
+
+    const raw = await downloadExtractedText(tenantId, policyId).catch(() => null)
+    const { html } = await getEnglishPolicyHtml(tenantId, policyId, raw)
+    if (!html) { err(res, 'NOT_READY', 'That policy has not finished processing yet.', 409); return }
+
+    const tenant = await (prisma as any).tenant.findUnique({
+      where:  { id: tenantId },
+      select: { name: true, logo_url: true, organisation_details: true },
+    })
+    const od = (tenant?.organisation_details ?? {}) as Record<string, string>
+
+    // logo_url is stored as a data URL by the settings upload, so the bytes are already
+    // here -- no fetch, and nothing to fail at download time.
+    let logo: Buffer | null = null
+    const m = /^data:image\/[a-z+]+;base64,(.+)$/i.exec(String(tenant?.logo_url ?? ''))
+    if (m) { try { logo = Buffer.from(m[1], 'base64') } catch { logo = null } }
+
+    const name = policy.name || policy.filename.replace(/\.[^.]+$/, '')
+    const buffer = await buildPolicyPdf({
+      policyName: name,
+      version:    String(policy.version ?? '1.0'),
+      html,
+      org: {
+        home_name:           tenant?.name ?? null,
+        address:             od.address ?? null,
+        registered_manager:  od.registered_manager ?? null,
+        default_approver:    od.default_approver || od.nominated_individual || null,
+        review_cycle_months: od.review_cycle_months ?? null,
+        logo,
+      },
+    })
+
+    const safe = `${name.replace(/[\\/:*?"<>|]/g, '').trim() || 'Policy'}.pdf`
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', `attachment; filename="${safe.replace(/"/g, '')}"; filename*=UTF-8''${encodeURIComponent(safe)}`)
+    res.setHeader('Content-Length', String(buffer.length))
+    res.send(buffer)
+  } catch (e: any) {
+    err(res, 'PDF_FAILED', e?.message ?? 'could not build that PDF', 500)
+  }
+})
+
 policiesRouter.get('/:id/file', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = getTenantId()
   const policy = await (prisma as any).policy.findFirst({

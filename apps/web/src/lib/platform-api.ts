@@ -1270,6 +1270,8 @@ export function createPlatformClient(token: string) {
       // client's library, so it is a separate, deliberate step after a person has read it.
       writeOrder: (id: string) =>
         adminFetch<{ order: PolicyOrder; words: number; sections: number; verification: PolicyOrderVerification; attempts: number }>(`/policy-gaps/orders/${id}/write`, token, { method: 'POST' }),
+      nudgeOrder: (id: string) =>
+        adminFetch<{ nudged: number; missing: number }>(`/policy-gaps/orders/${id}/nudge`, token, { method: 'POST' }),
       verifyOrder: (id: string) =>
         adminFetch<{ verification: PolicyOrderVerification }>(`/policy-gaps/orders/${id}/verify`, token, { method: 'POST' }),
       orderDraft: (id: string) =>
@@ -1344,7 +1346,8 @@ export interface PolicyOrder {
   policy_title: string
   reference_keys: string[]
   price_pence: number
-  status: 'paid' | 'drafting' | 'drafted' | 'approved' | 'refunded'
+  status: 'paid' | 'awaiting_details' | 'drafting' | 'drafted' | 'approved' | 'refunded'
+  intake: { missing: number; total: number } | null
   policy_id: string | null
   verification: PolicyOrderVerification | null
   verified_at: string | null

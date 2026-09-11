@@ -24,6 +24,7 @@ import {
 } from '../services/billing/stripe'
 import { missingPolicies } from '../services/analytics/missing-policies'
 import { sendPolicyPurchaseNotification } from '../services/email/outbound'
+import { productForTitle, purchaseIntakeState, intakeStateFor } from '../services/policy-writer/intake'
 
 export const policyPurchasesRouter = Router()
 
@@ -36,7 +37,26 @@ policyPurchasesRouter.get('/', async (req: Request, res: Response) => {
       where: { tenant_id: user.tenant_id },
       orderBy: { purchased_at: 'desc' },
     })
-    ok(res, { purchases: rows, price_pence: POLICY_PENCE })
+    // Enrich each purchase with its intake state so the client sees exactly which
+    // details we still need before writing can start.
+    const tenant = await (prisma as any).tenant.findUnique({
+      where: { id: user.tenant_id }, select: { organisation_details: true },
+    })
+    const od = (tenant?.organisation_details ?? {}) as Record<string, unknown>
+    const productSlugs = [...new Set(rows.map((r: any) => r.product_slug).filter(Boolean))]
+    const products = productSlugs.length
+      ? await (prisma as any).policyProduct.findMany({ where: { slug: { in: productSlugs } }, select: { slug: true, intake_fields: true } })
+      : []
+    const fieldsBySlug = new Map(products.map((p: any) => [p.slug, p.intake_fields]))
+    const purchases = rows.map((r: any) => ({
+      ...r,
+      intake: intakeStateFor(
+        (fieldsBySlug.get(r.product_slug) as any) ?? null,
+        od,
+        (r.intake_data ?? {}) as Record<string, unknown>,
+      ),
+    }))
+    ok(res, { purchases, price_pence: POLICY_PENCE })
   } catch (e: any) {
     err(res, 'PURCHASES_FAILED', e?.message ?? 'could not read your purchases', 500)
   }
@@ -97,6 +117,71 @@ policyPurchasesRouter.post('/checkout', async (req: Request, res: Response) => {
   }
 })
 
+// POST /:id/intake — the buyer supplies the details their policy needs.
+//
+// Shared identity answers are written to the tenant's organisation details, so they
+// are asked once and reused for every later purchase (and by the rest of CareStream).
+// Per-policy answers live on the purchase. When everything required is present, an
+// awaiting_details order becomes ready to write.
+policyPurchasesRouter.post('/:id/intake', async (req: Request, res: Response) => {
+  const user = (req as any).user
+  if (user.role !== 'admin') return err(res, 'FORBIDDEN', 'Only admins can supply policy details', 403)
+  const values = (req.body?.values ?? {}) as Record<string, unknown>
+  if (typeof values !== 'object' || Array.isArray(values)) return err(res, 'INVALID_INPUT', 'values must be an object', 400)
+
+  try {
+    const purchase = await (prisma as any).policyPurchase.findFirst({
+      where: { id: String(req.params.id), tenant_id: user.tenant_id },
+    })
+    if (!purchase) return err(res, 'NOT_FOUND', 'That order was not found', 404)
+    if (purchase.status === 'approved' || purchase.status === 'refunded') {
+      return err(res, 'CLOSED', 'That order is closed', 409)
+    }
+
+    // Only keys the order's field list declares are accepted; anything else is dropped.
+    const state = await purchaseIntakeState(purchase)
+    const allowed = new Map(state.fields.map(f => [f.key, f]))
+    const sharedUpdates: Record<string, string> = {}
+    const specificUpdates: Record<string, string> = {}
+    for (const [key, raw] of Object.entries(values)) {
+      const field = allowed.get(key)
+      if (!field) continue
+      const value = String(raw ?? '').trim().slice(0, 500)
+      if (!value) continue
+      if (field.shared) sharedUpdates[key] = value
+      else specificUpdates[key] = value
+    }
+
+    if (Object.keys(sharedUpdates).length) {
+      const tenant = await (prisma as any).tenant.findUnique({
+        where: { id: user.tenant_id }, select: { organisation_details: true },
+      })
+      await (prisma as any).tenant.update({
+        where: { id: user.tenant_id },
+        data: { organisation_details: { ...((tenant?.organisation_details ?? {}) as object), ...sharedUpdates } },
+      })
+    }
+    let updated = purchase
+    if (Object.keys(specificUpdates).length) {
+      updated = await (prisma as any).policyPurchase.update({
+        where: { id: purchase.id },
+        data: { intake_data: { ...((purchase.intake_data ?? {}) as object), ...specificUpdates } },
+      })
+    }
+
+    const after = await purchaseIntakeState(updated)
+    if (after.complete && updated.status === 'awaiting_details') {
+      updated = await (prisma as any).policyPurchase.update({
+        where: { id: purchase.id },
+        data: { status: 'paid', intake_completed_at: new Date() },
+      })
+    }
+    ok(res, { purchase: updated, intake: after })
+  } catch (e: any) {
+    err(res, 'INTAKE_FAILED', e?.message ?? 'could not save those details', 500)
+  }
+})
+
 // POST /reconcile — called when the buyer returns from Stripe.
 //
 // Idempotent on (stripe_payment_id, policy_title), so refreshing the return page cannot
@@ -117,8 +202,18 @@ policyPurchasesRouter.post('/reconcile', async (req: Request, res: Response) => 
     }
 
     const created: string[] = []
+    const buyerTenant = await (prisma as any).tenant.findUnique({
+      where: { id: user.tenant_id }, select: { organisation_details: true },
+    })
+    const od = (buyerTenant?.organisation_details ?? {}) as Record<string, unknown>
     for (const title of result.titles) {
       try {
+        // Map the order to a catalogue product where one exists (exact title match), so
+        // its intake fields apply. Bespoke gap titles fall back to the shared identity
+        // set. If required details are missing, the order starts at awaiting_details:
+        // writing cannot begin on facts we do not have.
+        const product = await productForTitle(title)
+        const intake = intakeStateFor(product?.intake_fields ?? null, od, {})
         await (prisma as any).policyPurchase.create({
           data: {
             tenant_id:         user.tenant_id,
@@ -127,7 +222,9 @@ policyPurchasesRouter.post('/reconcile', async (req: Request, res: Response) => 
             price_pence:       POLICY_PENCE,
             currency:          'gbp',
             stripe_payment_id: result.paymentId,
-            status:            'paid',
+            status:            intake.complete ? 'paid' : 'awaiting_details',
+            product_slug:      product?.slug ?? null,
+            intake_completed_at: intake.complete ? new Date() : null,
           },
         })
         created.push(title)

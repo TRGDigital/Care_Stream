@@ -71,6 +71,30 @@ export function MissingPoliciesBanner({ token }: { token: string }) {
   const [chosen, setChosen] = useState<Set<string>>(new Set())
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  // The intake form: the details a specific order still needs before writing starts.
+  const [intakeFor, setIntakeFor] = useState<PolicyPurchase | null>(null)
+  const [intakeValues, setIntakeValues] = useState<Record<string, string>>({})
+  const [intakeSaving, setIntakeSaving] = useState(false)
+  const [intakeError, setIntakeError] = useState('')
+
+  function openIntake(p: PolicyPurchase) {
+    setIntakeFor(p)
+    setIntakeError('')
+    const init: Record<string, string> = {}
+    for (const f of p.intake?.fields ?? []) init[f.key] = f.value ?? ''
+    setIntakeValues(init)
+  }
+  async function saveIntake() {
+    if (!intakeFor) return
+    setIntakeSaving(true); setIntakeError('')
+    try {
+      await createApiClient(token).policyPurchases.submitIntake(intakeFor.id, intakeValues)
+      setIntakeFor(null)
+      const r = await createApiClient(token).policyPurchases.list()
+      setPurchases(r.purchases)
+    } catch (e: any) { setIntakeError(e?.message ?? 'Could not save those details') }
+    finally { setIntakeSaving(false) }
+  }
 
   useEffect(() => {
     const api = createApiClient(token)
@@ -137,10 +161,42 @@ export function MissingPoliciesBanner({ token }: { token: string }) {
     p.status === 'approved' ? 'Delivered to your policies, and in your approval process'
       : p.status === 'drafted' ? 'Written, with us for final checks'
         : p.status === 'drafting' ? 'Being written'
-          : 'Paid, we have started'
+          : p.status === 'awaiting_details' ? 'Waiting on a few details from you'
+            : 'Paid, we have started'
+
 
   return (
     <div id="missing-policies" className="mb-6 scroll-mt-4 overflow-hidden rounded-card border-2 border-teal/40 bg-white shadow-card">
+      {intakeFor && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-8" onClick={() => setIntakeFor(null)}>
+          <div className="w-full max-w-lg rounded-xl bg-white shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="border-b border-gray-100 px-6 py-4">
+              <h3 className="text-base font-semibold text-neutral-dark">A few details before we write {intakeFor.policy_title}</h3>
+              <p className="mt-0.5 text-xs text-neutral-mid">These go into the document itself. Details marked shared are saved to your organisation and reused for every policy you order.</p>
+            </div>
+            <div className="max-h-[60vh] space-y-3 overflow-y-auto px-6 py-4">
+              {(intakeFor.intake?.fields ?? []).map(f => (
+                <div key={f.key}>
+                  <label className="mb-1 block text-xs font-medium text-neutral-dark">
+                    {f.label}{f.shared && <span className="ml-1.5 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] text-neutral-mid">shared</span>}
+                  </label>
+                  <input value={intakeValues[f.key] ?? ''} onChange={e => setIntakeValues(v => ({ ...v, [f.key]: e.target.value }))}
+                    placeholder={f.help ?? ''}
+                    className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+                </div>
+              ))}
+              {intakeError && <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{intakeError}</p>}
+            </div>
+            <div className="flex justify-end gap-2 border-t border-gray-100 px-6 py-3">
+              <button onClick={() => setIntakeFor(null)} className="rounded-lg px-4 py-2 text-sm text-neutral-mid hover:text-neutral-dark">Later</button>
+              <button onClick={saveIntake} disabled={intakeSaving}
+                className="rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-50">
+                {intakeSaving ? 'Saving\u2026' : 'Save details'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="border-b border-gray-100 bg-teal-light/25 px-6 py-5">
         <h2 className="text-base font-bold text-neutral-dark">
           We have read your policies against the law, and you are missing{' '}
@@ -190,12 +246,18 @@ export function MissingPoliciesBanner({ token }: { token: string }) {
           <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Policies you have ordered</p>
           <ul className="mt-2 space-y-1.5">
             {purchases.map(p => (
-              <li key={p.id} className="flex items-center gap-2 text-sm text-neutral-dark">
+              <li key={p.id} className="flex flex-wrap items-center gap-2 text-sm text-neutral-dark">
                 {p.status === 'approved'
                   ? <Check size={14} className="shrink-0 text-green-600" />
                   : <Clock size={14} className="shrink-0 text-amber-600" />}
                 <span className="font-medium">{p.policy_title}</span>
                 <span className="text-xs text-neutral-mid">{statusLabel(p)}</span>
+                {p.status === 'awaiting_details' && (p.intake?.missing ?? 0) > 0 && (
+                  <button onClick={() => openIntake(p)}
+                    className="rounded-md bg-amber-500 px-2.5 py-1 text-xs font-semibold text-white hover:bg-amber-600">
+                    Add the details we need ({p.intake!.missing})
+                  </button>
+                )}
               </li>
             ))}
           </ul>

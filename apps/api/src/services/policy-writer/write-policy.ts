@@ -24,6 +24,7 @@
 import { prisma } from '../../db/client'
 import { callClaude } from '../ai/claude'
 import { ROLE_PHRASES } from '../../lib/role-phrases'
+import { purchaseIntakeState } from './intake'
 
 const MODEL_SONNET = 'claude-sonnet-4-5-20250929'
 
@@ -156,13 +157,21 @@ export async function writePolicy(purchaseId: string, revisionNotes: string[] = 
     names: String(od[p.key] ?? '').split(',').map(s => s.trim()).filter(Boolean),
   }))
 
+  // The buyer's intake answers: identity details from organisation_details plus
+  // per-policy specifics from the purchase. Given to the writer as facts to use
+  // where the policy calls for them — the anti-placeholder rule still applies to
+  // anything NOT supplied.
+  const intake = await purchaseIntakeState(purchase)
+  const facts = intake.fields.filter(f => f.supplied && f.key !== 'address')
+    .map(f => `- ${f.label}: ${f.value}`)
+
   const baseMessage = buildUserMessage({
     title:    purchase.policy_title,
     homeName: tenant.name,
     address:  typeof od.address === 'string' ? od.address : null,
     regs,
     roleNames,
-  })
+  }) + (facts.length ? `\n\nFACTS PROVIDED BY THE ORGANISATION. Use each where the policy naturally calls for it; do not invent any detail beyond these:\n${facts.join('\n')}` : '')
   const userMessage = revisionNotes.length
     ? `${baseMessage}\n\nA PREVIOUS DRAFT OF THIS POLICY FAILED VERIFICATION. This rewrite must fix every one of these, without weakening anything else:\n${revisionNotes.map(n => `- ${n}`).join('\n')}`
     : baseMessage

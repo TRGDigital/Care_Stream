@@ -8,6 +8,8 @@ import { missingPolicies } from '../services/analytics/missing-policies'
 import { writePolicy } from '../services/policy-writer/write-policy'
 import { POLICY_PRODUCTS_SEED, POLICY_BUNDLES_SEED, SHARED_INTAKE_FIELDS, COMPLETE_LIBRARY_KEY } from '../data/policy-products-seed'
 import { verifyPaidPolicyDraft, verificationFailures } from '../services/policy-writer/verify-policy'
+import { purchaseIntakeState } from '../services/policy-writer/intake'
+import { sendTrainingUpdateEmail } from '../services/email/outbound'
 import { writeAuditLog } from '../lib/audit'
 import { uploadPolicyFile } from '../services/storage/s3'
 import { enqueueIngestion } from '../workers/queue'
@@ -167,11 +169,13 @@ platformPolicyGapsRouter.get('/orders', async (req: Request, res: Response) => {
       return scope === 'standalone' ? standalone : !standalone
     }
     // Work still owed floats to the top; delivered work is history.
-    const rank = (s: string) => (s === 'drafted' ? 0 : s === 'drafting' ? 1 : s === 'paid' ? 2 : 3)
-    const orders = rows
-      .filter(inScope)
-      .map((r: any) => ({ ...r, tenant: byId.get(r.tenant_id) ?? null }))
-      .sort((a: any, b: any) => rank(a.status) - rank(b.status))
+    const rank = (s: string) => (s === 'drafted' ? 0 : s === 'drafting' ? 1 : s === 'paid' ? 2 : s === 'awaiting_details' ? 3 : 4)
+    // Intake progress per order, so the queue shows who is blocking their own order.
+    const withIntake = await Promise.all(rows.filter(inScope).map(async (r: any) => {
+      const st = await purchaseIntakeState(r).catch(() => null)
+      return { ...r, tenant: byId.get(r.tenant_id) ?? null, intake: st ? { missing: st.missing, total: st.fields.length } : null }
+    }))
+    const orders = withIntake.sort((a: any, b: any) => rank(a.status) - rank(b.status))
     ok(res, { orders })
   } catch (e: any) {
     err(res, 'ORDERS_FAILED', e?.message ?? 'could not read the orders', 500)
@@ -216,6 +220,13 @@ platformPolicyGapsRouter.post('/orders/:id/status', async (req: Request, res: Re
 platformPolicyGapsRouter.post('/orders/:id/write', async (req: Request, res: Response) => {
   const id = String(req.params.id)
   try {
+    // Writing needs the buyer's details: a policy written on facts we do not have is
+    // placeholders waiting to happen, and the gate would fail it anyway.
+    const pre = await (prisma as any).policyPurchase.findUnique({ where: { id } })
+    if (pre?.status === 'awaiting_details') {
+      const st = await purchaseIntakeState(pre)
+      return err(res, 'AWAITING_DETAILS', 'The client has not supplied ' + st.missing + ' required detail' + (st.missing === 1 ? '' : 's') + ' yet. Nudge them, or wait.', 409)
+    }
     // Write, verify, and if verification fails feed the failures back as rewrite
     // instructions — up to three attempts. The final state is stored either way; a
     // draft that still fails arrives in the queue with a red checklist, never silently.
@@ -239,6 +250,39 @@ platformPolicyGapsRouter.post('/orders/:id/write', async (req: Request, res: Res
     ok(res, { order, words: written.words, sections: written.sections, verification, attempts })
   } catch (e: any) {
     err(res, 'WRITE_FAILED', e?.message ?? 'could not write that policy', 500)
+  }
+})
+
+// POST /orders/:id/nudge — email the client's admins that their policy is waiting
+// on details only they can supply. Deliberate, not automatic: a person decides when
+// a paying customer gets chased.
+platformPolicyGapsRouter.post('/orders/:id/nudge', async (req: Request, res: Response) => {
+  try {
+    const order = await (prisma as any).policyPurchase.findUnique({ where: { id: String(req.params.id) } })
+    if (!order) return err(res, 'NOT_FOUND', 'That order was not found', 404)
+    if (order.status !== 'awaiting_details') return err(res, 'NOT_WAITING', 'That order is not waiting on details', 409)
+    const st = await purchaseIntakeState(order)
+    const [tenant, admins] = await Promise.all([
+      (prisma as any).tenant.findUnique({ where: { id: order.tenant_id }, select: { name: true } }),
+      (prisma as any).user.findMany({
+        where: { tenant_id: order.tenant_id, role: 'admin', is_active: true },
+        select: { email: true, name: true },
+      }),
+    ])
+    const missingLabels = st.fields.filter(f => !f.supplied).map(f => `<li>${f.label}</li>`).join('')
+    let sent = 0
+    for (const a of admins as any[]) {
+      if (!a.email) continue
+      await sendTrainingUpdateEmail({
+        to: a.email, name: a.name || 'there', orgName: tenant?.name ?? '',
+        subject: `Your ${order.policy_title} is waiting on a few details`,
+        bodyHtml: `<p>You have paid for <strong>${order.policy_title}</strong> and we are ready to write it, but we still need ${st.missing} detail${st.missing === 1 ? '' : 's'} only you can supply:</p><ul>${missingLabels}</ul><p>Open <strong>Policies</strong> in your dashboard and press <strong>Add the details we need</strong> on the order. Writing starts as soon as they arrive.</p>`,
+      }).catch(() => {})
+      sent++
+    }
+    ok(res, { nudged: sent, missing: st.missing })
+  } catch (e: any) {
+    err(res, 'NUDGE_FAILED', e?.message ?? 'could not send the nudge', 500)
   }
 })
 

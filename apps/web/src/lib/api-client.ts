@@ -295,10 +295,19 @@ export function createApiClient(token: string) {
       // Returns null when the policy has no uploaded original (CareStream-written
       // policies are markdown), so the caller can fall back to the print view.
       downloadOriginal: async (id: string, filename: string): Promise<boolean> => {
-        const res = await fetch(`${API_URL}/policies/${encodeURIComponent(id)}/file`, {
+        // The uploaded original first. If there is none -- a CareStream-written policy
+        // is markdown -- fall through to the generated PDF, so the button downloads a
+        // real document either way.
+        let res = await fetch(`${API_URL}/policies/${encodeURIComponent(id)}/file`, {
           headers: { Authorization: `Bearer ${token}` },
         })
-        if (!res.ok) return false
+        if (!res.ok) {
+          res = await fetch(`${API_URL}/policies/${encodeURIComponent(id)}/pdf`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          if (!res.ok) return false
+          if (!/\.pdf$/i.test(filename)) filename = `${filename.replace(/\.[^.]+$/, '')}.pdf`
+        }
         const blob = await res.blob()
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')

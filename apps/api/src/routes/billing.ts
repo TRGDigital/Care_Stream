@@ -7,6 +7,10 @@ import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
 import { getPlanFeatures } from '../lib/plan-limits'
 
+// Tiers bought outright rather than subscribed to. Neither has a Stripe
+// subscription, so neither goes through the card-up-front billing gate.
+const NO_SUBSCRIPTION_TIERS = new Set(['training_only', 'policies_only'])
+
 export const billingRouter = Router()
 
 // ─── GET /billing/plans — active plans for the subscribe chooser ──────────────
@@ -63,7 +67,7 @@ billingRouter.post('/sync', requireAdmin, async (req: Request, res: Response) =>
     where: { id: tenantId },
     select: { subscription_status: true, stripe_subscription_id: true, tier: true },
   })
-  const needsBilling = t ? (t.tier !== 'training_only' && t.subscription_status !== 'active' && !t.stripe_subscription_id) : true
+  const needsBilling = t ? (!NO_SUBSCRIPTION_TIERS.has(t.tier ?? '') && t.subscription_status !== 'active' && !t.stripe_subscription_id) : true
   ok(res, { needs_billing: needsBilling, subscription_status: t?.subscription_status ?? null })
 })
 

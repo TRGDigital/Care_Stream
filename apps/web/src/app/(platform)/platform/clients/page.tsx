@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, type TenantSummary, type PlanLimits } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { AlertTriangle, Building2, Loader2, ExternalLink, GraduationCap, Award } from 'lucide-react'
+import { AlertTriangle, Building2, Loader2, ExternalLink, GraduationCap, Award, FileText} from 'lucide-react'
 import Link from 'next/link'
 
 // ─── Usage bar ────────────────────────────────────────────────────────────────
@@ -150,6 +150,12 @@ export default function ClientsPage() {
                               Training only
                             </span>
                           )}
+                          {t.tier === 'policies_only' && (
+                            <span className="flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-700">
+                              <FileText size={10} />
+                              Policies only
+                            </span>
+                          )}
                           {t.sub_tenant_count > 0 && (
                             <span className="flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">
                               <Building2 size={10} />
@@ -158,12 +164,12 @@ export default function ClientsPage() {
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-neutral-mid">{t.tier === 'training_only' ? 'Training module' : (t.plan?.name ?? '—')}</td>
+                      <td className="px-4 py-3 text-neutral-mid">{t.tier === 'training_only' ? 'Training module' : t.tier === 'policies_only' ? 'Policy purchase' : (t.plan?.name ?? '—')}</td>
                       <td className="px-4 py-3">
                         <StatusBadge status={t.subscription_status} />
                       </td>
                       <td className="px-4 py-3">
-                        {t.tier === 'training_only' ? (
+                        {t.tier === 'training_only' || t.tier === 'policies_only' ? (
                           <p className="text-right text-xs text-neutral-mid/60">—</p>
                         ) : (
                           <UsageBar

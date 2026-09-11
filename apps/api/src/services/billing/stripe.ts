@@ -395,6 +395,9 @@ export interface ShopCheckoutResult {
   email: string | null
   /** Billing name Stripe collected. Better than guessing from the email prefix. */
   name: string | null
+  /** The Stripe customer the invoice was raised against. Without saving this on the
+   *  tenant, /billing has nothing to list invoices for and the purchase looks unpaid. */
+  customerId: string | null
   amountTotalPence: number
   items: ShopItem[]
 }
@@ -447,6 +450,20 @@ export async function createShopCheckoutSession(input: {
 
   const stripe = getStripe()
   const opts = managedPaymentsRequestOptions()
+
+  // If this email already has an account with a Stripe customer, bill that customer
+  // rather than letting Stripe mint another guest. Otherwise each purchase raises its
+  // invoice against a different customer and /billing — which lists invoices for
+  // tenant.stripe_customer_id — shows none of them.
+  let existingCustomer: string | null = null
+  try {
+    const user = await (prisma as any).user.findUnique({
+      where:  { email: input.email.toLowerCase() },
+      select: { tenant: { select: { stripe_customer_id: true } } },
+    })
+    existingCustomer = user?.tenant?.stripe_customer_id ?? null
+  } catch { /* a new buyer simply has none */ }
+
   const params: Stripe.Checkout.SessionCreateParams = {
     mode: 'payment',
     line_items: priced.map(p => ({
@@ -457,7 +474,7 @@ export async function createShopCheckoutSession(input: {
         product_data: { name: p.name, tax_code: PLAN_TAX_CODE },
       },
     })),
-    customer_email: input.email,
+    ...(existingCustomer ? { customer: existingCustomer } : { customer_email: input.email }),
     metadata: {
       kind: 'policy_shop',
       // Keys only. A 65-policy pack would blow Stripe's 500-character metadata limit
@@ -499,6 +516,7 @@ export async function retrieveShopCheckoutSession(sessionId: string): Promise<Sh
       : (session.payment_intent?.id ?? session.id),
     email: session.customer_details?.email ?? session.customer_email ?? null,
     name: session.customer_details?.name ?? null,
+    customerId: typeof session.customer === 'string' ? session.customer : (session.customer?.id ?? null),
     amountTotalPence: session.amount_total ?? 0,
     items,
   }

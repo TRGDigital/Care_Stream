@@ -353,6 +353,17 @@ policyShopPublicRouter.post('/reconcile', async (req: Request, res: Response) =>
         .catch((e: any) => console.error('[policy-shop] password setup email failed:', e?.message ?? e))
     }
 
+    // Save the Stripe customer the invoice was raised against. /billing lists invoices
+    // for tenant.stripe_customer_id, so without this the buyer sees no invoice at all
+    // for something they have just paid for. Only set when absent: never repoint a
+    // tenant that already has one.
+    if (result.customerId) {
+      await (prisma as any).tenant.updateMany({
+        where: { id: tenantId, stripe_customer_id: null },
+        data:  { stripe_customer_id: result.customerId },
+      }).catch(() => {})
+    }
+
     // ── the orders ───────────────────────────────────────────────────────────
     const tenant = await (prisma as any).tenant.findUnique({
       where: { id: tenantId }, select: { name: true, account_number: true, organisation_details: true },

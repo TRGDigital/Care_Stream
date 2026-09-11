@@ -421,7 +421,9 @@ export async function uploadShopImage(buffer: Buffer): Promise<string> {
   let contentType = 'image/webp'
   try {
     body = await sharp(buffer)
-      .resize({ width: 1024, height: 1024, fit: 'inside', withoutEnlargement: true })
+      // these are generated landscape (1536x1024), so the cap is the long edge — capping
+      // at 1024 here would throw away the width the wide layout was generated for
+      .resize({ width: 1536, height: 1536, fit: 'inside', withoutEnlargement: true })
       .webp({ quality: 82 })
       .toBuffer()
   } catch (e) {

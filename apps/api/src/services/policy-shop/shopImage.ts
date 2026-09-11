@@ -23,7 +23,8 @@ function imageCostUsd(usage: any): number {
     const out     = usage.output_tokens ?? 0
     return (textIn * 5 + imageIn * 10 + out * 40) / 1_000_000
   }
-  return 0.042
+  // per-image estimate for 1536x1024 at default quality, when usage is absent
+  return 0.063
 }
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
@@ -39,6 +40,7 @@ Context: {{summary}}
 Style: flat modern vector illustration, soft rounded shapes, warm and friendly, gentle teal and warm-neutral palette, plenty of clean negative space. A calm UK care setting.
 Do NOT include any text, words, letters or logos.
 Do NOT show realistic human faces — keep any people stylised, simple and abstract.
+Compose for a WIDE landscape frame: keep the subject centred and away from the top and bottom edges, which are cropped.
 Professional and reassuring, suitable for a care provider buying this policy.`
 
 export const DEFAULT_POLICY_LAW_PROMPT = `Create an illustration representing a piece of UK care legislation or regulatory standard.
@@ -48,6 +50,7 @@ What it requires: {{summary}}
 Style: flat modern vector illustration, soft rounded shapes, gentle teal and warm-neutral palette, plenty of clean negative space. Convey the SUBJECT of the regulation through the scene, not through symbols of law such as gavels, scales or courtrooms.
 Do NOT include any text, words, letters, numbers or logos.
 Do NOT show realistic human faces — keep any people stylised, simple and abstract.
+Compose for a WIDE landscape frame: keep the subject centred and away from the top and bottom edges, which are cropped.
 Calm and authoritative, suitable beside a policy a care provider is buying.`
 
 async function promptFor(usage: string, fallback: string): Promise<string> {
@@ -64,11 +67,17 @@ function build(template: string, topic: string, context: string): string {
     .replace(/\{\{\s*summary\s*\}\}/g, context.trim().slice(0, 400))
 }
 
+// LANDSCAPE, not square. Three of the four places these appear are wide — the intake
+// card is 16:9, the legislation panel 16:10, the related-policy card 16:9 — and the CSS
+// uses object-fit:cover. A 1024x1024 source loses 44% of its height to that crop, which
+// is how you end up with headless people. 3:2 loses about 5%.
+const SIZE = '1536x1024'
+
 async function generate(template: string, topic: string, context: string): Promise<string> {
   const result = await openai.images.generate({
     model:  'gpt-image-1',
     prompt: build(template, topic, context),
-    size:   '1024x1024',
+    size:   SIZE,
   })
   recordCostUsd('gpt-image-1', imageCostUsd((result as any).usage))
   const b64 = result.data?.[0]?.b64_json

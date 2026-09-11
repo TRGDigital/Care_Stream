@@ -45,6 +45,18 @@ policyShopPublicRouter.get('/products/:slug', async (req: Request, res: Response
       }).catch(() => [] as any[]),
     ])
 
+    // Related policies: siblings from the same bundles (the natural next purchases),
+    // Complete Library membership excluded since everything shares it.
+    const meaningfulBundles = (product.bundle_keys ?? []).filter((k: string) => k !== 'complete-library')
+    const related = meaningfulBundles.length
+      ? await (prisma as any).policyProduct.findMany({
+          where: { active: true, slug: { not: product.slug }, bundle_keys: { hasSome: meaningfulBundles } },
+          select: { slug: true, title: true, description: true, price_pence: true, taster: true },
+          orderBy: { sort_order: 'asc' },
+          take: 6,
+        }).catch(() => [] as any[])
+      : []
+
     ok(res, {
       product: {
         slug: product.slug, title: product.title, description: product.description,
@@ -60,7 +72,10 @@ policyShopPublicRouter.get('/products/:slug', async (req: Request, res: Response
         official_name: r.official_name,
         summary: r.summary ?? '',
         required_elements_count: Array.isArray(r.required_elements) ? r.required_elements.length : 0,
+        // The curated elements themselves are the page's bullet-point key facts.
+        key_facts: (Array.isArray(r.required_elements) ? r.required_elements : []).slice(0, 6),
       })),
+      related,
     })
   } catch (e: any) {
     err(res, 'PRODUCT_FAILED', e?.message ?? 'could not load that policy', 500)

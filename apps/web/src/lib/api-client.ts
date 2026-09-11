@@ -47,16 +47,18 @@ export type MissingPolicyReport = {
 }
 
 /** A policy the home has paid us to write. */
+export type PolicyIntakeField = { key: string; label: string; help?: string; shared?: boolean; supplied: boolean; value: string | null }
 export type PolicyPurchase = {
   id: string
   policy_title: string
   reference_keys: string[]
   price_pence: number
   currency: string
-  status: 'paid' | 'drafting' | 'drafted' | 'approved' | 'refunded'
+  status: 'paid' | 'awaiting_details' | 'drafting' | 'drafted' | 'approved' | 'refunded'
   policy_id: string | null
   purchased_at: string
   approved_at: string | null
+  intake?: { fields: PolicyIntakeField[]; missing: number; complete: boolean }
 }
 
 /** Which named roles a home's own policies ask for, from GET /settings/role-mentions. */
@@ -456,6 +458,9 @@ export function createApiClient(token: string) {
     policyPurchases: {
       list: () =>
         apiFetch<{ purchases: PolicyPurchase[]; price_pence: number }>('/policy-purchases', token),
+      submitIntake: (id: string, values: Record<string, string>) =>
+        apiFetch<{ purchase: PolicyPurchase; intake: { fields: PolicyIntakeField[]; missing: number; complete: boolean } }>(
+          '/policy-purchases/' + encodeURIComponent(id) + '/intake', token, { method: 'POST', body: JSON.stringify({ values }) }),
       checkout: (titles: string[]) =>
         apiFetch<{ url: string; titles: string[]; price_pence: number }>('/policy-purchases/checkout', token, {
           method: 'POST', body: JSON.stringify({ titles }),

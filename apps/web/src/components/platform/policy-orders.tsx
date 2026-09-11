@@ -18,6 +18,7 @@ const when = (iso: string) => new Date(iso).toLocaleDateString('en-GB')
 
 const STATUS: Record<PolicyOrder['status'], { label: string; cls: string }> = {
   paid:     { label: 'Paid, not started', cls: 'bg-red-50 text-red-700' },
+  awaiting_details: { label: 'Awaiting client details', cls: 'bg-amber-50 text-amber-800' },
   drafting: { label: 'Being written',     cls: 'bg-amber-50 text-amber-800' },
   drafted:  { label: 'Needs our read',    cls: 'bg-indigo-50 text-indigo-700' },
   approved: { label: 'Delivered',         cls: 'bg-green-50 text-green-700' },
@@ -98,6 +99,16 @@ export function PolicyOrders({ token, scope }: { token: string; scope: 'subscrib
     finally { setBusy(null) }
   }
 
+  async function nudge(o: PolicyOrder) {
+    if (!window.confirm(`Email ${o.tenant?.name ?? 'the client'}'s admins that "${o.policy_title}" is waiting on their details?`)) return
+    setBusy(o.id); setError('')
+    try {
+      const r = await createPlatformClient(token).policyGaps.nudgeOrder(o.id)
+      window.alert(`Nudged ${r.nudged} admin${r.nudged === 1 ? '' : 's'}.`)
+    } catch (e: any) { setError(e.message) }
+    finally { setBusy(null) }
+  }
+
   async function verify(o: PolicyOrder) {
     setBusy(o.id); setError('')
     try {
@@ -172,6 +183,11 @@ export function PolicyOrders({ token, scope }: { token: string; scope: 'subscrib
                   {o.approved_by ? ` · approved by ${o.approved_by}` : ''}
                 </span>
               </span>
+              {o.intake && o.intake.missing > 0 && (
+                <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-800">
+                  {o.intake.total - o.intake.missing} of {o.intake.total} details supplied
+                </span>
+              )}
               {o.status === 'drafted' && (
                 o.verification
                   ? o.verification.passed
@@ -183,6 +199,13 @@ export function PolicyOrders({ token, scope }: { token: string; scope: 'subscrib
                 {STATUS[o.status].label}
               </span>
               <span className="flex shrink-0 gap-1.5">
+                {o.status === 'awaiting_details' && (
+                  <button onClick={() => nudge(o)} disabled={busy === o.id}
+                    className="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-40"
+                    title="Email the client's admins the exact details still missing.">
+                    {busy === o.id ? <Loader2 size={12} className="animate-spin" /> : <AlertTriangle size={12} />} Nudge for details
+                  </button>
+                )}
                 {(o.status === 'paid' || o.status === 'drafting') && (
                   <button onClick={() => write(o)} disabled={busy === o.id}
                     className="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-40"

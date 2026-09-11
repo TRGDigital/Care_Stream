@@ -395,6 +395,7 @@ function ChatPageInner() {
   // Which document categories the tenant actually has live documents in, so the
   // "new chat" topic tiles can grey out ones with nothing uploaded. null = not yet loaded.
   const [availableCats, setAvailableCats]               = useState<string[] | null>(null)
+  const [hasResidents,  setHasResidents]                = useState(false)
   // Per-conversation second-language switch: while on, chat answers (and any policy
   // the staff opens from a citation) come back in their 2nd language. Resets to their
   // first language whenever they start a new chat/discussion.
@@ -503,6 +504,7 @@ function ChatPageInner() {
     try { const ap = JSON.parse(localStorage.getItem(`cs_audappr_${userId}`) || 'null'); if (ap && typeof ap === 'object') setAuditApprovals(ap) } catch { /* ignore */ }
     try { const w = JSON.parse(localStorage.getItem(`cs_super_${userId}`)   || 'null'); if (typeof w === 'boolean') setSuperCached(w) } catch { /* ignore */ }
     try { const dc = JSON.parse(localStorage.getItem(`cs_doccats_${userId}`) || 'null'); if (Array.isArray(dc)) setAvailableCats(dc) } catch { /* ignore */ }
+    try { setHasResidents(localStorage.getItem(`cs_residents_${userId}`) === '1') } catch { /* ignore */ }
   }, [userId])
 
   // Fetch the tenant's available languages (defaults + admin-added) for the
@@ -519,7 +521,16 @@ function ChatPageInner() {
   useEffect(() => {
     if (!session?.accessToken) return
     createApiClient(session.accessToken).me.documentCategories()
-      .then(d => { const a = Array.isArray(d.available) ? d.available : []; setAvailableCats(a); try { localStorage.setItem(`cs_doccats_${userId}`, JSON.stringify(a)) } catch { /* ignore */ } })
+      .then(d => {
+        const a = Array.isArray(d.available) ? d.available : []
+        setAvailableCats(a)
+        const res = d.has_residents === true
+        setHasResidents(res)
+        try {
+          localStorage.setItem(`cs_doccats_${userId}`, JSON.stringify(a))
+          localStorage.setItem(`cs_residents_${userId}`, res ? '1' : '0')
+        } catch { /* ignore */ }
+      })
       .catch(() => {})
   }, [session?.accessToken, userId])
 
@@ -1277,7 +1288,7 @@ function ChatPageInner() {
                   : category === 'business_continuity' ? <LifeBuoy size={13} className="text-teal" />
                   : <Users size={13} className="text-teal" />}
                 <span className="truncate text-xs font-medium text-teal">
-                  {pinnedPolicy ? `Talking about: ${pinnedPolicy.title}` : CATEGORY_LABELS[category].title}
+                  {pinnedPolicy ? `Talking about: ${pinnedPolicy.title}` : topicTitleFor(category, CATEGORY_LABELS[category].title, hasResidents)}
                 </span>
               </div>
               <div className="flex shrink-0 items-center gap-1">
@@ -1320,7 +1331,7 @@ function ChatPageInner() {
           className="flex-1 overflow-y-auto px-4 py-6"
         >
           {category === null ? (
-            <CategorySelect onSelect={setCategory} available={availableCats} />
+            <CategorySelect onSelect={setCategory} available={availableCats} hasResidents={hasResidents} />
           ) : pinnedPolicy && isEmpty ? (
             <PolicyChatIntro title={pinnedPolicy.title} questions={policyQuestions} onSelect={sendMessage} />
           ) : isEmpty ? (
@@ -1493,7 +1504,20 @@ const CHAT_TOPICS: Array<{ key: DocumentCategory; Icon: typeof BookOpen; title: 
   { key: 'business_continuity', Icon: LifeBuoy,    title: 'Business Continuity',   subtitle: 'Emergency procedures & contingency plans' },
 ]
 
-function CategorySelect({ onSelect, available }: { onSelect: (c: DocumentCategory) => void; available: string[] | null }) {
+// Resident knowledge is retrieved under Policies & Procedures, so once a home has
+// approved resident entries the topic advertises it. Without this staff have no way
+// of knowing they can ask about a named resident at all — which was the whole point
+// of adding the entries.
+function topicTitleFor(key: DocumentCategory, base: string, hasResidents: boolean): string {
+  return key === 'internal_policy' && hasResidents ? 'Policies, Procedures & Residents' : base
+}
+function topicSubtitleFor(key: DocumentCategory, base: string, hasResidents: boolean): string {
+  return key === 'internal_policy' && hasResidents
+    ? 'Care policies, procedures and resident information'
+    : base
+}
+
+function CategorySelect({ onSelect, available, hasResidents }: { onSelect: (c: DocumentCategory) => void; available: string[] | null; hasResidents: boolean }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-8 px-4 py-12">
       <div className="text-center">
@@ -1501,7 +1525,9 @@ function CategorySelect({ onSelect, available }: { onSelect: (c: DocumentCategor
         <p className="mt-2 text-sm text-neutral-mid">Choose a knowledge area to get started</p>
       </div>
       <div className="grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2">
-        {CHAT_TOPICS.map(({ key, Icon, title, subtitle }) => {
+        {CHAT_TOPICS.map(({ key, Icon, title: baseTitle, subtitle: baseSubtitle }) => {
+          const title    = topicTitleFor(key, baseTitle, hasResidents)
+          const subtitle = topicSubtitleFor(key, baseSubtitle, hasResidents)
           // Until we know what's uploaded (available === null), keep tiles enabled.
           const enabled = available === null || available.includes(key)
           if (!enabled) {

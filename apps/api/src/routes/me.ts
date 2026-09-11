@@ -162,7 +162,15 @@ meRouter.get('/document-categories', async (req: Request, res: Response) => {
     if (bc > 0) available.add('business_continuity')
   }
 
-  ok(res, { available: Array.from(available) })
+  // Resident knowledge lives under the Policies & Procedures topic (retrieval does
+  // not filter by category), so the hub advertises residents on that tile once the
+  // home has approved resident entries. Without the flag staff have no way to know
+  // they can ask about a named resident at all.
+  const residents = await (prisma as any).knowledgeEntry.count({
+    where: { tenant_id: tenantId, knowledge_category: 'resident', approved: true },
+  }).catch(() => 0)
+
+  ok(res, { available: Array.from(available), has_residents: residents > 0 })
 })
 
 // ─── Web-push subscription (PWA notifications) ────────────────────────────────

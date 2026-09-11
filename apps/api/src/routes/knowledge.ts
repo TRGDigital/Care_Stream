@@ -46,7 +46,10 @@ knowledgeRouter.get('/', async (req: Request, res: Response) => {
 // ─── POST /knowledge ──────────────────────────────────────────────────────────
 // Create a manual Q&A entry. Auto-embeds to Pinecone.
 
-const KNOWLEDGE_CATEGORIES = ['general', 'business_continuity', 'policies_procedures', 'hr_staff', 'health_safety', 'medication', 'infection_control'] as const
+// 'resident' holds what staff need to know about an individual resident (background,
+// preferences, routines). Retrieval does not filter on category except for the special
+// business_continuity path, so these are searched like any other entry.
+const KNOWLEDGE_CATEGORIES = ['general', 'resident', 'business_continuity', 'policies_procedures', 'hr_staff', 'health_safety', 'medication', 'infection_control'] as const
 
 const CreateSchema = z.object({
   question:           z.string().min(5).max(500),

@@ -10,9 +10,9 @@ import { persistentCache } from '@/lib/page-cache'
 const AddEntryModal = dynamic(() => import('@/components/admin/knowledge/add-entry-modal').then(m => m.AddEntryModal), { ssr: false })
 import {
   BookOpen, Plus, Sparkles, Trash2, Pencil, X, Check,
-  Loader2, ChevronDown, ChevronRight, ShieldCheck, Clock,
+  Loader2, ChevronDown, ChevronRight, ShieldCheck, Clock, UserRound,
 } from 'lucide-react'
-import { KNOWLEDGE_CATEGORY_OPTIONS, KNOWLEDGE_CATEGORY_LABELS } from '@/lib/knowledge-categories'
+import { KNOWLEDGE_CATEGORY_OPTIONS, KNOWLEDGE_CATEGORY_LABELS, categoryAccent, isResidentCategory } from '@/lib/knowledge-categories'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -327,7 +327,7 @@ function ManualCategoryAccordion({
     grouped.get(cat)!.push(e)
   }
   // Sort so known categories come first in a logical order, then any extras
-  const ORDER = ['business_continuity', 'policies_procedures', 'hr_staff', 'health_safety', 'medication', 'infection_control', 'general']
+  const ORDER = ['resident', 'business_continuity', 'policies_procedures', 'hr_staff', 'health_safety', 'medication', 'infection_control', 'general']
   const sorted = [...grouped.entries()].sort(([a], [b]) => {
     const ai = ORDER.indexOf(a); const bi = ORDER.indexOf(b)
     if (ai === -1 && bi === -1) return a.localeCompare(b)
@@ -368,18 +368,20 @@ function ManualCategoryAccordion({
         const approved = catEntries.filter(e => e.approved).length
         const pending  = catEntries.length - approved
         const label    = KNOWLEDGE_CATEGORY_LABELS[cat] ?? cat
+        const accent   = categoryAccent(cat)
+        const CatIcon  = isResidentCategory(cat) ? UserRound : BookOpen
         return (
-          <div key={cat} className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div key={cat} className={`overflow-hidden rounded-lg border ${accent.card}`}>
             <button
               onClick={() => toggle(cat)}
-              className="flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-neutral-light/50"
+              className={`flex w-full items-center gap-3 px-4 py-3.5 text-left ${accent.header}`}
             >
               {isOpen
                 ? <ChevronDown size={16} className="flex-shrink-0 text-neutral-mid" />
                 : <ChevronRight size={16} className="flex-shrink-0 text-neutral-mid" />
               }
-              <BookOpen size={15} className="flex-shrink-0 text-teal" />
-              <span className="flex-1 text-sm font-semibold text-neutral-dark">{label}</span>
+              <CatIcon size={15} className={`flex-shrink-0 ${accent.icon}`} />
+              <span className={`flex-1 text-sm font-semibold ${accent.title}`}>{label}</span>
               <span className="text-xs text-neutral-mid">{catEntries.length} entries</span>
               {approved > 0 && (
                 <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
@@ -396,6 +398,7 @@ function ManualCategoryAccordion({
               <div className="divide-y divide-gray-100 border-t border-gray-100">
                 {catEntries.map(entry => (
                   <EntryRow
+                    accentRow={accent.row}
                     key={entry.id}
                     entry={entry}
                     isEditing={editId === entry.id}
@@ -623,6 +626,7 @@ function EntryRow({
   onDelete,
   onApprove,
   readOnly = false,
+  accentRow = '',
 }: {
   entry:        KnowledgeEntry
   isEditing:    boolean
@@ -633,6 +637,8 @@ function EntryRow({
   onDelete:     () => void
   onApprove:    () => void
   readOnly?:    boolean
+  /** Tailwind classes marking this row's category (resident entries are violet). */
+  accentRow?:   string
 }) {
   const [question, setQuestion] = useState(entry.question)
   const [answer, setAnswer]     = useState(entry.answer)
@@ -692,7 +698,7 @@ function EntryRow({
   }
 
   return (
-    <div className="group flex items-start gap-4 px-4 py-3.5">
+    <div className={`group flex items-start gap-4 px-4 py-3.5 ${accentRow}`}>
       <div className="min-w-0 flex-1">
         <div className="mb-0.5 flex items-center gap-2">
           {entry.approved ? (

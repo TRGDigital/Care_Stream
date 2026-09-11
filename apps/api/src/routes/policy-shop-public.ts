@@ -330,7 +330,10 @@ policyShopPublicRouter.post('/reconcile', async (req: Request, res: Response) =>
       const tempHash = await hashPassword(crypto.randomBytes(12).toString('base64url'))
       user = await (prisma as any).user.create({
         data: {
-          tenant_id: tenant.id, email, name: email.split('@')[0], role: 'admin',
+          tenant_id: tenant.id, email,
+          // Stripe's billing name if we have it; the email prefix only as a last resort
+          name: (result.name ?? '').trim() || email.split('@')[0],
+          role: 'admin',
           email_verified: true, password_hash: tempHash,
         },
       })

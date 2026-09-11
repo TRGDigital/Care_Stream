@@ -178,10 +178,24 @@ export function PolicyOrders({ token, scope }: { token: string; scope: 'subscrib
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-medium text-neutral-dark">{o.policy_title}</span>
                 <span className="block text-xs text-neutral-mid">
-                  {o.tenant ? `${o.tenant.account_number} · ${o.tenant.name}` : o.tenant_id}
+                  {o.tenant ? `${o.tenant.account_number} · ${o.company ?? o.tenant.name}` : o.tenant_id}
                   {' · '}{money(o.price_pence)}{' · '}ordered {when(o.purchased_at)}
                   {o.approved_by ? ` · approved by ${o.approved_by}` : ''}
                 </span>
+                {(o.buyer?.email || o.buyer?.name || o.registered_manager) && (
+                  <span className="mt-0.5 block text-xs text-neutral-mid">
+                    Ordered by {o.buyer?.name || 'unknown'}
+                    {o.buyer?.email && (
+                      <>
+                        {' '}
+                        <a href={`mailto:${o.buyer.email}`} className="font-medium text-teal hover:underline">
+                          {o.buyer.email}
+                        </a>
+                      </>
+                    )}
+                    {o.registered_manager && <> · registered manager {o.registered_manager}</>}
+                  </span>
+                )}
               </span>
               {o.intake && o.intake.missing > 0 && (
                 <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-800">

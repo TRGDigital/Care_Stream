@@ -160,9 +160,23 @@ platformPolicyGapsRouter.get('/orders', async (req: Request, res: Response) => {
     const tenantIds = [...new Set(rows.map((r: any) => r.tenant_id))]
     const tenants = await (prisma as any).tenant.findMany({
       where: { id: { in: tenantIds } },
-      select: { id: true, name: true, account_number: true, tier: true },
+      select: { id: true, name: true, account_number: true, tier: true, organisation_details: true },
     })
     const byId = new Map(tenants.map((t: any) => [t.id, t]))
+    // Who actually placed the order. A shop buyer's tenant is named "Policy customer"
+    // until they give their company name, so the queue needs the person and the
+    // company from the details they supplied, not just the placeholder.
+    const admins = await (prisma as any).user.findMany({
+      where:   { tenant_id: { in: tenantIds } },
+      select:  { tenant_id: true, name: true, email: true, role: true, created_at: true },
+      orderBy: { created_at: 'asc' },
+    })
+    const buyerByTenant = new Map<string, any>()
+    for (const u of admins as any[]) {
+      const prior = buyerByTenant.get(u.tenant_id)
+      // the first admin is the account's owner; fall back to the earliest user
+      if (!prior || (prior.role !== 'admin' && u.role === 'admin')) buyerByTenant.set(u.tenant_id, u)
+    }
     const inScope = (r: any) => {
       if (scope !== 'subscribers' && scope !== 'standalone') return true
       const standalone = (byId.get(r.tenant_id) as any)?.tier === 'policies_only'
@@ -173,7 +187,17 @@ platformPolicyGapsRouter.get('/orders', async (req: Request, res: Response) => {
     // Intake progress per order, so the queue shows who is blocking their own order.
     const withIntake = await Promise.all(rows.filter(inScope).map(async (r: any) => {
       const st = await purchaseIntakeState(r).catch(() => null)
-      return { ...r, tenant: byId.get(r.tenant_id) ?? null, intake: st ? { missing: st.missing, total: st.fields.length } : null }
+      const tenant: any = byId.get(r.tenant_id) ?? null
+      const od = (tenant?.organisation_details ?? {}) as Record<string, string>
+      const buyer = buyerByTenant.get(r.tenant_id) ?? null
+      return {
+        ...r,
+        tenant: tenant ? { id: tenant.id, name: tenant.name, account_number: tenant.account_number, tier: tenant.tier } : null,
+        company: od.company_legal_name || od.trading_name || null,
+        buyer: buyer ? { name: buyer.name ?? null, email: buyer.email ?? null } : null,
+        registered_manager: od.registered_manager || null,
+        intake: st ? { missing: st.missing, total: st.fields.length } : null,
+      }
     }))
     const orders = withIntake.sort((a: any, b: any) => rank(a.status) - rank(b.status))
     ok(res, { orders })

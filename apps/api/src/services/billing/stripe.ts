@@ -393,6 +393,8 @@ export interface ShopCheckoutResult {
   paid: boolean
   paymentId: string
   email: string | null
+  /** Billing name Stripe collected. Better than guessing from the email prefix. */
+  name: string | null
   amountTotalPence: number
   items: ShopItem[]
 }
@@ -496,6 +498,7 @@ export async function retrieveShopCheckoutSession(sessionId: string): Promise<Sh
       ? session.payment_intent
       : (session.payment_intent?.id ?? session.id),
     email: session.customer_details?.email ?? session.customer_email ?? null,
+    name: session.customer_details?.name ?? null,
     amountTotalPence: session.amount_total ?? 0,
     items,
   }

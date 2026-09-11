@@ -786,6 +786,52 @@ policiesRouter.patch('/:id/review', requireAdmin, async (req: Request, res: Resp
 // Serves pre-extracted text from S3 cache. Falls back to on-the-fly extraction
 // if the cache isn't ready yet (policy still processing).
 
+// GET /:id/file — the original document, exactly as it was uploaded.
+//
+// "Download PDF" has until now re-rendered the policy as HTML and opened the browser
+// print dialog, so a tenant who uploaded a PDF never got their own file back — they
+// got a print view of our rendering of it. When an original exists, hand it over.
+//
+// CareStream-written policies have no original (they are markdown we generated), so
+// this reports that rather than serving a .md a care home cannot use. Those need real
+// PDF generation, which is a separate piece of work.
+policiesRouter.get('/:id/file', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const policy = await (prisma as any).policy.findFirst({
+    where:  { id: String(req.params.id), tenant_id: tenantId },
+    select: { filename: true, s3_key: true, carestream_written: true },
+  })
+  if (!policy) { err(res, 'POLICY_NOT_FOUND', 'Policy not found.', 404); return }
+  if (!policy.s3_key) { err(res, 'NO_FILE', 'That policy has no stored file.', 404); return }
+
+  const ext = (policy.filename.split('.').pop() ?? '').toLowerCase()
+  if (ext === 'md') {
+    err(res, 'NO_ORIGINAL', 'This policy was written by CareStream and has no uploaded original. Use Print / Save as PDF.', 409)
+    return
+  }
+
+  const TYPES: Record<string, string> = {
+    pdf:  'application/pdf',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    doc:  'application/msword',
+    odt:  'application/vnd.oasis.opendocument.text',
+    txt:  'text/plain',
+  }
+
+  try {
+    const buffer = await downloadFile(policy.s3_key)
+    res.setHeader('Content-Type', TYPES[ext] ?? 'application/octet-stream')
+    // Quotes and escaping matter: a policy name with a comma or quote in it would
+    // otherwise truncate the filename the browser saves.
+    const safe = policy.filename.replace(/["\\]/g, '')
+    res.setHeader('Content-Disposition', `attachment; filename="${safe}"; filename*=UTF-8''${encodeURIComponent(policy.filename)}`)
+    res.setHeader('Content-Length', String(buffer.length))
+    res.send(buffer)
+  } catch (e: any) {
+    err(res, 'DOWNLOAD_FAILED', e?.message ?? 'could not read that file', 500)
+  }
+})
+
 policiesRouter.get('/:id', async (req: Request, res: Response) => {
   const tenantId = getTenantId()
 

@@ -980,6 +980,20 @@ function PolicyPreviewModal({ token, policy, version, onClose, onRename }: {
     if (!openPrintDoc(printHtml)) setError('Please allow pop-ups to print or download the policy.')
   }
 
+  // A real download of the file the tenant uploaded. Falls back to the print view when
+  // there is no original — a CareStream-written policy is markdown, and handing a care
+  // home a .md file would be worse than the print dialog.
+  const [downloading, setDownloading] = useState(false)
+  async function downloadOriginal() {
+    setDownloading(true); setError('')
+    try {
+      const ok = await createApiClient(token).policies.downloadOriginal(policy.id, name)
+      if (!ok) printOrDownload()
+    } catch {
+      printOrDownload()
+    } finally { setDownloading(false) }
+  }
+
   function commitRename() {
     const next = (renaming ?? '').trim().replace(/\s+/g, ' ')
     setRenaming(null)
@@ -1085,15 +1099,15 @@ function PolicyPreviewModal({ token, policy, version, onClose, onRename }: {
 
         <div className="flex items-center justify-between gap-2 border-t border-gray-100 px-6 py-3">
           <div className="flex items-center gap-2">
-            <button onClick={printOrDownload} disabled={loading || !data?.html}
-              title="Download as PDF with your letterhead, logo and sign-off block (choose Save as PDF in the dialog)"
+            <button onClick={downloadOriginal} disabled={loading || downloading || !data?.html}
+              title="Download the original document as it was uploaded"
               className="flex items-center gap-1.5 rounded-lg bg-teal px-3.5 py-2 text-sm font-medium text-white hover:bg-teal/90 disabled:opacity-50">
-              <Download size={14} /> Download PDF
+              <Download size={14} /> {downloading ? 'Downloading…' : 'Download'}
             </button>
             <button onClick={printOrDownload} disabled={loading || !data?.html}
-              title="Print with your letterhead, logo and sign-off block"
+              title="Open with your letterhead, logo and sign-off block, then print or choose Save as PDF"
               className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3.5 py-2 text-sm font-medium text-neutral-mid hover:border-teal hover:text-teal disabled:opacity-50">
-              <Printer size={14} /> Print
+              <Printer size={14} /> Print / Save as PDF
             </button>
           </div>
           <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-neutral-mid hover:text-neutral-dark">Close</button>

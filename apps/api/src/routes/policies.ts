@@ -937,8 +937,11 @@ policiesRouter.post('/:id/retry', requireAdmin, async (req: Request, res: Respon
     return
   }
 
-  if (policy.status !== 'failed') {
-    err(res, 'NOT_FAILED', 'Only failed policies can be retried.', 409)
+  // 'archived' is accepted too: before markFailed was corrected, every ingestion
+  // failure was recorded as archived, so those documents are stranded — retry would
+  // refuse the very policies that most need it.
+  if (policy.status !== 'failed' && policy.status !== 'archived') {
+    err(res, 'NOT_FAILED', 'Only failed or archived policies can be retried.', 409)
     return
   }
 
@@ -948,6 +951,9 @@ policiesRouter.post('/:id/retry', requireAdmin, async (req: Request, res: Respon
     docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     odt:  'application/vnd.oasis.opendocument.text',
     txt:  'text/plain',
+    // CareStream-written policies are delivered as .md. Without this the retry
+    // resolved them to application/octet-stream and failed them a second time.
+    md:   'text/markdown',
   }
   const mimeType = mimeMap[ext ?? ''] ?? 'application/octet-stream'
 

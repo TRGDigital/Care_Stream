@@ -72,8 +72,12 @@ function Catalogue({ token }: { token: string }) {
 
   if (products === null) return error ? <p className="text-sm text-red-700">{error}</p> : null
 
+  const COMPLETE = 'complete-library'
   const inBundle = (key: string) => products.filter(p => p.bundle_keys.includes(key))
-  const singlesOnly = products.filter(p => p.bundle_keys.length === 0)
+  // Every product belongs to the Complete Library, so "individual" means no other bundle.
+  const singlesOnly = products.filter(p => p.bundle_keys.filter(k => k !== COMPLETE).length === 0)
+  const namedBundles = bundles.filter(b => b.key !== COMPLETE)
+  const completeLibrary = bundles.find(b => b.key === COMPLETE)
 
   return (
     <div className="mt-8">
@@ -96,7 +100,22 @@ function Catalogue({ token }: { token: string }) {
         </p>
       ) : (
         <div className="space-y-5">
-          {bundles.map(b => (
+          {completeLibrary && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-teal/40 bg-teal-light/20 px-5 py-4">
+              <div className="flex items-center gap-2">
+                <Package size={16} className="text-teal" />
+                <div>
+                  <h3 className="text-sm font-semibold text-neutral-dark">{completeLibrary.title} <span className="font-normal text-neutral-mid">(all {products.length} policies)</span></h3>
+                  <p className="text-xs text-neutral-mid">{completeLibrary.description}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-base font-bold text-neutral-dark">{money(completeLibrary.price_pence)}</p>
+                {completeLibrary.renewal_cap_pence != null && <p className="text-[11px] text-neutral-mid">updates from year 2: {money(completeLibrary.renewal_cap_pence)}/yr</p>}
+              </div>
+            </div>
+          )}
+          {namedBundles.map(b => (
             <div key={b.id} className="rounded-xl border border-gray-200 bg-white">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 bg-teal-light/20 px-5 py-3">
                 <div className="flex items-center gap-2">

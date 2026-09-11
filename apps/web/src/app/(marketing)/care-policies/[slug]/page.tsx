@@ -2,10 +2,11 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import {
-  ShieldCheck, CheckCircle2, FileText, Scale, RefreshCw, UserCheck, Star, Package,
+  ShieldCheck, CheckCircle2, FileText, Scale, Star,
 } from 'lucide-react'
 import { JsonLd } from '@/components/json-ld'
 import { PolicyIntakeGame } from '@/components/marketing/policy-intake-game'
+import { HomeFaq, type Faq } from '@/components/marketing/home-faq'
 
 // The policy shop's product page — ONE page perfected before rollout (Len, 11 Sept).
 // Structure mirrors /staff-training/[slug]: hero with the intake demo as the focal
@@ -26,7 +27,8 @@ type ShopProduct = {
     intake_fields: Array<{ key: string; label: string; help: string | null; shared: boolean }>
   }
   bundles: Array<{ key: string; title: string; price_pence: number }>
-  regulations: Array<{ reference_key: string; official_name: string; summary: string; required_elements_count: number }>
+  regulations: Array<{ reference_key: string; official_name: string; summary: string; required_elements_count: number; key_facts: string[] }>
+  related: Array<{ slug: string; title: string; description: string; price_pence: number; taster: boolean }>
 }
 
 async function getProduct(slug: string): Promise<ShopProduct | null> {
@@ -60,7 +62,7 @@ export default async function PolicyProductPage({ params }: { params: Promise<{ 
   if (!LAUNCH_SLUGS.includes(slug)) notFound()
   const data = await getProduct(slug)
   if (!data) notFound()
-  const { product, bundles, regulations } = data
+  const { product, bundles, regulations, related } = data
 
   const heroBullets = [
     'Written for your organisation, not a template with your logo on it',
@@ -71,6 +73,15 @@ export default async function PolicyProductPage({ params }: { params: Promise<{ 
   const sharedFields = product.intake_fields.filter(f => f.shared)
   const specificFields = product.intake_fields.filter(f => !f.shared)
   const starterBundle = bundles.find(b => b.key === 'statutory-starter')
+
+  const faqs: Faq[] = [
+    { question: `What exactly do I receive?`, answer: `A complete ${product.title} written for your organisation, in your dashboard and as a print-ready PDF on your own letterhead. It names your service, your registration details and your leads, because you gave us them.` },
+    { question: 'Is this a template?', answer: `No. Each policy is written for the organisation buying it, structured from the legislation itself, verified against ${regulations.reduce((n, r) => n + r.required_elements_count, 0) || 'every'} required regulatory elements, and read by a person before it carries your name.` },
+    { question: 'How quickly will I get it?', answer: 'Within 2 working days of you completing the short questions above. Most arrive sooner.' },
+    { question: 'What happens when the law changes?', answer: 'We monitor UK care legislation continuously. When something affecting this policy changes, your copy is updated and you are told what changed and why. The first year of updates is included, then £12 a year per policy.' },
+    { question: 'Can I edit the policy myself?', answer: 'No, and deliberately so: we stand behind every word we approve. If something needs changing, tell us and we amend and re-verify it, so it always remains a document we can both defend to an inspector.' },
+    { question: 'What if I need more than one policy?', answer: `Most services do. The Statutory Starter Pack covers the twenty policies every CQC-registered service is expected to hold${starterBundle ? ` for ${money(starterBundle.price_pence)}` : ''}, and the Complete Policy Library covers all 65.` },
+  ]
 
   const productJson = {
     '@context': 'https://schema.org', '@type': 'Product',
@@ -145,31 +156,44 @@ export default async function PolicyProductPage({ params }: { params: Promise<{ 
         </div>
       </section>
 
-      {/* ── The legislation we analyse ── */}
+      {/* ── The legislation, as numbered sections with key facts and imagery ── */}
       <section className="bg-neutral-light/40 py-16">
         <div className="mx-auto max-w-content px-6">
           <p className="text-xs font-bold uppercase tracking-widest text-teal">Built from the law, checked against the law</p>
           <h2 className="mt-2 max-w-2xl text-3xl font-extrabold tracking-tight text-neutral-dark">
-            The legislation, CQC standards and guidance we analyse to write it
+            The legislation, CQC standards and law we analyse to write it
           </h2>
           <p className="mt-3 max-w-2xl text-neutral-mid">
-            Your {product.title} is structured from the regulations themselves, then verified
-            against every required element of each one before a person signs it off. If the law
-            changes, your policy is updated and you are told what changed and why.
+            Your {product.title} is structured from these regulations, then verified against every
+            required element of each one before a person signs it off.
           </p>
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
-            {regulations.map(r => (
-              <div key={r.reference_key} className="rounded-xl border border-gray-100 bg-white p-5 shadow-card">
-                <div className="mb-2 flex items-center gap-2">
-                  <Scale size={16} className="shrink-0 text-teal" />
-                  <h3 className="text-sm font-bold text-neutral-dark">{r.official_name}</h3>
+          <div className="mt-10 space-y-12">
+            {regulations.map((r, i) => (
+              <div key={r.reference_key} className={`grid items-center gap-8 lg:grid-cols-2 ${i % 2 === 1 ? 'lg:[&>*:first-child]:order-2' : ''}`}>
+                <div>
+                  <p className="text-4xl font-extrabold text-teal/30">{String(i + 1).padStart(2, '0')}</p>
+                  <h3 className="mt-1 text-xl font-extrabold text-neutral-dark">{r.official_name}</h3>
+                  <ul className="mt-4 space-y-2.5">
+                    {r.key_facts.map(fact => (
+                      <li key={fact} className="flex items-start gap-2.5 text-sm leading-relaxed text-neutral-dark">
+                        <CheckCircle2 size={17} className="mt-0.5 flex-shrink-0 text-teal" />
+                        <span>{fact}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {r.required_elements_count > 0 && (
+                    <p className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-teal-light/40 px-2.5 py-1 text-xs font-semibold text-teal">
+                      <ShieldCheck size={12} /> {r.required_elements_count} required elements verified in your policy
+                    </p>
+                  )}
                 </div>
-                {r.summary && <p className="text-sm leading-relaxed text-neutral-mid">{r.summary}</p>}
-                {r.required_elements_count > 0 && (
-                  <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-teal-light/40 px-2.5 py-1 text-xs font-semibold text-teal">
-                    <ShieldCheck size={12} /> {r.required_elements_count} required elements verified
-                  </p>
-                )}
+                {/* IMAGE SLOT: per-regulation artwork from Len, training-page theme. */}
+                <div className="flex aspect-[16/10] w-full items-center justify-center rounded-2xl bg-teal-gradient shadow-card">
+                  <div className="text-center text-white/90">
+                    <Scale size={36} className="mx-auto mb-2" />
+                    <p className="text-xs font-semibold">[ Image — {r.official_name} ]</p>
+                  </div>
+                </div>
               </div>
             ))}
             {regulations.length === 0 && (
@@ -179,44 +203,83 @@ export default async function PolicyProductPage({ params }: { params: Promise<{ 
         </div>
       </section>
 
-      {/* ── How it gets to you ── */}
-      <section className="bg-white py-16">
+      {/* ── FAQs about the policy ── */}
+      <HomeFaq faqs={faqs} />
+
+      {/* ── Why choose CareStream (policies edition) ── */}
+      <section className="bg-neutral-light/40 py-16">
         <div className="mx-auto max-w-content px-6">
-          <h2 className="max-w-2xl text-3xl font-extrabold tracking-tight text-neutral-dark">From your details to a policy you can stand behind</h2>
-          <div className="mt-8 grid gap-6 md:grid-cols-4">
+          <h2 className="text-3xl font-extrabold tracking-tight text-neutral-dark">Why choose CareStream?</h2>
+          <p className="mt-2 max-w-2xl text-neutral-mid">
+            Policies built for the care sector, written the way an inspector expects to read them.
+          </p>
+          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { Icon: FileText,  title: 'You give us the details', body: 'The short form above: who you are, your CQC registration, and the leads this policy names.' },
-              { Icon: Scale,     title: 'We write it from the law', body: 'One section per required element of the legislation, in your name, with your people.' },
-              { Icon: ShieldCheck, title: 'It is verified, then read', body: 'Automated checks against every required element, then a person reads it before it ships.' },
-              { Icon: RefreshCw, title: 'It stays current', body: 'When legislation changes, your policy is updated and you are told what changed.' },
-            ].map(s => (
-              <div key={s.title} className="rounded-xl border border-gray-100 bg-white p-5 shadow-card">
-                <s.Icon size={20} className="mb-3 text-teal" />
-                <h3 className="mb-1.5 text-sm font-bold text-neutral-dark">{s.title}</h3>
-                <p className="text-sm leading-relaxed text-neutral-mid">{s.body}</p>
+              '65 care policies, one platform',
+              'Written for your service, never a template',
+              'Verified against every required element of the law',
+              'Read by a person before it carries your name',
+              'Kept up to date with UK care regulations',
+              'Branded, print-ready PDF on your letterhead',
+              'Delivered within 2 working days of your details',
+              'Part of the full CareStream platform when you are ready',
+            ].map(b => (
+              <div key={b} className="flex items-start gap-2.5 rounded-xl border border-gray-100 bg-white p-4 shadow-card">
+                <CheckCircle2 size={18} className="mt-0.5 flex-shrink-0 text-teal" />
+                <span className="text-sm font-medium leading-relaxed text-neutral-dark">{b}</span>
               </div>
             ))}
           </div>
-          {starterBundle && (
-            <div className="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-teal-gradient px-8 py-7 text-white">
-              <div className="flex items-center gap-3">
-                <Package size={22} />
-                <div>
-                  <p className="text-lg font-bold">Need the full set? {starterBundle.title}</p>
-                  <p className="text-sm text-white/85">The twenty policies every CQC-registered service is expected to hold, {money(starterBundle.price_pence)}.</p>
-                </div>
-              </div>
-              <Link href="/contact?about=Statutory%20Starter%20Pack" className="rounded-btn bg-white px-6 py-3 text-sm font-semibold text-teal hover:bg-white/90">
-                Talk to us
-              </Link>
-            </div>
-          )}
-          <p className="mt-8 flex items-center gap-2 text-sm text-neutral-mid">
-            <UserCheck size={16} className="text-teal" />
-            Read-only by design: we approve every document that carries your name, and we keep it correct.
-          </p>
         </div>
       </section>
+
+      {/* ── Related policies ── */}
+      {related.length > 0 && (
+        <section className="bg-white py-16">
+          <div className="mx-auto max-w-content px-6">
+            <p className="text-xs font-bold uppercase tracking-widest text-teal">Related policies</p>
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-neutral-dark">More policies your service may need</h2>
+            <p className="mt-2 max-w-2xl text-neutral-mid">
+              More statutory and operational policies CareStream writes for your service, personalised,
+              human-reviewed and kept updated, exactly like this one.
+            </p>
+            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {related.map(rp => {
+                const launched = LAUNCH_SLUGS.includes(rp.slug)
+                return (
+                  <div key={rp.slug} className="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-card">
+                    {/* IMAGE SLOT: per-policy card image from Len, training-card theme. */}
+                    <div className="flex aspect-[16/9] w-full items-center justify-center bg-teal-gradient">
+                      <div className="text-center text-white/90">
+                        <FileText size={28} className="mx-auto mb-1.5" />
+                        <p className="text-[11px] font-semibold">[ Image — {rp.title} ]</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-1 flex-col p-5">
+                      <h3 className="text-base font-bold text-neutral-dark">{rp.title}</h3>
+                      <p className="mt-1.5 line-clamp-2 flex-1 text-sm leading-relaxed text-neutral-mid">{rp.description}</p>
+                      <div className="mt-4 flex items-center justify-between gap-3">
+                        <span className="text-lg font-extrabold text-neutral-dark">{money(rp.price_pence)}</span>
+                        <Link href={`/contact?about=${encodeURIComponent(rp.title)}`} className="rounded-btn bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700">
+                          Buy now
+                        </Link>
+                      </div>
+                      {launched ? (
+                        <Link href={`/care-policies/${rp.slug}`} className="mt-3 text-xs font-semibold text-teal hover:underline">
+                          See this policy in full →
+                        </Link>
+                      ) : (
+                        <p className="mt-3 text-xs text-neutral-mid">Full page coming soon</p>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
     </>
   )
 }

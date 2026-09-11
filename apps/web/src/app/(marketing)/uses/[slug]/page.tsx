@@ -1,3 +1,5 @@
+import { existsSync } from 'fs'
+import path from 'path'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -21,9 +23,30 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return { title: uc.meta.title, description: uc.meta.description }
 }
 
-// Artwork arrives after the copy. Until a file exists at the slot path the block
-// renders a labelled placeholder, so the page can ship on words alone.
+// Artwork arrives after the copy, so each slot looks for its file at build time and
+// falls back to a labelled placeholder naming the exact path it wants. Dropping a
+// file into public/images/uses/<slug>/ is all it takes to fill a slot; no template
+// change, and no broken image if the file is not there yet.
+const SLOT_EXTS = ['webp', 'jpg', 'jpeg', 'png'] as const
+
+function findSlotImage(slug: string, slot: string): string | null {
+  for (const ext of SLOT_EXTS) {
+    const rel = `images/uses/${slug}/${slot}.${ext}`
+    if (existsSync(path.join(process.cwd(), 'public', rel))) return `/${rel}`
+  }
+  return null
+}
+
 function Shot({ slug, slot, alt, className = '' }: { slug: string; slot: string; alt: string; className?: string }) {
+  const src = findSlotImage(slug, slot)
+  if (src) {
+    return (
+      <div className={`overflow-hidden rounded-2xl shadow-elevated ring-1 ring-gray-100 ${className}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt={alt} className="aspect-[16/10] w-full object-cover" />
+      </div>
+    )
+  }
   return (
     <div className={`overflow-hidden rounded-2xl bg-teal-gradient shadow-elevated ring-1 ring-gray-100 ${className}`}>
       <div className="flex aspect-[16/10] w-full items-center justify-center px-6 text-center">

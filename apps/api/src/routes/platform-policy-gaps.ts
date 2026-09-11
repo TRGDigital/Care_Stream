@@ -6,7 +6,7 @@ import { facilityTypeToSetting, settingLabel } from '../lib/care-setting'
 import { classifyTenantPolicies, knownPolicyTypes } from '../lib/policy-classifier'
 import { missingPolicies } from '../services/analytics/missing-policies'
 import { writePolicy } from '../services/policy-writer/write-policy'
-import { POLICY_PRODUCTS_SEED, POLICY_BUNDLES_SEED, SHARED_INTAKE_FIELDS } from '../data/policy-products-seed'
+import { POLICY_PRODUCTS_SEED, POLICY_BUNDLES_SEED, SHARED_INTAKE_FIELDS, COMPLETE_LIBRARY_KEY } from '../data/policy-products-seed'
 import { verifyPaidPolicyDraft, verificationFailures } from '../services/policy-writer/verify-policy'
 import { writeAuditLog } from '../lib/audit'
 import { uploadPolicyFile } from '../services/storage/s3'
@@ -112,7 +112,10 @@ platformPolicyGapsRouter.post('/catalogue/seed', async (_req: Request, res: Resp
     for (const [i, p] of POLICY_PRODUCTS_SEED.entries()) {
       const data = {
         title: p.title, description: p.description, price_pence: p.price_pence,
-        taster: p.taster === true, bundle_keys: p.bundles ?? [],
+        taster: p.taster === true,
+        // Every product is part of the Complete Library; appended here so the seed
+        // file never has to repeat it.
+        bundle_keys: [...(p.bundles ?? []), COMPLETE_LIBRARY_KEY],
         intake_fields: [...SHARED_INTAKE_FIELDS, ...(p.fields ?? [])],
         sort_order: i,
       }

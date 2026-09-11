@@ -62,7 +62,13 @@ export default async function PolicyProductPage({ params }: { params: Promise<{ 
   if (!LAUNCH_SLUGS.includes(slug)) notFound()
   const data = await getProduct(slug)
   if (!data) notFound()
-  const { product, bundles, regulations, related } = data
+  // Deploys build web and api in parallel, so this page can be prerendered against
+  // an API one version behind. Every list is defaulted so version skew can never
+  // crash the build; the missing data simply appears at the next revalidation.
+  const product = data.product
+  const bundles = data.bundles ?? []
+  const regulations = (data.regulations ?? []).map(r => ({ ...r, key_facts: r.key_facts ?? [] }))
+  const related = data.related ?? []
 
   const heroBullets = [
     'Written for your organisation, not a template with your logo on it',

@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { applyRoleNames } from '@/lib/policy-names'
-import { X, Loader2, Check, RotateCcw, FileCheck2, GitCompare, Download, Pencil, Send, Eraser } from 'lucide-react'
+import { X, Loader2, Check, RotateCcw, FileCheck2, GitCompare, Printer, Pencil, Send, Eraser } from 'lucide-react'
 
 import { buildPrintDoc, openPrintDoc, type OrgCtx } from '@/components/admin/policies/policy-print'
 
@@ -378,9 +378,9 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
               </button>
             )}
             <button onClick={downloadPolicy} disabled={!doc?.document}
-              title="Download the clean policy for print / PDF (letterhead + sign-off)"
+              title="Open the clean policy with letterhead and sign-off, then print or choose Save as PDF"
               className="inline-flex items-center gap-1.5 rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-gray-50 disabled:opacity-50">
-              <Download size={13} /> Download
+              <Printer size={13} /> Print / Save as PDF
             </button>
             {policiesOnly ? null : status === 'pending_external' ? (
               <div className="flex items-center gap-2">

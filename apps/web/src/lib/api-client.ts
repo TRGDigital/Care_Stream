@@ -290,6 +290,29 @@ export function createApiClient(token: string) {
     },
 
     policies: {
+      // The original uploaded file, streamed as a real download. apiFetch is not used:
+      // it parses every response as JSON, and this one is a PDF or a Word document.
+      // Returns null when the policy has no uploaded original (CareStream-written
+      // policies are markdown), so the caller can fall back to the print view.
+      downloadOriginal: async (id: string, filename: string): Promise<boolean> => {
+        const res = await fetch(`${API_URL}/policies/${encodeURIComponent(id)}/file`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) return false
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = filename
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        // Revoked on the next tick: revoking immediately can cancel the download in
+        // some browsers before it has started reading the blob.
+        setTimeout(() => URL.revokeObjectURL(url), 10_000)
+        return true
+      },
+
       // What changed, when, why and who signed it off. The version call returns the policy's
       // full text as published on that date.
       history: () =>

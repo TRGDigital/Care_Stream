@@ -69,6 +69,7 @@ function sectionColour(name: string): string {
 
 export default function PoliciesPage() {
   const { data: session }           = useSession()
+  const policiesOnly                = (session?.user as any)?.tier === 'policies_only'
   const userId = session?.user?.email ?? 'guest'
   const [policies,       setPolicies]       = useState<any[]>([])
   const [loading,        setLoading]        = useState(true)
@@ -527,7 +528,9 @@ export default function PoliciesPage() {
       {/* Adopted changes to review (Policy Change Adoption).
           Not on the History tab: that tab is the record of what has already happened, and a
           panel of outstanding work sitting above it reads as part of the history. */}
-      {tab !== 'history' && (() => {
+      {/* A policies-only buyer has no adopted changes and no reviewer, so neither this
+          panel nor its "we couldn't check" fallback means anything to them. */}
+      {tab !== 'history' && !policiesOnly && (() => {
         const toReview = reviewSummary.filter(d => d.pending > 0)
         if (!toReview.length) {
           // The summary fetch failed (after a retry) and we have nothing cached to show —

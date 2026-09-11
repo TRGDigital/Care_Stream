@@ -333,9 +333,14 @@ export async function ingestDocument(job: IngestionJobData): Promise<void> {
 
 async function markFailed(policyId: string, reason: string): Promise<void> {
   console.error(`[ingestion] Failed policy=${policyId}: ${reason}`)
+  // 'failed', not 'archived'. The policies page already understands failed — it keeps
+  // the document in the Active tab with a failed badge — but nothing ever wrote it, so
+  // every ingestion failure landed in Archived looking like a deliberate decision.
+  // That is how a policy we had written, charged for and delivered could disappear
+  // without anyone seeing an error.
   await (prisma as any).policy.update({
     where: { id: policyId },
-    data:  { status: 'archived' },
+    data:  { status: 'failed' },
   }).catch(() => {/* best-effort */})
 }
 

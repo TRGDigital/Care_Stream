@@ -59,7 +59,10 @@ function VerificationChecklist({ v }: { v: PolicyOrderVerification }) {
   )
 }
 
-export function PolicyOrders({ token }: { token: string }) {
+// scope keeps the two customer bases apart: 'subscribers' = full CareStream clients
+// buying from their gaps page (shown on Policy Gaps); 'standalone' = shop buyers with
+// a policies_only account (shown on Paid Policies).
+export function PolicyOrders({ token, scope }: { token: string; scope: 'subscribers' | 'standalone' }) {
   const [orders, setOrders] = useState<PolicyOrder[] | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   // The draft being read before approval. Nothing is delivered unread.
@@ -67,11 +70,11 @@ export function PolicyOrders({ token }: { token: string }) {
   const [error, setError] = useState('')
 
   const load = () =>
-    createPlatformClient(token).policyGaps.orders()
+    createPlatformClient(token).policyGaps.orders(scope)
       .then(r => setOrders(r.orders))
       .catch((e: Error) => setError(e.message))
 
-  useEffect(() => { load() }, [token])
+  useEffect(() => { load() }, [token, scope])
 
   async function write(o: PolicyOrder) {
     if (!window.confirm(
@@ -143,7 +146,7 @@ export function PolicyOrders({ token }: { token: string }) {
     <div className="mb-5 rounded-xl border border-gray-200 bg-white">
       <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 px-5 py-3">
         <h2 className="text-sm font-semibold text-neutral-dark">
-          Policies clients have paid for
+          {scope === 'standalone' ? 'Policies shop customers have paid for' : 'Policies subscribed clients have paid for'}
           {owed.length > 0 && <span className="ml-1.5 font-normal text-red-600">({owed.length} owed)</span>}
         </h2>
         <p className="text-xs text-neutral-mid">
@@ -153,8 +156,9 @@ export function PolicyOrders({ token }: { token: string }) {
 
       {orders.length === 0 ? (
         <p className="px-5 py-6 text-sm text-neutral-mid">
-          When a client orders a policy from their gaps page it appears here, and stays until
-          somebody has written it and approved it.
+          {scope === 'standalone'
+            ? 'When a shop customer (a policies-only account, no full CareStream licence) buys a policy it appears here, and stays until somebody has written it and approved it.'
+            : 'When a subscribed client orders a policy from their gaps page it appears here, and stays until somebody has written it and approved it.'}
         </p>
       ) : (
         <ul className="divide-y divide-gray-100">

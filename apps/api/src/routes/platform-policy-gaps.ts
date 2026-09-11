@@ -6,6 +6,7 @@ import { facilityTypeToSetting, settingLabel } from '../lib/care-setting'
 import { classifyTenantPolicies, knownPolicyTypes } from '../lib/policy-classifier'
 import { missingPolicies } from '../services/analytics/missing-policies'
 import { writePolicy } from '../services/policy-writer/write-policy'
+import { POLICY_PRODUCTS_SEED, POLICY_BUNDLES_SEED, SHARED_INTAKE_FIELDS } from '../data/policy-products-seed'
 import { verifyPaidPolicyDraft, verificationFailures } from '../services/policy-writer/verify-policy'
 import { writeAuditLog } from '../lib/audit'
 import { uploadPolicyFile } from '../services/storage/s3'
@@ -85,9 +86,68 @@ platformPolicyGapsRouter.post('/:tenantId/classify', async (req: Request, res: R
 // home automatically: a person reads the policy and decides it is good enough to carry that
 // home's name. Until then the client sees "with us for final checks", which is true.
 
-// GET /orders — every purchase across all clients, unfinished first.
-platformPolicyGapsRouter.get('/orders', async (_req: Request, res: Response) => {
+// ─── The shop catalogue ───────────────────────────────────────────────────────
+// What the standalone shop sells: every policy with its price, bundle membership
+// and the buyer details it needs before writing can start. The shared identity
+// fields are asked once per buyer; per-product fields are listed on each product.
+
+// GET /catalogue — products and bundles, for the Paid Policies tab (and later the shop).
+platformPolicyGapsRouter.get('/catalogue', async (_req: Request, res: Response) => {
   try {
+    const [products, bundles] = await Promise.all([
+      (prisma as any).policyProduct.findMany({ orderBy: [{ sort_order: 'asc' }, { title: 'asc' }] }),
+      (prisma as any).policyBundle.findMany({ orderBy: { title: 'asc' } }),
+    ])
+    ok(res, { products, bundles, shared_intake_fields: SHARED_INTAKE_FIELDS })
+  } catch (e: any) {
+    err(res, 'CATALOGUE_FAILED', e?.message ?? 'could not read the catalogue', 500)
+  }
+})
+
+// POST /catalogue/seed — idempotent upsert from the seed file. Re-run after editing
+// the seed; existing slugs are updated in place, nothing is deleted.
+platformPolicyGapsRouter.post('/catalogue/seed', async (_req: Request, res: Response) => {
+  try {
+    let upserted = 0
+    for (const [i, p] of POLICY_PRODUCTS_SEED.entries()) {
+      const data = {
+        title: p.title, description: p.description, price_pence: p.price_pence,
+        taster: p.taster === true, bundle_keys: p.bundles ?? [],
+        intake_fields: [...SHARED_INTAKE_FIELDS, ...(p.fields ?? [])],
+        sort_order: i,
+      }
+      await (prisma as any).policyProduct.upsert({
+        where: { slug: p.slug },
+        update: data,
+        create: { id: randomUUID(), slug: p.slug, ...data },
+      })
+      upserted++
+    }
+    for (const b of POLICY_BUNDLES_SEED) {
+      await (prisma as any).policyBundle.upsert({
+        where: { key: b.key },
+        update: { title: b.title, description: b.description, price_pence: b.price_pence, renewal_cap_pence: b.renewal_cap_pence ?? null },
+        create: { id: randomUUID(), key: b.key, title: b.title, description: b.description, price_pence: b.price_pence, renewal_cap_pence: b.renewal_cap_pence ?? null },
+      })
+    }
+    ok(res, { products: upserted, bundles: POLICY_BUNDLES_SEED.length })
+  } catch (e: any) {
+    err(res, 'SEED_FAILED', e?.message ?? 'could not seed the catalogue', 500)
+  }
+})
+
+// GET /orders — purchases, unfinished first.
+//
+// Two distinct customer bases buy policies, and their queues must not mix:
+//   scope=subscribers — full CareStream clients closing gaps from their own gaps page.
+//                       Their orders belong on Policy Gaps, next to the analysis that
+//                       prompted the purchase.
+//   scope=standalone  — shop buyers with a policies_only account and no full licence.
+//                       Their orders belong on the Paid Policies tab.
+// No scope returns everything (back-compat).
+platformPolicyGapsRouter.get('/orders', async (req: Request, res: Response) => {
+  try {
+    const scope = String(req.query.scope ?? '')
     const rows = await (prisma as any).policyPurchase.findMany({
       orderBy: [{ purchased_at: 'desc' }],
       take: 200,
@@ -95,12 +155,18 @@ platformPolicyGapsRouter.get('/orders', async (_req: Request, res: Response) => 
     const tenantIds = [...new Set(rows.map((r: any) => r.tenant_id))]
     const tenants = await (prisma as any).tenant.findMany({
       where: { id: { in: tenantIds } },
-      select: { id: true, name: true, account_number: true },
+      select: { id: true, name: true, account_number: true, tier: true },
     })
     const byId = new Map(tenants.map((t: any) => [t.id, t]))
+    const inScope = (r: any) => {
+      if (scope !== 'subscribers' && scope !== 'standalone') return true
+      const standalone = (byId.get(r.tenant_id) as any)?.tier === 'policies_only'
+      return scope === 'standalone' ? standalone : !standalone
+    }
     // Work still owed floats to the top; delivered work is history.
     const rank = (s: string) => (s === 'drafted' ? 0 : s === 'drafting' ? 1 : s === 'paid' ? 2 : 3)
     const orders = rows
+      .filter(inScope)
       .map((r: any) => ({ ...r, tenant: byId.get(r.tenant_id) ?? null }))
       .sort((a: any, b: any) => rank(a.status) - rank(b.status))
     ok(res, { orders })

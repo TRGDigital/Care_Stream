@@ -1260,8 +1260,12 @@ export function createPlatformClient(token: string) {
       // free; the coverage run costs Anthropic credit, so the two are separate calls.
       // Policies clients have paid for, and moving one along. Approval is manual on
       // purpose: a person decides a document is fit to carry a care home's name.
-      orders: () =>
-        adminFetch<{ orders: PolicyOrder[] }>('/policy-gaps/orders', token),
+      catalogue: () =>
+        adminFetch<{ products: PolicyProduct[]; bundles: PolicyProductBundle[]; shared_intake_fields: Array<{ key: string; label: string; help?: string; shared?: boolean }> }>('/policy-gaps/catalogue', token),
+      seedCatalogue: () =>
+        adminFetch<{ products: number; bundles: number }>('/policy-gaps/catalogue/seed', token, { method: 'POST' }),
+      orders: (scope?: 'subscribers' | 'standalone') =>
+        adminFetch<{ orders: PolicyOrder[] }>('/policy-gaps/orders' + (scope ? '?scope=' + scope : ''), token),
       // Writing the policy costs Anthropic credit. Delivering is what puts it in the
       // client's library, so it is a separate, deliberate step after a person has read it.
       writeOrder: (id: string) =>
@@ -1306,6 +1310,19 @@ export interface MissingPolicyReport {
   missing: Array<{ title: string; regulations: Array<{ reference_key: string; official_name: string }> }>
 }
 
+
+/** A product in the standalone policy shop's catalogue. */
+export interface PolicyProduct {
+  id: string; slug: string; title: string; description: string
+  price_pence: number; taster: boolean; active: boolean
+  bundle_keys: string[]; reference_keys: string[]
+  intake_fields: Array<{ key: string; label: string; help?: string; shared?: boolean }>
+  sort_order: number
+}
+export interface PolicyProductBundle {
+  id: string; key: string; title: string; description: string
+  price_pence: number; renewal_cap_pence: number | null; active: boolean
+}
 
 /** The verification-gate checklist stored on an order (see api verify-policy.ts). */
 export interface PolicyOrderVerification {

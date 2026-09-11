@@ -2632,6 +2632,41 @@ model RoleMentionScan {
 // already proven in production. Unlike a licence, a policy is not delivered on payment: the
 // status carries it from paid, through drafting and our internal read, to approved.
 // See apps/api/prisma/migrations/manual_policy_purchase.sql.
+// The standalone policy shop's catalogue: what we sell, at what price, and which
+// buyer-supplied details each policy needs before it can be written. Seeded from
+// src/data/policy-products-seed.ts (idempotent upsert; platform can reseed).
+model PolicyProduct {
+  id             String   @id @default(uuid())
+  slug           String   @unique
+  title          String
+  description    String   @default("")
+  price_pence    Int
+  taster         Boolean  @default(false)   // the deliberately cheap trial policy
+  active         Boolean  @default(true)
+  bundle_keys    String[] @default([])      // bundles this product belongs to
+  reference_keys String[] @default([])      // regulations the verification gate must cover
+  intake_fields  Json     @default("[]")    // [{ key, label, help?, shared? }] — shared fields are asked once per buyer
+  sort_order     Int      @default(0)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@map("policy_products")
+}
+
+model PolicyBundle {
+  id                String   @id @default(uuid())
+  key               String   @unique
+  title             String
+  description       String   @default("")
+  price_pence       Int
+  renewal_cap_pence Int?     // annual keep-updated cap for the whole bundle
+  active            Boolean  @default(true)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  @@map("policy_bundles")
+}
+
 model PolicyPurchase {
   id                String    @id @default(uuid()) @db.Uuid
   tenant_id         String

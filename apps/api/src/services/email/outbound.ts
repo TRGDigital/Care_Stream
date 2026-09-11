@@ -195,6 +195,65 @@ export async function sendNewTenantNotification(opts: {
 // ─── Paid-policy purchase notification to the platform owner ────────────────────
 // Sent when a client's policy purchase is reconciled: work is now owed, and the
 // Paid Policies tab is where it happens.
+// The policy shop buyer's own confirmation. Note the existing
+// sendPolicyPurchaseNotification goes to the PLATFORM, not the customer — until this,
+// somebody could pay and receive nothing at all.
+//
+// It carries the sign-in link because for a shop buyer this email IS the way in: they
+// have an account they never registered for and no password.
+export async function sendPolicyPurchaseConfirmation(opts: {
+  to: string
+  name: string
+  titles: string[]
+  totalPence: number
+  link: string
+  expiresMins: number
+  isNewAccount: boolean
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) {
+    console.warn('[email] SENDGRID_API_KEY not set — skipping policy purchase confirmation'); return
+  }
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc = (v: any) => String(v ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
+  const n = opts.titles.length
+  const days = Math.round(opts.expiresMins / (60 * 24))
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:18px;font-weight:700;margin:0 0 8px">Thank you, your ${n === 1 ? 'policy is' : 'policies are'} being written</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 16px">
+      Hello ${esc(opts.name)}, we have your payment of £${(opts.totalPence / 100).toFixed(2)} for
+      ${n} ${n === 1 ? 'policy' : 'policies'}. Each one is written for your organisation from the
+      legislation behind it, then read and approved by a person before it carries your name.
+      They will be ready within <strong>2 working days</strong>.
+    </p>
+    <ul style="margin:0 0 20px;padding-left:20px;color:#374151;font-size:14px">
+      ${opts.titles.map(t => `<li style="padding:2px 0">${esc(t)}</li>`).join('')}
+    </ul>
+    <p style="margin:0 0 20px">
+      <a href="${esc(opts.link)}" style="display:inline-block;background:#2563EB;color:#fff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 28px;border-radius:10px">
+        Open your policies
+      </a>
+    </p>
+    <p style="color:#6B7280;font-size:13px;line-height:1.6;margin:0 0 14px">
+      That link signs you in and lasts ${days} days.
+      ${opts.isNewAccount
+        ? 'We have created an account for you, so there is nothing to set up. A separate email lets you choose a password if you would rather sign in that way.'
+        : 'It is the same account you used last time, so your new policies sit alongside the ones you already have.'}
+    </p>
+    <p style="color:#6B7280;font-size:13px;line-height:1.6;margin:0">
+      You will see each policy move from being written to ready on that page. We will email you
+      again when they are there.
+    </p>
+  `)
+
+  await sgMail.send({
+    to: opts.to, from,
+    subject: n === 1 ? `Your ${opts.titles[0]} is being written` : `Your ${n} policies are being written`,
+    html,
+  })
+}
+
 export async function sendPolicyPurchaseNotification(opts: {
   tenantName: string; accountNumber?: string | null; titles: string[]; totalPence: number
 }): Promise<void> {

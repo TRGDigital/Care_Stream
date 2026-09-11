@@ -24,7 +24,13 @@ const SettingsSearchCtx = createContext('')
 // the staff library, audits and AI answers — none of which they have. Locked rather
 // than hidden, so the lock does the same job as the sidebar: it explains what the rest
 // of CareStream is.
-const POLICIES_ONLY_SETTINGS = new Set(['Organisation logo'])
+const POLICIES_ONLY_SETTINGS = new Set([
+  'Organisation logo',
+  // Their policies are written from these values. The intake form collects them once,
+  // but only while an order is awaiting details — without this there is no way to
+  // correct a typo in their own company name afterwards.
+  'Organisation details',
+])
 const SettingsLockCtx = createContext<{ locked: boolean; onLocked: (title: string) => void }>({
   locked: false, onLocked: () => {},
 })

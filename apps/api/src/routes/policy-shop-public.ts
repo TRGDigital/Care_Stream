@@ -11,6 +11,7 @@ import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { downloadFile } from '../services/storage/s3'
 import { shopImageUrl } from '../services/policy-shop/shopImage'
+import { questionsForReferenceKeys } from '../data/policy-intake-questions'
 import { createShopCheckoutSession, retrieveShopCheckoutSession, type ShopItem } from '../services/billing/stripe'
 import { createLoginLink } from '../lib/login-tokens'
 import { siteUrl } from '../lib/urls'
@@ -138,6 +139,16 @@ policyShopPublicRouter.get('/products/:slug', async (req: Request, res: Response
         intake_fields: ((product.intake_fields as any[]) ?? []).map(f => ({
           key: f.key, label: f.label, help: f.help ?? null, shared: f.shared === true,
         })),
+        // What we will ask about their service AFTER they buy, so the policy is written
+        // from their answers rather than around them.
+        //
+        // Exposed publicly on purpose, and it is the opposite of putting them at checkout.
+        // The buying page still asks its nine identity questions and nothing more; this is
+        // the page SAYING what it will ask later, which is the reassurance that the document
+        // is built for them. `prevents` is deliberately not sent: it is written for a
+        // reviewer deciding whether a draft overclaims, not for a buyer deciding to buy.
+        personalisation_questions: questionsForReferenceKeys(product.reference_keys ?? [])
+          .map(q => ({ key: q.key, label: q.label, help: q.help ?? null })),
       },
       bundles,
       regulations: (regs as any[]).map(r => ({

@@ -851,6 +851,10 @@ policiesRouter.get('/:id/pdf', requireAdmin, async (req: Request, res: Response)
     res.setHeader('Content-Length', String(buffer.length))
     res.send(buffer)
   } catch (e: any) {
+    // Logged, not just returned. This endpoint 500d in production and the reason was
+    // only in the response body, so diagnosing it meant a round trip through the
+    // browser. Same lesson as markFailed: if it can fail, the reason belongs in a log.
+    console.error(`[policy-pdf] Failed policy=${policyId}: ${e?.stack ?? e?.message ?? e}`)
     err(res, 'PDF_FAILED', e?.message ?? 'could not build that PDF', 500)
   }
 })

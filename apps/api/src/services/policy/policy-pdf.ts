@@ -16,6 +16,26 @@
 
 import PDFDocument from 'pdfkit'
 
+// These six imports are never referenced, and must not be removed.
+//
+// pdfkit loads the metrics for a standard font with require('#standard-fonts/TimesRoman')
+// -- a package-imports subpath, resolved through the "imports" map in its package.json.
+// Vercel traces the serverless bundle by reading the source statically, and it does not
+// follow "#" specifiers, so those .cjs files were left out of the deployment. Locally the
+// whole of node_modules is on disk and everything passed; deployed, the first doc.text()
+// threw Cannot find module and /policies/:id/pdf returned 500 -- which is why Download
+// kept falling back to the print view.
+//
+// Importing the same files through their PUBLIC subpath (pdfkit/standard-fonts/X, also in
+// that package.json) is an ordinary static import the tracer does follow, so they get
+// bundled. Only the faces this document actually uses are listed.
+import 'pdfkit/standard-fonts/TimesRoman'
+import 'pdfkit/standard-fonts/TimesBold'
+import 'pdfkit/standard-fonts/TimesItalic'
+import 'pdfkit/standard-fonts/TimesBoldItalic'
+import 'pdfkit/standard-fonts/Helvetica'
+import 'pdfkit/standard-fonts/HelveticaBold'
+
 export interface PolicyPdfOrg {
   home_name?: string | null
   address?: string | null

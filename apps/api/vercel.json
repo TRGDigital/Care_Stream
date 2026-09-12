@@ -4,10 +4,20 @@
     {
       "src": "src/app.ts",
       "use": "@vercel/node",
-      "config": { "maxDuration": 300, "memory": 1769 }
+      "config": {
+        "maxDuration": 300,
+        "memory": 1769,
+        "includeFiles": [
+          "../../node_modules/pdfkit/js/standard-fonts/**",
+          "node_modules/pdfkit/js/standard-fonts/**"
+        ]
+      }
     }
   ],
   "routes": [
-    { "src": "/(.*)", "dest": "/src/app.ts" }
+    {
+      "src": "/(.*)",
+      "dest": "/src/app.ts"
+    }
   ]
 }

@@ -23,6 +23,7 @@
 
 import { prisma } from '../../db/client'
 import { callClaude } from '../ai/claude'
+import { questionsForReferenceKeys, regulationsWithoutQuestions, type IntakeQuestion } from '../../data/policy-intake-questions'
 
 const MODEL_SONNET = 'claude-sonnet-4-5-20250929'
 
@@ -51,6 +52,20 @@ export type ProvenanceQualityStatement = {
   via: string[]            // which mapped regulations pull this statement in
 }
 
+/** Was this document actually finished, and was it checked? The panel should confirm what
+ *  was verified rather than leaving a reader to infer it from a green tick, which is how a
+ *  policy truncated at the token ceiling came to be recorded as passed. */
+export type PolicyIntegrity = {
+  words: number
+  sections: number
+  ends_cleanly: boolean
+  has_review_section: boolean
+  verified_at: string | null
+  checks_run: string[]
+  checks_passed: string[]
+  completeness_checked: boolean   // false for verdicts stored before that check existed
+}
+
 export type PolicyProvenance = {
   purchase_id: string
   policy_title: string
@@ -62,6 +77,10 @@ export type PolicyProvenance = {
   regulations: ProvenanceRegulation[]
   quality_statements: ProvenanceQualityStatement[]
   element_totals: { total: number; met: number; missing: number; unjudged: number }
+  integrity: PolicyIntegrity
+  /** What we must ask the buyer so this policy stops assuming. */
+  assumption_questions: IntakeQuestion[]
+  regulations_not_yet_derived: string[]
 }
 
 /** Everything that actually went into this policy, as recorded. No model is called. */
@@ -142,6 +161,19 @@ export async function buildPolicyProvenance(purchaseId: string): Promise<PolicyP
     via: (q.linked_regulations ?? []).filter((k: string) => keys.includes(k)),
   }))
 
+  const draft: string = (purchase.draft_content ?? '').trim()
+  const checks = (purchase.verification?.checks ?? {}) as Record<string, { passed?: boolean }>
+  const integrity: PolicyIntegrity = {
+    words: draft ? draft.split(/\s+/).filter(Boolean).length : 0,
+    sections: (draft.match(/^## /gm) ?? []).length,
+    ends_cleanly: /[.!?:)\]"'\u2019\u201d]$/.test(draft),
+    has_review_section: /^##\s+Review\b/m.test(draft),
+    verified_at: purchase.verified_at ? new Date(purchase.verified_at).toISOString() : null,
+    checks_run: Object.keys(checks),
+    checks_passed: Object.entries(checks).filter(([, c]) => c?.passed === true).map(([k]) => k),
+    completeness_checked: Object.prototype.hasOwnProperty.call(checks, 'completeness'),
+  }
+
   return {
     purchase_id: purchase.id,
     policy_title: purchase.policy_title,
@@ -153,6 +185,9 @@ export async function buildPolicyProvenance(purchaseId: string): Promise<PolicyP
     regulations,
     quality_statements,
     element_totals: totals,
+    integrity,
+    assumption_questions: questionsForReferenceKeys(keys),
+    regulations_not_yet_derived: regulationsWithoutQuestions(keys),
   }
 }
 

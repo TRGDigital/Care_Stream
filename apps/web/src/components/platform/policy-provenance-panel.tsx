@@ -156,6 +156,48 @@ export function PolicyProvenancePanel({ token, orderId }: { token: string; order
   return (
     <div className="border-b border-gray-100 bg-neutral-light/20 px-5 py-4">
 
+      {/* ── Was the document actually finished, and what was checked? ────────
+          A green tick on its own is what let a policy truncated at the token ceiling be
+          recorded as verified. This states what ran and what did not, so a reviewer
+          confirms rather than infers. */}
+      {(() => {
+        const i = prov.integrity
+        const complete = i.ends_cleanly && i.has_review_section
+        const ok = complete && i.completeness_checked
+        return (
+          <div className={`mb-4 rounded-lg border px-3 py-2.5 ${
+            !complete ? 'border-red-200 bg-red-50'
+            : !i.completeness_checked ? 'border-amber-200 bg-amber-50'
+            : 'border-green-200 bg-green-50'}`}>
+            <div className="flex items-start gap-2">
+              {ok ? <ShieldCheck size={14} className="mt-0.5 shrink-0 text-green-600" />
+                  : <ShieldAlert size={14} className="mt-0.5 shrink-0 text-red-600" />}
+              <div className="min-w-0">
+                <p className={`text-xs font-bold ${!complete ? 'text-red-800' : !i.completeness_checked ? 'text-amber-900' : 'text-green-800'}`}>
+                  {!complete
+                    ? 'This document is INCOMPLETE. It was cut off rather than finished.'
+                    : !i.completeness_checked
+                      ? 'Read in full, but verified before the completeness check existed.'
+                      : 'Read in full and verified complete.'}
+                </p>
+                <p className="mt-0.5 text-xs text-neutral-dark">
+                  {i.words.toLocaleString()} words · {i.sections} sections ·{' '}
+                  {i.ends_cleanly ? 'ends on a finished sentence' : 'stops mid-sentence'} ·{' '}
+                  {i.has_review_section ? 'has its closing Review section' : 'no closing Review section'}
+                </p>
+                <p className="mt-0.5 text-[11px] text-neutral-mid">
+                  {i.verified_at
+                    ? <>Checked {new Date(i.verified_at).toLocaleString('en-GB')}: {i.checks_passed.length} of {i.checks_run.length} checks passed
+                        {i.checks_run.length > 0 && <> ({i.checks_run.join(', ')})</>}</>
+                    : 'Never verified.'}
+                  {!i.completeness_checked && i.verified_at && ' — re-verify to run the completeness check on it.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
       {/* ── Half one: recorded fact ─────────────────────────────────────────── */}
       <div className="mb-1 flex items-center gap-2">
         <BookOpen size={14} className="text-teal" />
@@ -216,6 +258,32 @@ export function PolicyProvenancePanel({ token, orderId }: { token: string; order
             </>
           )}
         </>
+      )}
+
+      {/* ── What the policy assumes about this buyer ────────────────────────── */}
+      <div className="mb-1 flex items-center gap-2">
+        <CircleHelp size={14} className="text-amber-700" />
+        <h3 className="text-xs font-bold uppercase tracking-wide text-neutral-dark">What this policy assumes about them</h3>
+      </div>
+      <p className="mb-2 text-[11px] text-neutral-mid">
+        Derived from the required elements above. Until a buyer answers these, the policy
+        writes its own answer, and a policy claiming a practice the service does not have is
+        worse than one that omits it.
+      </p>
+      {prov.assumption_questions.length === 0 ? (
+        <p className="mb-4 text-xs text-neutral-mid">
+          Not derived yet for this policy&rsquo;s regulations.
+          {prov.regulations_not_yet_derived.length > 0 && ` (${prov.regulations_not_yet_derived.join(', ')})`}
+        </p>
+      ) : (
+        <ul className="mb-4 space-y-1">
+          {prov.assumption_questions.map(q => (
+            <li key={q.key} className="rounded-lg border border-gray-200 bg-white px-3 py-2">
+              <p className="text-xs font-semibold text-neutral-dark">{q.label}</p>
+              <p className="mt-0.5 text-xs text-neutral-mid">Otherwise: {q.prevents}</p>
+            </li>
+          ))}
+        </ul>
       )}
 
       {/* ── Half two: the independent check ─────────────────────────────────── */}

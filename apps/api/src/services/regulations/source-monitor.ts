@@ -16,7 +16,7 @@
 import crypto from 'crypto'
 import { prisma } from '../../db/client'
 import { mapLimit } from '../../lib/translate'
-import { diffText, resolveImpact } from './change-review'
+import { diffText, resolveImpact, meaningfulLines } from './change-review'
 
 const FETCH_TIMEOUT_MS = 9000
 const UA = 'CareStreamAI-RegulationMonitor/1.0 (+https://www.carestreamai.com)'
@@ -70,9 +70,16 @@ async function fingerprintUrl(url: string): Promise<{ fp: string; kind: 'last-mo
       .trim()
     if (!text) return { fp: 'skip:empty', kind: 'skip', text: '' }
     // A real modification date, where the source publishes one, is a better signal than a
-    // hash of a page whose furniture we may not have stripped perfectly.
+    // hash of a page whose furniture we may not have stripped perfectly. The live numbers
+    // bear that out: Last-Modified flagged 4 of 60 sources, the hash flagged 24 of 31.
     if (lastMod && !Number.isNaN(Date.parse(lastMod))) return { fp: `lm:${lastMod}`, kind: 'last-modified', text }
-    return { fp: `h:${crypto.createHash('sha256').update(text).digest('hex')}`, kind: 'hash', text }
+    // Hash the sentences the diff would actually report, not the whole stripped page.
+    // Hashing everything meant a rotating date or a reading-time counter moved the
+    // fingerprint while the diff found nothing to show, which is how 24 of 31 hashed
+    // sources came to be marked changed with an empty review queue behind them.
+    const signature = meaningfulLines(text).join('\n')
+    if (!signature) return { fp: 'skip:no-prose', kind: 'skip', text }
+    return { fp: `h:${crypto.createHash('sha256').update(signature).digest('hex')}`, kind: 'hash', text }
   } catch {
     return { fp: 'err:fetch', kind: 'error', text: '' }
   } finally {

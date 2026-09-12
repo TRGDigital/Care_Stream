@@ -28,12 +28,28 @@ export type SourceDiff = { added: string; removed: string; changed: boolean }
  *  Set-based rather than a true sequence diff: guidance pages get reordered and re-sectioned
  *  constantly, and a sequence diff reports all of that as change. What a reader wants is
  *  "which sentences are new and which are gone", which is exactly the set difference. */
-export function diffText(oldText: string, newText: string): SourceDiff {
-  const lines = (s: string) =>
-    s.split(/(?<=[.!?])\s+|\n+/).map(l => l.trim()).filter(l => l.length > 25)
+/** The part of a page that counts as its content.
+ *
+ *  Sentences over 25 characters. Everything shorter is page furniture that survived the tag
+ *  stripping: a rotating "last reviewed" date, a reading-time counter, a breadcrumb, a
+ *  cookie line. Those move on their own schedule and say nothing about the regulation.
+ *
+ *  Exported because the monitor's fingerprint must be taken over exactly this. Hashing the
+ *  whole stripped page while diffing only the long sentences meant the two could disagree,
+ *  and they did: on the live data, 24 of 31 hash-fingerprinted sources were flagged as
+ *  changed while the diff found nothing in any of them. Every one of those was a short
+ *  fragment moving. The alert said "changed", the review queue stayed empty, and
+ *  last_changed_at became a column nobody could believe.
+ *
+ *  Taking both from one definition makes that disagreement unrepresentable: if the
+ *  fingerprint moves there is a sentence to show for it. */
+export function meaningfulLines(s: string): string[] {
+  return s.split(/(?<=[.!?])\s+|\n+/).map(l => l.trim()).filter(l => l.length > 25)
+}
 
-  const before = new Set(lines(oldText))
-  const after  = new Set(lines(newText))
+export function diffText(oldText: string, newText: string): SourceDiff {
+  const before = new Set(meaningfulLines(oldText))
+  const after  = new Set(meaningfulLines(newText))
 
   const added   = [...after].filter(l => !before.has(l))
   const removed = [...before].filter(l => !after.has(l))

@@ -42,6 +42,10 @@ type ShopProduct = {
   product: {
     slug: string; title: string; description: string; price_pence: number; taster: boolean
     intake_fields: Array<{ key: string; label: string; help: string | null; shared: boolean }>
+    /** What we ask about their service AFTER the sale, derived from this policy's
+     *  regulations. Shown, never asked here: nine questions at checkout is a purchase,
+     *  forty-four is a decision to come back later. */
+    personalisation_questions?: Array<{ key: string; label: string; help: string | null }>
   }
   bundles: Array<{ key: string; title: string; price_pence: number }>
   regulations: Array<{ reference_key: string; official_name: string; summary: string; required_elements_count: number; key_facts: string[] }>
@@ -92,6 +96,7 @@ export default async function PolicyProductPage({ params }: { params: Promise<{ 
     'Verified against every required element of the legislation below',
     'Kept updated when the law changes, so it never quietly goes stale',
   ]
+  const personalisation = product.personalisation_questions ?? []
   const sharedFields = product.intake_fields.filter(f => f.shared)
   const specificFields = product.intake_fields.filter(f => !f.shared)
   const starterBundle = bundles.find(b => b.key === 'statutory-starter')
@@ -224,6 +229,73 @@ export default async function PolicyProductPage({ params }: { params: Promise<{ 
           </div>
         </div>
       </section>
+
+      {/* ── What we ask, so nothing is assumed ──
+          The strongest thing we can say about these policies is also the most literal.
+          Everyone else sells a template with a find and replace on the home name; this
+          lists the actual questions THIS policy will ask, served from the same mapping the
+          writer and the coverage judge use, so the page cannot promise something the
+          pipeline does not do. */}
+      {personalisation.length > 0 && (
+        <section className="bg-white py-16">
+          <div className="mx-auto max-w-content px-6">
+            <p className="text-xs font-bold uppercase tracking-[0.13em] text-teal">Written for your service</p>
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-neutral-dark">
+              What we ask you, so none of it is assumed.
+            </h2>
+            <p className="mt-3 max-w-3xl text-neutral-mid">
+              Most policy packs are one document sold to everyone with a find and replace on the
+              home name. Your {product.title} is written from the legislation above and from your
+              answers to the questions below. Where you have told us something, it says so. Where
+              you have not, it sets out what must happen rather than claiming you already do it.
+            </p>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl border border-gray-200 bg-white p-6">
+                <span className="inline-block rounded-full bg-teal/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.11em] text-teal">
+                  Before you pay
+                </span>
+                <p className="mt-3 text-lg font-bold text-neutral-dark">{product.intake_fields.length} quick questions</p>
+                <p className="mt-1 text-sm text-neutral-mid">
+                  Your registered name, address, CQC numbers and who holds the key roles. About
+                  three minutes. Nothing else is asked before you buy.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-gray-200 bg-white p-6">
+                <span className="inline-block rounded-full bg-teal/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.11em] text-teal">
+                  After you buy
+                </span>
+                <p className="mt-3 text-lg font-bold text-neutral-dark">{personalisation.length} about your service</p>
+                <p className="mt-1 text-sm text-neutral-mid">
+                  Asked once in your own account and used across every policy you own, so a second
+                  policy never asks you the same thing twice.
+                </p>
+              </div>
+            </div>
+
+            <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {personalisation.map(q => (
+                <li key={q.key} className="flex items-start gap-2.5 rounded-xl border border-gray-200 bg-white p-4">
+                  <svg viewBox="0 0 24 24" className="mt-0.5 h-4 w-4 shrink-0 stroke-teal" fill="none" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 12.5 9.5 18 20 6.5" />
+                  </svg>
+                  <span>
+                    <span className="block text-sm font-semibold text-neutral-dark">{q.label}</span>
+                    {q.help && <span className="mt-1 block text-xs text-neutral-mid">{q.help}</span>}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <p className="mt-6 max-w-3xl text-sm text-neutral-mid">
+              <span className="font-semibold text-neutral-dark">Why it matters.</span> A policy that
+              claims you assess your premises annually, when you never have, is not a harmless
+              overstatement. It is a signed statement handed to your inspector. We would rather write
+              what you must do than guess what you already do.
+            </p>
+          </div>
+        </section>
+      )}
 
       {/* ── FAQs about the policy ── */}
       <HomeFaq faqs={faqs} />

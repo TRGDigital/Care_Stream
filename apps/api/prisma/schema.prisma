@@ -1385,7 +1385,12 @@ model Collection {
   meta_description String?
   og_image_url     String?
   intro            String   @default("")                      // HTML paragraph shown under the H1
-  images           Json     @default("[]")                    // [{ url, alt }] — grid of ~3 images
+  // What the page sells. A collection never mixes the two: the card, the price, the basket
+  // and the call to action all differ, and a page selling both answers neither search.
+  kind             String   @default("policies")              // 'policies' | 'training'
+  cluster_key      String   @default("")                      // a themed six from collection-clusters.ts
+  eyebrow          String   @default("Policy collection")     // the small label above the H1
+  images           Json     @default("[]")                    // legacy manual grid; the product grid replaced it
   body             String   @default("")                      // HTML, the main content section
   links            Json     @default("[]")                    // [{ label, url }] — internal page links
   faqs             Json     @default("[]")                    // [{ question, answer }]

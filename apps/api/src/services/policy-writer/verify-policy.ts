@@ -44,10 +44,23 @@ export type PolicyVerification = {
     identity:     { passed: boolean; issues: string[] }
     coverage:     {
       passed: boolean
+      // Whether coverage could be judged at all. A draft that fails because the CATALOGUE
+      // is unmapped is not a draft a rewrite can fix, and the write loop must not burn
+      // three generations discovering that.
+      assessable: boolean
       issues: string[]
       regulations: Array<{ reference_key: string; official_name: string; met: boolean; missing_elements: string[] }>
     }
   }
+}
+
+/** True when re-writing the draft could plausibly fix what failed.
+ *
+ *  An unmapped catalogue fails verification, correctly, but no amount of rewriting will
+ *  change that -- the fault is in the configuration, not the document. Without this the
+ *  write loop would spend three Sonnet generations per order chasing it. */
+export function isWorthRewriting(v: PolicyVerification): boolean {
+  return v.checks.coverage.assessable
 }
 
 /** Every failure as a plain instruction, for the rewrite loop and the platform UI. */
@@ -99,10 +112,31 @@ export async function verifyPaidPolicyDraft(purchaseId: string): Promise<PolicyV
 
   // ── Coverage judge ──────────────────────────────────────────────────────────
   const coverage = {
-    passed: true, issues: [] as string[],
+    passed: true, assessable: true, issues: [] as string[],
     regulations: [] as Array<{ reference_key: string; official_name: string; met: boolean; missing_elements: string[] }>,
   }
   const judged = (regs as any[]).filter(r => Array.isArray(r.required_elements) && r.required_elements.length)
+
+  // Nothing to judge is NOT a pass.
+  //
+  // This block used to be skipped when there were no regulations, leaving `passed` at the
+  // true it was initialised with. Every product in the catalogue had an empty
+  // reference_keys, so every sold policy was reported verified having been checked against
+  // nothing at all -- a document we sell as correct against legislation, CQC and law.
+  //
+  // The header of this file already says silence is never a pass. It said it about a judge
+  // whose reply could not be parsed. The same has to hold when there is no question to put
+  // to it: an absent check fails, and says which of the two absences it was.
+  if (!judged.length) {
+    coverage.passed = false
+    coverage.assessable = false
+    coverage.issues.push(
+      (purchase.reference_keys ?? []).length === 0
+        ? 'No regulations are mapped to this policy, so its coverage cannot be assessed. Seed the catalogue, then verify again.'
+        : 'The regulations mapped to this policy have no required elements curated, so its coverage cannot be assessed.',
+    )
+  }
+
   if (judged.length) {
     const prompt = `You are auditing whether a care policy document addresses required regulatory elements.
 For each element, judge whether the DOCUMENT genuinely addresses it: states what the organisation does, who does it, and evidences it. A passing mention is not enough; a dedicated or substantial treatment is.

@@ -7,7 +7,8 @@ import { classifyTenantPolicies, knownPolicyTypes } from '../lib/policy-classifi
 import { missingPolicies } from '../services/analytics/missing-policies'
 import { writePolicy } from '../services/policy-writer/write-policy'
 import { POLICY_PRODUCTS_SEED, POLICY_BUNDLES_SEED, SHARED_INTAKE_FIELDS, COMPLETE_LIBRARY_KEY } from '../data/policy-products-seed'
-import { verifyPaidPolicyDraft, verificationFailures } from '../services/policy-writer/verify-policy'
+import { PRODUCT_REGULATIONS } from '../data/policy-product-regulations'
+import { verifyPaidPolicyDraft, verificationFailures, isWorthRewriting } from '../services/policy-writer/verify-policy'
 import { purchaseIntakeState } from '../services/policy-writer/intake'
 import { sendTrainingUpdateEmail } from '../services/email/outbound'
 import { writeAuditLog } from '../lib/audit'
@@ -110,11 +111,32 @@ platformPolicyGapsRouter.get('/catalogue', async (_req: Request, res: Response) 
 // the seed; existing slugs are updated in place, nothing is deleted.
 platformPolicyGapsRouter.post('/catalogue/seed', async (_req: Request, res: Response) => {
   try {
+    // Every regulation key the mapping refers to must exist, or a product would be seeded
+    // grounded in nothing -- which is exactly how reference_keys came to be empty across
+    // the whole catalogue. Checked once, up front, and the seed refuses rather than
+    // half-applying.
+    const wanted = [...new Set(Object.values(PRODUCT_REGULATIONS).flat())]
+    const known = new Set<string>(
+      ((await (prisma as any).externalRegulation.findMany({
+        where: { reference_key: { in: wanted } }, select: { reference_key: true },
+      })) as Array<{ reference_key: string }>).map(r => r.reference_key),
+    )
+    const unknown = wanted.filter(k => !known.has(k))
+    if (unknown.length) {
+      err(res, 'UNKNOWN_REGULATIONS',
+        `These regulation keys do not exist, so the catalogue was not seeded: ${unknown.join(', ')}`, 400)
+      return
+    }
+    const unmapped = POLICY_PRODUCTS_SEED.filter(p => !(PRODUCT_REGULATIONS[p.slug] ?? []).length).map(p => p.slug)
+
     let upserted = 0
     for (const [i, p] of POLICY_PRODUCTS_SEED.entries()) {
       const data = {
         title: p.title, description: p.description, price_pence: p.price_pence,
         taster: p.taster === true,
+        // The regulations this policy must satisfy. Without these the writer has no
+        // grounding and the coverage judge has nothing to judge.
+        reference_keys: PRODUCT_REGULATIONS[p.slug] ?? [],
         // Every product is part of the Complete Library; appended here so the seed
         // file never has to repeat it.
         bundle_keys: [...(p.bundles ?? []), COMPLETE_LIBRARY_KEY],
@@ -135,7 +157,7 @@ platformPolicyGapsRouter.post('/catalogue/seed', async (_req: Request, res: Resp
         create: { id: randomUUID(), key: b.key, title: b.title, description: b.description, price_pence: b.price_pence, renewal_cap_pence: b.renewal_cap_pence ?? null },
       })
     }
-    ok(res, { products: upserted, bundles: POLICY_BUNDLES_SEED.length })
+    ok(res, { products: upserted, bundles: POLICY_BUNDLES_SEED.length, unmapped_products: unmapped })
   } catch (e: any) {
     err(res, 'SEED_FAILED', e?.message ?? 'could not seed the catalogue', 500)
   }
@@ -261,7 +283,10 @@ platformPolicyGapsRouter.post('/orders/:id/write', async (req: Request, res: Res
       data: { draft_content: written.markdown, drafted_at: new Date(), drafted_by: (req as any).user?.email ?? 'platform', status: 'drafted' },
     })
     let verification = await verifyPaidPolicyDraft(id)
-    while (!verification.passed && attempts < 3) {
+    // Only rewrite for faults a rewrite can fix. An unmapped catalogue fails verification
+    // correctly and permanently, and retrying it would cost three generations to learn
+    // nothing.
+    while (!verification.passed && isWorthRewriting(verification) && attempts < 3) {
       attempts++
       written = await writePolicy(id, verificationFailures(verification))
       await (prisma as any).policyPurchase.update({

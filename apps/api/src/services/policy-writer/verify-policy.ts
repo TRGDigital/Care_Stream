@@ -17,6 +17,7 @@
 
 import { prisma } from '../../db/client'
 import { callClaude } from '../ai/claude'
+import { intakeFactsFor, intakeUnknownsFor } from './intake-answers'
 
 const MODEL_SONNET = 'claude-sonnet-4-5-20250929'
 
@@ -43,6 +44,14 @@ export type PolicyVerification = {
     terminology:  { passed: boolean; issues: string[] }
     identity:     { passed: boolean; issues: string[] }
     completeness: { passed: boolean; issues: string[] }
+    assumptions:  {
+      passed: boolean
+      issues: string[]
+      /** Sentences claiming a practice or resource nobody has confirmed. */
+      claims: Array<{ quote: string; why: string; question_key: string | null }>
+      /** False when the check could not run, so a pass is never inferred from silence. */
+      assessed: boolean
+    }
     coverage:     {
       passed: boolean
       // Whether coverage could be judged at all. A draft that fails because the CATALOGUE
@@ -67,6 +76,10 @@ export type PolicyVerification = {
  *  change that -- the fault is in the configuration, not the document. Without this the
  *  write loop would spend three Sonnet generations per order chasing it. */
 export function isWorthRewriting(v: PolicyVerification): boolean {
+  // A rewrite can soften an overclaim, so a failed assumption check is worth another pass.
+  // A check that could not RUN is not: the fault is ours, and three more generations would
+  // spend credit discovering the same outage.
+  if (v.checks.assumptions && !v.checks.assumptions.assessed) return false
   return v.checks.coverage.assessable
 }
 
@@ -77,6 +90,10 @@ export function verificationFailures(v: PolicyVerification): string[] {
   out.push(...v.checks.terminology.issues)
   out.push(...v.checks.identity.issues)
   out.push(...v.checks.completeness.issues)
+  out.push(...(v.checks.assumptions?.issues ?? []))
+  for (const c of v.checks.assumptions?.claims ?? []) {
+    out.push(`Remove or soften this claim, which nobody has confirmed: "${c.quote}" (${c.why})`)
+  }
   for (const r of v.checks.coverage.regulations) {
     for (const m of r.missing_elements) out.push(`${r.official_name}: the draft does not address "${m}"`)
   }
@@ -138,6 +155,101 @@ export async function verifyPaidPolicyDraft(purchaseId: string): Promise<PolicyV
     completeness.issues.push('The "Review" section is empty, so the document was cut off as it reached the end.')
   }
   completeness.passed = completeness.issues.length === 0
+
+  // ── Assumption gate ─────────────────────────────────────────────────────────
+  //
+  // The check the other four could never make. Substitution catches [name] and TBC.
+  // Terminology catches CRB and Public Health England. Identity catches a missing client
+  // name. Completeness catches a document cut off mid-word. None of them can catch
+  // "we hold a stock of easy read templates" in a home that holds none, because that is not
+  // a placeholder, a dead organisation, a missing name or a truncation. It is a fluent,
+  // well-formed sentence asserting a practice, and it is the failure mode that matters
+  // most: a policy claiming something the service does not do is a written admission of
+  // non-compliance, signed by the registered manager and handed to the inspector by the
+  // home itself. An omission is a gap; an overclaim is evidence.
+  //
+  // The judge is given what the buyer HAS told us and what they have NOT, so it can tell a
+  // sourced statement from an invented one. Without the unknowns it would flag every
+  // sentence in the document or none of them.
+  //
+  // This is a judgement, not a measurement, so it blocks rather than deletes: the claims
+  // are listed for a person, and delivery can still be overridden with a written reason
+  // through the existing route. A check that silently rewrote a sold document would be
+  // worse than the problem.
+  const assumptions = {
+    passed: true, assessed: true,
+    issues: [] as string[],
+    claims: [] as Array<{ quote: string; why: string; question_key: string | null }>,
+  }
+  try {
+    const [facts, unknowns] = await Promise.all([
+      intakeFactsFor(purchase.tenant_id, purchase.reference_keys ?? []),
+      intakeUnknownsFor(purchase.tenant_id, purchase.reference_keys ?? []),
+    ])
+
+    // Nothing unknown means nothing to overclaim about, and no call to make.
+    if (!unknowns.length) {
+      assumptions.issues.push(...[])
+    } else {
+      const prompt = `You are checking a UK care policy for claims the provider cannot support.
+
+You will be given facts the service HAS confirmed, a list of things they have NOT told us, and the document.
+
+Find sentences that assert, as something already true, a practice, system, resource, role or arrangement that is NOT among the confirmed facts. These are the dangerous ones, because an inspector reads them as a statement of what the service does.
+
+Report a sentence ONLY if all of these hold:
+- it states something as an accomplished fact about this service ("we hold", "we use", "our system", "we assess annually"), and
+- the fact is not in the confirmed list, and
+- it relates to something in the not-told-us list, or to a system, document, contract, equipment or named role.
+
+Do NOT report:
+- obligations or conditions ("will ensure", "must", "where the service uses", "if a resident")
+- statements of policy intent or commitment ("we are committed to", "we recognise")
+- anything supported by the confirmed facts
+- legal duties described in general terms
+
+Quote the sentence EXACTLY as it appears. question_key should be the key from the not-told-us list that would settle it, or null.
+
+Reply with JSON ONLY, no code fences:
+{"claims":[{"quote":"...","why":"...","question_key":"..."|null}]}`
+
+      const user = [
+        facts.length ? `CONFIRMED FACTS:\n${facts.join('\n')}` : 'CONFIRMED FACTS: none supplied.',
+        '',
+        `NOT TOLD US (each line is question_key :: what we would have asked):`,
+        ...unknowns.map(u => `${u.key} :: ${u.label}`),
+        '',
+        'DOCUMENT:',
+        draft.slice(0, 60_000),
+      ].join('\n')
+
+      const raw = (await callClaude(prompt, user, {
+        model: MODEL_SONNET, maxTokens: 4000, temperature: 0, feature: 'policy_assumptions',
+      })).trim()
+      const parsed = JSON.parse(raw.replace(/^```(?:json)?\s*|\s*```$/g, ''))
+
+      const known = new Set(unknowns.map(u => u.key))
+      for (const c of (parsed?.claims ?? []) as any[]) {
+        const quote = String(c?.quote ?? '').trim()
+        if (!quote) continue
+        // A quote the judge invented rather than found is not evidence of anything, and
+        // would send a reviewer hunting for a sentence that is not there.
+        if (!draft.includes(quote)) continue
+        const key = String(c?.question_key ?? '')
+        assumptions.claims.push({
+          quote,
+          why: String(c?.why ?? '').trim() || 'Not supported by anything the client has told us.',
+          question_key: known.has(key) ? key : null,
+        })
+      }
+      assumptions.passed = assumptions.claims.length === 0
+    }
+  } catch (e: any) {
+    // Consistent with the coverage judge: an unreadable answer is not an all-clear.
+    assumptions.passed = false
+    assumptions.assessed = false
+    assumptions.issues.push(`The assumption check could not run (${e?.message ?? 'error'}) — verify again`)
+  }
 
   // ── Coverage judge ──────────────────────────────────────────────────────────
   const coverage = {
@@ -212,9 +324,9 @@ Reply with JSON ONLY, no code fences: {"regulations":[{"reference_key":"...","el
 
   const verification: PolicyVerification = {
     passed: substitution.passed && terminology.passed && identity.passed
-            && completeness.passed && coverage.passed,
+            && completeness.passed && assumptions.passed && coverage.passed,
     checked_at: new Date().toISOString(),
-    checks: { substitution, terminology, identity, completeness, coverage },
+    checks: { substitution, terminology, identity, completeness, assumptions, coverage },
   }
 
   await (prisma as any).policyPurchase.update({

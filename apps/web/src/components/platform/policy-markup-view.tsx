@@ -32,7 +32,28 @@ const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 /** Wrap every occurrence of a supplied fact. Longest first, so "Ferndale Nursing Home"
  *  wins over "Ferndale" and the shorter one does not carve up the longer match. */
-function highlightFacts(line: string, facts: PolicyMarkup['facts']): React.ReactNode {
+function annotate(
+  line: string,
+  facts: PolicyMarkup['facts'],
+  claims: PolicyMarkup['unconfirmed_claims'],
+): React.ReactNode {
+  // Claims first, because an unconfirmed claim is about a whole sentence and a fact is a
+  // phrase inside one. Marking the sentence, then the values within it, keeps both visible:
+  // a claim often contains a real supplied name, and the overclaim is the sentence around it.
+  const claimHit = claims.find(c => line.includes(c.quote))
+  if (claimHit) {
+    const [before, ...rest] = line.split(claimHit.quote)
+    return (
+      <>
+        {before && <span>{annotate(before, facts, [])}</span>}
+        <span className="rounded bg-red-50 px-0.5 underline decoration-red-400 decoration-wavy underline-offset-2"
+              title={`Not confirmed by the client: ${claimHit.why}`}>
+          {annotate(claimHit.quote, facts, [])}
+        </span>
+        {rest.length > 0 && <span>{annotate(rest.join(claimHit.quote), facts, claims)}</span>}
+      </>
+    )
+  }
   if (!facts.length) return line
   const ordered = [...facts].sort((a, b) => b.value.length - a.value.length)
   const re = new RegExp(`(${ordered.map(f => escapeRe(f.value)).join('|')})`, 'gi')
@@ -109,6 +130,15 @@ export function PolicyMarkupView({ token, orderId }: { token: string; orderId: s
               </div>
             )
           })}
+          {markup.unconfirmed_claims.length > 0 && (
+            <div className="flex items-start gap-2 border-t border-gray-200 pt-1.5">
+              <span className="mt-0.5 rounded bg-red-50 px-1 text-[11px] underline decoration-red-400 decoration-wavy underline-offset-2">Aa</span>
+              <p className="text-xs text-neutral-dark">
+                <span className="font-semibold text-red-800">Claimed but not confirmed</span>
+                <span className="text-neutral-mid"> · {markup.unconfirmed_claims.length} sentence{markup.unconfirmed_claims.length === 1 ? '' : 's'} asserting something the client has not told us. Hover to see why.</span>
+              </p>
+            </div>
+          )}
           <div className="flex items-start gap-2 border-t border-gray-200 pt-1.5">
             <mark className="mt-0.5 rounded bg-yellow-200/70 px-1 text-[11px] font-medium">Aa</mark>
             <p className="text-xs text-neutral-dark">
@@ -139,7 +169,7 @@ export function PolicyMarkupView({ token, orderId }: { token: string; orderId: s
           const h2 = /^##\s+(.+)$/.exec(line)
           const h1 = /^#\s+(.+)$/.exec(line)
           const h3 = /^###\s+(.+)$/.exec(line)
-          if (h1) return <h1 key={i} className="mb-3 text-lg font-bold text-neutral-dark">{highlightFacts(h1[1], markup.facts)}</h1>
+          if (h1) return <h1 key={i} className="mb-3 text-lg font-bold text-neutral-dark">{annotate(h1[1], markup.facts, markup.unconfirmed_claims)}</h1>
           if (h2) {
             const nums = byHeading.get(h2[1].trim().toLowerCase()) ?? []
             return (
@@ -151,15 +181,15 @@ export function PolicyMarkupView({ token, orderId }: { token: string; orderId: s
                       ))
                     : <span className="grid h-5 w-5 place-items-center rounded border border-dashed border-gray-300 text-[10px] text-neutral-mid" title="No regulation attributed to this section">·</span>}
                 </span>
-                <h2 className="text-sm font-bold text-neutral-dark">{highlightFacts(h2[1], markup.facts)}</h2>
+                <h2 className="text-sm font-bold text-neutral-dark">{annotate(h2[1], markup.facts, markup.unconfirmed_claims)}</h2>
               </div>
             )
           }
-          if (h3) return <h3 key={i} className="mt-3 pl-7 text-[13px] font-semibold text-neutral-dark">{highlightFacts(h3[1], markup.facts)}</h3>
+          if (h3) return <h3 key={i} className="mt-3 pl-7 text-[13px] font-semibold text-neutral-dark">{annotate(h3[1], markup.facts, markup.unconfirmed_claims)}</h3>
           if (!line.trim()) return <div key={i} className="h-2" />
           const bullet = /^\s*[-*]\s+(.+)$/.exec(line)
-          if (bullet) return <p key={i} className="pl-10 text-[13px] leading-relaxed text-neutral-dark">• {highlightFacts(bullet[1], markup.facts)}</p>
-          return <p key={i} className="pl-7 text-[13px] leading-relaxed text-neutral-dark">{highlightFacts(line, markup.facts)}</p>
+          if (bullet) return <p key={i} className="pl-10 text-[13px] leading-relaxed text-neutral-dark">• {annotate(bullet[1], markup.facts, markup.unconfirmed_claims)}</p>
+          return <p key={i} className="pl-7 text-[13px] leading-relaxed text-neutral-dark">{annotate(line, markup.facts, markup.unconfirmed_claims)}</p>
         })}
       </div>
 

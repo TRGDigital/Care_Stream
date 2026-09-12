@@ -32,6 +32,7 @@ function failureCount(v: PolicyOrderVerification): number {
   // completeness is newer than some stored verdicts, so it may be absent on an old order.
   return v.checks.substitution.issues.length + v.checks.terminology.issues.length +
     v.checks.identity.issues.length + (v.checks.completeness?.issues.length ?? 0) +
+    (v.checks.assumptions?.issues.length ?? 0) + (v.checks.assumptions?.claims.length ?? 0) +
     v.checks.coverage.issues.length +
     v.checks.coverage.regulations.reduce((n, r) => n + r.missing_elements.length, 0)
 }
@@ -60,6 +61,14 @@ function VerificationChecklist({ v }: { v: PolicyOrderVerification }) {
       {row('No outdated organisations or instruments', v.checks.terminology.passed, v.checks.terminology.issues)}
       {row("The client's name appears in the document", v.checks.identity.passed, v.checks.identity.issues)}
       {v.checks.completeness && row('The document is complete, not cut off', v.checks.completeness.passed, v.checks.completeness.issues)}
+      {v.checks.assumptions && row(
+        v.checks.assumptions.passed
+          ? 'Nothing claimed that the client has not confirmed'
+          : `${v.checks.assumptions.claims.length} claim${v.checks.assumptions.claims.length === 1 ? '' : 's'} the client has not confirmed`,
+        v.checks.assumptions.passed,
+        [...v.checks.assumptions.issues,
+         ...v.checks.assumptions.claims.map(c => `"${c.quote}" — ${c.why}`)],
+      )}
       {row(
         cov.passed ? 'Every required regulatory element is addressed' : 'Required regulatory elements are missing',
         cov.passed,

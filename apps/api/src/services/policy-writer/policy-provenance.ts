@@ -23,7 +23,7 @@
 
 import { prisma } from '../../db/client'
 import { callClaude } from '../ai/claude'
-import { questionsForReferenceKeys, regulationsWithoutQuestions, type IntakeQuestion } from '../../data/policy-intake-questions'
+import { questionsForReferenceKeys, regulationsWithoutQuestions, INTAKE_QUESTIONS, type IntakeQuestion } from '../../data/policy-intake-questions'
 
 const MODEL_SONNET = 'claude-sonnet-4-5-20250929'
 
@@ -64,6 +64,36 @@ export type PolicyIntegrity = {
   checks_run: string[]
   checks_passed: string[]
   completeness_checked: boolean   // false for verdicts stored before that check existed
+}
+
+
+/** One regulation, numbered and coloured, for the marked-up view. */
+export type MarkupRegulation = {
+  index: number                 // 1-based, what the badge shows
+  reference_key: string
+  official_name: string
+  authority_basis: string
+  /** Headings where the judge found this regulation's elements addressed. */
+  sections: string[]
+  elements_met: number
+  elements_total: number
+}
+
+/** A fact the buyer gave us, and where it came from, so its use can be shown as sourced
+ *  rather than invented. This is matched in the text literally: no model decides whether a
+ *  name in the document is the name they supplied. */
+export type MarkupFact = {
+  label: string
+  value: string
+  source: 'organisation' | 'policy intake' | 'service questions'
+}
+
+export type PolicyMarkup = {
+  markdown: string
+  regulations: MarkupRegulation[]
+  facts: MarkupFact[]
+  /** Headings the judge attributed to no regulation. Not wrong, but worth a reviewer's eye. */
+  unattributed_sections: string[]
 }
 
 export type PolicyProvenance = {
@@ -320,4 +350,84 @@ export async function runPolicyChallenge(purchaseId: string): Promise<PolicyChal
     data: { challenge, challenged_at: new Date() },
   })
   return challenge
+}
+
+/** The policy with everything we know about where it came from, ready to be marked up.
+ *
+ *  Two different kinds of claim, kept apart because they are worth different levels of
+ *  trust. The regulation mapping is the coverage judge's opinion about which heading treats
+ *  which element: useful, and only as good as the judge. The facts are literal string
+ *  matches against values the buyer actually gave us, so highlighting one is a statement of
+ *  fact rather than a judgement. A reviewer should be able to tell which is which. */
+export async function buildPolicyMarkup(purchaseId: string): Promise<PolicyMarkup> {
+  const purchase = await (prisma as any).policyPurchase.findUnique({ where: { id: purchaseId } })
+  if (!purchase) throw new Error('That order was not found')
+  const markdown: string = purchase.draft_content ?? ''
+
+  const keys: string[] = purchase.reference_keys ?? []
+  const regs = keys.length
+    ? await (prisma as any).externalRegulation.findMany({
+        where: { reference_key: { in: keys } },
+        select: { reference_key: true, official_name: true, authority_basis: true, required_elements: true },
+      })
+    : []
+
+  const judged = new Map<string, any>()
+  for (const r of (purchase.verification?.checks?.coverage?.regulations ?? []) as any[]) {
+    judged.set(String(r.reference_key), r)
+  }
+
+  const regulations: MarkupRegulation[] = (regs as any[]).map((r, i) => {
+    const v = judged.get(r.reference_key)
+    const els: Array<{ met: boolean; section: string | null }> = v?.elements ?? []
+    const sections = [...new Set(els.filter(e => e.met && e.section).map(e => String(e.section)))]
+    return {
+      index: i + 1,
+      reference_key: r.reference_key,
+      official_name: r.official_name,
+      authority_basis: r.authority_basis ?? 'statutory',
+      sections,
+      elements_met: els.filter(e => e.met).length,
+      elements_total: (r.required_elements ?? []).length,
+    }
+  })
+
+  // Everything the buyer told us, from all three places it can come from.
+  const tenant = await (prisma as any).tenant.findUnique({
+    where: { id: purchase.tenant_id }, select: { name: true, organisation_details: true },
+  })
+  const od = (tenant?.organisation_details ?? {}) as Record<string, unknown>
+  const facts: MarkupFact[] = []
+  const push = (label: string, value: unknown, source: MarkupFact['source']) => {
+    const v = String(value ?? '').trim()
+    // Very short values match half the document. A two-character "answer" highlighted
+    // everywhere is noise that hides the real ones.
+    if (v.length < 3) return
+    if (facts.some(f => f.value.toLowerCase() === v.toLowerCase())) return
+    facts.push({ label, value: v, source })
+  }
+
+  push('Organisation', tenant?.name, 'organisation')
+  for (const [k, v] of Object.entries(od)) {
+    push(k.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase()), v, 'organisation')
+  }
+  for (const [k, v] of Object.entries((purchase.intake_data ?? {}) as Record<string, unknown>)) {
+    push(k.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase()), v, 'policy intake')
+  }
+  const answers = await (prisma as any).policyIntakeAnswer.findMany({
+    where: { tenant_id: purchase.tenant_id }, select: { question_key: true, value: true },
+  })
+  for (const a of answers as Array<{ question_key: string; value: string }>) {
+    const q = INTAKE_QUESTIONS[a.question_key]
+    // Yes and No are answers, not quotations. Highlighting the word "no" through a policy
+    // would drown every real match.
+    if (/^(yes|no)$/i.test(String(a.value).trim())) continue
+    push(q?.label ?? a.question_key, a.value, 'service questions')
+  }
+
+  const attributed = new Set(regulations.flatMap(r => r.sections.map(s => s.toLowerCase())))
+  const headings = [...markdown.matchAll(/^##\s+(.+)$/gm)].map(m => m[1].trim())
+  const unattributed_sections = headings.filter(h => !attributed.has(h.toLowerCase()))
+
+  return { markdown, regulations, facts, unattributed_sections }
 }

@@ -11,8 +11,9 @@
 
 import { useEffect, useState } from 'react'
 import { createPlatformClient, type PolicyOrder, type PolicyOrderVerification } from '@/lib/platform-api'
-import { Loader2, Check, PenLine, AlertTriangle, FileText, X, ShieldCheck, ShieldAlert, BookOpen, RefreshCw } from 'lucide-react'
+import { Loader2, Check, PenLine, AlertTriangle, FileText, X, ShieldCheck, ShieldAlert, BookOpen, RefreshCw, Highlighter } from 'lucide-react'
 import { PolicyProvenancePanel } from './policy-provenance-panel'
+import { PolicyMarkupView } from './policy-markup-view'
 
 const money = (p: number) => `£${(p / 100).toFixed(p % 100 === 0 ? 0 : 2)}`
 const when = (iso: string) => new Date(iso).toLocaleDateString('en-GB')
@@ -75,7 +76,7 @@ export function PolicyOrders({ token, scope }: { token: string; scope: 'subscrib
   const [orders, setOrders] = useState<PolicyOrder[] | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   // Which half of the read the reviewer is on: the document itself, or how it was built.
-  const [readTab, setReadTab] = useState<'document' | 'provenance'>('document')
+  const [readTab, setReadTab] = useState<'document' | 'markup' | 'provenance'>('document')
   // The draft being read before approval. Nothing is delivered unread.
   const [reading, setReading] = useState<{ id: string; title: string; draft: string } | null>(null)
   const [error, setError] = useState('')
@@ -99,7 +100,7 @@ export function PolicyOrders({ token, scope }: { token: string; scope: 'subscrib
     finally { setBusy(null) }
   }
 
-  async function read(o: PolicyOrder, tab: 'document' | 'provenance' = 'document') {
+  async function read(o: PolicyOrder, tab: 'document' | 'markup' | 'provenance' = 'document') {
     setReadTab(tab)
     setBusy(o.id); setError('')
     try {
@@ -302,7 +303,7 @@ export function PolicyOrders({ token, scope }: { token: string; scope: 'subscrib
                 rather than stacked: nobody scrolls past three thousand words to reach the
                 reason the policy says what it says. */}
             <div className="flex gap-1 border-b border-gray-100 px-5 pt-2">
-              {([['document', 'The document', FileText], ['provenance', 'How it was built', BookOpen]] as const).map(([k, label, Icon]) => (
+              {([['document', 'The document', FileText], ['markup', 'Marked up', Highlighter], ['provenance', 'How it was built', BookOpen]] as const).map(([k, label, Icon]) => (
                 <button key={k} onClick={() => setReadTab(k)}
                   className={`inline-flex items-center gap-1.5 rounded-t-lg px-3 py-2 text-xs font-semibold ${
                     readTab === k ? 'bg-neutral-light/40 text-neutral-dark' : 'text-neutral-mid hover:text-neutral-dark'}`}>
@@ -315,7 +316,9 @@ export function PolicyOrders({ token, scope }: { token: string; scope: 'subscrib
                 placeholder, a heading that never got filled in, a name that should not be there. */}
             {readTab === 'document'
               ? <pre className="flex-1 overflow-auto whitespace-pre-wrap px-5 py-4 text-[13px] leading-relaxed text-neutral-dark">{reading.draft}</pre>
-              : <div className="flex-1 overflow-auto"><PolicyProvenancePanel token={token} orderId={reading.id} /></div>}
+              : readTab === 'markup'
+                ? <div className="flex-1 overflow-auto"><PolicyMarkupView token={token} orderId={reading.id} /></div>
+                : <div className="flex-1 overflow-auto"><PolicyProvenancePanel token={token} orderId={reading.id} /></div>}
             {(() => {
               const o = orders?.find(x => x.id === reading.id)
               const delivered = o?.status === 'approved'

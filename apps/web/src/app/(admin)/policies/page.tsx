@@ -6,6 +6,7 @@ import { useEffect, useState, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { useSession } from 'next-auth/react'
 import { PolicyOrdersPanel } from '@/components/admin/policy-orders-panel'
+import { PolicyIntakePanel } from '@/components/admin/policy-intake-panel'
 import { PolicyHistoryTab } from '@/components/admin/policy-history-tab'
 import { createApiClient } from '@/lib/api-client'
 import EditablePolicyBody from '@/components/admin/editable-policy-body'
@@ -289,6 +290,7 @@ export default function PoliciesPage() {
           invisible here, and nothing asked for the details it cannot be written
           without. Renders nothing when there are no orders, so full clients who have
           never bought one see no change. */}
+      {session?.accessToken && <PolicyIntakePanel token={session.accessToken} />}
       {session?.accessToken && <PolicyOrdersPanel token={session.accessToken} />}
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">

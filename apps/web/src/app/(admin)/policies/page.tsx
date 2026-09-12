@@ -462,6 +462,7 @@ export default function PoliciesPage() {
           policy={previewPolicy}
           version={docByPolicy[previewPolicy.id]?.version}
           onClose={() => setPreviewPolicy(null)}
+          readOnly={policiesOnly}
           onRename={async name => {
             const p = policies.find(x => x.id === previewPolicy.id)
             if (p) await renamePolicy(p, name)
@@ -943,12 +944,16 @@ function PolicyActions({
 }
 
 // ─── Policy Preview (how it renders for staff) ────────────────────────────────
-function PolicyPreviewModal({ token, policy, version, onClose, onRename }: {
+function PolicyPreviewModal({ token, policy, version, onClose, onRename, readOnly = false }: {
   token: string
   policy: { id: string; name: string }
   version?: string
   onClose: () => void
   onRename?: (name: string) => void | Promise<void>
+  // Policies-only buyers cannot edit the wording. They bought a document that passed
+  // verification against the regulations it maps to; letting them rewrite it in place
+  // would quietly void the one thing they paid for.
+  readOnly?: boolean
 }) {
   // Held locally so the heading updates the moment it is saved, without waiting for the
   // list behind the modal to refetch.
@@ -1074,7 +1079,7 @@ function PolicyPreviewModal({ token, policy, version, onClose, onRename }: {
           ) : data.html ? (
             <EditablePolicyBody
               className="policy-content"
-              editable
+              editable={!readOnly}
               html={data.html}
               raw={data.raw}
               policyId={policy.id}
@@ -1105,9 +1110,9 @@ function PolicyPreviewModal({ token, policy, version, onClose, onRename }: {
               <Download size={14} /> {downloading ? 'Downloading…' : 'Download PDF'}
             </button>
             <button onClick={printOrDownload} disabled={loading || !data?.html}
-              title="Open with your letterhead, logo and sign-off block, then print or choose Save as PDF"
+              title="Open the policy with your letterhead, logo and sign-off block, ready to print"
               className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3.5 py-2 text-sm font-medium text-neutral-mid hover:border-teal hover:text-teal disabled:opacity-50">
-              <Printer size={14} /> Print / Save as PDF
+              <Printer size={14} /> Print Policy
             </button>
           </div>
           <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-neutral-mid hover:text-neutral-dark">Close</button>

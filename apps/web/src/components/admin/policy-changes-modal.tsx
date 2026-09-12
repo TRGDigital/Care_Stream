@@ -397,9 +397,9 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
               </button>
             )}
             <button onClick={downloadPolicy} disabled={!doc?.document}
-              title="Open the clean policy with letterhead and sign-off, then print or choose Save as PDF"
+              title="Open the clean policy with letterhead and sign-off, ready to print"
               className="inline-flex items-center gap-1.5 rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-gray-50 disabled:opacity-50">
-              <Printer size={13} /> Print / Save as PDF
+              <Printer size={13} /> Print Policy
             </button>
             {policiesOnly ? null : status === 'pending_external' ? (
               <div className="flex items-center gap-2">

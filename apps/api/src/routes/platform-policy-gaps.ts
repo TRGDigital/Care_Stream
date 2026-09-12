@@ -10,7 +10,7 @@ import { POLICY_PRODUCTS_SEED, POLICY_BUNDLES_SEED, SHARED_INTAKE_FIELDS, COMPLE
 import { PRODUCT_REGULATIONS } from '../data/policy-product-regulations'
 import { questionsForReferenceKeys, regulationsWithoutQuestions } from '../data/policy-intake-questions'
 import { verifyPaidPolicyDraft, verificationFailures, isWorthRewriting } from '../services/policy-writer/verify-policy'
-import { buildPolicyProvenance, runPolicyChallenge } from '../services/policy-writer/policy-provenance'
+import { buildPolicyProvenance, runPolicyChallenge, buildPolicyMarkup } from '../services/policy-writer/policy-provenance'
 import { purchaseIntakeState } from '../services/policy-writer/intake'
 import { sendTrainingUpdateEmail } from '../services/email/outbound'
 import { writeAuditLog } from '../lib/audit'
@@ -367,6 +367,20 @@ platformPolicyGapsRouter.get('/orders/:id/provenance', async (req: Request, res:
   } catch (e: any) {
     console.error(`[provenance] order=${req.params.id}: ${e?.stack ?? e?.message ?? e}`)
     err(res, 'PROVENANCE_FAILED', e?.message ?? 'could not build that provenance', 500)
+  }
+})
+
+// GET /orders/:id/markup — the policy with its sources attached, for the marked-up read.
+//
+// Two kinds of claim, deliberately kept apart: which regulation a section serves is the
+// coverage judge's opinion, while a highlighted fact is a literal match against a value the
+// buyer actually gave us. The view must not present them as equally certain.
+platformPolicyGapsRouter.get('/orders/:id/markup', async (req: Request, res: Response) => {
+  try {
+    ok(res, { markup: await buildPolicyMarkup(String(req.params.id)) })
+  } catch (e: any) {
+    console.error(`[markup] order=${req.params.id}: ${e?.stack ?? e?.message ?? e}`)
+    err(res, 'MARKUP_FAILED', e?.message ?? 'could not build that markup', 500)
   }
 })
 

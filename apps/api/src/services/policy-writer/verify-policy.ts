@@ -50,7 +50,13 @@ export type PolicyVerification = {
       // three generations discovering that.
       assessable: boolean
       issues: string[]
-      regulations: Array<{ reference_key: string; official_name: string; met: boolean; missing_elements: string[] }>
+      regulations: Array<{
+        reference_key: string; official_name: string; met: boolean; missing_elements: string[]
+        // Per element, and WHERE in the document it was found. The judge already reads the
+        // whole policy to decide met or not; asking which heading it read it under costs
+        // nothing extra and is what lets the marked-up view point at the passage.
+        elements?: Array<{ element: string; met: boolean; section: string | null }>
+      }>
     }
   }
 }
@@ -136,7 +142,10 @@ export async function verifyPaidPolicyDraft(purchaseId: string): Promise<PolicyV
   // ── Coverage judge ──────────────────────────────────────────────────────────
   const coverage = {
     passed: true, assessable: true, issues: [] as string[],
-    regulations: [] as Array<{ reference_key: string; official_name: string; met: boolean; missing_elements: string[] }>,
+    regulations: [] as Array<{
+      reference_key: string; official_name: string; met: boolean; missing_elements: string[]
+      elements?: Array<{ element: string; met: boolean; section: string | null }>
+    }>,
   }
   const judged = (regs as any[]).filter(r => Array.isArray(r.required_elements) && r.required_elements.length)
 
@@ -163,7 +172,8 @@ export async function verifyPaidPolicyDraft(purchaseId: string): Promise<PolicyV
   if (judged.length) {
     const prompt = `You are auditing whether a care policy document addresses required regulatory elements.
 For each element, judge whether the DOCUMENT genuinely addresses it: states what the organisation does, who does it, and evidences it. A passing mention is not enough; a dedicated or substantial treatment is.
-Reply with JSON ONLY, no code fences: {"regulations":[{"reference_key":"...","elements":[{"element":"...","met":true|false}]}]}`
+Where an element IS met, also give "section": the exact text of the "## " heading the treatment sits under, copied verbatim from the document. Use null where the element is not met.
+Reply with JSON ONLY, no code fences: {"regulations":[{"reference_key":"...","elements":[{"element":"...","met":true|false,"section":"..."|null}]}]}`
     const user = [
       `REGULATIONS AND THEIR REQUIRED ELEMENTS:`,
       ...judged.map(r => `- ${r.reference_key} (${r.official_name}):\n${(r.required_elements as string[]).slice(0, 12).map(e => `  * ${e}`).join('\n')}`),
@@ -180,7 +190,18 @@ Reply with JSON ONLY, no code fences: {"regulations":[{"reference_key":"...","el
         const missing = verdict
           ? (verdict.elements ?? []).filter((e: any) => e && e.met !== true).map((e: any) => String(e.element ?? '')).filter(Boolean)
           : (r.required_elements as string[]).slice(0, 12)   // no verdict for this regulation = not shown met
-        coverage.regulations.push({ reference_key: r.reference_key, official_name: r.official_name, met: missing.length === 0, missing_elements: missing })
+        const elements = verdict
+          ? (verdict.elements ?? []).map((e: any) => ({
+              element: String(e?.element ?? ''),
+              met: e?.met === true,
+              // A section is only meaningful for an element that was actually found.
+              section: e?.met === true && e?.section ? String(e.section).replace(/^#+\s*/, '').trim() : null,
+            })).filter((e: any) => e.element)
+          : undefined
+        coverage.regulations.push({
+          reference_key: r.reference_key, official_name: r.official_name,
+          met: missing.length === 0, missing_elements: missing, elements,
+        })
       }
       coverage.passed = coverage.regulations.every(r => r.met)
     } catch (e: any) {

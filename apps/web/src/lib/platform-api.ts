@@ -1291,6 +1291,9 @@ export function createPlatformClient(token: string) {
       // and safe to load whenever the panel opens.
       orderProvenance: (id: string) =>
         adminFetch<{ provenance: PolicyProvenance }>(`/policy-gaps/orders/${id}/provenance`, token),
+      // The policy with its sources attached, for the marked-up read.
+      orderMarkup: (id: string) =>
+        adminFetch<{ markup: PolicyMarkup }>(`/policy-gaps/orders/${id}/markup`, token),
       // A cold second opinion on what the policy should cover. Spends credit, so it is a
       // deliberate press, and the answer is stored on the order.
       challengeOrder: (id: string) =>
@@ -1428,6 +1431,29 @@ export interface PolicyProvenance {
   integrity: PolicyIntegrity
   assumption_questions: IntakeQuestion[]
   regulations_not_yet_derived: string[]
+}
+
+export interface MarkupRegulation {
+  index: number
+  reference_key: string
+  official_name: string
+  authority_basis: string
+  sections: string[]
+  elements_met: number
+  elements_total: number
+}
+
+export interface MarkupFact {
+  label: string
+  value: string
+  source: 'organisation' | 'policy intake' | 'service questions'
+}
+
+export interface PolicyMarkup {
+  markdown: string
+  regulations: MarkupRegulation[]
+  facts: MarkupFact[]
+  unattributed_sections: string[]
 }
 
 export interface ChallengeItem {

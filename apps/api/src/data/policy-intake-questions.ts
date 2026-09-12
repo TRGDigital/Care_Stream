@@ -173,6 +173,185 @@ export const INTAKE_QUESTIONS: Record<string, IntakeQuestion> = {
     label: 'How long do you keep care records after a resident leaves or dies?',
     prevents: 'Invents a retention schedule the service has never set.',
   },
+  // ── Medicines ──────────────────────────────────────────────────────────────────────
+  pharmacy_supplier: {
+    key: 'pharmacy_supplier', type: 'text',
+    label: 'Which pharmacy supplies your medicines?',
+    prevents: 'Describes ordering and reconciliation with a supplying pharmacy it cannot name.',
+  },
+  controlled_drugs: {
+    key: 'controlled_drugs', type: 'yesno',
+    label: 'Do you store controlled drugs on the premises?',
+    help: 'If yes, the policy will cover the CD cabinet, register and running balance checks.',
+    prevents: 'Writes controlled drugs procedures for a service that holds none, or omits them where they are held.',
+  },
+  mar_charts: {
+    key: 'mar_charts', type: 'text',
+    label: 'Are your MAR charts paper or electronic?',
+    help: 'Name the eMAR system if you use one.',
+    prevents: 'Assumes a particular way of recording administration, including prompts a paper chart cannot give.',
+  },
+  homely_remedies: {
+    key: 'homely_remedies', type: 'yesno',
+    label: 'Do you keep homely remedies such as paracetamol?',
+    prevents: 'Sets out a homely remedies protocol for a service that keeps none.',
+  },
+  self_administration: {
+    key: 'self_administration', type: 'yesno',
+    label: 'Do any residents look after their own medicines?',
+    prevents: 'Describes self-administration assessments that have never been carried out.',
+  },
+  medicines_competency: {
+    key: 'medicines_competency', type: 'text',
+    label: 'Who assesses staff competence to administer medicines?',
+    prevents: 'Requires observed competency assessments without saying who performs them.',
+  },
+
+  // ── Fire and evacuation ────────────────────────────────────────────────────────────
+  fire_responsible_person: {
+    key: 'fire_responsible_person', type: 'text',
+    label: 'Who is the named responsible person for fire safety?',
+    prevents: 'The Fire Safety Order requires a named responsible person; the policy will invent the role otherwise.',
+  },
+  fire_risk_assessment: {
+    key: 'fire_risk_assessment', type: 'text',
+    label: 'When was your fire risk assessment last reviewed, and by whom?',
+    prevents: 'States a fire risk assessment is current without knowing whether one exists.',
+  },
+  evacuation_strategy: {
+    key: 'evacuation_strategy', type: 'text',
+    label: 'What is your evacuation strategy?',
+    help: 'For example progressive horizontal evacuation, simultaneous evacuation, or stay put.',
+    prevents: 'Assumes progressive horizontal evacuation, which needs compartment lines the building may not have.',
+  },
+  evacuation_aids: {
+    key: 'evacuation_aids', type: 'longtext',
+    label: 'Which evacuation aids do you hold?',
+    help: 'Ski sheets, evac chairs, evacuation mattresses, or none.',
+    prevents: 'Describes maintaining evacuation equipment the service does not own.',
+  },
+  night_staffing: {
+    key: 'night_staffing', type: 'text',
+    label: 'How many staff are on duty overnight?',
+    help: 'The fire risk assessment has to be achievable with this number.',
+    prevents: 'Assumes night staffing sufficient for the evacuation strategy it describes.',
+  },
+
+  // ── Premises, equipment and utilities ──────────────────────────────────────────────
+  lifting_equipment: {
+    key: 'lifting_equipment', type: 'longtext',
+    label: 'Which lifting equipment do you have?',
+    help: 'Ceiling hoists, mobile hoists, slings, stairlifts, bath hoists, or none.',
+    prevents: 'Writes LOLER examination routines for equipment the service does not have.',
+  },
+  loler_contractor: {
+    key: 'loler_contractor', type: 'text',
+    label: 'Who carries out your six-monthly LOLER thorough examinations?',
+    prevents: 'Requires thorough examinations by a competent person without naming who that is.',
+  },
+  asset_register: {
+    key: 'asset_register', type: 'yesno',
+    label: 'Do you keep an equipment asset register and planned maintenance schedule?',
+    prevents: 'Describes an asset register and maintenance log the service does not keep.',
+  },
+  gas_contractor: {
+    key: 'gas_contractor', type: 'text',
+    label: 'Who is your Gas Safe registered engineer?',
+    prevents: 'Asserts annual gas safety checks without a contractor behind them.',
+  },
+  electrical_testing: {
+    key: 'electrical_testing', type: 'text',
+    label: 'When was your fixed wiring (EICR) last tested, and by whom?',
+    prevents: 'States electrical installations are tested on a cycle the service may not run.',
+  },
+  legionella_scheme: {
+    key: 'legionella_scheme', type: 'yesno',
+    label: 'Do you have a written legionella control scheme with temperature monitoring?',
+    prevents: 'Describes a written scheme and monthly outlet temperatures that may not be recorded.',
+  },
+  asbestos_register: {
+    key: 'asbestos_register', type: 'yesno',
+    label: 'Do you hold an asbestos survey or register for the building?',
+    help: 'Buildings constructed after 2000 will not need one.',
+    prevents: 'Requires an asbestos register the service has never commissioned.',
+  },
+  coshh_register: {
+    key: 'coshh_register', type: 'text',
+    label: 'Where is your COSHH file kept, and who maintains it?',
+    prevents: 'Refers to COSHH assessments and safety data sheets without saying where they live.',
+  },
+
+  // ── Infection prevention ───────────────────────────────────────────────────────────
+  ipc_lead: {
+    key: 'ipc_lead', type: 'text',
+    label: 'Who is your infection prevention and control lead?',
+    prevents: 'The code requires a named IPC lead; the policy will assign the role to nobody otherwise.',
+  },
+  health_protection_team: {
+    key: 'health_protection_team', type: 'text',
+    label: 'Which health protection team do you notify about outbreaks?',
+    prevents: 'Says outbreaks are notified without a route to notify them through.',
+  },
+
+  // ── Catering ───────────────────────────────────────────────────────────────────────
+  catering_arrangement: {
+    key: 'catering_arrangement', type: 'text',
+    label: 'Is catering in-house or contracted out?',
+    help: 'Name the contractor if it is contracted.',
+    prevents: 'Assigns kitchen duties to staff the service may not employ.',
+  },
+  allergen_matrix: {
+    key: 'allergen_matrix', type: 'yesno',
+    label: 'Do you keep an allergen matrix mapping dishes to the fourteen allergens?',
+    prevents: 'Describes an allergen matrix and recipe specifications the kitchen does not maintain.',
+  },
+  ppds_food: {
+    key: 'ppds_food', type: 'yesno',
+    label: 'Do you sell prepacked food, for example in a café, shop or fundraising stall?',
+    help: 'This decides whether Natasha\u2019s Law labelling applies to you.',
+    prevents: 'Applies PPDS labelling rules to a service that sells no packaged food, or omits them where it does.',
+  },
+
+  // ── Workforce ──────────────────────────────────────────────────────────────────────
+  agency_staff: {
+    key: 'agency_staff', type: 'yesno',
+    label: 'Do you use agency or bank staff?',
+    prevents: 'Writes induction and competency routes for agency staff without knowing any are used.',
+  },
+  registered_nurses: {
+    key: 'registered_nurses', type: 'yesno',
+    label: 'Do you employ registered nurses?',
+    prevents: 'Applies the NMC Code to a service that employs none.',
+  },
+  dbs_update_service: {
+    key: 'dbs_update_service', type: 'yesno',
+    label: 'Do you use the DBS Update Service?',
+    prevents: 'Describes annual status checks that only exist if the service subscribes.',
+  },
+  speak_up_routes: {
+    key: 'speak_up_routes', type: 'longtext',
+    label: 'Besides their line manager, who can staff raise a concern with?',
+    help: 'A named director, an external number, a Freedom to Speak Up guardian.',
+    prevents: 'Promises reporting routes that bypass the person complained about, without saying what they are.',
+  },
+  complaints_handler: {
+    key: 'complaints_handler', type: 'text',
+    label: 'Who handles complaints, and what is your response timescale?',
+    prevents: 'Commits to acknowledgement and response times nobody has agreed.',
+  },
+
+  // ── Clinical and external services ────────────────────────────────────────────────
+  gp_practice: {
+    key: 'gp_practice', type: 'text',
+    label: 'Which GP practice or practices cover your residents?',
+    prevents: 'Describes medication reviews and escalation with a GP it cannot name.',
+  },
+  end_of_life_framework: {
+    key: 'end_of_life_framework', type: 'text',
+    label: 'Do you follow an end of life framework?',
+    help: 'Gold Standards Framework, Six Steps, a local hospice programme, or none.',
+    prevents: 'States the service works to a named framework it has never adopted.',
+  },
 }
 
 /** Which questions each regulation's required elements make necessary. */
@@ -223,6 +402,70 @@ export const REGULATION_QUESTION_KEYS: Record<string, string[]> = {
   'oliver-mcgowan-mandatory-training': ['training_delivery'],
   'cqc': ['governance_meeting', 'local_authority'],
   'cqc-statutory-notifications': ['local_authority', 'governance_meeting'],
+  // ── Medicines ──────────────────────────────────────────────────────────────────────
+  'nice-sc1-managing-medicines-care-homes': ['pharmacy_supplier', 'controlled_drugs', 'mar_charts', 'homely_remedies', 'self_administration', 'medicines_competency', 'gp_practice', 'agency_staff'],
+  'medicines-act-1968': ['pharmacy_supplier', 'mar_charts', 'medicines_competency'],
+  'misuse-of-drugs-act-1971': ['controlled_drugs', 'pharmacy_supplier', 'medicines_competency'],
+  'rps-professional-guidance-on-the-safe-and-secure-handling-of-medicines': ['controlled_drugs', 'pharmacy_supplier', 'mar_charts', 'medicines_competency'],
+
+  // ── Fire, premises, equipment and utilities ───────────────────────────────────────
+  'regulatory-reform-fire-safety-order-2005': ['fire_responsible_person', 'fire_risk_assessment', 'evacuation_strategy', 'evacuation_aids', 'night_staffing', 'training_delivery'],
+  'regulation-15': ['asset_register', 'lifting_equipment', 'loler_contractor', 'gas_contractor', 'electrical_testing', 'legionella_scheme', 'asbestos_register', 'restraint_in_use', 'governance_meeting'],
+  'lifting-operations-and-lifting-equipment-regulations-1998-loler': ['lifting_equipment', 'loler_contractor', 'asset_register'],
+  'provision-and-use-of-work-equipment-regulations-1998-puwer': ['lifting_equipment', 'asset_register', 'training_delivery'],
+  'manual-handling-regulations': ['lifting_equipment', 'training_delivery', 'risk_register'],
+  'workplace-health-safety-and-welfare-regulations-1992': ['asset_register', 'health_safety_lead'],
+  'gas-safety-regulations-1998': ['gas_contractor', 'asset_register'],
+  'electricity-at-work-regulations-1989': ['electrical_testing', 'asset_register'],
+  'legionella-acop-l8': ['legionella_scheme', 'asset_register'],
+  'control-of-asbestos-regulations-2012': ['asbestos_register', 'health_safety_lead'],
+  'coshh': ['coshh_register', 'health_safety_lead', 'training_delivery'],
+  'first-aid-regulations': ['training_delivery', 'night_staffing'],
+  'riddor': ['health_safety_lead', 'governance_meeting'],
+
+  // ── Infection prevention ───────────────────────────────────────────────────────────
+  'health-and-social-care-act-infection-control-code': ['ipc_lead', 'health_protection_team', 'training_delivery', 'audit_schedule', 'agency_staff', 'coshh_register'],
+  'infection-control': ['ipc_lead', 'health_protection_team', 'training_delivery', 'audit_schedule'],
+  'nice-cg139': ['ipc_lead', 'training_delivery'],
+  'uk-health-security-agency-ukhsa': ['health_protection_team', 'ipc_lead'],
+
+  // ── Catering and nutrition ─────────────────────────────────────────────────────────
+  'food-allergen-natashas-law': ['catering_arrangement', 'allergen_matrix', 'ppds_food', 'training_delivery', 'record_system'],
+  'food-safety-act-1990': ['catering_arrangement', 'allergen_matrix', 'training_delivery'],
+  'food-hygiene-legislation-including-regulation-ec-no-8522004-and-food-hygiene-england-regulations-2013': ['catering_arrangement', 'training_delivery', 'audit_schedule'],
+  'regulation-14': ['catering_arrangement', 'allergen_matrix', 'record_system'],
+
+  // ── Workforce, conduct and speaking up ────────────────────────────────────────────
+  'employment-rights-act': ['speak_up_routes', 'agency_staff', 'training_delivery'],
+  'public-interest-disclosure-act': ['speak_up_routes', 'agency_staff'],
+  'freedom-to-speak-up': ['speak_up_routes', 'training_delivery'],
+  'whistleblowing': ['speak_up_routes', 'agency_staff'],
+  'disclosure-and-barring-service-dbs': ['dbs_update_service', 'agency_staff', 'records_retention'],
+  'safeguarding-vulnerable-groups-act-2006': ['dbs_update_service', 'local_authority', 'training_delivery'],
+  'working-time-regulations-1998': ['night_staffing', 'agency_staff'],
+  'the-code:-professional-standards-of-practice-and-behaviour-for-nurses-midwives-and-nursing-associates': ['registered_nurses', 'training_delivery'],
+  'modern-slavery-act-2015': ['agency_staff', 'training_delivery'],
+  'bribery-act-2010': ['governance_meeting', 'training_delivery'],
+  'workshops-to-raise-awareness-of-prevent': ['training_delivery', 'local_authority'],
+
+  // ── Care, clinical and complaints ─────────────────────────────────────────────────
+  'regulation-10': ['training_delivery', 'record_system'],
+  'regulation-11': ['restraint_in_use', 'imca_service', 'record_system'],
+  'common-law-principles-of-capacity-and-consent': ['restraint_in_use', 'imca_service', 'record_system'],
+  'regulation-16': ['complaints_handler', 'governance_meeting'],
+  'local-government-and-social-care-ombudsman-lgsco': ['complaints_handler'],
+  'regulation-20': ['complaints_handler', 'governance_meeting', 'training_delivery'],
+  'mental-health-act-1983': ['local_authority', 'imca_service', 'gp_practice'],
+  'nice_ng11_-_challenging_behaviour_and_learning_disabilities': ['restraint_in_use', 'training_delivery', 'gp_practice'],
+  'nice_ng31_-_care_of_dying_adults': ['end_of_life_framework', 'gp_practice', 'record_system'],
+  'gold-standards-framework-gsf': ['end_of_life_framework', 'gp_practice'],
+  'cg83_-_rehabilitation_after_critical_illness': ['gp_practice', 'record_system'],
+  'nice-guidelines': ['gp_practice', 'audit_schedule'],
+
+  // ── Registration and governance ───────────────────────────────────────────────────
+  'regulated-activities-regulations-2014': ['governance_meeting', 'audit_schedule', 'local_authority'],
+  'health-and-social-care-act-2008': ['governance_meeting', 'local_authority'],
+  'health-and-care-act-2022': ['governance_meeting', 'local_authority'],
 }
 
 /** The questions a product needs: the union of its regulations', asked once each. */

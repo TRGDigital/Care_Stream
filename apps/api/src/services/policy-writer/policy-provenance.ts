@@ -94,6 +94,10 @@ export type PolicyMarkup = {
   facts: MarkupFact[]
   /** Headings the judge attributed to no regulation. Not wrong, but worth a reviewer's eye. */
   unattributed_sections: string[]
+  /** Sentences the assumption gate flagged as claiming something unconfirmed. Marked in the
+   *  document itself, because the whole point is to see them in place rather than as a list
+   *  away from the sentence they are about. */
+  unconfirmed_claims: Array<{ quote: string; why: string; question_key: string | null }>
 }
 
 export type PolicyProvenance = {
@@ -429,5 +433,9 @@ export async function buildPolicyMarkup(purchaseId: string): Promise<PolicyMarku
   const headings = [...markdown.matchAll(/^##\s+(.+)$/gm)].map(m => m[1].trim())
   const unattributed_sections = headings.filter(h => !attributed.has(h.toLowerCase()))
 
-  return { markdown, regulations, facts, unattributed_sections }
+  const unconfirmed_claims = (purchase.verification?.checks?.assumptions?.claims ?? []) as Array<
+    { quote: string; why: string; question_key: string | null }
+  >
+
+  return { markdown, regulations, facts, unattributed_sections, unconfirmed_claims }
 }

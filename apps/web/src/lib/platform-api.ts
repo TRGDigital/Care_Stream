@@ -1363,6 +1363,12 @@ export interface PolicyOrderVerification {
     terminology:  { passed: boolean; issues: string[] }
     identity:     { passed: boolean; issues: string[] }
     completeness: { passed: boolean; issues: string[] }
+    assumptions?: {
+      passed: boolean
+      issues: string[]
+      claims: Array<{ quote: string; why: string; question_key: string | null }>
+      assessed: boolean
+    }
     coverage:     { passed: boolean; issues: string[]; regulations: Array<{ reference_key: string; official_name: string; met: boolean; missing_elements: string[] }> }
   }
 }
@@ -1454,6 +1460,7 @@ export interface PolicyMarkup {
   regulations: MarkupRegulation[]
   facts: MarkupFact[]
   unattributed_sections: string[]
+  unconfirmed_claims: Array<{ quote: string; why: string; question_key: string | null }>
 }
 
 export interface ChallengeItem {

@@ -290,6 +290,25 @@ export function createApiClient(token: string) {
     },
 
     policies: {
+      // The companion document: the legislation this policy was written against. Returns
+      // false when there is nothing to show (an uploaded policy has no provenance), so the
+      // caller can hide the button rather than offer a download that errors.
+      downloadLegislation: async (id: string, filename: string): Promise<boolean> => {
+        const res = await fetch(`${API_URL}/policies/${id}/legislation-pdf`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) return false
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = filename
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        URL.revokeObjectURL(url)
+        return true
+      },
       // What we still need to know about this service before its policies stop guessing.
       intake: () => apiFetch<{ intake: TenantIntake }>('/policies/intake', token),
       saveIntake: (answers: Record<string, string>) =>

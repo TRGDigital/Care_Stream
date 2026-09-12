@@ -14,7 +14,7 @@ import SlowLoadHint from '@/components/admin/slow-load-hint'
 import { persistentCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search, GraduationCap, Trash2, Copy, Loader2, CheckCircle2, Eye, FileText, FilePenLine, CalendarClock, Pencil, Download, Printer} from 'lucide-react'
+import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search, GraduationCap, Trash2, Copy, Loader2, CheckCircle2, Eye, FileText, FilePenLine, CalendarClock, Pencil, Download, Printer, Scale } from 'lucide-react'
 import { buildPrintDoc, openPrintDoc, type OrgCtx } from '@/components/admin/policies/policy-print'
 import { PolicyChangesModal } from '@/components/admin/policy-changes-modal'
 
@@ -991,6 +991,9 @@ function PolicyPreviewModal({ token, policy, version, onClose, onRename, readOnl
   // there is no original — a CareStream-written policy is markdown, and handing a care
   // home a .md file would be worse than the print dialog.
   const [downloading, setDownloading] = useState(false)
+  const [legislationBusy, setLegislationBusy] = useState(false)
+  // null = not tried yet, false = nothing to show for this policy so hide the button.
+  const [legislationAvailable, setLegislationAvailable] = useState<boolean | null>(null)
   async function downloadOriginal() {
     setDownloading(true); setError('')
     try {
@@ -1116,6 +1119,24 @@ function PolicyPreviewModal({ token, policy, version, onClose, onRename, readOnl
               className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3.5 py-2 text-sm font-medium text-neutral-mid hover:border-teal hover:text-teal disabled:opacity-50">
               <Printer size={14} /> Print Policy
             </button>
+            {/* The companion document. Hidden unless there is provenance to show: an
+                uploaded policy has none, and offering a download that errors is worse than
+                not offering it. */}
+            {legislationAvailable !== false && (
+              <button
+                onClick={async () => {
+                  setLegislationBusy(true)
+                  const ok = await createApiClient(token).policies
+                    .downloadLegislation(policy.id, `${name} - the law behind it.pdf`)
+                  setLegislationAvailable(ok)
+                  setLegislationBusy(false)
+                }}
+                disabled={legislationBusy}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-teal/30 bg-teal/5 px-3 py-2 text-xs font-semibold text-teal hover:bg-teal/10 disabled:opacity-40"
+                title="The legislation this policy was written against, what each part requires, and the CQC quality statements it supports">
+                <Scale size={14} /> {legislationBusy ? 'Preparing…' : 'The law behind it'}
+              </button>
+            )}
           </div>
           <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-neutral-mid hover:text-neutral-dark">Close</button>
         </div>

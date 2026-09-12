@@ -9,6 +9,7 @@ import { writePolicy } from '../services/policy-writer/write-policy'
 import { POLICY_PRODUCTS_SEED, POLICY_BUNDLES_SEED, SHARED_INTAKE_FIELDS, COMPLETE_LIBRARY_KEY } from '../data/policy-products-seed'
 import { PRODUCT_REGULATIONS } from '../data/policy-product-regulations'
 import { verifyPaidPolicyDraft, verificationFailures, isWorthRewriting } from '../services/policy-writer/verify-policy'
+import { buildPolicyProvenance, runPolicyChallenge } from '../services/policy-writer/policy-provenance'
 import { purchaseIntakeState } from '../services/policy-writer/intake'
 import { sendTrainingUpdateEmail } from '../services/email/outbound'
 import { writeAuditLog } from '../lib/audit'
@@ -343,6 +344,35 @@ platformPolicyGapsRouter.post('/orders/:id/verify', async (req: Request, res: Re
     ok(res, { verification })
   } catch (e: any) {
     err(res, 'VERIFY_FAILED', e?.message ?? 'could not verify that draft', 500)
+  }
+})
+
+// GET /orders/:id/provenance — why this policy says what it says.
+//
+// Recorded fact only: the regulations it was written against, their required elements with
+// the judge's verdict, and the CQC quality statements those regulations carry. No model is
+// called, so this cannot invent grounding that was not there.
+platformPolicyGapsRouter.get('/orders/:id/provenance', async (req: Request, res: Response) => {
+  try {
+    ok(res, { provenance: await buildPolicyProvenance(String(req.params.id)) })
+  } catch (e: any) {
+    console.error(`[provenance] order=${req.params.id}: ${e?.stack ?? e?.message ?? e}`)
+    err(res, 'PROVENANCE_FAILED', e?.message ?? 'could not build that provenance', 500)
+  }
+})
+
+// POST /orders/:id/challenge — a second opinion on what this policy SHOULD cover.
+//
+// Asked cold, from the title alone, then diffed against what was actually mapped. This is
+// the only check in the pipeline that can catch a mapping which is short: the coverage judge
+// measures the policy against the mapping, so it cannot see past it. Spends Anthropic credit,
+// so it runs on request rather than on every page view, and the answer is stored.
+platformPolicyGapsRouter.post('/orders/:id/challenge', async (req: Request, res: Response) => {
+  try {
+    ok(res, { challenge: await runPolicyChallenge(String(req.params.id)) })
+  } catch (e: any) {
+    console.error(`[challenge] order=${req.params.id}: ${e?.stack ?? e?.message ?? e}`)
+    err(res, 'CHALLENGE_FAILED', e?.message ?? 'could not run that challenge', 500)
   }
 })
 

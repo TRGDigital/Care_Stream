@@ -11,7 +11,8 @@
 
 import { useEffect, useState } from 'react'
 import { createPlatformClient, type PolicyOrder, type PolicyOrderVerification } from '@/lib/platform-api'
-import { Loader2, Check, PenLine, AlertTriangle, FileText, X, ShieldCheck, ShieldAlert } from 'lucide-react'
+import { Loader2, Check, PenLine, AlertTriangle, FileText, X, ShieldCheck, ShieldAlert, BookOpen } from 'lucide-react'
+import { PolicyProvenancePanel } from './policy-provenance-panel'
 
 const money = (p: number) => `£${(p / 100).toFixed(p % 100 === 0 ? 0 : 2)}`
 const when = (iso: string) => new Date(iso).toLocaleDateString('en-GB')
@@ -66,6 +67,8 @@ function VerificationChecklist({ v }: { v: PolicyOrderVerification }) {
 export function PolicyOrders({ token, scope }: { token: string; scope: 'subscribers' | 'standalone' }) {
   const [orders, setOrders] = useState<PolicyOrder[] | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
+  // Which half of the read the reviewer is on: the document itself, or how it was built.
+  const [readTab, setReadTab] = useState<'document' | 'provenance'>('document')
   // The draft being read before approval. Nothing is delivered unread.
   const [reading, setReading] = useState<{ id: string; title: string; draft: string } | null>(null)
   const [error, setError] = useState('')
@@ -90,6 +93,7 @@ export function PolicyOrders({ token, scope }: { token: string; scope: 'subscrib
   }
 
   async function read(o: PolicyOrder) {
+    setReadTab('document')
     setBusy(o.id); setError('')
     try {
       const r = await createPlatformClient(token).policyGaps.orderDraft(o.id)
@@ -257,10 +261,24 @@ export function PolicyOrders({ token, scope }: { token: string; scope: 'subscrib
             {(() => { const o = orders?.find(x => x.id === reading.id); return o?.verification ? <VerificationChecklist v={o.verification} /> : (
               <div className="border-b border-amber-100 bg-amber-50/60 px-5 py-2.5 text-xs font-medium text-amber-800">This draft has not been verified. Run Verify before approving.</div>
             ) })()}
+            {/* The document and its grounding are both long reads, so they sit side by side
+                rather than stacked: nobody scrolls past three thousand words to reach the
+                reason the policy says what it says. */}
+            <div className="flex gap-1 border-b border-gray-100 px-5 pt-2">
+              {([['document', 'The document', FileText], ['provenance', 'How it was built', BookOpen]] as const).map(([k, label, Icon]) => (
+                <button key={k} onClick={() => setReadTab(k)}
+                  className={`inline-flex items-center gap-1.5 rounded-t-lg px-3 py-2 text-xs font-semibold ${
+                    readTab === k ? 'bg-neutral-light/40 text-neutral-dark' : 'text-neutral-mid hover:text-neutral-dark'}`}>
+                  <Icon size={13} /> {label}
+                </button>
+              ))}
+            </div>
             {/* Deliberately the raw markdown. This is the last read before a care home's name
                 goes on it, and rendered prose hides things a plain read catches: a stray
                 placeholder, a heading that never got filled in, a name that should not be there. */}
-            <pre className="flex-1 overflow-auto whitespace-pre-wrap px-5 py-4 text-[13px] leading-relaxed text-neutral-dark">{reading.draft}</pre>
+            {readTab === 'document'
+              ? <pre className="flex-1 overflow-auto whitespace-pre-wrap px-5 py-4 text-[13px] leading-relaxed text-neutral-dark">{reading.draft}</pre>
+              : <div className="flex-1 overflow-auto"><PolicyProvenancePanel token={token} orderId={reading.id} /></div>}
             <div className="flex items-center justify-between gap-3 border-t border-gray-100 px-5 py-3">
               <p className="text-xs text-neutral-mid">{reading.draft.split(/\s+/).length} words. Approving puts this in the client's library.</p>
               <button

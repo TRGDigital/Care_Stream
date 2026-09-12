@@ -1287,6 +1287,14 @@ export function createPlatformClient(token: string) {
         adminFetch<{ nudged: number; missing: number }>(`/policy-gaps/orders/${id}/nudge`, token, { method: 'POST' }),
       verifyOrder: (id: string) =>
         adminFetch<{ verification: PolicyOrderVerification }>(`/policy-gaps/orders/${id}/verify`, token, { method: 'POST' }),
+      // Recorded fact: what this policy was written against. No model runs, so it is free
+      // and safe to load whenever the panel opens.
+      orderProvenance: (id: string) =>
+        adminFetch<{ provenance: PolicyProvenance }>(`/policy-gaps/orders/${id}/provenance`, token),
+      // A cold second opinion on what the policy should cover. Spends credit, so it is a
+      // deliberate press, and the answer is stored on the order.
+      challengeOrder: (id: string) =>
+        adminFetch<{ challenge: PolicyChallenge }>(`/policy-gaps/orders/${id}/challenge`, token, { method: 'POST' }),
       orderDraft: (id: string) =>
         adminFetch<{ draft: string | null; title: string; status: string }>(`/policy-gaps/orders/${id}/draft`, token),
       deliverOrder: (id: string, opts?: { override: true; reason: string }) =>
@@ -1349,6 +1357,64 @@ export interface PolicyOrderVerification {
     identity:     { passed: boolean; issues: string[] }
     coverage:     { passed: boolean; issues: string[]; regulations: Array<{ reference_key: string; official_name: string; met: boolean; missing_elements: string[] }> }
   }
+}
+
+/** One required element of a regulation, with the coverage judge's verdict.
+ *  met === null means no judgement has run: not the same as met, and must not look like it. */
+export interface ProvenanceElement { text: string; met: boolean | null }
+
+export interface ProvenanceRegulation {
+  reference_key: string
+  official_name: string
+  authority_basis: string
+  summary: string
+  care_home_context: string
+  practical_meaning: string
+  source_urls: string[]
+  required_elements: ProvenanceElement[]
+  last_reviewed_at: string | null
+  needs_update: boolean
+}
+
+export interface ProvenanceQualityStatement {
+  reference_key: string
+  key_question: string
+  number: number
+  name: string
+  we_statement: string
+  source_urls: string[]
+  via: string[]
+}
+
+/** Why a policy says what it says. Reported, never generated. */
+export interface PolicyProvenance {
+  purchase_id: string
+  policy_title: string
+  product_slug: string | null
+  drafted_at: string | null
+  drafted_by: string | null
+  verified_at: string | null
+  grounded: boolean
+  regulations: ProvenanceRegulation[]
+  quality_statements: ProvenanceQualityStatement[]
+  element_totals: { total: number; met: number; missing: number; unjudged: number }
+}
+
+export interface ChallengeItem {
+  name: string
+  why: string
+  basis: 'statutory' | 'guidance'
+  matched_key: string | null
+  /** grounded = we used it | missing_from_mapping = we hold it but did not use it
+   *  | not_in_library = we do not hold it at all */
+  status: 'grounded' | 'missing_from_mapping' | 'not_in_library'
+}
+
+export interface PolicyChallenge {
+  ran_at: string
+  policy_title: string
+  items: ChallengeItem[]
+  summary: { grounded: number; missing_from_mapping: number; not_in_library: number }
 }
 
 /** A policy a client has paid for, with the client attached. */

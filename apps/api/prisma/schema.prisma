@@ -2689,6 +2689,8 @@ model PolicyPurchase {
   drafted_at        DateTime?
   verification      Json?     // verification gate checklist (see verify-policy.ts); Approve requires passed=true
   verified_at       DateTime?
+  challenge         Json?     // independent second opinion on what this policy SHOULD cover (see policy-provenance.ts)
+  challenged_at     DateTime?
   product_slug      String?   // catalogue product this order maps to (intake fields + shop provenance)
   intake_data       Json      @default("{}")  // per-policy intake answers; shared identity answers live on tenant.organisation_details
   intake_completed_at DateTime?

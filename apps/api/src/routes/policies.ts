@@ -9,6 +9,8 @@ import { prisma } from '../db/client'
 import { getTenantId, tenantContext } from '../db/tenant-context'
 import { uploadPolicyFile, downloadExtractedText, downloadFile } from '../services/storage/s3'
 import { buildPolicyPdf, logoForPdf } from '../services/policy/policy-pdf'
+import { buildLegislationPdf } from '../services/policy/legislation-pdf'
+import { buildPolicyProvenance } from '../services/policy-writer/policy-provenance'
 import { tenantIntakeState, saveIntakeAnswers } from '../services/policy-writer/intake-answers'
 import { extractText, isSupportedMimeType } from '../services/rag/extractor'
 import { backfillSignatures } from '../lib/policy-dedup'
@@ -827,6 +829,71 @@ policiesRouter.patch('/:id/review', requireAdmin, async (req: Request, res: Resp
 // CareStream-written policies have no original (they are markdown we generated), so
 // this reports that rather than serving a .md a care home cannot use. Those need real
 // PDF generation, which is a separate piece of work.
+// GET /:id/legislation-pdf -- the companion document: what this policy was written against.
+//
+// Everything the pipeline knows about a policy's grounding has lived in the platform admin,
+// where the client cannot see it. They get a policy and are asked to take the rest on trust,
+// which is the one thing a compliance product should never ask. This hands them the working:
+// the legislation, what it requires, and the CQC quality statements it supports.
+//
+// Rendered from recorded data, so it costs no credit and cannot invent a citation. Available
+// only for a policy CareStream wrote and delivered: an uploaded document has no provenance
+// to show, and inventing one would be exactly the wrong thing to put on a letterhead.
+policiesRouter.get('/:id/legislation-pdf', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const policyId = String(req.params.id)
+  try {
+    const policy = await (prisma as any).policy.findFirst({
+      where:  { id: policyId, tenant_id: tenantId },
+      select: { id: true, name: true, version: true, carestream_written: true },
+    })
+    if (!policy) { err(res, 'POLICY_NOT_FOUND', 'Policy not found.', 404); return }
+
+    const purchase = await (prisma as any).policyPurchase.findFirst({
+      where:   { policy_id: policyId, tenant_id: tenantId },
+      orderBy: { created_at: 'desc' },
+      select:  { id: true },
+    })
+    if (!purchase) {
+      err(res, 'NO_PROVENANCE',
+        'This policy was not written by CareStream, so there is no record of the legislation behind it.', 409)
+      return
+    }
+
+    const provenance = await buildPolicyProvenance(purchase.id)
+    if (!provenance.regulations.length) {
+      err(res, 'NO_REGULATIONS',
+        'No legislation is recorded against this policy yet. Ask us to re-check it.', 409)
+      return
+    }
+
+    const tenant = await (prisma as any).tenant.findUnique({
+      where:  { id: tenantId },
+      select: { name: true, logo_url: true, organisation_details: true },
+    })
+    const od = (tenant?.organisation_details ?? {}) as Record<string, string>
+
+    const buffer = await buildLegislationPdf({
+      provenance,
+      version: String(policy.version ?? ''),
+      org: {
+        home_name: tenant?.name ?? null,
+        address:   od.address ?? null,
+        logo:      await logoForPdf(tenant?.logo_url),
+      },
+    })
+
+    const safe = (policy.name || 'Policy').replace(/[^A-Za-z0-9 ]+/g, '').trim() || 'Policy'
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', `attachment; filename="${safe} - the law behind it.pdf"`)
+    res.setHeader('Content-Length', String(buffer.length))
+    res.end(buffer)
+  } catch (e: any) {
+    console.error(`[legislation-pdf] policy=${policyId}: ${e?.stack ?? e?.message ?? e}`)
+    err(res, 'LEGISLATION_PDF_FAILED', e?.message ?? 'could not build that document', 500)
+  }
+})
+
 // GET /:id/pdf -- a generated, text-based PDF for a policy with no uploaded original.
 //
 // CareStream-written policies are markdown we produced, so there is no file to hand

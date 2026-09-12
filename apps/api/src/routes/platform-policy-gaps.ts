@@ -401,6 +401,18 @@ platformPolicyGapsRouter.post('/orders/:id/deliver', async (req: Request, res: R
     if (!order.draft_content) return err(res, 'NO_DRAFT', 'Write the policy before approving it', 409)
     if (order.status === 'approved') return err(res, 'ALREADY_DELIVERED', 'That policy has already been delivered', 409)
 
+    // Regenerating a delivered order returns it to 'drafted', which puts Approve back in
+    // reach -- and this route creates a NEW Policy row every time. Approving twice would
+    // leave the client holding two documents with the same title and no way to tell which
+    // is current. Refuse, rather than quietly duplicating.
+    //
+    // Superseding the delivered copy in place (new version on the same policy, re-ingested,
+    // back through the home's own approval chain) is the real answer and is not built yet.
+    if (order.policy_id) {
+      return err(res, 'ALREADY_IN_LIBRARY',
+        'This order has already put a policy in the client\u2019s library. Rewriting it here does not replace that copy, and approving again would add a second one. Replacing a delivered policy is not supported yet.', 409)
+    }
+
     // The gate: nothing ships unverified. A red or missing checklist blocks Approve.
     // The override exists for judgement calls (e.g. the judge is being over-strict on a
     // document a person has read and stands behind) — it must carry a reason, and it is

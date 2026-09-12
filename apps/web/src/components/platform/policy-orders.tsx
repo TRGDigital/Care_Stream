@@ -11,7 +11,7 @@
 
 import { useEffect, useState } from 'react'
 import { createPlatformClient, type PolicyOrder, type PolicyOrderVerification } from '@/lib/platform-api'
-import { Loader2, Check, PenLine, AlertTriangle, FileText, X, ShieldCheck, ShieldAlert, BookOpen } from 'lucide-react'
+import { Loader2, Check, PenLine, AlertTriangle, FileText, X, ShieldCheck, ShieldAlert, BookOpen, RefreshCw } from 'lucide-react'
 import { PolicyProvenancePanel } from './policy-provenance-panel'
 
 const money = (p: number) => `£${(p / 100).toFixed(p % 100 === 0 ? 0 : 2)}`
@@ -45,7 +45,11 @@ function VerificationChecklist({ v }: { v: PolicyOrderVerification }) {
   )
   const cov = v.checks.coverage
   return (
-    <div className={`border-b px-5 py-3 ${v.passed ? 'border-green-100 bg-green-50/60' : 'border-red-100 bg-red-50/60'}`}>
+    // max-h + overflow, because this list is not small. A policy missing twelve required
+    // elements renders twelve long sentences here, and without a cap the checklist ate the
+    // whole modal: the document and the provenance tab below it had nothing left to sit in
+    // and could not be scrolled to.
+    <div className={`max-h-[32vh] shrink-0 overflow-y-auto border-b px-5 py-3 ${v.passed ? 'border-green-100 bg-green-50/60' : 'border-red-100 bg-red-50/60'}`}>
       <p className={`mb-1 text-xs font-bold uppercase tracking-wide ${v.passed ? 'text-green-700' : 'text-red-700'}`}>
         {v.passed ? 'Verification passed' : 'Verification FAILED, this must not ship as-is'}
       </p>
@@ -222,6 +226,22 @@ export function PolicyOrders({ token, scope }: { token: string; scope: 'subscrib
                     className="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-40"
                     title="Email the client's admins the exact details still missing.">
                     {busy === o.id ? <Loader2 size={12} className="animate-spin" /> : <AlertTriangle size={12} />} Nudge for details
+                  </button>
+                )}
+                {/* Regenerate. The same write call, offered where it was previously
+                    unreachable: once a policy is drafted or delivered there was no way to
+                    rewrite it, which is exactly what you want after the regulations behind
+                    it change or after it fails verification. */}
+                {(o.status === 'drafted' || o.status === 'approved') && (
+                  <button
+                    onClick={() => {
+                      if (!confirm(`Rewrite "${o.policy_title}" from scratch?\n\nThis replaces the current draft, spends Anthropic credit, and returns the order to "needs our read" so it can be checked again.${o.status === 'approved' ? '\n\nThe copy already in the client\u2019s library is NOT changed by this.' : ''}`)) return
+                      void write(o)
+                    }}
+                    disabled={busy === o.id}
+                    className="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-40"
+                    title="Rewrite this policy against its mapped regulations. Spends Anthropic credit.">
+                    {busy === o.id ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />} Regenerate
                   </button>
                 )}
                 {(o.status === 'paid' || o.status === 'drafting') && (

@@ -18,6 +18,7 @@ import { SERVICE_TRIGGERS, resolveServiceProfile, regulationAppliesToTenant } fr
 import { renderOnboardingEmailHtml } from '../services/onboarding/render'
 import { syncCqcSeedsFromSheets, populateCqcSeedsSheet } from '../services/cqc-seeds/sheets-sync'
 import { prisma } from '../db/client'
+import { ALL_CLUSTERS, clusterByKey } from '../data/collection-clusters'
 import { writeAuditLog } from '../lib/audit'
 import { embedTexts } from '../services/rag/embedder'
 import { upsertRegulationVectors, deleteRegulationVector, deleteAllTenantPolicyVectors, getTenantVectorStats, getPlatformVectorStats } from '../services/vector/pinecone'
@@ -3471,13 +3472,28 @@ adminRouter.delete('/site-pages/:id', async (req: Request, res: Response) => {
 
 // ─── Collections (ecommerce-style SEO landing pages) ──────────────────────────
 
+// GET /clusters — the themed sixes a collection can be built from.
+//
+// Curated in code rather than assembled per page: a collection answers a search phrase, and
+// the six products that answer it rarely line up with a bundle. One cluster serves any
+// number of collections, because what differs between two pages is the copy and the search
+// intent, not the products.
+adminRouter.get('/clusters', async (_req: Request, res: Response) => {
+  ok(res, { clusters: ALL_CLUSTERS })
+})
+
 adminRouter.get('/collections', async (_req: Request, res: Response) => {
   const collections = await (prisma as any).collection.findMany({ orderBy: { updated_at: 'desc' } })
   ok(res, { collections, total: collections.length })
 })
 
 adminRouter.post('/collections', async (req: Request, res: Response) => {
-  const { title, slug } = req.body ?? {}
+  const { title, slug, cluster_key } = req.body ?? {}
+  // The grid IS the page. Without a cluster there is nothing to sell, and a collection
+  // page with an empty grid is worse than no page at all.
+  if (!cluster_key || !clusterByKey(String(cluster_key))) {
+    err(res, 'VALIDATION_ERROR', 'Choose a product cluster: the collection needs six products to show.'); return
+  }
   if (!title?.trim()) { err(res, 'VALIDATION_ERROR', 'Title is required.'); return }
   if (!slug?.trim())  { err(res, 'VALIDATION_ERROR', 'Slug is required.');  return }
 
@@ -3486,7 +3502,7 @@ adminRouter.post('/collections', async (req: Request, res: Response) => {
 
   const collection = await (prisma as any).collection.create({ data: buildCollectionData(req.body) })
   if (collection.status === 'published' && collection.slug) {
-    await submitUrlsForIndexing([`${siteUrl()}/collections/${collection.slug}`], { source: 'page' })
+    await submitUrlsForIndexing([`${siteUrl()}/collection/${collection.slug}`], { source: 'page' })
   }
   ok(res, { collection })
 })
@@ -3502,7 +3518,7 @@ adminRouter.patch('/collections/:id', async (req: Request, res: Response) => {
     data:  buildCollectionData(req.body),
   })
   if (collection.status === 'published' && collection.slug) {
-    await submitUrlsForIndexing([`${siteUrl()}/collections/${collection.slug}`], { source: 'page' })
+    await submitUrlsForIndexing([`${siteUrl()}/collection/${collection.slug}`], { source: 'page' })
   }
   ok(res, { collection })
 })
@@ -3515,8 +3531,12 @@ adminRouter.delete('/collections/:id', async (req: Request, res: Response) => {
 function buildCollectionData(body: any) {
   const {
     title, slug, status, meta_title, meta_description, og_image_url,
-    intro, images, body: content, links, faqs,
+    intro, images, body: content, links, faqs, kind, cluster_key, eyebrow,
   } = body ?? {}
+  // A cluster belongs to one kind. Saving a training cluster onto a policy collection would
+  // give a page whose grid and whose copy disagree, so the pair is resolved together rather
+  // than each field trusted on its own.
+  const cluster = cluster_key ? clusterByKey(String(cluster_key)) : undefined
   return {
     ...(title            !== undefined && { title:            title?.trim() ?? ''            }),
     ...(slug             !== undefined && { slug:             slug?.trim()                   }),
@@ -3529,6 +3549,9 @@ function buildCollectionData(body: any) {
     ...(content          !== undefined && { body:             typeof content === 'string' ? content : '' }),
     ...(links            !== undefined && { links:            normaliseLinks(links)          }),
     ...(faqs             !== undefined && { faqs:             normaliseFaqs(faqs)            }),
+    ...(kind             !== undefined && { kind:             kind === 'training' ? 'training' : 'policies' }),
+    ...(cluster_key      !== undefined && { cluster_key:      cluster ? cluster.key : ''      }),
+    ...(eyebrow          !== undefined && { eyebrow:          eyebrow?.trim() || (cluster?.kind === 'training' ? 'Training collection' : 'Policy collection') }),
   }
 }
 

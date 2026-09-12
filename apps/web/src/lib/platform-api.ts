@@ -330,6 +330,15 @@ export interface SitePage {
 export interface CollectionImage { url: string; alt: string }
 export interface CollectionLink  { label: string; url: string }
 
+/** A curated, themed six. Reusable across any number of collections. */
+export interface ProductCluster {
+  key: string
+  label: string
+  note: string
+  kind: 'policies' | 'training'
+  items: string[]
+}
+
 export interface Collection {
   id:               string
   slug:             string
@@ -343,6 +352,9 @@ export interface Collection {
   body:             string
   links:            CollectionLink[]
   faqs:             Array<{ question: string; answer: string }>
+  kind:             'policies' | 'training'
+  cluster_key:      string
+  eyebrow:          string
   created_at:       string
   updated_at:       string
 }
@@ -1126,6 +1138,10 @@ export function createPlatformClient(token: string) {
     },
 
     collections: {
+      // The themed sixes a collection can be built from. Curated in code, so this is a
+      // read: there is nothing to create here.
+      clusters: () =>
+        adminFetch<{ clusters: ProductCluster[] }>('/clusters', token),
       list: () =>
         adminFetch<{ collections: Collection[] }>('/collections', token),
       create: (data: Partial<Collection>) =>

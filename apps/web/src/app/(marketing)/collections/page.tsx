@@ -60,7 +60,7 @@ export default async function CollectionsIndexPage() {
             return (
               <Link
                 key={c.slug}
-                href={`/collections/${c.slug}`}
+                href={`/collection/${c.slug}`}
                 className="group flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-card transition-shadow hover:shadow-card-hover"
               >
                 {cover && (

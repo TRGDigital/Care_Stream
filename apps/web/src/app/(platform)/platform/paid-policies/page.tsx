@@ -21,6 +21,8 @@ function ProductRow({ p }: { p: PolicyProduct }) {
   const [open, setOpen] = useState(false)
   const specific = p.intake_fields.filter(f => !f.shared)
   const shared = p.intake_fields.filter(f => f.shared)
+  const assumptions = p.assumption_questions ?? []
+  const notDerived = p.regulations_not_yet_derived ?? []
   return (
     <li className="px-5 py-3">
       <div className="flex flex-wrap items-center gap-3">
@@ -31,6 +33,10 @@ function ProductRow({ p }: { p: PolicyProduct }) {
         {p.taster && <span className="shrink-0 rounded-full bg-purple-50 px-2 py-0.5 text-[11px] font-semibold text-purple-700">Taster</span>}
         <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-neutral-mid">
           {specific.length === 0 ? 'Standard details only' : `${specific.length} extra detail${specific.length === 1 ? '' : 's'}`}
+        </span>
+        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+          assumptions.length ? 'bg-amber-50 text-amber-800' : 'bg-gray-100 text-neutral-mid'}`}>
+          {assumptions.length ? `${assumptions.length} assumption${assumptions.length === 1 ? '' : 's'}` : 'not derived'}
         </span>
         <span className="shrink-0 text-sm font-bold text-neutral-dark">{money(p.price_pence)}</span>
       </div>
@@ -45,6 +51,38 @@ function ProductRow({ p }: { p: PolicyProduct }) {
           ) : (
             <p className="text-neutral-mid">No policy-specific details beyond the shared set.</p>
           )}
+
+          {/* What this policy would otherwise assume. Derived from the required elements of
+              the regulations it is written against, so it is a property of the law rather
+              than of any one draft. Each line says what it is asked for, because a question
+              nobody can justify is a question a buyer will skip. */}
+          <div className="mt-3 border-t border-gray-200 pt-2">
+            <p className="mb-1 font-semibold text-neutral-dark">
+              What this policy would assume if we did not ask
+              {assumptions.length > 0 && <span className="font-normal text-neutral-mid"> ({assumptions.length} question{assumptions.length === 1 ? '' : 's'})</span>}
+            </p>
+            {assumptions.length === 0 ? (
+              <p className="text-neutral-mid">
+                Not derived yet for this policy&rsquo;s regulations. Its assumptions have not been
+                worked out, so treat any draft of it as unchecked on this point.
+              </p>
+            ) : (
+              <ul className="space-y-1">
+                {assumptions.map(q => (
+                  <li key={q.key} className="text-neutral-dark">
+                    <span className="font-medium">{q.label}</span>
+                    <span className="block text-neutral-mid">Otherwise: {q.prevents}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {notDerived.length > 0 && (
+              <p className="mt-1 text-[11px] text-amber-800">
+                {notDerived.length} of this policy&rsquo;s regulations have no questions derived yet:{' '}
+                {notDerived.join(', ')}
+              </p>
+            )}
+          </div>
         </div>
       )}
     </li>

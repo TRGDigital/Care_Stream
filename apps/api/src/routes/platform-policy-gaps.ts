@@ -8,6 +8,7 @@ import { missingPolicies } from '../services/analytics/missing-policies'
 import { writePolicy } from '../services/policy-writer/write-policy'
 import { POLICY_PRODUCTS_SEED, POLICY_BUNDLES_SEED, SHARED_INTAKE_FIELDS, COMPLETE_LIBRARY_KEY } from '../data/policy-products-seed'
 import { PRODUCT_REGULATIONS } from '../data/policy-product-regulations'
+import { questionsForReferenceKeys, regulationsWithoutQuestions } from '../data/policy-intake-questions'
 import { verifyPaidPolicyDraft, verificationFailures, isWorthRewriting } from '../services/policy-writer/verify-policy'
 import { buildPolicyProvenance, runPolicyChallenge } from '../services/policy-writer/policy-provenance'
 import { purchaseIntakeState } from '../services/policy-writer/intake'
@@ -102,7 +103,15 @@ platformPolicyGapsRouter.get('/catalogue', async (_req: Request, res: Response) 
       (prisma as any).policyProduct.findMany({ orderBy: [{ sort_order: 'asc' }, { title: 'asc' }] }),
       (prisma as any).policyBundle.findMany({ orderBy: { title: 'asc' } }),
     ])
-    ok(res, { products, bundles, shared_intake_fields: SHARED_INTAKE_FIELDS })
+    // What each policy will otherwise assume about the buyer's service, derived from the
+    // required elements of the regulations it is written against. Attached here so the
+    // catalogue list can show it per policy without a second call.
+    const withQuestions = (products as any[]).map(p => ({
+      ...p,
+      assumption_questions: questionsForReferenceKeys(p.reference_keys ?? []),
+      regulations_not_yet_derived: regulationsWithoutQuestions(p.reference_keys ?? []),
+    }))
+    ok(res, { products: withQuestions, bundles, shared_intake_fields: SHARED_INTAKE_FIELDS })
   } catch (e: any) {
     err(res, 'CATALOGUE_FAILED', e?.message ?? 'could not read the catalogue', 500)
   }

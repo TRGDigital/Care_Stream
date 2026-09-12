@@ -1341,6 +1341,10 @@ export interface PolicyProduct {
   bundle_keys: string[]; reference_keys: string[]
   intake_fields: Array<{ key: string; label: string; help?: string; shared?: boolean }>
   sort_order: number
+  /** Derived from the required elements of this policy's regulations: what it would
+   *  otherwise assume about the buyer's service. */
+  assumption_questions?: IntakeQuestion[]
+  regulations_not_yet_derived?: string[]
 }
 export interface PolicyProductBundle {
   id: string; key: string; title: string; description: string
@@ -1387,6 +1391,28 @@ export interface ProvenanceQualityStatement {
   via: string[]
 }
 
+/** A question we must ask the buyer so the policy stops assuming. */
+export interface IntakeQuestion {
+  key: string
+  label: string
+  type: 'text' | 'yesno' | 'longtext'
+  help?: string
+  /** The assumption this prevents. For reviewers, not buyers. */
+  prevents: string
+}
+
+/** Was the document finished, and what was actually checked? */
+export interface PolicyIntegrity {
+  words: number
+  sections: number
+  ends_cleanly: boolean
+  has_review_section: boolean
+  verified_at: string | null
+  checks_run: string[]
+  checks_passed: string[]
+  completeness_checked: boolean
+}
+
 /** Why a policy says what it says. Reported, never generated. */
 export interface PolicyProvenance {
   purchase_id: string
@@ -1399,6 +1425,9 @@ export interface PolicyProvenance {
   regulations: ProvenanceRegulation[]
   quality_statements: ProvenanceQualityStatement[]
   element_totals: { total: number; met: number; missing: number; unjudged: number }
+  integrity: PolicyIntegrity
+  assumption_questions: IntakeQuestion[]
+  regulations_not_yet_derived: string[]
 }
 
 export interface ChallengeItem {

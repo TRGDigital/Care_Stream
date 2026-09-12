@@ -111,11 +111,28 @@ policyShopPublicRouter.get('/products/:slug', async (req: Request, res: Response
         where: { key: { in: product.bundle_keys ?? [] }, active: true },
         select: { key: true, title: true, price_pence: true },
       }),
-      (prisma as any).externalRegulation.findMany({
-        where: { expected_policy_titles: { hasSome: titleVariants(product.title) } },
-        select: { reference_key: true, official_name: true, summary: true, required_elements: true, image_key: true },
-        orderBy: { official_name: 'asc' },
-      }).catch(() => [] as any[]),
+      // The regulations this policy is ACTUALLY written against.
+      //
+      // This used to match on expected_policy_titles, which gave the shop a different answer
+      // from the one the writer and the coverage judge use. For safeguarding-adults the page
+      // advertised Prevent, which the policy is not written against, and omitted the Care Act
+      // 2014, which it is. Selling one set of law and writing against another is the kind of
+      // difference nobody notices until a buyer checks.
+      //
+      // reference_keys is the curated mapping, and it is what grounds the document. Title
+      // matching stays only as a fallback for a product with nothing mapped, which should no
+      // longer happen.
+      (product.reference_keys ?? []).length
+        ? (prisma as any).externalRegulation.findMany({
+            where: { reference_key: { in: product.reference_keys } },
+            select: { reference_key: true, official_name: true, summary: true, required_elements: true, image_key: true },
+            orderBy: { official_name: 'asc' },
+          }).catch(() => [] as any[])
+        : (prisma as any).externalRegulation.findMany({
+            where: { expected_policy_titles: { hasSome: titleVariants(product.title) } },
+            select: { reference_key: true, official_name: true, summary: true, required_elements: true, image_key: true },
+            orderBy: { official_name: 'asc' },
+          }).catch(() => [] as any[]),
     ])
 
     // Related policies: siblings from the same bundles (the natural next purchases),

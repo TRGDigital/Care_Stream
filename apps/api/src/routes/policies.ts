@@ -8,7 +8,7 @@ import { uploadMiddleware, bulkUploadMiddleware } from '../middleware/upload'
 import { prisma } from '../db/client'
 import { getTenantId, tenantContext } from '../db/tenant-context'
 import { uploadPolicyFile, downloadExtractedText, downloadFile } from '../services/storage/s3'
-import { buildPolicyPdf } from '../services/policy/policy-pdf'
+import { buildPolicyPdf, logoForPdf } from '../services/policy/policy-pdf'
 import { extractText, isSupportedMimeType } from '../services/rag/extractor'
 import { backfillSignatures } from '../lib/policy-dedup'
 import { BUILTIN_CATEGORY_KEYS, isValidCategory } from '../lib/policy-categories'
@@ -825,10 +825,9 @@ policiesRouter.get('/:id/pdf', requireAdmin, async (req: Request, res: Response)
     const od = (tenant?.organisation_details ?? {}) as Record<string, string>
 
     // logo_url is stored as a data URL by the settings upload, so the bytes are already
-    // here -- no fetch, and nothing to fail at download time.
-    let logo: Buffer | null = null
-    const m = /^data:image\/[a-z+]+;base64,(.+)$/i.exec(String(tenant?.logo_url ?? ''))
-    if (m) { try { logo = Buffer.from(m[1], 'base64') } catch { logo = null } }
+    // here -- no fetch, and nothing to fail at download time. It is not necessarily a
+    // format pdfkit can draw, though, so logoForPdf converts before we hand it over.
+    const logo = await logoForPdf(tenant?.logo_url)
 
     const name = policy.name || policy.filename.replace(/\.[^.]+$/, '')
     const buffer = await buildPolicyPdf({

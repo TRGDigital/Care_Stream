@@ -15,6 +15,7 @@
 // h2, h3, p, ul/ol/li, strong, em, br.
 
 import PDFDocument from 'pdfkit'
+import sharp from 'sharp'
 
 // These six imports are never referenced, and must not be removed.
 //
@@ -35,6 +36,48 @@ import 'pdfkit/standard-fonts/TimesItalic'
 import 'pdfkit/standard-fonts/TimesBoldItalic'
 import 'pdfkit/standard-fonts/Helvetica'
 import 'pdfkit/standard-fonts/HelveticaBold'
+
+/** The letterhead logo, decoded and in a format pdfkit can actually draw.
+ *
+ *  pdfkit renders PNG and JPEG only. The settings upload stores whatever the user chose as a
+ *  data URL, and in practice that is WebP -- every tenant we have stores WebP. doc.image()
+ *  throws on it, the draw was wrapped in a silent catch, and the letterhead came out bare
+ *  with nothing to say why. So convert first, and say so when it cannot be done.
+ *
+ *  Returns null rather than throwing: a logo we cannot decode must not cost them the policy. */
+export async function logoForPdf(dataUrl: string | null | undefined): Promise<Buffer | null> {
+  const m = /^data:image\/([a-z+]+);base64,(.+)$/i.exec(String(dataUrl ?? ''))
+  if (!m) return null
+  const [, format, b64] = m
+  let raw: Buffer
+  try {
+    raw = Buffer.from(b64, 'base64')
+  } catch {
+    console.warn('[policy-pdf] Logo is not valid base64; letterhead will have no logo')
+    return null
+  }
+  // Drawn into a 140x44 box, so anything wider than 2x that is weight for nothing: the
+  // uploaded logo is often a full-resolution export, and embedding it whole was adding
+  // ~200KB to every policy PDF.
+  const supported = /^(png|jpe?g)$/i.test(format)
+  try {
+    return await sharp(raw)
+      .resize({ width: LOGO_MAX_WIDTH, withoutEnlargement: true })
+      .png()
+      .toBuffer()
+  } catch (e: any) {
+    // A format sharp could not read. If pdfkit can draw the original anyway, use it
+    // rather than dropping a logo that would have worked.
+    if (supported) {
+      console.warn(`[policy-pdf] Could not resize the logo (${e?.message}); using it at full size`)
+      return raw
+    }
+    console.warn(`[policy-pdf] Could not convert a ${format} logo to PNG (${e?.message}); letterhead will have no logo`)
+    return null
+  }
+}
+
+const LOGO_MAX_WIDTH = 280   // 2x the 140pt draw box, so it stays crisp in print
 
 export interface PolicyPdfOrg {
   home_name?: string | null
@@ -144,8 +187,11 @@ export function buildPolicyPdf(opts: {
     try {
       doc.image(org.logo, MARGIN.left, y, { fit: [140, 44] })
       y += 52
-    } catch {
-      // a logo we cannot decode must not cost them the document
+    } catch (e: any) {
+      // A logo we cannot draw must not cost them the document, but it must not vanish
+      // silently either -- that is what hid the WebP problem. logoForPdf should have
+      // converted it already, so reaching here means something new.
+      console.warn(`[policy-pdf] Logo could not be drawn (${e?.message}); continuing without it`)
     }
   }
   if (org?.home_name) {

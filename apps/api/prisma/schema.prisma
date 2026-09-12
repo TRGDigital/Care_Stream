@@ -2674,6 +2674,28 @@ model PolicyBundle {
   @@map("policy_bundles")
 }
 
+// What a buyer has told us about their own service.
+//
+// Held per TENANT, not per purchase, because the questions are derived from regulations
+// and the same regulation sits behind many policies: "do you use an electronic care
+// system" is asked by data protection, GDPR, Caldicott, good governance and accessible
+// information. A buyer answers it once and every policy they own uses the answer.
+//
+// One row per question so an answer carries who gave it and when. A policy is written from
+// these, and if one later turns out to be wrong we need to know whose answer it was.
+model PolicyIntakeAnswer {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenant_id    String
+  question_key String
+  value        String   @default("")
+  answered_at  DateTime @default(now())
+  answered_by  String?
+
+  @@unique([tenant_id, question_key], map: "policy_intake_answers_tenant_question_key")
+  @@index([tenant_id], map: "policy_intake_answers_tenant_idx")
+  @@map("policy_intake_answers")
+}
+
 model PolicyPurchase {
   id                String    @id @default(uuid()) @db.Uuid
   tenant_id         String

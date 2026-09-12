@@ -25,6 +25,7 @@ import { prisma } from '../../db/client'
 import { callClaudeDetailed } from '../ai/claude'
 import { ROLE_PHRASES } from '../../lib/role-phrases'
 import { purchaseIntakeState } from './intake'
+import { intakeFactsFor, intakeUnknownsFor } from './intake-answers'
 
 const MODEL_SONNET = 'claude-sonnet-4-5-20250929'
 
@@ -52,6 +53,19 @@ Rules that matter more than style:
 - Never invent a fact about this home. If you do not know something, write the requirement
   rather than a fabricated detail. Never invent a person's name, a date, a certificate number,
   a contractor or a piece of equipment.
+- Never invent a PRACTICE either. This is the rule that gets broken. "We hold a stock of easy
+  read templates", "we assess our environment annually", "our system prompts staff", "we use
+  NHSmail" are not placeholders and will pass every other check, but they are claims about
+  what this home does, and a policy claiming a practice the home does not have is a written
+  admission of non-compliance handed to an inspector by the home itself.
+  Where a section needs a fact you have NOT been given below, write it as an obligation or a
+  condition, never as an accomplished fact:
+    say  "Where the service uses an electronic care record, needs are flagged on opening it."
+    say  "The registered manager will ensure an annual accessibility assessment is carried out."
+    not  "In our electronic care management system a banner appears when the record is opened."
+    not  "We assess our environment annually."
+  A policy that says what must happen is useful. A policy that says what already happens,
+  wrongly, is evidence against them.
 - Where a named role holder is given below, use that person's name once, at the point the role
   is first given a responsibility. Where no name is given, name the ROLE only and never write
   a placeholder such as [name] or TBC.
@@ -165,6 +179,15 @@ export async function writePolicy(purchaseId: string, revisionNotes: string[] = 
   const facts = intake.fields.filter(f => f.supplied && f.key !== 'address')
     .map(f => `- ${f.label}: ${f.value}`)
 
+  // What the buyer has told us about their own service, and what they have not. Naming the
+  // unknowns explicitly matters more than the facts do: left to itself the writer fills the
+  // gaps confidently and plausibly, and nothing downstream can tell an answered question
+  // from an invented one.
+  const [serviceFacts, unknowns] = await Promise.all([
+    intakeFactsFor(purchase.tenant_id, purchase.reference_keys ?? []),
+    intakeUnknownsFor(purchase.tenant_id, purchase.reference_keys ?? []),
+  ])
+
   const baseMessage = buildUserMessage({
     title:    purchase.policy_title,
     homeName: tenant.name,
@@ -172,6 +195,8 @@ export async function writePolicy(purchaseId: string, revisionNotes: string[] = 
     regs,
     roleNames,
   }) + (facts.length ? `\n\nFACTS PROVIDED BY THE ORGANISATION. Use each where the policy naturally calls for it; do not invent any detail beyond these:\n${facts.join('\n')}` : '')
+    + (serviceFacts.length ? `\n\nWHAT THIS SERVICE HAS TOLD US ABOUT ITSELF. These are true and may be stated as fact:\n${serviceFacts.join('\n')}` : '')
+    + (unknowns.length ? `\n\nNOT KNOWN ABOUT THIS SERVICE. They have not answered these, so you do not know the answer. Write the relevant sections as an obligation or a condition, never as something they already do, and never guess which way it goes:\n${unknowns.map(u => `- ${u.label}`).join('\n')}` : '')
   const userMessage = revisionNotes.length
     ? `${baseMessage}\n\nA PREVIOUS DRAFT OF THIS POLICY FAILED VERIFICATION. This rewrite must fix every one of these, without weakening anything else:\n${revisionNotes.map(n => `- ${n}`).join('\n')}`
     : baseMessage

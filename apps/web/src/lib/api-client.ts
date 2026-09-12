@@ -290,6 +290,12 @@ export function createApiClient(token: string) {
     },
 
     policies: {
+      // What we still need to know about this service before its policies stop guessing.
+      intake: () => apiFetch<{ intake: TenantIntake }>('/policies/intake', token),
+      saveIntake: (answers: Record<string, string>) =>
+        apiFetch<{ saved: number; cleared: number; intake: TenantIntake }>('/policies/intake', token, {
+          method: 'POST', body: JSON.stringify({ answers }),
+        }),
       // The original uploaded file, streamed as a real download. apiFetch is not used:
       // it parses every response as JSON, and this one is a PDF or a Word document.
       // Returns null when the policy has no uploaded original (CareStream-written
@@ -1415,4 +1421,23 @@ export function createApiClient(token: string) {
       }>('/analytics/language-switches', token),
     },
   }
+}
+
+/** A question we must ask so a bought policy stops assuming. */
+export interface IntakeQuestion {
+  key: string
+  label: string
+  type: 'text' | 'yesno' | 'longtext'
+  help?: string
+  prevents: string
+}
+
+/** What this service has told us, and what it has not. */
+export interface TenantIntake {
+  questions: IntakeQuestion[]
+  answers: Record<string, string>
+  answered: number
+  missing: number
+  outstanding: IntakeQuestion[]
+  regulations_not_yet_derived: string[]
 }

@@ -13,7 +13,7 @@ import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, type PolicyProduct, type PolicyProductBundle } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
 import { PolicyOrders } from '@/components/platform/policy-orders'
-import { Loader2, RefreshCw, Package, Tag, ClipboardList } from 'lucide-react'
+import { Loader2, RefreshCw, Package, Tag, ClipboardList, ChevronRight } from 'lucide-react'
 
 const money = (p: number) => `£${(p / 100).toFixed(p % 100 === 0 ? 0 : 2)}`
 
@@ -26,9 +26,17 @@ function ProductRow({ p }: { p: PolicyProduct }) {
   return (
     <li className="px-5 py-3">
       <div className="flex flex-wrap items-center gap-3">
-        <button onClick={() => setOpen(v => !v)} className="min-w-0 flex-1 text-left">
-          <span className="block text-sm font-medium text-neutral-dark">{p.title}</span>
-          <span className="block truncate text-xs text-neutral-mid">{p.description}</span>
+        {/* The row has always been expandable and never looked it. A chevron that turns,
+            and a line saying what is behind it, so nobody has to discover it by clicking. */}
+        <button onClick={() => setOpen(v => !v)} className="group flex min-w-0 flex-1 items-start gap-2 text-left">
+          <ChevronRight size={14} className={`mt-0.5 shrink-0 text-neutral-mid transition-transform group-hover:text-neutral-dark ${open ? 'rotate-90' : ''}`} />
+          <span className="min-w-0">
+            <span className="block text-sm font-medium text-neutral-dark group-hover:underline">{p.title}</span>
+            <span className="block truncate text-xs text-neutral-mid">{p.description}</span>
+            <span className="mt-0.5 block text-[11px] font-medium text-teal">
+              {open ? 'Hide' : 'Show'} the details we ask for and what this policy would otherwise assume
+            </span>
+          </span>
         </button>
         {p.taster && <span className="shrink-0 rounded-full bg-purple-50 px-2 py-0.5 text-[11px] font-semibold text-purple-700">Taster</span>}
         <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-neutral-mid">

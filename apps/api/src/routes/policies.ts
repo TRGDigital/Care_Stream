@@ -9,6 +9,7 @@ import { prisma } from '../db/client'
 import { getTenantId, tenantContext } from '../db/tenant-context'
 import { uploadPolicyFile, downloadExtractedText, downloadFile } from '../services/storage/s3'
 import { buildPolicyPdf, logoForPdf } from '../services/policy/policy-pdf'
+import { tenantIntakeState, saveIntakeAnswers } from '../services/policy-writer/intake-answers'
 import { extractText, isSupportedMimeType } from '../services/rag/extractor'
 import { backfillSignatures } from '../lib/policy-dedup'
 import { BUILTIN_CATEGORY_KEYS, isValidCategory } from '../lib/policy-categories'
@@ -141,6 +142,36 @@ policiesRouter.post('/check', requireAdmin, async (req: Request, res: Response) 
 // ─── GET /policies/duplicates ─────────────────────────────────────────────────
 // Policies flagged as possible content duplicates of an existing policy, awaiting
 // the tenant's decision (keep both / replace / discard).
+// GET /intake — what we still need to know about this service.
+//
+// Asked here rather than at checkout on purpose. Nine identity questions on the buying page
+// is a purchase; forty-four is a decision to come back later. Once the money is taken, the
+// same questions improve a document they already own, which is a different conversation.
+policiesRouter.get('/intake', requireAdmin, async (_req: Request, res: Response) => {
+  try {
+    ok(res, { intake: await tenantIntakeState(getTenantId()) })
+  } catch (e: any) {
+    console.error(`[intake] tenant=${getTenantId()}: ${e?.stack ?? e?.message ?? e}`)
+    err(res, 'INTAKE_FAILED', e?.message ?? 'could not read what we still need', 500)
+  }
+})
+
+// POST /intake — save answers. Body: { answers: { question_key: value } }
+policiesRouter.post('/intake', requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const answers = req.body?.answers
+    if (!answers || typeof answers !== 'object' || Array.isArray(answers)) {
+      err(res, 'BAD_ANSWERS', 'Send answers as an object of question_key to value.', 400); return
+    }
+    const who = (req as any).user?.email ?? null
+    const result = await saveIntakeAnswers(getTenantId(), answers as Record<string, string>, who)
+    ok(res, { ...result, intake: await tenantIntakeState(getTenantId()) })
+  } catch (e: any) {
+    console.error(`[intake] save tenant=${getTenantId()}: ${e?.stack ?? e?.message ?? e}`)
+    err(res, 'INTAKE_SAVE_FAILED', e?.message ?? 'could not save those answers', 500)
+  }
+})
+
 policiesRouter.get('/duplicates', requireAdmin, async (_req: Request, res: Response) => {
   const tenantId = getTenantId()
   const flagged = await (prisma as any).policy.findMany({

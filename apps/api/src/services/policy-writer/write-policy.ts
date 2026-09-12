@@ -22,7 +22,7 @@
 // it in whenever they do name someone, without the document being rewritten.
 
 import { prisma } from '../../db/client'
-import { callClaude } from '../ai/claude'
+import { callClaudeDetailed } from '../ai/claude'
 import { ROLE_PHRASES } from '../../lib/role-phrases'
 import { purchaseIntakeState } from './intake'
 
@@ -176,15 +176,31 @@ export async function writePolicy(purchaseId: string, revisionNotes: string[] = 
     ? `${baseMessage}\n\nA PREVIOUS DRAFT OF THIS POLICY FAILED VERIFICATION. This rewrite must fix every one of these, without weakening anything else:\n${revisionNotes.map(n => `- ${n}`).join('\n')}`
     : baseMessage
 
-  const markdown = (await callClaude(
+  const reply = await callClaudeDetailed(
     await getPolicyWriterPrompt(),
     userMessage,
-    // Long enough for the three thousand words the hand-written drafts ran to, and a low
-    // temperature because this is a compliance document, not a piece of writing.
-    { model: MODEL_SONNET, maxTokens: 8000, temperature: 0.2, feature: 'policy_writer' },
-  )).trim()
+    // 8000 was set when a policy meant the three thousand words the hand-written drafts ran
+    // to. Once reference_keys were populated a policy became one section per required
+    // element, and the first grounded draft came back at 6,278 words having hit the ceiling
+    // exactly: it stopped mid-word, in the middle of the Review section, and passed every
+    // check we had because none of them asked whether the document was finished.
+    //
+    // Low temperature because this is a compliance document, not a piece of writing.
+    { model: MODEL_SONNET, maxTokens: 24000, temperature: 0.2, feature: 'policy_writer' },
+  )
+  const markdown = reply.text.trim()
 
   if (markdown.length < 800) throw new Error('The written policy came back too short to use')
+
+  // A document cut off at the token limit must not be stored as a draft. It reads as a
+  // policy until the sentence it stops in, and the whole point of the gate is that nothing
+  // reaches a care home's name unchecked. Throwing sends it back round the write loop.
+  if (reply.stopReason === 'max_tokens') {
+    throw new Error(
+      'The policy was cut off at the length limit before it finished. It has not been saved. '
+      + 'Try again, and if it keeps happening this policy needs a higher limit.',
+    )
+  }
 
   return {
     markdown,

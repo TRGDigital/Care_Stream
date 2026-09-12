@@ -22,6 +22,41 @@ export interface ClaudeOptions {
   feature?:    string   // cost attribution, e.g. 'audit_recs' (defaults to any outer context / 'other')
 }
 
+/** A reply plus WHY the model stopped.
+ *
+ *  stop_reason is the only reliable way to know a reply was cut off at max_tokens rather
+ *  than finished. callClaude throws it away, which is fine for a short answer and not fine
+ *  for a document: a truncated policy looks like a policy right up to the point it stops
+ *  mid-word, and every check we run on it passes. */
+export interface ClaudeReply { text: string; stopReason: string | null }
+
+export async function callClaudeDetailed(
+  systemPrompt: string,
+  userMessage:  string,
+  options?:     ClaudeOptions,
+): Promise<ClaudeReply> {
+  const model = options?.model ?? MODEL
+  const exec = async (): Promise<ClaudeReply> => {
+    const response = await client.messages.create({
+      model,
+      max_tokens: options?.maxTokens  ?? 4096,
+      ...(options?.temperature !== undefined ? { temperature: options.temperature } : {}),
+      system:     withBritishEnglish(systemPrompt),
+      messages:   [{ role: 'user', content: userMessage }],
+    })
+
+    recordUsage(model, response.usage)
+
+    const block = response.content[0]
+    if (!block || block.type !== 'text') {
+      throw new Error('Claude returned no text content')
+    }
+
+    return { text: block.text, stopReason: response.stop_reason ?? null }
+  }
+  return options?.feature ? withAiFeature(options.feature, exec) : exec()
+}
+
 export async function callClaude(
   systemPrompt: string,
   userMessage:  string,

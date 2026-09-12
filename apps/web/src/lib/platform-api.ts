@@ -1355,6 +1355,7 @@ export interface PolicyOrderVerification {
     substitution: { passed: boolean; issues: string[] }
     terminology:  { passed: boolean; issues: string[] }
     identity:     { passed: boolean; issues: string[] }
+    completeness: { passed: boolean; issues: string[] }
     coverage:     { passed: boolean; issues: string[]; regulations: Array<{ reference_key: string; official_name: string; met: boolean; missing_elements: string[] }> }
   }
 }

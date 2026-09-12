@@ -248,7 +248,7 @@ export function PolicyOrders({ token, scope }: { token: string; scope: 'subscrib
                 {(o.status === 'drafted' || o.status === 'approved') && (
                   <button
                     onClick={() => {
-                      if (!confirm(`Rewrite "${o.policy_title}" from scratch?\n\nThis replaces the current draft, spends Anthropic credit, and returns the order to "needs our read" so it can be checked again.${o.status === 'approved' ? '\n\nThe copy already in the client\u2019s library is NOT changed by this.' : ''}`)) return
+                      if (!confirm(`Rewrite "${o.policy_title}" from scratch?\n\nThis replaces the current draft, spends Anthropic credit, and returns the order to "needs our read" so it can be checked again.${o.status === 'approved' ? '\n\nTheir current copy stays live until you approve the rewrite, which then replaces it.' : ''}`)) return
                       void write(o)
                     }}
                     disabled={busy === o.id}
@@ -337,7 +337,9 @@ export function PolicyOrders({ token, scope }: { token: string; scope: 'subscrib
                     {reading.draft.split(/\s+/).length} words.{' '}
                     {delivered
                       ? `Already delivered${o?.approved_at ? ` on ${when(o.approved_at)}` : ''}.`
-                      : "Approving puts this in the client's library."}
+                      : o?.policy_id
+                        ? 'Approving replaces the copy already in their library with this one, as a new version, and sends it back through their own approval chain.'
+                        : "Approving puts this in the client's library."}
                   </p>
                   {/* No approve button once it is delivered: the action is done, and a live
                       button here invites a second delivery of the same document. */}
@@ -346,7 +348,11 @@ export function PolicyOrders({ token, scope }: { token: string; scope: 'subscrib
                       onClick={() => { if (o) deliver(o) }}
                       disabled={busy === reading.id}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-xs font-semibold text-white hover:bg-teal/90 disabled:opacity-40">
-                      {busy === reading.id ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} {o?.verification?.passed ? 'Approve and deliver' : 'Approve anyway\u2026'}
+                      {busy === reading.id ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} {
+                        o?.policy_id
+                          ? (o?.verification?.passed ? 'Approve and replace their copy' : 'Replace anyway\u2026')
+                          : (o?.verification?.passed ? 'Approve and deliver' : 'Approve anyway\u2026')
+                      }
                     </button>
                   )}
                 </div>

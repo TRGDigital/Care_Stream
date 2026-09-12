@@ -98,6 +98,24 @@ export function titleVariants(title: string): string[] {
   return [...variants]
 }
 
+// GET /catalogue — every policy on sale, as slugs and titles.
+//
+// Exists so the marketing site can build a page per policy from what is actually for sale,
+// rather than from a list hand-copied into the front end that drifts the first time a
+// product is added or withdrawn.
+policyShopPublicRouter.get('/catalogue', async (_req: Request, res: Response) => {
+  try {
+    const products = await (prisma as any).policyProduct.findMany({
+      where:   { active: true },
+      select:  { slug: true, title: true, price_pence: true, taster: true },
+      orderBy: [{ sort_order: 'asc' }, { title: 'asc' }],
+    })
+    ok(res, { products })
+  } catch (e: any) {
+    err(res, 'CATALOGUE_FAILED', e?.message ?? 'could not read the catalogue', 500)
+  }
+})
+
 // GET /products/:slug — one product, its intake demo and the regulations analysed.
 policyShopPublicRouter.get('/products/:slug', async (req: Request, res: Response) => {
   try {

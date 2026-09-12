@@ -14,9 +14,26 @@ import { HomeFaq, type Faq } from '@/components/marketing/home-faq'
 // use the training-page theme; Len is producing a hero image per page — drop it in at
 // HERO_IMAGE below when ready.
 //
-// Only the slugs in LAUNCH_SLUGS render; everything else 404s until we deliberately
-// roll pages out. Adding a page later = adding its slug here.
-const LAUNCH_SLUGS = ['safeguarding-adults']
+// Every policy on sale gets a page.
+//
+// This was one hand-kept slug while the template was being perfected. A hardcoded list is
+// the wrong shape now: the catalogue is the thing that decides what we sell, and a list in
+// the front end drifts the first time a product is added or withdrawn. The pages are built
+// from the live catalogue instead.
+//
+// The fallback is the original single slug rather than an empty list, because a build that
+// cannot reach the API should ship the page we know is right rather than silently 404 the
+// whole shop.
+const FALLBACK_SLUGS = ['safeguarding-adults']
+
+async function saleableSlugs(): Promise<string[]> {
+  try {
+    const res = await fetch(`${API_URL}/public/policy-shop/catalogue`, { next: { revalidate: 3600 } })
+    if (!res.ok) return FALLBACK_SLUGS
+    const products = (await res.json()).data?.products as Array<{ slug: string }> | undefined
+    return products?.length ? products.map(p => p.slug) : FALLBACK_SLUGS
+  } catch { return FALLBACK_SLUGS }
+}
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 const HERO_IMAGE = '/images/care-provider-hero.jpg'   // same theme as the training pages
@@ -39,13 +56,12 @@ async function getProduct(slug: string): Promise<ShopProduct | null> {
   } catch { return null }
 }
 
-export function generateStaticParams() {
-  return LAUNCH_SLUGS.map(slug => ({ slug }))
+export async function generateStaticParams() {
+  return (await saleableSlugs()).map(slug => ({ slug }))
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  if (!LAUNCH_SLUGS.includes(slug)) return {}
   const data = await getProduct(slug)
   if (!data) return {}
   const price = `£${(data.product.price_pence / 100).toFixed(0)}`
@@ -59,7 +75,7 @@ const money = (p: number) => `£${(p / 100).toFixed(p % 100 === 0 ? 0 : 2)}`
 
 export default async function PolicyProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  if (!LAUNCH_SLUGS.includes(slug)) notFound()
+  // On sale or not is decided by the catalogue: getProduct returning null is the 404.
   const data = await getProduct(slug)
   if (!data) notFound()
   // Deploys build web and api in parallel, so this page can be prerendered against
@@ -251,7 +267,7 @@ export default async function PolicyProductPage({ params }: { params: Promise<{ 
             </p>
             <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {related.map(rp => {
-                const launched = LAUNCH_SLUGS.includes(rp.slug)
+                const launched = true   // every policy on sale has a page
                 return (
                   <div key={rp.slug} className="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-card">
                     {/* IMAGE SLOT: per-policy card image from Len, training-card theme. */}

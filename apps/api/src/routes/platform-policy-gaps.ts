@@ -424,16 +424,23 @@ platformPolicyGapsRouter.post('/orders/:id/deliver', async (req: Request, res: R
     if (!order.draft_content) return err(res, 'NO_DRAFT', 'Write the policy before approving it', 409)
     if (order.status === 'approved') return err(res, 'ALREADY_DELIVERED', 'That policy has already been delivered', 409)
 
-    // Regenerating a delivered order returns it to 'drafted', which puts Approve back in
-    // reach -- and this route creates a NEW Policy row every time. Approving twice would
-    // leave the client holding two documents with the same title and no way to tell which
-    // is current. Refuse, rather than quietly duplicating.
+    // Re-delivery supersedes the copy already in the library rather than adding a second
+    // one. A rewritten policy has to be able to REACH the client: the ones most likely to
+    // need rewriting are the ones already delivered, either because the law behind them
+    // moved or because the client has since told us something the first draft guessed at.
     //
-    // Superseding the delivered copy in place (new version on the same policy, re-ingested,
-    // back through the home's own approval chain) is the real answer and is not built yet.
-    if (order.policy_id) {
-      return err(res, 'ALREADY_IN_LIBRARY',
-        'This order has already put a policy in the client\u2019s library. Rewriting it here does not replace that copy, and approving again would add a second one. Replacing a delivered policy is not supported yet.', 409)
+    // The same policy row gains a version. Keeping the id matters beyond tidiness: adopted
+    // changes, approvals, read receipts and the coverage analysis all point at it, and a new
+    // row would silently orphan every one of them while looking like it had worked.
+    const superseding = order.policy_id
+      ? await (prisma as any).policy.findFirst({
+          where:  { id: order.policy_id, tenant_id: order.tenant_id },
+          select: { id: true, version: true, name: true },
+        })
+      : null
+    if (order.policy_id && !superseding) {
+      return err(res, 'POLICY_GONE',
+        'This order points at a policy that is no longer in the client\u2019s library, so there is nothing to replace. Ask them to restore it, or raise a fresh order.', 409)
     }
 
     // The gate: nothing ships unverified. A red or missing checklist blocks Approve.
@@ -465,7 +472,8 @@ platformPolicyGapsRouter.post('/orders/:id/deliver', async (req: Request, res: R
     })
     if (!owner) return err(res, 'NO_ADMIN', 'That client has no active admin to own the policy', 409)
 
-    const policyId = randomUUID()
+    const policyId = superseding?.id ?? randomUUID()
+    const version  = (superseding?.version ?? 0) + 1
     const filename = `${order.policy_title.replace(/[^A-Za-z0-9 ]+/g, '').trim() || 'Policy'}.md`
     const buffer = Buffer.from(order.draft_content, 'utf8')
 
@@ -477,21 +485,30 @@ platformPolicyGapsRouter.post('/orders/:id/deliver', async (req: Request, res: R
       mimeType: 'text/markdown',
     })
 
-    await (prisma as any).policy.create({
-      data: {
-        id:                 policyId,
-        tenant_id:          order.tenant_id,
-        name:               order.policy_title,
-        filename,
-        s3_key:             s3Key,
-        document_category:  'internal_policy',
-        version:            1,
-        status:             'processing',
-        uploaded_by:        owner.id,
-        // Provenance, so nobody has to wonder later where this document came from.
-        carestream_written: true,
-      },
-    })
+    if (superseding) {
+      // uploaded_by is left as it was: the person who first put this in the library did,
+      // and rewriting the document does not change who owns it.
+      await (prisma as any).policy.update({
+        where: { id: policyId },
+        data:  { filename, s3_key: s3Key, version, status: 'processing', carestream_written: true },
+      })
+    } else {
+      await (prisma as any).policy.create({
+        data: {
+          id:                 policyId,
+          tenant_id:          order.tenant_id,
+          name:               order.policy_title,
+          filename,
+          s3_key:             s3Key,
+          document_category:  'internal_policy',
+          version,
+          status:             'processing',
+          uploaded_by:        owner.id,
+          // Provenance, so nobody has to wonder later where this document came from.
+          carestream_written: true,
+        },
+      })
+    }
 
     // Index it, so it is searchable and the next coverage run reads it as evidence rather
     // than reporting the gap we were just paid to close.
@@ -502,7 +519,7 @@ platformPolicyGapsRouter.post('/orders/:id/deliver', async (req: Request, res: R
       document_category: 'internal_policy',
       filename,
       mime_type:         'text/markdown',
-      version:           1,
+      version,
     }).catch(() => {})
 
     // Into the home's own approval chain, not around it.
@@ -513,15 +530,38 @@ platformPolicyGapsRouter.post('/orders/:id/deliver', async (req: Request, res: R
     // submitForApproval an adopted change uses means their two settings decide what happens
     // next, exactly as they do for everything else: care manager, then external reviewer, or
     // straight to published when both are off.
-    await (prisma as any).policyDocument.create({
-      data: {
-        tenant_id:        order.tenant_id,
-        policy_id:        policyId,
-        original_content: order.draft_content,
-        draft_content:    order.draft_content,
-        version:          '1.0',
-      },
-    })
+    // The readable document behind the policy. On a supersede this is replaced rather than
+    // added to: staff must not be able to open a version we have withdrawn.
+    const existingDoc = superseding
+      ? await (prisma as any).policyDocument.findFirst({
+          where: { tenant_id: order.tenant_id, policy_id: policyId },
+          orderBy: { created_at: 'desc' }, select: { id: true },
+        })
+      : null
+    if (existingDoc) {
+      await (prisma as any).policyDocument.update({
+        where: { id: existingDoc.id },
+        data:  {
+          original_content: order.draft_content,
+          draft_content:    order.draft_content,
+          version:          `${version}.0`,
+        },
+      })
+    } else {
+      await (prisma as any).policyDocument.create({
+        data: {
+          tenant_id:        order.tenant_id,
+          policy_id:        policyId,
+          original_content: order.draft_content,
+          draft_content:    order.draft_content,
+          version:          `${version}.0`,
+        },
+      })
+    }
+
+    // Back through the home's own approval chain, exactly as the first delivery was. A
+    // replacement is a new document to the people who have to stand behind it, so a home
+    // that requires care manager approval gets to approve this one too.
     const approval = await submitForApproval(order.tenant_id, policyId, 'CareStream')
 
     const updated = await (prisma as any).policyPurchase.update({
@@ -535,7 +575,11 @@ platformPolicyGapsRouter.post('/orders/:id/deliver', async (req: Request, res: R
     })
     // approval.status tells the caller where it landed: pending_manager, pending_external or
     // published. "Delivered" on our side and "live" on theirs are different moments.
-    ok(res, { order: updated, policy_id: policyId, approval: approval?.status ?? 'unknown' })
+    ok(res, {
+      order: updated, policy_id: policyId, version,
+      superseded: Boolean(superseding),
+      approval: approval?.status ?? 'unknown',
+    })
   } catch (e: any) {
     err(res, 'DELIVER_FAILED', e?.message ?? 'could not deliver that policy', 500)
   }

@@ -168,6 +168,45 @@ policyPurchasesRouter.post('/:id/intake', async (req: Request, res: Response) =>
         where: { id: user.tenant_id },
         data: { organisation_details: mergedDetails, ...renaming },
       })
+
+      // A policy written while the tenant was still "Policy customer" has that phrase in its
+      // prose, permanently: the writer is told to name the organisation and it named the one
+      // it was given. Nothing re-checked it afterwards, so the document shipped looking
+      // personalised while naming nobody. The identity check passed at the time and only
+      // began to fail once the rename happened, which is how it surfaced at all.
+      //
+      // Flag every already-written draft that does not contain the real name, so it shows in
+      // the queue as needing a rewrite rather than sitting quietly wrong.
+      if (renaming.name) {
+        const stale = await (prisma as any).policyPurchase.findMany({
+          where:  { tenant_id: user.tenant_id, draft_content: { not: null } },
+          select: { id: true, draft_content: true, policy_title: true },
+        })
+        const needsRewrite = (stale as Array<{ id: string; draft_content: string }>)
+          .filter(p2 => !p2.draft_content.toLowerCase().includes(String(renaming.name).toLowerCase()))
+        for (const p2 of needsRewrite) {
+          await (prisma as any).policyPurchase.update({
+            where: { id: p2.id },
+            data:  {
+              verification: {
+                passed: false,
+                checked_at: new Date().toISOString(),
+                stale_identity: true,
+                checks: {
+                  substitution: { passed: true, issues: [] },
+                  terminology:  { passed: true, issues: [] },
+                  identity:     { passed: false, issues: [`Written before this organisation was named. The document does not say "${renaming.name}", so it must be rewritten before it is delivered.`] },
+                  completeness: { passed: true, issues: [] },
+                  coverage:     { passed: false, assessable: true, issues: ['Not re-checked since the organisation was named.'], regulations: [] },
+                },
+              },
+            },
+          }).catch(() => {})
+        }
+        if (needsRewrite.length) {
+          console.warn(`[intake] tenant=${user.tenant_id} renamed to "${renaming.name}"; ${needsRewrite.length} draft(s) flagged for rewrite`)
+        }
+      }
     }
     let updated = purchase
     if (Object.keys(specificUpdates).length) {

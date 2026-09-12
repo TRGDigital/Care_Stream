@@ -42,6 +42,7 @@ export type PolicyVerification = {
     substitution: { passed: boolean; issues: string[] }
     terminology:  { passed: boolean; issues: string[] }
     identity:     { passed: boolean; issues: string[] }
+    completeness: { passed: boolean; issues: string[] }
     coverage:     {
       passed: boolean
       // Whether coverage could be judged at all. A draft that fails because the CATALOGUE
@@ -69,6 +70,7 @@ export function verificationFailures(v: PolicyVerification): string[] {
   out.push(...v.checks.substitution.issues)
   out.push(...v.checks.terminology.issues)
   out.push(...v.checks.identity.issues)
+  out.push(...v.checks.completeness.issues)
   for (const r of v.checks.coverage.regulations) {
     for (const m of r.missing_elements) out.push(`${r.official_name}: the draft does not address "${m}"`)
   }
@@ -109,6 +111,27 @@ export async function verifyPaidPolicyDraft(purchaseId: string): Promise<PolicyV
     identity.issues.push(`The organisation's name ("${homeName || 'unknown'}") does not appear in the document`)
   }
   identity.passed = identity.issues.length === 0
+
+  // Did the document actually finish?
+  //
+  // Nothing asked this before, and a policy that stopped mid-word at the token ceiling
+  // passed all four checks: the elements were covered earlier in the text, there were no
+  // placeholders, the terminology was current and the name was present. It read as a policy
+  // right up to where it stopped. Deterministic on purpose -- a structural question deserves
+  // a structural answer, and this must hold for drafts written before the limit was raised.
+  const completeness = { passed: true, issues: [] as string[] }
+  const body = draft.trim()
+  const tail = body.slice(-90).replace(/\s+/g, ' ')
+  if (!/[.!?:)\]"'\u2019\u201d]$/.test(body)) {
+    completeness.issues.push(`The document stops mid-sentence, so it was cut off rather than finished: "...${tail}"`)
+  }
+  const review = body.match(/^##\s+Review\b([\s\S]*)$/m)
+  if (!review) {
+    completeness.issues.push('The document has no "Review" section, which is the last section every policy must end with.')
+  } else if (review[1].replace(/\s+/g, ' ').trim().length < 40) {
+    completeness.issues.push('The "Review" section is empty, so the document was cut off as it reached the end.')
+  }
+  completeness.passed = completeness.issues.length === 0
 
   // ── Coverage judge ──────────────────────────────────────────────────────────
   const coverage = {
@@ -167,9 +190,10 @@ Reply with JSON ONLY, no code fences: {"regulations":[{"reference_key":"...","el
   }
 
   const verification: PolicyVerification = {
-    passed: substitution.passed && terminology.passed && identity.passed && coverage.passed,
+    passed: substitution.passed && terminology.passed && identity.passed
+            && completeness.passed && coverage.passed,
     checked_at: new Date().toISOString(),
-    checks: { substitution, terminology, identity, coverage },
+    checks: { substitution, terminology, identity, completeness, coverage },
   }
 
   await (prisma as any).policyPurchase.update({

@@ -92,8 +92,8 @@ export function PolicyOrders({ token, scope }: { token: string; scope: 'subscrib
     finally { setBusy(null) }
   }
 
-  async function read(o: PolicyOrder) {
-    setReadTab('document')
+  async function read(o: PolicyOrder, tab: 'document' | 'provenance' = 'document') {
+    setReadTab(tab)
     setBusy(o.id); setError('')
     try {
       const r = await createPlatformClient(token).policyGaps.orderDraft(o.id)
@@ -231,18 +231,32 @@ export function PolicyOrders({ token, scope }: { token: string; scope: 'subscrib
                     {busy === o.id ? <Loader2 size={12} className="animate-spin" /> : <PenLine size={12} />} Write
                   </button>
                 )}
-                {o.status === 'drafted' && !o.verification && (
+                {/* Also available after delivery, and re-runnable. A policy already in a
+                    client's library is precisely the one worth re-checking when the
+                    regulations behind it change, or when it was written before they were
+                    mapped at all. */}
+                {(o.status === 'drafted' || o.status === 'approved') && (
                   <button onClick={() => verify(o)} disabled={busy === o.id}
                     className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-medium text-indigo-800 hover:bg-indigo-100 disabled:opacity-40"
                     title="Run the verification gate on this draft. Spends a little Anthropic credit.">
-                    {busy === o.id ? <Loader2 size={12} className="animate-spin" /> : <ShieldCheck size={12} />} Verify
+                    {busy === o.id ? <Loader2 size={12} className="animate-spin" /> : <ShieldCheck size={12} />} {o.verification ? 'Re-verify' : 'Verify'}
                   </button>
                 )}
-                {o.status === 'drafted' && (
-                  <button onClick={() => read(o)} disabled={busy === o.id}
-                    className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-dark hover:bg-neutral-light disabled:opacity-40">
-                    {busy === o.id ? <Loader2 size={12} className="animate-spin" /> : <FileText size={12} />} Read it
-                  </button>
+                {/* Both of these need only a draft to exist, so they stay available after
+                    delivery. Checking how a policy was grounded matters MOST once it is in
+                    a client's hands, which is exactly when these used to disappear. */}
+                {(o.status === 'drafted' || o.status === 'approved') && (
+                  <>
+                    <button onClick={() => read(o)} disabled={busy === o.id}
+                      className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-dark hover:bg-neutral-light disabled:opacity-40">
+                      {busy === o.id ? <Loader2 size={12} className="animate-spin" /> : <FileText size={12} />} Read it
+                    </button>
+                    <button onClick={() => read(o, 'provenance')} disabled={busy === o.id}
+                      className="inline-flex items-center gap-1 rounded-lg border border-teal/30 bg-teal/5 px-2.5 py-1.5 text-xs font-medium text-teal hover:bg-teal/10 disabled:opacity-40"
+                      title="The regulations and CQC quality statements this policy was written against, and an independent check on what it might still be missing.">
+                      {busy === o.id ? <Loader2 size={12} className="animate-spin" /> : <BookOpen size={12} />} How it was built
+                    </button>
+                  </>
                 )}
               </span>
             </li>
@@ -279,15 +293,30 @@ export function PolicyOrders({ token, scope }: { token: string; scope: 'subscrib
             {readTab === 'document'
               ? <pre className="flex-1 overflow-auto whitespace-pre-wrap px-5 py-4 text-[13px] leading-relaxed text-neutral-dark">{reading.draft}</pre>
               : <div className="flex-1 overflow-auto"><PolicyProvenancePanel token={token} orderId={reading.id} /></div>}
-            <div className="flex items-center justify-between gap-3 border-t border-gray-100 px-5 py-3">
-              <p className="text-xs text-neutral-mid">{reading.draft.split(/\s+/).length} words. Approving puts this in the client's library.</p>
-              <button
-                onClick={() => { const o = orders?.find(x => x.id === reading.id); if (o) deliver(o) }}
-                disabled={busy === reading.id}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-xs font-semibold text-white hover:bg-teal/90 disabled:opacity-40">
-                {busy === reading.id ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} {orders?.find(x => x.id === reading.id)?.verification?.passed ? 'Approve and deliver' : 'Approve anyway\u2026'}
-              </button>
-            </div>
+            {(() => {
+              const o = orders?.find(x => x.id === reading.id)
+              const delivered = o?.status === 'approved'
+              return (
+                <div className="flex items-center justify-between gap-3 border-t border-gray-100 px-5 py-3">
+                  <p className="text-xs text-neutral-mid">
+                    {reading.draft.split(/\s+/).length} words.{' '}
+                    {delivered
+                      ? `Already delivered${o?.approved_at ? ` on ${when(o.approved_at)}` : ''}.`
+                      : "Approving puts this in the client's library."}
+                  </p>
+                  {/* No approve button once it is delivered: the action is done, and a live
+                      button here invites a second delivery of the same document. */}
+                  {!delivered && (
+                    <button
+                      onClick={() => { if (o) deliver(o) }}
+                      disabled={busy === reading.id}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-xs font-semibold text-white hover:bg-teal/90 disabled:opacity-40">
+                      {busy === reading.id ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} {o?.verification?.passed ? 'Approve and deliver' : 'Approve anyway\u2026'}
+                    </button>
+                  )}
+                </div>
+              )
+            })()}
           </div>
         </div>
       )}

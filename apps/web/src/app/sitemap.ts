@@ -122,7 +122,7 @@ async function collectionPages(): Promise<Entry[]> {
       const collections = (await res.json())?.data?.collections ?? []
       const items = (collections as Array<{ slug?: string }>)
         .filter((c) => c.slug)
-        .map((c) => ({ url: `/collections/${c.slug}`, changeFrequency: 'monthly' as const, priority: 0.7 }))
+        .map((c) => ({ url: `/collection/${c.slug}`, changeFrequency: 'monthly' as const, priority: 0.7 }))
       // Include the index when there is at least one collection.
       return items.length > 0 ? [{ url: '/collections', changeFrequency: 'weekly', priority: 0.7 }, ...items] : []
     }

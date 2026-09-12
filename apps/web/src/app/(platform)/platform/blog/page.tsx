@@ -1328,7 +1328,7 @@ function LinksEditor({ links, onChange }: {
           <div className="flex flex-1 flex-col gap-1.5 sm:flex-row">
             <input value={l.label} onChange={e => update(i, 'label', e.target.value)} placeholder="Link text (e.g. Junior Cricket Pads)"
               className="flex-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-xs focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
-            <input value={l.url} onChange={e => update(i, 'url', e.target.value)} placeholder="/collections/... or https://…"
+            <input value={l.url} onChange={e => update(i, 'url', e.target.value)} placeholder="/collection/... or https://…"
               className="flex-1 rounded-md border border-gray-200 px-2.5 py-1.5 text-xs focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
           </div>
           <div className="flex items-center gap-0.5 text-xs">
@@ -1396,9 +1396,84 @@ function SingleImageField({ value, token, onChange }: {
 const EMPTY_COLLECTION = {
   title: '', slug: '', status: 'draft',
   meta_title: '', meta_description: '', og_image_url: '',
+  kind: 'policies', cluster_key: '', eyebrow: '',
   intro: '', images: [] as Array<{ url: string; alt: string }>,
   body: '', links: [] as Array<{ label: string; url: string }>,
   faqs: [] as Array<{ question: string; answer: string }>,
+}
+
+// Choosing what a collection sells: a kind, then one of the themed sixes.
+//
+// A cluster rather than six separate dropdowns. With 65 policies and 119 modules, picking
+// six from a list one at a time is slow and produces collections nobody curated -- and the
+// six that answer a search phrase are a judgement, made once, then reused. The same cluster
+// can back any number of collections, because what differs between two pages is the copy and
+// the search intent, not the products.
+function ClusterPicker({ kind, clusterKey, token, onChange }: {
+  kind: 'policies' | 'training'
+  clusterKey: string
+  token: string
+  onChange: (kind: 'policies' | 'training', clusterKey: string) => void
+}) {
+  const [clusters, setClusters] = useState<Array<{
+    key: string; label: string; note: string; kind: string; items: string[]
+  }>>([])
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    createPlatformClient(token).collections.clusters()
+      .then(r => setClusters(r.clusters))
+      .catch(e => setError(e?.message ?? 'Could not load the clusters.'))
+  }, [token])
+
+  const forKind = clusters.filter(c => c.kind === kind)
+  const chosen = clusters.find(c => c.key === clusterKey)
+
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-2">
+        {(['policies', 'training'] as const).map(k => (
+          <button key={k} type="button"
+            onClick={() => onChange(k, '')}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+              kind === k ? 'bg-teal text-white' : 'border border-gray-200 bg-white text-neutral-dark hover:bg-neutral-light'}`}>
+            {k === 'policies' ? 'Policies' : 'Training'}
+          </button>
+        ))}
+        <span className="self-center text-xs text-neutral-mid">
+          Switching clears the cluster: they are not interchangeable.
+        </span>
+      </div>
+
+      {error && <p className="text-xs text-red-700">{error}</p>}
+
+      <div className="grid gap-2 sm:grid-cols-2">
+        {forKind.map(c => (
+          <button key={c.key} type="button" onClick={() => onChange(kind, c.key)}
+            className={`rounded-lg border px-3 py-2.5 text-left ${
+              clusterKey === c.key ? 'border-teal bg-teal/5' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+            <span className="block text-sm font-semibold text-neutral-dark">{c.label}</span>
+            <span className="mt-0.5 block text-xs text-neutral-mid">{c.note}</span>
+          </button>
+        ))}
+      </div>
+
+      {chosen && (
+        <div className="rounded-lg border border-gray-200 bg-white px-3 py-2.5">
+          <p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">
+            The six on this page, in this order
+          </p>
+          <ol className="mt-1 list-decimal pl-5 text-xs text-neutral-dark">
+            {chosen.items.map(i => <li key={i}>{i}</li>)}
+          </ol>
+          <p className="mt-1.5 text-[11px] text-neutral-mid">
+            Titles, prices and images come from the catalogue when the page is viewed, so they
+            never go stale.
+          </p>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function CollectionForm({
@@ -1441,7 +1516,7 @@ function CollectionForm({
         <div>
           <label className="mb-1 block text-xs font-semibold text-neutral-mid">Slug *</label>
           <div className="flex items-center gap-1">
-            <span className="text-xs text-neutral-mid">/collections/</span>
+            <span className="text-xs text-neutral-mid">/collection/</span>
             <input value={form.slug} onChange={e => set('slug', slugify(e.target.value))} placeholder="junior-cricket-bats" className={input} />
           </div>
         </div>
@@ -1459,8 +1534,19 @@ function CollectionForm({
         <RichEditor value={form.intro} onChange={v => set('intro', v)} rows={4} placeholder="A short intro paragraph that sets up the collection…" />
       </AccordionSection>
 
-      <AccordionSection title="Image grid" description="A grid of images below the intro. Three images works well.">
-        <ImageGridEditor images={form.images} token={token} onChange={v => set('images', v)} />
+      <AccordionSection title="What this page sells" description="Six products, chosen as a themed set. This is the grid." defaultOpen>
+        <ClusterPicker
+          kind={form.kind === 'training' ? 'training' : 'policies'}
+          clusterKey={form.cluster_key ?? ''}
+          token={token}
+          onChange={(kind, cluster_key) => setForm((f: any) => ({
+            ...f, kind, cluster_key,
+            // The eyebrow follows the kind unless it has been written by hand.
+            eyebrow: (!f.eyebrow || f.eyebrow === 'Policy collection' || f.eyebrow === 'Training collection')
+              ? (kind === 'training' ? 'Training collection' : 'Policy collection')
+              : f.eyebrow,
+          }))}
+        />
       </AccordionSection>
 
       <AccordionSection title="Main content" description="The body content below the images — 3 to 4 paragraphs.">
@@ -2735,7 +2821,7 @@ export default function BlogPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-neutral-mid">
-                Ecommerce-style SEO landing pages at <code className="rounded bg-neutral-light px-1 py-0.5 text-xs">/collections/&hellip;</code> — intro, image grid, content, links and FAQs.
+                Ecommerce-style SEO landing pages at <code className="rounded bg-neutral-light px-1 py-0.5 text-xs">/collection/&hellip;</code> — intro, a themed six to buy, content, links and FAQs.
               </p>
               {!showCollection && !editCollection && (
                 <Button onClick={() => setShowCollection(true)}>
@@ -2769,9 +2855,9 @@ export default function BlogPage() {
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${STATUS_COLOURS[c.status] ?? STATUS_COLOURS.draft}`}>{c.status}</span>
                         </div>
                         <p className="mt-0.5 truncate text-xs text-neutral-mid">
-                          /collections/{c.slug}
+                          /collection/{c.slug}
                           {c.status === 'published' && (
-                            <a href={`https://carestreamai.com/collections/${c.slug}`} target="_blank" rel="noreferrer" className="ml-2 text-teal hover:underline">View ↗</a>
+                            <a href={`https://carestreamai.com/collection/${c.slug}`} target="_blank" rel="noreferrer" className="ml-2 text-teal hover:underline">View ↗</a>
                           )}
                         </p>
                       </div>

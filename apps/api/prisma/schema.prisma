@@ -37,6 +37,7 @@ model RemediationLesson {
   created_at DateTime @default(now())
 
   @@unique([ref_key, lang])
+  @@index([tenant_id, ref_key], map: "remediation_lessons_tenant_ref_idx")
   @@map("remediation_lessons")
 }
 
@@ -96,6 +97,7 @@ model PolicyTranslation {
   created_at DateTime @default(now())
 
   @@unique([policy_id, lang])
+  @@index([tenant_id], map: "policy_translations_tenant_idx")
   @@map("policy_translations")
 }
 
@@ -709,6 +711,7 @@ model PolicyDocumentChange {
   document      PolicyDocument @relation(fields: [document_id], references: [id], onDelete: Cascade)
 
   @@index([document_id])
+  @@index([tenant_id], map: "policy_document_changes_tenant_idx")
   @@map("policy_document_changes")
 }
 
@@ -726,6 +729,7 @@ model PolicyApproval {
   document       PolicyDocument @relation(fields: [document_id], references: [id], onDelete: Cascade)
 
   @@index([document_id])
+  @@index([tenant_id], map: "policy_approvals_tenant_idx")
   @@map("policy_approvals")
 }
 
@@ -855,6 +859,7 @@ model LoginToken {
   created_at DateTime  @default(now())
 
   @@index([user_id])
+  @@index([tenant_id], map: "login_tokens_tenant_idx")
   @@map("login_tokens")
 }
 
@@ -1543,6 +1548,7 @@ model AgentEvent {
 
   @@index([created_at])
   @@index([tool_name])
+  @@index([tenant_id, created_at(sort: Desc)], map: "agent_events_tenant_created_idx")
   @@map("agent_events")
 }
 
@@ -2573,6 +2579,7 @@ model FeatureRequest {
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
   @@index([status, created_at])
+  @@index([tenant_id, created_at(sort: Desc)], map: "feature_requests_tenant_created_idx")
   @@map("feature_requests")
 }
 

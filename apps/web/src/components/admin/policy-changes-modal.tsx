@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { applyRoleNames } from '@/lib/policy-names'
-import { X, Loader2, Check, RotateCcw, FileCheck2, GitCompare, Printer, Download, Pencil, Send, Eraser } from 'lucide-react'
+import { X, Loader2, Check, RotateCcw, FileCheck2, GitCompare, Printer, Download, Pencil, Send, Eraser, Scale } from 'lucide-react'
 
 import { buildPrintDoc, openPrintDoc, type OrgCtx } from '@/components/admin/policies/policy-print'
 
@@ -227,6 +227,9 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
   // One button doing both is what left a policy buyer pressing "Download" and getting
   // a print dialog, because this modal only ever had the print one.
   const [downloading, setDownloading] = useState(false)
+  const [legislationBusy, setLegislationBusy] = useState(false)
+  // null = not tried, false = this policy has no provenance so hide the button.
+  const [legislation, setLegislation] = useState<boolean | null>(null)
   async function downloadFile() {
     setDownloading(true); setError('')
     try {
@@ -374,7 +377,9 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
         {/* Header */}
         <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-4">
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-neutral-mid">Review changes</p>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-neutral-mid">
+              {policiesOnly ? 'Your policy' : 'Review changes'}
+            </p>
             <h2 className="mt-0.5 truncate text-lg font-bold text-neutral-dark">{policyName}</h2>
             <p className="mt-0.5 text-xs text-neutral-mid">
               {doc?.document?.version ? <>Current version {doc.document.version}</> : null}
@@ -394,6 +399,21 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
                 title={tracked ? 'Hide the highlights and preview the finished policy' : 'Highlight exactly what changed in this version'}
                 className="inline-flex items-center gap-1.5 rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:bg-gray-50">
                 <GitCompare size={13} /> {tracked ? 'Hide changes' : 'View changes'}
+              </button>
+            )}
+            {legislation !== false && (
+              <button
+                onClick={async () => {
+                  setLegislationBusy(true)
+                  const ok = await createApiClient(token).policies
+                    .downloadLegislation(policyId, `${policyName} - the law behind it.pdf`)
+                  setLegislation(ok)
+                  setLegislationBusy(false)
+                }}
+                disabled={legislationBusy}
+                title="The legislation this policy was written against, what each part requires, and the CQC quality statements it supports"
+                className="inline-flex items-center gap-1.5 rounded-btn border border-teal/30 bg-teal/5 px-3 py-1.5 text-xs font-medium text-teal hover:bg-teal/10 disabled:opacity-50">
+                <Scale size={13} /> {legislationBusy ? 'Preparing…' : 'The law behind it'}
               </button>
             )}
             <button onClick={downloadPolicy} disabled={!doc?.document}
@@ -453,7 +473,9 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
               {tracked
                 && !policiesOnly
                 ? <p className="mb-3 text-xs text-neutral-mid">Highlighted passages are what changed in this version: <span className="rounded bg-green-100 px-1">green</span> = added or replaced wording, <span className="rounded bg-red-50 px-1 text-red-400 line-through">red</span> = removed. Click <strong>Hide changes</strong> to preview the finished policy.</p>
-                : <p className="mb-3 text-xs text-neutral-mid">This is how the finished policy reads with the changes applied. Click <strong>View changes</strong> to highlight exactly what changed.</p>}
+                : policiesOnly
+                  ? <p className="mb-3 text-xs text-neutral-mid">Your policy as it stands, written for your service and checked against the legislation behind it.</p>
+                  : <p className="mb-3 text-xs text-neutral-mid">This is how the finished policy reads with the changes applied. Click <strong>View changes</strong> to highlight exactly what changed.</p>}
               <div ref={previewRef} className="policy-content prose prose-sm max-w-none rounded-lg border border-gray-100 bg-white p-4" />
             </div>
 

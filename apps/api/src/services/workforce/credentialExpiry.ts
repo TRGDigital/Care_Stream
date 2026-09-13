@@ -7,6 +7,7 @@
 // have no expiry, so they never appear here.
 
 import { prisma } from '../../db/client'
+import { sweepTenants } from '../../lib/tenant-sweep'
 import { isEmailEnabled } from '../../lib/notify'
 import { sendTrainingUpdateEmail } from '../email/outbound'
 
@@ -145,8 +146,10 @@ export async function runCredentialExpiryAllTenants(): Promise<{ tenants: number
     where: { plan: { has_workforce_compliance: true } }, select: { id: true },
   })
   let sent = 0
-  for (const t of tenants) {
-    try { if ((await runCredentialExpiryForTenant(t.id)).sent) sent++ } catch { /* continue */ }
-  }
-  return { tenants: tenants.length, sent }
+  // Swept rather than looped, so a run that cannot reach every tenant resumes next time
+  // instead of being killed silently part-way. See lib/tenant-sweep.ts.
+  const swept = await sweepTenants('credential-expiry', async (t) => {
+    if ((await runCredentialExpiryForTenant(t.id)).sent) sent++
+  })
+  return { tenants: swept.processed, sent }
 }

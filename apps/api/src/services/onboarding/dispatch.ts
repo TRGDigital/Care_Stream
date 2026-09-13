@@ -3,6 +3,7 @@
 // with open + click tracking. Day 1 can also be sent immediately on signup.
 
 import sgMail from '@sendgrid/mail'
+import { sweep, cursorFor } from '../../lib/tenant-sweep'
 import crypto from 'crypto'
 import { prisma } from '../../db/client'
 import { renderOnboardingEmailHtml } from './render'
@@ -164,15 +165,23 @@ export async function dispatchDue(opts: { force?: boolean; tenantId?: string } =
   const { dateStr, hour } = ukNow()
   if (!opts.force && hour !== 10) return { skipped: true, reason: `not 10am UK (currently ${hour}:00)`, dateStr }
 
+  // The cursor only applies to the full sweep. A single-tenant call is a manual, bounded
+  // run, and resuming it from wherever the scheduled job happened to stop would silently
+  // skip most of that tenant's enrolments.
+  const after = opts.tenantId ? null : await cursorFor('onboarding-emails')
   const enrolments = await (prisma as any).onboardingEnrolment.findMany({
-    where: { status: 'active', ...(opts.tenantId ? { tenant_id: opts.tenantId } : {}) },
+    where:   { status: 'active', ...(opts.tenantId ? { tenant_id: opts.tenantId } : {}), ...(after ? { id: { gt: after } } : {}) },
+    orderBy: { id: 'asc' },
   })
   const summary = { dateStr, enrolments: enrolments.length, sent: 0, skipped: 0, failed: 0, completed: 0, caught_up: 0, due: [] as any[] }
 
-  for (const enr of enrolments) {
+  // Swept rather than looped: this walks every active enrolment, of which there are more
+  // than there are tenants, and was the joint-slowest scheduled job measured. See
+  // lib/tenant-sweep.ts. A single-tenant call runs the whole set as before.
+  const runOne = async (enr: any) => {
     const startStr = new Date(enr.start_date).toISOString().slice(0, 10)
     const todayIdx = workingDayIndex(startStr, dateStr)
-    if (todayIdx == null) continue
+    if (todayIdx == null) return          // was `continue` when this was a for-loop
 
     const len = await sequenceLength(enr.plan)
 
@@ -185,11 +194,11 @@ export async function dispatchDue(opts: { force?: boolean; tenantId?: string } =
     if (lastSent >= len) {                       // whole sequence delivered
       await (prisma as any).onboardingEnrolment.update({ where: { id: enr.id }, data: { status: 'completed' } })
       summary.completed++
-      continue
+      return   // was `continue` when this was a for-loop
     }
 
     const target = Math.min(todayIdx, len)       // furthest day whose time has come
-    if (lastSent >= target) { summary.skipped++; continue }   // up to date, nothing due yet
+    if (lastSent >= target) { summary.skipped++; return }     // up to date, nothing due yet
 
     // Send the missed days oldest-first, but at most CATCHUP_MAX_PER_RUN per run so a
     // long outage recovers over a few days rather than firing a burst of emails.
@@ -213,6 +222,12 @@ export async function dispatchDue(opts: { force?: boolean; tenantId?: string } =
       await (prisma as any).onboardingEnrolment.update({ where: { id: enr.id }, data: { status: 'completed' } })
       summary.completed++
     }
+  }
+
+  if (opts.tenantId) {
+    for (const enr of enrolments) await runOne(enr)
+  } else {
+    await sweep('onboarding-emails', enrolments as Array<{ id: string }>, runOne)
   }
   return summary
 }

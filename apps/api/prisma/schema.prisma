@@ -2701,6 +2701,20 @@ model PolicyIntakeAnswer {
   @@map("policy_intake_answers")
 }
 
+// Where a tenant-sweeping scheduled job got to, so the next run resumes rather than
+// restarting. See lib/tenant-sweep.ts for why: four jobs walk every tenant sequentially and
+// would be killed part-way at scale, silently, having emailed only the tenants they reached.
+model CronJobCursor {
+  job              String   @id
+  last_tenant_id   String?
+  pass_started_at  DateTime @default(now())
+  passes_completed Int      @default(0)
+  tenants_this_run Int      @default(0)
+  updated_at       DateTime @default(now())
+
+  @@map("cron_job_cursors")
+}
+
 model PolicyPurchase {
   id                String    @id @default(uuid()) @db.Uuid
   tenant_id         String

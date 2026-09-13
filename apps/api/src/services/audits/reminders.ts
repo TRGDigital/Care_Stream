@@ -3,6 +3,7 @@
 // audit_updates email preference. Driven by the daily Vercel cron.
 
 import sgMail from '@sendgrid/mail'
+import { sweepTenants } from '../../lib/tenant-sweep'
 import { prisma } from '../../db/client'
 import { notifyUsers } from '../../lib/notify'
 import { siteUrl } from '../../lib/urls'
@@ -37,12 +38,14 @@ function reminderHtml(orgName: string, due: DueAudit[], inProgress: number): str
 }
 
 export async function sendDailyAuditReminders(): Promise<{ tenants: number; sent: number }> {
-  const tenants = await (prisma as any).tenant.findMany({ select: { id: true, name: true } })
   let sent = 0
-  for (const t of tenants as any[]) {
-    try {
+  // Swept rather than looped. The measured run is the slowest of the tenant-walking jobs, so
+  // at scale this is the first that would be killed part-way with no error -- having emailed
+  // the tenants it reached and silently skipped the rest. See lib/tenant-sweep.ts.
+  const swept = await sweepTenants('audit-reminders', async (t) => {
+    {
       const { due, inProgress } = await getAuditsDue(t.id)
-      if (!due.length && !inProgress) continue
+      if (!due.length && !inProgress) return   // was `continue` when this was a for-loop
 
       const admins = await (prisma as any).user.findMany({ where: { tenant_id: t.id, role: { in: ['admin', 'manager'] }, is_active: true }, select: { id: true } })
       if (admins.length) {
@@ -63,10 +66,8 @@ export async function sendDailyAuditReminders(): Promise<{ tenants: number; sent
         await notifyUsers(t.id, 'audit_updates', [a.id], (email) => sendEmail(email, `Audits to complete — ${t.name}`, html))
         sent += 1
       }
-    } catch (e: any) {
-      console.error('[audit-reminders] tenant failed', t.id, e?.message ?? e)
     }
-  }
-  console.log(`[audit-reminders] tenants=${tenants.length} sent=${sent}`)
-  return { tenants: tenants.length, sent }
+  })
+  console.log(`[audit-reminders] tenants=${swept.processed} sent=${sent}`)
+  return { tenants: swept.processed, sent }
 }

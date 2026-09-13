@@ -7,6 +7,7 @@
 // single tenant from the admin settings (manual "send now").
 
 import sgMail from '@sendgrid/mail'
+import { sweepTenants } from '../../lib/tenant-sweep'
 import { prisma } from '../../db/client'
 import { notifyUsers, isEmailEnabled } from '../../lib/notify'
 import { getKnowledgeGapData, KnowledgeGapData } from '../../lib/knowledge-gaps'
@@ -200,19 +201,17 @@ export async function runKnowledgeGapJobForTenant(tenantId: string, opts: { week
 // All tenants: snapshot daily; on the weekly day, also digest + refreshers.
 export async function runKnowledgeGapDailyJob(): Promise<{ tenants: number; digests: number; refreshers: number }> {
   const weekly = new Date().getUTCDay() === 1 // Monday
-  const tenants = await (prisma as any).tenant.findMany({ select: { id: true } })
   let digests = 0, refreshers = 0
-  for (const t of tenants as any[]) {
-    try {
-      const data = await snapshotTenant(t.id)
-      if (weekly) {
-        if (await sendTenantDigest(t.id, data).catch(() => false)) digests += 1
-        refreshers += await sendTenantRefreshers(t.id).catch(() => 0)
-      }
-    } catch (e: any) {
-      console.error('[kg/daily] tenant failed', t.id, e?.message ?? e)
+  // Swept rather than looped. This awaited every tenant in turn with no time budget, so at
+  // scale the invocation is killed part-way and the tenants past the cut silently get
+  // nothing, with no error to show for it. See lib/tenant-sweep.ts.
+  const swept = await sweepTenants('knowledge-gaps', async (t) => {
+    const data = await snapshotTenant(t.id)
+    if (weekly) {
+      if (await sendTenantDigest(t.id, data).catch(() => false)) digests += 1
+      refreshers += await sendTenantRefreshers(t.id).catch(() => 0)
     }
-  }
-  console.log(`[kg/daily] tenants=${tenants.length} weekly=${weekly} digests=${digests} refreshers=${refreshers}`)
-  return { tenants: tenants.length, digests, refreshers }
+  })
+  console.log(`[kg/daily] tenants=${swept.processed} weekly=${weekly} digests=${digests} refreshers=${refreshers}`)
+  return { tenants: swept.processed, digests, refreshers }
 }

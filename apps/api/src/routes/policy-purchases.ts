@@ -265,7 +265,22 @@ policyPurchasesRouter.post('/reconcile', async (req: Request, res: Response) => 
           data: {
             tenant_id:         user.tenant_id,
             policy_title:      title,
-            reference_keys:    result.referenceKeysByTitle[title] ?? [],
+            // The curated mapping first, then anything the gap analysis found on top.
+            //
+            // A gaps order used to store only what the gap analysis produced at checkout,
+            // while a shop order stored the product's curated mapping. The same policy was
+            // therefore written against less law when a subscriber ordered it than when a
+            // shop buyer did -- Asbestos Management came through with one regulation here
+            // and two there -- and everything downstream inherited it: fewer required
+            // elements, a weaker coverage check, a thinner provenance panel and a shorter
+            // legislation PDF, for the customer paying more.
+            //
+            // Union rather than replacement, because the gap analysis can legitimately find
+            // something specific to this tenant that the catalogue mapping does not carry.
+            reference_keys: [...new Set([
+              ...(product?.reference_keys ?? []),
+              ...(result.referenceKeysByTitle[title] ?? []),
+            ])],
             price_pence:       POLICY_PENCE,
             currency:          'gbp',
             stripe_payment_id: result.paymentId,

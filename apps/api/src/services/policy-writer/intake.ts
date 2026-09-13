@@ -16,12 +16,19 @@ import { SHARED_INTAKE_FIELDS, type IntakeField } from '../../data/policy-produc
 export type IntakeFieldState = IntakeField & { supplied: boolean; value: string | null }
 export type IntakeState = { fields: IntakeFieldState[]; missing: number; complete: boolean }
 
-export async function productForTitle(title: string): Promise<{ slug: string; intake_fields: IntakeField[] } | null> {
+export async function productForTitle(
+  title: string,
+): Promise<{ slug: string; intake_fields: IntakeField[]; reference_keys: string[] } | null> {
   const p = await (prisma as any).policyProduct.findFirst({
     where: { title: { equals: title, mode: 'insensitive' } },
-    select: { slug: true, intake_fields: true },
+    // reference_keys included because a gaps order needs the curated grounding too, not
+    // only the intake fields. Without it the same policy is written against less law when
+    // a subscriber orders it than when a shop buyer does.
+    select: { slug: true, intake_fields: true, reference_keys: true },
   }).catch(() => null)
-  return p ? { slug: p.slug, intake_fields: (p.intake_fields as IntakeField[]) ?? [] } : null
+  return p
+    ? { slug: p.slug, intake_fields: (p.intake_fields as IntakeField[]) ?? [], reference_keys: p.reference_keys ?? [] }
+    : null
 }
 
 export function intakeStateFor(

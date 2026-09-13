@@ -230,6 +230,16 @@ export function PolicyOrders({ token, scope }: { token: string; scope: 'subscrib
                     : <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700"><ShieldAlert size={11} /> {failureCount(o.verification)} issue{failureCount(o.verification) === 1 ? '' : 's'}</span>
                   : <span className="shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-semibold text-neutral-mid">Not verified</span>
               )}
+              {/* A gap can name a policy the catalogue does not sell. That order is grounded
+                  only in what the gap analysis found, which is thinner than a curated
+                  mapping -- and thinner-but-invisible is how an empty reference_keys went
+                  unnoticed across the whole catalogue for months. */}
+              {o.in_catalogue === false && (
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-800"
+                  title="Not one of the 65 catalogue policies, so it has no curated regulation mapping. It is written against whatever the gap analysis found.">
+                  <AlertTriangle size={11} /> Not in catalogue · {o.regulation_count ?? 0} reg{(o.regulation_count ?? 0) === 1 ? '' : 's'}
+                </span>
+              )}
               <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${STATUS[o.status].cls}`}>
                 {STATUS[o.status].label}
               </span>

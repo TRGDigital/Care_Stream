@@ -217,7 +217,15 @@ platformPolicyGapsRouter.get('/orders', async (req: Request, res: Response) => {
     // Work still owed floats to the top; delivered work is history.
     const rank = (s: string) => (s === 'drafted' ? 0 : s === 'drafting' ? 1 : s === 'paid' ? 2 : s === 'awaiting_details' ? 3 : 4)
     // Intake progress per order, so the queue shows who is blocking their own order.
-    const withIntake = await Promise.all(rows.filter(inScope).map(async (r: any) => {
+    // Which titles match a catalogue product. A gap can name a policy we do not sell, and
+    // that order is grounded only in whatever the gap analysis found rather than in a
+    // curated mapping. It is not wrong, but it is thinner, and thinner-but-invisible is how
+    // an empty reference_keys went unnoticed across the whole catalogue for months.
+    const inScopeRows = rows.filter(inScope)
+    const catalogue = await (prisma as any).policyProduct.findMany({ select: { title: true } })
+    const known = new Set((catalogue as Array<{ title: string }>).map(p2 => p2.title.toLowerCase()))
+
+    const withIntake = await Promise.all(inScopeRows.map(async (r: any) => {
       const st = await purchaseIntakeState(r).catch(() => null)
       const tenant: any = byId.get(r.tenant_id) ?? null
       const od = (tenant?.organisation_details ?? {}) as Record<string, string>
@@ -229,6 +237,10 @@ platformPolicyGapsRouter.get('/orders', async (req: Request, res: Response) => {
         buyer: buyer ? { name: buyer.name ?? null, email: buyer.email ?? null } : null,
         registered_manager: od.registered_manager || null,
         intake: st ? { missing: st.missing, total: st.fields.length } : null,
+        // False when the gap named a policy the catalogue does not sell, so the queue can
+        // say the grounding is thinner rather than leaving it to be discovered later.
+        in_catalogue: known.has(String(r.policy_title ?? '').toLowerCase()),
+        regulation_count: (r.reference_keys ?? []).length,
       }
     }))
     const orders = withIntake.sort((a: any, b: any) => rank(a.status) - rank(b.status))

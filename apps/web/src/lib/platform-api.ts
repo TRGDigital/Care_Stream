@@ -1511,6 +1511,10 @@ export interface PolicyOrder {
   price_pence: number
   status: 'paid' | 'awaiting_details' | 'drafting' | 'drafted' | 'approved' | 'refunded'
   intake: { missing: number; total: number } | null
+  /** False when the gap named a policy the catalogue does not sell: grounded only in what
+   *  the gap analysis found, so thinner than a catalogue policy. */
+  in_catalogue?: boolean
+  regulation_count?: number
   policy_id: string | null
   verification: PolicyOrderVerification | null
   verified_at: string | null

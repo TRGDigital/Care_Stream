@@ -246,7 +246,20 @@ publicTrainingRouter.get('/standard-modules/:slug/demo', async (req: Request, re
       }
       // Generate + cache translations. Warm ONE language per request (?gen=pol /
       // ?gen=hin) so each finishes within the function limit; ?gen=1 does both.
-      const genParam = String(req.query.gen ?? '')
+      // Generating costs Anthropic credit, so it is an operator action, not a visitor one.
+      //
+      // This was reachable as ?gen=1 by anyone, unauthenticated and unthrottled, and it
+      // regenerates rather than reading the cache -- so the same URL could be looped to
+      // spend without limit. Rate limiting alone is not enough when each call costs money:
+      // sixty paid translations a minute is still a bill somebody else chose to run up.
+      //
+      // Warming the cache now needs the same bearer the scheduled jobs use.
+      const cronSecret = process.env.CRON_SECRET
+      const warmAuthorised = Boolean(cronSecret) && req.headers.authorization === `Bearer ${cronSecret}`
+      const genParam = warmAuthorised ? String(req.query.gen ?? '') : ''
+      if (!warmAuthorised && req.query.gen) {
+        console.warn(`[training-public] unauthorised cache-warm attempt for ${slug} from ${req.ip}`)
+      }
       const genLangs: Array<'pol' | 'hin'> =
         genParam === '1' ? ['pol', 'hin'] : genParam === 'pol' || genParam === 'hin' ? [genParam] : []
       if (genLangs.length && lesson && question) {

@@ -55,7 +55,7 @@ import { seedTrainingModulesIfEmpty } from './lib/seed-training'
 import { sendRenewalReminders } from './services/training/renewalReminders'
 import { requireAuth } from './middleware/auth'
 import { tenantGuard } from './middleware/tenantGuard'
-import { apiLimiter } from './middleware/rateLimiter'
+import { apiLimiter, publicLimiter } from './middleware/rateLimiter'
 
 const app = express()
 const PORT = process.env.PORT || 4000
@@ -101,6 +101,13 @@ app.use(express.urlencoded({ extended: false, limit: '5mb' })) // Twilio webhook
 app.get('/health', (_req, res) => res.json({ status: 'ok' }))
 
 // §12.1 — Public routes (auth has its own tighter limiter applied inside the router)
+// Public routes are rate limited from here down. apiLimiter sits after requireAuth and keys
+// on the user id, so everything in front of the auth boundary was previously unthrottled --
+// including a demo endpoint that spends Anthropic credit per call.
+app.use('/public', publicLimiter)
+app.use('/onboarding', publicLimiter)
+app.use('/feedback', publicLimiter)
+
 app.use('/auth', authRouter)
 
 // §6.5 — Platform admin routes. Uses PLATFORM_ADMIN_TOKEN, not tenant JWTs.

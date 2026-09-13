@@ -20,9 +20,7 @@
 // and a document implying otherwise would be worse than useless to the home holding it.
 
 import PDFDocument from 'pdfkit'
-import sharp from 'sharp'
-import { promises as fs } from 'fs'
-import path from 'path'
+import { LOGO_HEADER, LOGO_FOOTER } from '../../assets/carestream-logo'
 import 'pdfkit/standard-fonts/TimesRoman'
 import 'pdfkit/standard-fonts/TimesBold'
 import 'pdfkit/standard-fonts/TimesItalic'
@@ -52,29 +50,14 @@ const CARESTREAM = {
   address: 'Registered office: Suite Ra01, 195-197 Wood Street, London, E17 3NU.',
 }
 
-// The logo is a 4336px PNG in the web app. Resized once per process rather than per page:
-// a hundred-kilobyte image redrawn on every footer of every document is waste nobody sees
-// until the PDFs get slow.
-let logoCache: { header: Buffer; footer: Buffer } | null = null
-async function careStreamLogo(): Promise<{ header: Buffer; footer: Buffer } | null> {
-  if (logoCache) return logoCache
-  for (const candidate of [
-    path.resolve(process.cwd(), 'apps/web/public/logo-color.png'),
-    path.resolve(process.cwd(), '../web/public/logo-color.png'),
-    path.resolve(__dirname, '../../../../web/public/logo-color.png'),
-  ]) {
-    try {
-      const raw = await fs.readFile(candidate)
-      logoCache = {
-        header: await sharp(raw).resize({ width: 420, withoutEnlargement: true }).png().toBuffer(),
-        footer: await sharp(raw).resize({ width: 200, withoutEnlargement: true }).png().toBuffer(),
-      }
-      return logoCache
-    } catch { /* try the next path */ }
-  }
-  // A missing logo must not cost them the document, but it should not be silent either.
-  console.warn('[legislation-pdf] CareStream logo not found; continuing without it')
-  return null
+// The mark is imported, not read from disk. apps/web/public is a different Vercel project
+// from this API, so a filesystem read finds it locally, passes every test, and quietly
+// produces an unbranded PDF in production -- the same shape of failure as the pdfkit font
+// metrics. Pre-sized at build by scripts/embed-logo.js.
+
+const KEY_QUESTION: Record<string, string> = {
+  safe: 'Safe', effective: 'Effective', caring: 'Caring',
+  responsive: 'Responsive', 'well-led': 'Well-led', wellled: 'Well-led',
 }
 
 /** The first few sentences, to a sensible length, cut on a sentence boundary.
@@ -88,16 +71,10 @@ function brief(text: string, limit = 420): string {
   const t = (text ?? '').replace(/\s+/g, ' ').trim()
   if (t.length <= limit) return t
   const cut = t.slice(0, limit)
-  // Prefer a sentence end; fall back to a word boundary rather than mid-word.
   const stop = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('; '))
   if (stop > limit * 0.5) return cut.slice(0, stop + 1)
   const space = cut.lastIndexOf(' ')
   return (space > 0 ? cut.slice(0, space) : cut).replace(/[,;:]$/, '') + '…'
-}
-
-const KEY_QUESTION: Record<string, string> = {
-  safe: 'Safe', effective: 'Effective', caring: 'Caring',
-  responsive: 'Responsive', 'well-led': 'Well-led', wellled: 'Well-led',
 }
 
 export interface LegislationPdfOrg {
@@ -125,14 +102,10 @@ export async function buildLegislationPdf(opts: {
     if (doc.y + needed > doc.page.height - MARGIN.bottom) doc.addPage()
   }
 
-  const logo = await careStreamLogo()
-
   // ── header: our mark, not theirs ────────────────────────────────────────────
   let y = MARGIN.top
-  if (logo) {
-    try { doc.image(logo.header, MARGIN.left, y, { fit: [150, 42] }); y += 50 }
-    catch (e: any) { console.warn(`[legislation-pdf] logo could not be drawn (${e?.message})`) }
-  }
+  try { doc.image(LOGO_HEADER, MARGIN.left, y, { fit: [150, 42] }); y += 50 }
+  catch (e: any) { console.warn(`[legislation-pdf] logo could not be drawn (${e?.message})`) }
 
   doc.font('Helvetica-Bold').fontSize(20).fillColor(BRAND.ink)
     .text(`${p.policy_title}`, MARGIN.left, y, { width })
@@ -320,12 +293,10 @@ export async function buildLegislationPdf(opts: {
       .lineWidth(0.75).strokeColor(BRAND.rule).stroke()
 
     let textLeft = MARGIN.left
-    if (logo) {
-      try {
-        doc.image(logo.footer, MARGIN.left, fy - 2, { fit: [76, 22] })
-        textLeft = MARGIN.left + 88
-      } catch { /* fall back to text only */ }
-    }
+    try {
+      doc.image(LOGO_FOOTER, MARGIN.left, fy - 2, { fit: [76, 22] })
+      textLeft = MARGIN.left + 88
+    } catch { /* text-only footer rather than no footer */ }
 
     doc.font('Helvetica').fontSize(7.5).fillColor(BRAND.accent)
       .text(CARESTREAM.url, textLeft, fy, { width: 160, lineBreak: false })

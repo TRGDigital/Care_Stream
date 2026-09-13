@@ -30,6 +30,24 @@ import type { PolicyProvenance } from '../policy-writer/policy-provenance'
 
 const MARGIN = { top: 56, bottom: 64, left: 56, right: 56 }
 
+/** The first few sentences, to a sensible length, cut on a sentence boundary.
+ *
+ *  The curated summaries are written for the writer and the coverage judge, which want every
+ *  nuance: the Accessible Information Standard's runs to three thousand characters and its
+ *  care-home context to four thousand. Printed in full, two regulations become a ten page
+ *  document, and a ten page explainer is one nobody reads -- which defeats the point of
+ *  handing it to them at all. The full text stays where it is useful, on the platform. */
+function brief(text: string, limit = 420): string {
+  const t = (text ?? '').replace(/\s+/g, ' ').trim()
+  if (t.length <= limit) return t
+  const cut = t.slice(0, limit)
+  // Prefer a sentence end; fall back to a word boundary rather than mid-word.
+  const stop = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('; '))
+  if (stop > limit * 0.5) return cut.slice(0, stop + 1)
+  const space = cut.lastIndexOf(' ')
+  return (space > 0 ? cut.slice(0, space) : cut).replace(/[,;:]$/, '') + '…'
+}
+
 const KEY_QUESTION: Record<string, string> = {
   safe: 'Safe', effective: 'Effective', caring: 'Caring',
   responsive: 'Responsive', 'well-led': 'Well-led', wellled: 'Well-led',
@@ -119,12 +137,12 @@ export function buildLegislationPdf(opts: {
 
     if (r.summary) {
       doc.font('Times-Bold').fontSize(10).fillColor('#1a1a1a').text('What it requires: ', { continued: true })
-      doc.font('Times-Roman').text(r.summary, { width })
+      doc.font('Times-Roman').text(brief(r.summary), { width })
       doc.moveDown(0.2)
     }
     if (r.care_home_context) {
       doc.font('Times-Bold').fontSize(10).fillColor('#1a1a1a').text('Why it matters in a care setting: ', { continued: true })
-      doc.font('Times-Roman').text(r.care_home_context, { width })
+      doc.font('Times-Roman').text(brief(r.care_home_context), { width })
       doc.moveDown(0.2)
     }
 

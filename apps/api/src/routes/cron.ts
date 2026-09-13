@@ -1,5 +1,5 @@
-// Scheduled job entry points. Authorised either by the x-vercel-cron header or, now that
-// CRON_SECRET is configured, a matching bearer token — so these can't be triggered externally.
+// Scheduled job entry points. Authorised by a CRON_SECRET bearer token only, so these
+// cannot be triggered externally.
 //
 // Scheduled from Postgres (pg_cron + pg_net), not from vercel.json: every one of these
 // stopped silently on 5 June 2026 and nobody found out for 96 days. See
@@ -19,6 +19,7 @@
 // silently stops appears as a missing row rather than as nothing at all.
 
 import { Router, Request, Response } from 'express'
+import { timingSafeEqual } from 'crypto'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { runKnowledgeGapDailyJob } from '../services/knowledge-gaps/digest'
@@ -39,10 +40,30 @@ import { buildCronReport, sendCronReport } from '../services/ops/cron-report'
 export const cronRouter = Router()
 
 function authed(req: Request): boolean {
-  if (req.headers['x-vercel-cron']) return true
+  // The bearer token, and nothing else.
+  //
+  // This used to accept the presence of an x-vercel-cron header as proof on its own. A
+  // header is set by whoever makes the request, so that was a bypass: twelve jobs, all
+  // GET, most of which email every tenant and two of which spend Anthropic credit, all
+  // triggerable by anybody who sent one header. Repeatedly.
+  //
+  // Nothing legitimate relied on it. These are scheduled from pg_cron, and
+  // public.carestream_cron() sends `Authorization: Bearer <secret>` read from the Supabase
+  // vault. Vercel scheduling was deliberately removed (see the note at the top of this
+  // file), so the header path was dead code with a hole in it.
   const secret = process.env.CRON_SECRET
-  if (secret && req.headers.authorization === `Bearer ${secret}`) return true
-  return false
+  if (!secret) {
+    // Fail closed. An unset secret used to mean the header check was the only gate; it now
+    // means nothing runs, which is the safe direction for a job that emails customers.
+    console.error('[cron] CRON_SECRET is not set — refusing to run scheduled jobs')
+    return false
+  }
+  const provided = req.headers.authorization
+  if (typeof provided !== 'string') return false
+  // Constant-time: these are compared on every scheduled run and the endpoint is public.
+  const a = Buffer.from(provided)
+  const b = Buffer.from(`Bearer ${secret}`)
+  return a.length === b.length && timingSafeEqual(a, b)
 }
 
 /** Run one scheduled job, recording the attempt either way.

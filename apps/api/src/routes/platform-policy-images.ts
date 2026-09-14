@@ -5,9 +5,11 @@
 // distinct regulations, so keying the legislation art by reference_key means a law
 // like Regulation 13 is drawn once and reused on every policy that cites it.
 //
-// Which regulations a policy is analysed against is resolved live from
-// expected_policy_titles, exactly as the public shop endpoint resolves it, so this
-// list can never drift from what the pages actually render.
+// Which regulations a policy is analysed against is resolved live from reference_keys,
+// exactly as the public shop endpoint resolves it, so this list cannot drift from what
+// the pages actually render. It did drift once, by 19 regulations, when the shop moved
+// to reference_keys and this page stayed on expected_policy_titles. If the shop changes
+// how it resolves regulations again, change it here in the same commit.
 
 import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
@@ -27,7 +29,8 @@ platformPolicyImagesRouter.get('/', async (_req: Request, res: Response) => {
     const [products, regs] = await Promise.all([
       (prisma as any).policyProduct.findMany({
         where:   { active: true },
-        select:  { slug: true, title: true, description: true, price_pence: true, image_key: true },
+        select:  { slug: true, title: true, description: true, price_pence: true,
+                   image_key: true, reference_keys: true },
         orderBy: { sort_order: 'asc' },
       }),
       (prisma as any).externalRegulation.findMany({
@@ -37,8 +40,20 @@ platformPolicyImagesRouter.get('/', async (_req: Request, res: Response) => {
 
     // Count how many policies each regulation appears on, so the ones worth doing
     // first are obvious. A regulation nothing cites is not listed at all.
+    //
+    // Resolved from reference_keys, with title matching only as the fallback for a
+    // product that has nothing mapped. This mirrors the public shop endpoint exactly,
+    // and it has to: when the shop moved to reference_keys and this page was left on
+    // expected_policy_titles, the two drifted by 19 regulations. Every one of them was
+    // rendering a blank slot on a live shop page while this page reported the library
+    // complete, because the page defined "done" and could not see them.
     const used = new Map<string, number>()
     for (const p of products as any[]) {
+      const mapped: string[] = p.reference_keys ?? []
+      if (mapped.length) {
+        for (const key of mapped) used.set(key, (used.get(key) ?? 0) + 1)
+        continue
+      }
       const variants = new Set(titleVariants(p.title).map(v => v.toLowerCase()))
       for (const r of regs as any[]) {
         const titles: string[] = r.expected_policy_titles ?? []

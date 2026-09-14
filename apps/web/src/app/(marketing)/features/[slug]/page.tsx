@@ -6,6 +6,7 @@ import { JsonLd } from '@/components/json-ld'
 import { faqPageSchema, serviceSchema, SITE_URL } from '@/lib/schema'
 import { DEFAULT_OG_IMAGE, absoluteImage } from '@/lib/page-meta'
 import { heroImageFor } from '@/lib/hero-images'
+import { FeaturePageV2, type FeatureV2Content } from '@/components/marketing/feature-page-v2'
 import {
   FeatureSimplePage,
   featureContentFromData,
@@ -87,10 +88,36 @@ async function getRelatedFeatures(currentSlug: string): Promise<Array<{ slug: st
   }
 }
 
-export default async function DbFeaturePage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function DbFeaturePage(
+  { params, searchParams }: {
+    params: Promise<{ slug: string }>
+    searchParams: Promise<Record<string, string | string[] | undefined>>
+  },
+) {
   const { slug } = await params
   const fp = await getFeaturePage(slug)
   if (!fp) notFound()
+
+  // The rebuilt theme template is opt-in with ?v2=1 until it is signed off. Switching 45 live
+  // pages on merge is exactly the kind of change that has to be looked at before it happens,
+  // not after; this way the new design can be read on any real page, with its real content,
+  // while the live page is untouched. Flipping it is then a one-line change.
+  const sp = await searchParams
+  if (sp?.v2 === '1') {
+    const caps = (fp.content as { capabilities?: string[] } | null)?.capabilities ?? []
+    const children = (await Promise.all(caps.map(getFeaturePage))).filter(Boolean)
+    return (
+      <FeaturePageV2 page={{
+        slug,
+        title: fp.title,
+        content: (fp.content ?? {}) as FeatureV2Content,
+        faqs: Array.isArray(fp.faqs) ? fp.faqs : [],
+        capabilities: children.map(c => ({
+          slug: c!.slug, title: c!.title, content: (c!.content ?? {}) as FeatureV2Content,
+        })),
+      }} />
+    )
+  }
 
   const faqs = Array.isArray(fp.faqs) ? fp.faqs.filter(f => f.question && f.answer) : []
   const content = featureContentFromData(fp.title, fp.content, faqs)

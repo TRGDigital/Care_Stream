@@ -50,7 +50,21 @@ const NAME_STOPWORDS = new Set([
   'and', 'the', 'of', 'for', 'to', 'in', 'on', 'at', 'a', 'an', 'our', 'your',
   'use', 'using', 'general', 'management', 'managing', 'staff', 'care', 'home', 'homes',
   'house', 'service', 'services', 'copy', 'draft', 'version', 'new', 'updated',
+  // Generic title furniture. These appear in dozens of unrelated care policies, so
+  // one of them in common says nothing: "The Care Certificate Standards" and "NMC
+  // Standards for Medicines Management" shared only "standards" and were reported
+  // to the tenant as similarly named.
+  'standards', 'standard', 'framework', 'requirements', 'register', 'records',
+  'record', 'training', 'review', 'annual', 'plan', 'plans', 'guidelines',
 ])
+
+// A note telling the tenant two documents "share similar wording" reads as nonsense
+// when the content comparison returned almost nothing, which is exactly what CS-1002
+// saw: two unrelated policies reported at 0% content match. One shared word still
+// counts as a similar name, because "Medication Administration" and "Medication
+// Storage" genuinely are one, but the content has to be at least loosely related
+// before we say so out loud.
+const SIMILAR_NAMED_MIN_CONTENT = 0.15
 
 // Distinctive words in a policy name (≥4 chars, not a stopword).
 function nameKeywords(name: string): Set<string> {
@@ -109,7 +123,8 @@ export async function detectContentDuplicate(opts: {
       const ck = nameKeywords(c.name)
       let shared = 0
       for (const w of myKeywords) if (ck.has(w)) shared++
-      if (shared > 0 && (!sameName || shared > sameName.shared || (shared === sameName.shared && score > sameName.score))) {
+      const similar = shared > 0 && score >= SIMILAR_NAMED_MIN_CONTENT
+      if (similar && (!sameName || shared > sameName.shared || (shared === sameName.shared && score > sameName.score))) {
         sameName = { id: c.id, name: c.name, shared, score }
       }
     }

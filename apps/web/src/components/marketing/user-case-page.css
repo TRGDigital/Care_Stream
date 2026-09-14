@@ -29,28 +29,19 @@
   background: var(--ground);
 }
 
-.ucpage /* ─── User case template ────────────────────────────────────────────────────
-     The page is deliberately two documents stacked: a conversion page down to
-     the CTA block, .ucpage then a long-form guide. The guide half is the part that is
-     authored in the console, .ucpage so it is styled as an article, .ucpage not as marketing. */
-  .uc-wrap{max-width:var(--maxw);margin:0 auto;padding:0 32px}
+.ucpage .uc-wrap{max-width:var(--maxw);margin:0 auto;padding:0 32px}
 .ucpage .uc-narrow{max-width:760px}
 .ucpage .uc-wrap{padding:0 22px}
-.ucpage /* Matches the home page eyebrow exactly, .ucpage in the accent colour rather than muted so
-     the page type reads as a label. Declared in full: the inherited .eyebrow rule sets
-     a monospace family that would otherwise leak through. */
-  .uc-eyebrow{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+.ucpage .uc-eyebrow{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
     font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
     color:var(--accent);margin:0 0 16px;}
-.ucpage /* Hero: copy and form left, .ucpage evidence panel right */
-  .uc-hero{background:linear-gradient(180deg,#FBF9FE 0%,var(--ground) 78%);border-bottom:1px solid var(--line)}
+.ucpage .uc-hero{background:linear-gradient(180deg,#FBF9FE 0%,var(--ground) 78%);border-bottom:1px solid var(--line)}
 .ucpage .uc-hero-in{display:grid;grid-template-columns:1.02fr .98fr;gap:60px;align-items:center;padding-block:64px 72px}
 .ucpage .uc-hero h1{font-size:clamp(2.1rem,3.8vw,3.15rem);line-height:1.06;letter-spacing:-.032em;text-wrap:balance;margin:0 0 18px}
 .ucpage .uc-hero h1 em{font-style:normal;color:var(--accent)}
 .ucpage .uc-hero .uc-lede{font-size:1.06rem;line-height:1.62;color:var(--ink-2);max-width:33em;margin:0 0 26px}
 .ucpage .uc-hero-in{grid-template-columns:1fr;gap:40px;padding-block:48px 52px}
-.ucpage /* Signup and demo sit together, .ucpage matching the home page hero */
-  .uc-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.ucpage .uc-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .ucpage .uc-field{display:flex;align-items:center;gap:8px;background:var(--ground);border:1px solid var(--line);
     border-radius:999px;padding:5px 5px 5px 18px;box-shadow:var(--shadow);min-width:335px;flex:1 1 335px;}
 .ucpage .uc-field input{border:0;outline:0;background:transparent;font:inherit;font-size:.93rem;color:var(--ink);flex:1;min-width:0;padding:9px 0}
@@ -63,8 +54,7 @@
 .ucpage .uc-demo:hover{border-color:#D9D2E6}
 .ucpage .uc-demo svg{width:15px;height:15px;color:var(--accent)}
 .ucpage .uc-fine{font-size:.8rem;color:var(--muted);margin-top:15px}
-.ucpage /* Right-hand panel: the outcome, .ucpage shown rather than described */
-  .uc-panel{background:var(--ground);border:1px solid var(--line);border-radius:18px;
+.ucpage .uc-panel{background:var(--ground);border:1px solid var(--line);border-radius:18px;
     box-shadow:var(--shadow-lg);padding:20px;}
 .ucpage .uc-panel-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
 .ucpage .uc-panel-hd b{font-size:.86rem;font-weight:650}
@@ -80,8 +70,7 @@
 .ucpage .uc-row small{font-size:.74rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .ucpage .uc-meter{height:6px;border-radius:99px;background:#EFEBF6;overflow:hidden;margin-top:16px}
 .ucpage .uc-meter i{display:block;height:100%;width:82%;border-radius:99px;background:var(--good)}
-.ucpage /* Shared section rhythm for the conversion half */
-  .uc-sec{padding:76px 0}
+.ucpage .uc-sec{padding:76px 0}
 .ucpage .uc-sec.tint{background:var(--ground-2);border-block:1px solid var(--line)}
 .ucpage .uc-sec h2{font-size:clamp(1.6rem,2.5vw,2.15rem);line-height:1.14;letter-spacing:-.025em;text-wrap:balance;margin:0 0 14px}
 .ucpage .uc-sec .sub{font-size:1rem;line-height:1.62;color:var(--muted);max-width:34em;margin:0}
@@ -93,8 +82,7 @@
 .ucpage .uc-card p{font-size:.9rem;line-height:1.6;color:var(--muted);margin:0}
 .ucpage .uc-cardico{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;margin-bottom:16px}
 .ucpage .uc-cardico svg{width:20px;height:20px;display:block}
-.ucpage /* Alternating feature blocks */
-  .uc-alt{display:grid;grid-template-columns:1fr 1.1fr;gap:56px;align-items:center;padding:52px 0}
+.ucpage .uc-alt{display:grid;grid-template-columns:1fr 1.1fr;gap:56px;align-items:center;padding:52px 0}
 .ucpage .uc-alt:nth-of-type(even) .uc-alt-copy{order:2}
 .ucpage .uc-alt{grid-template-columns:1fr;gap:32px;padding:34px 0}
 .ucpage .uc-alt:nth-of-type(even) .uc-alt-copy{order:0}
@@ -109,16 +97,14 @@
 .ucpage .uc-shot{background:var(--plate);border:1px solid var(--line);border-radius:16px;padding:20px;
     box-shadow:var(--shadow);aspect-ratio:16/10.6;display:grid;place-items:center;}
 .ucpage .uc-shot span{font-size:.78rem;color:var(--muted);text-align:center;line-height:1.5}
-.ucpage /* Quote */
-  .uc-quote{background:var(--ground);border:1px solid var(--line);border-radius:var(--r);
+.ucpage .uc-quote{background:var(--ground);border:1px solid var(--line);border-radius:var(--r);
     padding:34px;box-shadow:var(--shadow);display:grid;gap:18px}
 .ucpage .uc-quote blockquote{margin:0;font-size:1.12rem;line-height:1.55;letter-spacing:-.015em;color:var(--ink);text-wrap:pretty}
 .ucpage .uc-by{display:flex;align-items:center;gap:12px;font-size:.85rem;color:var(--muted)}
 .ucpage .uc-by b{color:var(--ink-2);font-weight:650}
 .ucpage .uc-avatar{width:38px;height:38px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
     display:grid;place-items:center;font-size:.82rem;font-weight:700;flex:0 0 auto}
-.ucpage /* Resource cards */
-  .uc-res{display:block;text-decoration:none;color:inherit;background:var(--ground);
+.ucpage .uc-res{display:block;text-decoration:none;color:inherit;background:var(--ground);
     border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
 .ucpage .uc-res:hover{border-color:#DCD5E8}
 .ucpage .uc-res .uc-band{height:104px;display:block;border-bottom:1px solid var(--line)}
@@ -127,8 +113,7 @@
 .ucpage .uc-res p{font-size:.85rem;color:var(--muted);margin:0 0 14px;line-height:1.55}
 .ucpage .uc-more{display:inline-flex;align-items:center;gap:6px;font-size:.83rem;font-weight:650;color:var(--accent)}
 .ucpage .uc-more svg{width:13px;height:13px}
-.ucpage /* FAQ */
-  .uc-faqgroup{margin-bottom:34px}
+.ucpage .uc-faqgroup{margin-bottom:34px}
 .ucpage .uc-faqgroup > h3{font-size:.74rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
     color:var(--muted);margin:0 0 12px}
 .ucpage .uc-q{border-bottom:1px solid var(--line)}
@@ -140,8 +125,7 @@
 .ucpage .uc-q .ans{padding:0 0 20px;font-size:.93rem;line-height:1.68;color:var(--ink-2);max-width:62em}
 .ucpage .uc-q .ans p{margin:0 0 11px}
 .ucpage .uc-q .ans p:last-child{margin:0}
-.ucpage /* Three-card CTA block */
-  .uc-cta{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.ucpage .uc-cta{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
 .ucpage .uc-cta{grid-template-columns:1fr}
 .ucpage .uc-ctacard{background:var(--ground);border:1px solid var(--line);border-radius:var(--r);padding:28px;
     box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;text-decoration:none;color:inherit;}
@@ -149,10 +133,7 @@
 .ucpage .uc-ctacard h3{font-size:1.02rem;letter-spacing:-.015em;margin:0}
 .ucpage .uc-ctacard p{font-size:.88rem;color:var(--muted);line-height:1.55;margin:0;flex:1}
 .ucpage .uc-ctacard .uc-more{margin-top:6px}
-.ucpage /* ─── The guide half ───────────────────────────────────────────────────────
-     Set as an article: one column, .ucpage generous measure, .ucpage no cards. This is the
-     region authored in the console. */
-  .uc-guide{border-top:1px solid var(--line);background:var(--ground);padding:78px 0 92px}
+.ucpage .uc-guide{border-top:1px solid var(--line);background:var(--ground);padding:78px 0 92px}
 .ucpage .uc-guide .uc-narrow{margin:0 auto}
 .ucpage .uc-guide h2{font-size:clamp(1.5rem,2.3vw,1.95rem);letter-spacing:-.024em;line-height:1.16;margin:52px 0 16px;text-wrap:balance}
 .ucpage .uc-guide h2:first-of-type{margin-top:0}
@@ -176,18 +157,13 @@
 .ucpage .uc-note p{margin:0;font-size:.94rem;line-height:1.65;color:var(--ink-2)}
 .ucpage .uc-note b{color:var(--ink)}
 .ucpage body.cms .uc-guide{background:#FCFAFF}
-.ucpage `, .ucpage and the hero
-     is a <section>, .ucpage so it was being pushed 104px down the page and given 104px of
-     dead space underneath. A class selector beats an element one, .ucpage so stating the
-     padding here removes both. */
-  .uc-hero{padding:0}
+.ucpage .uc-hero{padding:0}
 .ucpage .uc-hero-in{padding-block:clamp(24px,5.5vh,64px) clamp(26px,6vh,72px); width:100%;}
 .ucpage .uc-hero h1{font-size:clamp(1.7rem, 1.35vw + 2.05vh + 0.55rem, 3.15rem); margin-bottom:clamp(10px,1.8vh,18px);}
 .ucpage .uc-hero .uc-lede{font-size:clamp(.92rem,.55vh + .72rem,1.06rem); margin-bottom:clamp(14px,2.6vh,26px);}
 .ucpage .uc-hero .uc-eyebrow{margin-bottom:clamp(8px,1.6vh,16px);}
 .ucpage .uc-fine{margin-top:clamp(9px,1.5vh,15px);}
-.ucpage /* The panel is the tallest single element, .ucpage so it thins with the viewport too */
-  .uc-panel{padding:clamp(13px,1.9vh,20px);}
+.ucpage .uc-panel{padding:clamp(13px,1.9vh,20px);}
 .ucpage .uc-panel-hd{margin-bottom:clamp(9px,1.6vh,16px);}
 .ucpage .uc-row{padding:clamp(6px,1.15vh,11px) 2px;}
 .ucpage .uc-row span:not(.uc-tick){font-size:clamp(.78rem,.35vh + .68rem,.85rem);}
@@ -198,8 +174,7 @@
 .ucpage .uc-tick svg{width:10px; height:10px}
 .ucpage .uc-row:nth-of-type(n+4){display:none}
 .ucpage .uc-panel{display:none}
-.ucpage /* 335px does not fit inside a 375px viewport once the gutters are taken off */
-  .uc-field{min-width:min(335px,100%);}
+.ucpage .uc-field{min-width:min(335px,100%);}
 
 @media (max-width:760px){
   .ucpage .uc-wrap{padding:0 22px}

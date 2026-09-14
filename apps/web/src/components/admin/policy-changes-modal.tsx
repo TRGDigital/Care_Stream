@@ -401,7 +401,10 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
                 <GitCompare size={13} /> {tracked ? 'Hide changes' : 'View changes'}
               </button>
             )}
-            {legislation !== false && (
+            {/* Standalone policy buyers only. A full subscriber gets the grounding
+                through /gaps and the coverage report; showing it here as well put a
+                shop-only document in front of every tenant reviewing a change. */}
+            {policiesOnly && legislation !== false && (
               <button
                 onClick={async () => {
                   setLegislationBusy(true)

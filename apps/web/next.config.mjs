@@ -34,26 +34,22 @@ const nextConfig = {
       { source: '/trust-security', destination: '/trust', permanent: true },
 
       // ── Content theme switchover ──────────────────────────────────────────
-      // The rebuilt theme groups these pages under a section prefix. Each source
-      // below is a URL that is live and indexed TODAY, so it gets a 301 rather
-      // than being dropped: external links, the CQC directory listings and any
-      // stale search result keep working and the ranking consolidates onto the
-      // new path. /contact and /care-policies are deliberately absent — they stay
-      // exactly where they are.
-      { source: '/business-continuity',  destination: '/our-services/business-continuity',  permanent: true },
-      { source: '/care-audits',          destination: '/our-services/care-audits',          permanent: true },
-      { source: '/cqc-compliance',       destination: '/our-services/cqc-compliance',       permanent: true },
-      { source: '/cqc-report-chat',      destination: '/our-services/cqc-report-chat',      permanent: true },
-      { source: '/cqc-staff-questions',  destination: '/our-services/cqc-staff-questions',  permanent: true },
-      { source: '/hr-policies',          destination: '/our-services/hr-policies',          permanent: true },
-      { source: '/policy-gap-detection', destination: '/our-services/policy-gap-detection', permanent: true },
-
-      { source: '/privacy',              destination: '/trust/privacy',                     permanent: true },
-      { source: '/terms',                destination: '/trust/terms',                       permanent: true },
-      { source: '/dpa',                  destination: '/trust/dpa',                         permanent: true },
-      { source: '/cookies',              destination: '/trust/cookies',                     permanent: true },
-
-      { source: '/faq',                  destination: '/contact/faq',                       permanent: true },
+      // The rebuilt theme groups thirteen pages under a section prefix, and those
+      // moves need 301s from the live URLs. They are NOT here yet, and must not be
+      // added until the destination routes exist.
+      //
+      // They were added ahead of the port and shipped, which pointed /privacy,
+      // /care-audits, /cqc-compliance and ten others at routes the app does not
+      // serve: every one of them became a redirect to a 404. A redirect is only
+      // ever as good as its destination, and a 301 to a missing page is strictly
+      // worse than no redirect, because it takes a working page off the site.
+      //
+      // The list lives in the switchover plan; it goes in with the port, in the
+      // same deploy that creates /our-services/*, /trust/* and /contact/faq, and
+      // audit_pages.py in the theme repo is the check: it follows every redirect
+      // and reports the status of where it lands.
+      //
+      // /contact and /care-policies stay where they are either way.
 
       // ── Help centre sunset ────────────────────────────────────────────────
       // The 32 /help URLs are being retired with the theme (Len's call). Left

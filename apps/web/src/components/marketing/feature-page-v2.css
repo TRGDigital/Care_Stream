@@ -367,3 +367,7 @@
   .fpage-v2 .wctiles{grid-template-columns:1fr}
   .fpage-v2 .wccta-in{padding:28px}
 }
+
+.fpage-v2 .shot{display:block;overflow:hidden}
+.fpage-v2 .shot img{display:block;width:100%;height:auto;object-fit:cover;border-radius:inherit}
+.fpage-v2 .fchips{flex-wrap:wrap;overflow:visible}

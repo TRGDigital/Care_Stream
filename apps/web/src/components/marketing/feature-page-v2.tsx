@@ -87,7 +87,10 @@ function Hero({ page }: { page: FeatureV2Page }) {
         </div>
         <div>
           <div className="shot hub">
-            <SiteImage src={img(page.slug, 1)} alt={page.title} />
+            {/* priority: this is the page's largest above-the-fold image. Without it
+                SiteImage renders loading="lazy", which delays the one image the reader is
+                waiting for and hurts the LCP measurement on every feature page. */}
+            <SiteImage src={img(page.slug, 1)} alt={page.title} priority />
           </div>
         </div>
       </div>

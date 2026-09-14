@@ -37,6 +37,8 @@ export interface FeatureV2Page {
   faqs?: FeatureV2Faq[]
   /** Cluster pages only: the capabilities this page is assembled from, in order. */
   capabilities?: FeatureV2Page[]
+  /** Six sibling features, to keep the internal linking the current page has. */
+  related?: { slug: string; title: string }[]
 }
 
 const Tick = () => (
@@ -246,6 +248,26 @@ export function FeaturePageV2({ page }: { page: FeatureV2Page }) {
                 <div className="ans"><p>{f.answer}</p></div>
               </details>
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* The current page carries six links to sibling features, and an audit comparing the
+          two templates showed this was the one thing the rebuild dropped. Six internal links
+          on each of 52 pages is most of how this section is crawled, so it comes across. */}
+      {!!page.related?.length && (
+        <section className="fsec">
+          <div className="fwrap fsec-in">
+            <span className="flabel">More features</span>
+            <h2>Explore more features</h2>
+            <p>More of what the CareStream compliance platform does for UK care providers.</p>
+            <div className="ftiles">
+              {page.related.map(r => (
+                <Link className="ftile" href={`/features/${r.slug}`} key={r.slug}>
+                  <b>{r.title}</b>
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
       )}

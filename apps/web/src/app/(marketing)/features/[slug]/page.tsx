@@ -105,7 +105,10 @@ export default async function DbFeaturePage(
   const sp = await searchParams
   if (sp?.v2 === '1') {
     const caps = (fp.content as { capabilities?: string[] } | null)?.capabilities ?? []
-    const children = (await Promise.all(caps.map(getFeaturePage))).filter(Boolean)
+    const [children, relatedV2] = await Promise.all([
+      Promise.all(caps.map(getFeaturePage)).then(r => r.filter(Boolean)),
+      getRelatedFeatures(slug),
+    ])
     return (
       <FeaturePageV2 page={{
         slug,
@@ -115,6 +118,7 @@ export default async function DbFeaturePage(
         capabilities: children.map(c => ({
           slug: c!.slug, title: c!.title, content: (c!.content ?? {}) as FeatureV2Content,
         })),
+        related: relatedV2,
       }} />
     )
   }

@@ -55,6 +55,10 @@ export const PRODUCT_REGULATIONS: Record<string, string[]> = {
   'health-and-safety':           ['health-and-safety-at-work-act', 'workplace-health-safety-and-welfare-regulations-1992', 'first-aid-regulations'],
   'incident-reporting':          ['riddor', 'regulation-12', 'regulation-20'],
   'infection-prevention-control':['health-and-social-care-act-infection-control-code', 'infection-control', 'nice-cg139', 'uk-health-security-agency-ukhsa'],
+  // No regulation names lone working. It is the general duty applied to someone working
+  // alone, plus the staffing duty for how they are deployed and RIDDOR for what happens
+  // when something goes wrong and nobody saw it.
+  'lone-working':                ['health-and-safety-at-work-act', 'regulation-12', 'regulation-18', 'riddor'],
   'information-governance':      ['information-governance', 'caldicott-principles', 'gdpr', 'data-protection-act', 'records-management-code-of-practice-for-health-and-social-care-2021'],
   'learning-disability-autism':  ['oliver-mcgowan-mandatory-training', 'nice_ng11_-_challenging_behaviour_and_learning_disabilities', 'equality-act-2010'],
   'medicines-management':        ['medicines-act-1968', 'misuse-of-drugs-act-1971', 'nice-sc1-managing-medicines-care-homes', 'rps-professional-guidance-on-the-safe-and-secure-handling-of-medicines'],

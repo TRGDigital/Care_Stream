@@ -31,7 +31,6 @@
 
 .ucpage .uc-wrap{max-width:var(--maxw);margin:0 auto;padding:0 32px}
 .ucpage .uc-narrow{max-width:760px}
-.ucpage .uc-wrap{padding:0 22px}
 .ucpage .uc-eyebrow{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
     font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
     color:var(--accent);margin:0 0 16px;}
@@ -40,7 +39,6 @@
 .ucpage .uc-hero h1{font-size:clamp(2.1rem,3.8vw,3.15rem);line-height:1.06;letter-spacing:-.032em;text-wrap:balance;margin:0 0 18px}
 .ucpage .uc-hero h1 em{font-style:normal;color:var(--accent)}
 .ucpage .uc-hero .uc-lede{font-size:1.06rem;line-height:1.62;color:var(--ink-2);max-width:33em;margin:0 0 26px}
-.ucpage .uc-hero-in{grid-template-columns:1fr;gap:40px;padding-block:48px 52px}
 .ucpage .uc-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .ucpage .uc-field{display:flex;align-items:center;gap:8px;background:var(--ground);border:1px solid var(--line);
     border-radius:999px;padding:5px 5px 5px 18px;box-shadow:var(--shadow);min-width:335px;flex:1 1 335px;}
@@ -76,7 +74,6 @@
 .ucpage .uc-sec .sub{font-size:1rem;line-height:1.62;color:var(--muted);max-width:34em;margin:0}
 .ucpage .uc-head{margin-bottom:40px}
 .ucpage .uc-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
-.ucpage .uc-cards{grid-template-columns:1fr}
 .ucpage .uc-card{background:var(--ground);border:1px solid var(--line);border-radius:var(--r);padding:26px;box-shadow:var(--shadow)}
 .ucpage .uc-card h3{font-size:1.02rem;letter-spacing:-.015em;margin:0 0 9px}
 .ucpage .uc-card p{font-size:.9rem;line-height:1.6;color:var(--muted);margin:0}
@@ -84,8 +81,6 @@
 .ucpage .uc-cardico svg{width:20px;height:20px;display:block}
 .ucpage .uc-alt{display:grid;grid-template-columns:1fr 1.1fr;gap:56px;align-items:center;padding:52px 0}
 .ucpage .uc-alt:nth-of-type(even) .uc-alt-copy{order:2}
-.ucpage .uc-alt{grid-template-columns:1fr;gap:32px;padding:34px 0}
-.ucpage .uc-alt:nth-of-type(even) .uc-alt-copy{order:0}
 .ucpage .uc-alt h3{font-size:1.42rem;line-height:1.2;letter-spacing:-.02em;margin:0 0 14px;text-wrap:balance}
 .ucpage .uc-bullets{list-style:none;margin:0 0 20px;padding:0;display:grid;gap:11px}
 .ucpage .uc-bullets li{display:flex;gap:11px;font-size:.93rem;line-height:1.55;color:var(--ink-2)}
@@ -126,7 +121,6 @@
 .ucpage .uc-q .ans p{margin:0 0 11px}
 .ucpage .uc-q .ans p:last-child{margin:0}
 .ucpage .uc-cta{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
-.ucpage .uc-cta{grid-template-columns:1fr}
 .ucpage .uc-ctacard{background:var(--ground);border:1px solid var(--line);border-radius:var(--r);padding:28px;
     box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;text-decoration:none;color:inherit;}
 .ucpage .uc-ctacard:hover{border-color:#DCD5E8}
@@ -168,12 +162,6 @@
 .ucpage .uc-row{padding:clamp(6px,1.15vh,11px) 2px;}
 .ucpage .uc-row span:not(.uc-tick){font-size:clamp(.78rem,.35vh + .68rem,.85rem);}
 .ucpage .uc-meter{margin-top:clamp(9px,1.6vh,16px);}
-.ucpage .uc-hero-in{gap:clamp(18px,3.2vh,40px);}
-.ucpage .uc-hero .uc-lede{display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;}
-.ucpage .uc-tick{width:18px; height:18px}
-.ucpage .uc-tick svg{width:10px; height:10px}
-.ucpage .uc-row:nth-of-type(n+4){display:none}
-.ucpage .uc-panel{display:none}
 .ucpage .uc-field{min-width:min(335px,100%);}
 
 @media (max-width:760px){

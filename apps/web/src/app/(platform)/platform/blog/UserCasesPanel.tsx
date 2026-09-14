@@ -205,20 +205,20 @@ export function UserCasesPanel({ token }: { token: string }) {
       <div className="flex items-start justify-between gap-4">
         <p className="text-sm text-neutral-mid">
           The <code className="rounded bg-neutral-light px-1 py-0.5 text-xs">/uses/&hellip;</code> user case pages.
-          Edit the wording here and it is live within a minute, with no deploy. Each page also shows
+          The wording is the copy you approved in the content theme, imported as-is. Edit it here and it is live within a minute, with no deploy. Each page also shows
           the three blog posts allocated to it under a post&rsquo;s <strong>User case</strong> setting.
         </p>
         <button type="button" onClick={seed} disabled={busy === 'seed'}
           className="flex shrink-0 items-center gap-1.5 rounded-md border border-gray-200 px-4 py-2 text-sm font-medium hover:bg-neutral-light disabled:opacity-50">
           {busy === 'seed' ? <Loader2 size={14} className="animate-spin" /> : null}
-          Load starting copy
+          Import approved copy
         </button>
       </div>
 
       {note && <p className="rounded-md bg-neutral-light px-3 py-2 text-xs text-neutral-dark">{note}</p>}
       {missing > 0 && (
         <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
-          {missing} of {rows.length} pages have no content yet. &ldquo;Load starting copy&rdquo; fills
+          {missing} of {rows.length} pages have no content yet. &ldquo;Import approved copy&rdquo; fills
           them from the content theme and leaves any page you have already edited alone.
         </p>
       )}

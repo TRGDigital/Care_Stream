@@ -1429,6 +1429,30 @@ model FeaturePage {
   @@map("feature_pages")
 }
 
+// The /uses/<slug> user case pages. Same shape as FeaturePage on purpose: one template, one
+// row per page, copy edited in the console rather than in JSX, because the copy on these
+// pages is expected to change over time and a wording change should not need a deploy.
+//
+// `slug` matches the entries in lib/use-cases.ts, which is what blog posts are allocated to.
+model UserCasePage {
+  id               String   @id @default(uuid())
+  slug             String   @unique                          // e.g. policy-gaps
+  title            String   @default("")                      // hero H1, may contain <em>
+  status           String   @default("draft")                 // 'draft' | 'published'
+  meta_title       String?
+  meta_description String?
+  og_image_url     String?
+  hero_image_url   String?                                    // also the social card when og_image_url is unset
+  content          Json     @default("{}")                    // { eyebrow, lede, sections[], cards[], note }
+  faqs             Json     @default("[]")                    // [{ label, items: [{ question, answer }] }] — grouped, as the design has them
+  sort             Int      @default(0)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  @@index([status])
+  @@map("user_case_pages")
+}
+
 // Central alt-text store for static site images (managed in the platform console
 // → Blog → Alt Tags, surfaced on the marketing pages via the SiteImage component).
 model SiteImageAlt {

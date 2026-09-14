@@ -14,7 +14,9 @@ export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`
 
 // og:image must be an absolute URL — a root-relative path is ignored by every scraper, which
 // fails silently and looks like "the image just does not show".
-export const absoluteImage = (src?: string): string | undefined =>
+// Takes null as well as undefined: the database columns it is fed from (og_image_url,
+// feature_image_url) are nullable, and making every call site coalesce first is noise.
+export const absoluteImage = (src?: string | null): string | undefined =>
   !src ? undefined : /^https?:\/\//.test(src) ? src : `${SITE_URL}${src.startsWith('/') ? '' : '/'}${src}`
 
 export interface MetaFallback {

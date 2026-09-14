@@ -4,7 +4,8 @@ import { ArrowRight } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { JsonLd } from '@/components/json-ld'
 import { faqPageSchema, serviceSchema, SITE_URL } from '@/lib/schema'
-import { DEFAULT_OG_IMAGE } from '@/lib/page-meta'
+import { DEFAULT_OG_IMAGE, absoluteImage } from '@/lib/page-meta'
+import { heroImageFor } from '@/lib/hero-images'
 import {
   FeatureSimplePage,
   featureContentFromData,
@@ -43,6 +44,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!fp) return { title: 'Feature not found' }
   const title = fp.meta_title || `${fp.title} | CareStreamAI`
   const description = fp.meta_description || fp.content?.intro || ''
+  // This route builds its own metadata rather than going through pageMetadata(), so it did
+  // not pick up the hero fallback and all 43 feature pages shared the one branded card.
+  // Same chain as everywhere else: the Pages value, then the page's hero, then the card.
+  const image = absoluteImage(fp.og_image_url) || absoluteImage(heroImageFor(`/features/${fp.slug}`)) || DEFAULT_OG_IMAGE
   return {
     title: { absolute: title },
     description,
@@ -52,9 +57,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title,
       description,
       url: `${SITE_URL}/features/${fp.slug}`,
-      images: [fp.og_image_url || DEFAULT_OG_IMAGE],
+      images: [image],
     },
-    twitter: { card: 'summary_large_image', title, description, images: [fp.og_image_url || DEFAULT_OG_IMAGE] },
+    twitter: { card: 'summary_large_image', title, description, images: [image] },
   }
 }
 

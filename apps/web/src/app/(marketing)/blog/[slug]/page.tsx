@@ -5,6 +5,7 @@ import { ArticleLayout } from '@/components/marketing/article-layout'
 import { BlogFaqs } from '@/components/marketing/blog-faqs'
 import { JsonLd } from '@/components/json-ld'
 import { blogPostingSchema, faqPageSchema, hyperTocSchema } from '@/lib/schema'
+import { absoluteImage, DEFAULT_OG_IMAGE } from '@/lib/page-meta'
 import { buildBlogToc } from '@/lib/blog-toc'
 import { Fragment } from 'react'
 import { splitHtmlForCtas } from '@/lib/blog-cta'
@@ -106,6 +107,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!post) return { title: 'Post not found' }
   const title = post.meta_title || post.title
   const description = post.meta_description || post.excerpt || ''
+  // The article's own feature image is its sharing card. Only og_image_url was being read,
+  // and it is set on almost no post, so 28 of the 29 published articles were shared with no
+  // image at all — not even the branded fallback, because the tag was omitted entirely
+  // rather than defaulted. Every post has a feature image; it just was not being used.
+  const image = absoluteImage(post.og_image_url || post.feature_image_url) || DEFAULT_OG_IMAGE
   return {
     title,
     description,
@@ -115,8 +121,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title,
       description,
       url: `https://www.carestreamai.com/blog/${post.slug}`,
-      ...(post.og_image_url ? { images: [post.og_image_url] } : {}),
+      images: [image],
     },
+    // Without this an X/LinkedIn share falls back to a bare link. Every other page type
+    // declares it; articles, the pages most likely to actually be shared, did not.
+    twitter: { card: 'summary_large_image', title, description, images: [image] },
   }
 }
 

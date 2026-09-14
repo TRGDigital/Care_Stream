@@ -27,9 +27,9 @@ export interface ProductCluster {
 
 export const POLICY_CLUSTERS: ProductCluster[] = [
   { key: 'health-and-safety', label: 'Health and safety', kind: 'policies',
-    note: 'The general duty and the statutory duties under it: risk assessment, accidents, first aid, chemicals and hours.',
-    items: ['health-and-safety', 'risk-management', 'incident-reporting',
-            'first-aid', 'coshh', 'working-time'] },
+    note: 'The general duty and the hazards under it: moving and handling, hazardous substances, equipment, fire and accident reporting.',
+    items: ['health-and-safety', 'moving-and-handling', 'coshh',
+            'equipment-loler', 'fire-safety', 'incident-reporting'] },
   { key: 'fire-and-evacuation', label: 'Fire and evacuation', kind: 'policies',
     note: 'Fire safety, getting people out, and the premises duties behind both.',
     items: ['fire-safety', 'evacuation', 'premises-maintenance', 'health-and-safety',

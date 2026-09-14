@@ -7,6 +7,7 @@ import { SETTINGS_LIST, SETTING_IMAGES } from '@/lib/settings/list'
 import { CUSTOMER_LOGOS } from '@/lib/customer-logos'
 import { FEATURE_IMAGES } from '@/lib/feature-images'
 import { TRAINING_MARKETING_IMAGES } from '@/lib/training-marketing-images'
+import { THEME_IMAGES } from '@/lib/theme-images'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -18,6 +19,10 @@ export function AltTagsPanel({ token }: { token: string }) {
   const [loading, setLoading]     = useState(true)
   const [savingSrc, setSavingSrc] = useState<string | null>(null)
   const [savedSrc, setSavedSrc]   = useState<string | null>(null)
+  const [filter, setFilter]       = useState('')
+
+  const needle = filter.trim().toLowerCase()
+  const shown  = needle ? images.filter(i => i.src.toLowerCase().includes(needle)) : images
 
   useEffect(() => {
     if (!token) return
@@ -54,7 +59,13 @@ export function AltTagsPanel({ token }: { token: string }) {
         const featureVirtual: ImageAlt[] = FEATURE_IMAGES
           .map(f => ({ id: '', src: f.src, alt: f.alt }))
           .filter(im => !haveSrc.has(im.src))
-        const merged = [...pinned, ...dbImgs, ...virtual, ...settingVirtual, ...logoVirtual, ...featureVirtual]
+        // Everything the rebuilt content theme introduced (generated manifest). Several
+        // hundred rows, so they go last: the pinned and already-saved images stay where
+        // whoever is working through the list expects to find them.
+        const themeVirtual: ImageAlt[] = THEME_IMAGES
+          .map(f => ({ id: '', src: f.src, alt: f.alt }))
+          .filter(im => !haveSrc.has(im.src))
+        const merged = [...pinned, ...dbImgs, ...virtual, ...settingVirtual, ...logoVirtual, ...featureVirtual, ...themeVirtual]
         setImages(merged)
         setDrafts(Object.fromEntries(merged.map(i => [i.src, i.alt])))
       } finally {
@@ -89,8 +100,27 @@ export function AltTagsPanel({ token }: { token: string }) {
         Alt text for every static image on the site. Good alt text describes the image for screen
         readers and search engines (SEO). Saved changes appear on the live site within a minute.
       </p>
+      {/* The content theme brought several hundred images into this list, so working through
+          it without a filter means scrolling past everything you are not looking for. Matching
+          on the path lets you take one section at a time (type "features", "uses", "policy-law"). */}
+      <div className="flex items-center gap-3">
+        <input
+          value={filter}
+          onChange={e => setFilter(e.target.value)}
+          placeholder="Filter by path, e.g. features, uses, policy-law…"
+          className="w-full max-w-md rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal"
+        />
+        <span className="shrink-0 text-xs text-neutral-mid">
+          {shown.length === images.length
+            ? `${images.length} images`
+            : `${shown.length} of ${images.length} images`}
+        </span>
+      </div>
       <div className="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white">
-        {images.map(img => {
+        {shown.length === 0 && (
+          <p className="p-6 text-center text-sm text-neutral-mid">No image paths match that filter.</p>
+        )}
+        {shown.map(img => {
           const dirty = (drafts[img.src] ?? '') !== img.alt
           return (
             <div key={img.src} className="flex items-center gap-4 p-4">

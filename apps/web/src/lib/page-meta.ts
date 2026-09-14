@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { heroImageFor } from './hero-images'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 // Canonical host — must match sitemap.ts, robots.ts, metadataBase and lib/schema SITE_URL. The apex
@@ -10,6 +11,11 @@ export const canonicalUrl = (path: string) => `${SITE_URL}${path === '/' ? '' : 
 // Site-wide social sharing fallback — the branded CareStream card, used whenever a
 // page has no hero/OG image of its own.
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`
+
+// og:image must be an absolute URL — a root-relative path is ignored by every scraper, which
+// fails silently and looks like "the image just does not show".
+export const absoluteImage = (src?: string): string | undefined =>
+  !src ? undefined : /^https?:\/\//.test(src) ? src : `${SITE_URL}${src.startsWith('/') ? '' : '/'}${src}`
 
 export interface MetaFallback {
   title: string
@@ -28,9 +34,14 @@ export async function pageMetadata(path: string, fallback: MetaFallback): Promis
   let description = fallback.description
   let ogTitle: string | undefined
   let ogDescription: string | undefined
-  // Default to the supplied fallback image (e.g. the staff-training hero); an
-  // og_image_url set in the Pages tab overrides it.
-  let ogImage: string | undefined = fallback.image
+  // The sharing image, resolved worst-to-best so the better source always wins:
+  //   1. the page's own hero, looked up from the generated HERO_IMAGES map
+  //   2. an image the caller passed explicitly
+  //   3. og_image_url set by hand in the Pages tab (below)
+  // and DEFAULT_OG_IMAGE if none of them produced anything. The hero is the automatic layer:
+  // it means a page gets a real, page-specific card without anyone allocating one, which is
+  // the only way this stays true across several hundred pages.
+  let ogImage: string | undefined = fallback.image ?? absoluteImage(heroImageFor(path))
 
   try {
     const res = await fetch(`${API_URL}/public/site-pages?path=${encodeURIComponent(path)}`, {

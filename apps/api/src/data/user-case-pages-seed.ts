@@ -18,10 +18,18 @@ export interface UserCaseSection {
 }
 
 export interface UserCaseHead { eyebrow: string; heading: string; sub: string }
+
 export interface UserCasePanel {
   title: string
   pill: string
   rows: { label: string; note: string; done: boolean }[]
+}
+
+export interface UserCaseGuide {
+  eyebrow: string
+  title: string
+  lede: string
+  blocks: { heading: string; paras: string[]; bullets: string[] }[]
 }
 
 export interface UserCaseContent {
@@ -38,10 +46,14 @@ export interface UserCaseContent {
   /** Section headers above each block of cards. */
   heads: UserCaseHead[]
   /** The hero mock-up, built from markup rather than a screenshot. Null on the one
-   *  hand-built page, which uses a photograph instead. */
+   *  hand-built page, which uses a photograph. */
   panel: UserCasePanel | null
   /** The three closing cards. */
   cta: { title: string; body: string; action: string }[]
+  /** The line under the hero call to action. */
+  fine: string
+  /** The long-form guide that closes the page. */
+  guide: UserCaseGuide | null
 }
 
 /** FAQs are grouped under headings, which is how the page presents them. */
@@ -221,7 +233,53 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Bring your own situation and we will map it live.",
           "action": "Book a demo"
         }
-      ]
+      ],
+      "fine": "No card required · Set up in a day · UK data residency",
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A practical guide to language access in adult social care",
+        "lede": "Roughly one in five of the adult social care workforce in England was born outside the UK, and in some services it is far higher. Most language policy in care consists of translating an induction booklet once and hoping. This guide covers what language access actually requires, where translation is enough, where it is not, and how to evidence comprehension rather than delivery.",
+        "blocks": [
+          {
+            "heading": "Delivery is not comprehension",
+            "paras": [
+              "The whole problem sits in one gap. A policy was sent, opened and signed for. None of that establishes that the person understood what it asked of them, and in a sector where policies describe how to keep people safe, that gap is where the risk lives.",
+              "This is not a criticism of the workforce. Anyone reading a technical document in a second language works harder for less certainty, and a care policy is a technical document written in institutional English. The reasonable response is to remove the language barrier where you can and check understanding where you cannot."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Where translation is enough, and where it is not",
+            "paras": [
+              "Translation handles vocabulary and it handles it well. A carer reading the medication policy in Portuguese will follow the sequence of steps as reliably as a first language English reader.",
+              "It does not handle three things. Terms with no clean equivalent, where a phrase like duty of candour carries regulatory meaning that a literal translation loses. Cultural expectations about escalation, where a carer from a system with a stricter hierarchy may not challenge a senior. And literacy, which is a separate problem that translation can disguise."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "A workable standard",
+            "paras": [
+              "Aim for three things rather than a policy document about language. Every policy available in the language the person reads most comfortably. A named comprehension check for the safety critical subjects, done as a conversation rather than a form. And a private route to ask a question, because the barrier is usually embarrassment rather than access."
+            ],
+            "bullets": [
+              "Every policy available in each staff member’s own language",
+              "A recorded comprehension conversation for safeguarding, medication and moving and handling",
+              "A private way to ask a question without approaching a colleague",
+              "Language recorded against the read receipt",
+              "Terms specific to your service translated consistently"
+            ]
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "The Staff Hub holds one English library and serves it in over sixty languages, on the carer's own phone, with the language recorded against every read. Questions can be asked in plain language and answered from your own policies with the source shown, which is the private route that matters most in practice.",
+              "The comprehension conversation stays with your seniors, where it belongs. What the software removes is the excuse that the policy was not accessible.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      }
     },
     "faqs": [
       {
@@ -433,7 +491,45 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Bring your own situation and we will map it live.",
           "action": "Book a demo"
         }
-      ]
+      ],
+      "fine": "No card required · Set up in a day · UK data residency",
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A complete guide to running a policy gap analysis",
+        "lede": "A gap analysis is not an audit of the policies you have. It is a search for the ones you do not, which is a harder problem, because nothing in your folder points at an absence. This guide sets out a method you can run by hand with a spreadsheet and a fortnight, and what changes when you automate it.",
+        "blocks": [
+          {
+            "heading": "Start from the expected set, not from your folder",
+            "paras": [
+              "The instinct is to open your policy folder and work through it. That method can only ever confirm what you already have. Start instead from the list of what a service like yours is expected to hold, then check each item off against your library.",
+              "Getting that expected list right is most of the work. It varies by service type and by what you actually do, so a nursing home providing end of life care holds policies a residential home does not."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Three kinds of gap",
+            "paras": [
+              "Missing is the obvious one: no policy exists. Thin is more common and more dangerous, where a policy exists and passes a folder check but does not cover a required area. Stale is the third, where the policy covers the area but describes a practice, a role or a threshold that no longer applies."
+            ],
+            "bullets": [
+              "Missing: no policy exists for a required area",
+              "Thin: the policy exists but does not cover what it needs to",
+              "Stale: it covers the area but the content has been overtaken",
+              "Orphaned: it exists but nobody it applies to has read it",
+              "Contradicted: it is correct but another policy says otherwise"
+            ]
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "Policy Gap Detection runs the same method automatically, comparing your library against the expected set for your service type and reporting missing, thin and stale in one pass. The guided pipeline breaks it into four stages so you are not confronted with ninety findings at once, and runs are resumable when a shift interrupts you.",
+              "Every suggestion is accepted or rejected by you and nothing publishes without approval, which matters because a policy set that was rewritten by software is not one you can speak to in an inspection.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      }
     },
     "faqs": [
       {
@@ -645,7 +741,45 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Bring your own situation and we will map it live.",
           "action": "Book a demo"
         }
-      ]
+      ],
+      "fine": "No card required · Set up in a day · UK data residency",
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A guide to finding and resolving contradictions across a policy set",
+        "lede": "Most policy sets are assembled rather than written: some inherited, some bought as a template pack, some written in response to an incident. Each is reasonable on its own. The contradictions live in the gaps between them, and they are invisible to the way policies are normally reviewed.",
+        "blocks": [
+          {
+            "heading": "Why one at a time cannot work",
+            "paras": [
+              "Policy review is almost always scheduled per document. That method is good at catching a policy that has gone stale and structurally incapable of catching two policies that disagree, because the disagreement is not inside either document.",
+              "This is why contradictions survive years of diligent review. Nobody was doing the job badly. The job was defined in a way that excluded the problem."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "The four that matter",
+            "paras": [
+              "Reporting routes, where two policies send a concern to different people. Thresholds, where the same situation triggers action at different points. Named roles, where a policy names a post that no longer exists. And timescales, where the same duty carries two different windows."
+            ],
+            "bullets": [
+              "Different reporting routes for the same concern",
+              "Different thresholds for the same trigger",
+              "A named role that no longer exists in the structure",
+              "Two windows for the same statutory duty",
+              "Terms used to mean different things in different policies"
+            ]
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "Cross policy consistency checking reads the whole library at once and reports the specific sentences that disagree, grouped by the type of conflict so you can resolve a class of problem rather than a queue of items.",
+              "Resolution happens in place. You can correct wording directly in the policy panel, or replace a role or phrase everywhere it appears, and the corrected version goes out to the staff it applies to with the old one kept on the record.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      }
     },
     "faqs": [
       {
@@ -853,7 +987,40 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Bring your own situation and we will map it live.",
           "action": "Book a demo"
         }
-      ]
+      ],
+      "fine": "No card required · Set up in a day · UK data residency",
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A guide to aligning policy language with the CQC assessment framework",
+        "lede": "This is not about writing policies for inspectors. It is about the gap between doing something well and describing it in a way the person assessing you can credit. That gap is real, it is easy to close, and closing it changes nothing about your practice.",
+        "blocks": [
+          {
+            "heading": "What changed, and what did not",
+            "paras": [
+              "The single assessment framework replaced the key lines of enquiry with quality statements, written as we statements describing what a service should be able to say about itself. The five key questions survived. What changed is the unit of evidence.",
+              "For providers the practical consequence is narrow: the same evidence is now organised against different headings. A policy that evidenced a KLOE evidences a quality statement, provided somebody can see which one."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Making the mapping visible",
+            "paras": [
+              "The most common failure is a good policy that does not obviously evidence anything. The fix is usually a sentence, not a rewrite: state near the top what the policy is there to assure, in the framework's own terms, then carry on in your own voice.",
+              "The second most common failure is a term used loosely. Duty of candour, safe systems and person centred care all carry defined meaning. Using them as general descriptions is worse than not using them, because it suggests a specific claim you have not evidenced."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "Wording alignment reviews your existing library against the framework, flags terms used loosely, and proposes edits with the current and proposed wording side by side. You accept, edit or reject each one, and a phrase can be corrected across every policy at once.",
+              "The same language then feeds the CQC prep questions your staff practise on, which is what stops a well written policy and a hesitant staff answer sitting side by side in the same inspection.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      }
     },
     "faqs": [
       {
@@ -1061,7 +1228,46 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Bring your own situation and we will map it live.",
           "action": "Book a demo"
         }
-      ]
+      ],
+      "fine": "No card required · Set up in a day · UK data residency",
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A guide to reviewing and refreshing an ageing policy set",
+        "lede": "Almost every service has policies that have not been looked at in years, and almost every service knows it. What stops the work is not indifference, it is that the job looks like rewriting ninety documents. It is not. It is finding the specific content that has been overtaken.",
+        "blocks": [
+          {
+            "heading": "Sort before you write",
+            "paras": [
+              "Split the library into three. Policies that are current and need only a review date. Policies with specific content that has been overtaken. And the small number that are genuinely obsolete and need rewriting.",
+              "In most services the middle group is the largest and the third is tiny. Doing this sort first turns an impossible project into a fortnight of targeted edits."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "What actually goes stale",
+            "paras": [
+              "Content is rarely wrong in general. It is wrong in particulars, and the particulars are predictable."
+            ],
+            "bullets": [
+              "Superseded guidance still cited as current",
+              "A named role or post holder who has left",
+              "A threshold or timescale that has since moved",
+              "Links that no longer resolve",
+              "Pandemic era measures presented as standing practice",
+              "Equipment or systems the service no longer uses"
+            ]
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "Review dates are held per policy and editable, with a dashboard of what is due and a banner when something is overdue, so the schedule is visible rather than theoretical.",
+              "For the content itself, dated phrasing is found across the whole library at once and a phrase can be replaced or removed everywhere it appears, in your own wording. Legal change tracking then tells you which policies a new regulatory change affects, which is what stops the set drifting again.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      }
     },
     "faqs": [
       {
@@ -1273,7 +1479,53 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Bring your own situation and we will map it live.",
           "action": "Book a demo"
         }
-      ]
+      ],
+      "fine": "No card required · Set up in a day · UK data residency",
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A guide to tracking staff compliance in a care service",
+        "lede": "Compliant is a word used loosely enough that two people in the same service will mean different things by it. This guide unpicks what it actually contains, why the parts never agree with each other, and how to get to a position you can see rather than assemble.",
+        "blocks": [
+          {
+            "heading": "One carer, four systems",
+            "paras": [
+              "Take one care assistant. Her statutory training sits in a spreadsheet. Her observed competencies are on paper in a supervision file. Her policy acknowledgements are in an email folder. Her DBS and right to work are in a personnel file in a locked cabinet.",
+              "Every one of those is maintained by a different person on a different rhythm. Nothing joins them. When you say she is compliant you are asserting agreement between four systems that have never been compared."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Completion is not competence",
+            "paras": [
+              "The second problem is that most tracking records completion, which is a date, and treats it as competence, which is an observation. They are different evidence and an inspector will ask for both.",
+              "A matrix full of green completions and no competency records is the single most common way a service that trains its people well fails to demonstrate it."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "What a usable view contains",
+            "paras": [
+              "Build the view around exceptions rather than totals. A percentage that is always high tells a senior nothing and gets ignored within a fortnight."
+            ],
+            "bullets": [
+              "What is overdue right now, and whose it is",
+              "What falls due in the next thirty days",
+              "Anyone with a completion but no competency observation",
+              "Anyone who has not read a policy that changed",
+              "A named owner for each outstanding item"
+            ]
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "Everything lands on one staff record as it happens: policy reads against the version live that day, module scores, observed competencies and renewal dates. The view leads with exceptions, and chasing goes to the individual with the task attached rather than to everyone.",
+              "What it does not do is make people care. If completion is poor because nobody is held to it, this will show you that clearly and then it is yours to fix.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      }
     },
     "faqs": [
       {
@@ -1485,7 +1737,50 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Bring your own situation and we will map it live.",
           "action": "Book a demo"
         }
-      ]
+      ],
+      "fine": "No card required · Set up in a day · UK data residency",
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A complete guide to mandatory training in adult social care",
+        "lede": "This is the reference half of the page: what has to be done, how often, and where the requirement comes from. It is deliberately plain, because this is the part people come back to rather than read once.",
+        "blocks": [
+          {
+            "heading": "What mandatory actually means",
+            "paras": [
+              "Very little training is mandatory by name in legislation. What exists is a duty to ensure staff are competent and appropriately trained, and a set of subjects that are effectively required because you cannot evidence competence without them.",
+              "That distinction matters when someone asks why a subject is on the list. The honest answer is usually that it is how you evidence a general duty, not that a specific rule names it."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "The annual round",
+            "paras": [
+              "The subjects most services run annually or on a short cycle, with the caveat that frequency should follow risk in your service rather than a generic table."
+            ],
+            "bullets": [
+              "Safeguarding adults, and children where relevant",
+              "Fire safety and evacuation",
+              "Infection prevention and control",
+              "Moving and handling, with practical assessment",
+              "Basic life support",
+              "Medication, where the role involves it",
+              "Mental Capacity Act and Deprivation of Liberty Safeguards",
+              "Health and safety, including COSHH",
+              "Equality, diversity and inclusion",
+              "Food hygiene, where the role involves it"
+            ]
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "The annual round is available as CPD accredited modules bought per subject and completed in the staff hub, in the carer's own language, in short sessions rather than a booked afternoon.",
+              "Completion and score feed the training matrix as they happen, and the calendar shows renewals colliding before you commit to dates, which is what stops an induction cohort all falling due in the same month.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      }
     },
     "faqs": [
       {
@@ -1697,7 +1992,46 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Bring your own situation and we will map it live.",
           "action": "Book a demo"
         }
-      ]
+      ],
+      "fine": "No card required · Set up in a day · UK data residency",
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A guide to responsive, incident led training",
+        "lede": "Most services investigate well and train slowly. The investigation concludes, a report is written, an action is logged, and the training that would have prevented a recurrence arrives months later attached to the annual round. This guide is about closing that gap without turning learning into blame.",
+        "blocks": [
+          {
+            "heading": "Learning and blame share a border",
+            "paras": [
+              "The single reason incident led training goes wrong is that it feels punitive to the people receiving it. If a module lands three days after a colleague made a mistake, everyone knows why it arrived.",
+              "Two things help. Assign by role rather than by involvement, so it is clear the subject is being reinforced rather than an individual corrected. And separate the training from the disciplinary process explicitly, in writing, at the point it is assigned."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "From outcome to module",
+            "paras": [
+              "The steps are simple and the discipline is in doing them quickly."
+            ],
+            "bullets": [
+              "Identify the specific policy the incident touched",
+              "Decide which roles the learning applies to",
+              "Generate a short module from that policy and review it",
+              "Assign with a stated reason that is about practice, not people",
+              "Record an observed competency where the subject is practical",
+              "Close the loop on the incident record"
+            ]
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "An adhoc module is generated from the specific policy the incident touched, so what staff learn is what your policy says rather than a generic course on the topic. You review it before it goes out, assign it by role, and it arrives in the staff hub in each person's language.",
+              "Scores and observed competencies land on the same staff record as everything else, so the response is visible next to the incident rather than filed separately.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      }
     },
     "faqs": [
       {
@@ -1909,7 +2243,46 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Bring your own situation and we will map it live.",
           "action": "Book a demo"
         }
-      ]
+      ],
+      "fine": "No card required · Set up in a day · UK data residency",
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A guide to running and evidencing in person training",
+        "lede": "There is a persistent belief in care that everything is drifting online and that in person training is being squeezed out. In practice most services still deliver a great deal of it, deliver it well, and cannot prove it. This guide is about the proving.",
+        "blocks": [
+          {
+            "heading": "What has to be in the room",
+            "paras": [
+              "Practical assessment has to be observed. You cannot evidence that someone can perform a hoist transfer safely from a multiple choice score, and no reasonable inspector would accept that you could.",
+              "Beyond the genuinely practical, the honest answer is that a lot of in person training is habit. That is not automatically wrong, discussion based sessions on safeguarding culture can be far better in a room than on a screen, but it should be a choice rather than a default."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "What a record needs on it",
+            "paras": [
+              "A signing sheet is not a training record. It evidences presence and nothing else. The difference between a weak record and a strong one is entirely in the detail."
+            ],
+            "bullets": [
+              "The date and duration of the session",
+              "The trainer, named, internal or external",
+              "What was actually covered, not just the subject title",
+              "Who attended, individually",
+              "What each person demonstrated, and who observed it",
+              "Anyone who attended but was not signed off, and why"
+            ]
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "A face to face session is recorded with all of the above and lands in the training matrix beside the online modules for the same subject, with renewal dates set from the session date.",
+              "Pre reading can be pushed to the staff hub beforehand, which is the single easiest way to make an hour in a room worth more, and sessions are scheduled through the calendar so cover is planned rather than improvised on the day.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      }
     },
     "faqs": [
       {
@@ -2121,7 +2494,54 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Bring your own situation and we will map it live.",
           "action": "Book a demo"
         }
-      ]
+      ],
+      "fine": "No card required · Set up in a day · UK data residency",
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A guide to building and using a care training matrix",
+        "lede": "Almost every service has a training matrix. Very few have one that would survive being opened in front of an inspector without a caveat. The difference is rarely effort. It is what the matrix was designed to record.",
+        "blocks": [
+          {
+            "heading": "Completion is a date, competence is a judgement",
+            "paras": [
+              "The most common matrix has one cell per person per subject, containing a date. That records that something was completed. It does not record that the person can do it, and for practical subjects the date is the weaker half of the evidence.",
+              "A matrix that separates the two is more honest and more useful. It also immediately reveals a population most services do not know they have: people who completed the module and were never observed."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "What a matrix should contain",
+            "paras": [
+              "Beyond the obvious, the fields that make a matrix usable rather than decorative."
+            ],
+            "bullets": [
+              "Completion date and score, not just a tick",
+              "Competency observation, with the observer named",
+              "Renewal date, derived from the completion",
+              "The role requirement, so irrelevant cells stay empty",
+              "Source of the record, whether online, in person or imported",
+              "Whether the person has read the current version of the related policy"
+            ]
+          },
+          {
+            "heading": "From compliance artefact to planning tool",
+            "paras": [
+              "The reframe that makes a matrix worth maintaining is reading it against the rota rather than against a target. The question stops being what percentage are trained and becomes whether Tuesday night has anyone on it trained in what Tuesday night might need.",
+              "That question cannot be answered by a spreadsheet updated monthly, because the answer changes with every shift swap."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "The matrix holds completion, score, competency and renewal per subject per person, set by role, with in person and online in the same view, and it updates as things happen rather than when someone remembers.",
+              "Because it is live, it can be read against the rota to find uncovered shifts, and any individual's full position can be produced on demand rather than assembled before an inspection.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      }
     },
     "faqs": [
       {
@@ -2333,7 +2753,46 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Bring your own situation and we will map it live.",
           "action": "Book a demo"
         }
-      ]
+      ],
+      "fine": "No card required · Set up in a day · UK data residency",
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A guide to scheduling training across a care service",
+        "lede": "Training plans fail for operational reasons, not for want of intent. They are built on a calendar and executed against a rota, and nobody reconciles the two until the week the session is due. This guide is about building the plan the other way round.",
+        "blocks": [
+          {
+            "heading": "The March problem",
+            "paras": [
+              "Almost every service has a month where everything falls due. It is nearly always the month a group of people were inducted together, usually after a recruitment push, and it repeats every year afterwards because renewals are set from completion.",
+              "The fix is dull and effective: deliberately bring some renewals forward to flatten the peak. Slightly early costs nothing. Late costs you an overdue entry and, occasionally, a shift you cannot safely fill."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Constraints first",
+            "paras": [
+              "Build the schedule from what is fixed rather than from what is desirable."
+            ],
+            "bullets": [
+              "Minimum staffing for each shift",
+              "Skill mix, not just headcount",
+              "Night staff, who are the most frequently missed group",
+              "Part time patterns, so the same person is not always the one released",
+              "Agency cost of backfilling, which decides how many can go at once",
+              "The trainer, who is usually the scarcest resource of all"
+            ]
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "The calendar plots every renewal across twelve months so collisions are visible before you commit, and lets you rebalance deliberately rather than discovering the pile up in the month it lands.",
+              "Sessions are scheduled with cover in view, warnings arrive ahead of a renewal date rather than after it, and anything that does lapse stays on the dashboard until cleared instead of being absorbed into a percentage.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      }
     },
     "faqs": [
       {
@@ -2545,7 +3004,54 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Bring your own situation and we will map it live.",
           "action": "Book a demo"
         }
-      ]
+      ],
+      "fine": "No card required · Set up in a day · UK data residency",
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A guide to preparing a whole team for inspection",
+        "lede": "The most predictable failure in inspection preparation is that the manager is ready and the team has never been asked. The second most predictable is that the care staff were briefed and the kitchen was not. This guide covers both, and argues against the thing most services do first.",
+        "blocks": [
+          {
+            "heading": "Do not write model answers",
+            "paras": [
+              "The instinct is to produce a sheet of questions with the right answers and circulate it. It is the wrong move, for two reasons.",
+              "First, it is obvious. An inspector who hears the same phrasing from three people knows exactly what happened, and it converts a neutral conversation into a sceptical one. Second, a memorised answer collapses under a follow up question, and the staff member is left more exposed than if they had answered in their own words."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Prepare by role",
+            "paras": [
+              "Different roles get asked different things, and the roles least likely to be prepared are the ones most likely to be approached informally."
+            ],
+            "bullets": [
+              "Care assistants: daily practice, dignity, escalation, knowing residents",
+              "Seniors: supervision, delegation, incident handling",
+              "Nurses: clinical decisions, medication, capacity and consent",
+              "Kitchen: dietary needs, allergens, how they learn about a resident’s requirements",
+              "Maintenance: hazards, restricted areas, contractor handling",
+              "Administration: records, confidentiality, complaints handling"
+            ]
+          },
+          {
+            "heading": "What good preparation looks like",
+            "paras": [
+              "Ask real questions in supervision over the weeks before, in the person's own language where that helps, and when they do not know, send them to the policy rather than telling them the answer. That builds something that survives a follow up question.",
+              "Accept that some people will still be nervous. Nervous and honest reads far better than fluent and rehearsed."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "Question sets are matched to the role, including the ancillary roles that are usually missed, and practised in the staff hub on the person's own phone in their own language.",
+              "Each question links to the policy section the answer comes from rather than supplying an answer, and readiness is visible by role, which is how you find out that nobody in the kitchen has done it while there is still time.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      }
     },
     "faqs": [
       {
@@ -2769,7 +3275,53 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Bring your own situation and we will map it live.",
           "action": "Book a demo"
         }
-      ]
+      ],
+      "fine": "No card required · Set up in a day · UK data residency",
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A complete guide to onboarding a new care worker",
+        "lede": "Induction is the process a service repeats most and improves least. It is usually built around whoever happens to be on shift, and the record of it is whatever survived in the folder. This guide sets out what has to happen before a new starter works alone, in what order, and what you need to keep.",
+        "blocks": [
+          {
+            "heading": "Four jobs, not one",
+            "paras": [
+              "There are four separate things happening in a new starter's first fortnight, and services get into trouble by treating them as one. Legal: the checks that must be complete before the person works at all. Safety: the small number of things they must know before they are near a resident. Competence: the point at which they can work unsupervised. And belonging, which nobody documents and everybody feels.",
+              "Only the first two are urgent. Trying to complete all four in week one produces a heavy induction the new starter half remembers and the manager cannot evidence."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Before their first shift",
+            "paras": [
+              "These belong before someone starts, not during their first week. If any are outstanding, the person should not be on the rota."
+            ],
+            "bullets": [
+              "Proof of identity and right to work in the UK",
+              "An enhanced DBS check at the level the role requires",
+              "References covering recent employment, with gaps explained",
+              "Professional registration confirmed where the role requires it",
+              "A signed contract and a job description the person has read"
+            ]
+          },
+          {
+            "heading": "Sign off should be a decision",
+            "paras": [
+              "Sign off is too often the absence of a complaint. Three questions make it a decision. Has every safety critical subject been completed and, where practical, observed? Is there anything the person still does not do unsupervised, and is that written where the team can see it? And would the senior who watched them be comfortable with that person working a night shift?",
+              "If the answer to the third is no, the person is not signed off, whatever the paperwork says."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "The sequence is held once and assigned by role on the start date, so the pack is the same whoever is on shift that morning. Policies arrive in the new starter's own language on their own phone, and training is generated from the policies you actually use rather than a generic course.",
+              "Read receipts, scores and observations land on one record, so producing the evidence for one person takes a moment rather than an afternoon.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      }
     },
     "faqs": [
       {
@@ -2958,7 +3510,48 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Tell us how your home runs and we will tell you honestly if this helps.",
           "action": "Contact us"
         }
-      ]
+      ],
+      "fine": "No card required · Set up in a day · UK data residency",
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A practical guide to resident knowledge in a care home",
+        "lede": "Every home holds two kinds of knowledge about the people living in it. One is written down because it has to be. The other decides whether somebody has a good day, and it usually lives in the heads of whoever has worked there longest. This guide covers what belongs in each, why handover cannot carry it, and a standard that holds up.",
+        "blocks": [
+          {
+            "heading": "The knowledge that never had anywhere to live",
+            "paras": [
+              "Every care home runs on two kinds of knowledge. The first is written down because it has to be: the care plan, the risk assessments, the MAR chart, the policies. The second is the knowledge that makes a shift go well, and it has almost never been written down anywhere useful.",
+              "It is knowing that a resident answers to a name that is not on the door. It is knowing which chair is hers, that he takes his tea before anyone else is up, that she will eat if you sit with her and will not if you leave the plate. None of it is clinical. All of it decides whether somebody has a good day."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Why handover does not carry it",
+            "paras": [
+              "Handover is built for what has changed and what is urgent. It is short by design, and it should be. Asking it to also carry the accumulated character of thirty residents would make it unusable.",
+              "So the small things get passed on informally, by working alongside somebody who already knows. That works well when your team is stable and barely at all when it is not. Bank staff, agency cover and new starters are exactly the people who need the knowledge most and have the least access to it."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "What belongs here, and what does not",
+            "paras": [
+              "The test is simple: would you tell a new colleague this in the corridor on their first shift? If yes, it belongs. Preferred name, background and work, family and visitors, food they like and refuse, what helps them settle, how they prefer personal care to be offered.",
+              "What does not belong is anything clinical that has a proper home elsewhere. Medication, wound care, DoLS, moving and handling plans, anything that must be actioned or evidenced, belongs in the care plan and the systems built for it. Resident knowledge sits alongside those records, it does not replace them."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "CareStream gives that knowledge somewhere to live and a way to ask for it. Entries are added in the knowledge base under a Resident category, kept separate from your policies, and approved by an admin before any carer sees them.",
+              "Staff then ask about a resident by name in the hub, on their own phone, in their own language, and get an answer built from what your team wrote. A carer covering a shift can find out in fifteen seconds what would otherwise take three interruptions to somebody who is already busy.",
+              "Resident knowledge sits alongside the care plan. It does not replace it, and nothing clinical or actionable should live here."
+            ],
+            "bullets": []
+          }
+        ]
+      }
     },
     "faqs": [
       {

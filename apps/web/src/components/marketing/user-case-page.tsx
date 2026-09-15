@@ -36,6 +36,15 @@ export interface UserCaseContent {
   panel?: UserCasePanel | null
   /** The three closing cards. */
   cta?: { title: string; body: string; action: string }[]
+  /** The line under the hero call to action. */
+  fine?: string
+  /** The long-form guide that closes the page. */
+  guide?: {
+    eyebrow: string
+    title: string
+    lede: string
+    blocks: { heading: string; paras: string[]; bullets: string[] }[]
+  } | null
 }
 
 export interface UserCaseFaqGroup {
@@ -104,6 +113,9 @@ export function UserCasePageView({ page, readNext }: { page: UserCasePage; readN
               <Link className="uc-demo" href="/demo">Book a demo</Link>
               <Link className="uc-demo" href="/register">Start free trial</Link>
             </div>
+            {/* The theme puts an email form here. The ported page uses real links instead of a
+                form that does nothing, but this line is true either way and is kept. */}
+            {c.fine && <p className="uc-fine">{c.fine}</p>}
           </div>
           {/* The hero shows the product mock-up where the page has one: it is markup rather
               than a screenshot, so it stays readable to a crawler and scales without going
@@ -207,6 +219,27 @@ export function UserCasePageView({ page, readNext }: { page: UserCasePage; readN
                 </Link>
               ))}
             </div>
+          </div>
+        </section>
+      )}
+
+      {c.guide && (
+        <section className="uc-guide">
+          <div className="uc-wrap uc-narrow">
+            {c.guide.eyebrow && <span className="uc-eyebrow">{c.guide.eyebrow}</span>}
+            <h2>{c.guide.title}</h2>
+            {c.guide.lede && <p className="uc-guide-lede">{c.guide.lede}</p>}
+            {c.guide.blocks.map((b, i) => (
+              <div key={i}>
+                {b.heading && <h2>{b.heading}</h2>}
+                {b.paras.map((x, j) => <p key={j}>{x}</p>)}
+                {b.bullets.length > 0 && (
+                  <ul className="uc-checklist">
+                    {b.bullets.map((x, j) => <li key={j}><Tick />{x}</li>)}
+                  </ul>
+                )}
+              </div>
+            ))}
           </div>
         </section>
       )}

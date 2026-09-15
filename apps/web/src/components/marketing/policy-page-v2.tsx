@@ -126,6 +126,17 @@ const COMPARE: [string, Mark, Mark, Mark, Mark][] = [
   ['Costs less than a day of consultancy', 'yes', 'yes', 'no', 'yes'],
 ]
 
+const WHY = [
+  '65 care policies, one platform',
+  'Written for your service, never a template',
+  'Verified against every required element of the law',
+  'Read by a person before it carries your name',
+  'Kept up to date with UK care regulations',
+  'Branded, print-ready PDF on your letterhead',
+  'Delivered within 2 working days of your details',
+  'Part of the full CareStream platform when you are ready',
+]
+
 const ASSURANCES = [
   ['Fourteen day refund',
    'If it is not right for your service, tell us within fourteen days and we refund it in full.'],
@@ -347,14 +358,27 @@ export function PolicyPageV2({ product, regulations, related, bundles }: {
         </div>
       </section>
 
-      <section className="cvsample">
+      {/* "Why CareStream". This was missing entirely and its heading had been borrowed for the
+          sample section below, so two sections had collapsed into one wrong one. */}
+      <section className="pcsec">
         <div className="pcwrap">
+          <p className="pceyebrow">Why CareStream</p>
+          <h2>Policies written the way an inspector expects to read them.</h2>
+          <div className="pcwhy">
+            {WHY.map(t => <div key={t}><Tick /><span>{t}</span></div>)}
+          </div>
+        </div>
+      </section>
+
+      <section className="cvsample">
+        <div className="wrap">
           <div className="cvhead">
-            <p className="eyebrow">A look inside</p>
-            <h2>Policies written the way an inspector expects to read them.</h2>
+            <p className="eyebrow">Before you buy</p>
+            <h2>What the document actually looks like.</h2>
             <p>
-              The structure is the same for every policy we write. The wording is not, because
-              the wording is what you are paying us to write for your service.
+              Every section it contains, and a page of the real thing. We show the structure and
+              the personalisation rather than the wording, because the wording is what you are
+              paying us to write for your service.
             </p>
           </div>
           <div className="cvsplit">
@@ -475,6 +499,32 @@ export function PolicyPageV2({ product, regulations, related, bundles }: {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      </section>
+
+      {/* The cross-sell to training, which closes every policy page in the theme. Its opposite
+          number closes every training page. */}
+      <section className="xsell">
+        <div className="wrap">
+          <div className="xcard">
+            <div className="xart">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 4 2.5 8.5 12 13l9.5-4.5L12 4Z" />
+                <path d="M6 10.5v5c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-5" />
+                <path d="M21.5 8.5v6" />
+              </svg>
+            </div>
+            <div>
+              <p className="xeyebrow">Training</p>
+              <h3>Owning the policy is half of it</h3>
+              <p>
+                An inspector asks whether your staff understood it, not whether you hold it.
+                Ninety eight modules written and kept current by us, to the same regulations,
+                from £25.99 per staff member with no subscription.
+              </p>
+            </div>
+            <Link className="xcta" href="/staff-training">Browse the training <Arrow /></Link>
           </div>
         </div>
       </section>

@@ -17,6 +17,13 @@ export interface UserCaseSection {
   image_alt: string
 }
 
+export interface UserCaseHead { eyebrow: string; heading: string; sub: string }
+export interface UserCasePanel {
+  title: string
+  pill: string
+  rows: { label: string; note: string; done: boolean }[]
+}
+
 export interface UserCaseContent {
   /** Small label above the H1. */
   eyebrow: string
@@ -28,6 +35,13 @@ export interface UserCaseContent {
   cards: { title: string; body: string }[]
   /** The "general guidance, not legal advice" line. */
   note: string
+  /** Section headers above each block of cards. */
+  heads: UserCaseHead[]
+  /** The hero mock-up, built from markup rather than a screenshot. Null on the one
+   *  hand-built page, which uses a photograph instead. */
+  panel: UserCasePanel | null
+  /** The three closing cards. */
+  cta: { title: string; body: string; action: string }[]
 }
 
 /** FAQs are grouped under headings, which is how the page presents them. */
@@ -137,7 +151,77 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "A new carer can ask what to do about a refused medication without having to admit to a colleague that they did not understand the policy."
         }
       ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "A read receipt is only worth what the reader understood",
+          "sub": "An inspector will not ask whether you sent the policy. They will ask a carer what it says."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "Staff Hub in 60+ languages, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Amara Nwosu · Care Assistant · Igbo",
+        "pill": "Reading in Igbo",
+        "rows": [
+          {
+            "label": "Safeguarding Adults v3.1",
+            "note": "Read",
+            "done": true
+          },
+          {
+            "label": "Medication Policy v2.0",
+            "note": "Read",
+            "done": true
+          },
+          {
+            "label": "Infection Prevention v4.2",
+            "note": "Read",
+            "done": true
+          },
+          {
+            "label": "Moving and Handling v1.8",
+            "note": "Due",
+            "done": false
+          },
+          {
+            "label": "Mental Capacity v2.3",
+            "note": "Due",
+            "done": false
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started"
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now"
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo"
+        }
+      ]
     },
     "faqs": [
       {
@@ -279,7 +363,77 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Nothing is rewritten for you. Each suggestion is accepted or rejected, and what you accept is recorded with who accepted it."
         }
       ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "Absence is the hardest thing to notice",
+          "sub": "You can read every policy you have and still not know which one you never wrote."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "Policy Gaps, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Gap scan · Ferndale Nursing Home",
+        "pill": "7 gaps found",
+        "rows": [
+          {
+            "label": "Missing: Visiting Policy",
+            "note": "Required",
+            "done": false
+          },
+          {
+            "label": "Missing: Oral Health",
+            "note": "Required",
+            "done": false
+          },
+          {
+            "label": "Thin: Restraint and Restrictive Practice",
+            "note": "Review",
+            "done": false
+          },
+          {
+            "label": "Safeguarding Adults",
+            "note": "Complete",
+            "done": true
+          },
+          {
+            "label": "Medication Management",
+            "note": "Complete",
+            "done": true
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started"
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now"
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo"
+        }
+      ]
     },
     "faqs": [
       {
@@ -421,7 +575,77 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Change a route or a role and it updates across every policy that names it, with the old version kept on the record."
         }
       ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "A contradiction is a design fault, not a training fault",
+          "sub": "You cannot train your way out of two documents that give different instructions."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "Policy Inconsistencies, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Consistency check · 94 policies",
+        "pill": "5 conflicts",
+        "rows": [
+          {
+            "label": "Reporting route differs",
+            "note": "Safeguarding vs Whistleblowing",
+            "done": false
+          },
+          {
+            "label": "Different escalation window",
+            "note": "Complaints vs Duty of Candour",
+            "done": false
+          },
+          {
+            "label": "Role no longer exists",
+            "note": "Named in 3 policies",
+            "done": false
+          },
+          {
+            "label": "Medication thresholds",
+            "note": "Consistent",
+            "done": true
+          },
+          {
+            "label": "Consent wording",
+            "note": "Consistent",
+            "done": true
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started"
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now"
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo"
+        }
+      ]
     },
     "faqs": [
       {
@@ -559,7 +783,77 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "The aim is policies an inspector recognises, not policies that read as though they were written for an inspector."
         }
       ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "Good practice that does not use the framework language is harder to credit",
+          "sub": "You are not changing what you do. You are making it recognisable to the person assessing it."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "CQC Wording Alignment, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Wording review · 94 policies",
+        "pill": "38 suggestions",
+        "rows": [
+          {
+            "label": "Person centred care",
+            "note": "Map to quality statement",
+            "done": false
+          },
+          {
+            "label": "Duty of candour",
+            "note": "Term used loosely",
+            "done": false
+          },
+          {
+            "label": "Safe systems",
+            "note": "Reword to match framework",
+            "done": false
+          },
+          {
+            "label": "Safeguarding",
+            "note": "Aligned",
+            "done": true
+          },
+          {
+            "label": "Consent",
+            "note": "Aligned",
+            "done": true
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started"
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now"
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo"
+        }
+      ]
     },
     "faqs": [
       {
@@ -697,7 +991,77 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Change a dated phrase once and it updates across every policy that uses it, with your wording rather than an imposed replacement."
         }
       ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "Out of date is not the same as wrong, and treating them the same is why nothing gets done",
+          "sub": "The job is triage. Most stale policies need a sentence changed, not a rewrite."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "Policies Out of Date, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Review status · 94 policies",
+        "pill": "31 overdue",
+        "rows": [
+          {
+            "label": "Infection Prevention",
+            "note": "Last reviewed 2021",
+            "done": false
+          },
+          {
+            "label": "Visiting",
+            "note": "References COVID guidance",
+            "done": false
+          },
+          {
+            "label": "Business Continuity",
+            "note": "Names a former manager",
+            "done": false
+          },
+          {
+            "label": "Safeguarding",
+            "note": "Reviewed Jul 2026",
+            "done": true
+          },
+          {
+            "label": "Medication",
+            "note": "Reviewed Jun 2026",
+            "done": true
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started"
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now"
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo"
+        }
+      ]
     },
     "faqs": [
       {
@@ -839,7 +1203,77 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "A notification to the person who needs it, with the task attached, instead of a reminder to everyone."
         }
       ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "Compliance is a bundle, and nothing joins it up",
+          "sub": "Training, competency, registration and policy reads usually live in four places and agree with each other by luck."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "Staff Compliance, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Compliance · 48 staff",
+        "pill": "6 need attention",
+        "rows": [
+          {
+            "label": "J. Okafor · Moving and Handling",
+            "note": "Expired 4 days",
+            "done": false
+          },
+          {
+            "label": "S. Blake · Medication",
+            "note": "Due in 7 days",
+            "done": false
+          },
+          {
+            "label": "A. Reid · Safeguarding",
+            "note": "Not started",
+            "done": false
+          },
+          {
+            "label": "Team · Fire Safety",
+            "note": "100%",
+            "done": true
+          },
+          {
+            "label": "Team · Infection Prevention",
+            "note": "100%",
+            "done": true
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started"
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now"
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo"
+        }
+      ]
     },
     "faqs": [
       {
@@ -981,7 +1415,77 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Completion and score land in the matrix as they happen. Nobody transcribes a certificate into a spreadsheet."
         }
       ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "The training is the easy part",
+          "sub": "What costs you the month is scheduling it, chasing it and proving it happened."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "Annual Training, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Annual round 2026 · 48 staff",
+        "pill": "82% complete",
+        "rows": [
+          {
+            "label": "Safeguarding Adults",
+            "note": "46 of 48",
+            "done": true
+          },
+          {
+            "label": "Fire Safety",
+            "note": "48 of 48",
+            "done": true
+          },
+          {
+            "label": "Infection Prevention",
+            "note": "44 of 48",
+            "done": true
+          },
+          {
+            "label": "Moving and Handling",
+            "note": "31 of 48",
+            "done": false
+          },
+          {
+            "label": "Medication Awareness",
+            "note": "28 of 48",
+            "done": false
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started"
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now"
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo"
+        }
+      ]
     },
     "faqs": [
       {
@@ -1123,7 +1627,77 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "From investigation outcome to assigned module in an afternoon, which is the only timescale that changes behaviour."
         }
       ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "The gap between learning something and teaching it is where services get caught twice",
+          "sub": "An investigation that ends in a report has not changed anything on the floor."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "Adhoc Training, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Adhoc · Medication error, 12 Aug",
+        "pill": "Assigned to 14",
+        "rows": [
+          {
+            "label": "Module generated from Medication Policy",
+            "note": "12 Aug",
+            "done": true
+          },
+          {
+            "label": "Assigned to nurses and senior carers",
+            "note": "12 Aug",
+            "done": true
+          },
+          {
+            "label": "11 of 14 complete",
+            "note": "14 Aug",
+            "done": true
+          },
+          {
+            "label": "3 outstanding",
+            "note": "Chasing",
+            "done": false
+          },
+          {
+            "label": "Competency observation",
+            "note": "Due 19 Aug",
+            "done": false
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started"
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now"
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo"
+        }
+      ]
     },
     "faqs": [
       {
@@ -1265,7 +1839,77 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Attendance proves presence. The observation is what evidences that the person can do the thing."
         }
       ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "Undocumented good training is indistinguishable from none",
+          "sub": "The session happened. The evidence that it happened is a signature on a sheet in a drawer."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "Face to Face Training, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Session · Moving and Handling, 14 Aug",
+        "pill": "9 attended",
+        "rows": [
+          {
+            "label": "Session recorded, trainer named",
+            "note": "14 Aug",
+            "done": true
+          },
+          {
+            "label": "9 attendees logged",
+            "note": "14 Aug",
+            "done": true
+          },
+          {
+            "label": "Competency observed, 7 of 9",
+            "note": "14 Aug",
+            "done": true
+          },
+          {
+            "label": "2 to reassess",
+            "note": "Due 21 Aug",
+            "done": false
+          },
+          {
+            "label": "Matrix updated",
+            "note": "Automatic",
+            "done": false
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started"
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now"
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo"
+        }
+      ]
     },
     "faqs": [
       {
@@ -1407,7 +2051,77 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Not just who is missing training, but which shifts have nobody trained in something they might need."
         }
       ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "Most matrices track completion and call it competence",
+          "sub": "That is exactly why a matrix can pass an internal audit and fail an inspection."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "Training Matrix, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Training matrix · 48 staff",
+        "pill": "5 gaps",
+        "rows": [
+          {
+            "label": "Safeguarding",
+            "note": "48 of 48",
+            "done": true
+          },
+          {
+            "label": "Fire Safety",
+            "note": "48 of 48",
+            "done": true
+          },
+          {
+            "label": "Moving and Handling",
+            "note": "43 of 48, 2 unobserved",
+            "done": false
+          },
+          {
+            "label": "Medication",
+            "note": "28 of 31 eligible",
+            "done": false
+          },
+          {
+            "label": "Basic Life Support",
+            "note": "46 of 48",
+            "done": false
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started"
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now"
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo"
+        }
+      ]
     },
     "faqs": [
       {
@@ -1549,7 +2263,77 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "A session is only bookable if the shift can release the people. Cover planned rather than improvised."
         }
       ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "Everyone inducted together renews together",
+          "sub": "One recruitment push in March means every renewal lands in March for the rest of the service’s life."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "Training Calendar, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Training year 2026",
+        "pill": "3 collisions",
+        "rows": [
+          {
+            "label": "March · 19 renewals due",
+            "note": "Overloaded",
+            "done": false
+          },
+          {
+            "label": "March · Moving and Handling + BLS",
+            "note": "Same week",
+            "done": false
+          },
+          {
+            "label": "April · 4 renewals",
+            "note": "Balanced",
+            "done": true
+          },
+          {
+            "label": "May · 6 renewals",
+            "note": "Balanced",
+            "done": true
+          },
+          {
+            "label": "August · no cover on nights",
+            "note": "Check rota",
+            "done": false
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started"
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now"
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo"
+        }
+      ]
     },
     "faqs": [
       {
@@ -1691,7 +2475,77 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Practising in a second language on the spot is a bad way to find out whether someone knows the answer."
         }
       ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "Ancillary staff get asked too, and are almost never prepared",
+          "sub": "The kitchen and maintenance teams are the ones an inspector often reaches first."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "CQC Prep Questions, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Inspection readiness · 48 staff",
+        "pill": "76% practised",
+        "rows": [
+          {
+            "label": "Care assistants · 22 of 24",
+            "note": "Core set",
+            "done": true
+          },
+          {
+            "label": "Nurses · 8 of 8",
+            "note": "Clinical set",
+            "done": true
+          },
+          {
+            "label": "Kitchen · 1 of 5",
+            "note": "Not started",
+            "done": false
+          },
+          {
+            "label": "Maintenance · 0 of 3",
+            "note": "Not started",
+            "done": false
+          },
+          {
+            "label": "Seniors · 6 of 6",
+            "note": "Core plus leadership",
+            "done": true
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started"
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now"
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo"
+        }
+      ]
     },
     "faqs": [
       {
@@ -1845,7 +2699,77 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "Every read, score and observation lands in the matrix as it happens. Nobody reconstructs the first week six months later."
         }
       ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "An inspector will ask how you knew they were ready",
+          "sub": "Not whether you inducted them. How you can show it, for this person, on this date."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "Staff Onboarding, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Amina Osei · Care Assistant · Day 4",
+        "pill": "On track",
+        "rows": [
+          {
+            "label": "Safeguarding Adults v3.1 read",
+            "note": "Day 1",
+            "done": true
+          },
+          {
+            "label": "Moving and Handling, practical",
+            "note": "Day 2",
+            "done": true
+          },
+          {
+            "label": "Infection Prevention module, 100%",
+            "note": "Day 3",
+            "done": true
+          },
+          {
+            "label": "Medication competency, observed",
+            "note": "Day 5",
+            "done": false
+          },
+          {
+            "label": "Care Certificate standards 1 to 5",
+            "note": "Week 2",
+            "done": false
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started"
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now"
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo"
+        }
+      ]
     },
     "faqs": [
       {
@@ -1999,7 +2923,42 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "body": "The carer who knows a resident best is the one most likely to be on leave when it matters. Handover carries the clinical and the urgent. It has never been the place for the small things that make somebody feel known."
         }
       ],
-      "note": "Resident knowledge sits alongside the care plan. It does not replace it, and nothing clinical or actionable should live here."
+      "note": "Resident knowledge sits alongside the care plan. It does not replace it, and nothing clinical or actionable should live here.",
+      "heads": [
+        {
+          "eyebrow": "The problem",
+          "heading": "A care plan tells you the clinical. It rarely tells you the person.",
+          "sub": "None of what follows is a failure of record keeping. It is knowledge that has never had anywhere sensible to live."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "Resident knowledge, answered",
+          "sub": ""
+        }
+      ],
+      "panel": null,
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set your home up in a day. No card required.",
+          "action": "Start free trial"
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "See the hub, the knowledge base and the answers your staff get.",
+          "action": "Book a demo"
+        },
+        {
+          "title": "Talk to us",
+          "body": "Tell us how your home runs and we will tell you honestly if this helps.",
+          "action": "Contact us"
+        }
+      ]
     },
     "faqs": [
       {

@@ -17,12 +17,25 @@ export interface UserCaseSection {
   image_alt: string
 }
 
+export interface UserCaseHead { eyebrow: string; heading: string; sub: string }
+export interface UserCasePanel {
+  title: string
+  pill: string
+  rows: { label: string; note: string; done: boolean }[]
+}
+
 export interface UserCaseContent {
   eyebrow: string
   lede: string
   sections: UserCaseSection[]
   cards: { title: string; body: string }[]
   note: string
+  /** Section headers above each block. */
+  heads?: UserCaseHead[]
+  /** The hero mock-up, built from markup rather than a screenshot. */
+  panel?: UserCasePanel | null
+  /** The three closing cards. */
+  cta?: { title: string; body: string; action: string }[]
 }
 
 export interface UserCaseFaqGroup {
@@ -61,6 +74,17 @@ function Headline({ html }: { html: string }) {
   return <h1 dangerouslySetInnerHTML={{ __html: safe }} />
 }
 
+function Head({ head }: { head?: UserCaseHead }) {
+  if (!head || !head.heading) return null
+  return (
+    <div className="uc-head">
+      {head.eyebrow && <span className="uc-eyebrow">{head.eyebrow}</span>}
+      <h2>{head.heading}</h2>
+      {head.sub && <p className="sub">{head.sub}</p>}
+    </div>
+  )
+}
+
 function trim(s: string, n = 150) {
   const t = (s || '').replace(/\s+/g, ' ').trim()
   return t.length <= n ? t : t.slice(0, n).replace(/\s+\S*$/, '') + '...'
@@ -81,7 +105,23 @@ export function UserCasePageView({ page, readNext }: { page: UserCasePage; readN
               <Link className="uc-demo" href="/register">Start free trial</Link>
             </div>
           </div>
-          {page.hero_image_url && (
+          {/* The hero shows the product mock-up where the page has one: it is markup rather
+              than a screenshot, so it stays readable to a crawler and scales without going
+              soft. Only the hand-built resident knowledge page falls back to its image. */}
+          {c.panel ? (
+            <div className="uc-panel">
+              <div className="uc-panel-hd">
+                <b>{c.panel.title}</b><span className="uc-pill">{c.panel.pill}</span>
+              </div>
+              {c.panel.rows.map((r, i) => (
+                <div className="uc-row" key={i}>
+                  <span className={`uc-tick${r.done ? '' : ' pending'}`} />
+                  <span>{r.label}</span><small>{r.note}</small>
+                </div>
+              ))}
+              <div className="uc-meter"><i /></div>
+            </div>
+          ) : page.hero_image_url && (
             <div className="uc-shot">
               {/* priority: the hero is the largest above-the-fold image, and SiteImage is lazy
                   by default, which delays the one image the reader is waiting for. */}
@@ -123,6 +163,7 @@ export function UserCasePageView({ page, readNext }: { page: UserCasePage; readN
       {(c.cards ?? []).length > 0 && (
         <section className="uc-sec">
           <div className="uc-wrap">
+            <Head head={c.heads?.[0]} />
             <div className="uc-cards">
               {c.cards.map((card, i) => (
                 <div className="uc-card" key={i}>
@@ -138,6 +179,7 @@ export function UserCasePageView({ page, readNext }: { page: UserCasePage; readN
       {(page.faqs ?? []).length > 0 && (
         <section className="uc-sec">
           <div className="uc-wrap">
+            <Head head={c.heads?.find(h => /question/i.test(h.eyebrow))} />
             {page.faqs.map((g, i) => (
               <div className="uc-faqgroup" key={i}>
                 <h3>{g.label}</h3>
@@ -149,6 +191,22 @@ export function UserCasePageView({ page, readNext }: { page: UserCasePage; readN
                 ))}
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {!!c.cta?.length && (
+        <section className="uc-sec">
+          <div className="uc-wrap">
+            <div className="uc-cta">
+              {c.cta.map((x, i) => (
+                <Link className="uc-ctacard" key={i}
+                      href={i === 0 ? '/register' : i === 1 ? '/demo' : '/demo'}>
+                  <h3>{x.title}</h3><p>{x.body}</p>
+                  <span className="uc-more">{x.action}</span>
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
       )}

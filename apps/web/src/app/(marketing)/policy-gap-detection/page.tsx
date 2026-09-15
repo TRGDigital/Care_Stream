@@ -8,6 +8,7 @@ import { SectionLabel, PageCta } from '@/components/marketing/ui'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { POLICY_GAP_DETECTION_SLOTS } from '@/lib/page-slots/policy-gap-detection'
+import { ServicePageIfPublished } from '@/components/marketing/service-page-loader'
 
 export const metadata = {
   alternates: { canonical: 'https://www.carestreamai.com/policy-gap-detection' },
@@ -91,7 +92,17 @@ const STEPS = [
   { Icon: GraduationCap,     key: 'step8' },
 ]
 
-export default async function PolicyGapDetectionPage() {
+export default async function PolicyGapDetectionPage(
+  { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
+) {
+  // The rebuilt theme is opt-in with ?v2=1 until it is signed off. It renders the
+  // copy stored in service_pages; if nothing is published yet this falls through to
+  // the page below, so a page can never go blank waiting for an import.
+  if ((await searchParams)?.v2 === '1') {
+    const v2 = await ServicePageIfPublished({ slug: 'policy-gap-detection' })
+    if (v2) return v2
+  }
+
   const s = makeSlot(POLICY_GAP_DETECTION_SLOTS, await getContentSlots('/policy-gap-detection'))
   return (
     <>

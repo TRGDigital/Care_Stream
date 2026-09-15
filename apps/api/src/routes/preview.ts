@@ -15,6 +15,8 @@ const PATHS: Record<PreviewKind, (slug: string) => string> = {
   'user-case': slug => `/uses/${slug}`,
   'feature':   slug => `/features/${slug}`,
   'setting':   slug => `/${slug}`,
+  // Flat, like the care settings: /our-services is the theme's grouping, not a live URL.
+  'service-page': slug => `/${slug}`,
 }
 
 // POST /admin/preview { kind, slug } -> { url, expiresIn }

@@ -8,6 +8,7 @@ import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { BUSINESS_CONTINUITY_SLOTS } from '@/lib/page-slots/business-continuity'
+import { ServicePageIfPublished } from '@/components/marketing/service-page-loader'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
@@ -90,7 +91,17 @@ function BCPlanMockup() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default async function BusinessContinuityPage() {
+export default async function BusinessContinuityPage(
+  { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
+) {
+  // The rebuilt theme is opt-in with ?v2=1 until it is signed off. It renders the
+  // copy stored in service_pages; if nothing is published yet this falls through to
+  // the page below, so a page can never go blank waiting for an import.
+  if ((await searchParams)?.v2 === '1') {
+    const v2 = await ServicePageIfPublished({ slug: 'business-continuity' })
+    if (v2) return v2
+  }
+
   const s = makeSlot(BUSINESS_CONTINUITY_SLOTS, await getContentSlots('/business-continuity'))
 
   const COMPARE = [

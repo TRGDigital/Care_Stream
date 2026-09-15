@@ -39,7 +39,7 @@ export function TrainingDemo({
 }: {
   demo: TrainingDemoData
   buyHref: string
-  variant?: 'full' | 'card'
+  variant?: 'full' | 'card' | 'theme'
   onTakeQuiz?: () => void
 }) {
   const [step, setStep] = useState<Step>('lesson')
@@ -270,6 +270,128 @@ export function TrainingDemo({
   )
 
   // Card-only, for embedding as a hero focal element.
+  // The rebuilt theme's skin. Same state, same translations, same scoring: only the markup
+  // differs, so the taster cannot drift from the one the current pages serve.
+  if (variant === 'theme') {
+    const stepLabel = `Step ${stepIdx + 1} of ${STEPS.length}`
+    return (
+      <div className="demo" id="demo">
+        <div className="demo-top">
+          <b>Try it · a real lesson and question</b>
+          <span className="demo-step">{stepLabel}</span>
+        </div>
+        <div className="demo-steps">
+          {STEPS.map((s, i) => (
+            <span className={`s${i === stepIdx ? ' on' : i < stepIdx ? ' done' : ''}`} key={s.key}>
+              <span className="n">{i + 1}</span><span className="lb">{s.label}</span>
+            </span>
+          ))}
+        </div>
+        {L.image_url && (
+          <span>
+            <SiteImage className="demo-pic" src={`${API_URL}${L.image_url}`} alt={L.heading} />
+          </span>
+        )}
+
+        <div className="demo-body">
+          {step === 'lesson' && (
+            <div>
+              <h3>{L.heading}</h3>
+              <p>{L.body}</p>
+              <button type="button" className="tbtn solid"
+                      onClick={() => { setStep('question'); track('demo_continue') }}>
+                Continue to the question
+              </button>
+            </div>
+          )}
+
+          {step === 'question' && (
+            <div>
+              <p className="demo-q">{Q.text}</p>
+              <div className="demo-opts">
+                {Q.options.map((opt, i) => (
+                  <button type="button" className="demo-opt" key={i}
+                          onClick={() => { setSelected(i); setStep('result'); track('demo_answer', { correct: i === Q.correct }) }}>
+                    <span className="k">{String.fromCharCode(65 + i)}</span><span>{opt}</span>
+                  </button>
+                ))}
+              </div>
+              <button type="button" className="tbtn ghost" onClick={() => setStep('lesson')}>
+                Back to the lesson
+              </button>
+            </div>
+          )}
+        </div>
+
+        {step === 'result' && answered && (
+          <div>
+            <div className="demo-res">
+              <div className="demo-verdict">{isCorrect ? 'Correct' : 'Not quite'}</div>
+              <div className="demo-ans">
+                {Q.options.map((opt, i) => (
+                  <p key={i}>
+                    <b>{String.fromCharCode(65 + i)}</b> {opt}
+                    {i === Q.correct ? ' — correct' : i === selected ? ' — your answer' : ''}
+                  </p>
+                ))}
+              </div>
+              {Q.explanation && <div className="demo-why"><p>{Q.explanation}</p></div>}
+
+              {/* Only on a wrong answer, which is when the hub actually sends one. */}
+              {!isCorrect && (
+                <div className="demo-follow">
+                  <div className="hd">
+                    A follow-up question has been sent.
+                    <button type="button" aria-expanded={showInfo}
+                            onClick={() => setShowInfo(v => !v)}>Why?</button>
+                  </div>
+                  {showInfo && (
+                    <p>
+                      In the hub, a wrong answer sends the staff member a short follow-up lesson
+                      and a fresh question on the same point. They close the gap before they can
+                      finish the module, and every attempt is recorded for your CQC evidence.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <div className="demo-cta">
+                <p className="lead">
+                  That is how the training works. Give your whole team the full {demo.title} module.
+                </p>
+                <div className="row">
+                  <Link className="tbtn solid" href={buyHref}>Buy now for your team</Link>
+                  <Link className="tbtn ghost" href="/staff-training">Browse the courses</Link>
+                </div>
+                <button type="button" className="demo-again"
+                        onClick={() => { setStep('lesson'); setSelected(null); setShowInfo(false) }}>
+                  Try the demo again
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="demo-foot">
+          <span>{demo.total_sections} sections · {demo.total_questions} questions in the full module</span>
+          {availableLangs.length > 0 && (
+            <span className="langs">
+              {([['eng', 'English'], ['pol', 'Polski'], ['hin', 'हिन्दी']] as [string, string][])
+                .filter(([c]) => c === 'eng' || availableLangs.includes(c as 'pol' | 'hin'))
+                .map(([code, label]) => (
+                  <button type="button" className="demo-lang" key={code}
+                          aria-pressed={lang === code}
+                          onClick={() => setLang(code as 'eng' | 'pol' | 'hin')}>
+                    {label}
+                  </button>
+                ))}
+            </span>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   if (variant === 'card') return card
 
   // Full section with sticky intro + CTA (SEO training pages).

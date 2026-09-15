@@ -10,6 +10,9 @@ export async function generateMetadata() {
   })
 }
 
-export default function Page() {
-  return <ContentPage path="/cookies" title="Cookie Policy" />
+export default async function Page(
+  { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
+) {
+  const sp = await searchParams
+  return <ContentPage path="/cookies" title="Cookie Policy" v2={sp?.v2 === '1'} />
 }

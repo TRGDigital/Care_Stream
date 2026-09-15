@@ -1,4 +1,5 @@
 import { PageHero } from './ui'
+import { LegalPageV2, LEGAL_DOCS } from './legal-page-v2'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -19,8 +20,20 @@ async function getPage(path: string): Promise<{ content?: string } | null> {
   return null
 }
 
-export async function ContentPage({ path, title }: { path: string; title: string }) {
+export async function ContentPage({ path, title, v2 = false }: {
+  path: string
+  title: string
+  /** Render the rebuilt theme design. Same stored body either way: the flag changes the
+   *  design and nothing about the words. Opt-in with ?v2=1 until it is signed off. */
+  v2?: boolean
+}) {
   const page = await getPage(path)
+
+  if (v2) {
+    const doc = LEGAL_DOCS[path.replace(/^\//, '')]
+    if (doc) return <LegalPageV2 doc={doc} content={page?.content ?? ''} />
+  }
+
   // The PageHero already renders the single <h1>; demote any <h1> in the DB body
   // to <h2> so the page never has multiple H1 tags.
   const content = (page?.content ?? '').replace(/<(\/?)h1(\s|>)/gi, '<$1h2$2')

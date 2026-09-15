@@ -90,6 +90,13 @@ const Play = () => (
        strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 5.5v13l10-6.5z" /></svg>
 )
 
+// The stylesheet hides the native disclosure marker and rotates this plus into a cross when the
+// answer opens. Without it a question looks like a heading with nothing to click.
+const Plus = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
+       strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+)
+
 const Tick = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
        strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -194,47 +201,51 @@ export function UserCasePageView({ page, readNext }: { page: UserCasePage; readN
         </section>
       )}
 
-      <Head head={headFor(c.heads, /how it works/i)} />
-
-      {(c.sections ?? []).map((s, i) => (
-        <section className="uc-sec" key={i}>
+      {/* One tinted band holding the heading and all three rows, which is how the theme builds
+          it. Emitting a section per row dropped the tint and split the band into three, so the
+          page lost the alternating light/dark rhythm that separates its parts. */}
+      {(c.sections ?? []).length > 0 && (
+        <section className="uc-sec tint">
           <div className="uc-wrap">
-            <div className="uc-alt">
-              <div className="uc-alt-copy">
-                <h3>{s.heading}</h3>
-                {s.bullets?.length > 0 && (
-                  <ul className="uc-bullets">
-                    {s.bullets.map((b, j) => <li key={j}><Tick />{b}</li>)}
-                  </ul>
-                )}
-                {s.links?.length > 0 && (
-                  <div className="uc-tags">
-                    {s.links.map((l, j) => (
-                      <Link className="uc-tag" href={l.href} key={j}>{l.label}</Link>
-                    ))}
+            <Head head={headFor(c.heads, /how it works/i)} />
+            {c.sections.map((s, i) => (
+              <div className="uc-alt" key={i}>
+                <div className="uc-alt-copy">
+                  <h3>{s.heading}</h3>
+                  {s.bullets?.length > 0 && (
+                    <ul className="uc-bullets">
+                      {s.bullets.map((b, j) => <li key={j}><Tick />{b}</li>)}
+                    </ul>
+                  )}
+                  {s.links?.length > 0 && (
+                    <div className="uc-tags">
+                      {s.links.map((l, j) => (
+                        <Link className="uc-tag" href={l.href} key={j}>{l.label}</Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {s.image && (
+                  <div className="uc-shot">
+                    <SiteImage src={s.image} alt={s.image_alt || s.heading} />
                   </div>
                 )}
               </div>
-              {s.image && (
-                <div className="uc-shot">
-                  <SiteImage src={s.image} alt={s.image_alt || s.heading} />
-                </div>
-              )}
-            </div>
+            ))}
           </div>
         </section>
-      ))}
+      )}
 
       {(page.faqs ?? []).length > 0 && (
-        <section className="uc-sec">
-          <div className="uc-wrap">
+        <section className="uc-sec tint">
+          <div className="uc-wrap uc-narrow">
             <Head head={headFor(c.heads, /question/i)} />
             {page.faqs.map((g, i) => (
               <div className="uc-faqgroup" key={i}>
                 <h3>{g.label}</h3>
                 {g.items.map((f, j) => (
                   <details className="uc-q" key={j}>
-                    <summary>{f.question}</summary>
+                    <summary>{f.question}<Plus /></summary>
                     <div className="ans"><p>{f.answer}</p></div>
                   </details>
                 ))}
@@ -277,13 +288,16 @@ export function UserCasePageView({ page, readNext }: { page: UserCasePage; readN
                 )}
               </div>
             ))}
+            {/* The note closes the guide in the theme, inside the same narrow column. Giving it
+                its own full-width section detached it from the text it qualifies. */}
+            {c.note && <div className="uc-note"><p>{c.note}</p></div>}
           </div>
         </section>
       )}
 
-      {c.note && (
+      {c.note && !c.guide && (
         <section className="uc-sec">
-          <div className="uc-wrap">
+          <div className="uc-wrap uc-narrow">
             <div className="uc-note"><p>{c.note}</p></div>
           </div>
         </section>

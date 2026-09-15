@@ -19,16 +19,29 @@ const Play = () => (
        strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 5.5v13l10-6.5z" /></svg>
 )
 
+// The stylesheet hides the native disclosure marker and rotates this plus into a cross when the
+// answer opens. Without it a question looks like a heading with nothing to click.
+const Plus = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
+       strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+)
+
 // sbtn, not fbtn. The class names differ per family in the theme, and borrowing the features
 // one left these rendering as bare text with an oversized icon between them: the rule simply
 // did not exist in this family's stylesheet, so nothing errored and nothing was styled.
-function Actions() {
+function Buttons() {
   return (
-    <div className="sactions">
+    <>
       <Link className="sbtn solid" href="/register">Start free trial</Link>
       <Link className="sbtn ghost" href="/demo"><Play /> Book a demo</Link>
-    </div>
+    </>
   )
+}
+
+// The hero groups the buttons in `.sactions`; the closing band lays them out with `.row` and
+// no inner wrapper. The wrapper belongs to the caller, not here.
+function Actions() {
+  return <div className="sactions"><Buttons /></div>
 }
 
 function img(slug: string, n: number) {
@@ -194,7 +207,7 @@ export function SettingPageV2({ config }: { config: SettingPageConfig }) {
             <h2>Frequently asked</h2>
             {c.faqs.map((f, i) => (
               <details key={i}>
-                <summary>{f.question}</summary>
+                <summary>{f.question}<Plus /></summary>
                 <div className="ans"><p>{f.answer}</p></div>
               </details>
             ))}
@@ -206,7 +219,7 @@ export function SettingPageV2({ config }: { config: SettingPageConfig }) {
         <div className="swrap send-in">
           <h2>{c.cta.heading}</h2>
           <p>{c.cta.sub}</p>
-          <div className="row"><Actions /></div>
+          <div className="row"><Buttons /></div>
         </div>
       </section>
     </div>

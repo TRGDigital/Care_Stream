@@ -16,10 +16,16 @@ export function FeatureSeedBar({ token, onDone }: { token: string; onDone?: () =
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState('')
 
-  async function seed() {
+  // The plain import skips existing rows so it cannot discard an edit. `replace` is how a
+  // corrected import is delivered, and it asks first because it overwrites.
+  async function seed(replace = false) {
+    if (replace && !window.confirm(
+      'Replace the copy on the imported feature pages with the approved theme version?\n\n'
+      + 'Any wording you have edited here will be overwritten.')) return
     setBusy(true); setNote('')
     try {
-      const res = await fetch(`${API_URL}/admin/feature-pages/seed`, {
+      const res = await fetch(
+        `${API_URL}/admin/feature-pages/seed${replace ? '?overwrite=true' : ''}`, {
         method: 'POST', headers: { Authorization: `Bearer ${token}` },
       })
       const d = (await res.json())?.data ?? {}
@@ -46,11 +52,17 @@ export function FeatureSeedBar({ token, onDone }: { token: string; onDone?: () =
           To see any page in the rebuilt theme, add <code className="rounded bg-white px-1 py-0.5 text-xs">?v2=1</code> to
           its address. A page must be published before it will load.
         </p>
-        <button type="button" onClick={seed} disabled={busy}
-          className="flex shrink-0 items-center gap-1.5 rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium hover:bg-neutral-light disabled:opacity-50">
-          {busy ? <Loader2 size={14} className="animate-spin" /> : null}
-          Import approved copy
-        </button>
+        <div className="flex shrink-0 gap-2">
+          <button type="button" onClick={() => seed(false)} disabled={busy}
+            className="flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium hover:bg-neutral-light disabled:opacity-50">
+            {busy ? <Loader2 size={14} className="animate-spin" /> : null}
+            Import approved copy
+          </button>
+          <button type="button" onClick={() => seed(true)} disabled={busy}
+            className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium hover:bg-neutral-light disabled:opacity-50">
+            Re-import and replace
+          </button>
+        </div>
       </div>
       {note && <p className="rounded-md bg-white px-3 py-2 text-xs text-neutral-dark">{note}</p>}
     </div>

@@ -214,8 +214,11 @@ function Capability({ page, anchor }: { page: FeatureV2Page; anchor?: string }) 
             <div className="fkeyrow">
               <div>
                 <span className="flabel">In short</span>
+                {/* No `.ic` wrapper here. `.fkeys svg` styles the mark directly, where `.fout`
+                    wraps it; wrapping both put five extra `.ic` on every page and gave the
+                    keys the outcomes' treatment. */}
                 <ul className="fkeys">
-                  {c.keyPoints.map((k, i) => <li key={i}><span className="ic"><Tick /></span>{k}</li>)}
+                  {c.keyPoints.map((k, i) => <li key={i}><Tick />{k}</li>)}
                 </ul>
               </div>
               <div className="shot wide">

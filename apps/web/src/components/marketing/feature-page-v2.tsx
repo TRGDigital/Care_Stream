@@ -394,14 +394,18 @@ export function FeaturePageV2({ page }: { page: FeatureV2Page }) {
           <div className="fwrap fsec-in">
             <span className="flabel">More features</span>
             <h2>Explore more features</h2>
-            <p>More of what the CareStream compliance platform does for UK care providers.</p>
-            <div className="ftiles">
+            <Lead text="More of what the CareStream compliance platform does for UK care providers." />
+            {/* `cnav` is the theme's own component for linking to feature pages, which is what
+                this block does. It was built from `ftile`, a four-across tile that expects a
+                title AND a body, so six title-only boxes left a ragged row of near-empty
+                cards. cnav is three across, so six links fill two clean rows. */}
+            <nav className="cnav">
               {page.related.map(r => (
-                <Link className="ftile" href={`/features/${r.slug}`} key={r.slug}>
-                  <b>{r.title}</b>
+                <Link href={`/features/${r.slug}`} key={r.slug}>
+                  <span>&#8594;</span>{r.title}
                 </Link>
               ))}
-            </div>
+            </nav>
           </div>
         </section>
       )}

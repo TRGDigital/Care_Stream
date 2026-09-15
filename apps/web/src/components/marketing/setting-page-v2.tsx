@@ -19,11 +19,14 @@ const Play = () => (
        strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 5.5v13l10-6.5z" /></svg>
 )
 
+// sbtn, not fbtn. The class names differ per family in the theme, and borrowing the features
+// one left these rendering as bare text with an oversized icon between them: the rule simply
+// did not exist in this family's stylesheet, so nothing errored and nothing was styled.
 function Actions() {
   return (
     <div className="sactions">
-      <Link className="fbtn solid" href="/register">Start free trial</Link>
-      <Link className="fbtn ghost" href="/demo"><Play /> Book a demo</Link>
+      <Link className="sbtn solid" href="/register">Start free trial</Link>
+      <Link className="sbtn ghost" href="/demo"><Play /> Book a demo</Link>
     </div>
   )
 }
@@ -68,10 +71,10 @@ export function SettingPageV2({ config }: { config: SettingPageConfig }) {
               {c.mockup.tabs.map(t => <span key={t}>{t}</span>)}
             </div>
             <div className="smock-body">
-              <p className="q">{c.mockup.question}</p>
+              <p className="sask">{c.mockup.question}</p>
               <div className="sans">
-                <span className="src">{c.mockup.policyName}</span>
-                <p>{c.mockup.answer}</p>
+                <span className="from">{c.mockup.policyName}</span>
+                {c.mockup.answer}
                 <span className="cite">{c.mockup.citation}</span>
               </div>
               <div className="sfollow">

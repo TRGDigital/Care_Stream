@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
+import { verifyPreviewToken } from '../lib/preview-token'
 
 // Public, unauthenticated DB-driven feature pages (the /pricing feature list).
 // Only ever returns status='published'. Mounted before requireAuth in app.ts.
@@ -22,7 +23,9 @@ publicFeaturePagesRouter.get('/', async (_req: Request, res: Response) => {
 // GET /public/feature-pages/:slug — a single published feature page, in full
 publicFeaturePagesRouter.get('/:slug', async (req: Request, res: Response) => {
   const featurePage = await (prisma as any).featurePage.findFirst({
-    where:  { slug: String(req.params.slug), status: 'published' },
+    where:  verifyPreviewToken(String(req.query.preview ?? ''), 'feature', String(req.params.slug))
+              ? { slug: String(req.params.slug) }
+              : { slug: String(req.params.slug), status: 'published' },
     select: {
       slug: true, title: true, meta_title: true, meta_description: true, og_image_url: true,
       content: true, faqs: true, updated_at: true,

@@ -6,6 +6,7 @@ import { JsonLd } from '@/components/json-ld'
 import { faqPageSchema, serviceSchema, SITE_URL } from '@/lib/schema'
 import { DEFAULT_OG_IMAGE, absoluteImage } from '@/lib/page-meta'
 import { heroImageFor } from '@/lib/hero-images'
+import { previewParam } from '@/lib/preview'
 import { FeaturePageV2, type FeatureV2Content } from '@/components/marketing/feature-page-v2'
 import {
   FeatureSimplePage,
@@ -30,7 +31,9 @@ interface FeaturePage {
 
 async function getFeaturePage(slug: string): Promise<FeaturePage | null> {
   try {
-    const res = await fetch(`${API_URL}/public/feature-pages/${slug}`, { next: { revalidate: 60 } })
+    const q = await previewParam()
+    const res = await fetch(`${API_URL}/public/feature-pages/${slug}${q}`,
+      q ? { cache: 'no-store' } : { next: { revalidate: 60 } })
     if (!res.ok) return null
     const body = await res.json()
     return (body?.data?.featurePage ?? null) as FeaturePage | null

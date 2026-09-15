@@ -3,6 +3,7 @@ import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { requirePlatformAdmin } from '../middleware/auth'
 import { SETTING_PAGE_SEEDS } from '../data/setting-pages-seed'
+import { verifyPreviewToken } from '../lib/preview-token'
 
 // The 11 care-setting pages (/nursing-homes and the rest).
 //
@@ -23,12 +24,15 @@ publicSettingPagesRouter.get('/:slug', async (req: Request, res: Response) => {
   const slug = String(req.params.slug ?? '')
   if (!KNOWN.has(slug)) { err(res, 'NOT_FOUND', 'Unknown care setting.', 404); return }
 
+  const preview = verifyPreviewToken(String(req.query.preview ?? ''), 'setting', slug)
   const page = await (prisma as any).settingPage.findFirst({
-    where:  { slug, status: 'published' },
+    where:  preview ? { slug } : { slug, status: 'published' },
     select: { slug: true, label: true, config: true, updated_at: true },
   })
   if (!page) { err(res, 'NOT_FOUND', 'Page not found.', 404); return }
-  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=120')
+  res.setHeader('Cache-Control', preview
+    ? 'private, no-store'
+    : 'public, max-age=0, s-maxage=60, stale-while-revalidate=120')
   ok(res, { page })
 })
 

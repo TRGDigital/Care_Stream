@@ -24,18 +24,37 @@ export interface UserCasePanel {
   rows: { label: string; note: string; done: boolean }[]
 }
 
+/** The coloured icon on a card, stored as the primitives it is drawn from rather than as
+ *  markup, so the record is never injected as HTML. */
+export interface UserCaseIconShape {
+  tag: 'path' | 'circle' | 'rect'
+  d?: string
+  cx?: string; cy?: string; r?: string
+  x?: string; y?: string; width?: string; height?: string; rx?: string
+}
+
+export interface UserCaseIcon {
+  bg: string | null
+  fg: string | null
+  shapes: UserCaseIconShape[]
+}
+
 export interface UserCaseContent {
   eyebrow: string
   lede: string
   sections: UserCaseSection[]
-  cards: { title: string; body: string }[]
+  cards: { title: string; body: string; icon?: UserCaseIcon | null }[]
   note: string
   /** Section headers above each block. */
   heads?: UserCaseHead[]
   /** The hero mock-up, built from markup rather than a screenshot. */
   panel?: UserCasePanel | null
   /** The three closing cards. */
-  cta?: { title: string; body: string; action: string }[]
+  cta?: { title: string; body: string; action: string; icon?: UserCaseIcon | null }[]
+  /** Heading for the "Read next" block above the FAQs. */
+  read_next_head?: { eyebrow: string; heading: string }
+  /** The pastel band at the top of each Read next card, in order. */
+  read_next_bands?: string[]
   /** The line under the hero call to action. */
   fine?: string
   /** The long-form guide that closes the page. */
@@ -55,6 +74,7 @@ export interface UserCaseFaqGroup {
 export interface UserCasePage {
   slug: string
   title: string
+  meta_title?: string
   hero_image_url: string | null
   content: UserCaseContent
   faqs: UserCaseFaqGroup[]
@@ -97,6 +117,35 @@ const Plus = () => (
        strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
 )
 
+const Arrow = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M5 12h13M12 5.5 18.5 12 12 18.5" />
+  </svg>
+)
+
+/** The card icon, built as real elements from the stored primitives. Each card in the theme
+ *  carries its own drawing and its own colour pair; rendering the card without it left every
+ *  block starting with a bare heading. */
+function CardIcon({ icon }: { icon?: UserCaseIcon | null }) {
+  if (!icon?.shapes?.length) return null
+  return (
+    <span className="uc-cardico"
+          style={{ background: icon.bg ?? undefined, color: icon.fg ?? undefined }}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"
+           strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        {icon.shapes.map((s, i) => {
+          if (s.tag === 'circle') return <circle cx={s.cx} cy={s.cy} r={s.r} key={i} />
+          if (s.tag === 'rect') {
+            return <rect x={s.x} y={s.y} width={s.width} height={s.height} rx={s.rx} key={i} />
+          }
+          return <path d={s.d} key={i} />
+        })}
+      </svg>
+    </span>
+  )
+}
+
 const Tick = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
        strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -135,6 +184,10 @@ function trim(s: string, n = 150) {
 
 export function UserCasePageView({ page, readNext }: { page: UserCasePage; readNext: ReadNextPost[] }) {
   const c = page.content ?? ({} as UserCaseContent)
+  // The short name for this case, as the theme's closing block uses it ("Written on Staff Hub
+  // in 60+ languages"). meta_title is that name plus the site suffix.
+  const label = (page.meta_title ?? '').replace(/\s*\|\s*CareStreamAI\s*$/i, '').trim()
+    || page.title.replace(/<[^>]*>/g, '')
   return (
     <div className="ucpage">
       <section className="uc-hero">
@@ -143,15 +196,17 @@ export function UserCasePageView({ page, readNext }: { page: UserCasePage; readN
             {c.eyebrow && <span className="uc-eyebrow">{c.eyebrow}</span>}
             <Headline html={page.title} />
             {c.lede && <p className="uc-lede">{c.lede}</p>}
-            {/* The theme pairs a dark submit button inside an email form with an outlined
-                "Book a demo". Two real links carry the same hierarchy without a form that
-                does nothing: the trial is the primary, the demo the alternative. */}
+            {/* A plain GET form to /register, which reads ?email= and fills the field in, so
+                the address typed here is not typed twice. No JavaScript needed, and it
+                degrades to landing on the signup page. */}
             <div className="uc-actions">
-              <Link className="uc-demo solid" href="/register">Start free trial</Link>
+              <form className="uc-field" action="/register" method="get">
+                <input type="email" name="email" required
+                       placeholder="name@yourcarehome.co.uk" aria-label="Work email" />
+                <button type="submit">Start free trial</button>
+              </form>
               <Link className="uc-demo" href="/demo"><Play /> Book a demo</Link>
             </div>
-            {/* The theme puts an email form here. The ported page uses real links instead of a
-                form that does nothing, but this line is true either way and is kept. */}
             {c.fine && <p className="uc-fine">{c.fine}</p>}
           </div>
           {/* The hero shows the product mock-up where the page has one: it is markup rather
@@ -192,6 +247,7 @@ export function UserCasePageView({ page, readNext }: { page: UserCasePage; readN
             <div className="uc-cards">
               {c.cards.map((card, i) => (
                 <div className="uc-card" key={i}>
+                  <CardIcon icon={card.icon} />
                   <h3>{card.title}</h3>
                   <p>{card.body}</p>
                 </div>
@@ -236,6 +292,35 @@ export function UserCasePageView({ page, readNext }: { page: UserCasePage; readN
         </section>
       )}
 
+      {/* "Read next / Guides on this subject": three compact cards, above the questions. The
+          theme's own entries are working titles linking to /blog, because the posts had not
+          been written when it was designed. These are the posts allocated to this case in the
+          console, so the block ships with real links. */}
+      {readNext.length > 0 && (
+        <section className="uc-sec">
+          <div className="uc-wrap">
+            <Head head={{
+              eyebrow: c.read_next_head?.eyebrow || 'Read next',
+              heading: c.read_next_head?.heading || 'Guides on this subject',
+              sub: '',
+            }} />
+            <div className="uc-cards">
+              {readNext.map((p, i) => (
+                <Link className="uc-res" href={`/blog/${p.slug}`} key={p.slug}>
+                  <span className="uc-band"
+                        style={{ background: c.read_next_bands?.[i] ?? undefined }} />
+                  <span className="body">
+                    <h3>{p.title}</h3>
+                    <p>{trim(p.excerpt ?? '')}</p>
+                    <span className="uc-more">Read article <Arrow /></span>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {(page.faqs ?? []).length > 0 && (
         <section className="uc-sec tint">
           <div className="uc-wrap uc-narrow">
@@ -262,8 +347,9 @@ export function UserCasePageView({ page, readNext }: { page: UserCasePage; readN
               {c.cta.map((x, i) => (
                 <Link className="uc-ctacard" key={i}
                       href={i === 0 ? '/register' : i === 1 ? '/demo' : '/demo'}>
+                  <CardIcon icon={x.icon} />
                   <h3>{x.title}</h3><p>{x.body}</p>
-                  <span className="uc-more">{x.action}</span>
+                  <span className="uc-more">{x.action} <Arrow /></span>
                 </Link>
               ))}
             </div>
@@ -308,10 +394,11 @@ export function UserCasePageView({ page, readNext }: { page: UserCasePage; readN
       {readNext.length > 0 && (
         <section className="ucread">
           <div className="ucread-in">
-            <p className="uc-eyebrow">
-              {headFor(c.heads, /read next/i)?.eyebrow || 'Read next'}
-            </p>
-            <h2>{headFor(c.heads, /read next/i)?.heading || 'Guides on this subject'}</h2>
+            {/* "Written on <case>", which is this block's own heading in the theme. It had
+                been given "Guides on this subject", the heading belonging to the compact
+                block above, so the two were indistinguishable. */}
+            <p className="eyebrow">Read next</p>
+            <h2>Written on {label}</h2>
             <div className="ucread-grid">
               {readNext.map(p => (
                 <Link className="ucread-card" href={`/blog/${p.slug}`} key={p.slug}>

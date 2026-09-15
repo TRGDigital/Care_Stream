@@ -271,6 +271,8 @@
   .spage-v2 .scqc-cards{grid-template-columns:1fr}
 }
 
-.spage-v2 .shot,.spage-v2 .sshot,.spage-v2 .smock,.spage-v2 .uc-shot,.spage-v2 .ucread-art,.spage-v2 .pcrel-art{display:block;overflow:hidden}
-.spage-v2 .shot img,.spage-v2 .sshot img,.spage-v2 .smock img,.spage-v2 .uc-shot img,.spage-v2 .ucread-art img,.spage-v2 .pcrel-art img{display:block;width:100%;height:auto;object-fit:cover;border-radius:inherit}
+.spage-v2 .uc-demo.solid{background:var(--btn-ink);color:var(--btn-ink-text);border-color:var(--btn-ink)}
+.spage-v2 .uc-demo.solid:hover{opacity:.92}
+.spage-v2 .shot,.spage-v2 .sshot,.spage-v2 .sscen-shot,.spage-v2 .uc-shot,.spage-v2 .wcshot,.spage-v2 .smock,.spage-v2 .ucread-art,.spage-v2 .pcrel-art{display:block;overflow:hidden;padding:0;aspect-ratio:auto;height:auto;min-height:0;max-height:none}
+.spage-v2 .shot img,.spage-v2 .sshot img,.spage-v2 .sscen-shot img,.spage-v2 .uc-shot img,.spage-v2 .wcshot img,.spage-v2 .smock img,.spage-v2 .ucread-art img,.spage-v2 .pcrel-art img{display:block;width:100%;height:auto;object-fit:contain;border-radius:inherit}
 .spage-v2 .fchips,.spage-v2 .schips,.spage-v2 .smock-tabs,.spage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}

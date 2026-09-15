@@ -19,6 +19,22 @@ export interface UserCaseSection {
 
 export interface UserCaseHead { eyebrow: string; heading: string; sub: string }
 
+/** The coloured icon on each card, stored as the SVG primitives it is drawn from rather than
+ *  as markup. The renderer builds real elements from these, so nothing in the record is ever
+ *  trusted as HTML. Three shapes cover all 81 icons in the theme. */
+export interface UserCaseIconShape {
+  tag: 'path' | 'circle' | 'rect'
+  d?: string
+  cx?: string; cy?: string; r?: string
+  x?: string; y?: string; width?: string; height?: string; rx?: string
+}
+
+export interface UserCaseIcon {
+  bg: string | null
+  fg: string | null
+  shapes: UserCaseIconShape[]
+}
+
 export interface UserCasePanel {
   title: string
   pill: string
@@ -40,7 +56,7 @@ export interface UserCaseContent {
   /** The alternating copy/screenshot blocks that carry the argument. */
   sections: UserCaseSection[]
   /** The three supporting points below the sections. */
-  cards: { title: string; body: string }[]
+  cards: { title: string; body: string; icon: UserCaseIcon | null }[]
   /** The "general guidance, not legal advice" line. */
   note: string
   /** Section headers above each block of cards. */
@@ -49,11 +65,16 @@ export interface UserCaseContent {
    *  hand-built page, which uses a photograph. */
   panel: UserCasePanel | null
   /** The three closing cards. */
-  cta: { title: string; body: string; action: string }[]
+  cta: { title: string; body: string; action: string; icon: UserCaseIcon | null }[]
   /** The line under the hero call to action. */
   fine: string
   /** The long-form guide that closes the page. */
   guide: UserCaseGuide | null
+  /** Heading for the "Read next" block above the FAQs. The cards themselves are the posts
+   *  allocated to this case in the console, not stored copy. */
+  read_next_head: { eyebrow: string; heading: string }
+  /** The pastel band at the top of each of those cards, in order. */
+  read_next_bands: string[]
 }
 
 /** FAQs are grouped under headings, which is how the page presents them. */
@@ -75,6 +96,1680 @@ export interface UserCasePageSeed {
 
 export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
   {
+    "slug": "adhoc-training",
+    "title": "Turn an incident into training <em>by the end of the week</em>",
+    "meta_title": "Adhoc Training | CareStreamAI",
+    "meta_description": "Something happened on Tuesday. The learning from it should reach the people it applies to before it happens again, not in next year's annual round.",
+    "hero_image_url": "/images/uses/adhoc-training/1.webp",
+    "content": {
+      "eyebrow": "User case",
+      "lede": "Something happened on Tuesday. The learning from it should reach the people it applies to before it happens again, not in next year's annual round.",
+      "fine": "No card required · Set up in a day · UK data residency",
+      "sections": [
+        {
+          "heading": "Generated from your own policy",
+          "bullets": [
+            "A module built from the specific policy the incident touched",
+            "Uses your wording, not a generic course on the subject",
+            "Reviewed by you before it goes anywhere"
+          ],
+          "links": [
+            {
+              "label": "Adhoc Training",
+              "href": "/training-platform"
+            },
+            {
+              "label": "Care Policies",
+              "href": "/care-policies"
+            }
+          ],
+          "image": "/images/uses/adhoc-training/1.webp",
+          "image_alt": "Screenshot slot Module generated from a policy"
+        },
+        {
+          "heading": "Assigned to the right people",
+          "bullets": [
+            "Assignment by role, so the population is the affected one",
+            "Delivered to their staff hub in their own language",
+            "Outstanding staff visible without producing a report"
+          ],
+          "links": [
+            {
+              "label": "Staff Hub",
+              "href": "/staff-training"
+            },
+            {
+              "label": "Compliance",
+              "href": "/cqc-compliance"
+            }
+          ],
+          "image": "/images/uses/adhoc-training/2.webp",
+          "image_alt": "Screenshot slot Assignment by role"
+        },
+        {
+          "heading": "Closed with evidence",
+          "bullets": [
+            "Scores recorded alongside completion",
+            "Competency observation logged where the subject is practical",
+            "The whole response sits on the record next to the incident"
+          ],
+          "links": [
+            {
+              "label": "Training Matrix",
+              "href": "/training-platform"
+            },
+            {
+              "label": "Care Audits",
+              "href": "/care-audits"
+            }
+          ],
+          "image": "/images/uses/adhoc-training/3.webp",
+          "image_alt": "Screenshot slot Incident response on the record"
+        }
+      ],
+      "cards": [
+        {
+          "title": "Built from the policy it touched",
+          "body": "The module comes from your own policy on the subject, so what staff learn matches what your policy actually says.",
+          "icon": {
+            "bg": "#FAE7E3",
+            "fg": "#A94331",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M13 3 5.5 13.5H12L11 21l7.5-10.5H12z"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Only the people it applies to",
+          "body": "Assigned by role, so you are not sending a medication module to the kitchen and diluting the point.",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "circle",
+                "cx": "12",
+                "cy": "12",
+                "r": "8"
+              },
+              {
+                "tag": "circle",
+                "cx": "12",
+                "cy": "12",
+                "r": "3.4"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Days, not the next annual cycle",
+          "body": "From investigation outcome to assigned module in an afternoon, which is the only timescale that changes behaviour.",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "circle",
+                "cx": "12",
+                "cy": "12",
+                "r": "8.5"
+              },
+              {
+                "tag": "path",
+                "d": "M12 7v5.5l3.5 2"
+              }
+            ]
+          }
+        }
+      ],
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "The gap between learning something and teaching it is where services get caught twice",
+          "sub": "An investigation that ends in a report has not changed anything on the floor."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "Adhoc Training, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Adhoc · Medication error, 12 Aug",
+        "pill": "Assigned to 14",
+        "rows": [
+          {
+            "label": "Module generated from Medication Policy",
+            "note": "12 Aug",
+            "done": true
+          },
+          {
+            "label": "Assigned to nurses and senior carers",
+            "note": "12 Aug",
+            "done": true
+          },
+          {
+            "label": "11 of 14 complete",
+            "note": "14 Aug",
+            "done": true
+          },
+          {
+            "label": "3 outstanding",
+            "note": "Chasing",
+            "done": false
+          },
+          {
+            "label": "Competency observation",
+            "note": "Due 19 Aug",
+            "done": false
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started",
+          "icon": {
+            "bg": "#F1E9FA",
+            "fg": "#6F35B0",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M12 5v14M5 12h14"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
+        }
+      ],
+      "read_next_head": {
+        "eyebrow": "Read next",
+        "heading": "Guides on this subject"
+      },
+      "read_next_bands": [
+        "#EFE7FA",
+        "#E3F0EA",
+        "#FCF0DC"
+      ],
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A guide to responsive, incident led training",
+        "lede": "Most services investigate well and train slowly. The investigation concludes, a report is written, an action is logged, and the training that would have prevented a recurrence arrives months later attached to the annual round. This guide is about closing that gap without turning learning into blame.",
+        "blocks": [
+          {
+            "heading": "Learning and blame share a border",
+            "paras": [
+              "The single reason incident led training goes wrong is that it feels punitive to the people receiving it. If a module lands three days after a colleague made a mistake, everyone knows why it arrived.",
+              "Two things help. Assign by role rather than by involvement, so it is clear the subject is being reinforced rather than an individual corrected. And separate the training from the disciplinary process explicitly, in writing, at the point it is assigned."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "From outcome to module",
+            "paras": [
+              "The steps are simple and the discipline is in doing them quickly."
+            ],
+            "bullets": [
+              "Identify the specific policy the incident touched",
+              "Decide which roles the learning applies to",
+              "Generate a short module from that policy and review it",
+              "Assign with a stated reason that is about practice, not people",
+              "Record an observed competency where the subject is practical",
+              "Close the loop on the incident record"
+            ]
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "An adhoc module is generated from the specific policy the incident touched, so what staff learn is what your policy says rather than a generic course on the topic. You review it before it goes out, assign it by role, and it arrives in the staff hub in each person's language.",
+              "Scores and observed competencies land on the same staff record as everything else, so the response is visible next to the incident rather than filed separately.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      },
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+    },
+    "faqs": [
+      {
+        "label": "Speed",
+        "items": [
+          {
+            "question": "How quickly can we get a module out?",
+            "answer": "Same day. The module is generated from the policy, reviewed by you, and assigned."
+          },
+          {
+            "question": "Do we have to write it?",
+            "answer": "No. It is generated from your policy and you review it, which is a different job from writing a course."
+          },
+          {
+            "question": "Can we edit it before it goes out?",
+            "answer": "Yes, and you should. The generated module is a draft."
+          }
+        ]
+      },
+      {
+        "label": "Scope",
+        "items": [
+          {
+            "question": "Who receives it?",
+            "answer": "Whoever the policy applies to, by role. You can narrow it further."
+          },
+          {
+            "question": "Does everyone need retraining after an incident?",
+            "answer": "Usually not, and sending it to everyone is not thoroughness. It is an inability to tell who is affected."
+          },
+          {
+            "question": "Can we use this for policy changes as well as incidents?",
+            "answer": "Yes, that is the same mechanism. A changed policy can carry a short module explaining what changed."
+          }
+        ]
+      },
+      {
+        "label": "Evidence",
+        "items": [
+          {
+            "question": "Does this count as evidence of a response?",
+            "answer": "Combined with the investigation record, it evidences that learning reached the people it applied to and that they demonstrated it."
+          },
+          {
+            "question": "What about practical subjects?",
+            "answer": "An observed competency is recorded alongside the module, because a score alone does not evidence a practical skill."
+          },
+          {
+            "question": "Is it kept separate from annual training?",
+            "answer": "It sits on the same staff record but is identifiable as adhoc, so the annual position stays readable."
+          }
+        ]
+      }
+    ],
+    "sort": 7
+  },
+  {
+    "slug": "annual-training",
+    "title": "Get the statutory training done, <em>evidenced and off your desk</em>",
+    "meta_title": "Annual Training | CareStreamAI",
+    "meta_description": "The annual round comes due for everyone at once, usually in the middle of a staffing problem. CPD accredited courses your team completes in the staff hub, with completion feeding the matrix without anyone typing it in.",
+    "hero_image_url": "/images/uses/annual-training/1.webp",
+    "content": {
+      "eyebrow": "User case",
+      "lede": "The annual round comes due for everyone at once, usually in the middle of a staffing problem. CPD accredited courses your team completes in the staff hub, with completion feeding the matrix without anyone typing it in.",
+      "fine": "No card required · Set up in a day · UK data residency",
+      "sections": [
+        {
+          "heading": "The statutory subjects, ready to assign",
+          "bullets": [
+            "CPD accredited modules covering the annual round",
+            "Assigned by role, so people only get what applies to them",
+            "Available in over sixty languages in the staff hub"
+          ],
+          "links": [
+            {
+              "label": "Annual Training",
+              "href": "/staff-training"
+            },
+            {
+              "label": "Training",
+              "href": "/training-platform"
+            }
+          ],
+          "image": "/images/uses/annual-training/1.webp",
+          "image_alt": "Screenshot slot Annual course catalogue"
+        },
+        {
+          "heading": "Spread the load across the year",
+          "bullets": [
+            "A calendar that shows renewals colliding before you commit",
+            "Renewals rebalanced so an induction cohort does not all fall due in March",
+            "Warnings ahead of expiry rather than after it"
+          ],
+          "links": [
+            {
+              "label": "Training Calendar",
+              "href": "/training-platform"
+            },
+            {
+              "label": "Compliance",
+              "href": "/cqc-compliance"
+            }
+          ],
+          "image": "/images/uses/annual-training/2.webp",
+          "image_alt": "Screenshot slot Training calendar, renewals by month"
+        },
+        {
+          "heading": "Proof that assembles itself",
+          "bullets": [
+            "Scores recorded, not just completions",
+            "The matrix updates as each person finishes",
+            "Face to face sessions recorded on the same record"
+          ],
+          "links": [
+            {
+              "label": "Training Matrix",
+              "href": "/training-platform"
+            },
+            {
+              "label": "Care Audits",
+              "href": "/care-audits"
+            }
+          ],
+          "image": "/images/uses/annual-training/3.webp",
+          "image_alt": "Screenshot slot Matrix updating on completion"
+        }
+      ],
+      "cards": [
+        {
+          "title": "CPD accredited courses",
+          "body": "Ready made annual courses covering the statutory subjects, bought per module and completed in the staff hub.",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "circle",
+                "cx": "12",
+                "cy": "9.5",
+                "r": "5"
+              },
+              {
+                "tag": "path",
+                "d": "M8.8 13.6 7.6 20.5 12 18.3l4.4 2.2-1.2-6.9"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Done on shift, on their phone",
+          "body": "Short modules in the carer's own language, done between tasks rather than in a booked afternoon nobody can cover.",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "rect",
+                "x": "7",
+                "y": "3",
+                "width": "10",
+                "height": "18",
+                "rx": "2.4"
+              },
+              {
+                "tag": "path",
+                "d": "M11 18h2"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Evidence without admin",
+          "body": "Completion and score land in the matrix as they happen. Nobody transcribes a certificate into a spreadsheet.",
+          "icon": {
+            "bg": "#F1E9FA",
+            "fg": "#6F35B0",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M12 4.5v3M12 16.5v3M4.5 12h3M16.5 12h3"
+              },
+              {
+                "tag": "circle",
+                "cx": "12",
+                "cy": "12",
+                "r": "4"
+              }
+            ]
+          }
+        }
+      ],
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "The training is the easy part",
+          "sub": "What costs you the month is scheduling it, chasing it and proving it happened."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "Annual Training, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Annual round 2026 · 48 staff",
+        "pill": "82% complete",
+        "rows": [
+          {
+            "label": "Safeguarding Adults",
+            "note": "46 of 48",
+            "done": true
+          },
+          {
+            "label": "Fire Safety",
+            "note": "48 of 48",
+            "done": true
+          },
+          {
+            "label": "Infection Prevention",
+            "note": "44 of 48",
+            "done": true
+          },
+          {
+            "label": "Moving and Handling",
+            "note": "31 of 48",
+            "done": false
+          },
+          {
+            "label": "Medication Awareness",
+            "note": "28 of 48",
+            "done": false
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started",
+          "icon": {
+            "bg": "#F1E9FA",
+            "fg": "#6F35B0",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M12 5v14M5 12h14"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
+        }
+      ],
+      "read_next_head": {
+        "eyebrow": "Read next",
+        "heading": "Guides on this subject"
+      },
+      "read_next_bands": [
+        "#EFE7FA",
+        "#E3F0EA",
+        "#FCF0DC"
+      ],
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A complete guide to mandatory training in adult social care",
+        "lede": "This is the reference half of the page: what has to be done, how often, and where the requirement comes from. It is deliberately plain, because this is the part people come back to rather than read once.",
+        "blocks": [
+          {
+            "heading": "What mandatory actually means",
+            "paras": [
+              "Very little training is mandatory by name in legislation. What exists is a duty to ensure staff are competent and appropriately trained, and a set of subjects that are effectively required because you cannot evidence competence without them.",
+              "That distinction matters when someone asks why a subject is on the list. The honest answer is usually that it is how you evidence a general duty, not that a specific rule names it."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "The annual round",
+            "paras": [
+              "The subjects most services run annually or on a short cycle, with the caveat that frequency should follow risk in your service rather than a generic table."
+            ],
+            "bullets": [
+              "Safeguarding adults, and children where relevant",
+              "Fire safety and evacuation",
+              "Infection prevention and control",
+              "Moving and handling, with practical assessment",
+              "Basic life support",
+              "Medication, where the role involves it",
+              "Mental Capacity Act and Deprivation of Liberty Safeguards",
+              "Health and safety, including COSHH",
+              "Equality, diversity and inclusion",
+              "Food hygiene, where the role involves it"
+            ]
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "The annual round is available as CPD accredited modules bought per subject and completed in the staff hub, in the carer's own language, in short sessions rather than a booked afternoon.",
+              "Completion and score feed the training matrix as they happen, and the calendar shows renewals colliding before you commit to dates, which is what stops an induction cohort all falling due in the same month.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      },
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+    },
+    "faqs": [
+      {
+        "label": "The courses",
+        "items": [
+          {
+            "question": "Which subjects are covered?",
+            "answer": "The statutory annual round for adult social care, including safeguarding, fire safety, infection prevention, moving and handling and medication awareness."
+          },
+          {
+            "question": "Are they CPD accredited?",
+            "answer": "Yes."
+          },
+          {
+            "question": "How are they priced?",
+            "answer": "Per module, so you buy what your team needs rather than a bundle you will not use."
+          }
+        ]
+      },
+      {
+        "label": "Completion",
+        "items": [
+          {
+            "question": "How long does a module take?",
+            "answer": "Most are short enough to complete between tasks rather than requiring booked time off the floor."
+          },
+          {
+            "question": "Can staff do them in their own language?",
+            "answer": "Yes, in over sixty languages in the staff hub."
+          },
+          {
+            "question": "Is there an assessment?",
+            "answer": "Yes, and the score is recorded, not just the completion."
+          }
+        ]
+      },
+      {
+        "label": "Evidence",
+        "items": [
+          {
+            "question": "Does completion update our records automatically?",
+            "answer": "Yes, it lands in the training matrix as it happens."
+          },
+          {
+            "question": "Can we see who is outstanding?",
+            "answer": "Yes, at any point, without producing a report."
+          },
+          {
+            "question": "What about training we deliver ourselves?",
+            "answer": "Face to face sessions are recorded against the same staff record, so the two do not live apart."
+          }
+        ]
+      }
+    ],
+    "sort": 6
+  },
+  {
+    "slug": "cqc-prep-questions",
+    "title": "Prepare every staff member for the questions <em>they will actually be asked</em>",
+    "meta_title": "CQC Prep Questions | CareStreamAI",
+    "meta_description": "Inspectors talk to your carers, not to you. Role matched questions your team practises in the staff hub, in their own language, so nobody is asked something for the first time on the day.",
+    "hero_image_url": "/images/uses/cqc-prep-questions/1.webp",
+    "content": {
+      "eyebrow": "User case",
+      "lede": "Inspectors talk to your carers, not to you. Role matched questions your team practises in the staff hub, in their own language, so nobody is asked something for the first time on the day.",
+      "fine": "No card required · Set up in a day · UK data residency",
+      "sections": [
+        {
+          "heading": "Question sets by role",
+          "bullets": [
+            "Core set everyone gets, plus role specific sets on top",
+            "Ancillary roles covered properly rather than as an afterthought",
+            "Practised in the staff hub, on their own phone"
+          ],
+          "links": [
+            {
+              "label": "CQC Prep Questions",
+              "href": "/cqc-staff-questions"
+            },
+            {
+              "label": "Staff Hub",
+              "href": "/staff-training"
+            }
+          ],
+          "image": "/images/uses/cqc-prep-questions/1.webp",
+          "image_alt": "Screenshot slot Role matched question sets"
+        },
+        {
+          "heading": "Understanding, not scripts",
+          "bullets": [
+            "Each question links to the policy section the answer comes from",
+            "No model answers to memorise and repeat back",
+            "What is built is recall of practice rather than of a sentence"
+          ],
+          "links": [
+            {
+              "label": "Care Policies",
+              "href": "/care-policies"
+            },
+            {
+              "label": "Compliance",
+              "href": "/cqc-compliance"
+            }
+          ],
+          "image": "/images/uses/cqc-prep-questions/2.webp",
+          "image_alt": "Screenshot slot Question with its source policy"
+        },
+        {
+          "heading": "Readiness you can see",
+          "bullets": [
+            "Who has practised, by role, without producing a report",
+            "The roles nobody has covered surfaced before an inspector finds them",
+            "Print a set for a supervision conversation if you prefer paper"
+          ],
+          "links": [
+            {
+              "label": "CQC and Compliance",
+              "href": "/cqc-compliance"
+            },
+            {
+              "label": "Care Audits",
+              "href": "/care-audits"
+            }
+          ],
+          "image": "/images/uses/cqc-prep-questions/3.webp",
+          "image_alt": "Screenshot slot Readiness by role"
+        }
+      ],
+      "cards": [
+        {
+          "title": "Matched to the role",
+          "body": "A nurse, a care assistant and a kitchen assistant get different questions, because they will be asked different questions.",
+          "icon": {
+            "bg": "#FCF0DC",
+            "fg": "#9E6709",
+            "shapes": [
+              {
+                "tag": "circle",
+                "cx": "12",
+                "cy": "8",
+                "r": "3.4"
+              },
+              {
+                "tag": "path",
+                "d": "M5.5 20c.8-3.6 3.4-5.4 6.5-5.4s5.7 1.8 6.5 5.4"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Sends them back to the policy",
+          "body": "An answer is not supplied. The question points at the policy the answer comes from, so what is built is understanding.",
+          "icon": {
+            "bg": "#F1E9FA",
+            "fg": "#6F35B0",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1.2 1.2"
+              },
+              {
+                "tag": "path",
+                "d": "M13.5 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1.2-1.2"
+              }
+            ]
+          }
+        },
+        {
+          "title": "In their own language",
+          "body": "Practising in a second language on the spot is a bad way to find out whether someone knows the answer.",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "circle",
+                "cx": "12",
+                "cy": "12",
+                "r": "8.5"
+              },
+              {
+                "tag": "path",
+                "d": "M3.5 12h17M12 3.5c2.2 2.4 3.3 5.3 3.3 8.5S14.2 18.1 12 20.5c-2.2-2.4-3.3-5.3-3.3-8.5S9.8 5.9 12 3.5z"
+              }
+            ]
+          }
+        }
+      ],
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "Ancillary staff get asked too, and are almost never prepared",
+          "sub": "The kitchen and maintenance teams are the ones an inspector often reaches first."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "CQC Prep Questions, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Inspection readiness · 48 staff",
+        "pill": "76% practised",
+        "rows": [
+          {
+            "label": "Care assistants · 22 of 24",
+            "note": "Core set",
+            "done": true
+          },
+          {
+            "label": "Nurses · 8 of 8",
+            "note": "Clinical set",
+            "done": true
+          },
+          {
+            "label": "Kitchen · 1 of 5",
+            "note": "Not started",
+            "done": false
+          },
+          {
+            "label": "Maintenance · 0 of 3",
+            "note": "Not started",
+            "done": false
+          },
+          {
+            "label": "Seniors · 6 of 6",
+            "note": "Core plus leadership",
+            "done": true
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started",
+          "icon": {
+            "bg": "#F1E9FA",
+            "fg": "#6F35B0",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M12 5v14M5 12h14"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
+        }
+      ],
+      "read_next_head": {
+        "eyebrow": "Read next",
+        "heading": "Guides on this subject"
+      },
+      "read_next_bands": [
+        "#EFE7FA",
+        "#E3F0EA",
+        "#FCF0DC"
+      ],
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A guide to preparing a whole team for inspection",
+        "lede": "The most predictable failure in inspection preparation is that the manager is ready and the team has never been asked. The second most predictable is that the care staff were briefed and the kitchen was not. This guide covers both, and argues against the thing most services do first.",
+        "blocks": [
+          {
+            "heading": "Do not write model answers",
+            "paras": [
+              "The instinct is to produce a sheet of questions with the right answers and circulate it. It is the wrong move, for two reasons.",
+              "First, it is obvious. An inspector who hears the same phrasing from three people knows exactly what happened, and it converts a neutral conversation into a sceptical one. Second, a memorised answer collapses under a follow up question, and the staff member is left more exposed than if they had answered in their own words."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Prepare by role",
+            "paras": [
+              "Different roles get asked different things, and the roles least likely to be prepared are the ones most likely to be approached informally."
+            ],
+            "bullets": [
+              "Care assistants: daily practice, dignity, escalation, knowing residents",
+              "Seniors: supervision, delegation, incident handling",
+              "Nurses: clinical decisions, medication, capacity and consent",
+              "Kitchen: dietary needs, allergens, how they learn about a resident’s requirements",
+              "Maintenance: hazards, restricted areas, contractor handling",
+              "Administration: records, confidentiality, complaints handling"
+            ]
+          },
+          {
+            "heading": "What good preparation looks like",
+            "paras": [
+              "Ask real questions in supervision over the weeks before, in the person's own language where that helps, and when they do not know, send them to the policy rather than telling them the answer. That builds something that survives a follow up question.",
+              "Accept that some people will still be nervous. Nervous and honest reads far better than fluent and rehearsed."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "Question sets are matched to the role, including the ancillary roles that are usually missed, and practised in the staff hub on the person's own phone in their own language.",
+              "Each question links to the policy section the answer comes from rather than supplying an answer, and readiness is visible by role, which is how you find out that nobody in the kitchen has done it while there is still time.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      },
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+    },
+    "faqs": [
+      {
+        "label": "The questions",
+        "items": [
+          {
+            "question": "Where do the questions come from?",
+            "answer": "They reflect what inspectors ask staff in practice, grouped by theme and matched to the role."
+          },
+          {
+            "question": "Are model answers provided?",
+            "answer": "No, deliberately. Each question points at the policy the answer comes from, because rehearsed answers are transparent and undermine confidence."
+          },
+          {
+            "question": "Can we add our own?",
+            "answer": "Yes, including questions specific to your service."
+          }
+        ]
+      },
+      {
+        "label": "Coverage",
+        "items": [
+          {
+            "question": "Which roles are covered?",
+            "answer": "Care assistants, seniors, nurses, and the ancillary roles that are usually missed, including kitchen, maintenance and administration."
+          },
+          {
+            "question": "Do agency staff need this?",
+            "answer": "Anyone on shift can be spoken to, so a short core set for agency is sensible."
+          },
+          {
+            "question": "How long does it take a staff member?",
+            "answer": "Short sessions rather than one sitting, done on their own phone between tasks."
+          }
+        ]
+      },
+      {
+        "label": "On the day",
+        "items": [
+          {
+            "question": "Will this make our staff sound rehearsed?",
+            "answer": "It should do the opposite, because there is nothing to rehearse. The practice sends them to the policy rather than to a script."
+          },
+          {
+            "question": "Can we see who is ready?",
+            "answer": "Yes, by role, which is how the uncovered groups surface."
+          },
+          {
+            "question": "What if someone freezes anyway?",
+            "answer": "That happens, and it is a normal human response. What preparation changes is whether they had ever considered the question before."
+          }
+        ]
+      }
+    ],
+    "sort": 11
+  },
+  {
+    "slug": "cqc-wording-alignment",
+    "title": "Say it the way CQC says it, <em>so your evidence lands</em>",
+    "meta_title": "CQC Wording Alignment | CareStreamAI",
+    "meta_description": "Your policies describe good practice in your own words. An inspector is looking for theirs. Wording alignment reviews what you already have against the assessment framework language and proposes the edits, which you approve.",
+    "hero_image_url": "/images/uses/cqc-wording-alignment/1.webp",
+    "content": {
+      "eyebrow": "User case",
+      "lede": "Your policies describe good practice in your own words. An inspector is looking for theirs. Wording alignment reviews what you already have against the assessment framework language and proposes the edits, which you approve.",
+      "fine": "No card required · Set up in a day · UK data residency",
+      "sections": [
+        {
+          "heading": "Reviewed against the framework, not a template",
+          "bullets": [
+            "Checked against the quality statements each policy should evidence",
+            "Terms that carry specific regulatory meaning flagged where used loosely",
+            "Suggestions show current and proposed wording side by side"
+          ],
+          "links": [
+            {
+              "label": "CQC and Compliance",
+              "href": "/cqc-compliance"
+            },
+            {
+              "label": "Policy Gap Detection",
+              "href": "/policy-gap-detection"
+            }
+          ],
+          "image": "/images/uses/cqc-wording-alignment/1.webp",
+          "image_alt": "Screenshot slot Suggested wording, before and after"
+        },
+        {
+          "heading": "Applied to what you already have",
+          "bullets": [
+            "No rewrite. Alignment is added to your existing policies",
+            "Accept, edit or reject each suggestion individually",
+            "A phrase can be replaced across the whole library in one pass"
+          ],
+          "links": [
+            {
+              "label": "Care Policies",
+              "href": "/care-policies"
+            }
+          ],
+          "image": "/images/uses/cqc-wording-alignment/2.webp",
+          "image_alt": "Screenshot slot Accepting a wording suggestion"
+        },
+        {
+          "heading": "Evidence an inspector can follow",
+          "bullets": [
+            "The mapping from policy to quality statement is visible",
+            "Staff read the aligned version, recorded against that version",
+            "CQC prep questions draw on the same language"
+          ],
+          "links": [
+            {
+              "label": "CQC Prep Questions",
+              "href": "/cqc-staff-questions"
+            },
+            {
+              "label": "Compliance",
+              "href": "/cqc-compliance"
+            }
+          ],
+          "image": "/images/uses/cqc-wording-alignment/3.webp",
+          "image_alt": "Screenshot slot Policy mapped to quality statements"
+        }
+      ],
+      "cards": [
+        {
+          "title": "Mapped to quality statements",
+          "body": "Each policy is checked against the quality statements it should evidence, so the mapping is visible rather than implied.",
+          "icon": {
+            "bg": "#FCF0DC",
+            "fg": "#9E6709",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M4 6.5 9.5 4l5 2.5L20 4v13.5L14.5 20l-5-2.5L4 20z"
+              },
+              {
+                "tag": "path",
+                "d": "M9.5 4v13.5M14.5 6.5V20"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Edits proposed, not imposed",
+          "body": "Every suggestion shows the current wording and the proposed wording. You accept, edit or reject each one.",
+          "icon": {
+            "bg": "#F1E9FA",
+            "fg": "#6F35B0",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M4 20h4L19 9a2.5 2.5 0 0 0-3.5-3.5L4.5 16.5z"
+              }
+            ]
+          }
+        },
+        {
+          "title": "It still sounds like you",
+          "body": "The aim is policies an inspector recognises, not policies that read as though they were written for an inspector.",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M5 15V9h4l5-4v14l-5-4z"
+              },
+              {
+                "tag": "path",
+                "d": "M17.5 9.5a4 4 0 0 1 0 5"
+              }
+            ]
+          }
+        }
+      ],
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "Good practice that does not use the framework language is harder to credit",
+          "sub": "You are not changing what you do. You are making it recognisable to the person assessing it."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "CQC Wording Alignment, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Wording review · 94 policies",
+        "pill": "38 suggestions",
+        "rows": [
+          {
+            "label": "Person centred care",
+            "note": "Map to quality statement",
+            "done": false
+          },
+          {
+            "label": "Duty of candour",
+            "note": "Term used loosely",
+            "done": false
+          },
+          {
+            "label": "Safe systems",
+            "note": "Reword to match framework",
+            "done": false
+          },
+          {
+            "label": "Safeguarding",
+            "note": "Aligned",
+            "done": true
+          },
+          {
+            "label": "Consent",
+            "note": "Aligned",
+            "done": true
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started",
+          "icon": {
+            "bg": "#F1E9FA",
+            "fg": "#6F35B0",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M12 5v14M5 12h14"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
+        }
+      ],
+      "read_next_head": {
+        "eyebrow": "Read next",
+        "heading": "Guides on this subject"
+      },
+      "read_next_bands": [
+        "#EFE7FA",
+        "#E3F0EA",
+        "#FCF0DC"
+      ],
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A guide to aligning policy language with the CQC assessment framework",
+        "lede": "This is not about writing policies for inspectors. It is about the gap between doing something well and describing it in a way the person assessing you can credit. That gap is real, it is easy to close, and closing it changes nothing about your practice.",
+        "blocks": [
+          {
+            "heading": "What changed, and what did not",
+            "paras": [
+              "The single assessment framework replaced the key lines of enquiry with quality statements, written as we statements describing what a service should be able to say about itself. The five key questions survived. What changed is the unit of evidence.",
+              "For providers the practical consequence is narrow: the same evidence is now organised against different headings. A policy that evidenced a KLOE evidences a quality statement, provided somebody can see which one."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Making the mapping visible",
+            "paras": [
+              "The most common failure is a good policy that does not obviously evidence anything. The fix is usually a sentence, not a rewrite: state near the top what the policy is there to assure, in the framework's own terms, then carry on in your own voice.",
+              "The second most common failure is a term used loosely. Duty of candour, safe systems and person centred care all carry defined meaning. Using them as general descriptions is worse than not using them, because it suggests a specific claim you have not evidenced."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "Wording alignment reviews your existing library against the framework, flags terms used loosely, and proposes edits with the current and proposed wording side by side. You accept, edit or reject each one, and a phrase can be corrected across every policy at once.",
+              "The same language then feeds the CQC prep questions your staff practise on, which is what stops a well written policy and a hesitant staff answer sitting side by side in the same inspection.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      },
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+    },
+    "faqs": [
+      {
+        "label": "The review",
+        "items": [
+          {
+            "question": "Does it rewrite our policies?",
+            "answer": "No. It proposes wording and you decide. Nothing changes without an approval."
+          },
+          {
+            "question": "Will our policies end up sounding generic?",
+            "answer": "They should not. The suggestions target terms that carry regulatory meaning, not your house style."
+          },
+          {
+            "question": "How long does a review take?",
+            "answer": "The review runs in minutes. Working through the suggestions is the real time, and it can be done in stages."
+          }
+        ]
+      },
+      {
+        "label": "The framework",
+        "items": [
+          {
+            "question": "Is this based on the current framework?",
+            "answer": "It is based on the quality statements in the single assessment framework, which replaced the key lines of enquiry."
+          },
+          {
+            "question": "Do we need to restructure our policies around quality statements?",
+            "answer": "No, and we would not recommend it. The mapping can be made visible without reorganising the document."
+          },
+          {
+            "question": "What about terms specific to our service?",
+            "answer": "They are left alone unless they clash with a term that has a defined regulatory meaning."
+          }
+        ]
+      },
+      {
+        "label": "Afterwards",
+        "items": [
+          {
+            "question": "Do staff need to reread every policy?",
+            "answer": "Only where the change is substantive. Minor wording corrections do not reset acknowledgements."
+          },
+          {
+            "question": "Can we see what changed?",
+            "answer": "Yes, every accepted suggestion is recorded with the previous wording."
+          },
+          {
+            "question": "Does this help with inspection preparation?",
+            "answer": "It should, because the prep questions and your policies then use the same language, which is what makes a staff answer sound grounded."
+          }
+        ]
+      }
+    ],
+    "sort": 3
+  },
+  {
+    "slug": "face-to-face-training",
+    "title": "Get your in person sessions onto <em>the same record as everything else</em>",
+    "meta_title": "Face to Face Training | CareStreamAI",
+    "meta_description": "Your best training happens in a room, with a trainer, on real equipment. It also leaves no trace an inspector can follow. Face to face sessions recorded against the same staff record as the online modules.",
+    "hero_image_url": "/images/uses/face-to-face-training/1.webp",
+    "content": {
+      "eyebrow": "User case",
+      "lede": "Your best training happens in a room, with a trainer, on real equipment. It also leaves no trace an inspector can follow. Face to face sessions recorded against the same staff record as the online modules.",
+      "fine": "No card required · Set up in a day · UK data residency",
+      "sections": [
+        {
+          "heading": "Record the session, not just the register",
+          "bullets": [
+            "Trainer named, content covered, date and duration",
+            "Attendance logged per person rather than as a headcount",
+            "Competency outcome recorded individually, including anyone to reassess"
+          ],
+          "links": [
+            {
+              "label": "Face to Face",
+              "href": "/training-platform"
+            },
+            {
+              "label": "Care Audits",
+              "href": "/care-audits"
+            }
+          ],
+          "image": "/images/uses/face-to-face-training/1.webp",
+          "image_alt": "Screenshot slot Session record with attendees"
+        },
+        {
+          "heading": "It lands in the matrix",
+          "bullets": [
+            "Completion appears beside the online modules for that subject",
+            "Renewal dates set from the session date",
+            "Gaps visible immediately, including who did not attend"
+          ],
+          "links": [
+            {
+              "label": "Training Matrix",
+              "href": "/training-platform"
+            },
+            {
+              "label": "Compliance",
+              "href": "/cqc-compliance"
+            }
+          ],
+          "image": "/images/uses/face-to-face-training/2.webp",
+          "image_alt": "Screenshot slot Matrix showing in person and online"
+        },
+        {
+          "heading": "Prepare the room time",
+          "bullets": [
+            "Pre reading pushed to the staff hub before the session",
+            "The session spent on practice rather than on the theory",
+            "Scheduled against the rota so cover is planned, not improvised"
+          ],
+          "links": [
+            {
+              "label": "Staff Hub",
+              "href": "/staff-training"
+            },
+            {
+              "label": "Training Calendar",
+              "href": "/training-platform"
+            }
+          ],
+          "image": "/images/uses/face-to-face-training/3.webp",
+          "image_alt": "Screenshot slot Pre reading assigned before a session"
+        }
+      ],
+      "cards": [
+        {
+          "title": "In person, properly recorded",
+          "body": "Date, trainer, content covered, who attended and what each person demonstrated, held as a record rather than a sheet.",
+          "icon": {
+            "bg": "#DDF2EF",
+            "fg": "#0A736C",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M4 19.5V9l8-5 8 5v10.5"
+              },
+              {
+                "tag": "path",
+                "d": "M9.5 19.5V13h5v6.5"
+              }
+            ]
+          }
+        },
+        {
+          "title": "One record, both kinds",
+          "body": "Online and in person sit on the same staff record, so nobody has to reconcile a spreadsheet with a folder.",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M6 4v4a4 4 0 0 0 4 4h8M18 20v-4a4 4 0 0 0-4-4"
+              },
+              {
+                "tag": "path",
+                "d": "M15 9 18.5 12 15 15"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Competency, not just attendance",
+          "body": "Attendance proves presence. The observation is what evidences that the person can do the thing.",
+          "icon": {
+            "bg": "#FCF0DC",
+            "fg": "#9E6709",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M2.8 12S6.5 6 12 6s9.2 6 9.2 6-3.7 6-9.2 6-9.2-6-9.2-6z"
+              },
+              {
+                "tag": "circle",
+                "cx": "12",
+                "cy": "12",
+                "r": "2.6"
+              }
+            ]
+          }
+        }
+      ],
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "Undocumented good training is indistinguishable from none",
+          "sub": "The session happened. The evidence that it happened is a signature on a sheet in a drawer."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "Face to Face Training, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Session · Moving and Handling, 14 Aug",
+        "pill": "9 attended",
+        "rows": [
+          {
+            "label": "Session recorded, trainer named",
+            "note": "14 Aug",
+            "done": true
+          },
+          {
+            "label": "9 attendees logged",
+            "note": "14 Aug",
+            "done": true
+          },
+          {
+            "label": "Competency observed, 7 of 9",
+            "note": "14 Aug",
+            "done": true
+          },
+          {
+            "label": "2 to reassess",
+            "note": "Due 21 Aug",
+            "done": false
+          },
+          {
+            "label": "Matrix updated",
+            "note": "Automatic",
+            "done": false
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started",
+          "icon": {
+            "bg": "#F1E9FA",
+            "fg": "#6F35B0",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M12 5v14M5 12h14"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
+        }
+      ],
+      "read_next_head": {
+        "eyebrow": "Read next",
+        "heading": "Guides on this subject"
+      },
+      "read_next_bands": [
+        "#EFE7FA",
+        "#E3F0EA",
+        "#FCF0DC"
+      ],
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A guide to running and evidencing in person training",
+        "lede": "There is a persistent belief in care that everything is drifting online and that in person training is being squeezed out. In practice most services still deliver a great deal of it, deliver it well, and cannot prove it. This guide is about the proving.",
+        "blocks": [
+          {
+            "heading": "What has to be in the room",
+            "paras": [
+              "Practical assessment has to be observed. You cannot evidence that someone can perform a hoist transfer safely from a multiple choice score, and no reasonable inspector would accept that you could.",
+              "Beyond the genuinely practical, the honest answer is that a lot of in person training is habit. That is not automatically wrong, discussion based sessions on safeguarding culture can be far better in a room than on a screen, but it should be a choice rather than a default."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "What a record needs on it",
+            "paras": [
+              "A signing sheet is not a training record. It evidences presence and nothing else. The difference between a weak record and a strong one is entirely in the detail."
+            ],
+            "bullets": [
+              "The date and duration of the session",
+              "The trainer, named, internal or external",
+              "What was actually covered, not just the subject title",
+              "Who attended, individually",
+              "What each person demonstrated, and who observed it",
+              "Anyone who attended but was not signed off, and why"
+            ]
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "A face to face session is recorded with all of the above and lands in the training matrix beside the online modules for the same subject, with renewal dates set from the session date.",
+              "Pre reading can be pushed to the staff hub beforehand, which is the single easiest way to make an hour in a room worth more, and sessions are scheduled through the calendar so cover is planned rather than improvised on the day.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      },
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+    },
+    "faqs": [
+      {
+        "label": "Recording",
+        "items": [
+          {
+            "question": "What does a session record hold?",
+            "answer": "Date, trainer, content covered, attendees and a competency outcome per person."
+          },
+          {
+            "question": "Can we record a session that already happened?",
+            "answer": "Yes, retrospectively, with the actual date."
+          },
+          {
+            "question": "What if someone attended but was not signed off?",
+            "answer": "That is recorded as attended without competency, which is the honest position and the one an inspector expects to see used."
+          }
+        ]
+      },
+      {
+        "label": "Blended",
+        "items": [
+          {
+            "question": "Does this replace our online modules?",
+            "answer": "No. It puts the two on the same record so a subject can be part online and part in person without the evidence splitting."
+          },
+          {
+            "question": "What has to be face to face?",
+            "answer": "Anything requiring practical assessment, most obviously moving and handling and basic life support. Much of the rest is habit rather than requirement."
+          },
+          {
+            "question": "Can we assign pre reading before a session?",
+            "answer": "Yes, to the staff hub, so the room time is spent on practice."
+          }
+        ]
+      },
+      {
+        "label": "Practicalities",
+        "items": [
+          {
+            "question": "Who can record a session?",
+            "answer": "Whoever delivered it, or an administrator on their behalf with the trainer named."
+          },
+          {
+            "question": "Does it handle external trainers?",
+            "answer": "Yes, the trainer is named whether internal or external."
+          },
+          {
+            "question": "How does this work with the rota?",
+            "answer": "Sessions are scheduled through the training calendar so cover is visible before you commit."
+          }
+        ]
+      }
+    ],
+    "sort": 8
+  },
+  {
     "slug": "multilingual-staff-hub",
     "title": "Give every carer your policies in the language <em>they think in</em>",
     "meta_title": "Staff Hub in 60+ languages | CareStreamAI",
@@ -83,6 +1778,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
     "content": {
       "eyebrow": "User case",
       "lede": "Around one in five care workers in England reads English as a second language. Your policies are written in English, your read receipts say they were read, and nobody has ever checked whether they were understood. CareStream serves the same policy in over sixty languages, on the carer's own phone.",
+      "fine": "No card required · Set up in a day · UK data residency",
       "sections": [
         {
           "heading": "One library, sixty plus languages",
@@ -152,18 +1848,65 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
       "cards": [
         {
           "title": "Sixty plus languages, one policy",
-          "body": "You maintain one English policy. Every carer reads it in their own language, and when you update the English the translation follows automatically."
+          "body": "You maintain one English policy. Every carer reads it in their own language, and when you update the English the translation follows automatically.",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "circle",
+                "cx": "12",
+                "cy": "12",
+                "r": "8.5"
+              },
+              {
+                "tag": "path",
+                "d": "M3.5 12h17M12 3.5c2.2 2.4 3.3 5.3 3.3 8.5S14.2 18.1 12 20.5c-2.2-2.4-3.3-5.3-3.3-8.5S9.8 5.9 12 3.5z"
+              }
+            ]
+          }
         },
         {
           "title": "On their phone, not a shared PC",
-          "body": "No work email, no password to forget. They sign in on their own device and the whole library is there, in their language, on a break."
+          "body": "No work email, no password to forget. They sign in on their own device and the whole library is there, in their language, on a break.",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "rect",
+                "x": "7",
+                "y": "3",
+                "width": "10",
+                "height": "18",
+                "rx": "2.4"
+              },
+              {
+                "tag": "path",
+                "d": "M11 18h2"
+              }
+            ]
+          }
         },
         {
           "title": "Questions answered privately",
-          "body": "A new carer can ask what to do about a refused medication without having to admit to a colleague that they did not understand the policy."
+          "body": "A new carer can ask what to do about a refused medication without having to admit to a colleague that they did not understand the policy.",
+          "icon": {
+            "bg": "#F1E9FA",
+            "fg": "#6F35B0",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M4.5 5.5h15v11h-9L6 20v-3.5H4.5z"
+              },
+              {
+                "tag": "path",
+                "d": "M12 8.6a1.6 1.6 0 1 1 1.2 2.6v1"
+              }
+            ]
+          }
         }
       ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
       "heads": [
         {
           "eyebrow": "Why it matters",
@@ -221,20 +1964,58 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
         {
           "title": "Start a free trial",
           "body": "Set this up today. No card required.",
-          "action": "Get started"
+          "action": "Get started",
+          "icon": {
+            "bg": "#F1E9FA",
+            "fg": "#6F35B0",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M12 5v14M5 12h14"
+              }
+            ]
+          }
         },
         {
           "title": "Watch the walkthrough",
           "body": "Six minutes across the whole platform.",
-          "action": "Watch now"
+          "action": "Watch now",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
         },
         {
           "title": "Talk to us",
           "body": "Bring your own situation and we will map it live.",
-          "action": "Book a demo"
+          "action": "Book a demo",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
         }
       ],
-      "fine": "No card required · Set up in a day · UK data residency",
+      "read_next_head": {
+        "eyebrow": "Read next",
+        "heading": "Guides on this subject"
+      },
+      "read_next_bands": [
+        "#EFE7FA",
+        "#E3F0EA",
+        "#FCF0DC"
+      ],
       "guide": {
         "eyebrow": "Guide",
         "title": "A practical guide to language access in adult social care",
@@ -279,7 +2060,8 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
             "bullets": []
           }
         ]
-      }
+      },
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
     },
     "faqs": [
       {
@@ -337,6 +2119,334 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
     "sort": 0
   },
   {
+    "slug": "out-of-date-policies",
+    "title": "Bring a stale policy set back up to date <em>without starting again</em>",
+    "meta_title": "Policies Out of Date | CareStreamAI",
+    "meta_description": "Half your policies were last reviewed in 2022. Rewriting all of them is not realistic and not necessary. Find what has actually been overtaken, fix that, and leave the rest alone.",
+    "hero_image_url": "/images/uses/out-of-date-policies/1.webp",
+    "content": {
+      "eyebrow": "User case",
+      "lede": "Half your policies were last reviewed in 2022. Rewriting all of them is not realistic and not necessary. Find what has actually been overtaken, fix that, and leave the rest alone.",
+      "fine": "No card required · Set up in a day · UK data residency",
+      "sections": [
+        {
+          "heading": "See what is actually due",
+          "bullets": [
+            "Review dates held per policy and editable, not a blanket annual cycle",
+            "A dashboard of what is due, with a banner when something is overdue",
+            "Mark as updated per item, so the list empties as you work"
+          ],
+          "links": [
+            {
+              "label": "Care Policies",
+              "href": "/care-policies"
+            },
+            {
+              "label": "Policy Gap Detection",
+              "href": "/policy-gap-detection"
+            }
+          ],
+          "image": "/images/uses/out-of-date-policies/1.webp",
+          "image_alt": "Screenshot slot Policies due for review"
+        },
+        {
+          "heading": "Find the content that has been overtaken",
+          "bullets": [
+            "Superseded guidance and dated phrasing found across the whole set",
+            "Named roles that no longer exist flagged wherever they appear",
+            "COVID era wording surfaced so you can decide what stays"
+          ],
+          "links": [
+            {
+              "label": "Policy Gap Detection",
+              "href": "/policy-gap-detection"
+            }
+          ],
+          "image": "/images/uses/out-of-date-policies/2.webp",
+          "image_alt": "Screenshot slot Dated phrases found across the library"
+        },
+        {
+          "heading": "Fix it without a rewrite",
+          "bullets": [
+            "Edit wording directly in the policy panel",
+            "Replace or remove a phrase across every policy at once, in your words",
+            "Staff get the updated version, recorded against that version"
+          ],
+          "links": [
+            {
+              "label": "Care Policies",
+              "href": "/care-policies"
+            },
+            {
+              "label": "Staff Hub",
+              "href": "/staff-training"
+            }
+          ],
+          "image": "/images/uses/out-of-date-policies/3.webp",
+          "image_alt": "Screenshot slot Replacing a dated phrase"
+        }
+      ],
+      "cards": [
+        {
+          "title": "Review dates that are real",
+          "body": "A review date per policy, a dashboard of what is due, and a way to mark a policy reviewed with a record of who did it.",
+          "icon": {
+            "bg": "#FCF0DC",
+            "fg": "#9E6709",
+            "shapes": [
+              {
+                "tag": "circle",
+                "cx": "12",
+                "cy": "12",
+                "r": "8.5"
+              },
+              {
+                "tag": "path",
+                "d": "M12 7v5.5l3.5 2"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Find the dated content",
+          "body": "Superseded guidance, roles that no longer exist and thresholds that have moved, found across the library rather than policy by policy.",
+          "icon": {
+            "bg": "#F1E9FA",
+            "fg": "#6F35B0",
+            "shapes": [
+              {
+                "tag": "circle",
+                "cx": "10.8",
+                "cy": "10.8",
+                "r": "6.3"
+              },
+              {
+                "tag": "path",
+                "d": "M15.5 15.5 20 20"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Replace a phrase everywhere",
+          "body": "Change a dated phrase once and it updates across every policy that uses it, with your wording rather than an imposed replacement.",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M4 8h13l-3-3M20 16H7l3 3"
+              }
+            ]
+          }
+        }
+      ],
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "Out of date is not the same as wrong, and treating them the same is why nothing gets done",
+          "sub": "The job is triage. Most stale policies need a sentence changed, not a rewrite."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "Policies Out of Date, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Review status · 94 policies",
+        "pill": "31 overdue",
+        "rows": [
+          {
+            "label": "Infection Prevention",
+            "note": "Last reviewed 2021",
+            "done": false
+          },
+          {
+            "label": "Visiting",
+            "note": "References COVID guidance",
+            "done": false
+          },
+          {
+            "label": "Business Continuity",
+            "note": "Names a former manager",
+            "done": false
+          },
+          {
+            "label": "Safeguarding",
+            "note": "Reviewed Jul 2026",
+            "done": true
+          },
+          {
+            "label": "Medication",
+            "note": "Reviewed Jun 2026",
+            "done": true
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started",
+          "icon": {
+            "bg": "#F1E9FA",
+            "fg": "#6F35B0",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M12 5v14M5 12h14"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
+        }
+      ],
+      "read_next_head": {
+        "eyebrow": "Read next",
+        "heading": "Guides on this subject"
+      },
+      "read_next_bands": [
+        "#EFE7FA",
+        "#E3F0EA",
+        "#FCF0DC"
+      ],
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A guide to reviewing and refreshing an ageing policy set",
+        "lede": "Almost every service has policies that have not been looked at in years, and almost every service knows it. What stops the work is not indifference, it is that the job looks like rewriting ninety documents. It is not. It is finding the specific content that has been overtaken.",
+        "blocks": [
+          {
+            "heading": "Sort before you write",
+            "paras": [
+              "Split the library into three. Policies that are current and need only a review date. Policies with specific content that has been overtaken. And the small number that are genuinely obsolete and need rewriting.",
+              "In most services the middle group is the largest and the third is tiny. Doing this sort first turns an impossible project into a fortnight of targeted edits."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "What actually goes stale",
+            "paras": [
+              "Content is rarely wrong in general. It is wrong in particulars, and the particulars are predictable."
+            ],
+            "bullets": [
+              "Superseded guidance still cited as current",
+              "A named role or post holder who has left",
+              "A threshold or timescale that has since moved",
+              "Links that no longer resolve",
+              "Pandemic era measures presented as standing practice",
+              "Equipment or systems the service no longer uses"
+            ]
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "Review dates are held per policy and editable, with a dashboard of what is due and a banner when something is overdue, so the schedule is visible rather than theoretical.",
+              "For the content itself, dated phrasing is found across the whole library at once and a phrase can be replaced or removed everywhere it appears, in your own wording. Legal change tracking then tells you which policies a new regulatory change affects, which is what stops the set drifting again.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      },
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+    },
+    "faqs": [
+      {
+        "label": "Triage",
+        "items": [
+          {
+            "question": "Do we have to rewrite everything?",
+            "answer": "No, and you should not. Most stale policies need a specific correction, and identifying which is the whole job."
+          },
+          {
+            "question": "How often should policies be reviewed?",
+            "answer": "Annually for most, sooner for anything safety critical, and immediately when something changes that affects the policy."
+          },
+          {
+            "question": "What counts as out of date?",
+            "answer": "Content overtaken by guidance, roles that no longer exist, thresholds that have moved, and links that no longer resolve."
+          }
+        ]
+      },
+      {
+        "label": "COVID era wording",
+        "items": [
+          {
+            "question": "Should we delete all the COVID content?",
+            "answer": "No. Some of it became permanent good practice. The judgement is which, and the post on this is worth reading before you start deleting."
+          },
+          {
+            "question": "Can we remove a phrase across the whole set?",
+            "answer": "Yes, and you can replace it with your own wording rather than accept a suggested one."
+          },
+          {
+            "question": "Will removing it reset staff acknowledgements?",
+            "answer": "Not for minor corrections. Substantive changes are treated as a new version."
+          }
+        ]
+      },
+      {
+        "label": "Keeping it current",
+        "items": [
+          {
+            "question": "How do we stop drifting again?",
+            "answer": "Review dates per policy, a dashboard that surfaces what is due, and legal change tracking that tells you which policies a regulatory change affects."
+          },
+          {
+            "question": "Who should own the review?",
+            "answer": "One named person for the schedule, with subject owners for the content. The failure mode is a schedule nobody owns."
+          },
+          {
+            "question": "Can we see the history?",
+            "answer": "Every version is kept, with what changed and who changed it."
+          }
+        ]
+      }
+    ],
+    "sort": 4
+  },
+  {
     "slug": "policy-gaps",
     "title": "Find what your policy set is missing <em>before an inspector does</em>",
     "meta_title": "Policy Gaps | CareStreamAI",
@@ -345,6 +2455,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
     "content": {
       "eyebrow": "User case",
       "lede": "You have a folder of policies. What nobody can tell you is what is not in it. Policy Gap Detection reads your whole library against what your service type is expected to hold, and names the absences.",
+      "fine": "No card required · Set up in a day · UK data residency",
       "sections": [
         {
           "heading": "A guided scan, not a wall of findings",
@@ -410,18 +2521,63 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
       "cards": [
         {
           "title": "Measured against your service type",
-          "body": "A nursing home is expected to hold a different set from a domiciliary agency. The scan compares your library against the right list, not a generic one."
+          "body": "A nursing home is expected to hold a different set from a domiciliary agency. The scan compares your library against the right list, not a generic one.",
+          "icon": {
+            "bg": "#F1E9FA",
+            "fg": "#6F35B0",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"
+              },
+              {
+                "tag": "circle",
+                "cx": "12",
+                "cy": "12",
+                "r": "3"
+              }
+            ]
+          }
         },
         {
           "title": "Thin as well as missing",
-          "body": "A policy that exists but does not cover a required area is a gap that a folder audit will pass and an inspection will not."
+          "body": "A policy that exists but does not cover a required area is a gap that a folder audit will pass and an inspection will not.",
+          "icon": {
+            "bg": "#FCF0DC",
+            "fg": "#9E6709",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M12 4.5 21 19.5H3z"
+              },
+              {
+                "tag": "path",
+                "d": "M12 10v4M12 17h.01"
+              }
+            ]
+          }
         },
         {
           "title": "You approve every change",
-          "body": "Nothing is rewritten for you. Each suggestion is accepted or rejected, and what you accept is recorded with who accepted it."
+          "body": "Nothing is rewritten for you. Each suggestion is accepted or rejected, and what you accept is recorded with who accepted it.",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "circle",
+                "cx": "12",
+                "cy": "12",
+                "r": "8.5"
+              },
+              {
+                "tag": "path",
+                "d": "M8.2 12.4 11 15.2l5-5.4"
+              }
+            ]
+          }
         }
       ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
       "heads": [
         {
           "eyebrow": "Why it matters",
@@ -479,20 +2635,58 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
         {
           "title": "Start a free trial",
           "body": "Set this up today. No card required.",
-          "action": "Get started"
+          "action": "Get started",
+          "icon": {
+            "bg": "#F1E9FA",
+            "fg": "#6F35B0",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M12 5v14M5 12h14"
+              }
+            ]
+          }
         },
         {
           "title": "Watch the walkthrough",
           "body": "Six minutes across the whole platform.",
-          "action": "Watch now"
+          "action": "Watch now",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
         },
         {
           "title": "Talk to us",
           "body": "Bring your own situation and we will map it live.",
-          "action": "Book a demo"
+          "action": "Book a demo",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
         }
       ],
-      "fine": "No card required · Set up in a day · UK data residency",
+      "read_next_head": {
+        "eyebrow": "Read next",
+        "heading": "Guides on this subject"
+      },
+      "read_next_bands": [
+        "#EFE7FA",
+        "#E3F0EA",
+        "#FCF0DC"
+      ],
       "guide": {
         "eyebrow": "Guide",
         "title": "A complete guide to running a policy gap analysis",
@@ -529,7 +2723,8 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
             "bullets": []
           }
         ]
-      }
+      },
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
     },
     "faqs": [
       {
@@ -595,6 +2790,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
     "content": {
       "eyebrow": "User case",
       "lede": "Your safeguarding policy names one reporting route. Your whistleblowing policy names another. A carer follows whichever they read last, and the difference only surfaces when something has already gone wrong.",
+      "fine": "No card required · Set up in a day · UK data residency",
       "sections": [
         {
           "heading": "Cross policy checking",
@@ -660,18 +2856,57 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
       "cards": [
         {
           "title": "Reads the whole set at once",
-          "body": "A human reviewer checks one policy at a time. Contradictions only exist between documents, which is exactly what that method cannot see."
+          "body": "A human reviewer checks one policy at a time. Contradictions only exist between documents, which is exactly what that method cannot see.",
+          "icon": {
+            "bg": "#FAE7E3",
+            "fg": "#A94331",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M6 4v6a3 3 0 0 0 3 3h9M6 20v-6"
+              },
+              {
+                "tag": "path",
+                "d": "M15 9.5 18.5 13 15 16.5"
+              }
+            ]
+          }
         },
         {
           "title": "Roles and thresholds, not just wording",
-          "body": "Different escalation windows, different named roles and different thresholds are the conflicts that actually reach the floor."
+          "body": "Different escalation windows, different named roles and different thresholds are the conflicts that actually reach the floor.",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "circle",
+                "cx": "12",
+                "cy": "8",
+                "r": "3.4"
+              },
+              {
+                "tag": "path",
+                "d": "M5.5 20c.8-3.6 3.4-5.4 6.5-5.4s5.7 1.8 6.5 5.4"
+              }
+            ]
+          }
         },
         {
           "title": "Fix once, everywhere",
-          "body": "Change a route or a role and it updates across every policy that names it, with the old version kept on the record."
+          "body": "Change a route or a role and it updates across every policy that names it, with the old version kept on the record.",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M14.5 4.5a4.5 4.5 0 0 0-5.9 5.9L4 15l5 5 4.6-4.6a4.5 4.5 0 0 0 5.9-5.9L16.5 12 12 7.5z"
+              }
+            ]
+          }
         }
       ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
       "heads": [
         {
           "eyebrow": "Why it matters",
@@ -729,20 +2964,58 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
         {
           "title": "Start a free trial",
           "body": "Set this up today. No card required.",
-          "action": "Get started"
+          "action": "Get started",
+          "icon": {
+            "bg": "#F1E9FA",
+            "fg": "#6F35B0",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M12 5v14M5 12h14"
+              }
+            ]
+          }
         },
         {
           "title": "Watch the walkthrough",
           "body": "Six minutes across the whole platform.",
-          "action": "Watch now"
+          "action": "Watch now",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
         },
         {
           "title": "Talk to us",
           "body": "Bring your own situation and we will map it live.",
-          "action": "Book a demo"
+          "action": "Book a demo",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
         }
       ],
-      "fine": "No card required · Set up in a day · UK data residency",
+      "read_next_head": {
+        "eyebrow": "Read next",
+        "heading": "Guides on this subject"
+      },
+      "read_next_bands": [
+        "#EFE7FA",
+        "#E3F0EA",
+        "#FCF0DC"
+      ],
       "guide": {
         "eyebrow": "Guide",
         "title": "A guide to finding and resolving contradictions across a policy set",
@@ -779,7 +3052,8 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
             "bullets": []
           }
         ]
-      }
+      },
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
     },
     "faqs": [
       {
@@ -837,2548 +3111,6 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
     "sort": 2
   },
   {
-    "slug": "cqc-wording-alignment",
-    "title": "Say it the way CQC says it, <em>so your evidence lands</em>",
-    "meta_title": "CQC Wording Alignment | CareStreamAI",
-    "meta_description": "Your policies describe good practice in your own words. An inspector is looking for theirs. Wording alignment reviews what you already have against the assessment framework language and proposes the edits, which you approve.",
-    "hero_image_url": "/images/uses/cqc-wording-alignment/1.webp",
-    "content": {
-      "eyebrow": "User case",
-      "lede": "Your policies describe good practice in your own words. An inspector is looking for theirs. Wording alignment reviews what you already have against the assessment framework language and proposes the edits, which you approve.",
-      "sections": [
-        {
-          "heading": "Reviewed against the framework, not a template",
-          "bullets": [
-            "Checked against the quality statements each policy should evidence",
-            "Terms that carry specific regulatory meaning flagged where used loosely",
-            "Suggestions show current and proposed wording side by side"
-          ],
-          "links": [
-            {
-              "label": "CQC and Compliance",
-              "href": "/cqc-compliance"
-            },
-            {
-              "label": "Policy Gap Detection",
-              "href": "/policy-gap-detection"
-            }
-          ],
-          "image": "/images/uses/cqc-wording-alignment/1.webp",
-          "image_alt": "Screenshot slot Suggested wording, before and after"
-        },
-        {
-          "heading": "Applied to what you already have",
-          "bullets": [
-            "No rewrite. Alignment is added to your existing policies",
-            "Accept, edit or reject each suggestion individually",
-            "A phrase can be replaced across the whole library in one pass"
-          ],
-          "links": [
-            {
-              "label": "Care Policies",
-              "href": "/care-policies"
-            }
-          ],
-          "image": "/images/uses/cqc-wording-alignment/2.webp",
-          "image_alt": "Screenshot slot Accepting a wording suggestion"
-        },
-        {
-          "heading": "Evidence an inspector can follow",
-          "bullets": [
-            "The mapping from policy to quality statement is visible",
-            "Staff read the aligned version, recorded against that version",
-            "CQC prep questions draw on the same language"
-          ],
-          "links": [
-            {
-              "label": "CQC Prep Questions",
-              "href": "/cqc-staff-questions"
-            },
-            {
-              "label": "Compliance",
-              "href": "/cqc-compliance"
-            }
-          ],
-          "image": "/images/uses/cqc-wording-alignment/3.webp",
-          "image_alt": "Screenshot slot Policy mapped to quality statements"
-        }
-      ],
-      "cards": [
-        {
-          "title": "Mapped to quality statements",
-          "body": "Each policy is checked against the quality statements it should evidence, so the mapping is visible rather than implied."
-        },
-        {
-          "title": "Edits proposed, not imposed",
-          "body": "Every suggestion shows the current wording and the proposed wording. You accept, edit or reject each one."
-        },
-        {
-          "title": "It still sounds like you",
-          "body": "The aim is policies an inspector recognises, not policies that read as though they were written for an inspector."
-        }
-      ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
-      "heads": [
-        {
-          "eyebrow": "Why it matters",
-          "heading": "Good practice that does not use the framework language is harder to credit",
-          "sub": "You are not changing what you do. You are making it recognisable to the person assessing it."
-        },
-        {
-          "eyebrow": "How it works",
-          "heading": "What CareStream actually does here",
-          "sub": ""
-        },
-        {
-          "eyebrow": "Read next",
-          "heading": "Guides on this subject",
-          "sub": ""
-        },
-        {
-          "eyebrow": "Questions",
-          "heading": "CQC Wording Alignment, answered",
-          "sub": ""
-        }
-      ],
-      "panel": {
-        "title": "Wording review · 94 policies",
-        "pill": "38 suggestions",
-        "rows": [
-          {
-            "label": "Person centred care",
-            "note": "Map to quality statement",
-            "done": false
-          },
-          {
-            "label": "Duty of candour",
-            "note": "Term used loosely",
-            "done": false
-          },
-          {
-            "label": "Safe systems",
-            "note": "Reword to match framework",
-            "done": false
-          },
-          {
-            "label": "Safeguarding",
-            "note": "Aligned",
-            "done": true
-          },
-          {
-            "label": "Consent",
-            "note": "Aligned",
-            "done": true
-          }
-        ]
-      },
-      "cta": [
-        {
-          "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
-          "action": "Get started"
-        },
-        {
-          "title": "Watch the walkthrough",
-          "body": "Six minutes across the whole platform.",
-          "action": "Watch now"
-        },
-        {
-          "title": "Talk to us",
-          "body": "Bring your own situation and we will map it live.",
-          "action": "Book a demo"
-        }
-      ],
-      "fine": "No card required · Set up in a day · UK data residency",
-      "guide": {
-        "eyebrow": "Guide",
-        "title": "A guide to aligning policy language with the CQC assessment framework",
-        "lede": "This is not about writing policies for inspectors. It is about the gap between doing something well and describing it in a way the person assessing you can credit. That gap is real, it is easy to close, and closing it changes nothing about your practice.",
-        "blocks": [
-          {
-            "heading": "What changed, and what did not",
-            "paras": [
-              "The single assessment framework replaced the key lines of enquiry with quality statements, written as we statements describing what a service should be able to say about itself. The five key questions survived. What changed is the unit of evidence.",
-              "For providers the practical consequence is narrow: the same evidence is now organised against different headings. A policy that evidenced a KLOE evidences a quality statement, provided somebody can see which one."
-            ],
-            "bullets": []
-          },
-          {
-            "heading": "Making the mapping visible",
-            "paras": [
-              "The most common failure is a good policy that does not obviously evidence anything. The fix is usually a sentence, not a rewrite: state near the top what the policy is there to assure, in the framework's own terms, then carry on in your own voice.",
-              "The second most common failure is a term used loosely. Duty of candour, safe systems and person centred care all carry defined meaning. Using them as general descriptions is worse than not using them, because it suggests a specific claim you have not evidenced."
-            ],
-            "bullets": []
-          },
-          {
-            "heading": "Where CareStream fits",
-            "paras": [
-              "Wording alignment reviews your existing library against the framework, flags terms used loosely, and proposes edits with the current and proposed wording side by side. You accept, edit or reject each one, and a phrase can be corrected across every policy at once.",
-              "The same language then feeds the CQC prep questions your staff practise on, which is what stops a well written policy and a hesitant staff answer sitting side by side in the same inspection.",
-              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
-            ],
-            "bullets": []
-          }
-        ]
-      }
-    },
-    "faqs": [
-      {
-        "label": "The review",
-        "items": [
-          {
-            "question": "Does it rewrite our policies?",
-            "answer": "No. It proposes wording and you decide. Nothing changes without an approval."
-          },
-          {
-            "question": "Will our policies end up sounding generic?",
-            "answer": "They should not. The suggestions target terms that carry regulatory meaning, not your house style."
-          },
-          {
-            "question": "How long does a review take?",
-            "answer": "The review runs in minutes. Working through the suggestions is the real time, and it can be done in stages."
-          }
-        ]
-      },
-      {
-        "label": "The framework",
-        "items": [
-          {
-            "question": "Is this based on the current framework?",
-            "answer": "It is based on the quality statements in the single assessment framework, which replaced the key lines of enquiry."
-          },
-          {
-            "question": "Do we need to restructure our policies around quality statements?",
-            "answer": "No, and we would not recommend it. The mapping can be made visible without reorganising the document."
-          },
-          {
-            "question": "What about terms specific to our service?",
-            "answer": "They are left alone unless they clash with a term that has a defined regulatory meaning."
-          }
-        ]
-      },
-      {
-        "label": "Afterwards",
-        "items": [
-          {
-            "question": "Do staff need to reread every policy?",
-            "answer": "Only where the change is substantive. Minor wording corrections do not reset acknowledgements."
-          },
-          {
-            "question": "Can we see what changed?",
-            "answer": "Yes, every accepted suggestion is recorded with the previous wording."
-          },
-          {
-            "question": "Does this help with inspection preparation?",
-            "answer": "It should, because the prep questions and your policies then use the same language, which is what makes a staff answer sound grounded."
-          }
-        ]
-      }
-    ],
-    "sort": 3
-  },
-  {
-    "slug": "out-of-date-policies",
-    "title": "Bring a stale policy set back up to date <em>without starting again</em>",
-    "meta_title": "Policies Out of Date | CareStreamAI",
-    "meta_description": "Half your policies were last reviewed in 2022. Rewriting all of them is not realistic and not necessary. Find what has actually been overtaken, fix that, and leave the rest alone.",
-    "hero_image_url": "/images/uses/out-of-date-policies/1.webp",
-    "content": {
-      "eyebrow": "User case",
-      "lede": "Half your policies were last reviewed in 2022. Rewriting all of them is not realistic and not necessary. Find what has actually been overtaken, fix that, and leave the rest alone.",
-      "sections": [
-        {
-          "heading": "See what is actually due",
-          "bullets": [
-            "Review dates held per policy and editable, not a blanket annual cycle",
-            "A dashboard of what is due, with a banner when something is overdue",
-            "Mark as updated per item, so the list empties as you work"
-          ],
-          "links": [
-            {
-              "label": "Care Policies",
-              "href": "/care-policies"
-            },
-            {
-              "label": "Policy Gap Detection",
-              "href": "/policy-gap-detection"
-            }
-          ],
-          "image": "/images/uses/out-of-date-policies/1.webp",
-          "image_alt": "Screenshot slot Policies due for review"
-        },
-        {
-          "heading": "Find the content that has been overtaken",
-          "bullets": [
-            "Superseded guidance and dated phrasing found across the whole set",
-            "Named roles that no longer exist flagged wherever they appear",
-            "COVID era wording surfaced so you can decide what stays"
-          ],
-          "links": [
-            {
-              "label": "Policy Gap Detection",
-              "href": "/policy-gap-detection"
-            }
-          ],
-          "image": "/images/uses/out-of-date-policies/2.webp",
-          "image_alt": "Screenshot slot Dated phrases found across the library"
-        },
-        {
-          "heading": "Fix it without a rewrite",
-          "bullets": [
-            "Edit wording directly in the policy panel",
-            "Replace or remove a phrase across every policy at once, in your words",
-            "Staff get the updated version, recorded against that version"
-          ],
-          "links": [
-            {
-              "label": "Care Policies",
-              "href": "/care-policies"
-            },
-            {
-              "label": "Staff Hub",
-              "href": "/staff-training"
-            }
-          ],
-          "image": "/images/uses/out-of-date-policies/3.webp",
-          "image_alt": "Screenshot slot Replacing a dated phrase"
-        }
-      ],
-      "cards": [
-        {
-          "title": "Review dates that are real",
-          "body": "A review date per policy, a dashboard of what is due, and a way to mark a policy reviewed with a record of who did it."
-        },
-        {
-          "title": "Find the dated content",
-          "body": "Superseded guidance, roles that no longer exist and thresholds that have moved, found across the library rather than policy by policy."
-        },
-        {
-          "title": "Replace a phrase everywhere",
-          "body": "Change a dated phrase once and it updates across every policy that uses it, with your wording rather than an imposed replacement."
-        }
-      ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
-      "heads": [
-        {
-          "eyebrow": "Why it matters",
-          "heading": "Out of date is not the same as wrong, and treating them the same is why nothing gets done",
-          "sub": "The job is triage. Most stale policies need a sentence changed, not a rewrite."
-        },
-        {
-          "eyebrow": "How it works",
-          "heading": "What CareStream actually does here",
-          "sub": ""
-        },
-        {
-          "eyebrow": "Read next",
-          "heading": "Guides on this subject",
-          "sub": ""
-        },
-        {
-          "eyebrow": "Questions",
-          "heading": "Policies Out of Date, answered",
-          "sub": ""
-        }
-      ],
-      "panel": {
-        "title": "Review status · 94 policies",
-        "pill": "31 overdue",
-        "rows": [
-          {
-            "label": "Infection Prevention",
-            "note": "Last reviewed 2021",
-            "done": false
-          },
-          {
-            "label": "Visiting",
-            "note": "References COVID guidance",
-            "done": false
-          },
-          {
-            "label": "Business Continuity",
-            "note": "Names a former manager",
-            "done": false
-          },
-          {
-            "label": "Safeguarding",
-            "note": "Reviewed Jul 2026",
-            "done": true
-          },
-          {
-            "label": "Medication",
-            "note": "Reviewed Jun 2026",
-            "done": true
-          }
-        ]
-      },
-      "cta": [
-        {
-          "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
-          "action": "Get started"
-        },
-        {
-          "title": "Watch the walkthrough",
-          "body": "Six minutes across the whole platform.",
-          "action": "Watch now"
-        },
-        {
-          "title": "Talk to us",
-          "body": "Bring your own situation and we will map it live.",
-          "action": "Book a demo"
-        }
-      ],
-      "fine": "No card required · Set up in a day · UK data residency",
-      "guide": {
-        "eyebrow": "Guide",
-        "title": "A guide to reviewing and refreshing an ageing policy set",
-        "lede": "Almost every service has policies that have not been looked at in years, and almost every service knows it. What stops the work is not indifference, it is that the job looks like rewriting ninety documents. It is not. It is finding the specific content that has been overtaken.",
-        "blocks": [
-          {
-            "heading": "Sort before you write",
-            "paras": [
-              "Split the library into three. Policies that are current and need only a review date. Policies with specific content that has been overtaken. And the small number that are genuinely obsolete and need rewriting.",
-              "In most services the middle group is the largest and the third is tiny. Doing this sort first turns an impossible project into a fortnight of targeted edits."
-            ],
-            "bullets": []
-          },
-          {
-            "heading": "What actually goes stale",
-            "paras": [
-              "Content is rarely wrong in general. It is wrong in particulars, and the particulars are predictable."
-            ],
-            "bullets": [
-              "Superseded guidance still cited as current",
-              "A named role or post holder who has left",
-              "A threshold or timescale that has since moved",
-              "Links that no longer resolve",
-              "Pandemic era measures presented as standing practice",
-              "Equipment or systems the service no longer uses"
-            ]
-          },
-          {
-            "heading": "Where CareStream fits",
-            "paras": [
-              "Review dates are held per policy and editable, with a dashboard of what is due and a banner when something is overdue, so the schedule is visible rather than theoretical.",
-              "For the content itself, dated phrasing is found across the whole library at once and a phrase can be replaced or removed everywhere it appears, in your own wording. Legal change tracking then tells you which policies a new regulatory change affects, which is what stops the set drifting again.",
-              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
-            ],
-            "bullets": []
-          }
-        ]
-      }
-    },
-    "faqs": [
-      {
-        "label": "Triage",
-        "items": [
-          {
-            "question": "Do we have to rewrite everything?",
-            "answer": "No, and you should not. Most stale policies need a specific correction, and identifying which is the whole job."
-          },
-          {
-            "question": "How often should policies be reviewed?",
-            "answer": "Annually for most, sooner for anything safety critical, and immediately when something changes that affects the policy."
-          },
-          {
-            "question": "What counts as out of date?",
-            "answer": "Content overtaken by guidance, roles that no longer exist, thresholds that have moved, and links that no longer resolve."
-          }
-        ]
-      },
-      {
-        "label": "COVID era wording",
-        "items": [
-          {
-            "question": "Should we delete all the COVID content?",
-            "answer": "No. Some of it became permanent good practice. The judgement is which, and the post on this is worth reading before you start deleting."
-          },
-          {
-            "question": "Can we remove a phrase across the whole set?",
-            "answer": "Yes, and you can replace it with your own wording rather than accept a suggested one."
-          },
-          {
-            "question": "Will removing it reset staff acknowledgements?",
-            "answer": "Not for minor corrections. Substantive changes are treated as a new version."
-          }
-        ]
-      },
-      {
-        "label": "Keeping it current",
-        "items": [
-          {
-            "question": "How do we stop drifting again?",
-            "answer": "Review dates per policy, a dashboard that surfaces what is due, and legal change tracking that tells you which policies a regulatory change affects."
-          },
-          {
-            "question": "Who should own the review?",
-            "answer": "One named person for the schedule, with subject owners for the content. The failure mode is a schedule nobody owns."
-          },
-          {
-            "question": "Can we see the history?",
-            "answer": "Every version is kept, with what changed and who changed it."
-          }
-        ]
-      }
-    ],
-    "sort": 4
-  },
-  {
-    "slug": "staff-compliance",
-    "title": "Know who is compliant today, <em>without chasing anyone</em>",
-    "meta_title": "Staff Compliance | CareStreamAI",
-    "meta_description": "Most services find out that someone's training lapsed when they need the certificate. Compliance should be a live position you can see, not a report you assemble under pressure.",
-    "hero_image_url": "/images/uses/staff-compliance/1.webp",
-    "content": {
-      "eyebrow": "User case",
-      "lede": "Most services find out that someone's training lapsed when they need the certificate. Compliance should be a live position you can see, not a report you assemble under pressure.",
-      "sections": [
-        {
-          "heading": "A live position, not a monthly snapshot",
-          "bullets": [
-            "Completions, scores and competencies land as they happen",
-            "Renewal dates tracked per person, with warnings ahead of the date",
-            "No manual updating, so the view is never quietly out of date"
-          ],
-          "links": [
-            {
-              "label": "CQC and Compliance",
-              "href": "/cqc-compliance"
-            },
-            {
-              "label": "Training Matrix",
-              "href": "/training-platform"
-            }
-          ],
-          "image": "/images/uses/staff-compliance/1.webp",
-          "image_alt": "Screenshot slot Compliance overview, exceptions first"
-        },
-        {
-          "heading": "Chasing that targets one person",
-          "bullets": [
-            "Push notification to the staff hub on their own phone, task attached",
-            "The senior sees who is outstanding rather than sending to everyone",
-            "Escalation when a renewal is close rather than after it has passed"
-          ],
-          "links": [
-            {
-              "label": "Staff Hub",
-              "href": "/staff-training"
-            },
-            {
-              "label": "Training",
-              "href": "/training-platform"
-            }
-          ],
-          "image": "/images/uses/staff-compliance/2.webp",
-          "image_alt": "Screenshot slot Notification with the task attached"
-        },
-        {
-          "heading": "Evidence you do not have to prepare",
-          "bullets": [
-            "Any staff member's full position produced without assembling anything",
-            "Version aware, so you can show what they read and when",
-            "Face to face sessions recorded on the same record as online modules"
-          ],
-          "links": [
-            {
-              "label": "Compliance",
-              "href": "/cqc-compliance"
-            },
-            {
-              "label": "Care Audits",
-              "href": "/care-audits"
-            }
-          ],
-          "image": "/images/uses/staff-compliance/3.webp",
-          "image_alt": "Screenshot slot One staff member’s full record"
-        }
-      ],
-      "cards": [
-        {
-          "title": "One record per person",
-          "body": "Policy reads, module scores, observed competencies and renewal dates on the same staff record, updating as things happen."
-        },
-        {
-          "title": "Exceptions, not percentages",
-          "body": "A view built around what is overdue and who owns it, rather than a headline number that is always reassuring."
-        },
-        {
-          "title": "Targeted, not broadcast",
-          "body": "A notification to the person who needs it, with the task attached, instead of a reminder to everyone."
-        }
-      ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
-      "heads": [
-        {
-          "eyebrow": "Why it matters",
-          "heading": "Compliance is a bundle, and nothing joins it up",
-          "sub": "Training, competency, registration and policy reads usually live in four places and agree with each other by luck."
-        },
-        {
-          "eyebrow": "How it works",
-          "heading": "What CareStream actually does here",
-          "sub": ""
-        },
-        {
-          "eyebrow": "Read next",
-          "heading": "Guides on this subject",
-          "sub": ""
-        },
-        {
-          "eyebrow": "Questions",
-          "heading": "Staff Compliance, answered",
-          "sub": ""
-        }
-      ],
-      "panel": {
-        "title": "Compliance · 48 staff",
-        "pill": "6 need attention",
-        "rows": [
-          {
-            "label": "J. Okafor · Moving and Handling",
-            "note": "Expired 4 days",
-            "done": false
-          },
-          {
-            "label": "S. Blake · Medication",
-            "note": "Due in 7 days",
-            "done": false
-          },
-          {
-            "label": "A. Reid · Safeguarding",
-            "note": "Not started",
-            "done": false
-          },
-          {
-            "label": "Team · Fire Safety",
-            "note": "100%",
-            "done": true
-          },
-          {
-            "label": "Team · Infection Prevention",
-            "note": "100%",
-            "done": true
-          }
-        ]
-      },
-      "cta": [
-        {
-          "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
-          "action": "Get started"
-        },
-        {
-          "title": "Watch the walkthrough",
-          "body": "Six minutes across the whole platform.",
-          "action": "Watch now"
-        },
-        {
-          "title": "Talk to us",
-          "body": "Bring your own situation and we will map it live.",
-          "action": "Book a demo"
-        }
-      ],
-      "fine": "No card required · Set up in a day · UK data residency",
-      "guide": {
-        "eyebrow": "Guide",
-        "title": "A guide to tracking staff compliance in a care service",
-        "lede": "Compliant is a word used loosely enough that two people in the same service will mean different things by it. This guide unpicks what it actually contains, why the parts never agree with each other, and how to get to a position you can see rather than assemble.",
-        "blocks": [
-          {
-            "heading": "One carer, four systems",
-            "paras": [
-              "Take one care assistant. Her statutory training sits in a spreadsheet. Her observed competencies are on paper in a supervision file. Her policy acknowledgements are in an email folder. Her DBS and right to work are in a personnel file in a locked cabinet.",
-              "Every one of those is maintained by a different person on a different rhythm. Nothing joins them. When you say she is compliant you are asserting agreement between four systems that have never been compared."
-            ],
-            "bullets": []
-          },
-          {
-            "heading": "Completion is not competence",
-            "paras": [
-              "The second problem is that most tracking records completion, which is a date, and treats it as competence, which is an observation. They are different evidence and an inspector will ask for both.",
-              "A matrix full of green completions and no competency records is the single most common way a service that trains its people well fails to demonstrate it."
-            ],
-            "bullets": []
-          },
-          {
-            "heading": "What a usable view contains",
-            "paras": [
-              "Build the view around exceptions rather than totals. A percentage that is always high tells a senior nothing and gets ignored within a fortnight."
-            ],
-            "bullets": [
-              "What is overdue right now, and whose it is",
-              "What falls due in the next thirty days",
-              "Anyone with a completion but no competency observation",
-              "Anyone who has not read a policy that changed",
-              "A named owner for each outstanding item"
-            ]
-          },
-          {
-            "heading": "Where CareStream fits",
-            "paras": [
-              "Everything lands on one staff record as it happens: policy reads against the version live that day, module scores, observed competencies and renewal dates. The view leads with exceptions, and chasing goes to the individual with the task attached rather than to everyone.",
-              "What it does not do is make people care. If completion is poor because nobody is held to it, this will show you that clearly and then it is yours to fix.",
-              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
-            ],
-            "bullets": []
-          }
-        ]
-      }
-    },
-    "faqs": [
-      {
-        "label": "What is tracked",
-        "items": [
-          {
-            "question": "What counts towards compliance?",
-            "answer": "Statutory training, observed competencies, policy read receipts and renewal dates, held together per person."
-          },
-          {
-            "question": "Can we define our own requirements?",
-            "answer": "Yes. What is required is set by role, so a nurse, a carer and a kitchen assistant carry different lists."
-          },
-          {
-            "question": "Does it include face to face training?",
-            "answer": "Yes, in person sessions are recorded against the same record as online modules."
-          }
-        ]
-      },
-      {
-        "label": "Chasing",
-        "items": [
-          {
-            "question": "Do staff get chased automatically?",
-            "answer": "They get a notification with the task attached, on their own phone. The senior sees who is outstanding rather than broadcasting to everyone."
-          },
-          {
-            "question": "Will this fix poor completion rates?",
-            "answer": "Partly. It removes the friction and the excuse. Persistent non completion is a management issue and software will not resolve it."
-          },
-          {
-            "question": "Can we turn notifications off?",
-            "answer": "Yes, per requirement."
-          }
-        ]
-      },
-      {
-        "label": "Reporting",
-        "items": [
-          {
-            "question": "Can we produce evidence for one person on demand?",
-            "answer": "Yes, without assembling anything, which is the point."
-          },
-          {
-            "question": "Does it work across multiple services?",
-            "answer": "Each service has its own view, with a group level position where relevant."
-          },
-          {
-            "question": "What about agency staff?",
-            "answer": "They can be tracked on a shorter requirement set covering what applies to anyone on shift."
-          }
-        ]
-      }
-    ],
-    "sort": 5
-  },
-  {
-    "slug": "annual-training",
-    "title": "Get the statutory training done, <em>evidenced and off your desk</em>",
-    "meta_title": "Annual Training | CareStreamAI",
-    "meta_description": "The annual round comes due for everyone at once, usually in the middle of a staffing problem. CPD accredited courses your team completes in the staff hub, with completion feeding the matrix without anyone typing it in.",
-    "hero_image_url": "/images/uses/annual-training/1.webp",
-    "content": {
-      "eyebrow": "User case",
-      "lede": "The annual round comes due for everyone at once, usually in the middle of a staffing problem. CPD accredited courses your team completes in the staff hub, with completion feeding the matrix without anyone typing it in.",
-      "sections": [
-        {
-          "heading": "The statutory subjects, ready to assign",
-          "bullets": [
-            "CPD accredited modules covering the annual round",
-            "Assigned by role, so people only get what applies to them",
-            "Available in over sixty languages in the staff hub"
-          ],
-          "links": [
-            {
-              "label": "Annual Training",
-              "href": "/staff-training"
-            },
-            {
-              "label": "Training",
-              "href": "/training-platform"
-            }
-          ],
-          "image": "/images/uses/annual-training/1.webp",
-          "image_alt": "Screenshot slot Annual course catalogue"
-        },
-        {
-          "heading": "Spread the load across the year",
-          "bullets": [
-            "A calendar that shows renewals colliding before you commit",
-            "Renewals rebalanced so an induction cohort does not all fall due in March",
-            "Warnings ahead of expiry rather than after it"
-          ],
-          "links": [
-            {
-              "label": "Training Calendar",
-              "href": "/training-platform"
-            },
-            {
-              "label": "Compliance",
-              "href": "/cqc-compliance"
-            }
-          ],
-          "image": "/images/uses/annual-training/2.webp",
-          "image_alt": "Screenshot slot Training calendar, renewals by month"
-        },
-        {
-          "heading": "Proof that assembles itself",
-          "bullets": [
-            "Scores recorded, not just completions",
-            "The matrix updates as each person finishes",
-            "Face to face sessions recorded on the same record"
-          ],
-          "links": [
-            {
-              "label": "Training Matrix",
-              "href": "/training-platform"
-            },
-            {
-              "label": "Care Audits",
-              "href": "/care-audits"
-            }
-          ],
-          "image": "/images/uses/annual-training/3.webp",
-          "image_alt": "Screenshot slot Matrix updating on completion"
-        }
-      ],
-      "cards": [
-        {
-          "title": "CPD accredited courses",
-          "body": "Ready made annual courses covering the statutory subjects, bought per module and completed in the staff hub."
-        },
-        {
-          "title": "Done on shift, on their phone",
-          "body": "Short modules in the carer's own language, done between tasks rather than in a booked afternoon nobody can cover."
-        },
-        {
-          "title": "Evidence without admin",
-          "body": "Completion and score land in the matrix as they happen. Nobody transcribes a certificate into a spreadsheet."
-        }
-      ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
-      "heads": [
-        {
-          "eyebrow": "Why it matters",
-          "heading": "The training is the easy part",
-          "sub": "What costs you the month is scheduling it, chasing it and proving it happened."
-        },
-        {
-          "eyebrow": "How it works",
-          "heading": "What CareStream actually does here",
-          "sub": ""
-        },
-        {
-          "eyebrow": "Read next",
-          "heading": "Guides on this subject",
-          "sub": ""
-        },
-        {
-          "eyebrow": "Questions",
-          "heading": "Annual Training, answered",
-          "sub": ""
-        }
-      ],
-      "panel": {
-        "title": "Annual round 2026 · 48 staff",
-        "pill": "82% complete",
-        "rows": [
-          {
-            "label": "Safeguarding Adults",
-            "note": "46 of 48",
-            "done": true
-          },
-          {
-            "label": "Fire Safety",
-            "note": "48 of 48",
-            "done": true
-          },
-          {
-            "label": "Infection Prevention",
-            "note": "44 of 48",
-            "done": true
-          },
-          {
-            "label": "Moving and Handling",
-            "note": "31 of 48",
-            "done": false
-          },
-          {
-            "label": "Medication Awareness",
-            "note": "28 of 48",
-            "done": false
-          }
-        ]
-      },
-      "cta": [
-        {
-          "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
-          "action": "Get started"
-        },
-        {
-          "title": "Watch the walkthrough",
-          "body": "Six minutes across the whole platform.",
-          "action": "Watch now"
-        },
-        {
-          "title": "Talk to us",
-          "body": "Bring your own situation and we will map it live.",
-          "action": "Book a demo"
-        }
-      ],
-      "fine": "No card required · Set up in a day · UK data residency",
-      "guide": {
-        "eyebrow": "Guide",
-        "title": "A complete guide to mandatory training in adult social care",
-        "lede": "This is the reference half of the page: what has to be done, how often, and where the requirement comes from. It is deliberately plain, because this is the part people come back to rather than read once.",
-        "blocks": [
-          {
-            "heading": "What mandatory actually means",
-            "paras": [
-              "Very little training is mandatory by name in legislation. What exists is a duty to ensure staff are competent and appropriately trained, and a set of subjects that are effectively required because you cannot evidence competence without them.",
-              "That distinction matters when someone asks why a subject is on the list. The honest answer is usually that it is how you evidence a general duty, not that a specific rule names it."
-            ],
-            "bullets": []
-          },
-          {
-            "heading": "The annual round",
-            "paras": [
-              "The subjects most services run annually or on a short cycle, with the caveat that frequency should follow risk in your service rather than a generic table."
-            ],
-            "bullets": [
-              "Safeguarding adults, and children where relevant",
-              "Fire safety and evacuation",
-              "Infection prevention and control",
-              "Moving and handling, with practical assessment",
-              "Basic life support",
-              "Medication, where the role involves it",
-              "Mental Capacity Act and Deprivation of Liberty Safeguards",
-              "Health and safety, including COSHH",
-              "Equality, diversity and inclusion",
-              "Food hygiene, where the role involves it"
-            ]
-          },
-          {
-            "heading": "Where CareStream fits",
-            "paras": [
-              "The annual round is available as CPD accredited modules bought per subject and completed in the staff hub, in the carer's own language, in short sessions rather than a booked afternoon.",
-              "Completion and score feed the training matrix as they happen, and the calendar shows renewals colliding before you commit to dates, which is what stops an induction cohort all falling due in the same month.",
-              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
-            ],
-            "bullets": []
-          }
-        ]
-      }
-    },
-    "faqs": [
-      {
-        "label": "The courses",
-        "items": [
-          {
-            "question": "Which subjects are covered?",
-            "answer": "The statutory annual round for adult social care, including safeguarding, fire safety, infection prevention, moving and handling and medication awareness."
-          },
-          {
-            "question": "Are they CPD accredited?",
-            "answer": "Yes."
-          },
-          {
-            "question": "How are they priced?",
-            "answer": "Per module, so you buy what your team needs rather than a bundle you will not use."
-          }
-        ]
-      },
-      {
-        "label": "Completion",
-        "items": [
-          {
-            "question": "How long does a module take?",
-            "answer": "Most are short enough to complete between tasks rather than requiring booked time off the floor."
-          },
-          {
-            "question": "Can staff do them in their own language?",
-            "answer": "Yes, in over sixty languages in the staff hub."
-          },
-          {
-            "question": "Is there an assessment?",
-            "answer": "Yes, and the score is recorded, not just the completion."
-          }
-        ]
-      },
-      {
-        "label": "Evidence",
-        "items": [
-          {
-            "question": "Does completion update our records automatically?",
-            "answer": "Yes, it lands in the training matrix as it happens."
-          },
-          {
-            "question": "Can we see who is outstanding?",
-            "answer": "Yes, at any point, without producing a report."
-          },
-          {
-            "question": "What about training we deliver ourselves?",
-            "answer": "Face to face sessions are recorded against the same staff record, so the two do not live apart."
-          }
-        ]
-      }
-    ],
-    "sort": 6
-  },
-  {
-    "slug": "adhoc-training",
-    "title": "Turn an incident into training <em>by the end of the week</em>",
-    "meta_title": "Adhoc Training | CareStreamAI",
-    "meta_description": "Something happened on Tuesday. The learning from it should reach the people it applies to before it happens again, not in next year's annual round.",
-    "hero_image_url": "/images/uses/adhoc-training/1.webp",
-    "content": {
-      "eyebrow": "User case",
-      "lede": "Something happened on Tuesday. The learning from it should reach the people it applies to before it happens again, not in next year's annual round.",
-      "sections": [
-        {
-          "heading": "Generated from your own policy",
-          "bullets": [
-            "A module built from the specific policy the incident touched",
-            "Uses your wording, not a generic course on the subject",
-            "Reviewed by you before it goes anywhere"
-          ],
-          "links": [
-            {
-              "label": "Adhoc Training",
-              "href": "/training-platform"
-            },
-            {
-              "label": "Care Policies",
-              "href": "/care-policies"
-            }
-          ],
-          "image": "/images/uses/adhoc-training/1.webp",
-          "image_alt": "Screenshot slot Module generated from a policy"
-        },
-        {
-          "heading": "Assigned to the right people",
-          "bullets": [
-            "Assignment by role, so the population is the affected one",
-            "Delivered to their staff hub in their own language",
-            "Outstanding staff visible without producing a report"
-          ],
-          "links": [
-            {
-              "label": "Staff Hub",
-              "href": "/staff-training"
-            },
-            {
-              "label": "Compliance",
-              "href": "/cqc-compliance"
-            }
-          ],
-          "image": "/images/uses/adhoc-training/2.webp",
-          "image_alt": "Screenshot slot Assignment by role"
-        },
-        {
-          "heading": "Closed with evidence",
-          "bullets": [
-            "Scores recorded alongside completion",
-            "Competency observation logged where the subject is practical",
-            "The whole response sits on the record next to the incident"
-          ],
-          "links": [
-            {
-              "label": "Training Matrix",
-              "href": "/training-platform"
-            },
-            {
-              "label": "Care Audits",
-              "href": "/care-audits"
-            }
-          ],
-          "image": "/images/uses/adhoc-training/3.webp",
-          "image_alt": "Screenshot slot Incident response on the record"
-        }
-      ],
-      "cards": [
-        {
-          "title": "Built from the policy it touched",
-          "body": "The module comes from your own policy on the subject, so what staff learn matches what your policy actually says."
-        },
-        {
-          "title": "Only the people it applies to",
-          "body": "Assigned by role, so you are not sending a medication module to the kitchen and diluting the point."
-        },
-        {
-          "title": "Days, not the next annual cycle",
-          "body": "From investigation outcome to assigned module in an afternoon, which is the only timescale that changes behaviour."
-        }
-      ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
-      "heads": [
-        {
-          "eyebrow": "Why it matters",
-          "heading": "The gap between learning something and teaching it is where services get caught twice",
-          "sub": "An investigation that ends in a report has not changed anything on the floor."
-        },
-        {
-          "eyebrow": "How it works",
-          "heading": "What CareStream actually does here",
-          "sub": ""
-        },
-        {
-          "eyebrow": "Read next",
-          "heading": "Guides on this subject",
-          "sub": ""
-        },
-        {
-          "eyebrow": "Questions",
-          "heading": "Adhoc Training, answered",
-          "sub": ""
-        }
-      ],
-      "panel": {
-        "title": "Adhoc · Medication error, 12 Aug",
-        "pill": "Assigned to 14",
-        "rows": [
-          {
-            "label": "Module generated from Medication Policy",
-            "note": "12 Aug",
-            "done": true
-          },
-          {
-            "label": "Assigned to nurses and senior carers",
-            "note": "12 Aug",
-            "done": true
-          },
-          {
-            "label": "11 of 14 complete",
-            "note": "14 Aug",
-            "done": true
-          },
-          {
-            "label": "3 outstanding",
-            "note": "Chasing",
-            "done": false
-          },
-          {
-            "label": "Competency observation",
-            "note": "Due 19 Aug",
-            "done": false
-          }
-        ]
-      },
-      "cta": [
-        {
-          "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
-          "action": "Get started"
-        },
-        {
-          "title": "Watch the walkthrough",
-          "body": "Six minutes across the whole platform.",
-          "action": "Watch now"
-        },
-        {
-          "title": "Talk to us",
-          "body": "Bring your own situation and we will map it live.",
-          "action": "Book a demo"
-        }
-      ],
-      "fine": "No card required · Set up in a day · UK data residency",
-      "guide": {
-        "eyebrow": "Guide",
-        "title": "A guide to responsive, incident led training",
-        "lede": "Most services investigate well and train slowly. The investigation concludes, a report is written, an action is logged, and the training that would have prevented a recurrence arrives months later attached to the annual round. This guide is about closing that gap without turning learning into blame.",
-        "blocks": [
-          {
-            "heading": "Learning and blame share a border",
-            "paras": [
-              "The single reason incident led training goes wrong is that it feels punitive to the people receiving it. If a module lands three days after a colleague made a mistake, everyone knows why it arrived.",
-              "Two things help. Assign by role rather than by involvement, so it is clear the subject is being reinforced rather than an individual corrected. And separate the training from the disciplinary process explicitly, in writing, at the point it is assigned."
-            ],
-            "bullets": []
-          },
-          {
-            "heading": "From outcome to module",
-            "paras": [
-              "The steps are simple and the discipline is in doing them quickly."
-            ],
-            "bullets": [
-              "Identify the specific policy the incident touched",
-              "Decide which roles the learning applies to",
-              "Generate a short module from that policy and review it",
-              "Assign with a stated reason that is about practice, not people",
-              "Record an observed competency where the subject is practical",
-              "Close the loop on the incident record"
-            ]
-          },
-          {
-            "heading": "Where CareStream fits",
-            "paras": [
-              "An adhoc module is generated from the specific policy the incident touched, so what staff learn is what your policy says rather than a generic course on the topic. You review it before it goes out, assign it by role, and it arrives in the staff hub in each person's language.",
-              "Scores and observed competencies land on the same staff record as everything else, so the response is visible next to the incident rather than filed separately.",
-              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
-            ],
-            "bullets": []
-          }
-        ]
-      }
-    },
-    "faqs": [
-      {
-        "label": "Speed",
-        "items": [
-          {
-            "question": "How quickly can we get a module out?",
-            "answer": "Same day. The module is generated from the policy, reviewed by you, and assigned."
-          },
-          {
-            "question": "Do we have to write it?",
-            "answer": "No. It is generated from your policy and you review it, which is a different job from writing a course."
-          },
-          {
-            "question": "Can we edit it before it goes out?",
-            "answer": "Yes, and you should. The generated module is a draft."
-          }
-        ]
-      },
-      {
-        "label": "Scope",
-        "items": [
-          {
-            "question": "Who receives it?",
-            "answer": "Whoever the policy applies to, by role. You can narrow it further."
-          },
-          {
-            "question": "Does everyone need retraining after an incident?",
-            "answer": "Usually not, and sending it to everyone is not thoroughness. It is an inability to tell who is affected."
-          },
-          {
-            "question": "Can we use this for policy changes as well as incidents?",
-            "answer": "Yes, that is the same mechanism. A changed policy can carry a short module explaining what changed."
-          }
-        ]
-      },
-      {
-        "label": "Evidence",
-        "items": [
-          {
-            "question": "Does this count as evidence of a response?",
-            "answer": "Combined with the investigation record, it evidences that learning reached the people it applied to and that they demonstrated it."
-          },
-          {
-            "question": "What about practical subjects?",
-            "answer": "An observed competency is recorded alongside the module, because a score alone does not evidence a practical skill."
-          },
-          {
-            "question": "Is it kept separate from annual training?",
-            "answer": "It sits on the same staff record but is identifiable as adhoc, so the annual position stays readable."
-          }
-        ]
-      }
-    ],
-    "sort": 7
-  },
-  {
-    "slug": "face-to-face-training",
-    "title": "Get your in person sessions onto <em>the same record as everything else</em>",
-    "meta_title": "Face to Face Training | CareStreamAI",
-    "meta_description": "Your best training happens in a room, with a trainer, on real equipment. It also leaves no trace an inspector can follow. Face to face sessions recorded against the same staff record as the online modules.",
-    "hero_image_url": "/images/uses/face-to-face-training/1.webp",
-    "content": {
-      "eyebrow": "User case",
-      "lede": "Your best training happens in a room, with a trainer, on real equipment. It also leaves no trace an inspector can follow. Face to face sessions recorded against the same staff record as the online modules.",
-      "sections": [
-        {
-          "heading": "Record the session, not just the register",
-          "bullets": [
-            "Trainer named, content covered, date and duration",
-            "Attendance logged per person rather than as a headcount",
-            "Competency outcome recorded individually, including anyone to reassess"
-          ],
-          "links": [
-            {
-              "label": "Face to Face",
-              "href": "/training-platform"
-            },
-            {
-              "label": "Care Audits",
-              "href": "/care-audits"
-            }
-          ],
-          "image": "/images/uses/face-to-face-training/1.webp",
-          "image_alt": "Screenshot slot Session record with attendees"
-        },
-        {
-          "heading": "It lands in the matrix",
-          "bullets": [
-            "Completion appears beside the online modules for that subject",
-            "Renewal dates set from the session date",
-            "Gaps visible immediately, including who did not attend"
-          ],
-          "links": [
-            {
-              "label": "Training Matrix",
-              "href": "/training-platform"
-            },
-            {
-              "label": "Compliance",
-              "href": "/cqc-compliance"
-            }
-          ],
-          "image": "/images/uses/face-to-face-training/2.webp",
-          "image_alt": "Screenshot slot Matrix showing in person and online"
-        },
-        {
-          "heading": "Prepare the room time",
-          "bullets": [
-            "Pre reading pushed to the staff hub before the session",
-            "The session spent on practice rather than on the theory",
-            "Scheduled against the rota so cover is planned, not improvised"
-          ],
-          "links": [
-            {
-              "label": "Staff Hub",
-              "href": "/staff-training"
-            },
-            {
-              "label": "Training Calendar",
-              "href": "/training-platform"
-            }
-          ],
-          "image": "/images/uses/face-to-face-training/3.webp",
-          "image_alt": "Screenshot slot Pre reading assigned before a session"
-        }
-      ],
-      "cards": [
-        {
-          "title": "In person, properly recorded",
-          "body": "Date, trainer, content covered, who attended and what each person demonstrated, held as a record rather than a sheet."
-        },
-        {
-          "title": "One record, both kinds",
-          "body": "Online and in person sit on the same staff record, so nobody has to reconcile a spreadsheet with a folder."
-        },
-        {
-          "title": "Competency, not just attendance",
-          "body": "Attendance proves presence. The observation is what evidences that the person can do the thing."
-        }
-      ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
-      "heads": [
-        {
-          "eyebrow": "Why it matters",
-          "heading": "Undocumented good training is indistinguishable from none",
-          "sub": "The session happened. The evidence that it happened is a signature on a sheet in a drawer."
-        },
-        {
-          "eyebrow": "How it works",
-          "heading": "What CareStream actually does here",
-          "sub": ""
-        },
-        {
-          "eyebrow": "Read next",
-          "heading": "Guides on this subject",
-          "sub": ""
-        },
-        {
-          "eyebrow": "Questions",
-          "heading": "Face to Face Training, answered",
-          "sub": ""
-        }
-      ],
-      "panel": {
-        "title": "Session · Moving and Handling, 14 Aug",
-        "pill": "9 attended",
-        "rows": [
-          {
-            "label": "Session recorded, trainer named",
-            "note": "14 Aug",
-            "done": true
-          },
-          {
-            "label": "9 attendees logged",
-            "note": "14 Aug",
-            "done": true
-          },
-          {
-            "label": "Competency observed, 7 of 9",
-            "note": "14 Aug",
-            "done": true
-          },
-          {
-            "label": "2 to reassess",
-            "note": "Due 21 Aug",
-            "done": false
-          },
-          {
-            "label": "Matrix updated",
-            "note": "Automatic",
-            "done": false
-          }
-        ]
-      },
-      "cta": [
-        {
-          "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
-          "action": "Get started"
-        },
-        {
-          "title": "Watch the walkthrough",
-          "body": "Six minutes across the whole platform.",
-          "action": "Watch now"
-        },
-        {
-          "title": "Talk to us",
-          "body": "Bring your own situation and we will map it live.",
-          "action": "Book a demo"
-        }
-      ],
-      "fine": "No card required · Set up in a day · UK data residency",
-      "guide": {
-        "eyebrow": "Guide",
-        "title": "A guide to running and evidencing in person training",
-        "lede": "There is a persistent belief in care that everything is drifting online and that in person training is being squeezed out. In practice most services still deliver a great deal of it, deliver it well, and cannot prove it. This guide is about the proving.",
-        "blocks": [
-          {
-            "heading": "What has to be in the room",
-            "paras": [
-              "Practical assessment has to be observed. You cannot evidence that someone can perform a hoist transfer safely from a multiple choice score, and no reasonable inspector would accept that you could.",
-              "Beyond the genuinely practical, the honest answer is that a lot of in person training is habit. That is not automatically wrong, discussion based sessions on safeguarding culture can be far better in a room than on a screen, but it should be a choice rather than a default."
-            ],
-            "bullets": []
-          },
-          {
-            "heading": "What a record needs on it",
-            "paras": [
-              "A signing sheet is not a training record. It evidences presence and nothing else. The difference between a weak record and a strong one is entirely in the detail."
-            ],
-            "bullets": [
-              "The date and duration of the session",
-              "The trainer, named, internal or external",
-              "What was actually covered, not just the subject title",
-              "Who attended, individually",
-              "What each person demonstrated, and who observed it",
-              "Anyone who attended but was not signed off, and why"
-            ]
-          },
-          {
-            "heading": "Where CareStream fits",
-            "paras": [
-              "A face to face session is recorded with all of the above and lands in the training matrix beside the online modules for the same subject, with renewal dates set from the session date.",
-              "Pre reading can be pushed to the staff hub beforehand, which is the single easiest way to make an hour in a room worth more, and sessions are scheduled through the calendar so cover is planned rather than improvised on the day.",
-              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
-            ],
-            "bullets": []
-          }
-        ]
-      }
-    },
-    "faqs": [
-      {
-        "label": "Recording",
-        "items": [
-          {
-            "question": "What does a session record hold?",
-            "answer": "Date, trainer, content covered, attendees and a competency outcome per person."
-          },
-          {
-            "question": "Can we record a session that already happened?",
-            "answer": "Yes, retrospectively, with the actual date."
-          },
-          {
-            "question": "What if someone attended but was not signed off?",
-            "answer": "That is recorded as attended without competency, which is the honest position and the one an inspector expects to see used."
-          }
-        ]
-      },
-      {
-        "label": "Blended",
-        "items": [
-          {
-            "question": "Does this replace our online modules?",
-            "answer": "No. It puts the two on the same record so a subject can be part online and part in person without the evidence splitting."
-          },
-          {
-            "question": "What has to be face to face?",
-            "answer": "Anything requiring practical assessment, most obviously moving and handling and basic life support. Much of the rest is habit rather than requirement."
-          },
-          {
-            "question": "Can we assign pre reading before a session?",
-            "answer": "Yes, to the staff hub, so the room time is spent on practice."
-          }
-        ]
-      },
-      {
-        "label": "Practicalities",
-        "items": [
-          {
-            "question": "Who can record a session?",
-            "answer": "Whoever delivered it, or an administrator on their behalf with the trainer named."
-          },
-          {
-            "question": "Does it handle external trainers?",
-            "answer": "Yes, the trainer is named whether internal or external."
-          },
-          {
-            "question": "How does this work with the rota?",
-            "answer": "Sessions are scheduled through the training calendar so cover is visible before you commit."
-          }
-        ]
-      }
-    ],
-    "sort": 8
-  },
-  {
-    "slug": "training-matrix",
-    "title": "See the whole team’s training <em>on one page, live</em>",
-    "meta_title": "Training Matrix | CareStreamAI",
-    "meta_description": "Your matrix is a spreadsheet somebody updates monthly, which means it is accurate on one day in thirty. A live matrix updates as people complete things, and shows competency alongside completion.",
-    "hero_image_url": "/images/uses/training-matrix/1.webp",
-    "content": {
-      "eyebrow": "User case",
-      "lede": "Your matrix is a spreadsheet somebody updates monthly, which means it is accurate on one day in thirty. A live matrix updates as people complete things, and shows competency alongside completion.",
-      "sections": [
-        {
-          "heading": "The grid, built properly",
-          "bullets": [
-            "Completion, score, competency observation and renewal date per subject",
-            "Requirements set by role, so the grid is not full of irrelevant cells",
-            "In person and online sessions in the same view"
-          ],
-          "links": [
-            {
-              "label": "Training Matrix",
-              "href": "/training-platform"
-            },
-            {
-              "label": "Annual Training",
-              "href": "/staff-training"
-            }
-          ],
-          "image": "/images/uses/training-matrix/1.webp",
-          "image_alt": "Screenshot slot Full training matrix"
-        },
-        {
-          "heading": "Gaps that are actionable",
-          "bullets": [
-            "Anyone with a completion but no competency observation surfaced separately",
-            "Renewals due in the next thirty days shown before they lapse",
-            "Filter by role, subject or person without exporting anything"
-          ],
-          "links": [
-            {
-              "label": "Compliance",
-              "href": "/cqc-compliance"
-            },
-            {
-              "label": "Training",
-              "href": "/training-platform"
-            }
-          ],
-          "image": "/images/uses/training-matrix/2.webp",
-          "image_alt": "Screenshot slot Matrix filtered to gaps"
-        },
-        {
-          "heading": "From reporting to planning",
-          "bullets": [
-            "Read the matrix against the rota to spot uncovered shifts",
-            "Plan sessions around who actually needs them",
-            "Evidence produced on demand rather than assembled"
-          ],
-          "links": [
-            {
-              "label": "Training Calendar",
-              "href": "/training-platform"
-            },
-            {
-              "label": "Care Audits",
-              "href": "/care-audits"
-            }
-          ],
-          "image": "/images/uses/training-matrix/3.webp",
-          "image_alt": "Screenshot slot Matrix read against a rota"
-        }
-      ],
-      "cards": [
-        {
-          "title": "Completion and competency",
-          "body": "Two different columns, because a score and an observation are two different kinds of evidence."
-        },
-        {
-          "title": "Updates as things happen",
-          "body": "No monthly refresh, no transcribing certificates. The grid is the record rather than a report about it."
-        },
-        {
-          "title": "Readable against the rota",
-          "body": "Not just who is missing training, but which shifts have nobody trained in something they might need."
-        }
-      ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
-      "heads": [
-        {
-          "eyebrow": "Why it matters",
-          "heading": "Most matrices track completion and call it competence",
-          "sub": "That is exactly why a matrix can pass an internal audit and fail an inspection."
-        },
-        {
-          "eyebrow": "How it works",
-          "heading": "What CareStream actually does here",
-          "sub": ""
-        },
-        {
-          "eyebrow": "Read next",
-          "heading": "Guides on this subject",
-          "sub": ""
-        },
-        {
-          "eyebrow": "Questions",
-          "heading": "Training Matrix, answered",
-          "sub": ""
-        }
-      ],
-      "panel": {
-        "title": "Training matrix · 48 staff",
-        "pill": "5 gaps",
-        "rows": [
-          {
-            "label": "Safeguarding",
-            "note": "48 of 48",
-            "done": true
-          },
-          {
-            "label": "Fire Safety",
-            "note": "48 of 48",
-            "done": true
-          },
-          {
-            "label": "Moving and Handling",
-            "note": "43 of 48, 2 unobserved",
-            "done": false
-          },
-          {
-            "label": "Medication",
-            "note": "28 of 31 eligible",
-            "done": false
-          },
-          {
-            "label": "Basic Life Support",
-            "note": "46 of 48",
-            "done": false
-          }
-        ]
-      },
-      "cta": [
-        {
-          "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
-          "action": "Get started"
-        },
-        {
-          "title": "Watch the walkthrough",
-          "body": "Six minutes across the whole platform.",
-          "action": "Watch now"
-        },
-        {
-          "title": "Talk to us",
-          "body": "Bring your own situation and we will map it live.",
-          "action": "Book a demo"
-        }
-      ],
-      "fine": "No card required · Set up in a day · UK data residency",
-      "guide": {
-        "eyebrow": "Guide",
-        "title": "A guide to building and using a care training matrix",
-        "lede": "Almost every service has a training matrix. Very few have one that would survive being opened in front of an inspector without a caveat. The difference is rarely effort. It is what the matrix was designed to record.",
-        "blocks": [
-          {
-            "heading": "Completion is a date, competence is a judgement",
-            "paras": [
-              "The most common matrix has one cell per person per subject, containing a date. That records that something was completed. It does not record that the person can do it, and for practical subjects the date is the weaker half of the evidence.",
-              "A matrix that separates the two is more honest and more useful. It also immediately reveals a population most services do not know they have: people who completed the module and were never observed."
-            ],
-            "bullets": []
-          },
-          {
-            "heading": "What a matrix should contain",
-            "paras": [
-              "Beyond the obvious, the fields that make a matrix usable rather than decorative."
-            ],
-            "bullets": [
-              "Completion date and score, not just a tick",
-              "Competency observation, with the observer named",
-              "Renewal date, derived from the completion",
-              "The role requirement, so irrelevant cells stay empty",
-              "Source of the record, whether online, in person or imported",
-              "Whether the person has read the current version of the related policy"
-            ]
-          },
-          {
-            "heading": "From compliance artefact to planning tool",
-            "paras": [
-              "The reframe that makes a matrix worth maintaining is reading it against the rota rather than against a target. The question stops being what percentage are trained and becomes whether Tuesday night has anyone on it trained in what Tuesday night might need.",
-              "That question cannot be answered by a spreadsheet updated monthly, because the answer changes with every shift swap."
-            ],
-            "bullets": []
-          },
-          {
-            "heading": "Where CareStream fits",
-            "paras": [
-              "The matrix holds completion, score, competency and renewal per subject per person, set by role, with in person and online in the same view, and it updates as things happen rather than when someone remembers.",
-              "Because it is live, it can be read against the rota to find uncovered shifts, and any individual's full position can be produced on demand rather than assembled before an inspection.",
-              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
-            ],
-            "bullets": []
-          }
-        ]
-      }
-    },
-    "faqs": [
-      {
-        "label": "The grid",
-        "items": [
-          {
-            "question": "What is in each cell?",
-            "answer": "Completion, score, competency observation where relevant, and the renewal date."
-          },
-          {
-            "question": "Can we set different requirements per role?",
-            "answer": "Yes, and you should. A grid where every subject applies to everyone is mostly empty cells."
-          },
-          {
-            "question": "Does it include face to face training?",
-            "answer": "Yes, in the same view as the online modules."
-          }
-        ]
-      },
-      {
-        "label": "Accuracy",
-        "items": [
-          {
-            "question": "Who updates it?",
-            "answer": "Nobody. Completions, scores and observations land as they happen."
-          },
-          {
-            "question": "What about training done before we started using CareStream?",
-            "answer": "It can be imported so the grid reflects the real position from day one."
-          },
-          {
-            "question": "Can we correct a mistake?",
-            "answer": "Yes, and the correction is recorded."
-          }
-        ]
-      },
-      {
-        "label": "Using it",
-        "items": [
-          {
-            "question": "Can we export it?",
-            "answer": "Yes, though the point is that you can show it live rather than exporting to prove something."
-          },
-          {
-            "question": "Does it work across multiple services?",
-            "answer": "Per service, with a group view where relevant."
-          },
-          {
-            "question": "Can seniors see it, or only managers?",
-            "answer": "Access is by permission, and seniors seeing their own team is usually the version that changes behaviour."
-          }
-        ]
-      }
-    ],
-    "sort": 9
-  },
-  {
-    "slug": "training-calendar",
-    "title": "Plan a year of training without <em>a spreadsheet and a wall chart</em>",
-    "meta_title": "Training Calendar | CareStreamAI",
-    "meta_description": "Renewals fall due unevenly, cover is tight, and the plan usually lives in one person's head. A calendar that shows the collisions before you commit to dates.",
-    "hero_image_url": "/images/uses/training-calendar/1.webp",
-    "content": {
-      "eyebrow": "User case",
-      "lede": "Renewals fall due unevenly, cover is tight, and the plan usually lives in one person's head. A calendar that shows the collisions before you commit to dates.",
-      "sections": [
-        {
-          "heading": "The whole year, visible",
-          "bullets": [
-            "Every renewal plotted by month, per subject and per person",
-            "Collisions flagged before you commit to a date",
-            "Sessions and online rounds on the same calendar"
-          ],
-          "links": [
-            {
-              "label": "Training Calendar",
-              "href": "/training-platform"
-            },
-            {
-              "label": "Training Matrix",
-              "href": "/training-platform"
-            }
-          ],
-          "image": "/images/uses/training-calendar/1.webp",
-          "image_alt": "Screenshot slot Twelve month training calendar"
-        },
-        {
-          "heading": "Scheduling that respects the rota",
-          "bullets": [
-            "See which shifts can release staff before booking",
-            "Group people who need the same subject into one session",
-            "Repeat a session rather than force one date on everyone"
-          ],
-          "links": [
-            {
-              "label": "Training",
-              "href": "/training-platform"
-            },
-            {
-              "label": "Compliance",
-              "href": "/cqc-compliance"
-            }
-          ],
-          "image": "/images/uses/training-calendar/2.webp",
-          "image_alt": "Screenshot slot Session scheduled against cover"
-        },
-        {
-          "heading": "Nothing expires unnoticed",
-          "bullets": [
-            "Warnings ahead of the renewal date, not after",
-            "Escalation to the senior who owns the person, not a broadcast",
-            "Overdue surfaced on the dashboard until it is cleared"
-          ],
-          "links": [
-            {
-              "label": "Compliance",
-              "href": "/cqc-compliance"
-            },
-            {
-              "label": "Staff Hub",
-              "href": "/staff-training"
-            }
-          ],
-          "image": "/images/uses/training-calendar/3.webp",
-          "image_alt": "Screenshot slot Renewal warnings ahead of expiry"
-        }
-      ],
-      "cards": [
-        {
-          "title": "See the year at once",
-          "body": "Renewals plotted across twelve months, so the pile up is visible in January rather than discovered in March."
-        },
-        {
-          "title": "Rebalance deliberately",
-          "body": "Bring a renewal forward to flatten a month. Better slightly early than a fortnight late and unplanned."
-        },
-        {
-          "title": "Scheduled against the rota",
-          "body": "A session is only bookable if the shift can release the people. Cover planned rather than improvised."
-        }
-      ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
-      "heads": [
-        {
-          "eyebrow": "Why it matters",
-          "heading": "Everyone inducted together renews together",
-          "sub": "One recruitment push in March means every renewal lands in March for the rest of the service’s life."
-        },
-        {
-          "eyebrow": "How it works",
-          "heading": "What CareStream actually does here",
-          "sub": ""
-        },
-        {
-          "eyebrow": "Read next",
-          "heading": "Guides on this subject",
-          "sub": ""
-        },
-        {
-          "eyebrow": "Questions",
-          "heading": "Training Calendar, answered",
-          "sub": ""
-        }
-      ],
-      "panel": {
-        "title": "Training year 2026",
-        "pill": "3 collisions",
-        "rows": [
-          {
-            "label": "March · 19 renewals due",
-            "note": "Overloaded",
-            "done": false
-          },
-          {
-            "label": "March · Moving and Handling + BLS",
-            "note": "Same week",
-            "done": false
-          },
-          {
-            "label": "April · 4 renewals",
-            "note": "Balanced",
-            "done": true
-          },
-          {
-            "label": "May · 6 renewals",
-            "note": "Balanced",
-            "done": true
-          },
-          {
-            "label": "August · no cover on nights",
-            "note": "Check rota",
-            "done": false
-          }
-        ]
-      },
-      "cta": [
-        {
-          "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
-          "action": "Get started"
-        },
-        {
-          "title": "Watch the walkthrough",
-          "body": "Six minutes across the whole platform.",
-          "action": "Watch now"
-        },
-        {
-          "title": "Talk to us",
-          "body": "Bring your own situation and we will map it live.",
-          "action": "Book a demo"
-        }
-      ],
-      "fine": "No card required · Set up in a day · UK data residency",
-      "guide": {
-        "eyebrow": "Guide",
-        "title": "A guide to scheduling training across a care service",
-        "lede": "Training plans fail for operational reasons, not for want of intent. They are built on a calendar and executed against a rota, and nobody reconciles the two until the week the session is due. This guide is about building the plan the other way round.",
-        "blocks": [
-          {
-            "heading": "The March problem",
-            "paras": [
-              "Almost every service has a month where everything falls due. It is nearly always the month a group of people were inducted together, usually after a recruitment push, and it repeats every year afterwards because renewals are set from completion.",
-              "The fix is dull and effective: deliberately bring some renewals forward to flatten the peak. Slightly early costs nothing. Late costs you an overdue entry and, occasionally, a shift you cannot safely fill."
-            ],
-            "bullets": []
-          },
-          {
-            "heading": "Constraints first",
-            "paras": [
-              "Build the schedule from what is fixed rather than from what is desirable."
-            ],
-            "bullets": [
-              "Minimum staffing for each shift",
-              "Skill mix, not just headcount",
-              "Night staff, who are the most frequently missed group",
-              "Part time patterns, so the same person is not always the one released",
-              "Agency cost of backfilling, which decides how many can go at once",
-              "The trainer, who is usually the scarcest resource of all"
-            ]
-          },
-          {
-            "heading": "Where CareStream fits",
-            "paras": [
-              "The calendar plots every renewal across twelve months so collisions are visible before you commit, and lets you rebalance deliberately rather than discovering the pile up in the month it lands.",
-              "Sessions are scheduled with cover in view, warnings arrive ahead of a renewal date rather than after it, and anything that does lapse stays on the dashboard until cleared instead of being absorbed into a percentage.",
-              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
-            ],
-            "bullets": []
-          }
-        ]
-      }
-    },
-    "faqs": [
-      {
-        "label": "Planning",
-        "items": [
-          {
-            "question": "How far ahead can we plan?",
-            "answer": "A full twelve months, with renewals projected from current completion dates."
-          },
-          {
-            "question": "Can we move a renewal earlier?",
-            "answer": "Yes, and flattening an overloaded month is usually worth a slightly early renewal."
-          },
-          {
-            "question": "Does it handle recurring sessions?",
-            "answer": "Yes, including repeating the same session for different groups."
-          }
-        ]
-      },
-      {
-        "label": "Cover",
-        "items": [
-          {
-            "question": "Does it know our rota?",
-            "answer": "It shows the constraint so you can schedule against it rather than booking and discovering the problem later."
-          },
-          {
-            "question": "What about staff who work nights only?",
-            "answer": "They are the group most often missed, and the calendar makes that visible rather than leaving it to memory."
-          },
-          {
-            "question": "Can we schedule for one service or a group?",
-            "answer": "Either."
-          }
-        ]
-      },
-      {
-        "label": "Expiry",
-        "items": [
-          {
-            "question": "When do we get warned?",
-            "answer": "Ahead of the date, with the lead time set by you."
-          },
-          {
-            "question": "Who gets the warning?",
-            "answer": "The person and the senior who owns them, rather than everyone."
-          },
-          {
-            "question": "What happens if something lapses anyway?",
-            "answer": "It stays on the dashboard as overdue until it is cleared, rather than disappearing into a percentage."
-          }
-        ]
-      }
-    ],
-    "sort": 10
-  },
-  {
-    "slug": "cqc-prep-questions",
-    "title": "Prepare every staff member for the questions <em>they will actually be asked</em>",
-    "meta_title": "CQC Prep Questions | CareStreamAI",
-    "meta_description": "Inspectors talk to your carers, not to you. Role matched questions your team practises in the staff hub, in their own language, so nobody is asked something for the first time on the day.",
-    "hero_image_url": "/images/uses/cqc-prep-questions/1.webp",
-    "content": {
-      "eyebrow": "User case",
-      "lede": "Inspectors talk to your carers, not to you. Role matched questions your team practises in the staff hub, in their own language, so nobody is asked something for the first time on the day.",
-      "sections": [
-        {
-          "heading": "Question sets by role",
-          "bullets": [
-            "Core set everyone gets, plus role specific sets on top",
-            "Ancillary roles covered properly rather than as an afterthought",
-            "Practised in the staff hub, on their own phone"
-          ],
-          "links": [
-            {
-              "label": "CQC Prep Questions",
-              "href": "/cqc-staff-questions"
-            },
-            {
-              "label": "Staff Hub",
-              "href": "/staff-training"
-            }
-          ],
-          "image": "/images/uses/cqc-prep-questions/1.webp",
-          "image_alt": "Screenshot slot Role matched question sets"
-        },
-        {
-          "heading": "Understanding, not scripts",
-          "bullets": [
-            "Each question links to the policy section the answer comes from",
-            "No model answers to memorise and repeat back",
-            "What is built is recall of practice rather than of a sentence"
-          ],
-          "links": [
-            {
-              "label": "Care Policies",
-              "href": "/care-policies"
-            },
-            {
-              "label": "Compliance",
-              "href": "/cqc-compliance"
-            }
-          ],
-          "image": "/images/uses/cqc-prep-questions/2.webp",
-          "image_alt": "Screenshot slot Question with its source policy"
-        },
-        {
-          "heading": "Readiness you can see",
-          "bullets": [
-            "Who has practised, by role, without producing a report",
-            "The roles nobody has covered surfaced before an inspector finds them",
-            "Print a set for a supervision conversation if you prefer paper"
-          ],
-          "links": [
-            {
-              "label": "CQC and Compliance",
-              "href": "/cqc-compliance"
-            },
-            {
-              "label": "Care Audits",
-              "href": "/care-audits"
-            }
-          ],
-          "image": "/images/uses/cqc-prep-questions/3.webp",
-          "image_alt": "Screenshot slot Readiness by role"
-        }
-      ],
-      "cards": [
-        {
-          "title": "Matched to the role",
-          "body": "A nurse, a care assistant and a kitchen assistant get different questions, because they will be asked different questions."
-        },
-        {
-          "title": "Sends them back to the policy",
-          "body": "An answer is not supplied. The question points at the policy the answer comes from, so what is built is understanding."
-        },
-        {
-          "title": "In their own language",
-          "body": "Practising in a second language on the spot is a bad way to find out whether someone knows the answer."
-        }
-      ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
-      "heads": [
-        {
-          "eyebrow": "Why it matters",
-          "heading": "Ancillary staff get asked too, and are almost never prepared",
-          "sub": "The kitchen and maintenance teams are the ones an inspector often reaches first."
-        },
-        {
-          "eyebrow": "How it works",
-          "heading": "What CareStream actually does here",
-          "sub": ""
-        },
-        {
-          "eyebrow": "Read next",
-          "heading": "Guides on this subject",
-          "sub": ""
-        },
-        {
-          "eyebrow": "Questions",
-          "heading": "CQC Prep Questions, answered",
-          "sub": ""
-        }
-      ],
-      "panel": {
-        "title": "Inspection readiness · 48 staff",
-        "pill": "76% practised",
-        "rows": [
-          {
-            "label": "Care assistants · 22 of 24",
-            "note": "Core set",
-            "done": true
-          },
-          {
-            "label": "Nurses · 8 of 8",
-            "note": "Clinical set",
-            "done": true
-          },
-          {
-            "label": "Kitchen · 1 of 5",
-            "note": "Not started",
-            "done": false
-          },
-          {
-            "label": "Maintenance · 0 of 3",
-            "note": "Not started",
-            "done": false
-          },
-          {
-            "label": "Seniors · 6 of 6",
-            "note": "Core plus leadership",
-            "done": true
-          }
-        ]
-      },
-      "cta": [
-        {
-          "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
-          "action": "Get started"
-        },
-        {
-          "title": "Watch the walkthrough",
-          "body": "Six minutes across the whole platform.",
-          "action": "Watch now"
-        },
-        {
-          "title": "Talk to us",
-          "body": "Bring your own situation and we will map it live.",
-          "action": "Book a demo"
-        }
-      ],
-      "fine": "No card required · Set up in a day · UK data residency",
-      "guide": {
-        "eyebrow": "Guide",
-        "title": "A guide to preparing a whole team for inspection",
-        "lede": "The most predictable failure in inspection preparation is that the manager is ready and the team has never been asked. The second most predictable is that the care staff were briefed and the kitchen was not. This guide covers both, and argues against the thing most services do first.",
-        "blocks": [
-          {
-            "heading": "Do not write model answers",
-            "paras": [
-              "The instinct is to produce a sheet of questions with the right answers and circulate it. It is the wrong move, for two reasons.",
-              "First, it is obvious. An inspector who hears the same phrasing from three people knows exactly what happened, and it converts a neutral conversation into a sceptical one. Second, a memorised answer collapses under a follow up question, and the staff member is left more exposed than if they had answered in their own words."
-            ],
-            "bullets": []
-          },
-          {
-            "heading": "Prepare by role",
-            "paras": [
-              "Different roles get asked different things, and the roles least likely to be prepared are the ones most likely to be approached informally."
-            ],
-            "bullets": [
-              "Care assistants: daily practice, dignity, escalation, knowing residents",
-              "Seniors: supervision, delegation, incident handling",
-              "Nurses: clinical decisions, medication, capacity and consent",
-              "Kitchen: dietary needs, allergens, how they learn about a resident’s requirements",
-              "Maintenance: hazards, restricted areas, contractor handling",
-              "Administration: records, confidentiality, complaints handling"
-            ]
-          },
-          {
-            "heading": "What good preparation looks like",
-            "paras": [
-              "Ask real questions in supervision over the weeks before, in the person's own language where that helps, and when they do not know, send them to the policy rather than telling them the answer. That builds something that survives a follow up question.",
-              "Accept that some people will still be nervous. Nervous and honest reads far better than fluent and rehearsed."
-            ],
-            "bullets": []
-          },
-          {
-            "heading": "Where CareStream fits",
-            "paras": [
-              "Question sets are matched to the role, including the ancillary roles that are usually missed, and practised in the staff hub on the person's own phone in their own language.",
-              "Each question links to the policy section the answer comes from rather than supplying an answer, and readiness is visible by role, which is how you find out that nobody in the kitchen has done it while there is still time.",
-              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
-            ],
-            "bullets": []
-          }
-        ]
-      }
-    },
-    "faqs": [
-      {
-        "label": "The questions",
-        "items": [
-          {
-            "question": "Where do the questions come from?",
-            "answer": "They reflect what inspectors ask staff in practice, grouped by theme and matched to the role."
-          },
-          {
-            "question": "Are model answers provided?",
-            "answer": "No, deliberately. Each question points at the policy the answer comes from, because rehearsed answers are transparent and undermine confidence."
-          },
-          {
-            "question": "Can we add our own?",
-            "answer": "Yes, including questions specific to your service."
-          }
-        ]
-      },
-      {
-        "label": "Coverage",
-        "items": [
-          {
-            "question": "Which roles are covered?",
-            "answer": "Care assistants, seniors, nurses, and the ancillary roles that are usually missed, including kitchen, maintenance and administration."
-          },
-          {
-            "question": "Do agency staff need this?",
-            "answer": "Anyone on shift can be spoken to, so a short core set for agency is sensible."
-          },
-          {
-            "question": "How long does it take a staff member?",
-            "answer": "Short sessions rather than one sitting, done on their own phone between tasks."
-          }
-        ]
-      },
-      {
-        "label": "On the day",
-        "items": [
-          {
-            "question": "Will this make our staff sound rehearsed?",
-            "answer": "It should do the opposite, because there is nothing to rehearse. The practice sends them to the policy rather than to a script."
-          },
-          {
-            "question": "Can we see who is ready?",
-            "answer": "Yes, by role, which is how the uncovered groups surface."
-          },
-          {
-            "question": "What if someone freezes anyway?",
-            "answer": "That happens, and it is a normal human response. What preparation changes is whether they had ever considered the question before."
-          }
-        ]
-      }
-    ],
-    "sort": 11
-  },
-  {
-    "slug": "staff-onboarding",
-    "title": "Get a new starter safe, trained and <em>signed off in their first week</em>",
-    "meta_title": "Staff Onboarding | CareStreamAI",
-    "meta_description": "Staff onboarding is the moment a service is most exposed. New people are on the floor before the paperwork catches up, and the evidence that they were ready is scattered across a folder, an inbox and somebody's memory.",
-    "hero_image_url": "/images/uses/staff-onboarding/1.webp",
-    "content": {
-      "eyebrow": "User case",
-      "lede": "Staff onboarding is the moment a service is most exposed. New people are on the floor before the paperwork catches up, and the evidence that they were ready is scattered across a folder, an inbox and somebody's memory.",
-      "sections": [
-        {
-          "heading": "The first day pack builds itself",
-          "bullets": [
-            "Policies assigned by role, not a blanket send to everyone",
-            "Read receipts against the exact version live that day",
-            "On their own phone, no work email needed"
-          ],
-          "links": [
-            {
-              "label": "Care Policies",
-              "href": "/care-policies"
-            },
-            {
-              "label": "HR Policies",
-              "href": "/hr-policies"
-            },
-            {
-              "label": "Staff Hub",
-              "href": "/staff-training"
-            }
-          ],
-          "image": "/images/uses/staff-onboarding/1.webp",
-          "image_alt": "Screenshot slot Staff hub, first day pack"
-        },
-        {
-          "heading": "Training built from your own policies",
-          "bullets": [
-            "Adhoc modules generated from the policy they have just read",
-            "CPD accredited annual courses for the statutory subjects",
-            "Face to face sessions recorded on the same record as the online ones"
-          ],
-          "links": [
-            {
-              "label": "Adhoc Training",
-              "href": "/training-platform"
-            },
-            {
-              "label": "Annual Training",
-              "href": "/staff-training"
-            },
-            {
-              "label": "Face to Face",
-              "href": "/training-platform"
-            }
-          ],
-          "image": "/images/uses/staff-onboarding/2.webp",
-          "image_alt": "Screenshot slot Module generated from a policy"
-        },
-        {
-          "heading": "Sign off you can put in front of an inspector",
-          "bullets": [
-            "The training matrix shows the whole team and the gaps, live",
-            "Competency observations sit alongside the completions",
-            "CQC prep questions matched to the role, so they are ready to be asked"
-          ],
-          "links": [
-            {
-              "label": "Training Matrix",
-              "href": "/training-platform"
-            },
-            {
-              "label": "CQC Prep Questions",
-              "href": "/cqc-staff-questions"
-            },
-            {
-              "label": "Compliance",
-              "href": "/cqc-compliance"
-            }
-          ],
-          "image": "/images/uses/staff-onboarding/3.webp",
-          "image_alt": "Screenshot slot Training matrix, gaps highlighted"
-        }
-      ],
-      "cards": [
-        {
-          "title": "Nothing quietly gets missed",
-          "body": "The role decides the pack. A nurse, a care assistant and a kitchen assistant each get what applies to them, assigned on their start date."
-        },
-        {
-          "title": "They can actually read it",
-          "body": "A new starter whose first language is not English reads every policy in their own, on their own phone, without asking anyone for help."
-        },
-        {
-          "title": "Evidence assembles itself",
-          "body": "Every read, score and observation lands in the matrix as it happens. Nobody reconstructs the first week six months later."
-        }
-      ],
-      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above.",
-      "heads": [
-        {
-          "eyebrow": "Why it matters",
-          "heading": "An inspector will ask how you knew they were ready",
-          "sub": "Not whether you inducted them. How you can show it, for this person, on this date."
-        },
-        {
-          "eyebrow": "How it works",
-          "heading": "What CareStream actually does here",
-          "sub": ""
-        },
-        {
-          "eyebrow": "Read next",
-          "heading": "Guides on this subject",
-          "sub": ""
-        },
-        {
-          "eyebrow": "Questions",
-          "heading": "Staff Onboarding, answered",
-          "sub": ""
-        }
-      ],
-      "panel": {
-        "title": "Amina Osei · Care Assistant · Day 4",
-        "pill": "On track",
-        "rows": [
-          {
-            "label": "Safeguarding Adults v3.1 read",
-            "note": "Day 1",
-            "done": true
-          },
-          {
-            "label": "Moving and Handling, practical",
-            "note": "Day 2",
-            "done": true
-          },
-          {
-            "label": "Infection Prevention module, 100%",
-            "note": "Day 3",
-            "done": true
-          },
-          {
-            "label": "Medication competency, observed",
-            "note": "Day 5",
-            "done": false
-          },
-          {
-            "label": "Care Certificate standards 1 to 5",
-            "note": "Week 2",
-            "done": false
-          }
-        ]
-      },
-      "cta": [
-        {
-          "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
-          "action": "Get started"
-        },
-        {
-          "title": "Watch the walkthrough",
-          "body": "Six minutes across the whole platform.",
-          "action": "Watch now"
-        },
-        {
-          "title": "Talk to us",
-          "body": "Bring your own situation and we will map it live.",
-          "action": "Book a demo"
-        }
-      ],
-      "fine": "No card required · Set up in a day · UK data residency",
-      "guide": {
-        "eyebrow": "Guide",
-        "title": "A complete guide to onboarding a new care worker",
-        "lede": "Induction is the process a service repeats most and improves least. It is usually built around whoever happens to be on shift, and the record of it is whatever survived in the folder. This guide sets out what has to happen before a new starter works alone, in what order, and what you need to keep.",
-        "blocks": [
-          {
-            "heading": "Four jobs, not one",
-            "paras": [
-              "There are four separate things happening in a new starter's first fortnight, and services get into trouble by treating them as one. Legal: the checks that must be complete before the person works at all. Safety: the small number of things they must know before they are near a resident. Competence: the point at which they can work unsupervised. And belonging, which nobody documents and everybody feels.",
-              "Only the first two are urgent. Trying to complete all four in week one produces a heavy induction the new starter half remembers and the manager cannot evidence."
-            ],
-            "bullets": []
-          },
-          {
-            "heading": "Before their first shift",
-            "paras": [
-              "These belong before someone starts, not during their first week. If any are outstanding, the person should not be on the rota."
-            ],
-            "bullets": [
-              "Proof of identity and right to work in the UK",
-              "An enhanced DBS check at the level the role requires",
-              "References covering recent employment, with gaps explained",
-              "Professional registration confirmed where the role requires it",
-              "A signed contract and a job description the person has read"
-            ]
-          },
-          {
-            "heading": "Sign off should be a decision",
-            "paras": [
-              "Sign off is too often the absence of a complaint. Three questions make it a decision. Has every safety critical subject been completed and, where practical, observed? Is there anything the person still does not do unsupervised, and is that written where the team can see it? And would the senior who watched them be comfortable with that person working a night shift?",
-              "If the answer to the third is no, the person is not signed off, whatever the paperwork says."
-            ],
-            "bullets": []
-          },
-          {
-            "heading": "Where CareStream fits",
-            "paras": [
-              "The sequence is held once and assigned by role on the start date, so the pack is the same whoever is on shift that morning. Policies arrive in the new starter's own language on their own phone, and training is generated from the policies you actually use rather than a generic course.",
-              "Read receipts, scores and observations land on one record, so producing the evidence for one person takes a moment rather than an afternoon.",
-              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
-            ],
-            "bullets": []
-          }
-        ]
-      }
-    },
-    "faqs": [
-      {
-        "label": "Getting started",
-        "items": [
-          {
-            "question": "How long does it take to set up a sequence?",
-            "answer": "An afternoon. Pick a role, tick the policies and modules that apply, set the day each is due, and every new starter in that role gets it automatically."
-          },
-          {
-            "question": "Do we have to upload our policies first?",
-            "answer": "Yes, and you can bulk upload the whole set in one go. Most services are through this in a session."
-          },
-          {
-            "question": "What if we already use a paper induction booklet?",
-            "answer": "Keep it. Face to face sessions and observed competencies are recorded against the same staff record, so the two do not live apart."
-          }
-        ]
-      },
-      {
-        "label": "For the new starter",
-        "items": [
-          {
-            "question": "Do they need a work email address?",
-            "answer": "No. The staff hub works on their own phone and they can sign in without a password."
-          },
-          {
-            "question": "Which languages are supported?",
-            "answer": "More than sixty. They pick one and everything arrives in it."
-          },
-          {
-            "question": "What if they cannot find the answer in a policy?",
-            "answer": "They can ask in plain language and get an answer drawn from your policies with the source shown."
-          }
-        ]
-      },
-      {
-        "label": "Evidence",
-        "items": [
-          {
-            "question": "What can we show an inspector?",
-            "answer": "The policies they were given, the version live at the time, when they read it, what they scored and who observed their competency."
-          },
-          {
-            "question": "Does it prove understanding or only that they opened it?",
-            "answer": "Both are recorded separately. A read receipt is a read receipt. Understanding is evidenced by the score and, for practical subjects, an observed competency."
-          },
-          {
-            "question": "What happens if a policy changes mid induction?",
-            "answer": "The new version goes to everyone it applies to and the record keeps both."
-          }
-        ]
-      }
-    ],
-    "sort": 12
-  },
-  {
     "slug": "resident-knowledge",
     "title": "Give every carer what your longest serving staff <em>already know</em>",
     "meta_title": "Resident Knowledge | CareStreamAI",
@@ -3387,6 +3119,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
     "content": {
       "eyebrow": "User case",
       "lede": "A new starter meets a resident for the first time with a care plan and not much else. The things that actually make a shift go well, what she likes to be called, the food he will genuinely eat, the routine that settles her at night, live in the heads of the people who have been there years. CareStream holds them in your knowledge base and answers questions about a resident by name.",
+      "fine": "No card required · Set up in a day · UK data residency",
       "sections": [
         {
           "heading": "Write down what your team already knows",
@@ -3464,18 +3197,63 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
       "cards": [
         {
           "title": "New starters begin from nothing",
-          "body": "Someone on their first shift has read the care plan and met nobody. They do not know he was a signalman for thirty five years, or that she will not settle until the curtains are shut. They find out slowly, by getting it wrong first."
+          "body": "Someone on their first shift has read the care plan and met nobody. They do not know he was a signalman for thirty five years, or that she will not settle until the curtains are shut. They find out slowly, by getting it wrong first.",
+          "icon": {
+            "bg": "#EFE7FA",
+            "fg": "#6B3FA0",
+            "shapes": [
+              {
+                "tag": "circle",
+                "cx": "12",
+                "cy": "8",
+                "r": "3.6"
+              },
+              {
+                "tag": "path",
+                "d": "M4.5 20c.9-3.6 3.9-5.6 7.5-5.6s6.6 2 7.5 5.6"
+              }
+            ]
+          }
         },
         {
           "title": "Bank and agency repeat the same questions",
-          "body": "Cover staff ask the same handful of questions every time they walk in, usually of whoever is busiest. When nobody has a minute they guess, and the resident has a worse evening than they needed to."
+          "body": "Cover staff ask the same handful of questions every time they walk in, usually of whoever is busiest. When nobody has a minute they guess, and the resident has a worse evening than they needed to.",
+          "icon": {
+            "bg": "#FDF0E7",
+            "fg": "#B4541F",
+            "shapes": [
+              {
+                "tag": "circle",
+                "cx": "12",
+                "cy": "12",
+                "r": "8.5"
+              },
+              {
+                "tag": "path",
+                "d": "M12 7.5V12l3 2"
+              }
+            ]
+          }
         },
         {
           "title": "It lives in people, not in records",
-          "body": "The carer who knows a resident best is the one most likely to be on leave when it matters. Handover carries the clinical and the urgent. It has never been the place for the small things that make somebody feel known."
+          "body": "The carer who knows a resident best is the one most likely to be on leave when it matters. Handover carries the clinical and the urgent. It has never been the place for the small things that make somebody feel known.",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M4 5.5A1.5 1.5 0 0 1 5.5 4H19v16H5.5A1.5 1.5 0 0 1 4 18.5z"
+              },
+              {
+                "tag": "path",
+                "d": "M8 4v16"
+              }
+            ]
+          }
         }
       ],
-      "note": "Resident knowledge sits alongside the care plan. It does not replace it, and nothing clinical or actionable should live here.",
       "heads": [
         {
           "eyebrow": "The problem",
@@ -3494,54 +3272,61 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
         }
       ],
       "panel": {
-       "title": "Ferndale · Staff hub",
-       "pill": "Resident",
-       "rows": [
-        {
-         "label": "What time does Des go to bed?",
-         "note": "Asked",
-         "done": true
-        },
-        {
-         "label": "Stays up to about 11pm with the radio",
-         "note": "Answer",
-         "done": true
-        },
-        {
-         "label": "Milky drink around 10:30pm",
-         "note": "Answer",
-         "done": true
-        },
-        {
-         "label": "Door left slightly ajar, curtains open",
-         "note": "Answer",
-         "done": true
-        },
-        {
-         "label": "From: Resident profile, approved by the manager",
-         "note": "Source",
-         "done": true
-        }
-       ]
+        "title": "Ferndale · Staff hub",
+        "pill": "Resident",
+        "rows": [
+          {
+            "label": "What time does Des go to bed?",
+            "note": "Asked",
+            "done": true
+          },
+          {
+            "label": "Stays up to about 11pm with the radio",
+            "note": "Answer",
+            "done": true
+          },
+          {
+            "label": "Milky drink around 10:30pm",
+            "note": "Answer",
+            "done": true
+          },
+          {
+            "label": "Door left slightly ajar, curtains open",
+            "note": "Answer",
+            "done": true
+          },
+          {
+            "label": "From: Resident profile, approved by the manager",
+            "note": "Source",
+            "done": true
+          }
+        ]
       },
       "cta": [
         {
           "title": "Start a free trial",
           "body": "Set your home up in a day. No card required.",
-          "action": "Start free trial"
+          "action": "Start free trial",
+          "icon": null
         },
         {
           "title": "Watch the walkthrough",
           "body": "See the hub, the knowledge base and the answers your staff get.",
-          "action": "Book a demo"
+          "action": "Book a demo",
+          "icon": null
         },
         {
           "title": "Talk to us",
           "body": "Tell us how your home runs and we will tell you honestly if this helps.",
-          "action": "Contact us"
+          "action": "Contact us",
+          "icon": null
         }
       ],
-      "fine": "No card required · Set up in a day · UK data residency",
+      "read_next_head": {
+        "eyebrow": "Read next",
+        "heading": ""
+      },
+      "read_next_bands": [],
       "guide": {
         "eyebrow": "Guide",
         "title": "A practical guide to resident knowledge in a care home",
@@ -3581,7 +3366,8 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
             "bullets": []
           }
         ]
-      }
+      },
+      "note": "Resident knowledge sits alongside the care plan. It does not replace it, and nothing clinical or actionable should live here."
     },
     "faqs": [
       {
@@ -3637,5 +3423,1383 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
       }
     ],
     "sort": 13
+  },
+  {
+    "slug": "staff-compliance",
+    "title": "Know who is compliant today, <em>without chasing anyone</em>",
+    "meta_title": "Staff Compliance | CareStreamAI",
+    "meta_description": "Most services find out that someone's training lapsed when they need the certificate. Compliance should be a live position you can see, not a report you assemble under pressure.",
+    "hero_image_url": "/images/uses/staff-compliance/1.webp",
+    "content": {
+      "eyebrow": "User case",
+      "lede": "Most services find out that someone's training lapsed when they need the certificate. Compliance should be a live position you can see, not a report you assemble under pressure.",
+      "fine": "No card required · Set up in a day · UK data residency",
+      "sections": [
+        {
+          "heading": "A live position, not a monthly snapshot",
+          "bullets": [
+            "Completions, scores and competencies land as they happen",
+            "Renewal dates tracked per person, with warnings ahead of the date",
+            "No manual updating, so the view is never quietly out of date"
+          ],
+          "links": [
+            {
+              "label": "CQC and Compliance",
+              "href": "/cqc-compliance"
+            },
+            {
+              "label": "Training Matrix",
+              "href": "/training-platform"
+            }
+          ],
+          "image": "/images/uses/staff-compliance/1.webp",
+          "image_alt": "Screenshot slot Compliance overview, exceptions first"
+        },
+        {
+          "heading": "Chasing that targets one person",
+          "bullets": [
+            "Push notification to the staff hub on their own phone, task attached",
+            "The senior sees who is outstanding rather than sending to everyone",
+            "Escalation when a renewal is close rather than after it has passed"
+          ],
+          "links": [
+            {
+              "label": "Staff Hub",
+              "href": "/staff-training"
+            },
+            {
+              "label": "Training",
+              "href": "/training-platform"
+            }
+          ],
+          "image": "/images/uses/staff-compliance/2.webp",
+          "image_alt": "Screenshot slot Notification with the task attached"
+        },
+        {
+          "heading": "Evidence you do not have to prepare",
+          "bullets": [
+            "Any staff member's full position produced without assembling anything",
+            "Version aware, so you can show what they read and when",
+            "Face to face sessions recorded on the same record as online modules"
+          ],
+          "links": [
+            {
+              "label": "Compliance",
+              "href": "/cqc-compliance"
+            },
+            {
+              "label": "Care Audits",
+              "href": "/care-audits"
+            }
+          ],
+          "image": "/images/uses/staff-compliance/3.webp",
+          "image_alt": "Screenshot slot One staff member’s full record"
+        }
+      ],
+      "cards": [
+        {
+          "title": "One record per person",
+          "body": "Policy reads, module scores, observed competencies and renewal dates on the same staff record, updating as things happen.",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "circle",
+                "cx": "12",
+                "cy": "12",
+                "r": "3"
+              },
+              {
+                "tag": "path",
+                "d": "M6.5 6.5a8 8 0 0 0 0 11M17.5 6.5a8 8 0 0 1 0 11"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Exceptions, not percentages",
+          "body": "A view built around what is overdue and who owns it, rather than a headline number that is always reassuring.",
+          "icon": {
+            "bg": "#FCF0DC",
+            "fg": "#9E6709",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M12 4.5 21 19.5H3z"
+              },
+              {
+                "tag": "path",
+                "d": "M12 10v4M12 17h.01"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Targeted, not broadcast",
+          "body": "A notification to the person who needs it, with the task attached, instead of a reminder to everyone.",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M6.5 10a5.5 5.5 0 0 1 11 0c0 4 1.5 5.5 1.5 5.5H5S6.5 14 6.5 10z"
+              },
+              {
+                "tag": "path",
+                "d": "M10.2 19a2 2 0 0 0 3.6 0"
+              }
+            ]
+          }
+        }
+      ],
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "Compliance is a bundle, and nothing joins it up",
+          "sub": "Training, competency, registration and policy reads usually live in four places and agree with each other by luck."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "Staff Compliance, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Compliance · 48 staff",
+        "pill": "6 need attention",
+        "rows": [
+          {
+            "label": "J. Okafor · Moving and Handling",
+            "note": "Expired 4 days",
+            "done": false
+          },
+          {
+            "label": "S. Blake · Medication",
+            "note": "Due in 7 days",
+            "done": false
+          },
+          {
+            "label": "A. Reid · Safeguarding",
+            "note": "Not started",
+            "done": false
+          },
+          {
+            "label": "Team · Fire Safety",
+            "note": "100%",
+            "done": true
+          },
+          {
+            "label": "Team · Infection Prevention",
+            "note": "100%",
+            "done": true
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started",
+          "icon": {
+            "bg": "#F1E9FA",
+            "fg": "#6F35B0",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M12 5v14M5 12h14"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
+        }
+      ],
+      "read_next_head": {
+        "eyebrow": "Read next",
+        "heading": "Guides on this subject"
+      },
+      "read_next_bands": [
+        "#EFE7FA",
+        "#E3F0EA",
+        "#FCF0DC"
+      ],
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A guide to tracking staff compliance in a care service",
+        "lede": "Compliant is a word used loosely enough that two people in the same service will mean different things by it. This guide unpicks what it actually contains, why the parts never agree with each other, and how to get to a position you can see rather than assemble.",
+        "blocks": [
+          {
+            "heading": "One carer, four systems",
+            "paras": [
+              "Take one care assistant. Her statutory training sits in a spreadsheet. Her observed competencies are on paper in a supervision file. Her policy acknowledgements are in an email folder. Her DBS and right to work are in a personnel file in a locked cabinet.",
+              "Every one of those is maintained by a different person on a different rhythm. Nothing joins them. When you say she is compliant you are asserting agreement between four systems that have never been compared."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Completion is not competence",
+            "paras": [
+              "The second problem is that most tracking records completion, which is a date, and treats it as competence, which is an observation. They are different evidence and an inspector will ask for both.",
+              "A matrix full of green completions and no competency records is the single most common way a service that trains its people well fails to demonstrate it."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "What a usable view contains",
+            "paras": [
+              "Build the view around exceptions rather than totals. A percentage that is always high tells a senior nothing and gets ignored within a fortnight."
+            ],
+            "bullets": [
+              "What is overdue right now, and whose it is",
+              "What falls due in the next thirty days",
+              "Anyone with a completion but no competency observation",
+              "Anyone who has not read a policy that changed",
+              "A named owner for each outstanding item"
+            ]
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "Everything lands on one staff record as it happens: policy reads against the version live that day, module scores, observed competencies and renewal dates. The view leads with exceptions, and chasing goes to the individual with the task attached rather than to everyone.",
+              "What it does not do is make people care. If completion is poor because nobody is held to it, this will show you that clearly and then it is yours to fix.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      },
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+    },
+    "faqs": [
+      {
+        "label": "What is tracked",
+        "items": [
+          {
+            "question": "What counts towards compliance?",
+            "answer": "Statutory training, observed competencies, policy read receipts and renewal dates, held together per person."
+          },
+          {
+            "question": "Can we define our own requirements?",
+            "answer": "Yes. What is required is set by role, so a nurse, a carer and a kitchen assistant carry different lists."
+          },
+          {
+            "question": "Does it include face to face training?",
+            "answer": "Yes, in person sessions are recorded against the same record as online modules."
+          }
+        ]
+      },
+      {
+        "label": "Chasing",
+        "items": [
+          {
+            "question": "Do staff get chased automatically?",
+            "answer": "They get a notification with the task attached, on their own phone. The senior sees who is outstanding rather than broadcasting to everyone."
+          },
+          {
+            "question": "Will this fix poor completion rates?",
+            "answer": "Partly. It removes the friction and the excuse. Persistent non completion is a management issue and software will not resolve it."
+          },
+          {
+            "question": "Can we turn notifications off?",
+            "answer": "Yes, per requirement."
+          }
+        ]
+      },
+      {
+        "label": "Reporting",
+        "items": [
+          {
+            "question": "Can we produce evidence for one person on demand?",
+            "answer": "Yes, without assembling anything, which is the point."
+          },
+          {
+            "question": "Does it work across multiple services?",
+            "answer": "Each service has its own view, with a group level position where relevant."
+          },
+          {
+            "question": "What about agency staff?",
+            "answer": "They can be tracked on a shorter requirement set covering what applies to anyone on shift."
+          }
+        ]
+      }
+    ],
+    "sort": 5
+  },
+  {
+    "slug": "staff-onboarding",
+    "title": "Get a new starter safe, trained and <em>signed off in their first week</em>",
+    "meta_title": "Staff Onboarding | CareStreamAI",
+    "meta_description": "Staff onboarding is the moment a service is most exposed. New people are on the floor before the paperwork catches up, and the evidence that they were ready is scattered across a folder, an inbox and somebody's memory.",
+    "hero_image_url": "/images/uses/staff-onboarding/1.webp",
+    "content": {
+      "eyebrow": "User case",
+      "lede": "Staff onboarding is the moment a service is most exposed. New people are on the floor before the paperwork catches up, and the evidence that they were ready is scattered across a folder, an inbox and somebody's memory.",
+      "fine": "No card required · Set up in a day · UK data residency",
+      "sections": [
+        {
+          "heading": "The first day pack builds itself",
+          "bullets": [
+            "Policies assigned by role, not a blanket send to everyone",
+            "Read receipts against the exact version live that day",
+            "On their own phone, no work email needed"
+          ],
+          "links": [
+            {
+              "label": "Care Policies",
+              "href": "/care-policies"
+            },
+            {
+              "label": "HR Policies",
+              "href": "/hr-policies"
+            },
+            {
+              "label": "Staff Hub",
+              "href": "/staff-training"
+            }
+          ],
+          "image": "/images/uses/staff-onboarding/1.webp",
+          "image_alt": "Screenshot slot Staff hub, first day pack"
+        },
+        {
+          "heading": "Training built from your own policies",
+          "bullets": [
+            "Adhoc modules generated from the policy they have just read",
+            "CPD accredited annual courses for the statutory subjects",
+            "Face to face sessions recorded on the same record as the online ones"
+          ],
+          "links": [
+            {
+              "label": "Adhoc Training",
+              "href": "/training-platform"
+            },
+            {
+              "label": "Annual Training",
+              "href": "/staff-training"
+            },
+            {
+              "label": "Face to Face",
+              "href": "/training-platform"
+            }
+          ],
+          "image": "/images/uses/staff-onboarding/2.webp",
+          "image_alt": "Screenshot slot Module generated from a policy"
+        },
+        {
+          "heading": "Sign off you can put in front of an inspector",
+          "bullets": [
+            "The training matrix shows the whole team and the gaps, live",
+            "Competency observations sit alongside the completions",
+            "CQC prep questions matched to the role, so they are ready to be asked"
+          ],
+          "links": [
+            {
+              "label": "Training Matrix",
+              "href": "/training-platform"
+            },
+            {
+              "label": "CQC Prep Questions",
+              "href": "/cqc-staff-questions"
+            },
+            {
+              "label": "Compliance",
+              "href": "/cqc-compliance"
+            }
+          ],
+          "image": "/images/uses/staff-onboarding/3.webp",
+          "image_alt": "Screenshot slot Training matrix, gaps highlighted"
+        }
+      ],
+      "cards": [
+        {
+          "title": "Nothing quietly gets missed",
+          "body": "The role decides the pack. A nurse, a care assistant and a kitchen assistant each get what applies to them, assigned on their start date.",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "circle",
+                "cx": "12",
+                "cy": "12",
+                "r": "8.5"
+              },
+              {
+                "tag": "path",
+                "d": "M8.2 12.4 11 15.2l5-5.4"
+              }
+            ]
+          }
+        },
+        {
+          "title": "They can actually read it",
+          "body": "A new starter whose first language is not English reads every policy in their own, on their own phone, without asking anyone for help.",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "circle",
+                "cx": "12",
+                "cy": "12",
+                "r": "8.5"
+              },
+              {
+                "tag": "path",
+                "d": "M3.5 12h17M12 3.5c2.2 2.4 3.3 5.3 3.3 8.5S14.2 18.1 12 20.5c-2.2-2.4-3.3-5.3-3.3-8.5S9.8 5.9 12 3.5z"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Evidence assembles itself",
+          "body": "Every read, score and observation lands in the matrix as it happens. Nobody reconstructs the first week six months later.",
+          "icon": {
+            "bg": "#F1E9FA",
+            "fg": "#6F35B0",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M6 3.5h9l4 4v13H6z"
+              },
+              {
+                "tag": "path",
+                "d": "M9 12h7M9 16h5"
+              }
+            ]
+          }
+        }
+      ],
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "An inspector will ask how you knew they were ready",
+          "sub": "Not whether you inducted them. How you can show it, for this person, on this date."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "Staff Onboarding, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Amina Osei · Care Assistant · Day 4",
+        "pill": "On track",
+        "rows": [
+          {
+            "label": "Safeguarding Adults v3.1 read",
+            "note": "Day 1",
+            "done": true
+          },
+          {
+            "label": "Moving and Handling, practical",
+            "note": "Day 2",
+            "done": true
+          },
+          {
+            "label": "Infection Prevention module, 100%",
+            "note": "Day 3",
+            "done": true
+          },
+          {
+            "label": "Medication competency, observed",
+            "note": "Day 5",
+            "done": false
+          },
+          {
+            "label": "Care Certificate standards 1 to 5",
+            "note": "Week 2",
+            "done": false
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started",
+          "icon": {
+            "bg": "#F1E9FA",
+            "fg": "#6F35B0",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M12 5v14M5 12h14"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
+        }
+      ],
+      "read_next_head": {
+        "eyebrow": "Read next",
+        "heading": "Guides on this subject"
+      },
+      "read_next_bands": [
+        "#EFE7FA",
+        "#E3F0EA",
+        "#FCF0DC"
+      ],
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A complete guide to onboarding a new care worker",
+        "lede": "Induction is the process a service repeats most and improves least. It is usually built around whoever happens to be on shift, and the record of it is whatever survived in the folder. This guide sets out what has to happen before a new starter works alone, in what order, and what you need to keep.",
+        "blocks": [
+          {
+            "heading": "Four jobs, not one",
+            "paras": [
+              "There are four separate things happening in a new starter's first fortnight, and services get into trouble by treating them as one. Legal: the checks that must be complete before the person works at all. Safety: the small number of things they must know before they are near a resident. Competence: the point at which they can work unsupervised. And belonging, which nobody documents and everybody feels.",
+              "Only the first two are urgent. Trying to complete all four in week one produces a heavy induction the new starter half remembers and the manager cannot evidence."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Before their first shift",
+            "paras": [
+              "These belong before someone starts, not during their first week. If any are outstanding, the person should not be on the rota."
+            ],
+            "bullets": [
+              "Proof of identity and right to work in the UK",
+              "An enhanced DBS check at the level the role requires",
+              "References covering recent employment, with gaps explained",
+              "Professional registration confirmed where the role requires it",
+              "A signed contract and a job description the person has read"
+            ]
+          },
+          {
+            "heading": "Sign off should be a decision",
+            "paras": [
+              "Sign off is too often the absence of a complaint. Three questions make it a decision. Has every safety critical subject been completed and, where practical, observed? Is there anything the person still does not do unsupervised, and is that written where the team can see it? And would the senior who watched them be comfortable with that person working a night shift?",
+              "If the answer to the third is no, the person is not signed off, whatever the paperwork says."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "The sequence is held once and assigned by role on the start date, so the pack is the same whoever is on shift that morning. Policies arrive in the new starter's own language on their own phone, and training is generated from the policies you actually use rather than a generic course.",
+              "Read receipts, scores and observations land on one record, so producing the evidence for one person takes a moment rather than an afternoon.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      },
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+    },
+    "faqs": [
+      {
+        "label": "Getting started",
+        "items": [
+          {
+            "question": "How long does it take to set up a sequence?",
+            "answer": "An afternoon. Pick a role, tick the policies and modules that apply, set the day each is due, and every new starter in that role gets it automatically."
+          },
+          {
+            "question": "Do we have to upload our policies first?",
+            "answer": "Yes, and you can bulk upload the whole set in one go. Most services are through this in a session."
+          },
+          {
+            "question": "What if we already use a paper induction booklet?",
+            "answer": "Keep it. Face to face sessions and observed competencies are recorded against the same staff record, so the two do not live apart."
+          }
+        ]
+      },
+      {
+        "label": "For the new starter",
+        "items": [
+          {
+            "question": "Do they need a work email address?",
+            "answer": "No. The staff hub works on their own phone and they can sign in without a password."
+          },
+          {
+            "question": "Which languages are supported?",
+            "answer": "More than sixty. They pick one and everything arrives in it."
+          },
+          {
+            "question": "What if they cannot find the answer in a policy?",
+            "answer": "They can ask in plain language and get an answer drawn from your policies with the source shown."
+          }
+        ]
+      },
+      {
+        "label": "Evidence",
+        "items": [
+          {
+            "question": "What can we show an inspector?",
+            "answer": "The policies they were given, the version live at the time, when they read it, what they scored and who observed their competency."
+          },
+          {
+            "question": "Does it prove understanding or only that they opened it?",
+            "answer": "Both are recorded separately. A read receipt is a read receipt. Understanding is evidenced by the score and, for practical subjects, an observed competency."
+          },
+          {
+            "question": "What happens if a policy changes mid induction?",
+            "answer": "The new version goes to everyone it applies to and the record keeps both."
+          }
+        ]
+      }
+    ],
+    "sort": 12
+  },
+  {
+    "slug": "training-calendar",
+    "title": "Plan a year of training without <em>a spreadsheet and a wall chart</em>",
+    "meta_title": "Training Calendar | CareStreamAI",
+    "meta_description": "Renewals fall due unevenly, cover is tight, and the plan usually lives in one person's head. A calendar that shows the collisions before you commit to dates.",
+    "hero_image_url": "/images/uses/training-calendar/1.webp",
+    "content": {
+      "eyebrow": "User case",
+      "lede": "Renewals fall due unevenly, cover is tight, and the plan usually lives in one person's head. A calendar that shows the collisions before you commit to dates.",
+      "fine": "No card required · Set up in a day · UK data residency",
+      "sections": [
+        {
+          "heading": "The whole year, visible",
+          "bullets": [
+            "Every renewal plotted by month, per subject and per person",
+            "Collisions flagged before you commit to a date",
+            "Sessions and online rounds on the same calendar"
+          ],
+          "links": [
+            {
+              "label": "Training Calendar",
+              "href": "/training-platform"
+            },
+            {
+              "label": "Training Matrix",
+              "href": "/training-platform"
+            }
+          ],
+          "image": "/images/uses/training-calendar/1.webp",
+          "image_alt": "Screenshot slot Twelve month training calendar"
+        },
+        {
+          "heading": "Scheduling that respects the rota",
+          "bullets": [
+            "See which shifts can release staff before booking",
+            "Group people who need the same subject into one session",
+            "Repeat a session rather than force one date on everyone"
+          ],
+          "links": [
+            {
+              "label": "Training",
+              "href": "/training-platform"
+            },
+            {
+              "label": "Compliance",
+              "href": "/cqc-compliance"
+            }
+          ],
+          "image": "/images/uses/training-calendar/2.webp",
+          "image_alt": "Screenshot slot Session scheduled against cover"
+        },
+        {
+          "heading": "Nothing expires unnoticed",
+          "bullets": [
+            "Warnings ahead of the renewal date, not after",
+            "Escalation to the senior who owns the person, not a broadcast",
+            "Overdue surfaced on the dashboard until it is cleared"
+          ],
+          "links": [
+            {
+              "label": "Compliance",
+              "href": "/cqc-compliance"
+            },
+            {
+              "label": "Staff Hub",
+              "href": "/staff-training"
+            }
+          ],
+          "image": "/images/uses/training-calendar/3.webp",
+          "image_alt": "Screenshot slot Renewal warnings ahead of expiry"
+        }
+      ],
+      "cards": [
+        {
+          "title": "See the year at once",
+          "body": "Renewals plotted across twelve months, so the pile up is visible in January rather than discovered in March.",
+          "icon": {
+            "bg": "#DDF2EF",
+            "fg": "#0A736C",
+            "shapes": [
+              {
+                "tag": "rect",
+                "x": "4",
+                "y": "5.5",
+                "width": "16",
+                "height": "14",
+                "rx": "2"
+              },
+              {
+                "tag": "path",
+                "d": "M4 10h16M8.5 3.5v4M15.5 3.5v4"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Rebalance deliberately",
+          "body": "Bring a renewal forward to flatten a month. Better slightly early than a fortnight late and unplanned.",
+          "icon": {
+            "bg": "#FCF0DC",
+            "fg": "#9E6709",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M4 18h3v-6H4zM10.5 18h3V6h-3zM17 18h3v-9h-3z"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Scheduled against the rota",
+          "body": "A session is only bookable if the shift can release the people. Cover planned rather than improvised.",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M12 4.5 20 8v5c0 4-3.4 6.6-8 7.5C7.4 19.6 4 17 4 13V8z"
+              },
+              {
+                "tag": "path",
+                "d": "M9 12.4 11.3 14.7 15.3 10"
+              }
+            ]
+          }
+        }
+      ],
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "Everyone inducted together renews together",
+          "sub": "One recruitment push in March means every renewal lands in March for the rest of the service’s life."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "Training Calendar, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Training year 2026",
+        "pill": "3 collisions",
+        "rows": [
+          {
+            "label": "March · 19 renewals due",
+            "note": "Overloaded",
+            "done": false
+          },
+          {
+            "label": "March · Moving and Handling + BLS",
+            "note": "Same week",
+            "done": false
+          },
+          {
+            "label": "April · 4 renewals",
+            "note": "Balanced",
+            "done": true
+          },
+          {
+            "label": "May · 6 renewals",
+            "note": "Balanced",
+            "done": true
+          },
+          {
+            "label": "August · no cover on nights",
+            "note": "Check rota",
+            "done": false
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started",
+          "icon": {
+            "bg": "#F1E9FA",
+            "fg": "#6F35B0",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M12 5v14M5 12h14"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
+        }
+      ],
+      "read_next_head": {
+        "eyebrow": "Read next",
+        "heading": "Guides on this subject"
+      },
+      "read_next_bands": [
+        "#EFE7FA",
+        "#E3F0EA",
+        "#FCF0DC"
+      ],
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A guide to scheduling training across a care service",
+        "lede": "Training plans fail for operational reasons, not for want of intent. They are built on a calendar and executed against a rota, and nobody reconciles the two until the week the session is due. This guide is about building the plan the other way round.",
+        "blocks": [
+          {
+            "heading": "The March problem",
+            "paras": [
+              "Almost every service has a month where everything falls due. It is nearly always the month a group of people were inducted together, usually after a recruitment push, and it repeats every year afterwards because renewals are set from completion.",
+              "The fix is dull and effective: deliberately bring some renewals forward to flatten the peak. Slightly early costs nothing. Late costs you an overdue entry and, occasionally, a shift you cannot safely fill."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Constraints first",
+            "paras": [
+              "Build the schedule from what is fixed rather than from what is desirable."
+            ],
+            "bullets": [
+              "Minimum staffing for each shift",
+              "Skill mix, not just headcount",
+              "Night staff, who are the most frequently missed group",
+              "Part time patterns, so the same person is not always the one released",
+              "Agency cost of backfilling, which decides how many can go at once",
+              "The trainer, who is usually the scarcest resource of all"
+            ]
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "The calendar plots every renewal across twelve months so collisions are visible before you commit, and lets you rebalance deliberately rather than discovering the pile up in the month it lands.",
+              "Sessions are scheduled with cover in view, warnings arrive ahead of a renewal date rather than after it, and anything that does lapse stays on the dashboard until cleared instead of being absorbed into a percentage.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      },
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+    },
+    "faqs": [
+      {
+        "label": "Planning",
+        "items": [
+          {
+            "question": "How far ahead can we plan?",
+            "answer": "A full twelve months, with renewals projected from current completion dates."
+          },
+          {
+            "question": "Can we move a renewal earlier?",
+            "answer": "Yes, and flattening an overloaded month is usually worth a slightly early renewal."
+          },
+          {
+            "question": "Does it handle recurring sessions?",
+            "answer": "Yes, including repeating the same session for different groups."
+          }
+        ]
+      },
+      {
+        "label": "Cover",
+        "items": [
+          {
+            "question": "Does it know our rota?",
+            "answer": "It shows the constraint so you can schedule against it rather than booking and discovering the problem later."
+          },
+          {
+            "question": "What about staff who work nights only?",
+            "answer": "They are the group most often missed, and the calendar makes that visible rather than leaving it to memory."
+          },
+          {
+            "question": "Can we schedule for one service or a group?",
+            "answer": "Either."
+          }
+        ]
+      },
+      {
+        "label": "Expiry",
+        "items": [
+          {
+            "question": "When do we get warned?",
+            "answer": "Ahead of the date, with the lead time set by you."
+          },
+          {
+            "question": "Who gets the warning?",
+            "answer": "The person and the senior who owns them, rather than everyone."
+          },
+          {
+            "question": "What happens if something lapses anyway?",
+            "answer": "It stays on the dashboard as overdue until it is cleared, rather than disappearing into a percentage."
+          }
+        ]
+      }
+    ],
+    "sort": 10
+  },
+  {
+    "slug": "training-matrix",
+    "title": "See the whole team’s training <em>on one page, live</em>",
+    "meta_title": "Training Matrix | CareStreamAI",
+    "meta_description": "Your matrix is a spreadsheet somebody updates monthly, which means it is accurate on one day in thirty. A live matrix updates as people complete things, and shows competency alongside completion.",
+    "hero_image_url": "/images/uses/training-matrix/1.webp",
+    "content": {
+      "eyebrow": "User case",
+      "lede": "Your matrix is a spreadsheet somebody updates monthly, which means it is accurate on one day in thirty. A live matrix updates as people complete things, and shows competency alongside completion.",
+      "fine": "No card required · Set up in a day · UK data residency",
+      "sections": [
+        {
+          "heading": "The grid, built properly",
+          "bullets": [
+            "Completion, score, competency observation and renewal date per subject",
+            "Requirements set by role, so the grid is not full of irrelevant cells",
+            "In person and online sessions in the same view"
+          ],
+          "links": [
+            {
+              "label": "Training Matrix",
+              "href": "/training-platform"
+            },
+            {
+              "label": "Annual Training",
+              "href": "/staff-training"
+            }
+          ],
+          "image": "/images/uses/training-matrix/1.webp",
+          "image_alt": "Screenshot slot Full training matrix"
+        },
+        {
+          "heading": "Gaps that are actionable",
+          "bullets": [
+            "Anyone with a completion but no competency observation surfaced separately",
+            "Renewals due in the next thirty days shown before they lapse",
+            "Filter by role, subject or person without exporting anything"
+          ],
+          "links": [
+            {
+              "label": "Compliance",
+              "href": "/cqc-compliance"
+            },
+            {
+              "label": "Training",
+              "href": "/training-platform"
+            }
+          ],
+          "image": "/images/uses/training-matrix/2.webp",
+          "image_alt": "Screenshot slot Matrix filtered to gaps"
+        },
+        {
+          "heading": "From reporting to planning",
+          "bullets": [
+            "Read the matrix against the rota to spot uncovered shifts",
+            "Plan sessions around who actually needs them",
+            "Evidence produced on demand rather than assembled"
+          ],
+          "links": [
+            {
+              "label": "Training Calendar",
+              "href": "/training-platform"
+            },
+            {
+              "label": "Care Audits",
+              "href": "/care-audits"
+            }
+          ],
+          "image": "/images/uses/training-matrix/3.webp",
+          "image_alt": "Screenshot slot Matrix read against a rota"
+        }
+      ],
+      "cards": [
+        {
+          "title": "Completion and competency",
+          "body": "Two different columns, because a score and an observation are two different kinds of evidence.",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "rect",
+                "x": "4",
+                "y": "4",
+                "width": "16",
+                "height": "16",
+                "rx": "2"
+              },
+              {
+                "tag": "path",
+                "d": "M4 10h16M4 15h16M10 4v16"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Updates as things happen",
+          "body": "No monthly refresh, no transcribing certificates. The grid is the record rather than a report about it.",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "circle",
+                "cx": "12",
+                "cy": "12",
+                "r": "3"
+              },
+              {
+                "tag": "path",
+                "d": "M6.5 6.5a8 8 0 0 0 0 11M17.5 6.5a8 8 0 0 1 0 11"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Readable against the rota",
+          "body": "Not just who is missing training, but which shifts have nobody trained in something they might need.",
+          "icon": {
+            "bg": "#F1E9FA",
+            "fg": "#6F35B0",
+            "shapes": [
+              {
+                "tag": "rect",
+                "x": "4",
+                "y": "5.5",
+                "width": "16",
+                "height": "14",
+                "rx": "2"
+              },
+              {
+                "tag": "path",
+                "d": "M4 10h16M8.5 3.5v4M15.5 3.5v4"
+              }
+            ]
+          }
+        }
+      ],
+      "heads": [
+        {
+          "eyebrow": "Why it matters",
+          "heading": "Most matrices track completion and call it competence",
+          "sub": "That is exactly why a matrix can pass an internal audit and fail an inspection."
+        },
+        {
+          "eyebrow": "How it works",
+          "heading": "What CareStream actually does here",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Read next",
+          "heading": "Guides on this subject",
+          "sub": ""
+        },
+        {
+          "eyebrow": "Questions",
+          "heading": "Training Matrix, answered",
+          "sub": ""
+        }
+      ],
+      "panel": {
+        "title": "Training matrix · 48 staff",
+        "pill": "5 gaps",
+        "rows": [
+          {
+            "label": "Safeguarding",
+            "note": "48 of 48",
+            "done": true
+          },
+          {
+            "label": "Fire Safety",
+            "note": "48 of 48",
+            "done": true
+          },
+          {
+            "label": "Moving and Handling",
+            "note": "43 of 48, 2 unobserved",
+            "done": false
+          },
+          {
+            "label": "Medication",
+            "note": "28 of 31 eligible",
+            "done": false
+          },
+          {
+            "label": "Basic Life Support",
+            "note": "46 of 48",
+            "done": false
+          }
+        ]
+      },
+      "cta": [
+        {
+          "title": "Start a free trial",
+          "body": "Set this up today. No card required.",
+          "action": "Get started",
+          "icon": {
+            "bg": "#F1E9FA",
+            "fg": "#6F35B0",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M12 5v14M5 12h14"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Watch the walkthrough",
+          "body": "Six minutes across the whole platform.",
+          "action": "Watch now",
+          "icon": {
+            "bg": "#E6F4EC",
+            "fg": "#15764F",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Talk to us",
+          "body": "Bring your own situation and we will map it live.",
+          "action": "Book a demo",
+          "icon": {
+            "bg": "#E5EEFC",
+            "fg": "#2760BC",
+            "shapes": [
+              {
+                "tag": "path",
+                "d": "M8 5.5v13l10-6.5z"
+              }
+            ]
+          }
+        }
+      ],
+      "read_next_head": {
+        "eyebrow": "Read next",
+        "heading": "Guides on this subject"
+      },
+      "read_next_bands": [
+        "#EFE7FA",
+        "#E3F0EA",
+        "#FCF0DC"
+      ],
+      "guide": {
+        "eyebrow": "Guide",
+        "title": "A guide to building and using a care training matrix",
+        "lede": "Almost every service has a training matrix. Very few have one that would survive being opened in front of an inspector without a caveat. The difference is rarely effort. It is what the matrix was designed to record.",
+        "blocks": [
+          {
+            "heading": "Completion is a date, competence is a judgement",
+            "paras": [
+              "The most common matrix has one cell per person per subject, containing a date. That records that something was completed. It does not record that the person can do it, and for practical subjects the date is the weaker half of the evidence.",
+              "A matrix that separates the two is more honest and more useful. It also immediately reveals a population most services do not know they have: people who completed the module and were never observed."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "What a matrix should contain",
+            "paras": [
+              "Beyond the obvious, the fields that make a matrix usable rather than decorative."
+            ],
+            "bullets": [
+              "Completion date and score, not just a tick",
+              "Competency observation, with the observer named",
+              "Renewal date, derived from the completion",
+              "The role requirement, so irrelevant cells stay empty",
+              "Source of the record, whether online, in person or imported",
+              "Whether the person has read the current version of the related policy"
+            ]
+          },
+          {
+            "heading": "From compliance artefact to planning tool",
+            "paras": [
+              "The reframe that makes a matrix worth maintaining is reading it against the rota rather than against a target. The question stops being what percentage are trained and becomes whether Tuesday night has anyone on it trained in what Tuesday night might need.",
+              "That question cannot be answered by a spreadsheet updated monthly, because the answer changes with every shift swap."
+            ],
+            "bullets": []
+          },
+          {
+            "heading": "Where CareStream fits",
+            "paras": [
+              "The matrix holds completion, score, competency and renewal per subject per person, set by role, with in person and online in the same view, and it updates as things happen rather than when someone remembers.",
+              "Because it is live, it can be read against the rota to find uncovered shifts, and any individual's full position can be produced on demand rather than assembled before an inspection.",
+              "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+            ],
+            "bullets": []
+          }
+        ]
+      },
+      "note": "General guidance, not legal advice. Regulatory requirements change and vary by service type. Check the current CQC guidance and your own registration conditions before relying on any of the above."
+    },
+    "faqs": [
+      {
+        "label": "The grid",
+        "items": [
+          {
+            "question": "What is in each cell?",
+            "answer": "Completion, score, competency observation where relevant, and the renewal date."
+          },
+          {
+            "question": "Can we set different requirements per role?",
+            "answer": "Yes, and you should. A grid where every subject applies to everyone is mostly empty cells."
+          },
+          {
+            "question": "Does it include face to face training?",
+            "answer": "Yes, in the same view as the online modules."
+          }
+        ]
+      },
+      {
+        "label": "Accuracy",
+        "items": [
+          {
+            "question": "Who updates it?",
+            "answer": "Nobody. Completions, scores and observations land as they happen."
+          },
+          {
+            "question": "What about training done before we started using CareStream?",
+            "answer": "It can be imported so the grid reflects the real position from day one."
+          },
+          {
+            "question": "Can we correct a mistake?",
+            "answer": "Yes, and the correction is recorded."
+          }
+        ]
+      },
+      {
+        "label": "Using it",
+        "items": [
+          {
+            "question": "Can we export it?",
+            "answer": "Yes, though the point is that you can show it live rather than exporting to prove something."
+          },
+          {
+            "question": "Does it work across multiple services?",
+            "answer": "Per service, with a group view where relevant."
+          },
+          {
+            "question": "Can seniors see it, or only managers?",
+            "answer": "Access is by permission, and seniors seeing their own team is usually the version that changes behaviour."
+          }
+        ]
+      }
+    ],
+    "sort": 9
   }
 ]

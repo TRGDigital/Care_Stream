@@ -15,7 +15,7 @@ import jwt from 'jsonwebtoken'
 
 const TTL_SECONDS = 30 * 60
 
-export type PreviewKind = 'user-case' | 'feature' | 'setting'
+export type PreviewKind = 'user-case' | 'feature' | 'setting' | 'service-page'
 
 interface PreviewClaims {
   kind: PreviewKind

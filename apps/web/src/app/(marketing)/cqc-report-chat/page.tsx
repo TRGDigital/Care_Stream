@@ -4,6 +4,7 @@ import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { CQC_REPORT_CHAT_SLOTS } from '@/lib/page-slots/cqc-report-chat'
+import { ServicePageIfPublished } from '@/components/marketing/service-page-loader'
 
 export const metadata = {
   alternates: { canonical: 'https://www.carestreamai.com/cqc-report-chat' },
@@ -140,7 +141,17 @@ function ChallengeMockup() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default async function CqcReportChatPage() {
+export default async function CqcReportChatPage(
+  { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
+) {
+  // The rebuilt theme is opt-in with ?v2=1 until it is signed off. It renders the
+  // copy stored in service_pages; if nothing is published yet this falls through to
+  // the page below, so a page can never go blank waiting for an import.
+  if ((await searchParams)?.v2 === '1') {
+    const v2 = await ServicePageIfPublished({ slug: 'cqc-report-chat' })
+    if (v2) return v2
+  }
+
   const s = makeSlot(CQC_REPORT_CHAT_SLOTS, await getContentSlots('/cqc-report-chat'))
   return (
     <>

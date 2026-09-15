@@ -1434,6 +1434,30 @@ model FeaturePage {
 // pages is expected to change over time and a wording change should not need a deploy.
 //
 // `slug` matches the entries in lib/use-cases.ts, which is what blog posts are allocated to.
+// The seven /our-services pages: care-audits, cqc-compliance, hr-policies and the rest.
+//
+// Unlike /care-policies, /buy and /staff-training, this family shares NO prose between pages
+// (measured: 0% common), so the copy is stored rather than living in the template. Unlike
+// /uses, the pages are not one fixed shape: they run from 6 to 15 sections, so `content` holds
+// an ORDERED LIST OF TYPED BLOCKS and the template renders whatever it is given.
+model ServicePage {
+  id               String   @id @default(uuid())
+  slug             String   @unique                          // e.g. care-audits — the LIVE flat URL
+  title            String   @default("")                      // hero H1, may contain <em>
+  status           String   @default("draft")                 // 'draft' | 'published'
+  meta_title       String?
+  meta_description String?
+  og_image_url     String?
+  hero_image_url   String?                                    // also the social card when og_image_url is unset
+  content          Json     @default("{}")                    // { lede, blocks: [{ kind, label, heading, intro, items[] }] }
+  sort             Int      @default(0)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  @@index([status])
+  @@map("service_pages")
+}
+
 model UserCasePage {
   id               String   @id @default(uuid())
   slug             String   @unique                          // e.g. policy-gaps

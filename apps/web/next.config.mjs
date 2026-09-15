@@ -33,23 +33,23 @@ const nextConfig = {
     return [
       { source: '/trust-security', destination: '/trust', permanent: true },
 
-      // ── Content theme switchover ──────────────────────────────────────────
-      // The rebuilt theme groups thirteen pages under a section prefix, and those
-      // moves need 301s from the live URLs. They are NOT here yet, and must not be
-      // added until the destination routes exist.
+      // ── Content theme switchover: NO redirects are needed ─────────────────
+      // This note used to say thirteen redirects were still to come "with the
+      // port". They are not coming, and adding them would be a mistake.
       //
-      // They were added ahead of the port and shipped, which pointed /privacy,
-      // /care-audits, /cqc-compliance and ten others at routes the app does not
-      // serve: every one of them became a redirect to a 404. A redirect is only
-      // ever as good as its destination, and a 301 to a missing page is strictly
-      // worse than no redirect, because it takes a working page off the site.
+      // The rebuilt theme groups those pages under /our-services/, /trust/ and
+      // /contact/ prefixes. Len's rule for the switchover is that no current URL
+      // changes: the port swaps the TEMPLATE and the pages keep the flat URLs they
+      // already have. All thirteen (/care-audits, /cqc-compliance, /hr-policies,
+      // /policy-gap-detection, /cqc-staff-questions, /cqc-report-chat,
+      // /business-continuity, /privacy, /terms, /cookies, /dpa, /faq, and
+      // /care-policies) are live at those flat paths today and stay there.
       //
-      // The list lives in the switchover plan; it goes in with the port, in the
-      // same deploy that creates /our-services/*, /trust/* and /contact/faq, and
-      // audit_pages.py in the theme repo is the check: it follows every redirect
-      // and reports the status of where it lands.
-      //
-      // /contact and /care-policies stay where they are either way.
+      // Why this note matters: the redirects WERE added ahead of the port once and
+      // shipped, pointing thirteen working pages at routes the app does not serve.
+      // Every one became a 301 to a 404. A redirect is only ever as good as its
+      // destination, and a 301 to a missing page is strictly worse than no
+      // redirect, because it takes a working page off the site.
 
       // ── Help centre sunset ────────────────────────────────────────────────
       // The 32 /help URLs are being retired with the theme (Len's call). Left

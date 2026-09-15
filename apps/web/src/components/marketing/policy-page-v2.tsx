@@ -221,6 +221,8 @@ export function PolicyPageV2({ product, regulations, related, bundles }: {
             pricePence={product.price_pence}
             fields={product.intake_fields}
             buyHref={`/contact?about=${encodeURIComponent(product.title)}`}
+            variant="theme"
+            heroImage={hero}
           />
         </div>
       </section>
@@ -249,7 +251,11 @@ export function PolicyPageV2({ product, regulations, related, bundles }: {
                     </span>
                   )}
                 </div>
-                <div className="pclaw-shot">
+                {/* `filled` is what strips the placeholder padding and background from a frame
+                    that holds a real image. Without it every picture sits inside a lilac
+                    plate, which is the fault Len reported on /uses, in this family's own
+                    class names. */}
+                <div className="pclaw-shot filled">
                   <SiteImage src={`/images/policy-law/${r.reference_key}.webp`}
                              alt={r.official_name} />
                 </div>
@@ -443,7 +449,7 @@ export function PolicyPageV2({ product, regulations, related, bundles }: {
             <div className="pcrel">
               {related.map(rp => (
                 <div className="pcrelc" key={rp.slug}>
-                  <div className="pcrel-art">
+                  <div className="pcrel-art filled">
                     <SiteImage src={`/images/care-policies/${rp.slug}/1.webp`} alt={rp.title} />
                   </div>
                   <div className="pcrelb">

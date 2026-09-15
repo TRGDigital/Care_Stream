@@ -1,5 +1,5 @@
 /* Ported from the content theme by carestream-theme-preview/port_css.py.
- * Source: trust/privacy.html, trust/dpa.html, contact/faq.html
+ * Source: trust/privacy.html, trust/dpa.html
  *
  * Kept as CSS rather than rewritten as Tailwind because these rules are the design.
  * Scoped under .lgpage-v2, with the theme tokens on that wrapper rather than
@@ -35,9 +35,6 @@
 .lgpage-v2 .uc-eyebrow{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
     font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
     color:var(--accent);margin:0 0 16px;}
-.lgpage-v2 .uc-q .ans{padding:0 0 20px;font-size:.93rem;line-height:1.68;color:var(--ink-2);max-width:62em}
-.lgpage-v2 .uc-q .ans p{margin:0 0 11px}
-.lgpage-v2 .uc-q .ans p:last-child{margin:0}
 .lgpage-v2 .uc-hero .uc-eyebrow{margin-bottom:clamp(8px,1.6vh,16px);}
 .lgpage-v2 .lgpage{padding:0}
 .lgpage-v2 .lgwrap{max-width:1160px;margin:0 auto;padding-inline:32px}
@@ -105,53 +102,6 @@
 .lgpage-v2 .lgbtn.ghost:hover{border-color:#D9D2E6}
 .lgpage-v2 .lgpage{display:none}
 .lgpage-v2 .lgpage.on{display:block}
-.lgpage-v2 .cfpage{padding:0}
-.lgpage-v2 .cfwrap{max-width:1160px;margin:0 auto;padding-inline:32px}
-.lgpage-v2 .cfhero{padding:0;background:linear-gradient(180deg,#FBF9FE 0%, var(--ground) 88%);border-bottom:1px solid var(--line)}
-.lgpage-v2 .cfhero-in{padding-block:clamp(30px, 5vh, 58px) clamp(26px, 4vh, 44px)}
-.lgpage-v2 .cfhero h1{font-size:clamp(1.9rem, 1.1vw + 1.95vh + 0.65rem, 2.8rem);line-height:1.07;
-    letter-spacing:-.032em;margin:0 0 14px;text-wrap:balance;max-width:18ch}
-.lgpage-v2 .cfhero p{font-size:1.02rem;line-height:1.62;color:var(--ink-2);margin:0;max-width:46em}
-.lgpage-v2 .cfsec{padding:0}
-.lgpage-v2 .cfsec.tint{background:var(--ground-2);border-block:1px solid var(--line)}
-.lgpage-v2 .cfsec h2{font-size:clamp(1.45rem, 2.1vw, 1.95rem);line-height:1.17;letter-spacing:-.027em;
-    margin:0 0 16px;text-wrap:balance}
-.lgpage-v2 .cfroute a svg, .lgpage-v2 .cfcall a svg, .lgpage-v2 .cfbtn svg, .lgpage-v2 .cfq summary svg{width:15px;height:15px;flex:0 0 auto}
-.lgpage-v2 .cfbody-in{display:grid;grid-template-columns:240px minmax(0,1fr);gap:56px;
-    padding-block:clamp(30px, 4.4vh, 52px) clamp(50px, 7vh, 86px);align-items:start}
-.lgpage-v2 .cfnav{position:sticky;top:calc(var(--chrome) + 20px);align-self:start;
-    border-left:2px solid var(--line);padding-left:18px}
-.lgpage-v2 .cfnav p{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.64rem;
-    letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
-.lgpage-v2 .cfnav a{display:flex;justify-content:space-between;gap:10px;font-size:.85rem;line-height:1.4;
-    color:var(--muted);text-decoration:none;padding:7px 0}
-.lgpage-v2 .cfnav a:hover{color:var(--accent)}
-.lgpage-v2 .cfnav a span{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.7rem;opacity:.6}
-.lgpage-v2 .cfnav li.on > a{color:var(--ink);font-weight:600}
-.lgpage-v2 .cfnav ol{list-style:none;margin:0;padding:0}
-.lgpage-v2 .cfgroup{margin-bottom:44px;scroll-margin-top:calc(var(--chrome) + 24px)}
-.lgpage-v2 .cfgroup:last-child{margin-bottom:0}
-.lgpage-v2 .cfgroup > h2{font-size:1.24rem;letter-spacing:-.022em;margin:0 0 6px}
-.lgpage-v2 .cfq{border-bottom:1px solid var(--line)}
-.lgpage-v2 .cfq summary{list-style:none;cursor:pointer;display:flex;align-items:flex-start;justify-content:space-between;
-    gap:20px;padding:17px 0;font-size:.98rem;font-weight:600;letter-spacing:-.012em;line-height:1.45}
-.lgpage-v2 .cfq summary::-webkit-details-marker{display:none}
-.lgpage-v2 .cfq summary svg{width:15px;height:15px;flex:0 0 auto;color:var(--muted);transition:transform .22s;margin-top:3px}
-.lgpage-v2 .cfq[open] summary svg{transform:rotate(45deg)}
-.lgpage-v2 .cfq .ans{padding:0 0 18px;font-size:.94rem;line-height:1.74;color:var(--ink-2);max-width:60em}
-.lgpage-v2 .cfend{padding:0;border-top:1px solid var(--line);background:var(--ground-2)}
-.lgpage-v2 .cfend-in{padding-block:clamp(52px, 7.5vh, 88px);text-align:center}
-.lgpage-v2 .cfend h2{font-size:clamp(1.4rem, 2.1vw, 1.85rem);letter-spacing:-.027em;margin:0 0 12px;text-wrap:balance}
-.lgpage-v2 .cfend p{font-size:.98rem;line-height:1.6;color:var(--muted);margin:0 auto 22px;max-width:36em}
-.lgpage-v2 .cfend .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-.lgpage-v2 .cfbtn{display:inline-flex;align-items:center;gap:8px;border-radius:999px;text-decoration:none;
-    font-size:.9rem;font-weight:650;padding:12px 22px}
-.lgpage-v2 .cfbtn.solid{background:var(--btn-ink);color:var(--btn-ink-text)}
-.lgpage-v2 .cfbtn.ghost{border:1px solid var(--line);background:var(--ground);color:var(--ink)}
-.lgpage-v2 .cfbtn.ghost:hover{border-color:#D9D2E6}
-.lgpage-v2 .pvtab.on{background:#fff;border-color:#fff;color:var(--ink)}
-.lgpage-v2 .cfpage{display:none}
-.lgpage-v2 .cfpage.on{display:block}
 
 @media (max-width:760px){
   .lgpage-v2 .lgwrap{padding-inline:22px}
@@ -168,16 +118,6 @@
 }
 @media (max-width:560px){
   .lgpage-v2 .lgrel-grid{grid-template-columns:1fr}
-}
-@media (max-width:760px){
-  .lgpage-v2 .cfwrap{padding-inline:22px}
-}
-@media (max-width:1000px){
-  .lgpage-v2 .cfbody-in{grid-template-columns:minmax(0,1fr);gap:0}
-}
-@media (max-width:1000px){
-  .lgpage-v2 .cfnav{position:static;border-left:0;border:1px solid var(--line);border-radius:14px;
-      padding:18px 20px;margin-bottom:28px;background:var(--ground-2)}
 }
 
 .lgpage-v2 .shot,.lgpage-v2 .sshot,.lgpage-v2 .sscen-shot,.lgpage-v2 .uc-shot,.lgpage-v2 .wcshot,.lgpage-v2 .smock,.lgpage-v2 .ucread-art,.lgpage-v2 .pcrel-art{display:block;overflow:hidden;padding:0;aspect-ratio:auto;height:auto;min-height:0;max-height:none}

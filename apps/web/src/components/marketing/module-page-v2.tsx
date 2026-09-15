@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
 import { TrainingDemo, type TrainingDemoData } from './training-demo'
 import { careSetting } from '@/lib/care-setting'
+import { LanguageCheck } from './language-check'
 import './module-page-v2.css'
 
 // The rebuilt /staff-training/<slug> template. Renders the SAME module record and the same demo
@@ -95,6 +96,10 @@ const DELIVERY: [string, string][] = [
    'Automatic reminders at 90, 30 and 7 days, with a live compliance dashboard.'],
 ]
 
+// The technology marks under the hero. Plain text rather than the app's logo components: the
+// theme sets these as labelled chips, and a mark here is a name, not a brand lockup.
+const TECH = ['Google Cloud', 'OpenAI', 'Claude', 'Supabase', 'Pinecone', 'Google Ads', 'AWS']
+
 const LANGUAGE_POINTS = [
   'One tap flips any lesson or question into their language, instantly.',
   'Over 60 languages, with no setup and no separate versions to manage.',
@@ -110,6 +115,25 @@ const INSIDE: [string, string][] = [
    + 'that stick.'],
   ['A certificate that is evidence',
    'Dated and named per person, filed against your training matrix and ready for inspection.'],
+]
+
+// The three screenshots in "Inside every course". Shared images, same on every module page.
+const SHOTS: [string, string, string, string][] = [
+  ['/images/_shared/mod3.jpeg',
+   'The end of module screen with the reflective practice prompt, mapped standards and the '
+   + 'printable course summary and competency checklist all available in CareStream',
+   'Reflective practice',
+   'After passing, staff record what they will do differently in their day to day work. Their '
+   + 'reflection is saved to their training record and shown with their certificate.'],
+  ['/images/_shared/mod4.jpeg',
+   'The printable one page course summary with learning outcomes, key points, key terms and '
+   + 'references all available for CPD approved CareStream training modules',
+   'A course summary to keep',
+   'A printable one page takeaway of the outcomes, key points and key terms.'],
+  ['/images/_shared/mod5.jpeg',
+   'The printable observed competency checklist with tick boxes and a manager sign off',
+   'Observed competency checklist',
+   'A printable checklist for managers to confirm skills in practice, with a sign off.'],
 ]
 
 const LOOP: [string, string][] = [
@@ -174,6 +198,21 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
 
   return (
     <div className="mpage-v2">
+      {/* The bar that follows the reader down the page. It has no basket to add to, so it
+          carries the same action the hero does. */}
+      <div className="mbar">
+        <div className="mbar-in">
+          {hero && <span className="thumb"><SiteImage src={hero} alt={m.title} /></span>}
+          <span className="who">
+            <b>{m.title}</b>
+            <span className="meta">
+              {minutes > 0 && <>~{minutes} min to complete<i>·</i></>}{price} per staff member
+            </span>
+          </span>
+          <Link className="add" href={buyHref}>Start course now</Link>
+        </div>
+      </div>
+
       <section className="mhero">
         <div className="mwrap mhero-in">
           <div>
@@ -209,11 +248,47 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               <span className="row"><Star /><Star /><Star /><Star /><Star /></span>
               {' '}Trusted by UK care providers
             </p>
+
+            <div className="mtech">
+              <p className="cap">Specialists in the technology behind it all</p>
+              <div className="marks">
+                {TECH.map(t => <span className="techmark" key={t}>{t}</span>)}
+              </div>
+              <p className="note">
+                The same AI and technology behind the world&apos;s best products powers
+                CareStream, so your team&apos;s {lower} training stays accurate, always up to date
+                with the latest guidance, and is delivered in over 60 languages.
+              </p>
+            </div>
           </div>
 
           {demo && <TrainingDemo demo={demo} buyHref={buyHref} variant="theme" />}
         </div>
       </section>
+
+      {/* The strip under the hero. The theme's language box is a client-side "is my language
+          supported" check; the answer is always yes, so this states it rather than pretending
+          to look it up. */}
+      <div className="mstats">
+        <div className="mstats-in">
+          <div className="mstat">
+            <p className="cap"><Clock /> Avg. Duration</p>
+            <p className="val">{minutes > 0 ? `About ${minutes} minutes` : 'Varies by module'}</p>
+          </div>
+          <div className="mstat">
+            <p className="cap"><Tick /> Certificate</p>
+            <p className="val">For every staff member</p>
+          </div>
+          <div className="mstat lang">
+            <p className="cap"><Tick /> Available languages</p>
+            <LanguageCheck />
+          </div>
+          <div className="mstat pub">
+            <p className="cap">Course Published by</p>
+            <SiteImage src="/images/_shared/mod1.png" alt="CareStream" />
+          </div>
+        </div>
+      </div>
 
       <section className="msec">
         <div className="mwrap msec-in mnarrow">
@@ -353,6 +428,14 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
           </div>
           <div className="mgrid4" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
             {INSIDE.map(([t, b]) => <div key={t}><Mark /><b>{t}</b><p>{b}</p></div>)}
+          </div>
+          <div className="tshotcards">
+            {SHOTS.map(([src, alt, title, body]) => (
+              <div className="tshotcard" key={src}>
+                <span className="frame"><SiteImage src={src} alt={alt} /></span>
+                <div className="cap"><b>{title}</b><p>{body}</p></div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

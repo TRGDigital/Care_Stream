@@ -9,6 +9,7 @@ import { PageCta, SectionLabel } from './ui'
 import { HomeFaq } from './home-faq'
 import { SiteImage } from '@/components/site-image'
 import { SETTING_IMAGES } from '@/lib/settings/list'
+import { SettingPageV2 } from './setting-page-v2'
 
 // Icon registry — configs reference icons by key (pure data, no JSX in configs).
 export const SETTING_ICONS: Record<string, LucideIcon> = {
@@ -124,7 +125,11 @@ function HubMockup({ m }: { m: SettingPageConfig['mockup'] }) {
   )
 }
 
-export function SettingPage({ config }: { config: SettingPageConfig }) {
+// v2 opts a page into the rebuilt content theme. It is threaded through here rather than
+// duplicated across the eleven route files, and defaults to false so the live pages are
+// untouched until the design is signed off.
+export function SettingPage({ config, v2 }: { config: SettingPageConfig; v2?: boolean }) {
+  if (v2) return <SettingPageV2 config={config} />
   const c = config
   const image = SETTING_IMAGES[c.slug]
   return (

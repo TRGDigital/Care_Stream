@@ -1,0 +1,185 @@
+/* Ported from the content theme by carestream-theme-preview/port_css.py.
+ * Source: trust/privacy.html, trust/dpa.html, contact/faq.html
+ *
+ * Kept as CSS rather than rewritten as Tailwind because these rules are the design.
+ * Scoped under .lgpage-v2, with the theme tokens on that wrapper rather than
+ * :root, so the rest of the app is untouched. Header and footer rules are excluded.
+ */
+.lgpage-v2 {
+  --accent: #7B3FBF;
+  --accent-2: #C2503E;
+  --accent-soft: #F3EDFA;
+  --btn-ink: #17121F;
+  --btn-ink-text: #FFFFFF;
+  --chrome: 68px;
+  --good: #1F8A5B;
+  --ground: #FFFFFF;
+  --ground-2: #F7F5FA;
+  --ink: #17121F;
+  --ink-2: #3A3245;
+  --line: #E9E5EF;
+  --maxw: 1440px;
+  --muted: #6B6577;
+  --plate: #F2EEF8;
+  --r: 14px;
+  --shadow: 0 1px 2px rgba(23,18,31,.04), 0 12px 32px rgba(23,18,31,.06);
+  --shadow-lg: 0 2px 4px rgba(23,18,31,.04), 0 24px 64px rgba(23,18,31,.10);
+  color: var(--ink);
+  background: var(--ground);
+}
+
+.lgpage-v2 .demo-steps .s.on .n{background:var(--accent);color:#fff}
+.lgpage-v2 .demo-steps .s.on .lb{color:var(--ink)}
+.lgpage-v2 .demo-cta .row{display:flex;gap:10px;flex-wrap:wrap}
+.lgpage-v2 .demo-cta .row a{flex:1 1 160px;font-size:.85rem;padding:11px 16px;justify-content:center;text-align:center}
+.lgpage-v2 .uc-eyebrow{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--accent);margin:0 0 16px;}
+.lgpage-v2 .uc-q .ans{padding:0 0 20px;font-size:.93rem;line-height:1.68;color:var(--ink-2);max-width:62em}
+.lgpage-v2 .uc-q .ans p{margin:0 0 11px}
+.lgpage-v2 .uc-q .ans p:last-child{margin:0}
+.lgpage-v2 .uc-hero .uc-eyebrow{margin-bottom:clamp(8px,1.6vh,16px);}
+.lgpage-v2 .lgpage{padding:0}
+.lgpage-v2 .lgwrap{max-width:1160px;margin:0 auto;padding-inline:32px}
+.lgpage-v2 .lghero{padding:0;background:linear-gradient(180deg,#FBF9FE 0%, var(--ground) 88%);border-bottom:1px solid var(--line)}
+.lgpage-v2 .lghero-in{padding-block:clamp(30px, 5vh, 56px) clamp(24px, 3.6vh, 40px)}
+.lgpage-v2 .lghero h1{font-size:clamp(1.85rem, 1.1vw + 1.9vh + 0.65rem, 2.7rem);line-height:1.08;
+    letter-spacing:-.032em;margin:0 0 14px;text-wrap:balance;max-width:20ch}
+.lgpage-v2 .lghero p{font-size:1rem;line-height:1.6;color:var(--ink-2);margin:0;max-width:46em}
+.lgpage-v2 .lgmeta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.lgpage-v2 .lgpill{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;white-space:nowrap;
+    background:var(--ground);border:1px solid var(--line);border-radius:999px;padding:7px 14px;
+    font-size:.79rem;font-weight:600;color:var(--ink-2);box-shadow:var(--shadow)}
+.lgpage-v2 .lgpill svg{width:13px;height:13px;color:var(--accent);flex:0 0 auto}
+.lgpage-v2 .lgbody{padding:0}
+.lgpage-v2 .lgbody-in{display:grid;grid-template-columns:250px minmax(0,1fr);gap:56px;
+    padding-block:clamp(30px, 4.4vh, 52px) clamp(52px, 7vh, 88px);align-items:start}
+.lgpage-v2 .lgtoc{position:sticky;top:calc(var(--chrome) + 20px);align-self:start;
+    border-left:2px solid var(--line);padding-left:18px;max-height:calc(100vh - var(--chrome) - 60px);overflow-y:auto}
+.lgpage-v2 .lgtoc-title{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.64rem;
+    letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.lgpage-v2 .lgtoc ol{list-style:none;margin:0;padding:0;display:grid;gap:1px;counter-reset:lgc}
+.lgpage-v2 .lgtoc a{display:flex;gap:9px;font-size:.83rem;line-height:1.4;color:var(--muted);
+    text-decoration:none;padding:6px 0}
+.lgpage-v2 .lgtoc a:hover{color:var(--accent)}
+.lgpage-v2 .lgtoc li.on > a{color:var(--ink);font-weight:600}
+.lgpage-v2 .lgtoc a::before{counter-increment:lgc;content:counter(lgc);
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.68rem;
+    color:var(--accent);flex:0 0 auto;padding-top:1px;opacity:.75}
+.lgpage-v2 .lgdoc{max-width:44em}
+.lgpage-v2 .lgdoc h2{font-size:clamp(1.16rem, 1.5vw, 1.38rem);line-height:1.28;letter-spacing:-.022em;
+    margin:44px 0 14px;text-wrap:balance;scroll-margin-top:calc(var(--chrome) + 24px)}
+.lgpage-v2 .lgdoc h2:first-child{margin-top:0}
+.lgpage-v2 .lgdoc h3{font-size:1.02rem;letter-spacing:-.016em;margin:28px 0 10px;
+    scroll-margin-top:calc(var(--chrome) + 24px)}
+.lgpage-v2 .lgdoc p{font-size:1rem;line-height:1.78;color:var(--ink-2);margin:0 0 17px}
+.lgpage-v2 .lgdoc ul, .lgpage-v2 .lgdoc ol{margin:0 0 20px;padding-left:22px;display:grid;gap:9px}
+.lgpage-v2 .lgdoc li{font-size:1rem;line-height:1.72;color:var(--ink-2)}
+.lgpage-v2 .lgdoc li::marker{color:var(--accent)}
+.lgpage-v2 .lgdoc strong{color:var(--ink);font-weight:650}
+.lgpage-v2 .lgdoc a{color:var(--accent)}
+.lgpage-v2 .lgdoc table{width:100%;border-collapse:collapse;font-size:.93rem;margin:0 0 22px}
+.lgpage-v2 .lgdoc th, .lgpage-v2 .lgdoc td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);
+    vertical-align:top;line-height:1.6}
+.lgpage-v2 .lgdoc th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.lgpage-v2 .lgdoc .lgupdated{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.72rem;letter-spacing:.04em;color:var(--muted);background:var(--ground-2);
+    border:1px solid var(--line);border-radius:999px;padding:6px 13px;margin:0 0 26px}
+.lgpage-v2 .lgrelated{padding:0;border-top:1px solid var(--line);background:var(--ground-2)}
+.lgpage-v2 .lgrelated-in{padding-block:clamp(40px, 5.6vh, 68px)}
+.lgpage-v2 .lgrel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px}
+.lgpage-v2 .lgrel{display:flex;flex-direction:column;gap:6px;text-decoration:none;color:inherit;
+    background:var(--ground);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+.lgpage-v2 .lgrel:hover{border-color:#DCD5E8}
+.lgpage-v2 .lgrel b{font-size:.94rem;letter-spacing:-.014em}
+.lgpage-v2 .lgrel span{font-size:.83rem;line-height:1.55;color:var(--muted)}
+.lgpage-v2 .lgend{padding:0;border-top:1px solid var(--line)}
+.lgpage-v2 .lgend-in{padding-block:clamp(44px, 6vh, 72px);text-align:center}
+.lgpage-v2 .lgend h2{font-size:clamp(1.3rem, 2vw, 1.7rem);letter-spacing:-.026em;margin:0 0 12px;text-wrap:balance}
+.lgpage-v2 .lgend p{font-size:.97rem;line-height:1.6;color:var(--muted);margin:0 auto 22px;max-width:36em}
+.lgpage-v2 .lgend .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.lgpage-v2 .lgbtn{display:inline-flex;align-items:center;gap:8px;border-radius:999px;text-decoration:none;
+    font-size:.9rem;font-weight:650;padding:12px 22px}
+.lgpage-v2 .lgbtn.solid{background:var(--btn-ink);color:var(--btn-ink-text)}
+.lgpage-v2 .lgbtn.ghost{border:1px solid var(--line);background:var(--ground);color:var(--ink)}
+.lgpage-v2 .lgbtn.ghost:hover{border-color:#D9D2E6}
+.lgpage-v2 .lgpage{display:none}
+.lgpage-v2 .lgpage.on{display:block}
+.lgpage-v2 .cfpage{padding:0}
+.lgpage-v2 .cfwrap{max-width:1160px;margin:0 auto;padding-inline:32px}
+.lgpage-v2 .cfhero{padding:0;background:linear-gradient(180deg,#FBF9FE 0%, var(--ground) 88%);border-bottom:1px solid var(--line)}
+.lgpage-v2 .cfhero-in{padding-block:clamp(30px, 5vh, 58px) clamp(26px, 4vh, 44px)}
+.lgpage-v2 .cfhero h1{font-size:clamp(1.9rem, 1.1vw + 1.95vh + 0.65rem, 2.8rem);line-height:1.07;
+    letter-spacing:-.032em;margin:0 0 14px;text-wrap:balance;max-width:18ch}
+.lgpage-v2 .cfhero p{font-size:1.02rem;line-height:1.62;color:var(--ink-2);margin:0;max-width:46em}
+.lgpage-v2 .cfsec{padding:0}
+.lgpage-v2 .cfsec.tint{background:var(--ground-2);border-block:1px solid var(--line)}
+.lgpage-v2 .cfsec h2{font-size:clamp(1.45rem, 2.1vw, 1.95rem);line-height:1.17;letter-spacing:-.027em;
+    margin:0 0 16px;text-wrap:balance}
+.lgpage-v2 .cfroute a svg, .lgpage-v2 .cfcall a svg, .lgpage-v2 .cfbtn svg, .lgpage-v2 .cfq summary svg{width:15px;height:15px;flex:0 0 auto}
+.lgpage-v2 .cfbody-in{display:grid;grid-template-columns:240px minmax(0,1fr);gap:56px;
+    padding-block:clamp(30px, 4.4vh, 52px) clamp(50px, 7vh, 86px);align-items:start}
+.lgpage-v2 .cfnav{position:sticky;top:calc(var(--chrome) + 20px);align-self:start;
+    border-left:2px solid var(--line);padding-left:18px}
+.lgpage-v2 .cfnav p{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.64rem;
+    letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.lgpage-v2 .cfnav a{display:flex;justify-content:space-between;gap:10px;font-size:.85rem;line-height:1.4;
+    color:var(--muted);text-decoration:none;padding:7px 0}
+.lgpage-v2 .cfnav a:hover{color:var(--accent)}
+.lgpage-v2 .cfnav a span{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.7rem;opacity:.6}
+.lgpage-v2 .cfnav li.on > a{color:var(--ink);font-weight:600}
+.lgpage-v2 .cfnav ol{list-style:none;margin:0;padding:0}
+.lgpage-v2 .cfgroup{margin-bottom:44px;scroll-margin-top:calc(var(--chrome) + 24px)}
+.lgpage-v2 .cfgroup:last-child{margin-bottom:0}
+.lgpage-v2 .cfgroup > h2{font-size:1.24rem;letter-spacing:-.022em;margin:0 0 6px}
+.lgpage-v2 .cfq{border-bottom:1px solid var(--line)}
+.lgpage-v2 .cfq summary{list-style:none;cursor:pointer;display:flex;align-items:flex-start;justify-content:space-between;
+    gap:20px;padding:17px 0;font-size:.98rem;font-weight:600;letter-spacing:-.012em;line-height:1.45}
+.lgpage-v2 .cfq summary::-webkit-details-marker{display:none}
+.lgpage-v2 .cfq summary svg{width:15px;height:15px;flex:0 0 auto;color:var(--muted);transition:transform .22s;margin-top:3px}
+.lgpage-v2 .cfq[open] summary svg{transform:rotate(45deg)}
+.lgpage-v2 .cfq .ans{padding:0 0 18px;font-size:.94rem;line-height:1.74;color:var(--ink-2);max-width:60em}
+.lgpage-v2 .cfend{padding:0;border-top:1px solid var(--line);background:var(--ground-2)}
+.lgpage-v2 .cfend-in{padding-block:clamp(52px, 7.5vh, 88px);text-align:center}
+.lgpage-v2 .cfend h2{font-size:clamp(1.4rem, 2.1vw, 1.85rem);letter-spacing:-.027em;margin:0 0 12px;text-wrap:balance}
+.lgpage-v2 .cfend p{font-size:.98rem;line-height:1.6;color:var(--muted);margin:0 auto 22px;max-width:36em}
+.lgpage-v2 .cfend .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.lgpage-v2 .cfbtn{display:inline-flex;align-items:center;gap:8px;border-radius:999px;text-decoration:none;
+    font-size:.9rem;font-weight:650;padding:12px 22px}
+.lgpage-v2 .cfbtn.solid{background:var(--btn-ink);color:var(--btn-ink-text)}
+.lgpage-v2 .cfbtn.ghost{border:1px solid var(--line);background:var(--ground);color:var(--ink)}
+.lgpage-v2 .cfbtn.ghost:hover{border-color:#D9D2E6}
+.lgpage-v2 .pvtab.on{background:#fff;border-color:#fff;color:var(--ink)}
+.lgpage-v2 .cfpage{display:none}
+.lgpage-v2 .cfpage.on{display:block}
+
+@media (max-width:760px){
+  .lgpage-v2 .lgwrap{padding-inline:22px}
+}
+@media (max-width:1000px){
+  .lgpage-v2 .lgbody-in{grid-template-columns:minmax(0,1fr);gap:0}
+}
+@media (max-width:1000px){
+  .lgpage-v2 .lgtoc{position:static;border-left:0;border:1px solid var(--line);border-radius:14px;
+      padding:18px 20px;margin-bottom:30px;background:var(--ground-2);max-height:none}
+}
+@media (max-width:860px){
+  .lgpage-v2 .lgrel-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:560px){
+  .lgpage-v2 .lgrel-grid{grid-template-columns:1fr}
+}
+@media (max-width:760px){
+  .lgpage-v2 .cfwrap{padding-inline:22px}
+}
+@media (max-width:1000px){
+  .lgpage-v2 .cfbody-in{grid-template-columns:minmax(0,1fr);gap:0}
+}
+@media (max-width:1000px){
+  .lgpage-v2 .cfnav{position:static;border-left:0;border:1px solid var(--line);border-radius:14px;
+      padding:18px 20px;margin-bottom:28px;background:var(--ground-2)}
+}
+
+.lgpage-v2 .shot,.lgpage-v2 .sshot,.lgpage-v2 .sscen-shot,.lgpage-v2 .uc-shot,.lgpage-v2 .wcshot,.lgpage-v2 .smock,.lgpage-v2 .ucread-art,.lgpage-v2 .pcrel-art{display:block;overflow:hidden;padding:0;aspect-ratio:auto;height:auto;min-height:0;max-height:none}
+.lgpage-v2 .shot img,.lgpage-v2 .sshot img,.lgpage-v2 .sscen-shot img,.lgpage-v2 .uc-shot img,.lgpage-v2 .wcshot img,.lgpage-v2 .smock img,.lgpage-v2 .ucread-art img,.lgpage-v2 .pcrel-art img{display:block;width:100%;height:auto;object-fit:contain;border-radius:inherit}
+.lgpage-v2 .fchips,.lgpage-v2 .schips,.lgpage-v2 .smock-tabs,.lgpage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}

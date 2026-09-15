@@ -10,6 +10,9 @@ export async function generateMetadata() {
   })
 }
 
-export default function Page() {
-  return <ContentPage path="/dpa" title="Data Processing Agreement" />
+export default async function Page(
+  { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
+) {
+  const sp = await searchParams
+  return <ContentPage path="/dpa" title="Data Processing Agreement" v2={sp?.v2 === '1'} />
 }

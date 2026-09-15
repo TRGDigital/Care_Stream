@@ -3493,7 +3493,37 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
           "sub": ""
         }
       ],
-      "panel": null,
+      "panel": {
+       "title": "Ferndale · Staff hub",
+       "pill": "Resident",
+       "rows": [
+        {
+         "label": "What time does Des go to bed?",
+         "note": "Asked",
+         "done": true
+        },
+        {
+         "label": "Stays up to about 11pm with the radio",
+         "note": "Answer",
+         "done": true
+        },
+        {
+         "label": "Milky drink around 10:30pm",
+         "note": "Answer",
+         "done": true
+        },
+        {
+         "label": "Door left slightly ajar, curtains open",
+         "note": "Answer",
+         "done": true
+        },
+        {
+         "label": "From: Resident profile, approved by the manager",
+         "note": "Source",
+         "done": true
+        }
+       ]
+      },
       "cta": [
         {
           "title": "Start a free trial",

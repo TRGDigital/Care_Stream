@@ -123,6 +123,7 @@ export function SettingPageV2({ config }: { config: SettingPageConfig }) {
 
       <section className="ssec tint">
         <div className="swrap ssec-in">
+          <span className="slabel">What you get</span>
           <h2>{c.servicesH2}</h2>
           <div className="sservices">
             {SERVICES.map(s => (
@@ -136,21 +137,25 @@ export function SettingPageV2({ config }: { config: SettingPageConfig }) {
 
       <section className="ssec">
         <div className="swrap ssec-in">
+          <span className="slabel">Day to day</span>
           <h2>{c.scenarios.h2}</h2>
           <p>{c.scenarios.sub}</p>
-          {c.scenarios.items.map((s, i) => (
-            <div className="sscen-row" key={i}>
-              <div className="sscen">
-                <div>
+          {/* ONE two-column row: the six scenarios stacked in the left column against a single
+              tall image. Emitting a row per scenario gave six rows and repeated the same
+              image six times, which is a different page from the one the theme describes. */}
+          <div className="sscen-row">
+            <div className="sscen">
+              {c.scenarios.items.map((s, i) => (
+                <div key={i}>
                   <span className="dot">{String(i + 1).padStart(2, '0')}</span>
                   <div><span className="tag">{s.tag}</span><p>{s.body}</p></div>
                 </div>
-              </div>
-              <div className="sscen-shot">
-                <SiteImage src={img(c.slug, Math.min(i + 2, 2))} alt={s.tag} />
-              </div>
+              ))}
             </div>
-          ))}
+            <div className="sscen-shot">
+              <SiteImage src={img(c.slug, 2)} alt={c.scenarios.h2} />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -179,6 +184,7 @@ export function SettingPageV2({ config }: { config: SettingPageConfig }) {
 
       <section className="ssec">
         <div className="swrap ssec-in">
+          <span className="slabel">The outcome</span>
           <h2>{c.outcomes.h2}</h2>
           <div className="sout">
             {c.outcomes.items.map((o, i) => (
@@ -190,6 +196,7 @@ export function SettingPageV2({ config }: { config: SettingPageConfig }) {
 
       <section className="scqc">
         <div className="swrap scqc-in">
+          <span className="slabel">CQC</span>
           <h2>{c.cqc.h2}</h2>
           <p>{c.cqc.intro}</p>
           <div className="scqc-cards">

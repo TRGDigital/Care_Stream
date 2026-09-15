@@ -212,8 +212,6 @@
   .ucpage .uc-panel{display:none}
 }
 
-.ucpage .uc-demo.solid{background:var(--btn-ink);color:var(--btn-ink-text);border-color:var(--btn-ink)}
-.ucpage .uc-demo.solid:hover{opacity:.92}
-.ucpage .shot,.ucpage .sshot,.ucpage .smock,.ucpage .uc-shot,.ucpage .ucread-art,.ucpage .pcrel-art{display:block;overflow:hidden}
-.ucpage .shot img,.ucpage .sshot img,.ucpage .smock img,.ucpage .uc-shot img,.ucpage .ucread-art img,.ucpage .pcrel-art img{display:block;width:100%;height:auto;object-fit:cover;border-radius:inherit}
+.ucpage .shot,.ucpage .sshot,.ucpage .sscen-shot,.ucpage .uc-shot,.ucpage .wcshot,.ucpage .smock,.ucpage .ucread-art,.ucpage .pcrel-art{display:block;overflow:hidden;padding:0;aspect-ratio:auto;height:auto;min-height:0;max-height:none}
+.ucpage .shot img,.ucpage .sshot img,.ucpage .sscen-shot img,.ucpage .uc-shot img,.ucpage .wcshot img,.ucpage .smock img,.ucpage .ucread-art img,.ucpage .pcrel-art img{display:block;width:100%;height:auto;object-fit:contain;border-radius:inherit}
 .ucpage .fchips,.ucpage .schips,.ucpage .smock-tabs,.ucpage .uc-tags{flex-wrap:wrap;overflow:visible}

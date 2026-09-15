@@ -31,7 +31,12 @@ export default function RegisterPage() {
   const router = useRouter()
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('tier') === 'training_only') setTrainingOnly(true)
+    const q = new URLSearchParams(window.location.search)
+    if (q.get('tier') === 'training_only') setTrainingOnly(true)
+    // The /uses hero asks for a work email and sends it here, so the visitor does not type it
+    // twice. Read the same way as tier, for the same reason: no SSR/hydration mismatch.
+    const email = q.get('email')?.trim()
+    if (email) setForm(prev => ({ ...prev, email }))
   }, [])
 
   function update(key: FormKey) {

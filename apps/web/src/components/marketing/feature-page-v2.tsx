@@ -229,6 +229,7 @@ function Capability({ page, anchor }: { page: FeatureV2Page; anchor?: string }) 
       {!!c.whyItWorks?.tiles?.length && (
         <section className="fsec">
           <div className="fwrap fsec-in">
+            <span className="flabel">Why it works</span>
             {c.whyItWorks.heading && <h2>{c.whyItWorks.heading}</h2>}
             <Lead text={c.whyItWorks.intro} />
             <div className="ftiles">

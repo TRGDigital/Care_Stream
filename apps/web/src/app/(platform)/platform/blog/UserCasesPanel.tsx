@@ -52,10 +52,19 @@ export function UserCasesPanel({ token }: { token: string }) {
 
   useEffect(() => { if (token) load() }, [token, load])
 
-  async function seed() {
+  // `replace` is the deliberate overwrite. The plain import skips pages that already exist, so
+  // it cannot discard an edit — but that also means it cannot deliver a corrected import, which
+  // is exactly what was needed when four missing blocks were added to the extract. Asking first,
+  // because this does throw away console edits.
+  async function seed(replace = false) {
+    if (replace && !window.confirm(
+      'Replace the copy on every user case page with the approved theme version?\n\n'
+      + 'Any wording you have edited here will be overwritten.')) return
     setBusy('seed'); setNote('')
     try {
-      const res = await fetch(`${API_URL}/admin/user-cases/seed`, { method: 'POST', headers: auth() })
+      const res = await fetch(
+        `${API_URL}/admin/user-cases/seed${replace ? '?overwrite=true' : ''}`,
+        { method: 'POST', headers: auth() })
       const body = await res.json()
       const d = body?.data ?? {}
       setNote(
@@ -224,11 +233,17 @@ export function UserCasesPanel({ token }: { token: string }) {
           The wording is the copy you approved in the content theme, imported as-is. Edit it here and it is live within a minute, with no deploy. Each page also shows
           the three blog posts allocated to it under a post&rsquo;s <strong>User case</strong> setting.
         </p>
-        <button type="button" onClick={seed} disabled={busy === 'seed'}
-          className="flex shrink-0 items-center gap-1.5 rounded-md border border-gray-200 px-4 py-2 text-sm font-medium hover:bg-neutral-light disabled:opacity-50">
-          {busy === 'seed' ? <Loader2 size={14} className="animate-spin" /> : null}
-          Import approved copy
-        </button>
+        <div className="flex shrink-0 gap-2">
+          <button type="button" onClick={() => seed(false)} disabled={busy === 'seed'}
+            className="flex items-center gap-1.5 rounded-md border border-gray-200 px-4 py-2 text-sm font-medium hover:bg-neutral-light disabled:opacity-50">
+            {busy === 'seed' ? <Loader2 size={14} className="animate-spin" /> : null}
+            Import approved copy
+          </button>
+          <button type="button" onClick={() => seed(true)} disabled={busy === 'seed'}
+            className="rounded-md border border-gray-200 px-4 py-2 text-sm font-medium hover:bg-neutral-light disabled:opacity-50">
+            Re-import and replace
+          </button>
+        </div>
       </div>
 
       {note && <p className="rounded-md bg-neutral-light px-3 py-2 text-xs text-neutral-dark">{note}</p>}

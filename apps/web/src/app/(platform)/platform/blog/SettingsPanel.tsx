@@ -55,10 +55,17 @@ export function SettingsPanel({ token }: { token: string }) {
 
   useEffect(() => { if (token) load() }, [token, load])
 
-  async function seed() {
+  // The plain import skips existing rows so it can never discard an edit. `replace` is the
+  // deliberate way to pull a corrected import across, and it asks first because it does.
+  async function seed(replace = false) {
+    if (replace && !window.confirm(
+      'Reset the copy on every care setting page to the version in the code?\n\n'
+      + 'Any wording you have edited here will be overwritten.')) return
     setBusy('seed'); setNote('')
     try {
-      const res = await fetch(`${API_URL}/admin/setting-pages/seed`, { method: 'POST', headers: auth() })
+      const res = await fetch(
+        `${API_URL}/admin/setting-pages/seed${replace ? '?overwrite=true' : ''}`,
+        { method: 'POST', headers: auth() })
       const d = (await res.json())?.data ?? {}
       setNote(`Added ${d.created?.length ?? 0}, refreshed ${d.updated?.length ?? 0}, left alone ${d.skipped?.length ?? 0}.` + (d.note ? ` ${d.note}` : ''))
       await load()
@@ -221,11 +228,17 @@ export function SettingsPanel({ token }: { token: string }) {
           A page renders from here once published; until then it shows the version in the code,
           so nothing can go blank.
         </p>
-        <button type="button" onClick={seed} disabled={busy === 'seed'}
-          className="flex shrink-0 items-center gap-1.5 rounded-md border border-gray-200 px-4 py-2 text-sm font-medium hover:bg-neutral-light disabled:opacity-50">
-          {busy === 'seed' ? <Loader2 size={14} className="animate-spin" /> : null}
-          Import current copy
-        </button>
+        <div className="flex shrink-0 gap-2">
+          <button type="button" onClick={() => seed(false)} disabled={busy === 'seed'}
+            className="flex items-center gap-1.5 rounded-md border border-gray-200 px-4 py-2 text-sm font-medium hover:bg-neutral-light disabled:opacity-50">
+            {busy === 'seed' ? <Loader2 size={14} className="animate-spin" /> : null}
+            Import current copy
+          </button>
+          <button type="button" onClick={() => seed(true)} disabled={busy === 'seed'}
+            className="rounded-md border border-gray-200 px-4 py-2 text-sm font-medium hover:bg-neutral-light disabled:opacity-50">
+            Reset to code version
+          </button>
+        </div>
       </div>
 
       {note && <p className="rounded-md bg-neutral-light px-3 py-2 text-xs text-neutral-dark">{note}</p>}

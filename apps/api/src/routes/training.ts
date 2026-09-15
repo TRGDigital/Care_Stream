@@ -546,8 +546,17 @@ trainingRouter.post('/modules/:id/archive', requireAdmin, async (req: Request, r
   ok(res, { module: { ...updated, illustration_url: illustrationUrl(updated.illustration_key) } })
 })
 
-// GET /training/compliance — full grid: all staff × enrolled modules
-trainingRouter.get('/compliance', async (req: Request, res: Response) => {
+// GET /training/compliance — full grid: all staff × enrolled modules.
+//
+// Admin only. This returns every active member of staff in the tenant with their name, email,
+// job role and shift pattern, plus each of their enrolment records. That is the whole home's
+// roster and its training gaps, so it is not something one carer should be able to pull about
+// their colleagues. The neighbouring /catalogue and /prebuilt routes were already admin-gated;
+// this one was not, which looks like an oversight rather than a decision.
+//
+// Only the console calls it ((admin) pages and components/admin), so gating it does not affect
+// the staff hub.
+trainingRouter.get('/compliance', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   try {
     const [users, enrollments] = await Promise.all([

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
+import { THEME_IMAGES } from '@/lib/theme-images'
 import './feature-page-v2.css'
 
 // The rebuilt /features template. Renders the SAME feature_pages.content that the current
@@ -51,13 +52,19 @@ const Play = () => (
        strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 5.5v13l10-6.5z" /></svg>
 )
 
-function Actions() {
+function Buttons() {
   return (
-    <div className="factions">
+    <>
       <Link className="fbtn solid" href="/register">Start free trial</Link>
       <Link className="fbtn ghost" href="/demo"><Play /> Book a demo</Link>
-    </div>
+    </>
   )
+}
+
+// The hero groups the buttons in `.factions`; the closing band lays them out with `.row` and
+// no inner wrapper. Two different rules, so the wrapper belongs to the caller, not here.
+function Actions() {
+  return <div className="factions"><Buttons /></div>
 }
 
 // whatItIs.body is stored as prose with blank-line breaks rather than markup, so it is split
@@ -67,8 +74,34 @@ function Prose({ text }: { text?: string }) {
   return <>{paras.map((p, i) => <p key={i}>{p}</p>)}</>
 }
 
+/** The standfirst under a section heading. The theme wraps it in `.lead` and marks each
+ *  paragraph `.lead` too, which is what makes it read larger and lighter than body copy.
+ *  Rendering it as a plain <p> kept the words and lost the distinction. */
+function Lead({ text }: { text?: string }) {
+  const paras = (text ?? '').split(/\n\s*\n|(?<=\.)\s{2,}/).map(s => s.trim()).filter(Boolean)
+  if (!paras.length) return null
+  return (
+    <div className="lead">
+      {paras.map((p, i) => <p className="lead" key={i}>{p}</p>)}
+    </div>
+  )
+}
+
 function img(slug: string, n: number) {
   return `/images/features/${slug}/${n}.webp`
+}
+
+// The wide crop beside the "In short" list. Half the capabilities have their own fifth image
+// and half do not, so the theme falls back to the shared one rather than leaving a hole. The
+// set is read off the generated manifest, so this can never point at a file that isn't there.
+const WIDE_SHOTS = new Set(
+  THEME_IMAGES.map(i => i.src).filter(s => /^\/images\/features\/[^/]+\/5\.webp$/.test(s)),
+)
+const SHARED_WIDE = '/images/_shared/1.webp'
+
+function wideShot(slug: string) {
+  const own = img(slug, 5)
+  return WIDE_SHOTS.has(own) ? own : SHARED_WIDE
 }
 
 function Hero({ page }: { page: FeatureV2Page }) {
@@ -146,7 +179,7 @@ function Capability({ page, anchor }: { page: FeatureV2Page; anchor?: string }) 
         <section className="fsec">
           <div className="fwrap fsec-in">
             {c.howItWorks?.heading && <h2>{c.howItWorks.heading}</h2>}
-            {c.howItWorks?.intro && <p>{c.howItWorks.intro}</p>}
+            <Lead text={c.howItWorks?.intro} />
             {big.map((s, i) => (
               <div className={`fsteprow${i % 2 ? ' fsteprow-flip' : ''}`} key={i}>
                 <div className="fstep-copy">
@@ -185,6 +218,9 @@ function Capability({ page, anchor }: { page: FeatureV2Page; anchor?: string }) 
                   {c.keyPoints.map((k, i) => <li key={i}><span className="ic"><Tick /></span>{k}</li>)}
                 </ul>
               </div>
+              <div className="shot wide">
+                <SiteImage src={wideShot(page.slug)} alt={page.title} />
+              </div>
             </div>
           </div>
         </section>
@@ -194,7 +230,7 @@ function Capability({ page, anchor }: { page: FeatureV2Page; anchor?: string }) 
         <section className="fsec">
           <div className="fwrap fsec-in">
             {c.whyItWorks.heading && <h2>{c.whyItWorks.heading}</h2>}
-            {c.whyItWorks.intro && <p>{c.whyItWorks.intro}</p>}
+            <Lead text={c.whyItWorks.intro} />
             <div className="ftiles">
               {c.whyItWorks.tiles.map((t, i) => (
                 <div className="ftile" key={i}><b>{t.title}</b><p>{t.body}</p></div>
@@ -207,10 +243,91 @@ function Capability({ page, anchor }: { page: FeatureV2Page; anchor?: string }) 
   )
 }
 
+const Plus = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
+       strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+)
+
+/** The stylesheet hides the native disclosure marker and rotates this plus into a cross when
+ *  the answer opens. Without it the questions looked like plain headings with no affordance at
+ *  all, which is the sort of thing a content check has no way to notice. */
+function Faq({ faq }: { faq: FeatureV2Faq }) {
+  return (
+    <details className="fq">
+      <summary>{faq.question}<Plus /></summary>
+      <div className="ans"><p>{faq.answer}</p></div>
+    </details>
+  )
+}
+
+/** One capability as a cluster page states it: a numbered summary beside a single screenshot,
+ *  with the step-by-step detail folded into a disclosure.
+ *
+ *  A cluster used to render each child through <Capability>, which is the whole of a standalone
+ *  page. Ten children produced ten full pages stacked end to end: every word was present, and
+ *  the page was nothing like the design, which makes a cluster an index you can scan. */
+function ClusterFeature({ page, parentSlug, index }: {
+  page: FeatureV2Page; parentSlug: string; index: number
+}) {
+  const c = page.content ?? {}
+  const steps = c.howItWorks?.sections ?? []
+  const n = String(index + 1).padStart(2, '0')
+
+  return (
+    <section className={`cfeat${index % 2 ? ' cfeat-flip' : ''}`} id={page.slug}>
+      <div className="cfeat-copy">
+        <span className="cnum">{n}</span>
+        <h3>{page.title}</h3>
+        <Prose text={c.whatItIs?.body} />
+        {!!c.chips?.length && (
+          <div className="fchips">
+            {c.chips.map((x, i) => <span className="fchip" key={i}>{x}</span>)}
+          </div>
+        )}
+        {!!c.outcomes?.length && (
+          <ul className="cout">
+            {c.outcomes.map((o, i) => <li key={i}><Tick />{o}</li>)}
+          </ul>
+        )}
+        {(steps.length > 0 || !!c.keyPoints?.length) && (
+          <details className="cmore">
+            <summary>How it works, step by step<Plus /></summary>
+            <div className="cmore-in">
+              {steps.length > 0 && (
+                <div className="csteps">
+                  {steps.map((s, i) => (
+                    <div className="cstep" key={i}>
+                      <span className="n">{i + 1}</span>
+                      <div><b>{s.heading}</b><p>{s.body}</p></div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {!!c.keyPoints?.length && (
+                <ul className="ckeys">
+                  {c.keyPoints.map((k, i) => <li key={i}><Tick />{k}</li>)}
+                </ul>
+              )}
+            </div>
+          </details>
+        )}
+      </div>
+      {/* The aside image belongs to the CLUSTER, numbered by position: a cluster of ten ships
+          eleven images, one for the hero and one per capability. */}
+      <div className="cfeat-aside">
+        <div className="shot app">
+          <SiteImage src={img(parentSlug, index + 2)} alt={page.title} />
+        </div>
+      </div>
+    </section>
+  )
+}
+
 export function FeaturePageV2({ page }: { page: FeatureV2Page }) {
   const kids = page.capabilities ?? []
   const isCluster = kids.length > 0
   const faqs = page.faqs ?? []
+  const groupedFaqCount = kids.reduce((n, k) => n + (k.faqs?.length ?? 0), 0)
 
   return (
     <div className="fpage-v2">
@@ -233,21 +350,38 @@ export function FeaturePageV2({ page }: { page: FeatureV2Page }) {
         </section>
       )}
 
-      {isCluster
-        ? kids.map(k => <Capability page={k} anchor={k.slug} key={k.slug} />)
-        : <Capability page={page} />}
+      {isCluster ? (
+        <section className="fsec">
+          <div className="fwrap fsec-in cfeats">
+            {kids.map((k, i) => (
+              <ClusterFeature page={k} parentSlug={page.slug} index={i} key={k.slug} />
+            ))}
+          </div>
+        </section>
+      ) : <Capability page={page} />}
 
-      {!!faqs.length && (
+      {(faqs.length > 0 || groupedFaqCount > 0) && (
         <section className="fsec tint">
           <div className="fwrap fsec-in fnarrow">
-            <span className="flabel">Questions</span>
+            <span className="flabel">
+              Questions{isCluster && groupedFaqCount > 0 ? ` · ${groupedFaqCount}` : ''}
+            </span>
             <h2>Frequently asked</h2>
-            {faqs.map((f, i) => (
-              <details className="fq" key={i}>
-                <summary>{f.question}</summary>
-                <div className="ans"><p>{f.answer}</p></div>
-              </details>
-            ))}
+            {/* A cluster groups its questions under the capability they belong to, each group
+                headed by a link back up to that capability. Rendering them as one flat list
+                lost both the grouping and those links. */}
+            {isCluster
+              ? kids.map((k, i) => !!k.faqs?.length && (
+                  <div className="fqgroup" key={k.slug}>
+                    <h3 className="fqgh">
+                      <a href={`#${k.slug}`}>
+                        <span>{String(i + 1).padStart(2, '0')}</span>{k.title}
+                      </a>
+                    </h3>
+                    {k.faqs.map((f, j) => <Faq faq={f} key={j} />)}
+                  </div>
+                ))
+              : faqs.map((f, i) => <Faq faq={f} key={i} />)}
           </div>
         </section>
       )}
@@ -276,7 +410,7 @@ export function FeaturePageV2({ page }: { page: FeatureV2Page }) {
         <div className="fwrap fend-in">
           <h2>{page.content?.cta?.heading ?? 'See it on your own policies.'}</h2>
           {page.content?.cta?.sub && <p>{page.content.cta.sub}</p>}
-          <div className="row"><Actions /></div>
+          <div className="row"><Buttons /></div>
         </div>
       </section>
     </div>

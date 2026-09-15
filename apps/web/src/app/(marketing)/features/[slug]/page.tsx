@@ -124,8 +124,11 @@ export default async function DbFeaturePage(
         title: fp.title,
         content: (fp.content ?? {}) as FeatureV2Content,
         faqs: Array.isArray(fp.faqs) ? fp.faqs : [],
+        // A cluster's questions are its children's questions, grouped under each capability,
+        // so the children have to bring their own faqs across and not just their content.
         capabilities: children.map(c => ({
           slug: c!.slug, title: c!.title, content: (c!.content ?? {}) as FeatureV2Content,
+          faqs: Array.isArray(c!.faqs) ? c!.faqs : [],
         })),
         related: relatedV2,
       }} />

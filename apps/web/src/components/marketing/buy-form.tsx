@@ -6,7 +6,12 @@ import { Minus, Plus, Loader2, ShieldCheck } from 'lucide-react'
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 const gbp = (pence: number) => `£${(pence / 100).toFixed(2)}`
 
-export function BuyForm({ slug, moduleName, unitPence }: { slug: string; moduleName: string; unitPence: number }) {
+// Two skins, one checkout. The rebuilt theme styles this panel with its own `by*` classes; the
+// logic, the validation and the call to /public/training/checkout are shared, so the two cannot
+// drift apart the way a second copy of the form would.
+export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
+  slug: string; moduleName: string; unitPence: number; variant?: 'default' | 'theme'
+}) {
   const [qty, setQty]     = useState(1)
   const [email, setEmail] = useState('')
   const [org, setOrg]     = useState('')
@@ -36,6 +41,53 @@ export function BuyForm({ slug, moduleName, unitPence }: { slug: string; moduleN
       setError(e?.message ?? 'Something went wrong. Please try again.')
       setBusy(false)
     }
+  }
+
+  if (variant === 'theme') {
+    return (
+      <form className="bypanel" onSubmit={submit}>
+        <div className="byprice"><b>{gbp(unitPence)}</b><span>per staff member</span></div>
+        <p className="note">One-off payment. No renewal unless you buy again.</p>
+
+        <label className="bylabel" htmlFor="byq">Number of licences</label>
+        <div className="byqty">
+          <div className="bystep">
+            <button type="button" onClick={() => setQ(qty - 1)} aria-label="Fewer licences">−</button>
+            <input id="byq" type="number" min={1} max={500} value={qty}
+                   onChange={e => setQ(parseInt(e.target.value || '1', 10))} />
+            <button type="button" onClick={() => setQ(qty + 1)} aria-label="More licences">+</button>
+          </div>
+          {/* Inline, as the theme has it, rather than a class of my own invention. */}
+          <span style={{ fontSize: '.86rem', color: 'var(--muted)' }}>{gbp(unitPence)} each</span>
+        </div>
+
+        <div className="byfield">
+          <label className="bylabel" htmlFor="byorg">Your service</label>
+          <input id="byorg" type="text" value={org} onChange={e => setOrg(e.target.value)}
+                 placeholder="Ferndale Nursing Home" />
+        </div>
+        <div className="byfield">
+          <label className="bylabel" htmlFor="byem">Where to send the licences</label>
+          <input id="byem" type="email" value={email} onChange={e => setEmail(e.target.value)}
+                 placeholder="manager@yourhome.co.uk" />
+        </div>
+
+        <div className="bytotal"><span>Total</span><b>{gbp(total)}</b></div>
+        {/* The theme's panel has no error state, because its form does nothing. This one takes
+            a payment, so it needs one: the existing `note` styling, in the warning colour. */}
+        {error && (
+          <p className="note" role="alert" style={{ color: 'var(--accent-2)', fontWeight: 600 }}>
+            {error}
+          </p>
+        )}
+        <button className="bybtn" type="submit" disabled={busy}>
+          {busy ? 'Starting secure checkout…' : 'Continue to payment'}
+        </button>
+        <p className="bysecure">
+          <ShieldCheck size={13} /> Card payment handled by Stripe. We never see your card details.
+        </p>
+      </form>
+    )
   }
 
   return (

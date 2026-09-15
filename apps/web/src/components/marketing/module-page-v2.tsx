@@ -538,6 +538,13 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
       <section className="xsell">
         <div className="wrap">
           <div className="xcard">
+            <div className="xart">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 3h8l4.5 4.5V21H6z" />
+                <path d="M14 3v5h4.5" />
+                <path d="M9 13h6M9 17h4" />
+              </svg>
+            </div>
             <div>
               <p className="xeyebrow">Care policies</p>
               <h3>Every module is written from a policy</h3>

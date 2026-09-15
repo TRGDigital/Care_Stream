@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, ArrowRight, GraduationCap, Globe, RefreshCw, CheckCircle2 } from 'lucide-react'
 import { BuyForm } from '@/components/marketing/buy-form'
+import { BuyPageV2 } from '@/components/marketing/buy-page-v2'
 import { pageMetadata } from '@/lib/page-meta'
 import { fetchModules, relatedModules } from '@/lib/related-modules'
 
@@ -10,7 +11,20 @@ export const revalidate = 60
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
-async function getModule(slug: string): Promise<{ title: string; illustration_url?: string | null } | null> {
+// The rebuilt template needs the whole record (summary, sections, duration, group), which the
+// endpoint already returns; only this type was narrow.
+type ModuleRecord = {
+  slug: string
+  title: string
+  summary?: string | null
+  group_label?: string | null
+  duration_minutes?: number | null
+  cpd_accredited?: boolean | null
+  illustration_url?: string | null
+  sections?: Array<{ heading: string; body?: string | null; image_url?: string | null }>
+}
+
+async function getModule(slug: string): Promise<ModuleRecord | null> {
   try {
     const res = await fetch(`${API_URL}/public/training/standard-modules/${encodeURIComponent(slug)}`, { next: { revalidate: 60 } })
     if (res.ok) return (await res.json())?.data?.module ?? null
@@ -40,7 +54,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return pageMetadata(`/buy/${slug}`, { title, description, image })
 }
 
-export default async function BuyPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function BuyPage(
+  { params, searchParams }: {
+    params: Promise<{ slug: string }>
+    searchParams?: Promise<Record<string, string | string[] | undefined>>
+  },
+) {
   const { slug } = await params
   const [m, unitPence, allModules] = await Promise.all([getModule(slug), getUnitPence(), fetchModules()])
   if (!m) notFound()
@@ -48,6 +67,20 @@ export default async function BuyPage({ params }: { params: Promise<{ slug: stri
   // Cross-links to other buy pages so every module's purchase page has several
   // dofollow internal links, not just the single one from its training page.
   const related = relatedModules(allModules, slug, { sameGroup: 3, windowCount: 4 })
+
+  // Opt-in with ?v2=1 until it is signed off, the same as the other ported families. It renders
+  // this same record, so the flag changes the design and nothing else.
+  const sp = await searchParams
+  if (sp?.v2 === '1') {
+    return (
+      <BuyPageV2
+        module={{ ...m, slug }}
+        unitPence={unitPence}
+        related={related.map(r => ({ slug: r.slug, title: r.title, group_label: r.group_label }))}
+        apiUrl={API_URL}
+      />
+    )
+  }
 
   return (
     <>

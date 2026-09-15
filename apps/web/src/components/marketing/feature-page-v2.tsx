@@ -234,7 +234,9 @@ function Capability({ page, anchor }: { page: FeatureV2Page; anchor?: string }) 
             <Lead text={c.whyItWorks.intro} />
             <div className="ftiles">
               {c.whyItWorks.tiles.map((t, i) => (
-                <div className="ftile" key={i}><b>{t.title}</b><p>{t.body}</p></div>
+                <div className="ftile" key={i}>
+                  <TileMark /><b>{t.title}</b><p>{t.body}</p>
+                </div>
               ))}
             </div>
           </div>
@@ -247,6 +249,19 @@ function Capability({ page, anchor }: { page: FeatureV2Page; anchor?: string }) 
 const Plus = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
        strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+)
+
+// The mark on each "why it works" tile. The same glyph on all 44 pages, so it is decoration
+// rather than content and lives here. It was absent entirely, which is four of the icons
+// missing from every simple feature page.
+const TileMark = () => (
+  <span className="ic">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+         strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 4v5M12 15v5M4 12h5M15 12h5" />
+      <circle cx="12" cy="12" r="2.6" />
+    </svg>
+  </span>
 )
 
 /** The stylesheet hides the native disclosure marker and rotates this plus into a cross when
@@ -280,9 +295,12 @@ function ClusterFeature({ page, parentSlug, index }: {
         <span className="cnum">{n}</span>
         <h3>{page.title}</h3>
         <Prose text={c.whatItIs?.body} />
+        {/* Four chips, not the whole set. A capability page carries six in its own hero; the
+            cluster shows the first four of each, so three capabilities read as a list rather
+            than eighteen chips wrapping across four lines. */}
         {!!c.chips?.length && (
           <div className="fchips">
-            {c.chips.map((x, i) => <span className="fchip" key={i}>{x}</span>)}
+            {c.chips.slice(0, 4).map((x, i) => <span className="fchip" key={i}>{x}</span>)}
           </div>
         )}
         {!!c.outcomes?.length && (

@@ -98,13 +98,19 @@ export default async function DbFeaturePage(
   const fp = await getFeaturePage(slug)
   if (!fp) notFound()
 
-  // The rebuilt theme template is opt-in with ?v2=1 until it is signed off. Switching 45 live
+  // The rebuilt theme template is opt-in with ?v2=1 until it is signed off. Switching the live
   // pages on merge is exactly the kind of change that has to be looked at before it happens,
   // not after; this way the new design can be read on any real page, with its real content,
   // while the live page is untouched. Flipping it is then a one-line change.
+  //
+  // EXCEPT for cluster pages, which always use it. A cluster is an assembly of its child
+  // capabilities and holds no body content of its own, so the old template renders its hero
+  // and then an empty "What it is" section. That is not a preference about design, it is a
+  // page with nothing on it, and the eight of them are live. The new template is the only one
+  // that can render this page type at all.
   const sp = await searchParams
-  if (sp?.v2 === '1') {
-    const caps = (fp.content as { capabilities?: string[] } | null)?.capabilities ?? []
+  const caps = (fp.content as { capabilities?: string[] } | null)?.capabilities ?? []
+  if (sp?.v2 === '1' || caps.length > 0) {
     const [children, relatedV2] = await Promise.all([
       Promise.all(caps.map(getFeaturePage)).then(r => r.filter(Boolean)),
       getRelatedFeatures(slug),

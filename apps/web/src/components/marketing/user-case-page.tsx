@@ -69,6 +69,27 @@ export interface ReadNextPost {
   feature_image_url: string | null
 }
 
+// The panel's status marks. The theme puts a tick inside a filled circle for done and a
+// clock for pending; rendering the circle with nothing in it read as a coloured dot.
+const TickMark = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2"
+       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M4 12.5 9.5 18 20 6.5" />
+  </svg>
+)
+
+const ClockMark = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"
+       strokeLinecap="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 1.8" />
+  </svg>
+)
+
+const Play = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"
+       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 5.5v13l10-6.5z" /></svg>
+)
+
 const Tick = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
        strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -81,6 +102,12 @@ const Tick = () => (
 function Headline({ html }: { html: string }) {
   const safe = html.replace(/<(?!\/?em\b)[^>]*>/g, '')
   return <h1 dangerouslySetInnerHTML={{ __html: safe }} />
+}
+
+/** Finds a section header by what its eyebrow says. Positional lookup breaks on the one page
+ *  that has three headers rather than four. */
+function headFor(heads: UserCaseHead[] | undefined, pattern: RegExp): UserCaseHead | undefined {
+  return (heads ?? []).find(h => pattern.test(h.eyebrow || ''))
 }
 
 function Head({ head }: { head?: UserCaseHead }) {
@@ -109,9 +136,12 @@ export function UserCasePageView({ page, readNext }: { page: UserCasePage; readN
             {c.eyebrow && <span className="uc-eyebrow">{c.eyebrow}</span>}
             <Headline html={page.title} />
             {c.lede && <p className="uc-lede">{c.lede}</p>}
+            {/* The theme pairs a dark submit button inside an email form with an outlined
+                "Book a demo". Two real links carry the same hierarchy without a form that
+                does nothing: the trial is the primary, the demo the alternative. */}
             <div className="uc-actions">
-              <Link className="uc-demo" href="/demo">Book a demo</Link>
-              <Link className="uc-demo" href="/register">Start free trial</Link>
+              <Link className="uc-demo solid" href="/register">Start free trial</Link>
+              <Link className="uc-demo" href="/demo"><Play /> Book a demo</Link>
             </div>
             {/* The theme puts an email form here. The ported page uses real links instead of a
                 form that does nothing, but this line is true either way and is kept. */}
@@ -127,7 +157,9 @@ export function UserCasePageView({ page, readNext }: { page: UserCasePage; readN
               </div>
               {c.panel.rows.map((r, i) => (
                 <div className="uc-row" key={i}>
-                  <span className={`uc-tick${r.done ? '' : ' pending'}`} />
+                  <span className={`uc-tick${r.done ? '' : ' pending'}`}>
+                    {r.done ? <TickMark /> : <ClockMark />}
+                  </span>
                   <span>{r.label}</span><small>{r.note}</small>
                 </div>
               ))}
@@ -142,6 +174,27 @@ export function UserCasePageView({ page, readNext }: { page: UserCasePage; readN
           )}
         </div>
       </section>
+
+      {/* "Why it matters" sits above the alternating sections in the design: it frames the
+          argument the sections then make. Rendering the sections first put the framing after
+          the thing it frames. */}
+      {(c.cards ?? []).length > 0 && (
+        <section className="uc-sec">
+          <div className="uc-wrap">
+            <Head head={headFor(c.heads, /matter|why/i) ?? c.heads?.[0]} />
+            <div className="uc-cards">
+              {c.cards.map((card, i) => (
+                <div className="uc-card" key={i}>
+                  <h3>{card.title}</h3>
+                  <p>{card.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <Head head={headFor(c.heads, /how it works/i)} />
 
       {(c.sections ?? []).map((s, i) => (
         <section className="uc-sec" key={i}>
@@ -172,26 +225,10 @@ export function UserCasePageView({ page, readNext }: { page: UserCasePage; readN
         </section>
       ))}
 
-      {(c.cards ?? []).length > 0 && (
-        <section className="uc-sec">
-          <div className="uc-wrap">
-            <Head head={c.heads?.[0]} />
-            <div className="uc-cards">
-              {c.cards.map((card, i) => (
-                <div className="uc-card" key={i}>
-                  <h3>{card.title}</h3>
-                  <p>{card.body}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {(page.faqs ?? []).length > 0 && (
         <section className="uc-sec">
           <div className="uc-wrap">
-            <Head head={c.heads?.find(h => /question/i.test(h.eyebrow))} />
+            <Head head={headFor(c.heads, /question/i)} />
             {page.faqs.map((g, i) => (
               <div className="uc-faqgroup" key={i}>
                 <h3>{g.label}</h3>
@@ -257,8 +294,10 @@ export function UserCasePageView({ page, readNext }: { page: UserCasePage; readN
       {readNext.length > 0 && (
         <section className="ucread">
           <div className="ucread-in">
-            <p className="uc-eyebrow">Read next</p>
-            <h2>Written on this</h2>
+            <p className="uc-eyebrow">
+              {headFor(c.heads, /read next/i)?.eyebrow || 'Read next'}
+            </p>
+            <h2>{headFor(c.heads, /read next/i)?.heading || 'Guides on this subject'}</h2>
             <div className="ucread-grid">
               {readNext.map(p => (
                 <Link className="ucread-card" href={`/blog/${p.slug}`} key={p.slug}>

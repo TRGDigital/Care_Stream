@@ -10,6 +10,7 @@ import { slotsForPath, type SlotDef } from '@/lib/page-slots'
 import { PlatformShell } from '@/components/platform-shell'
 import { AltTagsPanel } from './AltTagsPanel'
 import { UserCasesPanel } from './UserCasesPanel'
+import { FeatureSeedBar } from './FeatureSeedBar'
 import { Button } from '@/components/ui/button'
 import {
   Check, ChevronDown, Clock, Globe, Loader2, Pencil, Plus, Trash2, Upload, User, X,
@@ -2735,6 +2736,7 @@ export default function BlogPage() {
         {/* ── Features pages tab ──────────────────────────────────────────── */}
         {tab === 'features' && (
           <div className="space-y-4">
+            {token && <FeatureSeedBar token={token} onDone={() => location.reload()} />}
             <div className="flex items-center justify-between gap-4">
               <p className="text-sm text-neutral-mid">
                 The <code className="rounded bg-neutral-light px-1 py-0.5 text-xs">/features/&hellip;</code> pages linked from the pricing list. Edit the content and FAQs; publishing submits the page for indexing and adds it to the sitemap.

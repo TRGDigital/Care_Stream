@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
 import type { SettingPageConfig } from './setting-page'
+import { SETTING_PAGE_ICONS } from '@/lib/settings/icons'
 import './setting-page-v2.css'
 
 // The rebuilt template for the 11 care-setting pages. Renders the SAME config the current
@@ -21,6 +22,13 @@ const Play = () => (
 
 // The stylesheet hides the native disclosure marker and rotates this plus into a cross when the
 // answer opens. Without it a question looks like a heading with nothing to click.
+const Arrow = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M5 12h13M13 6.5 18.5 12 13 17.5" />
+  </svg>
+)
+
 const Plus = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
        strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
@@ -48,22 +56,104 @@ function img(slug: string, n: number) {
   return `/images/${slug}/${n}.webp`
 }
 
-// The eight service descriptions, in the order the design lists them, with the page they link
-// to. Kept here rather than in each config because the mapping is the same for every setting;
-// only the wording differs, and that is what the config holds.
-const SERVICES: { key: keyof SettingPageConfig['serviceDescriptions']; title: string; href: string }[] = [
-  { key: 'policies',    title: 'Care Policies',          href: '/care-policies' },
-  { key: 'hr',          title: 'HR Policies',            href: '/hr-policies' },
-  { key: 'training',    title: 'Training',               href: '/training-platform' },
-  { key: 'audits',      title: 'Care Audits',            href: '/care-audits' },
-  { key: 'cqc',         title: 'CQC and Compliance',     href: '/cqc-compliance' },
-  { key: 'staffq',      title: 'CQC Staff Questions',    href: '/cqc-staff-questions' },
-  { key: 'reportchat',  title: 'CQC Report Chat',        href: '/cqc-report-chat' },
-  { key: 'continuity',  title: 'Business Continuity',    href: '/business-continuity' },
+// The eight service cards, in the order the design lists them: link, title, colour pair and
+// icon. Kept here rather than in each config because they are byte-identical on all eleven
+// pages; only the wording differs, and that is what the config holds.
+//
+// Titles, hrefs, colours and icon paths all taken from the theme. The icons were absent
+// entirely, which is eight of the twenty-one missing from each page.
+interface Service {
+  key: keyof SettingPageConfig['serviceDescriptions']
+  title: string
+  href: string
+  bg: string
+  fg: string
+  d: string[]
+  circle?: { cx: string; cy: string; r: string }
+}
+
+const SERVICES: Service[] = [
+  { key: 'policies', title: 'Care Policies', href: '/care-policies',
+    bg: '#F1E9FA', fg: '#6F35B0', d: ['M6 3.5h9l4 4v13H6z', 'M9 12h7M9 16h5'] },
+  { key: 'hr', title: 'HR Policies', href: '/hr-policies',
+    bg: '#E5EEFC', fg: '#2760BC', circle: { cx: '12', cy: '8', r: '3.4' },
+    d: ['M5.5 20c.8-3.6 3.4-5.4 6.5-5.4s5.7 1.8 6.5 5.4'] },
+  { key: 'training', title: 'Staff Training', href: '/staff-training',
+    bg: '#E6F4EC', fg: '#15764F',
+    d: ['M12 5 21 9.5 12 14 3 9.5z',
+        'M6.8 11.8V16c0 1.6 2.3 2.9 5.2 2.9s5.2-1.3 5.2-2.9v-4.2'] },
+  { key: 'audits', title: 'Care Audits', href: '/care-audits',
+    bg: '#DDF2EF', fg: '#0A736C',
+    d: ['M9 4.5h6v2H9z', 'M7 5.5H5.5v15h13v-15H17', 'M9 12l2 2 4-4'] },
+  { key: 'cqc', title: 'CQC and Compliance', href: '/cqc-compliance',
+    bg: '#FCF0DC', fg: '#9E6709',
+    d: ['M12 3.5 20 7v5.5c0 4.4-3.4 7.4-8 8.6-4.6-1.2-8-4.2-8-8.6V7z',
+        'M8.8 12.2 11 14.5l4.2-4.6'] },
+  { key: 'staffq', title: 'CQC Staff Questions', href: '/cqc-staff-questions',
+    bg: '#FCF0DC', fg: '#9E6709', circle: { cx: '12', cy: '12', r: '8.5' },
+    d: ['M9.8 9.4a2.3 2.3 0 1 1 2.5 3.4v1.1', 'M12.2 17h.01'] },
+  { key: 'reportchat', title: 'CQC Report Chat', href: '/cqc-report-chat',
+    bg: '#DDF2EF', fg: '#0A736C',
+    d: ['M4.5 5.5h15v11h-9L6 20v-3.5H4.5z', 'M8.5 10h7M8.5 13h4'] },
+  { key: 'continuity', title: 'Business Continuity', href: '/business-continuity',
+    bg: '#FAE7E3', fg: '#A94331',
+    d: ['M20 12a8 8 0 1 1-2.6-5.9', 'M20 4v4.5h-4.5', 'M12 8v4.5l3 1.8'] },
 ]
+
+/** An icon with no colour of its own: the card's stylesheet colours it. Used by the three CQC
+ *  cards, whose icons are the same on every setting page. */
+export interface IconShape {
+  tag: 'path' | 'circle' | 'rect'
+  d?: string
+  cx?: string; cy?: string; r?: string
+  x?: string; y?: string; width?: string; height?: string; rx?: string
+}
+
+function PlainIcon({ shapes }: { shapes: IconShape[] }) {
+  if (!shapes.length) return null
+  return (
+    <span className="ic">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"
+           strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        {shapes.map((s, i) => {
+          if (s.tag === 'circle') return <circle cx={s.cx} cy={s.cy} r={s.r} key={i} />
+          if (s.tag === 'rect') {
+            return <rect x={s.x} y={s.y} width={s.width} height={s.height} rx={s.rx} key={i} />
+          }
+          return <path d={s.d} key={i} />
+        })}
+      </svg>
+    </span>
+  )
+}
+
+// The three CQC cards carry the same icons on all eleven pages, so they live here.
+const CQC_ICONS: IconShape[][] = [
+  [{ tag: 'path', d: 'M4 20V4' }, { tag: 'path', d: 'M4 20h16' },
+   { tag: 'path', d: 'M8 16v-5M12.5 16V8M17 16v-3' }],
+  [{ tag: 'circle', cx: '12', cy: '12', r: '8.5' },
+   { tag: 'path', d: 'M9.8 9.4a2.3 2.3 0 1 1 2.5 3.4v1.1' }, { tag: 'path', d: 'M12.2 17h.01' }],
+  [{ tag: 'path', d: 'M12 3.5 20 7v5.5c0 4.4-3.4 7.4-8 8.6-4.6-1.2-8-4.2-8-8.6V7z' },
+   { tag: 'path', d: 'M8.8 12.2 11 14.5l4.2-4.6' }],
+]
+
+function ServiceIcon({ s }: { s: Service }) {
+  return (
+    <span className="ic" style={{ background: s.bg, color: s.fg }}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"
+           strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        {s.circle && <circle cx={s.circle.cx} cy={s.circle.cy} r={s.circle.r} />}
+        {s.d.map((d, i) => <path d={d} key={i} />)}
+      </svg>
+    </span>
+  )
+}
 
 export function SettingPageV2({ config }: { config: SettingPageConfig }) {
   const c = config
+  // Icons are keyed by slug, not carried in the config: nobody edits an icon in the console,
+  // so routing them through the seed and a re-import would be churn for no gain.
+  const icons = SETTING_PAGE_ICONS[c.slug] ?? { challenge: [], outcomes: [] }
   return (
     <div className="spage-v2">
       <section className="shero">
@@ -78,10 +168,14 @@ export function SettingPageV2({ config }: { config: SettingPageConfig }) {
               from the config the same way, and stays readable to a crawler. */}
           <div className="smock">
             <div className="smock-top">
-              <b>{c.mockup.orgName}</b><span className="tag">{c.mockup.badge}</span>
+              {/* smock-badge, not tag: `tag` is the scenario label further down the page and
+                  carries different styling, so the badge was rendering as the wrong thing. */}
+              <b>{c.mockup.orgName}</b><span className="smock-badge">{c.mockup.badge}</span>
             </div>
             <div className="smock-tabs">
-              {c.mockup.tabs.map(t => <span key={t}>{t}</span>)}
+              {c.mockup.tabs.map((t, i) => (
+                <span className={`smock-tab${i ? '' : ' on'}`} key={t}>{t}</span>
+              ))}
             </div>
             <div className="smock-body">
               <p className="sask">{c.mockup.question}</p>
@@ -115,7 +209,10 @@ export function SettingPageV2({ config }: { config: SettingPageConfig }) {
           </div>
           <div className="sgrid4">
             {c.challenge.items.map((it, i) => (
-              <div className="scard" key={i}><b>{it.title}</b><p>{it.body}</p></div>
+              <div className="scard" key={i}>
+                <PlainIcon shapes={icons.challenge[i] ?? []} />
+                <b>{it.title}</b><p>{it.body}</p>
+              </div>
             ))}
           </div>
         </div>
@@ -127,8 +224,10 @@ export function SettingPageV2({ config }: { config: SettingPageConfig }) {
           <h2>{c.servicesH2}</h2>
           <div className="sservices">
             {SERVICES.map(s => (
-              <Link href={s.href} key={s.key}>
+              <Link className="sservice" href={s.href} key={s.key}>
+                <ServiceIcon s={s} />
                 <b>{s.title}</b><p>{c.serviceDescriptions[s.key]}</p>
+                <span className="more">Learn more <Arrow /></span>
               </Link>
             ))}
           </div>
@@ -168,7 +267,7 @@ export function SettingPageV2({ config }: { config: SettingPageConfig }) {
               <p>{c.deepDive.para1}</p>
               <p>{c.deepDive.para2}</p>
               <div className="schips">
-                {c.deepDive.chips.map((ch, i) => <span key={i}>{ch}</span>)}
+                {c.deepDive.chips.map((ch, i) => <span className="schip" key={i}>{ch}</span>)}
               </div>
             </div>
             <div className="spanel">
@@ -188,7 +287,10 @@ export function SettingPageV2({ config }: { config: SettingPageConfig }) {
           <h2>{c.outcomes.h2}</h2>
           <div className="sout">
             {c.outcomes.items.map((o, i) => (
-              <div key={i}><b>{o.title}</b><p>{o.body}</p></div>
+              <div key={i}>
+                <PlainIcon shapes={icons.outcomes[i] ?? []} />
+                <b>{o.title}</b><p>{o.body}</p>
+              </div>
             ))}
           </div>
         </div>
@@ -201,7 +303,10 @@ export function SettingPageV2({ config }: { config: SettingPageConfig }) {
           <p>{c.cqc.intro}</p>
           <div className="scqc-cards">
             {c.cqc.cards.map((card, i) => (
-              <div key={i}><b>{card.title}</b><p>{card.body}</p></div>
+              <div key={i}>
+                <PlainIcon shapes={CQC_ICONS[i] ?? []} />
+                <b>{card.title}</b><p>{card.body}</p>
+              </div>
             ))}
           </div>
         </div>

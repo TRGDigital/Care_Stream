@@ -1,4 +1,5 @@
 import type { SettingPageConfig } from '@/components/marketing/setting-page'
+import { previewParam } from '@/lib/preview'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -14,7 +15,9 @@ export async function settingConfigFromDb(
   fallback: SettingPageConfig,
 ): Promise<SettingPageConfig> {
   try {
-    const res = await fetch(`${API_URL}/public/setting-pages/${slug}`, { next: { revalidate: 60 } })
+    const q = await previewParam()
+    const res = await fetch(`${API_URL}/public/setting-pages/${slug}${q}`,
+      q ? { cache: 'no-store' } : { next: { revalidate: 60 } })
     if (!res.ok) return fallback
     const body = await res.json()
     const cfg = body?.data?.page?.config

@@ -78,6 +78,22 @@ export function UserCasesPanel({ token }: { token: string }) {
     } finally { setBusy(null) }
   }
 
+
+  // Asks the API for a short-lived link to this page, then opens it. The link names one page
+  // and expires in 30 minutes, so the draft stays invisible to everyone else.
+  async function preview(kind: string, slug: string) {
+    setBusy(slug)
+    try {
+      const res = await fetch(`${API_URL}/admin/preview`, {
+        method: 'POST',
+        headers: { ...auth(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind, slug }),
+      })
+      const url = (await res.json())?.data?.url
+      if (url) window.open(url, '_blank', 'noopener')
+    } finally { setBusy(null) }
+  }
+
   async function edit(slug: string) {
     setBusy(slug)
     try {
@@ -240,6 +256,10 @@ export function UserCasesPanel({ token }: { token: string }) {
               </p>
             </div>
             <div className="flex shrink-0 gap-2">
+              {r.exists && (
+                <button type="button" onClick={() => preview('user-case', r.slug)} disabled={busy === r.slug}
+                  className="rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium hover:bg-neutral-light disabled:opacity-50">Preview</button>
+              )}
               {r.exists && (
                 <button type="button" onClick={() => edit(r.slug)} disabled={busy === r.slug}
                   className="rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium hover:bg-neutral-light disabled:opacity-50">Edit</button>

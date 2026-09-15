@@ -37,6 +37,7 @@ import { supportRequestsRouter } from './routes/support-requests'
 import { publicBlogRouter } from './routes/blog-public'
 import { publicUserCasesRouter } from './routes/user-cases-public'
 import { publicSettingPagesRouter, settingPagesAdminRouter } from './routes/setting-pages'
+import { previewAdminRouter } from './routes/preview'
 import { userCasesAdminRouter } from './routes/user-cases-admin'
 import { publicTrainingRouter } from './routes/training-public'
 import { publicTrainingReviewRouter } from './routes/training-review-public'
@@ -118,6 +119,7 @@ app.use('/auth', authRouter)
 app.use('/admin/onboarding-templates', onboardingTemplatesRouter)
 app.use('/admin/user-cases', userCasesAdminRouter)
 app.use('/admin/setting-pages', settingPagesAdminRouter)
+app.use('/admin/preview', previewAdminRouter)
 app.use('/admin/standard-training', standardTrainingRouter)
 app.use('/admin/standard-programmes', standardProgrammesRouter)
 app.use('/admin/policy-seeds', policySeedsRouter)

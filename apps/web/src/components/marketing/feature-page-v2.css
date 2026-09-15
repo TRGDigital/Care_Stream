@@ -1,10 +1,9 @@
-/* Ported from the content theme (carestream-theme-preview) by
- * ~/.claude/jobs/2fddce09/tmp/build_feature_css.py. Kept as CSS rather than rewritten as
- * Tailwind because these rules are the design.
+/* Ported from the content theme by carestream-theme-preview/port_css.py.
+ * Source: features/basic-analytics.html, features/audits.html, features/web-chat-interface.html
  *
- * Scoped under .fpage-v2, with the theme tokens on that wrapper rather than :root, so the
- * rest of the app is untouched. Header and footer rules are excluded: the app supplies
- * its own, and restyling them from here would leak across every page.
+ * Kept as CSS rather than rewritten as Tailwind because these rules are the design.
+ * Scoped under .fpage-v2, with the theme tokens on that wrapper rather than
+ * :root, so the rest of the app is untouched. Header and footer rules are excluded.
  */
 .fpage-v2 {
   --accent: #7B3FBF;
@@ -368,6 +367,6 @@
   .fpage-v2 .wccta-in{padding:28px}
 }
 
-.fpage-v2 .shot{display:block;overflow:hidden}
-.fpage-v2 .shot img{display:block;width:100%;height:auto;object-fit:cover;border-radius:inherit}
-.fpage-v2 .fchips{flex-wrap:wrap;overflow:visible}
+.fpage-v2 .shot,.fpage-v2 .sshot,.fpage-v2 .smock,.fpage-v2 .uc-shot,.fpage-v2 .ucread-art,.fpage-v2 .pcrel-art{display:block;overflow:hidden}
+.fpage-v2 .shot img,.fpage-v2 .sshot img,.fpage-v2 .smock img,.fpage-v2 .uc-shot img,.fpage-v2 .ucread-art img,.fpage-v2 .pcrel-art img{display:block;width:100%;height:auto;object-fit:cover;border-radius:inherit}
+.fpage-v2 .fchips,.fpage-v2 .schips,.fpage-v2 .smock-tabs,.fpage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}

@@ -83,7 +83,9 @@ export function UserCasePageView({ page, readNext }: { page: UserCasePage; readN
           </div>
           {page.hero_image_url && (
             <div className="uc-shot">
-              <SiteImage src={page.hero_image_url} alt={page.title.replace(/<[^>]*>/g, '')} />
+              {/* priority: the hero is the largest above-the-fold image, and SiteImage is lazy
+                  by default, which delays the one image the reader is waiting for. */}
+              <SiteImage src={page.hero_image_url} alt={page.title.replace(/<[^>]*>/g, '')} priority />
             </div>
           )}
         </div>

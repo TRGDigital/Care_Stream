@@ -36,6 +36,7 @@ import { featureRequestsRouter } from './routes/feature-requests'
 import { supportRequestsRouter } from './routes/support-requests'
 import { publicBlogRouter } from './routes/blog-public'
 import { publicUserCasesRouter } from './routes/user-cases-public'
+import { publicSettingPagesRouter, settingPagesAdminRouter } from './routes/setting-pages'
 import { userCasesAdminRouter } from './routes/user-cases-admin'
 import { publicTrainingRouter } from './routes/training-public'
 import { publicTrainingReviewRouter } from './routes/training-review-public'
@@ -116,6 +117,7 @@ app.use('/auth', authRouter)
 // Must be mounted BEFORE requireAuth so it isn't rejected as an unauthenticated request.
 app.use('/admin/onboarding-templates', onboardingTemplatesRouter)
 app.use('/admin/user-cases', userCasesAdminRouter)
+app.use('/admin/setting-pages', settingPagesAdminRouter)
 app.use('/admin/standard-training', standardTrainingRouter)
 app.use('/admin/standard-programmes', standardProgrammesRouter)
 app.use('/admin/policy-seeds', policySeedsRouter)
@@ -145,6 +147,7 @@ app.use('/onboarding', onboardingPublicRouter)
 // Public marketing blog — published posts only, no auth. Must be mounted BEFORE requireAuth.
 app.use('/public/blog', publicBlogRouter)
 app.use('/public/user-cases', publicUserCasesRouter)
+app.use('/public/setting-pages', publicSettingPagesRouter)
 app.use('/public/policy-shop', policyShopPublicRouter)
 
 // Public training-module illustrations (no tenant data), no auth. Must be mounted BEFORE requireAuth.

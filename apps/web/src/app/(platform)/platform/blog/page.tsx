@@ -11,6 +11,7 @@ import { PlatformShell } from '@/components/platform-shell'
 import { AltTagsPanel } from './AltTagsPanel'
 import { UserCasesPanel } from './UserCasesPanel'
 import { FeatureSeedBar } from './FeatureSeedBar'
+import { SettingsPanel } from './SettingsPanel'
 import { Button } from '@/components/ui/button'
 import {
   Check, ChevronDown, Clock, Globe, Loader2, Pencil, Plus, Trash2, Upload, User, X,
@@ -1924,7 +1925,7 @@ function SlotEditor({ page, defs, token, onSaved }: {
 
 export default function BlogPage() {
   const token = usePlatformAuth()
-  const [tab,  setTab]  = useState<'posts' | 'authors' | 'pages' | 'mainsite' | 'training' | 'features' | 'collections' | 'altTags' | 'userCases'>('posts')
+  const [tab,  setTab]  = useState<'posts' | 'authors' | 'pages' | 'mainsite' | 'training' | 'features' | 'collections' | 'altTags' | 'userCases' | 'careSettings'>('posts')
 
   // Posts state
   const [posts,     setPosts]     = useState<BlogPost[]>([])
@@ -2389,7 +2390,7 @@ export default function BlogPage() {
         {/* Tabs */}
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex gap-6 overflow-x-auto">
-            {(['posts', 'authors', 'pages', 'mainsite', 'training', 'features', 'collections', 'userCases', 'altTags'] as const).map(t => (
+            {(['posts', 'authors', 'pages', 'mainsite', 'training', 'features', 'collections', 'userCases', 'careSettings', 'altTags'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -2399,7 +2400,7 @@ export default function BlogPage() {
                     : 'text-neutral-mid hover:text-neutral-dark'
                 }`}
               >
-                {t === 'posts' ? `Posts (${posts.length})` : t === 'authors' ? `Authors (${authors.length})` : t === 'pages' ? `Pages (${allPages.length})` : t === 'mainsite' ? `Main site pages (${mainSitePagesList.length})` : t === 'training' ? `Training pages (${trainingPagesList.length})` : t === 'features' ? `Features pages (${featurePages.length})` : t === 'collections' ? `Collections (${collections.length})` : t === 'userCases' ? 'User cases' : 'Alt Tags'}
+                {t === 'posts' ? `Posts (${posts.length})` : t === 'authors' ? `Authors (${authors.length})` : t === 'pages' ? `Pages (${allPages.length})` : t === 'mainsite' ? `Main site pages (${mainSitePagesList.length})` : t === 'training' ? `Training pages (${trainingPagesList.length})` : t === 'features' ? `Features pages (${featurePages.length})` : t === 'collections' ? `Collections (${collections.length})` : t === 'userCases' ? 'User cases' : t === 'careSettings' ? 'Care settings' : 'Alt Tags'}
               </button>
             ))}
           </nav>
@@ -2890,6 +2891,7 @@ export default function BlogPage() {
 
         {tab === 'altTags' && token && <AltTagsPanel token={token} />}
         {tab === 'userCases' && token && <UserCasesPanel token={token} />}
+        {tab === 'careSettings' && token && <SettingsPanel token={token} />}
 
       </div>
     </PlatformShell>

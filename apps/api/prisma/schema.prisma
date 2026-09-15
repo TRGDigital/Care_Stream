@@ -1453,6 +1453,25 @@ model UserCasePage {
   @@map("user_case_pages")
 }
 
+// The 11 care-setting pages. Their copy moved out of apps/web/src/lib/settings/<slug>.ts so it
+// can be edited in the console: changing a sentence should not need a deploy.
+//
+// `config` is the whole page object, seeded verbatim from the TypeScript file. Structural
+// fields travel with it (icon keys, the slug), but the console only exposes the words.
+model SettingPage {
+  id         String   @id @default(uuid())
+  slug       String   @unique                          // e.g. nursing-homes
+  label      String   @default("")                     // e.g. Nursing Homes
+  status     String   @default("draft")                // 'draft' | 'published'
+  config     Json     @default("{}")                   // SettingPageConfig
+  sort       Int      @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([status])
+  @@map("setting_pages")
+}
+
 // Central alt-text store for static site images (managed in the platform console
 // → Blog → Alt Tags, surfaced on the marketing pages via the SiteImage component).
 model SiteImageAlt {

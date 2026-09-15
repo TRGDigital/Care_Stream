@@ -1,6 +1,7 @@
 import { SettingPage } from '@/components/marketing/setting-page'
 import { config } from '@/lib/settings/nursing-homes'
 import { settingPageMetadata } from '@/lib/settings/meta'
+import { settingConfigFromDb } from '@/lib/settings/db'
 
 export const generateMetadata = () => settingPageMetadata(config)
 
@@ -10,5 +11,8 @@ export default async function Page(
   { searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> },
 ) {
   const sp = await searchParams
-  return <SettingPage config={config} v2={sp?.v2 === '1'} />
+  // Copy comes from the database so it can be edited in the console; the config in
+  // lib/settings is the fallback when no published row exists.
+  const live = await settingConfigFromDb(config.slug, config)
+  return <SettingPage config={live} v2={sp?.v2 === '1'} />
 }

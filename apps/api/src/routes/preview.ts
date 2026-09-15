@@ -29,7 +29,20 @@ previewAdminRouter.post('/', (req: Request, res: Response) => {
   }
 
   const token = signPreviewToken(kind, slug)
-  const base = (process.env.WEB_URL ?? 'https://www.carestreamai.com').replace(/\/$/, '')
+  // WEB_URL holds a comma-separated list of every host the site answers on, and one entry in
+  // it is missing its colon. Using it raw produced a preview link beginning
+  // "https://carestreamai.com,https//www.carestreamai.com,https://care-stream-web..." which no
+  // browser can open. Take the first entry that is genuinely a URL, and fall back to the
+  // canonical host, which is where the site actually lives.
+  const hosts = (process.env.WEB_URL ?? '')
+    .split(',')
+    .map(s => s.trim().replace(/\/$/, ''))
+    .filter(s => /^https:\/\/[a-z0-9.-]+$/i.test(s))
+  // Prefer the canonical www host. The apex is in that list too and 308s to www, and a preview
+  // link that starts with a redirect is one more thing to go wrong for no benefit.
+  const base = hosts.find(h => h.startsWith('https://www.'))
+    ?? hosts[0]
+    ?? 'https://www.carestreamai.com'
   const url = `${base}/api/preview?token=${encodeURIComponent(token)}`
       + `&path=${encodeURIComponent(PATHS[kind](slug))}`
 

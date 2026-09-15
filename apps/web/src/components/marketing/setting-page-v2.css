@@ -271,6 +271,6 @@
   .spage-v2 .scqc-cards{grid-template-columns:1fr}
 }
 
-.spage-v2 .shot,.spage-v2 .sshot,.spage-v2 .smock{display:block;overflow:hidden}
-.spage-v2 .shot img,.spage-v2 .sshot img,.spage-v2 .smock img{display:block;width:100%;height:auto;object-fit:cover;border-radius:inherit}
-.spage-v2 .fchips,.spage-v2 .schips,.spage-v2 .smock-tabs{flex-wrap:wrap;overflow:visible}
+.spage-v2 .shot,.spage-v2 .sshot,.spage-v2 .smock,.spage-v2 .uc-shot,.spage-v2 .ucread-art,.spage-v2 .pcrel-art{display:block;overflow:hidden}
+.spage-v2 .shot img,.spage-v2 .sshot img,.spage-v2 .smock img,.spage-v2 .uc-shot img,.spage-v2 .ucread-art img,.spage-v2 .pcrel-art img{display:block;width:100%;height:auto;object-fit:cover;border-radius:inherit}
+.spage-v2 .fchips,.spage-v2 .schips,.spage-v2 .smock-tabs,.spage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}

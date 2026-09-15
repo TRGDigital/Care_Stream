@@ -1,4 +1,5 @@
 import { FaqAccordion } from './faq-accordion'
+import { FaqPageV2 } from '@/components/marketing/faq-page-v2'
 import { PageHero, PageCta } from '@/components/marketing/ui'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { JsonLd } from '@/components/json-ld'
@@ -30,7 +31,9 @@ const FAQ_SECTIONS = [
   { titleKey: 'getting.title',   prefix: 'getting',   count: 5 },
 ]
 
-export default async function FaqPage() {
+export default async function FaqPage(
+  { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
+) {
   const s = makeSlot(FAQ_SLOTS, await getContentSlots('/faq'))
   const FAQ_GROUPS = FAQ_SECTIONS.map(({ titleKey, prefix, count }) => ({
     title: s(titleKey),
@@ -40,6 +43,23 @@ export default async function FaqPage() {
     })),
   }))
   const ALL_FAQS = FAQ_GROUPS.flatMap(g => g.items).map(i => ({ question: i.q, answer: i.a }))
+
+  // Opt-in with ?v2=1 until it is signed off, like the other ported families. Same slots,
+  // same thirty questions: the flag changes the design and nothing else.
+  const sp = await searchParams
+  if (sp?.v2 === '1') {
+    return (
+      <>
+        <JsonLd data={faqPageSchema(ALL_FAQS)} />
+        <FaqPageV2
+          groups={FAQ_GROUPS}
+          label={s('header.label')}
+          title={s('header.title')}
+          subtitle={s('header.subtitle')}
+        />
+      </>
+    )
+  }
 
   return (
     <>

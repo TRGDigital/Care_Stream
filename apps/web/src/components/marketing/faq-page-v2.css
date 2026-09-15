@@ -1,0 +1,103 @@
+/* Ported from the content theme by carestream-theme-preview/port_css.py.
+ * Source: contact/faq.html
+ *
+ * Kept as CSS rather than rewritten as Tailwind because these rules are the design.
+ * Scoped under .cfpage-v2, with the theme tokens on that wrapper rather than
+ * :root, so the rest of the app is untouched. Header and footer rules are excluded.
+ */
+.cfpage-v2 {
+  --accent: #7B3FBF;
+  --accent-2: #C2503E;
+  --accent-soft: #F3EDFA;
+  --btn-ink: #17121F;
+  --btn-ink-text: #FFFFFF;
+  --chrome: 68px;
+  --good: #1F8A5B;
+  --ground: #FFFFFF;
+  --ground-2: #F7F5FA;
+  --ink: #17121F;
+  --ink-2: #3A3245;
+  --line: #E9E5EF;
+  --maxw: 1440px;
+  --muted: #6B6577;
+  --plate: #F2EEF8;
+  --r: 14px;
+  --shadow: 0 1px 2px rgba(23,18,31,.04), 0 12px 32px rgba(23,18,31,.06);
+  --shadow-lg: 0 2px 4px rgba(23,18,31,.04), 0 24px 64px rgba(23,18,31,.10);
+  color: var(--ink);
+  background: var(--ground);
+}
+
+.cfpage-v2 .demo-steps .s.on .n{background:var(--accent);color:#fff}
+.cfpage-v2 .demo-steps .s.on .lb{color:var(--ink)}
+.cfpage-v2 .demo-cta .row{display:flex;gap:10px;flex-wrap:wrap}
+.cfpage-v2 .demo-cta .row a{flex:1 1 160px;font-size:.85rem;padding:11px 16px;justify-content:center;text-align:center}
+.cfpage-v2 .uc-eyebrow{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--accent);margin:0 0 16px;}
+.cfpage-v2 .uc-q .ans{padding:0 0 20px;font-size:.93rem;line-height:1.68;color:var(--ink-2);max-width:62em}
+.cfpage-v2 .uc-q .ans p{margin:0 0 11px}
+.cfpage-v2 .uc-q .ans p:last-child{margin:0}
+.cfpage-v2 .uc-hero .uc-eyebrow{margin-bottom:clamp(8px,1.6vh,16px);}
+.cfpage-v2 .cfpage{padding:0}
+.cfpage-v2 .cfwrap{max-width:1160px;margin:0 auto;padding-inline:32px}
+.cfpage-v2 .cfhero{padding:0;background:linear-gradient(180deg,#FBF9FE 0%, var(--ground) 88%);border-bottom:1px solid var(--line)}
+.cfpage-v2 .cfhero-in{padding-block:clamp(30px, 5vh, 58px) clamp(26px, 4vh, 44px)}
+.cfpage-v2 .cfhero h1{font-size:clamp(1.9rem, 1.1vw + 1.95vh + 0.65rem, 2.8rem);line-height:1.07;
+    letter-spacing:-.032em;margin:0 0 14px;text-wrap:balance;max-width:18ch}
+.cfpage-v2 .cfhero p{font-size:1.02rem;line-height:1.62;color:var(--ink-2);margin:0;max-width:46em}
+.cfpage-v2 .cfsec{padding:0}
+.cfpage-v2 .cfsec.tint{background:var(--ground-2);border-block:1px solid var(--line)}
+.cfpage-v2 .cfsec h2{font-size:clamp(1.45rem, 2.1vw, 1.95rem);line-height:1.17;letter-spacing:-.027em;
+    margin:0 0 16px;text-wrap:balance}
+.cfpage-v2 .cfroute a svg, .cfpage-v2 .cfcall a svg, .cfpage-v2 .cfbtn svg, .cfpage-v2 .cfq summary svg{width:15px;height:15px;flex:0 0 auto}
+.cfpage-v2 .cfbody-in{display:grid;grid-template-columns:240px minmax(0,1fr);gap:56px;
+    padding-block:clamp(30px, 4.4vh, 52px) clamp(50px, 7vh, 86px);align-items:start}
+.cfpage-v2 .cfnav{position:sticky;top:calc(var(--chrome) + 20px);align-self:start;
+    border-left:2px solid var(--line);padding-left:18px}
+.cfpage-v2 .cfnav p{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.64rem;
+    letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.cfpage-v2 .cfnav a{display:flex;justify-content:space-between;gap:10px;font-size:.85rem;line-height:1.4;
+    color:var(--muted);text-decoration:none;padding:7px 0}
+.cfpage-v2 .cfnav a:hover{color:var(--accent)}
+.cfpage-v2 .cfnav a span{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.7rem;opacity:.6}
+.cfpage-v2 .cfnav li.on > a{color:var(--ink);font-weight:600}
+.cfpage-v2 .cfnav ol{list-style:none;margin:0;padding:0}
+.cfpage-v2 .cfgroup{margin-bottom:44px;scroll-margin-top:calc(var(--chrome) + 24px)}
+.cfpage-v2 .cfgroup:last-child{margin-bottom:0}
+.cfpage-v2 .cfgroup > h2{font-size:1.24rem;letter-spacing:-.022em;margin:0 0 6px}
+.cfpage-v2 .cfq{border-bottom:1px solid var(--line)}
+.cfpage-v2 .cfq summary{list-style:none;cursor:pointer;display:flex;align-items:flex-start;justify-content:space-between;
+    gap:20px;padding:17px 0;font-size:.98rem;font-weight:600;letter-spacing:-.012em;line-height:1.45}
+.cfpage-v2 .cfq summary::-webkit-details-marker{display:none}
+.cfpage-v2 .cfq summary svg{width:15px;height:15px;flex:0 0 auto;color:var(--muted);transition:transform .22s;margin-top:3px}
+.cfpage-v2 .cfq[open] summary svg{transform:rotate(45deg)}
+.cfpage-v2 .cfq .ans{padding:0 0 18px;font-size:.94rem;line-height:1.74;color:var(--ink-2);max-width:60em}
+.cfpage-v2 .cfend{padding:0;border-top:1px solid var(--line);background:var(--ground-2)}
+.cfpage-v2 .cfend-in{padding-block:clamp(52px, 7.5vh, 88px);text-align:center}
+.cfpage-v2 .cfend h2{font-size:clamp(1.4rem, 2.1vw, 1.85rem);letter-spacing:-.027em;margin:0 0 12px;text-wrap:balance}
+.cfpage-v2 .cfend p{font-size:.98rem;line-height:1.6;color:var(--muted);margin:0 auto 22px;max-width:36em}
+.cfpage-v2 .cfend .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.cfpage-v2 .cfbtn{display:inline-flex;align-items:center;gap:8px;border-radius:999px;text-decoration:none;
+    font-size:.9rem;font-weight:650;padding:12px 22px}
+.cfpage-v2 .cfbtn.solid{background:var(--btn-ink);color:var(--btn-ink-text)}
+.cfpage-v2 .cfbtn.ghost{border:1px solid var(--line);background:var(--ground);color:var(--ink)}
+.cfpage-v2 .cfbtn.ghost:hover{border-color:#D9D2E6}
+.cfpage-v2 .pvtab.on{background:#fff;border-color:#fff;color:var(--ink)}
+.cfpage-v2 .cfpage{display:none}
+.cfpage-v2 .cfpage.on{display:block}
+
+@media (max-width:760px){
+  .cfpage-v2 .cfwrap{padding-inline:22px}
+}
+@media (max-width:1000px){
+  .cfpage-v2 .cfbody-in{grid-template-columns:minmax(0,1fr);gap:0}
+}
+@media (max-width:1000px){
+  .cfpage-v2 .cfnav{position:static;border-left:0;border:1px solid var(--line);border-radius:14px;
+      padding:18px 20px;margin-bottom:28px;background:var(--ground-2)}
+}
+
+.cfpage-v2 .shot,.cfpage-v2 .sshot,.cfpage-v2 .sscen-shot,.cfpage-v2 .uc-shot,.cfpage-v2 .wcshot,.cfpage-v2 .smock,.cfpage-v2 .ucread-art,.cfpage-v2 .pcrel-art{display:block;overflow:hidden;padding:0;aspect-ratio:auto;height:auto;min-height:0;max-height:none}
+.cfpage-v2 .shot img,.cfpage-v2 .sshot img,.cfpage-v2 .sscen-shot img,.cfpage-v2 .uc-shot img,.cfpage-v2 .wcshot img,.cfpage-v2 .smock img,.cfpage-v2 .ucread-art img,.cfpage-v2 .pcrel-art img{display:block;width:100%;height:auto;object-fit:contain;border-radius:inherit}
+.cfpage-v2 .fchips,.cfpage-v2 .schips,.cfpage-v2 .smock-tabs,.cfpage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}

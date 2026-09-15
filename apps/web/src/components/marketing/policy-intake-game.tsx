@@ -12,6 +12,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, CheckCircle2, PartyPopper, ShieldCheck, Sparkles } from 'lucide-react'
+import { SiteImage } from '@/components/site-image'
 
 export type IntakeGameField = { key: string; label: string; help: string | null; shared: boolean }
 
@@ -34,12 +35,16 @@ const CHEERS = [
   'Last few.',
 ]
 
-export function PolicyIntakeGame({ slug, title, pricePence, fields, buyHref }: {
+// Two skins, one game. The rebuilt theme styles it with its own `pc*` classes; the state, the
+// saved answers and the flow are shared, so the two cannot drift apart.
+export function PolicyIntakeGame({ slug, title, pricePence, fields, buyHref, variant = 'default', heroImage }: {
   slug: string
   title: string
   pricePence: number
   fields: IntakeGameField[]
   buyHref: string
+  variant?: 'default' | 'theme'
+  heroImage?: string | null
 }) {
   // step -1 = start screen; 0..n-1 = one field each; n = the finale with Buy.
   const [step, setStep] = useState(-1)
@@ -66,6 +71,94 @@ export function PolicyIntakeGame({ slug, title, pricePence, fields, buyHref }: {
   const field = step >= 0 && step < total ? fields[step] : null
   const next = () => setStep(s => Math.min(s + 1, total))
   const back = () => setStep(s => Math.max(s - 1, -1))
+
+  if (variant === 'theme') {
+    const unanswered = fields.filter(f => !(values[f.key] ?? '').trim())
+    return (
+      <div className="pcgame">
+        {step >= 0 && (
+          <div className="pcprog">
+            <div className="pcprog-top">
+              <span>Question {Math.min(step + 1, total)} of {total}</span><em>{pct}%</em>
+            </div>
+            <div className="pcbar"><i style={{ width: `${pct}%` }} /></div>
+          </div>
+        )}
+
+        {step < 0 && (
+          <div>
+            {heroImage && (
+              <div className="pcgame-shot filled">
+                <SiteImage src={heroImage} alt={title} priority />
+              </div>
+            )}
+            <div className="pcgame-body">
+              <h3>Let&apos;s build your {title}</h3>
+              <p className="g">
+                Answer {total} quick questions, about three minutes, and we&apos;ll write this
+                policy for your service, in your name, with your people. You can skip anything and
+                add it later.
+              </p>
+              <button className="pcgo" type="button" onClick={() => setStep(0)}>
+                Start building it
+              </button>
+              <p className="pcasked">Asked once, reused for every policy you buy</p>
+            </div>
+          </div>
+        )}
+
+        {field && (
+          <div className="pcgame-body">
+            <label className="pclabel" htmlFor="pcfield">
+              <span>{field.label}</span>
+              {field.shared && <span className="pcshared">saved for all your policies</span>}
+            </label>
+            {field.help && <p className="pchelp">{field.help}</p>}
+            <input className="pcinput" id="pcfield" type="text" autoComplete="off"
+                   value={values[field.key] ?? ''}
+                   onChange={e => save({ ...values, [field.key]: e.target.value })} />
+            <div className="pcnav">
+              <button className="pcback" type="button" onClick={back}>Back</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <button className="pcskip" type="button" onClick={next}>Skip for now</button>
+                <button className="pcnext" type="button" onClick={next}>Next</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step >= total && (
+          <div className="pcgame-body">
+            <p className="pcdone">That&apos;s everything we need</p>
+            <p className="g">
+              {answered} of {total} answered.{' '}
+              {unanswered.length
+                ? 'You can add the rest at any point before we write it.'
+                : 'Nothing left to fill in.'}
+            </p>
+            {unanswered.length > 0 && (
+              <ul className="pcsummary">
+                {unanswered.map(f => (
+                  <li key={f.key}>
+                    {f.label}
+                    <button type="button" onClick={() => setStep(fields.indexOf(f))}>add</button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="pcprice">
+              <b>{money} <span>one-off</span></b>
+              <em>First year of updates included · delivered within 2 working days</em>
+            </div>
+            <Link className="pcbuy" href={buyHref}>Continue · {money}</Link>
+            <p className="pcsaved">
+              Your answers are saved on this device and carried into your order.
+            </p>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="overflow-hidden rounded-2xl bg-white shadow-elevated ring-1 ring-gray-100">

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { PolicyPageV2 } from '@/components/marketing/policy-page-v2'
 import {
   ShieldCheck, CheckCircle2, FileText, Scale, Star,
 } from 'lucide-react'
@@ -77,11 +78,31 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 const money = (p: number) => `£${(p / 100).toFixed(p % 100 === 0 ? 0 : 2)}`
 
-export default async function PolicyProductPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function PolicyProductPage(
+  { params, searchParams }: {
+    params: Promise<{ slug: string }>
+    searchParams?: Promise<Record<string, string | string[] | undefined>>
+  },
+) {
   const { slug } = await params
   // On sale or not is decided by the catalogue: getProduct returning null is the 404.
   const data = await getProduct(slug)
   if (!data) notFound()
+
+  // The rebuilt theme template is opt-in with ?v2=1 until it is signed off, the same as the
+  // other ported families. It renders this same record, so the flag changes the design and
+  // nothing else; flipping it for the family is a one-line change here.
+  const sp = await searchParams
+  if (sp?.v2 === '1') {
+    return (
+      <PolicyPageV2
+        product={data.product}
+        regulations={(data.regulations ?? []).map(r => ({ ...r, key_facts: r.key_facts ?? [] }))}
+        related={data.related ?? []}
+        bundles={data.bundles ?? []}
+      />
+    )
+  }
   // Deploys build web and api in parallel, so this page can be prerendered against
   // an API one version behind. Every list is defaulted so version skew can never
   // crash the build; the missing data simply appears at the next revalidation.

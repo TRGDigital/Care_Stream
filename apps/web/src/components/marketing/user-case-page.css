@@ -1,10 +1,9 @@
-/* Ported verbatim from the content theme (carestream-theme-preview), by
- * ~/.claude/jobs/2fddce09/tmp/build_uc_css.py. Kept as CSS rather than rewritten as
- * Tailwind utilities because these rules ARE the design, and retyping 141 of them is how
- * a port ends up looking almost right.
+/* Ported from the content theme by carestream-theme-preview/port_css.py.
+ * Source: uses/policy-gaps.html
  *
- * Everything is scoped under .ucpage, and the theme tokens sit on that wrapper rather
- * than :root, so this cannot affect the rest of the app.
+ * Kept as CSS rather than rewritten as Tailwind because these rules are the design.
+ * Scoped under .ucpage, with the theme tokens on that wrapper rather than
+ * :root, so the rest of the app is untouched. Header and footer rules are excluded.
  */
 .ucpage {
   --accent: #7B3FBF;
@@ -29,6 +28,25 @@
   background: var(--ground);
 }
 
+.ucpage .demo-steps .s.on .n{background:var(--accent);color:#fff}
+.ucpage .demo-steps .s.on .lb{color:var(--ink)}
+.ucpage .dlg .sub{margin:0 0 22px;font-size:.9rem;line-height:1.6;color:var(--muted)}
+.ucpage .ucread{border-top:1px solid var(--line);background:var(--ground-2);padding:72px 0}
+.ucpage .ucread .ucread-in{max-width:1180px;margin:0 auto;padding:0 40px}
+.ucpage .ucread h2{margin:6px 0 30px;font-size:clamp(1.5rem,2.4vw,2rem);letter-spacing:-.02em}
+.ucpage .ucread-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.ucpage .ucread-card{display:flex;flex-direction:column;background:var(--ground);border:1px solid var(--line);border-radius:var(--r,14px);overflow:hidden;text-decoration:none;color:inherit;transition:border-color .18s ease,transform .18s ease}
+.ucpage .ucread-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.ucpage .ucread-art{display:block;aspect-ratio:16/9;background:var(--ground-2);overflow:hidden}
+.ucpage .ucread-art img{width:100%;height:100%;object-fit:cover;display:block}
+.ucpage .ucread-body{padding:18px 20px 22px;display:flex;flex-direction:column;gap:8px}
+.ucpage .ucread-meta{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.63rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.ucpage .ucread-card b{font-size:1.02rem;line-height:1.3;letter-spacing:-.01em}
+.ucpage .ucread-ex{font-size:.88rem;line-height:1.55;color:var(--muted)}
+.ucpage .eyebrow{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.7rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--muted); margin:0 0 18px;}
+.ucpage .showcase .eyebrow{color:#9A90AC}
 .ucpage .uc-wrap{max-width:var(--maxw);margin:0 auto;padding:0 32px}
 .ucpage .uc-narrow{max-width:760px}
 .ucpage .uc-eyebrow{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
@@ -92,13 +110,6 @@
 .ucpage .uc-shot{background:var(--plate);border:1px solid var(--line);border-radius:16px;padding:20px;
     box-shadow:var(--shadow);aspect-ratio:16/10.6;display:grid;place-items:center;}
 .ucpage .uc-shot span{font-size:.78rem;color:var(--muted);text-align:center;line-height:1.5}
-.ucpage .uc-quote{background:var(--ground);border:1px solid var(--line);border-radius:var(--r);
-    padding:34px;box-shadow:var(--shadow);display:grid;gap:18px}
-.ucpage .uc-quote blockquote{margin:0;font-size:1.12rem;line-height:1.55;letter-spacing:-.015em;color:var(--ink);text-wrap:pretty}
-.ucpage .uc-by{display:flex;align-items:center;gap:12px;font-size:.85rem;color:var(--muted)}
-.ucpage .uc-by b{color:var(--ink-2);font-weight:650}
-.ucpage .uc-avatar{width:38px;height:38px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
-    display:grid;place-items:center;font-size:.82rem;font-weight:700;flex:0 0 auto}
 .ucpage .uc-res{display:block;text-decoration:none;color:inherit;background:var(--ground);
     border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
 .ucpage .uc-res:hover{border-color:#DCD5E8}
@@ -141,7 +152,6 @@
 .ucpage .uc-guide th, .ucpage .uc-guide td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.55}
 .ucpage .uc-guide th{font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:700}
 .ucpage .uc-guide td:first-child{font-weight:600;color:var(--ink);white-space:nowrap}
-.ucpage .uc-tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .ucpage .uc-checklist{list-style:none;padding:0;margin:0 0 24px;display:grid;gap:2px}
 .ucpage .uc-checklist li{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);
     border-radius:10px;background:var(--ground-2);font-size:.94rem;line-height:1.55}
@@ -151,6 +161,9 @@
 .ucpage .uc-note p{margin:0;font-size:.94rem;line-height:1.65;color:var(--ink-2)}
 .ucpage .uc-note b{color:var(--ink)}
 .ucpage body.cms .uc-guide{background:#FCFAFF}
+.ucpage .ptab.on{background:#fff;color:var(--ink);border-color:#fff}
+.ucpage .ucpage{display:none;padding:0}
+.ucpage .ucpage.on{display:block}
 .ucpage .uc-hero{padding:0}
 .ucpage .uc-hero-in{padding-block:clamp(24px,5.5vh,64px) clamp(26px,6vh,72px); width:100%;}
 .ucpage .uc-hero h1{font-size:clamp(1.7rem, 1.35vw + 2.05vh + 0.55rem, 3.15rem); margin-bottom:clamp(10px,1.8vh,18px);}
@@ -164,6 +177,10 @@
 .ucpage .uc-meter{margin-top:clamp(9px,1.6vh,16px);}
 .ucpage .uc-field{min-width:min(335px,100%);}
 
+@media(max-width:900px){
+  .ucpage .ucread-grid{grid-template-columns:1fr}
+  .ucpage .ucread .ucread-in{padding:0 20px}
+}
 @media (max-width:760px){
   .ucpage .uc-wrap{padding:0 22px}
 }
@@ -194,3 +211,7 @@
 @media (max-width:700px){
   .ucpage .uc-panel{display:none}
 }
+
+.ucpage .shot,.ucpage .sshot,.ucpage .smock{display:block;overflow:hidden}
+.ucpage .shot img,.ucpage .sshot img,.ucpage .smock img{display:block;width:100%;height:auto;object-fit:cover;border-radius:inherit}
+.ucpage .fchips,.ucpage .schips,.ucpage .smock-tabs{flex-wrap:wrap;overflow:visible}

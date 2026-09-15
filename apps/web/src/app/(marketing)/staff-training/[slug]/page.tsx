@@ -16,6 +16,7 @@ import { relatedModules } from '@/lib/related-modules'
 import { ModuleCard, type LibraryTopic } from '@/components/marketing/training-library-tabs'
 import { CartButton } from '@/components/marketing/cart-button'
 import { TrainingDemo, type TrainingDemoData } from '@/components/marketing/training-demo'
+import { ModulePageV2 } from '@/components/marketing/module-page-v2'
 import { GoogleCloud, OpenAI, Claude, Supabase, Pinecone, GoogleAds, Aws } from '@/components/marketing/tech-logos'
 import { TrainingHubPreview } from '@/components/marketing/training-hub-preview'
 import { TrainingLanguageSection } from '@/components/marketing/training-language-section'
@@ -27,6 +28,7 @@ import { COURSE_LANGUAGE_CODES } from '@/lib/languages'
 import { WhyChooseCareStream } from '@/components/marketing/why-choose-carestream'
 import { TrainingVideo } from '@/components/marketing/training-video'
 import { estimatedMinutes, formatDuration } from '@/lib/training-commerce'
+import { careSetting } from '@/lib/care-setting'
 
 export const revalidate = 60
 
@@ -54,22 +56,6 @@ type ModuleDetail = {
   illustration_url: string | null
 }
 
-// The generated module content is written for a care-home voice ("our home").
-// CareStream serves every kind of CQC-regulated service, so present it as
-// "care setting" on the public pages.
-function careSetting(input?: string | null): string {
-  if (!input) return ''
-  return input
-    .replace(/\bat our home\b/gi, 'at the care setting')
-    .replace(/\bcare homes\b/gi, 'care settings')
-    .replace(/\bcare home\b/gi, 'care setting')
-    .replace(/\bnursing homes\b/gi, 'care settings')
-    .replace(/\bnursing home\b/gi, 'care setting')
-    .replace(/\bour home\b/gi, 'the care setting')
-    .replace(/\bthe home\b/gi, 'the care setting')
-    .replace(/\bthis home\b/gi, 'this care setting')
-    .replace(/\byour home\b/gi, 'your care setting')
-}
 
 async function getModule(slug: string): Promise<ModuleDetail | null> {
   try {
@@ -155,12 +141,32 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return pageMetadata(`/staff-training/${slug}`, { title, description, image })
 }
 
-export default async function TrainingModulePage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function TrainingModulePage(
+  { params, searchParams }: {
+    params: Promise<{ slug: string }>
+    searchParams?: Promise<Record<string, string | string[] | undefined>>
+  },
+) {
   const { slug } = await params
   const m = await getModule(slug)
   if (!m) notFound()
   const [related, demo, unitPence] = await Promise.all([getRelatedTopics(slug), getModuleDemo(slug), getUnitPence()])
   const unitPrice = (unitPence / 100).toFixed(2)
+
+  // Opt-in with ?v2=1 until it is signed off, the same as the other ported families. It renders
+  // this same record and the same demo payload, so the flag changes the design and nothing else.
+  const sp = await searchParams
+  if (sp?.v2 === '1') {
+    return (
+      <ModulePageV2
+        module={{ ...m, slug }}
+        demo={demo}
+        related={related}
+        unitPence={unitPence}
+        apiUrl={API_URL}
+      />
+    )
+  }
 
   const heroBullets = [
     'CQC-aligned, mapped to the Care Certificate framework',

@@ -13,6 +13,7 @@ import { uploadBlogImage, deleteTenantFiles, getTenantStorageStats, getPlatformS
 import { formatPolicyHtml, getEnglishPolicyHtml, mapLimit } from '../lib/translate'
 import { syncRegulationsFromSheets } from '../services/regulations/sheets-sync'
 import { TRAINING_TOPICS } from '../data/training-topics'
+import { FEATURE_PAGE_SEEDS } from '../data/feature-pages-seed'
 import { SETTING_LABELS, facilityTypeToSetting, settingLabel } from '../lib/care-setting'
 import { SERVICE_TRIGGERS, resolveServiceProfile, regulationAppliesToTenant } from '../lib/service-triggers'
 import { renderOnboardingEmailHtml } from '../services/onboarding/render'
@@ -3616,6 +3617,48 @@ adminRouter.patch('/feature-pages/:id', async (req: Request, res: Response) => {
 adminRouter.delete('/feature-pages/:id', async (req: Request, res: Response) => {
   await (prisma as any).featurePage.delete({ where: { id: req.params.id } })
   ok(res, { deleted: true })
+})
+
+// POST /feature-pages/seed — create the 9 feature pages that have no row: the 8 cluster pages
+// the content theme assembles from their children, and web-chat-interface.
+//
+// Only those 9. The other 44 already hold the approved copy and the rebuilt template renders
+// them unchanged, so seeding them would overwrite live copy with a second copy of itself.
+//
+// Existing rows are skipped, because re-running this after someone has edited a page in the
+// console would discard their words. ?overwrite=true is the deliberate way to refresh after a
+// theme change. Created as 'draft': these 9 URLs are not live today and nothing appears on the
+// site until each is published.
+adminRouter.post('/feature-pages/seed', async (req: Request, res: Response) => {
+  const overwrite = String(req.query.overwrite ?? '') === 'true'
+  const have = new Set<string>(
+    (await (prisma as any).featurePage.findMany({ select: { slug: true } })).map((r: any) => r.slug),
+  )
+
+  const created: string[] = []
+  const updated: string[] = []
+  const skipped: string[] = []
+
+  for (const s of FEATURE_PAGE_SEEDS) {
+    if (have.has(s.slug) && !overwrite) { skipped.push(s.slug); continue }
+    const data = {
+      title: s.title, meta_title: s.meta_title, meta_description: s.meta_description,
+      content: s.content, faqs: s.faqs, sort: s.sort,
+    }
+    await (prisma as any).featurePage.upsert({
+      where:  { slug: s.slug },
+      update: data,                       // status left alone on an update
+      create: { slug: s.slug, status: 'draft', ...data },
+    })
+    ;(have.has(s.slug) ? updated : created).push(s.slug)
+  }
+
+  ok(res, {
+    created, updated, skipped,
+    note: skipped.length && !overwrite
+      ? 'Existing pages were left alone so console edits are not lost. Re-run with ?overwrite=true to refresh them from the theme.'
+      : undefined,
+  })
 })
 
 function buildFeaturePageData(body: any) {

@@ -26,6 +26,10 @@
   --shadow-lg: 0 2px 4px rgba(23,18,31,.04), 0 24px 64px rgba(23,18,31,.10);
   color: var(--ink);
   background: var(--ground);
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
 .lngpage-v2 .nd .ic{width:36px;height:36px;border-radius:11px; display:grid;place-items:center;flex:0 0 auto}

@@ -26,6 +26,10 @@
   --shadow-lg: 0 2px 4px rgba(23,18,31,.04), 0 24px 64px rgba(23,18,31,.10);
   color: var(--ink);
   background: var(--ground);
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
 .apage-v2 .demo-steps .n{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;font-size:.74rem;font-weight:800;background:var(--ground-2);color:var(--muted);flex:0 0 auto}

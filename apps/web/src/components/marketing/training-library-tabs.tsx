@@ -245,7 +245,9 @@ function ThemeBasket() {
       <b>{totalQty} licence{totalQty === 1 ? '' : 's'}</b>
       <span>{totalQty ? gbp(pct ? net : gross) : ''}</span>
       <span className="disc" hidden={!pct}>{pct ? `${pct}% bulk discount, saving ${gbp(discount)}` : ''}</span>
-      <Link className="go" href="/buy">Checkout <Arr /></Link>
+      {/* /basket, the app's basket and checkout. The theme links /buy, which is not a page
+          here (only /buy/<slug> is), so its Checkout was a 404. */}
+      <Link className="go" href="/basket">Checkout <Arr /></Link>
     </div>
   )
 }

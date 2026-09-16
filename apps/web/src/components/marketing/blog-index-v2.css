@@ -1,0 +1,142 @@
+/* Ported from the content theme by carestream-theme-preview/port_css.py.
+ * Source: blog.html
+ *
+ * Kept as CSS rather than rewritten as Tailwind because these rules are the design.
+ * Scoped under .bipage-v2, with the theme tokens on that wrapper rather than
+ * :root, so the rest of the app is untouched. Header and footer rules are excluded.
+ */
+.bipage-v2 {
+  --accent: #7B3FBF;
+  --accent-2: #C2503E;
+  --accent-soft: #F3EDFA;
+  --btn-ink: #17121F;
+  --btn-ink-text: #FFFFFF;
+  --chrome: 68px;
+  --good: #1F8A5B;
+  --ground: #FFFFFF;
+  --ground-2: #F7F5FA;
+  --ink: #17121F;
+  --ink-2: #3A3245;
+  --line: #E9E5EF;
+  --maxw: 1440px;
+  --muted: #6B6577;
+  --plate: #F2EEF8;
+  --r: 14px;
+  --shadow: 0 1px 2px rgba(23,18,31,.04), 0 12px 32px rgba(23,18,31,.06);
+  --shadow-lg: 0 2px 4px rgba(23,18,31,.04), 0 24px 64px rgba(23,18,31,.10);
+  color: var(--ink);
+  background: var(--ground);
+}
+
+.bipage-v2 .demo-cta .row{display:flex;gap:10px;flex-wrap:wrap}
+.bipage-v2 .demo-cta .row a{flex:1 1 160px;font-size:.85rem;padding:11px 16px;justify-content:center;text-align:center}
+.bipage-v2 .mega-grid.c2{grid-template-columns:1fr 1fr;}
+.bipage-v2 .uc-eyebrow{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--accent);margin:0 0 16px;}
+.bipage-v2 .uc-hero .uc-eyebrow{margin-bottom:clamp(8px,1.6vh,16px);}
+.bipage-v2 .biwrap{max-width:1220px;margin:0 auto;padding:0 32px}
+.bipage-v2 .bihero{padding:0;background:linear-gradient(180deg,#FBF9FE 0%,var(--ground) 86%);border-bottom:1px solid var(--line)}
+.bipage-v2 .bihero-in{padding-block:clamp(30px, 5vh, 58px) clamp(22px, 3.4vh, 34px);max-width:44em}
+.bipage-v2 .bihero h1{font-size:clamp(1.9rem, 1.1vw + 1.9vh + 0.65rem, 2.85rem);line-height:1.07;
+    letter-spacing:-.032em;margin:0 0 14px;text-wrap:balance}
+.bipage-v2 .bihero p{font-size:clamp(.98rem, .38vh + .86rem, 1.08rem);line-height:1.62;color:var(--ink-2);margin:0}
+.bipage-v2 .bifilter{position:sticky;top:var(--chrome);z-index:30;background:var(--ground);
+    border-bottom:1px solid var(--line);padding:12px 0}
+.bipage-v2 .bifilter-in{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.bipage-v2 .bicats{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0;padding-bottom:2px}
+.bipage-v2 .bicats::-webkit-scrollbar{display:none}
+.bipage-v2 .bicat{flex:0 0 auto;font:inherit;font-size:.82rem;font-weight:600;cursor:pointer;white-space:nowrap;
+    border:1px solid var(--line);background:var(--ground);color:var(--ink-2);border-radius:999px;padding:7px 14px}
+.bipage-v2 .bicat:hover{border-color:#D9D2E6}
+.bipage-v2 .bicat[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.bipage-v2 .bicat span{opacity:.55;margin-left:6px;font-variant-numeric:tabular-nums}
+.bipage-v2 .bisearch{position:relative;flex:0 0 auto}
+.bipage-v2 .bisearch input{font:inherit;font-size:.85rem;border:1px solid var(--line);border-radius:999px;
+    padding:8px 14px 8px 34px;background:var(--ground);color:var(--ink);width:210px}
+.bipage-v2 .bisearch input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+.bipage-v2 .bisearch svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--muted)}
+.bipage-v2 .bilead{padding:0}
+.bipage-v2 .bilead-in{padding-block:clamp(26px, 4vh, 46px) clamp(20px, 3vh, 34px)}
+.bipage-v2 .bilead a{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:40px;align-items:center;
+    text-decoration:none;color:inherit;background:var(--ground);border:1px solid var(--line);
+    border-radius:18px;overflow:hidden;box-shadow:var(--shadow-lg)}
+.bipage-v2 .bilead .pic{order:2}
+.bipage-v2 .bilead .txt{padding:34px}
+.bipage-v2 .bilead h2{font-size:clamp(1.3rem, 1.6vw, 1.75rem);line-height:1.2;letter-spacing:-.024em;
+    margin:12px 0 12px;text-wrap:balance}
+.bipage-v2 .bilead p{font-size:.95rem;line-height:1.62;color:var(--ink-2);margin:0 0 18px;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.bipage-v2 img.pic{display:block;width:100%;height:auto;object-fit:cover;background:var(--plate)}
+.bipage-v2 .bicard img.pic{aspect-ratio:16/9}
+.bipage-v2 .bilead img.pic{aspect-ratio:16/10}
+.bipage-v2 .bigrid-sec{padding:0}
+.bipage-v2 .bigrid-sec-in{padding-block:clamp(18px, 2.6vh, 30px) clamp(46px, 6vh, 78px)}
+.bipage-v2 .bigrid{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+.bipage-v2 .bicard{display:flex;flex-direction:column;text-decoration:none;color:inherit;background:var(--ground);
+    border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);
+    transition:border-color .16s, transform .16s}
+.bipage-v2 .bicard:hover{border-color:#DCD5E8;transform:translateY(-2px)}
+.bipage-v2 .bicard .txt{padding:20px;display:flex;flex-direction:column;flex:1}
+.bipage-v2 .bicard h3{font-size:1rem;line-height:1.35;letter-spacing:-.016em;margin:11px 0 9px;text-wrap:balance}
+.bipage-v2 .bicard p{font-size:.87rem;line-height:1.55;color:var(--muted);margin:0 0 16px;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.bipage-v2 .bicard .foot{margin-top:auto;display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted)}
+.bipage-v2 .bicard .foot i{font-style:normal;opacity:.45}
+.bipage-v2 .bimeta{display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.66rem;
+    letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.bipage-v2 .bitag{border-radius:999px;padding:4px 9px;font-weight:700;letter-spacing:.06em}
+.bipage-v2 .bitag.c1{background:var(--accent-soft);color:var(--accent)}
+.bipage-v2 .bitag.c2{background:#E6F4EC;color:#15764F}
+.bipage-v2 .bitag.c3{background:#FCF0DC;color:#9E6709}
+.bipage-v2 .bitag.c4{background:#E5EEFC;color:#2760BC}
+.bipage-v2 .bitag.c5{background:#DDF2EF;color:#0A736C}
+.bipage-v2 .bitag.c6{background:#FAE7E3;color:#A94331}
+.bipage-v2 .bitag.c7{background:var(--ground-2);color:var(--ink-2)}
+.bipage-v2 .biempty{padding:60px 0;text-align:center;color:var(--muted);font-size:.95rem}
+.bipage-v2 .biend{padding:0;border-top:1px solid var(--line);background:var(--ground-2)}
+.bipage-v2 .biend-in{padding-block:clamp(40px, 5.6vh, 68px);text-align:center}
+.bipage-v2 .biend h2{font-size:clamp(1.4rem, 2.1vw, 1.9rem);letter-spacing:-.026em;margin:0 0 12px;text-wrap:balance}
+.bipage-v2 .biend p{font-size:.98rem;line-height:1.6;color:var(--muted);margin:0 auto 22px;max-width:34em}
+.bipage-v2 .biend .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.bipage-v2 .bibtn{display:inline-flex;align-items:center;gap:8px;border-radius:999px;text-decoration:none;
+    font-size:.9rem;font-weight:650;padding:12px 21px}
+.bipage-v2 .bibtn.solid{background:var(--btn-ink);color:var(--btn-ink-text)}
+.bipage-v2 .bibtn.ghost{border:1px solid var(--line);background:var(--ground);color:var(--ink)}
+
+@media (max-width:860px){
+  .bipage-v2 .mega-grid.c2{grid-template-columns:1fr}
+}
+@media (max-width:1000px){
+  .bipage-v2 .bstep .txt{flex:1}
+}
+@media (max-width:760px){
+  .bipage-v2 .biwrap{padding:0 22px}
+}
+@media (max-width:900px){
+  .bipage-v2 .bilead a{grid-template-columns:minmax(0,1fr);gap:0}
+}
+@media (max-width:900px){
+  .bipage-v2 .bilead .pic{order:0}
+}
+@media (max-width:900px){
+  .bipage-v2 .bilead .txt{padding:24px}
+}
+@media (max-width:900px){
+  .bipage-v2 .bilead img.pic{aspect-ratio:16/9}
+}
+@media (max-width:980px){
+  .bipage-v2 .bigrid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:620px){
+  .bipage-v2 .bigrid{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  .bipage-v2 .bicard{transition:none}
+  .bipage-v2 .bicard:hover{transform:none}
+}
+
+.bipage-v2 .shot,.bipage-v2 .sshot,.bipage-v2 .sscen-shot,.bipage-v2 .uc-shot,.bipage-v2 .wcshot,.bipage-v2 .svshot,.bipage-v2 .wwshot,.bipage-v2 .wfshot,.bipage-v2 .wfheroshot,.bipage-v2 .tpshot,.bipage-v2 .rgshot,.bipage-v2 .dmshot,.bipage-v2 .plate:not(.shotplate),.bipage-v2 .smock,.bipage-v2 .ucread-art,.bipage-v2 .pcrel-art{display:block!important;overflow:hidden;padding:0!important;aspect-ratio:auto!important;height:auto!important;min-height:0!important;max-height:none!important}
+.bipage-v2 .shot img,.bipage-v2 .sshot img,.bipage-v2 .sscen-shot img,.bipage-v2 .uc-shot img,.bipage-v2 .wcshot img,.bipage-v2 .svshot img,.bipage-v2 .wwshot img,.bipage-v2 .wfshot img,.bipage-v2 .wfheroshot img,.bipage-v2 .tpshot img,.bipage-v2 .rgshot img,.bipage-v2 .dmshot img,.bipage-v2 .plate:not(.shotplate) img,.bipage-v2 .smock img,.bipage-v2 .ucread-art img,.bipage-v2 .pcrel-art img{display:block;width:100%!important;height:auto!important;object-fit:contain;border-radius:inherit}
+.bipage-v2 .fchips,.bipage-v2 .schips,.bipage-v2 .smock-tabs,.bipage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}

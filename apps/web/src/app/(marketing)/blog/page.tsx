@@ -1,5 +1,8 @@
 import Link from 'next/link'
 import { PageHero } from '@/components/marketing/ui'
+import { BlogIndexV2 } from '@/components/marketing/blog-index-v2'
+import { getContentSlots, makeSlot } from '@/lib/page-slots'
+import { BLOG_V2_SLOTS } from '@/lib/page-slots/blog-v2'
 
 // Database-driven: posts are managed in the platform admin and served from the
 // public blog API. ISR keeps the page fast and SEO-friendly while staying current.
@@ -56,8 +59,16 @@ async function getPosts(): Promise<ListedPost[]> {
   }
 }
 
-export default async function BlogPage() {
+export default async function BlogPage(
+  { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
+) {
   const posts = await getPosts()
+
+  // Opt-in with ?v2=1 until it is signed off. Its own slot set, because the copy is new.
+  if ((await searchParams)?.v2 === '1') {
+    const slots = await getContentSlots('/blog')
+    return <BlogIndexV2 posts={posts} s={makeSlot(BLOG_V2_SLOTS, slots)} />
+  }
 
   return (
     <>

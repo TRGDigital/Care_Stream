@@ -22,11 +22,12 @@ export const DEMO_SLOTS: SlotDef[] = [
 
   // Trial callout
   { key: 'trial.title', group: 'Trial callout', label: 'Heading', default: 'Prefer to try it yourself first?' },
-  { key: 'trial.body', group: 'Trial callout', label: 'Body', multiline: true, default: 'Start a free 14-day trial — no charge until day 14. You can still book a demo any time during or after the trial.' },
+  { key: 'trial.body', group: 'Trial callout', label: 'Body', multiline: true, default: 'Start a free 14-day trial, no charge until day 14. You can still book a demo any time during or after the trial.' },
   { key: 'trial.chip1', group: 'Trial callout', label: 'Chip 1', default: '14-day free trial' },
   { key: 'trial.chip2', group: 'Trial callout', label: 'Chip 2', default: 'No charge until day 14' },
   { key: 'trial.chip3', group: 'Trial callout', label: 'Chip 3', default: 'Set up in under an hour' },
 
   // Form
   { key: 'form.h3', group: 'Form', label: 'Form heading', default: 'Request a demo' },
+  { key: 'form.note', group: 'Form', label: 'Note under the button', default: 'We respond within one business day.' },
 ]

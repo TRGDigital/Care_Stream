@@ -3,6 +3,7 @@ import { PageHero } from '@/components/marketing/ui'
 import { DemoForm } from '@/components/marketing/demo-form'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { DEMO_SLOTS } from '@/lib/page-slots/demo'
+import { DemoPageV2 } from '@/components/marketing/demo-page-v2'
 
 export const metadata = {
   alternates: { canonical: 'https://www.carestreamai.com/demo' },
@@ -17,8 +18,15 @@ export const metadata = {
   },
 }
 
-export default async function DemoPage() {
+export default async function DemoPage(
+  { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
+) {
   const s = makeSlot(DEMO_SLOTS, await getContentSlots('/demo'))
+
+  // Opt-in with ?v2=1 until it is signed off. No second slot set: the theme's copy and these
+  // defaults are the same words, so both templates read the same slots.
+  if ((await searchParams)?.v2 === '1') return <DemoPageV2 s={s} />
+
   return (
     <>
       <PageHero

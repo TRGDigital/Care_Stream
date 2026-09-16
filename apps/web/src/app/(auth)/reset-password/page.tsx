@@ -4,7 +4,7 @@ import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import { CrossIcon, PasswordInput, TickIcon, WarnIcon } from '../auth-fields'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -60,100 +60,68 @@ function ResetPasswordContent() {
 
   if (status === 'success') {
     return (
-      <div className="text-center">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
-          <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-          </svg>
-        </div>
-        <h1 className="mb-2 text-2xl font-bold text-neutral-dark">Password updated</h1>
-        <p className="mb-8 text-sm text-neutral-mid">
-          Your password has been changed successfully. Redirecting you to sign in…
-        </p>
-        <Link href="/login">
-          <Button className="w-full">Sign in now</Button>
-        </Link>
+      <div className="lgstate">
+        <div className="lgico good"><TickIcon /></div>
+        <h1>Password updated</h1>
+        <p className="lgsub">Your password has been changed successfully. Redirecting you to sign in…</p>
+        <Link href="/login" className="lgbtn solid">Sign in now</Link>
       </div>
     )
   }
 
   if (status === 'expired') {
     return (
-      <div className="text-center">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-amber-50">
-          <svg className="h-8 w-8 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-          </svg>
-        </div>
-        <h1 className="mb-2 text-2xl font-bold text-neutral-dark">Link expired</h1>
-        <p className="mb-8 text-sm text-neutral-mid">
-          This reset link has expired. Request a new one and we&apos;ll send a fresh email.
-        </p>
-        <Link href="/forgot-password">
-          <Button className="w-full">Request a new link</Button>
-        </Link>
+      <div className="lgstate">
+        <div className="lgico warn"><WarnIcon /></div>
+        <h1>Link expired</h1>
+        <p className="lgsub">This reset link has expired. Request a new one and we&apos;ll send a fresh email.</p>
+        <Link href="/forgot-password" className="lgbtn solid">Request a new link</Link>
       </div>
     )
   }
 
   if (status === 'invalid') {
     return (
-      <div className="text-center">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
-          <svg className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </div>
-        <h1 className="mb-2 text-2xl font-bold text-neutral-dark">Link invalid</h1>
-        <p className="mb-8 text-sm text-neutral-mid">
-          This reset link is invalid or has already been used.
-        </p>
-        <Link href="/forgot-password">
-          <Button variant="secondary" className="w-full">Request a new link</Button>
-        </Link>
+      <div className="lgstate">
+        <div className="lgico bad"><CrossIcon /></div>
+        <h1>Link invalid</h1>
+        <p className="lgsub">This reset link is invalid or has already been used.</p>
+        <Link href="/forgot-password" className="lgbtn">Request a new link</Link>
       </div>
     )
   }
 
   return (
     <>
-      <h1 className="mb-2 text-2xl font-bold text-neutral-dark">Choose a new password</h1>
-      <p className="mb-7 text-sm text-neutral-mid">Must be at least 8 characters.</p>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-neutral-dark">
-            New password
-          </label>
-          <input
+      <h1>Choose a new password</h1>
+      <p className="lgsub">Must be at least 8 characters.</p>
+      <form className="lgfields" onSubmit={handleSubmit}>
+        <div className="lgfield">
+          <label htmlFor="password">New password</label>
+          <PasswordInput
             id="password"
-            type="password"
             required
             minLength={8}
             autoComplete="new-password"
             value={password}
             onChange={e => setPassword(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
           />
         </div>
-        <div>
-          <label htmlFor="confirm" className="mb-1.5 block text-sm font-medium text-neutral-dark">
-            Confirm new password
-          </label>
-          <input
+        <div className="lgfield">
+          <label htmlFor="confirm">Confirm new password</label>
+          <PasswordInput
             id="confirm"
-            type="password"
             required
             minLength={8}
             autoComplete="new-password"
             value={confirm}
             onChange={e => setConfirm(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
           />
         </div>
-        {error && <p className="text-sm text-status-error">{error}</p>}
-        <Button type="submit" className="w-full" size="lg" disabled={loading}>
+        {error && <p className="lgerr" role="alert">{error}</p>}
+        <button type="submit" className="lgbtn solid" disabled={loading}>
           {loading ? 'Updating password…' : 'Set new password'}
-        </Button>
+        </button>
       </form>
     </>
   )

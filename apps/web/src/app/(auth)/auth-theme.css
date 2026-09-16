@@ -1,0 +1,176 @@
+/* The sign-in and account pages, in the theme's design (build/login.html and build/register.html
+   in the theme preview). Scoped under .csauth so none of it reaches the console.
+   Differences from the theme, on purpose:
+   - no Google or Microsoft sign-in buttons: single sign-on is not set up yet;
+   - states the design mock did not need (errors, sending, sent, disabled) and the smaller pages
+     that share this shell (forgot and reset password, check email, verify email). */
+
+.csauth{
+  --ground:#FFFFFF; --ground-2:#F7F5FA; --ink:#17121F; --ink-2:#3A3245; --muted:#6B6577;
+  --line:#E9E5EF; --accent:#7B3FBF; --accent-2:#C2503E; --accent-soft:#F3EDFA; --good:#1F8A5B;
+  --plate:#F2EEF8; --btn-ink:#17121F; --btn-ink-text:#FFFFFF;
+  background:var(--ground); color:var(--ink); color-scheme:light;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+  font-size:17px; line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+.csauth *{box-sizing:border-box}
+.csauth :where(h1,h2){margin:0; letter-spacing:-.035em; line-height:1.02; font-weight:700; text-wrap:balance}
+.csauth :where(p){margin:0}
+.csauth :focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px}
+.csauth [hidden]{display:none!important}
+
+.csauth .lg{display:grid;grid-template-columns:minmax(0,46fr) minmax(0,54fr);
+  min-height:100svh;background:var(--ground)}
+@media (max-width:980px){ .csauth .lg{grid-template-columns:minmax(0,1fr)} }
+
+/* left: the form */
+.csauth .lgform{display:flex;align-items:center;justify-content:center;
+  padding:48px 32px;background:var(--plate)}
+.csauth .lgform-in{width:100%;max-width:392px}
+
+.csauth .lglogo{display:inline-flex;align-items:center;gap:10px;margin-bottom:40px;text-decoration:none}
+.csauth .lglogo>img.cslogo{height:46px;width:auto;display:block}
+
+.csauth .lgform h1{margin:0 0 7px;font-size:1.72rem;line-height:1.2;letter-spacing:-.02em}
+.csauth .lgsub{margin:0 0 28px;font-size:.94rem;color:var(--muted)}
+
+.csauth .lgbtn{display:flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;padding:13px 18px;border-radius:12px;font:inherit;font-size:.93rem;
+  font-weight:620;cursor:pointer;border:1px solid var(--line);background:var(--plate);
+  color:var(--ink);text-decoration:none;transition:background .16s,border-color .16s,transform .08s}
+.csauth .lgbtn:hover{background:var(--ground-2)}
+.csauth .lgbtn:active{transform:translateY(1px)}
+.csauth .lgbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.csauth .lgbtn.solid{background:var(--btn-ink);border-color:var(--btn-ink);
+  color:var(--btn-ink-text);margin-top:4px}
+.csauth .lgbtn.solid:hover{background:var(--ink-2);border-color:var(--ink-2)}
+.csauth .lgbtn.ghost{background:transparent}
+.csauth .lgbtn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+
+.csauth .lgor{display:flex;align-items:center;gap:14px;margin:22px 0;
+  font-size:.78rem;color:var(--muted)}
+.csauth .lgor::before,.csauth .lgor::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.csauth .lgfields{display:grid;gap:16px}
+.csauth .lgfield label{display:block;margin-bottom:7px;font-size:.85rem;font-weight:600}
+.csauth .lglabelrow{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.csauth .lglabelrow label{margin-bottom:7px}
+.csauth .lglabelrow a{font-size:.82rem;font-weight:600;color:var(--accent);text-decoration:none}
+.csauth .lglabelrow a:hover{text-decoration:underline}
+.csauth .lgfield input{width:100%;padding:12px 14px;border:1px solid var(--line);
+  border-radius:11px;font:inherit;font-size:.93rem;background:var(--ground);
+  color:var(--ink);transition:border-color .16s,box-shadow .16s}
+.csauth .lgfield input::placeholder{color:var(--muted);opacity:.75}
+.csauth .lgfield input:focus{outline:none;border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-soft)}
+
+.csauth .lgpw{position:relative}
+.csauth .lgpw input{padding-right:46px}
+.csauth .lgeye{position:absolute;top:50%;right:6px;transform:translateY(-50%);
+  width:32px;height:32px;display:grid;place-items:center;border:0;border-radius:8px;
+  background:transparent;color:var(--muted);cursor:pointer}
+.csauth .lgeye svg{width:17px;height:17px}
+.csauth .lgeye:hover{background:var(--ground-2);color:var(--ink)}
+.csauth .lgeye.on{color:var(--accent)}
+
+.csauth .lghint{margin:9px 0 0;text-align:center;font-size:.8rem;color:var(--muted)}
+.csauth .lgalt{margin:28px 0 0;text-align:center;font-size:.9rem;color:var(--muted)}
+.csauth .lgalt a{font-weight:640;color:var(--accent);text-decoration:none}
+.csauth .lgalt a:hover{text-decoration:underline}
+.csauth .lgnote{margin:7px 0 0;font-size:.78rem;color:var(--muted)}
+
+.csauth .rgterms{display:flex;gap:11px;align-items:flex-start;cursor:pointer;
+  font-size:.86rem;line-height:1.5;color:var(--muted)}
+.csauth .rgterms input{flex:0 0 auto;width:17px;height:17px;margin:1px 0 0;
+  accent-color:var(--accent);cursor:pointer}
+.csauth .rgterms a{font-weight:620;color:var(--accent);text-decoration:none}
+.csauth .rgterms a:hover{text-decoration:underline}
+
+/* Messages the mock had no need for */
+.csauth .lgerr{margin:0;font-size:.86rem;line-height:1.5;color:#B42318}
+.csauth .lgok{margin:0;padding:12px 14px;border-radius:11px;font-size:.88rem;line-height:1.5;
+  background:#E7F5EE;color:#0E5D3C}
+.csauth .lgsent{margin:0;padding:12px 14px;border-radius:11px;font-size:.88rem;line-height:1.5;
+  text-align:center;background:var(--accent-soft);color:var(--ink-2)}
+
+/* The smaller pages that share the shell: one centred message and an action */
+.csauth .lgstate{text-align:center}
+.csauth .lgstate .lgsub{margin-bottom:22px}
+.csauth .lgico{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;
+  margin:0 auto 24px;background:var(--ground);color:var(--accent);box-shadow:0 0 0 1px var(--line)}
+.csauth .lgico svg{width:30px;height:30px}
+.csauth .lgico.good{background:#E7F5EE;color:var(--good)}
+.csauth .lgico.warn{background:#FDF3E7;color:#B7791F}
+.csauth .lgico.bad{background:#FBEAE7;color:#B42318}
+.csauth .lgemail{margin:-14px 0 22px;font-size:.96rem;font-weight:650;color:var(--ink);word-break:break-word}
+.csauth .lgstate .lgalt{margin-top:22px}
+.csauth .lgspin{width:32px;height:32px;margin:0 auto 16px;border-radius:50%;
+  border:2px solid var(--accent);border-top-color:transparent;animation:csauth-spin .8s linear infinite}
+@keyframes csauth-spin{to{transform:rotate(360deg)}}
+
+/* right: the branded panel. The form column can run past the viewport (register especially),
+   so the panel pins and the form scrolls beside it. */
+.csauth .lgside{position:sticky;top:0;align-self:start;height:100svh;
+  overflow:hidden;background:var(--ink);display:flex;flex-direction:column}
+@media (max-width:980px){ .csauth .lgside{display:none} }
+
+.csauth .lgphoto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  object-position:62% center}
+.csauth .lgscrim{position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(18,14,26,.66) 0%,rgba(18,14,26,.76) 42%,rgba(18,14,26,.92) 100%)}
+
+.csauth .lgside-in{position:relative;z-index:1;display:flex;flex-direction:column;
+  justify-content:space-between;gap:40px;height:100%;padding:56px 52px;
+  overflow-y:auto;scrollbar-width:none}
+.csauth .lgside-in::-webkit-scrollbar{display:none}
+@media (max-width:1200px){ .csauth .lgside-in{padding:44px 38px} }
+
+.csauth .lgeyebrow{margin:0;font-size:.7rem;font-weight:750;letter-spacing:.15em;
+  text-transform:uppercase;color:rgba(255,255,255,.66)}
+.csauth .lgside h2{margin:18px 0 0;font-size:clamp(1.9rem, 2.4vw, 2.6rem);line-height:1.14;
+  letter-spacing:-.025em;color:#fff;text-wrap:balance}
+.csauth .lglede{margin:14px 0 0;max-width:44ch;font-size:1rem;line-height:1.6;
+  color:rgba(255,255,255,.74)}
+
+.csauth .lgchips{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.csauth .lgchip{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;
+  border-radius:99px;border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.12);font-size:.79rem;font-weight:640;color:#fff}
+.csauth .lgchip svg{flex:0 0 auto;width:13px;height:13px}
+
+.csauth .lgcover{margin-top:34px}
+.csauth .lgcover ul{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:10px}
+.csauth .lgcover li{display:flex;gap:10px;align-items:flex-start;
+  font-size:.88rem;line-height:1.45;color:rgba(255,255,255,.8)}
+.csauth .lgcover li svg{flex:0 0 auto;width:14px;height:14px;margin-top:3px;color:#BFA3E8}
+.csauth .lgcover li span{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 9px}
+.csauth .lgcover li b{font-weight:640;color:#fff}
+.csauth .lgcover li em{font-style:normal;font-size:.67rem;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:rgba(255,255,255,.5);white-space:nowrap}
+
+.csauth .lgquote{margin:0;padding:22px 26px;border-radius:18px;
+  border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.1)}
+.csauth .lgquote blockquote{margin:0;font-size:.92rem;font-style:italic;line-height:1.62;
+  color:rgba(255,255,255,.9)}
+.csauth .lgquote figcaption{margin-top:11px;font-size:.76rem;font-weight:650;
+  color:rgba(255,255,255,.55)}
+
+@media (prefers-reduced-motion:reduce){ .csauth .lgbtn{transition:none} .csauth .lgspin{animation-duration:2.4s} }
+
+/* Now the panel is pinned it can no longer grow with the form, so on a short viewport the copy
+   has to tighten rather than be clipped. */
+@media (max-height:860px){
+  .csauth .lgside-in{padding:34px 46px;gap:22px}
+  .csauth .lgside h2{margin-top:12px;font-size:clamp(1.6rem, 2vw, 2.1rem)}
+  .csauth .lglede{margin-top:11px;font-size:.94rem}
+  .csauth .lgchips{margin-top:17px}
+  .csauth .lgcover{margin-top:20px}
+  .csauth .lgcover ul{margin-top:11px;gap:7px}
+  .csauth .lgcover li{font-size:.84rem}
+  .csauth .lgquote{padding:16px 20px}
+  .csauth .lgquote blockquote{font-size:.87rem;line-height:1.5}
+}
+@media (max-height:700px){
+  .csauth .lgchips{display:none}
+  .csauth .lgside-in{padding:26px 40px}
+}

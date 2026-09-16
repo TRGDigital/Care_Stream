@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import { PasswordInput } from '../auth-fields'
 
 // Where to land after signing in: the page the user was on when their session
 // expired (?callbackUrl=), else the last console page they visited (stored by
@@ -27,14 +27,14 @@ export default function LoginPage() {
   const router = useRouter()
 
   async function sendMagicLink() {
-    if (!email.trim()) { setError('Enter your email address, then tap “Email me a sign-in link”.'); return }
+    if (!email.trim()) { setError('Enter your email address, then tap "Email me a sign-in link".'); return }
     setError(''); setMagicLoading(true)
     try {
       await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? ''}/auth/magic-link/request`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim() }),
       })
       setMagicSent(true)
-    } catch { setMagicSent(true) /* same UX — don't reveal */ }
+    } catch { setMagicSent(true) /* same UX, don't reveal */ }
     finally { setMagicLoading(false) }
   }
 
@@ -59,80 +59,69 @@ export default function LoginPage() {
       return
     }
 
-    // Reload so the server layout picks up the new session — straight back to
+    // Reload so the server layout picks up the new session, straight back to
     // wherever the user was working, not the dashboard.
     window.location.href = postLoginTarget()
   }
 
   return (
     <>
-      <h1 className="mb-2 text-2xl font-bold text-neutral-dark">Welcome back</h1>
-      <p className="mb-7 text-sm text-neutral-mid">Sign in to your CareStreamAI account</p>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-neutral-dark">
-            Email address
-          </label>
+      <h1>Welcome back</h1>
+      <p className="lgsub">Sign in to your CareStreamAI account</p>
+
+      <form className="lgfields" onSubmit={handleSubmit}>
+        <div className="lgfield">
+          <label htmlFor="email">Email address</label>
           <input
             id="email"
             type="email"
             required
             autoComplete="email"
+            placeholder="you@yourcarehome.co.uk"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
           />
         </div>
-        <div>
-          <div className="mb-1.5 flex items-center justify-between">
-            <label htmlFor="password" className="text-sm font-medium text-neutral-dark">
-              Password
-            </label>
-            <Link href="/forgot-password" className="text-sm font-medium text-teal hover:underline">
-              Forgot password?
-            </Link>
+
+        <div className="lgfield">
+          <div className="lglabelrow">
+            <label htmlFor="password">Password</label>
+            <Link href="/forgot-password">Forgot password?</Link>
           </div>
-          <input
+          <PasswordInput
             id="password"
-            type="password"
             required
             autoComplete="current-password"
+            placeholder="Your password"
             value={password}
             onChange={e => setPassword(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
           />
         </div>
-        {error && <p className="text-sm text-status-error">{error}</p>}
-        <Button type="submit" className="w-full" size="lg" disabled={loading}>
+
+        {error && <p className="lgerr" role="alert">{error}</p>}
+
+        <button type="submit" className="lgbtn solid" disabled={loading}>
           {loading ? 'Signing in…' : 'Sign in'}
-        </Button>
+        </button>
       </form>
 
-      {/* Passwordless option — easier for care staff on a phone */}
-      <div className="my-5 flex items-center gap-3 text-xs text-neutral-mid">
-        <span className="h-px flex-1 bg-gray-200" /> or <span className="h-px flex-1 bg-gray-200" />
-      </div>
+      {/* Passwordless option, easier for care staff on a phone */}
+      <div className="lgor"><span>or</span></div>
+
       {magicSent ? (
-        <p className="rounded-lg border border-teal/20 bg-teal-light/30 px-4 py-3 text-center text-sm text-neutral-dark">
-          If that email is registered, a sign-in link is on its way. Open it on your phone — no password needed.
+        <p className="lgsent" role="status">
+          If that email is registered, a sign-in link is on its way. Open it on your phone, no password needed.
         </p>
       ) : (
-        <button
-          type="button"
-          onClick={sendMagicLink}
-          disabled={magicLoading}
-          className="w-full rounded-md border border-teal px-3 py-2.5 text-sm font-medium text-teal hover:bg-teal hover:text-white transition-colors disabled:opacity-50"
-        >
-          {magicLoading ? 'Sending…' : 'Email me a sign-in link'}
-        </button>
+        <>
+          <button type="button" className="lgbtn ghost" onClick={sendMagicLink} disabled={magicLoading}>
+            {magicLoading ? 'Sending…' : 'Email me a sign-in link'}
+          </button>
+          <p className="lghint">No password needed. Open the link on your phone.</p>
+        </>
       )}
 
-      <p className="mt-6 text-center text-sm text-neutral-mid">
-        Don&apos;t have an account?{' '}
-        <Link href="/register" className="font-medium text-teal hover:underline">
-          Register your organisation
-        </Link>
-      </p>
+      <p className="lgalt">New to CareStream? <Link href="/register">Register your organisation</Link></p>
     </>
   )
 }

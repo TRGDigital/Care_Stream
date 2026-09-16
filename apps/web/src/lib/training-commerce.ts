@@ -43,6 +43,14 @@ export function estimatedMinutes(groupKey?: string | null, durationMinutes?: num
   return (groupKey && GROUP_MINUTES[groupKey]) || 45
 }
 
+/** How often a module is refreshed, as it reads in a sentence ("refresh it every year"). Shared
+ *  by the current and rebuilt module pages: the theme wrote "every year" for every module, which
+ *  is wrong for the four that are not annual. */
+export function refreshWord(f: string | null | undefined): string {
+  return f === 'annual' ? 'every year' : f === 'biennial' ? 'every two years' : f === 'triennial' ? 'every three years'
+    : f === 'once' ? 'once, usually at induction' : 'regularly'
+}
+
 export function formatDuration(minutes: number): string {
   if (minutes < 60) return `~${minutes} min`
   const h = Math.floor(minutes / 60)

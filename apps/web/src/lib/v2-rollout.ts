@@ -42,6 +42,9 @@ const LIVE: ReadonlySet<V2Family> = new Set<V2Family>([
   // Batch 3: the /staff-training and /care-policies index pages, matching the theme on the
   // deployment once the library, demo, basket and pack cards were brought into line.
   'indexes',
+  // Batch 4: the 98 /staff-training/<slug> module pages, on the theme's copy with Course and
+  // FAQPage kept, checked against their theme pages on the deployment.
+  'modules',
 ])
 
 type Params = Record<string, string | string[] | undefined> | undefined

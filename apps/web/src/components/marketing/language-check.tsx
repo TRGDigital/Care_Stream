@@ -15,7 +15,8 @@ export function LanguageCheck() {
   const term = q.trim().toLowerCase()
 
   const result = useMemo(() => {
-    if (!term) return `Over ${COURSE_LANGUAGES.length} languages supported`
+    // The theme's wording, the same "over 60" the rest of the site uses.
+    if (!term) return 'Over 60 languages supported'
     const hit = COURSE_LANGUAGES.find(l => l.name.toLowerCase().startsWith(term))
       ?? COURSE_LANGUAGES.find(l => l.name.toLowerCase().includes(term))
     if (hit) return `Yes, ${hit.name} is supported`
@@ -26,6 +27,8 @@ export function LanguageCheck() {
   return (
     <>
       <div className="mlangbox">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"
+             aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4 4" /></svg>
         <input type="text" value={q} onChange={e => setQ(e.target.value)}
                placeholder="Type your language"
                aria-label="Check if your language is supported" autoComplete="off" />

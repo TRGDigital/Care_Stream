@@ -2,7 +2,10 @@ import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
 import { TrainingDemo, type TrainingDemoData } from './training-demo'
 import { careSetting } from '@/lib/care-setting'
+import { claimSafe, estimatedMinutes, refreshWord } from '@/lib/training-commerce'
 import { LanguageCheck } from './language-check'
+import { ThemeModuleCard, type LibraryTopic } from './training-library-tabs'
+import { TrainingAddButton, TrainingCartLink, TrainingSaveButton } from './training-cart-buttons'
 import './module-page-v2.css'
 
 // The rebuilt /staff-training/<slug> template. Renders the SAME module record and the same demo
@@ -11,6 +14,12 @@ import './module-page-v2.css'
 // Measured before building: 40 of the 49 long paragraphs on a training page are identical across
 // modules once the title is substituted, and all nine of the rest come from the training API
 // (the module record and its demo endpoint). No content extraction, no seed, no re-import.
+//
+// THE COPY IS THE THEME'S. The first version took several blocks from elsewhere ("Assigned, not
+// scheduled", "Key points to remember", "A trainer in the room", "training that actually lands")
+// that appear on no theme page; the rendered section-by-section diff against all 98 found them.
+// Everything fixed below is the theme's wording. Three places differ on purpose, each noted
+// where it happens: the refresh frequency, the standards and guidance links, and the image alts.
 //
 // careSetting() is applied to every generated string, exactly as the current page does it. The
 // module content is written in a care-home voice and the public pages say "care setting"; the
@@ -35,6 +44,8 @@ export interface TrainingModule {
   key_points?: string[]
   sections?: ModuleSectionData[]
   standards?: string[]
+  authority_links?: { label: string; url: string }[]
+  group_key?: string | null
   illustration_url?: string | null
 }
 
@@ -86,11 +97,11 @@ const Mark = () => <span className="ic"><Tick /></span>
 const money = (p: number) => `£${(p / 100).toFixed(2)}`
 
 const DELIVERY: [string, string][] = [
-  ['Assigned, not scheduled',
-   'Allocate a module to a person or a role. No room to book and no date to find.'],
-  ['Completed on any device',
-   'Staff work through it in the hub on a phone between tasks, or on a desktop in the office.'],
-  ['Gaps closed automatically',
+  ['Teach, then assess',
+   'Short teaching sections and a real care scenario, then an assessment that checks understanding.'],
+  ['In any language',
+   'Staff complete it in over 60 languages, while your records stay in English.'],
+  ['Learn and retry',
    'A wrong answer triggers a short follow-up lesson and a fresh question, so the gap is closed.'],
   ['Renewals handled',
    'Automatic reminders at 90, 30 and 7 days, with a live compliance dashboard.'],
@@ -110,11 +121,12 @@ const INSIDE: [string, string][] = [
   ['References and further reading',
    'Every course is built on recognised UK guidance and cites its sources, from NICE and '
    + 'Skills for Care to the NHS and the legislation itself.'],
-  ['Key points to remember',
-   'Each module closes with the points that matter most, so the important things are the ones '
-   + 'that stick.'],
-  ['A certificate that is evidence',
-   'Dated and named per person, filed against your training matrix and ready for inspection.'],
+  ['Key terms explained',
+   'A plain English glossary of the technical terms in each course. A simple way to support every '
+   + 'learner, including staff with English as a second language.'],
+  ['Measured learning gain',
+   'A quick knowledge check before the lesson is compared with the final assessment, so every '
+   + 'certificate comes with evidence of how much the course actually taught.'],
 ]
 
 // The three screenshots in "Inside every course". Shared images, same on every module page.
@@ -129,15 +141,18 @@ const SHOTS: [string, string, string, string][] = [
    'The printable one page course summary with learning outcomes, key points, key terms and '
    + 'references all available for CPD approved CareStream training modules',
    'A course summary to keep',
-   'A printable one page takeaway of the outcomes, key points and key terms.'],
+   'A printable one page takeaway of the outcomes, key points and key terms. Perfect for staff '
+   + 'files, supervision conversations and the staff room wall.'],
   ['/images/_shared/mod5.jpeg',
-   'The printable observed competency checklist with tick boxes and a manager sign off',
+   'The printable observed competency checklist with tick boxes and a manager sign off section '
+   + 'all available for CPD approved CareStream training modules',
    'Observed competency checklist',
-   'A printable checklist for managers to confirm skills in practice, with a sign off.'],
+   'A printable checklist for managers to confirm skills in practice, with a sign off section. It '
+   + 'completes the picture beyond the knowledge assessment.'],
 ]
 
 const LOOP: [string, string][] = [
-  ['An immediate lesson, not a red cross',
+  ['Instant lesson and feedback',
    'A wrong answer immediately opens a short lesson explaining the point, so the gap is closed '
    + 'there and then.'],
   ['Targeted follow up question',
@@ -150,7 +165,9 @@ const LOOP: [string, string][] = [
 
 type Mark3 = 'yes' | 'no' | 'part'
 const COMPARE: [string, Mark3, Mark3, Mark3][] = [
-  ['Written for a CQC-registered service rather than a national standard', 'yes', 'part', 'no'],
+  ['Try a real lesson and a real question before you buy', 'yes', 'no', 'no'],
+  ['Learning outcomes and time to complete stated up front', 'yes', 'part', 'no'],
+  ['Written lesson sections, each with its own illustration', 'yes', 'part', 'no'],
   ['Interactive exercises after the lesson that teaches them, in every module', 'yes', 'part', 'yes'],
   ['Assessment in every module, with the key points to revisit', 'yes', 'yes', 'part'],
   ['Taken in any of sixty plus languages', 'yes', 'part', 'no'],
@@ -183,7 +200,7 @@ function CompareMark({ mark }: { mark: Mark3 }) {
 export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
   module: TrainingModule
   demo: TrainingDemoData | null
-  related: RelatedModule[]
+  related: LibraryTopic[]
   unitPence: number
   apiUrl: string
 }) {
@@ -195,20 +212,25 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
   const hero = img(m.illustration_url)
   const lower = m.title.toLowerCase()
   const sections = m.sections ?? []
+  // The theme states a time for every module; where the record has none it uses the same
+  // estimate the library cards do.
+  const est = estimatedMinutes(m.group_key, m.duration_minutes)
+  const addLabel = { slug: m.slug, title: m.title, unitPence }
 
   return (
     <div className="mpage-v2">
-      {/* The bar that follows the reader down the page. It has no basket to add to, so it
-          carries the same action the hero does. */}
+      {/* The bar that follows the reader down the page. Its action is the theme's own: straight
+          to this module's purchase page. */}
       <div className="mbar">
         <div className="mbar-in">
           {hero && <span className="thumb"><SiteImage src={hero} alt={m.title} /></span>}
           <span className="who">
             <b>{m.title}</b>
             <span className="meta">
-              {minutes > 0 && <>~{minutes} min to complete<i>·</i></>}{price} per staff member
+              <Clock /> ~{est} min to complete<i>·</i>{price} per staff member
             </span>
           </span>
+          <TrainingSaveButton slug={m.slug} title={m.title} />
           <Link className="add" href={buyHref}>Start course now</Link>
         </div>
       </div>
@@ -232,18 +254,31 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
             <div className="mbuy">
               <div className="price"><b>{price}</b><span>per staff member, one off</span></div>
               <p className="sub">No subscription needed. Bulk discounts from 10+ licences.</p>
-              {/* The theme has a basket here. There is no multi-module basket in the app, and
-                  /buy/<slug> IS the purchase page (quantity, details, Stripe), so the action
-                  goes there rather than into a collector with nowhere to check out. */}
+              {/* The theme's basket. The first version sent this to /buy/<slug> because there
+                  was no multi-module basket; there is one now (the training cart, checked out
+                  at /basket), and the /staff-training library already adds to it. */}
               <div className="mrow">
-                <Link className="add" href={buyHref}>Start course now</Link>
+                <TrainingAddButton {...addLabel} />
+                <TrainingSaveButton slug={m.slug} title={m.title} />
               </div>
             </div>
 
             <p className="mprice-line">
               From <b>{price} per staff member</b>, one-off. No subscription needed.
             </p>
-            <div className="mcue"><span>Try it: a real lesson &amp; question</span><Arrow /></div>
+            {/* The theme's two hand-drawn arrows: across to the demo on desktop, down to it on
+                a phone. One generic arrow left the phone layout with none. */}
+            <div className="mcue">
+              <span>Try it: a real lesson &amp; question</span>
+              <svg width="88" height="30" viewBox="0 0 88 30" fill="none" className="across" aria-hidden="true">
+                <path d="M3 16 C 30 17, 56 19, 80 11" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                <path d="M70 4 L 83 11 L 69 19" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <svg width="26" height="34" viewBox="0 0 26 34" fill="none" className="down" aria-hidden="true">
+                <path d="M13 2 C 13 16, 11 22, 13 28" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                <path d="M6 22 L 13 30 L 20 22" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
             <p className="mstars">
               <span className="row"><Star /><Star /><Star /><Star /><Star /></span>
               {' '}Trusted by UK care providers
@@ -262,7 +297,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
             </div>
           </div>
 
-          {demo && <TrainingDemo demo={demo} buyHref={buyHref} variant="theme" />}
+          {demo && <TrainingDemo demo={demo} buyHref={buyHref} variant="theme" place="module" />}
         </div>
       </section>
 
@@ -273,14 +308,14 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
         <div className="mstats-in">
           <div className="mstat">
             <p className="cap"><Clock /> Avg. Duration</p>
-            <p className="val">{minutes > 0 ? `About ${minutes} minutes` : 'Varies by module'}</p>
+            <p className="val">About {est} minutes</p>
           </div>
           <div className="mstat">
             <p className="cap"><Tick /> Certificate</p>
             <p className="val">For every staff member</p>
           </div>
           <div className="mstat lang">
-            <p className="cap"><Tick /> Available languages</p>
+            <p className="cap"><Tick /> Available Languages (60+)</p>
             <LanguageCheck />
           </div>
           <div className="mstat pub">
@@ -342,11 +377,43 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
             <ul className="mkeys">
               {m.key_points.map((k, i) => <li key={i}><Tick />{cs(k)}</li>)}
             </ul>
-            {!!m.standards?.length && (
-              <div className="mnotes">
-                {m.standards.map((s, i) => <p className="mnote" key={i}>{s}</p>)}
+            {/* The theme's two notes. It wrote "refreshed every year" and the no-standards
+                sentence for every module; the frequency is the module's own, and the ten
+                modules that list standards name them, as the current page does. Those ten
+                also carry links to national guidance, which the theme has nowhere: dropping
+                them would lose them, so they follow as a third note. */}
+            <div className="mnotes">
+              <div className="mnote">
+                <Tick />
+                <span>
+                  {m.title} is {m.frequency === 'once' ? 'completed' : 'refreshed'}{' '}
+                  {refreshWord(m.frequency)}, for the staff in your care setting whose roles require it.
+                  {m.requires_practical ? ' It includes a practical sign-off.' : ''}
+                </span>
               </div>
-            )}
+              <div className="mnote">
+                <Tick />
+                <span>
+                  {m.standards?.length
+                    ? `Supports your evidence against ${m.standards.slice(0, 3).join(', ')}${m.standards.length > 3 ? ' and more' : ''}.`
+                    : 'Supports the training evidence CQC expects to see for a well-run, safe care setting.'}
+                </span>
+              </div>
+              {!!m.authority_links?.length && (
+                <div className="mnote">
+                  <Tick />
+                  <span>
+                    Aligned to national guidance:{' '}
+                    {m.authority_links.map((a, i) => (
+                      <span key={a.url}>
+                        {i > 0 && '; '}
+                        <a href={a.url} target="_blank" rel="noopener noreferrer">{a.label}</a>
+                      </span>
+                    ))}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </section>
       )}
@@ -355,6 +422,11 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
         <div className="mwrap msec-in">
           <span className="mlabel">How CareStream delivers it</span>
           <h2>Not a slideshow once a year. Training that sticks.</h2>
+          <p>
+            CareStream delivers {lower} training in the hub your team already uses, grounded in
+            best practice and your own policies, so it fits your care setting and not a generic
+            template.
+          </p>
           <div className="mgrid4">
             {DELIVERY.map(([t, b]) => (
               <div key={t}><Mark /><b>{t}</b><p>{b}</p></div>
@@ -422,7 +494,9 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
             </div>
             {hero && (
               <figure className="tshot">
-                <SiteImage src={hero} alt={`The CareStream staff training hub showing ${lower}`} />
+                {/* The theme's alt calls this the hub showing assigned courses; it is the
+                    module's illustration, so the alt says that. */}
+                <SiteImage src={hero} alt={`${m.title} training illustration`} />
               </figure>
             )}
           </div>
@@ -432,7 +506,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
           <div className="tshotcards">
             {SHOTS.map(([src, alt, title, body]) => (
               <div className="tshotcard" key={src}>
-                <span className="frame"><SiteImage src={src} alt={alt} /></span>
+                <span className="frame"><SiteImage src={src} alt={claimSafe(alt)} /></span>
                 <div className="cap"><b>{title}</b><p>{body}</p></div>
               </div>
             ))}
@@ -447,10 +521,18 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               <span className="mlabel">The follow up loop</span>
               <h2>Wrong answers become lessons, not failures</h2>
               <p>
-                A staff member who gets something wrong is the one who most needs teaching. In
-                CareStream that is what happens, automatically, and every attempt is recorded.
+                Most e learning marks an answer wrong and moves on. CareStream does not. Every
+                wrong answer triggers an automatic follow up loop that teaches the point again and
+                rechecks it, so no knowledge gap is left behind.
               </p>
             </div>
+            {/* The theme places the module's first lesson illustration here. Its alt describes
+                a hub screen the image is not, so the alt names the lesson instead. */}
+            {img(sections[0]?.image_url) && (
+              <figure className="tshot">
+                <SiteImage src={img(sections[0]?.image_url)!} alt={sections[0].heading} />
+              </figure>
+            )}
           </div>
           <div className="mgrid4" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
             {LOOP.map(([t, b]) => <div key={t}><Mark /><b>{t}</b><p>{b}</p></div>)}
@@ -473,7 +555,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
                 <li><Tick />Instant certificate on completion</li>
                 <li><Tick />Flexible learning, anytime, on any device</li>
                 <li><Tick />Content kept up to date with UK care regulations</li>
-                {minutes > 0 && <li><Tick />Time to complete: ~{minutes} min</li>}
+                <li><Tick />Time to complete: ~{est} min</li>
               </ul>
             </div>
             <figure className="mwhy-photo">
@@ -499,7 +581,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
           <details>
             <summary>How often should staff complete {m.title} training?<Plus /></summary>
             <div className="ans">
-              Most services refresh {m.title} training every year. CareStream tracks each
+              Most services refresh {m.title} training {refreshWord(m.frequency)}. CareStream tracks each
               person&apos;s renewal date and sends automatic reminders at 90, 30 and 7 days.
             </div>
           </details>
@@ -528,44 +610,15 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
             <h2>More training your team may need</h2>
             <p>
               More mandatory and role-specific training CareStream delivers to your team, in the
-              hub, in any language.
+              hub, in any language. Add any of these to your basket.
             </p>
-            {/* Built from the API. The theme's own cards ship an unsubstituted image token and
-                repeat one module's title and description on every card, which is a bug in its
-                generator rather than a design to copy. */}
+            {/* The library's own theme card, so a related module reads, prices and adds to the
+                basket exactly as it does on /staff-training. Built from the API: the theme's
+                cards ship an unsubstituted image token and repeat one module on every card,
+                which is a bug in its generator rather than a design to copy. */}
             <div className="tgrid" style={{ marginTop: 24 }}>
               {related.map(r => (
-                <div className="tcard" key={r.slug}>
-                  <span className="pic">
-                    {img(r.illustration_url) && (
-                      <SiteImage src={img(r.illustration_url)!} alt={r.title} />
-                    )}
-                    {r.frequency && <span className="freq">{r.frequency}</span>}
-                    <span className="stack"><span className="cert"><Tick /> Certificate</span></span>
-                  </span>
-                  <div className="in">
-                    {r.requires_practical && (
-                      <div className="badges">
-                        <span className="tbadge prac">Practical assessment</span>
-                      </div>
-                    )}
-                    <h4>{r.title}</h4>
-                    <p className="desc">{cs(r.summary || r.description || '')}</p>
-                    <div className="tmeta">
-                      <span className="tprice">{price}</span>
-                      {!!r.duration_minutes && (
-                        <span className="tdur"><Clock /> ~{r.duration_minutes} min</span>
-                      )}
-                      <Link className="tdetails" href={`/staff-training/${r.slug}`}>
-                        Details <Arrow />
-                      </Link>
-                    </div>
-                    <div className="tbuy">
-                      <Link className="add" href={`/buy/${r.slug}`}>Start course now</Link>
-                    </div>
-                    <p className="tbulk">Bulk discounts from 10+ licences</p>
-                  </div>
-                </div>
+                <ThemeModuleCard key={r.slug} t={r} bulk="Bulk discounts from 10+ licences" />
               ))}
             </div>
           </div>
@@ -574,9 +627,10 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
 
       <section className="tend">
         <div className="mwrap tend-in">
-          <h2>Give your team {lower} training that actually lands.</h2>
+          <h2>Give your team {lower} training that actually sticks.</h2>
+          <p>Add it to your basket, allocate it in seconds, and let the evidence build itself.</p>
           <div className="row">
-            <Link className="tbtn solid" href={buyHref}>Start course now</Link>
+            <TrainingAddButton {...addLabel} className="tbtn solid" label={`Add to basket · ${price}`} />
             <Link className="tbtn ghost" href="/demo">Book a demo</Link>
           </div>
         </div>
@@ -587,6 +641,11 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
           <div className="cvhead">
             <p className="eyebrow">Compared</p>
             <h2>Three ways to train a care team.</h2>
+            <p>
+              These modules are written and kept current by us, so your managers do not have to
+              write or maintain them. We have compared what each approach does rather than naming
+              providers, because products change and this should still be true next year.
+            </p>
           </div>
           <div className="cvtablewrap">
             <table className="cvtable">
@@ -595,7 +654,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
                   <th />
                   <th className="us">CareStream</th>
                   <th>A generic e-learning library</th>
-                  <th>A trainer in the room</th>
+                  <th>A trainer you book</th>
                 </tr>
               </thead>
               <tbody>
@@ -641,6 +700,8 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
           </div>
         </div>
       </section>
+
+      <TrainingCartLink />
     </div>
   )
 }

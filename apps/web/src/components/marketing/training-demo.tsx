@@ -36,11 +36,16 @@ export function TrainingDemo({
   buyHref,
   variant = 'full',
   onTakeQuiz,
+  place = 'index',
 }: {
   demo: TrainingDemoData
   buyHref: string
   variant?: 'full' | 'card' | 'theme'
   onTakeQuiz?: () => void
+  /** Theme variant only. The theme words the taster differently on the /staff-training index
+   *  (course title, "full course", a "+60 more" chip) and on a module page ("Try it · a real
+   *  lesson and question", "full module", no chip). */
+  place?: 'index' | 'module'
 }) {
   const [step, setStep] = useState<Step>('lesson')
   const [selected, setSelected] = useState<number | null>(null)
@@ -305,7 +310,7 @@ export function TrainingDemo({
     return (
       <div className="demo" id="demo">
         <div className="demo-top">
-          <b>{demo.title}</b>
+          <b>{place === 'module' ? 'Try it · a real lesson and question' : demo.title}</b>
           <span className="demo-step">Try it &middot; step {n} of {STEPS.length}</span>
         </div>
         <div className="demo-steps">
@@ -405,7 +410,7 @@ export function TrainingDemo({
         </div>
 
         <div className="demo-foot">
-          <span>{demo.total_sections} sections &middot; {demo.total_questions} questions in the full course</span>
+          <span>{demo.total_sections} sections &middot; {demo.total_questions} questions in the full {place === 'module' ? 'module' : 'course'}</span>
           <span className="langs">
             {LANG_BUTTONS.map(([code, label]) => (
               <button type="button" className="demo-lang" key={code} aria-pressed={lang === code}
@@ -413,7 +418,7 @@ export function TrainingDemo({
                 {label}
               </button>
             ))}
-            <span className="demo-lang" style={{ opacity: 0.6 }}>+60 more</span>
+            {place === 'index' && <span className="demo-lang" style={{ opacity: 0.6 }}>+60 more</span>}
           </span>
         </div>
       </div>

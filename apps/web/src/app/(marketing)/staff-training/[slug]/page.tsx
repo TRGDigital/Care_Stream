@@ -23,11 +23,11 @@ import { TrainingLanguageSection } from '@/components/marketing/training-languag
 import { TrainingCpdFeatures } from '@/components/marketing/training-cpd-features'
 import { TrainingFollowUpLoop } from '@/components/marketing/training-follow-up-loop'
 import { JsonLd } from '@/components/json-ld'
-import { courseSchema } from '@/lib/schema'
+import { courseSchema, faqPageSchema } from '@/lib/schema'
 import { COURSE_LANGUAGE_CODES } from '@/lib/languages'
 import { WhyChooseCareStream } from '@/components/marketing/why-choose-carestream'
 import { TrainingVideo } from '@/components/marketing/training-video'
-import { estimatedMinutes, formatDuration } from '@/lib/training-commerce'
+import { estimatedMinutes, formatDuration, refreshWord } from '@/lib/training-commerce'
 import { careSetting } from '@/lib/care-setting'
 import { isV2 } from '@/lib/v2-rollout'
 
@@ -58,40 +58,37 @@ type ModuleDetail = {
 }
 
 
+// ONLY a 404 from the API means "no such module". Anything else (the public rate limit's 429, a
+// 5xx, a network error) is thrown, after one retry. This used to return null for every failure,
+// and null means notFound(): a module page that hit the API's 60-requests-a-minute limit was
+// rendered, and cached, as a 404. That is how a build that prerendered all 98 modules at once
+// left about sixty of them 404ing on the deployment. A thrown error is never cached, and during
+// revalidation Next keeps serving the last good page instead.
 async function getModule(slug: string): Promise<ModuleDetail | null> {
-  try {
-    const res = await fetch(`${API_URL}/public/training/standard-modules/${encodeURIComponent(slug)}`, { next: { revalidate: 60 } })
-    if (res.ok) return ((await res.json())?.data?.module ?? null) as ModuleDetail | null
-  } catch {
-    // fall through
+  const url = `${API_URL}/public/training/standard-modules/${encodeURIComponent(slug)}`
+  for (let attempt = 0; attempt < 2; attempt++) {
+    // An hour, not a minute: module records change rarely, and every refetch spends the shared
+    // per-IP public rate limit that all server-side page renders draw on.
+    const res = await fetch(url, attempt ? { cache: 'no-store' } : { next: { revalidate: 3600 } })
+      .catch(() => null)
+    if (res?.status === 404) return null
+    if (res?.ok) return ((await res.json())?.data?.module ?? null) as ModuleDetail | null
+    if (!attempt) await new Promise(r => setTimeout(r, 1500))
   }
-  return null
+  throw new Error(`Training module ${slug}: the API did not answer; not treating it as missing`)
 }
 
-export async function generateStaticParams() {
-  try {
-    // no-store: always read the live list at build time. A cached (revalidate)
-    // entry can pin an empty response from a window when the API was down,
-    // which would prerender zero pages and 404 every slug.
-    const res = await fetch(`${API_URL}/public/training/standard-modules`, { cache: 'no-store' })
-    if (res.ok) {
-      const topics = (await res.json())?.data?.topics ?? []
-      return (topics as Array<{ slug?: string }>).map((t) => ({ slug: t.slug })).filter((p) => p.slug)
-    }
-  } catch {
-    // fall through
-  }
-  return []
-}
+// No build-time prerender, so no generateStaticParams. Rendering all 98 modules at build fired
+// several hundred API requests at once from the build's few IPs, straight into the public rate
+// limit. Each page renders on request with its fetches cached, the same as /features/[slug].
+// (Exporting generateStaticParams returning [] is NOT the same: it marks the route as prerendered,
+// and the page reads searchParams, so every module page 500'd with a static-to-dynamic error.)
 
 function freqLabel(f: string): string {
   return f === 'annual' ? 'Annual' : f === 'biennial' ? 'Biennial' : f === 'triennial' ? 'Triennial'
     : f === 'once' ? 'One-off' : f === 'adhoc' ? 'Ad-hoc' : f
 }
-function freqWord(f: string): string {
-  return f === 'annual' ? 'every year' : f === 'biennial' ? 'every two years' : f === 'triennial' ? 'every three years'
-    : f === 'once' ? 'once, usually at induction' : 'regularly'
-}
+const freqWord = refreshWord
 
 // Related modules as full, buyable catalogue cards. Keeps the rotating-window +
 // same-group selection (so every module page still gets several dofollow internal
@@ -116,7 +113,7 @@ async function getRelatedTopics(currentSlug: string): Promise<LibraryTopic[]> {
 // Live one-lesson + one-question taster for this module (null if not yet built).
 async function getModuleDemo(slug: string): Promise<TrainingDemoData | null> {
   try {
-    const res = await fetch(`${API_URL}/public/training/standard-modules/${encodeURIComponent(slug)}/demo?v=2`, { next: { revalidate: 300 } })
+    const res = await fetch(`${API_URL}/public/training/standard-modules/${encodeURIComponent(slug)}/demo?v=2`, { next: { revalidate: 3600 } })
     if (res.ok) return (await res.json())?.data?.demo ?? null
   } catch { /* fall through */ }
   return null
@@ -153,21 +150,6 @@ export default async function TrainingModulePage(
   if (!m) notFound()
   const [related, demo, unitPence] = await Promise.all([getRelatedTopics(slug), getModuleDemo(slug), getUnitPence()])
   const unitPrice = (unitPence / 100).toFixed(2)
-
-  // Opt-in with ?v2=1 until it is signed off, the same as the other ported families. It renders
-  // this same record and the same demo payload, so the flag changes the design and nothing else.
-  const sp = await searchParams
-  if (await isV2('modules', sp)) {
-    return (
-      <ModulePageV2
-        module={{ ...m, slug }}
-        demo={demo}
-        related={related}
-        unitPence={unitPence}
-        apiUrl={API_URL}
-      />
-    )
-  }
 
   const heroBullets = [
     'CQC-aligned, mapped to the Care Certificate framework',
@@ -245,6 +227,28 @@ export default async function TrainingModulePage(
     pricePence: unitPence,
     workloadMinutes: Math.min(120, Math.max(30, sectionsToShow.length * 10)),
   })
+
+  // The rebuilt design. It renders this same record and the same demo payload, so the flag
+  // changes the design and nothing else. It sits after the Course facts and the FAQs are built
+  // because it must carry the same structured data: returning before them, as it first did,
+  // dropped Course and FAQPage from every module page. The current page gets FAQPage from
+  // HomeFaq; the rebuilt one shows the same four questions and marks them up here.
+  const sp = await searchParams
+  if (await isV2('modules', sp)) {
+    return (
+      <>
+        <JsonLd data={courseJson} />
+        <JsonLd data={faqPageSchema(faqs)} />
+        <ModulePageV2
+          module={{ ...m, slug }}
+          demo={demo}
+          related={related}
+          unitPence={unitPence}
+          apiUrl={API_URL}
+        />
+      </>
+    )
+  }
 
   return (
     <>

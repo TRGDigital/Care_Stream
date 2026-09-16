@@ -188,9 +188,11 @@ export function WebChatPageV2({ page }: { page: WebChatPage }) {
             <h2>{c.cta?.heading}</h2>
             {c.cta?.sub && <p>{c.cta.sub}</p>}
           </div>
+          {/* Plain solid/ghost, as the theme has them: .wcbtn is the hero's button and its
+              light background put white text on a light pill here. */}
           <div className="btns">
-            <Link className="wcbtn solid" href="/register">Start free trial <Arrow /></Link>
-            <Link className="wcbtn ghost" href="/demo">Book a demo</Link>
+            <Link className="solid" href="/register">Start free trial <Arrow /></Link>
+            <Link className="ghost" href="/demo">Book a demo</Link>
           </div>
         </div>
       </section>

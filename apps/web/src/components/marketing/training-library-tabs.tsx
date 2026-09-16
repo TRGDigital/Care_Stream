@@ -227,7 +227,7 @@ function ThemeModuleCard({ t, settingLabel, bulk }: {
               <Cart /> Add to basket
             </button>
           )}
-          <SaveCourseButton slug={t.slug} title={t.title} compact className="tsave" />
+          <SaveCourseButton variant="theme" slug={t.slug} title={t.title} className="tsave" />
         </div>
         <p className="tbulk">{bulk}</p>
       </div>

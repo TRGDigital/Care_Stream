@@ -141,7 +141,7 @@ export default async function WebChatInterfacePage(
 ) {
   // Opt-in with ?v2=1 until it is signed off. The rebuilt page reads the feature_pages record,
   // the same one every other feature page reads, rather than the CONTENT literal below.
-  if (await isV2('features', searchParams)) {
+  if (await isV2('web-chat', searchParams)) {
     const fp = await getRecord()
     if (fp) {
       return (

@@ -16,14 +16,32 @@ export function SaveCourseButton({
 }: {
   slug: string
   title: string
-  /** 'dark' sits on the navy sticky bar; 'light' on white cards. */
-  variant?: 'dark' | 'light'
+  /** 'dark' sits on the navy sticky bar; 'light' on white cards; 'theme' is the rebuilt
+   *  design, which styles the button entirely through the class it is given. */
+  variant?: 'dark' | 'light' | 'theme'
   /** Icon only — no visible "Save" label (used on space-tight cards). */
   compact?: boolean
   className?: string
 }) {
   const { isSaved, savedCourses } = useSavedCourses()
   const saved = isSaved(slug)
+
+  // The rebuilt design's markup, with none of the utility classes below. Given those as well,
+  // the theme's `tsave` rule and a 42px bordered button fought over the same element, which the
+  // rendered class diff on the training collections caught.
+  if (variant === 'theme') {
+    return (
+      <button type="button" className={className} onClick={() => savedCourses.toggle({ slug, title })}
+              aria-pressed={saved}
+              aria-label={saved ? `${title} is saved for later` : `Save ${title} for later`}
+              title={saved ? 'Saved, click to remove' : 'Save for later'}>
+        <svg viewBox="0 0 24 24" fill={saved ? 'currentColor' : 'none'} stroke="currentColor"
+             strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+        </svg>
+      </button>
+    )
+  }
 
   const styles = variant === 'dark'
     ? saved
@@ -38,7 +56,7 @@ export function SaveCourseButton({
       type="button"
       onClick={() => savedCourses.toggle({ slug, title })}
       aria-pressed={saved}
-      title={saved ? 'Saved — click to remove' : 'Save this course for later'}
+      title={saved ? 'Saved, click to remove' : 'Save this course for later'}
       className={`inline-flex flex-shrink-0 items-center justify-center gap-2 rounded-btn border font-semibold transition-colors ${
         compact ? 'h-[42px] w-[42px] text-sm' : 'px-4 py-3 text-sm md:text-base'
       } ${styles} ${className}`}

@@ -47,7 +47,7 @@ export function TrainingAddButton({ slug, title, unitPence, className = '' }: {
 export function TrainingSaveButton({ slug, title, className = '' }: {
   slug: string; title: string; className?: string
 }) {
-  return <SaveCourseButton slug={slug} title={title} compact className={`tsave ${className}`.trim()} />
+  return <SaveCourseButton variant="theme" slug={slug} title={title} className={`tsave ${className}`.trim()} />
 }
 
 /** The floating "View basket" link, with the licence count and the discounted total from the

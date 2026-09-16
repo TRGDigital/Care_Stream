@@ -25,6 +25,7 @@ export type V2Family =
   | 'buy'           // /buy/*
   | 'indexes'       // /staff-training and /care-policies
   | 'home'          // /
+  | 'blog-posts'    // /blog/*
 
 const LIVE: ReadonlySet<V2Family> = new Set<V2Family>([
   // Batch 1: families already published and checked against the deployment.

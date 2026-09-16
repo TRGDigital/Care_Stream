@@ -33,7 +33,7 @@ const CTAS: Record<BlogCtaType, {
     href: '/pricing',
     variants: [
       { title: 'Roll out training your team will actually finish', sub: 'CareStream turns your policies into role-based training with tracking and certificates. See the plans and get started.' },
-      { title: 'Training that keeps you CQC-ready', sub: 'Assign, track and evidence staff training in minutes. Explore the plans and roll it out this week.' },
+      { title: 'Training that keeps you CQC ready', sub: 'Assign, track and evidence staff training in minutes. Explore the plans and roll it out this week.' },
     ],
   },
   discuss_training: {
@@ -47,10 +47,27 @@ const CTAS: Record<BlogCtaType, {
   },
 }
 
-export function BlogCta({ type, variant = 0 }: { type: string; variant?: number }) {
+export const CtaArrow = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M5 12h13M13 6.5 18.5 12 13 17.5" />
+  </svg>
+)
+
+export function BlogCta({ type, variant = 0, theme = false }: { type: string; variant?: number; theme?: boolean }) {
   const cfg = CTAS[type as BlogCtaType]
   if (!cfg) return null
   const v = cfg.variants[variant % cfg.variants.length] ?? cfg.variants[0]!
+  // The rebuilt post template (blog-post-v2.tsx): the theme's .bcta block.
+  if (theme) {
+    return (
+      <div className="bcta">
+        <span className="eyebrow">{cfg.eyebrow}</span>
+        <b>{v.title}</b>
+        <p>{v.sub}</p>
+        <Link className="bbtn" href={cfg.href}>{cfg.button} <CtaArrow /></Link>
+      </div>
+    )
+  }
   return (
     <div className="not-prose my-10 rounded-xl border border-teal/20 bg-teal-light p-6 text-center sm:p-8">
       <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-teal">{cfg.eyebrow}</p>

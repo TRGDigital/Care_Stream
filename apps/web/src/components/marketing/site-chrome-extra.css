@@ -1,0 +1,51 @@
+/* Additions to the ported chrome (site-chrome.css is generated; these are not in the theme).
+ *
+ * - The header's wrapper takes no box of its own, so position:sticky on <header> sticks to the
+ *   page rather than to a wrapper exactly its own height.
+ * - The Our Services menu carries three collection columns (policies, training, features).
+ * - Below 1280px the theme hides the nav links and offers nothing instead; the menu button and
+ *   panel give those destinations back. On a phone the two pills move into the panel too, or the
+ *   header row overflows.
+ */
+.cschrome-head { display: contents; }
+
+.cschrome #m1 .mcolls { grid-template-columns: repeat(3, 1fr); }
+
+.cschrome .menubtn { display: none; }
+
+@media (max-width: 1279px) {
+  .cschrome .menubtn { display: grid; }
+}
+@media (max-width: 860px) {
+  .cschrome #m1 .mcolls { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .cschrome .util .pill,
+  .cschrome .util > .navbtn { display: none; }
+}
+
+.cschrome .mnav {
+  border-top: 1px solid var(--line);
+  background: var(--ground);
+  max-height: calc(100vh - 68px);
+  overflow-y: auto;
+}
+.cschrome .mnav .wrap { display: flex; flex-direction: column; padding-top: 10px; padding-bottom: 22px; }
+.cschrome .mnav > .wrap > a,
+.cschrome .mnav summary {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 4px; font-size: .97rem; font-weight: 600; color: var(--ink);
+  text-decoration: none; border-bottom: 1px solid var(--line); cursor: pointer; list-style: none;
+}
+.cschrome .mnav summary::-webkit-details-marker { display: none; }
+.cschrome .mnav summary svg { width: 12px; height: 8px; transition: transform .2s; }
+.cschrome .mnav details[open] summary svg { transform: rotate(180deg); }
+.cschrome .mnav details .mega-grid { padding: 12px 0; gap: 6px; }
+.cschrome .mnav details .mcolls { padding: 12px 0; grid-template-columns: 1fr; }
+.cschrome .mnav-cta { display: flex; gap: 10px; flex-wrap: wrap; padding-top: 16px; }
+
+/* Footer additions: Cookie settings sits with the other base links, and the adviser disclaimer
+ * runs under the base row in the same small muted type. */
+.cschrome .fcookie { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; }
+.cschrome .fcookie:hover { color: var(--ink); }
+.cschrome .fdisclaim { margin: 14px 0 0; font-size: .74rem; line-height: 1.55; color: var(--muted); max-width: 90ch; }

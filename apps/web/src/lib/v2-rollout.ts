@@ -33,8 +33,12 @@ const LIVE: ReadonlySet<V2Family> = new Set<V2Family>([
   'one-offs',
   'collections',
   // Batch 2a: the 11 care-setting pages, published and matching the theme with no differences.
-  // Our Services, the other half of batch 2, is held back for fixes.
   'settings',
+  // Batch 2b: the 7 Our Services pages and /how-it-works, re-imported with parts and matching
+  // the theme on the deployment (class counts, block order, every run of theme copy), and the
+  // web chat feature page, re-imported and matching once its closing buttons were fixed.
+  'services',
+  'web-chat',
 ])
 
 type Params = Record<string, string | string[] | undefined> | undefined

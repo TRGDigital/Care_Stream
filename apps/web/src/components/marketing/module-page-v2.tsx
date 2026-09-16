@@ -6,6 +6,7 @@ import { claimSafe, estimatedMinutes, refreshWord } from '@/lib/training-commerc
 import { LanguageCheck } from './language-check'
 import { ThemeModuleCard, type LibraryTopic } from './training-library-tabs'
 import { TrainingAddButton, TrainingCartLink, TrainingSaveButton } from './training-cart-buttons'
+import { StickyBarReveal } from './sticky-bar-reveal'
 import './module-page-v2.css'
 
 // The rebuilt /staff-training/<slug> template. Renders the SAME module record and the same demo
@@ -221,6 +222,8 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
     <div className="mpage-v2">
       {/* The bar that follows the reader down the page. Its action is the theme's own: straight
           to this module's purchase page. */}
+      {/* The bar slides in once the hero buy panel has scrolled away, as in the theme. */}
+      <StickyBarReveal bar=".mpage-v2 .mbar" anchor=".mpage-v2 .mbuy" />
       <div className="mbar">
         <div className="mbar-in">
           {hero && <span className="thumb"><SiteImage src={hero} alt={m.title} /></span>}

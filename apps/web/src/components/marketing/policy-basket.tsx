@@ -133,9 +133,19 @@ export function StickyBuyBar({ item, image }: { item: BasketItem; image: string 
   useEffect(() => {
     const card = document.querySelector('.pcbuycard')
     if (!card) return
-    const io = new IntersectionObserver(([e]) => setShown(!e.isIntersecting && e.boundingClientRect.top < 0))
+    // The theme's check, reached by an observer and a scroll listener both: the observer alone
+    // can miss a fast jump down the page.
+    const sync = () => setShown(card.getBoundingClientRect().bottom < 0)
+    const io = new IntersectionObserver(sync, { threshold: 0 })
     io.observe(card)
-    return () => io.disconnect()
+    addEventListener('scroll', sync, { passive: true })
+    addEventListener('resize', sync, { passive: true })
+    sync()
+    return () => {
+      io.disconnect()
+      removeEventListener('scroll', sync)
+      removeEventListener('resize', sync)
+    }
   }, [])
 
   return (

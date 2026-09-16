@@ -10,12 +10,13 @@ type DemoValues = { name: string; role: string; organisation: string; email: str
 // `variant="theme"` renders the rebuilt page's markup and nothing else changes: the same state,
 // the same lead POST, the same WebMCP tool. A second form component would have been a second
 // place for the lead payload to drift out of step with the API.
+// `variant="dialog"` is the same form again inside the Book a demo overlay (demo-dialog.tsx).
 export function DemoForm({
   variant = 'default',
   formHeading = 'Request a demo',
   note = 'We respond within one business day.',
 }: {
-  variant?: 'default' | 'theme'
+  variant?: 'default' | 'theme' | 'dialog'
   /** Only used by the theme variant, which owns its own heading rather than the page. */
   formHeading?: string
   note?: string
@@ -48,8 +49,10 @@ export function DemoForm({
     }
   }
 
-  // Expose the demo request to AI agents via WebMCP (no-op where unsupported).
+  // Expose the demo request to AI agents via WebMCP (no-op where unsupported). The overlay is on
+  // every page, so it leaves the tool to the /demo page form rather than registering it twice.
   useAgentForm({
+    enabled: variant !== 'dialog',
     name: 'book_demo',
     title: 'Book a CareStream demo',
     description:
@@ -77,6 +80,62 @@ export function DemoForm({
   // The theme's form is inert (`onsubmit="return false"`), so it has no success or error state
   // to copy. Both reuse classes the theme does style, with the one colour inline: a rule added
   // to the ported stylesheet would be lost the next time port_css.py regenerates it.
+  if (variant === 'dialog') {
+    if (submitted) {
+      return (
+        <div className="dlgdone" role="status">
+          <b>Request received</b>
+          <p>We will be in touch within one business day to confirm your demo time.</p>
+        </div>
+      )
+    }
+    return (
+      <form onSubmit={handleSubmit}>
+        <div className="dlgrow">
+          <div className="dlgf">
+            <label htmlFor="dlgn">Full name <i>*</i></label>
+            <input id="dlgn" name="name" type="text" required autoComplete="name" value={form.name} onChange={handleChange} />
+          </div>
+          <div className="dlgf">
+            <label htmlFor="dlgr">Job title <i>*</i></label>
+            <input id="dlgr" name="role" type="text" required autoComplete="organization-title" value={form.role} onChange={handleChange} />
+          </div>
+        </div>
+        <div className="dlgf">
+          <label htmlFor="dlgo">Organisation <i>*</i></label>
+          <input id="dlgo" name="organisation" type="text" required autoComplete="organization" value={form.organisation} onChange={handleChange} />
+        </div>
+        <div className="dlgrow">
+          <div className="dlgf">
+            <label htmlFor="dlge">Work email <i>*</i></label>
+            <input id="dlge" name="email" type="email" required autoComplete="email" value={form.email} onChange={handleChange} />
+          </div>
+          <div className="dlgf">
+            <label htmlFor="dlgp">Phone number</label>
+            <input id="dlgp" name="phone" type="tel" autoComplete="tel" value={form.phone} onChange={handleChange} />
+          </div>
+        </div>
+        <div className="dlgf">
+          <label htmlFor="dlgs">Number of homes / locations</label>
+          <select id="dlgs" name="homes" value={form.homes} onChange={handleChange}>
+            <option value="">Select&hellip;</option>
+            <option value="1">1</option>
+            <option value="2-5">2 to 5</option>
+            <option value="6-15">6 to 15</option>
+            <option value="16+">16 or more</option>
+          </select>
+        </div>
+        <div className="dlgf">
+          <label htmlFor="dlgm">Anything you&rsquo;d like to cover?</label>
+          <textarea id="dlgm" name="message" value={form.message} onChange={handleChange} />
+        </div>
+        {error && <p className="dlgerr" role="alert">{error}</p>}
+        <button className="dlgbtn" type="submit">Request demo</button>
+        <p className="dlgnote">{note}</p>
+      </form>
+    )
+  }
+
   if (submitted && variant === 'theme') {
     return (
       <div className="dmform">
@@ -126,8 +185,8 @@ export function DemoForm({
           <select id="dmsites" name="homes" value={form.homes} onChange={handleChange}>
             <option value="">Select&hellip;</option>
             <option value="1">1</option>
-            <option value="2-5">2&ndash;5</option>
-            <option value="6-15">6&ndash;15</option>
+            <option value="2-5">2 to 5</option>
+            <option value="6-15">6 to 15</option>
             <option value="16+">16 or more</option>
           </select>
         </div>

@@ -30,6 +30,8 @@ export interface UseAgentFormOptions {
   onSubmit: (values: Record<string, string>) => void | Promise<unknown>
   /** Re-register when these change (e.g. to capture fresh closures). */
   deps?: unknown[]
+  /** false registers nothing: for a second copy of a form whose tool is already registered. */
+  enabled?: boolean
 }
 
 function buildSchema(fields: AgentFormField[]) {
@@ -48,7 +50,7 @@ function buildSchema(fields: AgentFormField[]) {
 
 export function useAgentForm(opts: UseAgentFormOptions) {
   useAgentTool(
-    {
+    opts.enabled === false ? null : {
       name: opts.name,
       title: opts.title,
       description: opts.description,

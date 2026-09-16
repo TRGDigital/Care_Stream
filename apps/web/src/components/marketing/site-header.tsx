@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 import { TRAINING_ACCREDITED } from '@/lib/training-commerce'
 import { SETTINGS_LIST } from '@/lib/settings/list'
 import { MEGA_SERVICES, MEGA_WHO, type MegaItem } from './site-chrome-data'
+import { DemoDialog } from './demo-dialog'
 import './site-chrome.css'
 import './site-chrome-extra.css'
 
@@ -239,6 +240,7 @@ export function SiteHeader() {
           </div>
         </div>
       </header>
+      <DemoDialog />
     </div>
   )
 }

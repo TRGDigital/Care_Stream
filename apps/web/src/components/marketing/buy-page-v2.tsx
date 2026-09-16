@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
+import { careSetting } from '@/lib/care-setting'
 import { BuyForm } from './buy-form'
 import './buy-page-v2.css'
 
@@ -80,20 +81,39 @@ const TRUST: [string, string][] = [
    'Licences do not expire the moment you buy. Staff have a year to complete.'],
 ]
 
+// The theme's six, in its order. The first answer has two paragraphs, split on the blank line.
 const FAQS: [string, string][] = [
   ['Do I need a CareStream subscription to buy this?',
    'No. This page exists precisely so you do not. You buy the licences you need, your staff '
    + 'complete the module in the CareStream hub, and that is the end of it. There is no trial '
-   + 'to start, no card kept on file, and no subscription that begins quietly afterwards.'],
-  ['What happens if someone fails the assessment?',
-   'They get a short follow-up lesson on that specific point, and they retry it. The record '
-   + 'shows the improvement from the first attempt to the latest, which is stronger evidence '
-   + 'than a single pass mark, because it shows the gap was found and closed.'],
+   + 'to start, no card kept on file, and no subscription that begins quietly afterwards.'
+   + '\n\nIf you later decide you want the full platform, anything your staff have already '
+   + 'completed carries across into your account.'],
+  ['What does one licence actually cover?',
+   'One licence covers one named member of staff for this one module, including the lesson, the '
+   + 'assessment, any follow-up questions triggered by a wrong answer, and their certificate. '
+   + 'Licences are not shared between people, because the completion record has to belong to an '
+   + 'individual to be worth anything at inspection.'],
+  ['How quickly can staff start?',
+   'Immediately. The licences are on your account as soon as the payment clears, and staff get '
+   + 'their invite the moment you add them. There is no onboarding call and no setup period.'],
+  ['Can staff complete it in another language?',
+   'Yes. Each staff member has a first language on their profile, and the lesson, the questions '
+   + 'and the feedback all arrive in it. They answer in that language too. What you see as a '
+   + 'manager stays in English, so the record reads the same whoever completed it.'],
+  ['What if someone fails the assessment?',
+   'Nothing is lost. A wrong answer triggers a short follow-up lesson on that specific point, and '
+   + 'they retry it. The record shows the improvement from the first attempt to the latest, which '
+   + 'is stronger evidence than a single pass mark, because it shows the gap was found and closed.'],
   ['Can I buy for more than one service?',
    'Yes. Buy the total number of licences you need and allocate them across your services when '
    + 'you add staff. If you are licensing for a group and want an invoice rather than a card '
    + 'payment, get in touch and we will raise one.'],
 ]
+
+function firstSentence(text: string) {
+  return (text || '').match(/[^.!?]+[.!?]+/)?.[0].trim() ?? text
+}
 
 /** The first two sentences, which is what the theme's generator uses for the intro. */
 function twoSentences(text: string) {
@@ -166,7 +186,7 @@ export function BuyPageV2({ module: m, unitPence, related, apiUrl }: {
           <span className="bylabel-sec">What is in this module</span>
           <h2>{m.title}, start to finish.</h2>
           <p className="intro">
-            {twoSentences(m.summary ?? '')} This is the same module CareStream subscribers get,
+            {careSetting(twoSentences(m.summary ?? ''))} This is the same module CareStream subscribers get,
             written for care settings rather than adapted from a generic course.
             {minutes ? ` It runs about ${minutes} minutes and ends with a 20 question assessment.` : ''}
           </p>
@@ -175,13 +195,14 @@ export function BuyPageV2({ module: m, unitPence, related, apiUrl }: {
               {curriculum.map((s, i) => (
                 <li key={i}>
                   <span className="n" />
-                  <span><b>{s.heading}</b>{s.body && <p>{s.body}</p>}</span>
+                  {/* The theme lists each lesson with its first sentence, not the whole body. */}
+                  <span><b>{careSetting(s.heading)}</b>{s.body && <p>{careSetting(firstSentence(s.body))}</p>}</span>
                 </li>
               ))}
             </ul>
             {wide && (
               <div className="byshot wide">
-                <SiteImage src={wide} alt={curriculum[0]?.heading || m.title} />
+                <SiteImage src={wide} alt={careSetting(curriculum[0]?.heading) || m.title} />
               </div>
             )}
           </div>
@@ -223,7 +244,7 @@ export function BuyPageV2({ module: m, unitPence, related, apiUrl }: {
             {FAQS.map(([q, a]) => (
               <details key={q}>
                 <summary>{q}<Plus /></summary>
-                <div className="ans"><p>{a}</p></div>
+                <div className="ans">{a.split('\n\n').map((p, i) => <p key={i}>{p}</p>)}</div>
               </details>
             ))}
           </div>

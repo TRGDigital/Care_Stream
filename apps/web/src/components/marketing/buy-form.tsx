@@ -12,7 +12,8 @@ const gbp = (pence: number) => `£${(pence / 100).toFixed(2)}`
 export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
   slug: string; moduleName: string; unitPence: number; variant?: 'default' | 'theme'
 }) {
-  const [qty, setQty]     = useState(1)
+  // The theme's form opens at eight licences, a typical team, not one.
+  const [qty, setQty]     = useState(variant === 'theme' ? 8 : 1)
   const [email, setEmail] = useState('')
   const [org, setOrg]     = useState('')
   const [busy, setBusy]   = useState(false)
@@ -84,7 +85,9 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
           {busy ? 'Starting secure checkout…' : 'Continue to payment'}
         </button>
         <p className="bysecure">
-          <ShieldCheck size={13} /> Card payment handled by Stripe. We never see your card details.
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"
+               strokeLinejoin="round" aria-hidden="true"><path d="M12 3l7 3v6c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z" /><path d="M9 12l2 2 4-4" /></svg>
+          Card payment handled by Stripe. We never see your card details.
         </p>
       </form>
     )

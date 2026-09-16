@@ -25,12 +25,19 @@ type ModuleRecord = {
   sections?: Array<{ heading: string; body?: string | null; image_url?: string | null }>
 }
 
+// ONLY a 404 from the API means "no such module". Anything else (the public rate limit's 429, a
+// 5xx, a network error) retries once and then throws, which Next never caches, so a busy API
+// cannot turn a purchase page into a stored 404. Same fix as /staff-training/[slug].
 async function getModule(slug: string): Promise<ModuleRecord | null> {
-  try {
-    const res = await fetch(`${API_URL}/public/training/standard-modules/${encodeURIComponent(slug)}`, { next: { revalidate: 60 } })
-    if (res.ok) return (await res.json())?.data?.module ?? null
-  } catch { /* fall through */ }
-  return null
+  const url = `${API_URL}/public/training/standard-modules/${encodeURIComponent(slug)}`
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const res = await fetch(url, attempt ? { cache: 'no-store' } : { next: { revalidate: 3600 } })
+      .catch(() => null)
+    if (res?.status === 404) return null
+    if (res?.ok) return ((await res.json())?.data?.module ?? null) as ModuleRecord | null
+    if (!attempt) await new Promise(r => setTimeout(r, 1500))
+  }
+  throw new Error(`Training module ${slug}: the API did not answer; not treating it as missing`)
 }
 
 async function getUnitPence(): Promise<number> {
@@ -77,7 +84,8 @@ export default async function BuyPage(
       <BuyPageV2
         module={{ ...m, slug }}
         unitPence={unitPence}
-        related={related.map(r => ({ slug: r.slug, title: r.title, group_label: r.group_label }))}
+        // Six, as the theme lists: same selection as the current page, one fewer link.
+        related={related.slice(0, 6).map(r => ({ slug: r.slug, title: r.title, group_label: r.group_label }))}
         apiUrl={API_URL}
       />
     )

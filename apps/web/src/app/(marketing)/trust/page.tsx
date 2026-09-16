@@ -25,7 +25,18 @@ export default async function TrustPage(
 
   // Opt-in with ?v2=1 until it is signed off. Its own slot set, because the copy is new.
   if (await isV2('one-offs', searchParams)) {
-    return <TrustPageV2 s={makeSlot(TRUST_V2_SLOTS, slots)} />
+    // FAQPage schema from the six security questions the rebuilt page shows. The current page
+    // emits it (twice); the rebuilt branch returned without it.
+    const v2s = makeSlot(TRUST_V2_SLOTS, slots)
+    const v2faqs = [1, 2, 3, 4, 5, 6]
+      .map(n => ({ question: v2s(`faq.q${n}.q`), answer: v2s(`faq.q${n}.a`) }))
+      .filter(f => f.question && f.answer)
+    return (
+      <>
+        {v2faqs.length > 0 && <JsonLd data={faqPageSchema(v2faqs)} />}
+        <TrustPageV2 s={v2s} />
+      </>
+    )
   }
 
   const s = makeSlot(TRUST_SLOTS, slots)

@@ -125,7 +125,13 @@ export default async function AboutPage(
   // the copy is new: sharing keys with the current page would leave each design holding
   // half-written values belonging to the other.
   if (await isV2('one-offs', searchParams)) {
-    return <AboutPageV2 s={makeSlot(ABOUT_V2_SLOTS, slots)} />
+    // AboutPage schema, as the current page carries. The rebuilt branch returned without it.
+    return (
+      <>
+        <JsonLd data={aboutPageSchema()} />
+        <AboutPageV2 s={makeSlot(ABOUT_V2_SLOTS, slots)} />
+      </>
+    )
   }
   const PLATFORM_CARDS = [
     { Icon: FileText,       key: 'platform.card1', href: '/care-policies' },

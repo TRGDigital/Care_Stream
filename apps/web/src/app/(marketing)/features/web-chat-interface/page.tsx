@@ -3,6 +3,8 @@ import { MessageSquare, Globe, ShieldCheck, Clock, Users, FileText, Search, Zap 
 import { FeatureShowcasePage, type FeatureContent } from '@/components/marketing/feature-page'
 import { pageMetadata } from '@/lib/page-meta'
 import { WebChatPageV2 } from '@/components/marketing/web-chat-page-v2'
+import { JsonLd } from '@/components/json-ld'
+import { faqPageSchema, serviceSchema } from '@/lib/schema'
 import type { FeatureV2Content } from '@/components/marketing/feature-page-v2'
 import { isV2 } from '@/lib/v2-rollout'
 
@@ -144,12 +146,25 @@ export default async function WebChatInterfacePage(
   if (await isV2('web-chat', searchParams)) {
     const fp = await getRecord()
     if (fp) {
+      // Service and FAQPage schema, as every other feature page carries. Without it this page
+      // would repeat what batch 1 did to the other feature pages the day it goes live.
+      const faqs = (Array.isArray(fp.faqs) ? fp.faqs : [])
+        .filter((f: { question?: string; answer?: string }) => f?.question && f?.answer)
       return (
-        <WebChatPageV2 page={{
-          title: fp.title,
-          content: (fp.content ?? {}) as FeatureV2Content & { stepImages?: string[] },
-          faqs: Array.isArray(fp.faqs) ? fp.faqs : [],
-        }} />
+        <>
+          <JsonLd data={serviceSchema({
+            name: fp.title,
+            description: fp.meta_description
+              || `${fp.title}, part of the CareStreamAI compliance platform for UK care providers.`,
+            path: '/features/web-chat-interface',
+          })} />
+          {faqs.length > 0 && <JsonLd data={faqPageSchema(faqs)} />}
+          <WebChatPageV2 page={{
+            title: fp.title,
+            content: (fp.content ?? {}) as FeatureV2Content & { stepImages?: string[] },
+            faqs: Array.isArray(fp.faqs) ? fp.faqs : [],
+          }} />
+        </>
       )
     }
   }

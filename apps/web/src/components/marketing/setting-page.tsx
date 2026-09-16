@@ -7,6 +7,8 @@ import {
 } from 'lucide-react'
 import { PageCta, SectionLabel } from './ui'
 import { HomeFaq } from './home-faq'
+import { JsonLd } from '@/components/json-ld'
+import { faqPageSchema } from '@/lib/schema'
 import { SiteImage } from '@/components/site-image'
 import { SETTING_IMAGES } from '@/lib/settings/list'
 import { SettingPageV2 } from './setting-page-v2'
@@ -129,7 +131,17 @@ function HubMockup({ m }: { m: SettingPageConfig['mockup'] }) {
 // duplicated across the eleven route files, and defaults to false so the live pages are
 // untouched until the design is signed off.
 export function SettingPage({ config, v2 }: { config: SettingPageConfig; v2?: boolean }) {
-  if (v2) return <SettingPageV2 config={config} />
+  if (v2) {
+    // The FAQPage schema. The current design gets it from HomeFaq; the rebuilt page renders its
+    // questions itself and returned without it, so batch 2a removed it from all eleven pages.
+    const faqs = (config.faqs ?? []).filter(f => f.question && f.answer)
+    return (
+      <>
+        {faqs.length > 0 && <JsonLd data={faqPageSchema(faqs)} />}
+        <SettingPageV2 config={config} />
+      </>
+    )
+  }
   const c = config
   const image = SETTING_IMAGES[c.slug]
   return (

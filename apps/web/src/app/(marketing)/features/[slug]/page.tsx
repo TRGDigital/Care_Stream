@@ -44,6 +44,30 @@ async function getFeaturePage(slug: string): Promise<FeaturePage | null> {
   }
 }
 
+/** The structured data every feature page carries: a Service, and ONE FAQPage built from the
+ *  questions the page actually shows.
+ *
+ *  The rebuilt branches returned early without it, so going live with batch 1 quietly removed
+ *  both from 44 feature pages. The current page emitted FAQPage twice (here and again inside
+ *  HomeFaq); the rebuilt page emits it once, which is what Google expects. */
+function FeatureStructuredData({ slug, title, description, faqs }: {
+  slug: string; title: string; description?: string | null
+  faqs: Array<{ question?: string | null; answer?: string | null }>
+}) {
+  const shown = faqs.filter((f): f is { question: string; answer: string } =>
+    Boolean(f?.question && f?.answer))
+  return (
+    <>
+      <JsonLd data={serviceSchema({
+        name: title,
+        description: description || `${title}, part of the CareStreamAI compliance platform for UK care providers.`,
+        path: `/features/${slug}`,
+      })} />
+      {shown.length > 0 && <JsonLd data={faqPageSchema(shown)} />}
+    </>
+  )
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const fp = await getFeaturePage(slug)
@@ -121,11 +145,15 @@ export default async function DbFeaturePage(
   // differs, so its copy stays where all the other feature copy is.
   if (await isV2('web-chat', sp) && slug === 'web-chat-interface') {
     return (
-      <WebChatPageV2 page={{
-        title: fp.title,
-        content: (fp.content ?? {}) as FeatureV2Content & { stepImages?: string[] },
-        faqs: Array.isArray(fp.faqs) ? fp.faqs : [],
-      }} />
+      <>
+        <FeatureStructuredData slug={slug} title={fp.title} description={fp.meta_description}
+                               faqs={Array.isArray(fp.faqs) ? fp.faqs : []} />
+        <WebChatPageV2 page={{
+          title: fp.title,
+          content: (fp.content ?? {}) as FeatureV2Content & { stepImages?: string[] },
+          faqs: Array.isArray(fp.faqs) ? fp.faqs : [],
+        }} />
+      </>
     )
   }
 
@@ -134,7 +162,15 @@ export default async function DbFeaturePage(
       Promise.all(caps.map(getFeaturePage)).then(r => r.filter(Boolean)),
       getRelatedFeatures(slug),
     ])
+    // A cluster page shows its children's questions, grouped under each capability, so those
+    // are the questions its FAQPage describes when it has none of its own.
+    const ownFaqs = Array.isArray(fp.faqs) ? fp.faqs : []
+    const shownFaqs = ownFaqs.length ? ownFaqs
+      : children.flatMap(c => (Array.isArray(c!.faqs) ? c!.faqs : []))
     return (
+      <>
+      <FeatureStructuredData slug={slug} title={fp.title} description={fp.meta_description}
+                             faqs={shownFaqs} />
       <FeaturePageV2 page={{
         slug,
         title: fp.title,
@@ -148,6 +184,7 @@ export default async function DbFeaturePage(
         })),
         related: relatedV2,
       }} />
+      </>
     )
   }
 
@@ -159,7 +196,7 @@ export default async function DbFeaturePage(
     <>
       <JsonLd data={serviceSchema({
         name: fp.title,
-        description: fp.meta_description || `${fp.title} — part of the CareStreamAI compliance platform for UK care providers.`,
+        description: fp.meta_description || `${fp.title}, part of the CareStreamAI compliance platform for UK care providers.`,
         path: `/features/${slug}`,
       })} />
       {faqs.length > 0 && <JsonLd data={faqPageSchema(faqs)} />}

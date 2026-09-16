@@ -356,11 +356,11 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
                 <div className="mpart" key={i}>
                   <div className="mpart-copy">
                     <span className="n">{String(i + 1).padStart(2, '0')}</span>
-                    <h3>{s.heading}</h3>
+                    <h3>{cs(s.heading)}</h3>
                     {s.body && <p>{cs(s.body)}</p>}
                   </div>
                   {img(s.image_url) && (
-                    <figure><SiteImage src={img(s.image_url)!} alt={s.heading} /></figure>
+                    <figure><SiteImage src={img(s.image_url)!} alt={cs(s.heading)} /></figure>
                   )}
                 </div>
               ))}
@@ -530,7 +530,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
                 a hub screen the image is not, so the alt names the lesson instead. */}
             {img(sections[0]?.image_url) && (
               <figure className="tshot">
-                <SiteImage src={img(sections[0]?.image_url)!} alt={sections[0].heading} />
+                <SiteImage src={img(sections[0]?.image_url)!} alt={cs(sections[0].heading)} />
               </figure>
             )}
           </div>

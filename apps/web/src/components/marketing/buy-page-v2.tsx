@@ -196,13 +196,13 @@ export function BuyPageV2({ module: m, unitPence, related, apiUrl }: {
                 <li key={i}>
                   <span className="n" />
                   {/* The theme lists each lesson with its first sentence, not the whole body. */}
-                  <span><b>{s.heading}</b>{s.body && <p>{careSetting(firstSentence(s.body))}</p>}</span>
+                  <span><b>{careSetting(s.heading)}</b>{s.body && <p>{careSetting(firstSentence(s.body))}</p>}</span>
                 </li>
               ))}
             </ul>
             {wide && (
               <div className="byshot wide">
-                <SiteImage src={wide} alt={curriculum[0]?.heading || m.title} />
+                <SiteImage src={wide} alt={careSetting(curriculum[0]?.heading) || m.title} />
               </div>
             )}
           </div>

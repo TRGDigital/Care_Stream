@@ -231,7 +231,10 @@ export function HomePageV2({ s }: { s: HomeCopy }) {
                 {FACES.map(f => (
                   <span className="face" key={f}><SiteImage src={`/images/home/${f}`} alt="" /></span>
                 ))}
-                <span className="cap">{s('proof.caption')}</span>
+                {/* Two lines in the design; on one line it pushed a logo onto a second row. */}
+                <span className="cap">
+                  {s('proof.caption').split('\n').map((line, i) => <span key={i}>{i > 0 && <br />}{line}</span>)}
+                </span>
               </div>
             </div>
             <div className="logos">

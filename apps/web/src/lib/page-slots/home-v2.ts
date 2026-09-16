@@ -49,7 +49,7 @@ export const HOME_V2_SLOTS: SlotDef[] = [
 
   // ── Proof strip ─────────────────────────────────────────────────────────────
   { key: 'proof.stat', group: 'Proof strip', label: 'Heading', default: 'Trusted by CQC-registered services across England' },
-  { key: 'proof.caption', group: 'Proof strip', label: 'Caption beside the faces', default: 'Real carers and managers using CareStream today' },
+  { key: 'proof.caption', group: 'Proof strip', label: 'Caption beside the faces (a new line breaks it, as the design does)', multiline: true, default: 'Real carers and managers\nusing CareStream today' },
 
   // ── Walkthrough ─────────────────────────────────────────────────────────────
   { key: 'watch.eyebrow', group: 'Walkthrough', label: 'Eyebrow', default: 'Watch' },

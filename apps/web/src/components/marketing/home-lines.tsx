@@ -90,7 +90,9 @@ function heroLines(): () => void {
       out += `<path id="${pid}" class="ln" d="${elbow(p, q)}" stroke="${col}" style="animation-delay:${(i * 0.07).toFixed(2)}s"/>`
       dot(p.x, p.y, col, 0.7 + i * 0.07); dot(q.x, q.y, col, 0.75 + i * 0.07)
       if (!still) {
-        travellers += `<circle r="4" fill="${col}" opacity=".95">`
+        // opacity 0 until its animation begins: at .95, as the theme has it, each pulse sat
+        // visible at the svg's top-left corner for the second or so before it started moving.
+        travellers += `<circle r="4" fill="${col}" opacity="0">`
           + `<animateMotion dur="6.2s" begin="${(1.1 + i * 0.44).toFixed(2)}s" repeatCount="indefinite" `
           + `keyPoints="0;1" keyTimes="0;1" calcMode="linear">`
           + `<mpath href="#${pid}"/></animateMotion>`

@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, useState } from 'react'
+import { Fragment, useRef, useState } from 'react'
 import Link from 'next/link'
 import { CheckCircle2, XCircle, Sparkles, ArrowRight, ArrowLeft, RotateCcw, Send, Info, Globe } from 'lucide-react'
 import { SiteImage } from '@/components/site-image'
@@ -46,6 +46,7 @@ export function TrainingDemo({
   const [selected, setSelected] = useState<number | null>(null)
   const [showInfo, setShowInfo] = useState(false)
   const [lang, setLang] = useState<'eng' | 'pol' | 'hin'>('eng')
+  const toResult = useRef<number | undefined>(undefined)
   const { lesson, question } = demo
   if (!lesson || !question) return null
 
@@ -284,9 +285,16 @@ export function TrainingDemo({
       setSelected(i)
       track('demo_answer', { correct: i === Q.correct })
       // The theme marks the options first, then moves to the result a moment later.
-      window.setTimeout(() => setStep('result'), 260)
+      // Cancelled by anything that leaves the question first (back, try again, a language),
+      // and only ever moves on from the question, so a late timer cannot open an empty result.
+      window.clearTimeout(toResult.current)
+      toResult.current = window.setTimeout(
+        () => setStep(s => (s === 'question' ? 'result' : s)), 260)
     }
-    const again = () => { setSelected(null); setShowInfo(false); setStep('lesson') }
+    const again = () => {
+      window.clearTimeout(toResult.current)
+      setSelected(null); setShowInfo(false); setStep('lesson')
+    }
     const LANG_BUTTONS = ([['eng', 'English'], ['hin', 'हिन्दी'], ['pol', 'Polski']] as [string, string][])
       .filter(([c]) => c === 'eng' || availableLangs.includes(c as 'pol' | 'hin'))
     const Tick = ({ w = 2.6 }: { w?: number }) => (
@@ -341,7 +349,7 @@ export function TrainingDemo({
             <div className="demo-fb" hidden />
             <button type="button" className="tbtn ghost"
                     style={{ fontSize: '.82rem', padding: '8px 15px', marginTop: 12 }}
-                    onClick={() => { setSelected(null); setStep('lesson') }}>
+                    onClick={again}>
               Back to the lesson
             </button>
           </div>

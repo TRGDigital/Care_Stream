@@ -1,63 +1,91 @@
 import Link from 'next/link'
 import { CookieSettingsButton } from './cookie-consent'
-import { SiteImage } from '@/components/site-image'
 import { SETTINGS_LIST } from '@/lib/settings/list'
+import './site-chrome.css'
+import './site-chrome-extra.css'
 
-const WHO_WE_SERVE = [
-  { href: '/who-we-serve', label: 'All settings' },
-  ...SETTINGS_LIST.map((s) => ({ href: `/${s.slug}`, label: s.label })),
+// The site footer, in the theme's markup (.site-foot, .fbrand, .fcols, .fbase), styled by the
+// ported chrome stylesheet.
+//
+// Kept from the footer this replaces, because each does a job the theme's footer does not:
+// - links added in the console (Pages tab, "Show in footer navigation") still join their column;
+// - Cookie settings, so a visitor can change their consent from any page;
+// - the line that CareStream is not a legal or compliance adviser and that a readiness report is
+//   no guarantee of a rating.
+// The ICO registration the theme adds is checked: ZC221613 is TRG Digital Ltd on the public
+// register, valid to 12 August 2027.
+
+type LinkItem = { href: string; label: string }
+
+const USER_CASES: LinkItem[] = [
+  { href: '/uses/multilingual-staff-hub', label: 'Staff Hub in 60+ languages' },
+  { href: '/uses/resident-knowledge', label: 'Resident Knowledge' },
+  { href: '/uses/policy-gaps', label: 'Policy Gaps' },
+  { href: '/uses/policy-inconsistencies', label: 'Policy Inconsistencies' },
+  { href: '/uses/cqc-wording-alignment', label: 'CQC Wording Alignment' },
+  { href: '/uses/out-of-date-policies', label: 'Policies Out of Date' },
+  { href: '/uses/staff-compliance', label: 'Staff Compliance' },
+  { href: '/uses/annual-training', label: 'Annual Training' },
+  { href: '/uses/adhoc-training', label: 'Adhoc Training' },
+  { href: '/uses/face-to-face-training', label: 'Face to Face Training' },
+  { href: '/uses/training-matrix', label: 'Training Matrix' },
+  { href: '/uses/training-calendar', label: 'Training Calendar' },
+  { href: '/uses/cqc-prep-questions', label: 'CQC Prep Questions' },
+  { href: '/uses/staff-onboarding', label: 'Staff Onboarding' },
 ]
-
-const PRODUCT = [
-  { href: '/how-it-works',         label: 'How It Works' },
-  { href: '/care-policies',         label: 'Features' },
-  { href: '/pricing',              label: 'Pricing' },
-  { href: '/who-its-for',          label: 'Who It\'s For' },
-  { href: '/cqc-compliance',       label: 'CQC & Compliance' },
-  { href: '/training-platform',    label: 'Training' },
-  { href: '/staff-training',       label: 'Annual Training' },
+const PRODUCT: LinkItem[] = [
+  { href: '/how-it-works', label: 'How It Works' },
+  { href: '/care-policies', label: 'Features' },
+  { href: '/pricing', label: 'Pricing' },
+  { href: '/who-its-for', label: 'Who It\'s For' },
+  { href: '/cqc-compliance', label: 'CQC & Compliance' },
+  { href: '/training-platform', label: 'Training' },
+  { href: '/staff-training', label: 'Annual Training' },
+  { href: '/languages', label: 'Languages' },
+  { href: '/features/web-chat-interface', label: 'Web Chat Interface' },
   { href: '/regulatory-knowledge', label: 'Regulatory Knowledge' },
-  { href: '/demo',                 label: 'Book a Demo' },
+  { href: '/demo', label: 'Book a Demo' },
 ]
-
-const TRUST = [
-  { href: '/trust',    label: 'Trust & Security' },
-  { href: '/rag',      label: 'RAG' },
-  { href: '/privacy',  label: 'Privacy Policy' },
-  { href: '/terms',    label: 'Terms of Service' },
-  { href: '/dpa',      label: 'Data Processing Agreement' },
-  { href: '/cookies',  label: 'Cookie Policy' },
+const WHO_WE_SERVE: LinkItem[] = [
+  { href: '/who-we-serve', label: 'All settings' },
+  ...SETTINGS_LIST.map(s => ({ href: `/${s.slug}`, label: s.label })),
 ]
-
-const COMPANY = [
-  { href: '/about',        label: 'About' },
+const TRUST: LinkItem[] = [
+  { href: '/trust', label: 'Trust & Security' },
+  { href: '/rag', label: 'RAG' },
+  { href: '/privacy', label: 'Privacy Policy' },
+  { href: '/terms', label: 'Terms of Service' },
+  { href: '/dpa', label: 'Data Processing Agreement' },
+  { href: '/cookies', label: 'Cookie Policy' },
+]
+const COMPANY: LinkItem[] = [
+  { href: '/about', label: 'About' },
   { href: '/case-studies', label: 'Case Studies' },
-  { href: '/blog',         label: 'Blog' },
-  { href: '/faq',          label: 'FAQ' },
-  { href: '/contact',      label: 'Contact' },
+  { href: '/blog', label: 'Blog' },
+  { href: '/faq', label: 'FAQ' },
+  { href: '/contact', label: 'Contact' },
+]
+const GET_STARTED: LinkItem[] = [
+  { href: '/register', label: 'Start Free Trial' },
+  { href: '/demo', label: 'Book a Demo' },
+  { href: '/login', label: 'Sign In' },
+  { href: '/help', label: 'Help Centre' },
 ]
 
-const GET_STARTED = [
-  { href: '/register', label: 'Start Free Trial' },
-  { href: '/demo',     label: 'Book a Demo' },
-  { href: '/login',    label: 'Sign In' },
-  { href: '/help',     label: 'Help Centre' },
+// The console's footer groups, matched to the theme's columns.
+const GROUPS: { heading: string; consoleGroup: string | null; links: LinkItem[]; wide?: boolean }[] = [
+  { heading: 'User cases', consoleGroup: null, links: USER_CASES, wide: true },
+  { heading: 'Product', consoleGroup: 'Product', links: PRODUCT },
+  { heading: 'Who we serve', consoleGroup: 'Who We Serve', links: WHO_WE_SERVE },
+  { heading: 'Trust & legal', consoleGroup: 'Trust & Legal', links: TRUST },
+  { heading: 'Company', consoleGroup: 'Company', links: COMPANY },
+  { heading: 'Get started', consoleGroup: 'Get Started', links: GET_STARTED },
 ]
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
-const STATIC_GROUPS: Array<{ heading: string; links: Array<{ href: string; label: string }> }> = [
-  { heading: 'Product',       links: PRODUCT },
-  { heading: 'Who We Serve',  links: WHO_WE_SERVE },
-  { heading: 'Trust & Legal', links: TRUST },
-  { heading: 'Company',       links: COMPANY },
-  { heading: 'Get Started',   links: GET_STARTED },
-]
-
 interface FooterPage { path: string; title: string; footer_group: string | null; footer_label: string | null; footer_sort: number }
 
-// CMS-managed footer links (Pages tab → "Show in footer navigation") are merged
-// into the static groups below, so new pages appear without a code change.
 async function getFooterPages(): Promise<FooterPage[]> {
   try {
     const res = await fetch(`${API_URL}/public/site-pages/footer`, { next: { revalidate: 60 } })
@@ -72,106 +100,58 @@ const stripBrand = (t: string) => t.replace(/\s*\|\s*CareStream\s*$/i, '').trim(
 
 export async function MarketingFooter() {
   const dbPages = await getFooterPages()
-  const groups = STATIC_GROUPS.map(({ heading, links }) => {
+  const groups = GROUPS.map(g => {
     const extra = dbPages
-      .filter(p => p.footer_group === heading && !links.some(l => l.href === p.path))
+      .filter(p => g.consoleGroup && p.footer_group === g.consoleGroup && !g.links.some(l => l.href === p.path))
       .sort((a, b) => (a.footer_sort || 0) - (b.footer_sort || 0))
       .map(p => ({ href: p.path, label: p.footer_label || stripBrand(p.title || p.path) }))
-    return { heading, links: [...links, ...extra] }
+    return { ...g, links: [...g.links, ...extra] }
   })
+
   return (
-    <footer className="bg-neutral-dark text-white">
-      {/* Top section */}
-      <div className="mx-auto max-w-content px-6 pb-14 pt-16">
-        {/* Brand + tagline */}
-        <div className="mb-12 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <SiteImage src="/logo-white.png" alt="CareStreamAI" width={4336} height={1301} sizes="140px" className="h-10 w-auto" />
-            <p className="mt-1 text-sm italic text-gray-400">Policy access for every voice in your team.</p>
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Link
-              href="/demo"
-              className="btn-amber rounded-btn px-6 py-2.5 text-sm text-center"
-            >
-              Book a Free Demo
-            </Link>
-            <Link
-              href="/register"
-              className="btn-ghost-white rounded-btn px-6 py-2.5 text-sm text-center"
-            >
-              Start Free Trial
-            </Link>
-          </div>
-        </div>
-
-        {/* Links grid */}
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-5">
-          {groups.map(({ heading, links }) => (
-            <div key={heading}>
-              <p className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-500">{heading}</p>
-              <ul className="space-y-2.5">
-                {links.map(({ href, label }) => (
-                  <li key={href}>
-                    <Link href={href} className="text-sm text-gray-400 hover:text-white transition-colors">
-                      {label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        {/* Divider */}
-        <div className="my-12 border-t border-white/8" />
-
-        {/* Bottom row */}
-        <div className="flex flex-col gap-4 text-xs text-gray-500 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-col gap-1">
-            <p>© 2026 CareStreamAI. All rights reserved.</p>
-            <p>
-              CareStreamAI is a product of TRG Digital Ltd, registered in England &amp; Wales (company no. 11731704). Registered office: Suite Ra01, 195-197 Wood Street, London, England, E17 3NU.
-            </p>
-            <p>
-              CareStreamAI is not a registered legal or compliance advisor. CQC Readiness Reports provide factual audit data and do not constitute a guarantee of any inspection rating or regulatory outcome.
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <CookieSettingsButton className="hover:text-white transition-colors" />
-            <a href="mailto:hello@carestreamai.com" className="hover:text-white transition-colors">
-              hello@carestreamai.com
-            </a>
-            <a
-              href="https://www.linkedin.com/company/carestreamai/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 hover:text-white transition-colors"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-              </svg>
-              LinkedIn
-            </a>
-          </div>
-        </div>
-
-        {/* Built by TRG Digital */}
-        <div className="mt-10 border-t border-white/8 pt-6 text-center">
-          <a
-            href="https://www.trgdigital.co.uk/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-gray-500 transition-colors hover:text-gray-300"
-          >
-            <span>This site was built by</span>
-            <span className="inline-flex items-center rounded bg-white px-2 py-1">
-              <SiteImage src="/trg-digital.png" alt="TRG Digital" width={900} height={209} sizes="84px" className="h-4 w-auto" />
+    <div className="cschrome">
+      <footer className="site-foot">
+        <div className="wrap">
+          <div className="fbrand">
+            <span className="brand">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="cslogo" src="/logo-color.svg" alt="CareStream" width={187} height={56} />
             </span>
-            <span>a specialist care sector marketing agency</span>
-          </a>
+            <p>Policy, training and CQC evidence for care services in England. Built by people who have sat through an inspection.</p>
+            <address className="faddr">Suite Ra01, 195-197 Wood Street,<br />London, E17 3NU</address>
+            <Link className="fcontact" href="/demo">
+              Contact us
+              <svg viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7h8M7.5 3.5 11 7l-3.5 3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </Link>
+          </div>
+
+          <div className="fcols">
+            {groups.map(g => (
+              <div className={`fcol${g.wide ? ' wide' : ''}`} key={g.heading}>
+                <h4>{g.heading}</h4>
+                {g.links.map(l => <Link href={l.href} key={l.href}>{l.label}</Link>)}
+              </div>
+            ))}
+          </div>
+
+          <div className="fbase">
+            <span>© 2026 TRG Digital Ltd · Company 11731704 · Registered in England</span>
+            <a className="fico" href="https://ico.org.uk/ESDWebPages/Entry/ZC221613" rel="noopener noreferrer" target="_blank">
+              <span>ICO registered: ZC221613</span>
+            </a>
+            <span className="fsocial">
+              <CookieSettingsButton className="fcookie" />
+              <a href="https://www.linkedin.com/company/carestreamai/" rel="noopener noreferrer" target="_blank">LinkedIn</a>
+              <a href="mailto:hello@carestreamai.com">hello@carestreamai.com</a>
+            </span>
+          </div>
+          <p className="fdisclaim">
+            CareStreamAI is a product of TRG Digital Ltd. It is not a registered legal or compliance
+            advisor, and CQC Readiness Reports provide factual audit data, not a guarantee of any
+            inspection rating or regulatory outcome.
+          </p>
         </div>
-      </div>
-    </footer>
+      </footer>
+    </div>
   )
 }

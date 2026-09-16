@@ -151,20 +151,40 @@ export function SettingsPanel({ token }: { token: string }) {
         </div>
       )
     }
+    const status = rows.find(r => r.slug === slug)?.status ?? 'draft'
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-neutral-dark">{cfg.label}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-semibold text-neutral-dark">{cfg.label}</p>
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${STATUS[status] ?? STATUS.draft}`}>{status}</span>
+            </div>
             <p className="font-mono text-xs text-neutral-mid">/{slug}</p>
           </div>
           <div className="flex gap-2">
             <button type="button" onClick={() => { setSlug(null); setCfg(null) }}
               className="rounded-md border border-gray-200 px-4 py-2 text-sm">Back</button>
+            <button type="button" onClick={() => preview('setting', slug)} disabled={busy === slug}
+              className="rounded-md border border-gray-200 px-4 py-2 text-sm hover:bg-neutral-light disabled:opacity-50">
+              Preview
+            </button>
             <button type="button" onClick={save} disabled={saving}
-              className="flex items-center gap-1.5 rounded-md bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">
+              className="flex items-center gap-1.5 rounded-md border border-gray-200 px-4 py-2 text-sm font-medium hover:bg-neutral-light disabled:opacity-50">
               {saving ? <Loader2 size={14} className="animate-spin" /> : saved ? <Check size={14} /> : null}
               {saved ? 'Saved' : 'Save'}
+            </button>
+            {/* Publishing from inside the editor, as the Our Services panel does. It saves
+                first, so publishing can never put live a version older than what is on screen. */}
+            <button type="button" disabled={saving || busy === slug}
+              onClick={async () => {
+                if (status !== 'published') await save()
+                await setStatus(slug, status === 'published' ? 'draft' : 'published')
+              }}
+              className={status === 'published'
+                ? 'rounded-md border border-gray-200 px-4 py-2 text-sm font-medium hover:bg-neutral-light disabled:opacity-50'
+                : 'rounded-md bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50'}>
+              {status === 'published' ? 'Unpublish' : 'Save and publish'}
             </button>
           </div>
         </div>
@@ -272,11 +292,15 @@ export function SettingsPanel({ token }: { token: string }) {
                 <button type="button" onClick={() => edit(r.slug)} disabled={busy === r.slug}
                   className="rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium hover:bg-neutral-light disabled:opacity-50">Edit</button>
               )}
+              {/* Named Publish / Unpublish, as on the Our Services and Uses panels. It was
+                  "Use this copy", which nobody reads as the button that puts a page live. */}
               {r.exists && (
                 <button type="button" onClick={() => setStatus(r.slug, r.status === 'published' ? 'draft' : 'published')}
                   disabled={busy === r.slug}
-                  className="rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium hover:bg-neutral-light disabled:opacity-50">
-                  {r.status === 'published' ? 'Use code version' : 'Use this copy'}
+                  className={r.status === 'published'
+                    ? 'rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium hover:bg-neutral-light disabled:opacity-50'
+                    : 'rounded-md bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark disabled:opacity-50'}>
+                  {r.status === 'published' ? 'Unpublish' : 'Publish'}
                 </button>
               )}
             </div>

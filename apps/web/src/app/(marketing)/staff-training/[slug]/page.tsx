@@ -23,11 +23,11 @@ import { TrainingLanguageSection } from '@/components/marketing/training-languag
 import { TrainingCpdFeatures } from '@/components/marketing/training-cpd-features'
 import { TrainingFollowUpLoop } from '@/components/marketing/training-follow-up-loop'
 import { JsonLd } from '@/components/json-ld'
-import { courseSchema } from '@/lib/schema'
+import { courseSchema, faqPageSchema } from '@/lib/schema'
 import { COURSE_LANGUAGE_CODES } from '@/lib/languages'
 import { WhyChooseCareStream } from '@/components/marketing/why-choose-carestream'
 import { TrainingVideo } from '@/components/marketing/training-video'
-import { estimatedMinutes, formatDuration } from '@/lib/training-commerce'
+import { estimatedMinutes, formatDuration, refreshWord } from '@/lib/training-commerce'
 import { careSetting } from '@/lib/care-setting'
 import { isV2 } from '@/lib/v2-rollout'
 
@@ -88,10 +88,7 @@ function freqLabel(f: string): string {
   return f === 'annual' ? 'Annual' : f === 'biennial' ? 'Biennial' : f === 'triennial' ? 'Triennial'
     : f === 'once' ? 'One-off' : f === 'adhoc' ? 'Ad-hoc' : f
 }
-function freqWord(f: string): string {
-  return f === 'annual' ? 'every year' : f === 'biennial' ? 'every two years' : f === 'triennial' ? 'every three years'
-    : f === 'once' ? 'once, usually at induction' : 'regularly'
-}
+const freqWord = refreshWord
 
 // Related modules as full, buyable catalogue cards. Keeps the rotating-window +
 // same-group selection (so every module page still gets several dofollow internal
@@ -153,21 +150,6 @@ export default async function TrainingModulePage(
   if (!m) notFound()
   const [related, demo, unitPence] = await Promise.all([getRelatedTopics(slug), getModuleDemo(slug), getUnitPence()])
   const unitPrice = (unitPence / 100).toFixed(2)
-
-  // Opt-in with ?v2=1 until it is signed off, the same as the other ported families. It renders
-  // this same record and the same demo payload, so the flag changes the design and nothing else.
-  const sp = await searchParams
-  if (await isV2('modules', sp)) {
-    return (
-      <ModulePageV2
-        module={{ ...m, slug }}
-        demo={demo}
-        related={related}
-        unitPence={unitPence}
-        apiUrl={API_URL}
-      />
-    )
-  }
 
   const heroBullets = [
     'CQC-aligned, mapped to the Care Certificate framework',
@@ -245,6 +227,28 @@ export default async function TrainingModulePage(
     pricePence: unitPence,
     workloadMinutes: Math.min(120, Math.max(30, sectionsToShow.length * 10)),
   })
+
+  // The rebuilt design. It renders this same record and the same demo payload, so the flag
+  // changes the design and nothing else. It sits after the Course facts and the FAQs are built
+  // because it must carry the same structured data: returning before them, as it first did,
+  // dropped Course and FAQPage from every module page. The current page gets FAQPage from
+  // HomeFaq; the rebuilt one shows the same four questions and marks them up here.
+  const sp = await searchParams
+  if (await isV2('modules', sp)) {
+    return (
+      <>
+        <JsonLd data={courseJson} />
+        <JsonLd data={faqPageSchema(faqs)} />
+        <ModulePageV2
+          module={{ ...m, slug }}
+          demo={demo}
+          related={related}
+          unitPence={unitPence}
+          apiUrl={API_URL}
+        />
+      </>
+    )
+  }
 
   return (
     <>

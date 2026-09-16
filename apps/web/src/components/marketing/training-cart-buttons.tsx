@@ -22,8 +22,10 @@ const Cart = () => (
 )
 
 /** Add a module to the training cart, then step the quantity once it is in. */
-export function TrainingAddButton({ slug, title, unitPence, className = '' }: {
+export function TrainingAddButton({ slug, title, unitPence, className = '', label = 'Add to basket' }: {
   slug: string; title: string; unitPence: number; className?: string
+  /** The theme's closing band reads "Add to basket · £25.99". */
+  label?: string
 }) {
   const { items, cart } = useCart()
   const inCart = items.find(i => i.slug === slug)
@@ -39,7 +41,7 @@ export function TrainingAddButton({ slug, title, unitPence, className = '' }: {
   return (
     <button type="button" className={`add ${className}`.trim()}
             onClick={() => cart.add({ slug, title, unitPence })}>
-      <Cart /> Add to basket
+      <Cart /> {label}
     </button>
   )
 }

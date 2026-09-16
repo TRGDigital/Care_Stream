@@ -180,7 +180,7 @@ const Seal = () => (
 /** The theme's module card. "Certificate" is the completion certificate every course issues
  *  for CQC evidence, not an accreditation claim; the CPD mark appears only when
  *  TRAINING_ACCREDITED is set, exactly as on the current card. */
-function ThemeModuleCard({ t, settingLabel, bulk, hidden }: {
+export function ThemeModuleCard({ t, settingLabel, bulk, hidden }: {
   t: LibraryTopic; settingLabel?: string | null; bulk: string; hidden?: boolean
 }) {
   const { items, cart } = useCart()

@@ -120,6 +120,6 @@
   .wwpage-v2 .wwstats{gap:20px}
 }
 
-.wwpage-v2 .shot,.wwpage-v2 .sshot,.wwpage-v2 .sscen-shot,.wwpage-v2 .uc-shot,.wwpage-v2 .wcshot,.wwpage-v2 .smock,.wwpage-v2 .ucread-art,.wwpage-v2 .pcrel-art{display:block;overflow:hidden;padding:0;aspect-ratio:auto;height:auto;min-height:0;max-height:none}
-.wwpage-v2 .shot img,.wwpage-v2 .sshot img,.wwpage-v2 .sscen-shot img,.wwpage-v2 .uc-shot img,.wwpage-v2 .wcshot img,.wwpage-v2 .smock img,.wwpage-v2 .ucread-art img,.wwpage-v2 .pcrel-art img{display:block;width:100%;height:auto;object-fit:contain;border-radius:inherit}
+.wwpage-v2 .shot,.wwpage-v2 .sshot,.wwpage-v2 .sscen-shot,.wwpage-v2 .uc-shot,.wwpage-v2 .wcshot,.wwpage-v2 .svshot,.wwpage-v2 .wwshot,.wwpage-v2 .wfshot,.wwpage-v2 .wfheroshot,.wwpage-v2 .tpshot,.wwpage-v2 .rgshot,.wwpage-v2 .dmshot,.wwpage-v2 .plate:not(.shotplate),.wwpage-v2 .smock,.wwpage-v2 .ucread-art,.wwpage-v2 .pcrel-art{display:block!important;overflow:hidden;padding:0!important;aspect-ratio:auto!important;height:auto!important;min-height:0!important;max-height:none!important}
+.wwpage-v2 .shot img,.wwpage-v2 .sshot img,.wwpage-v2 .sscen-shot img,.wwpage-v2 .uc-shot img,.wwpage-v2 .wcshot img,.wwpage-v2 .svshot img,.wwpage-v2 .wwshot img,.wwpage-v2 .wfshot img,.wwpage-v2 .wfheroshot img,.wwpage-v2 .tpshot img,.wwpage-v2 .rgshot img,.wwpage-v2 .dmshot img,.wwpage-v2 .plate:not(.shotplate) img,.wwpage-v2 .smock img,.wwpage-v2 .ucread-art img,.wwpage-v2 .pcrel-art img{display:block;width:100%!important;height:auto!important;object-fit:contain;border-radius:inherit}
 .wwpage-v2 .fchips,.wwpage-v2 .schips,.wwpage-v2 .smock-tabs,.wwpage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}

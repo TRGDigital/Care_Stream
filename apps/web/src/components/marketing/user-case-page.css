@@ -212,6 +212,6 @@
   .ucpage .uc-panel{display:none}
 }
 
-.ucpage .shot,.ucpage .sshot,.ucpage .sscen-shot,.ucpage .uc-shot,.ucpage .wcshot,.ucpage .smock,.ucpage .ucread-art,.ucpage .pcrel-art{display:block;overflow:hidden;padding:0;aspect-ratio:auto;height:auto;min-height:0;max-height:none}
-.ucpage .shot img,.ucpage .sshot img,.ucpage .sscen-shot img,.ucpage .uc-shot img,.ucpage .wcshot img,.ucpage .smock img,.ucpage .ucread-art img,.ucpage .pcrel-art img{display:block;width:100%;height:auto;object-fit:contain;border-radius:inherit}
+.ucpage .shot,.ucpage .sshot,.ucpage .sscen-shot,.ucpage .uc-shot,.ucpage .wcshot,.ucpage .svshot,.ucpage .wwshot,.ucpage .wfshot,.ucpage .wfheroshot,.ucpage .tpshot,.ucpage .rgshot,.ucpage .dmshot,.ucpage .plate:not(.shotplate),.ucpage .smock,.ucpage .ucread-art,.ucpage .pcrel-art{display:block!important;overflow:hidden;padding:0!important;aspect-ratio:auto!important;height:auto!important;min-height:0!important;max-height:none!important}
+.ucpage .shot img,.ucpage .sshot img,.ucpage .sscen-shot img,.ucpage .uc-shot img,.ucpage .wcshot img,.ucpage .svshot img,.ucpage .wwshot img,.ucpage .wfshot img,.ucpage .wfheroshot img,.ucpage .tpshot img,.ucpage .rgshot img,.ucpage .dmshot img,.ucpage .plate:not(.shotplate) img,.ucpage .smock img,.ucpage .ucread-art img,.ucpage .pcrel-art img{display:block;width:100%!important;height:auto!important;object-fit:contain;border-radius:inherit}
 .ucpage .fchips,.ucpage .schips,.ucpage .smock-tabs,.ucpage .uc-tags{flex-wrap:wrap;overflow:visible}

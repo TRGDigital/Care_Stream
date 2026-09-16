@@ -120,6 +120,6 @@
   .lgpage-v2 .lgrel-grid{grid-template-columns:1fr}
 }
 
-.lgpage-v2 .shot,.lgpage-v2 .sshot,.lgpage-v2 .sscen-shot,.lgpage-v2 .uc-shot,.lgpage-v2 .wcshot,.lgpage-v2 .smock,.lgpage-v2 .ucread-art,.lgpage-v2 .pcrel-art{display:block;overflow:hidden;padding:0;aspect-ratio:auto;height:auto;min-height:0;max-height:none}
-.lgpage-v2 .shot img,.lgpage-v2 .sshot img,.lgpage-v2 .sscen-shot img,.lgpage-v2 .uc-shot img,.lgpage-v2 .wcshot img,.lgpage-v2 .smock img,.lgpage-v2 .ucread-art img,.lgpage-v2 .pcrel-art img{display:block;width:100%;height:auto;object-fit:contain;border-radius:inherit}
+.lgpage-v2 .shot,.lgpage-v2 .sshot,.lgpage-v2 .sscen-shot,.lgpage-v2 .uc-shot,.lgpage-v2 .wcshot,.lgpage-v2 .svshot,.lgpage-v2 .wwshot,.lgpage-v2 .wfshot,.lgpage-v2 .wfheroshot,.lgpage-v2 .tpshot,.lgpage-v2 .rgshot,.lgpage-v2 .dmshot,.lgpage-v2 .plate:not(.shotplate),.lgpage-v2 .smock,.lgpage-v2 .ucread-art,.lgpage-v2 .pcrel-art{display:block!important;overflow:hidden;padding:0!important;aspect-ratio:auto!important;height:auto!important;min-height:0!important;max-height:none!important}
+.lgpage-v2 .shot img,.lgpage-v2 .sshot img,.lgpage-v2 .sscen-shot img,.lgpage-v2 .uc-shot img,.lgpage-v2 .wcshot img,.lgpage-v2 .svshot img,.lgpage-v2 .wwshot img,.lgpage-v2 .wfshot img,.lgpage-v2 .wfheroshot img,.lgpage-v2 .tpshot img,.lgpage-v2 .rgshot img,.lgpage-v2 .dmshot img,.lgpage-v2 .plate:not(.shotplate) img,.lgpage-v2 .smock img,.lgpage-v2 .ucread-art img,.lgpage-v2 .pcrel-art img{display:block;width:100%!important;height:auto!important;object-fit:contain;border-radius:inherit}
 .lgpage-v2 .fchips,.lgpage-v2 .schips,.lgpage-v2 .smock-tabs,.lgpage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}

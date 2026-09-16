@@ -199,6 +199,6 @@
   .bypage-v2 .bysteps, .bypage-v2 .bytrust, .bypage-v2 .byother{grid-template-columns:1fr}
 }
 
-.bypage-v2 .shot,.bypage-v2 .sshot,.bypage-v2 .sscen-shot,.bypage-v2 .uc-shot,.bypage-v2 .wcshot,.bypage-v2 .smock,.bypage-v2 .ucread-art,.bypage-v2 .pcrel-art{display:block;overflow:hidden;padding:0;aspect-ratio:auto;height:auto;min-height:0;max-height:none}
-.bypage-v2 .shot img,.bypage-v2 .sshot img,.bypage-v2 .sscen-shot img,.bypage-v2 .uc-shot img,.bypage-v2 .wcshot img,.bypage-v2 .smock img,.bypage-v2 .ucread-art img,.bypage-v2 .pcrel-art img{display:block;width:100%;height:auto;object-fit:contain;border-radius:inherit}
+.bypage-v2 .shot,.bypage-v2 .sshot,.bypage-v2 .sscen-shot,.bypage-v2 .uc-shot,.bypage-v2 .wcshot,.bypage-v2 .svshot,.bypage-v2 .wwshot,.bypage-v2 .wfshot,.bypage-v2 .wfheroshot,.bypage-v2 .tpshot,.bypage-v2 .rgshot,.bypage-v2 .dmshot,.bypage-v2 .plate:not(.shotplate),.bypage-v2 .smock,.bypage-v2 .ucread-art,.bypage-v2 .pcrel-art{display:block!important;overflow:hidden;padding:0!important;aspect-ratio:auto!important;height:auto!important;min-height:0!important;max-height:none!important}
+.bypage-v2 .shot img,.bypage-v2 .sshot img,.bypage-v2 .sscen-shot img,.bypage-v2 .uc-shot img,.bypage-v2 .wcshot img,.bypage-v2 .svshot img,.bypage-v2 .wwshot img,.bypage-v2 .wfshot img,.bypage-v2 .wfheroshot img,.bypage-v2 .tpshot img,.bypage-v2 .rgshot img,.bypage-v2 .dmshot img,.bypage-v2 .plate:not(.shotplate) img,.bypage-v2 .smock img,.bypage-v2 .ucread-art img,.bypage-v2 .pcrel-art img{display:block;width:100%!important;height:auto!important;object-fit:contain;border-radius:inherit}
 .bypage-v2 .fchips,.bypage-v2 .schips,.bypage-v2 .smock-tabs,.bypage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}

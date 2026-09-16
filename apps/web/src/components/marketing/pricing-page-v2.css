@@ -133,6 +133,6 @@
   .ppage-v2 table.pt thead th{position:static}
 }
 
-.ppage-v2 .shot,.ppage-v2 .sshot,.ppage-v2 .sscen-shot,.ppage-v2 .uc-shot,.ppage-v2 .wcshot,.ppage-v2 .smock,.ppage-v2 .ucread-art,.ppage-v2 .pcrel-art{display:block;overflow:hidden;padding:0;aspect-ratio:auto;height:auto;min-height:0;max-height:none}
-.ppage-v2 .shot img,.ppage-v2 .sshot img,.ppage-v2 .sscen-shot img,.ppage-v2 .uc-shot img,.ppage-v2 .wcshot img,.ppage-v2 .smock img,.ppage-v2 .ucread-art img,.ppage-v2 .pcrel-art img{display:block;width:100%;height:auto;object-fit:contain;border-radius:inherit}
+.ppage-v2 .shot,.ppage-v2 .sshot,.ppage-v2 .sscen-shot,.ppage-v2 .uc-shot,.ppage-v2 .wcshot,.ppage-v2 .svshot,.ppage-v2 .wwshot,.ppage-v2 .wfshot,.ppage-v2 .wfheroshot,.ppage-v2 .tpshot,.ppage-v2 .rgshot,.ppage-v2 .dmshot,.ppage-v2 .plate:not(.shotplate),.ppage-v2 .smock,.ppage-v2 .ucread-art,.ppage-v2 .pcrel-art{display:block!important;overflow:hidden;padding:0!important;aspect-ratio:auto!important;height:auto!important;min-height:0!important;max-height:none!important}
+.ppage-v2 .shot img,.ppage-v2 .sshot img,.ppage-v2 .sscen-shot img,.ppage-v2 .uc-shot img,.ppage-v2 .wcshot img,.ppage-v2 .svshot img,.ppage-v2 .wwshot img,.ppage-v2 .wfshot img,.ppage-v2 .wfheroshot img,.ppage-v2 .tpshot img,.ppage-v2 .rgshot img,.ppage-v2 .dmshot img,.ppage-v2 .plate:not(.shotplate) img,.ppage-v2 .smock img,.ppage-v2 .ucread-art img,.ppage-v2 .pcrel-art img{display:block;width:100%!important;height:auto!important;object-fit:contain;border-radius:inherit}
 .ppage-v2 .fchips,.ppage-v2 .schips,.ppage-v2 .smock-tabs,.ppage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}

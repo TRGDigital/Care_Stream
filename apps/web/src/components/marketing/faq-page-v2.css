@@ -98,6 +98,6 @@
       padding:18px 20px;margin-bottom:28px;background:var(--ground-2)}
 }
 
-.cfpage-v2 .shot,.cfpage-v2 .sshot,.cfpage-v2 .sscen-shot,.cfpage-v2 .uc-shot,.cfpage-v2 .wcshot,.cfpage-v2 .smock,.cfpage-v2 .ucread-art,.cfpage-v2 .pcrel-art{display:block;overflow:hidden;padding:0;aspect-ratio:auto;height:auto;min-height:0;max-height:none}
-.cfpage-v2 .shot img,.cfpage-v2 .sshot img,.cfpage-v2 .sscen-shot img,.cfpage-v2 .uc-shot img,.cfpage-v2 .wcshot img,.cfpage-v2 .smock img,.cfpage-v2 .ucread-art img,.cfpage-v2 .pcrel-art img{display:block;width:100%;height:auto;object-fit:contain;border-radius:inherit}
+.cfpage-v2 .shot,.cfpage-v2 .sshot,.cfpage-v2 .sscen-shot,.cfpage-v2 .uc-shot,.cfpage-v2 .wcshot,.cfpage-v2 .svshot,.cfpage-v2 .wwshot,.cfpage-v2 .wfshot,.cfpage-v2 .wfheroshot,.cfpage-v2 .tpshot,.cfpage-v2 .rgshot,.cfpage-v2 .dmshot,.cfpage-v2 .plate:not(.shotplate),.cfpage-v2 .smock,.cfpage-v2 .ucread-art,.cfpage-v2 .pcrel-art{display:block!important;overflow:hidden;padding:0!important;aspect-ratio:auto!important;height:auto!important;min-height:0!important;max-height:none!important}
+.cfpage-v2 .shot img,.cfpage-v2 .sshot img,.cfpage-v2 .sscen-shot img,.cfpage-v2 .uc-shot img,.cfpage-v2 .wcshot img,.cfpage-v2 .svshot img,.cfpage-v2 .wwshot img,.cfpage-v2 .wfshot img,.cfpage-v2 .wfheroshot img,.cfpage-v2 .tpshot img,.cfpage-v2 .rgshot img,.cfpage-v2 .dmshot img,.cfpage-v2 .plate:not(.shotplate) img,.cfpage-v2 .smock img,.cfpage-v2 .ucread-art img,.cfpage-v2 .pcrel-art img{display:block;width:100%!important;height:auto!important;object-fit:contain;border-radius:inherit}
 .cfpage-v2 .fchips,.cfpage-v2 .schips,.cfpage-v2 .smock-tabs,.cfpage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}

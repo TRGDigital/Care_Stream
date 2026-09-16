@@ -455,6 +455,6 @@
   .pcpage-v2 .cvsample, .pcpage-v2 .cvcompare{padding-top: 56px;}
 }
 
-.pcpage-v2 .shot,.pcpage-v2 .sshot,.pcpage-v2 .sscen-shot,.pcpage-v2 .uc-shot,.pcpage-v2 .wcshot,.pcpage-v2 .smock,.pcpage-v2 .ucread-art,.pcpage-v2 .pcrel-art{display:block;overflow:hidden;padding:0;aspect-ratio:auto;height:auto;min-height:0;max-height:none}
-.pcpage-v2 .shot img,.pcpage-v2 .sshot img,.pcpage-v2 .sscen-shot img,.pcpage-v2 .uc-shot img,.pcpage-v2 .wcshot img,.pcpage-v2 .smock img,.pcpage-v2 .ucread-art img,.pcpage-v2 .pcrel-art img{display:block;width:100%;height:auto;object-fit:contain;border-radius:inherit}
+.pcpage-v2 .shot,.pcpage-v2 .sshot,.pcpage-v2 .sscen-shot,.pcpage-v2 .uc-shot,.pcpage-v2 .wcshot,.pcpage-v2 .svshot,.pcpage-v2 .wwshot,.pcpage-v2 .wfshot,.pcpage-v2 .wfheroshot,.pcpage-v2 .tpshot,.pcpage-v2 .rgshot,.pcpage-v2 .dmshot,.pcpage-v2 .plate:not(.shotplate),.pcpage-v2 .smock,.pcpage-v2 .ucread-art,.pcpage-v2 .pcrel-art{display:block!important;overflow:hidden;padding:0!important;aspect-ratio:auto!important;height:auto!important;min-height:0!important;max-height:none!important}
+.pcpage-v2 .shot img,.pcpage-v2 .sshot img,.pcpage-v2 .sscen-shot img,.pcpage-v2 .uc-shot img,.pcpage-v2 .wcshot img,.pcpage-v2 .svshot img,.pcpage-v2 .wwshot img,.pcpage-v2 .wfshot img,.pcpage-v2 .wfheroshot img,.pcpage-v2 .tpshot img,.pcpage-v2 .rgshot img,.pcpage-v2 .dmshot img,.pcpage-v2 .plate:not(.shotplate) img,.pcpage-v2 .smock img,.pcpage-v2 .ucread-art img,.pcpage-v2 .pcrel-art img{display:block;width:100%!important;height:auto!important;object-fit:contain;border-radius:inherit}
 .pcpage-v2 .fchips,.pcpage-v2 .schips,.pcpage-v2 .smock-tabs,.pcpage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}

@@ -367,8 +367,11 @@
   .fpage-v2 .wccta-in{padding:28px}
 }
 
+.fpage-v2 .shot,.fpage-v2 .sshot,.fpage-v2 .sscen-shot,.fpage-v2 .uc-shot,.fpage-v2 .wcshot,.fpage-v2 .svshot,.fpage-v2 .wwshot,.fpage-v2 .wfshot,.fpage-v2 .wfheroshot,.fpage-v2 .tpshot,.fpage-v2 .rgshot,.fpage-v2 .dmshot,.fpage-v2 .plate:not(.shotplate),.fpage-v2 .smock,.fpage-v2 .ucread-art,.fpage-v2 .pcrel-art{display:block!important;overflow:hidden;padding:0!important;aspect-ratio:auto!important;height:auto!important;min-height:0!important;max-height:none!important}
+.fpage-v2 .shot img,.fpage-v2 .sshot img,.fpage-v2 .sscen-shot img,.fpage-v2 .uc-shot img,.fpage-v2 .wcshot img,.fpage-v2 .svshot img,.fpage-v2 .wwshot img,.fpage-v2 .wfshot img,.fpage-v2 .wfheroshot img,.fpage-v2 .tpshot img,.fpage-v2 .rgshot img,.fpage-v2 .dmshot img,.fpage-v2 .plate:not(.shotplate) img,.fpage-v2 .smock img,.fpage-v2 .ucread-art img,.fpage-v2 .pcrel-art img{display:block;width:100%!important;height:auto!important;object-fit:contain;border-radius:inherit}
+.fpage-v2 .fchips,.fpage-v2 .schips,.fpage-v2 .smock-tabs,.fpage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}
+
+/* Hand-added, not from the theme: the dark solid demo button uses the app's own button
+ * tokens. Re-running port_css.py drops anything appended here, so it lives at the end. */
 .fpage-v2 .uc-demo.solid{background:var(--btn-ink);color:var(--btn-ink-text);border-color:var(--btn-ink)}
 .fpage-v2 .uc-demo.solid:hover{opacity:.92}
-.fpage-v2 .shot,.fpage-v2 .sshot,.fpage-v2 .sscen-shot,.fpage-v2 .uc-shot,.fpage-v2 .wcshot,.fpage-v2 .smock,.fpage-v2 .ucread-art,.fpage-v2 .pcrel-art{display:block;overflow:hidden;padding:0;aspect-ratio:auto;height:auto;min-height:0;max-height:none}
-.fpage-v2 .shot img,.fpage-v2 .sshot img,.fpage-v2 .sscen-shot img,.fpage-v2 .uc-shot img,.fpage-v2 .wcshot img,.fpage-v2 .smock img,.fpage-v2 .ucread-art img,.fpage-v2 .pcrel-art img{display:block;width:100%;height:auto;object-fit:contain;border-radius:inherit}
-.fpage-v2 .fchips,.fpage-v2 .schips,.fpage-v2 .smock-tabs,.fpage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}

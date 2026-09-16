@@ -271,8 +271,11 @@
   .spage-v2 .scqc-cards{grid-template-columns:1fr}
 }
 
+.spage-v2 .shot,.spage-v2 .sshot,.spage-v2 .sscen-shot,.spage-v2 .uc-shot,.spage-v2 .wcshot,.spage-v2 .svshot,.spage-v2 .wwshot,.spage-v2 .wfshot,.spage-v2 .wfheroshot,.spage-v2 .tpshot,.spage-v2 .rgshot,.spage-v2 .dmshot,.spage-v2 .plate:not(.shotplate),.spage-v2 .smock,.spage-v2 .ucread-art,.spage-v2 .pcrel-art{display:block!important;overflow:hidden;padding:0!important;aspect-ratio:auto!important;height:auto!important;min-height:0!important;max-height:none!important}
+.spage-v2 .shot img,.spage-v2 .sshot img,.spage-v2 .sscen-shot img,.spage-v2 .uc-shot img,.spage-v2 .wcshot img,.spage-v2 .svshot img,.spage-v2 .wwshot img,.spage-v2 .wfshot img,.spage-v2 .wfheroshot img,.spage-v2 .tpshot img,.spage-v2 .rgshot img,.spage-v2 .dmshot img,.spage-v2 .plate:not(.shotplate) img,.spage-v2 .smock img,.spage-v2 .ucread-art img,.spage-v2 .pcrel-art img{display:block;width:100%!important;height:auto!important;object-fit:contain;border-radius:inherit}
+.spage-v2 .fchips,.spage-v2 .schips,.spage-v2 .smock-tabs,.spage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}
+
+/* Hand-added, not from the theme: the dark solid demo button uses the app's own button
+ * tokens. Re-running port_css.py drops anything appended here, so it lives at the end. */
 .spage-v2 .uc-demo.solid{background:var(--btn-ink);color:var(--btn-ink-text);border-color:var(--btn-ink)}
 .spage-v2 .uc-demo.solid:hover{opacity:.92}
-.spage-v2 .shot,.spage-v2 .sshot,.spage-v2 .sscen-shot,.spage-v2 .uc-shot,.spage-v2 .wcshot,.spage-v2 .smock,.spage-v2 .ucread-art,.spage-v2 .pcrel-art{display:block;overflow:hidden;padding:0;aspect-ratio:auto;height:auto;min-height:0;max-height:none}
-.spage-v2 .shot img,.spage-v2 .sshot img,.spage-v2 .sscen-shot img,.spage-v2 .uc-shot img,.spage-v2 .wcshot img,.spage-v2 .smock img,.spage-v2 .ucread-art img,.spage-v2 .pcrel-art img{display:block;width:100%;height:auto;object-fit:contain;border-radius:inherit}
-.spage-v2 .fchips,.spage-v2 .schips,.spage-v2 .smock-tabs,.spage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}

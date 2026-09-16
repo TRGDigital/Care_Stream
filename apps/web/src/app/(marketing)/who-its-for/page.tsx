@@ -10,6 +10,8 @@ import { EditableContentBlock } from '@/components/marketing/editable-content-bl
 import { SiteImage } from '@/components/site-image'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { WHO_ITS_FOR_SLOTS } from '@/lib/page-slots/who-its-for'
+import { WHO_ITS_FOR_V2_SLOTS } from '@/lib/page-slots/who-its-for-v2'
+import { WhoItsForV2 } from '@/components/marketing/who-its-for-v2'
 import { TrainingDemo, type TrainingDemoData } from '@/components/marketing/training-demo'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
@@ -415,12 +417,39 @@ function TrainingManagersSection({ catalogue, demo }: { catalogue: TrainingCatal
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default async function WhoItsForPage() {
-  const s = makeSlot(WHO_ITS_FOR_SLOTS, await getContentSlots('/who-its-for'))
+export default async function WhoItsForPage(
+  { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
+) {
+  const slots = await getContentSlots('/who-its-for')
   const [trainingCatalogue, trainingDemo] = await Promise.all([
     getTrainingCatalogue(),
     getModuleDemo(FEATURED_DEMO_SLUG),
   ])
+
+  // Opt-in with ?v2=1 until it is signed off. Its own slot set, because the copy is new.
+  if ((await searchParams)?.v2 === '1') {
+    const { groups, topics } = trainingCatalogue
+    return (
+      <WhoItsForV2
+        s={makeSlot(WHO_ITS_FOR_V2_SLOTS, slots)}
+        training={{
+          demo: trainingDemo,
+          demoSlug: FEATURED_DEMO_SLUG,
+          moduleCount: topics.length || 98,
+          categories: Object.keys(groups).length
+            ? Object.entries(groups).map(([key, label]) => ({
+                label,
+                count: topics.filter(t => t.group_key === key).length,
+              }))
+            : FALLBACK_CATEGORIES.map(label => ({ label, count: 0 })),
+          modules: (topics.length ? topics.map(t => t.title).filter(Boolean)
+                                  : FALLBACK_MODULES).slice(0, 12),
+        }}
+      />
+    )
+  }
+
+  const s = makeSlot(WHO_ITS_FOR_SLOTS, slots)
   return (
     <>
       {/* ── Split hero ───────────────────────────────────────────────────── */}

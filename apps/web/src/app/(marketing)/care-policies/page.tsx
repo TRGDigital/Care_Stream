@@ -8,6 +8,26 @@ import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { CARE_POLICIES_SLOTS } from '@/lib/page-slots/care-policies'
+import { CARE_POLICIES_V2_SLOTS } from '@/lib/page-slots/care-policies-v2'
+import {
+  CarePoliciesIndexV2, type PolicyProduct, type PolicyBundle,
+} from '@/components/marketing/care-policies-index-v2'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+
+// The 66 policies and the packs, from the shop rather than from the page: a price written into
+// the page goes stale the first time one changes.
+async function getCatalogue(): Promise<{ products: PolicyProduct[]; bundles: PolicyBundle[] }> {
+  try {
+    const res = await fetch(`${API_URL}/public/policy-shop/catalogue`,
+                            { next: { revalidate: 3600 } })
+    if (!res.ok) return { products: [], bundles: [] }
+    const d = (await res.json())?.data ?? {}
+    return { products: d.products ?? [], bundles: d.bundles ?? [] }
+  } catch {
+    return { products: [], bundles: [] }
+  }
+}
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 const RICH_LINK_WHITE = '[&_a]:font-semibold [&_a]:text-white [&_a]:underline [&_a]:underline-offset-2'
@@ -90,8 +110,23 @@ function FeatureDashboardMockup() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default async function FeaturesPage() {
-  const s = makeSlot(CARE_POLICIES_SLOTS, await getContentSlots('/care-policies'))
+export default async function FeaturesPage(
+  { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
+) {
+  const slots = await getContentSlots('/care-policies')
+
+  // Opt-in with ?v2=1 until it is signed off. Its own slot set: the existing one holds only
+  // 64% of the theme's strings, so reusing it would render a page part approved copy and part
+  // the previous wording.
+  if ((await searchParams)?.v2 === '1') {
+    const { products, bundles } = await getCatalogue()
+    return (
+      <CarePoliciesIndexV2 s={makeSlot(CARE_POLICIES_V2_SLOTS, slots)}
+                           products={products} bundles={bundles} />
+    )
+  }
+
+  const s = makeSlot(CARE_POLICIES_SLOTS, slots)
 
   const HUB_ITEMS = ['channels.hub.item1', 'channels.hub.item2', 'channels.hub.item3', 'channels.hub.item4', 'channels.hub.item5']
   const EMAIL_ITEMS = ['channels.email.item1', 'channels.email.item2', 'channels.email.item3', 'channels.email.item4', 'channels.email.item5']

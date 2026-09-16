@@ -98,19 +98,29 @@ export function titleVariants(title: string): string[] {
   return [...variants]
 }
 
-// GET /catalogue — every policy on sale, as slugs and titles.
+// GET /catalogue — every policy on sale, and every bundle, as slugs and titles.
 //
 // Exists so the marketing site can build a page per policy from what is actually for sale,
 // rather than from a list hand-copied into the front end that drifts the first time a
 // product is added or withdrawn.
 policyShopPublicRouter.get('/catalogue', async (_req: Request, res: Response) => {
   try {
-    const products = await (prisma as any).policyProduct.findMany({
-      where:   { active: true },
-      select:  { slug: true, title: true, price_pence: true, taster: true },
-      orderBy: [{ sort_order: 'asc' }, { title: 'asc' }],
-    })
-    ok(res, { products })
+    // Bundles come back alongside the products because the rebuilt /care-policies page lists
+    // both, and a second request for six rows is a second thing that can fail on the page that
+    // sells them. Existing callers read `products` and are unaffected.
+    const [products, bundles] = await Promise.all([
+      (prisma as any).policyProduct.findMany({
+        where:   { active: true },
+        select:  { slug: true, title: true, price_pence: true, taster: true },
+        orderBy: [{ sort_order: 'asc' }, { title: 'asc' }],
+      }),
+      (prisma as any).policyBundle.findMany({
+        where:   { active: true },
+        select:  { key: true, title: true, description: true, price_pence: true },
+        orderBy: [{ price_pence: 'asc' }],
+      }),
+    ])
+    ok(res, { products, bundles })
   } catch (e: any) {
     err(res, 'CATALOGUE_FAILED', e?.message ?? 'could not read the catalogue', 500)
   }

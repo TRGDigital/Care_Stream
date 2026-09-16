@@ -5,6 +5,9 @@ import { BlogFaqs } from '@/components/marketing/blog-faqs'
 import { JsonLd } from '@/components/json-ld'
 import { faqPageSchema, SITE_URL } from '@/lib/schema'
 import { CollectionIntro } from '@/components/marketing/collection-intro'
+import { CollectionPageV2 } from '@/components/marketing/collection-page-v2'
+import { getContentSlots, makeSlot } from '@/lib/page-slots'
+import { COLLECTION_V2_SLOTS } from '@/lib/page-slots/collection-v2'
 
 // An ecommerce-style collection page: copy, the six products it sells, deeper copy, FAQs,
 // sibling links, then the services banner. The order is the order a visitor needs it in.
@@ -81,10 +84,28 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 }
 
-export default async function CollectionPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function CollectionPage(
+  { params, searchParams }: {
+    params: Promise<{ slug: string }>
+    searchParams?: Promise<Record<string, string | string[] | undefined>>
+  },
+) {
   const { slug } = await params
   const c = await getCollection(slug)
   if (!c) notFound()
+
+  // Opt-in with ?v2=1 until it is signed off. The collection record is the same either way:
+  // only the page furniture the theme repeats on every collection is a slot set.
+  if ((await searchParams)?.v2 === '1') {
+    const slots = await getContentSlots('/collection')
+    return (
+      <>
+        {Array.isArray(c.faqs) && c.faqs.length > 0
+          && <JsonLd data={faqPageSchema(c.faqs.filter(f => f.question && f.answer))} />}
+        <CollectionPageV2 c={c} s={makeSlot(COLLECTION_V2_SLOTS, slots)} />
+      </>
+    )
+  }
 
   const links = Array.isArray(c.links) ? c.links.filter(l => l.label && l.url) : []
   const faqs = Array.isArray(c.faqs) ? c.faqs.filter(f => f.question && f.answer) : []

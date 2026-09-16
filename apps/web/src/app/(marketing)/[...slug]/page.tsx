@@ -43,7 +43,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   })
 }
 
-export default async function CmsPage({ params }: { params: Promise<{ slug: string[] }> }) {
+export default async function CmsPage(
+  { params, searchParams }: {
+    params: Promise<{ slug: string[] }>
+    searchParams?: Promise<Record<string, string | string[] | undefined>>
+  },
+) {
   const { slug } = await params
   const path = '/' + slug.join('/')
   const page = await fetchPage(path)
@@ -57,7 +62,11 @@ export default async function CmsPage({ params }: { params: Promise<{ slug: stri
   return (
     <>
       {faqs.length > 0 && <JsonLd data={faqPageSchema(faqs)} />}
-      <ContentPage path={path} title={stripBrand(page.title) || prettify(slug)} />
+      {/* Opt-in with ?v2=1 until it is signed off. The stored body is the same either way:
+          the flag changes the design and nothing about the words. This reaches
+          /client-services-agreement, which is a CMS page rather than a route of its own. */}
+      <ContentPage path={path} title={stripBrand(page.title) || prettify(slug)}
+                   v2={(await searchParams)?.v2 === '1'} />
     </>
   )
 }

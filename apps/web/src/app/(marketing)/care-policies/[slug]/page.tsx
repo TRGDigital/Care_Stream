@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { PolicyPageV2 } from '@/components/marketing/policy-page-v2'
+import { PolicyPageV2, policyFaqs } from '@/components/marketing/policy-page-v2'
+import { faqPageSchema } from '@/lib/schema'
 import {
   ShieldCheck, CheckCircle2, FileText, Scale, Star,
 } from 'lucide-react'
@@ -54,16 +55,30 @@ type ShopProduct = {
   related: Array<{ slug: string; title: string; description: string; price_pence: number; taster: boolean }>
 }
 
+// ONLY a 404 from the API means "not on sale". Anything else (the public rate limit's 429, a 5xx,
+// a network error) retries once and then throws, which Next never caches, so a busy API can no
+// longer turn a policy page into a stored 404. Same fix as /staff-training/[slug], where it
+// left about sixty module pages 404ing on a deployment.
 async function getProduct(slug: string): Promise<ShopProduct | null> {
-  try {
-    const res = await fetch(`${API_URL}/public/policy-shop/products/${encodeURIComponent(slug)}`, { next: { revalidate: 300 } })
-    if (!res.ok) return null
-    return (await res.json()).data as ShopProduct
-  } catch { return null }
+  const url = `${API_URL}/public/policy-shop/products/${encodeURIComponent(slug)}`
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const res = await fetch(url, attempt ? { cache: 'no-store' } : { next: { revalidate: 300 } })
+      .catch(() => null)
+    if (res?.status === 404) return null
+    if (res?.ok) return (await res.json()).data as ShopProduct
+    if (!attempt) await new Promise(r => setTimeout(r, 1500))
+  }
+  throw new Error(`Policy ${slug}: the API did not answer; not treating it as missing`)
 }
 
-export async function generateStaticParams() {
-  return (await saleableSlugs()).map(slug => ({ slug }))
+// No generateStaticParams. Prerendering every policy at build sends one burst of requests into
+// the public rate limit, and a route that reads searchParams must not be marked prerendered.
+// Each page renders on request with its fetch cached, as /features/[slug] does.
+
+/** The number of policies on sale, for the copy that states it. */
+async function catalogueCount(): Promise<number> {
+  const slugs = await saleableSlugs()
+  return slugs === FALLBACK_SLUGS ? 66 : slugs.length
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -95,13 +110,30 @@ export default async function PolicyProductPage(
   // nothing else; flipping it for the family is a one-line change here.
   const sp = await searchParams
   if (await isV2('policies', sp)) {
+    const regs = (data.regulations ?? []).map(r => ({ ...r, key_facts: r.key_facts ?? [] }))
+    const bundlesV2 = data.bundles ?? []
+    const count = await catalogueCount()
+    // The current page carries Product and FAQPage structured data (FAQPage via HomeFaq), so the
+    // rebuilt one must too; the FAQs are the same list the page shows.
+    const faqsV2 = policyFaqs(data.product, regs.reduce((n, r) => n + (r.required_elements_count || 0), 0),
+      bundlesV2.find(b => b.key === 'statutory-starter'), count)
     return (
-      <PolicyPageV2
-        product={data.product}
-        regulations={(data.regulations ?? []).map(r => ({ ...r, key_facts: r.key_facts ?? [] }))}
-        related={data.related ?? []}
-        bundles={data.bundles ?? []}
-      />
+      <>
+        <JsonLd data={{
+          '@context': 'https://schema.org', '@type': 'Product',
+          name: data.product.title,
+          description: data.product.description,
+          offers: { '@type': 'Offer', priceCurrency: 'GBP', price: (data.product.price_pence / 100).toFixed(2), availability: 'https://schema.org/PreOrder' },
+        }} />
+        <JsonLd data={faqPageSchema(faqsV2)} />
+        <PolicyPageV2
+          product={data.product}
+          regulations={regs}
+          related={data.related ?? []}
+          bundles={bundlesV2}
+          catalogueCount={count}
+        />
+      </>
     )
   }
   // Deploys build web and api in parallel, so this page can be prerendered against

@@ -121,13 +121,37 @@ const COMPARE: [string, Mark, Mark, Mark, Mark][] = [
   ['A branded companion document setting out the law it was written against',
    'yes', 'no', 'no', 'no'],
   ['Read and approved by a person before it carries your name', 'yes', 'no', 'yes', 'no'],
-  ['Prints on your own letterhead with a sign-off and version block', 'yes', 'part', 'yes', 'no'],
-  ['Updated when the law changes, with what changed and why', 'yes', 'part', 'no', 'no'],
-  ['Costs less than a day of consultancy', 'yes', 'yes', 'no', 'yes'],
+  ['Prints on your own letterhead with a sign-off and version block', 'yes', 'part', 'part', 'no'],
+  ['Named role holders update everywhere when the person changes', 'yes', 'no', 'no', 'no'],
+  ['Kept current when the law changes, and you are told what changed', 'yes', 'part', 'no', 'no'],
+  ['Turnaround stated before you buy', 'yes', 'yes', 'no', 'yes'],
+  ['Your staff can ask it questions in their own language', 'yes', 'no', 'no', 'no'],
 ]
+const COMPARE_COST = ['£39 to £79 per policy, one-off', '£250 to £995 for the pack',
+  'A day rate, typically £400 upwards', 'Nothing']
+
+/** The six questions the theme asks, and the current page asks, in the order both show them.
+ *  One list, so the page and its FAQPage structured data cannot say different things. */
+export function policyFaqs(p: { title: string }, elements: number, starter: PolicyBundle | undefined,
+                           catalogueCount: number) {
+  return [
+    { question: 'What exactly do I receive?',
+      answer: `A complete ${p.title} written for your organisation, in your dashboard and as a print-ready PDF on your own letterhead. It names your service, your registration details and your leads, because you gave us them.` },
+    { question: 'Is this a template?',
+      answer: `No. Each policy is written for the organisation buying it, structured from the legislation itself, verified against ${elements || 'every'} required regulatory elements, and read by a person before it carries your name.` },
+    { question: 'How quickly will I get it?',
+      answer: 'Within 2 working days of you completing the short questions above. Most arrive sooner.' },
+    { question: 'What happens when the law changes?',
+      answer: 'We monitor UK care legislation continuously. When something affecting this policy changes, your copy is updated and you are told what changed and why. The first year of updates is included, then £12 a year per policy.' },
+    { question: 'Can I edit the policy myself?',
+      answer: 'No, and deliberately so: we stand behind every word we approve. If something needs changing, tell us and we amend and re-verify it, so it always remains a document we can both defend to an inspector.' },
+    { question: 'What if I need more than one policy?',
+      answer: `Most services do. The Statutory Starter Pack covers the twenty policies every CQC-registered service is expected to hold${starter ? ` for ${money(starter.price_pence)}` : ''}, and the Complete Policy Library covers all ${catalogueCount}.` },
+  ]
+}
 
 const WHY = [
-  '65 care policies, one platform',
+  'CATALOGUE care policies, one platform',
   'Written for your service, never a template',
   'Verified against every required element of the law',
   'Read by a person before it carries your name',
@@ -153,18 +177,24 @@ function CompareMark({ mark }: { mark: Mark }) {
   return <span className="cvno"><Cross /></span>
 }
 
-export function PolicyPageV2({ product, regulations, related, bundles }: {
+export function PolicyPageV2({ product, regulations, related, bundles, catalogueCount }: {
   product: PolicyProduct
   regulations: PolicyRegulation[]
   related: PolicyRelated[]
   bundles: PolicyBundle[]
+  /** How many policies the shop sells. The theme and the current page say 65; the catalogue
+   *  has 66, and will change again, so the number comes from the catalogue. */
+  catalogueCount: number
 }) {
   const price = money(product.price_pence)
   const questions = product.intake_fields?.length ?? 0
   const elements = regulations.reduce((n, r) => n + (r.required_elements_count || 0), 0)
   const hero = `/images/care-policies/${product.slug}/1.webp`
   const item = { slug: product.slug, title: product.title, price_pence: product.price_pence }
-  const pack = bundles[0]
+  // The theme mentions a pack only on the twenty policies in the Statutory Starter Pack. Taking
+  // the first bundle named the Governance & Data Pack on /caldicott, which the theme does not.
+  const pack = bundles.find(b => b.key === 'statutory-starter')
+  const faqs = policyFaqs(product, elements, pack, catalogueCount)
 
   return (
     <div className="pcpage-v2">
@@ -198,12 +228,19 @@ export function PolicyPageV2({ product, regulations, related, bundles }: {
 
             <p className="pcnote">
               One-off, first year of updates included. Delivered within <b>2 working days</b> of
-              your details.{pack && <> Also in the <b>{pack.title}</b>, for {money(pack.price_pence)}.</>}
+              your details.{pack && <> Also in the <b>{pack.title}</b>, 20 policies for {money(pack.price_pence)}.</>}
             </p>
 
             <div className="pccue">
               <span>Build it now: {questions} questions, three minutes</span>
-              <Arrow />
+              <svg width="88" height="30" viewBox="0 0 88 30" fill="none" className="across" aria-hidden="true">
+                <path d="M3 16 C 30 17, 56 19, 80 11" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                <path d="M70 4 L 83 11 L 69 19" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <svg width="26" height="34" viewBox="0 0 26 34" fill="none" className="down" aria-hidden="true">
+                <path d="M13 2 C 13 16, 11 22, 13 28" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                <path d="M6 22 L 13 30 L 20 22" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </div>
 
             <p className="pctrust">
@@ -294,7 +331,7 @@ export function PolicyPageV2({ product, regulations, related, bundles }: {
           </div>
           {!!product.personalisation_questions?.length && (
             <div className="pcqs">
-              {product.personalisation_questions.slice(0, 5).map(q => (
+              {product.personalisation_questions.map(q => (
                 <div className="pcq" key={q.key}>
                   <Ask />
                   <div><b>{q.label}</b>{q.help && <span>{q.help}</span>}</div>
@@ -330,36 +367,12 @@ export function PolicyPageV2({ product, regulations, related, bundles }: {
           <p className="pceyebrow">Common questions</p>
           <h2>What you are actually buying.</h2>
           <div className="pcfaq">
-            <details open>
-              <summary>What exactly do I receive?</summary>
-              <p className="a">
-                A complete {product.title} written for your organisation, in your dashboard and
-                as a print-ready PDF on your own letterhead. It names your service, your
-                registration details and your leads, because you gave us them.
-              </p>
-            </details>
-            <details>
-              <summary>Is this a template?</summary>
-              <p className="a">
-                No. Each policy is written for the organisation buying it, structured from the
-                legislation itself, verified against {elements} required regulatory elements, and
-                read by a person before it carries your name.
-              </p>
-            </details>
-            <details>
-              <summary>How quickly will I get it?</summary>
-              <p className="a">
-                Within 2 working days of you completing the short questions above. Most arrive
-                sooner.
-              </p>
-            </details>
-            <details>
-              <summary>What happens when the law changes?</summary>
-              <p className="a">
-                Your policy is updated and you are told what changed and why. The first year of
-                updates is included; after that it is £12 a year, and you can stop at any time.
-              </p>
-            </details>
+            {faqs.map((f, i) => (
+              <details open={i === 0} key={f.question}>
+                <summary>{f.question}</summary>
+                <p className="a">{f.answer}</p>
+              </details>
+            ))}
           </div>
         </div>
       </section>
@@ -371,7 +384,7 @@ export function PolicyPageV2({ product, regulations, related, bundles }: {
           <p className="pceyebrow">Why CareStream</p>
           <h2>Policies written the way an inspector expects to read them.</h2>
           <div className="pcwhy">
-            {WHY.map(t => <div key={t}><Tick /><span>{t}</span></div>)}
+            {WHY.map(t => <div key={t}><Tick /><span>{t.replace('CATALOGUE', String(catalogueCount))}</span></div>)}
           </div>
         </div>
       </section>
@@ -503,9 +516,18 @@ export function PolicyPageV2({ product, regulations, related, bundles }: {
                     <td><CompareMark mark={d} /></td>
                   </tr>
                 ))}
+                <tr>
+                  <td className="f">What it costs</td>
+                  <td className="us">{COMPARE_COST[0]}</td>
+                  {COMPARE_COST.slice(1).map(c => <td key={c}>{c}</td>)}
+                </tr>
               </tbody>
             </table>
           </div>
+          <p className="cvfoot">
+            Prices are the published rates of the common alternatives as at September 2026, for
+            comparison only.
+          </p>
         </div>
       </section>
 

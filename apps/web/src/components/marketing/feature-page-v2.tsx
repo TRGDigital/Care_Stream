@@ -105,15 +105,23 @@ function wideShot(slug: string) {
   return WIDE_SHOTS.has(own) ? own : SHARED_WIDE
 }
 
+/** The stored intro is two paragraphs. The theme puts the first in the hero and the rest at the
+ *  end of "What it is" (checked against all 44 feature pages). Rendering both in the hero made
+ *  it twice as long as the theme's and left "What it is" a paragraph short. */
+function introParas(c: FeatureV2Content) {
+  return (c.intro ?? '').split(/\n\s*\n/).map(s => s.trim()).filter(Boolean)
+}
+
 function Hero({ page }: { page: FeatureV2Page }) {
   const c = page.content ?? {}
+  const lede = introParas(c)[0]
   return (
     <section className="fhero">
       <div className="fwrap fhero-in">
         <div>
           {c.eyebrow && <span className="uc-eyebrow">{c.eyebrow}</span>}
           <h1>{page.title}</h1>
-          {c.intro && <p>{c.intro}</p>}
+          {lede && <p>{lede}</p>}
           {!!c.chips?.length && (
             <div className="fchips">
               {c.chips.map((ch, i) => <span className="fchip" key={i}>{ch}</span>)}
@@ -157,6 +165,7 @@ function Capability({ page, anchor }: { page: FeatureV2Page; anchor?: string }) 
               <span className="flabel">What it is</span>
               {c.whatItIs?.heading && <h2>{c.whatItIs.heading}</h2>}
               <Prose text={c.whatItIs?.body} />
+              {introParas(c).slice(1).map((p, i) => <p key={`intro-${i}`}>{p}</p>)}
             </div>
             {!!c.sidebar?.length && (
               <div className="fside">
@@ -184,6 +193,7 @@ function Capability({ page, anchor }: { page: FeatureV2Page; anchor?: string }) 
       {!!steps.length && (
         <section className="fsec">
           <div className="fwrap fsec-in">
+            <span className="flabel">How it works</span>
             {c.howItWorks?.heading && <h2>{c.howItWorks.heading}</h2>}
             <Lead text={c.howItWorks?.intro} />
             {big.map((s, i) => (

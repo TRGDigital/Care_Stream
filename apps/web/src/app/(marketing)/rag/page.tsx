@@ -2,6 +2,9 @@ import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { CheckCircle2, FileText, GraduationCap, Search, ShieldCheck, Zap } from 'lucide-react'
 import { pageMetadata } from '@/lib/page-meta'
+import { getContentSlots, makeSlot } from '@/lib/page-slots'
+import { RAG_V2_SLOTS } from '@/lib/page-slots/rag-v2'
+import { RagPageV2 } from '@/components/marketing/rag-page-v2'
 import { HubChatMockup } from '@/components/marketing/hub-chat-mockup'
 import { RagEngineMockup } from '@/components/marketing/rag-engine-mockup'
 
@@ -11,7 +14,15 @@ export const generateMetadata = () => pageMetadata('/rag', {
   description: 'CareStreamAI uses Retrieval Augmented Generation to ground every answer and training question in verified source material. Here is what that means and why it matters for care compliance.',
 })
 
-export default function RagPage() {
+export default async function RagPage(
+  { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
+) {
+  // Opt-in with ?v2=1 until it is signed off. Its own slot set, because the copy is new.
+  if ((await searchParams)?.v2 === '1') {
+    const slots = await getContentSlots('/rag')
+    return <RagPageV2 s={makeSlot(RAG_V2_SLOTS, slots)} />
+  }
+
   return (
     <>
       <PageHero

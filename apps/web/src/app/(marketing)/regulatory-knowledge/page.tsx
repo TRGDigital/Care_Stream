@@ -1,6 +1,9 @@
 import Link from 'next/link'
 import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
+import { getContentSlots, makeSlot } from '@/lib/page-slots'
+import { REGULATORY_KNOWLEDGE_V2_SLOTS } from '@/lib/page-slots/regulatory-knowledge-v2'
+import { RegulatoryKnowledgeV2 } from '@/components/marketing/regulatory-knowledge-v2'
 
 export const metadata = {
   alternates: { canonical: 'https://www.carestreamai.com/regulatory-knowledge' },
@@ -75,7 +78,15 @@ const WORKED_EXAMPLES = [
   },
 ]
 
-export default function RegulatoryKnowledgePage() {
+export default async function RegulatoryKnowledgePage(
+  { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
+) {
+  // Opt-in with ?v2=1 until it is signed off. Its own slot set, because the copy is new.
+  if ((await searchParams)?.v2 === '1') {
+    const slots = await getContentSlots('/regulatory-knowledge')
+    return <RegulatoryKnowledgeV2 s={makeSlot(REGULATORY_KNOWLEDGE_V2_SLOTS, slots)} />
+  }
+
   return (
     <>
       <PageHero

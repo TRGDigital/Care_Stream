@@ -3,6 +3,9 @@ import { Globe, MessageSquare, FileText, CheckCircle2, ArrowRight } from 'lucide
 import { PageHero, SectionLabel } from '@/components/marketing/ui'
 import { pageMetadata } from '@/lib/page-meta'
 import { COURSE_LANGUAGES } from '@/lib/languages'
+import { getContentSlots, makeSlot } from '@/lib/page-slots'
+import { LANGUAGES_V2_SLOTS } from '@/lib/page-slots/languages-v2'
+import { LanguagesV2 } from '@/components/marketing/languages-v2'
 
 export const revalidate = 3600
 
@@ -15,7 +18,15 @@ export async function generateMetadata() {
   })
 }
 
-export default function LanguagesPage() {
+export default async function LanguagesPage(
+  { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
+) {
+  // Opt-in with ?v2=1 until it is signed off. Its own slot set, because the copy is new.
+  if ((await searchParams)?.v2 === '1') {
+    const slots = await getContentSlots('/languages')
+    return <LanguagesV2 s={makeSlot(LANGUAGES_V2_SLOTS, slots)} />
+  }
+
   return (
     <>
       <PageHero

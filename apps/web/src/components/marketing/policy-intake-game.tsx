@@ -83,7 +83,7 @@ export function PolicyIntakeGame({ slug, title, pricePence, fields, buyHref, var
         {(
           <div className="pcprog" hidden={step < 0}>
             <div className="pcprog-top">
-              <span>Question {Math.min(step + 1, total)} of {total}</span><em>{pct}%</em>
+              <span>Question {Math.min(Math.max(step + 1, 1), total)} of {total}</span><em>{pct}%</em>
             </div>
             <div className="pcbar"><i style={{ width: `${pct}%` }} /></div>
           </div>

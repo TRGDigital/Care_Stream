@@ -9,6 +9,12 @@ import type { SlotDef } from './types'
 // hand-copying those is how a card's body ends up under the wrong title.
 export const ABOUT_V2_SLOTS: SlotDef[] = [
   {
+    "key": "hero.label",
+    "group": "Hero",
+    "label": "Eyebrow",
+    "default": "About"
+  },
+  {
     "key": "hero.h1",
     "group": "Hero",
     "label": "Headline",
@@ -73,9 +79,22 @@ export const ABOUT_V2_SLOTS: SlotDef[] = [
     "default": "CareStreamAI was built to close that gap, not by replacing policies, but by making them genuinely accessible to everyone. The same problem, we realised, applied to mandatory training and to the evidence a service needs at inspection. So CareStream grew from policy access into a single hub for policies, training, audits and CQC readiness."
   },
   {
-    "key": "start.p4",
+    "key": "start.stat.fig",
     "group": "Where we started",
-    "label": "Paragraph 4",
+    "label": "Statistic",
+    "default": "190,000+"
+  },
+  {
+    "key": "start.stat.lab",
+    "group": "Where we started",
+    "label": "Statistic label",
+    "multiline": true,
+    "default": "overseas workers joined the UK care sector in 2023/24."
+  },
+  {
+    "key": "start.stat.sub",
+    "group": "Where we started",
+    "label": "Statistic note",
     "multiline": true,
     "default": "Most were expected to navigate complex policy libraries in a second language from day one."
   },
@@ -97,6 +116,12 @@ export const ABOUT_V2_SLOTS: SlotDef[] = [
     "label": "Paragraph",
     "multiline": true,
     "default": "What began as policy access has grown into a single hub for the things a care team relies on every day, all grounded in your own documents and available in any language."
+  },
+  {
+    "key": "platform.more",
+    "group": "The platform today",
+    "label": "Card link label",
+    "default": "Learn more"
   },
   {
     "key": "platform.c1.title",

@@ -109,19 +109,30 @@ export interface IconShape {
   x?: string; y?: string; width?: string; height?: string; rx?: string
 }
 
+/** The stored shapes as real elements. Never inject a stored icon as HTML: this keeps the set
+ *  of things a generated icon can become closed to three primitives. Shared with /about and
+ *  /training-platform, which carry their own generated icon sets. */
+export function Shapes({ shapes }: { shapes: IconShape[] }) {
+  return (
+    <>
+      {shapes.map((s, i) => {
+        if (s.tag === 'circle') return <circle cx={s.cx} cy={s.cy} r={s.r} key={i} />
+        if (s.tag === 'rect') {
+          return <rect x={s.x} y={s.y} width={s.width} height={s.height} rx={s.rx} key={i} />
+        }
+        return <path d={s.d} key={i} />
+      })}
+    </>
+  )
+}
+
 function PlainIcon({ shapes }: { shapes: IconShape[] }) {
   if (!shapes.length) return null
   return (
     <span className="ic">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"
            strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        {shapes.map((s, i) => {
-          if (s.tag === 'circle') return <circle cx={s.cx} cy={s.cy} r={s.r} key={i} />
-          if (s.tag === 'rect') {
-            return <rect x={s.x} y={s.y} width={s.width} height={s.height} rx={s.rx} key={i} />
-          }
-          return <path d={s.d} key={i} />
-        })}
+        <Shapes shapes={shapes} />
       </svg>
     </span>
   )

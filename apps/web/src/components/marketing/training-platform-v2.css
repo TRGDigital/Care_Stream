@@ -1,0 +1,138 @@
+/* Ported from the content theme by carestream-theme-preview/port_css.py.
+ * Source: training-platform.html
+ *
+ * Kept as CSS rather than rewritten as Tailwind because these rules are the design.
+ * Scoped under .tppage-v2, with the theme tokens on that wrapper rather than
+ * :root, so the rest of the app is untouched. Header and footer rules are excluded.
+ */
+.tppage-v2 {
+  --accent: #7B3FBF;
+  --accent-2: #C2503E;
+  --accent-soft: #F3EDFA;
+  --btn-ink: #17121F;
+  --btn-ink-text: #FFFFFF;
+  --chrome: 68px;
+  --good: #1F8A5B;
+  --ground: #FFFFFF;
+  --ground-2: #F7F5FA;
+  --ink: #17121F;
+  --ink-2: #3A3245;
+  --line: #E9E5EF;
+  --maxw: 1440px;
+  --muted: #6B6577;
+  --plate: #F2EEF8;
+  --r: 14px;
+  --shadow: 0 1px 2px rgba(23,18,31,.04), 0 12px 32px rgba(23,18,31,.06);
+  --shadow-lg: 0 2px 4px rgba(23,18,31,.04), 0 24px 64px rgba(23,18,31,.10);
+  color: var(--ink);
+  background: var(--ground);
+}
+
+.tppage-v2 .demo-steps .n{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;font-size:.74rem;font-weight:800;background:var(--ground-2);color:var(--muted);flex:0 0 auto}
+.tppage-v2 .demo-steps .s.on .n{background:var(--accent);color:#fff}
+.tppage-v2 .demo-steps .s.done .n{background:var(--accent-soft);color:var(--accent)}
+.tppage-v2 .lede{font-size:clamp(1.05rem,1.7vw,1.32rem); color:var(--muted); line-height:1.55; max-width:34ch}
+.tppage-v2 .hero .lede{margin:26px auto 0; max-width:44ch; text-align:center}
+.tppage-v2 .watch .lede{max-width:38ch}
+.tppage-v2 .watch-list .n{width:22px;height:22px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
+    display:grid;place-items:center;font-size:.7rem;font-weight:700;flex:0 0 auto;margin-top:1px;}
+.tppage-v2 .nd .ic{width:36px;height:36px;border-radius:11px; display:grid;place-items:center;flex:0 0 auto}
+.tppage-v2 .nd .ic svg{width:19px;height:19px;color:#fff}
+.tppage-v2 .c-purple .ic{background:#7B3FBF}
+.tppage-v2 .c-green  .ic{background:#1F8A5B}
+.tppage-v2 .c-amber  .ic{background:#D08A15}
+.tppage-v2 .c-coral  .ic{background:#C2503E}
+.tppage-v2 .c-blue   .ic{background:#2F6FD0}
+.tppage-v2 .uc-sec.tint{background:var(--ground-2);border-block:1px solid var(--line)}
+.tppage-v2 .fbtn.solid{background:var(--btn-ink);color:var(--btn-ink-text)}
+.tppage-v2 .fbtn.ghost{border:1px solid var(--line);background:var(--ground);color:var(--ink)}
+.tppage-v2 .fbtn.ghost:hover{border-color:#D9D2E6}
+.tppage-v2 .fsec.tint{background:var(--ground-2);border-block:1px solid var(--line)}
+.tppage-v2 .fout .ic{width:30px;height:30px;border-radius:9px;background:#E7F5EE;color:var(--good);
+    display:grid;place-items:center;margin-bottom:13px}
+.tppage-v2 .fout .ic svg{width:16px;height:16px;display:block}
+.tppage-v2 .fstep-copy .n{display:inline-grid;place-items:center;width:27px;height:27px;border-radius:8px;
+    background:var(--accent-soft);color:var(--accent);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.73rem;font-weight:700;margin-bottom:13px}
+.tppage-v2 .fstepmini .n{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:7px;
+    background:var(--accent-soft);color:var(--accent);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.7rem;font-weight:700;margin-bottom:11px}
+.tppage-v2 .ftile .ic{width:30px;height:30px;border-radius:9px;background:var(--accent-soft);color:var(--accent);
+    display:grid;place-items:center;margin-bottom:13px}
+.tppage-v2 .ftile .ic svg{width:16px;height:16px;display:block}
+.tppage-v2 .cstep .n{display:inline-grid;place-items:center;width:23px;height:23px;border-radius:7px;flex:0 0 auto;
+    background:var(--ground);border:1px solid var(--line);color:var(--accent);
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.68rem;font-weight:700}
+.tppage-v2 .tpwrap{max-width:1180px;margin:0 auto;padding-inline:32px}
+.tppage-v2 .tphero{background:linear-gradient(180deg,#FBF9FE 0%, var(--ground) 88%);border-bottom:1px solid var(--line)}
+.tppage-v2 .tphero-in{padding-block:58px 54px;display:grid;grid-template-columns:minmax(340px,1fr) minmax(0,540px);
+    gap:44px;align-items:center}
+.tppage-v2 .tpeyebrow{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);
+    background:var(--accent-soft);padding:5px 11px;border-radius:99px;margin-bottom:15px}
+.tppage-v2 .tphero h1{font-size:clamp(1.9rem,1.1vw + 1.55rem,2.6rem);line-height:1.09;letter-spacing:-.033em;
+    margin:0 0 16px;text-wrap:balance}
+.tppage-v2 .tphero .lede{font-size:1.04rem;line-height:1.68;color:var(--ink-2);margin:0 0 26px;max-width:36em}
+.tppage-v2 .tpactions{display:flex;gap:12px;flex-wrap:wrap}
+.tppage-v2 .tpbtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;
+    padding:13px 24px;font-size:.92rem;font-weight:650;text-decoration:none;border:0}
+.tppage-v2 .tpbtn.solid{background:var(--btn-ink);color:var(--btn-ink-text)}
+.tppage-v2 .tpbtn.ghost{border:1px solid var(--line);color:var(--ink);background:var(--ground)}
+.tppage-v2 .tpbtn svg{width:15px;height:15px}
+.tppage-v2 .tpsec{padding-block:62px;border-bottom:1px solid var(--line)}
+.tppage-v2 .tpsec.tint{background:var(--ground-2)}
+.tppage-v2 .tplabel{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.65rem;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:12px}
+.tppage-v2 .tpsec h2{font-size:clamp(1.5rem,.85vw + 1.22rem,2.05rem);line-height:1.13;letter-spacing:-.03em;
+    margin:0 0 14px;text-wrap:balance}
+.tppage-v2 .tpsec .intro{font-size:1rem;line-height:1.68;color:var(--ink-2);margin:0 0 28px;max-width:50em}
+.tppage-v2 .tpsplit{display:grid;grid-template-columns:minmax(340px,1fr) minmax(0,540px);gap:44px;align-items:center}
+.tppage-v2 .tpsplit.flip>*:first-child{order:2}
+.tppage-v2 .tpitems{display:grid;gap:16px;margin:0;padding:0;list-style:none}
+.tppage-v2 .tpitems li{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start}
+.tppage-v2 .tpitems .ic{width:34px;height:34px;border-radius:11px;background:var(--accent-soft);
+    display:grid;place-items:center;flex:0 0 auto}
+.tppage-v2 .tpitems .ic svg{width:16px;height:16px;stroke:var(--accent)}
+.tppage-v2 .tpitems b{display:block;font-size:.97rem;letter-spacing:-.015em;margin-bottom:4px}
+.tppage-v2 .tpitems p{margin:0;font-size:.91rem;line-height:1.62;color:var(--muted)}
+.tppage-v2 .tpsteps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:8px}
+.tppage-v2 .tpstep{background:var(--ground);border:1px solid var(--line);border-radius:15px;padding:24px;
+    box-shadow:var(--shadow)}
+.tppage-v2 .tpstep .n{display:inline-grid;place-items:center;width:27px;height:27px;border-radius:9px;
+    background:var(--accent-soft);color:var(--accent);
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.72rem;font-weight:700;
+    margin-bottom:13px}
+.tppage-v2 .tpstep b{display:block;font-size:.97rem;letter-spacing:-.015em;margin-bottom:7px}
+.tppage-v2 .tpstep p{margin:0;font-size:.9rem;line-height:1.62;color:var(--muted)}
+.tppage-v2 .tpshot{background:var(--plate);border:1px solid var(--line);border-radius:16px;display:grid;
+    place-items:center;text-align:center;padding:24px;box-shadow:var(--shadow);aspect-ratio:16/10}
+.tppage-v2 .tpshot span{font-size:.82rem;line-height:1.55;color:var(--ink-2);max-width:26em}
+.tppage-v2 .tpshot b{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.62rem;letter-spacing:.11em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.tppage-v2 .tpshot em{display:block;font-style:normal;font-size:.74rem;color:var(--muted);margin-top:8px}
+.tppage-v2 .tpcta{padding-block:64px}
+.tppage-v2 .tpcta-in{background:linear-gradient(135deg,var(--accent),var(--accent-2));border-radius:20px;
+    padding:40px;display:flex;align-items:center;justify-content:space-between;gap:26px;flex-wrap:wrap}
+.tppage-v2 .tpcta h2{color:#fff;font-size:clamp(1.4rem,.8vw + 1.15rem,1.9rem);line-height:1.15;
+    letter-spacing:-.028em;margin:0 0 8px}
+.tppage-v2 .tpcta p{color:rgba(255,255,255,.82);margin:0;font-size:.98rem;line-height:1.6;max-width:36em}
+.tppage-v2 .tpcta .btns{display:flex;gap:12px;flex-wrap:wrap;flex-shrink:0}
+.tppage-v2 .tpcta .btns a{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    border-radius:999px;padding:13px 26px;font-size:.9rem;font-weight:650;text-decoration:none}
+.tppage-v2 .tpcta .solid{background:#fff;color:var(--ink)}
+.tppage-v2 .tpcta .ghost{border:2px solid rgba(255,255,255,.35);color:#fff}
+.tppage-v2 .tpcta .btns svg{width:15px;height:15px}
+
+@media(max-width:1000px){
+  .tppage-v2 .tphero-in, .tppage-v2 .tpsplit{grid-template-columns:minmax(0,1fr)}
+  .tppage-v2 .tpsplit.flip>*:first-child{order:0}
+  .tppage-v2 .tpsteps{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .tppage-v2 .tpwrap{padding-inline:22px}
+  .tppage-v2 .tpcta-in{padding:28px}
+}
+
+.tppage-v2 .shot,.tppage-v2 .sshot,.tppage-v2 .sscen-shot,.tppage-v2 .uc-shot,.tppage-v2 .wcshot,.tppage-v2 .svshot,.tppage-v2 .wwshot,.tppage-v2 .wfshot,.tppage-v2 .wfheroshot,.tppage-v2 .tpshot,.tppage-v2 .rgshot,.tppage-v2 .dmshot,.tppage-v2 .plate:not(.shotplate),.tppage-v2 .smock,.tppage-v2 .ucread-art,.tppage-v2 .pcrel-art{display:block!important;overflow:hidden;padding:0!important;aspect-ratio:auto!important;height:auto!important;min-height:0!important;max-height:none!important}
+.tppage-v2 .shot img,.tppage-v2 .sshot img,.tppage-v2 .sscen-shot img,.tppage-v2 .uc-shot img,.tppage-v2 .wcshot img,.tppage-v2 .svshot img,.tppage-v2 .wwshot img,.tppage-v2 .wfshot img,.tppage-v2 .wfheroshot img,.tppage-v2 .tpshot img,.tppage-v2 .rgshot img,.tppage-v2 .dmshot img,.tppage-v2 .plate:not(.shotplate) img,.tppage-v2 .smock img,.tppage-v2 .ucread-art img,.tppage-v2 .pcrel-art img{display:block;width:100%!important;height:auto!important;object-fit:contain;border-radius:inherit}
+.tppage-v2 .fchips,.tppage-v2 .schips,.tppage-v2 .smock-tabs,.tppage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}

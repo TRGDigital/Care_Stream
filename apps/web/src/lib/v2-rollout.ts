@@ -11,7 +11,9 @@
 //   ?v2=0  shows the current page even for a family that is live, for comparison.
 
 export type V2Family =
-  | 'features'      // /features/*, 53 pages
+  | 'features'      // /features/*, 52 pages
+  | 'web-chat'      // /features/web-chat-interface, switched separately: it goes live only once
+                    // its content has been re-imported, and would otherwise be near-empty
   | 'legal'         // /privacy /terms /cookies /dpa /client-services-agreement
   | 'one-offs'      // /about /pricing /languages /rag /regulatory-knowledge /trust /contact
                     // /demo /blog /faq /who-we-serve /who-its-for /training-platform
@@ -24,8 +26,12 @@ export type V2Family =
   | 'indexes'       // /staff-training and /care-policies
   | 'home'          // /
 
-/** Batch 1, per the go-live plan: families already published and checked. */
 const LIVE: ReadonlySet<V2Family> = new Set<V2Family>([
+  // Batch 1: families already published and checked against the deployment.
+  'features',
+  'legal',
+  'one-offs',
+  'collections',
 ])
 
 type Params = Record<string, string | string[] | undefined> | undefined

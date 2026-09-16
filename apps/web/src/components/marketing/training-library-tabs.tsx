@@ -238,12 +238,12 @@ export function ThemeModuleCard({ t, settingLabel, bulk, hidden }: {
 /** The sticky basket bar: licences, the line total and any bulk discount, all from the cart
  *  store, so it cannot disagree with the checkout. */
 function ThemeBasket() {
-  const { totalQty, gross, pct, discount, net } = useCart()
+  const { items, totalQty, gross, pct, discount, net } = useCart()
   // Always in the page and hidden while the basket is empty, as the theme has it.
   return (
     <div className="tbasket" hidden={!totalQty}>
       <b>{totalQty} licence{totalQty === 1 ? '' : 's'}</b>
-      <span>{totalQty ? gbp(pct ? net : gross) : ''}</span>
+      <span>{totalQty ? `${items.length} course${items.length === 1 ? '' : 's'} · ${gbp(pct ? net : gross)}` : ''}</span>
       <span className="disc" hidden={!pct}>{pct ? `${pct}% bulk discount, saving ${gbp(discount)}` : ''}</span>
       {/* /basket, the app's basket and checkout. The theme links /buy, which is not a page
           here (only /buy/<slug> is), so its Checkout was a 404. */}

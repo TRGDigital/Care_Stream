@@ -58,7 +58,8 @@ export function TrainingCartLink() {
   const { totalQty, gross, pct, net } = useCart()
   if (!totalQty) return null
   return (
-    <Link className="mcart" href="/buy">
+    // /basket, the app's basket and checkout: /buy on its own is not a page (theme's link).
+    <Link className="mcart" href="/basket">
       <Cart /> <span>View basket</span> <span className="count">{totalQty}</span>
       <span>{gbp(pct ? net : gross)}</span>
     </Link>

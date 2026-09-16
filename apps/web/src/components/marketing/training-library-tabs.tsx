@@ -48,6 +48,11 @@ type Props = {
   groups: Record<string, string>
   settings: Array<{ key: string; label: string }>
   topics: LibraryTopic[]
+  /** `theme` renders the rebuilt /staff-training markup. Same filtering, same cart, same
+   *  pricing and the same accreditation guard: only the markup differs. */
+  variant?: 'default' | 'theme'
+  /** Theme copy, from the page's slot set. */
+  copy?: { search: string; all: string; note: string; bulk: string }
 }
 
 // One library card. `accent` gives setting-specific modules a distinct blue
@@ -142,10 +147,113 @@ export function ModuleCard({ t, accent, settingLabel }: { t: LibraryTopic; accen
   )
 }
 
+
+const Cart = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="9.5" cy="19" r="1.4" /><circle cx="17" cy="19" r="1.4" />
+    <path d="M3 4h2.2l2.3 10.5h10.2L20 7.5H6" />
+  </svg>
+)
+
+const Clk = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="8.5" /><path d="M12 8v4.5l3 1.8" />
+  </svg>
+)
+
+const Arr = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
+       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </svg>
+)
+
+const Seal = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="9" r="5.5" /><path d="m8.5 13.5-1.5 7 5-2.5 5 2.5-1.5-7" />
+  </svg>
+)
+
+/** The theme's module card. "Certificate" is the completion certificate every course issues
+ *  for CQC evidence, not an accreditation claim; the CPD mark appears only when
+ *  TRAINING_ACCREDITED is set, exactly as on the current card. */
+function ThemeModuleCard({ t, settingLabel, bulk }: {
+  t: LibraryTopic; settingLabel?: string | null; bulk: string
+}) {
+  const { items, cart } = useCart()
+  const inCart = items.find((i) => i.slug === t.slug)
+  const duration = formatDuration(estimatedMinutes(t.group_key, t.duration_minutes))
+  const forSetting = !!t.care_setting
+
+  return (
+    <div className={`tcard${forSetting ? ' forsetting' : ''}`}>
+      <span className="pic">
+        {t.illustration_url && <SiteImage src={`${API_URL}${t.illustration_url}`} alt="" />}
+        <span className="freq">{frequencyLabel(t.frequency)}</span>
+        <span className="stack">
+          <span className="cert"><Seal /> Certificate</span>
+          {TRAINING_ACCREDITED && <span className="cert"><Seal /> CPD Certified</span>}
+          {forSetting && settingLabel && <span className="forset">For {settingLabel}</span>}
+        </span>
+      </span>
+      <div className="in">
+        <div className="badges">
+          {t.requires_practical && <span className="tbadge prac">Practical assessment</span>}
+        </div>
+        <h4>{t.title}</h4>
+        <p className="desc">
+          {t.description ?? GROUP_BLURB[t.group_key] ?? 'A mandatory training subject, ready to assign.'}
+        </p>
+        <div className="tmeta">
+          <span className="tprice">{gbp(UNIT_PENCE)}</span>
+          <span className="tdur"><Clk /> {duration}</span>
+          <Link className="tdetails" href={`/staff-training/${t.slug}`}>Details <Arr /></Link>
+        </div>
+        <div className="tbuy">
+          {inCart ? (
+            <span className="add">
+              <button type="button" aria-label="Fewer"
+                      onClick={() => cart.setQty(t.slug, inCart.qty - 1)}>&minus;</button>
+              {inCart.qty} in basket
+              <button type="button" aria-label="More"
+                      onClick={() => cart.setQty(t.slug, inCart.qty + 1)}>+</button>
+            </span>
+          ) : (
+            <button type="button" className="add"
+                    onClick={() => cart.add({ slug: t.slug, title: t.title, unitPence: UNIT_PENCE })}>
+              <Cart /> Add to basket
+            </button>
+          )}
+          <SaveCourseButton slug={t.slug} title={t.title} compact className="tsave" />
+        </div>
+        <p className="tbulk">{bulk}</p>
+      </div>
+    </div>
+  )
+}
+
+/** The sticky basket bar: licences, the line total and any bulk discount, all from the cart
+ *  store, so it cannot disagree with the checkout. */
+function ThemeBasket() {
+  const { totalQty, gross, pct, discount, net } = useCart()
+  if (!totalQty) return null
+  return (
+    <div className="tbasket">
+      <b>{totalQty} licence{totalQty === 1 ? '' : 's'}</b>
+      <span>{gbp(pct ? net : gross)}</span>
+      {pct > 0 && <span className="disc">{pct}% bulk discount, saving {gbp(discount)}</span>}
+      <Link className="go" href="/buy">Checkout <Arr /></Link>
+    </div>
+  )
+}
+
 // The standard-library grid with setting tabs. "All settings" shows the universal
 // (cross-over) core; each setting tab surfaces that setting's specific modules FIRST
 // (in a distinct blue accent), then the shared core below.
-export function TrainingLibraryTabs({ groups, settings, topics }: Props) {
+export function TrainingLibraryTabs({ groups, settings, topics, variant = 'default', copy }: Props) {
   const [active, setActive] = useState<string | null>(null) // null = All settings (universal core)
   const [query, setQuery] = useState('')
 
@@ -157,6 +265,59 @@ export function TrainingLibraryTabs({ groups, settings, topics }: Props) {
   const settingSpecific = (active ? topics.filter((t) => t.care_setting === active) : []).filter(matchesQuery)
   const hasSpecific = !!activeLabel && settingSpecific.length > 0
   const totalMatches = universal.length + settingSpecific.length
+
+  if (variant === 'theme') {
+    const c = copy ?? {
+      search: 'Search training modules', all: 'All settings',
+      note: '', bulk: 'Bulk discounts from 10+ licences',
+    }
+    // Setting-specific modules lead, then the shared core, grouped the way the theme groups.
+    const shown = [...settingSpecific, ...universal]
+    const byGroup = GROUP_ORDER
+      .map(g => ({ key: g, label: groups[g] ?? g, items: shown.filter(x => x.group_key === g) }))
+      .filter(g => g.items.length > 0)
+
+    return (
+      <>
+        <label className="tsearch">
+          <Search size={18} aria-hidden="true" />
+          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)}
+                 placeholder={c.search} aria-label="Search training modules" />
+        </label>
+        <div className="tsettings" role="group" aria-label="Care setting">
+          {[{ key: null as string | null, label: c.all }, ...settings].map((tab) => (
+            <button type="button" className="tset" key={tab.key ?? 'all'}
+                    aria-pressed={active === tab.key} onClick={() => setActive(tab.key)}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        {!q && c.note && <p className="tnote">{c.note}</p>}
+        {q && (
+          <p className="tnote" role="status" aria-live="polite">
+            {totalMatches === 0
+              ? `No modules match "${query}". Try a broader term.`
+              : `${totalMatches} module${totalMatches === 1 ? '' : 's'} match "${query}".`}
+          </p>
+        )}
+        <div>
+          {byGroup.map(g => (
+            <div className="tgroup" key={g.key}>
+              <h3>{g.label}<span>{g.items.length}</span></h3>
+              <div className="tgrid">
+                {g.items.map(x => (
+                  <ThemeModuleCard key={x.slug} t={x} bulk={c.bulk}
+                    settingLabel={x.care_setting
+                      ? settings.find(s => s.key === x.care_setting)?.label ?? null : null} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <ThemeBasket />
+      </>
+    )
+  }
 
   return (
     <div>

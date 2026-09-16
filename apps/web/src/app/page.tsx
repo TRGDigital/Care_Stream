@@ -1074,12 +1074,10 @@ async function getFeaturedPosts(): Promise<HomeBlogPost[]> {
   return []
 }
 
-// The whole props object is optional: /home-blue renders this component directly with no
-// arguments, and making searchParams merely optional is not enough for that call to typecheck.
 export default async function HomePage(
   { searchParams }: {
     searchParams?: Promise<Record<string, string | string[] | undefined>>
-  } = {},
+  },
 ) {
   const [faqs, slots, featuredPosts] = await Promise.all([getHomeFaqs(), getContentSlots('/'), getFeaturedPosts()])
   const s = makeSlot(HOME_SLOTS, slots)

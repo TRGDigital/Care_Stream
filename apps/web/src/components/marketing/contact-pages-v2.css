@@ -1,5 +1,5 @@
 /* Ported from the content theme by carestream-theme-preview/port_css.py.
- * Source: contact/faq.html
+ * Source: contact/faq.html, contact.html
  *
  * Kept as CSS rather than rewritten as Tailwind because these rules are the design.
  * Scoped under .cfpage-v2, with the theme tokens on that wrapper rather than
@@ -47,10 +47,47 @@
     letter-spacing:-.032em;margin:0 0 14px;text-wrap:balance;max-width:18ch}
 .cfpage-v2 .cfhero p{font-size:1.02rem;line-height:1.62;color:var(--ink-2);margin:0;max-width:46em}
 .cfpage-v2 .cfsec{padding:0}
+.cfpage-v2 .cfsec-in{padding-block:clamp(40px, 5.6vh, 72px)}
 .cfpage-v2 .cfsec.tint{background:var(--ground-2);border-block:1px solid var(--line)}
+.cfpage-v2 .cflabel{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.65rem;
+    letter-spacing:.11em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:12px}
 .cfpage-v2 .cfsec h2{font-size:clamp(1.45rem, 2.1vw, 1.95rem);line-height:1.17;letter-spacing:-.027em;
     margin:0 0 16px;text-wrap:balance}
+.cfpage-v2 .cfsplit{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:52px;align-items:start}
+.cfpage-v2 .cfroutes{display:grid;gap:14px;margin-top:8px}
+.cfpage-v2 .cfroute{background:var(--ground);border:1px solid var(--line);border-radius:14px;
+    padding:20px 22px;box-shadow:var(--shadow)}
+.cfpage-v2 .cfroute b{display:block;font-size:.96rem;letter-spacing:-.014em;margin-bottom:7px}
+.cfpage-v2 .cfroute p{font-size:.87rem;line-height:1.62;color:var(--muted);margin:0 0 12px}
+.cfpage-v2 .cfroute a{display:inline-flex;align-items:center;gap:8px;font-size:.87rem;font-weight:650;
+    color:var(--accent);text-decoration:none}
+.cfpage-v2 .cfroute a svg{width:14px;height:14px}
+.cfpage-v2 .cfcall{background:var(--ink);color:#fff;border-radius:14px;padding:22px}
+.cfpage-v2 .cfcall b{display:block;font-size:.98rem;letter-spacing:-.014em;margin-bottom:7px;color:#fff}
+.cfpage-v2 .cfcall p{font-size:.88rem;line-height:1.6;color:rgba(255,255,255,.68);margin:0 0 16px}
+.cfpage-v2 .cfcall a{display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--ink);
+    border-radius:999px;padding:10px 18px;font-size:.87rem;font-weight:650;text-decoration:none}
+.cfpage-v2 .cfform{background:var(--ground);border:1px solid var(--line);border-radius:18px;
+    padding:28px;box-shadow:var(--shadow-lg)}
+.cfpage-v2 .cfform h3{font-size:1.1rem;letter-spacing:-.018em;margin:0 0 20px}
+.cfpage-v2 .cffield{display:grid;gap:7px;margin-bottom:16px}
+.cfpage-v2 .cffield label{font-size:.82rem;font-weight:650;letter-spacing:-.01em;color:var(--ink-2)}
+.cfpage-v2 .cffield label .req{color:var(--accent);margin-left:3px}
+.cfpage-v2 .cffield input, .cfpage-v2 .cffield select, .cfpage-v2 .cffield textarea{font:inherit;font-size:.92rem;color:var(--ink);
+    background:var(--ground);border:1px solid var(--line);border-radius:11px;padding:11px 13px;width:100%}
+.cfpage-v2 .cffield textarea{min-height:140px;resize:vertical;line-height:1.6}
+.cfpage-v2 .cffield input:focus, .cfpage-v2 .cffield select:focus, .cfpage-v2 .cffield textarea:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+.cfpage-v2 .cfpair{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.cfpage-v2 .cfsubmit{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;
+    font:inherit;font-size:.92rem;font-weight:650;cursor:pointer;border:0;border-radius:999px;
+    background:var(--btn-ink);color:var(--btn-ink-text);padding:13px 20px;margin-top:4px}
+.cfpage-v2 .cfsubmit svg{width:15px;height:15px;flex:0 0 auto}
 .cfpage-v2 .cfroute a svg, .cfpage-v2 .cfcall a svg, .cfpage-v2 .cfbtn svg, .cfpage-v2 .cfq summary svg{width:15px;height:15px;flex:0 0 auto}
+.cfpage-v2 .cfnote{font-size:.79rem;line-height:1.55;color:var(--muted);margin:14px 0 0;text-align:center}
+.cfpage-v2 .cfnote a{color:var(--accent)}
+.cfpage-v2 .cfsent{display:none;background:#E7F5EE;color:#0E5D3C;border-radius:12px;padding:14px 16px;
+    font-size:.9rem;line-height:1.55;margin-bottom:16px}
+.cfpage-v2 .cfform.sent .cfsent{display:block}
 .cfpage-v2 .cfbody-in{display:grid;grid-template-columns:240px minmax(0,1fr);gap:56px;
     padding-block:clamp(30px, 4.4vh, 52px) clamp(50px, 7vh, 86px);align-items:start}
 .cfpage-v2 .cfnav{position:sticky;top:calc(var(--chrome) + 20px);align-self:start;
@@ -89,6 +126,15 @@
 
 @media (max-width:760px){
   .cfpage-v2 .cfwrap{padding-inline:22px}
+}
+@media (max-width:900px){
+  .cfpage-v2 .cfsplit{grid-template-columns:minmax(0,1fr);gap:32px}
+}
+@media (max-width:560px){
+  .cfpage-v2 .cfform{padding:22px}
+}
+@media (max-width:560px){
+  .cfpage-v2 .cfpair{grid-template-columns:1fr}
 }
 @media (max-width:1000px){
   .cfpage-v2 .cfbody-in{grid-template-columns:minmax(0,1fr);gap:0}

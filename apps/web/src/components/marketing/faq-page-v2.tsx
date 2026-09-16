@@ -1,5 +1,8 @@
 import Link from 'next/link'
-import './faq-page-v2.css'
+// One stylesheet for both pages under the theme's `cf` design: /contact/faq and
+// /contact share the hero, section, end and button rules, and a second copy of
+// them would drift the first time either was touched.
+import './contact-pages-v2.css'
 
 // The rebuilt /faq template. Renders the SAME thirty questions the current page renders, from
 // the same editable slots, so nothing about the words changes.

@@ -3,6 +3,7 @@ import { PageHero } from '@/components/marketing/ui'
 import { ContactForm } from './contact-form'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { CONTACT_SLOTS } from '@/lib/page-slots/contact'
+import { ContactPageV2 } from '@/components/marketing/contact-page-v2'
 import { JsonLd } from '@/components/json-ld'
 import { contactPageSchema } from '@/lib/schema'
 
@@ -19,8 +20,22 @@ export const metadata = {
   },
 }
 
-export default async function ContactPage() {
+export default async function ContactPage(
+  { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
+) {
   const s = makeSlot(CONTACT_SLOTS, await getContentSlots('/contact'))
+
+  // Opt-in with ?v2=1 until it is signed off. No second slot set: the theme's copy and these
+  // defaults are the same words, so both templates read the same slots.
+  if ((await searchParams)?.v2 === '1') {
+    return (
+      <>
+        <JsonLd data={contactPageSchema()} />
+        <ContactPageV2 s={s} />
+      </>
+    )
+  }
+
   return (
     <>
       <JsonLd data={contactPageSchema()} />

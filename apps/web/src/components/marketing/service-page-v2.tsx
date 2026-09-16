@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
 import './service-page-v2.css'
@@ -369,9 +370,32 @@ function partsOf(b: ServiceBlock): ServicePart[] {
   }]
 }
 
-export function ServicePageV2({ page }: { page: ServicePage }) {
+/** Questions edited in the console (Blog → Pages) rather than imported with the theme. They sit
+ *  just before the closing call to action, in the theme's own question styling. */
+function ConsoleFaqs({ faqs }: { faqs: { question: string; answer: string }[] }) {
+  return (
+    <section className="svsec">
+      <div className="svwrap svsec-in svnarrow">
+        <span className="svlabel">FAQ</span>
+        <h2>Frequently asked questions.</h2>
+        {faqs.map((f, i) => (
+          <details className="svq" key={i}>
+            <summary>{f.question}<Chevron /></summary>
+            <div className="ans"><p>{f.answer}</p></div>
+          </details>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+export function ServicePageV2({ page, faqs = [] }: {
+  page: ServicePage
+  faqs?: { question: string; answer: string }[]
+}) {
   const c = page.content ?? { lede: [], blocks: [] }
   const blocks = c.blocks ?? []
+  const endAt = blocks.findIndex(b => b.kind === 'end')
 
   return (
     <div className="svpage-v2">
@@ -407,13 +431,16 @@ export function ServicePageV2({ page }: { page: ServicePage }) {
       {blocks.map((b, i) => {
         if (b.kind === 'end') {
           return (
-            <section className="svend" key={i}>
-              <div className="svwrap svend-in">
-                {b.heading && <h2 dangerouslySetInnerHTML={{ __html: b.heading }} />}
-                <Paras lines={b.intro} />
-                <Buttons actions={b.actions} fallback={END_DEFAULT} className="row" />
-              </div>
-            </section>
+            <Fragment key={i}>
+              {i === endAt && faqs.length > 0 && <ConsoleFaqs faqs={faqs} />}
+              <section className="svend">
+                <div className="svwrap svend-in">
+                  {b.heading && <h2 dangerouslySetInnerHTML={{ __html: b.heading }} />}
+                  <Paras lines={b.intro} />
+                  <Buttons actions={b.actions} fallback={END_DEFAULT} className="row" />
+                </div>
+              </section>
+            </Fragment>
           )
         }
 
@@ -469,6 +496,7 @@ export function ServicePageV2({ page }: { page: ServicePage }) {
           </section>
         )
       })}
+      {endAt < 0 && faqs.length > 0 && <ConsoleFaqs faqs={faqs} />}
     </div>
   )
 }

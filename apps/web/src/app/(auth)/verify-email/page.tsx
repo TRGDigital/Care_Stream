@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import { CrossIcon, TickIcon, WarnIcon } from '../auth-fields'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -15,7 +15,7 @@ function VerifyEmailContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'already' | 'expired' | 'error'>('loading')
   const ranRef = useRef(false)
 
-  // Verify automatically on load (the email click IS the confirmation — no extra
+  // Verify automatically on load (the email click IS the confirmation, no extra
   // button; email scanners don't run JS, so the single-use token stays safe). On
   // success, auto-login with the one-time token the API returns and drop the user
   // into the trial/card step.
@@ -36,7 +36,7 @@ function VerifyEmailContent() {
           const r = await signIn('credentials', { mode: 'magic', token: body.data.login_token, redirect: false })
           if (r?.ok) { window.location.href = '/start'; return }
         }
-        // Verified, but auto-login unavailable (e.g. link re-used) — fall back to manual.
+        // Verified, but auto-login unavailable (e.g. link re-used): fall back to manual.
         setStatus(body.data?.already_verified ? 'already' : 'success')
       } catch {
         setStatus('error')
@@ -46,70 +46,46 @@ function VerifyEmailContent() {
 
   if (status === 'loading') {
     return (
-      <div className="text-center">
-        <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-teal border-t-transparent" />
-        <p className="text-sm text-neutral-mid">Verifying your email and signing you in…</p>
+      <div className="lgstate">
+        <div className="lgspin" />
+        <p className="lgsub">Verifying your email and signing you in…</p>
       </div>
     )
   }
 
   if (status === 'success' || status === 'already') {
     return (
-      <div className="text-center">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
-          <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-          </svg>
-        </div>
-        <h1 className="mb-2 text-2xl font-bold text-neutral-dark">Email verified</h1>
-        <p className="mb-8 text-sm text-neutral-mid">
+      <div className="lgstate">
+        <div className="lgico good"><TickIcon /></div>
+        <h1>Email verified</h1>
+        <p className="lgsub">
           {status === 'already'
             ? 'Your email address has already been verified.'
             : 'Your email address has been confirmed. You can now sign in.'}
         </p>
-        <Link href="/login">
-          <Button className="w-full">Sign in to your account</Button>
-        </Link>
+        <Link href="/login" className="lgbtn solid">Sign in to your account</Link>
       </div>
     )
   }
 
   if (status === 'expired') {
     return (
-      <div className="text-center">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-amber-50">
-          <svg className="h-8 w-8 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-          </svg>
-        </div>
-        <h1 className="mb-2 text-2xl font-bold text-neutral-dark">Link expired</h1>
-        <p className="mb-8 text-sm text-neutral-mid">
-          This verification link has expired. Request a new one and we&apos;ll send a fresh email.
-        </p>
-        <Link href="/check-email">
-          <Button className="w-full">Request a new link</Button>
-        </Link>
+      <div className="lgstate">
+        <div className="lgico warn"><WarnIcon /></div>
+        <h1>Link expired</h1>
+        <p className="lgsub">This verification link has expired. Request a new one and we&apos;ll send a fresh email.</p>
+        <Link href="/check-email" className="lgbtn solid">Request a new link</Link>
       </div>
     )
   }
 
   return (
-    <div className="text-center">
-      <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
-        <svg className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </div>
-      <h1 className="mb-2 text-2xl font-bold text-neutral-dark">Verification failed</h1>
-      <p className="mb-8 text-sm text-neutral-mid">
-        This link is invalid or has already been used. Try requesting a new verification email.
-      </p>
-      <Link href="/check-email">
-        <Button variant="secondary" className="w-full">Request a new link</Button>
-      </Link>
-      <p className="mt-4 text-sm text-neutral-mid">
-        <Link href="/login" className="font-medium text-teal hover:underline">Back to sign in</Link>
-      </p>
+    <div className="lgstate">
+      <div className="lgico bad"><CrossIcon /></div>
+      <h1>Verification failed</h1>
+      <p className="lgsub">This link is invalid or has already been used. Try requesting a new verification email.</p>
+      <Link href="/check-email" className="lgbtn">Request a new link</Link>
+      <p className="lgalt"><Link href="/login">Back to sign in</Link></p>
     </div>
   )
 }

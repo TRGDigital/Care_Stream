@@ -11,12 +11,15 @@ import type { SlotDef } from './types'
 // new, so reusing it would have rendered a page two thirds approved copy and one third the
 // previous wording. The old set still serves the current page, untouched.
 //
-// The 66 policies and 6 packs are NOT here. They come from the policy-shop catalogue at
-// request time, the same as the pages that sell them: a price written into a page goes
-// stale the first time one changes.
+// The 66 policies, and every title and price, are NOT here. They come from the policy-shop
+// catalogue at request time, the same as the pages that sell them: a price written into a
+// page goes stale the first time one changes. The packs' card descriptions and their order
+// ARE here: they are the theme's copy, shorter than the bundle pages' own.
+export const CARE_POLICIES_PACK_ORDER = ['statutory-starter', 'complete-library', 'clinical-care-pack', 'health-safety-pack', 'governance-data-pack', 'hr-workforce-pack']
+
 export const CARE_POLICIES_V2_SLOTS: SlotDef[] = [
 
-  { key: 'hero.label', group: 'Hero', label: 'Eyebrow', default: '' },
+  { key: 'hero.label', group: 'Hero', label: 'Eyebrow', default: 'Features' },
   { key: 'hero.h1', group: 'Hero', label: 'Headline', default: 'Everything your care team needs. Nothing they do not.' },
   { key: 'hero.p1', group: 'Hero', label: 'Paragraph 1', multiline: true, default: 'CareStream is purpose-built for UK care settings. Every feature addresses a real challenge that registered managers, HR leads, and frontline staff face every day.' },
 
@@ -211,4 +214,10 @@ export const CARE_POLICIES_V2_SLOTS: SlotDef[] = [
   { key: 'cat.label', group: 'The policy library', label: 'Eyebrow', default: 'The policy library' },
   { key: 'cat.h2', group: 'The policy library', label: 'Heading', default: 'All 66 policies, written for your service.' },
   { key: 'cat.lede', group: 'The policy library', label: 'Paragraph', multiline: true, default: 'Buy a single policy or a pack. Each one is written for the organisation buying it, structured from the legislation itself, read by a person before it carries your name, and kept updated when the law changes.' },
+  { key: 'pack.statutory-starter.desc', group: 'The policy library', label: 'Statutory Starter Pack: card description', multiline: true, default: 'The twenty policies every CQC-registered service is expected to hold.' },
+  { key: 'pack.complete-library.desc', group: 'The policy library', label: 'Complete Policy Library: card description', multiline: true, default: 'Every policy on this page, in one licence.' },
+  { key: 'pack.clinical-care-pack.desc', group: 'The policy library', label: 'Clinical Care Pack: card description', multiline: true, default: 'Care planning, medicines, end of life and the clinical protocols around them.' },
+  { key: 'pack.health-safety-pack.desc', group: 'The policy library', label: 'Health & Safety Pack: card description', multiline: true, default: 'Premises, equipment, fire, COSHH and the rest of your safety file.' },
+  { key: 'pack.governance-data-pack.desc', group: 'The policy library', label: 'Governance & Data Pack: card description', multiline: true, default: 'Governance, audit, records and the whole information governance set.' },
+  { key: 'pack.hr-workforce-pack.desc', group: 'The policy library', label: 'HR & Workforce Pack: card description', multiline: true, default: 'Recruitment, supervision, conduct and the policies your staff file needs.' },
 ]

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
+import { CARE_POLICIES_PACK_ORDER } from '@/lib/page-slots/care-policies-v2'
 import './service-page-v2.css'
 
 // The rebuilt /care-policies INDEX.
@@ -23,6 +24,11 @@ export interface PolicyBundle {
 }
 
 const money = (p: number) => `£${Math.round(p / 100)}`
+
+const rank = (key: string) => {
+  const i = (CARE_POLICIES_PACK_ORDER as readonly string[]).indexOf(key)
+  return i < 0 ? CARE_POLICIES_PACK_ORDER.length : i
+}
 
 const Tick = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"
@@ -248,9 +254,13 @@ export function CarePoliciesIndexV2({ s, products, bundles }: {
           <p className="lede3">{s('cat.lede')}</p>
           {bundles.length > 0 && (
             <div className="pcpacks">
-              {bundles.map(p => (
+              {/* In the theme's order, with the theme's one-line descriptions (editable in the
+                  console). Title and price stay the shop's. A pack added to the shop later
+                  goes after the theme's six, with the shop's own description. */}
+              {[...bundles].sort((a, b) => rank(a.key) - rank(b.key)).map(p => (
                 <Link className="pcpack" href={`/care-policies/bundles/${p.key}`} key={p.key}>
-                  <b>{p.title}</b><em>{money(p.price_pence)}</em><span>{p.description}</span>
+                  <b>{p.title}</b><em>{money(p.price_pence)}</em>
+                  <span>{s(`pack.${p.key}.desc`) || p.description}</span>
                 </Link>
               ))}
             </div>

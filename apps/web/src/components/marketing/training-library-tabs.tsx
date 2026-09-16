@@ -180,8 +180,8 @@ const Seal = () => (
 /** The theme's module card. "Certificate" is the completion certificate every course issues
  *  for CQC evidence, not an accreditation claim; the CPD mark appears only when
  *  TRAINING_ACCREDITED is set, exactly as on the current card. */
-function ThemeModuleCard({ t, settingLabel, bulk }: {
-  t: LibraryTopic; settingLabel?: string | null; bulk: string
+function ThemeModuleCard({ t, settingLabel, bulk, hidden }: {
+  t: LibraryTopic; settingLabel?: string | null; bulk: string; hidden?: boolean
 }) {
   const { items, cart } = useCart()
   const inCart = items.find((i) => i.slug === t.slug)
@@ -189,7 +189,7 @@ function ThemeModuleCard({ t, settingLabel, bulk }: {
   const forSetting = !!t.care_setting
 
   return (
-    <div className={`tcard${forSetting ? ' forsetting' : ''}`}>
+    <div className={`tcard${forSetting ? ' forsetting' : ''}`} hidden={hidden}>
       <span className="pic">
         {t.illustration_url && <SiteImage src={`${API_URL}${t.illustration_url}`} alt="" />}
         <span className="freq">{frequencyLabel(t.frequency)}</span>
@@ -271,11 +271,23 @@ export function TrainingLibraryTabs({ groups, settings, topics, variant = 'defau
       search: 'Search training modules', all: 'All settings',
       note: '', bulk: 'Bulk discounts from 10+ licences',
     }
-    // Setting-specific modules lead, then the shared core, grouped the way the theme groups.
-    const shown = [...settingSpecific, ...universal]
+    // EVERY module is in the page, as in the theme, and the ones outside the chosen setting or
+    // the search are hidden rather than left out. Rendering only the shown ones put 46 of the
+    // 98 modules in the server HTML, so the 52 written for particular settings had no link on
+    // the library page a crawler could follow. A setting's own modules lead their group.
+    const visible = (t: LibraryTopic) =>
+      (active ? !t.care_setting || t.care_setting === active : !t.care_setting) && matchesQuery(t)
     const byGroup = GROUP_ORDER
-      .map(g => ({ key: g, label: groups[g] ?? g, items: shown.filter(x => x.group_key === g) }))
+      .map(g => ({
+        key: g, label: groups[g] ?? g,
+        items: topics.filter(x => x.group_key === g)
+          .sort((a, b) => Number(!!active && b.care_setting === active)
+                        - Number(!!active && a.care_setting === active)),
+      }))
       .filter(g => g.items.length > 0)
+    const noteText = activeLabel
+      ? `Showing the extra modules built for ${activeLabel}, followed by the core library every service needs.`
+      : c.note
 
     return (
       <>
@@ -292,21 +304,19 @@ export function TrainingLibraryTabs({ groups, settings, topics, variant = 'defau
             </button>
           ))}
         </div>
-        {!q && c.note && <p className="tnote">{c.note}</p>}
-        {q && (
+        {!q && noteText && <p className="tnote">{noteText}</p>}
+        {q && totalMatches > 0 && (
           <p className="tnote" role="status" aria-live="polite">
-            {totalMatches === 0
-              ? `No modules match "${query}". Try a broader term.`
-              : `${totalMatches} module${totalMatches === 1 ? '' : 's'} match "${query}".`}
+            {`${totalMatches} module${totalMatches === 1 ? '' : 's'} match "${query}".`}
           </p>
         )}
         <div>
           {byGroup.map(g => (
-            <div className="tgroup" key={g.key}>
+            <div className="tgroup" key={g.key} hidden={!g.items.some(visible)}>
               <h3>{g.label}<span>{g.items.length}</span></h3>
               <div className="tgrid">
                 {g.items.map(x => (
-                  <ThemeModuleCard key={x.slug} t={x} bulk={c.bulk}
+                  <ThemeModuleCard key={x.slug} t={x} bulk={c.bulk} hidden={!visible(x)}
                     settingLabel={x.care_setting
                       ? settings.find(s => s.key === x.care_setting)?.label ?? null : null} />
                 ))}
@@ -314,6 +324,9 @@ export function TrainingLibraryTabs({ groups, settings, topics, variant = 'defau
             </div>
           ))}
         </div>
+        <p className="tempty" role="status" hidden={totalMatches > 0}>
+          No modules match that. Try a broader term or another setting.
+        </p>
         <ThemeBasket />
       </>
     )

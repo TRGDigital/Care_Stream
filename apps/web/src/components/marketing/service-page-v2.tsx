@@ -2,18 +2,32 @@ import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
 import './service-page-v2.css'
 
-// The rebuilt template for the seven /our-services pages, at their LIVE flat URLs
-// (/care-audits, /cqc-compliance and the rest). No URL changes in this switchover.
+// The rebuilt template for the seven /our-services pages and /how-it-works, at their LIVE
+// URLs (/care-audits, /cqc-compliance and the rest). No URL changes in this switchover.
 //
-// This family is the odd one out. /care-policies, /buy and /staff-training share 73-94% of
-// their prose between pages, so their copy lives in the template. These share NOTHING: 0%
-// measured, 15 to 53 paragraphs each. So the copy is stored in service_pages and edited in
-// the console, and the template renders whatever blocks it is given.
+// This family shares NOTHING between pages (0% common prose, measured), so the copy is stored
+// in service_pages and edited in the console, and the template renders whatever it is given.
 //
-// Blocks, not a fixed shape: the pages run from 4 to 13 sections. A fixed template would pad
-// the short ones and truncate the long ones.
+// A page is sections, and a SECTION IS BUILT FROM PARTS. The first version gave each section
+// one kind, and the site-wide rendered check against the deployment showed the cost: a table
+// and a list inside an image split came out as a list with the table's rows flattened, every
+// card icon was missing (125 across the eight pages), image-beside-copy layouts rendered
+// stacked, and the hero eyebrow and section buttons were gone. Parts carry where they sit
+// relative to the image, so the split, and anything hoisted below it, renders as the theme has.
+//
+// Records imported before this change have no parts. They still render, as one part per
+// section, until they are re-imported.
+
+export interface ServiceIconShape {
+  tag: 'path' | 'circle' | 'rect'
+  d?: string
+  cx?: string; cy?: string; r?: string
+  x?: string; y?: string; width?: string; height?: string; rx?: string
+}
 
 export interface ServiceItem {
+  icon?: ServiceIconShape[]
+  flag?: string
   marker: string
   tag: string
   tone: string
@@ -22,30 +36,55 @@ export interface ServiceItem {
   bullets: string[]
 }
 
+export interface ServicePart {
+  kind: string
+  where: '' | 'in' | 'after'
+  sub?: string
+  variant?: string
+  items: ServiceItem[]
+  bullets: string[]
+  header?: string
+  footer?: string
+  head?: string[]
+  rows?: string[][]
+  title?: string
+  paras?: string[]
+}
+
+export interface ServiceAction { label: string; href: string; style: 'solid' | 'ghost'; play: boolean }
+
 export interface ServiceBlock {
   kind: string
+  id?: string
   tint: boolean
   label: string
   heading: string
   intro: string[]
   image: string | null
-  items: ServiceItem[]
-  bullets: string[]
+  split?: boolean
+  flip?: boolean
+  narrow?: boolean
+  parts?: ServicePart[]
+  actions?: ServiceAction[]
+  // The pre-parts shape, still accepted.
+  items?: ServiceItem[]
+  bullets?: string[]
   head?: string[]
   rows?: string[][]
-  /** The grid's layout classes, read off the theme rather than inferred: `c2`, `c3`, `c4`,
-   *  `stack3`, `inplace`, `hoisted`. Guessing the column count from the number of items got
-   *  it wrong on most pages. */
   variant?: string
-  narrow?: boolean
-  flip?: boolean
 }
 
 export interface ServicePage {
   slug: string
   title: string
   hero_image_url: string | null
-  content: { lede: string[]; blocks: ServiceBlock[] }
+  content: {
+    eyebrow?: string
+    lede: string[]
+    actions?: ServiceAction[]
+    toc?: { href: string; label: string }[]
+    blocks: ServiceBlock[]
+  }
 }
 
 const Tick = () => (
@@ -62,237 +101,272 @@ const Play = () => (
   </svg>
 )
 
+const Chevron = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
+       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="m6 9 6 6 6-6" />
+  </svg>
+)
+
+const Chat = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.1A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z" />
+  </svg>
+)
+
+/** An item's icon, rebuilt from stored shapes as real elements. Never injected as markup. */
+function Icon({ shapes }: { shapes?: ServiceIconShape[] }) {
+  if (!shapes?.length) return null
+  return (
+    <span className="ic">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"
+           strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        {shapes.map((s, i) => {
+          if (s.tag === 'circle') return <circle cx={s.cx} cy={s.cy} r={s.r} key={i} />
+          if (s.tag === 'rect') {
+            return <rect x={s.x} y={s.y} width={s.width} height={s.height} rx={s.rx} key={i} />
+          }
+          return <path d={s.d} key={i} />
+        })}
+      </svg>
+    </span>
+  )
+}
+
 /** The headline may carry an <em> the design colours, so it is inserted as markup. It comes
  *  from the extractor's `rich()`, which keeps only em/strong/b/i and drops everything else. */
 function Headline({ html }: { html: string }) {
   return <h1 dangerouslySetInnerHTML={{ __html: html }} />
 }
 
-function Head({ block }: { block: ServiceBlock }) {
-  if (!block.label && !block.heading) return null
-  return (
-    <>
-      {block.label && <span className="svlabel">{block.label}</span>}
-      {block.heading && <h2 dangerouslySetInnerHTML={{ __html: block.heading }} />}
-    </>
-  )
-}
-
-function Paras({ lines }: { lines: string[] }) {
+function Paras({ lines }: { lines?: string[] }) {
   return <>{(lines ?? []).map((p, i) => <p key={i}>{p}</p>)}</>
 }
 
-function Bullets({ lines }: { lines: string[] }) {
+function Ticks({ lines, plain }: { lines?: string[]; plain?: boolean }) {
   if (!lines?.length) return null
+  // Card, timeline and channel lists are plain lists in the theme; only a section's own list
+  // is .svticks. Rendering every list as .svticks restyled the ones inside items.
   return (
-    <ul className="svticks">
+    <ul className={plain ? undefined : 'svticks'}>
       {lines.map((b, i) => <li key={i}><Tick />{b}</li>)}
     </ul>
   )
 }
 
-/** One block's body. The kind chooses the layout; the copy is the same shape either way, which
- *  is what lets seven differently-built pages share a template. */
-function Body({ block }: { block: ServiceBlock }) {
-  const { kind, items } = block
+function Buttons({ actions, fallback, className }: {
+  actions?: ServiceAction[]; fallback: ServiceAction[]; className: string
+}) {
+  const list = actions?.length ? actions : fallback
+  return (
+    <div className={className}>
+      {list.map(a => (
+        <Link className={`svbtn ${a.style}`} href={a.href} key={`${a.href}-${a.label}`}>
+          {a.play && <Play />}{a.play && ' '}{a.label}
+        </Link>
+      ))}
+    </div>
+  )
+}
 
-  if (kind === 'cards') {
-    return (
-      <div className={`svcards ${block.variant ?? 'c3'}`.trim()}>
-        {items.map((it, i) => (
-          <div className="svcard" key={i}>
-            {it.title && <b>{it.title}</b>}
-            <Paras lines={it.paras} />
-            <Bullets lines={it.bullets} />
-          </div>
-        ))}
-      </div>
-    )
-  }
+const HERO_DEFAULT: ServiceAction[] = [
+  { label: 'Start free trial', href: '/register', style: 'solid', play: false },
+  { label: 'Book a demo', href: '/demo', style: 'ghost', play: true },
+]
+const END_DEFAULT: ServiceAction[] = [
+  { label: 'Start free trial', href: '/register', style: 'solid', play: false },
+  { label: 'Book a demo', href: '/demo', style: 'ghost', play: false },
+]
 
-  if (kind === 'steps') {
-    return (
-      <div className={`svsteps ${block.variant ?? ''}`.trim()}>
-        {items.map((it, i) => (
-          <div className="svstep" key={i}>
-            <span className="n">{it.marker || String(i + 1).padStart(2, '0')}</span>
-            {it.title && <b>{it.title}</b>}
-            <Paras lines={it.paras} />
-          </div>
-        ))}
-      </div>
-    )
-  }
+/** One part. The kind chooses the markup, matched element for element to the theme's. */
+function Part({ part }: { part: ServicePart }) {
+  const { kind, items = [] } = part
+  const v = (base: string) => `${base}${part.variant ? ` ${part.variant}` : ''}`
 
-  if (kind === 'timeline') {
-    return (
-      <div className="svtimeline">
-        {items.map((it, i) => (
-          <div key={i}>
-            <span className="dot">{it.marker || String(i + 1).padStart(2, '0')}</span>
-            <div>
-              {it.tag && <span className="tag">{it.tag}</span>}
-              {it.title && <b>{it.title}</b>}
-              <Paras lines={it.paras} />
-              <Bullets lines={it.bullets} />
-            </div>
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  if (kind === 'stats') {
-    return (
-      <div className="svstats">
-        {items.map((it, i) => (
-          <div className="svstat" key={i}>
-            {it.marker && <span className="fig">{it.marker}</span>}
-            {it.title && <b>{it.title}</b>}
-            <Paras lines={it.paras} />
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  if (kind === 'compare') {
-    return (
-      <div className="svcompare">
-        {items.map((it, i) => (
-          <div className={`svcmp${it.tone ? ` ${it.tone}` : ''}`} key={i}>
-            {it.tag && <span className="lb">{it.tag}</span>}
-            <Paras lines={it.paras} />
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  if (kind === 'table' && block.rows?.length) {
-    return (
-      <div className={`svtable ${block.variant ?? ''}`.trim()}>
-        <table className="svt">
-          {!!block.head?.length && (
-            <thead><tr>{block.head.map((h, i) => <th key={i}>{h}</th>)}</tr></thead>
-          )}
-          <tbody>
-            {block.rows.map((r, i) => (
-              <tr key={i}>{r.map((c, j) => <td key={j}>{c}</td>)}</tr>
+  const body = (() => {
+    switch (kind) {
+      case 'cards':
+        return (
+          <div className={v('svcards')}>
+            {items.map((it, i) => (
+              <div className="svcard" key={i}>
+                <Icon shapes={it.icon} />
+                {it.title && <b>{it.title}</b>}
+                <Paras lines={it.paras} />
+                <Ticks lines={it.bullets} plain />
+              </div>
             ))}
-          </tbody>
-        </table>
-      </div>
-    )
-  }
-
-  // ── /how-it-works adds four kinds. They are list-shaped like the rest, which is why that
-  // page shares this template rather than having one of its own. ──────────────────────────
-
-  if (kind === 'toc') {
-    return (
-      <nav className="htoc" aria-label="On this page">
-        <div className="svwrap htoc-in">
-          {items.map((it, i) => (
-            <a href={`#${it.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} key={i}>
-              {it.title}
-            </a>
-          ))}
-        </div>
-      </nav>
-    )
-  }
-
-  if (kind === 'channels') {
-    return (
-      <div className="hchans">
-        {items.map((it, i) => (
-          <div className="hchan" key={i}>
-            <div className="hchan-h">
-              <span className="ic" />
-              <div><b>{it.title}</b><span>{it.tag}</span></div>
-            </div>
-            <Paras lines={it.paras} />
           </div>
-        ))}
-      </div>
-    )
-  }
-
-  if (kind === 'langdemo') {
-    return (
-      <div className="hdemo">
-        {block.heading && <p className="hdemo-h">{block.heading}</p>}
-        <ul>
-          {items.map((it, i) => (
-            <li key={i}>
-              <div><b>{it.title}</b><Paras lines={it.paras} /></div>
-              {it.tag && <span className="det">{it.tag}</span>}
-            </li>
-          ))}
-        </ul>
-      </div>
-    )
-  }
-
-  if (kind === 'frameworks') {
-    return (
-      <div className="hfw">
-        {block.heading && <p className="hfw-h">{block.heading}</p>}
-        <ul>
-          {items.map((it, i) => (
-            <li key={i}><b>{it.title}</b><span>{it.tag}</span></li>
-          ))}
-        </ul>
-      </div>
-    )
-  }
-
-  if (kind === 'prompts') {
-    return (
-      <ul className="svprompts">
-        {block.bullets.map((b, i) => <li key={i}><span className="pic" /><span>{b}</span></li>)}
-      </ul>
-    )
-  }
-
-  if (kind === 'asks') {
-    return (
-      <div className="svasks">
-        {items.map((it, i) => (
-          <div className="svask" key={i}>
-            {it.tag && <span className="dom">{it.tag}</span>}
-            <Paras lines={it.paras} />
+        )
+      case 'steps':
+        return (
+          <div className={v('svsteps')}>
+            {items.map((it, i) => (
+              <div className="svstep" key={i}>
+                <span className="n">{it.marker || String(i + 1).padStart(2, '0')}</span>
+                {it.title && <b>{it.title}</b>}
+                <Paras lines={it.paras} />
+                {it.tag && <span className="det">{it.tag}</span>}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-    )
-  }
+        )
+      case 'stats':
+        return (
+          <div className={v('svstats')}>
+            {items.map((it, i) => (
+              <div className="svstat" key={i}>
+                {it.marker && <span className="fig">{it.marker}</span>}
+                {it.title && <b>{it.title}</b>}
+                <Paras lines={it.paras} />
+              </div>
+            ))}
+          </div>
+        )
+      case 'compare':
+        return (
+          <div className={v('svcompare')}>
+            {items.map((it, i) => (
+              <div className={`svcmp${it.tone ? ` ${it.tone}` : ''}`} key={i}>
+                {it.tag && <span className="lb">{it.tag}</span>}
+                <Paras lines={it.paras} />
+              </div>
+            ))}
+          </div>
+        )
+      case 'table':
+        if (!part.rows?.length) return null
+        return (
+          <div className={v('svtable')}>
+            <table className="svt">
+              {!!part.head?.length && (
+                <thead><tr>{part.head.map((h, i) => <th key={i}>{h}</th>)}</tr></thead>
+              )}
+              <tbody>
+                {part.rows.map((r, i) => (
+                  <tr key={i}>{r.map((c, j) => <td key={j}>{c}</td>)}</tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
+      case 'ticks':
+        return <Ticks lines={part.bullets} />
+      case 'timeline':
+        return (
+          <div className="svtimeline">
+            {items.map((it, i) => (
+              <div key={i}>
+                <span className="dot">{it.marker || String(i + 1).padStart(2, '0')}</span>
+                <div>
+                  {it.tag && <span className="tag">{it.tag}</span>}
+                  {it.title && <b>{it.title}</b>}
+                  <Paras lines={it.paras} />
+                  <Ticks lines={it.bullets} plain />
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      case 'note':
+        return (
+          <div className="svnote">
+            {(part.title || items[0]?.title) && <b>{part.title || items[0]?.title}</b>}
+            <Paras lines={part.paras ?? items[0]?.paras} />
+          </div>
+        )
+      case 'prompts':
+        return (
+          <ul className="svprompts">
+            {part.bullets.map((b, i) => (
+              <li key={i}><span className="pic"><Chat /></span><span>{b}</span></li>
+            ))}
+          </ul>
+        )
+      case 'asks':
+        return (
+          <div className="svasks">
+            {items.map((it, i) => (
+              <div className="svask" key={i}>
+                {it.tag && <span className="dom">{it.tag}</span>}
+                <Paras lines={it.paras} />
+              </div>
+            ))}
+          </div>
+        )
+      case 'channels':
+        return (
+          <div className="hchans">
+            {items.map((it, i) => (
+              <div className="hchan" key={i}>
+                <div className="hchan-h">
+                  <Icon shapes={it.icon} />
+                  <div><b>{it.title}</b><span>{it.tag}</span></div>
+                </div>
+                <Paras lines={it.paras} />
+                <Ticks lines={it.bullets} plain />
+              </div>
+            ))}
+          </div>
+        )
+      case 'langdemo':
+        return (
+          <div className="hdemo">
+            {part.header && <p className="hdemo-h">{part.header}</p>}
+            <ul>
+              {items.map((it, i) => (
+                <li key={i}>
+                  {it.flag && <span className="fl">{it.flag}</span>}
+                  <div><b>{it.title}</b><Paras lines={it.paras} /></div>
+                  {it.tag && <span className="det">{it.tag}</span>}
+                </li>
+              ))}
+            </ul>
+            {part.footer && <p className="hdemo-f"><Tick />{part.footer}</p>}
+          </div>
+        )
+      case 'frameworks':
+        return (
+          <div className="hfw">
+            {part.header && <p className="hfw-h">{part.header}</p>}
+            <ul>
+              {items.map((it, i) => <li key={i}><b>{it.title}</b><span>{it.tag}</span></li>)}
+            </ul>
+            {part.footer && <p className="hfw-m">{part.footer}</p>}
+          </div>
+        )
+      case 'faq':
+        return (
+          <>
+            {items.map((it, i) => (
+              <details className="svq" key={i}>
+                <summary>{it.title}<Chevron /></summary>
+                <div className="ans"><Paras lines={it.paras} /></div>
+              </details>
+            ))}
+          </>
+        )
+      default:
+        return <Ticks lines={part.bullets} />
+    }
+  })()
 
-  if (kind === 'faq') {
-    return (
-      <>
-        {items.map((it, i) => (
-          <details className="svq" key={i}>
-            <summary>{it.title}</summary>
-            <div className="ans"><Paras lines={it.paras} /></div>
-          </details>
-        ))}
-      </>
-    )
-  }
+  return (
+    <>
+      {part.sub && <span className="svsub">{part.sub}</span>}
+      {body}
+    </>
+  )
+}
 
-  if (kind === 'note') {
-    return (
-      <div className="svnote">
-        {items[0]?.title && <b>{items[0].title}</b>}
-        <Paras lines={items[0]?.paras ?? block.intro} />
-      </div>
-    )
-  }
-
-  // ticks, split, prose: the copy with whatever list and image the block carries.
-  return <Bullets lines={block.bullets} />
+/** A record imported before sections carried parts: treat its one kind as its one part. */
+function partsOf(b: ServiceBlock): ServicePart[] {
+  if (b.parts) return b.parts
+  return [{
+    kind: b.kind, where: '', variant: b.variant, items: b.items ?? [], bullets: b.bullets ?? [],
+    head: b.head, rows: b.rows,
+  }]
 }
 
 export function ServicePageV2({ page }: { page: ServicePage }) {
@@ -304,12 +378,10 @@ export function ServicePageV2({ page }: { page: ServicePage }) {
       <section className="svhero">
         <div className="svwrap svhero-in">
           <div>
+            {c.eyebrow && <span className="uc-eyebrow">{c.eyebrow}</span>}
             <Headline html={page.title} />
             <Paras lines={c.lede} />
-            <div className="svactions">
-              <Link className="svbtn solid" href="/register">Start free trial</Link>
-              <Link className="svbtn ghost" href="/demo"><Play /> Book a demo</Link>
-            </div>
+            <Buttons actions={c.actions} fallback={HERO_DEFAULT} className="svactions" />
           </div>
           {page.hero_image_url && (
             <div className="svshotwrap">
@@ -324,6 +396,14 @@ export function ServicePageV2({ page }: { page: ServicePage }) {
         </div>
       </section>
 
+      {!!c.toc?.length && (
+        <nav className="htoc" aria-label="On this page">
+          <div className="svwrap htoc-in">
+            {c.toc.map(x => <a href={x.href} key={x.href}>{x.label}</a>)}
+          </div>
+        </nav>
+      )}
+
       {blocks.map((b, i) => {
         if (b.kind === 'end') {
           return (
@@ -331,44 +411,56 @@ export function ServicePageV2({ page }: { page: ServicePage }) {
               <div className="svwrap svend-in">
                 {b.heading && <h2 dangerouslySetInnerHTML={{ __html: b.heading }} />}
                 <Paras lines={b.intro} />
-                <div className="row">
-                  <Link className="svbtn solid" href="/register">Start free trial</Link>
-                  <Link className="svbtn ghost" href="/demo">Book a demo</Link>
-                </div>
+                <Buttons actions={b.actions} fallback={END_DEFAULT} className="row" />
               </div>
             </section>
           )
         }
 
-        // A split block puts the copy beside an image; everything else runs full width.
-        const split = b.kind === 'split' && b.image
-        const wrap = `svwrap svsec-in${b.narrow ? ' svnarrow' : ''}`
+        const parts = partsOf(b)
+        // A section puts its copy beside its image when the theme gives it a split. Older
+        // records only knew the split as a kind of its own.
+        const split = !!b.image && (b.split ?? b.kind === 'split')
+        const head = (
+          <>
+            {b.label && <span className="svlabel">{b.label}</span>}
+            {b.heading && <h2 dangerouslySetInnerHTML={{ __html: b.heading }} />}
+            <Paras lines={b.intro} />
+          </>
+        )
+        const actions = !!b.actions?.length && (
+          <Buttons actions={b.actions} fallback={[]} className="svactions" />
+        )
+        const alt = b.heading.replace(/<[^>]*>/g, '')
+
         return (
-          <section className={`svsec${b.tint ? ' tint' : ''}`} key={i}>
-            <div className={wrap}>
+          <section id={b.id || undefined} className={`svsec${b.tint ? ' tint' : ''}`} key={i}>
+            <div className={`svwrap svsec-in${b.narrow ? ' svnarrow' : ''}`}>
               {split ? (
-                <div className={`svsplit${b.flip ? ' flip' : ''}`}>
-                  <div>
-                    <Head block={b} />
-                    <Paras lines={b.intro} />
-                    <Body block={b} />
-                  </div>
-                  <div className="svshotwrap">
-                    <div className="svshot app">
-                      <SiteImage src={b.image!} alt={b.heading.replace(/<[^>]*>/g, '')} />
-                    </div>
-                  </div>
-                </div>
-              ) : (
                 <>
-                  <Head block={b} />
-                  <Paras lines={b.intro} />
-                  <Body block={b} />
-                  {b.image && b.kind !== 'cards' && (
+                  <div className={`svsplit${b.flip ? ' flip' : ''}`}>
+                    <div>
+                      {head}
+                      {parts.filter(x => x.where !== 'after').map((x, j) => <Part part={x} key={j} />)}
+                      {actions}
+                    </div>
                     <div className="svshotwrap">
                       <div className="svshot app">
-                        <SiteImage src={b.image} alt={b.heading.replace(/<[^>]*>/g, '')} />
+                        <SiteImage src={b.image!} alt={alt} />
                       </div>
+                    </div>
+                  </div>
+                  {parts.filter(x => x.where === 'after').map((x, j) => <Part part={x} key={j} />)}
+                </>
+              ) : (
+                <>
+                  {head}
+                  {parts.map((x, j) => <Part part={x} key={j} />)}
+                  {actions}
+                  {/* A section with an image but no split shows it below its copy. */}
+                  {b.image && (
+                    <div className="svshotwrap">
+                      <div className="svshot app"><SiteImage src={b.image} alt={alt} /></div>
                     </div>
                   )}
                 </>

@@ -1,0 +1,160 @@
+/* Ported from the content theme by carestream-theme-preview/port_css.py.
+ * Source: about.html
+ *
+ * Kept as CSS rather than rewritten as Tailwind because these rules are the design.
+ * Scoped under .apage-v2, with the theme tokens on that wrapper rather than
+ * :root, so the rest of the app is untouched. Header and footer rules are excluded.
+ */
+.apage-v2 {
+  --accent: #7B3FBF;
+  --accent-2: #C2503E;
+  --accent-soft: #F3EDFA;
+  --btn-ink: #17121F;
+  --btn-ink-text: #FFFFFF;
+  --chrome: 68px;
+  --good: #1F8A5B;
+  --ground: #FFFFFF;
+  --ground-2: #F7F5FA;
+  --ink: #17121F;
+  --ink-2: #3A3245;
+  --line: #E9E5EF;
+  --maxw: 1440px;
+  --muted: #6B6577;
+  --plate: #F2EEF8;
+  --r: 14px;
+  --shadow: 0 1px 2px rgba(23,18,31,.04), 0 12px 32px rgba(23,18,31,.06);
+  --shadow-lg: 0 2px 4px rgba(23,18,31,.04), 0 24px 64px rgba(23,18,31,.10);
+  color: var(--ink);
+  background: var(--ground);
+}
+
+.apage-v2 .demo-steps .n{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;font-size:.74rem;font-weight:800;background:var(--ground-2);color:var(--muted);flex:0 0 auto}
+.apage-v2 .demo-steps .s.on .n{background:var(--accent);color:#fff}
+.apage-v2 .demo-steps .s.done .n{background:var(--accent-soft);color:var(--accent)}
+.apage-v2 .demo-cta .row{display:flex;gap:10px;flex-wrap:wrap}
+.apage-v2 .demo-cta .row a{flex:1 1 160px;font-size:.85rem;padding:11px 16px;justify-content:center;text-align:center}
+.apage-v2 .dlg .sub{margin:0 0 22px;font-size:.9rem;line-height:1.6;color:var(--muted)}
+.apage-v2 .watch-list .n{width:22px;height:22px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
+    display:grid;place-items:center;font-size:.7rem;font-weight:700;flex:0 0 auto;margin-top:1px;}
+.apage-v2 .nd .ic{width:36px;height:36px;border-radius:11px; display:grid;place-items:center;flex:0 0 auto}
+.apage-v2 .nd .ic svg{width:19px;height:19px;color:#fff}
+.apage-v2 .c-purple .ic{background:#7B3FBF}
+.apage-v2 .c-green  .ic{background:#1F8A5B}
+.apage-v2 .c-amber  .ic{background:#D08A15}
+.apage-v2 .c-coral  .ic{background:#C2503E}
+.apage-v2 .c-blue   .ic{background:#2F6FD0}
+.apage-v2 .uc-eyebrow{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--accent);margin:0 0 16px;}
+.apage-v2 .uc-sec.tint{background:var(--ground-2);border-block:1px solid var(--line)}
+.apage-v2 .uc-sec .sub{font-size:1rem;line-height:1.62;color:var(--muted);max-width:34em;margin:0}
+.apage-v2 .uc-hero .uc-eyebrow{margin-bottom:clamp(8px,1.6vh,16px);}
+.apage-v2 .awrap{max-width:1180px;margin:0 auto;padding-inline:32px}
+.apage-v2 .ahero{padding:0;background:linear-gradient(180deg,#FBF9FE 0%, var(--ground) 86%);border-bottom:1px solid var(--line)}
+.apage-v2 .ahero-in{padding-block:clamp(34px, 5.6vh, 66px) clamp(30px, 4.6vh, 54px)}
+.apage-v2 .ahero h1, .apage-v2 .ahero p{max-width:20ch}
+.apage-v2 .ahero p{max-width:46em}
+.apage-v2 .ahero h1{font-size:clamp(1.95rem, 1.2vw + 2vh + 0.68rem, 3rem);line-height:1.06;
+    letter-spacing:-.033em;margin:0 0 16px;text-wrap:balance}
+.apage-v2 .ahero p{font-size:clamp(1rem, .4vh + .88rem, 1.12rem);line-height:1.62;color:var(--ink-2);margin:0}
+.apage-v2 .achips{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.apage-v2 .achip{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;white-space:nowrap;
+    background:var(--ground);border:1px solid var(--line);border-radius:999px;padding:7px 14px;
+    font-size:.8rem;font-weight:600;color:var(--ink-2);box-shadow:var(--shadow)}
+.apage-v2 .achip::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--accent);flex:0 0 auto}
+.apage-v2 .asec{padding:0}
+.apage-v2 .asec-in{padding-block:clamp(44px, 6vh, 76px)}
+.apage-v2 .asec.tint{background:var(--ground-2);border-block:1px solid var(--line)}
+.apage-v2 .asec h2{font-size:clamp(1.5rem, 2.2vw, 2rem);line-height:1.16;letter-spacing:-.027em;
+    margin:0 0 16px;text-wrap:balance}
+.apage-v2 .asec p{font-size:1.02rem;line-height:1.75;color:var(--ink-2);margin:0 0 18px;max-width:42em}
+.apage-v2 .alabel{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.65rem;
+    letter-spacing:.11em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:12px}
+.apage-v2 .asplit{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);gap:52px;align-items:start}
+.apage-v2 .astat{background:var(--ground);border:1px solid var(--line);border-radius:18px;padding:30px;
+    box-shadow:var(--shadow-lg);position:sticky;top:calc(var(--chrome) + 24px)}
+.apage-v2 .astat .fig{display:block;font-size:clamp(2.2rem, 3.4vw, 3rem);font-weight:700;letter-spacing:-.04em;
+    line-height:1;color:var(--accent);margin-bottom:12px;font-variant-numeric:tabular-nums}
+.apage-v2 .astat .lab{display:block;font-size:1rem;line-height:1.5;font-weight:650;letter-spacing:-.014em;margin-bottom:12px}
+.apage-v2 .astat .sub{font-size:.87rem;line-height:1.6;color:var(--muted);margin:0;max-width:none}
+.apage-v2 .acards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:28px}
+.apage-v2 .acard{display:flex;flex-direction:column;text-decoration:none;color:inherit;background:var(--ground);
+    border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:var(--shadow)}
+.apage-v2 .acard:hover{border-color:#DCD5E8}
+.apage-v2 .acard .ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;margin-bottom:16px}
+.apage-v2 .acard .ic svg{width:19px;height:19px;display:block}
+.apage-v2 .acard b{display:block;font-size:1rem;letter-spacing:-.016em;margin-bottom:8px}
+.apage-v2 .acard p{font-size:.89rem;line-height:1.6;color:var(--muted);margin:0 0 16px;flex:1;max-width:none}
+.apage-v2 .acard .more{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:650;color:var(--accent)}
+.apage-v2 .acard .more svg{width:13px;height:13px}
+.apage-v2 .aprin-sec{padding:0;background:var(--ink);color:#fff}
+.apage-v2 .aprin-in{padding-block:clamp(52px, 7vh, 92px);
+    display:grid;grid-template-columns:minmax(0,.72fr) minmax(0,1.28fr);gap:60px;align-items:start}
+.apage-v2 .aprin-lead{position:sticky;top:calc(var(--chrome) + 30px)}
+.apage-v2 .aprin-lead .alabel{color:rgba(255,255,255,.42)}
+.apage-v2 .aprin-lead h2{font-size:clamp(1.7rem, 2.6vw, 2.35rem);line-height:1.1;letter-spacing:-.03em;
+    color:#fff;margin:0 0 16px;text-wrap:balance}
+.apage-v2 .aprin-lead p{font-size:.98rem;line-height:1.68;color:rgba(255,255,255,.62);margin:0;max-width:26em}
+.apage-v2 .aprin-list{display:grid;gap:0}
+.apage-v2 .aprin{display:grid;grid-template-columns:auto minmax(0,1fr);gap:22px;align-items:start;
+    padding-block:24px;border-top:1px solid rgba(255,255,255,.13)}
+.apage-v2 .aprin:first-child{border-top:0;padding-top:0}
+.apage-v2 .aprin:last-child{padding-bottom:0}
+.apage-v2 .aprin .n{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.72rem;
+    font-weight:700;color:var(--accent);padding-top:5px;letter-spacing:.04em}
+.apage-v2 .aprin b{display:block;font-size:1.12rem;line-height:1.32;letter-spacing:-.02em;color:#fff;
+    margin:0 0 8px;text-wrap:balance}
+.apage-v2 .aprin p{font-size:.94rem;line-height:1.7;color:rgba(255,255,255,.62);margin:0;max-width:44em}
+.apage-v2 .auk{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.8fr);gap:48px;align-items:start}
+.apage-v2 .aticks{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.apage-v2 .aticks li{display:flex;gap:12px;align-items:flex-start;background:var(--ground);
+    border:1px solid var(--line);border-radius:14px;padding:16px 18px;
+    font-size:.9rem;line-height:1.6;color:var(--ink-2);box-shadow:var(--shadow)}
+.apage-v2 .aticks svg{width:16px;height:16px;flex:0 0 auto;margin-top:3px;color:var(--good)}
+.apage-v2 .ateam{padding:0;background:var(--ink);color:#fff}
+.apage-v2 .ateam-in{padding-block:clamp(48px, 6.4vh, 84px);text-align:center;max-width:46em;margin:0 auto}
+.apage-v2 .ateam .alabel{color:rgba(255,255,255,.45)}
+.apage-v2 .ateam h2{font-size:clamp(1.5rem, 2.2vw, 2rem);letter-spacing:-.027em;margin:0 0 16px;color:#fff;text-wrap:balance}
+.apage-v2 .ateam p{font-size:1.02rem;line-height:1.75;color:rgba(255,255,255,.75);margin:0 auto;max-width:none}
+.apage-v2 .aend{padding:0;border-top:1px solid var(--line);background:var(--ground-2)}
+.apage-v2 .aend-in{padding-block:clamp(64px, 9vh, 104px);text-align:center}
+.apage-v2 .aend h2{font-size:clamp(1.45rem, 2.2vw, 1.95rem);letter-spacing:-.027em;margin:0 0 14px;text-wrap:balance}
+.apage-v2 .aend p{font-size:1rem;line-height:1.6;color:var(--muted);margin:0 auto 24px;max-width:34em}
+.apage-v2 .aend .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.apage-v2 .abtn{display:inline-flex;align-items:center;gap:8px;border-radius:999px;text-decoration:none;
+    font-size:.9rem;font-weight:650;padding:12px 22px}
+.apage-v2 .abtn.solid{background:var(--btn-ink);color:var(--btn-ink-text)}
+.apage-v2 .abtn.ghost{border:1px solid var(--line);background:var(--ground);color:var(--ink)}
+.apage-v2 .abtn.ghost:hover{border-color:#D9D2E6}
+
+@media (max-width:760px){
+  .apage-v2 .awrap{padding-inline:22px}
+}
+@media (max-width:900px){
+  .apage-v2 .asplit{grid-template-columns:minmax(0,1fr);gap:30px}
+}
+@media (max-width:900px){
+  .apage-v2 .astat{position:static}
+}
+@media (max-width:900px){
+  .apage-v2 .acards{grid-template-columns:1fr 1fr}
+}
+@media (max-width:600px){
+  .apage-v2 .acards{grid-template-columns:1fr}
+}
+@media (max-width:940px){
+  .apage-v2 .aprin-in{grid-template-columns:minmax(0,1fr);gap:34px}
+}
+@media (max-width:940px){
+  .apage-v2 .aprin-lead{position:static}
+}
+@media (max-width:560px){
+  .apage-v2 .aprin{grid-template-columns:minmax(0,1fr);gap:12px}
+}
+@media (max-width:900px){
+  .apage-v2 .auk{grid-template-columns:minmax(0,1fr);gap:28px}
+}
+
+.apage-v2 .shot,.apage-v2 .sshot,.apage-v2 .sscen-shot,.apage-v2 .uc-shot,.apage-v2 .wcshot,.apage-v2 .smock,.apage-v2 .ucread-art,.apage-v2 .pcrel-art{display:block;overflow:hidden;padding:0;aspect-ratio:auto;height:auto;min-height:0;max-height:none}
+.apage-v2 .shot img,.apage-v2 .sshot img,.apage-v2 .sscen-shot img,.apage-v2 .uc-shot img,.apage-v2 .wcshot img,.apage-v2 .smock img,.apage-v2 .ucread-art img,.apage-v2 .pcrel-art img{display:block;width:100%;height:auto;object-fit:contain;border-radius:inherit}
+.apage-v2 .fchips,.apage-v2 .schips,.apage-v2 .smock-tabs,.apage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}

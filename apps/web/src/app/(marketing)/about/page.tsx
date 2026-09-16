@@ -5,6 +5,8 @@ import { pageMetadata } from '@/lib/page-meta'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { ABOUT_SLOTS } from '@/lib/page-slots/about'
+import { ABOUT_V2_SLOTS } from '@/lib/page-slots/about-v2'
+import { AboutPageV2 } from '@/components/marketing/about-page-v2'
 import { JsonLd } from '@/components/json-ld'
 import { aboutPageSchema } from '@/lib/schema'
 
@@ -110,8 +112,20 @@ function AboutHeroMockup() {
   )
 }
 
-export default async function AboutPage() {
-  const s = makeSlot(ABOUT_SLOTS, await getContentSlots('/about'))
+export default async function AboutPage(
+  { searchParams }: {
+    searchParams?: Promise<Record<string, string | string[] | undefined>>
+  },
+) {
+  const slots = await getContentSlots('/about')
+  const s = makeSlot(ABOUT_SLOTS, slots)
+
+  // The rebuilt theme is opt-in with ?v2=1 until it is signed off. Its own slot set, because
+  // the copy is new: sharing keys with the current page would leave each design holding
+  // half-written values belonging to the other.
+  if ((await searchParams)?.v2 === '1') {
+    return <AboutPageV2 s={makeSlot(ABOUT_V2_SLOTS, slots)} />
+  }
   const PLATFORM_CARDS = [
     { Icon: FileText,       key: 'platform.card1', href: '/care-policies' },
     { Icon: GraduationCap,  key: 'platform.card2', href: '/staff-training' },

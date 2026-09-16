@@ -1,0 +1,109 @@
+/* Ported from the content theme by carestream-theme-preview/port_css.py.
+ * Source: demo.html
+ *
+ * Kept as CSS rather than rewritten as Tailwind because these rules are the design.
+ * Scoped under .dmpage-v2, with the theme tokens on that wrapper rather than
+ * :root, so the rest of the app is untouched. Header and footer rules are excluded.
+ */
+.dmpage-v2 {
+  --accent: #7B3FBF;
+  --accent-2: #C2503E;
+  --accent-soft: #F3EDFA;
+  --btn-ink: #17121F;
+  --btn-ink-text: #FFFFFF;
+  --chrome: 68px;
+  --good: #1F8A5B;
+  --ground: #FFFFFF;
+  --ground-2: #F7F5FA;
+  --ink: #17121F;
+  --ink-2: #3A3245;
+  --line: #E9E5EF;
+  --maxw: 1440px;
+  --muted: #6B6577;
+  --plate: #F2EEF8;
+  --r: 14px;
+  --shadow: 0 1px 2px rgba(23,18,31,.04), 0 12px 32px rgba(23,18,31,.06);
+  --shadow-lg: 0 2px 4px rgba(23,18,31,.04), 0 24px 64px rgba(23,18,31,.10);
+  color: var(--ink);
+  background: var(--ground);
+}
+
+.dmpage-v2 .demo-steps .n{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;font-size:.74rem;font-weight:800;background:var(--ground-2);color:var(--muted);flex:0 0 auto}
+.dmpage-v2 .demo-steps .s.on .n{background:var(--accent);color:#fff}
+.dmpage-v2 .demo-steps .s.done .n{background:var(--accent-soft);color:var(--accent)}
+.dmpage-v2 .watch-list .n{width:22px;height:22px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
+    display:grid;place-items:center;font-size:.7rem;font-weight:700;flex:0 0 auto;margin-top:1px;}
+.dmpage-v2 .fstep-copy .n{display:inline-grid;place-items:center;width:27px;height:27px;border-radius:8px;
+    background:var(--accent-soft);color:var(--accent);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.73rem;font-weight:700;margin-bottom:13px}
+.dmpage-v2 .fstepmini .n{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:7px;
+    background:var(--accent-soft);color:var(--accent);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.7rem;font-weight:700;margin-bottom:11px}
+.dmpage-v2 .cstep .n{display:inline-grid;place-items:center;width:23px;height:23px;border-radius:7px;flex:0 0 auto;
+    background:var(--ground);border:1px solid var(--line);color:var(--accent);
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.68rem;font-weight:700}
+.dmpage-v2 .dmwrap{max-width:1180px;margin:0 auto;padding-inline:32px}
+.dmpage-v2 .dmhero{background:linear-gradient(180deg,#FBF9FE 0%, var(--ground) 88%);border-bottom:1px solid var(--line)}
+.dmpage-v2 .dmhero-in{padding-block:52px 48px;display:grid;grid-template-columns:minmax(340px,1fr) minmax(0,560px);
+    gap:46px;align-items:center}
+.dmpage-v2 .dmherocopy p{margin:0;max-width:38em}
+.dmpage-v2 .dmshot{background:var(--plate);border:1px solid var(--line);border-radius:16px;display:grid;
+    place-items:center;text-align:center;padding:24px;box-shadow:var(--shadow-lg)}
+.dmpage-v2 .dmshot span{font-size:.82rem;line-height:1.55;color:var(--ink-2);max-width:26em}
+.dmpage-v2 .dmshot b{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.62rem;letter-spacing:.11em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.dmpage-v2 .dmshot em{display:block;font-style:normal;font-size:.74rem;color:var(--muted);margin-top:8px}
+.dmpage-v2 .dmeyebrow{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);
+    background:var(--accent-soft);padding:5px 11px;border-radius:99px;margin-bottom:15px}
+.dmpage-v2 .dmhero h1{font-size:clamp(1.95rem,1.2vw + 1.55rem,2.7rem);line-height:1.08;letter-spacing:-.034em;
+    margin:0 0 16px;text-wrap:balance}
+.dmpage-v2 .dmhero p{font-size:1.05rem;line-height:1.68;color:var(--ink-2);margin:0;max-width:42em}
+.dmpage-v2 .dmmain{padding-block:56px}
+.dmpage-v2 .dmgrid{display:grid;grid-template-columns:minmax(340px,1fr) minmax(0,470px);gap:56px;align-items:start}
+.dmpage-v2 .dmmain h2{font-size:clamp(1.45rem,.8vw + 1.2rem,1.95rem);line-height:1.14;letter-spacing:-.03em;
+    margin:0 0 30px}
+.dmpage-v2 .dmsteps{display:grid;gap:26px}
+.dmpage-v2 .dmstep{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:start}
+.dmpage-v2 .dmstep .n{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;
+    background:var(--accent);color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.82rem;font-weight:800;flex:0 0 auto;box-shadow:0 6px 18px rgba(123,63,191,.22)}
+.dmpage-v2 .dmstep b{display:block;font-size:1rem;letter-spacing:-.016em;margin-bottom:5px}
+.dmpage-v2 .dmstep p{margin:0;font-size:.94rem;line-height:1.65;color:var(--muted)}
+.dmpage-v2 .dmtrial{margin-top:36px;background:var(--accent-soft);border-radius:16px;padding:24px 26px}
+.dmpage-v2 .dmtrial b{display:block;color:var(--accent);font-size:.97rem;letter-spacing:-.015em;margin-bottom:7px}
+.dmpage-v2 .dmtrial p{margin:0;font-size:.91rem;line-height:1.65;color:var(--ink-2)}
+.dmpage-v2 .dmchips{display:flex;flex-wrap:wrap;gap:16px;margin-top:15px}
+.dmpage-v2 .dmchips span{display:inline-flex;align-items:center;gap:7px;font-size:.86rem;color:var(--ink-2)}
+.dmpage-v2 .dmchips svg{width:13px;height:13px;stroke:var(--accent);flex:0 0 auto}
+.dmpage-v2 .dmform{background:var(--ground);border:1px solid var(--line);border-radius:18px;padding:30px;
+    box-shadow:var(--shadow-lg);position:sticky;top:calc(var(--chrome) + 24px)}
+.dmpage-v2 .dmform h3{font-size:1.18rem;letter-spacing:-.022em;margin:0 0 22px}
+.dmpage-v2 .dmrow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.dmpage-v2 .dmfield{margin-bottom:14px}
+.dmpage-v2 .dmfield label{display:block;font-size:.8rem;font-weight:700;margin-bottom:6px;letter-spacing:-.01em}
+.dmpage-v2 .dmfield label span{color:var(--accent)}
+.dmpage-v2 .dmfield input, .dmpage-v2 .dmfield select, .dmpage-v2 .dmfield textarea{width:100%;border:1px solid var(--line);
+    border-radius:11px;padding:0 13px;height:44px;font-size:.93rem;font-family:inherit;color:var(--ink);
+    background:var(--ground)}
+.dmpage-v2 .dmfield textarea{height:88px;padding:11px 13px;resize:vertical;line-height:1.55}
+.dmpage-v2 .dmfield input::placeholder, .dmpage-v2 .dmfield textarea::placeholder{color:var(--muted)}
+.dmpage-v2 .dmbtn{display:block;width:100%;text-align:center;background:var(--btn-ink);color:var(--btn-ink-text);
+    border:0;border-radius:12px;padding:14px;font-size:.97rem;font-weight:650;cursor:pointer;
+    font-family:inherit;margin-top:6px}
+.dmpage-v2 .dmbtn:hover{opacity:.9}
+.dmpage-v2 .dmnote{margin:13px 0 0;text-align:center;font-size:.82rem;color:var(--muted)}
+
+@media(max-width:1000px){
+  .dmpage-v2 .dmhero-in{grid-template-columns:minmax(0,1fr);gap:32px}
+  .dmpage-v2 .dmgrid{grid-template-columns:minmax(0,1fr)}
+  .dmpage-v2 .dmform{position:static}
+}
+@media(max-width:640px){
+  .dmpage-v2 .dmwrap{padding-inline:22px}
+  .dmpage-v2 .dmrow{grid-template-columns:1fr}
+}
+
+.dmpage-v2 .shot,.dmpage-v2 .sshot,.dmpage-v2 .sscen-shot,.dmpage-v2 .uc-shot,.dmpage-v2 .wcshot,.dmpage-v2 .svshot,.dmpage-v2 .wwshot,.dmpage-v2 .wfshot,.dmpage-v2 .wfheroshot,.dmpage-v2 .tpshot,.dmpage-v2 .rgshot,.dmpage-v2 .dmshot,.dmpage-v2 .plate:not(.shotplate),.dmpage-v2 .smock,.dmpage-v2 .ucread-art,.dmpage-v2 .pcrel-art{display:block!important;overflow:hidden;padding:0!important;aspect-ratio:auto!important;height:auto!important;min-height:0!important;max-height:none!important}
+.dmpage-v2 .shot img,.dmpage-v2 .sshot img,.dmpage-v2 .sscen-shot img,.dmpage-v2 .uc-shot img,.dmpage-v2 .wcshot img,.dmpage-v2 .svshot img,.dmpage-v2 .wwshot img,.dmpage-v2 .wfshot img,.dmpage-v2 .wfheroshot img,.dmpage-v2 .tpshot img,.dmpage-v2 .rgshot img,.dmpage-v2 .dmshot img,.dmpage-v2 .plate:not(.shotplate) img,.dmpage-v2 .smock img,.dmpage-v2 .ucread-art img,.dmpage-v2 .pcrel-art img{display:block;width:100%!important;height:auto!important;object-fit:contain;border-radius:inherit}
+.dmpage-v2 .fchips,.dmpage-v2 .schips,.dmpage-v2 .smock-tabs,.dmpage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}

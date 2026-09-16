@@ -7,7 +7,19 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
 type DemoValues = { name: string; role: string; organisation: string; email: string; phone: string; homes: string; message: string }
 
-export function DemoForm() {
+// `variant="theme"` renders the rebuilt page's markup and nothing else changes: the same state,
+// the same lead POST, the same WebMCP tool. A second form component would have been a second
+// place for the lead payload to drift out of step with the API.
+export function DemoForm({
+  variant = 'default',
+  formHeading = 'Request a demo',
+  note = 'We respond within one business day.',
+}: {
+  variant?: 'default' | 'theme'
+  /** Only used by the theme variant, which owns its own heading rather than the page. */
+  formHeading?: string
+  note?: string
+}) {
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState<DemoValues>({ name: '', role: '', organisation: '', email: '', phone: '', homes: '', message: '' })
@@ -32,7 +44,7 @@ export function DemoForm() {
       await submitLead(form, 'web')
       setSubmitted(true)
     } catch {
-      setError('Something went wrong — please try again, or email hello@carestreamai.com.')
+      setError('Something went wrong, please try again, or email hello@carestreamai.com.')
     }
   }
 
@@ -61,6 +73,75 @@ export function DemoForm() {
 
   const inputClass = "w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-neutral-dark placeholder:text-gray-400 focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20 transition-colors"
   const labelClass = "mb-1.5 block text-sm font-semibold text-neutral-dark"
+
+  // The theme's form is inert (`onsubmit="return false"`), so it has no success or error state
+  // to copy. Both reuse classes the theme does style, with the one colour inline: a rule added
+  // to the ported stylesheet would be lost the next time port_css.py regenerates it.
+  if (submitted && variant === 'theme') {
+    return (
+      <div className="dmform">
+        <h3>Request received</h3>
+        <p className="dmnote">
+          We will be in touch within one business day to confirm your demo time.
+        </p>
+      </div>
+    )
+  }
+
+  if (variant === 'theme') {
+    return (
+      <form className="dmform" onSubmit={handleSubmit}>
+        <h3>{formHeading}</h3>
+        <div className="dmrow">
+          <div className="dmfield">
+            <label htmlFor="dmname">Full name <span>*</span></label>
+            <input id="dmname" name="name" type="text" required value={form.name}
+                   onChange={handleChange} placeholder="Your name" />
+          </div>
+          <div className="dmfield">
+            <label htmlFor="dmrole">Job title <span>*</span></label>
+            <input id="dmrole" name="role" type="text" required value={form.role}
+                   onChange={handleChange} placeholder="Registered Manager" />
+          </div>
+        </div>
+        <div className="dmfield">
+          <label htmlFor="dmorg">Organisation <span>*</span></label>
+          <input id="dmorg" name="organisation" type="text" required value={form.organisation}
+                 onChange={handleChange} placeholder="Your care service" />
+        </div>
+        <div className="dmrow">
+          <div className="dmfield">
+            <label htmlFor="dmemail">Work email <span>*</span></label>
+            <input id="dmemail" name="email" type="email" required value={form.email}
+                   onChange={handleChange} placeholder="manager@yourhome.co.uk" />
+          </div>
+          <div className="dmfield">
+            <label htmlFor="dmphone">Phone number</label>
+            <input id="dmphone" name="phone" type="tel" value={form.phone}
+                   onChange={handleChange} placeholder="01234 567890" />
+          </div>
+        </div>
+        <div className="dmfield">
+          <label htmlFor="dmsites">Number of homes / locations</label>
+          <select id="dmsites" name="homes" value={form.homes} onChange={handleChange}>
+            <option value="">Select&hellip;</option>
+            <option value="1">1</option>
+            <option value="2-5">2&ndash;5</option>
+            <option value="6-15">6&ndash;15</option>
+            <option value="16+">16 or more</option>
+          </select>
+        </div>
+        <div className="dmfield">
+          <label htmlFor="dmnotes">Anything you&apos;d like to cover?</label>
+          <textarea id="dmnotes" name="message" value={form.message} onChange={handleChange}
+                    placeholder="Policies we would like to see, questions about data security, anything else." />
+        </div>
+        {error && <p className="dmnote" style={{ color: '#B42318' }}>{error}</p>}
+        <button className="dmbtn" type="submit">Request demo</button>
+        <p className="dmnote">{note}</p>
+      </form>
+    )
+  }
 
   if (submitted) {
     return (

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Fragment, useRef, useState } from 'react'
 import Link from 'next/link'
 import { CheckCircle2, XCircle, Sparkles, ArrowRight, ArrowLeft, RotateCcw, Send, Info, Globe } from 'lucide-react'
 import { SiteImage } from '@/components/site-image'
@@ -46,6 +46,7 @@ export function TrainingDemo({
   const [selected, setSelected] = useState<number | null>(null)
   const [showInfo, setShowInfo] = useState(false)
   const [lang, setLang] = useState<'eng' | 'pol' | 'hin'>('eng')
+  const toResult = useRef<number | undefined>(undefined)
   const { lesson, question } = demo
   if (!lesson || !question) return null
 
@@ -273,120 +274,147 @@ export function TrainingDemo({
   // The rebuilt theme's skin. Same state, same translations, same scoring: only the markup
   // differs, so the taster cannot drift from the one the current pages serve.
   if (variant === 'theme') {
-    const stepLabel = `Step ${stepIdx + 1} of ${STEPS.length}`
+    // EVERY step is in the page and toggled with `hidden`, as the theme has it: the question,
+    // its options and the result copy are server-rendered, so they are there for a crawler
+    // and for the no-JS reader, and the markup matches the theme's element for element. The
+    // first version rendered only the current step.
+    const n = stepIdx + 1
+    const picked = selected !== null
+    const choose = (i: number) => {
+      if (picked) return
+      setSelected(i)
+      track('demo_answer', { correct: i === Q.correct })
+      // The theme marks the options first, then moves to the result a moment later.
+      // Cancelled by anything that leaves the question first (back, try again, a language),
+      // and only ever moves on from the question, so a late timer cannot open an empty result.
+      window.clearTimeout(toResult.current)
+      toResult.current = window.setTimeout(
+        () => setStep(s => (s === 'question' ? 'result' : s)), 260)
+    }
+    const again = () => {
+      window.clearTimeout(toResult.current)
+      setSelected(null); setShowInfo(false); setStep('lesson')
+    }
+    const LANG_BUTTONS = ([['eng', 'English'], ['hin', 'हिन्दी'], ['pol', 'Polski']] as [string, string][])
+      .filter(([c]) => c === 'eng' || availableLangs.includes(c as 'pol' | 'hin'))
+    const Tick = ({ w = 2.6 }: { w?: number }) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={w}
+           strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+    )
+
     return (
       <div className="demo" id="demo">
         <div className="demo-top">
-          <b>Try it · a real lesson and question</b>
-          <span className="demo-step">{stepLabel}</span>
+          <b>{demo.title}</b>
+          <span className="demo-step">Try it &middot; step {n} of {STEPS.length}</span>
         </div>
         <div className="demo-steps">
           {STEPS.map((s, i) => (
-            <span className={`s${i === stepIdx ? ' on' : i < stepIdx ? ' done' : ''}`} key={s.key}>
-              <span className="n">{i + 1}</span><span className="lb">{s.label}</span>
-            </span>
+            <Fragment key={s.key}>
+              {i > 0 && <span className="bar" />}
+              <span className={`s${i === stepIdx ? ' on' : i < stepIdx ? ' done' : ''}`}>
+                <span className="n">{i < stepIdx ? <Tick /> : i + 1}</span>
+                <span className="lb">{s.label}</span>
+              </span>
+            </Fragment>
           ))}
         </div>
         {L.image_url && (
-          <span>
-            <SiteImage className="demo-pic" src={`${API_URL}${L.image_url}`} alt={L.heading} />
+          <span hidden={step !== 'lesson'}>
+            {/* priority: the largest image in the hero; lazy loading delayed the LCP. */}
+            <SiteImage className="demo-pic" src={`${API_URL}${L.image_url}`} alt="" priority />
           </span>
         )}
 
         <div className="demo-body">
-          {step === 'lesson' && (
-            <div>
-              <h3>{L.heading}</h3>
-              <p>{L.body}</p>
-              <button type="button" className="tbtn solid"
-                      onClick={() => { setStep('question'); track('demo_continue') }}>
-                Continue to the question
-              </button>
+          <div hidden={step !== 'lesson'}>
+            <h3>{L.heading}</h3>
+            <p>{L.body}</p>
+            <button type="button" className="tbtn solid" style={{ fontSize: '.85rem', padding: '10px 18px' }}
+                    onClick={() => { setStep('question'); track('demo_continue') }}>
+              Continue to the question
+            </button>
+          </div>
+          <div hidden={step !== 'question'}>
+            <p className="demo-q">{Q.text}</p>
+            <div className="demo-opts">
+              {Q.options.map((opt, i) => (
+                <button type="button" className="demo-opt" key={i} disabled={picked}
+                        data-state={picked ? (i === Q.correct ? 'right' : i === selected ? 'wrong' : undefined) : undefined}
+                        onClick={() => choose(i)}>
+                  <span className="k">{String.fromCharCode(65 + i)}</span><span>{opt}</span>
+                </button>
+              ))}
             </div>
-          )}
-
-          {step === 'question' && (
-            <div>
-              <p className="demo-q">{Q.text}</p>
-              <div className="demo-opts">
-                {Q.options.map((opt, i) => (
-                  <button type="button" className="demo-opt" key={i}
-                          onClick={() => { setSelected(i); setStep('result'); track('demo_answer', { correct: i === Q.correct }) }}>
-                    <span className="k">{String.fromCharCode(65 + i)}</span><span>{opt}</span>
-                  </button>
-                ))}
-              </div>
-              <button type="button" className="tbtn ghost" onClick={() => setStep('lesson')}>
-                Back to the lesson
-              </button>
-            </div>
-          )}
+            <div className="demo-fb" hidden />
+            <button type="button" className="tbtn ghost"
+                    style={{ fontSize: '.82rem', padding: '8px 15px', marginTop: 12 }}
+                    onClick={again}>
+              Back to the lesson
+            </button>
+          </div>
         </div>
 
-        {step === 'result' && answered && (
-          <div>
-            <div className="demo-res">
-              <div className="demo-verdict">{isCorrect ? 'Correct' : 'Not quite'}</div>
-              <div className="demo-ans">
-                {Q.options.map((opt, i) => (
-                  <p key={i}>
-                    <b>{String.fromCharCode(65 + i)}</b> {opt}
-                    {i === Q.correct ? ' — correct' : i === selected ? ' — your answer' : ''}
-                  </p>
-                ))}
-              </div>
-              {Q.explanation && <div className="demo-why"><p>{Q.explanation}</p></div>}
-
-              {/* Only on a wrong answer, which is when the hub actually sends one. */}
-              {!isCorrect && (
-                <div className="demo-follow">
-                  <div className="hd">
-                    A follow-up question has been sent.
-                    <button type="button" aria-expanded={showInfo}
-                            onClick={() => setShowInfo(v => !v)}>Why?</button>
-                  </div>
-                  {showInfo && (
-                    <p>
-                      In the hub, a wrong answer sends the staff member a short follow-up lesson
-                      and a fresh question on the same point. They close the gap before they can
-                      finish the module, and every attempt is recorded for your CQC evidence.
-                    </p>
-                  )}
+        <div hidden={step !== 'result'}>
+          <div className="demo-res">
+            <div className={`demo-verdict${picked ? (isCorrect ? ' right' : ' wrong') : ''}`}>
+              {picked && (isCorrect
+                ? <><Tick w={2.4} />Correct.</>
+                : <><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"
+                         strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="9" /><path d="M15 9l-6 6M9 9l6 6" /></svg>Not quite.</>)}
+            </div>
+            <div className="demo-ans">
+              {picked && Q.options.map((opt, i) => (
+                <div key={i} className={i === Q.correct ? 'right' : i === selected ? 'wrong' : undefined}>
+                  <span className="k">{String.fromCharCode(65 + i)}</span><span>{opt}</span>
                 </div>
+              ))}
+            </div>
+            <div className="demo-why">
+              {picked && (
+                <>
+                  <b>The correct answer is &ldquo;{Q.options[Q.correct]}&rdquo;.</b>{' '}
+                  {Q.explanation || 'In the full module, a wrong answer triggers a short follow-up lesson and a fresh question, so the gap is always closed before the module can be completed.'}
+                </>
               )}
-
-              <div className="demo-cta">
-                <p className="lead">
-                  That is how the training works. Give your whole team the full {demo.title} module.
-                </p>
-                <div className="row">
-                  <Link className="tbtn solid" href={buyHref}>Buy now for your team</Link>
-                  <Link className="tbtn ghost" href="/staff-training">Browse the courses</Link>
-                </div>
-                <button type="button" className="demo-again"
-                        onClick={() => { setStep('lesson'); setSelected(null); setShowInfo(false) }}>
-                  Try the demo again
-                </button>
+            </div>
+            {/* Only on a wrong answer, which is when the hub actually sends one. */}
+            <div className="demo-follow" hidden={!picked || isCorrect}>
+              <div className="hd">
+                A follow-up question has been sent.
+                <button type="button" aria-expanded={showInfo} onClick={() => setShowInfo(v => !v)}>Why?</button>
               </div>
+              <p hidden={!showInfo}>
+                In the hub, a wrong answer sends the staff member a short follow-up lesson and a fresh
+                question on the same point. They close the gap before they can finish the module, and
+                every attempt is recorded for your CQC evidence.
+              </p>
+            </div>
+            <div className="demo-cta">
+              <p className="lead">
+                That is how the training works. Give your whole team the full {demo.title} module.
+              </p>
+              <div className="row">
+                <Link className="tbtn solid" href={buyHref}>Buy now for your team</Link>
+                <a className="tbtn ghost" href="#courses">Browse the courses</a>
+              </div>
+              <button type="button" className="demo-again" onClick={again}>Try the demo again</button>
             </div>
           </div>
-        )}
+        </div>
 
         <div className="demo-foot">
-          <span>{demo.total_sections} sections · {demo.total_questions} questions in the full module</span>
-          {availableLangs.length > 0 && (
-            <span className="langs">
-              {([['eng', 'English'], ['pol', 'Polski'], ['hin', 'हिन्दी']] as [string, string][])
-                .filter(([c]) => c === 'eng' || availableLangs.includes(c as 'pol' | 'hin'))
-                .map(([code, label]) => (
-                  <button type="button" className="demo-lang" key={code}
-                          aria-pressed={lang === code}
-                          onClick={() => setLang(code as 'eng' | 'pol' | 'hin')}>
-                    {label}
-                  </button>
-                ))}
-            </span>
-          )}
+          <span>{demo.total_sections} sections &middot; {demo.total_questions} questions in the full course</span>
+          <span className="langs">
+            {LANG_BUTTONS.map(([code, label]) => (
+              <button type="button" className="demo-lang" key={code} aria-pressed={lang === code}
+                      onClick={() => { setLang(code as 'eng' | 'pol' | 'hin'); again() }}>
+                {label}
+              </button>
+            ))}
+            <span className="demo-lang" style={{ opacity: 0.6 }}>+60 more</span>
+          </span>
         </div>
       </div>
     )

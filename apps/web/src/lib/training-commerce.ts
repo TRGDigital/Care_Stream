@@ -53,3 +53,15 @@ export function formatDuration(minutes: number): string {
 // Accreditation claim is OFF until CPD approval. Flip on per environment (or later
 // per course) once the courses are approved. Never show "accredited" before then.
 export const TRAINING_ACCREDITED = process.env.NEXT_PUBLIC_TRAINING_ACCREDITED === 'true'
+
+/** Copy written ahead of approval says "CPD approved" (the theme's image descriptions, and
+ *  five alt texts in the console). Until TRAINING_ACCREDITED is set the phrase is removed
+ *  wherever such copy is served, so it is never claimed early; the stored words are kept, so
+ *  turning the flag on restores them. */
+export function claimSafe(text: string): string {
+  if (TRAINING_ACCREDITED) return text
+  return text
+    .replace(/\s*all available for CPD approved CareStream training modules/gi,
+             ' all available in CareStream')
+    .replace(/\bCPD approved\s+/gi, '')
+}

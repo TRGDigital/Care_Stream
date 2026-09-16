@@ -39,6 +39,9 @@ const LIVE: ReadonlySet<V2Family> = new Set<V2Family>([
   // web chat feature page, re-imported and matching once its closing buttons were fixed.
   'services',
   'web-chat',
+  // Batch 3: the /staff-training and /care-policies index pages, matching the theme on the
+  // deployment once the library, demo, basket and pack cards were brought into line.
+  'indexes',
 ])
 
 type Params = Record<string, string | string[] | undefined> | undefined

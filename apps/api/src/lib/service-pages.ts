@@ -13,6 +13,9 @@ export const SERVICE_PAGE_SLUGS = [
   'hr-policies',
   'policy-gap-detection',
   'business-continuity',
+  // Not an Our Services page, but built from the same blocks, so it shares the
+  // template and the store rather than having a template of its own.
+  'how-it-works',
 ] as const
 
 export type ServicePageSlug = (typeof SERVICE_PAGE_SLUGS)[number]

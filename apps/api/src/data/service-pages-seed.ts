@@ -2596,5 +2596,632 @@ export const SERVICE_PAGE_SEEDS: ServicePageSeed[] = [
       ]
     },
     "sort": 6
+  },
+  {
+    "slug": "how-it-works",
+    "title": "Everything you need to know about how CareStreamAI works.",
+    "meta_title": "Everything you need to know about how CareStreamAI works. | CareStreamAI",
+    "meta_description": "From uploading your first policy to your CQC inspection, a complete walkthrough of every feature, how it works, and why it matters for your care setting.",
+    "hero_image_url": "/images/how-it-works/1.webp",
+    "content": {
+      "lede": [
+        "From uploading your first policy to your CQC inspection, a complete walkthrough of every feature, how it works, and why it matters for your care setting."
+      ],
+      "blocks": [
+        {
+          "kind": "steps",
+          "tint": false,
+          "label": "Getting Started",
+          "heading": "Up and running in under an hour.",
+          "image": "/images/how-it-works/2.webp",
+          "variant": "",
+          "narrow": false,
+          "flip": false,
+          "items": [
+            {
+              "marker": "01",
+              "tag": "Most care settings upload between 20 and 80 policy documents. The upload takes minutes.",
+              "tone": "",
+              "title": "Upload your documents",
+              "paras": [
+                "Upload your policy library, staff handbook, and any supporting documents from the admin dashboard. PDF, Word, and plain text are all accepted. There is no limit on file size or number of policies."
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "02",
+              "tag": "Processing typically completes in under five minutes per document, automatically.",
+              "tone": "",
+              "title": "CareStreamAI processes them",
+              "paras": [
+                "Each document is read, chunked into meaningful sections, and indexed for semantic search. Key facts such as named individuals, contact numbers and local procedures are extracted and made searchable."
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "03",
+              "tag": "Most care settings are fully live within 45 minutes of starting the setup process.",
+              "tone": "",
+              "title": "Your team goes live",
+              "paras": [
+                "Add your staff and they get the hub on their phone, with email as a backup. They can immediately ask questions, read policies and start their training, in the language they think in, with voice input when typing is harder."
+              ],
+              "bullets": []
+            }
+          ],
+          "intro": [
+            "There is no integration project, no IT department involvement, and no lengthy rollout. Three steps and your whole team has access."
+          ],
+          "bullets": []
+        },
+        {
+          "kind": "steps",
+          "tint": true,
+          "label": "The AI Engine",
+          "heading": "How the AI generates answers.",
+          "image": "/images/how-it-works/3.webp",
+          "variant": "",
+          "narrow": false,
+          "flip": false,
+          "items": [
+            {
+              "marker": "01",
+              "tag": "",
+              "tone": "",
+              "title": "Semantic search",
+              "paras": [
+                "The question is converted into a mathematical representation and matched against your indexed policies. The most relevant sections are retrieved, even when the exact wording of the question differs from the policy."
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "02",
+              "tag": "",
+              "tone": "",
+              "title": "Context assembly",
+              "paras": [
+                "The retrieved policy sections are assembled into a context window, along with any conversation history from the current session and the relevant regulatory framework."
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "03",
+              "tag": "",
+              "tone": "",
+              "title": "Answer generation",
+              "paras": [
+                "The AI is instructed to answer using only the provided context. It cannot draw on general knowledge or training data. If the answer is not in your documents, it says so."
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "04",
+              "tag": "",
+              "tone": "",
+              "title": "Citation and logging",
+              "paras": [
+                "Every response cites the exact policy and section used. The full interaction, including question, answer, policy cited, language, channel and timestamp, is logged to the audit trail.",
+                "The AI is given your policy content and told: answer from this, and only this. It has no access to the internet, no access to other organisations’ policies, and no access to its general training data when answering. If a question cannot be answered from your documents, it tells the staff member and flags the gap for your review."
+              ],
+              "bullets": []
+            }
+          ],
+          "intro": [
+            "CareStreamAI uses a technique called Retrieval-Augmented Generation (RAG). In plain English: it finds the right part of your policy, reads it, and writes the answer from that content only."
+          ],
+          "bullets": []
+        },
+        {
+          "kind": "channels",
+          "tint": false,
+          "label": "The Hub",
+          "heading": "One hub on their phone. Email and voice when it suits.",
+          "image": null,
+          "variant": "",
+          "narrow": false,
+          "flip": false,
+          "items": [
+            {
+              "marker": "",
+              "tag": "",
+              "tone": "",
+              "title": "",
+              "paras": [],
+              "bullets": []
+            },
+            {
+              "marker": "",
+              "tag": "On any smartphone, plus desktop browser",
+              "tone": "",
+              "title": "The hub app",
+              "paras": [
+                "The hub is the one place for your whole team. Staff open it to ask a policy question, read a procedure, or complete a piece of training, all in the language they think in. The chat is conversational, so they can ask follow-ups within the same session and the system keeps full context. Reminders and new training arrive as notifications, so nothing gets missed."
+              ],
+              "bullets": [
+                "Policies, training and answers in one place",
+                "Push notifications for reminders and new training",
+                "Conversational follow-ups with full session context",
+                "Voice input for hands-free questions mid-task",
+                "Suggested follow-up questions after each response",
+                "Works on any smartphone or desktop browser"
+              ]
+            },
+            {
+              "marker": "",
+              "tag": "",
+              "tone": "",
+              "title": "",
+              "paras": [],
+              "bullets": []
+            },
+            {
+              "marker": "",
+              "tag": "Any email client, any device",
+              "tone": "",
+              "title": "Email",
+              "paras": [
+                "Staff email your dedicated CareStreamAI address from any device. The system replies within 30 seconds. Replying to the response continues the conversation. The system reads the full thread and maintains context across multiple exchanges."
+              ],
+              "bullets": [
+                "No login and no app required, works from any email client",
+                "Response arrives in the same email thread within 30 seconds",
+                "Thread context maintained, reply to continue the conversation",
+                "Useful for staff who prefer email or are on shift handover"
+              ]
+            },
+            {
+              "marker": "",
+              "tag": "",
+              "tone": "",
+              "title": "",
+              "paras": [],
+              "bullets": []
+            },
+            {
+              "marker": "",
+              "tag": "In the hub, hands-free",
+              "tone": "",
+              "title": "Voice input",
+              "paras": [
+                "Not everyone types quickly in their second language. Voice input lets staff speak their question naturally, mid-task and hands-free, in any language. The audio is transcribed, language-detected, and answered from your policies in the same language it was spoken."
+              ],
+              "bullets": [
+                "60+ languages supported for voice input",
+                "Transcription shown alongside the answer for transparency",
+                "Same response quality as typed queries",
+                "Logged identically, voice queries appear in the audit trail"
+              ]
+            }
+          ],
+          "intro": [
+            "The hub is where your team lives day to day: their policies, their training and instant answers, in one place. Email and voice give the same quality of response, drawn from the same library, with the same audit trail."
+          ],
+          "bullets": []
+        },
+        {
+          "kind": "ticks",
+          "tint": true,
+          "label": "The hub in use",
+          "heading": "What your team actually sees.",
+          "image": "/images/how-it-works/4.webp",
+          "variant": "",
+          "narrow": false,
+          "flip": false,
+          "items": [],
+          "intro": [
+            "The same answer, the same citation, whichever way they ask."
+          ],
+          "bullets": [
+            "Ask in the hub app, by email or by voice, and the answer cites the policy section it came from",
+            "Staff ask in their own language and get the answer back in it, across 60 or more languages",
+            "Every answer is logged with who asked, what was cited and when, ready for the audit trail",
+            "Training, inductions, audits and CQC prep live in the same hub, so there is one place to go"
+          ]
+        },
+        {
+          "kind": "cards",
+          "tint": false,
+          "label": "Staff Training",
+          "heading": "Training that lives in the same hub.",
+          "image": "/images/how-it-works/5.webp",
+          "variant": "c4 hoisted",
+          "narrow": false,
+          "flip": true,
+          "items": [
+            {
+              "marker": "",
+              "tag": "",
+              "tone": "",
+              "title": "Mandatory library",
+              "paras": [
+                "Every annual mandatory subject, ready to assign, from safeguarding to moving and handling."
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "",
+              "tag": "",
+              "tone": "",
+              "title": "Built from your policies",
+              "paras": [
+                "Generate a module from your own policy documents, so it teaches your procedures, not generic content."
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "",
+              "tag": "",
+              "tone": "",
+              "title": "Teach, then assess",
+              "paras": [
+                "Each module teaches in short sections, applies a real care scenario, and finishes with an assessment."
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "",
+              "tag": "",
+              "tone": "",
+              "title": "Learn and retry",
+              "paras": [
+                "A wrong answer triggers a short follow-up lesson and a fresh question, so the gap is closed."
+              ],
+              "bullets": []
+            }
+          ],
+          "intro": [
+            "CareStream is not only about answering questions. It delivers your mandatory training and modules built from your own policies, in the hub your team already uses, in 60+ languages, with renewals tracked for you."
+          ],
+          "bullets": []
+        },
+        {
+          "kind": "langdemo",
+          "tint": true,
+          "label": "Multilingual Engine",
+          "heading": "60+ languages. Zero configuration.",
+          "image": null,
+          "variant": "",
+          "narrow": false,
+          "flip": false,
+          "items": [
+            {
+              "marker": "60+",
+              "tag": "",
+              "tone": "",
+              "title": "Languages detected",
+              "paras": [],
+              "bullets": []
+            },
+            {
+              "marker": "English",
+              "tag": "",
+              "tone": "",
+              "title": "Source policy language",
+              "paras": [],
+              "bullets": []
+            },
+            {
+              "marker": "None",
+              "tag": "",
+              "tone": "",
+              "title": "Setup required",
+              "paras": [],
+              "bullets": []
+            },
+            {
+              "marker": "£0",
+              "tag": "🇵🇭",
+              "tone": "",
+              "title": "Extra cost per language",
+              "paras": [
+                "The same question, six languages, one policy",
+                "Ano ang gagawin ko pagkatapos ng pagbagsak ng residente?",
+                "Co powinienem zrobić po upadku mieszkańca?",
+                "Ce trebuie să fac după ce un rezident cade?",
+                "निवासी के गिरने के बाद मुझे क्या करना चाहिए?",
+                "Kini mo yẹ ki n ṣe lẹhin ti olugbe ba subu?",
+                "Maxaan samayn karaa marka martida ay dhacdo?",
+                "All answered from the same Falls Policy, each in the language asked"
+              ],
+              "bullets": [
+                "🇵🇭 Tagalog Ano ang gagawin ko pagkatapos ng pagbagsak ng residente? Detected",
+                "🇵🇱 Polish Co powinienem zrobić po upadku mieszkańca? Detected",
+                "🇷🇴 Romanian Ce trebuie să fac după ce un rezident cade? Detected",
+                "🇮🇳 Hindi निवासी के गिरने के बाद मुझे क्या करना चाहिए? Detected",
+                "🇳🇬 Yoruba Kini mo yẹ ki n ṣe lẹhin ti olugbe ba subu? Detected",
+                "🇸🇴 Somali Maxaan samayn karaa marka martida ay dhacdo? Detected"
+              ]
+            }
+          ],
+          "intro": [
+            "Language detection is automatic and happens on every query. Staff do not select a language, toggle a setting, or use a special command. They simply ask their question, in the language they think in, and the answer comes back in the same language.",
+            "Responses are always generated from your English-language policies. The translation happens at the point of response, not at the point of upload. This means you maintain one authoritative English policy library and every language version is derived from it consistently."
+          ],
+          "bullets": []
+        },
+        {
+          "kind": "frameworks",
+          "tint": false,
+          "label": "Regulatory Intelligence",
+          "heading": "Over 50 UK regulatory frameworks, pre-loaded.",
+          "image": null,
+          "variant": "",
+          "narrow": false,
+          "flip": false,
+          "items": [
+            {
+              "marker": "01",
+              "tag": "",
+              "tone": "",
+              "title": "Your internal policy is retrieved",
+              "paras": [
+                "The most relevant section of your own policy is found and used as the primary source for the response."
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "02",
+              "tag": "",
+              "tone": "",
+              "title": "Relevant regulations are overlaid",
+              "paras": [
+                "CareStreamAI identifies which of the 50+ pre-loaded frameworks apply to the question, including CQC, RIDDOR, MCA and GDPR, and adds that context."
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "03",
+              "tag": "Reg 9 to 20",
+              "tone": "",
+              "title": "The interaction is explained",
+              "paras": [
+                "The response explains both what your policy requires and what the law requires, including where they align, where they differ, and where your policy goes further.",
+                "A selection of included frameworks",
+                "+ 42 additional frameworks included"
+              ],
+              "bullets": [
+                "CQC Fundamental Standards Reg 9 to 20",
+                "Health and Safety at Work Act 1974 HSWA 1974",
+                "GDPR and Data Protection Act 2018 UK GDPR",
+                "Mental Capacity Act 2005 MCA 2005",
+                "Care Act 2014 Safeguarding Care Act 2014",
+                "RIDDOR 2013 RIDDOR 2013",
+                "Equality Act 2010 EA 2010",
+                "Control of Substances Hazardous to Health COSHH 2002"
+              ]
+            }
+          ],
+          "intro": [
+            "Your internal policies don’t exist in isolation. They’re built on a foundation of UK law and regulation. CareStreamAI has over 50 regulatory frameworks pre-loaded so that when a staff member asks something that touches both your policy and an external requirement, the response explains how the two interact."
+          ],
+          "bullets": []
+        },
+        {
+          "kind": "ticks",
+          "tint": true,
+          "label": "The Knowledge Base",
+          "heading": "Not just your policies. Your care setting, in detail.",
+          "image": "/images/how-it-works/6.webp",
+          "variant": "",
+          "narrow": false,
+          "flip": false,
+          "items": [],
+          "intro": [
+            "CareStreamAI doesn’t just answer generic questions about policies. Because it reads your actual documents, it extracts the specific facts that make your service unique: named individuals, direct-dial numbers, shift arrangements and local procedures.",
+            "Upload your staff handbook, on-call rota, local infection control guidance, or any supporting document and it becomes immediately queryable. Staff get answers that reflect how your service actually operates, not how a generic care setting might."
+          ],
+          "bullets": [
+            "Named individuals and contact numbers from your rota and handbook",
+            "Local procedures and site-specific instructions",
+            "Staff handbook: HR policies, leave, disciplinary and onboarding",
+            "Seeded knowledge never mixed with other tenants' data"
+          ]
+        },
+        {
+          "kind": "cards",
+          "tint": false,
+          "label": "Policy Gap Detection",
+          "heading": "Find your gaps before CQC does.",
+          "image": "/images/how-it-works/7.webp",
+          "variant": "c4 hoisted",
+          "narrow": false,
+          "flip": true,
+          "items": [
+            {
+              "marker": "",
+              "tag": "",
+              "tone": "",
+              "title": "Real-time flagging",
+              "paras": [
+                "Every unanswered query is flagged immediately, not batched monthly."
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "",
+              "tag": "",
+              "tone": "",
+              "title": "Ranked by frequency",
+              "paras": [
+                "The most commonly asked unanswered questions are shown first, so you fix the most impactful gaps."
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "",
+              "tag": "",
+              "tone": "",
+              "title": "Monthly summary report",
+              "paras": [
+                "A summary is compiled automatically and available for your manager review."
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "",
+              "tag": "",
+              "tone": "",
+              "title": "Included in CQC Readiness Report",
+              "paras": [
+                "Gap resolution evidence is included as proof of continuous improvement."
+              ],
+              "bullets": []
+            }
+          ],
+          "intro": [
+            "Every time CareStreamAI cannot find an answer in your documents, it flags the query as a gap. Over time, patterns emerge: the same questions appearing repeatedly without policy coverage.",
+            "Your Policy Gap Report shows exactly which questions your staff are asking that your current policies don’t address, ranked by frequency. This is actionable evidence of where your policy library needs strengthening, surfaced before an inspection identifies it first."
+          ],
+          "bullets": []
+        },
+        {
+          "kind": "cards",
+          "tint": true,
+          "label": "Analytics & Compliance",
+          "heading": "Your compliance evidence builds automatically.",
+          "image": "/images/how-it-works/8.webp",
+          "variant": "c4 hoisted",
+          "narrow": false,
+          "flip": false,
+          "items": [
+            {
+              "marker": "",
+              "tag": "",
+              "tone": "",
+              "title": "Tenant isolation",
+              "paras": [
+                "Complete data separation between all organisations"
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "",
+              "tag": "",
+              "tone": "",
+              "title": "Encrypted at rest",
+              "paras": [
+                "AES-256 encryption for all stored documents and logs"
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "",
+              "tag": "",
+              "tone": "",
+              "title": "Never used for training",
+              "paras": [
+                "Your documents are never used to train AI models"
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "",
+              "tag": "",
+              "tone": "",
+              "title": "UK data residency",
+              "paras": [
+                "Available on Professional and Enterprise plans"
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "",
+              "tag": "",
+              "tone": "",
+              "title": "Usage analytics dashboard",
+              "paras": [
+                "See total queries, active staff, top policies accessed, busiest times, and channel breakdown (hub, email, voice), updated in real time."
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "",
+              "tag": "",
+              "tone": "",
+              "title": "Language activity report",
+              "paras": [
+                "Which languages your staff are asking in, how frequently, and which policies are being accessed across languages. CQC evidence of equitable access."
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "",
+              "tag": "",
+              "tone": "",
+              "title": "Staff engagement tracking",
+              "paras": [
+                "Which individuals are using the system, how often, and whether engagement changes after policy updates or training events."
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "",
+              "tag": "",
+              "tone": "",
+              "title": "Query history and audit log",
+              "paras": [
+                "Every query is stored: who asked, what they asked, which policy was cited, the full response, and the timestamp. Searchable and exportable."
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "",
+              "tag": "",
+              "tone": "",
+              "title": "CQC Readiness Report",
+              "paras": [
+                "A structured PDF covering policy access frequency, multilingual activity, staff engagement, gap identification and resolution, and version history. Ready for inspection."
+              ],
+              "bullets": []
+            },
+            {
+              "marker": "",
+              "tag": "",
+              "tone": "",
+              "title": "Policy version history",
+              "paras": [
+                "Every version of every uploaded policy is retained. You can see which version was in use when any query was answered, which is important for post-incident review."
+              ],
+              "bullets": []
+            }
+          ],
+          "intro": [
+            "Every interaction with CareStreamAI is logged and structured. Your analytics dashboard and CQC Readiness Report are generated from this data continuously. There is nothing to compile manually."
+          ],
+          "bullets": []
+        },
+        {
+          "kind": "prose",
+          "tint": false,
+          "label": "Data & Security",
+          "heading": "Your data stays yours.",
+          "image": null,
+          "variant": "",
+          "narrow": false,
+          "flip": false,
+          "items": [],
+          "intro": [
+            "Every tenant’s policy library is stored in a completely isolated environment. Your policies are never used to train any model, never shared with other organisations, and never accessible to anyone outside your account. Data is encrypted at rest and in transit. UK data residency is available on Professional and Enterprise plans."
+          ],
+          "bullets": []
+        },
+        {
+          "kind": "end",
+          "tint": false,
+          "label": "",
+          "heading": "See it working with your own policies.",
+          "image": null,
+          "variant": "",
+          "narrow": false,
+          "flip": false,
+          "items": [],
+          "intro": [
+            "Book a 30 minute demo and we will show you CareStreamAI responding to real queries from your documents."
+          ],
+          "bullets": []
+        }
+      ]
+    },
+    "sort": 7
   }
 ]

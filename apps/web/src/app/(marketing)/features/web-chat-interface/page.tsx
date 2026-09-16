@@ -2,6 +2,24 @@ import type { Metadata } from 'next'
 import { MessageSquare, Globe, ShieldCheck, Clock, Users, FileText, Search, Zap } from 'lucide-react'
 import { FeatureShowcasePage, type FeatureContent } from '@/components/marketing/feature-page'
 import { pageMetadata } from '@/lib/page-meta'
+import { WebChatPageV2 } from '@/components/marketing/web-chat-page-v2'
+import type { FeatureV2Content } from '@/components/marketing/feature-page-v2'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+
+// This page has a route of ITS OWN, which in the App Router beats features/[slug]. The rebuilt
+// template was first wired into [slug] and so never rendered here: the static segment won, and
+// the live page carried none of it. Fetching the record here is what makes ?v2=1 reach it.
+async function getRecord() {
+  try {
+    const res = await fetch(`${API_URL}/public/feature-pages/web-chat-interface`,
+                            { next: { revalidate: 60 } })
+    if (!res.ok) return null
+    return (await res.json())?.data?.featurePage ?? null
+  } catch {
+    return null
+  }
+}
 
 export const revalidate = 60
 
@@ -117,6 +135,23 @@ const CONTENT: FeatureContent = {
   },
 }
 
-export default function WebChatInterfacePage() {
+export default async function WebChatInterfacePage(
+  { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
+) {
+  // Opt-in with ?v2=1 until it is signed off. The rebuilt page reads the feature_pages record,
+  // the same one every other feature page reads, rather than the CONTENT literal below.
+  if ((await searchParams)?.v2 === '1') {
+    const fp = await getRecord()
+    if (fp) {
+      return (
+        <WebChatPageV2 page={{
+          title: fp.title,
+          content: (fp.content ?? {}) as FeatureV2Content & { stepImages?: string[] },
+          faqs: Array.isArray(fp.faqs) ? fp.faqs : [],
+        }} />
+      )
+    }
+  }
+
   return <FeatureShowcasePage content={CONTENT} />
 }

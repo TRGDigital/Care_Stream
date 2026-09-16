@@ -84,7 +84,8 @@ export default async function BuyPage(
       <BuyPageV2
         module={{ ...m, slug }}
         unitPence={unitPence}
-        related={related.map(r => ({ slug: r.slug, title: r.title, group_label: r.group_label }))}
+        // Six, as the theme lists: same selection as the current page, one fewer link.
+        related={related.slice(0, 6).map(r => ({ slug: r.slug, title: r.title, group_label: r.group_label }))}
         apiUrl={API_URL}
       />
     )

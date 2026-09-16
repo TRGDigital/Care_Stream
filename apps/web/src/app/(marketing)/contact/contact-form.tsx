@@ -3,11 +3,30 @@
 import { useState } from 'react'
 import { useAgentForm } from '@/components/agent/use-agent-form'
 
+const Arrow = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
+       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </svg>
+)
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
 type ContactValues = { name: string; email: string; subject: string; message: string }
 
-export function ContactForm() {
+// `variant="theme"` renders the rebuilt page's markup and nothing else changes: the same
+// state, the same lead POST, the same WebMCP tool. A second form component would have been a
+// second place for the lead payload to drift out of step with the API.
+export function ContactForm({
+  variant = 'default',
+  formHeading = 'Send a message',
+  note,
+}: {
+  variant?: 'default' | 'theme'
+  /** Only used by the theme variant, which owns its own heading rather than the page. */
+  formHeading?: string
+  note?: React.ReactNode
+} = {}) {
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState<ContactValues>({ name: '', email: '', subject: '', message: '' })
@@ -32,7 +51,7 @@ export function ContactForm() {
       await submitLead(form, 'web')
       setSubmitted(true)
     } catch {
-      setError('Something went wrong — please try again, or email hello@carestreamai.com.')
+      setError('Something went wrong, please try again, or email hello@carestreamai.com.')
     }
   }
 
@@ -58,6 +77,59 @@ export function ContactForm() {
 
   const inputClass = "w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-neutral-dark placeholder:text-gray-400 focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20 transition-colors"
   const labelClass = "mb-1.5 block text-sm font-semibold text-neutral-dark"
+
+  const SUBJECTS: [string, string][] = [
+    ['product', 'Product question'],
+    ['pricing', 'Pricing or plans'],
+    ['data', 'Data protection / security'],
+    ['support', 'Technical support'],
+    ['other', 'Other'],
+  ]
+
+  if (variant === 'theme') {
+    return (
+      <form className="cfform" onSubmit={handleSubmit}>
+        <h3>{formHeading}</h3>
+        {/* The theme keeps the confirmation inside the form rather than replacing it, so the
+            routes and the heading beside it do not jump when a message is sent. */}
+        {submitted && <div className="cfsent">Message sent. We respond within one business day.</div>}
+        {!submitted && (
+          <>
+            <div className="cfpair">
+              <div className="cffield">
+                <label htmlFor="cfName">Your name<span className="req">*</span></label>
+                <input type="text" id="cfName" name="name" required autoComplete="name"
+                       value={form.name} onChange={handleChange} />
+              </div>
+              <div className="cffield">
+                <label htmlFor="cfEmail">Email<span className="req">*</span></label>
+                <input type="email" id="cfEmail" name="email" required autoComplete="email"
+                       placeholder="name@yourcarehome.co.uk"
+                       value={form.email} onChange={handleChange} />
+              </div>
+            </div>
+            <div className="cffield">
+              <label htmlFor="cfSubject">What is it about?<span className="req">*</span></label>
+              <select id="cfSubject" name="subject" required
+                      value={form.subject} onChange={handleChange}>
+                <option value="">Select a topic&hellip;</option>
+                {SUBJECTS.map(([v, l]) => <option value={v} key={v}>{l}</option>)}
+              </select>
+            </div>
+            <div className="cffield">
+              <label htmlFor="cfMessage">Message<span className="req">*</span></label>
+              <textarea id="cfMessage" name="message" required
+                        placeholder="Tell us about your service and what you are trying to solve."
+                        value={form.message} onChange={handleChange} />
+            </div>
+            {error && <p className="cfnote" style={{ color: '#B42318' }}>{error}</p>}
+            <button type="submit" className="cfsubmit">Send message <Arrow /></button>
+          </>
+        )}
+        {note && <p className="cfnote">{note}</p>}
+      </form>
+    )
+  }
 
   if (submitted) {
     return (

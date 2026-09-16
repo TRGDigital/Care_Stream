@@ -6,6 +6,8 @@ import { HubChatMockup } from '@/components/marketing/hub-chat-mockup'
 import { FaqAccordion } from '@/components/marketing/home-faq'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { TRUST_SLOTS } from '@/lib/page-slots/trust'
+import { TRUST_V2_SLOTS } from '@/lib/page-slots/trust-v2'
+import { TrustPageV2 } from '@/components/marketing/trust-page-v2'
 import { JsonLd } from '@/components/json-ld'
 import { faqPageSchema } from '@/lib/schema'
 
@@ -15,8 +17,17 @@ export const generateMetadata = () => pageMetadata('/trust', {
   description: 'CareStreamAI only ever answers from your uploaded documents. No internet searches, no hallucinations, no cross-contamination. Here is how we keep your compliance data safe.',
 })
 
-export default async function TrustPage() {
-  const s = makeSlot(TRUST_SLOTS, await getContentSlots('/trust'))
+export default async function TrustPage(
+  { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
+) {
+  const slots = await getContentSlots('/trust')
+
+  // Opt-in with ?v2=1 until it is signed off. Its own slot set, because the copy is new.
+  if ((await searchParams)?.v2 === '1') {
+    return <TrustPageV2 s={makeSlot(TRUST_V2_SLOTS, slots)} />
+  }
+
+  const s = makeSlot(TRUST_SLOTS, slots)
   const faqs = [1, 2, 3, 4, 5, 6].map(n => ({ question: s(`faq.q${n}.question`), answer: s(`faq.q${n}.answer`) }))
   return (
     <>

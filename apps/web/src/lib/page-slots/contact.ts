@@ -25,4 +25,10 @@ export const CONTACT_SLOTS: SlotDef[] = [
 
   // Form
   { key: 'form.h3', group: 'Form', label: 'Form heading', default: 'Send a message' },
+  { key: 'form.note.before', group: 'Form', label: 'Note, before the link', multiline: true, default: 'We respond within one business day. Your details are only used to answer you, as set out in our' },
+  { key: 'form.note.link', group: 'Form', label: 'Note link text', default: 'privacy policy' },
+
+  // Closing, on the rebuilt page
+  { key: 'end.h2', group: 'Closing', label: 'Heading', default: 'Looking for a quick answer?' },
+  { key: 'end.lede', group: 'Closing', label: 'Paragraph', multiline: true, default: 'Most questions about the product, data handling and pricing are already answered on the FAQ.' },
 ]

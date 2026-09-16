@@ -25,5 +25,5 @@ export const metadata: Metadata = {
 }
 
 export default async function HomeBluePreviewPage() {
-  return <div className="theme-blue">{await HomePage()}</div>
+  return <div className="theme-blue">{await HomePage({})}</div>
 }

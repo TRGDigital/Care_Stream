@@ -5,6 +5,7 @@ import { PageHero, PageCta, SectionLabel } from '@/components/marketing/ui'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { PRICING_SLOTS } from '@/lib/page-slots/pricing'
+import { PricingPageV2 } from '@/components/marketing/pricing-page-v2'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
@@ -174,9 +175,21 @@ function FeatureValue({ val, light = false }: { val: Cell; light?: boolean }) {
   return <span className={`text-sm font-medium ${light ? 'text-white' : 'text-neutral-dark'}`}>{val}</span>
 }
 
-export default async function PricingPage() {
+export default async function PricingPage(
+  { searchParams }: {
+    searchParams?: Promise<Record<string, string | string[] | undefined>>
+  },
+) {
   const linkedFeatures = await getLinkedFeatureSlugs()
   const s = makeSlot(PRICING_SLOTS, await getContentSlots('/pricing'))
+
+  // The rebuilt theme is opt-in with ?v2=1 until it is signed off. The plans and the
+  // comparison table come from the generated pricing data, so the figures cannot drift from
+  // the approved design by someone editing one of two copies.
+  if ((await searchParams)?.v2 === '1') {
+    return <PricingPageV2 heading="Simple pricing, no surprises" lede={s('hero.subtitle')} />
+  }
+
   return (
     <>
       <PageHero

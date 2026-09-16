@@ -28,8 +28,13 @@ export interface ServiceItem {
 
 /** One section of the page. `kind` selects the layout; everything else is the copy. */
 export interface ServiceBlock {
+  // The six after 'end' are the block kinds the theme gives their own shape: a question list,
+  // example prompts, the questions an inspector asks, the three access channels, the language
+  // demo and the regulatory frameworks. The template has always rendered all of them; only
+  // this union was behind, which is why the API had not typechecked since the port.
   kind: 'cards' | 'steps' | 'timeline' | 'stats' | 'ticks' | 'compare' | 'split' | 'note'
     | 'table' | 'prose' | 'end'
+    | 'faq' | 'prompts' | 'asks' | 'channels' | 'langdemo' | 'frameworks'
   /** The theme alternates plain and tinted bands. Losing this is what flattened /uses. */
   tint: boolean
   label: string
@@ -38,6 +43,17 @@ export interface ServiceBlock {
   image: string | null
   items: ServiceItem[]
   bullets: string[]
+  /**
+   * How the block's items are laid out, read from the theme rather than inferred from how many
+   * items there are: the design sets it per block, and guessing it from the count was wrong on
+   * most pages. A space-separated class list, not an enum, because the theme combines them
+   * ("hoisted c3"). Empty string means the block's default.
+   */
+  variant: string
+  /** Narrower measure on the block's prose. */
+  narrow: boolean
+  /** Split blocks only: which side the image sits on. */
+  flip: boolean
   /** Table blocks only. Rows, not prose: flattening a table loses which cell is which. */
   head?: string[]
   rows?: string[][]

@@ -1,5 +1,5 @@
 /* Ported from the content theme by carestream-theme-preview/port_css.py.
- * Source: features/basic-analytics.html, features/audits.html, features/web-chat-interface.html
+ * Source: features/basic-analytics.html, features/audits.html, features/web-chat-interface.html, features/external-regulatory-knowledge-base.html
  *
  * Kept as CSS rather than rewritten as Tailwind because these rules are the design.
  * Scoped under .fpage-v2, with the theme tokens on that wrapper rather than
@@ -297,6 +297,33 @@
 .fpage-v2 .wccta .solid{background:#fff;color:var(--ink)}
 .fpage-v2 .wccta .ghost{border:2px solid rgba(255,255,255,.35);color:#fff}
 .fpage-v2 .wccta .btns svg{width:15px;height:15px}
+.fpage-v2 .erkb-frame{background:var(--ground,#fff);border:1px solid var(--line,#E9E5EF);border-radius:16px;padding:26px 24px;box-shadow:0 18px 44px rgba(23,18,31,.07)}
+.fpage-v2 .erkb{display:grid;gap:12px;font-size:.86rem;line-height:1.5}
+.fpage-v2 .erkb-arrow{text-align:center;color:var(--muted,#6B6577);font-size:1rem;line-height:1}
+.fpage-v2 .erkb-tag{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted,#6B6577)}
+.fpage-v2 .erkb-hero{gap:20px}
+.fpage-v2 .erkb-col.good{border-top:1px solid var(--line,#E9E5EF);padding-top:20px}
+.fpage-v2 .erkb-col{display:grid;gap:10px}
+.fpage-v2 .erkb-box{background:var(--accent-soft,#F3EDFA);border-radius:12px;padding:14px 15px;font-weight:650;color:var(--ink,#17121F)}
+.fpage-v2 .erkb-box em{display:block;font-style:normal;font-weight:400;font-size:.78rem;color:var(--muted,#6B6577);margin-top:5px}
+.fpage-v2 .erkb-box.fuzzy{background:#F2F1F4;color:var(--muted,#6B6577)}
+.fpage-v2 .erkb-out{border-radius:12px;padding:12px 15px;font-size:.82rem}
+.fpage-v2 .erkb-out.warn{background:#FBF0EE;color:#A23C2B}
+.fpage-v2 .erkb-out.ok{background:#E8F4EE;color:#166B47;font-weight:650}
+.fpage-v2 .erkb-col.bad{opacity:.72}
+.fpage-v2 .erkb-src{background:var(--ground-2,#F7F5FA);border:1px solid var(--line,#E9E5EF);border-radius:10px;padding:9px 13px;color:var(--ink-2,#3A3245)}
+.fpage-v2 .erkb-base{background:var(--accent,#7B3FBF);color:#fff;border-radius:12px;padding:13px 15px;font-weight:650;text-align:center}
+.fpage-v2 .erkb-t{display:grid;gap:3px;padding:13px 15px 13px 18px;border-left:2px solid var(--line,#E9E5EF);position:relative}
+.fpage-v2 .erkb-t::before{content:'';position:absolute;left:-5px;top:17px;width:8px;height:8px;border-radius:50%;background:var(--line,#E9E5EF)}
+.fpage-v2 .erkb-t.live{border-left-color:var(--accent,#7B3FBF)}
+.fpage-v2 .erkb-t.live::before{background:var(--accent,#7B3FBF)}
+.fpage-v2 .erkb-t b{font-size:.9rem;letter-spacing:-.014em}
+.fpage-v2 .erkb-t em{font-style:normal;font-size:.8rem;color:var(--muted,#6B6577)}
+.fpage-v2 .erkb-step{background:var(--ground-2,#F7F5FA);border:1px solid var(--line,#E9E5EF);border-radius:12px;padding:13px 15px;display:grid;gap:3px}
+.fpage-v2 .erkb-step b{font-size:.9rem;letter-spacing:-.014em}
+.fpage-v2 .erkb-step em{font-style:normal;font-size:.8rem;color:var(--muted,#6B6577)}
+.fpage-v2 .erkb-step.mid{background:var(--accent-soft,#F3EDFA);border-color:transparent}
+.fpage-v2 .erkb-step.out{background:#E8F4EE;border-color:transparent}
 
 @media (max-width:1020px){
   .fpage-v2 .hub{grid-template-columns:1fr;gap:16px}

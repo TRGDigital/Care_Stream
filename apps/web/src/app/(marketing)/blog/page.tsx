@@ -67,7 +67,11 @@ export default async function BlogPage(
   // Opt-in with ?v2=1 until it is signed off. Its own slot set, because the copy is new.
   if ((await searchParams)?.v2 === '1') {
     const slots = await getContentSlots('/blog')
-    return <BlogIndexV2 posts={posts} s={makeSlot(BLOG_V2_SLOTS, slots)} />
+    // Resolved to plain strings here: BlogIndexV2 is a client component, and the slot-lookup
+    // function cannot be passed across to one.
+    const s = makeSlot(BLOG_V2_SLOTS, slots)
+    const copy = Object.fromEntries(BLOG_V2_SLOTS.map(d => [d.key, s(d.key)]))
+    return <BlogIndexV2 posts={posts} copy={copy} />
   }
 
   return (

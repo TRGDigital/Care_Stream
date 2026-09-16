@@ -63,7 +63,12 @@ function Meta({ post, cats, foot }: { post: ListedPost; cats: string[]; foot?: b
   )
 }
 
-export function BlogIndexV2({ posts, s }: { posts: ListedPost[]; s: Copy }) {
+// Takes the copy as plain strings, NOT the slot-lookup function every server template takes.
+// This is a client component, and a function cannot cross the server/client boundary: the
+// first version was given `s` directly, which type-checked and built cleanly and then returned
+// a 500 on every request. The page resolves the copy on the server and hands over the result.
+export function BlogIndexV2({ posts, copy }: { posts: ListedPost[]; copy: Record<string, string> }) {
+  const s: Copy = (key) => copy[key] ?? ''
   const [cat, setCat] = useState('all')
   const [q, setQ] = useState('')
 

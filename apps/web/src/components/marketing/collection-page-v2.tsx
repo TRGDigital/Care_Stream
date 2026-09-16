@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { CollectionIntro } from './collection-intro'
 import { AddToBasket, SavePolicy, BasketPill } from './policy-basket'
+import { TrainingAddButton, TrainingSaveButton, TrainingCartLink } from './training-cart-buttons'
 import './collection-page-v2.css'
 
 // The rebuilt /collection/[slug] pages.
@@ -26,6 +27,9 @@ export interface CollectionProduct {
 }
 
 export interface CollectionV2 {
+  /** Which cart the products go into. A training course must never land in the policy
+   *  basket, which checks out somewhere else entirely. */
+  kind: 'policies' | 'training'
   title: string
   eyebrow: string
   intro: string
@@ -50,6 +54,7 @@ export function CollectionPageV2({ c, s }: { c: CollectionV2; s: Copy }) {
   const links = (c.links ?? []).filter(l => l.label && l.url)
   const faqs = (c.faqs ?? []).filter(f => f.question && f.answer)
   const products = c.products ?? []
+  const training = c.kind === 'training'
   const noun = s('meta.noun') || 'in this collection'
 
   return (
@@ -91,9 +96,19 @@ export function CollectionPageV2({ c, s }: { c: CollectionV2; s: Copy }) {
                       <em>{money(p.price_pence)}</em><i>{p.meta}</i>
                     </div>
                     <div className="clbuy">
-                      <AddToBasket className="clbuy-add"
-                        item={{ slug: p.slug, title: p.title, price_pence: p.price_pence }} />
-                      <SavePolicy className="clbuy-save" slug={p.slug} title={p.title} />
+                      {training ? (
+                        <>
+                          <TrainingAddButton className="clbuy-add" slug={p.slug} title={p.title}
+                                             unitPence={p.price_pence} />
+                          <TrainingSaveButton className="clbuy-save" slug={p.slug} title={p.title} />
+                        </>
+                      ) : (
+                        <>
+                          <AddToBasket className="clbuy-add"
+                            item={{ slug: p.slug, title: p.title, price_pence: p.price_pence }} />
+                          <SavePolicy className="clbuy-save" slug={p.slug} title={p.title} />
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -157,7 +172,7 @@ export function CollectionPageV2({ c, s }: { c: CollectionV2; s: Copy }) {
         </div>
       </section>
 
-      <BasketPill />
+      {training ? <TrainingCartLink /> : <BasketPill />}
     </div>
   )
 }

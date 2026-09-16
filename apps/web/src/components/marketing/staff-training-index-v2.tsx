@@ -67,7 +67,9 @@ const Globe = () => (
 )
 
 /** Reads `<base><n><suffix>` until one comes back empty. */
-function series(s: Copy, base: string, suffix = '', max = 14): number[] {
+// A runaway guard, not a limit on content: see the same helper on /care-policies, where a cap
+// of 14 dropped two of sixteen points.
+function series(s: Copy, base: string, suffix = '', max = 60): number[] {
   const out: number[] = []
   for (let n = 1; n <= max; n++) {
     if (!s(`${base}${n}${suffix}`)) break

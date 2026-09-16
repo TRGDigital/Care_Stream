@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
-import { highlightStaleTerms, highlightSearch, quoteColour } from '@/lib/policy-preview'
+import { highlightStaleTerms, highlightSearch, quoteColour, findPhraseBlocks, normPolicyText } from '@/lib/policy-preview'
 import { buildPolicyDiffHtml } from '@/lib/policy-diff'
 import { X, Loader2, Search, FileText, CheckCircle2, Check, AlertTriangle, Info, FilePenLine, Locate, History, ExternalLink, SquarePen, CalendarClock, Trash2 } from 'lucide-react'
 
@@ -138,6 +138,33 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     setNavPos(s => ({ ...s, [n]: idx + 1 }))
   }
 
+  // ─── "Show in policy" for a change already in the draft ─────────────────────
+  // An applied change has no handle to look up: updatePreview strips data-lint when it greens a
+  // mark, and in diff mode the new wording is plain <ins> with no id. So find it by its TEXT.
+  // Matching is done per BLOCK rather than per element because the diff is word-level: when only
+  // part of a line changed, <ins> wraps just those words, so the full phrase never sits in one node.
+  const swapCycleRef = useRef<Record<string, number>>({})
+  const [swapPos, setSwapPos] = useState<Record<string, { i: number; total: number }>>({})
+
+  // Scroll to the NEXT occurrence of an applied change each click, flashing it — same behaviour as
+  // "Show in policy" on an outstanding finding.
+  function showSwapInPolicy(key: string, phrase: string) {
+    const hits = findPhraseBlocks(previewRef.current, phrase)
+    if (!hits.length) { setSwapPos(s => ({ ...s, [key]: { i: 0, total: 0 } })); return }
+    const idx = (swapCycleRef.current[key] ?? 0) % hits.length
+    swapCycleRef.current[key] = idx + 1
+    const block = hits[idx]!
+    // Land the eye on the changed run itself where the markup gives us one.
+    const want = normPolicyText(phrase)
+    const inner = [...block.querySelectorAll<HTMLElement>('ins, mark')]
+      .find(el => { const t = normPolicyText(el.textContent ?? ''); return !!t && (want.includes(t) || t.includes(want)) })
+    const target = inner ?? block
+    target.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    target.classList.add('rounded', 'ring-2', 'ring-neutral-900', 'ring-offset-1')
+    setTimeout(() => target.classList.remove('rounded', 'ring-2', 'ring-neutral-900', 'ring-offset-1'), 1400)
+    setSwapPos(s => ({ ...s, [key]: { i: idx + 1, total: hits.length } }))
+  }
+
   // Reflect an applied change in the right-hand preview so it's visible on the policy side:
   // swap the highlighted wording for the new text and turn it green (an applied change). For a
   // fill, only the marks whose text is the given token are swapped (a finding may have several).
@@ -213,6 +240,9 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
     setMarkCounts(counts)
     cycleRef.current = {}
     setNavPos({})
+    // The applied-change lookups point at nodes in the old render; start them over too.
+    swapCycleRef.current = {}
+    setSwapPos({})
     // Pandemic-era wording: group highlighted occurrences by the SECTION they sit in (heading to
     // next heading), so a COVID-heavy section is one card and a lone mention elsewhere is its own.
     const covidPos = replaceable.findIndex(o => o.f.signal_key === 'covid-era')
@@ -501,14 +531,33 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
                       <li key={gi} className="text-xs">
                         <p className="font-medium text-neutral-dark">{g.requirement}</p>
                         <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                          {g.swaps.map((s, k) => (
-                            <span key={k} className="inline-flex items-center gap-1">
-                              <span className="rounded bg-rose-50 px-1 py-0.5 text-rose-700 line-through">{s.old.length > 40 ? `${s.old.slice(0, 40)}…` : s.old}</span>
-                              {s.neu
-                                ? <><span className="text-neutral-mid">→</span><span className="rounded bg-green-100 px-1 py-0.5 font-medium text-green-800">{s.neu}</span></>
-                                : <span className="italic text-neutral-mid">removed</span>}
-                            </span>
-                          ))}
+                          {g.swaps.map((s, k) => {
+                            // A replacement is found by its NEW wording; a removal by the old
+                            // wording, which the diff still shows struck through.
+                            const key    = `${gi}:${k}`
+                            const phrase = s.neu || s.old
+                            const pos    = swapPos[key]
+                            return (
+                              <span key={k} className="inline-flex items-center gap-1">
+                                <span className="rounded bg-rose-50 px-1 py-0.5 text-rose-700 line-through">{s.old.length > 40 ? `${s.old.slice(0, 40)}…` : s.old}</span>
+                                {s.neu
+                                  ? <><span className="text-neutral-mid">→</span><span className="rounded bg-green-100 px-1 py-0.5 font-medium text-green-800">{s.neu}</span></>
+                                  : <span className="italic text-neutral-mid">removed</span>}
+                                <button
+                                  onClick={() => showSwapInPolicy(key, phrase)}
+                                  title={`Show "${phrase}" in the policy`}
+                                  className="inline-flex items-center gap-1 rounded-btn border border-green-300 bg-white px-1.5 py-0.5 text-[11px] font-medium text-green-800 hover:bg-green-50"
+                                >
+                                  <Locate size={11} /> Show in policy
+                                </button>
+                                {pos && (pos.total === 0
+                                  ? <span className="text-[11px] italic text-neutral-mid">not found in the draft</span>
+                                  : pos.total > 1
+                                    ? <span className="text-[11px] tabular-nums text-neutral-mid">{pos.i} of {pos.total}</span>
+                                    : null)}
+                              </span>
+                            )
+                          })}
                         </div>
                       </li>
                     ))}

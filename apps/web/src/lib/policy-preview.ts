@@ -205,3 +205,23 @@ export function highlightStaleTerms(root: HTMLElement, termsPerFinding: string[]
 
   return displayNum
 }
+
+/** Whitespace- and case-insensitive comparison key for policy prose. */
+export const normPolicyText = (s: string): string => s.replace(/\s+/g, ' ').trim().toLowerCase()
+
+/**
+ * The innermost blocks whose text contains `phrase`, in document order.
+ *
+ * Used to locate a change that is already in the draft, which has no id to look up: the applied
+ * highlight has had its data-lint removed, and in diff mode the new wording is plain <ins>. Matching
+ * is per BLOCK rather than per element because the diff is word-level — when only part of a line
+ * changed, <ins> wraps just those words, so the full phrase never sits in a single node.
+ */
+export function findPhraseBlocks(root: HTMLElement | null, phrase: string): HTMLElement[] {
+  const want = normPolicyText(phrase ?? '')
+  if (!root || !want) return []
+  const hits = Array.from(root.querySelectorAll<HTMLElement>('p, li, h1, h2, h3, h4, td, blockquote'))
+    .filter(el => normPolicyText(el.textContent ?? '').includes(want))
+  // Innermost only, so a list item is not also reported via its containing block.
+  return hits.filter(el => !hits.some(other => other !== el && el.contains(other)))
+}

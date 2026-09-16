@@ -10,8 +10,10 @@ export interface PricingPlan {
   name: string
   price: string
   annual: string
+  line: string
   badge: string
-  features: string[]
+  badgeQuiet: boolean
+  features: { text: string; more: boolean }[]
   ctaHref: string
   ctaLabel: string
   highlight: boolean
@@ -33,15 +35,32 @@ export const PRICING: {
   "plans": [
     {
       "name": "Starter",
+      "line": "For a single service getting its policies and staff answers in order.",
       "price": "£85 per month",
       "annual": "£850 a year if you pay annually",
       "badge": "",
+      "badgeQuiet": false,
       "features": [
-        "10 annual training allocations a month",
-        "Up to 25 policies, 1 handbook, 10 staff users",
-        "500 questions a month",
-        "Chat, email and voice access",
-        "Basic analytics and the regulatory knowledge base"
+        {
+          "text": "10 annual training allocations a month",
+          "more": false
+        },
+        {
+          "text": "Up to 25 policies, 1 handbook, 10 staff users",
+          "more": false
+        },
+        {
+          "text": "500 questions a month",
+          "more": false
+        },
+        {
+          "text": "Chat, email and voice access",
+          "more": false
+        },
+        {
+          "text": "Basic analytics and the regulatory knowledge base",
+          "more": false
+        }
       ],
       "ctaHref": "/register",
       "ctaLabel": "Start free trial",
@@ -49,17 +68,40 @@ export const PRICING: {
     },
     {
       "name": "Professional",
+      "line": "For services that need the policy intelligence and the training evidence.",
       "price": "£230 per month",
       "annual": "£2,300 a year if you pay annually",
       "badge": "Most popular",
+      "badgeQuiet": false,
       "features": [
-        "30 annual training allocations a month",
-        "Unlimited policies, handbooks and staff users",
-        "5,000 questions a month",
-        "Policy gap detection and CQC wording alignment",
-        "Face to face training and the full matrix",
-        "CQC evidence pack and training payroll report",
-        "Advanced analytics and the CQC readiness report"
+        {
+          "text": "30 annual training allocations a month",
+          "more": false
+        },
+        {
+          "text": "Unlimited policies, handbooks and staff users",
+          "more": false
+        },
+        {
+          "text": "5,000 questions a month",
+          "more": false
+        },
+        {
+          "text": "Policy gap detection and CQC wording alignment",
+          "more": false
+        },
+        {
+          "text": "Face to face training and the full matrix",
+          "more": false
+        },
+        {
+          "text": "CQC evidence pack and training payroll report",
+          "more": false
+        },
+        {
+          "text": "Advanced analytics and the CQC readiness report",
+          "more": false
+        }
       ],
       "ctaHref": "/register",
       "ctaLabel": "Start free trial",
@@ -67,17 +109,40 @@ export const PRICING: {
     },
     {
       "name": "Enterprise",
+      "line": "For groups running several services, with audits and workforce records.",
       "price": "£385 per month",
       "annual": "£3,850 a year if you pay annually",
-      "badge": "",
+      "badge": "Everything included",
+      "badgeQuiet": true,
       "features": [
-        "Unlimited annual training allocations",
-        "Everything in Professional, plus:",
-        "Build your own audits, linked to training",
-        "Effectiveness of training and training impact",
-        "Multi site group console and benchmarking",
-        "Workforce compliance register and expiry alerts",
-        "Priority support and a dedicated manager"
+        {
+          "text": "Unlimited annual training allocations",
+          "more": false
+        },
+        {
+          "text": "Everything in Professional, plus:",
+          "more": true
+        },
+        {
+          "text": "Build your own audits, linked to training",
+          "more": false
+        },
+        {
+          "text": "Effectiveness of training and training impact",
+          "more": false
+        },
+        {
+          "text": "Multi site group console and benchmarking",
+          "more": false
+        },
+        {
+          "text": "Workforce compliance register and expiry alerts",
+          "more": false
+        },
+        {
+          "text": "Priority support and a dedicated manager",
+          "more": false
+        }
       ],
       "ctaHref": "/register",
       "ctaLabel": "Start free trial",

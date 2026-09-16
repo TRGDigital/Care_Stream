@@ -26,10 +26,15 @@ const Nope = () => (
        strokeLinecap="round" aria-hidden="true"><path d="M6 12h12" /></svg>
 )
 
+// Every comparison cell is a `val` td in the theme, whatever is inside it: the tick and the
+// nope are spans within. Putting `val` on the text span instead left 129 of the 156 cells
+// without the class that sizes and centres them.
 function Cell({ value }: { value: PricingValue }) {
-  if (value === true) return <span className="tick"><Tick /></span>
-  if (value === false) return <span className="nope"><Nope /></span>
-  return <span className="val">{value}</span>
+  if (value === true) return <td className="val"><span className="tick"><Tick /></span></td>
+  if (value === false) {
+    return <td className="val"><span className="nope" aria-label="not included" /></td>
+  }
+  return <td className="val">{value}</td>
 }
 
 export function PricingPageV2({ heading, lede }: { heading: string; lede: string }) {
@@ -57,8 +62,11 @@ export function PricingPageV2({ heading, lede }: { heading: string; lede: string
         <div className="pwrap pplans-in">
           {PRICING.plans.map(p => (
             <div className={`pcard${p.highlight ? ' hi' : ''}`} key={p.name}>
-              {p.badge && <span className="pbadge">{p.badge}</span>}
-              <h3>{p.name}</h3>
+              {p.badge && (
+                <span className={`pbadge${p.badgeQuiet ? ' quiet' : ''}`}>{p.badge}</span>
+              )}
+              <h2>{p.name}</h2>
+              <p className="line">{p.line}</p>
               {/* Both figures are always rendered; the switch only chooses which is shown, so
                   a crawler and a reader with no JavaScript still see the real prices. */}
               <div className="pprice">{annual ? p.annual : p.price}</div>
@@ -67,7 +75,9 @@ export function PricingPageV2({ heading, lede }: { heading: string; lede: string
                 {p.ctaLabel}
               </Link>
               <ul className="pfeats">
-                {p.features.map(f => <li key={f}><Tick />{f}</li>)}
+                {p.features.map(f => (
+                  <li className={f.more ? 'more' : undefined} key={f.text}><Tick />{f.text}</li>
+                ))}
               </ul>
             </div>
           ))}
@@ -85,7 +95,9 @@ export function PricingPageV2({ heading, lede }: { heading: string; lede: string
                 <tr>
                   <th>Feature</th>
                   {PRICING.plans.map(p => (
-                    <th className="plan" key={p.name}>{p.name} {p.price}</th>
+                    <th className={`plan${p.highlight ? ' hi' : ''}`} key={p.name}>
+                      <b>{p.name}</b><span>{p.price}</span>
+                    </th>
                   ))}
                 </tr>
               </thead>
@@ -100,7 +112,7 @@ export function PricingPageV2({ heading, lede }: { heading: string; lede: string
                     {g.rows.map(r => (
                       <tr key={`${g.group}-${r.label}`}>
                         <td>{r.label}</td>
-                        {r.values.map((v, i) => <td key={i}><Cell value={v} /></td>)}
+                        {r.values.map((v, i) => <Cell value={v} key={i} />)}
                       </tr>
                     ))}
                   </>

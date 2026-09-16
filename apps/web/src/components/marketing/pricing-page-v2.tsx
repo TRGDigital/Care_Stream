@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { PRICING, type PricingValue } from '@/lib/pricing-data'
+import { PRICING_FEATURE_LINKS } from '@/lib/pricing-feature-links'
 import './pricing-page-v2.css'
+import './pricing-page-v2-extra.css'
 
 // The rebuilt /pricing page.
 //
@@ -111,7 +113,14 @@ export function PricingPageV2({ heading, lede }: { heading: string; lede: string
                     )}
                     {g.rows.map(r => (
                       <tr key={`${g.group}-${r.label}`}>
-                        <td>{r.label}</td>
+                        <td>
+                          {PRICING_FEATURE_LINKS[r.label] ? (
+                            <Link className="pflink" href={PRICING_FEATURE_LINKS[r.label]!}>
+                              {r.label}
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" /></svg>
+                            </Link>
+                          ) : r.label}
+                        </td>
                         {r.values.map((v, i) => <Cell value={v} key={i} />)}
                       </tr>
                     ))}

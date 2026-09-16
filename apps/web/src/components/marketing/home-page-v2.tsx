@@ -24,6 +24,11 @@ import './home-page-v2.css'
 
 export interface HomeCopy { (key: string): string }
 
+/** A heading the design breaks onto two lines: the break is a new line in the slot. */
+const Lines = ({ text }: { text: string }) => (
+  <>{text.split('\n').map((line, i) => <span key={i}>{i > 0 && <br />}{line}</span>)}</>
+)
+
 type Css = React.CSSProperties & Record<`--${string}`, string>
 
 const I20 = ({ children }: { children: React.ReactNode }) => (
@@ -255,7 +260,7 @@ export function HomePageV2({ s }: { s: HomeCopy }) {
               </div>
               <div>
                 <p className="eyebrow">{s('watch.eyebrow')}</p>
-                <h2>{s('watch.h2')}</h2>
+                <h2><Lines text={s('watch.h2')} /></h2>
                 <p className="lede">{s('watch.lede')}</p>
                 <ul className="watch-list">
                   {[1, 2, 3].map(n => (
@@ -274,7 +279,7 @@ export function HomePageV2({ s }: { s: HomeCopy }) {
         <section className="hubsec" style={{ paddingBottom: 72 }}>
           <div className="wrap" style={{ textAlign: 'center' }}>
             <p className="eyebrow">{s('hub.eyebrow')}</p>
-            <h2>{s('hub.h2')}</h2>
+            <h2><Lines text={s('hub.h2')} /></h2>
             <p className="lede" style={{ margin: '22px auto 0', textAlign: 'center' }}>{s('hub.lede')}</p>
             <div className="hub" id="hub">
               <svg className="hub-lines" id="hubLines" aria-hidden="true" />
@@ -306,7 +311,7 @@ export function HomePageV2({ s }: { s: HomeCopy }) {
         <section>
           <div className="wrap">
             <p className="eyebrow">{s('pi.eyebrow')}</p>
-            <h2>{s('pi.h2')}</h2>
+            <h2><Lines text={s('pi.h2')} /></h2>
             <div className="split" style={{ marginTop: 56 }}>
               <div className="plate-wrap">
                 <div className="plate shotplate">
@@ -327,7 +332,7 @@ export function HomePageV2({ s }: { s: HomeCopy }) {
             <div className="split rev">
               <div>
                 <p className="eyebrow">{s('hubband.eyebrow')}</p>
-                <h2>{s('hubband.h2')}</h2>
+                <h2><Lines text={s('hubband.h2')} /></h2>
                 <p className="lede">{s('hubband.lede')}</p>
                 <div className="btnrow">
                   <Link className="pill pill-solid" href="/staff-hub">{s('hubband.cta1')}</Link>
@@ -348,7 +353,7 @@ export function HomePageV2({ s }: { s: HomeCopy }) {
         <section className="showcase">
           <HomeShowcase slides={SHOWCASE} hint={s('showcase.hint')} head={<>
             <p className="eyebrow">{s('showcase.eyebrow')}</p>
-            <h2>{s('showcase.h2')}</h2>
+            <h2><Lines text={s('showcase.h2')} /></h2>
           </>} />
         </section>
 
@@ -357,7 +362,7 @@ export function HomePageV2({ s }: { s: HomeCopy }) {
             <div className="split rev">
               <div>
                 <p className="eyebrow">{s('training.eyebrow')}</p>
-                <h2>{s('training.h2')}</h2>
+                <h2><Lines text={s('training.h2')} /></h2>
                 <p className="lede" style={{ marginTop: 22 }}>{s('training.lede')}</p>
                 <HomeAccordion items={training} style={{ marginTop: 26 }} />
               </div>

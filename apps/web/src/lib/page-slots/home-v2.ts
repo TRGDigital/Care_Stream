@@ -53,7 +53,7 @@ export const HOME_V2_SLOTS: SlotDef[] = [
 
   // ── Walkthrough ─────────────────────────────────────────────────────────────
   { key: 'watch.eyebrow', group: 'Walkthrough', label: 'Eyebrow', default: 'Watch' },
-  { key: 'watch.h2', group: 'Walkthrough', label: 'Heading', default: 'See CareStream working, end to end' },
+  { key: 'watch.h2', group: 'Walkthrough', label: 'Heading (a new line breaks it, as the design does)', multiline: true, default: 'See CareStream working,\nend to end' },
   { key: 'watch.lede', group: 'Walkthrough', label: 'Paragraph', multiline: true, default: 'A short walkthrough of the whole platform, from uploading your first policy, policy gaps, training to the evidence assembling itself while your team gets on with the job.' },
   { key: 'watch.step1', group: 'Walkthrough', label: 'Step 1', default: 'Upload your policy library and run the first gap analysis' },
   { key: 'watch.step2', group: 'Walkthrough', label: 'Step 2', default: 'Adopt the suggested wording, then approve and publish it' },
@@ -64,13 +64,13 @@ export const HOME_V2_SLOTS: SlotDef[] = [
 
   // ── One source of truth ─────────────────────────────────────────────────────
   { key: 'hub.eyebrow', group: 'One source of truth', label: 'Eyebrow', default: 'One source of truth' },
-  { key: 'hub.h2', group: 'One source of truth', label: 'Heading', default: 'Everything runs off your policy library' },
+  { key: 'hub.h2', group: 'One source of truth', label: 'Heading (a new line breaks it, as the design does)', multiline: true, default: 'Everything runs off\nyour policy library' },
   { key: 'hub.lede', group: 'One source of truth', label: 'Paragraph', multiline: true, default: 'Nothing is typed twice. Change a policy and the training, the answers your staff get and the evidence in your file all move with it.' },
   { key: 'hub.core', group: 'One source of truth', label: 'Label on the centre', default: 'Your policy library' },
 
   // ── Policy intelligence ─────────────────────────────────────────────────────
   { key: 'pi.eyebrow', group: 'Policy intelligence', label: 'Eyebrow', default: 'Policy intelligence' },
-  { key: 'pi.h2', group: 'Policy intelligence', label: 'Heading', default: 'Compliance that reads your actual documents' },
+  { key: 'pi.h2', group: 'Policy intelligence', label: 'Heading (a new line breaks it, as the design does)', multiline: true, default: 'Compliance that reads\nyour actual documents' },
   { key: 'pi.a1.title', group: 'Policy intelligence', label: 'Point 1 title', default: 'Regulation coverage' },
   { key: 'pi.a1.body', group: 'Policy intelligence', label: 'Point 1 body', multiline: true, default: 'Every regulation that applies to your service, checked against the words in your own policies. Not a tick-box list you fill in yourself.' },
   { key: 'pi.a2.title', group: 'Policy intelligence', label: 'Point 2 title', default: 'Out-of-date content' },
@@ -84,19 +84,19 @@ export const HOME_V2_SLOTS: SlotDef[] = [
 
   // ── Staff hub ───────────────────────────────────────────────────────────────
   { key: 'hubband.eyebrow', group: 'Staff hub', label: 'Eyebrow', default: 'Staff hub' },
-  { key: 'hubband.h2', group: 'Staff hub', label: 'Heading', default: 'Answers at 3am, in their language' },
+  { key: 'hubband.h2', group: 'Staff hub', label: 'Heading (a new line breaks it, as the design does)', multiline: true, default: 'Answers at 3am,\nin their language' },
   { key: 'hubband.lede', group: 'Staff hub', label: 'Paragraph', multiline: true, default: 'A carer asks a question in Tagalog and gets your policy back in Tagalog. The same answer your handbook gives, not something from the internet. Every question is logged as evidence.' },
   { key: 'hubband.cta1', group: 'Staff hub', label: 'Primary button', default: 'See the hub' },
   { key: 'hubband.cta2', group: 'Staff hub', label: 'Secondary button', default: 'All 60+ languages' },
 
   // ── The platform ────────────────────────────────────────────────────────────
   { key: 'showcase.eyebrow', group: 'The platform', label: 'Eyebrow', default: 'The platform' },
-  { key: 'showcase.h2', group: 'The platform', label: 'Heading', default: 'Real compliance work, for every part of the service' },
+  { key: 'showcase.h2', group: 'The platform', label: 'Heading (a new line breaks it, as the design does)', multiline: true, default: 'Real compliance work,\nfor every part of the service' },
   { key: 'showcase.hint', group: 'The platform', label: 'Scroll hint', default: 'Scroll, or pick an area above' },
 
   // ── Training ────────────────────────────────────────────────────────────────
   { key: 'training.eyebrow', group: 'Training', label: 'Eyebrow', default: 'Training' },
-  { key: 'training.h2', group: 'Training', label: 'Heading', default: 'Training built from your own policies' },
+  { key: 'training.h2', group: 'Training', label: 'Heading (a new line breaks it, as the design does)', multiline: true, default: 'Training built from\nyour own policies' },
   { key: 'training.lede', group: 'Training', label: 'Paragraph', multiline: true, default: 'Not generic e-learning. Modules written from your agreed ways of working, approved by you before staff ever see them.' },
   { key: 'training.a1.title', group: 'Training', label: 'Step 1 title', default: 'A module is generated from a policy' },
   { key: 'training.a1.body', group: 'Training', label: 'Step 1 body', multiline: true, default: 'Point CareStream at a policy and it drafts a short module from what that document actually says: the lesson, the key points, and multiple-choice questions with the right answer taken from your wording rather than a generic bank.' },

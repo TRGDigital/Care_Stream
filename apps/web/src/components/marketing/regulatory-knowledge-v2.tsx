@@ -25,7 +25,9 @@ const Join = () => (
 /** Reads slot keys of the form `<base><n>` until one comes back empty. Used for the lists whose
  *  length is a property of the copy (a coverage card has four items or six), so that editing a
  *  list in the console does not need a template change. */
-function series(s: Copy, base: string, max = 12): string[] {
+// A runaway guard, not a limit on content: on /care-policies a cap of 14 dropped two of sixteen
+// points, so none of these helpers caps a list anywhere near a real length.
+function series(s: Copy, base: string, max = 60): string[] {
   const out: string[] = []
   for (let n = 1; n <= max; n++) {
     const v = s(`${base}${n}`)

@@ -45,46 +45,65 @@ const Dot = () => (
   </svg>
 )
 
-/** Reads `<base><n>` until one comes back empty, so a list's length is a property of the copy
- *  rather than of the template. */
-function series(s: Copy, base: string, max = 14): number[] {
+/** Reads `<base><n><suffix>` until one comes back empty, so a list's length is a property of
+ *  the copy rather than of the template.
+ *
+ *  The suffix matters. Cards, statistics and steps are stored as `b1.c1.title`, not `b1.c1`,
+ *  and the first version probed the bare key, found nothing, and rendered none of them: every
+ *  card, statistic and personalisation step was missing from the live page while every check
+ *  run against the template passed. The rendered class diff is what caught it. */
+// The cap is a runaway guard, not a limit on content: it was 14, and band 7 has 16 points, so
+// the last two were quietly dropped.
+function series(s: Copy, base: string, suffix = '', max = 60): number[] {
   const out: number[] = []
   for (let n = 1; n <= max; n++) {
-    if (!s(`${base}${n}`)) break
+    if (!s(`${base}${n}${suffix}`)) break
     out.push(n)
   }
   return out
 }
 
 // What each of the eight bands is made of, read from the theme rather than guessed: the design
-// sets the card-grid width per band, and which bands carry an image, a stat row or steps.
-const BANDS: {
-  n: number; tint: boolean; cards: '' | 'c2' | 'c3' | 'c4'; img?: number
-  stats?: boolean; steps?: boolean; hl?: boolean
-}[] = [
+// sets the card-grid width per band, and which bands carry an image beside their copy.
+const BANDS: { n: number; tint: boolean; cards: '' | 'c2' | 'c3' | 'c4'; img?: number }[] = [
   { n: 1, tint: true, cards: 'c2', img: 2 },
-  { n: 2, tint: false, cards: '', img: 3, stats: true },
+  { n: 2, tint: false, cards: '', img: 3 },
   { n: 3, tint: true, cards: 'c3' },
-  { n: 4, tint: false, cards: 'c4', steps: true },
-  { n: 5, tint: true, cards: 'c4', hl: true },
+  { n: 4, tint: false, cards: 'c4' },
+  { n: 5, tint: true, cards: 'c4' },
   { n: 6, tint: false, cards: 'c4' },
   { n: 7, tint: true, cards: 'c3', img: 4 },
   { n: 8, tint: false, cards: 'c4' },
 ]
 
+/** A card exists when it has a title OR a first paragraph. Band 5's cards have no title, and
+ *  probing the title alone found none of them, so the whole grid disappeared. */
+function cardSeries(s: Copy, k: string, max = 60): number[] {
+  const out: number[] = []
+  for (let i = 1; i <= max; i++) {
+    if (!s(`${k}.c${i}.title`) && !s(`${k}.c${i}.p1`)) break
+    out.push(i)
+  }
+  return out
+}
+
 function Band({ s, b }: { s: Copy; b: (typeof BANDS)[number] }) {
   const k = `b${b.n}`
-  const paras = series(s, `${k}.p`)
-  const ticks = series(s, `${k}.li`)
-  const cards = series(s, `${k}.c`, 14).filter(i => s(`${k}.c${i}.title`))
-  const stats = b.stats ? series(s, `${k}.stat`) : []
-  const steps = b.steps ? series(s, `${k}.step`) : []
+  const hl = s(`${k}.h2hl`)
+  const cards = cardSeries(s, k)
+  const stats = series(s, `${k}.stat`, '.fig')
+  const steps = series(s, `${k}.step`, '.title')
+  // Each band list is its own <ul>: band 7 has two, which must not merge into one.
+  const lists = series(s, `${k}.l`, '.li1').map(m => ({ m, points: series(s, `${k}.l${m}.li`) }))
 
+  // The order is the theme's, the same in all eight bands: label, heading, prose, statistics,
+  // steps, cards, points. Where a band has an image, ALL of this sits in the copy column
+  // beside it, the cards included.
   const copy = (
     <div>
       <span className="svlabel">{s(`${k}.label`)}</span>
-      <h2>{s(`${k}.h2`)}</h2>
-      {paras.map(i => <p key={i}>{s(`${k}.p${i}`)}</p>)}
+      <h2>{s(`${k}.h2`)}{hl && <> <span className="hl">{hl}</span></>}</h2>
+      {series(s, `${k}.p`).map(i => <p key={i}>{s(`${k}.p${i}`)}</p>)}
       {stats.length > 0 && (
         <div className="svstats">
           {stats.map(i => (
@@ -106,11 +125,32 @@ function Band({ s, b }: { s: Copy; b: (typeof BANDS)[number] }) {
           ))}
         </div>
       )}
-      {ticks.length > 0 && (
-        <ul className="svticks">
-          {ticks.map(i => <li key={i}><Tick />{s(`${k}.li${i}`)}</li>)}
-        </ul>
+      {cards.length > 0 && (
+        <div className={`svcards${b.cards ? ` ${b.cards}` : ''}`}>
+          {cards.map(i => {
+            const points = series(s, `${k}.c${i}.li`)
+            return (
+              <div className="svcard" key={i}>
+                <span className="ic"><Dot /></span>
+                {/* Kept even when empty, as in the theme: band 5's cards carry no title. */}
+                <b>{s(`${k}.c${i}.title`)}</b>
+                {series(s, `${k}.c${i}.p`).map(j => <p key={j}>{s(`${k}.c${i}.p${j}`)}</p>)}
+                {points.length > 0 && (
+                  // The theme sets a card's own list to one column, spaced off the prose.
+                  <ul className="svticks" style={{ gridTemplateColumns: '1fr', marginTop: 14 }}>
+                    {points.map(j => <li key={j}><Tick />{s(`${k}.c${i}.li${j}`)}</li>)}
+                  </ul>
+                )}
+              </div>
+            )
+          })}
+        </div>
       )}
+      {lists.map(({ m, points }) => (
+        <ul className="svticks" key={m}>
+          {points.map(i => <li key={i}><Tick />{s(`${k}.l${m}.li${i}`)}</li>)}
+        </ul>
+      ))}
     </div>
   )
 
@@ -127,18 +167,6 @@ function Band({ s, b }: { s: Copy; b: (typeof BANDS)[number] }) {
             </div>
           </div>
         ) : copy}
-
-        {cards.length > 0 && (
-          <div className={`svcards${b.cards ? ` ${b.cards}` : ''}`}>
-            {cards.map(i => (
-              <div className={`svcard${b.hl && i === 1 ? ' hl' : ''}`} key={i}>
-                <span className="ic"><Dot /></span>
-                <b>{s(`${k}.c${i}.title`)}</b>
-                <p>{s(`${k}.c${i}.body`)}</p>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </section>
   )
@@ -191,7 +219,7 @@ export function CarePoliciesIndexV2({ s, products, bundles }: {
           <h2>{s('pers.h2')}</h2>
           <p className="lede3">{s('pers.lede')}</p>
           <div className="pcpsteps">
-            {series(s, 'pers.s').map((i, idx) => (
+            {series(s, 'pers.s', '.title').map((i, idx) => (
               <div className="pcpstep" key={i}>
                 <span className="n">{String(idx + 1).padStart(2, '0')}</span>
                 <b>{s(`pers.s${i}.title`)}</b>

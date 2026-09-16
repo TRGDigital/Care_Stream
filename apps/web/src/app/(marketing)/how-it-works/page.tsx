@@ -10,8 +10,10 @@ import { EditableContentBlock } from '@/components/marketing/editable-content-bl
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { HOW_IT_WORKS_SLOTS } from '@/lib/page-slots/how-it-works'
 import { JsonLd } from '@/components/json-ld'
-import { howToSchema } from '@/lib/schema'
-import { ServicePageIfPublished } from '@/components/marketing/service-page-loader'
+import { faqPageSchema, howToSchema } from '@/lib/schema'
+import { loadServicePage } from '@/components/marketing/service-page-loader'
+import { ServicePageV2 } from '@/components/marketing/service-page-v2'
+import { getSitePageContent } from '@/lib/site-page-content'
 import { isV2 } from '@/lib/v2-rollout'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
@@ -149,8 +151,35 @@ export default async function HowItWorksPage(
   // /how-it-works is built from the same blocks as the Our Services pages, so it uses
   // their template and their stored copy. Falls through when nothing is published.
   if (await isV2('services', searchParams)) {
-    const v2 = await ServicePageIfPublished({ slug: 'how-it-works' })
-    if (v2) return v2
+    const page = await loadServicePage('how-it-works')
+    if (page?.content?.blocks?.length) {
+      // The current page carries HowTo and FAQPage structured data, so the rebuilt one must
+      // too. HowTo describes the setup steps this page shows ("Up and running in under an
+      // hour"); the FAQs are the ones edited in the console, shown here as well as marked up.
+      const { faqs } = await getSitePageContent('/how-it-works')
+      // Records imported before sections had parts carry the steps as the section's own kind.
+      const stepItems = (b: (typeof page.content.blocks)[number]) =>
+        b.parts ? b.parts.find(p => p.kind === 'steps')?.items : b.kind === 'steps' ? b.items : undefined
+      const block = page.content.blocks.find(b => stepItems(b)?.length)
+      const steps = ((block && stepItems(block)) ?? [])
+        .filter(it => it.title)
+        .map(it => ({ name: it.title, text: (it.paras ?? []).join(' ') || it.tag || it.title }))
+      const plain = (html: string) => html.replace(/<[^>]*>/g, '')
+      return (
+        <>
+          {block && steps.length > 0 && (
+            <JsonLd data={howToSchema({
+              name: plain(block.heading) || 'How to get started with CareStreamAI',
+              description: (block.intro ?? []).join(' ') || plain(block.heading),
+              path: '/how-it-works',
+              steps,
+            })} />
+          )}
+          {faqs.length > 0 && <JsonLd data={faqPageSchema(faqs)} />}
+          <ServicePageV2 page={page} faqs={faqs} />
+        </>
+      )
+    }
   }
 
   const s = makeSlot(HOW_IT_WORKS_SLOTS, await getContentSlots('/how-it-works'))

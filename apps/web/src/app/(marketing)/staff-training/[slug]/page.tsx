@@ -78,12 +78,11 @@ async function getModule(slug: string): Promise<ModuleDetail | null> {
   throw new Error(`Training module ${slug}: the API did not answer; not treating it as missing`)
 }
 
-// No build-time prerender. Rendering all 98 modules at build fired several hundred API requests
-// at once from the build's few IPs, straight into the public rate limit. Each page now renders
-// on its first request and is cached from then on (revalidate below), which spreads the load.
-export async function generateStaticParams() {
-  return []
-}
+// No build-time prerender, so no generateStaticParams. Rendering all 98 modules at build fired
+// several hundred API requests at once from the build's few IPs, straight into the public rate
+// limit. Each page renders on request with its fetches cached, the same as /features/[slug].
+// (Exporting generateStaticParams returning [] is NOT the same: it marks the route as prerendered,
+// and the page reads searchParams, so every module page 500'd with a static-to-dynamic error.)
 
 function freqLabel(f: string): string {
   return f === 'annual' ? 'Annual' : f === 'biennial' ? 'Biennial' : f === 'triennial' ? 'Triennial'

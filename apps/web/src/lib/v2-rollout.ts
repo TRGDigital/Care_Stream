@@ -32,6 +32,9 @@ const LIVE: ReadonlySet<V2Family> = new Set<V2Family>([
   'legal',
   'one-offs',
   'collections',
+  // Batch 2a: the 11 care-setting pages, published and matching the theme with no differences.
+  // Our Services, the other half of batch 2, is held back for fixes.
+  'settings',
 ])
 
 type Params = Record<string, string | string[] | undefined> | undefined

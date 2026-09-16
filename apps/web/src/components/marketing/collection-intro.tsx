@@ -12,7 +12,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 
-export function CollectionIntro({ html }: { html: string }) {
+// `variant="theme"` renders the rebuilt page's markup: the theme clamps with a `data-clamped`
+// attribute on the wrapper and styles the button as `.clmore`. Same behaviour either way.
+export function CollectionIntro({ html, variant = 'default' }: {
+  html: string
+  variant?: 'default' | 'theme'
+}) {
   const [open, setOpen] = useState(false)
   const [needsToggle, setNeedsToggle] = useState(false)
   const ref = useRef<HTMLDivElement | null>(null)
@@ -21,6 +26,20 @@ export function CollectionIntro({ html }: { html: string }) {
     const el = ref.current
     if (el) setNeedsToggle(el.scrollHeight > el.clientHeight + 2)
   }, [html])
+
+  if (variant === 'theme') {
+    return (
+      <div className="clintro" {...(open ? {} : { 'data-clamped': '' })}>
+        <div className="lede" ref={ref} dangerouslySetInnerHTML={{ __html: html }} />
+        {needsToggle && (
+          <button className="clmore" type="button" onClick={() => setOpen(o => !o)}>
+            {open ? 'Show less' : 'Read more'}
+            <ChevronDown size={13} className={open ? 'rotate-180' : ''} />
+          </button>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="mt-4">

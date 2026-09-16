@@ -17,7 +17,7 @@ export interface LegalDoc {
   pill?: string
 }
 
-// The four documents, their one-line framing and their cross-links. Page furniture rather than
+// The five documents, their one-line framing and their cross-links. Page furniture rather than
 // body copy, taken from the theme.
 export const LEGAL_DOCS: Record<string, LegalDoc> = {
   privacy: {
@@ -36,6 +36,12 @@ export const LEGAL_DOCS: Record<string, LegalDoc> = {
     slug: 'dpa', title: 'Data Processing Agreement',
     lede: 'The agreement governing how CareStream processes personal data on your behalf as your processor.',
     pill: 'Made under Article 28 of the UK GDPR',
+  },
+  // Served by the [...slug] catch-all rather than a route of its own, being a CMS page, but it
+  // carries the same design as the other four in the theme: an identical class set, checked.
+  'client-services-agreement': {
+    slug: 'client-services-agreement', title: 'Client Services Agreement',
+    lede: 'The subscription terms for the CareStream platform, between TRG Digital Ltd and the Customer. Version 1.0.',
   },
 }
 

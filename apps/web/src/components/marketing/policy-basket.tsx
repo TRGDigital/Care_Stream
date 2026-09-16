@@ -83,7 +83,9 @@ export function AddToBasket({ item, className = '' }: { item: BasketItem; classN
   )
 }
 
-export function SavePolicy({ slug, title }: { slug: string; title: string }) {
+export function SavePolicy({ slug, title, className = '' }: {
+  slug: string; title: string; className?: string
+}) {
   const store = useStore(KEY_SAVED)
   const saved = !!store[slug]
   const toggle = useCallback(() => {
@@ -95,7 +97,7 @@ export function SavePolicy({ slug, title }: { slug: string; title: string }) {
   }, [slug, title])
 
   return (
-    <button type="button" className="pcsave" onClick={toggle} aria-pressed={saved}
+    <button type="button" className={`pcsave ${className}`.trim()} onClick={toggle} aria-pressed={saved}
             title={saved ? 'Saved for later' : 'Save this policy for later'}
             aria-label={`${saved ? 'Remove' : 'Save'} ${title} ${saved ? 'from' : 'for'} later`}>
       <HeartIcon />

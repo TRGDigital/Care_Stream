@@ -22,6 +22,8 @@ import { JsonLd } from '@/components/json-ld'
 import { webApplicationSchema, faqPageSchema } from '@/lib/schema'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { HOME_SLOTS } from '@/lib/page-slots/home'
+import { HOME_V2_SLOTS } from '@/lib/page-slots/home-v2'
+import { HomePageV2 } from '@/components/marketing/home-page-v2'
 import {
   Zap, ClipboardCheck, Upload, MessageSquare, Mic,
   BookOpen, Shield, ArrowRight, Check, ShieldAlert,
@@ -1072,9 +1074,30 @@ async function getFeaturedPosts(): Promise<HomeBlogPost[]> {
   return []
 }
 
-export default async function HomePage() {
+// The whole props object is optional: /home-blue renders this component directly with no
+// arguments, and making searchParams merely optional is not enough for that call to typecheck.
+export default async function HomePage(
+  { searchParams }: {
+    searchParams?: Promise<Record<string, string | string[] | undefined>>
+  } = {},
+) {
   const [faqs, slots, featuredPosts] = await Promise.all([getHomeFaqs(), getContentSlots('/'), getFeaturedPosts()])
   const s = makeSlot(HOME_SLOTS, slots)
+
+  // The rebuilt home page is opt-in with ?v2=1 until it is signed off. It reads its own slot
+  // set, because its copy is entirely new: none of the 29 paragraphs on it appear in the slots
+  // the current page uses, so the two cannot share keys.
+  if ((await searchParams)?.v2 === '1') {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <JsonLd data={[webApplicationSchema(), faqPageSchema(faqs)]} />
+        <MarketingNav />
+        <HomePageV2 s={makeSlot(HOME_V2_SLOTS, slots)} />
+        <MarketingFooter />
+      </div>
+    )
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <JsonLd data={[webApplicationSchema(), faqPageSchema(faqs)]} />

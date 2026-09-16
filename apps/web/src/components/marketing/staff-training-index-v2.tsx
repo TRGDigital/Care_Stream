@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
-import { TRAINING_ACCREDITED } from '@/lib/training-commerce'
+import { claimSafe } from '@/lib/training-commerce'
 import { TrainingDemo, type TrainingDemoData } from './training-demo'
 import { TrainingLibraryTabs, type LibraryTopic } from './training-library-tabs'
 import './staff-training-index-v2.css'
@@ -26,17 +26,6 @@ export interface Catalogue {
   topics: LibraryTopic[]
 }
 
-/** The approved copy says "CPD approved" in five image descriptions and one visible caption.
- *  CPD accreditation is not claimed until it is held, so the phrase is removed unless
- *  TRAINING_ACCREDITED is set: the same guard the course cards use for their CPD mark. The
- *  words are kept in the slot set as written, so turning the flag on restores them. */
-function claimSafe(text: string): string {
-  if (TRAINING_ACCREDITED) return text
-  return text
-    .replace(/\s*all available for CPD approved CareStream training modules/gi,
-             ' all available in CareStream')
-    .replace(/\bCPD approved\s+/gi, '')
-}
 
 const Tick = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"

@@ -51,6 +51,8 @@ const LIVE: ReadonlySet<V2Family> = new Set<V2Family>([
   // Batch 6: the 98 /buy/<slug> pages, matching their theme pages on class counts and block
   // order; only the related-module picks differ (chosen by rule, not hard-coded).
   'buy',
+  // Batch 7: the home page, rebuilt block by block from the theme and matching it.
+  'home',
 ])
 
 type Params = Record<string, string | string[] | undefined> | undefined

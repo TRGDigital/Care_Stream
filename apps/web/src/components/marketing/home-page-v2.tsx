@@ -343,11 +343,10 @@ export function HomePageV2({ s }: { s: HomeCopy }) {
         </section>
 
         <section className="showcase">
-          <div className="wrap">
+          <HomeShowcase slides={SHOWCASE} hint={s('showcase.hint')} head={<>
             <p className="eyebrow">{s('showcase.eyebrow')}</p>
             <h2>{s('showcase.h2')}</h2>
-          </div>
-          <HomeShowcase slides={SHOWCASE} hint={s('showcase.hint')} />
+          </>} />
         </section>
 
         <section>

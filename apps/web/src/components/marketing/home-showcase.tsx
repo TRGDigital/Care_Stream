@@ -31,7 +31,11 @@ const ReadMoreArrow = () => (
   </svg>
 )
 
-export function HomeShowcase({ slides, hint }: { slides: Slide[]; hint: string }) {
+export function HomeShowcase({ slides, hint, head }: {
+  slides: Slide[]; hint: string
+  /** The eyebrow and heading. The theme puts them in the same .wrap as the tabs. */
+  head?: React.ReactNode
+}) {
   const track = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(0)
 
@@ -76,6 +80,7 @@ export function HomeShowcase({ slides, hint }: { slides: Slide[]; hint: string }
   return (
     <>
       <div className="wrap">
+        {head}
         <div className="tabs" role="tablist" aria-label="Product areas">
           {slides.map((s, i) => (
             <button type="button" className="tab" role="tab" key={s.title}

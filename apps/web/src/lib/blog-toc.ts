@@ -14,7 +14,12 @@ export type TocHeading = { level: number; id: string; text: string }
  * current and future post automatically with no data migration. Styling lives
  * in globals.css under `.cs-toc`.
  */
-export function buildBlogToc(html: string): { html: string; headings: TocHeading[] } {
+export function buildBlogToc(
+  html: string,
+  /** false returns the ids and headings without injecting the ToC, for a page that renders its
+   *  own (the rebuilt post template shows it as a rail beside the article). */
+  { inject = true }: { inject?: boolean } = {},
+): { html: string; headings: TocHeading[] } {
   if (!html) return { html, headings: [] }
 
   // The page renders the post title as the single <h1>; demote any stray <h1> in
@@ -59,6 +64,7 @@ export function buildBlogToc(html: string): { html: string; headings: TocHeading
 
   // A ToC only earns its place when there are a couple of sections to jump to.
   if (headings.length < 2) return { html: withIds, headings: [] }
+  if (!inject) return { html: withIds, headings }
 
   const minLevel = Math.min(...headings.map(h => h.level))
   const items = headings

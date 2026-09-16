@@ -10,6 +10,8 @@ import { buildBlogToc } from '@/lib/blog-toc'
 import { Fragment } from 'react'
 import { splitHtmlForCtas } from '@/lib/blog-cta'
 import { BlogCta, BLOG_CTA_TYPES } from '@/components/marketing/blog-cta'
+import { BlogPostV2 } from '@/components/marketing/blog-post-v2'
+import { isV2 } from '@/lib/v2-rollout'
 
 export const revalidate = 60
 
@@ -129,11 +131,30 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 }
 
-export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function BlogPostPage({ params, searchParams }: {
+  params: Promise<{ slug: string }>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}) {
   const { slug } = await params
   const post = await getPost(slug)
   if (!post) notFound()
   const related = await getRelated(slug)
+
+  // The theme's post template. Same data, same structured data; only the markup changes.
+  if (await isV2('blog-posts', searchParams)) {
+    const { headings } = buildBlogToc(post.content, { inject: false })
+    const faqs = (post.faqs ?? []).filter(f => f?.question?.trim() && f?.answer?.trim())
+    return (
+      <>
+        <JsonLd data={[
+          blogPostingSchema(post, headings.length > 0),
+          ...(headings.length > 0 ? [hyperTocSchema(post.slug, headings)] : []),
+          ...(faqs.length > 0 ? [faqPageSchema(faqs)] : []),
+        ]} />
+        <BlogPostV2 post={post} related={related} />
+      </>
+    )
+  }
 
   const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
   const date = post.publication_date ? fmtDate(post.publication_date) : ''

@@ -25,6 +25,7 @@ export type V2Family =
   | 'buy'           // /buy/*
   | 'indexes'       // /staff-training and /care-policies
   | 'home'          // /
+  | 'blog-posts'    // /blog/*
 
 const LIVE: ReadonlySet<V2Family> = new Set<V2Family>([
   // Batch 1: families already published and checked against the deployment.
@@ -53,6 +54,9 @@ const LIVE: ReadonlySet<V2Family> = new Set<V2Family>([
   'buy',
   // Batch 7: the home page, rebuilt block by block from the theme and matching it.
   'home',
+  // Batch 8: the blog post template, checked on all 41 published posts on the deployment
+  // (template, title, BlogPosting, related articles) with the same structured data as before.
+  'blog-posts',
 ])
 
 type Params = Record<string, string | string[] | undefined> | undefined

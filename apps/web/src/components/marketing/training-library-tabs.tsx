@@ -239,12 +239,12 @@ function ThemeModuleCard({ t, settingLabel, bulk, hidden }: {
  *  store, so it cannot disagree with the checkout. */
 function ThemeBasket() {
   const { totalQty, gross, pct, discount, net } = useCart()
-  if (!totalQty) return null
+  // Always in the page and hidden while the basket is empty, as the theme has it.
   return (
-    <div className="tbasket">
+    <div className="tbasket" hidden={!totalQty}>
       <b>{totalQty} licence{totalQty === 1 ? '' : 's'}</b>
-      <span>{gbp(pct ? net : gross)}</span>
-      {pct > 0 && <span className="disc">{pct}% bulk discount, saving {gbp(discount)}</span>}
+      <span>{totalQty ? gbp(pct ? net : gross) : ''}</span>
+      <span className="disc" hidden={!pct}>{pct ? `${pct}% bulk discount, saving ${gbp(discount)}` : ''}</span>
       <Link className="go" href="/buy">Checkout <Arr /></Link>
     </div>
   )
@@ -292,7 +292,8 @@ export function TrainingLibraryTabs({ groups, settings, topics, variant = 'defau
     return (
       <>
         <label className="tsearch">
-          <Search size={18} aria-hidden="true" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
+               strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4 4" /></svg>
           <input type="search" value={query} onChange={(e) => setQuery(e.target.value)}
                  placeholder={c.search} aria-label="Search training modules" />
         </label>

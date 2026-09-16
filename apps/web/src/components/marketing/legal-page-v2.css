@@ -32,6 +32,13 @@
   -webkit-font-smoothing: antialiased;
 }
 
+/* The theme's element base rules (headings, focus ring): not class rules, so the port dropped them. */
+.lgpage-v2 :where(h1,h2,h3){margin:0; letter-spacing:-.035em; line-height:1.02; font-weight:700; text-wrap:balance}
+.lgpage-v2 :where(h1){font-size:clamp(2.6rem,5.6vw,4.4rem)}
+.lgpage-v2 :where(h2){font-size:clamp(2.1rem,4.4vw,3.4rem); line-height:1.05}
+.lgpage-v2 :where(h3){font-size:1.12rem; letter-spacing:-.015em; line-height:1.3}
+.lgpage-v2 :where(:focus-visible){outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
 .lgpage-v2 .demo-steps .s.on .n{background:var(--accent);color:#fff}
 .lgpage-v2 .demo-steps .s.on .lb{color:var(--ink)}
 .lgpage-v2 .demo-cta .row{display:flex;gap:10px;flex-wrap:wrap}

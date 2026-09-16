@@ -32,6 +32,13 @@
   -webkit-font-smoothing: antialiased;
 }
 
+/* The theme's element base rules (headings, focus ring): not class rules, so the port dropped them. */
+.mpage-v2 :where(h1,h2,h3){margin:0; letter-spacing:-.035em; line-height:1.02; font-weight:700; text-wrap:balance}
+.mpage-v2 :where(h1){font-size:clamp(2.6rem,5.6vw,4.4rem)}
+.mpage-v2 :where(h2){font-size:clamp(2.1rem,4.4vw,3.4rem); line-height:1.05}
+.mpage-v2 :where(h3){font-size:1.12rem; letter-spacing:-.015em; line-height:1.3}
+.mpage-v2 :where(:focus-visible){outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
 .mpage-v2 [data-placed]>span, .mpage-v2 [data-placed]>.ph, .mpage-v2 [data-placed]>.play, .mpage-v2 [data-placed]>.cap{display:none!important}
 .mpage-v2 .demo-steps{display:flex;align-items:center;gap:9px;padding:13px 22px;border-bottom:1px solid var(--line)}
 .mpage-v2 .demo-steps .s{display:flex;align-items:center;gap:8px}

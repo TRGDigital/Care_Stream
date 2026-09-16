@@ -1,0 +1,7 @@
+/* Additions to the ported pricing stylesheet (pricing-page-v2.css is generated from the theme).
+ * Each comparison row links to its feature page: the label keeps the table's type, and a small
+ * arrow in the accent marks it as a link, strongest on hover. */
+.ppage-v2 table.pt a.pflink{color:inherit;text-decoration:none;display:inline-flex;align-items:baseline;gap:6px}
+.ppage-v2 table.pt a.pflink svg{width:12px;height:12px;flex:0 0 auto;color:var(--accent);opacity:.6;transform:translateY(1px);transition:opacity .15s,transform .15s}
+.ppage-v2 table.pt a.pflink:hover{color:var(--accent)}
+.ppage-v2 table.pt a.pflink:hover svg{opacity:1;transform:translate(1px,0)}

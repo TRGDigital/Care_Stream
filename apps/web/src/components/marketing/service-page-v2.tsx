@@ -186,6 +186,68 @@ function Body({ block }: { block: ServiceBlock }) {
     )
   }
 
+  // ── /how-it-works adds four kinds. They are list-shaped like the rest, which is why that
+  // page shares this template rather than having one of its own. ──────────────────────────
+
+  if (kind === 'toc') {
+    return (
+      <nav className="htoc" aria-label="On this page">
+        <div className="svwrap htoc-in">
+          {items.map((it, i) => (
+            <a href={`#${it.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} key={i}>
+              {it.title}
+            </a>
+          ))}
+        </div>
+      </nav>
+    )
+  }
+
+  if (kind === 'channels') {
+    return (
+      <div className="hchans">
+        {items.map((it, i) => (
+          <div className="hchan" key={i}>
+            <div className="hchan-h">
+              <span className="ic" />
+              <div><b>{it.title}</b><span>{it.tag}</span></div>
+            </div>
+            <Paras lines={it.paras} />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (kind === 'langdemo') {
+    return (
+      <div className="hdemo">
+        {block.heading && <p className="hdemo-h">{block.heading}</p>}
+        <ul>
+          {items.map((it, i) => (
+            <li key={i}>
+              <div><b>{it.title}</b><Paras lines={it.paras} /></div>
+              {it.tag && <span className="det">{it.tag}</span>}
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
+
+  if (kind === 'frameworks') {
+    return (
+      <div className="hfw">
+        {block.heading && <p className="hfw-h">{block.heading}</p>}
+        <ul>
+          {items.map((it, i) => (
+            <li key={i}><b>{it.title}</b><span>{it.tag}</span></li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
+
   if (kind === 'prompts') {
     return (
       <ul className="svprompts">

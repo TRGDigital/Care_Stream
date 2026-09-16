@@ -266,7 +266,19 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
             <p className="mprice-line">
               From <b>{price} per staff member</b>, one-off. No subscription needed.
             </p>
-            <div className="mcue"><span>Try it: a real lesson &amp; question</span><Arrow /></div>
+            {/* The theme's two hand-drawn arrows: across to the demo on desktop, down to it on
+                a phone. One generic arrow left the phone layout with none. */}
+            <div className="mcue">
+              <span>Try it: a real lesson &amp; question</span>
+              <svg width="88" height="30" viewBox="0 0 88 30" fill="none" className="across" aria-hidden="true">
+                <path d="M3 16 C 30 17, 56 19, 80 11" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                <path d="M70 4 L 83 11 L 69 19" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <svg width="26" height="34" viewBox="0 0 26 34" fill="none" className="down" aria-hidden="true">
+                <path d="M13 2 C 13 16, 11 22, 13 28" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                <path d="M6 22 L 13 30 L 20 22" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
             <p className="mstars">
               <span className="row"><Star /><Star /><Star /><Star /><Star /></span>
               {' '}Trusted by UK care providers

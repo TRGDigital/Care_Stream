@@ -1,0 +1,125 @@
+/* Ported from the content theme by carestream-theme-preview/port_css.py.
+ * Source: who-we-serve.html
+ *
+ * Kept as CSS rather than rewritten as Tailwind because these rules are the design.
+ * Scoped under .wwpage-v2, with the theme tokens on that wrapper rather than
+ * :root, so the rest of the app is untouched. Header and footer rules are excluded.
+ */
+.wwpage-v2 {
+  --accent: #7B3FBF;
+  --accent-2: #C2503E;
+  --accent-soft: #F3EDFA;
+  --btn-ink: #17121F;
+  --btn-ink-text: #FFFFFF;
+  --chrome: 68px;
+  --good: #1F8A5B;
+  --ground: #FFFFFF;
+  --ground-2: #F7F5FA;
+  --ink: #17121F;
+  --ink-2: #3A3245;
+  --line: #E9E5EF;
+  --maxw: 1440px;
+  --muted: #6B6577;
+  --plate: #F2EEF8;
+  --r: 14px;
+  --shadow: 0 1px 2px rgba(23,18,31,.04), 0 12px 32px rgba(23,18,31,.06);
+  --shadow-lg: 0 2px 4px rgba(23,18,31,.04), 0 24px 64px rgba(23,18,31,.10);
+  color: var(--ink);
+  background: var(--ground);
+}
+
+.wwpage-v2 .demo-steps .s{display:flex;align-items:center;gap:8px}
+.wwpage-v2 .demo-steps .s.on .n{background:var(--accent);color:#fff}
+.wwpage-v2 .demo-steps .s.done .n{background:var(--accent-soft);color:var(--accent)}
+.wwpage-v2 .demo-steps .s.on .lb{color:var(--ink)}
+.wwpage-v2 .lede{font-size:clamp(1.05rem,1.7vw,1.32rem); color:var(--muted); line-height:1.55; max-width:34ch}
+.wwpage-v2 .hero .lede{margin:26px auto 0; max-width:44ch; text-align:center}
+.wwpage-v2 .watch .lede{max-width:38ch}
+.wwpage-v2 .nd .ic{width:36px;height:36px;border-radius:11px; display:grid;place-items:center;flex:0 0 auto}
+.wwpage-v2 .nd .ic svg{width:19px;height:19px;color:#fff}
+.wwpage-v2 .c-purple .ic{background:#7B3FBF}
+.wwpage-v2 .c-green  .ic{background:#1F8A5B}
+.wwpage-v2 .c-amber  .ic{background:#D08A15}
+.wwpage-v2 .c-coral  .ic{background:#C2503E}
+.wwpage-v2 .c-blue   .ic{background:#2F6FD0}
+.wwpage-v2 .fout .ic{width:30px;height:30px;border-radius:9px;background:#E7F5EE;color:var(--good);
+    display:grid;place-items:center;margin-bottom:13px}
+.wwpage-v2 .fout .ic svg{width:16px;height:16px;display:block}
+.wwpage-v2 .ftile .ic{width:30px;height:30px;border-radius:9px;background:var(--accent-soft);color:var(--accent);
+    display:grid;place-items:center;margin-bottom:13px}
+.wwpage-v2 .ftile .ic svg{width:16px;height:16px;display:block}
+.wwpage-v2 .wwrap{max-width:1180px;margin:0 auto;padding-inline:32px}
+.wwpage-v2 .wweyebrow{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);
+    background:var(--accent-soft);padding:5px 11px;border-radius:99px;margin-bottom:15px}
+.wwpage-v2 .wwlabel{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.63rem;
+    letter-spacing:.13em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+.wwpage-v2 .wwhero{background:linear-gradient(180deg,#FBF9FE 0%, var(--ground) 90%);border-bottom:1px solid var(--line);
+    padding:0}
+.wwpage-v2 .wwhero-in{padding-block:60px 54px;display:grid;
+    grid-template-columns:minmax(340px,1fr) minmax(0,420px);gap:52px;align-items:center}
+.wwpage-v2 .wwhero h1{max-width:16em}
+.wwpage-v2 .wwshot{border-radius:20px;overflow:hidden;box-shadow:var(--shadow-lg);
+    background:var(--plate);display:grid;place-items:center;text-align:center;padding:24px}
+.wwpage-v2 .wwshot span{font-size:.82rem;line-height:1.55;color:var(--ink-2);max-width:24em}
+.wwpage-v2 .wwshot b{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.62rem;letter-spacing:.11em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.wwpage-v2 [data-placed].wwshot{border-radius:20px}
+.wwpage-v2 .wwhero h1{font-size:clamp(1.95rem,1.2vw + 1.55rem,2.75rem);line-height:1.08;letter-spacing:-.034em;
+    margin:0 0 16px;text-wrap:balance}
+.wwpage-v2 .wwhero p{font-size:1.05rem;line-height:1.68;color:var(--ink-2);margin:0;max-width:46em}
+.wwpage-v2 .wwstats{display:flex;flex-wrap:wrap;gap:28px;margin-top:28px}
+.wwpage-v2 .wwstat b{display:block;font-size:1.5rem;letter-spacing:-.03em;line-height:1.1}
+.wwpage-v2 .wwstat span{display:block;font-size:.82rem;color:var(--muted);margin-top:3px}
+.wwpage-v2 .wwsec{padding-block:56px}
+.wwpage-v2 .wwsec h2{font-size:clamp(1.45rem,.8vw + 1.2rem,2rem);line-height:1.14;letter-spacing:-.03em;margin:0 0 14px}
+.wwpage-v2 .wwsec p.lede{font-size:1rem;line-height:1.7;color:var(--ink-2);margin:0 0 30px;max-width:46em}
+.wwpage-v2 .wwsame p.lede{font-size:1rem;line-height:1.7;color:var(--ink-2);max-width:46em}
+.wwpage-v2 .wwgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.wwpage-v2 .wwcard{display:flex;flex-direction:column;background:var(--ground);border:1px solid var(--line);
+    border-radius:16px;padding:26px 24px 24px;text-decoration:none;color:inherit;
+    box-shadow:var(--shadow);transition:border-color .15s,transform .15s,box-shadow .15s}
+.wwpage-v2 .wwcard:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.wwpage-v2 .wwcard .ic{display:grid;place-items:center;width:46px;height:46px;border-radius:14px;
+    background:var(--accent-soft);margin-bottom:16px;flex:0 0 auto}
+.wwpage-v2 .wwcard .ic svg{width:21px;height:21px;stroke:var(--accent);stroke-width:1.9;fill:none;
+    stroke-linecap:round;stroke-linejoin:round}
+.wwpage-v2 .wwcard h3{font-size:1.06rem;letter-spacing:-.022em;margin:0 0 9px;text-wrap:balance}
+.wwpage-v2 .wwcard p{margin:0 0 18px;font-size:.91rem;line-height:1.65;color:var(--muted);flex:1}
+.wwpage-v2 .wwcard .go{font-size:.86rem;font-weight:650;color:var(--accent);display:inline-flex;
+    align-items:center;gap:6px}
+.wwpage-v2 .wwcard .go svg{width:13px;height:13px;stroke:var(--accent);stroke-width:2.4;fill:none;
+    stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
+.wwpage-v2 .wwcard:hover .go svg{transform:translateX(3px)}
+.wwpage-v2 .wwsame{background:var(--ground-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    padding-block:52px}
+.wwpage-v2 .wwrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:26px;margin-top:26px}
+.wwpage-v2 .wwitem{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start}
+.wwpage-v2 .wwitem .tick{display:grid;place-items:center;width:26px;height:26px;border-radius:8px;
+    background:var(--ground);border:1px solid var(--line);flex:0 0 auto;margin-top:2px}
+.wwpage-v2 .wwitem .tick svg{width:12px;height:12px;stroke:var(--accent);stroke-width:2.8;fill:none;
+    stroke-linecap:round;stroke-linejoin:round}
+.wwpage-v2 .wwitem b{display:block;font-size:.96rem;letter-spacing:-.017em;margin-bottom:5px}
+.wwpage-v2 .wwitem p{margin:0;font-size:.89rem;line-height:1.65;color:var(--muted)}
+.wwpage-v2 .wwcta{padding-block:56px;text-align:center}
+.wwpage-v2 .wwcta h2{font-size:clamp(1.35rem,.7vw + 1.15rem,1.8rem);letter-spacing:-.028em;margin:0 0 10px}
+.wwpage-v2 .wwcta p{margin:0 auto 24px;font-size:.98rem;line-height:1.7;color:var(--ink-2);max-width:40em}
+.wwpage-v2 .wwbtns{display:flex;gap:13px;justify-content:center;flex-wrap:wrap}
+.wwpage-v2 .wwbtn{display:inline-block;padding:13px 24px;border-radius:12px;font-size:.95rem;font-weight:650;
+    text-decoration:none}
+.wwpage-v2 .wwbtn.p{background:var(--btn-ink);color:var(--btn-ink-text)}
+.wwpage-v2 .wwbtn.s{background:var(--ground);color:var(--ink);border:1px solid var(--line)}
+.wwpage-v2 .wwbtn:hover{opacity:.9}
+
+@media(max-width:1000px){
+  .wwpage-v2 .wwhero-in{grid-template-columns:minmax(0,1fr);gap:34px}
+  .wwpage-v2 .wwshot{max-width:420px}
+}
+@media(max-width:640px){
+  .wwpage-v2 .wwrap{padding-inline:22px}
+  .wwpage-v2 .wwstats{gap:20px}
+}
+
+.wwpage-v2 .shot,.wwpage-v2 .sshot,.wwpage-v2 .sscen-shot,.wwpage-v2 .uc-shot,.wwpage-v2 .wcshot,.wwpage-v2 .smock,.wwpage-v2 .ucread-art,.wwpage-v2 .pcrel-art{display:block;overflow:hidden;padding:0;aspect-ratio:auto;height:auto;min-height:0;max-height:none}
+.wwpage-v2 .shot img,.wwpage-v2 .sshot img,.wwpage-v2 .sscen-shot img,.wwpage-v2 .uc-shot img,.wwpage-v2 .wcshot img,.wwpage-v2 .smock img,.wwpage-v2 .ucread-art img,.wwpage-v2 .pcrel-art img{display:block;width:100%;height:auto;object-fit:contain;border-radius:inherit}
+.wwpage-v2 .fchips,.wwpage-v2 .schips,.wwpage-v2 .smock-tabs,.wwpage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}

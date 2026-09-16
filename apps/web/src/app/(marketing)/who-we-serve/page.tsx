@@ -9,6 +9,8 @@ import { SETTINGS_LIST } from '@/lib/settings/list'
 import { pageMetadata } from '@/lib/page-meta'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { WHO_WE_SERVE_SLOTS } from '@/lib/page-slots/who-we-serve'
+import { WHO_WE_SERVE_V2_SLOTS } from '@/lib/page-slots/who-we-serve-v2'
+import { SettingsIndexV2 } from '@/components/marketing/settings-index-v2'
 
 // Overridable from the platform console (Blog → Pages / site_pages).
 export const generateMetadata = () => pageMetadata('/who-we-serve', {
@@ -21,7 +23,15 @@ const ICONS: Record<string, LucideIcon> = {
   heart: Heart, pill: Pill, building: Building2, shield: ShieldCheck,
 }
 
-export default async function WhoWeServePage() {
+export default async function WhoWeServePage(
+  { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
+) {
+  // Opt-in with ?v2=1 until it is signed off. Its own slot set, because the copy is new.
+  const v2slots = await getContentSlots('/who-we-serve')
+  if ((await searchParams)?.v2 === '1') {
+    return <SettingsIndexV2 s={makeSlot(WHO_WE_SERVE_V2_SLOTS, v2slots)} />
+  }
+
   const s = makeSlot(WHO_WE_SERVE_SLOTS, await getContentSlots('/who-we-serve'))
   return (
     <>

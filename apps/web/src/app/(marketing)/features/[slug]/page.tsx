@@ -8,6 +8,7 @@ import { DEFAULT_OG_IMAGE, absoluteImage } from '@/lib/page-meta'
 import { heroImageFor } from '@/lib/hero-images'
 import { previewParam } from '@/lib/preview'
 import { FeaturePageV2, type FeatureV2Content } from '@/components/marketing/feature-page-v2'
+import { WebChatPageV2 } from '@/components/marketing/web-chat-page-v2'
 import {
   FeatureSimplePage,
   featureContentFromData,
@@ -113,6 +114,20 @@ export default async function DbFeaturePage(
   // that can render this page type at all.
   const sp = await searchParams
   const caps = (fp.content as { capabilities?: string[] } | null)?.capabilities ?? []
+
+  // One page the theme hand-built with its own design rather than the shared feature layout.
+  // It reads the same feature_pages.content as every other feature page; only the markup
+  // differs, so its copy stays where all the other feature copy is.
+  if (sp?.v2 === '1' && slug === 'web-chat-interface') {
+    return (
+      <WebChatPageV2 page={{
+        title: fp.title,
+        content: (fp.content ?? {}) as FeatureV2Content & { stepImages?: string[] },
+        faqs: Array.isArray(fp.faqs) ? fp.faqs : [],
+      }} />
+    )
+  }
+
   if (sp?.v2 === '1' || caps.length > 0) {
     const [children, relatedV2] = await Promise.all([
       Promise.all(caps.map(getFeaturePage)).then(r => r.filter(Boolean)),

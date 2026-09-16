@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
 import { THEME_IMAGES } from '@/lib/theme-images'
+import { ErkbHero, ErkbStep } from './erkb-diagram'
 import './feature-page-v2.css'
 
 // The rebuilt /features template. Renders the SAME feature_pages.content that the current
@@ -121,12 +122,17 @@ function Hero({ page }: { page: FeatureV2Page }) {
           <Actions />
         </div>
         <div>
-          <div className="shot hub">
-            {/* priority: this is the page's largest above-the-fold image. Without it
-                SiteImage renders loading="lazy", which delays the one image the reader is
-                waiting for and hurts the LCP measurement on every feature page. */}
-            <SiteImage src={img(page.slug, 1)} alt={page.title} priority />
-          </div>
+          {/* One page is illustrated with a diagram rather than a screenshot, and renders it
+              exactly where the screenshot would. Null on every other feature page. */}
+          <ErkbHero slug={page.slug} />
+          {page.slug !== 'external-regulatory-knowledge-base' && (
+            <div className="shot hub">
+              {/* priority: this is the page's largest above-the-fold image. Without it
+                  SiteImage renders loading="lazy", which delays the one image the reader is
+                  waiting for and hurts the LCP measurement on every feature page. */}
+              <SiteImage src={img(page.slug, 1)} alt={page.title} priority />
+            </div>
+          )}
         </div>
       </div>
     </section>
@@ -188,9 +194,12 @@ function Capability({ page, anchor }: { page: FeatureV2Page; anchor?: string }) 
                   <p>{s.body}</p>
                 </div>
                 <div>
-                  <div className="shot app">
-                    <SiteImage src={img(page.slug, i + 2)} alt={s.heading} />
-                  </div>
+                  <ErkbStep slug={page.slug} index={i} />
+                  {page.slug !== 'external-regulatory-knowledge-base' && (
+                    <div className="shot app">
+                      <SiteImage src={img(page.slug, i + 2)} alt={s.heading} />
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

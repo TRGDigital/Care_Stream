@@ -228,7 +228,7 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
 
             <p className="pcnote">
               One-off, first year of updates included. Delivered within <b>2 working days</b> of
-              your details.{pack && <> Also in the <b>{pack.title}</b>, for {money(pack.price_pence)}.</>}
+              your details.{pack && <> Also in the <b>{pack.title}</b>, 20 policies for {money(pack.price_pence)}.</>}
             </p>
 
             <div className="pccue">

@@ -7,6 +7,7 @@ import { RAG_V2_SLOTS } from '@/lib/page-slots/rag-v2'
 import { RagPageV2 } from '@/components/marketing/rag-page-v2'
 import { HubChatMockup } from '@/components/marketing/hub-chat-mockup'
 import { RagEngineMockup } from '@/components/marketing/rag-engine-mockup'
+import { isV2 } from '@/lib/v2-rollout'
 
 // Overridable from the platform console (Blog → Pages / site_pages).
 export const generateMetadata = () => pageMetadata('/rag', {
@@ -18,7 +19,7 @@ export default async function RagPage(
   { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
 ) {
   // Opt-in with ?v2=1 until it is signed off. Its own slot set, because the copy is new.
-  if ((await searchParams)?.v2 === '1') {
+  if (await isV2('one-offs', searchParams)) {
     const slots = await getContentSlots('/rag')
     return <RagPageV2 s={makeSlot(RAG_V2_SLOTS, slots)} />
   }

@@ -12,6 +12,7 @@ import { HOW_IT_WORKS_SLOTS } from '@/lib/page-slots/how-it-works'
 import { JsonLd } from '@/components/json-ld'
 import { howToSchema } from '@/lib/schema'
 import { ServicePageIfPublished } from '@/components/marketing/service-page-loader'
+import { isV2 } from '@/lib/v2-rollout'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 const RICH_LINK_WHITE = '[&_a]:font-semibold [&_a]:text-white [&_a]:underline [&_a]:underline-offset-2'
@@ -147,7 +148,7 @@ export default async function HowItWorksPage(
 ) {
   // /how-it-works is built from the same blocks as the Our Services pages, so it uses
   // their template and their stored copy. Falls through when nothing is published.
-  if ((await searchParams)?.v2 === '1') {
+  if (await isV2('services', searchParams)) {
     const v2 = await ServicePageIfPublished({ slug: 'how-it-works' })
     if (v2) return v2
   }

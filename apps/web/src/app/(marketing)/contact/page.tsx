@@ -6,6 +6,7 @@ import { CONTACT_SLOTS } from '@/lib/page-slots/contact'
 import { ContactPageV2 } from '@/components/marketing/contact-page-v2'
 import { JsonLd } from '@/components/json-ld'
 import { contactPageSchema } from '@/lib/schema'
+import { isV2 } from '@/lib/v2-rollout'
 
 export const metadata = {
   alternates: { canonical: 'https://www.carestreamai.com/contact' },
@@ -27,7 +28,7 @@ export default async function ContactPage(
 
   // Opt-in with ?v2=1 until it is signed off. No second slot set: the theme's copy and these
   // defaults are the same words, so both templates read the same slots.
-  if ((await searchParams)?.v2 === '1') {
+  if (await isV2('one-offs', searchParams)) {
     return (
       <>
         <JsonLd data={contactPageSchema()} />

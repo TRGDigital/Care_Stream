@@ -2,6 +2,7 @@ import { SettingPage } from '@/components/marketing/setting-page'
 import { config } from '@/lib/settings/substance-misuse'
 import { settingPageMetadata } from '@/lib/settings/meta'
 import { settingConfigFromDb } from '@/lib/settings/db'
+import { isV2 } from '@/lib/v2-rollout'
 
 export const generateMetadata = () => settingPageMetadata(config)
 
@@ -14,5 +15,5 @@ export default async function Page(
   // Copy comes from the database so it can be edited in the console; the config in
   // lib/settings is the fallback when no published row exists.
   const live = await settingConfigFromDb(config.slug, config)
-  return <SettingPage config={live} v2={sp?.v2 === '1'} />
+  return <SettingPage config={live} v2={await isV2('settings', sp)} />
 }

@@ -29,6 +29,7 @@ import {
   BookOpen, Shield, ArrowRight, Check, ShieldAlert,
   GraduationCap, HelpCircle, FileText, CheckCircle2, Sparkles,
 } from 'lucide-react'
+import { isV2 } from '@/lib/v2-rollout'
 
 type Slot = (key: string) => string
 
@@ -1085,7 +1086,7 @@ export default async function HomePage(
   // The rebuilt home page is opt-in with ?v2=1 until it is signed off. It reads its own slot
   // set, because its copy is entirely new: none of the 29 paragraphs on it appear in the slots
   // the current page uses, so the two cannot share keys.
-  if ((await searchParams)?.v2 === '1') {
+  if (await isV2('home', searchParams)) {
     return (
       <div className="flex min-h-screen flex-col">
         <JsonLd data={[webApplicationSchema(), faqPageSchema(faqs)]} />

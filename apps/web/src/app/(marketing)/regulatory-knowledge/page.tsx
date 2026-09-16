@@ -4,6 +4,7 @@ import { EditableContentBlock } from '@/components/marketing/editable-content-bl
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { REGULATORY_KNOWLEDGE_V2_SLOTS } from '@/lib/page-slots/regulatory-knowledge-v2'
 import { RegulatoryKnowledgeV2 } from '@/components/marketing/regulatory-knowledge-v2'
+import { isV2 } from '@/lib/v2-rollout'
 
 export const metadata = {
   alternates: { canonical: 'https://www.carestreamai.com/regulatory-knowledge' },
@@ -82,7 +83,7 @@ export default async function RegulatoryKnowledgePage(
   { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
 ) {
   // Opt-in with ?v2=1 until it is signed off. Its own slot set, because the copy is new.
-  if ((await searchParams)?.v2 === '1') {
+  if (await isV2('one-offs', searchParams)) {
     const slots = await getContentSlots('/regulatory-knowledge')
     return <RegulatoryKnowledgeV2 s={makeSlot(REGULATORY_KNOWLEDGE_V2_SLOTS, slots)} />
   }

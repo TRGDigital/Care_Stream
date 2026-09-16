@@ -3,6 +3,7 @@ import { PageHero } from '@/components/marketing/ui'
 import { BlogIndexV2 } from '@/components/marketing/blog-index-v2'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { BLOG_V2_SLOTS } from '@/lib/page-slots/blog-v2'
+import { isV2 } from '@/lib/v2-rollout'
 
 // Database-driven: posts are managed in the platform admin and served from the
 // public blog API. ISR keeps the page fast and SEO-friendly while staying current.
@@ -65,7 +66,7 @@ export default async function BlogPage(
   const posts = await getPosts()
 
   // Opt-in with ?v2=1 until it is signed off. Its own slot set, because the copy is new.
-  if ((await searchParams)?.v2 === '1') {
+  if (await isV2('one-offs', searchParams)) {
     const slots = await getContentSlots('/blog')
     // Resolved to plain strings here: BlogIndexV2 is a client component, and the slot-lookup
     // function cannot be passed across to one.

@@ -9,6 +9,7 @@ import { ABOUT_V2_SLOTS } from '@/lib/page-slots/about-v2'
 import { AboutPageV2 } from '@/components/marketing/about-page-v2'
 import { JsonLd } from '@/components/json-ld'
 import { aboutPageSchema } from '@/lib/schema'
+import { isV2 } from '@/lib/v2-rollout'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
@@ -123,7 +124,7 @@ export default async function AboutPage(
   // The rebuilt theme is opt-in with ?v2=1 until it is signed off. Its own slot set, because
   // the copy is new: sharing keys with the current page would leave each design holding
   // half-written values belonging to the other.
-  if ((await searchParams)?.v2 === '1') {
+  if (await isV2('one-offs', searchParams)) {
     return <AboutPageV2 s={makeSlot(ABOUT_V2_SLOTS, slots)} />
   }
   const PLATFORM_CARDS = [

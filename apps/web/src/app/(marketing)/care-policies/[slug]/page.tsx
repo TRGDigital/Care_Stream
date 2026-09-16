@@ -8,6 +8,7 @@ import {
 import { JsonLd } from '@/components/json-ld'
 import { PolicyIntakeGame } from '@/components/marketing/policy-intake-game'
 import { HomeFaq, type Faq } from '@/components/marketing/home-faq'
+import { isV2 } from '@/lib/v2-rollout'
 
 // The policy shop's product page — ONE page perfected before rollout (Len, 11 Sept).
 // Structure mirrors /staff-training/[slug]: hero with the intake demo as the focal
@@ -93,7 +94,7 @@ export default async function PolicyProductPage(
   // other ported families. It renders this same record, so the flag changes the design and
   // nothing else; flipping it for the family is a one-line change here.
   const sp = await searchParams
-  if (sp?.v2 === '1') {
+  if (await isV2('policies', sp)) {
     return (
       <PolicyPageV2
         product={data.product}

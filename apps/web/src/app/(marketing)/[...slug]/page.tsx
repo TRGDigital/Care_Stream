@@ -3,6 +3,7 @@ import { ContentPage } from '@/components/marketing/content-page'
 import { pageMetadata } from '@/lib/page-meta'
 import { JsonLd } from '@/components/json-ld'
 import { faqPageSchema } from '@/lib/schema'
+import { isV2 } from '@/lib/v2-rollout'
 
 export const revalidate = 60
 
@@ -66,7 +67,7 @@ export default async function CmsPage(
           the flag changes the design and nothing about the words. This reaches
           /client-services-agreement, which is a CMS page rather than a route of its own. */}
       <ContentPage path={path} title={stripBrand(page.title) || prettify(slug)}
-                   v2={(await searchParams)?.v2 === '1'} />
+                   v2={await isV2('legal', searchParams)} />
     </>
   )
 }

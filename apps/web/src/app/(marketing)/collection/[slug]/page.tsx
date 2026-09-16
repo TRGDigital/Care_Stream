@@ -8,6 +8,7 @@ import { CollectionIntro } from '@/components/marketing/collection-intro'
 import { CollectionPageV2 } from '@/components/marketing/collection-page-v2'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { COLLECTION_V2_SLOTS } from '@/lib/page-slots/collection-v2'
+import { isV2 } from '@/lib/v2-rollout'
 
 // An ecommerce-style collection page: copy, the six products it sells, deeper copy, FAQs,
 // sibling links, then the services banner. The order is the order a visitor needs it in.
@@ -96,7 +97,7 @@ export default async function CollectionPage(
 
   // Opt-in with ?v2=1 until it is signed off. The collection record is the same either way:
   // only the page furniture the theme repeats on every collection is a slot set.
-  if ((await searchParams)?.v2 === '1') {
+  if (await isV2('collections', searchParams)) {
     const slots = await getContentSlots('/collection')
     return (
       <>

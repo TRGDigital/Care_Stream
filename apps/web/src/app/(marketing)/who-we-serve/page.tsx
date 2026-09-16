@@ -11,6 +11,7 @@ import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { WHO_WE_SERVE_SLOTS } from '@/lib/page-slots/who-we-serve'
 import { WHO_WE_SERVE_V2_SLOTS } from '@/lib/page-slots/who-we-serve-v2'
 import { SettingsIndexV2 } from '@/components/marketing/settings-index-v2'
+import { isV2 } from '@/lib/v2-rollout'
 
 // Overridable from the platform console (Blog → Pages / site_pages).
 export const generateMetadata = () => pageMetadata('/who-we-serve', {
@@ -28,7 +29,7 @@ export default async function WhoWeServePage(
 ) {
   // Opt-in with ?v2=1 until it is signed off. Its own slot set, because the copy is new.
   const v2slots = await getContentSlots('/who-we-serve')
-  if ((await searchParams)?.v2 === '1') {
+  if (await isV2('one-offs', searchParams)) {
     return <SettingsIndexV2 s={makeSlot(WHO_WE_SERVE_V2_SLOTS, v2slots)} />
   }
 

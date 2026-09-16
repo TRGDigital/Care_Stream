@@ -6,6 +6,7 @@ import { JsonLd } from '@/components/json-ld'
 import { faqPageSchema } from '@/lib/schema'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { FAQ_SLOTS } from '@/lib/page-slots/faq'
+import { isV2 } from '@/lib/v2-rollout'
 
 export const metadata = {
   alternates: { canonical: 'https://www.carestreamai.com/faq' },
@@ -47,7 +48,7 @@ export default async function FaqPage(
   // Opt-in with ?v2=1 until it is signed off, like the other ported families. Same slots,
   // same thirty questions: the flag changes the design and nothing else.
   const sp = await searchParams
-  if (sp?.v2 === '1') {
+  if (await isV2('one-offs', sp)) {
     return (
       <>
         <JsonLd data={faqPageSchema(ALL_FAQS)} />

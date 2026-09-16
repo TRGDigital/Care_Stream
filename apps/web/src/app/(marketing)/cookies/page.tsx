@@ -1,5 +1,6 @@
 import { ContentPage } from '@/components/marketing/content-page'
 import { pageMetadata } from '@/lib/page-meta'
+import { isV2 } from '@/lib/v2-rollout'
 
 export const revalidate = 60
 
@@ -14,5 +15,5 @@ export default async function Page(
   { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
 ) {
   const sp = await searchParams
-  return <ContentPage path="/cookies" title="Cookie Policy" v2={sp?.v2 === '1'} />
+  return <ContentPage path="/cookies" title="Cookie Policy" v2={await isV2('legal', sp)} />
 }

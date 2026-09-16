@@ -10,6 +10,7 @@
 // the flow says so rather than blocking the sale.
 
 import { useEffect, useMemo, useState } from 'react'
+import { AddToBasket } from './policy-basket'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, CheckCircle2, PartyPopper, ShieldCheck, Sparkles } from 'lucide-react'
 import { SiteImage } from '@/components/site-image'
@@ -74,10 +75,13 @@ export function PolicyIntakeGame({ slug, title, pricePence, fields, buyHref, var
 
   if (variant === 'theme') {
     const unanswered = fields.filter(f => !(values[f.key] ?? '').trim())
+    // EVERY panel is in the page and toggled with `hidden`, as the theme has it, so the start,
+    // the question and the finale are all server-rendered. The finale adds this policy to the
+    // policy basket, as the theme's does; it used to link away with "Continue".
     return (
       <div className="pcgame">
-        {step >= 0 && (
-          <div className="pcprog">
+        {(
+          <div className="pcprog" hidden={step < 0}>
             <div className="pcprog-top">
               <span>Question {Math.min(step + 1, total)} of {total}</span><em>{pct}%</em>
             </div>
@@ -85,8 +89,8 @@ export function PolicyIntakeGame({ slug, title, pricePence, fields, buyHref, var
           </div>
         )}
 
-        {step < 0 && (
-          <div>
+        {(
+          <div hidden={step >= 0}>
             {heroImage && (
               <div className="pcgame-shot filled">
                 <SiteImage src={heroImage} alt={title} priority />
@@ -107,16 +111,17 @@ export function PolicyIntakeGame({ slug, title, pricePence, fields, buyHref, var
           </div>
         )}
 
-        {field && (
-          <div className="pcgame-body">
+        {(
+          <div className="pcgame-body" hidden={!field}>
+            <p className="pccheer" hidden />
             <label className="pclabel" htmlFor="pcfield">
-              <span>{field.label}</span>
-              {field.shared && <span className="pcshared">saved for all your policies</span>}
+              <span>{field?.label}</span>
+              <span className="pcshared" hidden={!field?.shared}>saved for all your policies</span>
             </label>
-            {field.help && <p className="pchelp">{field.help}</p>}
+            <p className="pchelp" hidden={!field?.help}>{field?.help}</p>
             <input className="pcinput" id="pcfield" type="text" autoComplete="off"
-                   value={values[field.key] ?? ''}
-                   onChange={e => save({ ...values, [field.key]: e.target.value })} />
+                   value={field ? values[field.key] ?? '' : ''}
+                   onChange={e => field && save({ ...values, [field.key]: e.target.value })} />
             <div className="pcnav">
               <button className="pcback" type="button" onClick={back}>Back</button>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -127,8 +132,8 @@ export function PolicyIntakeGame({ slug, title, pricePence, fields, buyHref, var
           </div>
         )}
 
-        {step >= total && (
-          <div className="pcgame-body">
+        {(
+          <div className="pcgame-body" hidden={step < total}>
             <p className="pcdone">That&apos;s everything we need</p>
             <p className="g">
               {answered} of {total} answered.{' '}
@@ -150,7 +155,8 @@ export function PolicyIntakeGame({ slug, title, pricePence, fields, buyHref, var
               <b>{money} <span>one-off</span></b>
               <em>First year of updates included · delivered within 2 working days</em>
             </div>
-            <Link className="pcbuy" href={buyHref}>Continue · {money}</Link>
+            <AddToBasket item={{ slug, title, price_pence: pricePence }} className="pcbuy"
+                         label={`Add to basket · ${money}`} />
             <p className="pcsaved">
               Your answers are saved on this device and carried into your order.
             </p>

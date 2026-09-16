@@ -63,7 +63,11 @@ const HeartIcon = () => (
   </svg>
 )
 
-export function AddToBasket({ item, className = '' }: { item: BasketItem; className?: string }) {
+export function AddToBasket({ item, className = '', label = 'Add to basket' }: {
+  item: BasketItem; className?: string
+  /** The intake game's finale reads "Add to basket · £59" in the theme. */
+  label?: string
+}) {
   const store = useStore(KEY_BASKET)
   const inBasket = !!store[item.slug]
   const toggle = useCallback(() => {
@@ -78,7 +82,7 @@ export function AddToBasket({ item, className = '' }: { item: BasketItem; classN
     <button type="button" className={`pcadd ${className}`.trim()} onClick={toggle}
             data-in={inBasket ? '1' : undefined}
             aria-pressed={inBasket}>
-      <CartIcon /> {inBasket ? 'In your basket' : 'Add to basket'}
+      <CartIcon /> {inBasket ? 'In your basket' : label}
     </button>
   )
 }

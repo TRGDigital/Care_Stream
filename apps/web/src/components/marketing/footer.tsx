@@ -119,7 +119,7 @@ export async function MarketingFooter() {
             </span>
             <p>Policy, training and CQC evidence for care services in England. Built by people who have sat through an inspection.</p>
             <address className="faddr">Suite Ra01, 195-197 Wood Street,<br />London, E17 3NU</address>
-            <Link className="fcontact" href="/demo">
+            <Link className="fcontact" href="/contact">
               Contact us
               <svg viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7h8M7.5 3.5 11 7l-3.5 3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </Link>

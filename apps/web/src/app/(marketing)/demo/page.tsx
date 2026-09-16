@@ -4,6 +4,7 @@ import { DemoForm } from '@/components/marketing/demo-form'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { DEMO_SLOTS } from '@/lib/page-slots/demo'
 import { DemoPageV2 } from '@/components/marketing/demo-page-v2'
+import { isV2 } from '@/lib/v2-rollout'
 
 export const metadata = {
   alternates: { canonical: 'https://www.carestreamai.com/demo' },
@@ -25,7 +26,7 @@ export default async function DemoPage(
 
   // Opt-in with ?v2=1 until it is signed off. No second slot set: the theme's copy and these
   // defaults are the same words, so both templates read the same slots.
-  if ((await searchParams)?.v2 === '1') return <DemoPageV2 s={s} />
+  if (await isV2('one-offs', searchParams)) return <DemoPageV2 s={s} />
 
   return (
     <>

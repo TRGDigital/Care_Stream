@@ -6,6 +6,7 @@ import { BuyForm } from '@/components/marketing/buy-form'
 import { BuyPageV2 } from '@/components/marketing/buy-page-v2'
 import { pageMetadata } from '@/lib/page-meta'
 import { fetchModules, relatedModules } from '@/lib/related-modules'
+import { isV2 } from '@/lib/v2-rollout'
 
 export const revalidate = 60
 
@@ -71,7 +72,7 @@ export default async function BuyPage(
   // Opt-in with ?v2=1 until it is signed off, the same as the other ported families. It renders
   // this same record, so the flag changes the design and nothing else.
   const sp = await searchParams
-  if (sp?.v2 === '1') {
+  if (await isV2('buy', sp)) {
     return (
       <BuyPageV2
         module={{ ...m, slug }}

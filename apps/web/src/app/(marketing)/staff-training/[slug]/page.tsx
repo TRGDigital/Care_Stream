@@ -29,6 +29,7 @@ import { WhyChooseCareStream } from '@/components/marketing/why-choose-carestrea
 import { TrainingVideo } from '@/components/marketing/training-video'
 import { estimatedMinutes, formatDuration } from '@/lib/training-commerce'
 import { careSetting } from '@/lib/care-setting'
+import { isV2 } from '@/lib/v2-rollout'
 
 export const revalidate = 60
 
@@ -156,7 +157,7 @@ export default async function TrainingModulePage(
   // Opt-in with ?v2=1 until it is signed off, the same as the other ported families. It renders
   // this same record and the same demo payload, so the flag changes the design and nothing else.
   const sp = await searchParams
-  if (sp?.v2 === '1') {
+  if (await isV2('modules', sp)) {
     return (
       <ModulePageV2
         module={{ ...m, slug }}

@@ -9,6 +9,7 @@ import { EditableContentBlock } from '@/components/marketing/editable-content-bl
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { BUSINESS_CONTINUITY_SLOTS } from '@/lib/page-slots/business-continuity'
 import { ServicePageIfPublished } from '@/components/marketing/service-page-loader'
+import { isV2 } from '@/lib/v2-rollout'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
@@ -97,7 +98,7 @@ export default async function BusinessContinuityPage(
   // The rebuilt theme is opt-in with ?v2=1 until it is signed off. It renders the
   // copy stored in service_pages; if nothing is published yet this falls through to
   // the page below, so a page can never go blank waiting for an import.
-  if ((await searchParams)?.v2 === '1') {
+  if (await isV2('services', searchParams)) {
     const v2 = await ServicePageIfPublished({ slug: 'business-continuity' })
     if (v2) return v2
   }

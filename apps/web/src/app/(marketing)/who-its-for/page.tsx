@@ -13,6 +13,7 @@ import { WHO_ITS_FOR_SLOTS } from '@/lib/page-slots/who-its-for'
 import { WHO_ITS_FOR_V2_SLOTS } from '@/lib/page-slots/who-its-for-v2'
 import { WhoItsForV2 } from '@/components/marketing/who-its-for-v2'
 import { TrainingDemo, type TrainingDemoData } from '@/components/marketing/training-demo'
+import { isV2 } from '@/lib/v2-rollout'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
@@ -427,7 +428,7 @@ export default async function WhoItsForPage(
   ])
 
   // Opt-in with ?v2=1 until it is signed off. Its own slot set, because the copy is new.
-  if ((await searchParams)?.v2 === '1') {
+  if (await isV2('one-offs', searchParams)) {
     const { groups, topics } = trainingCatalogue
     return (
       <WhoItsForV2

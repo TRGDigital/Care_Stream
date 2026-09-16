@@ -12,6 +12,7 @@ import { CARE_POLICIES_V2_SLOTS } from '@/lib/page-slots/care-policies-v2'
 import {
   CarePoliciesIndexV2, type PolicyProduct, type PolicyBundle,
 } from '@/components/marketing/care-policies-index-v2'
+import { isV2 } from '@/lib/v2-rollout'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -118,7 +119,7 @@ export default async function FeaturesPage(
   // Opt-in with ?v2=1 until it is signed off. Its own slot set: the existing one holds only
   // 64% of the theme's strings, so reusing it would render a page part approved copy and part
   // the previous wording.
-  if ((await searchParams)?.v2 === '1') {
+  if (await isV2('indexes', searchParams)) {
     const { products, bundles } = await getCatalogue()
     return (
       <CarePoliciesIndexV2 s={makeSlot(CARE_POLICIES_V2_SLOTS, slots)}

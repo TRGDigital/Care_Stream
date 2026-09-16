@@ -14,6 +14,7 @@ import {
   featureContentFromData,
   type FeaturePageContent,
 } from '@/components/marketing/feature-page'
+import { isV2 } from '@/lib/v2-rollout'
 
 export const revalidate = 60
 
@@ -118,7 +119,7 @@ export default async function DbFeaturePage(
   // One page the theme hand-built with its own design rather than the shared feature layout.
   // It reads the same feature_pages.content as every other feature page; only the markup
   // differs, so its copy stays where all the other feature copy is.
-  if (sp?.v2 === '1' && slug === 'web-chat-interface') {
+  if (await isV2('features', sp) && slug === 'web-chat-interface') {
     return (
       <WebChatPageV2 page={{
         title: fp.title,
@@ -128,7 +129,7 @@ export default async function DbFeaturePage(
     )
   }
 
-  if (sp?.v2 === '1' || caps.length > 0) {
+  if (await isV2('features', sp) || caps.length > 0) {
     const [children, relatedV2] = await Promise.all([
       Promise.all(caps.map(getFeaturePage)).then(r => r.filter(Boolean)),
       getRelatedFeatures(slug),

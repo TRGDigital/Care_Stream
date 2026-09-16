@@ -6,6 +6,7 @@ import { EditableContentBlock } from '@/components/marketing/editable-content-bl
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { PRICING_SLOTS } from '@/lib/page-slots/pricing'
 import { PricingPageV2 } from '@/components/marketing/pricing-page-v2'
+import { isV2 } from '@/lib/v2-rollout'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
@@ -186,7 +187,7 @@ export default async function PricingPage(
   // The rebuilt theme is opt-in with ?v2=1 until it is signed off. The plans and the
   // comparison table come from the generated pricing data, so the figures cannot drift from
   // the approved design by someone editing one of two copies.
-  if ((await searchParams)?.v2 === '1') {
+  if (await isV2('one-offs', searchParams)) {
     return <PricingPageV2 heading="Simple pricing, no surprises" lede={s('hero.subtitle')} />
   }
 

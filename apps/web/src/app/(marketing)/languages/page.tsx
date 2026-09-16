@@ -6,6 +6,7 @@ import { COURSE_LANGUAGES } from '@/lib/languages'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { LANGUAGES_V2_SLOTS } from '@/lib/page-slots/languages-v2'
 import { LanguagesV2 } from '@/components/marketing/languages-v2'
+import { isV2 } from '@/lib/v2-rollout'
 
 export const revalidate = 3600
 
@@ -22,7 +23,7 @@ export default async function LanguagesPage(
   { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
 ) {
   // Opt-in with ?v2=1 until it is signed off. Its own slot set, because the copy is new.
-  if ((await searchParams)?.v2 === '1') {
+  if (await isV2('one-offs', searchParams)) {
     const slots = await getContentSlots('/languages')
     return <LanguagesV2 s={makeSlot(LANGUAGES_V2_SLOTS, slots)} />
   }

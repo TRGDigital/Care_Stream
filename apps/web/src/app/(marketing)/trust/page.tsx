@@ -10,6 +10,7 @@ import { TRUST_V2_SLOTS } from '@/lib/page-slots/trust-v2'
 import { TrustPageV2 } from '@/components/marketing/trust-page-v2'
 import { JsonLd } from '@/components/json-ld'
 import { faqPageSchema } from '@/lib/schema'
+import { isV2 } from '@/lib/v2-rollout'
 
 // Overridable from the platform console (Blog → Pages / site_pages).
 export const generateMetadata = () => pageMetadata('/trust', {
@@ -23,7 +24,7 @@ export default async function TrustPage(
   const slots = await getContentSlots('/trust')
 
   // Opt-in with ?v2=1 until it is signed off. Its own slot set, because the copy is new.
-  if ((await searchParams)?.v2 === '1') {
+  if (await isV2('one-offs', searchParams)) {
     return <TrustPageV2 s={makeSlot(TRUST_V2_SLOTS, slots)} />
   }
 

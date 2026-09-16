@@ -16,6 +16,7 @@ import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { STAFF_TRAINING_SLOTS } from '@/lib/page-slots/staff-training'
 import { STAFF_TRAINING_V2_SLOTS } from '@/lib/page-slots/staff-training-v2'
 import { StaffTrainingIndexV2 } from '@/components/marketing/staff-training-index-v2'
+import { isV2 } from '@/lib/v2-rollout'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
@@ -150,7 +151,7 @@ export default async function StaffTrainingPage(
 
   // Opt-in with ?v2=1 until it is signed off. Its own slot set: the existing one holds only
   // 19% of the theme's strings. The library and the lesson demo are the same data either way.
-  if ((await searchParams)?.v2 === '1') {
+  if (await isV2('indexes', searchParams)) {
     return (
       <StaffTrainingIndexV2 s={makeSlot(STAFF_TRAINING_V2_SLOTS, slots)}
                             catalogue={catalogue} demo={heroDemo} />

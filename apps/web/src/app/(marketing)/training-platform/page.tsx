@@ -13,6 +13,7 @@ import { pageMetadata } from '@/lib/page-meta'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { TRAINING_PLATFORM_V2_SLOTS } from '@/lib/page-slots/training-platform-v2'
 import { TrainingPlatformV2 } from '@/components/marketing/training-platform-v2'
+import { isV2 } from '@/lib/v2-rollout'
 
 export const revalidate = 60
 
@@ -68,7 +69,7 @@ export default async function TrainingPlatformPage(
   { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
 ) {
   // Opt-in with ?v2=1 until it is signed off. Its own slot set, because the copy is new.
-  if ((await searchParams)?.v2 === '1') {
+  if (await isV2('one-offs', searchParams)) {
     const slots = await getContentSlots('/training-platform')
     return <TrainingPlatformV2 s={makeSlot(TRAINING_PLATFORM_V2_SLOTS, slots)} />
   }

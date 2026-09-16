@@ -4,6 +4,7 @@ import { FeatureShowcasePage, type FeatureContent } from '@/components/marketing
 import { pageMetadata } from '@/lib/page-meta'
 import { WebChatPageV2 } from '@/components/marketing/web-chat-page-v2'
 import type { FeatureV2Content } from '@/components/marketing/feature-page-v2'
+import { isV2 } from '@/lib/v2-rollout'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -140,7 +141,7 @@ export default async function WebChatInterfacePage(
 ) {
   // Opt-in with ?v2=1 until it is signed off. The rebuilt page reads the feature_pages record,
   // the same one every other feature page reads, rather than the CONTENT literal below.
-  if ((await searchParams)?.v2 === '1') {
+  if (await isV2('features', searchParams)) {
     const fp = await getRecord()
     if (fp) {
       return (

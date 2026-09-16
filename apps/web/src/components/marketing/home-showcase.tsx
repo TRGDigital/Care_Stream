@@ -21,9 +21,21 @@ export interface Slide {
   href: string
   image: string
   colour: string
+  /** The theme's icon for this area, drawn in the coloured tile. */
+  icon: React.ReactNode
 }
 
-export function HomeShowcase({ slides }: { slides: Slide[] }) {
+const ReadMoreArrow = () => (
+  <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
+    <path d="M3 7h8M7.5 3.5 11 7l-3.5 3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
+
+export function HomeShowcase({ slides, hint, head }: {
+  slides: Slide[]; hint: string
+  /** The eyebrow and heading. The theme puts them in the same .wrap as the tabs. */
+  head?: React.ReactNode
+}) {
   const track = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(0)
 
@@ -68,7 +80,8 @@ export function HomeShowcase({ slides }: { slides: Slide[] }) {
   return (
     <>
       <div className="wrap">
-        <div className="tabs" role="tablist">
+        {head}
+        <div className="tabs" role="tablist" aria-label="Product areas">
           {slides.map((s, i) => (
             <button type="button" className="tab" role="tab" key={s.title}
                     aria-selected={i === active} onClick={() => go(i)}>
@@ -86,9 +99,9 @@ export function HomeShowcase({ slides }: { slides: Slide[] }) {
           {slides.map((s, i) => (
             <div className={`slide${i === active ? ' active' : ''}`} key={s.title}>
               <div className="slide-head">
-                <span className="slide-ico" style={{ background: s.colour }} />
+                <span className="slide-ico" style={{ background: s.colour }}>{s.icon}</span>
                 <div><h3>{s.title}</h3><p>{s.body}</p></div>
-                <Link className="readmore" href={s.href}>Read more</Link>
+                <Link className="readmore" href={s.href}>Read more <ReadMoreArrow /></Link>
               </div>
               <div className="shot"><SiteImage src={s.image} alt={s.title} /></div>
             </div>
@@ -98,12 +111,20 @@ export function HomeShowcase({ slides }: { slides: Slide[] }) {
         </div>
       </div>
 
-      <div className="wrap navrow">
-        {/* One slide at a time, from wherever the track has actually settled. */}
-        <button type="button" className="nav" onClick={() => go(active - 1)}
-                aria-label="Previous">‹</button>
-        <button type="button" className="nav" onClick={() => go(active + 1)}
-                aria-label="Next">›</button>
+      <div className="wrap">
+        {/* The theme's scroll hint and arrows. One slide at a time, from wherever the track
+            has actually settled. */}
+        <div className="scrollhint">
+          <span>{hint}</span>
+          <span className="arrows">
+            <button type="button" className="arrow" onClick={() => go(active - 1)} aria-label="Previous">
+              <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M7.5 1.5 3 6l4.5 4.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
+            <button type="button" className="arrow" onClick={() => go(active + 1)} aria-label="Next">
+              <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M4.5 1.5 9 6l-4.5 4.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
+          </span>
+        </div>
       </div>
     </>
   )

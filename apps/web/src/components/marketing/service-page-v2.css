@@ -1,5 +1,5 @@
 /* Ported from the content theme by carestream-theme-preview/port_css.py.
- * Source: our-services/care-audits.html, our-services/cqc-compliance.html, our-services/business-continuity.html, our-services/policy-gap-detection.html, our-services/cqc-staff-questions.html, our-services/hr-policies.html, our-services/cqc-report-chat.html, how-it-works.html
+ * Source: our-services/care-audits.html, our-services/cqc-compliance.html, our-services/business-continuity.html, our-services/policy-gap-detection.html, our-services/cqc-staff-questions.html, our-services/hr-policies.html, our-services/cqc-report-chat.html, how-it-works.html, care-policies.html
  *
  * Kept as CSS rather than rewritten as Tailwind because these rules are the design.
  * Scoped under .svpage-v2, with the theme tokens on that wrapper rather than
@@ -315,6 +315,45 @@
 .svpage-v2 .svsplit .svstep b{margin:0}
 .svpage-v2 .svsplit .svstep p{margin:0}
 .svpage-v2 .svsplit .svstep .det{margin-top:4px}
+.svpage-v2 .svhero-in{grid-template-columns:minmax(340px,1fr) minmax(0,949px)!important;gap:36px!important;align-items:center}
+.svpage-v2 .svhero .svshotwrap{width:100%;max-width:949px}
+.svpage-v2 .svsplit:has(img[src*='/care-policies/2.webp']), .svpage-v2 .svsplit:has(img[src*='/care-policies/3.webp']){grid-template-columns:1fr!important;gap:28px}
+.svpage-v2 .svsplit:has(img[src*='/care-policies/2.webp']) .svshotwrap, .svpage-v2 .svsplit:has(img[src*='/care-policies/3.webp']) .svshotwrap{max-width:none!important;width:100%}
+.svpage-v2 .pcpers{padding-block:64px;border-top:1px solid var(--line)}
+.svpage-v2 .pcpers-in{max-width:1180px;margin:0 auto;padding-inline:32px}
+.svpage-v2 .pcpers p.eb{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+.svpage-v2 .pcpers h2{font-size:clamp(1.45rem,.8vw + 1.2rem,2rem);line-height:1.15;letter-spacing:-.03em;margin:0 0 14px;max-width:22em}
+.svpage-v2 .pcpers .lede3{font-size:1rem;line-height:1.7;color:var(--ink-2);margin:0 0 34px;max-width:52em}
+.svpage-v2 .pcpsteps{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px;margin-bottom:34px}
+.svpage-v2 .pcpstep{background:var(--ground);border:1px solid var(--line);border-radius:14px;padding:22px 24px}
+.svpage-v2 .pcpstep .n{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:9px;background:var(--accent-soft);color:var(--accent);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.72rem;font-weight:800;margin-bottom:12px}
+.svpage-v2 .pcpstep b{display:block;font-size:.98rem;letter-spacing:-.018em;margin-bottom:7px}
+.svpage-v2 .pcpstep p{margin:0;font-size:.9rem;line-height:1.65;color:var(--muted)}
+.svpage-v2 .pccompare{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.svpage-v2 .pccmp{border-radius:14px;padding:20px 22px;border:1px solid var(--line);background:var(--ground)}
+.svpage-v2 .pccmp.bad{border-color:#F0D2D2;background:#FDF6F6}
+.svpage-v2 .pccmp.good{border-color:#C9E5D8;background:#F5FBF8}
+.svpage-v2 .pccmp span{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:9px}
+.svpage-v2 .pccmp.bad span{color:#A33A3A}
+.svpage-v2 .pccmp.good span{color:#1F7A55}
+.svpage-v2 .pccmp q{display:block;font-size:.95rem;line-height:1.6;color:var(--ink);font-style:italic;quotes:none;margin-bottom:9px}
+.svpage-v2 .pccmp em{font-style:normal;font-size:.85rem;line-height:1.6;color:var(--muted)}
+.svpage-v2 .pccat{padding-block:64px;border-top:1px solid var(--line);background:var(--ground-2)}
+.svpage-v2 .pccat-in{max-width:1180px;margin:0 auto;padding-inline:32px}
+.svpage-v2 .pccat p.eb{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+.svpage-v2 .pccat h2{font-size:clamp(1.45rem,.8vw + 1.2rem,2rem);line-height:1.15;letter-spacing:-.03em;margin:0 0 14px;max-width:20em}
+.svpage-v2 .pccat .lede3{font-size:1rem;line-height:1.7;color:var(--ink-2);margin:0 0 30px;max-width:48em}
+.svpage-v2 .pcpacks{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-bottom:38px}
+.svpage-v2 .pcpack{background:var(--ground);border:1px solid var(--line);border-radius:14px;padding:20px 22px;transition:border-color .15s,transform .15s}
+.svpage-v2 .pcpack:hover{border-color:var(--accent);transform:translateY(-2px)}
+.svpage-v2 .pcpack b{display:block;font-size:.97rem;letter-spacing:-.018em;margin-bottom:6px}
+.svpage-v2 .pcpack em{font-style:normal;font-size:1.25rem;font-weight:800;letter-spacing:-.028em;color:var(--accent)}
+.svpage-v2 .pcpack span{display:block;font-size:.84rem;line-height:1.55;color:var(--muted);margin-top:6px}
+.svpage-v2 .pcgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(272px,1fr));gap:2px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.svpage-v2 .pcrow{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--ground);padding:15px 18px;text-decoration:none;color:inherit}
+.svpage-v2 .pcrow:hover{background:var(--accent-soft)}
+.svpage-v2 .pcrow b{font-size:.9rem;font-weight:600;letter-spacing:-.014em}
+.svpage-v2 .pcrow i{font-style:normal;font-size:.88rem;font-weight:800;color:var(--accent);white-space:nowrap}
 
 @media(max-width:1000px){
   .svpage-v2 .svhero-in{grid-template-columns:minmax(0,1fr)!important}
@@ -395,6 +434,12 @@
 @media (max-width:900px){
   .svpage-v2 .svsplit .svstep{grid-template-columns:minmax(0,1fr)}
   .svpage-v2 .svsplit .svstep .n{grid-row:auto;margin-bottom:10px}
+}
+@media(max-width:640px){
+  .svpage-v2 .pcpers-in{padding-inline:22px}
+}
+@media(max-width:640px){
+  .svpage-v2 .pccat-in{padding-inline:22px}
 }
 
 .svpage-v2 .shot,.svpage-v2 .sshot,.svpage-v2 .sscen-shot,.svpage-v2 .uc-shot,.svpage-v2 .wcshot,.svpage-v2 .svshot,.svpage-v2 .wwshot,.svpage-v2 .wfshot,.svpage-v2 .wfheroshot,.svpage-v2 .tpshot,.svpage-v2 .rgshot,.svpage-v2 .dmshot,.svpage-v2 .plate:not(.shotplate),.svpage-v2 .smock,.svpage-v2 .ucread-art,.svpage-v2 .pcrel-art{display:block!important;overflow:hidden;padding:0!important;aspect-ratio:auto!important;height:auto!important;min-height:0!important;max-height:none!important}

@@ -4,6 +4,7 @@ import { Fragment, useRef, useState } from 'react'
 import Link from 'next/link'
 import { CheckCircle2, XCircle, Sparkles, ArrowRight, ArrowLeft, RotateCcw, Send, Info, Globe } from 'lucide-react'
 import { SiteImage } from '@/components/site-image'
+import { careSetting } from '@/lib/care-setting'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -333,8 +334,11 @@ export function TrainingDemo({
 
         <div className="demo-body">
           <div hidden={step !== 'lesson'}>
-            <h3>{L.heading}</h3>
-            <p>{L.body}</p>
+            {/* Care-setting wording, as the rest of the rebuilt page uses: the lesson is written
+                for a care home ("Understanding Falls Risk in Our Home"). English only; the
+                translations are left as saved. */}
+            <h3>{lang === 'eng' ? careSetting(L.heading) : L.heading}</h3>
+            <p>{lang === 'eng' ? careSetting(L.body) : L.body}</p>
             <button type="button" className="tbtn solid" style={{ fontSize: '.85rem', padding: '10px 18px' }}
                     onClick={() => { setStep('question'); track('demo_continue') }}>
               Continue to the question

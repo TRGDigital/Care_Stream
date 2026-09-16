@@ -20,6 +20,9 @@ export async function seedOnboardingEmails(): Promise<{ inserted: number; total:
       await (prisma as any).onboardingEmail.create({
         data: {
           plan, day_index, subject: e.subject, preheader: e.preheader, from_email: null,
+          // A draft seeds inactive: previewable and test-sendable in the editor,
+          // skipped by the dispatcher until someone publishes it.
+          is_active: !e.draft,
           template_key: keyOf(e.subject), sort_order: day_index * 100,
           body: {
             headline:  e.headline,

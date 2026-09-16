@@ -77,7 +77,9 @@ function EmailCard({ token, email, onSaved, onMoveUp, onMoveDown, canUp, canDown
   const [testTo, setTestTo]       = useState('')
   const [testing, setTesting]     = useState(false)
   const [testMsg, setTestMsg]     = useState('')
-  const dirty = subject !== email.subject || preheader !== email.preheader
+  const [image, setImage]         = useState(email.image ?? '')
+  const [publishing, setPublishing] = useState(false)
+  const dirty = subject !== email.subject || preheader !== email.preheader || image !== (email.image ?? '')
 
   async function sendTest() {
     if (!testTo.trim()) return
@@ -89,8 +91,16 @@ function EmailCard({ token, email, onSaved, onMoveUp, onMoveDown, canUp, canDown
 
   async function save() {
     setSaving(true)
-    try { await createPlatformClient(token).onboarding.update(email.id, { subject, preheader }); setSaved(true); setTimeout(() => setSaved(false), 2000); onSaved() }
+    try { await createPlatformClient(token).onboarding.update(email.id, { subject, preheader, image }); setSaved(true); setTimeout(() => setSaved(false), 2000); onSaved() }
     finally { setSaving(false) }
+  }
+
+  // Drafts never reach a tenant. Publishing is the last step, after the copy has
+  // been read and the screenshot added.
+  async function setLive(next: boolean) {
+    setPublishing(true)
+    try { await createPlatformClient(token).onboarding.update(email.id, { is_active: next }); onSaved() }
+    finally { setPublishing(false) }
   }
 
   const s = email.stats
@@ -100,6 +110,7 @@ function EmailCard({ token, email, onSaved, onMoveUp, onMoveDown, canUp, canDown
       <div className="flex items-center gap-2 px-5 py-3">
         <button onClick={() => setOpen(o => !o)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
           <span className="rounded-full bg-teal/10 px-2 py-0.5 text-xs font-bold text-teal">Day {email.day_index}</span>
+          {!email.is_active && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">Draft</span>}
           {email.badge && <span className="hidden rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 sm:inline">{email.badge}</span>}
           <span className="min-w-0 flex-1 truncate text-sm font-medium text-neutral-dark">{email.subject}</span>
           <span className="hidden whitespace-nowrap text-xs text-neutral-mid md:inline">{s.sent} sent · {s.opened} opened</span>
@@ -133,10 +144,18 @@ function EmailCard({ token, email, onSaved, onMoveUp, onMoveDown, canUp, canDown
           </label>
           <p className="text-xs text-neutral-mid">From: <span className="font-medium text-neutral-dark">{email.from_email ?? 'hello@carestreamai.com'}</span></p>
         </div>
-        {email.image && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={email.image} alt="" className="hidden h-24 w-40 shrink-0 rounded-lg border border-gray-200 object-cover object-top sm:block" />
-        )}
+        <div className="shrink-0 sm:w-40">
+          {image
+            // eslint-disable-next-line @next/next/no-img-element
+            ? <img src={image} alt="" className="mb-1 hidden h-24 w-40 rounded-lg border border-gray-200 object-cover object-top sm:block" />
+            : <div className="mb-1 hidden h-24 w-40 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-neutral-light/40 text-[11px] text-neutral-mid sm:flex">No image yet</div>}
+          <input
+            value={image}
+            onChange={e => setImage(e.target.value)}
+            placeholder="/emails/feature.png"
+            className="w-full rounded-lg border border-gray-300 px-2 py-1 text-[11px] focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20"
+          />
+        </div>
       </div>
 
       <div className="mt-4 grid grid-cols-4 gap-2">
@@ -170,6 +189,18 @@ function EmailCard({ token, email, onSaved, onMoveUp, onMoveDown, canUp, canDown
         {dirty && <button onClick={() => { setSubject(email.subject); setPreheader(email.preheader) }} className="text-xs font-medium text-neutral-mid hover:text-neutral-dark">Cancel</button>}
         {saved && <span className="text-xs font-medium text-green-600">Saved ✓</span>}
         {!dirty && !saved && <span className="text-xs text-neutral-mid">No unsaved changes</span>}
+        <span className="ml-auto flex items-center gap-2">
+          {!email.is_active
+            ? <>
+                <span className="text-xs text-neutral-mid">Draft. Not sent to anyone yet.</span>
+                <button onClick={() => setLive(true)} disabled={publishing} className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50">
+                  {publishing ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Publish
+                </button>
+              </>
+            : <button onClick={() => setLive(false)} disabled={publishing} className="text-xs font-medium text-neutral-mid hover:text-red-600">
+                {publishing ? 'Working…' : 'Unpublish'}
+              </button>}
+        </span>
       </div>
       </div>
       )}
@@ -226,6 +257,8 @@ export default function EmailMarketingPage() {
   const [plan, setPlan]       = useState('enterprise')
   const [emails, setEmails]   = useState<EmailRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState('')
 
   function load() {
     if (!token) return
@@ -245,6 +278,19 @@ export default function EmailMarketingPage() {
     setEmails(next) // optimistic swap; day numbers refresh after the reload
     try { await createPlatformClient(token).onboarding.reorder(plan, next.map(e => e.id)) }
     finally { load() }
+  }
+
+  // Pull in any email that exists in code but not yet in the database. New ones
+  // arrive as drafts, so this is safe to press at any time.
+  async function sync() {
+    if (!token) return
+    setSyncing(true); setSyncMsg('')
+    try {
+      const r = await createPlatformClient(token).onboarding.sync()
+      setSyncMsg(r.inserted ? `${r.inserted} new email${r.inserted === 1 ? '' : 's'} added as drafts` : 'Everything is already in place')
+      load()
+    } catch (e: any) { setSyncMsg(e?.message ?? 'Could not sync') }
+    finally { setSyncing(false) }
   }
 
   if (!token) return null
@@ -271,6 +317,13 @@ export default function EmailMarketingPage() {
           description="Sent to tenant admins the moment a staff member passes a training module: name, module, score, CPD hours and learning gain, with a link to the record where the certificate is ready to download. The test uses sample data."
           endpoint="/admin/training-completion-email/test"
         />
+
+        <div className="flex flex-wrap items-center gap-2">
+          <button onClick={sync} disabled={syncing} className="inline-flex items-center gap-1.5 rounded-lg border border-teal/40 px-3 py-2 text-xs font-semibold text-teal hover:bg-teal-light/40 disabled:opacity-50">
+            {syncing ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Sync new emails
+          </button>
+          {syncMsg && <span className="text-xs font-medium text-neutral-dark">{syncMsg}</span>}
+        </div>
 
         <div className="flex gap-2">
           {PLANS.map(p => (

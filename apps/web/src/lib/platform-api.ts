@@ -691,10 +691,12 @@ export function createPlatformClient(token: string) {
       emails: (plan: string) => adminFetch<{ plan: string; emails: Array<{
         id: string; plan: string; day_index: number; subject: string; preheader: string
         from_email: string | null; badge: string | null; headline: string | null; image: string | null
+        is_active: boolean
         stats: { sent: number; delivered: number; opened: number; clicked: number; bounced: number; delivered_pct: number | null; open_pct: number | null; click_pct: number | null; first_sent_at: string | null }
       }> }>(`/onboarding/emails?plan=${encodeURIComponent(plan)}`, token),
-      update: (id: string, data: { subject?: string; preheader?: string; from_email?: string }) =>
+      update: (id: string, data: { subject?: string; preheader?: string; from_email?: string; is_active?: boolean; image?: string }) =>
         adminFetch<{ id: string }>(`/onboarding/emails/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
+      sync: () => adminFetch<{ inserted: number; total: number }>(`/onboarding/emails/sync`, token, { method: 'POST' }),
       reorder: (plan: string, ids: string[]) =>
         adminFetch<{ reordered: number }>(`/onboarding/emails/reorder`, token, { method: 'POST', body: JSON.stringify({ plan, ids }) }),
       preview: (id: string) => adminFetch<{ html: string; subject: string }>(`/onboarding/emails/${id}/preview`, token),

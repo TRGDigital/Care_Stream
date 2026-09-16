@@ -3797,7 +3797,7 @@ adminRouter.get('/onboarding/emails', async (req: Request, res: Response) => {
   const out = owned.map(e => ({
     id: e.id, plan: e.plan, day_index: e.day_index, subject: e.subject, preheader: e.preheader,
     from_email: e.from_email, badge: (e.body as any)?.badge ?? null, headline: (e.body as any)?.headline ?? null,
-    image: (e.body as any)?.imageSrc ?? null,
+    image: (e.body as any)?.imageSrc ?? null, is_active: e.is_active,
     stats: aggregateSends(byEmail.get(e.id) ?? []),
   }))
   ok(res, { plan, emails: out })
@@ -3862,14 +3862,34 @@ adminRouter.patch('/onboarding/emails/:id', async (req: Request, res: Response) 
   if (typeof req.body?.subject === 'string')   data.subject = req.body.subject.trim()
   if (typeof req.body?.preheader === 'string') data.preheader = req.body.preheader.trim()
   if (typeof req.body?.from_email === 'string') data.from_email = req.body.from_email.trim() || null
-  if (!Object.keys(data).length) { err(res, 'NO_FIELDS', 'Nothing to update.', 400); return }
+  // Publishing a draft, and attaching the screenshot that goes with it.
+  if (typeof req.body?.is_active === 'boolean') data.is_active = req.body.is_active
+  const imageGiven = typeof req.body?.image === 'string'
+  if (!Object.keys(data).length && !imageGiven) { err(res, 'NO_FIELDS', 'Nothing to update.', 400); return }
   const email = await (prisma as any).onboardingEmail.findUnique({ where: { id: req.params.id }, select: { template_key: true } })
-  if (email?.template_key) {
-    await (prisma as any).onboardingEmail.updateMany({ where: { template_key: email.template_key }, data })
-  } else {
-    await (prisma as any).onboardingEmail.update({ where: { id: req.params.id }, data })
+  const targets = email?.template_key
+    ? await (prisma as any).onboardingEmail.findMany({ where: { template_key: email.template_key }, select: { id: true, body: true } })
+    : await (prisma as any).onboardingEmail.findMany({ where: { id: req.params.id }, select: { id: true, body: true } })
+  for (const t of targets as any[]) {
+    // body is JSON, so the screenshot is merged into the existing object rather
+    // than replacing it and losing the headline, steps and CTA with it.
+    const rowData = imageGiven
+      ? { ...data, body: { ...(t.body as any), imageSrc: (req.body.image as string).trim() || null } }
+      : data
+    if (!Object.keys(rowData).length) continue
+    await (prisma as any).onboardingEmail.update({ where: { id: t.id }, data: rowData })
   }
   ok(res, { id: req.params.id })
+})
+
+// POST /admin/onboarding/emails/sync — seed any email defined in code but not yet
+// in the database. Idempotent, and it never touches a row that already exists, so
+// platform edits are preserved. The daily cron does this too; this is the button
+// for when you have just added emails and want them now.
+adminRouter.post('/onboarding/emails/sync', async (_req: Request, res: Response) => {
+  const { seedOnboardingEmails } = await import('../services/onboarding/seed')
+  const result = await seedOnboardingEmails()
+  ok(res, result)
 })
 
 // POST /admin/onboarding/emails/reorder — set the order for a plan's OWN emails.

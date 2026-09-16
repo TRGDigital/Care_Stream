@@ -65,7 +65,12 @@ async function sequenceLength(plan: string): Promise<number> {
 }
 
 async function template(plan: string, day_index: number): Promise<any | null> {
-  return (prisma as any).onboardingEmail.findUnique({ where: { plan_day_index: { plan, day_index } } })
+  // is_active is the draft flag: an unpublished email is previewable and test
+  // sendable in the editor but must never reach a tenant. Checked here rather
+  // than only in sequenceLength, because publishing an email further down the
+  // list raises the sequence length past any draft still sitting above it.
+  const row = await (prisma as any).onboardingEmail.findUnique({ where: { plan_day_index: { plan, day_index } } })
+  return row?.is_active ? row : null
 }
 
 async function activeAdmins(tenantId: string): Promise<Array<{ id: string; email: string }>> {

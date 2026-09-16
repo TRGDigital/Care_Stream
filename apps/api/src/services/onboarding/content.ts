@@ -2,6 +2,8 @@
 // One feature per email, benefit-led, working-day cadence. House style: no dashes.
 // Sending automation is a later phase; this data drives the preview gallery.
 
+import { draftsFor } from './drafts'
+
 export type PlanKey = 'starter' | 'professional' | 'enterprise'
 
 export interface EmailStep { title: string; body: string }
@@ -18,6 +20,7 @@ export interface OnboardingEmail {
   badge?:     string        // e.g. "Professional feature"
   where?:     string        // "where to click" guidance shown with the screenshot
   imageSrc?:  string        // real platform screenshot (added once captured)
+  draft?:     boolean       // seeds is_active = false: visible in the editor, never dispatched
 }
 
 export interface Sequence {
@@ -501,6 +504,8 @@ const withWhere = (e: OnboardingEmail): OnboardingEmail => ({
 // ── Compose sequences ──────────────────────────────────────────────────────────
 function build(plan: PlanKey): OnboardingEmail[] {
   const core = coreEmails(plan)
+  // Drafts are appended after the live sequence. They seed inactive, so they do
+  // not extend the drip until each one is published.
   let list: OnboardingEmail[]
   if (plan === 'starter') list = [...core, STARTER_FINALE]
   else if (plan === 'professional') list = [...core, CQC_REPORT_CHAT, ADVANCED_ANALYTICS, CQC_EVIDENCE, POLICY_GAPS, faceToFace('pro')]
@@ -508,7 +513,7 @@ function build(plan: PlanKey): OnboardingEmail[] {
     ...core, CQC_REPORT_CHAT, ADVANCED_ANALYTICS, CQC_EVIDENCE, POLICY_GAPS, faceToFace('enterprise'),
     BUILD_AUDITS, EFFECTIVENESS, TRAINING_IMPACT, ENTERPRISE_FINALE,
   ]
-  return list.map(withWhere)
+  return [...list, ...draftsFor(plan)].map(withWhere)
 }
 
 export const SEQUENCES: Record<PlanKey, Sequence> = {

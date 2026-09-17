@@ -2425,6 +2425,8 @@ model AuditRun {
   auditor_signed_at     DateTime?
   manager_signature_key String?                              // drawn signature when the manager approved
   manager_signed_at     DateTime?
+  report_pdf_key        String?                              // PDF report saved when completed or signed off
+  report_generated_at   DateTime?
   created_at         DateTime      @default(now())
   updated_at         DateTime      @updatedAt
   tenant             Tenant        @relation(fields: [tenant_id], references: [id])

@@ -7,7 +7,7 @@ import { createApiClient } from '@/lib/api-client'
 import { AuthedImage } from '@/components/authed-image'
 import { AuditRecs } from '@/components/audit-recs'
 import { AuditActionPlan } from '@/components/admin/audit-action-plan'
-import { ChevronLeft, ChevronRight, ChevronDown, CheckCircle2, Circle, Printer, Sparkles, Loader2, AlertTriangle, Pause, Camera, CornerDownRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronDown, CheckCircle2, Circle, Printer, Sparkles, Loader2, AlertTriangle, Pause, Camera, CornerDownRight, FileDown } from 'lucide-react'
 import { QuestionInput, EMPTY_ANSWER, answerFromRow, type AuditAnswer } from '@/components/audits/question-input'
 import { isAnswered, isNarrative, isScored, isYesNo, outcomeFor, visibleQuestionIds } from '@/lib/audit-questions'
 import { SignaturePad } from '@/components/audits/signature-pad'
@@ -155,6 +155,7 @@ export default function AuditRunPage() {
   const [signature, setSignature] = useState<string | null>(null)
   const [signedName, setSignedName] = useState('')
   const [signatureUrls, setSignatureUrls] = useState<{ auditor?: string; manager?: string }>({})
+  const [downloading, setDownloading] = useState(false)
   const [summary,   setSummary]     = useState({ strengths: '', improvements: '', actions_deadline: '' })
   const [loading,   setLoading]     = useState(true)
   const [section,   setSection]     = useState(0)
@@ -230,6 +231,21 @@ export default function AuditRunPage() {
       scheduleAutoSave(qId, updated)
       return next
     })
+  }
+
+  // The server-built PDF report (the same one emailed to admins when the audit was completed).
+  async function downloadPdf() {
+    if (!api) return
+    setDownloading(true)
+    try {
+      const blob = await api.audits.reportPdfBlob(id)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${(report?.audit_name ?? 'audit').replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-report.pdf`
+      document.body.appendChild(a); a.click(); a.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 30_000)
+    } catch { /* ignore */ } finally { setDownloading(false) }
   }
 
   function loadSignatures(rpt: any) {
@@ -338,6 +354,12 @@ export default function AuditRunPage() {
                 className="flex items-center gap-2 rounded-btn border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:border-teal hover:text-teal"
               >
                 <Pause size={14} /> Save &amp; exit
+              </button>
+            )}
+            {isCompleted && (
+              <button onClick={downloadPdf} disabled={downloading}
+                className="flex items-center gap-2 rounded-btn bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">
+                {downloading ? <Loader2 size={14} className="animate-spin" /> : <FileDown size={14} />} Download PDF
               </button>
             )}
             {isCompleted && (

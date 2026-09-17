@@ -560,6 +560,11 @@ export default function SettingsPage() {
   // Scheduled audits: when an overdue audit is escalated to managers, and how often admins get a summary.
   const auditEscalateDays = orgDetails.audit_escalate_after_days ?? '2'
   const auditSummary = orgDetails.audit_summary ?? 'weekly'
+  const auditReportEmail = orgDetails.audit_report_email !== 'off'
+  function toggleAuditReportEmail() {
+    const next = { ...orgDetails, audit_report_email: auditReportEmail ? 'off' : 'on' }
+    setOrgDetails(next); saveOrgDetails(next)
+  }
   function setAuditSchedulingSetting(key: 'audit_escalate_after_days' | 'audit_summary', value: string) {
     const next = { ...orgDetails, [key]: value }
     setOrgDetails(next); saveOrgDetails(next)
@@ -1462,6 +1467,19 @@ export default function SettingsPage() {
                 onClick={toggleReadiness}
                 className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors ${showReadiness ? 'bg-teal' : 'bg-gray-300'}`}>
                 <span className={`absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow transition-transform ${showReadiness ? 'translate-x-5' : 'translate-x-0'}`} />
+              </button>
+            </div>
+            <div className="mt-4 flex items-start justify-between gap-4 rounded-lg border border-gray-200 bg-neutral-light/30 px-4 py-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-neutral-dark">Email the PDF report to admins</p>
+                <p className="mt-0.5 text-sm text-neutral-mid">
+                  When an audit is completed (or signed off, if manager approval is on), a PDF report is saved with the audit and emailed to your admins. Turn this off to save it without emailing.
+                </p>
+              </div>
+              <button type="button" role="switch" aria-checked={auditReportEmail} aria-label="Email the PDF report to admins"
+                onClick={toggleAuditReportEmail}
+                className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors ${auditReportEmail ? 'bg-teal' : 'bg-gray-300'}`}>
+                <span className={`absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow transition-transform ${auditReportEmail ? 'translate-x-5' : 'translate-x-0'}`} />
               </button>
             </div>
             <div className="mt-4 rounded-lg border border-gray-200 bg-neutral-light/30 px-4 py-3">

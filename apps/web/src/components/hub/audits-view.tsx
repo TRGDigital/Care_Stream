@@ -519,7 +519,8 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
           <div className="mt-6 rounded-xl border border-green-200 bg-green-50/50 p-4 text-sm text-neutral-dark">
             <p className="mb-1 flex items-center gap-1.5 font-semibold text-green-700"><CheckCircle2 size={15} /> Completed</p>
             {run.ai_recommendations && <div className="mt-2"><p className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-mid">AI recommendations</p><AuditRecs text={run.ai_recommendations} /></div>}
-            <p className="mt-2 text-xs text-neutral-mid">Open the admin Audit section to print or export this audit.</p>
+            <button onClick={() => api.audits.reportPdfBlob(runId).then(b => { const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = 'audit-report.pdf'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 30_000) }).catch(() => {})}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal">Download PDF report</button>
           </div>
         )}
       </div>

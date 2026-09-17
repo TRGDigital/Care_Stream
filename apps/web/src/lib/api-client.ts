@@ -1113,6 +1113,11 @@ export function createApiClient(token: string) {
       },
       deleteEvidence: (evidenceId: string) => apiFetch<{ deleted: boolean }>(`/audits/evidence/${evidenceId}`, token, { method: 'DELETE' }),
       // Signatures: the auditor signs before completing; the manager signs when approving.
+      reportPdfBlob: async (runId: string, stored = false): Promise<Blob> => {
+        const res = await fetch(`${API_URL}/audits/runs/${runId}/report.pdf${stored ? '?stored=1' : ''}`, { headers: { Authorization: `Bearer ${token}` } })
+        if (!res.ok) throw new Error('Could not build the PDF report')
+        return res.blob()
+      },
       signRun: (runId: string, image: string, name: string) => apiFetch<{ signed: boolean; signed_at: string }>(`/audits/runs/${runId}/signature`, token, { method: 'POST', body: JSON.stringify({ image, name }) }),
       signatureBlob: async (runId: string, role: 'auditor' | 'manager'): Promise<Blob> => {
         const res = await fetch(`${API_URL}/audits/runs/${runId}/signature/${role}`, { headers: { Authorization: `Bearer ${token}` } })

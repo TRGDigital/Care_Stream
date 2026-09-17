@@ -73,6 +73,7 @@ const NAV_GROUPS: Array<{ title: string | null; items: Array<{ href: string; lab
     items: [
       { href: '/platform/blog',            label: 'Blog',             Icon: Newspaper       },
       { href: '/platform/email-marketing', label: 'Email Marketing',  Icon: Mail            },
+      { href: '/platform/ai-chat',         label: 'AI Chat',          Icon: MessageSquareText },
       { href: '/platform/prompts',         label: 'AI Prompts',       Icon: FileText        },
       { href: '/platform/feature-requests', label: 'Feature Requests', Icon: Lightbulb      },
       { href: '/platform/service-requests', label: 'Service Requests', Icon: LifeBuoy        },

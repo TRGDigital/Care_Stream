@@ -374,3 +374,52 @@ export async function queryKnowledgeVectors(
     metadata: m.metadata as KnowledgeVectorMetadata,
   }))
 }
+
+// ─── Public website vectors (website AI chat) ──────────────────────────────────
+// The marketing site's own pages, for the chat on www.carestreamai.com. Its own namespace, and the
+// chat queries ONLY this namespace: a visitor's question must never be matched against a tenant's
+// policies, handbook or knowledge base. No tenant data is ever written here.
+// Vector ID: site_<pathKey>_<n>, so a page's vectors can be replaced as a set.
+
+export const PUBLIC_SITE_NAMESPACE = 'public_site'
+
+export interface PublicSiteVectorMetadata extends Record<string, unknown> {
+  path:    string
+  title:   string
+  heading: string
+  text:    string
+}
+
+export interface PublicSiteVector {
+  id:       string
+  values:   number[]
+  metadata: PublicSiteVectorMetadata
+}
+
+export async function replacePublicSiteVectors(idPrefix: string, vectors: PublicSiteVector[]): Promise<void> {
+  const ns  = getIndex().namespace(PUBLIC_SITE_NAMESPACE)
+  const old = await listIdsByPrefix(PUBLIC_SITE_NAMESPACE, idPrefix)
+  const keep = new Set(vectors.map(v => v.id))
+  const stale = old.filter(id => !keep.has(id))
+  if (vectors.length) await upsertBatched(PUBLIC_SITE_NAMESPACE, vectors)
+  for (let i = 0; i < stale.length; i += BATCH_SIZE) await ns.deleteMany(stale.slice(i, i + BATCH_SIZE))
+}
+
+export async function deletePublicSiteVectors(idPrefix: string): Promise<void> {
+  const ns  = getIndex().namespace(PUBLIC_SITE_NAMESPACE)
+  const ids = await listIdsByPrefix(PUBLIC_SITE_NAMESPACE, idPrefix)
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) await ns.deleteMany(ids.slice(i, i + BATCH_SIZE))
+}
+
+export async function queryPublicSite(
+  vector: number[],
+  topK:   number,
+  filter?: Record<string, unknown>,
+): Promise<Array<{ id: string; score: number; metadata: PublicSiteVectorMetadata }>> {
+  const resp = await getIndex().namespace(PUBLIC_SITE_NAMESPACE).query({
+    vector, topK, includeMetadata: true, ...(filter ? { filter } : {}),
+  })
+  return (resp.matches ?? []).map(m => ({
+    id: m.id, score: m.score ?? 0, metadata: m.metadata as PublicSiteVectorMetadata,
+  }))
+}

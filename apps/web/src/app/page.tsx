@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MarketingNav } from '@/components/marketing/nav'
+import { WebsiteChat } from '@/components/marketing/website-chat'
 import { HomeFaq, type Faq } from '@/components/marketing/home-faq'
 import { Typewriter } from '@/components/marketing/typewriter'
 
@@ -1093,6 +1094,7 @@ export default async function HomePage(
         <MarketingNav />
         <HomePageV2 s={makeSlot(HOME_V2_SLOTS, slots)} />
         <MarketingFooter />
+        <WebsiteChat />
       </div>
     )
   }
@@ -1120,6 +1122,7 @@ export default async function HomePage(
         <HomeBlogSection posts={featuredPosts} />
       </main>
       <MarketingFooter />
+      <WebsiteChat />
     </div>
   )
 }

@@ -2846,3 +2846,89 @@ model PolicyPurchase {
   @@index([status], map: "policy_purchase_status_idx")
   @@map("policy_purchase")
 }
+
+// ─── Website AI chat ──────────────────────────────────────────────────────────
+// The chat on the public marketing site. It answers ONLY from the public website, indexed into
+// its own Pinecone namespace (public_site), and never reads tenant data. Conversations and every
+// message are kept so the platform AI Chat tab can review them, and so a platform admin can take a
+// conversation over live. SQL: prisma/sql/manual_website_chat.sql (RLS on, no policies).
+
+model WebsiteChatConversation {
+  id              String    @id @default(uuid())
+  visitor_id      String                                // random id kept in the visitor's browser
+  status          String    @default("ai")              // 'ai' | 'human' | 'closed'
+  wants_human     Boolean   @default(false)             // the visitor asked to talk to a person
+  started_path    String?
+  last_path       String?
+  visitor_name    String?
+  visitor_email   String?
+  lead_id         String?
+  message_count   Int       @default(0)
+  unanswered      Int       @default(0)                  // AI replies with no grounding in the site
+  thumbs_up       Int       @default(0)
+  thumbs_down     Int       @default(0)
+  user_agent      String?
+  agent_joined_at DateTime?
+  last_message_at DateTime  @default(now())
+  created_at      DateTime  @default(now())
+
+  messages WebsiteChatMessage[]
+
+  @@index([last_message_at])
+  @@index([visitor_id])
+  @@map("website_chat_conversations")
+}
+
+model WebsiteChatMessage {
+  id              String   @id @default(uuid())
+  conversation_id String
+  role            String                                  // 'visitor' | 'ai' | 'agent' | 'system'
+  content         String
+  sources         Json     @default("[]")                // [{ url, title }]
+  grounded        Boolean?                               // AI only: did the site answer it
+  feedback        Int?                                   // 1 | -1
+  path            String?
+  input_tokens    Int?
+  output_tokens   Int?
+  latency_ms      Int?
+  created_at      DateTime @default(now())
+
+  conversation WebsiteChatConversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@index([conversation_id, created_at])
+  @@index([created_at])
+  @@map("website_chat_messages")
+}
+
+// One row per indexed website page: what is in the index, when, and whether it needs refreshing.
+model WebsiteChatPage {
+  id           String    @id @default(uuid())
+  path         String    @unique
+  title        String?
+  section      String?                                   // the first path segment, for grouping
+  content_hash String?
+  chunk_count  Int       @default(0)
+  status       String    @default("pending")             // 'pending' | 'indexed' | 'error' | 'removed'
+  error        String?
+  queued_at    DateTime?                                 // set when a publish asks for a refresh
+  indexed_at   DateTime?
+  updated_at   DateTime  @updatedAt
+
+  @@index([status])
+  @@map("website_chat_pages")
+}
+
+// Single row ('default'): how the assistant presents itself, and whether a person is online.
+model WebsiteChatSettings {
+  id                 String    @id @default("default")
+  enabled            Boolean   @default(true)
+  assistant_name     String    @default("CareStream AI")
+  avatar_url         String?
+  greeting           String    @default("Hi, I'm the CareStream assistant. Ask me anything about policies, training, CQC readiness or pricing, and I'll answer from what's on our site.")
+  suggested          Json      @default("[]")            // [{ prefix, questions: string[] }]
+  agent_name         String    @default("Len")
+  agent_online_until DateTime?
+  updated_at         DateTime  @updatedAt
+
+  @@map("website_chat_settings")
+}

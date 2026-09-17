@@ -7,6 +7,7 @@ import { getAiCreditUsage, getQueryUsage, trackAiAction } from '../lib/plan-limi
 import { DEFAULT_ONBOARDING_FLOW_PROMPT, DEFAULT_ONBOARDING_QUESTIONS_PROMPT } from './onboarding-templates'
 import { DEFAULT_TRAINING_MODULE_PROMPT } from '../services/training/moduleGenerator'
 import { DEFAULT_TRAINING_IMAGE_PROMPT } from '../services/training/moduleImage'
+import { DEFAULT_WEBSITE_CHAT_PROMPT } from '../services/website-chat/answer'
 import { DEFAULT_POLICY_ANONYMISE_PROMPT } from './policy-seeds'
 import { imageUploadMiddleware } from '../middleware/upload'
 import { uploadBlogImage, deleteTenantFiles, getTenantStorageStats, getPlatformStorageStats, downloadExtractedText, downloadFile } from '../services/storage/s3'
@@ -25,6 +26,7 @@ import { embedTexts } from '../services/rag/embedder'
 import { upsertRegulationVectors, deleteRegulationVector, deleteAllTenantPolicyVectors, getTenantVectorStats, getPlatformVectorStats } from '../services/vector/pinecone'
 import type { RegulationVector } from '../services/vector/pinecone'
 import { ok, err } from '../lib/response'
+import { queueWebsiteReindex } from '../services/website-chat/indexer'
 import { blogImagePublicUrl, siteUrl } from '../lib/urls'
 import { USE_CASES, USE_CASE_POST_LIMIT, parseUseCaseSlugs, useCaseLabel } from '../lib/use-cases'
 import { submitUrlsForIndexing, countIndexedPages, ralfyIndexBalance } from '../services/ralfyindex/indexer'
@@ -2737,6 +2739,7 @@ const USAGE_LABELS: Record<string, string> = {
   regulation_coverage:             'Policy Gaps — Regulation Coverage',
   policy_writer:                   'Policy Writer — Policies we write for clients',
   regulation_change_review:        'Legislation Monitor — Change review',
+  website_chat:                    'Website AI Chat — Visitor answers',
 }
 
 // Seed any missing prompts — checks per-usage so new prompts are added even when others already exist.
@@ -2767,6 +2770,7 @@ async function ensurePromptsSeeded() {
     regulation_coverage:        DEFAULT_REGULATION_COVERAGE_PROMPT,
     policy_writer:              DEFAULT_POLICY_WRITER_PROMPT,
     regulation_change_review:   DEFAULT_CHANGE_REVIEW_PROMPT,
+    website_chat:               DEFAULT_WEBSITE_CHAT_PROMPT,
   }
   for (const [usage, content] of Object.entries(inlineDefaults)) {
     const existing = await (prisma as any).aiPrompt.findUnique({ where: { usage } })
@@ -3365,6 +3369,7 @@ adminRouter.post('/blog/posts', async (req: Request, res: Response) => {
   }
 
   const post = await (prisma as any).blogPost.create({ data: buildPostData(req.body) })
+  if (post.slug) await queueWebsiteReindex(`/blog/${post.slug}`)
   if (post.status === 'published' && post.slug) {
     await submitUrlsForIndexing([`${siteUrl()}/blog/${post.slug}`], { source: 'blog', blogPostId: post.id })
   }
@@ -3388,6 +3393,7 @@ adminRouter.patch('/blog/posts/:id', async (req: Request, res: Response) => {
     where: { id: req.params.id },
     data:  buildPostData(req.body),
   })
+  if (post.slug) await queueWebsiteReindex(`/blog/${post.slug}`)
   if (post.status === 'published' && post.slug) {
     await submitUrlsForIndexing([`${siteUrl()}/blog/${post.slug}`], { source: 'blog', blogPostId: post.id })
   }
@@ -3395,7 +3401,8 @@ adminRouter.patch('/blog/posts/:id', async (req: Request, res: Response) => {
 })
 
 adminRouter.delete('/blog/posts/:id', async (req: Request, res: Response) => {
-  await (prisma as any).blogPost.delete({ where: { id: req.params.id } })
+  const gone = await (prisma as any).blogPost.delete({ where: { id: req.params.id } })
+  if (gone?.slug) await queueWebsiteReindex(`/blog/${gone.slug}`)
   ok(res, { deleted: true })
 })
 
@@ -3590,6 +3597,7 @@ adminRouter.post('/feature-pages', async (req: Request, res: Response) => {
   if (existing) { err(res, 'CONFLICT', `A feature page with slug "${slug}" already exists.`, 409); return }
 
   const featurePage = await (prisma as any).featurePage.create({ data: buildFeaturePageData(req.body) })
+  if (featurePage.slug) await queueWebsiteReindex(`/features/${featurePage.slug}`)
   if (featurePage.status === 'published' && featurePage.slug) {
     await submitUrlsForIndexing([`${siteUrl()}/features/${featurePage.slug}`], { source: 'page' })
   }
@@ -3606,6 +3614,7 @@ adminRouter.patch('/feature-pages/:id', async (req: Request, res: Response) => {
     where: { id: req.params.id },
     data:  buildFeaturePageData(req.body),
   })
+  if (featurePage.slug) await queueWebsiteReindex(`/features/${featurePage.slug}`)
   // A pure "mark updated" toggle is just a personal tracker; don't re-submit the page for indexing.
   const onlyTracker = Object.keys(req.body ?? {}).every((k) => k === 'content_updated')
   if (!onlyTracker && featurePage.status === 'published' && featurePage.slug) {

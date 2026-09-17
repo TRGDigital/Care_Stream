@@ -5,6 +5,7 @@ import { getSiteAltMap } from '@/lib/image-alts'
 import { BreadcrumbsJsonLd } from '@/components/breadcrumbs-json-ld'
 import { MarketingAgentTools } from '@/components/agent/marketing-agent-tools'
 import { PopEmbed } from '@/components/marketing/pop-embed'
+import { WebsiteChat } from '@/components/marketing/website-chat'
 
 export default async function MarketingLayout({ children }: { children: React.ReactNode }) {
   const altMap = await getSiteAltMap()
@@ -18,6 +19,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
         <main className="flex-1">{children}</main>
         <MarketingFooter />
       </div>
+      <WebsiteChat />
     </AltMapProvider>
   )
 }

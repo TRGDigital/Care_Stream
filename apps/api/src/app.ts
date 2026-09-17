@@ -49,6 +49,7 @@ import { publicCollectionsRouter } from './routes/collections-public'
 import { publicFeaturePagesRouter } from './routes/feature-pages-public'
 import { publicImageAltsRouter } from './routes/image-alts'
 import { marketingPublicRouter } from './routes/marketing-public'
+import { publicWebsiteChatRouter, websiteChatAdminRouter } from './routes/website-chat'
 import { onboardingPublicRouter } from './routes/onboarding-public'
 import { lpPublicRouter } from './routes/lp-public'
 import { policyShopPublicRouter } from './routes/policy-shop-public'
@@ -130,6 +131,7 @@ app.use('/admin/platform-glossary', platformGlossaryRouter)
 app.use('/admin/translation-changes', platformTranslationChangesRouter)
 app.use('/admin/policy-gaps', platformPolicyGapsRouter)
 app.use('/admin/policy-images', platformPolicyImagesRouter)
+app.use('/admin/ai-chat', websiteChatAdminRouter)
 app.use('/admin', adminRouter)
 
 // §8.1 — SendGrid Inbound Parse webhook. Unauthenticated — auth is handled
@@ -180,6 +182,8 @@ app.use('/public/image-alts', publicImageAltsRouter)
 // Public marketing leads (contact/demo forms) + WebMCP agent-event tracking, no auth.
 // Must be mounted BEFORE requireAuth.
 app.use('/public/marketing', marketingPublicRouter)
+// The website AI chat widget (answers from the public site only).
+app.use('/public/chat', publicWebsiteChatRouter)
 
 // Public landing page system (demos.carestreamai.com), no auth. BEFORE requireAuth.
 app.use('/public/lp', lpPublicRouter)

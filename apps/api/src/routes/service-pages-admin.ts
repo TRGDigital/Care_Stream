@@ -1,8 +1,9 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
+import { queueWebsiteReindex } from '../services/website-chat/indexer'
 import { requirePlatformAdmin } from '../middleware/auth'
-import { SERVICE_PAGE_SLUGS, isServicePageSlug } from '../lib/service-pages'
+import { SERVICE_PAGE_SLUGS, isServicePageSlug, servicePagePath } from '../lib/service-pages'
 import { SERVICE_PAGE_SEEDS } from '../data/service-pages-seed'
 
 // Console management of the seven /our-services pages (Blog -> Services). Their copy is
@@ -58,6 +59,8 @@ servicePagesAdminRouter.put('/:slug', async (req: Request, res: Response) => {
     update: data,
     create: { slug, ...data },
   })
+  // The website chat re-reads the page once the change has reached the site.
+  await queueWebsiteReindex(servicePagePath(slug))
   ok(res, { page })
 })
 

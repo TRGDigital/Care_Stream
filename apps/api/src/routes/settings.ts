@@ -277,7 +277,7 @@ settingsRouter.patch('/', async (req: Request, res: Response) => {
     if (typeof organisation_details !== 'object' || organisation_details === null || Array.isArray(organisation_details)) {
       return err(res, 'INVALID_INPUT', 'organisation_details must be an object', 400)
     }
-    const ALLOWED = new Set(['nominated_individual', 'address', 'cqc_location_id', 'cqc_provider_id', 'review_cycle_months', 'version_scheme', 'default_approver', 'show_role_names', 'require_manager_approval', 'require_external_approval', 'require_audit_manager_approval', 'show_readiness_score', 'audit_escalate_after_days', 'audit_summary'])
+    const ALLOWED = new Set(['nominated_individual', 'address', 'cqc_location_id', 'cqc_provider_id', 'review_cycle_months', 'version_scheme', 'default_approver', 'show_role_names', 'require_manager_approval', 'require_external_approval', 'require_audit_manager_approval', 'show_readiness_score', 'audit_escalate_after_days', 'audit_summary', 'audit_report_email'])
     // Role-holders can hold MORE THAN ONE person (comma-separated); the tenant picks which
     // one at adoption. These add to the names derived from staff positions/specialisms.
     const ROLE_KEYS = new Set(['registered_manager', 'safeguarding_lead', 'caldicott_guardian', 'ipc_lead', 'fire_safety_officer', 'dignity_champion', 'maintenance_lead', 'health_safety_lead', 'medicines_lead', 'data_protection_officer', 'deputy_manager', 'moving_handling_lead', 'mental_capacity_lead', 'end_of_life_lead', 'water_safety_lead', 'training_lead', 'freedom_to_speak_up_guardian', 'complaints_lead', 'first_aid_lead', 'food_safety_lead', 'nutrition_hydration_lead', 'falls_lead', 'tissue_viability_lead', 'business_continuity_lead'])

@@ -29,6 +29,7 @@ import { generateAuditRecommendations } from './audits'
 import { prisma } from '../db/client'
 import { SECTIONS_WITH_ALL_QUESTIONS, shapeRunTemplate, visibleQuestions, answerText, outcomeFor } from '../lib/audit-questions'
 import { completeMyAction, requestExtension, storeSignature } from '../services/audits/action-closeout'
+import { generateAndStoreAuditReport } from '../services/audits/report-pdf'
 import { managerApprove, rejectPolicy, getPolicyDocument, getAdoptionContext, getApprovalState, setExternalRecipient, EXTERNAL_LINK_TTL_DAYS } from '../services/analytics/policy-adoption'
 
 // Friendly policy title from a filename (strip extension + tidy separators).
@@ -477,6 +478,8 @@ meRouter.post('/audit-approvals/:runId/approve', async (req: Request, res: Respo
   if (!r) { err(res, 'NOT_FOUND', 'Not found', 404); return }
   // Now that it's approved, generate the AI recommendations (the final step of the workflow).
   await generateAuditRecommendations(tenantId, String(req.params.runId)).catch(e => console.error('[audit approve] recs:', e))
+  // The signed-off report: saved against the audit and emailed to admins.
+  await generateAndStoreAuditReport(tenantId, String(req.params.runId), { email: true }).catch(e => console.error('[audit approve] report pdf:', e))
   ok(res, r)
 })
 

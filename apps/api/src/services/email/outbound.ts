@@ -667,6 +667,31 @@ export interface SendAuditUpdateOptions {
   bodyHtml: string
 }
 
+// The audit PDF report, emailed to admins when an audit is completed or signed off.
+export async function sendAuditReportEmail(opts: {
+  to: string; name: string; orgName: string; auditName: string; subject: string | null
+  period: string; approved: boolean; runId: string; pdf: Buffer
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) return
+  const from      = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
+  const firstName = opts.name.split(' ')[0] ?? opts.name
+  const what      = `${opts.auditName}${opts.subject ? ` (${opts.subject})` : ''}`
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px">
+      The <strong>${what}</strong> audit for <strong>${opts.period}</strong> has been ${opts.approved ? 'signed off' : 'completed'}. The full report is attached as a PDF and saved with the audit.
+    </p>
+    <p style="margin:0 0 8px"><a href="${WEB_URL}/audits/${opts.runId}" style="display:inline-block;background:#0d9488;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600">Open the audit</a></p>
+    ${emailFooter(opts.orgName)}
+  `)
+  const file = `${what}-${opts.period}`.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  await sgMail.send({
+    to: opts.to, from, subject: `Audit report: ${what}, ${opts.period}`, html,
+    attachments: [{ content: opts.pdf.toString('base64'), filename: `${file}.pdf`, type: 'application/pdf', disposition: 'attachment' }],
+  })
+}
+
 export async function sendAuditUpdateEmail(opts: SendAuditUpdateOptions): Promise<void> {
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) return

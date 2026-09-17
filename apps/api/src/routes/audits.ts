@@ -25,6 +25,7 @@ import {
 import {
   REPEATS, listAssignments, ensureAllocated, linkRunToAssignment, completeAssignmentsForRun, startOfDayUTC,
 } from '../services/audits/assignments'
+import { previousActionsForRun, verifyAction, decideExtension, storeSignature } from '../services/audits/action-closeout'
 
 export const auditsRouter = Router()
 
@@ -2215,6 +2216,11 @@ auditsRouter.get('/runs/:id/report', requireAuditAccess, async (req: Request, re
     approved_by_role:  run.approved_by_role,
     approved_at:       run.approved_at,
     approval_note:     run.approval_note,
+    auditor_signed_name: run.auditor_signed_name ?? null,
+    auditor_signed_at:   run.auditor_signed_at ?? null,
+    has_auditor_signature: !!run.auditor_signature_key,
+    manager_signed_at:   run.manager_signed_at ?? null,
+    has_manager_signature: !!run.manager_signature_key,
     strengths:         run.strengths,
     improvements:      run.improvements,
     actions_deadline:  run.actions_deadline,
@@ -2243,6 +2249,134 @@ auditsRouter.get('/runs/:id/report', requireAuditAccess, async (req: Request, re
   }
 
   ok(res, { report })
+})
+
+// ─── Signatures ───────────────────────────────────────────────────────────────
+
+// POST /audits/runs/:id/signature — body { image: PNG data URL, name } — the auditor signs before completing.
+auditsRouter.post('/runs/:id/signature', requireAuditAccess, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const run = await (prisma as any).auditRun.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId }, select: { id: true, template_id: true, status: true } })
+  if (!run || !auditTemplateAllowed(req, run.template_id)) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
+  if (run.status === 'completed') return err(res, 'LOCKED', 'This audit is already completed.', 400)
+  const name = String(req.body?.name ?? '').trim().slice(0, 120)
+  if (!name) return err(res, 'INVALID', 'Type your name under your signature.', 400)
+  try {
+    const key = await storeSignature(tenantId, run.id, String(req.body?.image ?? ''))
+    await (prisma as any).auditRun.update({ where: { id: run.id }, data: { auditor_signature_key: key, auditor_signed_name: name, auditor_signed_at: new Date() } })
+    ok(res, { signed: true, signed_at: new Date() })
+  } catch (e: any) { err(res, 'INVALID', e?.message ?? 'Could not save the signature.', 400) }
+})
+
+// GET /audits/runs/:id/signature/:role — the signature image (auditor | manager), tenant-scoped.
+auditsRouter.get('/runs/:id/signature/:role', async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const run = await (prisma as any).auditRun.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId }, select: { auditor_signature_key: true, manager_signature_key: true } })
+  const key = req.params.role === 'manager' ? run?.manager_signature_key : run?.auditor_signature_key
+  if (!key) return err(res, 'NOT_FOUND', 'No signature', 404)
+  try {
+    const buf = await downloadFile(key)
+    res.setHeader('Content-Type', 'image/png')
+    res.setHeader('X-Content-Type-Options', 'nosniff')
+    res.setHeader('Cache-Control', 'private, no-store')
+    res.send(buf)
+  } catch (e: any) { err(res, 'DOWNLOAD_FAILED', e?.message ?? 'Could not load the signature', 500) }
+})
+
+// ─── Closing actions ─────────────────────────────────────────────────────────
+
+// GET /audits/runs/:id/previous-actions — the last audit of this kind's actions, to check at this one.
+auditsRouter.get('/runs/:id/previous-actions', requireAuditAccess, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const run = await (prisma as any).auditRun.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId }, select: { template_id: true } })
+  if (!run || !auditTemplateAllowed(req, run.template_id)) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
+  ok(res, await previousActionsForRun(tenantId, String(req.params.id)))
+})
+
+// POST /audits/actions/:id/verify — body { run_id, result: 'fixed' | 'not_fixed', note? }
+auditsRouter.post('/actions/:actionId/verify', requireAuditAccess, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const result = req.body?.result === 'not_fixed' ? 'not_fixed' : req.body?.result === 'fixed' ? 'fixed' : null
+  if (!result) return err(res, 'INVALID', 'Say whether it is still fixed.', 400)
+  const run = await (prisma as any).auditRun.findFirst({ where: { id: String(req.body?.run_id ?? ''), tenant_id: tenantId }, select: { template_id: true } })
+  if (!run || !auditTemplateAllowed(req, run.template_id)) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
+  const me = await (prisma as any).user.findUnique({ where: { id: req.user!.sub }, select: { name: true } }).catch(() => null)
+  try {
+    await verifyAction(tenantId, String(req.params.actionId), String(req.body.run_id), result, req.body?.note ? String(req.body.note) : null, me?.name ?? 'Auditor')
+    ok(res, await previousActionsForRun(tenantId, String(req.body.run_id)))
+  } catch (e: any) { err(res, 'INVALID', e?.message ?? 'Could not record the check.', 400) }
+})
+
+// POST /audits/actions/:id/extension-decision — body { approve }
+auditsRouter.post('/actions/:actionId/extension-decision', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const me = await (prisma as any).user.findUnique({ where: { id: req.user!.sub }, select: { name: true } }).catch(() => null)
+  try {
+    await decideExtension(tenantId, String(req.params.actionId), req.body?.approve === true, me?.name ?? 'An admin')
+    ok(res, { decided: true })
+  } catch (e: any) { err(res, 'INVALID', e?.message ?? 'Could not record the decision.', 400) }
+})
+
+// Who may add or see a photo on an action: admins, and the staff member it is assigned to.
+async function actionForPhotos(req: Request, actionId: string) {
+  const tenantId = req.user!.tenant_id
+  const a = await (prisma as any).auditAction.findFirst({ where: { id: actionId, tenant_id: tenantId }, select: { id: true, run_id: true, assigned_to: true, status: true } })
+  if (!a) return null
+  if (req.user!.role === 'admin') return a
+  const me = await (prisma as any).user.findUnique({ where: { id: req.user!.sub }, select: { name: true } }).catch(() => null)
+  const mine = !!me?.name && !!a.assigned_to && me.name.trim().toLowerCase() === a.assigned_to.trim().toLowerCase()
+  return mine ? a : null
+}
+
+// POST /audits/actions/:id/evidence (multipart "image") — a photo showing the action was done.
+auditsRouter.post('/actions/:actionId/evidence', imageUploadMiddleware, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const file = (req as any).file as Express.Multer.File | undefined
+  if (!file) return err(res, 'NO_FILE', 'No image was uploaded.', 400)
+  const a = await actionForPhotos(req, String(req.params.actionId))
+  if (!a) return err(res, 'NOT_FOUND', 'Action not found', 404)
+  const count = await (prisma as any).auditActionEvidence.count({ where: { action_id: a.id } })
+  if (count >= 10) return err(res, 'TOO_MANY', 'An action can have up to 10 photos.', 400)
+  const detected = detectEvidenceType(file.buffer)
+  if (!detected || !detected.mime.startsWith('image/')) return err(res, 'INVALID_IMAGE', 'That file is not a valid image.', 400)
+  const scan = await scanBuffer(file.buffer, file.originalname)
+  if (scan.status === 'infected') return err(res, 'MALWARE_DETECTED', 'That image failed the malware scan and was not uploaded.', 400)
+  if (scan.status === 'error' && scannerConfigured()) return err(res, 'SCAN_FAILED', 'The image could not be virus-scanned just now, so it was not uploaded. Please try again.', 503)
+  const s3Key = await uploadAuditEvidence({ tenantId, runId: a.run_id, key: `action-${randomUUID()}.${detected.ext}`, buffer: file.buffer, mimeType: detected.mime })
+  const ev = await (prisma as any).auditActionEvidence.create({
+    data: { tenant_id: tenantId, action_id: a.id, s3_key: s3Key, file_name: file.originalname.slice(0, 200), file_type: detected.mime, size_bytes: file.size ?? 0, scan_status: scan.status === 'clean' ? 'clean' : 'skipped', uploaded_by: req.user!.sub },
+  })
+  ok(res, { evidence: { id: ev.id, file_name: ev.file_name } }, 201)
+})
+
+// GET /audits/action-evidence/:id — stream an action photo.
+auditsRouter.get('/action-evidence/:id', async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const ev = await (prisma as any).auditActionEvidence.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId } })
+  if (!ev) return err(res, 'NOT_FOUND', 'Photo not found', 404)
+  // Anyone with audit access can see it (for the re-check at the next audit), as can the assignee.
+  const allowed = req.user!.role === 'admin' || ev.uploaded_by === req.user!.sub || !!(await actionForPhotos(req, ev.action_id))
+    || !!(await (prisma as any).user.findFirst({ where: { id: req.user!.sub, audit_template_ids: { isEmpty: false } }, select: { id: true } }))
+  if (!allowed) return err(res, 'NOT_FOUND', 'Photo not found', 404)
+  try {
+    const buf = await downloadFile(ev.s3_key)
+    res.setHeader('Content-Type', SAFE_AUDIT_IMAGE_TYPES.has(ev.file_type) ? ev.file_type : 'application/octet-stream')
+    res.setHeader('X-Content-Type-Options', 'nosniff')
+    res.setHeader('Content-Security-Policy', "sandbox; default-src 'none'; img-src 'self' data:; object-src 'none'")
+    res.setHeader('Cache-Control', 'private, no-store')
+    res.send(buf)
+  } catch (e: any) { err(res, 'DOWNLOAD_FAILED', e?.message ?? 'Could not load image', 500) }
+})
+
+// DELETE /audits/action-evidence/:id — the uploader or an admin, while the action is not done.
+auditsRouter.delete('/action-evidence/:id', async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const ev = await (prisma as any).auditActionEvidence.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId }, include: { action: { select: { status: true } } } })
+  if (!ev || (req.user!.role !== 'admin' && ev.uploaded_by !== req.user!.sub)) return err(res, 'NOT_FOUND', 'Photo not found', 404)
+  if (ev.action.status === 'done' && req.user!.role !== 'admin') return err(res, 'LOCKED', 'Reopen the action to change its photos.', 400)
+  try { await deleteFile(ev.s3_key) } catch { /* best effort */ }
+  await (prisma as any).auditActionEvidence.delete({ where: { id: ev.id } })
+  ok(res, { deleted: true })
 })
 
 // ─── Audit action plan ────────────────────────────────────────────────────────

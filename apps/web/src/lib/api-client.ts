@@ -32,6 +32,24 @@ export type PolicyHistoryEntry = {
 }
 
 /** A regulation in scope with no policy behind it, from GET /analytics/gaps/missing-policies. */
+export type AuditActionCloseout = {
+  completion_note?: string | null
+  evidence?: Array<{ id: string; file_name: string }>
+  extension_status?: 'pending' | 'approved' | 'declined' | null
+  extension_requested_to?: string | null
+  extension_reason?: string | null
+  extension_decided_by?: string | null
+  verified_result?: 'fixed' | 'not_fixed' | null
+  verified_at?: string | null
+  verified_by?: string | null
+  verify_note?: string | null
+}
+export type PreviousAuditAction = {
+  id: string; description: string; priority: string; status: string; assigned_to: string | null; external_name: string | null
+  due_date: string | null; done_at: string | null; completion_note: string | null; evidence: Array<{ id: string; file_name: string }>
+  verified_result: 'fixed' | 'not_fixed' | null; verified_by: string | null; verify_note: string | null
+}
+
 export type AuditAssignment = {
   id: string; template_id: string; template_name: string; subject_scope: string
   assigned_user_id: string; assigned_name: string; assigned_role: string | null
@@ -1094,6 +1112,27 @@ export function createApiClient(token: string) {
         return apiFetch<{ evidence: { id: string; question_id: string; file_name: string; file_type: string; size_bytes: number; created_at: string } }>(`/audits/runs/${runId}/questions/${questionId}/evidence`, token, { method: 'POST', body: form, headers: {} })
       },
       deleteEvidence: (evidenceId: string) => apiFetch<{ deleted: boolean }>(`/audits/evidence/${evidenceId}`, token, { method: 'DELETE' }),
+      // Signatures: the auditor signs before completing; the manager signs when approving.
+      signRun: (runId: string, image: string, name: string) => apiFetch<{ signed: boolean; signed_at: string }>(`/audits/runs/${runId}/signature`, token, { method: 'POST', body: JSON.stringify({ image, name }) }),
+      signatureBlob: async (runId: string, role: 'auditor' | 'manager'): Promise<Blob> => {
+        const res = await fetch(`${API_URL}/audits/runs/${runId}/signature/${role}`, { headers: { Authorization: `Bearer ${token}` } })
+        if (!res.ok) throw new Error('Could not load signature')
+        return res.blob()
+      },
+      // Closing actions: the last audit's actions to re-check, extension decisions, and photos of the fix.
+      previousActions: (runId: string) => apiFetch<{ previous_run: { id: string; audit_month: string; completed_at: string } | null; actions: PreviousAuditAction[] }>(`/audits/runs/${runId}/previous-actions`, token),
+      verifyAction: (actionId: string, runId: string, result: 'fixed' | 'not_fixed', note?: string) => apiFetch<{ previous_run: any; actions: PreviousAuditAction[] }>(`/audits/actions/${encodeURIComponent(actionId)}/verify`, token, { method: 'POST', body: JSON.stringify({ run_id: runId, result, note }) }),
+      decideActionExtension: (actionId: string, approve: boolean) => apiFetch<{ decided: boolean }>(`/audits/actions/${encodeURIComponent(actionId)}/extension-decision`, token, { method: 'POST', body: JSON.stringify({ approve }) }),
+      uploadActionEvidence: (actionId: string, image: File) => {
+        const form = new FormData(); form.append('image', image)
+        return apiFetch<{ evidence: { id: string; file_name: string } }>(`/audits/actions/${encodeURIComponent(actionId)}/evidence`, token, { method: 'POST', body: form, headers: {} })
+      },
+      deleteActionEvidence: (evidenceId: string) => apiFetch<{ deleted: boolean }>(`/audits/action-evidence/${evidenceId}`, token, { method: 'DELETE' }),
+      actionEvidenceBlob: async (evidenceId: string): Promise<Blob> => {
+        const res = await fetch(`${API_URL}/audits/action-evidence/${evidenceId}`, { headers: { Authorization: `Bearer ${token}` } })
+        if (!res.ok) throw new Error('Could not load image')
+        return res.blob()
+      },
       // Fetch the image bytes with auth (can't be a plain <img src>) → object URL.
       evidenceBlob: async (evidenceId: string): Promise<Blob> => {
         const res = await fetch(`${API_URL}/audits/evidence/${evidenceId}`, { headers: { Authorization: `Bearer ${token}` } })
@@ -1123,7 +1162,8 @@ export function createApiClient(token: string) {
         apiFetch<{ status: 'pending' | 'approved' }>('/me/translation-suggestion', token, { method: 'POST', body: JSON.stringify(data) }),
       counts: () => apiFetch<{ training: number; induction: number; cqc: number; followup: number; annual: number; audits: number; actions: number; programmes: number }>('/me/counts', token),
       actions: () => apiFetch<{ actions: Array<{ id: string; description: string; priority: string; due_date: string | null; status: string; done_at: string | null; run_id: string; audit_name: string }> }>('/me/actions', token),
-      setActionStatus: (id: string, status: 'open' | 'in_progress' | 'done') => apiFetch<{ actions: Array<{ id: string; description: string; priority: string; due_date: string | null; status: string; done_at: string | null; run_id: string; audit_name: string }> }>(`/me/actions/${encodeURIComponent(id)}`, token, { method: 'PATCH', body: JSON.stringify({ status }) }),
+      setActionStatus: (id: string, status: 'open' | 'in_progress' | 'done', note?: string) => apiFetch<{ actions: Array<{ id: string; description: string; priority: string; due_date: string | null; status: string; done_at: string | null; run_id: string; audit_name: string } & AuditActionCloseout> }>(`/me/actions/${encodeURIComponent(id)}`, token, { method: 'PATCH', body: JSON.stringify({ status, ...(note ? { note } : {}) }) }),
+      requestActionExtension: (id: string, until: string, reason: string) => apiFetch<{ actions: any[] }>(`/me/actions/${encodeURIComponent(id)}/extension`, token, { method: 'POST', body: JSON.stringify({ until, reason }) }),
       externalActions: () => apiFetch<{ actions: Array<{ id: string; description: string; priority: string; due_date: string | null; status: string; done_at: string | null; run_id: string; audit_name: string; external_name: string | null }> }>('/me/external-actions', token),
       setExternalActionStatus: (id: string, status: 'open' | 'in_progress' | 'done') => apiFetch<{ actions: Array<{ id: string; description: string; priority: string; due_date: string | null; status: string; done_at: string | null; run_id: string; audit_name: string; external_name: string | null }> }>(`/me/external-actions/${encodeURIComponent(id)}`, token, { method: 'PATCH', body: JSON.stringify({ status }) }),
       policyApprovals: () => apiFetch<{ is_manager: boolean; policies: Array<{ policy_id: string; name: string; version: string; changes: number; submitted_at: string }>; published: Array<{ policy_id: string; name: string; version: string; published_at: string; published_by: string }>; returned: Array<{ policy_id: string; name: string; version: string; returned_at: string; returned_by: string }>; awaiting_external: Array<{ policy_id: string; name: string; version: string; sent: boolean; reviewer_name: string }> }>('/me/policy-approvals', token),
@@ -1134,7 +1174,7 @@ export function createApiClient(token: string) {
       rejectPolicyAsManager: (policyId: string, comment: string, feedback: Array<{ change_id: string; note: string }> = []) => apiFetch<{ status: string }>(`/me/policy-approvals/${encodeURIComponent(policyId)}/reject`, token, { method: 'POST', body: JSON.stringify({ comment, feedback }) }),
       auditApprovals: () => apiFetch<{ is_manager: boolean; audits: Array<{ run_id: string; template_name: string; subject: string | null; subject_room: string | null; subject_scope: string; auditor_name: string; audit_month: string; submitted_at: string | null }>; recent: Array<{ run_id: string; template_name: string; approved_by: string; approved_at: string | null; audit_month: string }> }>('/me/audit-approvals', token),
       auditApprovalDetail: (runId: string) => apiFetch<{ report: { audit_name: string; subject: string | null; subject_room: string | null; subject_scope: string; auditor_name: string | null; auditor_role: string | null; audit_month: string; submitted_by: string | null; submitted_at: string | null; strengths: string | null; improvements: string | null; actions_deadline: string | null; ai_recommendations: string | null; sections: Array<{ title: string; questions: Array<{ id: string; question: string; question_type: string; answer_yn: boolean | null; answer_na: boolean; answer_text?: string; outcome?: string; outcome_text: string | null; actions_text: string | null }> }> } }>(`/me/audit-approvals/${encodeURIComponent(runId)}`, token),
-      approveAuditAsManager: (runId: string) => apiFetch<{ status: string }>(`/me/audit-approvals/${encodeURIComponent(runId)}/approve`, token, { method: 'POST' }),
+      approveAuditAsManager: (runId: string, signature?: string) => apiFetch<{ status: string }>(`/me/audit-approvals/${encodeURIComponent(runId)}/approve`, token, { method: 'POST', body: JSON.stringify(signature ? { signature } : {}) }),
       rejectAuditAsManager: (runId: string, comment: string) => apiFetch<{ status: string }>(`/me/audit-approvals/${encodeURIComponent(runId)}/reject`, token, { method: 'POST', body: JSON.stringify({ comment }) }),
       documentCategories: () => apiFetch<{ available: string[]; has_residents?: boolean }>('/me/document-categories', token),
       pushSubscribe: (sub: { endpoint: string; keys: { p256dh: string; auth: string } }) =>

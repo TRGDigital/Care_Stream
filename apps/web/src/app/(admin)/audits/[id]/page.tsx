@@ -10,6 +10,8 @@ import { AuditActionPlan } from '@/components/admin/audit-action-plan'
 import { ChevronLeft, ChevronRight, ChevronDown, CheckCircle2, Circle, Printer, Sparkles, Loader2, AlertTriangle, Pause, Camera, CornerDownRight } from 'lucide-react'
 import { QuestionInput, EMPTY_ANSWER, answerFromRow, type AuditAnswer } from '@/components/audits/question-input'
 import { isAnswered, isNarrative, isScored, isYesNo, outcomeFor, visibleQuestionIds } from '@/lib/audit-questions'
+import { SignaturePad } from '@/components/audits/signature-pad'
+import { PreviousActionsPanel } from '@/components/audits/previous-actions-panel'
 import { clsx } from 'clsx'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -28,7 +30,7 @@ function ScoreBadge({ yes, total }: { yes: number; total: number }) {
 
 const AUDIT_SUBJECT_LABEL: Record<string, string> = { resident: 'Resident', staff: 'Staff', room: 'Room' }
 
-function PrintReport({ report }: { report: any }) {
+function PrintReport({ report, signatures }: { report: any; signatures: { auditor?: string; manager?: string } }) {
   return (
     <div id="audit-print-area" className="hidden print:block p-8 font-sans text-sm text-black">
       <div className="mb-3 flex items-start justify-between gap-6 border-b-4 border-teal pb-2">
@@ -113,13 +115,27 @@ function PrintReport({ report }: { report: any }) {
         <p>{report.actions_deadline ?? ''}</p>
       </div>
 
-      {report.approved_by_name && (
-        <div className="avoid-break mt-6 border border-gray-300 p-3">
-          <h2 className="mb-2 border-b border-teal/30 pb-1 text-sm font-bold uppercase text-teal-dark">Manager sign-off</h2>
-          <p className="text-xs">
-            Approved by <strong>{report.approved_by_name}</strong>{report.approved_by_role ? ` (${report.approved_by_role})` : ''}
-            {report.approved_at ? ` on ${new Date(report.approved_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}.
-          </p>
+      {(report.has_auditor_signature || report.approved_by_name) && (
+        <div className="avoid-break mt-6 grid grid-cols-2 gap-4">
+          {report.has_auditor_signature && (
+            <div className="border border-gray-300 p-3">
+              <h2 className="mb-2 border-b border-teal/30 pb-1 text-sm font-bold uppercase text-teal-dark">Auditor</h2>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {signatures.auditor && <img src={signatures.auditor} alt="Auditor signature" className="h-16 w-auto" />}
+              <p className="text-xs">Signed by <strong>{report.auditor_signed_name}</strong>{report.auditor_signed_at ? ` on ${new Date(report.auditor_signed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}.</p>
+            </div>
+          )}
+          {report.approved_by_name && (
+            <div className="border border-gray-300 p-3">
+              <h2 className="mb-2 border-b border-teal/30 pb-1 text-sm font-bold uppercase text-teal-dark">Manager sign-off</h2>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {report.has_manager_signature && signatures.manager && <img src={signatures.manager} alt="Manager signature" className="h-16 w-auto" />}
+              <p className="text-xs">
+                Approved by <strong>{report.approved_by_name}</strong>{report.approved_by_role ? ` (${report.approved_by_role})` : ''}
+                {report.approved_at ? ` on ${new Date(report.approved_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}.
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -136,6 +152,9 @@ export default function AuditRunPage() {
   const [answers,   setAnswers]     = useState<Map<string, AuditAnswer>>(new Map())
   const [qsNames,   setQsNames]     = useState<Record<string, { name: string; key_question: string }>>({})
   const [completeError, setCompleteError] = useState('')
+  const [signature, setSignature] = useState<string | null>(null)
+  const [signedName, setSignedName] = useState('')
+  const [signatureUrls, setSignatureUrls] = useState<{ auditor?: string; manager?: string }>({})
   const [summary,   setSummary]     = useState({ strengths: '', improvements: '', actions_deadline: '' })
   const [loading,   setLoading]     = useState(true)
   const [section,   setSection]     = useState(0)
@@ -146,6 +165,8 @@ export default function AuditRunPage() {
   const [report,    setReport]      = useState<any>(null)
   const [evidence,  setEvidence]    = useState<Map<string, any[]>>(new Map())
   const saveTimer                   = useRef<NodeJS.Timeout>()
+  // The signature box is only on the summary; leaving it clears the drawing, so clear what was captured too.
+  useEffect(() => { setSignature(null) }, [section])
 
   const api = session?.accessToken ? createApiClient(session.accessToken) : null
 
@@ -168,8 +189,9 @@ export default function AuditRunPage() {
         improvements:     r.improvements     ?? '',
         actions_deadline: r.actions_deadline ?? '',
       })
+      setSignedName(r.auditor_name ?? '')
       if (r.status === 'completed') {
-        api.audits.report(id).then(({ report: rpt }) => setReport(rpt)).catch(() => {})
+        api.audits.report(id).then(({ report: rpt }) => { setReport(rpt); loadSignatures(rpt) }).catch(() => {})
       }
     }).catch(() => {}).finally(() => setLoading(false))
   }, [id, session?.accessToken]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -210,6 +232,16 @@ export default function AuditRunPage() {
     })
   }
 
+  function loadSignatures(rpt: any) {
+    if (!api) return
+    const roles: Array<'auditor' | 'manager'> = []
+    if (rpt?.has_auditor_signature) roles.push('auditor')
+    if (rpt?.has_manager_signature) roles.push('manager')
+    for (const role of roles) {
+      api.audits.signatureBlob(id, role).then(b => setSignatureUrls(u => ({ ...u, [role]: URL.createObjectURL(b) }))).catch(() => {})
+    }
+  }
+
   async function saveSummary() {
     if (!api) return
     await api.audits.updateRun(id, summary).catch(() => {})
@@ -228,6 +260,9 @@ export default function AuditRunPage() {
     await saveSummary()
     setCompleteError('')
     try {
+      // The auditor's signature is saved first; completion is refused below without one.
+      if (!signature || !signedName.trim()) throw new Error('Sign and type your name before completing the audit.')
+      await api.audits.signRun(id, signature, signedName.trim())
       await api.audits.complete(id)
       // Re-fetch the FULL run (the complete response is a bare update with no template relation,
       // which the page renders). This also picks up the fresh approval status for the banner.
@@ -236,6 +271,7 @@ export default function AuditRunPage() {
       setApprovalRequired(!!approval_required)
       const { report: rpt } = await api.audits.report(id)
       setReport(rpt)
+      loadSignatures(rpt)
     } catch (e: any) {
       setCompleteError(e?.message ?? 'The audit could not be completed. Please try again.')
     } finally {
@@ -269,7 +305,7 @@ export default function AuditRunPage() {
   return (
     <div>
       {/* Print-only report */}
-      {report && <PrintReport report={report} />}
+      {report && <PrintReport report={report} signatures={signatureUrls} />}
 
       {/* Screen view */}
       <div className="print:hidden">
@@ -358,6 +394,8 @@ export default function AuditRunPage() {
             />
           </div>
         </div>
+
+        {session?.accessToken && <PreviousActionsPanel token={session.accessToken} runId={id} readOnly={isCompleted} />}
 
         {/* Section tabs */}
         <div className="mb-4 flex flex-wrap gap-2">
@@ -582,6 +620,41 @@ export default function AuditRunPage() {
               </div>
             </div>
 
+            {!isCompleted && (
+              <div className="rounded-card bg-white p-6 shadow-card">
+                <h2 className="mb-1 text-sm font-semibold text-neutral-dark">Your signature</h2>
+                <p className="mb-3 text-xs text-neutral-mid">Sign to confirm this audit is a true record. Your signature and the date are saved to the report.</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <SignaturePad onChange={setSignature} />
+                  <label className="block">
+                    <span className="mb-1 block text-xs font-medium text-neutral-mid">Your name</span>
+                    <input value={signedName} onChange={e => setSignedName(e.target.value)} className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {isCompleted && (report?.has_auditor_signature || report?.has_manager_signature) && (
+              <div className="grid gap-4 rounded-card bg-white p-6 shadow-card sm:grid-cols-2">
+                {report?.has_auditor_signature && (
+                  <div>
+                    <p className="text-xs font-medium text-neutral-mid">Auditor signature</p>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {signatureUrls.auditor && <img src={signatureUrls.auditor} alt="Auditor signature" className="my-1 h-16 w-auto" />}
+                    <p className="text-xs text-neutral-dark">{report.auditor_signed_name}{report.auditor_signed_at ? `, ${new Date(report.auditor_signed_at).toLocaleDateString('en-GB')}` : ''}</p>
+                  </div>
+                )}
+                {report?.has_manager_signature && (
+                  <div>
+                    <p className="text-xs font-medium text-neutral-mid">Manager signature</p>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {signatureUrls.manager && <img src={signatureUrls.manager} alt="Manager signature" className="my-1 h-16 w-auto" />}
+                    <p className="text-xs text-neutral-dark">{report.approved_by_name}{report.manager_signed_at ? `, ${new Date(report.manager_signed_at).toLocaleDateString('en-GB')}` : ''}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Complete / AI recommendations */}
             {!isCompleted && (
               <div className="flex items-center justify-between rounded-card border border-teal/20 bg-teal/5 p-5">
@@ -595,7 +668,7 @@ export default function AuditRunPage() {
                 </div>
                 <button
                   onClick={completeAudit}
-                  disabled={completing || progress < 100}
+                  disabled={completing || progress < 100 || !signature || !signedName.trim()}
                   className="flex items-center gap-2 rounded-btn bg-teal px-5 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50"
                 >
                   {completing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}

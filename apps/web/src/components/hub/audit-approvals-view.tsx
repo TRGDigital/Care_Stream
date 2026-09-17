@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { AuditRecs } from '@/components/audit-recs'
+import { SignaturePad } from '@/components/audits/signature-pad'
 import { persistentCache } from '@/lib/page-cache'
 import { Loader2, FileCheck2, ChevronLeft, Check, X, ClipboardCheck, History } from 'lucide-react'
 
@@ -40,6 +41,7 @@ export function AuditApprovalsView({ token, userId, onChange }: { token: string;
   const [note, setNote]       = useState('')
   const [msg, setMsg]         = useState('')
   const [error, setError]     = useState('')
+  const [signature, setSignature] = useState<string | null>(null)
 
   function load() {
     createApiClient(token).me.auditApprovals()
@@ -57,10 +59,12 @@ export function AuditApprovalsView({ token, userId, onChange }: { token: string;
 
   async function approve() {
     if (!selected) return
+    if (!signature) { setError('Sign in the box before approving.'); return }
     if (!confirm(`Approve "${selected.template_name}"? This finalises the audit and generates the AI recommendations (takes a few seconds). Your name and today's date are saved to it.`)) return
     setBusy(true); setError('')
     try {
-      await createApiClient(token).me.approveAuditAsManager(selected.run_id)
+      await createApiClient(token).me.approveAuditAsManager(selected.run_id, signature)
+      setSignature(null)
       setMsg(`Approved "${selected.template_name}". Your sign-off is saved to the audit.`)
       setSelected(null); load(); onChange?.()
     } catch (e: any) { setError(e.message ?? 'Could not approve.') } finally { setBusy(false) }
@@ -98,6 +102,10 @@ export function AuditApprovalsView({ token, userId, onChange }: { token: string;
             </div>
           </div>
           {error && <div className="mt-3 rounded-md border border-red-100 bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>}
+          <div className="mt-3 rounded-lg border border-gray-200 bg-white p-3">
+            <p className="mb-1 text-xs font-medium text-neutral-mid">Your signature (needed to approve)</p>
+            <div className="max-w-sm"><SignaturePad key={selected.run_id} onChange={setSignature} height={110} /></div>
+          </div>
 
           {detailLoading || !detail ? (
             <div className="flex items-center gap-2 py-12 text-sm text-neutral-mid"><Loader2 size={16} className="animate-spin" /> Loading audit…</div>

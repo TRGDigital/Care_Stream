@@ -5,11 +5,12 @@
 // The editor opens in an overlay (same pattern as starting a new audit); the audit page shows a
 // compact summary card that launches it.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { createApiClient } from '@/lib/api-client'
+import { createApiClient, type AuditActionCloseout } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
+import { AuthedImage } from '@/components/authed-image'
 import { ClipboardList, Plus, Trash2, Loader2, Check, X } from 'lucide-react'
 
-type Action = { id: string; description: string; priority: string; due_date: string | null; assigned_to: string | null; is_external: boolean; external_name: string | null; status: string; source: string; done_at: string | null }
+type Action = { id: string; description: string; priority: string; due_date: string | null; assigned_to: string | null; is_external: boolean; external_name: string | null; status: string; source: string; done_at: string | null } & AuditActionCloseout
 type Plan = { status: string; actions: Action[] }
 type StaffOption = { name: string; job_role: string | null }
 
@@ -83,6 +84,10 @@ export function AuditActionPlan({ token, runId, canGenerate, heading }: { token:
   async function remove(id: string) { setPlan(pl => { const next = pl ? { ...pl, actions: pl.actions.filter(a => a.id !== id) } : pl; cachePlan(next); return next }); await api.audits.deleteAuditAction(id).catch(() => {}) }
   async function add() { const d = newDesc.trim(); if (!d) return; setNewDesc(''); const p = await api.audits.addAuditAction(runId, d, 'priority').catch(() => null); if (p) { setPlan(p as Plan); cachePlan(p as Plan) } }
   async function approve() { setBusy(true); try { const p = await api.audits.approveActionPlan(runId); setPlan(p as Plan); cachePlan(p as Plan) } catch { /* ignore */ } finally { setBusy(false) } }
+  async function decideExtension(id: string, approve: boolean) {
+    setBusy(true)
+    try { await api.audits.decideActionExtension(id, approve); load() } catch { /* ignore */ } finally { setBusy(false) }
+  }
   async function generate() { setGenerating(true); try { const p = await api.audits.generateActionPlan(runId); setPlan(p as Plan); cachePlan(p as Plan); setOpen(true) } catch { /* ignore */ } finally { setGenerating(false) } }
 
   if (loading) return <div className="h-24 animate-pulse rounded-card bg-gray-50" />
@@ -208,6 +213,32 @@ export function AuditActionPlan({ token, runId, canGenerate, heading }: { token:
                           </select>
                         )}
                       </div>
+                      {/* Closing it out: more time requested, what was done, photos, and the re-check at the next audit. */}
+                      {a.extension_status === 'pending' && a.extension_requested_to && (
+                        <div className="mt-2 flex flex-wrap items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-2 text-xs text-amber-900">
+                          <span className="flex-1">More time asked for, until <strong>{new Date(a.extension_requested_to).toLocaleDateString('en-GB')}</strong>{a.extension_reason ? `: ${a.extension_reason}` : ''}</span>
+                          <button onClick={() => decideExtension(a.id, true)} disabled={busy} className="rounded bg-teal px-2 py-1 font-medium text-white disabled:opacity-50">Agree</button>
+                          <button onClick={() => decideExtension(a.id, false)} disabled={busy} className="rounded border border-amber-300 px-2 py-1 font-medium text-amber-900 disabled:opacity-50">Decline</button>
+                        </div>
+                      )}
+                      {a.extension_status && a.extension_status !== 'pending' && (
+                        <p className="mt-1.5 pl-1 text-[11px] text-neutral-mid">More time {a.extension_status === 'approved' ? 'agreed' : 'declined'}{a.extension_decided_by ? ` by ${a.extension_decided_by}` : ''}.</p>
+                      )}
+                      {a.completion_note && <p className="mt-2 rounded-md bg-white px-2.5 py-1.5 text-xs text-neutral-dark"><span className="text-neutral-mid">What was done: </span>{a.completion_note}</p>}
+                      {!!a.evidence?.length && (
+                        <div className="mt-2 flex flex-wrap gap-1.5 pl-1">
+                          {a.evidence.map(ev => (
+                            <AuthedImage key={ev.id} id={ev.id} load={() => api.audits.actionEvidenceBlob(ev.id)} alt={ev.file_name}
+                              onClick={() => api.audits.actionEvidenceBlob(ev.id).then(b => window.open(URL.createObjectURL(b), '_blank', 'noopener')).catch(() => {})}
+                              className="h-14 w-14 cursor-pointer rounded object-cover ring-1 ring-gray-200" />
+                          ))}
+                        </div>
+                      )}
+                      {a.verified_result && (
+                        <p className={`mt-1.5 pl-1 text-[11px] font-medium ${a.verified_result === 'fixed' ? 'text-green-700' : 'text-rose-700'}`}>
+                          Checked at the next audit: {a.verified_result === 'fixed' ? 'still fixed' : 'not fixed, reopened'}{a.verified_by ? ` (${a.verified_by})` : ''}{a.verify_note ? `. ${a.verify_note}` : ''}
+                        </p>
+                      )}
                     </div>
                   )
                 })}

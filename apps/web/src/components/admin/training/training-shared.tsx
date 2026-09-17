@@ -24,6 +24,10 @@ export type Enrollment = {
   completed_at: string | null; expires_at: string | null
   certificate_url: string | null; due_date: string | null
   daysUntilExpiry: number | null
+  /** When it was allocated, and when an admin last re-sent it as a reminder. */
+  created_at?: string
+  last_reminded_at?: string | null
+  reminder_count?: number
   module: { id: string; slug: string; name: string; category: string; sort_order: number; source?: string; requires_practical?: boolean; tier?: string }
 }
 

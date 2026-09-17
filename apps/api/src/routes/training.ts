@@ -7,10 +7,10 @@ import { uploadBlogImage } from '../services/storage/s3'
 import { sendProactiveTrainingQuestions } from '../services/training/proactive'
 import { callClaude } from '../services/ai/claude'
 import { notifyAdmin, notifyStaffAllocation, notifyFollowUp } from '../lib/notify'
-import { sendTrainingUpdateEmail } from '../services/email/outbound'
+import { sendTrainingUpdateEmail, sendTrainingReminderEmail } from '../services/email/outbound'
 import { getTrainingReceiptUrl, createTrainingBasketCheckoutSession } from '../services/billing/stripe'
 import { requireAdmin } from '../middleware/auth'
-import { blogImagePublicUrl } from '../lib/urls'
+import { blogImagePublicUrl, siteUrl } from '../lib/urls'
 import { facilityTypeToSetting, settingFallbackOrder } from '../lib/care-setting'
 import { translateQuestionsBatch, translateTextsBatch, withTranslationBudget, hubContentLang } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
@@ -577,6 +577,41 @@ trainingRouter.get('/compliance', async (req: Request, res: Response) => {
     ok(res, { users, enrollments: enriched })
   } catch (e: any) {
     err(res, 'FETCH_FAILED', e.message, 500)
+  }
+})
+
+// POST /training/enrollments/:id/remind — re-send the allocation email for one course, as a
+// reminder (admin only). Records when, and how many times, so Staff progress can show it and
+// filter by it. A second press within a few minutes is refused so a double click cannot send
+// the same person two emails.
+const REMIND_COOLDOWN_MS = 5 * 60 * 1000
+trainingRouter.post('/enrollments/:id/remind', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const enr = await (prisma as any).trainingEnrollment.findFirst({
+    where:   { id: String(req.params.id), tenant_id: tenantId },
+    include: { user: { select: { name: true, email: true, is_active: true } }, module: { select: { name: true, source: true } } },
+  })
+  if (!enr) { err(res, 'NOT_FOUND', 'Allocation not found.', 404); return }
+  if (enr.status === 'complete') { err(res, 'ALREADY_COMPLETE', 'This course is already complete.', 400); return }
+  if (!enr.user?.is_active || !enr.user?.email) { err(res, 'NO_EMAIL', 'This staff member has no active email address.', 400); return }
+  if (enr.last_reminded_at && Date.now() - new Date(enr.last_reminded_at).getTime() < REMIND_COOLDOWN_MS) {
+    err(res, 'TOO_SOON', 'A reminder was sent in the last few minutes.', 429); return
+  }
+  try {
+    const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
+    await sendTrainingReminderEmail({
+      to: enr.user.email, name: enr.user.name, orgName: tenant?.name ?? '',
+      courseName: enr.module.name, dueDate: enr.due_date ? new Date(enr.due_date) : null,
+      kind: enr.module.source === 'ai_generated' ? 'annual_training' : 'training', portalUrl: siteUrl(),
+    })
+    const updated = await (prisma as any).trainingEnrollment.update({
+      where:  { id: enr.id },
+      data:   { last_reminded_at: new Date(), reminder_count: { increment: 1 } },
+      select: { last_reminded_at: true, reminder_count: true },
+    })
+    ok(res, updated)
+  } catch (e: any) {
+    err(res, 'REMIND_FAILED', e?.message ?? 'Could not send the reminder.', 500)
   }
 })
 

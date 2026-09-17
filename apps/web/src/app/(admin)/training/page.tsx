@@ -12,7 +12,7 @@ import { gbp, UNIT_PENCE, DISCOUNT_TIERS, discountPctForQty } from '@/lib/traini
 import {
   AlertCircle, CheckCircle2, ChevronDown, Clock, GraduationCap, History,
   Info, Lock, Loader2, Plus, Save, ShieldCheck, Sparkles, Trash2, Unlock, Users, Eye,
-  Search, X, Archive, RotateCcw, ShoppingCart, Minus, ClipboardCheck,
+  Search, X, Archive, RotateCcw, ShoppingCart, Minus, ClipboardCheck, Mail, CalendarDays,
 } from 'lucide-react'
 import { ModulePreviewPlayer } from '@/components/training/module-preview-player'
 import { PracticalChecklistSheet } from '@/components/training/course-printables'
@@ -1744,9 +1744,91 @@ function TrainingOnlyTraining({ token }: { token: string | null }) {
 // training and renewals due within 30 days. The same warnings reach admins by email:
 // staff renewal reminders daily at 90/30/7 days, and overdue or expired training
 // resurfacing in Monday's manager digest.
-function StaffProgressTab({ staff, enrollments }: { staff: Staff[]; enrollments: Enrollment[] }) {
+type SentRange = 'all' | 'today' | '7' | '30' | 'custom'
+
+const shortDate = (iso: string | null | undefined) =>
+  iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''
+
+/** One allocated course under a staff member: when it went out, any reminders, and a re-send. */
+function CourseLine({ e, onRemind }: {
+  e: Enrollment
+  onRemind: (id: string) => Promise<void>
+}) {
+  const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [message, setMessage] = useState('')
+  const complete = e.status === 'complete'
+  const statusLabel: Record<string, string> = { complete: 'Complete', in_progress: 'In progress', not_started: 'Not started', expired: 'Expired' }
+  const statusTone = e.status === 'complete' ? 'bg-green-50 text-green-700'
+    : e.status === 'expired' ? 'bg-red-50 text-red-700'
+    : e.status === 'in_progress' ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-neutral-mid'
+
+  async function resend() {
+    setState('sending'); setMessage('')
+    try {
+      await onRemind(e.id)
+      setState('sent')
+    } catch (err: any) {
+      setState('error'); setMessage(err?.message ?? 'Could not send')
+    }
+  }
+
+  return (
+    <li className="flex flex-wrap items-center gap-x-3 gap-y-1 py-1.5">
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-xs font-medium text-neutral-dark">{e.module.name}</p>
+        <p className="text-[11px] text-neutral-mid">
+          {e.created_at ? `Allocated ${shortDate(e.created_at)}` : 'Allocated'}
+          {e.last_reminded_at && ` · Reminder sent ${shortDate(e.last_reminded_at)}${(e.reminder_count ?? 0) > 1 ? ` (${e.reminder_count} in total)` : ''}`}
+          {e.due_date && !complete && ` · Due ${shortDate(e.due_date)}`}
+        </p>
+      </div>
+      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusTone}`}>{statusLabel[e.status] ?? e.status}</span>
+      {!complete && (
+        <button type="button" onClick={resend} disabled={state === 'sending' || state === 'sent'}
+          title="Email this staff member a reminder to complete this course"
+          className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-semibold transition-colors disabled:cursor-default ${
+            state === 'sent' ? 'border-green-200 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-neutral-dark hover:border-teal hover:text-teal'}`}>
+          {state === 'sending' ? <Loader2 size={12} className="animate-spin" /> : state === 'sent' ? <CheckCircle2 size={12} /> : <Mail size={12} />}
+          {state === 'sent' ? 'Reminder sent' : 'Re-send email'}
+        </button>
+      )}
+      {state === 'error' && <span className="w-full text-[11px] text-red-600">{message}</span>}
+    </li>
+  )
+}
+
+function StaffProgressTab({ staff, enrollments, onRemind }: {
+  staff: Staff[]; enrollments: Enrollment[]; onRemind: (id: string) => Promise<void>
+}) {
   const now = Date.now()
   const DAY = 86_400_000
+
+  // "What was sent, and when": an allocation counts as sent on the day it was allocated and on
+  // the day of its latest reminder, so filtering by a date shows both.
+  const [range, setRange] = useState<SentRange>('all')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const window_ = (() => {
+    const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0)
+    if (range === 'today') return { start: startOfToday.getTime(), end: Infinity }
+    if (range === '7') return { start: startOfToday.getTime() - 6 * DAY, end: Infinity }
+    if (range === '30') return { start: startOfToday.getTime() - 29 * DAY, end: Infinity }
+    if (range === 'custom') {
+      const start = from ? new Date(`${from}T00:00:00`).getTime() : -Infinity
+      const end = to ? new Date(`${to}T23:59:59.999`).getTime() : Infinity
+      return { start, end }
+    }
+    return null
+  })()
+  const sentInWindow = (e: Enrollment) => {
+    if (!window_) return true
+    return [e.created_at, e.last_reminded_at].some(d => {
+      if (!d) return false
+      const t = new Date(d).getTime()
+      return t >= window_.start && t <= window_.end
+    })
+  }
   type Problem = { staffName: string; module: string; kind: 'overdue' | 'expired' | 'expiring'; days: number }
 
   const byUser = new Map<string, Enrollment[]>()
@@ -1782,7 +1864,11 @@ function StaffProgressTab({ staff, enrollments }: { staff: Staff[]; enrollments:
       }
     }
     const assigned = list.length
-    return { staff: s, assigned, complete, inProgress, notStarted, overdue, nextRenewal, pct: assigned ? Math.round((complete / assigned) * 100) : null }
+    // Outstanding courses first (they are the ones to chase), then the most recently allocated.
+    const courses = list.filter(sentInWindow).sort((a, b) =>
+      (Number(a.status === 'complete') - Number(b.status === 'complete')) ||
+      (new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime()))
+    return { staff: s, assigned, complete, inProgress, notStarted, overdue, nextRenewal, courses, pct: assigned ? Math.round((complete / assigned) * 100) : null }
   }).sort((a, b) => (b.overdue - a.overdue) || ((a.pct ?? 101) - (b.pct ?? 101)) || a.staff.name.localeCompare(b.staff.name))
 
   const KIND_RANK = { expired: 0, overdue: 1, expiring: 2 } as const
@@ -1804,6 +1890,7 @@ function StaffProgressTab({ staff, enrollments }: { staff: Staff[]; enrollments:
       <HelpAccordion title="How Staff Progress works">
         <p><strong className="text-neutral-dark">What this tab does</strong> — one screen answering &ldquo;how is everyone getting on?&rdquo;. Every staff member&rsquo;s progress on the training allocated to them, and a worklist of what needs chasing: overdue training, expired training, and renewals due in the next 30 days.</p>
         <p><strong className="text-neutral-dark">The same warnings by email</strong> — staff get automatic renewal reminders at 90, 30 and 7 days before expiry, and admins receive the renewal digest; overdue and expired training resurfaces in Monday&rsquo;s digest so nothing stays quietly stuck. Toggle these in Settings &rsaquo; Training notifications.</p>
+        <p><strong className="text-neutral-dark">Courses and reminders</strong> — each staff member&rsquo;s courses are listed under their name with the date each was allocated. <strong className="text-neutral-dark">Re-send email</strong> emails them a reminder naming that course (and its due date), and the date it was sent is recorded. Use <strong className="text-neutral-dark">Sent</strong> to see what went out, allocated or reminded, on a given day or between two dates.</p>
         <p><strong className="text-neutral-dark">Fixing what it shows</strong> — chase overdue items with a word or a nudge from the Compliance grid; assign renewals from Assign training; the Delivery tab can resend questions to anyone mid-module.</p>
       </HelpAccordion>
 
@@ -1843,10 +1930,33 @@ function StaffProgressTab({ staff, enrollments }: { staff: Staff[]; enrollments:
         </div>
       )}
 
-      <div className="mb-2 flex items-center gap-2">
-        <Users size={16} className="text-teal" />
-        <h2 className="text-sm font-semibold text-neutral-dark">Progress by staff member</h2>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Users size={16} className="text-teal" />
+          <h2 className="text-sm font-semibold text-neutral-dark">Progress by staff member</h2>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="flex items-center gap-1 font-medium text-neutral-mid"><CalendarDays size={14} /> Sent</span>
+          {([['all', 'Any time'], ['today', 'Today'], ['7', 'Last 7 days'], ['30', 'Last 30 days'], ['custom', 'Dates']] as const).map(([k, l]) => (
+            <button key={k} type="button" onClick={() => setRange(k)}
+              className={`rounded-full px-2.5 py-1 font-semibold ${range === k ? 'bg-teal text-white' : 'border border-gray-200 bg-white text-neutral-mid hover:text-neutral-dark'}`}>{l}</button>
+          ))}
+          {range === 'custom' && (
+            <>
+              <input type="date" value={from} max={to || undefined} onChange={ev => setFrom(ev.target.value)} aria-label="Sent from"
+                className="rounded-md border border-gray-200 px-2 py-1 text-xs focus:border-teal focus:outline-none" />
+              <span className="text-neutral-mid">to</span>
+              <input type="date" value={to} min={from || undefined} onChange={ev => setTo(ev.target.value)} aria-label="Sent to"
+                className="rounded-md border border-gray-200 px-2 py-1 text-xs focus:border-teal focus:outline-none" />
+            </>
+          )}
+        </div>
       </div>
+      {window_ && (
+        <p className="mb-2 text-xs text-neutral-mid">
+          Showing courses allocated, or re-sent as a reminder, {range === 'today' ? 'today' : range === '7' ? 'in the last 7 days' : range === '30' ? 'in the last 30 days' : `${from ? `from ${shortDate(from)}` : ''}${from && to ? ' ' : ''}${to ? `to ${shortDate(to)}` : ''}` || 'in the chosen dates'}.
+        </p>
+      )}
       {rows.every(r => r.assigned === 0) ? (
         <div className="rounded-card border border-dashed border-gray-200 bg-white px-6 py-12 text-center">
           <GraduationCap size={32} className="mx-auto mb-3 text-gray-300" />
@@ -1868,11 +1978,28 @@ function StaffProgressTab({ staff, enrollments }: { staff: Staff[]; enrollments:
               </tr>
             </thead>
             <tbody>
-              {rows.filter(r => r.assigned > 0).map(r => (
-                <tr key={r.staff.id} className="border-b border-gray-50 last:border-0 hover:bg-neutral-light/30">
-                  <td className="px-5 py-3">
+              {rows.filter(r => r.assigned > 0 && (!window_ || r.courses.length > 0)).length === 0 && (
+                <tr><td colSpan={7} className="px-5 py-8 text-center text-sm text-neutral-mid">Nothing was allocated or re-sent in these dates.</td></tr>
+              )}
+              {rows.filter(r => r.assigned > 0 && (!window_ || r.courses.length > 0)).map(r => {
+                const open = expanded.has(r.staff.id)
+                const shown = open ? r.courses : r.courses.slice(0, 3)
+                return (
+                <tr key={r.staff.id} className="border-b border-gray-50 align-top last:border-0 hover:bg-neutral-light/30">
+                  <td className="min-w-[360px] px-5 py-3">
                     <p className="font-medium text-neutral-dark">{r.staff.name}</p>
                     <p className="text-xs text-neutral-mid">{r.staff.job_role ?? r.staff.email}</p>
+                    {shown.length > 0 && (
+                      <ul className="mt-2 divide-y divide-gray-50 border-t border-gray-100">
+                        {shown.map(e => <CourseLine key={e.id} e={e} onRemind={onRemind} />)}
+                      </ul>
+                    )}
+                    {r.courses.length > 3 && (
+                      <button type="button" className="mt-1 text-[11px] font-semibold text-teal"
+                        onClick={() => setExpanded(prev => { const n = new Set(prev); if (n.has(r.staff.id)) n.delete(r.staff.id); else n.add(r.staff.id); return n })}>
+                        {open ? 'Show fewer' : `Show all ${r.courses.length} courses`}
+                      </button>
+                    )}
                   </td>
                   <td className="px-3 py-3 min-w-[140px]">
                     <div className="flex items-center gap-2">
@@ -1888,7 +2015,8 @@ function StaffProgressTab({ staff, enrollments }: { staff: Staff[]; enrollments:
                   <td className={`px-3 py-3 text-center font-semibold ${r.overdue > 0 ? 'text-red-600' : 'text-neutral-mid'}`}>{r.overdue}</td>
                   <td className="px-3 py-3 text-xs text-neutral-mid">{r.nextRenewal ? new Date(r.nextRenewal).toLocaleDateString('en-GB') : '—'}</td>
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -2082,7 +2210,13 @@ export default function TrainingPage() {
       {tab === 'modules'  && api && <ModulesTab api={api} modules={modules} staff={staff} enrollments={enrollments} onAssigned={load} />}
       {tab === 'history'  && api && <HistoryTab api={api} modules={modules} />}
       {tab === 'delivery' && api && <DeliveryTab api={api} modules={modules} staff={staff} />}
-      {tab === 'progress' && <StaffProgressTab staff={staff} enrollments={enrollments} />}
+      {tab === 'progress' && (
+        <StaffProgressTab staff={staff} enrollments={enrollments} onRemind={async id => {
+          if (!api) throw new Error('Not signed in')
+          const r = await api.training.remindEnrollment(id)
+          setEnrollments(prev => prev.map(e => (e.id === id ? { ...e, ...r } : e)))
+        }} />
+      )}
       {tab === 'face_to_face' && (f2fLocked ? (
         <UpgradePanel
           title="Face-to-face Training"

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
+import { queueWebsiteReindex } from '../services/website-chat/indexer'
 import { requirePlatformAdmin } from '../middleware/auth'
 import { USE_CASES, isUseCaseSlug, useCaseLabel } from '../lib/use-cases'
 import { USER_CASE_PAGE_SEEDS } from '../data/user-case-pages-seed'
@@ -61,6 +62,8 @@ userCasesAdminRouter.put('/:slug', async (req: Request, res: Response) => {
     update: data,
     create: { slug, ...data },
   })
+  // The website chat re-reads the page once the change has reached the site.
+  await queueWebsiteReindex(`/uses/${slug}`)
   ok(res, { page })
 })
 

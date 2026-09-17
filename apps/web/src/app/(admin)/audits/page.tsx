@@ -44,12 +44,13 @@ function HowToAccordion() {
       </button>
       {open && (
         <div className="space-y-2 border-t border-teal/10 px-4 py-3 text-xs leading-relaxed text-neutral-mid">
-          <p><strong className="text-neutral-dark">Starting an audit:</strong> Click "New audit", choose the audit type (e.g. Health &amp; Safety – Monthly), select the month, and optionally enter the auditor name and role. Click "Start audit" to open the form.</p>
-          <p><strong className="text-neutral-dark">Completing the form:</strong> Work through each section using the tabs. For yes/no questions tap Yes, No, or N/A. For findings-based audits (e.g. Medicines Management) type your findings and any actions directly. Answers save automatically — you can leave and return at any time.</p>
-          <p><strong className="text-neutral-dark">Pausing on the web:</strong> Click <em>Save &amp; exit</em> at the top of the audit form at any time. All answers are saved automatically as you go — you can return and resume from the In Progress section on this page.</p>
-          <p><strong className="text-neutral-dark">Finishing &amp; AI recommendations:</strong> Once all required questions are answered, go to the Summary tab, fill in strengths, areas for improvement, and a deadline. Click "Complete &amp; get AI recommendations" to generate a structured report linked to CQC Key Questions.</p>
-          <p><strong className="text-neutral-dark">Your own audits:</strong> Build an audit from scratch, or copy a built-in audit and edit your copy. Questions can be yes/no, findings, free text, a number with a pass range (for example fridge temperatures), a date, one or several options, or a rating. A question can be asked only when an earlier answer matches, and tagged with the CQC quality statement it evidences. Every save is a new version, and completed audits keep the questions they were answered against.</p>
-          <p><strong className="text-neutral-dark">Printing &amp; storing reports:</strong> Completed audits appear in the Audit Repository below. Click any row to view or reprint the report. Use "Print / save" inside the audit to produce a PDF-ready version.</p>
+          <p><strong className="text-neutral-dark">Starting an audit:</strong> Click &ldquo;New audit&rdquo;, choose the audit and the month, plus the room, resident, staff member or shift if it asks for one, then click &ldquo;Start audit&rdquo;. Audits can also be done on a phone or tablet in the Chat Hub, with photos you can draw on.</p>
+          <p><strong className="text-neutral-dark">Scheduling:</strong> Use &ldquo;Schedule an audit&rdquo; to assign an audit to a named person with a due date and a repeat. They are reminded before it is due and when it is overdue, and overdue audits are escalated to admins. Choose the escalation and summary emails in Settings, Audits.</p>
+          <p><strong className="text-neutral-dark">Completing the form:</strong> If the audit has been done before, first check the actions from the last audit are still fixed. Work through each section; questions that only apply after a certain answer appear when needed. Answers save automatically, and &ldquo;Save &amp; exit&rdquo; lets you return from In progress.</p>
+          <p><strong className="text-neutral-dark">Finishing:</strong> Fill in the Summary tab, sign, and click &ldquo;Complete &amp; get AI recommendations&rdquo;. If manager approval is on, the audit goes to your care manager in the hub to sign off first. A PDF report is saved with the audit and emailed to your admins.</p>
+          <p><strong className="text-neutral-dark">Action plans:</strong> Recommendations become an action plan you review, assign and approve. Staff close actions in the hub with a note and photos, or ask for more time, and the next audit re-checks them.</p>
+          <p><strong className="text-neutral-dark">Your own audits:</strong> Build an audit from scratch, import one you already use from a PDF, Word document or photo, or copy a built-in audit and edit your copy. Hide any built-in audits you do not use. Every save is a new version, and completed audits keep the questions they were answered against.</p>
+          <p><strong className="text-neutral-dark">Trends and reports:</strong> The Trends panel shows scores over time and repeat failures. Completed audits are in the Audit Repository below, where you can view the report or download the PDF. <a href="/guides#monthly-audits" className="font-medium text-teal hover:underline">Read the full guide</a>.</p>
         </div>
       )}
     </div>
@@ -488,7 +489,7 @@ export default function AuditsPage() {
                 )}
                 {auditorName && (
                   <p className="text-xs text-neutral-mid">
-                    Auditor: <span className="font-medium text-neutral-dark">{auditorName}{auditorRole ? ` — ${auditorRole}` : ''}</span>
+                    Auditor: <span className="font-medium text-neutral-dark">{auditorName}{auditorRole ? `, ${auditorRole}` : ''}</span>
                   </p>
                 )}
               </div>
@@ -579,10 +580,10 @@ export default function AuditsPage() {
                   >
                     <td className="px-5 py-3 font-medium text-neutral-dark">{run.template.name}</td>
                     <td className="py-3 pr-5 text-neutral-mid">{monthLabel(run.audit_month)}</td>
-                    <td className="py-3 pr-5 text-neutral-mid">{run.auditor_name ?? '—'}</td>
+                    <td className="py-3 pr-5 text-neutral-mid">{run.auditor_name ?? '-'}</td>
                     <td className="py-3 pr-5"><StatusBadge status={run.status} /></td>
                     <td className="py-3 pr-5 text-right text-xs text-neutral-mid">
-                      {run.completed_at ? new Date(run.completed_at).toLocaleDateString('en-GB') : '—'}
+                      {run.completed_at ? new Date(run.completed_at).toLocaleDateString('en-GB') : '-'}
                     </td>
                     <td className="py-3 pr-4 text-right">
                       <ChevronRight size={14} className="ml-auto text-neutral-mid" />

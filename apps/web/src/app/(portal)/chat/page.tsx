@@ -1015,6 +1015,16 @@ function ChatPageInner() {
               {navCounts.audits > 0 && !hubLocked('audits') && <NavBadge count={navCounts.audits} className="bg-orange-500" />}
             </button>
           )}
+          {!trainingOnly && auditApprovals.is_manager && (
+          <button
+            onClick={() => setView('audit-approvals')}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'audit-approvals' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+          >
+            <ClipboardCheck size={15} />
+            Audit sign-off
+            {auditApprovals.count > 0 && <NavBadge count={auditApprovals.count} className="bg-rose-500" />}
+          </button>
+          )}
           {canF2F && (
             <button
               onClick={() => !hubLocked('f2f') && setView('f2f')}
@@ -1054,16 +1064,6 @@ function ChatPageInner() {
             <FileText size={15} />
             Policies
             {policyApprovals.count + dueReviewCount > 0 && <NavBadge count={policyApprovals.count + dueReviewCount} className="bg-rose-500" />}
-          </button>
-          )}
-          {!trainingOnly && auditApprovals.is_manager && (
-          <button
-            onClick={() => setView('audit-approvals')}
-            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'audit-approvals' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
-          >
-            <ClipboardCheck size={15} />
-            Audit sign-off
-            {auditApprovals.count > 0 && <NavBadge count={auditApprovals.count} className="bg-rose-500" />}
           </button>
           )}
           {!isReviewer && (

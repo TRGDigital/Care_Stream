@@ -20,13 +20,27 @@ import { ok, err } from '../lib/response'
 import {
   createPolicyCheckoutSession,
   retrievePolicyCheckoutSession,
-  POLICY_PENCE,
 } from '../services/billing/stripe'
 import { missingPolicies } from '../services/analytics/missing-policies'
 import { sendPolicyPurchaseNotification } from '../services/email/outbound'
 import { productForTitle, purchaseIntakeState, intakeStateFor } from '../services/policy-writer/intake'
 
 export const policyPurchasesRouter = Router()
+
+// What a policy costs on /gaps: the policy shop's price for the same policy, matched by title,
+// so a subscriber never pays more (or less) than a shop buyer. A missing policy with no shop
+// page is priced at the shop's highest single-policy price, the same tier as the most
+// substantial policies it sells.
+async function policyPrices(): Promise<{ priceFor: (title: string) => number; byTitle: Record<string, number>; fallback: number }> {
+  const products = await (prisma as any).policyProduct.findMany({
+    where: { active: true }, select: { title: true, price_pence: true },
+  })
+  const byLower = new Map<string, number>((products as any[]).map(p => [String(p.title).trim().toLowerCase(), p.price_pence]))
+  const fallback = Math.max(0, ...(products as any[]).map(p => p.price_pence)) || 7900
+  const priceFor = (title: string) => byLower.get(title.trim().toLowerCase()) ?? fallback
+  const byTitle = Object.fromEntries((products as any[]).map(p => [p.title, priceFor(p.title)]))
+  return { priceFor, byTitle, fallback }
+}
 
 // GET / — what this client has bought, newest first. Drives both their own view of where a
 // document has got to and the platform queue of work owed.
@@ -56,7 +70,15 @@ policyPurchasesRouter.get('/', async (req: Request, res: Response) => {
         (r.intake_data ?? {}) as Record<string, unknown>,
       ),
     }))
-    ok(res, { purchases, price_pence: POLICY_PENCE })
+    const [prices, ignores] = await Promise.all([
+      policyPrices(),
+      (prisma as any).missingPolicyIgnore.findMany({
+        where: { tenant_id: user.tenant_id }, orderBy: { ignored_at: 'desc' },
+        select: { policy_title: true, ignored_at: true, ignored_by_name: true },
+      }),
+    ])
+    // price_pence is the price for a policy with no shop page; prices holds every shop policy.
+    ok(res, { purchases, price_pence: prices.fallback, prices: prices.byTitle, ignored: ignores })
   } catch (e: any) {
     err(res, 'PURCHASES_FAILED', e?.message ?? 'could not read your purchases', 500)
   }
@@ -104,14 +126,18 @@ policyPurchasesRouter.post('/checkout', async (req: Request, res: Response) => {
 
     const refs: Record<string, string[]> = {}
     for (const t of toBuy) refs[t] = offered.get(t) ?? []
+    const { priceFor } = await policyPrices()
+    const pricesByTitle: Record<string, number> = {}
+    for (const t of toBuy) pricesByTitle[t] = priceFor(t)
 
     const url = await createPolicyCheckoutSession({
       tenantId: user.tenant_id,
       email:    user.email,
       titles:   toBuy,
       referenceKeysByTitle: refs,
+      pricesByTitle,
     })
-    ok(res, { url, titles: toBuy, price_pence: POLICY_PENCE })
+    ok(res, { url, titles: toBuy, total_pence: toBuy.reduce((n, t) => n + pricesByTitle[t], 0) })
   } catch (e: any) {
     err(res, 'CHECKOUT_FAILED', e?.message ?? 'could not start checkout', 500)
   }
@@ -229,6 +255,41 @@ policyPurchasesRouter.post('/:id/intake', async (req: Request, res: Response) =>
   }
 })
 
+// POST /ignore { title } and POST /unignore { title } — a tenant deciding a missing policy
+// does not apply to them. Admin only, like buying. Ignoring hides it from the missing list;
+// it never deletes anything and can be undone.
+policyPurchasesRouter.post('/ignore', async (req: Request, res: Response) => {
+  const user = (req as any).user
+  if (user.role !== 'admin') return err(res, 'FORBIDDEN', 'Only admins can change this list', 403)
+  const title = String(req.body?.title ?? '').trim().slice(0, 300)
+  if (!title) return err(res, 'INVALID_INPUT', 'title is required', 400)
+  try {
+    const me = await (prisma as any).user.findUnique({ where: { id: user.sub }, select: { name: true } }).catch(() => null)
+    const row = await (prisma as any).missingPolicyIgnore.upsert({
+      where:  { tenant_id_policy_title: { tenant_id: user.tenant_id, policy_title: title } },
+      update: {},
+      create: { tenant_id: user.tenant_id, policy_title: title, ignored_by: user.sub, ignored_by_name: me?.name ?? null },
+      select: { policy_title: true, ignored_at: true, ignored_by_name: true },
+    })
+    ok(res, { ignored: row })
+  } catch (e: any) {
+    err(res, 'IGNORE_FAILED', e?.message ?? 'could not ignore that policy', 500)
+  }
+})
+
+policyPurchasesRouter.post('/unignore', async (req: Request, res: Response) => {
+  const user = (req as any).user
+  if (user.role !== 'admin') return err(res, 'FORBIDDEN', 'Only admins can change this list', 403)
+  const title = String(req.body?.title ?? '').trim()
+  if (!title) return err(res, 'INVALID_INPUT', 'title is required', 400)
+  try {
+    await (prisma as any).missingPolicyIgnore.deleteMany({ where: { tenant_id: user.tenant_id, policy_title: title } })
+    ok(res, { unignored: true })
+  } catch (e: any) {
+    err(res, 'UNIGNORE_FAILED', e?.message ?? 'could not restore that policy', 500)
+  }
+})
+
 // POST /reconcile — called when the buyer returns from Stripe.
 //
 // Idempotent on (stripe_payment_id, policy_title), so refreshing the return page cannot
@@ -281,7 +342,9 @@ policyPurchasesRouter.post('/reconcile', async (req: Request, res: Response) => 
               ...(product?.reference_keys ?? []),
               ...(result.referenceKeysByTitle[title] ?? []),
             ])],
-            price_pence:       POLICY_PENCE,
+            // What Stripe charged for this title; a session from before per-policy pricing
+            // carries no prices and falls back to today's price for the same policy.
+            price_pence:       result.pricesByTitle[title] ?? (await policyPrices()).priceFor(title),
             currency:          'gbp',
             stripe_payment_id: result.paymentId,
             status:            intake.complete ? 'paid' : 'awaiting_details',
@@ -311,7 +374,7 @@ policyPurchasesRouter.post('/reconcile', async (req: Request, res: Response) => 
         tenantName: tenant?.name ?? 'Unknown client',
         accountNumber: tenant?.account_number ?? null,
         titles: created,
-        totalPence: created.length * POLICY_PENCE,
+        totalPence: created.reduce((n, t) => n + (result.pricesByTitle[t] ?? 0), 0),
       }).catch(e => console.error('[policy-purchases] notify failed:', e?.message ?? e))
     }
 

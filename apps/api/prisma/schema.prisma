@@ -2850,6 +2850,22 @@ model PolicyPurchase {
   @@map("policy_purchase")
 }
 
+// A missing policy a tenant has decided they do not need, from /gaps. Hidden from the
+// "you are missing" list until they undo it. Kept by title because that is how the missing
+// report names a policy. SQL: prisma/sql/manual_missing_policy_ignores.sql (RLS on).
+model MissingPolicyIgnore {
+  id              String   @id @default(uuid())
+  tenant_id       String
+  policy_title    String
+  ignored_by      String?
+  ignored_by_name String?
+  ignored_at      DateTime @default(now())
+
+  @@unique([tenant_id, policy_title])
+  @@index([tenant_id])
+  @@map("missing_policy_ignores")
+}
+
 // ─── Website AI chat ──────────────────────────────────────────────────────────
 // The chat on the public marketing site. It answers ONLY from the public website, indexed into
 // its own Pinecone namespace (public_site), and never reads tenant data. Conversations and every

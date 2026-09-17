@@ -15,25 +15,46 @@
 
 import { useEffect, useState } from 'react'
 import { createApiClient, type MissingPolicyReport, type PolicyPurchase } from '@/lib/api-client'
-import { AlertTriangle, Loader2, ShoppingCart, Check, Clock, ChevronDown } from 'lucide-react'
+import { AlertTriangle, Loader2, ShoppingCart, Check, Clock, ChevronDown, EyeOff, RotateCcw } from 'lucide-react'
 
 const money = (pence: number) => `£${(pence / 100).toFixed(pence % 100 === 0 ? 0 : 2)}`
+
+type Prices = { byTitle: Record<string, number>; fallback: number }
+
+// The same price the policy shop charges for this policy (matched by title), so buying it here
+// never costs more or less than buying it from its page. A policy with no shop page uses the
+// fallback the API sends. The server charges from the same table.
+const priceOf = (prices: Prices, title: string) => {
+  const hit = Object.entries(prices.byTitle).find(([t]) => t.trim().toLowerCase() === title.trim().toLowerCase())
+  return hit ? hit[1] : prices.fallback
+}
 
 // The count, shared by the alert at the top of the page and the banner further down. Both
 // need the same answer and it is the same free read, so it is fetched once per component
 // rather than twice per page.
+// Fired when a policy is ignored or restored, so the alert at the top of the page recounts.
+const CHANGED = 'cs-missing-policies-changed'
+
 export function useMissingCount(token: string): number | null {
   const [count, setCount] = useState<number | null>(null)
+  const [version, setVersion] = useState(0)
+  useEffect(() => {
+    const bump = () => setVersion(v => v + 1)
+    window.addEventListener(CHANGED, bump)
+    return () => window.removeEventListener(CHANGED, bump)
+  }, [])
   useEffect(() => {
     const api = createApiClient(token)
     Promise.all([api.gaps.missingPolicies(), api.policyPurchases.list()])
       .then(([r, p]) => {
         if (!r.analysed || !r.usable) { setCount(null); return }
         const bought = new Set(p.purchases.map(x => x.policy_title))
-        setCount(r.missing.filter(m => !bought.has(m.title)).length)
+        // A policy the home has chosen to ignore is no longer something they are missing.
+        const ignored = new Set((p.ignored ?? []).map(x => x.policy_title))
+        setCount(r.missing.filter(m => !bought.has(m.title) && !ignored.has(m.title)).length)
       })
       .catch(() => setCount(null))
-  }, [token])
+  }, [token, version])
   return count
 }
 
@@ -67,7 +88,10 @@ export function MissingPoliciesAlert({ token }: { token: string }) {
 export function MissingPoliciesBanner({ token }: { token: string }) {
   const [report, setReport] = useState<MissingPolicyReport | null>(null)
   const [purchases, setPurchases] = useState<PolicyPurchase[]>([])
-  const [pricePence, setPricePence] = useState(12000)
+  const [prices, setPrices] = useState<Prices>({ byTitle: {}, fallback: 0 })
+  const [ignored, setIgnored] = useState<Array<{ policy_title: string; ignored_at: string; ignored_by_name: string | null }>>([])
+  const [ignoring, setIgnoring] = useState<string | null>(null)
+  const [showIgnored, setShowIgnored] = useState(false)
   const [chosen, setChosen] = useState<Set<string>>(new Set())
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -102,7 +126,8 @@ export function MissingPoliciesBanner({ token }: { token: string }) {
       .then(([r, p]) => {
         setReport(r)
         setPurchases(p.purchases)
-        setPricePence(p.price_pence)
+        setPrices({ byTitle: p.prices ?? {}, fallback: p.price_pence })
+        setIgnored(p.ignored ?? [])
       })
       .catch(() => { /* the banner simply does not appear; it is never the main event */ })
   }, [token])
@@ -135,8 +160,33 @@ export function MissingPoliciesBanner({ token }: { token: string }) {
   if (!report || !report.analysed || !report.usable) return null
 
   const bought = new Map(purchases.map(p => [p.policy_title, p]))
-  const toBuy = report.missing.filter(m => !bought.has(m.title))
-  if (toBuy.length === 0 && purchases.length === 0) return null
+  const ignoredTitles = new Set(ignored.map(i => i.policy_title))
+  const toBuy = report.missing.filter(m => !bought.has(m.title) && !ignoredTitles.has(m.title))
+  // Only ignores that still match something on the missing list are worth showing.
+  const ignoredMissing = ignored.filter(i => report.missing.some(m => m.title === i.policy_title) && !bought.has(i.policy_title))
+  if (toBuy.length === 0 && purchases.length === 0 && ignoredMissing.length === 0) return null
+  const chosenTotal = [...chosen].reduce((n, t) => n + priceOf(prices, t), 0)
+
+  async function ignore(title: string) {
+    setIgnoring(title); setError('')
+    try {
+      const r = await createApiClient(token).policyPurchases.ignore(title)
+      setIgnored(prev => [r.ignored, ...prev.filter(i => i.policy_title !== title)])
+      setChosen(prev => { const n = new Set(prev); n.delete(title); return n })
+      window.dispatchEvent(new Event(CHANGED))
+    } catch (e: any) { setError(e?.message ?? 'Could not ignore that policy') }
+    finally { setIgnoring(null) }
+  }
+
+  async function unignore(title: string) {
+    setIgnoring(title); setError('')
+    try {
+      await createApiClient(token).policyPurchases.unignore(title)
+      setIgnored(prev => prev.filter(i => i.policy_title !== title))
+      window.dispatchEvent(new Event(CHANGED))
+    } catch (e: any) { setError(e?.message ?? 'Could not restore that policy') }
+    finally { setIgnoring(null) }
+  }
 
   const toggle = (title: string) =>
     setChosen(prev => {
@@ -199,8 +249,10 @@ export function MissingPoliciesBanner({ token }: { token: string }) {
       )}
       <div className="border-b border-gray-100 bg-teal-light/25 px-6 py-5">
         <h2 className="text-base font-bold text-neutral-dark">
-          We have read your policies against the law, and you are missing{' '}
-          {toBuy.length === 1 ? 'one policy' : `${toBuy.length} policies`}
+          {toBuy.length === 0
+            ? 'We have read your policies against the law'
+            : <>We have read your policies against the law, and you are missing{' '}
+              {toBuy.length === 1 ? 'one policy' : `${toBuy.length} policies`}</>}
         </h2>
         {/* A dated analysis is still shown, so say plainly that it is dated rather than
             letting it read as this morning's verdict. */}
@@ -220,7 +272,8 @@ export function MissingPoliciesBanner({ token }: { token: string }) {
       {toBuy.length > 0 && (
         <div className="divide-y divide-gray-100">
           {toBuy.map(m => (
-            <label key={m.title} className="flex cursor-pointer items-start gap-3 px-6 py-3.5 hover:bg-neutral-light/40">
+            <div key={m.title} className="flex items-start gap-3 px-6 py-3.5 hover:bg-neutral-light/40">
+              <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-3">
               <input
                 type="checkbox"
                 checked={chosen.has(m.title)}
@@ -235,9 +288,47 @@ export function MissingPoliciesBanner({ token }: { token: string }) {
                   Required by {m.regulations.map(r => r.official_name).join(' · ')}
                 </span>
               </span>
-              <span className="shrink-0 text-sm font-semibold text-neutral-dark">{money(pricePence)}</span>
-            </label>
+              <span className="shrink-0 text-sm font-semibold text-neutral-dark">{money(priceOf(prices, m.title))}</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => ignore(m.title)}
+                disabled={ignoring === m.title}
+                title="We do not need this policy: hide it from this list"
+                className="inline-flex shrink-0 items-center gap-1 rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-neutral-mid hover:border-gray-300 hover:text-neutral-dark disabled:opacity-50"
+              >
+                {ignoring === m.title ? <Loader2 size={12} className="animate-spin" /> : <EyeOff size={12} />} Ignore
+              </button>
+            </div>
           ))}
+        </div>
+      )}
+
+      {ignoredMissing.length > 0 && (
+        <div className="border-t border-gray-100 px-6 py-3">
+          <button type="button" onClick={() => setShowIgnored(s => !s)}
+            className="flex items-center gap-1.5 text-xs font-semibold text-neutral-mid hover:text-neutral-dark">
+            <ChevronDown size={14} className={showIgnored ? 'rotate-180 transition-transform' : 'transition-transform'} />
+            {ignoredMissing.length === 1 ? '1 policy ignored' : `${ignoredMissing.length} policies ignored`}
+          </button>
+          {showIgnored && (
+            <ul className="mt-2 space-y-1.5">
+              {ignoredMissing.map(i => (
+                <li key={i.policy_title} className="flex flex-wrap items-center gap-2 text-sm text-neutral-mid">
+                  <EyeOff size={13} className="shrink-0" />
+                  <span className="font-medium text-neutral-dark">{i.policy_title}</span>
+                  <span className="text-xs">
+                    Ignored {new Date(i.ignored_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    {i.ignored_by_name ? ` by ${i.ignored_by_name}` : ''}
+                  </span>
+                  <button type="button" onClick={() => unignore(i.policy_title)} disabled={ignoring === i.policy_title}
+                    className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold text-teal hover:bg-teal-light/30 disabled:opacity-50">
+                    {ignoring === i.policy_title ? <Loader2 size={11} className="animate-spin" /> : <RotateCcw size={11} />} Undo
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 
@@ -268,8 +359,8 @@ export function MissingPoliciesBanner({ token }: { token: string }) {
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-6 py-4">
           <p className="text-sm text-neutral-mid">
             {chosen.size === 0
-              ? `${money(pricePence)} per policy`
-              : `${chosen.size} selected · ${money(pricePence * chosen.size)}`}
+              ? 'Choose the policies you would like us to write'
+              : `${chosen.size} selected · ${money(chosenTotal)}`}
           </p>
           <button
             onClick={buy}

@@ -514,12 +514,24 @@ export function createApiClient(token: string) {
     },
     policyPurchases: {
       list: () =>
-        apiFetch<{ purchases: PolicyPurchase[]; price_pence: number }>('/policy-purchases', token),
+        apiFetch<{
+          purchases: PolicyPurchase[]
+          /** The price of a missing policy with no page in the policy shop. */
+          price_pence: number
+          /** The policy shop's price for each policy, by title. */
+          prices?: Record<string, number>
+          ignored?: Array<{ policy_title: string; ignored_at: string; ignored_by_name: string | null }>
+        }>('/policy-purchases', token),
+      ignore: (title: string) =>
+        apiFetch<{ ignored: { policy_title: string; ignored_at: string; ignored_by_name: string | null } }>(
+          '/policy-purchases/ignore', token, { method: 'POST', body: JSON.stringify({ title }) }),
+      unignore: (title: string) =>
+        apiFetch<{ unignored: boolean }>('/policy-purchases/unignore', token, { method: 'POST', body: JSON.stringify({ title }) }),
       submitIntake: (id: string, values: Record<string, string>) =>
         apiFetch<{ purchase: PolicyPurchase; intake: { fields: PolicyIntakeField[]; missing: number; complete: boolean } }>(
           '/policy-purchases/' + encodeURIComponent(id) + '/intake', token, { method: 'POST', body: JSON.stringify({ values }) }),
       checkout: (titles: string[]) =>
-        apiFetch<{ url: string; titles: string[]; price_pence: number }>('/policy-purchases/checkout', token, {
+        apiFetch<{ url: string; titles: string[]; total_pence: number }>('/policy-purchases/checkout', token, {
           method: 'POST', body: JSON.stringify({ titles }),
         }),
       reconcile: (session_id: string) =>

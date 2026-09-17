@@ -8,7 +8,7 @@ import { detectEvidenceType } from '../lib/evidence-file'
 import { scanBuffer, scannerConfigured } from '../services/security/malware-scan'
 import { uploadAuditEvidence, downloadFile, deleteFile } from '../services/storage/s3'
 import { callClaude } from '../services/ai/claude'
-import { trackAiAction, checkFeature, PlanLimitError } from '../lib/plan-limits'
+import { trackAiAction, checkFeature, PlanLimitError, checkAiCreditLimit, logAiCredit } from '../lib/plan-limits'
 import { notifyAdmin } from '../lib/notify'
 import { sendAuditUpdateEmail } from '../services/email/outbound'
 import { getAuditsDue } from '../services/audits/due'
@@ -29,6 +29,9 @@ import { previousActionsForRun, verifyAction, decideExtension, storeSignature } 
 import { buildAuditReport, qualityStatementNames } from '../services/audits/report'
 import { renderAuditReportPdf, generateAndStoreAuditReport, reportFileName } from '../services/audits/report-pdf'
 import { tenantInsights, templateInsights, groupInsights } from '../services/audits/insights'
+import { AUDIT_LIBRARY } from '../data/audit-library'
+import multer from 'multer'
+import { draftAuditFromFile, IMPORT_TYPES } from '../services/audits/import'
 
 export const auditsRouter = Router()
 
@@ -1278,6 +1281,32 @@ export async function ensurePlatformTemplatesSeeded() {
     })
     console.log(`[audits] Seeded platform template: ${tmpl.name}`)
   }
+
+  // The library audits: written with question settings, conditions and CQC tags, so they are built
+  // through the same editor homes use (which also records version 1).
+  const missing = AUDIT_LIBRARY.filter(t => !existingNames.has(t.name))
+  if (!missing.length) return
+  const statements = await (prisma as any).qualityStatement.findMany({ select: { id: true, reference_key: true } }).catch(() => [])
+  const qsId = new Map<string, string>((statements as any[]).map(r => [r.reference_key, r.id]))
+  for (const tmpl of missing) {
+    const row = await (prisma as any).auditTemplate.create({
+      data: { name: tmpl.name, description: tmpl.description, is_seed: true, tenant_id: null, frequency: tmpl.frequency, subject_scope: tmpl.subject_scope ?? 'none', version: 0 },
+    })
+    const parsed = parseEditorPayload({
+      name: tmpl.name, frequency: tmpl.frequency, subject_scope: tmpl.subject_scope ?? 'none',
+      sections: tmpl.sections.map((sec, si) => ({
+        title: sec.title,
+        questions: sec.questions.map((q, qi) => ({
+          key: q.key ?? `q-${si}-${qi}`, text: q.text, type: q.type ?? 'yes_no_na', settings: q.settings ?? null,
+          show_if: q.show_if ?? null, quality_statement_id: q.qs ? (qsId.get(q.qs) ?? null) : null,
+        })),
+      })),
+      change_note: 'Added to the CareStream audit library',
+    })
+    if ('error' in parsed) { console.error(`[audits] Library audit "${tmpl.name}" is invalid: ${parsed.error}`); await (prisma as any).auditTemplate.delete({ where: { id: row.id } }); continue }
+    await saveTemplateStructure(row.id, parsed.payload, { changedBy: 'CareStream' })
+    console.log(`[audits] Seeded library audit: ${tmpl.name}`)
+  }
 }
 
 // ─── GET /audits/templates ────────────────────────────────────────────────────
@@ -1404,6 +1433,35 @@ auditsRouter.post('/templates', requireAdmin, async (req: Request, res: Response
 async function readableTemplate(tenantId: string, id: string) {
   return (prisma as any).auditTemplate.findFirst({ where: { id, is_active: true, OR: [{ tenant_id: null }, { tenant_id: tenantId }] }, select: { id: true, tenant_id: true, name: true } })
 }
+
+// POST /audits/templates/import (multipart "file") — a draft audit from an existing PDF, Word document,
+// text file or photo, returned for review in the builder. Nothing is saved until the builder saves it.
+const importUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } }).single('file')
+auditsRouter.post('/templates/import', requireAdmin, (req: Request, res: Response, next) => {
+  importUpload(req, res, (e: any) => {
+    if (!e) return next()
+    if (e.code === 'LIMIT_FILE_SIZE') return err(res, 'FILE_TOO_LARGE', 'The file must be under 15 MB.', 413)
+    return err(res, 'UPLOAD_ERROR', 'The file could not be uploaded. Please try again.', 400)
+  })
+}, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  try {
+    await checkFeature(tenantId, 'has_custom_audits')
+    await checkAiCreditLimit(tenantId)
+  } catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
+  const file = (req as any).file as Express.Multer.File | undefined
+  if (!file) return err(res, 'NO_FILE', 'Choose a file to import.', 400)
+  const detected = detectEvidenceType(file.buffer)
+  const mimetype = detected?.mime && IMPORT_TYPES[detected.mime] ? detected.mime : file.mimetype
+  if (!IMPORT_TYPES[mimetype] && !/\.(docx|odt|txt)$/i.test(file.originalname)) return err(res, 'INVALID_FILE', 'Upload a PDF, Word document, text file or a photo of the audit.', 400)
+  const scan = await scanBuffer(file.buffer, file.originalname)
+  if (scan.status === 'infected') return err(res, 'MALWARE_DETECTED', 'That file failed the malware scan.', 400)
+  try {
+    const out = await draftAuditFromFile({ buffer: file.buffer, mimetype, originalname: file.originalname })
+    logAiCredit(tenantId, 'audit_import').catch(() => {})
+    ok(res, out)
+  } catch (e: any) { err(res, 'IMPORT_FAILED', e?.message ?? 'The audit could not be imported.', 422) }
+})
 
 // GET /audits/templates/:id/structure — the audit in the builder's shape.
 auditsRouter.get('/templates/:id/structure', requireAdmin, async (req: Request, res: Response) => {

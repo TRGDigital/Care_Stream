@@ -1080,6 +1080,10 @@ export function createApiClient(token: string) {
     audits: {
       templates: (opts: { includeHidden?: boolean } = {}) => apiFetch<{ templates: any[]; rooms: string[]; staff: string[]; recent_subjects: Record<string, string[]>; me: { name: string | null; job_role: string | null } }>(`/audits/templates${opts.includeHidden ? '?include_hidden=1' : ''}`, token),
       // The builder: an audit's structure, saving an edit, copying and hiding, and its version history.
+      importTemplate: (file: File) => {
+        const form = new FormData(); form.append('file', file)
+        return apiFetch<{ draft: any; notes: string | null; question_count: number }>('/audits/templates/import', token, { method: 'POST', body: form, headers: {} })
+      },
       templateStructure: (id: string) => apiFetch<{ template: AuditEditorTemplate }>(`/audits/templates/${id}/structure`, token),
       updateTemplate: (id: string, data: any) => apiFetch<{ version: number; template: AuditEditorTemplate }>(`/audits/templates/${id}`, token, { method: 'PUT', body: JSON.stringify(data) }),
       copyTemplate: (id: string, data: { name?: string; hide_original?: boolean }) => apiFetch<{ template: AuditEditorTemplate }>(`/audits/templates/${id}/copy`, token, { method: 'POST', body: JSON.stringify(data) }),

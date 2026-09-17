@@ -121,17 +121,31 @@
 .ucpage .uc-shot{background:var(--plate);border:1px solid var(--line);border-radius:16px;padding:20px;
     box-shadow:var(--shadow);aspect-ratio:16/10.6;display:grid;place-items:center;}
 .ucpage .uc-shot span{font-size:.78rem;color:var(--muted);text-align:center;line-height:1.5}
-.ucpage .uc-res{display:block;text-decoration:none;color:inherit;background:var(--ground);
-    border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
-.ucpage .uc-res:hover{border-color:#DCD5E8}
-.ucpage .uc-res .uc-band{height:104px;display:block;border-bottom:1px solid var(--line)}
-.ucpage .uc-res .uc-band{overflow:hidden}
-.ucpage .uc-res .uc-band img{width:100%;height:100%;object-fit:cover;display:block}
-.ucpage .uc-res .body{padding:20px}
-.ucpage .uc-res h3{font-size:.98rem;line-height:1.35;letter-spacing:-.015em;margin:0 0 8px}
-.ucpage .uc-res p{font-size:.85rem;color:var(--muted);margin:0 0 14px;line-height:1.55}
-.ucpage .uc-more{display:inline-flex;align-items:center;gap:6px;font-size:.83rem;font-weight:650;color:var(--accent)}
-.ucpage .uc-more svg{width:13px;height:13px}
+/* "Guides on this subject" cards. The body is a <span>, so it is made a block here: left inline,
+   its padding never applied and the text ran to the card's edges. The image is the post's own,
+   at a real photo ratio rather than a 104px strip. */
+.ucpage .uc-res{display:flex;flex-direction:column;text-decoration:none;color:inherit;background:var(--ground);
+    border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);
+    transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.ucpage .uc-res:hover{border-color:#DCD5E8;transform:translateY(-3px);box-shadow:0 18px 40px -22px rgba(23,18,31,.32)}
+.ucpage .uc-res .uc-band{display:block;aspect-ratio:16/10;overflow:hidden;border-bottom:1px solid var(--line)}
+.ucpage .uc-res .uc-band img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s ease}
+.ucpage .uc-res:hover .uc-band img{transform:scale(1.04)}
+.ucpage .uc-res .body{display:flex;flex-direction:column;flex:1 1 auto;padding:22px 26px 26px}
+.ucpage .uc-res h3{font-size:1.1rem;line-height:1.35;letter-spacing:-.018em;margin:0 0 10px}
+.ucpage .uc-res p{font-size:.9rem;color:var(--muted);margin:0 0 20px;line-height:1.6;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ucpage .uc-more{display:inline-flex;align-items:center;gap:6px;margin-top:auto;padding-top:16px;border-top:1px solid var(--line);
+    font-size:.86rem;font-weight:650;color:var(--accent)}
+.ucpage .uc-more svg{width:13px;height:13px;transition:transform .2s ease}
+.ucpage .uc-res:hover .uc-more svg{transform:translateX(3px)}
+@media (max-width:1100px) and (min-width:901px){
+  .ucpage .uc-res .body{padding:20px 22px 22px}
+}
+@media (prefers-reduced-motion:reduce){
+  .ucpage .uc-res,.ucpage .uc-res .uc-band img,.ucpage .uc-more svg{transition:none}
+  .ucpage .uc-res:hover,.ucpage .uc-res:hover .uc-band img{transform:none}
+}
 .ucpage .uc-faqgroup{margin-bottom:34px}
 .ucpage .uc-faqgroup > h3{font-size:.74rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
     color:var(--muted);margin:0 0 12px}

@@ -119,7 +119,8 @@ export function BasketPill() {
   return (
     <div className={`pcbasket${items.length ? ' on' : ''}`} hidden={!items.length}>
       <span>
-        <b>{money(total)}</b>
+        {/* The space is real text, not CSS: without it the pill read "£691 policy". */}
+        <b>{money(total)}</b>{' '}
         <span className="n">{items.length} {items.length === 1 ? 'policy' : 'policies'}</span>
       </span>
       <a href={`/contact?about=${encodeURIComponent(about)}`}>Checkout</a>

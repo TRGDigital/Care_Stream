@@ -83,3 +83,8 @@
 .csreg .rgfoot{margin-top:auto;padding:44px 20px 36px;display:flex;justify-content:center;gap:28px;font-size:.86rem}
 .csreg .rgfoot a{color:var(--ink-2);text-decoration:none}
 .csreg .rgfoot a:hover{color:var(--accent)}
+
+/* The Asana-style terms line under the email field. */
+.csreg .rglegal{margin:12px 0 0;font-size:.8rem;line-height:1.55;color:var(--muted);text-align:left}
+.csreg .rglegal a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
+.csreg .rglegal a:hover{color:var(--accent)}

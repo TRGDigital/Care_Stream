@@ -557,6 +557,13 @@ export default function SettingsPage() {
     const next = { ...orgDetails, require_audit_manager_approval: requireAuditApproval ? 'off' : 'on' }
     setOrgDetails(next); saveOrgDetails(next)
   }
+  // Scheduled audits: when an overdue audit is escalated to managers, and how often admins get a summary.
+  const auditEscalateDays = orgDetails.audit_escalate_after_days ?? '2'
+  const auditSummary = orgDetails.audit_summary ?? 'weekly'
+  function setAuditSchedulingSetting(key: 'audit_escalate_after_days' | 'audit_summary', value: string) {
+    const next = { ...orgDetails, [key]: value }
+    setOrgDetails(next); saveOrgDetails(next)
+  }
   const showReadiness = orgDetails.show_readiness_score === 'on'
   function toggleReadiness() {
     const next = { ...orgDetails, show_readiness_score: showReadiness ? 'off' : 'on' }
@@ -1456,6 +1463,32 @@ export default function SettingsPage() {
                 className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors ${showReadiness ? 'bg-teal' : 'bg-gray-300'}`}>
                 <span className={`absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow transition-transform ${showReadiness ? 'translate-x-5' : 'translate-x-0'}`} />
               </button>
+            </div>
+            <div className="mt-4 rounded-lg border border-gray-200 bg-neutral-light/30 px-4 py-3">
+              <p className="text-sm font-medium text-neutral-dark">Scheduled audits</p>
+              <p className="mt-0.5 text-sm text-neutral-mid">
+                The person an audit is assigned to is emailed when it is assigned, two days before it is due, and when it becomes overdue. Choose when an overdue audit is escalated to admins and managers, and how often admins get a summary of what is due, overdue and done.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-4">
+                <label className="text-sm text-neutral-dark">
+                  <span className="mb-1 block text-xs font-medium text-neutral-mid">Escalate when overdue by</span>
+                  <select value={auditEscalateDays} onChange={e => setAuditSchedulingSetting('audit_escalate_after_days', e.target.value)} className="rounded-md border border-gray-200 px-3 py-1.5 text-sm focus:border-teal focus:outline-none">
+                    <option value="0">The day it becomes overdue</option>
+                    <option value="1">1 day</option>
+                    <option value="2">2 days</option>
+                    <option value="3">3 days</option>
+                    <option value="7">7 days</option>
+                  </select>
+                </label>
+                <label className="text-sm text-neutral-dark">
+                  <span className="mb-1 block text-xs font-medium text-neutral-mid">Summary email to admins</span>
+                  <select value={auditSummary} onChange={e => setAuditSchedulingSetting('audit_summary', e.target.value)} className="rounded-md border border-gray-200 px-3 py-1.5 text-sm focus:border-teal focus:outline-none">
+                    <option value="weekly">Weekly, on Mondays</option>
+                    <option value="daily">Daily</option>
+                    <option value="off">Off</option>
+                  </select>
+                </label>
+              </div>
             </div>
             <div className="mt-4 rounded-lg border border-teal/20 bg-teal-light/20 px-4 py-3">
               <p className="text-sm font-medium text-neutral-dark">Action plans</p>

@@ -2307,9 +2307,41 @@ model AuditTemplate {
   sections    AuditSection[]
   runs        AuditRun[]
   versions    AuditTemplateVersion[]
+  assignments AuditAssignment[]
 
   @@index([tenant_id])
   @@map("audit_templates")
+}
+
+// A scheduled audit: a named person, a due date and an optional repeat. Completing the linked run
+// completes it and, when it repeats, creates the next one. Overdue ones are reminded and escalated
+// by the daily audit-reminders job.
+model AuditAssignment {
+  id                  String        @id @default(uuid())
+  tenant_id           String
+  template_id         String
+  assigned_user_id    String
+  subject             String?                                // room, resident or staff member for scoped audits
+  subject_room        String?
+  due_date            DateTime
+  repeat              String        @default("none")          // none | daily | weekly | monthly | quarterly
+  status              String        @default("open")          // open | completed | missed | cancelled
+  run_id              String?                                 // the audit run started for it
+  previous_id         String?                                 // the occurrence this one follows
+  notes               String?
+  completed_at        DateTime?
+  reminded_at         DateTime?                               // "due soon" email sent
+  overdue_notified_at DateTime?                               // "overdue" email sent to the assignee
+  escalated_at        DateTime?                               // escalated to managers
+  created_by          String?
+  created_at          DateTime      @default(now())
+  updated_at          DateTime      @updatedAt
+  template            AuditTemplate @relation(fields: [template_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id, status, due_date])
+  @@index([assigned_user_id, status])
+  @@index([run_id])
+  @@map("audit_assignments")
 }
 
 // A saved copy of an audit's structure after each edit, so a home can see what changed and when.

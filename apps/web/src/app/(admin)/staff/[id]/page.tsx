@@ -877,6 +877,35 @@ export default function StaffRecordPage() {
           </div>
         </div>
 
+        {/* Scheduled audits assigned to them */}
+        {rec.audit_assignments && rec.audit_assignments.items.length > 0 && (
+          <div className="pdf-card rounded-card border border-gray-100 bg-white p-5 shadow-card">
+            <p className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><CalendarDays size={15} className="text-teal" /> Scheduled audits</p>
+            <p className="mb-3 text-xs text-neutral-mid">Audits assigned to {u.name.split(' ')[0]} with a due date: everything still open, and the last 90 days of completed and missed ones.</p>
+            <div className="mb-3 flex flex-wrap gap-4 text-xs">
+              <span><strong className="text-neutral-dark">{rec.audit_assignments.summary.open}</strong> <span className="text-neutral-mid">open</span></span>
+              <span><strong className="text-rose-700">{rec.audit_assignments.summary.overdue}</strong> <span className="text-neutral-mid">overdue</span></span>
+              <span><strong className="text-green-700">{rec.audit_assignments.summary.completed}</strong> <span className="text-neutral-mid">completed</span></span>
+              <span><strong className="text-amber-700">{rec.audit_assignments.summary.missed}</strong> <span className="text-neutral-mid">missed</span></span>
+            </div>
+            <ul className="space-y-2">
+              {rec.audit_assignments.items.map((a: any) => (
+                <li key={a.id} className="flex items-start justify-between gap-3 rounded-lg border border-gray-100 bg-neutral-light/20 px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="text-sm text-neutral-dark">{a.template_name}{a.subject ? ` · ${a.subject}` : ''}</p>
+                    <p className="mt-0.5 text-xs text-neutral-mid">
+                      Due {fmtDate(a.due_date)}{a.repeat !== 'none' ? ` · repeats ${a.repeat}` : ''}{a.completed_at ? ` · completed ${fmtDate(a.completed_at)}` : ''}
+                    </p>
+                  </div>
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${a.status === 'completed' ? 'bg-green-50 text-green-700' : a.overdue ? 'bg-rose-50 text-rose-700' : a.status === 'missed' ? 'bg-amber-50 text-amber-700' : a.status === 'cancelled' ? 'bg-gray-100 text-neutral-mid' : a.run_status === 'in_progress' ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-neutral-mid'}`}>
+                    {a.status === 'completed' ? 'Completed' : a.overdue ? `Overdue ${a.days_overdue}d` : a.status === 'missed' ? 'Missed' : a.status === 'cancelled' ? 'Cancelled' : a.run_status === 'in_progress' ? 'In progress' : 'Due'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* Assigned audit actions */}
         {actions && actions.actions.length > 0 && (
           <div className="pdf-card rounded-card border border-gray-100 bg-white p-5 shadow-card">

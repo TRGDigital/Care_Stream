@@ -61,8 +61,10 @@ function AuditList({ api, token, userId, onOpen }: { api: ReturnType<typeof crea
   const [subjectRoomInput, setSubjectRoomInput] = useState<Record<string, string>>({})
   const [loading,   setLoading]   = useState(!cached)
   const [starting,  setStarting]  = useState<string | null>(null)
+  const [assigned,  setAssigned]  = useState<any[]>([])
 
   function load() {
+    api.audits.assignments({ view: 'open', mine: true }).then(d => setAssigned(d.assignments)).catch(() => {})
     Promise.all([api.audits.templates(), api.audits.runs(), api.audits.stats()])
       .then(([t, r, s]) => { setTemplates(t.templates ?? []); setRooms(t.rooms ?? []); setStaff(t.staff ?? []); setRecentSubjects(t.recent_subjects ?? {}); setRuns(r.runs ?? []); setStats(s); persistentCache.set(ck, { templates: t.templates ?? [], runs: r.runs ?? [], rooms: t.rooms ?? [], staff: t.staff ?? [], recentSubjects: t.recent_subjects ?? {}, stats: s }) })
       .catch(() => {})
@@ -70,13 +72,13 @@ function AuditList({ api, token, userId, onOpen }: { api: ReturnType<typeof crea
   }
   useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function start(templateId: string, subject?: string, subjectRoom?: string) {
+  async function start(templateId: string, subject?: string, subjectRoom?: string, assignmentId?: string) {
     if (starting) return
-    setStarting(templateId)
+    setStarting(assignmentId ?? templateId)
     try {
       const now = new Date()
       const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-      const { run } = await api.audits.createRun({ template_id: templateId, audit_month: month, ...(subject ? { subject } : {}), ...(subjectRoom ? { subject_room: subjectRoom } : {}) })
+      const { run } = await api.audits.createRun({ template_id: templateId, audit_month: month, ...(subject ? { subject } : {}), ...(subjectRoom ? { subject_room: subjectRoom } : {}), ...(assignmentId ? { assignment_id: assignmentId } : {}) })
       onOpen(run.id)
     } catch { /* ignore */ } finally { setStarting(null) }
   }
@@ -125,6 +127,31 @@ function AuditList({ api, token, userId, onOpen }: { api: ReturnType<typeof crea
             <div className="rounded-xl border border-gray-200 bg-white p-3 text-center">
               <p className="text-2xl font-bold text-teal-600">{stats.completed}</p>
               <p className="mt-0.5 text-xs text-neutral-mid">Completed total</p>
+            </div>
+          </div>
+        )}
+
+        {/* Scheduled audits assigned to this person, soonest first */}
+        {assigned.length > 0 && (
+          <div className="mb-6">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-teal">Assigned to you</p>
+            <div className="space-y-2">
+              {assigned.map(a => (
+                <div key={a.id} className={`flex items-center gap-3 rounded-xl border p-4 ${a.overdue ? 'border-rose-200 bg-rose-50/50' : 'border-teal/20 bg-teal-light/20'}`}>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-neutral-dark">{a.template_name}{a.subject ? ` · ${a.subject}` : ''}</p>
+                    <p className={`text-xs ${a.overdue ? 'font-semibold text-rose-700' : 'text-neutral-mid'}`}>
+                      {a.overdue ? `Overdue by ${a.days_overdue} day${a.days_overdue === 1 ? '' : 's'}` : `Due ${new Date(a.due_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })}`}
+                      {a.repeat !== 'none' ? ` · repeats ${a.repeat}` : ''}
+                    </p>
+                  </div>
+                  {a.run_id && a.run_status === 'in_progress'
+                    ? <button onClick={() => onOpen(a.run_id)} className="shrink-0 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal">Resume</button>
+                    : <button onClick={() => start(a.template_id, a.subject ?? undefined, a.subject_room ?? undefined, a.id)} disabled={starting === a.id} className="flex shrink-0 items-center gap-1 rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal/90 disabled:opacity-50">
+                        {starting === a.id ? <Loader2 size={12} className="animate-spin" /> : <Play size={12} />} Start
+                      </button>}
+                </div>
+              ))}
             </div>
           </div>
         )}

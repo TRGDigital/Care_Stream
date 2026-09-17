@@ -22,6 +22,9 @@ import {
 import {
   parseEditorPayload, saveTemplateStructure, createTemplateFromPayload, copyTemplate, templateForEditor,
 } from '../services/audits/template-editor'
+import {
+  REPEATS, listAssignments, ensureAllocated, linkRunToAssignment, completeAssignmentsForRun, startOfDayUTC,
+} from '../services/audits/assignments'
 
 export const auditsRouter = Router()
 
@@ -1515,6 +1518,111 @@ auditsRouter.delete('/templates/:id', requireAdmin, async (req: Request, res: Re
   ok(res, { deleted: true })
 })
 
+// ─── Scheduled audits ─────────────────────────────────────────────────────────
+
+// A run is one per day for daily audits and one per month for everything else, so only daily audits
+// can repeat more often than monthly.
+function repeatAllowed(frequency: string | undefined, repeat: string): boolean {
+  return frequency === 'daily' || !['daily', 'weekly'].includes(repeat)
+}
+const REPEAT_HINT = 'Only daily audits can repeat every day or week. Other audits are recorded once a month, so choose monthly, quarterly or no repeat.'
+
+// GET /audits/assignments?view=open|overdue|week|completed|all — admins see everyone's; others their own.
+auditsRouter.get('/assignments', requireAuditAccess, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const isAdmin = req.user!.role === 'admin'
+  const view = String(req.query.view ?? 'open')
+  const today = startOfDayUTC(new Date())
+  // ?mine=1 is the hub's "assigned to you" list, for admins too.
+  const userId = isAdmin && req.query.mine !== '1' ? (req.query.user_id ? String(req.query.user_id) : undefined) : req.user!.sub
+  const opts: any = { userId }
+  if (view === 'open' || view === 'overdue' || view === 'week') opts.statuses = ['open']
+  if (view === 'week') opts.to = new Date(today.getTime() + 7 * 86_400_000)
+  if (view === 'completed') { opts.statuses = ['completed', 'missed', 'cancelled']; opts.from = new Date(today.getTime() - 180 * 86_400_000) }
+  let list = await listAssignments(tenantId, opts)
+  if (view === 'overdue') list = list.filter(a => a.overdue)
+  if (view === 'completed') list = list.reverse()
+  const counts = await listAssignments(tenantId, { userId, statuses: ['open'] })
+  ok(res, {
+    assignments: list,
+    counts: {
+      open: counts.length,
+      overdue: counts.filter(a => a.overdue).length,
+      due_this_week: counts.filter(a => !a.overdue && new Date(a.due_date).getTime() < today.getTime() + 7 * 86_400_000).length,
+    },
+  })
+})
+
+// POST /audits/assignments — body { template_id, assigned_user_id, due_date, repeat?, subject?, subject_room?, notes? }
+auditsRouter.post('/assignments', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const b = req.body ?? {}
+  const template = await (prisma as any).auditTemplate.findFirst({ where: { id: String(b.template_id ?? ''), is_active: true, OR: [{ tenant_id: null }, { tenant_id: tenantId }] } })
+  if (!template) return err(res, 'NOT_FOUND', 'Audit not found', 404)
+  const user = await (prisma as any).user.findFirst({ where: { id: String(b.assigned_user_id ?? ''), tenant_id: tenantId, is_active: true }, select: { id: true, name: true } })
+  if (!user) return err(res, 'INVALID', 'Choose who the audit is assigned to.', 400)
+  const due = new Date(String(b.due_date ?? ''))
+  if (isNaN(due.getTime())) return err(res, 'INVALID', 'Choose a due date.', 400)
+  const repeat = (REPEATS as readonly string[]).includes(b.repeat) ? b.repeat : 'none'
+  if (!repeatAllowed(template.frequency, repeat)) return err(res, 'INVALID', REPEAT_HINT, 400)
+  const scoped = (template.subject_scope ?? 'none') !== 'none'
+  const subject = scoped ? (String(b.subject ?? '').trim().slice(0, 80) || null) : null
+  const me = await (prisma as any).user.findUnique({ where: { id: req.user!.sub }, select: { name: true } }).catch(() => null)
+  const assignment = await (prisma as any).auditAssignment.create({
+    data: {
+      tenant_id: tenantId, template_id: template.id, assigned_user_id: user.id,
+      subject, subject_room: scoped ? (String(b.subject_room ?? '').trim().slice(0, 40) || null) : null,
+      due_date: startOfDayUTC(due), repeat, notes: b.notes ? String(b.notes).trim().slice(0, 500) : null,
+      created_by: me?.name ?? null,
+    },
+  })
+  await ensureAllocated(tenantId, user.id, template.id).catch(() => {})
+  const [shaped] = await listAssignments(tenantId, { ids: [assignment.id] })
+  ok(res, { assignment: shaped }, 201)
+
+  // Tell the assignee straight away.
+  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } }).catch(() => null)
+  const { notifyUsers } = await import('../lib/notify')
+  const dueText = startOfDayUTC(due).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/London' })
+  const repeatText = repeat === 'none' ? '' : ` It repeats ${repeat === 'daily' ? 'every day' : repeat === 'weekly' ? 'every week' : repeat === 'monthly' ? 'every month' : 'every quarter'}.`
+  notifyUsers(tenantId, 'audit_updates', [user.id], (email, name) => sendAuditUpdateEmail({
+    to: email, name, orgName: tenant?.name ?? '', subject: `Audit assigned to you: ${template.name}`,
+    bodyHtml: `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px"><strong>${template.name}</strong>${subject ? ` (${subject})` : ''} has been assigned to you, due on <strong>${dueText}</strong>.${repeatText}</p><p style="color:#374151;font-size:15px;line-height:1.6;margin:0">You can start it from Audits in the hub.</p>`,
+  })).catch(e => console.error('[audits/assignments] notify:', e))
+})
+
+// PATCH /audits/assignments/:id — body { due_date?, assigned_user_id?, repeat?, notes?, status: 'cancelled' | 'open' }
+auditsRouter.patch('/assignments/:id', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const a = await (prisma as any).auditAssignment.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId } })
+  if (!a) return err(res, 'NOT_FOUND', 'Scheduled audit not found', 404)
+  const b = req.body ?? {}
+  const data: any = {}
+  if (b.due_date) {
+    const due = new Date(String(b.due_date))
+    if (isNaN(due.getTime())) return err(res, 'INVALID', 'Invalid due date.', 400)
+    // A new date resets the reminders for it.
+    Object.assign(data, { due_date: startOfDayUTC(due), reminded_at: null, overdue_notified_at: null, escalated_at: null })
+  }
+  if (b.assigned_user_id) {
+    const u = await (prisma as any).user.findFirst({ where: { id: String(b.assigned_user_id), tenant_id: tenantId, is_active: true }, select: { id: true } })
+    if (!u) return err(res, 'INVALID', 'Staff member not found.', 400)
+    data.assigned_user_id = u.id
+    await ensureAllocated(tenantId, u.id, a.template_id).catch(() => {})
+  }
+  if (b.repeat && (REPEATS as readonly string[]).includes(b.repeat)) {
+    const tpl = await (prisma as any).auditTemplate.findUnique({ where: { id: a.template_id }, select: { frequency: true } })
+    if (!repeatAllowed(tpl?.frequency, b.repeat)) return err(res, 'INVALID', REPEAT_HINT, 400)
+    data.repeat = b.repeat
+  }
+  if (b.notes !== undefined) data.notes = b.notes ? String(b.notes).trim().slice(0, 500) : null
+  if (b.status === 'cancelled' && a.status === 'open') data.status = 'cancelled'
+  if (b.status === 'open' && a.status === 'cancelled') data.status = 'open'
+  await (prisma as any).auditAssignment.update({ where: { id: a.id }, data })
+  const [shaped] = await listAssignments(tenantId, { ids: [a.id] })
+  ok(res, { assignment: shaped })
+})
+
 // ─── GET /audits/runs ─────────────────────────────────────────────────────────
 
 // ─── GET /audits/stats ───────────────────────────────────────────────────────
@@ -1632,7 +1740,17 @@ auditsRouter.post('/runs', requireAuditAccess, async (req: Request, res: Respons
   const existing = await (prisma as any).auditRun.findFirst({
     where: { tenant_id: tenantId, template_id, audit_month: periodDate, ...(scoped ? { room_number: subjectValue } : {}) },
   })
-  if (existing) return ok(res, { run: existing })
+  if (existing) {
+    if (existing.status !== 'completed') {
+      await linkRunToAssignment(tenantId, existing, req.body.assignment_id ?? null).catch(() => null)
+    } else if (req.body.assignment_id) {
+      // Opened from an assignment, but this period's audit was already completed: the assignment is done.
+      // (Never auto-linked: viewing an old completed audit must not complete a future assignment.)
+      const linkedId = await linkRunToAssignment(tenantId, existing, req.body.assignment_id).catch(() => null)
+      if (linkedId) await completeAssignmentsForRun(tenantId, existing.id).catch(() => {})
+    }
+    return ok(res, { run: existing })
+  }
 
   // Default the auditor to the signed-in user so every run always carries who did it and their
   // role (the AI recommendations otherwise flag "Unknown" as an accountability gap).
@@ -1650,6 +1768,8 @@ auditsRouter.post('/runs', requireAuditAccess, async (req: Request, res: Respons
       template_version: template.version ?? 1,
     },
   })
+
+  await linkRunToAssignment(tenantId, run, req.body.assignment_id ?? null).catch(e => console.error('[audits] link assignment:', e))
 
   // Remember typed room names for the room picker (residents and staff are picked elsewhere).
   if (subjectValue && scope === 'room') {
@@ -2019,6 +2139,7 @@ auditsRouter.post('/runs/:id/complete', requireAuditAccess, async (req: Request,
       where: { id: run.id }, data: { status: 'completed', completed_at: new Date() },
     })
     await submitAuditForApproval(tenantId, run.id, run.auditor_name ?? '').catch(e => console.error('[audits/complete] submit for approval:', e))
+    await completeAssignmentsForRun(tenantId, run.id).catch(e => console.error('[audits/complete] assignments:', e))
     completed.approval_status = 'pending_manager'
     completed.submitted_at    = new Date()
     completed.submitted_by    = run.auditor_name ?? null
@@ -2031,6 +2152,7 @@ auditsRouter.post('/runs/:id/complete', requireAuditAccess, async (req: Request,
   const completed = await (prisma as any).auditRun.update({
     where: { id: run.id }, data: { status: 'completed', completed_at: new Date() },
   })
+  await completeAssignmentsForRun(tenantId, run.id).catch(e => console.error('[audits/complete] assignments:', e))
 
   ok(res, { run: completed, recommendations, approval_required: false })
 

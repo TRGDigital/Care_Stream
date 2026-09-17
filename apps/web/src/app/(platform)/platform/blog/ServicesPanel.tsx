@@ -5,6 +5,10 @@ import { Loader2, Check, ExternalLink } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
+/** Where a row lives on the site: flat, except the role pages stored as who-its-for-<role>. */
+const pathOf = (slug: string) =>
+  slug.startsWith('who-its-for-') ? `/who-its-for/${slug.slice('who-its-for-'.length)}` : `/${slug}`
+
 // The seven /our-services pages (/care-audits, /cqc-compliance and the rest). Their copy lives
 // in the database and is edited here rather than in the page components: a wording change is a
 // save, not a deploy.
@@ -183,7 +187,8 @@ export function ServicesPanel({ token }: { token: string }) {
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-4 rounded-xl border border-gray-200 bg-neutral-light/40 p-4">
         <p className="text-sm text-neutral-mid">
-          The seven <strong>Our Services</strong> pages and <strong>How it works</strong>. <strong>Import approved copy</strong>
+          The seven <strong>Our Services</strong> pages, <strong>How it works</strong> and the nine
+          {' '}<strong>Who it&apos;s for</strong> role pages. <strong>Import approved copy</strong>
           {' '}brings across the wording signed off in the content theme; every string was
           checked back against the theme page it came from.
           <br />
@@ -216,7 +221,7 @@ export function ServicesPanel({ token }: { token: string }) {
           {rows.map(r => (
             <tr key={r.slug} className="border-b border-gray-100">
               <td className="py-2.5">
-                <b className="font-semibold text-neutral-dark">/{r.slug}</b>
+                <b className="font-semibold text-neutral-dark">{pathOf(r.slug)}</b>
                 {r.title && <span className="ml-2 text-xs text-neutral-mid">{r.title.replace(/<[^>]*>/g, '')}</span>}
               </td>
               <td>
@@ -249,7 +254,7 @@ export function ServicesPanel({ token }: { token: string }) {
       {open && (
         <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-5">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-neutral-dark">/{open.slug}</h3>
+            <h3 className="font-semibold text-neutral-dark">{pathOf(open.slug)}</h3>
             <div className="flex items-center gap-2">
               {saved && <span className="flex items-center gap-1 text-xs text-green-700"><Check size={12} /> Saved</span>}
               <button type="button" onClick={() => save({ content: open.content, title: open.title })}

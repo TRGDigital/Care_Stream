@@ -441,6 +441,9 @@ async function priceShopItems(items: ShopItem[]): Promise<Array<{
 export async function createShopCheckoutSession(input: {
   email: string
   items: ShopItem[]
+  /** From the checkout page's details form, kept on the session for whoever fulfils it. */
+  orgName?: string
+  buyerName?: string
 }): Promise<{ url: string; totalPence: number }> {
   const items = input.items.slice(0, 30)
   if (!items.length) throw new Error('Nothing to buy')
@@ -481,6 +484,8 @@ export async function createShopCheckoutSession(input: {
       // if expanded, and the expansion belongs to the catalogue anyway — reconcile
       // reads the pack's contents from the database rather than from this string.
       items: JSON.stringify(items.map(i => `${i.kind === 'bundle' ? 'b' : 'p'}:${i.key}`)).slice(0, 500),
+      ...(input.orgName ? { org_name: input.orgName.slice(0, 200) } : {}),
+      ...(input.buyerName ? { buyer_name: input.buyerName.slice(0, 200) } : {}),
     },
     billing_address_collection: 'required',
     invoice_creation: { enabled: true },

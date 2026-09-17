@@ -270,7 +270,10 @@ policyShopPublicRouter.post('/checkout', async (req: Request, res: Response) => 
   if (!items.length) return err(res, 'EMPTY_BASKET', 'There is nothing in the basket', 400)
 
   try {
-    const { url, totalPence } = await createShopCheckoutSession({ email, items })
+    // Optional, from the checkout page's details form. Free text, so trimmed and capped.
+    const orgName = String(req.body?.org_name ?? '').trim().slice(0, 200)
+    const buyerName = String(req.body?.name ?? '').trim().slice(0, 200)
+    const { url, totalPence } = await createShopCheckoutSession({ email, items, orgName, buyerName })
     ok(res, { url, total_pence: totalPence })
   } catch (e: any) {
     // Price lookup failures are the buyer's problem to see (a policy went inactive

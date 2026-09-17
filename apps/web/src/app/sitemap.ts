@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next'
 import { SETTINGS_LIST } from '@/lib/settings/list'
 import { HELP_ARTICLE_PATHS } from '@/lib/help-articles'
+import { ROLE_PAGES } from '@/lib/role-pages'
 
 // Canonical host is www (the apex 308-redirects to it). The sitemap MUST use www
 // or Google reports every entry as "Page with redirect".
@@ -22,6 +23,7 @@ const MARKETING: Entry[] = [
   { url: '/pricing',                               changeFrequency: 'weekly',  priority: 0.9 },
   { url: '/features/web-chat-interface',           changeFrequency: 'monthly', priority: 0.7 },
   { url: '/who-its-for',                           changeFrequency: 'monthly', priority: 0.8 },
+  ...ROLE_PAGES.map(r => ({ url: `/who-its-for/${r.role}`, changeFrequency: 'monthly' as const, priority: 0.7 })),
   { url: '/staff-training',                        changeFrequency: 'monthly', priority: 0.9 },
   { url: '/training-platform',                     changeFrequency: 'monthly', priority: 0.9 },
   { url: '/hr-policies',                           changeFrequency: 'monthly', priority: 0.9 },

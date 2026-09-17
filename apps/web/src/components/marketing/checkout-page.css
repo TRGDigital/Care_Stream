@@ -1,0 +1,139 @@
+/* The checkout design for /basket (training) and /care-policies/checkout (policies), approved in
+ * the content theme (carestream-theme-preview/gen_checkout_pages.py). Every class is ck-prefixed
+ * and the theme tokens sit on .ckpage, so nothing here reaches the rest of the site.
+ */
+.ckpage{
+  --ground:#FFFFFF;--ground-2:#F7F5FA;--ink:#17121F;--ink-2:#3A3245;--muted:#6B6577;--line:#E9E5EF;
+  --accent:#7B3FBF;--accent-soft:#F3EDFA;--good:#1F8A5B;--plate:#F2EEF8;--btn-ink:#17121F;--btn-ink-text:#FFFFFF;
+  --shadow:0 1px 2px rgba(23,18,31,.04), 0 12px 32px rgba(23,18,31,.06);--chrome:68px;
+}
+.ckpage{background:var(--ground-2);padding:34px 0 90px;color:var(--ink)}
+.ckwrap{max-width:1180px;margin:0 auto;padding:0 32px}
+.ckback{display:inline-flex;align-items:center;gap:7px;font-size:.88rem;font-weight:600;color:var(--ink-2);text-decoration:none;margin-bottom:22px}
+.ckback:hover{color:var(--accent)}
+.ckback svg{width:15px;height:15px}
+.ckhead{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:26px}
+.ckhead h1{font-size:clamp(2rem,3.4vw,2.7rem);line-height:1.05;letter-spacing:-.035em;margin:0}
+.ckhead p{margin:8px 0 0;color:var(--muted);font-size:1rem}
+.cksteps{display:flex;align-items:center;gap:10px;list-style:none;margin:0;padding:0;font-size:.82rem;color:var(--muted);flex-wrap:wrap}
+.cksteps li{display:flex;align-items:center;gap:8px}
+.cksteps li+li::before{content:"";width:22px;height:1px;background:var(--line);margin-right:2px}
+.cksteps .n{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:.72rem;font-weight:700;border:1px solid var(--line);background:var(--ground)}
+.cksteps .on{color:var(--ink);font-weight:650}
+.cksteps .on .n{background:var(--ink);border-color:var(--ink);color:#fff}
+.ckgrid{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:28px;align-items:start}
+.ckcol{display:grid;gap:18px;min-width:0}
+.ckpanel{background:var(--ground);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+.ckpanel-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 24px;border-bottom:1px solid var(--line)}
+.ckpanel-hd h2{font-size:1.08rem;letter-spacing:-.015em;margin:0}
+.ckpanel-hd span{font-size:.84rem;color:var(--muted)}
+.ckitems{list-style:none;margin:0;padding:0}
+.ckitem{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:18px;align-items:center;padding:18px 24px}
+.ckitem+.ckitem{border-top:1px solid var(--line)}
+.ckthumb{width:96px;aspect-ratio:4/3;border-radius:10px;overflow:hidden;background:var(--plate);border:1px solid var(--line)}
+.ckthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.ckinfo{min-width:0}
+.ckinfo a{font-weight:650;color:var(--ink);text-decoration:none;letter-spacing:-.012em;line-height:1.35;display:block}
+.ckinfo a:hover{color:var(--accent)}
+.ckinfo .meta{font-size:.84rem;color:var(--muted);margin-top:3px}
+.ckinfo .acts{display:flex;gap:16px;margin-top:9px}
+.ckinfo .acts button{background:none;border:0;padding:0;font:inherit;font-size:.8rem;font-weight:600;color:var(--muted);cursor:pointer}
+.ckinfo .acts button:hover{color:var(--accent)}
+.ckright{display:flex;align-items:center;gap:18px}
+.ckqty{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--ground)}
+.ckqty button{width:34px;height:34px;border:0;background:none;font-size:1.05rem;color:var(--ink-2);cursor:pointer}
+.ckqty button:hover{background:var(--ground-2)}
+.ckqty input{width:42px;height:34px;border:0;border-inline:1px solid var(--line);text-align:center;font:inherit;font-size:.9rem;font-weight:650;color:var(--ink);-moz-appearance:textfield}
+.ckqty input::-webkit-inner-spin-button{-webkit-appearance:none}
+.ckprice{min-width:84px;text-align:right;font-weight:700;letter-spacing:-.01em}
+.ckladder{padding:20px 24px 22px}
+.ckladder p{margin:0 0 14px;font-size:.9rem;color:var(--ink-2)}
+.ckladder p b{color:var(--accent)}
+.cktiers{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cktier{border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center;background:var(--ground)}
+.cktier b{display:block;font-size:1.02rem;letter-spacing:-.02em}
+.cktier span{font-size:.74rem;color:var(--muted)}
+.cktier.on{border-color:var(--accent);background:var(--accent-soft)}
+.cktier.on b{color:var(--accent)}
+.ckbar{height:6px;border-radius:99px;background:var(--line);margin-top:14px;overflow:hidden}
+.ckbar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.ckform{padding:22px 24px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
+.ckfield{display:grid;gap:6px}
+.ckfield.full{grid-column:1/-1}
+.ckfield label{font-size:.84rem;font-weight:600;color:var(--ink-2)}
+.ckfield input,.ckfield select{height:46px;border:1px solid #D9D3E2;border-radius:10px;padding:0 14px;font:inherit;font-size:.95rem;color:var(--ink);background:var(--ground)}
+.ckfield input:focus,.ckfield select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.ckfield small{font-size:.78rem;color:var(--muted)}
+.cknext{padding:20px 24px 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;counter-reset:ck}
+.cknext div{border:1px solid var(--line);border-radius:14px;padding:16px;background:var(--ground-2)}
+.cknext span{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.7rem;letter-spacing:.1em;color:var(--accent)}
+.cknext b{display:block;margin:6px 0 4px;font-size:.95rem;letter-spacing:-.012em}
+.cknext p{margin:0;font-size:.84rem;line-height:1.5;color:var(--muted)}
+.ckupsell{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center;padding:20px 24px;background:linear-gradient(120deg,var(--accent-soft),var(--ground) 70%);border-radius:18px;border:1px solid #E4D8F3}
+.ckupsell b{display:block;font-size:1rem;letter-spacing:-.015em}
+.ckupsell p{margin:4px 0 0;font-size:.88rem;color:var(--ink-2)}
+.ckupsell a{white-space:nowrap;border:1px solid var(--ink);color:var(--ink);border-radius:999px;padding:10px 18px;font-size:.86rem;font-weight:650;text-decoration:none}
+.ckupsell a:hover{background:var(--ink);color:#fff}
+.cksum{position:sticky;top:calc(var(--chrome) + 20px)}
+.cksum .in{padding:22px 24px 24px}
+.cksum h2{font-size:1.08rem;margin:0 0 16px;letter-spacing:-.015em}
+.cklines{display:grid;gap:10px;font-size:.92rem}
+.cklines div{display:flex;justify-content:space-between;gap:12px}
+.cklines span{color:var(--muted)}
+.cklines .save{color:var(--good)}
+.cklines .save span{color:var(--good)}
+.cktotal{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line);margin-top:16px;padding-top:16px}
+.cktotal span{font-weight:650}
+.cktotal b{font-size:1.9rem;letter-spacing:-.03em}
+.cksub{font-size:.8rem;color:var(--muted);text-align:right;margin-top:2px}
+.ckterms{display:flex;gap:10px;align-items:flex-start;font-size:.82rem;line-height:1.5;color:var(--muted);margin:18px 0 0;cursor:pointer}
+.ckterms input{width:17px;height:17px;margin:2px 0 0;accent-color:var(--accent);flex:0 0 auto}
+.ckterms a{color:var(--ink);font-weight:600}
+.ckpay{margin-top:16px;width:100%;height:54px;border:0;border-radius:999px;background:var(--btn-ink);color:var(--btn-ink-text);font:inherit;font-size:1rem;font-weight:650;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+.ckpay:hover{opacity:.92}
+.ckpay[disabled]{opacity:.45;cursor:not-allowed}
+.ckpay svg{width:17px;height:17px}
+.cksecure{display:flex;align-items:center;justify-content:center;gap:7px;margin:12px 0 0;font-size:.78rem;color:var(--muted)}
+.cksecure svg{width:14px;height:14px;color:var(--good)}
+.ckassure{list-style:none;margin:18px 0 0;padding:16px 0 0;border-top:1px solid var(--line);display:grid;gap:12px}
+.ckassure li{display:grid;grid-template-columns:20px 1fr;gap:10px;font-size:.84rem;line-height:1.45;color:var(--ink-2)}
+.ckassure svg{width:18px;height:18px;color:var(--good);margin-top:1px}
+.ckassure b{display:block;color:var(--ink)}
+.ckhelp{margin:14px 0 0;text-align:center;font-size:.82rem;color:var(--muted)}
+.ckhelp a{color:var(--accent);font-weight:600;text-decoration:none}
+.ckempty{padding:48px 24px;text-align:center}
+.ckempty b{display:block;font-size:1.15rem;margin-bottom:6px}
+.ckempty p{margin:0 0 18px;color:var(--muted)}
+.ckempty a{display:inline-block;background:var(--btn-ink);color:#fff;border-radius:999px;padding:12px 22px;font-weight:650;text-decoration:none}
+.ckmbar{display:none}
+@media (max-width:1020px){
+  .ckgrid{grid-template-columns:1fr}
+  .cksum{position:static}
+}
+@media (max-width:700px){
+  .ckwrap{padding:0 16px}
+  .ckitem{grid-template-columns:72px minmax(0,1fr);gap:14px;padding:16px}
+  .ckthumb{width:72px}
+  .ckright{grid-column:1/-1;justify-content:space-between}
+  .ckpanel-hd,.ckladder,.ckform,.cknext,.cksum .in{padding-left:16px;padding-right:16px}
+  .ckform{grid-template-columns:1fr}
+  .cknext{grid-template-columns:1fr}
+  .cktiers{grid-template-columns:repeat(2,1fr)}
+  .ckupsell{grid-template-columns:1fr}
+  .ckpage{padding-bottom:110px}
+  .ckmbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:40;align-items:center;justify-content:space-between;gap:12px;
+    padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--ground);border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(23,18,31,.08)}
+  .ckmbar span{font-size:.78rem;color:var(--muted);display:block}
+  .ckmbar b{font-size:1.2rem;letter-spacing:-.02em}
+  .ckmbar a{background:var(--btn-ink);color:#fff;border-radius:999px;padding:12px 20px;font-weight:650;text-decoration:none;font-size:.92rem}
+}
+
+/* App additions: the error line, saved courses, and buttons rendered as <button>. */
+.ckpage .ckerr{margin:12px 0 0;padding:10px 12px;border-radius:10px;background:#FDF3E3;color:#8A5A0B;font-size:.84rem;line-height:1.45}
+.ckpage .cksaved .ckitem .ckright button{border:1px solid var(--line);background:var(--ground);border-radius:999px;padding:8px 14px;font:inherit;font-size:.82rem;font-weight:650;color:var(--ink);cursor:pointer}
+.ckpage .cksaved .ckitem .ckright button:hover{border-color:var(--ink)}
+.ckpage .ckupsell button{white-space:nowrap;border:1px solid var(--ink);background:none;color:var(--ink);border-radius:999px;padding:10px 18px;font:inherit;font-size:.86rem;font-weight:650;cursor:pointer}
+.ckpage .ckupsell button:hover{background:var(--ink);color:#fff}
+.ckpage .ckmbar button{background:var(--btn-ink);color:#fff;border:0;border-radius:999px;padding:12px 20px;font:inherit;font-weight:650;font-size:.92rem}
+.ckpage h1,.ckpage h2{font-weight:700;color:var(--ink)}
+.ckpage *,.ckpage *::before,.ckpage *::after{box-sizing:border-box}

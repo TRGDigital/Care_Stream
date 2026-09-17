@@ -2,8 +2,12 @@ import { Fragment } from 'react'
 import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
 import { TocSpy } from './toc-spy'
+import { THEME_IMAGES } from '@/lib/theme-images'
 import './service-page-v2.css'
 import './service-page-v2-extra.css'
+// The /who-its-for role pages, ported on their own under .svpage-v2.svrole so re-porting them can
+// never shift a rule on the eight service pages already live.
+import './service-page-role.css'
 
 // The rebuilt template for the seven /our-services pages and /how-it-works, at their LIVE
 // URLs (/care-audits, /cqc-compliance and the rest). No URL changes in this switchover.
@@ -37,6 +41,8 @@ export interface ServiceItem {
   title: string
   paras: string[]
   bullets: string[]
+  /** Where the item links to: a card's closing "Explore" line, or a pill in a row of links. */
+  href?: string
 }
 
 export interface ServicePart {
@@ -101,6 +107,13 @@ const Play = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"
        strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M8 5.5v13l10-6.5z" />
+  </svg>
+)
+
+const Arrow = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
+       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M5 12h14M13 6l6 6-6 6" />
   </svg>
 )
 
@@ -196,7 +209,11 @@ function Part({ part }: { part: ServicePart }) {
               <div className="svcard" key={i}>
                 <Icon shapes={it.icon} />
                 {it.title && <b>{it.title}</b>}
-                <Paras lines={it.paras} />
+                {/* A card with a link closes on it: its last paragraph is the link's wording. */}
+                <Paras lines={it.href ? it.paras.slice(0, -1) : it.paras} />
+                {it.href && it.paras.length > 0 && (
+                  <p><Link className="svmore" href={it.href}>{it.paras[it.paras.length - 1]}<Arrow /></Link></p>
+                )}
                 <Ticks lines={it.bullets} plain />
               </div>
             ))}
@@ -339,6 +356,14 @@ function Part({ part }: { part: ServicePart }) {
             {part.footer && <p className="hfw-m">{part.footer}</p>}
           </div>
         )
+      case 'links':
+        return (
+          <div className="uc-tags">
+            {items.filter(it => it.href).map((it, i) => (
+              <Link className="uc-tag" href={it.href!} key={i}>{it.title}</Link>
+            ))}
+          </div>
+        )
       case 'faq':
         return (
           <>
@@ -361,6 +386,14 @@ function Part({ part }: { part: ServicePart }) {
       {body}
     </>
   )
+}
+
+// The role pages' images were given descriptive alt text in the theme (the same text the Alt Tags
+// panel lists them with), so they render with it until it is edited there. The other service
+// pages keep their headings, which say more than their manifest rows do.
+const THEME_ALT = new Map(THEME_IMAGES.map(i => [i.src, i.alt]))
+function roleAlt(slug: string, src: string) {
+  return slug.startsWith('who-its-for-') ? THEME_ALT.get(src) ?? '' : ''
 }
 
 /** A record imported before sections carried parts: treat its one kind as its one part. */
@@ -400,7 +433,7 @@ export function ServicePageV2({ page, faqs = [] }: {
   const endAt = blocks.findIndex(b => b.kind === 'end')
 
   return (
-    <div className="svpage-v2" data-page={page.slug}>
+    <div className={`svpage-v2${page.slug.startsWith('who-its-for-') ? ' svrole' : ''}`} data-page={page.slug}>
       <section className="svhero">
         <div className="svwrap svhero-in">
           <div>
@@ -414,7 +447,8 @@ export function ServicePageV2({ page, faqs = [] }: {
               <div className="svshot app">
                 {/* priority: the hero is the largest above-the-fold image, and SiteImage is
                     lazy by default, which delays the one image the reader is waiting for. */}
-                <SiteImage src={page.hero_image_url} alt={page.title.replace(/<[^>]*>/g, '')}
+                <SiteImage src={page.hero_image_url}
+                           alt={roleAlt(page.slug, page.hero_image_url) || page.title.replace(/<[^>]*>/g, '')}
                            priority />
               </div>
             </div>
@@ -461,7 +495,7 @@ export function ServicePageV2({ page, faqs = [] }: {
         const actions = !!b.actions?.length && (
           <Buttons actions={b.actions} fallback={[]} className="svactions" />
         )
-        const alt = b.heading.replace(/<[^>]*>/g, '')
+        const alt = (b.image && roleAlt(page.slug, b.image)) || b.heading.replace(/<[^>]*>/g, '')
 
         return (
           <section id={b.id || undefined} className={`svsec${b.tint ? ' tint' : ''}`} key={i}>

@@ -205,7 +205,7 @@ export function RoleBasedSend({ staff, token, onSent }: { staff: StaffUser[]; to
             <div className="ml-auto flex items-center gap-3">
               {selected.size > 0 && (
                 <span className="text-xs text-neutral-mid">
-                  {selected.size} staff · {selectedRoles.size} role{selectedRoles.size === 1 ? '' : 's'} · ~{creditEstimate} AI credit{creditEstimate === 1 ? '' : 's'}
+                  {selected.size} staff · {selectedRoles.size} role{selectedRoles.size === 1 ? '' : 's'} · ~{creditEstimate} AI tokens{creditEstimate === 1 ? '' : 's'}
                 </span>
               )}
               <button
@@ -226,7 +226,7 @@ export function RoleBasedSend({ staff, token, onSent }: { staff: StaffUser[]; to
           {error && <p className="mb-2 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
           {result && (
             <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-              <p className="flex items-center gap-1.5 font-semibold"><CheckCircle2 size={14} /> {result.delivered} questions sent ({result.credits_used} AI credits)</p>
+              <p className="flex items-center gap-1.5 font-semibold"><CheckCircle2 size={14} /> {result.delivered} questions sent ({result.credits_used} AI tokens)</p>
               <ul className="mt-1.5 space-y-0.5 text-xs">
                 {result.roles.map(r => (
                   <li key={r.role}>{r.role}: {r.questions} tailored question{r.questions === 1 ? '' : 's'} → {r.recipients} staff</li>

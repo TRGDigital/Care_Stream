@@ -293,7 +293,7 @@ function ReviewModule({ api, id, onBack, onAssign }: { api: ReturnType<typeof cr
     } catch { /* ignore */ } finally { setSaving(false) }
   }
   async function generateImage() {
-    if (!m.illustration_url && !confirm('Generating a cover image uses 1 AI credit. Continue?')) return
+    if (!m.illustration_url && !confirm('Generating a cover image uses AI tokens from your monthly allowance. Continue?')) return
     setImgBusy(true)
     try { const { illustration_url } = await api.training.generateModuleImage(id); setM((prev: any) => ({ ...prev, illustration_url })) }
     catch (e: any) { alert(e?.message ?? 'Image generation failed') } finally { setImgBusy(false) }
@@ -327,7 +327,7 @@ function ReviewModule({ api, id, onBack, onAssign }: { api: ReturnType<typeof cr
           ? <img src={apiAssetUrl(m.illustration_url) ?? ''} alt="" className="aspect-[16/9] w-full object-cover" />
           : <div className="flex aspect-[16/9] w-full items-center justify-center bg-neutral-light/60"><ImageIcon size={28} className="text-gray-300" /></div>}
         <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
-          <p className="text-xs text-neutral-mid">Cover image <span className="text-gray-400">· uses 1 AI credit</span></p>
+          <p className="text-xs text-neutral-mid">Cover image <span className="text-gray-400">· uses AI tokens</span></p>
           <button onClick={generateImage} disabled={imgBusy} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal disabled:opacity-50">
             {imgBusy ? <><Loader2 size={12} className="animate-spin" /> Generating…</> : <><Sparkles size={12} /> {m.illustration_url ? 'Regenerate image' : 'Generate image'}</>}
           </button>
@@ -377,8 +377,8 @@ function ReviewModule({ api, id, onBack, onAssign }: { api: ReturnType<typeof cr
         </div>
 
         <label className="mb-1 block text-xs font-medium text-neutral-mid">Lesson sections — teach → scenario → quick check</label>
-        <SectionsEditor value={m.learning_content?.sections ?? []} onChange={next => setLearning('sections', next)} assetUrl={apiAssetUrl} imageHint="uses 1 AI credit" onGenerateImage={async (i) => {
-          if (!confirm('Generating a section image uses 1 AI credit. Continue?')) return
+        <SectionsEditor value={m.learning_content?.sections ?? []} onChange={next => setLearning('sections', next)} assetUrl={apiAssetUrl} imageHint="uses AI tokens" onGenerateImage={async (i) => {
+          if (!confirm('Generating a section image uses AI tokens from your monthly allowance. Continue?')) return
           await api.training.updateModule(id, { name: m.name, learning_content: m.learning_content, questions: m.questions, pass_mark: m.pass_mark, frequency: m.frequency, duration_minutes: m.duration_minutes })
           try { await api.training.generateSectionImage(id, i); load() } catch (e: any) { alert(e?.message ?? 'Image generation failed') }
         }} />

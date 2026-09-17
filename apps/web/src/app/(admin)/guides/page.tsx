@@ -8,7 +8,7 @@ import {
   FileText, Users, MessageSquare, Mail, ClipboardCheck,
   GraduationCap, BarChart2, BookOpen, ShieldAlert, Settings, Zap, ClipboardList,
   LifeBuoy, Upload, CheckCircle, Info, UserPlus, RefreshCw, CalendarDays, Lightbulb, Loader2, Building2, BadgeCheck,
-  UserRound, BriefcaseBusiness, ListChecks,
+  UserRound, BriefcaseBusiness, ListChecks, Sparkles,
 } from 'lucide-react'
 
 function FeatureRequestModal({ open, onClose, token }: { open: boolean; onClose: () => void; token?: string }) {
@@ -723,7 +723,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
           </p>
           <ul className="ml-1 space-y-1.5 text-sm text-neutral-dark">
             <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span>When you come back, an amber <strong>Resume</strong> banner on the affected section shows how much was already done (for example &ldquo;18 of 24 analysed&rdquo;).</span></li>
-            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span>Pressing <strong>Resume</strong> continues from where it stopped. Items already analysed are <strong>not re-processed and cost no extra AI credits</strong>.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span>Pressing <strong>Resume</strong> continues from where it stopped. Items already analysed are <strong>not re-processed and use no extra AI tokens</strong>.</span></li>
           </ul>
           <p className="text-sm text-neutral-dark leading-relaxed">
             If a section ever fails to load you will see a clear &ldquo;Couldn&rsquo;t load this section&rdquo; message with a <strong>Retry</strong> button rather than an empty panel. Retrying is free, it simply reloads the saved results.
@@ -1145,7 +1145,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Under every question you&rsquo;ll see its <strong>source</strong>, which depends on the type of flow:
           </p>
           <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-neutral-mid">
-            <li><strong>Ready-made role flows</strong> (adopted from CareStream) show <strong className="text-teal">&ldquo;CareStream Sources&rdquo;</strong>. We write and generate those questions for you in our own system, so they cost you no AI credits. The &lsquo;read policy&rsquo; steps in these flows are still matched to <em>your</em> policies.</li>
+            <li><strong>Ready-made role flows</strong> (adopted from CareStream) show <strong className="text-teal">&ldquo;CareStream Sources&rdquo;</strong>. We write and generate those questions for you in our own system, so they use none of your AI tokens. The &lsquo;read policy&rsquo; steps in these flows are still matched to <em>your</em> policies.</li>
             <li><strong>Flows you build yourself</strong> show <strong>your own policy</strong> for each question (for example &ldquo;Generated from Infection Control Policy&rdquo;), because those questions are drawn from the policy <em>you</em> chose. A question you typed by hand, or an older one, shows &ldquo;Source not recorded&rdquo;.</li>
           </ul>
           <p className="mt-2 text-sm text-neutral-mid">This makes it easy to see where each question came from and to spot one that isn&rsquo;t relevant to the role or your policies.</p>
@@ -1350,7 +1350,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'annual-training',
     icon:    GraduationCap,
     title:   'Annual training modules',
-    summary: 'Standard or policy-tailored annual training, AI credits, cover images, certificates & renewals',
+    summary: 'Standard or policy-tailored annual training, AI tokens, cover images, certificates & renewals',
     content: (
       <div className="space-y-5">
         <SectionBlock title="What it is">
@@ -1361,15 +1361,15 @@ const GUIDE_SECTIONS: GuideSection[] = [
 
         <SectionBlock title="Two ways to get a module">
           <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-neutral-mid">
-            <li><strong>Assign standard</strong>: a ready-made module from the CareStream <strong>standard library</strong>, written against good-practice care-sector guidance. These are <strong>free</strong> to assign and don&apos;t use any AI credits. Quickest way to get started.</li>
-            <li><strong>Tailor to our policies</strong>: the AI reads <strong>your own uploaded policies</strong> (plus anonymised reference policies) and writes a module specific to how <em>your</em> home works, citing the policies it used. Tailoring a module uses <strong>1 AI credit</strong>.</li>
+            <li><strong>Assign standard</strong>: a ready-made module from the CareStream <strong>standard library</strong>, written against good-practice care-sector guidance. These are <strong>free</strong> to assign and use none of your AI tokens. Quickest way to get started.</li>
+            <li><strong>Tailor to our policies</strong>: the AI reads <strong>your own uploaded policies</strong> (plus anonymised reference policies) and writes a module specific to how <em>your</em> home works, citing the policies it used. Tailoring a module uses <strong>AI tokens</strong>.</li>
           </ul>
           <Tip>Both kinds work identically for staff, the difference is only how the content was created. Start with standard modules and tailor the ones where your policies differ from the norm.</Tip>
         </SectionBlock>
 
-        <SectionBlock title="AI credits">
+        <SectionBlock title="AI tokens">
           <p className="text-sm text-neutral-mid">
-            Tailoring modules, generating cover images and a few other AI features draw on your plan&apos;s <strong>monthly AI credits</strong> (Starter 5, Professional 25). The remaining balance is shown at the top of the Annual training page and on your dashboard. Credits are <strong>separate</strong> from everyday <em>queries</em> (the questions staff ask in the hub), running low on one never affects the other. The balance resets at the start of each month. When you&apos;re out, you can still assign standard modules for free, or upgrade your plan.
+            Tailoring modules, generating cover images and a few other AI features draw on your plan&apos;s <strong>monthly AI tokens</strong> (Starter 6 million, Professional 18 million, Enterprise 30 million). The remaining allowance is shown at the top of the Annual training page and on your dashboard. Tokens are <strong>separate</strong> from everyday <em>questions</em> staff ask in the hub, so running low on one never affects the other. The allowance resets on the 1st of each month. When it is spent you can still assign standard modules for free, or move up a plan. See <strong>AI tokens &amp; your monthly allowance</strong> for the full picture.
           </p>
         </SectionBlock>
 
@@ -1392,7 +1392,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
 
         <SectionBlock title="Cover images (optional)">
           <p className="text-sm text-neutral-mid">
-            In the review screen you can <strong>Generate image</strong> to create a friendly cover illustration for the module, it appears below the title in the hub and helps staff recognise it. Generating an image uses <strong>1 AI credit</strong>; you can regenerate it if you&apos;d like a different one. It&apos;s entirely optional and modules work fine without one. Standard-library modules already come with images at no cost.
+            In the review screen you can <strong>Generate image</strong> to create a friendly cover illustration for the module, it appears below the title in the hub and helps staff recognise it. Generating an image uses <strong>AI tokens</strong>; you can regenerate it if you&apos;d like a different one. It&apos;s entirely optional and modules work fine without one. Standard-library modules already come with images at no cost.
           </p>
         </SectionBlock>
 
@@ -1929,7 +1929,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
               </div>
             ))}
           </div>
-          <div className="mt-3"><Tip>You can also scope the send to particular CQC domains with the domain chips. The estimated AI credit cost is shown before you press Generate &amp; send.</Tip></div>
+          <div className="mt-3"><Tip>You can also scope the send to particular CQC domains with the domain chips. The estimated AI tokens cost is shown before you press Generate &amp; send.</Tip></div>
         </SectionBlock>
         <SectionBlock title="The five CQC domains">
           <div className="rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
@@ -1956,7 +1956,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
               To create several at once, click <strong>Generate with AI</strong>. Choose a single domain or a <strong>balanced mix across all five</strong>, pick how many (3, 5 or 10), and optionally give a focus theme (e.g. dementia care, medication). CareStream generates that many brand-new questions and model answers, saves them straight to your bank, and avoids duplicating questions you already have.
             </p>
             <p className="text-sm text-neutral-mid">
-              All generated questions follow the same CQC inspector style and include a model answer used for scoring. <strong>AI generation uses 1 AI credit per question generated</strong>: so a batch of 5 uses 5 credits. The cost is shown before you confirm.
+              All generated questions follow the same CQC inspector style and include a model answer used for scoring. <strong>Generating questions draws on your AI tokens</strong>, in proportion to how much is generated: a batch of five uses roughly five times one. Your remaining allowance is shown before you confirm.
             </p>
           </div>
         </SectionBlock>
@@ -2553,6 +2553,94 @@ const GUIDE_SECTIONS: GuideSection[] = [
           </div>
         </SectionBlock>
         <Tip>Settings changes take effect immediately and there is no separate publish or save step for most settings.</Tip>
+      </div>
+    ),
+  },
+  {
+    id:      'ai-tokens',
+    icon:    Sparkles,
+    title:   'AI tokens & your monthly allowance',
+    summary: 'What tokens are, how many your plan includes, what uses them, and when they reset',
+    content: (
+      <div className="space-y-5">
+        <SectionBlock title="What a token is, in plain terms">
+          <p className="text-sm text-neutral-mid">
+            Every time CareStream asks its AI to do something, the work is measured in <strong>tokens</strong>. A token is
+            roughly three quarters of a word, counting both what we send the AI (your policy text, the question) and what
+            it sends back. Writing a training module is tens of thousands of tokens; analysing your whole policy library
+            against the regulations is a few million.
+          </p>
+          <p className="text-sm text-neutral-mid">
+            You do not need to think in tokens day to day. The number exists so you can see what you have used and what is
+            left, in the same way you would look at a mobile data allowance.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="What your plan includes">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-neutral-mid">
+                  <th className="py-2 pr-4 font-semibold">Plan</th>
+                  <th className="py-2 pr-4 font-semibold">AI tokens each month</th>
+                  <th className="py-2 font-semibold">Roughly enough for</th>
+                </tr>
+              </thead>
+              <tbody className="text-neutral-dark">
+                <tr className="border-b border-gray-100"><td className="py-2 pr-4 font-medium">Starter</td><td className="py-2 pr-4"><strong>6 million</strong></td><td className="py-2 text-neutral-mid">A full policy gap analysis plus a handful of tailored training modules</td></tr>
+                <tr className="border-b border-gray-100"><td className="py-2 pr-4 font-medium">Professional</td><td className="py-2 pr-4"><strong>18 million</strong></td><td className="py-2 text-neutral-mid">Regular gap analysis across a larger library, with training generation through the month</td></tr>
+                <tr><td className="py-2 pr-4 font-medium">Enterprise</td><td className="py-2 pr-4"><strong>30 million</strong></td><td className="py-2 text-neutral-mid">Heavy use across multiple services</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <Tip>To put that in context: a busy 40-bed home running gap analysis and generating training through the month typically uses around a quarter of the Enterprise allowance.</Tip>
+        </SectionBlock>
+
+        <SectionBlock title="What uses tokens, and what does not">
+          <p className="text-sm font-semibold text-neutral-dark">Uses your allowance</p>
+          <ul className="space-y-1.5 text-sm text-neutral-mid">
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Policy gap analysis</strong> — regulation coverage, out-of-date content, cross-policy consistency and CQC wording. This is the biggest user by some distance.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Tailoring training</strong> to your policies, and generating cover images.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Generating CQC prep questions</strong>, audit recommendations and onboarding questions.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Translating</strong> content into a staff member&apos;s own language.</span></li>
+          </ul>
+          <p className="mt-3 text-sm font-semibold text-neutral-dark">Does not touch your allowance</p>
+          <ul className="space-y-1.5 text-sm text-neutral-mid">
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Questions your staff ask in the hub.</strong> These have their own separate monthly limit, shown beside your tokens on the dashboard. Running out of tokens never stops a carer getting an answer on shift.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Assigning standard training modules</strong> from the CareStream library. Those are already written, so they are free.</span></li>
+            <li className="flex gap-2"><CheckCircle size={15} className="mt-0.5 shrink-0 text-teal" /><span><strong>Resuming an interrupted analysis.</strong> Anything already analysed is not done twice.</span></li>
+          </ul>
+        </SectionBlock>
+
+        <SectionBlock title="Seeing where you are">
+          <div className="space-y-3">
+            <Step n={1}>Open your <strong>Dashboard</strong>. The <strong>AI tokens</strong> card shows what you have used against your allowance, with a bar that turns amber past 70% and red past 90%.</Step>
+            <Step n={2}>On any AI feature page, the same figure appears as a line at the top, so you know where you stand before starting something large.</Step>
+            <Step n={3}>The card also shows the reset date.</Step>
+          </div>
+        </SectionBlock>
+
+        <SectionBlock title="When it resets, and what happens if you run out">
+          <p className="text-sm text-neutral-mid">
+            Your allowance resets on the <strong>1st of each month</strong>, whatever date you joined on. It does not roll
+            over: an unused allowance does not carry into next month, so there is nothing to be gained by holding back.
+          </p>
+          <p className="text-sm text-neutral-mid">
+            If you use it all, AI generation pauses until the 1st. Everything else carries on as normal — your staff keep
+            asking questions, your policies stay available, training already assigned still runs, and nothing is lost.
+            You will see a message telling you the allowance is spent. If you need more before the reset, moving up a plan
+            increases the allowance immediately.
+          </p>
+          <Tip>If you are close to the limit and have a large job to run, such as a full gap analysis, it is worth waiting for the reset rather than starting something that stops part way.</Tip>
+        </SectionBlock>
+
+        <SectionBlock title="Why tokens rather than a number of actions">
+          <p className="text-sm text-neutral-mid">
+            We used to count <em>actions</em>, which sounds simpler but is not fair: analysing a 90-page policy and
+            generating one training question both counted as one, despite being wildly different amounts of work. Tokens
+            measure the actual work, so a small job costs a small amount and you are not charged the same for both.
+          </p>
+        </SectionBlock>
       </div>
     ),
   },

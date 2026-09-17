@@ -563,7 +563,7 @@ export default function GapsPage() {
             <div className="flex items-start gap-3">
               <Coins size={22} className="mt-0.5 shrink-0 text-teal" />
               <div>
-                <h2 className="text-lg font-bold text-neutral-dark">A full re-run uses AI credits</h2>
+                <h2 className="text-lg font-bold text-neutral-dark">A full re-run uses AI tokens</h2>
                 <p className="mt-1 text-sm leading-relaxed text-neutral-mid">Running the coverage analysis reads through all of your policies and can take a few minutes. It is fastest to keep this page open until it finishes. If you do leave or refresh, your progress is saved and you can resume the run from where it stopped, without re-running what is already complete.</p>
               </div>
             </div>
@@ -1139,7 +1139,7 @@ function PolicyHealthSection({ token, userId, stepInfo, confirmRun, onRunComplet
       ) : !data?.scanned ? (
         <div className="flex items-center gap-3 px-6 py-6">
           <Sparkles size={18} className="shrink-0 text-teal" />
-          <p className="text-sm text-neutral-mid">Scan your policy library for out-of-date content, superseded law and regulators, pandemic-era wording and unfilled template placeholders. This runs instantly and uses no AI credits.</p>
+          <p className="text-sm text-neutral-mid">Scan your policy library for out-of-date content, superseded law and regulators, pandemic-era wording and unfilled template placeholders. This runs instantly and uses none of your AI tokens.</p>
         </div>
       ) : (data.policies ?? []).length === 0 ? (
         <div className="flex items-center gap-3 px-6 py-5">
@@ -1501,7 +1501,7 @@ function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunCo
       await driveBatches(api, to_extract)
       load()
     } catch (e: any) {
-      setRunErr(e?.message?.includes('credit') ? 'AI credit limit reached — the check stopped. It will resume where it left off next time.' : (e?.message ?? 'The check could not finish.'))
+      setRunErr(/credit|token/i.test(e?.message ?? '') ? 'Your AI token allowance for this month is spent — the check stopped. It will resume where it left off once the allowance resets on the 1st, or sooner if you move up a plan.' : (e?.message ?? 'The check could not finish.'))
     } finally { setRunning(false); setProgress(null); onRunComplete() }
   }
 
@@ -1514,7 +1514,7 @@ function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunCo
       await driveBatches(api, runState?.remaining ?? 0)
       load()
     } catch (e: any) {
-      setRunErr(e?.message?.includes('credit') ? 'AI credit limit reached — the check stopped. It will resume where it left off next time.' : (e?.message ?? 'The check could not finish.'))
+      setRunErr(/credit|token/i.test(e?.message ?? '') ? 'Your AI token allowance for this month is spent — the check stopped. It will resume where it left off once the allowance resets on the 1st, or sooner if you move up a plan.' : (e?.message ?? 'The check could not finish.'))
     } finally { setRunning(false); setProgress(null); onRunComplete() }
   }
 
@@ -1562,7 +1562,7 @@ function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunCo
         ) : !data?.analysed ? (
           <div className="flex items-center gap-3 px-6 py-6">
             <Sparkles size={18} className="shrink-0 text-teal" />
-            <p className="text-sm text-neutral-mid">Run the check to compare related and near-duplicate policies for contradictions. It reads policies and uses AI credits, so it runs only when you ask.</p>
+            <p className="text-sm text-neutral-mid">Run the check to compare related and near-duplicate policies for contradictions. It reads policies and uses AI tokens, so it runs only when you ask.</p>
           </div>
         ) : conflicts.length === 0 ? (
           <div className="flex items-center gap-3 px-6 py-5">
@@ -1663,7 +1663,7 @@ function PolicyWordingAlignmentSection({ token, userId, stepInfo, confirmRun, on
       await driveBatches(api, total)
       load()
     } catch (e: any) {
-      setRunErr(e?.message?.includes('credit') ? 'AI credit limit reached — the check stopped. It resumes where it left off next time.' : (e?.message ?? 'The check could not finish.'))
+      setRunErr(/credit|token/i.test(e?.message ?? '') ? 'Your AI token allowance for this month is spent — the check stopped. It resumes where it left off once the allowance resets on the 1st, or sooner if you move up a plan.' : (e?.message ?? 'The check could not finish.'))
       load()
     } finally { setRunning(false); setProgress(null); onRunComplete() }
   }
@@ -1678,7 +1678,7 @@ function PolicyWordingAlignmentSection({ token, userId, stepInfo, confirmRun, on
       await driveBatches(api, runState?.total ?? 0)
       load()
     } catch (e: any) {
-      setRunErr(e?.message?.includes('credit') ? 'AI credit limit reached — the check stopped. It resumes where it left off next time.' : (e?.message ?? 'The check could not finish.'))
+      setRunErr(/credit|token/i.test(e?.message ?? '') ? 'Your AI token allowance for this month is spent — the check stopped. It resumes where it left off once the allowance resets on the 1st, or sooner if you move up a plan.' : (e?.message ?? 'The check could not finish.'))
       load()
     } finally { setRunning(false); setProgress(null); onRunComplete() }
   }
@@ -1714,7 +1714,7 @@ function PolicyWordingAlignmentSection({ token, userId, stepInfo, confirmRun, on
       {open && (<div className="border-t border-gray-100">
         <StaleBanner info={stepInfo} />
         <div className="flex flex-wrap items-center justify-between gap-2 px-6 pt-4">
-          <p className="max-w-2xl text-xs text-neutral-mid">Checks whether each policy <strong>reads</strong> the person-centred, outcomes-focused way the CQC Single Assessment Framework expects, and drafts a rewrite you can adopt. Re-running checks every policy and uses AI credits, so it runs only when you ask.</p>
+          <p className="max-w-2xl text-xs text-neutral-mid">Checks whether each policy <strong>reads</strong> the person-centred, outcomes-focused way the CQC Single Assessment Framework expects, and drafts a rewrite you can adopt. Re-running checks every policy and uses AI tokens, so it runs only when you ask.</p>
           <button onClick={() => confirmRun(run)} disabled={running}
             className="flex shrink-0 items-center gap-2 rounded-btn border border-teal/30 bg-white px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30 disabled:opacity-50">
             {running ? <><Loader2 size={13} className="animate-spin" /> {progress ?? 'Running…'}</> : <><RefreshCw size={13} /> {analysed > 0 ? 'Re-run analysis' : 'Run wording analysis'}</>}

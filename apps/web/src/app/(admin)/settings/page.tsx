@@ -419,7 +419,7 @@ export default function SettingsPage() {
   //
   // Reading a stored scan is instant. Running one reads every policy's text, most of which
   // lives in object storage rather than the database, so it is an explicit action and never
-  // happens on page load. It spends no AI credit.
+  // happens on page load. It spends no AI tokens.
   // Mentioned in a policy, but nobody named for it. These are the ones actually worth
   // chasing, and they are the reason the scan exists.
   const needsName = (roleScan?.mentions ?? []).filter(m => {
@@ -1143,7 +1143,7 @@ export default function SettingsPage() {
               {/* Every role stays listed below whether or not a policy mentions it, so anyone
                   can fill in whoever they like. This just marks the ones their own documents
                   actually ask for, which is a far better guide than a form of twenty four
-                  boxes. Costs no AI credit: it is a text search over policies we already hold. */}
+                  boxes. Costs no AI tokens: it is a text search over policies we already hold. */}
               <div className="mt-4 rounded-lg border border-gray-200 bg-neutral-light/40 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">

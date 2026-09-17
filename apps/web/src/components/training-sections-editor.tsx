@@ -27,7 +27,7 @@ export function SectionsEditor({ value, onChange, onGenerateImage, assetUrl, ima
   onChange: (next: LessonSection[]) => void
   onGenerateImage?: (index: number) => Promise<void>  // saves + generates + reloads
   assetUrl?: (path: string | null | undefined) => string | null
-  imageHint?: string  // e.g. "free" or "uses 1 AI credit"
+  imageHint?: string  // e.g. "free" or "uses AI tokens"
   // Interactive activities, edited in the section they end. Omitted on screens
   // that don't author them (the tenant review screen), where nothing renders.
   activities?: Activity[]

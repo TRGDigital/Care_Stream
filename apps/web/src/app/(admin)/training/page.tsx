@@ -374,7 +374,7 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
   }
 
   async function generateLesson(m: Module) {
-    if (!confirm('Build a full scenario-based lesson (teach → real care scenario → quick check) and a fresh question bank for this module, grounded in your policies?\n\nIt reuses the matching standard module\'s images where available. Your current questions will be replaced. Uses 1 AI credit.')) return
+    if (!confirm('Build a full scenario-based lesson (teach → real care scenario → quick check) and a fresh question bank for this module, grounded in your policies?\n\nIt reuses the matching standard module\'s images where available. Your current questions will be replaced. Uses AI tokens.')) return
     setGenLoading(p => ({ ...p, [m.id]: 'lesson' }))
     setGenError(p => ({ ...p, [m.id]: '' }))
     try {
@@ -713,9 +713,9 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
         </div>
         <p className="text-xs text-neutral-mid">
           {view === 'live'
-            ? 'Your own training modules — generated from your uploaded policies (using your AI credits) and fully editable. Archive any you don’t need; archived modules aren’t shown to staff and can be restored anytime.'
+            ? 'Your own training modules — generated from your uploaded policies (using your AI tokens) and fully editable. Archive any you don’t need; archived modules aren’t shown to staff and can be restored anytime.'
             : view === 'prebuilt'
-              ? 'Built by CareStream and ready to assign to your staff — these don’t use any of your AI credits. The choice of tier is always yours: pre-built is a legitimate pick for a refresher, with CPD approved courses available separately above.'
+              ? 'Built by CareStream and ready to assign to your staff — these don’t use any of your AI tokens. The choice of tier is always yours: pre-built is a legitimate pick for a refresher, with CPD approved courses available separately above.'
               : 'These modules are hidden from staff. Restore any to move it back into the live list.'}
         </p>
       </div>

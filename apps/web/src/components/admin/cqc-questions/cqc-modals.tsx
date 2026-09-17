@@ -217,7 +217,7 @@ export function SendModal({
 
 // ─── Generate Batch Modal ─────────────────────────────────────────────────────
 // AI-generates a batch of brand-new questions and saves them to the bank. Each
-// generated question consumes one of the tenant's AI credits.
+// generated question consumes one of the tenant's AI tokens.
 
 export function GenerateBatchModal({
   token, onClose, onGenerated,
@@ -308,7 +308,7 @@ export function GenerateBatchModal({
 
           <div className="flex items-start gap-2 rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-xs text-amber-700">
             <AlertCircle size={14} className="mt-0.5 shrink-0" />
-            <span>Uses AI credits — 1 credit per question generated (this batch: <strong>{count} credit{count !== 1 ? 's' : ''}</strong>).</span>
+            <span>Uses AI tokens — 1 credit per question generated (this batch: <strong>{count} credit{count !== 1 ? 's' : ''}</strong>).</span>
           </div>
 
           {error && <p className="flex items-center gap-2 text-sm text-red-600"><AlertCircle size={15} />{error}</p>}

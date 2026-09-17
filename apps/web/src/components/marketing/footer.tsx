@@ -24,6 +24,8 @@ type Badge = {
   w: number; h: number
   /** Landscape lockup with fine print, so it needs a slightly larger cap to stay legible. */
   wide?: boolean
+  /** Our own statement rather than a third party's mark: stays internal, no new tab. */
+  selfDeclared?: boolean
 }
 
 const BADGES: Badge[] = [
@@ -58,6 +60,18 @@ const BADGES: Badge[] = [
     alt: 'Disability Confident Committed',
     href: 'https://www.gov.uk/government/collections/disability-confident-campaign',
     label: 'Disability Confident Committed',
+  },
+  {
+    // Unlike the four above, this is NOT issued or checked by anyone: there is no general
+    // "GDPR compliant" certification, and this graphic carries no issuer. It is our own
+    // statement about how we handle data, so it links to /trust where that statement is
+    // actually made and can be read, rather than standing as a bare claim. Keep it last,
+    // after the marks a third party did issue.
+    src: '/badges/gdpr-compliant.png', w: 286, h: 120,
+    alt: 'GDPR compliant',
+    href: '/trust',
+    label: 'GDPR compliant',
+    selfDeclared: true,
   },
 ]
 
@@ -162,11 +176,15 @@ export async function MarketingFooter() {
           appears on the home page and every page in the (marketing) group. */}
       <section className="faccred" aria-label="Accreditations and registrations">
         <div className="wrap">
-          <p className="faccred-lead">Accredited and registered</p>
+          <p className="faccred-lead">Accreditations and compliance</p>
           <ul className="faccred-row">
             {BADGES.map(b => (
               <li key={b.label}>
-                <a href={b.href} rel="noopener noreferrer" target="_blank" title={b.label}>
+                <a
+                  href={b.href}
+                  title={b.label}
+                  {...(b.selfDeclared ? {} : { rel: 'noopener noreferrer', target: '_blank' })}
+                >
                   <img className={b.wide ? 'wide' : undefined} src={b.src} alt={b.alt} width={b.w} height={b.h} loading="lazy" />
                 </a>
               </li>
@@ -195,7 +213,23 @@ export async function MarketingFooter() {
               <img className="cslogo" src="/logo-color.svg" alt="CareStream" width={187} height={56} />
             </span>
             <p>Policy, training and CQC evidence for care services in England. Built by people who have sat through an inspection.</p>
-            <address className="faddr">Suite Ra01, 195-197 Wood Street,<br />London, E17 3NU</address>
+            <div className="faddrrow">
+              <address className="faddr">Suite Ra01, 195-197 Wood Street,<br />London, E17 3NU</address>
+              {/* Google Preferred Sources. Our own pill so it sits in the footer's type and
+                  scale, using the G lifted from Google's official badge artwork rather than a
+                  redrawn mark. Points at the documented deeplink: Google's button script would
+                  pull news.google.com/swg/js/v1/publisher.js onto every page, and this needs
+                  nothing loaded to do the same job. */}
+              <a
+                className="fpreferred"
+                href="https://www.google.com/preferences/source?q=carestreamai.com"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <img src="/badges/google-g.png" alt="" width={112} height={112} aria-hidden="true" />
+                <span>Add to Preferred Sources</span>
+              </a>
+            </div>
             <Link className="fcontact" href="/contact">
               Contact us
               <svg viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7h8M7.5 3.5 11 7l-3.5 3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>

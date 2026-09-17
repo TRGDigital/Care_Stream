@@ -2205,6 +2205,11 @@ model TrainingSendLog {
   trigger_type String    // 'scheduled' | 'manual' | 'return_to_work' | 'post_incident' | 'quizme' | 'spaced_repetition'
   triggered_by String?
   context      String?
+  // One triggered send writes a row per staff member; batch_id ties them together, and note
+  // keeps the admin's own note (incident description, return-to-work notes) apart from the
+  // delivery outcome in context. Both null on rows written before they existed.
+  note         String?
+  batch_id     String?
   sent_at      DateTime  @default(now())
   rule         TrainingDeliveryRule? @relation(fields: [rule_id], references: [id], onDelete: SetNull)
 

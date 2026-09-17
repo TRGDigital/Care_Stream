@@ -1101,11 +1101,26 @@ const AUDIENCE_LABELS: Record<string, string> = {
   specific:   'Specific staff',
 }
 
-function DeliveryTab({ api, modules, staff }: {
+const SEND_EVENT_FILTERS = [
+  { key: '',               label: 'All' },
+  { key: 'post_incident',  label: 'Post-incident' },
+  { key: 'return_to_work', label: 'Return to work' },
+  { key: 'manual',         label: 'Manual send' },
+]
+
+function DeliveryTab({ api, modules, staff, onOpenModules }: {
   api:     ReturnType<typeof createApiClient>
   modules: Module[]
   staff:   Staff[]
+  onOpenModules: () => void
 }) {
+  // Only modules with questions can be sent; the rest are empty adhoc placeholders.
+  const available = modules.filter(m => (m.questions?.length ?? 0) > 0)
+  const [events,        setEvents]        = useState<any[]>([])
+  const [eventsLoading, setEventsLoading] = useState(true)
+  const [eventType,     setEventType]     = useState('')
+  const [openEvent,     setOpenEvent]     = useState<string | null>(null)
+  const [qsNote,        setQsNote]        = useState('')
   const [rules,       setRules]       = useState<any[]>([])
   const [rulesLoading,setRulesLoading]= useState(true)
   const [showModal,   setShowModal]   = useState(false)
@@ -1133,6 +1148,14 @@ function DeliveryTab({ api, modules, staff }: {
   const [piDesc,      setPiDesc]      = useState('')
   const [piSending,   setPiSending]   = useState(false)
   const [piResult,    setPiResult]    = useState('')
+
+  function loadEvents(type = eventType) {
+    return api.training.sendEvents({ type, limit: 30 })
+      .then(d => setEvents(d.events))
+      .catch(() => {})
+      .finally(() => setEventsLoading(false))
+  }
+  useEffect(() => { setEventsLoading(true); loadEvents(eventType) }, [eventType])
 
   useEffect(() => {
     api.training.deliveryRules()
@@ -1177,8 +1200,10 @@ function DeliveryTab({ api, modules, staff }: {
     if (!qsModule) { setQsResult('Please select a module'); return }
     setQsSending(true); setQsResult('')
     try {
-      const res = await api.training.manualSend({ module_id: qsModule, target_audience: qsAudience, questions_per_send: qsQCount })
+      const res = await api.training.manualSend({ module_id: qsModule, target_audience: qsAudience, questions_per_send: qsQCount, note: qsNote.trim() || undefined })
       setQsResult((res as any).message ?? `Delivered to ${res.sent_to} staff member${res.sent_to !== 1 ? 's' : ''}`)
+      setQsNote('')
+      loadEvents()
       const logRes = await api.training.sendLog(30)
       setSendLog(logRes.logs)
     } catch (e: any) {
@@ -1188,11 +1213,13 @@ function DeliveryTab({ api, modules, staff }: {
 
   async function returnToWork() {
     if (!rtwUser) { setRtwResult('Please select a staff member'); return }
+    if (!rtwModule) { setRtwResult('Please select a module'); return }
     setRtwSending(true); setRtwResult('')
     try {
       const res = await api.training.returnToWork({ user_id: rtwUser, module_id: rtwModule || undefined, notes: rtwNotes || undefined })
       setRtwResult((res as any).message ?? `Return-to-work questions sent to ${res.staff_name}`)
       setRtwUser(''); setRtwModule(''); setRtwNotes('')
+      loadEvents()
       const logRes = await api.training.sendLog(30)
       setSendLog(logRes.logs)
     } catch (e: any) {
@@ -1208,6 +1235,7 @@ function DeliveryTab({ api, modules, staff }: {
       const res = await api.training.postIncident({ module_id: piModule, target_audience: piAudience, incident_description: piDesc })
       setPiResult((res as any).message ?? `Delivered to ${res.sent_to} staff member${res.sent_to !== 1 ? 's' : ''}`)
       setPiModule(''); setPiDesc('')
+      loadEvents()
       const logRes = await api.training.sendLog(30)
       setSendLog(logRes.logs)
     } catch (e: any) {
@@ -1314,7 +1342,14 @@ function DeliveryTab({ api, modules, staff }: {
 
       {/* ── Quick Actions ─────────────────────────────────────────── */}
       <div>
-        <h2 className="mb-4 font-semibold text-neutral-dark">Quick actions</h2>
+        <h2 className="mb-1 font-semibold text-neutral-dark">Quick actions</h2>
+        <p className="mb-4 text-xs text-neutral-mid">
+          {available.length === 0
+            ? <>No modules have questions yet. </>
+            : <>{available.length} module{available.length === 1 ? ' has' : 's have'} questions ready to send. </>}
+          Questions come from{' '}
+          <button type="button" onClick={onOpenModules} className="font-medium text-teal hover:underline">Adhoc Training Modules &amp; Questions</button>.
+        </p>
         <div className="grid gap-5 md:grid-cols-3">
 
           {/* Manual send */}
@@ -1330,7 +1365,7 @@ function DeliveryTab({ api, modules, staff }: {
               <select value={qsModule} onChange={e => setQsModule(e.target.value)}
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none">
                 <option value="">— Select module —</option>
-                {modules.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                {available.map(m => <option key={m.id} value={m.id}>{m.name} ({m.questions.length} question{m.questions.length === 1 ? '' : 's'})</option>)}
               </select>
               <div className="flex gap-2">
                 <select value={qsAudience} onChange={e => setQsAudience(e.target.value)}
@@ -1344,6 +1379,9 @@ function DeliveryTab({ api, modules, staff }: {
                   {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}Q</option>)}
                 </select>
               </div>
+              <input type="text" value={qsNote} onChange={e => setQsNote(e.target.value)}
+                placeholder="Note (optional) e.g. ahead of CQC visit"
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
               <button onClick={manualSend} disabled={qsSending}
                 className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-teal py-2 text-sm font-medium text-white hover:bg-teal/90 disabled:opacity-50">
                 {qsSending ? <><Loader2 size={13} className="animate-spin" /> Sending…</> : <><Sparkles size={13} /> Send now</>}
@@ -1369,8 +1407,8 @@ function DeliveryTab({ api, modules, staff }: {
               </select>
               <select value={rtwModule} onChange={e => setRtwModule(e.target.value)}
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none">
-                <option value="">— Module (optional) —</option>
-                {modules.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                <option value="">— Select module —</option>
+                {available.map(m => <option key={m.id} value={m.id}>{m.name} ({m.questions.length} question{m.questions.length === 1 ? '' : 's'})</option>)}
               </select>
               <input type="text" value={rtwNotes} onChange={e => setRtwNotes(e.target.value)}
                 placeholder="Notes e.g. returned from 3-week sick leave"
@@ -1396,7 +1434,7 @@ function DeliveryTab({ api, modules, staff }: {
               <select value={piModule} onChange={e => setPiModule(e.target.value)}
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none">
                 <option value="">— Related module —</option>
-                {modules.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                {available.map(m => <option key={m.id} value={m.id}>{m.name} ({m.questions.length} question{m.questions.length === 1 ? '' : 's'})</option>)}
               </select>
               <select value={piAudience} onChange={e => setPiAudience(e.target.value)}
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none">
@@ -1416,6 +1454,82 @@ function DeliveryTab({ api, modules, staff }: {
           </div>
 
         </div>
+      </div>
+
+      {/* ── Triggered sends ─────────────────────────────────────── */}
+      <div>
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="font-semibold text-neutral-dark">Triggered sends</h2>
+            <p className="text-xs text-neutral-mid">Every post-incident, return to work and manual send, with any note that was added</p>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {SEND_EVENT_FILTERS.map(f => (
+              <button key={f.key} type="button" onClick={() => setEventType(f.key)}
+                className={`rounded-full border px-3 py-1 text-xs font-medium ${eventType === f.key ? 'border-teal bg-teal text-white' : 'border-gray-200 bg-white text-neutral-mid hover:border-teal hover:text-teal'}`}>
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        {eventsLoading ? (
+          <div className="flex justify-center py-8"><Loader2 size={20} className="animate-spin text-neutral-mid" /></div>
+        ) : events.length === 0 ? (
+          <div className="rounded-card border border-dashed border-gray-200 bg-white px-6 py-10 text-center">
+            <History size={28} className="mx-auto mb-2 text-gray-300" />
+            <p className="font-medium text-neutral-dark">Nothing triggered yet</p>
+            <p className="mt-1 text-sm text-neutral-mid">Sends from the quick actions above will be recorded here.</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-50 rounded-card border border-gray-100 bg-white shadow-card">
+            {events.map((ev: any) => {
+              const open = openEvent === ev.id
+              return (
+                <div key={ev.id} className="px-5 py-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                          ev.trigger_type === 'post_incident'  ? 'bg-red-50 text-red-600'    :
+                          ev.trigger_type === 'return_to_work' ? 'bg-amber-50 text-amber-600':
+                          'bg-teal/10 text-teal'
+                        }`}>
+                          {TRIGGER_LABELS[ev.trigger_type] ?? ev.trigger_type}
+                        </span>
+                        <p className="text-sm font-medium text-neutral-dark">{ev.module?.name ?? 'Module removed'}</p>
+                      </div>
+                      <p className="mt-1 text-xs text-neutral-mid">
+                        {new Date(ev.sent_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        {ev.triggered_by ? ` · by ${ev.triggered_by}` : ''}
+                      </p>
+                    </div>
+                    <button type="button" onClick={() => setOpenEvent(open ? null : ev.id)}
+                      className="flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-medium text-neutral-dark hover:border-teal hover:text-teal">
+                      <Users size={12} />
+                      Delivered to {ev.delivered} of {ev.total}
+                      <ChevronDown size={12} className={open ? 'rotate-180' : ''} />
+                    </button>
+                  </div>
+                  {ev.note && (
+                    <div className="mt-2.5 rounded-lg bg-neutral-light/60 px-3 py-2 text-sm text-neutral-dark">
+                      <span className="text-xs font-medium text-neutral-mid">Note: </span>{ev.note}
+                    </div>
+                  )}
+                  {open && (
+                    <ul className="mt-2.5 space-y-1">
+                      {ev.recipients.map((r: any, i: number) => (
+                        <li key={i} className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                          <span className="text-neutral-dark">{r.name}{r.job_role ? <span className="text-neutral-mid"> ({r.job_role})</span> : null}</span>
+                          <span className={r.delivered ? 'text-green-600' : 'text-amber-600'}>{r.outcome || 'recorded'}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* ── Send Log ──────────────────────────────────────────────── */}
@@ -2209,7 +2323,7 @@ export default function TrainingPage() {
 
       {tab === 'modules'  && api && <ModulesTab api={api} modules={modules} staff={staff} enrollments={enrollments} onAssigned={load} />}
       {tab === 'history'  && api && <HistoryTab api={api} modules={modules} />}
-      {tab === 'delivery' && api && <DeliveryTab api={api} modules={modules} staff={staff} />}
+      {tab === 'delivery' && api && <DeliveryTab api={api} modules={modules} staff={staff} onOpenModules={() => setTab('modules')} />}
       {tab === 'progress' && (
         <StaffProgressTab staff={staff} enrollments={enrollments} onRemind={async id => {
           if (!api) throw new Error('Not signed in')

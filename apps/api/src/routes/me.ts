@@ -27,6 +27,7 @@ import { allocateFromSupervision, type AllocationType } from '../services/superv
 import { sendTrainingCompletionEmail } from '../services/email/outbound'
 import { generateAuditRecommendations } from './audits'
 import { prisma } from '../db/client'
+import { SECTIONS_WITH_ALL_QUESTIONS, shapeRunTemplate, visibleQuestions, answerText, outcomeFor } from '../lib/audit-questions'
 import { managerApprove, rejectPolicy, getPolicyDocument, getAdoptionContext, getApprovalState, setExternalRecipient, EXTERNAL_LINK_TTL_DAYS } from '../services/analytics/policy-adoption'
 
 // Friendly policy title from a filename (strip extension + tidy separators).
@@ -422,16 +423,18 @@ meRouter.get('/audit-approvals', async (req: Request, res: Response) => {
 meRouter.get('/audit-approvals/:runId', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   if (!(await isCareManager((req as any).user.sub))) { err(res, 'FORBIDDEN', 'Not a care manager', 403); return }
-  const run = await (prisma as any).auditRun.findFirst({
+  const rawRun = await (prisma as any).auditRun.findFirst({
     where: { id: String(req.params.runId), tenant_id: tenantId },
     include: {
-      template: { include: { sections: { orderBy: { section_order: 'asc' }, include: { questions: { where: { is_active: true }, orderBy: { question_order: 'asc' } } } } } },
+      template: { include: SECTIONS_WITH_ALL_QUESTIONS },
       answers:  true,
       tenant:   { select: { name: true } },
     },
   })
-  if (!run) { err(res, 'NOT_FOUND', 'Not found', 404); return }
+  if (!rawRun) { err(res, 'NOT_FOUND', 'Not found', 404); return }
+  const run = shapeRunTemplate(rawRun)
   const answerMap = new Map<string, any>((run.answers as any[]).map(a => [a.question_id, a]))
+  const visibleIds = new Set(visibleQuestions(run).map((q: any) => q.id))
   const report = {
     audit_name:        run.template.name,
     subject:           run.room_number,
@@ -448,11 +451,11 @@ meRouter.get('/audit-approvals/:runId', async (req: Request, res: Response) => {
     ai_recommendations: run.ai_recommendations,
     sections: (run.template.sections as any[]).map(s => ({
       title:     s.title,
-      questions: (s.questions as any[]).map(q => {
+      questions: (s.questions as any[]).filter(q => visibleIds.has(q.id)).map(q => {
         const a: any = answerMap.get(q.id)
-        return { id: q.id, question: q.question_text, question_type: q.question_type, answer_yn: a?.answer_yn ?? null, answer_na: a?.answer_na ?? false, outcome_text: a?.outcome_text ?? null, actions_text: a?.actions_text ?? null }
+        return { id: q.id, question: q.question_text, question_type: q.question_type, answer_yn: a?.answer_yn ?? null, answer_na: a?.answer_na ?? false, answer_text: answerText(q, a), outcome: outcomeFor(q, a), outcome_text: a?.outcome_text ?? null, actions_text: a?.actions_text ?? null }
       }),
-    })),
+    })).filter(s => s.questions.length),
   }
   ok(res, { report })
 })

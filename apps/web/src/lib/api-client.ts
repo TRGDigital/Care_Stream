@@ -32,6 +32,16 @@ export type PolicyHistoryEntry = {
 }
 
 /** A regulation in scope with no policy behind it, from GET /analytics/gaps/missing-policies. */
+export type AuditEditorQuestion = {
+  id: string | null; key: string; text: string; type: string; settings: any
+  show_if: { key: string; equals: string[] } | null; quality_statement_id: string | null
+}
+export type AuditEditorTemplate = {
+  id: string; tenant_id: string | null; name: string; description: string | null; frequency: string
+  subject_scope: string; requires_shift: boolean; version: number; module_ids: string[]; is_seed: boolean
+  sections: Array<{ id: string | null; title: string; questions: AuditEditorQuestion[] }>
+}
+
 export type TrainingMatrixStatus =
   | 'in_date' | 'due_soon' | 'expired' | 'overdue' | 'practical_due'
   | 'in_progress' | 'not_started' | 'missing' | 'none' | 'agency'
@@ -1023,7 +1033,14 @@ export function createApiClient(token: string) {
     },
 
     audits: {
-      templates: () => apiFetch<{ templates: any[]; rooms: string[]; staff: string[]; recent_subjects: Record<string, string[]>; me: { name: string | null; job_role: string | null } }>('/audits/templates', token),
+      templates: (opts: { includeHidden?: boolean } = {}) => apiFetch<{ templates: any[]; rooms: string[]; staff: string[]; recent_subjects: Record<string, string[]>; me: { name: string | null; job_role: string | null } }>(`/audits/templates${opts.includeHidden ? '?include_hidden=1' : ''}`, token),
+      // The builder: an audit's structure, saving an edit, copying and hiding, and its version history.
+      templateStructure: (id: string) => apiFetch<{ template: AuditEditorTemplate }>(`/audits/templates/${id}/structure`, token),
+      updateTemplate: (id: string, data: any) => apiFetch<{ version: number; template: AuditEditorTemplate }>(`/audits/templates/${id}`, token, { method: 'PUT', body: JSON.stringify(data) }),
+      copyTemplate: (id: string, data: { name?: string; hide_original?: boolean }) => apiFetch<{ template: AuditEditorTemplate }>(`/audits/templates/${id}/copy`, token, { method: 'POST', body: JSON.stringify(data) }),
+      setTemplateHidden: (id: string, hidden: boolean) => apiFetch<{ hidden: boolean }>(`/audits/templates/${id}/hidden`, token, { method: 'POST', body: JSON.stringify({ hidden }) }),
+      templateVersions: (id: string) => apiFetch<{ versions: Array<{ version: number; changed_by: string | null; change_note: string | null; created_at: string; runs: number; question_count: number; snapshot: any }> }>(`/audits/templates/${id}/versions`, token),
+      qualityStatements: () => apiFetch<{ statements: Array<{ id: string; name: string; key_question: string; number: number }> }>('/audits/quality-statements', token),
       actionPlans: () => apiFetch<{ plans: Array<{ run_id: string; audit_name: string; subject: string | null; status: 'draft' | 'approved'; total: number; open: number }> }>('/audits/action-plans', token),
       previewActionPlanEmails: () => apiFetch<{ sent_to: string }>('/audits/action-plan/preview-emails', token, { method: 'POST' }),
       actionsSummary: () => apiFetch<{
@@ -1043,9 +1060,9 @@ export function createApiClient(token: string) {
       },
       createRun: (data: { template_id: string; audit_month: string; auditor_name?: string; auditor_role?: string; room_number?: string; subject?: string; subject_room?: string }) =>
         apiFetch<{ run: any }>('/audits/runs', token, { method: 'POST', body: JSON.stringify(data) }),
-      getRun: (id: string) => apiFetch<{ run: any; approval_required?: boolean }>(`/audits/runs/${id}`, token),
+      getRun: (id: string) => apiFetch<{ run: any; approval_required?: boolean; quality_statements?: Record<string, { name: string; key_question: string }> }>(`/audits/runs/${id}`, token),
       updateRun: (id: string, data: any) => apiFetch<{ run: any }>(`/audits/runs/${id}`, token, { method: 'PUT', body: JSON.stringify(data) }),
-      saveAnswers: (id: string, answers: Array<{ question_id: string; answer_yn?: boolean | null; answer_na?: boolean; no_compliant?: boolean | null; outcome_text?: string | null; actions_text?: string | null }>) =>
+      saveAnswers: (id: string, answers: Array<{ question_id: string; answer_yn?: boolean | null; answer_na?: boolean; no_compliant?: boolean | null; answer_value?: string | string[] | null; outcome_text?: string | null; actions_text?: string | null }>) =>
         apiFetch<{ saved: number }>(`/audits/runs/${id}/answers`, token, { method: 'POST', body: JSON.stringify({ answers }) }),
       complete: (id: string) => apiFetch<{ run: any; recommendations: string; approval_required?: boolean }>(`/audits/runs/${id}/complete`, token, { method: 'POST' }),
       actionPlan: (id: string) => apiFetch<{ status: string; actions: Array<{ id: string; description: string; priority: string; due_date: string | null; assigned_to: string | null; is_external: boolean; external_name: string | null; status: string; source: string; done_at: string | null }> }>(`/audits/runs/${id}/action-plan`, token),
@@ -1100,7 +1117,7 @@ export function createApiClient(token: string) {
       approvePolicyAsManager: (policyId: string) => apiFetch<{ status: string; version?: string }>(`/me/policy-approvals/${encodeURIComponent(policyId)}/approve`, token, { method: 'POST' }),
       rejectPolicyAsManager: (policyId: string, comment: string, feedback: Array<{ change_id: string; note: string }> = []) => apiFetch<{ status: string }>(`/me/policy-approvals/${encodeURIComponent(policyId)}/reject`, token, { method: 'POST', body: JSON.stringify({ comment, feedback }) }),
       auditApprovals: () => apiFetch<{ is_manager: boolean; audits: Array<{ run_id: string; template_name: string; subject: string | null; subject_room: string | null; subject_scope: string; auditor_name: string; audit_month: string; submitted_at: string | null }>; recent: Array<{ run_id: string; template_name: string; approved_by: string; approved_at: string | null; audit_month: string }> }>('/me/audit-approvals', token),
-      auditApprovalDetail: (runId: string) => apiFetch<{ report: { audit_name: string; subject: string | null; subject_room: string | null; subject_scope: string; auditor_name: string | null; auditor_role: string | null; audit_month: string; submitted_by: string | null; submitted_at: string | null; strengths: string | null; improvements: string | null; actions_deadline: string | null; ai_recommendations: string | null; sections: Array<{ title: string; questions: Array<{ id: string; question: string; question_type: string; answer_yn: boolean | null; answer_na: boolean; outcome_text: string | null; actions_text: string | null }> }> } }>(`/me/audit-approvals/${encodeURIComponent(runId)}`, token),
+      auditApprovalDetail: (runId: string) => apiFetch<{ report: { audit_name: string; subject: string | null; subject_room: string | null; subject_scope: string; auditor_name: string | null; auditor_role: string | null; audit_month: string; submitted_by: string | null; submitted_at: string | null; strengths: string | null; improvements: string | null; actions_deadline: string | null; ai_recommendations: string | null; sections: Array<{ title: string; questions: Array<{ id: string; question: string; question_type: string; answer_yn: boolean | null; answer_na: boolean; answer_text?: string; outcome?: string; outcome_text: string | null; actions_text: string | null }> }> } }>(`/me/audit-approvals/${encodeURIComponent(runId)}`, token),
       approveAuditAsManager: (runId: string) => apiFetch<{ status: string }>(`/me/audit-approvals/${encodeURIComponent(runId)}/approve`, token, { method: 'POST' }),
       rejectAuditAsManager: (runId: string, comment: string) => apiFetch<{ status: string }>(`/me/audit-approvals/${encodeURIComponent(runId)}/reject`, token, { method: 'POST', body: JSON.stringify({ comment }) }),
       documentCategories: () => apiFetch<{ available: string[]; has_residents?: boolean }>('/me/document-categories', token),

@@ -5,9 +5,10 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
-import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info, Wrench, Trash2, GraduationCap, X, ClipboardList, Mail, Loader2 } from 'lucide-react'
+import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info, Wrench, Trash2, GraduationCap, X, ClipboardList, Mail, Loader2, Pencil, Copy, EyeOff, Eye, History } from 'lucide-react'
 import { clsx } from 'clsx'
 import { AuditBuilder } from '@/components/admin/audit-builder'
+import { AuditVersionsModal } from '@/components/admin/audit-versions-modal'
 import { LinkTrainingModal } from '@/components/admin/link-training-modal'
 import { AuditActionPlan } from '@/components/admin/audit-action-plan'
 import { usePlanFeatures } from '@/lib/use-plan-features'
@@ -45,6 +46,7 @@ function HowToAccordion() {
           <p><strong className="text-neutral-dark">Completing the form:</strong> Work through each section using the tabs. For yes/no questions tap Yes, No, or N/A. For findings-based audits (e.g. Medicines Management) type your findings and any actions directly. Answers save automatically — you can leave and return at any time.</p>
           <p><strong className="text-neutral-dark">Pausing on the web:</strong> Click <em>Save &amp; exit</em> at the top of the audit form at any time. All answers are saved automatically as you go — you can return and resume from the In Progress section on this page.</p>
           <p><strong className="text-neutral-dark">Finishing &amp; AI recommendations:</strong> Once all required questions are answered, go to the Summary tab, fill in strengths, areas for improvement, and a deadline. Click "Complete &amp; get AI recommendations" to generate a structured report linked to CQC Key Questions.</p>
+          <p><strong className="text-neutral-dark">Your own audits:</strong> Build an audit from scratch, or copy a built-in audit and edit your copy. Questions can be yes/no, findings, free text, a number with a pass range (for example fridge temperatures), a date, one or several options, or a rating. A question can be asked only when an earlier answer matches, and tagged with the CQC quality statement it evidences. Every save is a new version, and completed audits keep the questions they were answered against.</p>
           <p><strong className="text-neutral-dark">Printing &amp; storing reports:</strong> Completed audits appear in the Audit Repository below. Click any row to view or reprint the report. Use "Print / save" inside the audit to produce a PDF-ready version.</p>
         </div>
       )}
@@ -79,6 +81,13 @@ export default function AuditsPage() {
   const [starting,    setStarting]    = useState(false)
   const [showNew,     setShowNew]     = useState(false)
   const [showBuilder, setShowBuilder] = useState(false)
+  const [editingId,   setEditingId]   = useState<string | null>(null)
+  const [versionsOf,  setVersionsOf]  = useState<any>(null)
+  const [copying,     setCopying]     = useState<any>(null)
+  const [copyName,    setCopyName]    = useState('')
+  const [copyHide,    setCopyHide]    = useState(true)
+  const [copyBusy,    setCopyBusy]    = useState(false)
+  const [copyError,   setCopyError]   = useState('')
   const [availOpen,   setAvailOpen]   = useState(false)
   const [linking, setLinking] = useState<any>(null)
   const [deleting,    setDeleting]    = useState<string | null>(null)
@@ -109,8 +118,8 @@ export default function AuditsPage() {
   useEffect(() => {
     if (!session?.accessToken) return
     const api = createApiClient(session.accessToken)
-    Promise.all([api.audits.templates(), api.audits.runs()])
-      .then(([t, r]) => { setTemplates(t.templates); setRooms(t.rooms ?? []); setStaff(t.staff ?? []); setRuns(r.runs); if (t.templates[0]) setSelTemplate(t.templates[0].id); setAuditorName(v => v || (t.me?.name ?? '')); setAuditorRole(v => v || (t.me?.job_role ?? '')); persistentCache.set(`admin-audits-${userId}`, { templates: t.templates, runs: r.runs }) })
+    Promise.all([api.audits.templates({ includeHidden: true }), api.audits.runs()])
+      .then(([t, r]) => { setTemplates(t.templates); setRooms(t.rooms ?? []); setStaff(t.staff ?? []); setRuns(r.runs); { const first = t.templates.find((x: any) => !x.hidden); if (first) setSelTemplate(first.id) } setAuditorName(v => v || (t.me?.name ?? '')); setAuditorRole(v => v || (t.me?.job_role ?? '')); persistentCache.set(`admin-audits-${userId}`, { templates: t.templates, runs: r.runs }) })
       .catch(() => {})
       .finally(() => setLoading(false))
     api.audits.actionPlans().then(d => { setActionPlans(d.plans); persistentCache.set(`admin-action-plans-${userId}`, d.plans) }).catch(() => {})
@@ -125,7 +134,7 @@ export default function AuditsPage() {
 
   async function reloadTemplates() {
     if (!session?.accessToken) return
-    const t = await createApiClient(session.accessToken).audits.templates().catch(() => null)
+    const t = await createApiClient(session.accessToken).audits.templates({ includeHidden: true }).catch(() => null)
     if (t) { setTemplates(t.templates); setRooms(t.rooms ?? []); setStaff(t.staff ?? []) }
   }
   async function removeTemplate(id: string, name: string) {
@@ -134,6 +143,22 @@ export default function AuditsPage() {
     setDeleting(id)
     try { await createApiClient(session.accessToken).audits.deleteTemplate(id); await reloadTemplates() }
     catch { /* ignore */ } finally { setDeleting(null) }
+  }
+
+  async function setHidden(t: any, hidden: boolean) {
+    if (!session?.accessToken) return
+    await createApiClient(session.accessToken).audits.setTemplateHidden(t.id, hidden).catch(() => {})
+    await reloadTemplates()
+  }
+  async function copyAudit() {
+    if (!session?.accessToken || !copying) return
+    setCopyBusy(true); setCopyError('')
+    try {
+      const { template } = await createApiClient(session.accessToken).audits.copyTemplate(copying.id, { name: copyName.trim() || undefined, hide_original: !copying.tenant_id && copyHide })
+      setCopying(null)
+      await reloadTemplates()
+      setEditingId(template.id)
+    } catch (e: any) { setCopyError(e?.message ?? 'Could not copy the audit.') } finally { setCopyBusy(false) }
   }
 
   const selTpl = templates.find(t => t.id === selTemplate)
@@ -235,8 +260,36 @@ export default function AuditsPage() {
         </div>
       )}
 
-      {showBuilder && session?.accessToken && (
-        <AuditBuilder token={session.accessToken} onClose={() => setShowBuilder(false)} onCreated={reloadTemplates} />
+      {(showBuilder || editingId) && session?.accessToken && (
+        <AuditBuilder token={session.accessToken} templateId={editingId} onClose={() => { setShowBuilder(false); setEditingId(null) }} onCreated={reloadTemplates} />
+      )}
+
+      {versionsOf && session?.accessToken && (
+        <AuditVersionsModal token={session.accessToken} template={versionsOf} onClose={() => setVersionsOf(null)} />
+      )}
+
+      {copying && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setCopying(null)}>
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+            <h2 className="text-base font-semibold text-neutral-dark">Copy &ldquo;{copying.name}&rdquo;</h2>
+            <p className="mt-1 text-sm text-neutral-mid">The copy becomes your own audit, so you can change its questions. Completed audits of the original are not affected.</p>
+            <label className="mb-1 mt-4 block text-xs font-medium text-neutral-mid">Name for your copy</label>
+            <input value={copyName} onChange={e => setCopyName(e.target.value)} className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+            {!copying.tenant_id && (
+              <label className="mt-3 flex items-start gap-2 text-sm text-neutral-dark">
+                <input type="checkbox" checked={copyHide} onChange={e => setCopyHide(e.target.checked)} className="mt-0.5 accent-teal" />
+                Hide the built-in version, so your team only sees your copy
+              </label>
+            )}
+            {copyError && <p className="mt-3 text-sm text-red-600">{copyError}</p>}
+            <div className="mt-5 flex justify-end gap-2">
+              <button onClick={() => setCopying(null)} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:bg-neutral-light">Cancel</button>
+              <button onClick={copyAudit} disabled={copyBusy} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-50">
+                {copyBusy && <Loader2 size={14} className="animate-spin" />} Copy and edit
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {linking && session?.accessToken && (
@@ -255,7 +308,16 @@ export default function AuditsPage() {
                   <p className="text-sm font-medium text-neutral-dark">{t.name}</p>
                   <p className="text-xs text-neutral-mid capitalize">{t.frequency}{typeof t._count?.sections === 'number' ? ` · ${t._count.sections} section${t._count.sections === 1 ? '' : 's'}` : ''}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button onClick={() => setEditingId(t.id)} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
+                    <Pencil size={13} /> Edit
+                  </button>
+                  <button onClick={() => setVersionsOf(t)} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
+                    <History size={13} /> v{t.version ?? 1}
+                  </button>
+                  <button onClick={() => { setCopying(t); setCopyName(`${t.name} (copy)`); setCopyError('') }} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
+                    <Copy size={13} /> Copy
+                  </button>
                   <button onClick={() => canLinkTraining ? setLinking(t) : router.push('/billing')} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal" title={canLinkTraining ? undefined : 'Linking audits to training is an Enterprise feature'}>
                     <GraduationCap size={13} /> Linked training{Array.isArray(t.module_ids) && t.module_ids.length ? ` (${t.module_ids.length})` : ''}{!canLinkTraining && <LockChip tier="Enterprise" />}
                   </button>
@@ -288,7 +350,7 @@ export default function AuditsPage() {
                     onChange={e => setSelTemplate(e.target.value)}
                     className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-neutral-dark focus:border-teal focus:outline-none"
                   >
-                    {templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    {templates.filter(t => !t.hidden).map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                   </select>
                 </div>
                 <div>
@@ -489,25 +551,40 @@ export default function AuditsPage() {
               onClick={() => setAvailOpen(v => !v)}
               className="flex w-full items-center gap-2 px-4 py-3 text-left hover:bg-neutral-light/40"
             >
-              <h2 className="text-sm font-semibold text-neutral-dark">Available audits ({templates.length})</h2>
+              <h2 className="text-sm font-semibold text-neutral-dark">Available audits ({templates.filter(t => !t.hidden).length}{templates.some(t => t.hidden) ? `, ${templates.filter(t => t.hidden).length} hidden` : ''})</h2>
               <ChevronDown size={16} className={clsx('ml-auto shrink-0 text-neutral-mid transition-transform', !availOpen && '-rotate-90')} />
             </button>
             {availOpen && (
               <div className="border-t border-gray-100">
-                <p className="px-4 pt-3 text-xs text-neutral-mid">Every audit your team can run. Scoped audits are completed one resident, staff member or room at a time.</p>
+                <p className="px-4 pt-3 text-xs text-neutral-mid">Every audit your team can run. Scoped audits are completed one resident, staff member or room at a time. To change a built-in audit, copy it and edit your copy; hide the ones you don&rsquo;t use.</p>
                 <table className="mt-2 w-full text-left text-sm">
                   <tbody className="divide-y divide-gray-50">
                     {templates.map(t => {
                       const sc = t.subject_scope ?? (t.room_based ? 'room' : 'none')
                       return (
                         <tr key={t.id}>
-                          <td className="px-4 py-2.5 font-medium text-neutral-dark">
+                          <td className={clsx('px-4 py-2.5 font-medium', t.hidden ? 'text-neutral-mid' : 'text-neutral-dark')}>
                             {t.name}
                             {t.tenant_id && <span className="ml-2 rounded bg-teal/10 px-1.5 py-0.5 text-[10px] font-semibold text-teal">Your audit</span>}
+                            {t.hidden && <span className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-neutral-mid">Hidden</span>}
                           </td>
                           <td className="px-4 py-2.5 text-xs text-neutral-mid">{FREQ_LABEL[t.frequency] ?? t.frequency}</td>
                           <td className="px-4 py-2.5 text-right">
                             {sc !== 'none' && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-neutral-mid">Per {SCOPE_WORD[sc] ?? sc}</span>}
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-2.5 text-right">
+                            {!t.tenant_id && (
+                              <span className="inline-flex gap-1.5">
+                                <button onClick={() => canCustomAudits ? (setCopying(t), setCopyName(`${t.name} (our version)`), setCopyHide(true), setCopyError('')) : router.push('/billing')}
+                                  title={canCustomAudits ? 'Copy this audit so you can edit it' : 'Copying and editing audits is an Enterprise feature'}
+                                  className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
+                                  <Copy size={12} /> Copy and edit{!canCustomAudits && <LockChip tier="Enterprise" />}
+                                </button>
+                                <button onClick={() => setHidden(t, !t.hidden)} className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
+                                  {t.hidden ? <><Eye size={12} /> Show</> : <><EyeOff size={12} /> Hide</>}
+                                </button>
+                              </span>
+                            )}
                           </td>
                         </tr>
                       )

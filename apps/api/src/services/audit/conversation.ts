@@ -3,6 +3,7 @@
 // Returns { handled: true } if the message was consumed, { handled: false } to pass through.
 
 import { prisma } from '../../db/client'
+import { SECTIONS_WITH_ALL_QUESTIONS, shapeRunTemplate, isVisible, isYesNo, isNarrative } from '../../lib/audit-questions'
 
 type SendFn = (text: string) => Promise<void>
 
@@ -21,10 +22,6 @@ const NO_WORDS      = ['no', 'n', '✗', '❌', 'nope', 'negative']
 const NA_WORDS      = ['n/a', 'na', 'not applicable', 'not apply']
 const SKIP_WORDS    = ['skip', 'none', '-', '.', 'no outcome', 'no actions', 'nothing']
 
-// Templates that require a shift selection (day/night) before starting
-const SHIFT_REQUIRED_TEMPLATES = ['Fire Marshall Checklist']
-// Templates that require a room number before starting
-const ROOM_REQUIRED_TEMPLATES  = ['Resident Bedrooms']
 
 function isYes(text: string)  { return YES_WORDS.includes(text.toLowerCase().trim()) }
 function isNo(text: string)   { return NO_WORDS.includes(text.toLowerCase().trim()) }
@@ -34,15 +31,69 @@ function isAuditTrigger(text: string) {
   const lower = text.toLowerCase().trim()
   return TRIGGER_WORDS.some(t => lower === t || lower.startsWith(t + ' '))
 }
-function requiresShift(templateName: string)  { return SHIFT_REQUIRED_TEMPLATES.includes(templateName) }
-function requiresRoom(templateName: string)   { return ROOM_REQUIRED_TEMPLATES.includes(templateName) }
+// Set on the audit itself (the builder's "ask for day or night shift" and "each audit is about").
+function requiresShift(template: any)  { return !!template?.requires_shift }
+function requiresSubject(template: any) { return (template?.subject_scope ?? 'none') !== 'none' }
+function subjectPrompt(template: any) {
+  const scope = template?.subject_scope
+  return scope === 'resident' ? "Please enter the *resident's name or initials* for this audit:"
+    : scope === 'staff' ? "Please enter the *staff member's name* for this audit:"
+    : 'Please enter the *room number* for this checklist:'
+}
+
+// Parse a WhatsApp reply for the number, date, choice and rating question types. Returns the stored
+// answer_value, or null when the reply cannot be read (the question is asked again).
+function parseTypedReply(q: any, text: string): string | null {
+  const t = text.trim()
+  const s = q.settings ?? {}
+  if (q.question_type === 'number') {
+    const m = t.replace(',', '.').match(/-?\d+(\.\d+)?/)
+    return m ? m[0] : null
+  }
+  if (q.question_type === 'date') {
+    if (/^today$/i.test(t)) return new Date().toISOString().slice(0, 10)
+    let m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/)
+    if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`
+    m = t.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/)
+    if (m) {
+      const y = m[3].length === 2 ? `20${m[3]}` : m[3]
+      const d = new Date(`${y}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}T00:00:00Z`)
+      return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10)
+    }
+    return null
+  }
+  const options: string[] = (s.options ?? []).map((o: any) => o.label)
+  const pick = (part: string) => {
+    const n = parseInt(part, 10)
+    if (String(n) === part.trim() && n >= 1 && n <= options.length) return options[n - 1]
+    return options.find(o => o.toLowerCase() === part.trim().toLowerCase()) ?? null
+  }
+  if (q.question_type === 'choice') return pick(t)
+  if (q.question_type === 'multi_choice') {
+    const picked = t.split(/[,;]+/).map(pick)
+    if (!picked.length || picked.some(x => x === null)) return null
+    return JSON.stringify([...new Set(picked)])
+  }
+  if (q.question_type === 'rating') {
+    const n = parseInt(t, 10), max = s.max_rating ?? 5
+    return String(n) === t && n >= 1 && n <= max ? String(n) : null
+  }
+  return null
+}
 
 function fmtQuestion(q: any, qNum: number, total: number, sectionTitle: string): string {
   const qType = q.question_type ?? 'yes_no'
   let replyHint: string
+  const na = q.settings?.allow_na ? ', or *n/a*' : ''
+  const options: string[] = (q.settings?.options ?? []).map((o: any, i: number) => `*${i + 1}.* ${o.label}`)
   if (qType === 'yes_no_na')  replyHint = 'Reply *yes*, *no*, or *n/a*'
   else if (qType === 'findings')  replyHint = 'Reply with your *findings* (or *skip*)'
   else if (qType === 'free_text') replyHint = 'Reply with your *answer* (or *skip*)'
+  else if (qType === 'number')    replyHint = `Reply with a *number*${q.settings?.unit ? ` in ${q.settings.unit}` : ''}${na}`
+  else if (qType === 'date')      replyHint = `Reply with a *date*, e.g. 14/09/2026 or *today*${na}`
+  else if (qType === 'choice')    replyHint = `${options.join('\n')}\n\nReply with the *number* of your answer${na}`
+  else if (qType === 'multi_choice') replyHint = `${options.join('\n')}\n\nReply with the *numbers* that apply, separated by commas${na}`
+  else if (qType === 'rating')    replyHint = `Reply with a *rating from 1 to ${q.settings?.max_rating ?? 5}*${na}`
   else                            replyHint = 'Reply *yes* or *no*'
   return [
     `📋 *Monthly Audit*`,
@@ -88,21 +139,12 @@ async function createFreshRun(tenantId: string, templateId: string): Promise<any
 }
 
 async function getRunWithQuestions(runId: string): Promise<{ run: any; flatQuestions: any[] }> {
-  const run = await (prisma as any).auditRun.findUnique({
+  const raw = await (prisma as any).auditRun.findUnique({
     where:   { id: runId },
-    include: {
-      template: {
-        include: {
-          sections: {
-            orderBy: { section_order: 'asc' },
-            include: { questions: { where: { is_active: true }, orderBy: { question_order: 'asc' } } },
-          },
-        },
-      },
-      answers: true,
-    },
+    include: { template: { include: SECTIONS_WITH_ALL_QUESTIONS }, answers: true },
   })
-  if (!run) return { run: null, flatQuestions: [] }
+  if (!raw) return { run: null, flatQuestions: [] }
+  const run = shapeRunTemplate(raw)
 
   const flatQuestions: Array<{ q: any; section: any; index: number }> = []
   for (const section of run.template.sections) {
@@ -115,7 +157,20 @@ async function getRunWithQuestions(runId: string): Promise<{ run: any; flatQuest
 
 function findCurrentQuestion(flatQuestions: Array<{ q: any; section: any; index: number }>, answers: any[]) {
   const answeredIds = new Set(answers.map((a: any) => a.question_id))
-  return flatQuestions.find(({ q }) => !answeredIds.has(q.id)) ?? null
+  const byId = new Map<string, any>(flatQuestions.map(f => [f.q.id, f.q]))
+  const answerMap = new Map<string, any>(answers.map((a: any) => [a.question_id, a]))
+  // Questions hidden by a condition (for example "only if the answer above is No") are skipped.
+  return flatQuestions.find(({ q }) => !answeredIds.has(q.id) && isVisible(q, byId, answerMap)) ?? null
+}
+
+// Audits the home can run, without the built-in audits it has hidden.
+async function listTemplates(tenantId: string) {
+  const [templates, tenant] = await Promise.all([
+    (prisma as any).auditTemplate.findMany({ where: { is_active: true, OR: [{ tenant_id: null }, { tenant_id: tenantId }] }, orderBy: { name: 'asc' } }),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { hidden_audit_templates: true } }),
+  ])
+  const hidden: string[] = tenant?.hidden_audit_templates ?? []
+  return (templates as any[]).filter(t => t.tenant_id || !hidden.includes(t.id))
 }
 
 export async function handleAuditConversation(params: AuditConversationParams): Promise<{ handled: boolean }> {
@@ -133,8 +188,16 @@ export async function handleAuditConversation(params: AuditConversationParams): 
       return { handled: false }
     }
 
-    const current = findCurrentQuestion(flatQuestions, run.answers)
     const step    = session.audit_step ?? 'yn'
+    // The follow-up steps (is No correct or a gap, outcome, actions) belong to the question that was
+    // just answered, which is the most recently answered one, not the next unanswered question.
+    const followUp = ['no_class', 'outcome', 'actions'].includes(step)
+    const lastAnswered = followUp
+      ? [...(run.answers as any[])].sort((a, b) => new Date(b.answered_at).getTime() - new Date(a.answered_at).getTime())[0]
+      : null
+    const current = followUp
+      ? (flatQuestions.find(f => f.q.id === lastAnswered?.question_id) ?? findCurrentQuestion(flatQuestions, run.answers))
+      : findCurrentQuestion(flatQuestions, run.answers)
 
     if (!current) {
       // All questions answered — prompt to complete
@@ -180,19 +243,18 @@ export async function handleAuditConversation(params: AuditConversationParams): 
     // ── Confirmation step: user must say yes before questions begin ──────────
     if (step === 'confirm') {
       if (isYes(incomingText)) {
-        const templateName = run.template?.name ?? ''
-        if (requiresShift(templateName)) {
+        if (requiresShift(run.template)) {
           await (prisma as any).whatsAppSession.update({
             where: { id: session.id },
             data:  { audit_step: 'shift' },
           })
           await send('Is this a *day shift* or *night shift* audit?\n\nReply *day* or *night*.')
-        } else if (requiresRoom(templateName)) {
+        } else if (requiresSubject(run.template)) {
           await (prisma as any).whatsAppSession.update({
             where: { id: session.id },
             data:  { audit_step: 'room' },
           })
-          await send('Please enter the *room number* for this checklist:')
+          await send(subjectPrompt(run.template))
         } else {
           await (prisma as any).whatsAppSession.update({
             where: { id: session.id },
@@ -281,8 +343,8 @@ export async function handleAuditConversation(params: AuditConversationParams): 
     // ── Room step: Resident Bedrooms requires a room number ───────────────────
     if (step === 'room') {
       const roomNumber = incomingText.trim()
-      if (!roomNumber || roomNumber.length > 30) {
-        await send('Please enter the room number (e.g. *12* or *Room 4A*).')
+      if (!roomNumber || roomNumber.length > 80) {
+        await send(subjectPrompt(run.template))
         return { handled: true }
       }
 
@@ -315,7 +377,7 @@ export async function handleAuditConversation(params: AuditConversationParams): 
       const nextQ = findCurrentQuestion(fqs, activeAnswers)
 
       if (!nextQ) {
-        await send(`The checklist for *Room ${roomNumber}* is already complete. Log in to CareStream to view the report.`)
+        await send(`The *${run.template.name}* for *${roomNumber}* is already complete. Log in to CareStream to view the report.`)
         await (prisma as any).whatsAppSession.update({
           where: { id: session.id },
           data:  { detected_category: null, audit_run_id: null, audit_step: null },
@@ -325,7 +387,7 @@ export async function handleAuditConversation(params: AuditConversationParams): 
         const resumeNote = activeAnswers.length > 0
           ? `\n_Resuming — ${activeAnswers.length} of ${totalQs} already answered._`
           : ''
-        await send(`🛏️ *Room ${roomNumber}* — starting checklist.${resumeNote}`)
+        await send(`✅ *${roomNumber}* — starting *${run.template.name}*.${resumeNote}`)
         await send(fmtQuestion(nextQ.q, nextQ.index + 1, totalQs, nextQ.section.title))
       }
       return { handled: true }
@@ -368,6 +430,23 @@ export async function handleAuditConversation(params: AuditConversationParams): 
         return { handled: true }
       }
 
+      if (!isYesNo(qType) && !isNarrative(qType)) {
+        const na = !!q.settings?.allow_na && isNA(incomingText)
+        const value = na ? null : parseTypedReply(q, incomingText)
+        if (!na && value === null) {
+          await send(`Sorry, I could not read that answer.\n\n${fmtQuestion(q, current.index + 1, total, section.title)}`)
+          return { handled: true }
+        }
+        await (prisma as any).auditAnswer.upsert({
+          where:  { run_id_question_id: { run_id: run.id, question_id: q.id } },
+          create: { run_id: run.id, question_id: q.id, answer_value: value, answer_na: na },
+          update: { answer_value: value, answer_na: na, answer_yn: null, answered_at: new Date() },
+        })
+        await (prisma as any).whatsAppSession.update({ where: { id: session.id }, data: { audit_step: 'outcome' } })
+        await send(fmtOutcome(false))
+        return { handled: true }
+      }
+
       // yes_no / yes_no_na
       const acceptNA = qType === 'yes_no_na' && isNA(incomingText)
       if (isYes(incomingText) || isNo(incomingText) || acceptNA) {
@@ -381,9 +460,14 @@ export async function handleAuditConversation(params: AuditConversationParams): 
           const yn = isYes(incomingText)
           await (prisma as any).auditAnswer.upsert({
             where:  { run_id_question_id: { run_id: run.id, question_id: q.id } },
-            create: { run_id: run.id, question_id: q.id, answer_yn: yn, answer_na: false },
-            update: { answer_yn: yn, answer_na: false, answered_at: new Date() },
+            create: { run_id: run.id, question_id: q.id, answer_yn: yn, answer_na: false, no_compliant: null },
+            update: { answer_yn: yn, answer_na: false, no_compliant: null, answered_at: new Date() },
           })
+          if (!yn) {
+            await (prisma as any).whatsAppSession.update({ where: { id: session.id }, data: { audit_step: 'no_class' } })
+            await send('Is *No* the correct answer here, or a gap?\n\n*1.* No is the correct answer\n*2.* It is a gap (we do not have this or have not done it)')
+            return { handled: true }
+          }
         }
         await (prisma as any).whatsAppSession.update({
           where: { id: session.id },
@@ -396,6 +480,22 @@ export async function handleAuditConversation(params: AuditConversationParams): 
         await send(`Please reply ${hint} for:\n\n_${q.question_text}_`)
         return { handled: true }
       }
+    }
+
+    if (step === 'no_class') {
+      const t = incomingText.trim().toLowerCase()
+      const compliant = t === '1' || t.startsWith('correct') ? true : t === '2' || t.startsWith('gap') ? false : null
+      if (compliant === null) {
+        await send('Please reply *1* if No is the correct answer, or *2* if it is a gap.')
+        return { handled: true }
+      }
+      await (prisma as any).auditAnswer.update({
+        where: { run_id_question_id: { run_id: run.id, question_id: q.id } },
+        data:  { no_compliant: compliant, answered_at: new Date() },
+      })
+      await (prisma as any).whatsAppSession.update({ where: { id: session.id }, data: { audit_step: 'outcome' } })
+      await send(fmtOutcome(false))
+      return { handled: true }
     }
 
     if (step === 'outcome') {
@@ -449,10 +549,7 @@ export async function handleAuditConversation(params: AuditConversationParams): 
 
   // ── Trigger: user wants to start an audit ────────────────────────────────────
   if (isAuditTrigger(incomingText)) {
-    const templates = await (prisma as any).auditTemplate.findMany({
-      where:   { is_active: true, OR: [{ tenant_id: null }, { tenant_id: tenantId }] },
-      orderBy: { name: 'asc' },
-    })
+    const templates = await listTemplates(tenantId)
 
     if (templates.length === 0) {
       await send('No audit templates are set up yet. Please contact your administrator.')
@@ -461,7 +558,7 @@ export async function handleAuditConversation(params: AuditConversationParams): 
 
     if (templates.length === 1) {
       // Only one template — start immediately
-      const needsContext = requiresShift(templates[0].name) || requiresRoom(templates[0].name)
+      const needsContext = requiresShift(templates[0]) || requiresSubject(templates[0])
       const run = needsContext
         ? await createFreshRun(tenantId, templates[0].id)
         : await getOrCreateActiveRun(tenantId, templates[0].id)
@@ -503,10 +600,7 @@ export async function handleAuditConversation(params: AuditConversationParams): 
 
   // ── Template selection reply ──────────────────────────────────────────────────
   if (session.detected_category === 'audit_select') {
-    const templates = await (prisma as any).auditTemplate.findMany({
-      where:   { is_active: true, OR: [{ tenant_id: null }, { tenant_id: tenantId }] },
-      orderBy: { name: 'asc' },
-    })
+    const templates = await listTemplates(tenantId)
     const idx = parseInt(incomingText.trim(), 10) - 1
     if (isNaN(idx) || idx < 0 || idx >= templates.length) {
       const list = templates.map((t: any, i: number) => `*${i + 1}.* ${t.name}`).join('\n')
@@ -515,7 +609,7 @@ export async function handleAuditConversation(params: AuditConversationParams): 
     }
 
     const chosen = templates[idx]
-    const needsContext = requiresShift(chosen.name) || requiresRoom(chosen.name)
+    const needsContext = requiresShift(chosen) || requiresSubject(chosen)
     const run    = needsContext
       ? await createFreshRun(tenantId, chosen.id)
       : await getOrCreateActiveRun(tenantId, chosen.id)

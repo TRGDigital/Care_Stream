@@ -313,6 +313,7 @@ model Tenant {
   translation_glossary    Json               @default("[]")                     // term-locking for translation: [{ term, keep, note }]
   translation_suggestions_auto_approve Boolean @default(false)                   // false → staff translation suggestions need admin approval (default)
   rooms                   String[]           @default([])                       // custom room/bed names for per-room audits
+  hidden_audit_templates  String[]           @default([])                       // built-in audits this home has hidden (usually replaced by its own copy)
   room_count              Int                @default(0)                        // number of rooms in the home (generates 1..N for the audit room picker)
   training_enrollments    TrainingEnrollment[]
   training_modules        TrainingModule[]
@@ -2298,14 +2299,33 @@ model AuditTemplate {
   frequency   String         @default("monthly")  // daily | weekly | monthly | quarterly | periodic
   subject_scope String       @default("none")     // none | room | resident | staff — what each run is about
   module_ids  String[]       @default([])         // training modules this audit measures the impact of
+  version        Int         @default(1)          // bumped on every structural edit; runs record the version they used
+  requires_shift Boolean     @default(false)      // ask day or night shift when starting (WhatsApp)
   created_at  DateTime       @default(now())
   updated_at  DateTime       @updatedAt
   tenant      Tenant?        @relation(fields: [tenant_id], references: [id])
   sections    AuditSection[]
   runs        AuditRun[]
+  versions    AuditTemplateVersion[]
 
   @@index([tenant_id])
   @@map("audit_templates")
+}
+
+// A saved copy of an audit's structure after each edit, so a home can see what changed and when.
+model AuditTemplateVersion {
+  id          String        @id @default(uuid())
+  template_id String
+  tenant_id   String?
+  version     Int
+  snapshot    Json                                   // { name, frequency, subject_scope, sections: [{ title, questions: [...] }] }
+  changed_by  String?
+  change_note String?
+  created_at  DateTime      @default(now())
+  template    AuditTemplate @relation(fields: [template_id], references: [id], onDelete: Cascade)
+
+  @@index([template_id])
+  @@map("audit_template_versions")
 }
 
 model AuditSection {
@@ -2325,8 +2345,14 @@ model AuditQuestion {
   section_id     String
   question_text  String
   question_order Int
-  question_type  String        @default("yes_no")   // yes_no | yes_no_na | findings | free_text
+  question_type  String        @default("yes_no")   // yes_no | yes_no_na | findings | free_text | number | date | choice | multi_choice | rating
   is_active      Boolean       @default(true)
+  // number: { unit, min, max } (outside min/max is a fail); choice / multi_choice: { options: [{ label, fail }] };
+  // rating: { max, pass_min }; any type: { allow_na }
+  settings       Json?
+  show_if        Json?                               // { question_id, equals: string[] }: only asked when that answer matches
+  quality_statement_id String?                        // CQC quality statement this question evidences
+  created_at     DateTime      @default(now())       // a completed run only shows questions that existed when it was completed
   section        AuditSection  @relation(fields: [section_id], references: [id], onDelete: Cascade)
   answers        AuditAnswer[]
 
@@ -2345,6 +2371,7 @@ model AuditRun {
   room_number        String?                                // room-by-room templates, or the subject value for scoped audits
   subject_room       String?                                // optional room for a resident-scoped audit (which room the person is in)
   status             String        @default("in_progress")  // in_progress | completed
+  template_version   Int?                                   // the audit's version when this run started
   ai_recommendations String?
   strengths          String?
   improvements       String?
@@ -2465,6 +2492,7 @@ model AuditAnswer {
   question_id  String
   answer_yn    Boolean?
   answer_na    Boolean       @default(false)
+  answer_value String?                               // number, date (YYYY-MM-DD), choice label, rating, or a JSON array for multi_choice
   // For a "No" answer only: is the No the correct/compliant answer (true = not a gap,
   // scores as a pass) or a genuine gap / not-in-place (false = a failure point)? Null
   // when the answer isn't No. Required to be set for a No before the audit can complete.

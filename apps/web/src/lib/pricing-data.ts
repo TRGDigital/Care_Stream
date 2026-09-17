@@ -194,6 +194,14 @@ export const PRICING: {
           ]
         },
         {
+          "label": "AI tokens",
+          "values": [
+            "6 million per month",
+            "18 million per month",
+            "30 million per month"
+          ]
+        },
+        {
           "label": "Languages in the staff hub",
           "values": [
             "60+",

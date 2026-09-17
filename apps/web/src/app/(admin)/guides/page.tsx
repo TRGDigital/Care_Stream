@@ -2065,115 +2065,176 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'monthly-audits',
     icon:    ClipboardCheck,
     title:   'Monthly Audits',
-    summary: 'Complete, store, and review care quality audits, on the web or in the hub, with AI recommendations',
+    summary: 'Run, schedule, sign off and track care quality audits, build or import your own, and follow every action through to the re-check',
     content: (
       <div className="space-y-5">
         <SectionBlock title="What audits do">
           <p className="text-sm text-neutral-mid">
-            The Audits module provides pre-built audit templates covering the key governance areas of a care setting, Health &amp; Safety, Medicines Management, Infection Control, Fire Safety, bedroom checks and more, at daily, monthly, quarterly and periodic frequencies. Complete audits on the web or in the <strong>Chat Hub</strong>, and generate CQC-linked AI recommendations on completion. You can also <strong>build your own audits</strong> for anything specific to your service.
+            The Audits module gives you a library of over 30 ready-made audits covering the governance of a care setting, plus the tools to build or import your own. Audits can be completed on the web or on a phone or tablet in the <strong>Chat Hub</strong>, scheduled and assigned to named staff, signed and approved, and turned into an action plan that is followed through to a re-check at the next audit. Every completed audit produces a PDF report and feeds the <strong>Trends</strong> panel, so you can show inspectors not just that you audit, but that things improve.
           </p>
         </SectionBlock>
 
-        <SectionBlock title="Building your own audit">
+        <SectionBlock title="The audit library">
           <p className="text-sm text-neutral-mid">
-            Beyond the ready-made templates, you can create audits tailored to your service, a kitchen hygiene check, a maintenance walk-round, a supervision checklist, anything you audit.
+            Every built-in audit is written for UK care settings and each question is tagged with the CQC quality statement it evidences.
           </p>
-          <div className="mt-2 space-y-3">
-            <Step n={1}>On the <strong>Monthly Audits</strong> page click <strong>Build your own audit</strong>.</Step>
-            <Step n={2}>Give it a <strong>name</strong> and choose <strong>how often</strong> it runs (Periodic, Daily, Weekly, Monthly or Quarterly).</Step>
-            <Step n={3}>Add your <strong>questions</strong>. For each one, pick the response type: <strong>Yes / No / N/A + notes</strong> (the default), <strong>Yes / No + notes</strong>, or <strong>Free-text findings</strong>. Add as many questions as you need.</Step>
-            <Step n={4}>Optionally, under <strong>Linked training</strong>, tick the training module(s) this audit measures. CareStream then tracks whether completing that training improves this audit&rsquo;s scores over time, shown in <strong>Analytics → Training Impact</strong>. You can also set this later with the <strong>Linked training</strong> button on the audit under <strong>Your audits</strong>.</Step>
-            <Step n={5}>Click <strong>Create audit</strong>. It now appears under <strong>Your audits</strong> on this page (delete it there if you no longer need it).</Step>
-            <Step n={6}>To put it in front of staff, go to <strong>Staff</strong>, add or edit a person, set <strong>Access level</strong> to <em>Staff + Audits</em>, and tick your new audit. It then shows in that staff member&rsquo;s hub for them to complete, answering each question with the response buttons plus a notes field, exactly like the built-in audits, including the AI recommendations on completion.</Step>
-          </div>
-          <Tip>Your custom audits sit alongside the pre-built ones everywhere, the allocation list, the hub, the repository and the AI recommendations, so there&rsquo;s nothing extra to learn.</Tip>
-        </SectionBlock>
-
-        <SectionBlock title="Available templates">
-          <div className="rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
+          <div className="mt-2 rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
             {[
-              ['Daily',     'Fire Marshall Checklist'],
-              ['Daily',     'Resident Bedrooms'],
-              ['Monthly',   'Health &amp; Safety'],
-              ['Monthly',   'Resident Bedroom Audit'],
-              ['Monthly',   'Medicines Management'],
-              ['Monthly',   'Kitchen Audit'],
-              ['Monthly',   'Accident &amp; Incident Book Audit'],
-              ['Quarterly', 'Infection Control'],
-              ['Quarterly', 'Fire Drill Record Form'],
-              ['Periodic',  'Quality Assurance'],
-              ['Periodic',  'GDPR Audit Checklist'],
-            ].map(([freq, name]) => (
-              <div key={name} className="grid grid-cols-[6rem_1fr] gap-3 px-4 py-2.5">
+              ['Daily',     'Fire Marshall Checklist, Daily Medication Audit, Resident Bedrooms (room by room), Fluid Intake and Hydration (per resident)'],
+              ['Weekly',    'Medication Stock and Storage'],
+              ['Monthly',   'Health and Safety, Medicines Management, Kitchen, Accident and Incident Book, Resident Bedroom Audit, Care Plan Review, Resident Feedback Round, Staff Training and Compliance, Monthly Governance Review, Safeguarding Log Review, Night Shift Walkround, Premises and Maintenance, Mealtime Experience, Falls Prevention and Post-Fall Review, Pressure Care and Skin Integrity, Water Safety and Legionella, Laundry, Call Bell Response'],
+              ['Quarterly', 'Infection Control, Fire Drill Record, Single Assessment Framework Review, Dementia Care Environment, HR Staff Files (per staff member)'],
+              ['Periodic',  'Quality Assurance, GDPR Audit Checklist'],
+            ].map(([freq, names]) => (
+              <div key={freq} className="grid grid-cols-[6rem_1fr] gap-3 px-4 py-2.5">
                 <span className="text-xs font-medium text-teal">{freq}</span>
-                <span className="text-neutral-dark" dangerouslySetInnerHTML={{ __html: name }} />
+                <span className="text-neutral-dark">{names}</span>
               </div>
             ))}
           </div>
+          <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong>Copy</strong> a built-in audit to make your own version you can edit. You can hide the original at the same time so your team only sees your copy.</li>
+            <li><strong>Hide</strong> any built-in audit you do not use. It disappears from the start list, the hub and reminders, and <strong>Show</strong> brings it back.</li>
+          </ul>
+        </SectionBlock>
+
+        <SectionBlock title="Building your own audit">
+          <div className="space-y-3">
+            <Step n={1}>On the <strong>Monthly Audits</strong> page click <strong>Build your own audit</strong>.</Step>
+            <Step n={2}>Give it a <strong>name</strong>, choose <strong>how often</strong> it runs, and whether it is done <strong>once for the home</strong>, <strong>room by room</strong>, <strong>per resident</strong> or <strong>per staff member</strong>. Tick <strong>shift</strong> if the auditor should record which shift it covers.</Step>
+            <Step n={3}>Add <strong>sections</strong>, then add questions to each one and choose a type for each question (see the table below).</Step>
+            <Step n={4}>Optionally make a question <strong>conditional</strong>, so it is only asked when an earlier answer matches (for example &ldquo;What was the discrepancy?&rdquo; only when the balance check finds one).</Step>
+            <Step n={5}>Optionally tag each question with the <strong>CQC quality statement</strong> it evidences. The tags appear in the report and help the AI recommendations.</Step>
+            <Step n={6}>Under <strong>Linked training</strong>, tick any training module this audit measures, so <strong>Analytics → Training Impact</strong> can show whether the training improved the scores.</Step>
+            <Step n={7}>Click <strong>Create audit</strong>. It appears under <strong>Available audits</strong> alongside the built-in ones.</Step>
+          </div>
+          <div className="mt-3 rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
+            {[
+              ['Yes / No / N/A', 'A check that is met, not met, or does not apply. A &ldquo;No&rdquo; asks what was found and what will be done.'],
+              ['Yes / No',       'The same, where not applicable is not an option.'],
+              ['Number',         'A reading or count with an optional unit and pass range, for example a fridge between 2 and 8 °C. Readings outside the range fail.'],
+              ['Date',           'A date to record, such as the last service.'],
+              ['Choice',         'Pick one option. Mark any option that shows a problem as a fail.'],
+              ['Multiple choice','Tick all that apply, with the same fail marking.'],
+              ['Rating',         'A score out of a maximum you choose, with an optional pass mark.'],
+              ['Findings',       'Written findings with actions and timescales.'],
+              ['Free text',      'A note that is not scored, such as who was spoken to.'],
+            ].map(([label, desc]) => (
+              <div key={label} className="grid grid-cols-[8rem_1fr] gap-3 px-4 py-2.5">
+                <span className="font-medium text-neutral-dark">{label}</span>
+                <span className="text-neutral-mid" dangerouslySetInnerHTML={{ __html: desc }} />
+              </div>
+            ))}
+          </div>
+          <Tip>Custom audits work everywhere the built-in ones do: scheduling, the hub, signatures, PDF reports, action plans and trends. Building, copying and importing audits are included on the Enterprise plan.</Tip>
+        </SectionBlock>
+
+        <SectionBlock title="Importing an audit you already use">
+          <p className="text-sm text-neutral-mid">
+            Already have audits on paper or in Word? You do not need to retype them.
+          </p>
+          <div className="mt-2 space-y-3">
+            <Step n={1}>Click <strong>Import an existing audit</strong> on the Monthly Audits page.</Step>
+            <Step n={2}>Upload a <strong>PDF</strong>, a <strong>Word document</strong>, a text file, or a <strong>photo of the paper form</strong> (up to 15 MB). Scanned and handwritten forms work.</Step>
+            <Step n={3}>AI reads it and opens it in the builder with the sections, question types, options, conditions and CQC tags filled in. Anything it was unsure about is listed at the top under <strong>Worth checking</strong>.</Step>
+            <Step n={4}>Check and edit it, then click <strong>Create audit</strong>. Nothing is saved until you do. Each import uses one AI credit.</Step>
+          </div>
+        </SectionBlock>
+
+        <SectionBlock title="Editing audits and versions">
+          <p className="text-sm text-neutral-mid">
+            Click <strong>Edit</strong> on any of your audits to change it. Every save creates a new <strong>version</strong>, and you can add a short note saying what changed. Click <strong>Versions</strong> to see the full history of who changed what and when.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Completed audits always keep the exact questions they were answered against, so changing a question never rewrites an old report. That gives you a clear record for inspectors of how your audits have developed.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="Scheduling and assigning audits">
+          <div className="space-y-3">
+            <Step n={1}>In <strong>Scheduled audits</strong> on the Monthly Audits page, click <strong>Schedule an audit</strong>.</Step>
+            <Step n={2}>Choose the audit, the room, resident or staff member if it has one, the <strong>person it is assigned to</strong>, the <strong>due date</strong> and whether it <strong>repeats</strong>. Staff who are not admins are given access to that audit automatically.</Step>
+            <Step n={3}>The person sees it in the hub under <strong>Assigned to you</strong>. When they complete it, the schedule is marked done and the next one is set up from the repeat.</Step>
+            <Step n={4}>Use the filters (<strong>Overdue</strong>, <strong>Due in 7 days</strong>, <strong>All open</strong>, <strong>Done and missed</strong>) to see where things stand. A repeat that passes without being done is recorded as missed.</Step>
+          </div>
+          <p className="mt-3 text-sm text-neutral-mid">
+            The assigned person is emailed when an audit is assigned, two days before it is due, and when it becomes overdue. In <strong>Settings → Audits</strong> you choose when an overdue audit is <strong>escalated</strong> to admins and managers, and whether admins get a <strong>summary email</strong> weekly, daily or not at all. Each staff member&rsquo;s record also lists the audits scheduled for them.
+          </p>
         </SectionBlock>
 
         <SectionBlock title="Completing an audit on the web">
           <div className="space-y-3">
-            <Step n={1}>Go to <strong>Monthly Audits</strong> in the sidebar and click <em>New audit</em>.</Step>
-            <Step n={2}>Choose the audit type, select the month, and optionally enter the auditor's name and role. Click <em>Start audit</em>, then confirm the details on the next screen.</Step>
-            <Step n={3}>Work through each section using the tabs at the top. Answer yes/no questions by tapping Yes or No (or N/A where applicable). For findings-based audits, type your observations directly into the Findings field and record any planned actions in Actions &amp; Timescales.</Step>
-            <Step n={4}>Answers save automatically as you go. To pause and return later, click <em>Save &amp; exit</em> at the top of the form, your audit will appear in the <strong>In progress</strong> section on the Monthly Audits page.</Step>
-            <Step n={5}>Once all required questions are answered, open the <strong>Summary</strong> tab. Fill in the strengths, areas for improvement, and a target completion date for any actions.</Step>
-            <Step n={6}>Click <em>Complete &amp; get AI recommendations</em> to finalise the audit and generate your report.</Step>
+            <Step n={1}>Go to <strong>Monthly Audits</strong> and click <strong>New audit</strong>. Choose the audit and the month, plus the room, resident, staff member or shift if it asks for one. Click <strong>Start audit</strong>.</Step>
+            <Step n={2}>If this audit has been done before, <strong>Actions from the last audit</strong> appear first. Check each one and mark it <strong>Still fixed</strong> or <strong>Not fixed</strong>. Not fixed reopens the action for the person it was assigned to.</Step>
+            <Step n={3}>Work through each section. Conditional questions appear only when they apply. Answers save automatically, and <strong>Save &amp; exit</strong> lets you come back later from <strong>In progress</strong>.</Step>
+            <Step n={4}>Open the <strong>Summary</strong> tab and add strengths, areas for improvement and a target date for actions. Every question that is showing must be answered before you can finish.</Step>
+            <Step n={5}><strong>Sign</strong> with your finger or mouse and type your name. Then click <strong>Complete &amp; get AI recommendations</strong>, or <strong>Send to care manager for approval</strong> if manager approval is switched on.</Step>
           </div>
         </SectionBlock>
 
         <SectionBlock title="Doing audits in the Chat Hub">
           <p className="text-sm text-neutral-mid">
-            Staff whose role is <strong>Admin</strong> get an <strong>Audits</strong> item in the Chat Hub sidebar, handy for completing checks on a phone or tablet while walking the home.
+            Admins, and staff given audit access or assigned an audit, get an <strong>Audits</strong> item in the hub, ideal for walking the home with a phone or tablet.
           </p>
           <div className="mt-2 space-y-3">
-            <Step n={1}>Open the hub and choose <strong>Audits</strong>. Templates are grouped by frequency (Daily, Weekly, Monthly…), with anything in progress shown at the top to resume.</Step>
-            <Step n={2}>Tap <strong>Start</strong> to begin a run, answer each question (Yes/No/N-A, findings or free-text, saved automatically), then <strong>Complete audit</strong> to generate the AI recommendations.</Step>
-            <Step n={3}>Audits done in the hub are the same records as on the web, they appear in your <strong>Audit section</strong> (and repository) automatically. Nothing is duplicated.</Step>
+            <Step n={1}>Open <strong>Audits</strong> in the hub. Anything <strong>Assigned to you</strong> is at the top with its due date, then anything in progress, then every audit grouped by how often it runs.</Step>
+            <Step n={2}>Answer each question. Where something is wrong, <strong>take a photo</strong> and draw on it to circle or arrow the problem before it is saved to the audit.</Step>
+            <Step n={3}>Sign on screen and complete. Hub audits are the same records as the web, so they appear in the repository, reports and trends straight away.</Step>
           </div>
         </SectionBlock>
 
-        <SectionBlock title="Per-room audits (bedrooms)">
+        <SectionBlock title="Per-room, per-resident and per-staff audits">
           <p className="text-sm text-neutral-mid">
-            Bedroom audits are completed <strong>one room at a time</strong>. When you start one, you pick a room number first, and each room is tracked as its own record (a daily bedroom audit resets per room, per day).
+            Some audits are done <strong>one at a time</strong>: bedrooms room by room, care plans and hydration per resident, HR files per staff member. You choose who or which room when you start, and each is tracked as its own record.
           </p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
             <li>Set how many rooms your home has in <strong>Settings → Rooms</strong>. The room picker then offers <strong>1</strong> to that number.</li>
-            <li>Need a named room (e.g. "Lavender")? Just type it into the room box when starting, it&apos;s remembered for next time.</li>
+            <li>Need a named room (for example &ldquo;Lavender&rdquo;)? Type it into the room box when starting and it is remembered for next time.</li>
           </ul>
         </SectionBlock>
 
-        <SectionBlock title="Daily reminders">
+        <SectionBlock title="Manager sign-off">
           <p className="text-sm text-neutral-mid">
-            Each morning CareStream emails admins a reminder to finish any in-progress audits and start recurring ones (e.g. daily bedroom checks) not yet done. Turn these on/off with the <strong>Audit updates</strong> switch in <strong>Settings → Email communications</strong>.
+            Turn on <strong>Require manager approval for completed audits</strong> in <strong>Settings → Audits</strong> and a completed audit goes to your care manager in the hub to review. They sign on screen to approve it, and both signatures, names and dates are saved to the audit and printed on the report.
           </p>
         </SectionBlock>
 
-        <SectionBlock title="AI recommendations">
+        <SectionBlock title="Reports and AI recommendations">
           <p className="text-sm text-neutral-mid">
-            On completion, CareStream analyses every answer against CQC Key Questions and generates a structured report covering: immediate actions required, priority improvements, CQC compliance notes across the five key questions (Safe, Effective, Caring, Responsive, Well-Led), commendations, and recommended focus areas for the next cycle.
+            On completion (or on sign-off, when approval is on) CareStream analyses every answer against the CQC key questions and writes recommendations: immediate actions, priority improvements, compliance notes for Safe, Effective, Caring, Responsive and Well-led, commendations and focus areas for next time.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            A <strong>PDF report</strong> is saved with the audit, with the score, every answer and finding, the CQC tags, signatures and the recommendations. It is emailed to your admins automatically, which you can turn off in <strong>Settings → Audits</strong>. Use <strong>Download PDF</strong> on any completed audit to get it again.
           </p>
         </SectionBlock>
 
-        <SectionBlock title="Action plans">
-          <p className="text-sm text-neutral-mid">
-            Recommendations only help if someone acts on them. From a completed audit, CareStream turns them into a tracked <strong>action plan</strong> you assign to staff and work to completion, so nothing is lost in a report.
-          </p>
-          <div className="mt-2 space-y-3">
-            <Step n={1}>When an audit is completed, CareStream <strong>drafts an action plan</strong> from its recommendations. Open the completed audit and you&rsquo;ll see an <strong>Action plan</strong> card showing the status and how many actions are open. (For audits completed earlier, press <strong>Generate action plan tracker</strong> to build one from their existing recommendations.)</Step>
-            <Step n={2}>Open the plan to <strong>review the draft</strong>. Edit the wording, set a priority and due date, and <strong>assign each action to a staff member</strong> by picking their name. Add any of your own, then press <strong>Approve action plan</strong> to start tracking.</Step>
-            <Step n={3}>Once approved, each person sees the actions assigned to them in the <strong>Chat Hub under &ldquo;My actions&rdquo;</strong>, with the priority, the source audit and the due date. They move each one along themselves: <strong>Start</strong>, then <strong>Mark done</strong>. Overdue items are flagged.</Step>
-            <Step n={4}>Track allocation and completion in <strong>Analytics → Action plans</strong>: totals for assigned, outstanding, completed and overdue, a per-staff breakdown, and a most-urgent-first list of everything still outstanding. Each staff member&rsquo;s own record page also lists the actions assigned to them.</Step>
+        <SectionBlock title="Action plans and closing actions">
+          <div className="space-y-3">
+            <Step n={1}>When an audit is completed, CareStream <strong>drafts an action plan</strong> from its recommendations. Open the completed audit and you&rsquo;ll see an <strong>Action plan</strong> card showing the status and how many actions are open.</Step>
+            <Step n={2}>Open the plan, edit the wording, set a priority and due date, <strong>assign each action to a staff member</strong>, add any of your own, and press <strong>Approve action plan</strong>.</Step>
+            <Step n={3}>Each person sees their actions in the hub under <strong>My actions</strong>. To close one they press <strong>Mark done</strong>, say what they did, and can add photos of the fix. If they cannot finish in time they tap <strong>Need more time?</strong> with a new date and reason, and a manager agrees or declines it on the action plan.</Step>
+            <Step n={4}>Overdue actions send reminders to the person, and are escalated to admins if they stay overdue.</Step>
+            <Step n={5}>At the <strong>next audit</strong> of the same kind, the auditor checks each action is <strong>still fixed</strong>. Anything not fixed is reopened, so problems cannot quietly come back.</Step>
           </div>
           <p className="mt-3 text-sm text-neutral-mid">
-            A living action plan is strong evidence at inspection that you find issues and act on them, exactly what the <strong>Well-led</strong> key question looks for. Draft plans are never shown to staff; actions only appear in the hub once you approve the plan.
+            Track everything in <strong>Analytics → Action plans</strong>, and on each staff member&rsquo;s record. A living action plan, with evidence of the fix and a re-check, is exactly what the <strong>Well-led</strong> key question looks for. Draft plans are never shown to staff.
           </p>
+        </SectionBlock>
+
+        <SectionBlock title="Trends and repeat failures">
+          <p className="text-sm text-neutral-mid">
+            The <strong>Trends</strong> panel on the Monthly Audits page shows the percentage of scored checks met over the last 3, 6, 12 or 24 months, each audit&rsquo;s latest score and how it has changed, and a small chart of its history.
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong>Repeat failures</strong> are listed first: the same check failing in consecutive audits, which usually means an action has not worked.</li>
+            <li>Click <strong>Details</strong> on an audit to see which questions fail most often and how each section is scoring.</li>
+            <li>If you run more than one home, <strong>Across your homes</strong> compares their scores side by side.</li>
+          </ul>
         </SectionBlock>
 
         <SectionBlock title="Audit repository">
           <p className="text-sm text-neutral-mid">
-            All completed audits are stored in the Audit Repository at the bottom of the Monthly Audits page. Click any row to view the full report, review the AI recommendations, or print a PDF-ready version. In-progress audits appear separately at the top so you can return to them at any time.
+            All completed audits are stored in the Audit Repository at the bottom of the Monthly Audits page. Click any row to view the full report, the recommendations and the action plan, download the PDF, or use <strong>Print / save</strong>. In-progress audits appear separately at the top so you can return to them at any time.
           </p>
         </SectionBlock>
       </div>
@@ -2705,7 +2766,7 @@ function GuideAccordion({ section, isOpen, onToggle }: { section: GuideSection; 
   const Icon = section.icon
 
   return (
-    <div className="overflow-hidden rounded-card bg-white shadow-card">
+    <div id={section.id} className="scroll-mt-6 overflow-hidden rounded-card bg-white shadow-card">
       <button
         onClick={onToggle}
         className="flex w-full items-center gap-3 px-6 py-4 text-left transition-colors hover:bg-neutral-light/50"
@@ -2740,6 +2801,13 @@ export default function HelpPage() {
   const [showSupport, setShowSupport] = useState(false)
   // Single-open accordion: only one section expanded at a time.
   const [openId, setOpenId] = useState<string | null>(GUIDE_SECTIONS.find(s => s.defaultOpen)?.id ?? null)
+  // A link such as /guides#monthly-audits opens that section.
+  useEffect(() => {
+    const id = window.location.hash.slice(1)
+    if (!id || !GUIDE_SECTIONS.some(s => s.id === id)) return
+    setOpenId(id)
+    requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'start' }))
+  }, [])
   const q = query.trim().toLowerCase()
   const filtered = q
     ? GUIDE_SECTIONS.filter(s => s.title.toLowerCase().includes(q) || s.summary.toLowerCase().includes(q))

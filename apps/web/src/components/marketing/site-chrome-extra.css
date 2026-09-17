@@ -50,27 +50,34 @@
 .cschrome .fcookie:hover { color: var(--ink); }
 .cschrome .fdisclaim { margin: 14px 0 0; font-size: .74rem; line-height: 1.55; color: var(--muted); max-width: 90ch; }
 
-/* ── Accreditation band ─────────────────────────────────────────────────────
-   Sits above the footer base row. The marks are set on a white card because the
-   ICO badge ships as a JPEG with a white background, which would otherwise show
-   as a pale square against the footer's --ground-2.
+/* ── Accreditation strip ────────────────────────────────────────────────────
+   A band of its own ABOVE the footer, not a row inside it: these are claims about
+   the business rather than footer navigation, and above the footer they read as a
+   closing statement instead of small print.
 
-   Normalised by HEIGHT, never by width: these are other organisations' trademarks
-   and must not be stretched, squashed or recoloured. The CPD mark is landscape and
-   carries fine print ("The CPD Certification Service"), so height alone makes it
-   unreadable next to the square marks; it gets a slightly larger cap so the lockup
-   reads at a glance. Disability Confident guidance sets a 10mm minimum height,
-   which is why nothing here drops below ~38px. */
-.cschrome .faccred{margin-top:44px}
+   White ground, which also does a job — the ICO badge ships as a JPEG with a baked
+   white background, so on any tinted surface it shows as a pale square. The footer's
+   own border-top separates the two, so this band carries only a top border.
+
+   Marks are normalised by HEIGHT, never width: these are other organisations'
+   trademarks and must not be stretched, squashed or recoloured. The CPD lockup is
+   landscape with fine print, so it gets a slightly larger cap to stay legible beside
+   the square marks. Disability Confident guidance sets a 10mm minimum height, which
+   is why nothing here drops below ~44px. */
+.cschrome .faccred{
+  background:var(--ground,#fff);
+  border-top:1px solid var(--line);
+  padding:34px 0 30px;
+}
+.cschrome .faccred .wrap{max-width:var(--maxw);margin:0 auto;padding:0 40px}
 .cschrome .faccred-lead{
   font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--ink);margin:0 0 14px;
+  color:var(--ink);margin:0 0 18px;text-align:center;
 }
 .cschrome .faccred-row{
-  list-style:none;margin:0;padding:26px 30px;
+  list-style:none;margin:0;padding:0;
   display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
-  gap:28px 56px;
-  background:#fff;border:1px solid var(--line);border-radius:14px;
+  gap:26px 56px;
 }
 .cschrome .faccred-row li{display:flex;align-items:center}
 .cschrome .faccred-row a{
@@ -82,21 +89,22 @@
 .cschrome .faccred-row a:focus-visible{opacity:1}
 .cschrome .faccred-row img{display:block;width:auto;height:56px}
 .cschrome .faccred-row img.wide{height:64px}
-
+.cschrome .faccred-note{
+  margin:16px 0 0;text-align:center;
+  font-size:.75rem;color:var(--muted);
+}
 
 /* Four marks wrapping by flex gives three ragged lines on a phone. A 2x2 grid is
-   predictable and balanced at every phone width, and each cell centres its own mark
-   so the differing aspect ratios still line up. */
+   predictable at every phone width, and each cell centres its own mark so the
+   differing aspect ratios still line up. */
 @media (max-width:760px){
+  .cschrome .faccred{padding:28px 0 24px}
+  .cschrome .faccred .wrap{padding:0 20px}
   .cschrome .faccred-row{
     display:grid;grid-template-columns:repeat(2,1fr);
-    gap:22px 16px;padding:22px 16px;justify-items:center;
+    gap:22px 16px;justify-items:center;
   }
   .cschrome .faccred-row li{justify-content:center}
   .cschrome .faccred-row img{height:44px;max-width:100%}
   .cschrome .faccred-row img.wide{height:48px}
-}
-.cschrome .faccred-note{
-  margin:10px 0 0;text-align:center;
-  font-size:.75rem;color:var(--muted);
 }

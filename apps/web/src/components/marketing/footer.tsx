@@ -156,6 +156,28 @@ export async function MarketingFooter() {
 
   return (
     <div className="cschrome">
+      {/* Accreditation strip. Deliberately OUTSIDE <footer>: these are claims about the
+          business, not footer navigation, and sitting above the footer they read as a
+          closing statement rather than small print. Rendered by MarketingFooter, so it
+          appears on the home page and every page in the (marketing) group. */}
+      <section className="faccred" aria-label="Accreditations and registrations">
+        <div className="wrap">
+          <p className="faccred-lead">Accredited and registered</p>
+          <ul className="faccred-row">
+            {BADGES.map(b => (
+              <li key={b.label}>
+                <a href={b.href} rel="noopener noreferrer" target="_blank" title={b.label}>
+                  <img className={b.wide ? 'wide' : undefined} src={b.src} alt={b.alt} width={b.w} height={b.h} loading="lazy" />
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p className="faccred-note">
+            CPD Provider No. 50224 · ICO registration ZC221613
+          </p>
+        </div>
+      </section>
+
       <footer className="site-foot">
         <div className="wrap">
           <div className="fbrand">
@@ -178,22 +200,6 @@ export async function MarketingFooter() {
                 {g.links.map(l => <Link href={l.href} key={l.href}>{l.label}</Link>)}
               </div>
             ))}
-          </div>
-
-          <div className="faccred">
-            <p className="faccred-lead">Accredited and registered</p>
-            <ul className="faccred-row">
-              {BADGES.map(b => (
-                <li key={b.label}>
-                  <a href={b.href} rel="noopener noreferrer" target="_blank" title={b.label}>
-                    <img className={b.wide ? 'wide' : undefined} src={b.src} alt={b.alt} width={b.w} height={b.h} loading="lazy" />
-                  </a>
-                </li>
-              ))}
-            </ul>
-            <p className="faccred-note">
-              CPD Provider No. 50224 · ICO registration ZC221613
-            </p>
           </div>
 
           <div className="fbase">

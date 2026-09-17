@@ -32,6 +32,15 @@ export type PolicyHistoryEntry = {
 }
 
 /** A regulation in scope with no policy behind it, from GET /analytics/gaps/missing-policies. */
+export type AuditAssignment = {
+  id: string; template_id: string; template_name: string; subject_scope: string
+  assigned_user_id: string; assigned_name: string; assigned_role: string | null
+  subject: string | null; subject_room: string | null; due_date: string; repeat: string
+  status: 'open' | 'completed' | 'missed' | 'cancelled'; overdue: boolean; days_overdue: number
+  run_id: string | null; run_status: string | null; completed_at: string | null; escalated_at: string | null
+  notes: string | null; created_at: string
+}
+
 export type AuditEditorQuestion = {
   id: string | null; key: string; text: string; type: string; settings: any
   show_if: { key: string; equals: string[] } | null; quality_statement_id: string | null
@@ -1040,6 +1049,13 @@ export function createApiClient(token: string) {
       copyTemplate: (id: string, data: { name?: string; hide_original?: boolean }) => apiFetch<{ template: AuditEditorTemplate }>(`/audits/templates/${id}/copy`, token, { method: 'POST', body: JSON.stringify(data) }),
       setTemplateHidden: (id: string, hidden: boolean) => apiFetch<{ hidden: boolean }>(`/audits/templates/${id}/hidden`, token, { method: 'POST', body: JSON.stringify({ hidden }) }),
       templateVersions: (id: string) => apiFetch<{ versions: Array<{ version: number; changed_by: string | null; change_note: string | null; created_at: string; runs: number; question_count: number; snapshot: any }> }>(`/audits/templates/${id}/versions`, token),
+      // Scheduled audits: a named person, a due date and an optional repeat.
+      assignments: (params: { view?: 'open' | 'overdue' | 'week' | 'completed' | 'all'; user_id?: string; mine?: boolean } = {}) =>
+        apiFetch<{ assignments: AuditAssignment[]; counts: { open: number; overdue: number; due_this_week: number } }>(`/audits/assignments?view=${params.view ?? 'open'}${params.user_id ? `&user_id=${params.user_id}` : ''}${params.mine ? '&mine=1' : ''}`, token),
+      createAssignment: (data: { template_id: string; assigned_user_id: string; due_date: string; repeat?: string; subject?: string; subject_room?: string; notes?: string }) =>
+        apiFetch<{ assignment: AuditAssignment }>('/audits/assignments', token, { method: 'POST', body: JSON.stringify(data) }),
+      updateAssignment: (id: string, data: { due_date?: string; assigned_user_id?: string; repeat?: string; notes?: string | null; status?: 'cancelled' | 'open' }) =>
+        apiFetch<{ assignment: AuditAssignment }>(`/audits/assignments/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       qualityStatements: () => apiFetch<{ statements: Array<{ id: string; name: string; key_question: string; number: number }> }>('/audits/quality-statements', token),
       actionPlans: () => apiFetch<{ plans: Array<{ run_id: string; audit_name: string; subject: string | null; status: 'draft' | 'approved'; total: number; open: number }> }>('/audits/action-plans', token),
       previewActionPlanEmails: () => apiFetch<{ sent_to: string }>('/audits/action-plan/preview-emails', token, { method: 'POST' }),
@@ -1058,7 +1074,7 @@ export function createApiClient(token: string) {
         if (params?.template_id) qs.set('template_id', params.template_id)
         return apiFetch<{ runs: any[] }>(`/audits/runs${qs.toString() ? '?' + qs : ''}`, token)
       },
-      createRun: (data: { template_id: string; audit_month: string; auditor_name?: string; auditor_role?: string; room_number?: string; subject?: string; subject_room?: string }) =>
+      createRun: (data: { template_id: string; audit_month: string; auditor_name?: string; auditor_role?: string; room_number?: string; subject?: string; subject_room?: string; assignment_id?: string }) =>
         apiFetch<{ run: any }>('/audits/runs', token, { method: 'POST', body: JSON.stringify(data) }),
       getRun: (id: string) => apiFetch<{ run: any; approval_required?: boolean; quality_statements?: Record<string, { name: string; key_question: string }> }>(`/audits/runs/${id}`, token),
       updateRun: (id: string, data: any) => apiFetch<{ run: any }>(`/audits/runs/${id}`, token, { method: 'PUT', body: JSON.stringify(data) }),

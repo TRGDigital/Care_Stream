@@ -9,6 +9,7 @@ import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, C
 import { clsx } from 'clsx'
 import { AuditBuilder } from '@/components/admin/audit-builder'
 import { AuditVersionsModal } from '@/components/admin/audit-versions-modal'
+import { AuditSchedule } from '@/components/admin/audit-schedule'
 import { LinkTrainingModal } from '@/components/admin/link-training-modal'
 import { AuditActionPlan } from '@/components/admin/audit-action-plan'
 import { usePlanFeatures } from '@/lib/use-plan-features'
@@ -230,6 +231,10 @@ export default function AuditsPage() {
       <HowToAccordion />
 
       {session?.accessToken && <CqcReadinessCard token={session.accessToken} userId={userId} />}
+
+      {session?.accessToken && (
+        <AuditSchedule token={session.accessToken} templates={templates.filter(t => !t.hidden)} rooms={rooms} staffNames={staff} />
+      )}
 
       {/* ── Action plans (viewable here as well as in the hub) ───────────────────── */}
       {session?.accessToken && (

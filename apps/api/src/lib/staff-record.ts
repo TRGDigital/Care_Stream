@@ -5,6 +5,7 @@
 
 import { prisma } from '../db/client'
 import { buildTrainingMatrix } from './training-matrix'
+import { listAssignments, startOfDayUTC } from '../services/audits/assignments'
 
 const DAY = 86_400_000
 
@@ -406,6 +407,21 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     count: (certRows as any[]).length,
   }
 
+  // ── Scheduled audits assigned to them: everything open, plus the last 90 days of the rest ──
+  const since = new Date(startOfDayUTC(now).getTime() - 90 * DAY)
+  const assigned = await listAssignments(tenantId, { userId }).catch(() => [] as any[])
+  const auditAssignments = {
+    items: assigned.filter(a => a.status === 'open' || new Date(a.due_date) >= since)
+      .sort((a, b) => (a.status === 'open' ? 0 : 1) - (b.status === 'open' ? 0 : 1) || new Date(a.due_date).getTime() - new Date(b.due_date).getTime()),
+    summary: {
+      open: assigned.filter(a => a.status === 'open').length,
+      overdue: assigned.filter(a => a.overdue).length,
+      completed: assigned.filter(a => a.status === 'completed' && new Date(a.due_date) >= since).length,
+      missed: assigned.filter(a => a.status === 'missed' && new Date(a.due_date) >= since).length,
+    },
+  }
+  if (auditAssignments.summary.overdue > 0) flags.push({ level: 'high', kind: 'audit_overdue', label: `${auditAssignments.summary.overdue} scheduled audit${auditAssignments.summary.overdue > 1 ? 's' : ''} overdue` })
+
   // ── Required training for their role (the same rules as the Training Matrix tab) ──
   let requiredTraining: any = null
   const matrix = await buildTrainingMatrix(tenantId, { userId }).catch(() => null)
@@ -437,6 +453,7 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     onboarding: { items: onboarding, summary: onboardingSummary },
     face_to_face: faceToFace,
     required_training: requiredTraining,
+    audit_assignments: auditAssignments,
     certificates,
     engagement, flags, trends, timeline, benchmarks, reading,
     induction_questions: inductionQuestions,

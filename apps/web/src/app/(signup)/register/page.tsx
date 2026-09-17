@@ -135,6 +135,13 @@ export default function RegisterPage() {
                 />
                 <button type="submit">Continue</button>
               </div>
+              {/* The terms stated up front, as Asana does. The explicit tick on the next step
+                  stays: it is the record that they agreed. */}
+              <p className="rglegal">
+                By signing up, I agree to CareStream&apos;s{' '}
+                <Link href="/terms" target="_blank">Terms and Conditions</Link> and acknowledge the{' '}
+                <Link href="/privacy" target="_blank">Privacy Policy</Link>.
+              </p>
             </form>
             <p className="rgalt">Already have an account? <Link href="/login">Log in</Link></p>
           </>

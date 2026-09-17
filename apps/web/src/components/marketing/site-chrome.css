@@ -31,7 +31,9 @@
 .cschrome a{color:inherit}
 .cschrome [hidden]{display:none!important}
 
-.cschrome .brand>img.cslogo{height:40px;width:auto;display:block;flex:0 0 auto}
+.cschrome .brand>img.cslogo{height:40px;width:auto;max-width:none;display:block;flex:0 0 auto}
+/* The theme never shrinks the logo: at 1280px its row runs into the gutter rather than squash it. */
+.cschrome .nav>.brand{flex-shrink:0}
 .cschrome .brand:has(>img.cslogo){gap:0;font-size:0;line-height:0}
 .cschrome .fbrand .brand>img.cslogo{height:36px;width:auto;display:block}
 .cschrome .fbrand .brand:has(>img.cslogo){gap:0;font-size:0;line-height:0;margin-bottom:14px}

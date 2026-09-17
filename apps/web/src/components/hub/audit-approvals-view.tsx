@@ -17,6 +17,11 @@ const monthLabel = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { 
 function answerLabel(q: Detail['sections'][number]['questions'][number]): { text: string; tone: string } {
   if (q.question_type === 'findings' || q.question_type === 'free_text') return { text: 'Findings', tone: 'text-neutral-mid' }
   if (q.answer_na) return { text: 'N/A', tone: 'text-neutral-mid' }
+  // Number, date, choice and rating questions: the answer as written, coloured by its pass rule.
+  if (q.question_type !== 'yes_no' && q.question_type !== 'yes_no_na') {
+    const tone = q.outcome === 'fail' ? 'text-rose-700' : q.outcome === 'pass' ? 'text-green-700' : q.outcome === 'unanswered' ? 'text-amber-600' : 'text-neutral-dark'
+    return { text: q.answer_text ?? 'Not answered', tone }
+  }
   if (q.answer_yn === true) return { text: 'Yes', tone: 'text-green-700' }
   if (q.answer_yn === false) return { text: 'No', tone: 'text-rose-700' }
   return { text: 'Not answered', tone: 'text-amber-600' }

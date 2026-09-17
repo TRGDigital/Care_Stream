@@ -7,54 +7,12 @@ import { createApiClient } from '@/lib/api-client'
 import { AuthedImage } from '@/components/authed-image'
 import { AuditRecs } from '@/components/audit-recs'
 import { AuditActionPlan } from '@/components/admin/audit-action-plan'
-import { ChevronLeft, ChevronRight, ChevronDown, CheckCircle2, Circle, Printer, Sparkles, Loader2, AlertTriangle, Pause, Camera } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronDown, CheckCircle2, Circle, Printer, Sparkles, Loader2, AlertTriangle, Pause, Camera, CornerDownRight } from 'lucide-react'
+import { QuestionInput, EMPTY_ANSWER, answerFromRow, type AuditAnswer } from '@/components/audits/question-input'
+import { isAnswered, isNarrative, isScored, isYesNo, outcomeFor, visibleQuestionIds } from '@/lib/audit-questions'
 import { clsx } from 'clsx'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function AnswerToggle({
-  qType, ansYn, ansNa, onYn, onNa, disabled,
-}: {
-  qType: string; ansYn: boolean | null; ansNa: boolean
-  onYn: (v: boolean) => void; onNa: () => void; disabled?: boolean
-}) {
-  return (
-    <div className="flex gap-2">
-      <button
-        onClick={() => onYn(true)}
-        disabled={disabled}
-        className={clsx(
-          'rounded-md px-4 py-1.5 text-sm font-medium transition-colors',
-          ansYn === true && !ansNa
-            ? 'bg-green-500 text-white'
-            : 'border border-gray-200 text-neutral-mid hover:border-green-400 hover:text-green-600',
-        )}
-      >Yes</button>
-      <button
-        onClick={() => onYn(false)}
-        disabled={disabled}
-        className={clsx(
-          'rounded-md px-4 py-1.5 text-sm font-medium transition-colors',
-          ansYn === false && !ansNa
-            ? 'bg-red-500 text-white'
-            : 'border border-gray-200 text-neutral-mid hover:border-red-400 hover:text-red-500',
-        )}
-      >No</button>
-      {qType === 'yes_no_na' && (
-        <button
-          onClick={onNa}
-          disabled={disabled}
-          className={clsx(
-            'rounded-md px-4 py-1.5 text-sm font-medium transition-colors',
-            ansNa
-              ? 'bg-gray-400 text-white'
-              : 'border border-gray-200 text-neutral-mid hover:border-gray-400 hover:text-neutral-dark',
-          )}
-        >N/A</button>
-      )}
-    </div>
-  )
-}
 
 function ScoreBadge({ yes, total }: { yes: number; total: number }) {
   const pct   = total > 0 ? Math.round((yes / total) * 100) : 0
@@ -96,13 +54,14 @@ function PrintReport({ report }: { report: any }) {
             <td className="border border-gray-300 bg-teal-light px-2 py-1 font-semibold">Audit date</td>
             <td className="border border-gray-300 px-2 py-1">
               {new Date(report.audit_month).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
+              {report.template_version ? ` (audit version ${report.template_version})` : ''}
             </td>
           </tr>
         </tbody>
       </table>
 
       {report.sections.map((section: any) => {
-        const hasYN = section.questions.some((q: any) => q.question_type === 'yes_no' || q.question_type === 'yes_no_na')
+        const hasYN = section.questions.some((q: any) => !isNarrative(q.question_type))
         return (
           <div key={section.title} className="mb-4">
             <h2 className="mb-1 bg-teal px-2 py-1.5 text-sm font-bold uppercase text-white">{section.title}</h2>
@@ -119,13 +78,20 @@ function PrintReport({ report }: { report: any }) {
               </thead>
               <tbody>
                 {section.questions.map((q: any) => {
-                  const isYN = q.question_type === 'yes_no' || q.question_type === 'yes_no_na'
+                  const isYN = isYesNo(q.question_type)
+                  const typed = !isYN && !isNarrative(q.question_type)
                   return (
                     <tr key={q.id}>
-                      <td className="border border-gray-300 bg-gray-50 px-2 py-1 font-medium">{q.question}</td>
-                      {hasYN && <td className="border border-gray-300 px-2 py-1 text-center">{isYN && q.answer_yn === true  && !q.answer_na ? '✓' : ''}</td>}
-                      {hasYN && <td className="border border-gray-300 px-2 py-1 text-center">{isYN && q.answer_yn === false && !q.answer_na ? '✓' : ''}</td>}
-                      {hasYN && <td className="border border-gray-300 px-2 py-1 text-center">{isYN && q.answer_na ? '✓' : ''}</td>}
+                      <td className="border border-gray-300 bg-gray-50 px-2 py-1 font-medium">
+                        {q.question}
+                        {q.quality_statement && <span className="block text-[10px] font-normal text-neutral-mid">CQC: {q.quality_statement}</span>}
+                      </td>
+                      {hasYN && typed && (
+                        <td colSpan={3} className={clsx('border border-gray-300 px-2 py-1 text-center', q.outcome === 'fail' && 'font-semibold text-red-700')}>{q.answer_text}</td>
+                      )}
+                      {hasYN && !typed && <td className="border border-gray-300 px-2 py-1 text-center">{isYN && q.answer_yn === true  && !q.answer_na ? '✓' : ''}</td>}
+                      {hasYN && !typed && <td className="border border-gray-300 px-2 py-1 text-center">{isYN && q.answer_yn === false && !q.answer_na ? '✓' : ''}</td>}
+                      {hasYN && !typed && <td className="border border-gray-300 px-2 py-1 text-center">{isYN && q.answer_na ? '✓' : ''}</td>}
                       <td className="border border-gray-300 px-2 py-1">{q.outcome_text ?? ''}</td>
                       <td className="border border-gray-300 px-2 py-1">{q.question_type === 'free_text' ? '' : (q.actions_text ?? '')}</td>
                     </tr>
@@ -167,7 +133,9 @@ export default function AuditRunPage() {
   const { id }                      = useParams<{ id: string }>()
   const router                      = useRouter()
   const [run,       setRun]         = useState<any>(null)
-  const [answers,   setAnswers]     = useState<Map<string, { answer_yn: boolean|null; answer_na: boolean; no_compliant: boolean|null; outcome_text: string; actions_text: string }>>(new Map())
+  const [answers,   setAnswers]     = useState<Map<string, AuditAnswer>>(new Map())
+  const [qsNames,   setQsNames]     = useState<Record<string, { name: string; key_question: string }>>({})
+  const [completeError, setCompleteError] = useState('')
   const [summary,   setSummary]     = useState({ strengths: '', improvements: '', actions_deadline: '' })
   const [loading,   setLoading]     = useState(true)
   const [section,   setSection]     = useState(0)
@@ -181,38 +149,16 @@ export default function AuditRunPage() {
 
   const api = session?.accessToken ? createApiClient(session.accessToken) : null
 
-  // A yes/no question is only "fully answered" once a No has also been classified as compliant
-  // (correct answer) or a gap — that classification is required before the audit can complete.
-  const ynFullyAnswered = (a: any): boolean => {
-    if (!a) return false
-    if (a.answer_na === true) return true
-    if (a.answer_yn === true) return true
-    if (a.answer_yn === false) return a.no_compliant === true || a.no_compliant === false
-    return false
-  }
-
-  // A "pass" for the section score: a Yes, or a No the auditor confirmed is the correct/compliant
-  // answer (not a gap). N/A is excluded from the score elsewhere.
-  const ynPass = (a: any): boolean =>
-    !!a && !a.answer_na && (a.answer_yn === true || (a.answer_yn === false && a.no_compliant === true))
-
   // Load run
   useEffect(() => {
     if (!api) return
-    api.audits.getRun(id).then(({ run: r, approval_required }) => {
+    api.audits.getRun(id).then(({ run: r, approval_required, quality_statements }) => {
       setRun(r)
       setApprovalRequired(!!approval_required)
+      setQsNames(quality_statements ?? {})
       // Hydrate answers from saved data
-      const map = new Map<string, any>()
-      for (const a of r.answers) {
-        map.set(a.question_id, {
-          answer_yn:    a.answer_yn    ?? null,
-          answer_na:    a.answer_na    ?? false,
-          no_compliant: a.no_compliant ?? null,
-          outcome_text: a.outcome_text ?? '',
-          actions_text: a.actions_text ?? '',
-        })
-      }
+      const map = new Map<string, AuditAnswer>()
+      for (const a of r.answers) map.set(a.question_id, answerFromRow(a))
       setAnswers(map)
       const evMap = new Map<string, any[]>()
       for (const e of (r.evidence ?? [])) { const arr = evMap.get(e.question_id) ?? []; arr.push(e); evMap.set(e.question_id, arr) }
@@ -253,16 +199,9 @@ export default function AuditRunPage() {
     }, 600)
   }, [id, api]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  function updateAnswer(qId: string, field: 'answer_yn' | 'answer_na' | 'no_compliant' | 'outcome_text' | 'actions_text', value: any) {
+  function updateAnswer(qId: string, patch: Partial<AuditAnswer>) {
     setAnswers(prev => {
-      const existing = prev.get(qId) ?? { answer_yn: null, answer_na: false, no_compliant: null, outcome_text: '', actions_text: '' }
-      // Selecting Yes/No clears N/A; selecting N/A clears Yes/No. no_compliant only applies to a
-      // "No" answer, so it's cleared whenever the answer becomes Yes / N/A (or is unset).
-      const patch = field === 'answer_yn'
-        ? { answer_yn: value, answer_na: false, no_compliant: value === false ? existing.no_compliant : null }
-        : field === 'answer_na'
-          ? { answer_na: value, answer_yn: null, no_compliant: null }
-          : { [field]: value }
+      const existing = prev.get(qId) ?? EMPTY_ANSWER
       const updated = { ...existing, ...patch }
       const next    = new Map(prev)
       next.set(qId, updated)
@@ -287,6 +226,7 @@ export default function AuditRunPage() {
     const allAnswers = Array.from(answers.entries()).map(([question_id, v]) => ({ question_id, ...v }))
     if (allAnswers.length) await api.audits.saveAnswers(id, allAnswers).catch(() => {})
     await saveSummary()
+    setCompleteError('')
     try {
       await api.audits.complete(id)
       // Re-fetch the FULL run (the complete response is a bare update with no template relation,
@@ -296,8 +236,8 @@ export default function AuditRunPage() {
       setApprovalRequired(!!approval_required)
       const { report: rpt } = await api.audits.report(id)
       setReport(rpt)
-    } catch {
-      // show error
+    } catch (e: any) {
+      setCompleteError(e?.message ?? 'The audit could not be completed. Please try again.')
     } finally {
       setCompleting(false)
     }
@@ -307,17 +247,24 @@ export default function AuditRunPage() {
   if (!run)    return <p className="text-sm text-status-error">Audit not found.</p>
 
   const isCompleted   = run.status === 'completed'
-  const sections      = run.template.sections
+  // Questions hidden by a condition are not asked, so they are left out of progress and scores.
+  const visibleIds    = visibleQuestionIds(run.template.sections, answers)
+  const sections      = run.template.sections.map((s: any) => ({ ...s, questions: s.questions.filter((q: any) => visibleIds.has(q.id)) })).filter((s: any) => s.questions.length)
   const allQuestions  = sections.flatMap((s: any) => s.questions)
-  // Only yes/no questions are mandatory for progress — findings/free_text are always considered answered
-  const ynQuestions   = allQuestions.filter((q: any) => q.question_type === 'yes_no' || q.question_type === 'yes_no_na')
-  const answeredCount = ynQuestions.filter((q: any) => ynFullyAnswered(answers.get(q.id))).length
-  const totalQ   = ynQuestions.length
+  // Findings and free text are optional; every other question must be answered.
+  const required      = allQuestions.filter((q: any) => !isNarrative(q.question_type))
+  const answeredCount = required.filter((q: any) => isAnswered(q, answers.get(q.id))).length
+  const totalQ   = required.length
   const progress = totalQ > 0 ? Math.round((answeredCount / totalQ) * 100) : 100
 
+  // Section score: passes out of scored questions that were answered other than N/A.
+  const sectionScore = (qs: any[]) => {
+    const scored = qs.filter((q: any) => isScored(q) && !['na', 'info'].includes(outcomeFor(q, answers.get(q.id))))
+    return { pass: scored.filter((q: any) => outcomeFor(q, answers.get(q.id)) === 'pass').length, total: scored.length }
+  }
+  if (section > sections.length) setSection(sections.length)
   const currentSection = sections[section]
-  const yesCount = currentSection?.questions.filter((q: any) => ynPass(answers.get(q.id))).length ?? 0
-  const ynCount  = currentSection?.questions.filter((q: any) => q.question_type === 'yes_no' || q.question_type === 'yes_no_na').length ?? 0
+  const { pass: yesCount, total: ynCount } = sectionScore(currentSection?.questions ?? [])
 
   return (
     <div>
@@ -415,12 +362,8 @@ export default function AuditRunPage() {
         {/* Section tabs */}
         <div className="mb-4 flex flex-wrap gap-2">
           {sections.map((s: any, i: number) => {
-            const sectionYes   = s.questions.filter((q: any) => ynPass(answers.get(q.id))).length
             const sectionTotal = s.questions.length
-            const sectionDone  = s.questions.filter((q: any) => {
-              if (q.question_type === 'findings' || q.question_type === 'free_text') return true
-              return ynFullyAnswered(answers.get(q.id))
-            }).length
+            const sectionDone  = s.questions.filter((q: any) => isAnswered(q, answers.get(q.id))).length
             return (
               <button
                 key={s.id}
@@ -467,80 +410,34 @@ export default function AuditRunPage() {
 
             <div className="divide-y divide-gray-50">
               {currentSection.questions.map((q: any, qi: number) => {
-                const ans = answers.get(q.id) ?? { answer_yn: null, answer_na: false, no_compliant: null, outcome_text: '', actions_text: '' }
-                const isYN = q.question_type === 'yes_no' || q.question_type === 'yes_no_na'
-                const showFields = isYN
-                  ? (ans.answer_yn !== null || ans.answer_na)
-                  : true
+                const ans = answers.get(q.id) ?? EMPTY_ANSWER
+                const narrative = isNarrative(q.question_type)
+                const showFields = narrative || isAnswered(q, ans) || ans.answer_yn === false
+                const out = outcomeFor(q, ans)
+                const tag = q.quality_statement_id ? qsNames[q.quality_statement_id] : null
 
                 return (
-                  <div key={q.id} className={clsx('px-6 py-5', isYN && ans.answer_yn === false && !ans.answer_na && (ans.no_compliant === false ? 'bg-red-50/30' : ans.no_compliant === null ? 'bg-amber-50/40' : ''))}>
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-neutral-dark">
-                          <span className="mr-2 text-xs text-neutral-mid">{qi + 1}.</span>
-                          {q.question_text}
-                        </p>
-                      </div>
-                      {isYN && (
-                        <AnswerToggle
-                          qType={q.question_type}
-                          ansYn={ans.answer_yn}
-                          ansNa={ans.answer_na}
-                          onYn={v => updateAnswer(q.id, 'answer_yn', v)}
-                          onNa={() => updateAnswer(q.id, 'answer_na', !ans.answer_na)}
-                          disabled={isCompleted}
-                        />
-                      )}
+                  <div key={q.id} className={clsx('px-6 py-5', out === 'fail' && isAnswered(q, ans) ? 'bg-red-50/30' : ans.answer_yn === false && ans.no_compliant === null && !ans.answer_na ? 'bg-amber-50/40' : '', q.show_if && 'border-l-4 border-teal/30')}>
+                    <div className="mb-3">
+                      <p className="text-sm font-medium text-neutral-dark">
+                        {q.show_if ? <CornerDownRight size={13} className="mr-1.5 inline text-teal" /> : <span className="mr-2 text-xs text-neutral-mid">{qi + 1}.</span>}
+                        {q.question_text}
+                      </p>
+                      {tag && <span className="mt-1 inline-block rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">CQC: {tag.name}</span>}
                     </div>
-
-                    {/* When the answer is No, the auditor must say whether No is the correct answer
-                        (compliant, scores as a pass) or a genuine gap (a failure point). Required. */}
-                    {isYN && ans.answer_yn === false && !ans.answer_na && (
-                      <div className={clsx('mt-3 rounded-lg border p-3', ans.no_compliant === null ? 'border-amber-300 bg-amber-50' : 'border-gray-200 bg-gray-50')}>
-                        <p className="mb-2 text-xs font-medium text-neutral-dark">
-                          Is &ldquo;No&rdquo; the correct answer, or a gap?
-                          {ans.no_compliant === null && <span className="ml-1 font-semibold text-amber-700">Please choose one to continue.</span>}
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            disabled={isCompleted}
-                            onClick={() => updateAnswer(q.id, 'no_compliant', true)}
-                            className={clsx('rounded-btn border px-3 py-1.5 text-xs font-medium disabled:opacity-50',
-                              ans.no_compliant === true ? 'border-green-600 bg-green-600 text-white' : 'border-gray-300 text-neutral-mid hover:border-green-500 hover:text-green-700')}
-                          >
-                            No is the correct answer
-                          </button>
-                          <button
-                            type="button"
-                            disabled={isCompleted}
-                            onClick={() => updateAnswer(q.id, 'no_compliant', false)}
-                            className={clsx('rounded-btn border px-3 py-1.5 text-xs font-medium disabled:opacity-50',
-                              ans.no_compliant === false ? 'border-rose-600 bg-rose-600 text-white' : 'border-gray-300 text-neutral-mid hover:border-rose-500 hover:text-rose-700')}
-                          >
-                            No — we don&rsquo;t have this / haven&rsquo;t done it
-                          </button>
-                        </div>
-                        <p className="mt-2 text-[11px] text-neutral-mid">
-                          {ans.no_compliant === true
-                            ? 'Recorded as compliant — this won’t count against the section score.'
-                            : ans.no_compliant === false
-                              ? 'Recorded as a gap — it’ll be included in the AI recommendations.'
-                              : ''}
-                        </p>
-                      </div>
+                    {!narrative && (
+                      <QuestionInput q={q} a={ans} disabled={isCompleted} onChange={patch => updateAnswer(q.id, patch)} />
                     )}
 
                     {showFields && (
-                      <div className={clsx('mt-3 grid grid-cols-1 gap-3', !isYN || q.question_type === 'free_text' ? '' : 'sm:grid-cols-2')}>
+                      <div className={clsx('mt-3 grid grid-cols-1 gap-3', narrative ? '' : 'sm:grid-cols-2')}>
                         <div>
                           <label className="mb-1 block text-xs font-medium text-neutral-mid">
                             {q.question_type === 'findings' ? 'Findings' : 'Outcome of audit'}
                           </label>
                           <textarea
                             value={ans.outcome_text}
-                            onChange={e => updateAnswer(q.id, 'outcome_text', e.target.value)}
+                            onChange={e => updateAnswer(q.id, { outcome_text: e.target.value })}
                             onBlur={() => api?.audits.saveAnswers(id, [{ question_id: q.id, ...ans }]).catch(() => {})}
                             disabled={isCompleted}
                             placeholder={q.question_type === 'findings' ? 'Findings…' : 'Notes on what was found…'}
@@ -555,7 +452,7 @@ export default function AuditRunPage() {
                             </label>
                             <textarea
                               value={ans.actions_text}
-                              onChange={e => updateAnswer(q.id, 'actions_text', e.target.value)}
+                              onChange={e => updateAnswer(q.id, { actions_text: e.target.value })}
                               onBlur={() => api?.audits.saveAnswers(id, [{ question_id: q.id, ...ans }]).catch(() => {})}
                               disabled={isCompleted}
                               placeholder="Actions required…"
@@ -663,9 +560,7 @@ export default function AuditRunPage() {
               <h2 className="mb-4 text-sm font-semibold text-neutral-dark">Section scores</h2>
               <div className="space-y-2">
                 {sections.map((s: any) => {
-                  const ynQs  = s.questions.filter((q: any) => q.question_type === 'yes_no' || q.question_type === 'yes_no_na')
-                  const yes   = ynQs.filter((q: any) => ynPass(answers.get(q.id))).length
-                  const total = ynQs.length
+                  const { pass: yes, total } = sectionScore(s.questions)
                   if (total === 0) return (
                     <div key={s.id} className="flex items-center gap-3">
                       <span className="w-52 shrink-0 truncate text-xs text-neutral-mid">{s.title.replace(/^Section \d+: /, '')}</span>
@@ -707,6 +602,10 @@ export default function AuditRunPage() {
                   {completing ? (approvalRequired ? 'Sending…' : 'Generating…') : (approvalRequired ? 'Send to care manager for approval' : 'Complete & get AI recommendations')}
                 </button>
               </div>
+            )}
+
+            {completeError && (
+              <p className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"><AlertTriangle size={13} /> {completeError}</p>
             )}
 
             {progress < 100 && !isCompleted && (

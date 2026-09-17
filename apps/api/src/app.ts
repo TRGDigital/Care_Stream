@@ -17,6 +17,7 @@ import { suggestionsRouter } from './routes/suggestions'
 import { adminRouter } from './routes/admin'
 import { onboardingTemplatesRouter } from './routes/onboarding-templates'
 import { policySeedsRouter } from './routes/policy-seeds'
+import { auditSeedsAdminRouter } from './routes/audit-seeds-admin'
 import { platformGlossaryRouter } from './routes/platform-glossary'
 import { platformTranslationChangesRouter } from './routes/platform-translation-changes'
 import { platformPolicyGapsRouter } from './routes/platform-policy-gaps'
@@ -128,6 +129,7 @@ app.use('/admin/preview', previewAdminRouter)
 app.use('/admin/standard-training', standardTrainingRouter)
 app.use('/admin/standard-programmes', standardProgrammesRouter)
 app.use('/admin/policy-seeds', policySeedsRouter)
+app.use('/admin/audit-seeds', auditSeedsAdminRouter)
 app.use('/admin/platform-glossary', platformGlossaryRouter)
 app.use('/admin/translation-changes', platformTranslationChangesRouter)
 app.use('/admin/policy-gaps', platformPolicyGapsRouter)

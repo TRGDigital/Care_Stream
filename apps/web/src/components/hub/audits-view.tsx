@@ -14,10 +14,12 @@ import { compressImage } from '@/lib/image-compress'
 import { AuthedImage } from '@/components/authed-image'
 import {
   ClipboardCheck, ChevronLeft, ChevronRight, CheckCircle2, Circle, Loader2,
-  Sparkles, Play, Pause, Plus, Camera, X,
+  Sparkles, Play, Pause, Plus, Camera, X, CornerDownRight,
 } from 'lucide-react'
+import { QuestionInput, EMPTY_ANSWER, answerFromRow, type AuditAnswer } from '@/components/audits/question-input'
+import { isAnswered as questionAnswered, isNarrative, visibleQuestionIds } from '@/lib/audit-questions'
 
-type Answer = { answer_yn: boolean | null; answer_na: boolean; outcome_text: string; actions_text: string }
+type Answer = AuditAnswer
 
 const FREQ_ORDER = ['daily', 'weekly', 'monthly', 'quarterly', 'periodic']
 const FREQ_LABEL: Record<string, string> = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', quarterly: 'Quarterly', periodic: 'Periodic' }
@@ -30,11 +32,7 @@ function periodLabel(audit_month: string | Date) {
     : d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
-function isYN(t: string) { return t === 'yes_no' || t === 'yes_no_na' }
-function isAnswered(q: any, a?: Answer) {
-  if (q.question_type === 'findings' || q.question_type === 'free_text') return true
-  return a?.answer_na === true || (a?.answer_yn !== null && a?.answer_yn !== undefined)
-}
+function isAnswered(q: any, a?: Answer) { return questionAnswered(q, a) }
 
 export function AuditsView({ token, userId }: { token: string; userId: string }) {
   const api = createApiClient(token)
@@ -246,15 +244,18 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
   const [approvalRequired, setApprovalRequired] = useState(false)
   const [evidence,  setEvidence]  = useState<Map<string, any[]>>(new Map())
   const [uploadingQ, setUploadingQ] = useState<string | null>(null)
+  const [qsNames,   setQsNames]   = useState<Record<string, { name: string }>>({})
+  const [completeError, setCompleteError] = useState('')
   const isMobile = useIsMobileOrTablet()
   const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
-    api.audits.getRun(runId).then(({ run: r, approval_required }) => {
+    api.audits.getRun(runId).then(({ run: r, approval_required, quality_statements }) => {
       setRun(r)
       setApprovalRequired(!!approval_required)
+      setQsNames(quality_statements ?? {})
       const map = new Map<string, Answer>()
-      for (const a of (r.answers ?? [])) map.set(a.question_id, { answer_yn: a.answer_yn ?? null, answer_na: a.answer_na ?? false, outcome_text: a.outcome_text ?? '', actions_text: a.actions_text ?? '' })
+      for (const a of (r.answers ?? [])) map.set(a.question_id, answerFromRow(a))
       setAnswers(map)
       const evMap = new Map<string, any[]>()
       for (const e of (r.evidence ?? [])) { const arr = evMap.get(e.question_id) ?? []; arr.push(e); evMap.set(e.question_id, arr) }
@@ -281,17 +282,14 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
     clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(async () => {
       setSaving(true)
-      await api.audits.saveAnswers(runId, [{ question_id: qId, answer_yn: value.answer_yn, answer_na: value.answer_na, outcome_text: value.outcome_text, actions_text: value.actions_text } as any]).catch(() => {})
+      await api.audits.saveAnswers(runId, [{ question_id: qId, ...value }]).catch(() => {})
       setSaving(false)
     }, 600)
   }, [runId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  function update(qId: string, field: keyof Answer, value: any) {
+  function update(qId: string, patch: Partial<Answer>) {
     setAnswers(prev => {
-      const existing = prev.get(qId) ?? { answer_yn: null, answer_na: false, outcome_text: '', actions_text: '' }
-      const patch = field === 'answer_yn' ? { answer_yn: value, answer_na: false }
-        : field === 'answer_na' ? { answer_na: value, answer_yn: null }
-        : { [field]: value }
+      const existing = prev.get(qId) ?? EMPTY_ANSWER
       const updated = { ...existing, ...patch }
       const next = new Map(prev); next.set(qId, updated)
       scheduleSave(qId, updated)
@@ -300,21 +298,29 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
   }
 
   async function complete() {
-    setCompleting(true)
+    setCompleting(true); setCompleteError('')
     try {
+      // Flush every answer first: the per-question save is debounced.
+      clearTimeout(saveTimer.current)
+      const all = Array.from(answers.entries()).map(([question_id, v]) => ({ question_id, ...v }))
+      if (all.length) await api.audits.saveAnswers(runId, all).catch(() => {})
       await api.audits.updateRun(runId, summary).catch(() => {})
       await api.audits.complete(runId)
       onExit()
-    } catch { /* ignore */ } finally { setCompleting(false) }
+    } catch (e: any) {
+      setCompleteError(e?.message ?? 'The audit could not be completed. Please try again.')
+    } finally { setCompleting(false) }
   }
 
   if (loading) return <div className="flex-1 space-y-4 overflow-y-auto p-6">{[1, 2].map(i => <div key={i} className="h-24 animate-pulse rounded-xl bg-gray-100" />)}</div>
   if (!run) return <div className="flex-1 p-6"><button onClick={onExit} className="text-sm text-teal">← Back to audits</button><p className="mt-4 text-sm text-status-error">Audit not found.</p></div>
 
   const isCompleted = run.status === 'completed'
-  const sections: any[] = run.template?.sections ?? []
+  // Questions hidden by a condition are not asked; findings and free text are optional.
+  const visibleIds = visibleQuestionIds(run.template?.sections ?? [], answers)
+  const sections: any[] = (run.template?.sections ?? []).map((s: any) => ({ ...s, questions: s.questions.filter((q: any) => visibleIds.has(q.id)) })).filter((s: any) => s.questions.length)
   const allQ = sections.flatMap((s: any) => s.questions)
-  const ynQ = allQ.filter((q: any) => isYN(q.question_type))
+  const ynQ = allQ.filter((q: any) => !isNarrative(q.question_type))
   const answeredCount = ynQ.filter((q: any) => isAnswered(q, answers.get(q.id))).length
   const progress = ynQ.length > 0 ? Math.round((answeredCount / ynQ.length) * 100) : 100
   const cur = sections[section]
@@ -357,24 +363,27 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
         <div className="space-y-3">
           {cur && <p className="text-sm font-semibold text-neutral-dark">{cur.title}</p>}
           {cur?.questions.map((q: any) => {
-            const a = answers.get(q.id) ?? { answer_yn: null, answer_na: false, outcome_text: '', actions_text: '' }
+            const a = answers.get(q.id) ?? EMPTY_ANSWER
+            const narrative = isNarrative(q.question_type)
             return (
-              <div key={q.id} className="rounded-xl border border-gray-200 bg-white p-4">
-                <p className="mb-2 text-sm text-neutral-dark">{q.question}</p>
-                {isYN(q.question_type) && (
-                  <div className="mb-2 flex gap-2">
-                    <button disabled={isCompleted} onClick={() => update(q.id, 'answer_yn', true)} className={`rounded-md px-4 py-1.5 text-sm font-medium ${a.answer_yn === true && !a.answer_na ? 'bg-green-500 text-white' : 'border border-gray-200 text-neutral-mid hover:border-green-400'}`}>Yes</button>
-                    <button disabled={isCompleted} onClick={() => update(q.id, 'answer_yn', false)} className={`rounded-md px-4 py-1.5 text-sm font-medium ${a.answer_yn === false && !a.answer_na ? 'bg-red-500 text-white' : 'border border-gray-200 text-neutral-mid hover:border-red-400'}`}>No</button>
-                    {q.question_type === 'yes_no_na' && (
-                      <button disabled={isCompleted} onClick={() => update(q.id, 'answer_na', true)} className={`rounded-md px-4 py-1.5 text-sm font-medium ${a.answer_na ? 'bg-gray-400 text-white' : 'border border-gray-200 text-neutral-mid hover:border-gray-400'}`}>N/A</button>
-                    )}
+              <div key={q.id} className={`rounded-xl border bg-white p-4 ${q.show_if ? 'border-teal/30' : 'border-gray-200'}`}>
+                <p className="mb-2 text-sm text-neutral-dark">
+                  {q.show_if && <CornerDownRight size={13} className="mr-1 inline text-teal" />}
+                  {q.question_text}
+                </p>
+                {q.quality_statement_id && qsNames[q.quality_statement_id] && (
+                  <span className="mb-2 inline-block rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">CQC: {qsNames[q.quality_statement_id].name}</span>
+                )}
+                {!narrative && (
+                  <div className="mb-2">
+                    <QuestionInput q={q} a={a} disabled={isCompleted} onChange={patch => update(q.id, patch)} />
                   </div>
                 )}
                 <textarea
                   disabled={isCompleted}
                   value={a.outcome_text}
-                  onChange={e => update(q.id, 'outcome_text', e.target.value)}
-                  placeholder={isYN(q.question_type) ? 'Outcome / notes (optional)' : 'Findings'}
+                  onChange={e => update(q.id, { outcome_text: e.target.value })}
+                  placeholder={narrative ? 'Findings' : 'Outcome / notes (optional)'}
                   rows={2}
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-neutral-dark placeholder:text-neutral-mid focus:border-teal focus:outline-none disabled:bg-gray-50"
                 />
@@ -382,7 +391,7 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
                   <textarea
                     disabled={isCompleted}
                     value={a.actions_text}
-                    onChange={e => update(q.id, 'actions_text', e.target.value)}
+                    onChange={e => update(q.id, { actions_text: e.target.value })}
                     placeholder="Actions to be taken (optional)"
                     rows={2}
                     className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-neutral-dark placeholder:text-neutral-mid focus:border-teal focus:outline-none disabled:bg-gray-50"
@@ -444,11 +453,13 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
             <textarea value={summary.improvements} onChange={e => setSummary(s => ({ ...s, improvements: e.target.value }))} placeholder="Areas requiring improvement" rows={2} className="mb-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
             <input value={summary.actions_deadline} onChange={e => setSummary(s => ({ ...s, actions_deadline: e.target.value }))} placeholder="Deadline for actions" className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
             <div className="flex items-center gap-3">
-              <button onClick={complete} disabled={completing} className="flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-50">
+              <button onClick={complete} disabled={completing || progress < 100} className="flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-50">
                 {completing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />} {approvalRequired ? 'Send for approval' : 'Complete audit'}
               </button>
               <button onClick={onExit} className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm text-neutral-mid hover:border-teal/40"><Pause size={13} /> Save &amp; exit</button>
             </div>
+            {progress < 100 && <p className="mt-2 text-xs text-amber-600">{ynQ.length - answeredCount} question{ynQ.length - answeredCount === 1 ? '' : 's'} still to answer before you can finish.</p>}
+            {completeError && <p className="mt-2 text-xs text-red-600">{completeError}</p>}
             <p className="mt-2 text-xs text-neutral-mid">
               {approvalRequired
                 ? 'Sends the audit to your care manager to review and approve. The AI recommendations are generated once they approve.'

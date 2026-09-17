@@ -16,6 +16,12 @@ import { auditApprovalRequired, submitAuditForApproval } from '../services/audit
 import { scoreAuditDomains } from '../services/analytics/readiness'
 import { generateActionPlanForRun, getActionPlan, addAction, updateAction, deleteAction, approveActionPlan, getAssignedActionsSummary, listActionPlans } from '../services/audits/action-plan'
 import { sendActionPlanStaffEmail, sendActionPlanExternalEmail } from '../services/email/outbound'
+import {
+  SECTIONS_WITH_ALL_QUESTIONS, shapeRunTemplate, visibleQuestions, isAnswered, outcomeFor, answerText, isYesNo, isNarrative,
+} from '../lib/audit-questions'
+import {
+  parseEditorPayload, saveTemplateStructure, createTemplateFromPayload, copyTemplate, templateForEditor,
+} from '../services/audits/template-editor'
 
 export const auditsRouter = Router()
 
@@ -1246,6 +1252,7 @@ export async function ensurePlatformTemplatesSeeded() {
         is_seed:     true,
         frequency:   tmpl.frequency,
         subject_scope: auditSubjectScope(tmpl.name),
+        requires_shift: tmpl.name === 'Fire Marshall Checklist',
         tenant_id:   null,
         sections: {
           create: tmpl.sections.map((s, si) => ({
@@ -1303,7 +1310,7 @@ auditsRouter.get('/templates', requireAuditAccess, async (req: Request, res: Res
       },
       orderBy: [{ tenant_id: 'asc' }, { name: 'asc' }],
     }),
-    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { rooms: true, room_count: true } }),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { rooms: true, room_count: true, hidden_audit_templates: true } }),
     (prisma as any).user.findMany({ where: { tenant_id: tenantId, name: { not: null } }, select: { name: true, job_role: true }, orderBy: { name: 'asc' } }).catch(() => []),
     (prisma as any).auditRun.findMany({ where: { tenant_id: tenantId, room_number: { not: null } }, select: { template_id: true, room_number: true }, orderBy: { created_at: 'desc' }, take: 400 }).catch(() => []),
     (prisma as any).user.findUnique({ where: { id: req.user!.sub }, select: { name: true, job_role: true } }).catch(() => null),
@@ -1326,10 +1333,14 @@ auditsRouter.get('/templates', requireAuditAccess, async (req: Request, res: Res
     if (!list.includes(v) && list.length < 50) list.push(v)
   }
 
-  let withFlags = (templates as any[]).map(t => {
-    const scope = t.subject_scope ?? (isRoomBasedAudit(t.name) ? 'room' : 'none')
-    return { ...t, subject_scope: scope, room_based: scope === 'room' }
-  })
+  const hiddenIds: string[] = tenant?.hidden_audit_templates ?? []
+  const includeHidden = req.query.include_hidden === '1' && req.user!.role === 'admin'
+  let withFlags = (templates as any[])
+    .map(t => {
+      const scope = t.subject_scope ?? (isRoomBasedAudit(t.name) ? 'room' : 'none')
+      return { ...t, subject_scope: scope, room_based: scope === 'room', hidden: !t.tenant_id && hiddenIds.includes(t.id) }
+    })
+    .filter(t => includeHidden || !t.hidden)
   // "Staff + Audits" members only see their allocated templates.
   if (req.auditAllowed !== 'all') {
     const allowed = req.auditAllowed as string[]
@@ -1361,48 +1372,124 @@ auditsRouter.post('/templates', requireAdmin, async (req: Request, res: Response
   // Building your own audit is an Enterprise feature.
   try { await checkFeature(tenantId, 'has_custom_audits') }
   catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
-  const { name, description, frequency } = req.body
-  if (!name?.trim()) return err(res, 'MISSING_NAME', 'Audit name is required', 400)
 
-  const VALID_TYPES = new Set(['yes_no', 'yes_no_na', 'findings', 'free_text'])
-  const normQ = (q: any) => (typeof q === 'string' ? { text: q, type: 'yes_no_na' } : { text: String(q?.text ?? ''), type: VALID_TYPES.has(q?.type) ? q.type : 'yes_no_na' })
-
-  // Accept either a flat `questions` array (wrapped into one section) or explicit `sections`.
-  let rawSections: Array<{ title: string; questions: any[] }>
-  if (Array.isArray(req.body.sections) && req.body.sections.length) {
-    rawSections = req.body.sections.map((s: any) => ({ title: String(s?.title ?? '').trim() || 'Questions', questions: Array.isArray(s?.questions) ? s.questions : [] }))
-  } else if (Array.isArray(req.body.questions) && req.body.questions.length) {
-    rawSections = [{ title: 'Questions', questions: req.body.questions }]
-  } else {
-    return err(res, 'MISSING_QUESTIONS', 'Add at least one question', 400)
+  // Accept explicit `sections`, or a flat `questions` array wrapped into one section.
+  const body = { ...req.body }
+  if (!(Array.isArray(body.sections) && body.sections.length) && Array.isArray(body.questions) && body.questions.length) {
+    body.sections = [{ title: 'Questions', questions: body.questions.map((q: any) => (typeof q === 'string' ? { text: q, type: 'yes_no_na' } : q)) }]
   }
+  if (!body.frequency) body.frequency = 'periodic'
+  const parsed = parseEditorPayload(body, { requireName: true })
+  if ('error' in parsed) return err(res, 'VALIDATION_ERROR', parsed.error, 400)
 
-  // Clean: drop empty question texts; default each question to yes_no_na (Yes/No/N/A + notes).
-  const sections = rawSections
-    .map(s => ({ title: s.title, questions: s.questions.map(normQ).filter(q => q.text.trim()) }))
-    .filter(s => s.questions.length)
-  if (!sections.length) return err(res, 'MISSING_QUESTIONS', 'Add at least one question', 400)
-
-  const moduleIds = Array.isArray(req.body.module_ids) ? [...new Set(req.body.module_ids.map(String))].slice(0, 20) : []
-  const template = await (prisma as any).auditTemplate.create({
-    data: {
-      tenant_id:   tenantId,
-      name:        name.trim(),
-      description: description?.trim() ?? null,
-      frequency:   ['daily', 'weekly', 'monthly', 'quarterly', 'periodic'].includes(frequency) ? frequency : 'periodic',
-      module_ids:  moduleIds,
-      sections: {
-        create: sections.map((s, si) => ({
-          title:         s.title,
-          section_order: si,
-          questions: { create: s.questions.map((q, qi) => ({ question_text: q.text.trim(), question_order: qi, question_type: q.type })) },
-        })),
-      },
-    },
-    include: { sections: { include: { questions: true } } },
-  })
-  ok(res, { template }, 201)
+  const moduleIds = Array.isArray(req.body.module_ids) ? [...new Set(req.body.module_ids.map(String))].slice(0, 20) as string[] : []
+  const me = await (prisma as any).user.findUnique({ where: { id: req.user!.sub }, select: { name: true } }).catch(() => null)
+  try {
+    const id = await createTemplateFromPayload(tenantId, parsed.payload, { module_ids: moduleIds, changedBy: me?.name ?? null })
+    const template = await (prisma as any).auditTemplate.findUnique({ where: { id }, include: { sections: { include: { questions: true } } } })
+    ok(res, { template }, 201)
+  } catch (e: any) { err(res, 'SAVE_FAILED', e?.message ?? 'Could not create the audit.', 500) }
 })
+
+// ─── Editing, copying, hiding and versions ──────────────────────────────────────
+
+// Templates the tenant can read: built-in (tenant_id null) or its own.
+async function readableTemplate(tenantId: string, id: string) {
+  return (prisma as any).auditTemplate.findFirst({ where: { id, is_active: true, OR: [{ tenant_id: null }, { tenant_id: tenantId }] }, select: { id: true, tenant_id: true, name: true } })
+}
+
+// GET /audits/templates/:id/structure — the audit in the builder's shape.
+auditsRouter.get('/templates/:id/structure', requireAdmin, async (req: Request, res: Response) => {
+  const tpl = await readableTemplate(req.user!.tenant_id, String(req.params.id))
+  if (!tpl) return err(res, 'NOT_FOUND', 'Audit not found', 404)
+  ok(res, { template: await templateForEditor(tpl.id) })
+})
+
+// PUT /audits/templates/:id — save an edited version of the home's own audit.
+auditsRouter.put('/templates/:id', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  try { await checkFeature(tenantId, 'has_custom_audits') }
+  catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
+  const id = String(req.params.id)
+  const tpl = await (prisma as any).auditTemplate.findFirst({ where: { id, tenant_id: tenantId, is_active: true }, select: { id: true } })
+  if (!tpl) return err(res, 'NOT_FOUND', 'Audit not found. Built-in audits cannot be edited; copy one to make it your own.', 404)
+  const parsed = parseEditorPayload(req.body, { requireName: true })
+  if ('error' in parsed) return err(res, 'VALIDATION_ERROR', parsed.error, 400)
+  const me = await (prisma as any).user.findUnique({ where: { id: req.user!.sub }, select: { name: true } }).catch(() => null)
+  try {
+    const version = await saveTemplateStructure(id, parsed.payload, { changedBy: me?.name ?? null })
+    ok(res, { version, template: await templateForEditor(id) })
+  } catch (e: any) { err(res, 'SAVE_FAILED', e?.message ?? 'Could not save the audit.', 500) }
+})
+
+// POST /audits/templates/:id/copy — body { name?, hide_original? }
+auditsRouter.post('/templates/:id/copy', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  try { await checkFeature(tenantId, 'has_custom_audits') }
+  catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
+  const src = await readableTemplate(tenantId, String(req.params.id))
+  if (!src) return err(res, 'NOT_FOUND', 'Audit not found', 404)
+  const me = await (prisma as any).user.findUnique({ where: { id: req.user!.sub }, select: { name: true } }).catch(() => null)
+  try {
+    const id = await copyTemplate(src.id, tenantId, req.body?.name ? String(req.body.name) : null, me?.name ?? null)
+    if (!id) return err(res, 'NOT_FOUND', 'Audit not found', 404)
+    if (req.body?.hide_original && !src.tenant_id) await setBuiltInHidden(tenantId, src.id, true)
+    ok(res, { template: await templateForEditor(id) }, 201)
+  } catch (e: any) { err(res, 'COPY_FAILED', e?.message ?? 'Could not copy the audit.', 500) }
+})
+
+async function setBuiltInHidden(tenantId: string, templateId: string, hidden: boolean) {
+  const t = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { hidden_audit_templates: true } })
+  const cur: string[] = t?.hidden_audit_templates ?? []
+  const next = hidden ? [...new Set([...cur, templateId])] : cur.filter(x => x !== templateId)
+  await (prisma as any).tenant.update({ where: { id: tenantId }, data: { hidden_audit_templates: next } })
+}
+
+// POST /audits/templates/:id/hidden — body { hidden }. Hide a built-in audit from this home's lists.
+auditsRouter.post('/templates/:id/hidden', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const id = String(req.params.id)
+  const tpl = await (prisma as any).auditTemplate.findFirst({ where: { id, tenant_id: null }, select: { id: true } })
+  if (!tpl) return err(res, 'NOT_FOUND', 'Only built-in audits can be hidden. Delete your own audits instead.', 404)
+  await setBuiltInHidden(tenantId, id, req.body?.hidden !== false)
+  ok(res, { hidden: req.body?.hidden !== false })
+})
+
+// GET /audits/templates/:id/versions — the edit history (newest first), with each version's structure.
+auditsRouter.get('/templates/:id/versions', requireAdmin, async (req: Request, res: Response) => {
+  const tpl = await readableTemplate(req.user!.tenant_id, String(req.params.id))
+  if (!tpl) return err(res, 'NOT_FOUND', 'Audit not found', 404)
+  const [versions, runCounts] = await Promise.all([
+    (prisma as any).auditTemplateVersion.findMany({ where: { template_id: tpl.id }, orderBy: { version: 'desc' }, take: 50 }),
+    (prisma as any).auditRun.groupBy({ by: ['template_version'], where: { template_id: tpl.id, tenant_id: req.user!.tenant_id }, _count: { _all: true } }),
+  ])
+  const runsByVersion = new Map((runCounts as any[]).map(r => [r.template_version, r._count._all]))
+  ok(res, {
+    versions: (versions as any[]).map(v => ({
+      version: v.version, changed_by: v.changed_by, change_note: v.change_note, created_at: v.created_at,
+      runs: runsByVersion.get(v.version) ?? 0,
+      question_count: (v.snapshot?.sections ?? []).reduce((n: number, s: any) => n + (s.questions?.length ?? 0), 0),
+      snapshot: v.snapshot,
+    })),
+  })
+})
+
+// GET /audits/quality-statements — the CQC quality statements questions can be tagged with.
+auditsRouter.get('/quality-statements', requireAuditAccess, async (_req: Request, res: Response) => {
+  const rows = await (prisma as any).qualityStatement.findMany({
+    where: { is_active: true },
+    select: { id: true, name: true, key_question: true, number: true },
+    orderBy: [{ key_question: 'asc' }, { number: 'asc' }],
+  }).catch(() => [])
+  ok(res, { statements: rows })
+})
+
+async function qualityStatementNames(ids: string[]): Promise<Record<string, { name: string; key_question: string }>> {
+  const unique = [...new Set(ids.filter(Boolean))]
+  if (!unique.length) return {}
+  const rows = await (prisma as any).qualityStatement.findMany({ where: { id: { in: unique } }, select: { id: true, name: true, key_question: true } }).catch(() => [])
+  return Object.fromEntries((rows as any[]).map(r => [r.id, { name: r.name, key_question: r.key_question }]))
+}
 
 // ─── PATCH /audits/templates/:id — link/unlink the training modules this audit measures ─
 auditsRouter.patch('/templates/:id', requireAdmin, async (req: Request, res: Response) => {
@@ -1560,6 +1647,7 @@ auditsRouter.post('/runs', requireAuditAccess, async (req: Request, res: Respons
       auditor_role: (auditor_role?.trim() || me?.job_role || null),
       room_number:  subjectValue,
       subject_room: subjectRoom,
+      template_version: template.version ?? 1,
     },
   })
 
@@ -1578,27 +1666,13 @@ auditsRouter.post('/runs', requireAuditAccess, async (req: Request, res: Respons
 auditsRouter.get('/runs/:id', requireAuditAccess, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
 
-  const run = await (prisma as any).auditRun.findFirst({
+  const raw = await (prisma as any).auditRun.findFirst({
     where: { id: req.params.id, tenant_id: tenantId },
-    include: {
-      template: {
-        include: {
-          sections: {
-            orderBy:  { section_order: 'asc' },
-            include:  {
-              questions: {
-                where:   { is_active: true },
-                orderBy: { question_order: 'asc' },
-              },
-            },
-          },
-        },
-      },
-      answers: true,
-    },
+    include: { template: { include: SECTIONS_WITH_ALL_QUESTIONS }, answers: true },
   })
 
-  if (!run || !auditTemplateAllowed(req, run.template_id)) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
+  if (!raw || !auditTemplateAllowed(req, raw.template_id)) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
+  const run = shapeRunTemplate(raw)
 
   // Attach any evidence photos (grouped client-side by question_id).
   const evidence = await (prisma as any).auditAnswerEvidence.findMany({
@@ -1607,7 +1681,8 @@ auditsRouter.get('/runs/:id', requireAuditAccess, async (req: Request, res: Resp
     select:  { id: true, question_id: true, file_name: true, file_type: true, size_bytes: true, created_at: true },
   })
   const approval_required = await auditApprovalRequired(tenantId).catch(() => false)
-  ok(res, { run: { ...run, evidence }, approval_required })
+  const quality_statements = await qualityStatementNames(run.template.sections.flatMap((s: any) => s.questions.map((q: any) => q.quality_statement_id)))
+  ok(res, { run: { ...run, evidence }, approval_required, quality_statements })
 })
 
 // ─── PUT /audits/runs/:id ─────────────────────────────────────────────────────
@@ -1637,6 +1712,14 @@ auditsRouter.put('/runs/:id', requireAuditAccess, async (req: Request, res: Resp
 
 // ─── POST /audits/runs/:id/answers ───────────────────────────────────────────
 
+// Store a number, date, choice or rating as text; a multi-choice answer arrives as an array.
+function answerValue(v: any): string | null {
+  if (v === null || v === undefined) return null
+  if (Array.isArray(v)) return v.length ? JSON.stringify(v.map(x => String(x).slice(0, 120)).slice(0, 20)) : null
+  const t = String(v).trim().slice(0, 500)
+  return t || null
+}
+
 auditsRouter.post('/runs/:id/answers', requireAuditAccess, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
   const { answers } = req.body  // Array<{ question_id, answer_yn?, outcome_text?, actions_text? }>
@@ -1664,6 +1747,7 @@ auditsRouter.post('/runs/:id/answers', requireAuditAccess, async (req: Request, 
           answer_yn:    a.answer_yn    ?? null,
           answer_na:    a.answer_na    ?? false,
           no_compliant: noCompliant,
+          answer_value: answerValue(a.answer_value),
           outcome_text: a.outcome_text ?? null,
           actions_text: a.actions_text ?? null,
         },
@@ -1672,6 +1756,7 @@ auditsRouter.post('/runs/:id/answers', requireAuditAccess, async (req: Request, 
           ...(a.answer_na    !== undefined && { answer_na:    a.answer_na }),
           // Reset no_compliant whenever the yes/no/na answer is touched, then set it for a No.
           ...((a.answer_yn !== undefined || a.answer_na !== undefined || a.no_compliant !== undefined) && { no_compliant: noCompliant }),
+          ...(a.answer_value !== undefined && { answer_value: answerValue(a.answer_value) }),
           ...(a.outcome_text !== undefined && { outcome_text: a.outcome_text }),
           ...(a.actions_text !== undefined && { actions_text: a.actions_text }),
           answered_at: new Date(),
@@ -1791,21 +1876,33 @@ async function buildQualityStatementsBlock(): Promise<string> {
 // Generate the AI recommendations for a completed audit and save them to the run. Extracted so it
 // can run either at completion (no approval) OR once the care manager approves (approval workflow).
 export async function generateAuditRecommendations(tenantId: string, runId: string): Promise<string> {
-  const run = await (prisma as any).auditRun.findFirst({
+  const rawRun = await (prisma as any).auditRun.findFirst({
     where: { id: runId, tenant_id: tenantId },
     include: {
-      template: { include: { sections: { orderBy: { section_order: 'asc' }, include: { questions: { where: { is_active: true }, orderBy: { question_order: 'asc' } } } } } },
+      template: { include: SECTIONS_WITH_ALL_QUESTIONS },
       answers:  true,
       tenant:   { select: { name: true } },
     },
   })
-  if (!run) return ''
+  if (!rawRun) return ''
+  const run = shapeRunTemplate(rawRun)
 
   const answerMap = new Map<string, any>(run.answers.map((a: any) => [a.question_id, a]))
+  const visibleIds = new Set(visibleQuestions(run).map((q: any) => q.id))
+  const qsNames = await qualityStatementNames(run.template.sections.flatMap((s: any) => s.questions.map((q: any) => q.quality_statement_id)))
   const auditResultsText = run.template.sections.map((section: any) => {
     const lines: string[] = [`\n${section.title}:`]
-    for (const q of section.questions) {
+    for (const q of section.questions.filter((x: any) => visibleIds.has(x.id))) {
       const a: any = answerMap.get(q.id)
+      const tag = q.quality_statement_id && qsNames[q.quality_statement_id] ? ` [CQC quality statement: ${qsNames[q.quality_statement_id].name}]` : ''
+      if (!isYesNo(q.question_type) && !isNarrative(q.question_type)) {
+        const out = outcomeFor(q, a)
+        const verdict = out === 'fail' ? ' (OUTSIDE THE EXPECTED RANGE OR A FAILING OPTION: a gap)' : out === 'pass' ? ' (within the expected answer)' : ''
+        lines.push(`  - ${q.question_text}${tag}: ${answerText(q, a)}${verdict}`)
+        if (a?.outcome_text) lines.push(`    Outcome: ${a.outcome_text}`)
+        if (a?.actions_text) lines.push(`    Actions: ${a.actions_text}`)
+        continue
+      }
       if (q.question_type === 'yes_no' || q.question_type === 'yes_no_na') {
         let yn: string
         if (a?.answer_na)                yn = 'N/A'
@@ -1814,11 +1911,11 @@ export async function generateAuditRecommendations(tenantId: string, runId: stri
           ? 'NO (this is the correct/compliant answer for this question — NOT a gap, no action required)'
           : 'NO (a gap — the control is not in place or has not been completed)'
         else                             yn = 'NOT ANSWERED'
-        lines.push(`  - ${q.question_text}: ${yn}`)
+        lines.push(`  - ${q.question_text}${tag}: ${yn}`)
         if (a?.outcome_text) lines.push(`    Outcome: ${a.outcome_text}`)
         if (a?.actions_text) lines.push(`    Actions: ${a.actions_text}`)
       } else {
-        lines.push(`  - ${q.question_text}`)
+        lines.push(`  - ${q.question_text}${tag}`)
         if (a?.outcome_text) lines.push(`    Findings: ${a.outcome_text}`)
         if (a?.actions_text) lines.push(`    Actions & Timescales: ${a.actions_text}`)
       }
@@ -1883,22 +1980,26 @@ export async function generateAuditRecommendations(tenantId: string, runId: stri
 auditsRouter.post('/runs/:id/complete', requireAuditAccess, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
 
-  const run = await (prisma as any).auditRun.findFirst({
+  const rawRun = await (prisma as any).auditRun.findFirst({
     where: { id: req.params.id, tenant_id: tenantId },
     include: {
-      template: {
-        include: {
-          sections: {
-            orderBy: { section_order: 'asc' },
-            include: { questions: { where: { is_active: true }, orderBy: { question_order: 'asc' } } },
-          },
-        },
-      },
+      template: { include: SECTIONS_WITH_ALL_QUESTIONS },
       answers: true,
       tenant:  { select: { name: true, logo_url: true } },
     },
   })
-  if (!run || !auditTemplateAllowed(req, run.template_id)) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
+  if (!rawRun || !auditTemplateAllowed(req, rawRun.template_id)) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
+  const run = shapeRunTemplate(rawRun)
+
+  // Every question that is asked must be answered (a No classified as correct or a gap). Questions
+  // hidden by a condition are skipped.
+  if (run.status !== 'completed') {
+    const answers = new Map<string, any>(run.answers.map((a: any) => [a.question_id, a]))
+    const missing = visibleQuestions(run).filter((q: any) => !isAnswered(q, answers.get(q.id)))
+    if (missing.length) {
+      return err(res, 'INCOMPLETE', `${missing.length} question${missing.length === 1 ? ' is' : 's are'} still unanswered. Answer ${missing.length === 1 ? 'it' : 'them'} before completing the audit.`, 400)
+    }
+  }
 
   // Backfill the auditor from the person completing it if it wasn't captured at start, so the
   // report always records who carried it out and their role.
@@ -1957,29 +2058,26 @@ auditsRouter.post('/runs/:id/complete', requireAuditAccess, async (req: Request,
 auditsRouter.get('/runs/:id/report', requireAuditAccess, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
 
-  const run = await (prisma as any).auditRun.findFirst({
+  const rawRun = await (prisma as any).auditRun.findFirst({
     where: { id: req.params.id, tenant_id: tenantId },
     include: {
-      template: {
-        include: {
-          sections: {
-            orderBy: { section_order: 'asc' },
-            include: { questions: { where: { is_active: true }, orderBy: { question_order: 'asc' } } },
-          },
-        },
-      },
+      template: { include: SECTIONS_WITH_ALL_QUESTIONS },
       answers: true,
       tenant:  { select: { name: true, logo_url: true } },
     },
   })
-  if (!run || !auditTemplateAllowed(req, run.template_id)) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
+  if (!rawRun || !auditTemplateAllowed(req, rawRun.template_id)) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
+  const run = shapeRunTemplate(rawRun)
 
   const answerMap = new Map<string, any>(run.answers.map((a: any) => [a.question_id, a]))
+  const visibleIds = new Set(visibleQuestions(run).map((q: any) => q.id))
+  const qsNames = await qualityStatementNames(run.template.sections.flatMap((s: any) => s.questions.map((q: any) => q.quality_statement_id)))
 
   const report = {
     organisation:      run.tenant.name,
     logo_url:          run.tenant.logo_url ?? null,
     audit_name:        run.template.name,
+    template_version:  run.template_version ?? null,
     subject:           run.room_number,
     subject_room:      run.subject_room,
     subject_scope:     run.template.subject_scope ?? 'none',
@@ -2001,19 +2099,25 @@ auditsRouter.get('/runs/:id/report', requireAuditAccess, async (req: Request, re
     ai_recommendations: run.ai_recommendations,
     sections: run.template.sections.map((s: any) => ({
       title:     s.title,
-      questions: s.questions.map((q: any) => {
+      questions: s.questions.filter((q: any) => visibleIds.has(q.id)).map((q: any) => {
         const a: any = answerMap.get(q.id)
         return {
           id:            q.id,
           question:      q.question_text,
           question_type: q.question_type,
+          settings:      q.settings ?? null,
           answer_yn:     a?.answer_yn    ?? null,
           answer_na:     a?.answer_na    ?? false,
+          no_compliant:  a?.no_compliant ?? null,
+          answer_value:  a?.answer_value ?? null,
+          answer_text:   answerText(q, a),
+          outcome:       outcomeFor(q, a),
+          quality_statement: q.quality_statement_id ? (qsNames[q.quality_statement_id]?.name ?? null) : null,
           outcome_text:  a?.outcome_text ?? null,
           actions_text:  a?.actions_text ?? null,
         }
       }),
-    })),
+    })).filter((s: any) => s.questions.length),
   }
 
   ok(res, { report })

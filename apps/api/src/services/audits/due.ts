@@ -16,16 +16,20 @@ export interface DueAudit { id: string; name: string; frequency: string }
 export async function getAuditsDue(tenantId: string, allowedTemplateIds?: string[]): Promise<{ due: DueAudit[]; inProgress: number }> {
   const scope = allowedTemplateIds && allowedTemplateIds.length ? { id: { in: allowedTemplateIds } } : {}
   const runScope = allowedTemplateIds && allowedTemplateIds.length ? { template_id: { in: allowedTemplateIds } } : {}
-  const [templates, runs] = await Promise.all([
+  const [allTemplates, runs, tenant] = await Promise.all([
     (prisma as any).auditTemplate.findMany({
       where:  { is_active: true, OR: [{ tenant_id: null }, { tenant_id: tenantId }], ...scope },
-      select: { id: true, name: true, frequency: true },
+      select: { id: true, name: true, frequency: true, tenant_id: true },
     }),
     (prisma as any).auditRun.findMany({
       where:  { tenant_id: tenantId, ...runScope },
       select: { template_id: true, status: true, audit_month: true },
     }),
+    (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { hidden_audit_templates: true } }),
   ])
+  // Built-in audits the home has hidden are never due.
+  const hidden: string[] = tenant?.hidden_audit_templates ?? []
+  const templates = (allTemplates as any[]).filter(t => t.tenant_id || !hidden.includes(t.id))
 
   const now = new Date()
   const Y = now.getUTCFullYear(), M = now.getUTCMonth(), D = now.getUTCDate()

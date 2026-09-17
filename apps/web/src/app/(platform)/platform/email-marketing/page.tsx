@@ -54,6 +54,14 @@ const PLANS = [
   { key: 'enterprise',   label: 'Enterprise' },
 ]
 
+// Product campaigns for people who buy training or a policy WITHOUT a plan.
+// Same table and same editor; they differ in being gated on what the buyer has
+// done rather than purely on the day count.
+const CAMPAIGNS = [
+  { key: 'training_shop', label: 'Training buyer' },
+  { key: 'policy_shop',   label: 'Policy buyer' },
+]
+
 function fmtDate(iso: string | null) {
   if (!iso) return 'Not sent yet'
   return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -325,15 +333,25 @@ export default function EmailMarketingPage() {
           {syncMsg && <span className="text-xs font-medium text-neutral-dark">{syncMsg}</span>}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {PLANS.map(p => (
             <button key={p.key} onClick={() => setPlan(p.key)} className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${plan === p.key ? 'bg-teal text-white' : 'bg-neutral-light text-neutral-mid hover:bg-gray-200'}`}>
               {p.label}
             </button>
           ))}
+          <span className="mx-1 h-6 w-px bg-gray-200" />
+          {CAMPAIGNS.map(c => (
+            <button key={c.key} onClick={() => setPlan(c.key)} className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${plan === c.key ? 'bg-violet-600 text-white' : 'bg-violet-50 text-violet-700 hover:bg-violet-100'}`}>
+              {c.label}
+            </button>
+          ))}
         </div>
         <p className="-mt-2 text-xs text-neutral-mid">
-          {plan === 'starter'
+          {plan === 'training_shop'
+            ? 'For someone who bought training licences without a CareStream plan. Emails are gated on what they have actually done: the allocate nudge disappears once they allocate, and the "one carer trained" email waits until somebody finishes.'
+            : plan === 'policy_shop'
+            ? 'For someone who bought a written policy without a CareStream plan. Follows the order through intake, drafting and approval. The intake chaser is the one that matters: nothing can be written until those answers are in.'
+            : plan === 'starter'
             ? 'The core sequence, shared by all plans (plus the Starter-only finale). Reordering here flows up to Professional and Enterprise.'
             : plan === 'professional'
               ? 'The emails Professional adds after the shared core. Reordering here also updates Enterprise.'

@@ -2582,6 +2582,9 @@ model OnboardingEmail {
   from_email   String?
   body         Json
   is_active    Boolean  @default(true)
+  condition    String?                      // predicate evaluated at send time (conditions.ts)
+  condition_unmet String @default("skip")   // skip | wait
+  hold_max_days   Int    @default(14)       // how long "wait" holds before giving up
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
   sends        OnboardingSend[]
@@ -2611,13 +2614,17 @@ model OnboardingQuestionFeedback {
 
 model OnboardingEnrolment {
   id         String   @id @default(uuid())
-  tenant_id  String   @unique
+  tenant_id  String
   plan       String
+  campaign   String   @default("plan")   // plan | training_shop | policy_shop
   start_date DateTime @db.Date
   status     String   @default("active")
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   sends      OnboardingSend[]
+  // A policy buyer who later takes a licence needs both sequences, so the key is
+  // the pair, not the tenant.
+  @@unique([tenant_id, campaign])
   @@map("onboarding_enrolments")
 }
 
@@ -2627,6 +2634,7 @@ model OnboardingSend {
   enrolment_id      String?
   email_id          String?
   plan              String
+  campaign          String   @default("plan")
   day_index         Int
   recipient_email   String
   recipient_user_id String?

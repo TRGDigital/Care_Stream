@@ -10,6 +10,7 @@ import { createLoginLink } from '../lib/login-tokens'
 import { siteUrl } from '../lib/urls'
 import { translateTextsBatch, translateQuestionsBatch } from '../lib/translate'
 import { sendStaffLoginLinkEmail, sendPasswordSetupEmail, sendTrainingOnboardingGuideEmail } from '../services/email/outbound'
+import { enrolInCampaign } from '../services/onboarding/dispatch'
 import { hashPassword } from '../services/auth/password'
 import crypto from 'crypto'
 
@@ -603,6 +604,14 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
       // train in their hub, track progress. Sent once, alongside the account emails.
       await sendTrainingOnboardingGuideEmail({ to: email, name: adminName })
         .catch((e: any) => console.error('[training-checkout] onboarding guide email failed:', e?.message ?? e))
+    }
+
+    // Start the training-buyer campaign. Enrolment is idempotent, so a repeat
+    // purchase continues the sequence rather than restarting it, and every email
+    // in it is a draft until published — nothing sends off the back of this yet.
+    if (tenantId) {
+      await enrolInCampaign(tenantId, 'training_shop')
+        .catch((e: any) => console.error('[training-checkout] campaign enrolment failed:', e?.message ?? e))
     }
 
     // One pooled licence per seat, per module, all tagged with the Stripe payment id.

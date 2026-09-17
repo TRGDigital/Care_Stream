@@ -11,14 +11,21 @@
 
 import { prisma } from '../../db/client'
 import { SEQUENCES, PLAN_ORDER } from './content'
+import { CAMPAIGNS, CAMPAIGN_ORDER } from './campaigns'
 
 // Stable cross-plan identity: same subject -> same key (shared emails link up).
 const keyOf = (subject: string) => subject.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
 
 export async function seedOnboardingEmails(): Promise<{ inserted: number; total: number }> {
   let inserted = 0, total = 0
-  for (const plan of PLAN_ORDER) {
-    const seq = SEQUENCES[plan]
+  // Campaigns are stored in the same table, keyed by their campaign name in the
+  // `plan` column: the editor, preview, test send and stats all work unchanged.
+  const sequences: Array<{ plan: string; emails: any[] }> = [
+    ...PLAN_ORDER.map(plan => ({ plan: plan as string, emails: SEQUENCES[plan].emails as any[] })),
+    ...CAMPAIGN_ORDER.map(key => ({ plan: key as string, emails: CAMPAIGNS[key].emails as any[] })),
+  ]
+  for (const { plan, emails } of sequences) {
+    const seq = { emails }
     const existing = await (prisma as any).onboardingEmail.findMany({ where: { plan }, select: { template_key: true, day_index: true } })
     const haveKey = new Set((existing as any[]).map(r => r.template_key).filter(Boolean))
     let nextDay = (existing as any[]).reduce((max, r) => Math.max(max, r.day_index ?? 0), 0)
@@ -37,6 +44,9 @@ export async function seedOnboardingEmails(): Promise<{ inserted: number; total:
           // skipped by the dispatcher until someone publishes it.
           is_active: !e.draft,
           template_key: key, sort_order: day_index * 100,
+          condition:       e.condition ?? null,
+          condition_unmet: e.conditionUnmet ?? 'skip',
+          hold_max_days:   e.holdMaxDays ?? 14,
           body: {
             headline:  e.headline,
             intro:     e.intro,

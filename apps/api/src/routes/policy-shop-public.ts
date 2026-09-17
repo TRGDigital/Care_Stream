@@ -21,6 +21,7 @@ import {
 } from '../services/email/outbound'
 import crypto from 'crypto'
 import { intakeStateFor } from '../services/policy-writer/intake'
+import { enrolInCampaign } from '../services/onboarding/dispatch'
 
 export const policyShopPublicRouter = Router()
 
@@ -461,6 +462,11 @@ policyShopPublicRouter.post('/reconcile', async (req: Request, res: Response) =>
         totalPence: result.amountTotalPence, link,
         expiresMins: ttlMs / 60000, isNewAccount,
       }).catch((e: any) => console.error('[policy-shop] confirmation email failed:', e?.message ?? e))
+
+      // Start the policy-buyer campaign; idempotent, and every email is a draft
+      // until published.
+      enrolInCampaign(tenantId, 'policy_shop')
+        .catch((e: any) => console.error('[policy-shop] campaign enrolment failed:', e?.message ?? e))
 
       sendPolicyPurchaseNotification({
         tenantName: tenant?.name ?? 'Policy customer',

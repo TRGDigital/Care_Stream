@@ -6,6 +6,7 @@ import sgMail from '@sendgrid/mail'
 import { sweep, cursorFor } from '../../lib/tenant-sweep'
 import crypto from 'crypto'
 import { prisma } from '../../db/client'
+import { evaluateCondition } from './conditions'
 import { renderOnboardingEmailHtml } from './render'
 
 const FROM     = process.env.ONBOARDING_FROM_EMAIL ?? 'hello@carestreamai.com'
@@ -99,7 +100,8 @@ async function sendToRecipient(opts: {
   if (row?.sent_at) return 'skipped'
   if (!row) {
     row = await (prisma as any).onboardingSend.create({ data: {
-      tenant_id: tenantId, enrolment_id: enrolment?.id ?? null, email_id: tmpl.id, plan: tmpl.plan, day_index: tmpl.day_index,
+      tenant_id: tenantId, enrolment_id: enrolment?.id ?? null, email_id: tmpl.id, plan: tmpl.plan,
+      campaign: enrolment?.campaign ?? 'plan', day_index: tmpl.day_index,
       recipient_email: recipientEmail, recipient_user_id: recipientUserId ?? null, subject: tmpl.subject,
       scheduled_for: scheduledFor, status: 'scheduled',
     } }).catch(async () => (prisma as any).onboardingSend.findFirst({ where: { tenant_id: tenantId, email_id: tmpl.id, recipient_email: recipientEmail } }))
@@ -144,7 +146,7 @@ export async function sendTestEmail(to: string, tmpl: { subject: string; prehead
 // Enrol a tenant into the drip (one active enrolment per tenant).
 export async function enrolTenant(tenantId: string, planName: string | null, startStr: string): Promise<any> {
   const plan = planKeyOf(planName)
-  const existing = await (prisma as any).onboardingEnrolment.findUnique({ where: { tenant_id: tenantId } })
+  const existing = await (prisma as any).onboardingEnrolment.findUnique({ where: { tenant_id_campaign: { tenant_id: tenantId, campaign: 'plan' } } })
   if (existing) {
     // Keep the existing start date; just refresh the plan (e.g. once billing resolves).
     if (existing.plan !== plan && existing.status === 'active') {
@@ -152,7 +154,22 @@ export async function enrolTenant(tenantId: string, planName: string | null, sta
     }
     return existing
   }
-  return (prisma as any).onboardingEnrolment.create({ data: { tenant_id: tenantId, plan, start_date: new Date(startStr), status: 'active' } })
+  return (prisma as any).onboardingEnrolment.create({ data: { tenant_id: tenantId, plan, campaign: 'plan', start_date: new Date(startStr), status: 'active' } })
+}
+
+// Enrol a product buyer into a campaign. Separate from the plan drip: a policy
+// buyer who later takes a licence needs both, which is why the enrolment key is
+// (tenant, campaign). `plan` carries the campaign name so the existing lookup by
+// (plan, day_index) resolves the campaign's own emails.
+export async function enrolInCampaign(tenantId: string, campaign: 'training_shop' | 'policy_shop', startStr?: string): Promise<any> {
+  const start = startStr ?? new Date().toISOString().slice(0, 10)
+  const existing = await (prisma as any).onboardingEnrolment.findUnique({
+    where: { tenant_id_campaign: { tenant_id: tenantId, campaign } },
+  })
+  if (existing) return existing   // a second purchase does not restart the sequence
+  return (prisma as any).onboardingEnrolment.create({
+    data: { tenant_id: tenantId, plan: campaign, campaign, start_date: new Date(start), status: 'active' },
+  })
 }
 
 // Send day 1 right away (used on signup). Safe to call repeatedly.
@@ -178,7 +195,7 @@ export async function dispatchDue(opts: { force?: boolean; tenantId?: string } =
     where:   { status: 'active', ...(opts.tenantId ? { tenant_id: opts.tenantId } : {}), ...(after ? { id: { gt: after } } : {}) },
     orderBy: { id: 'asc' },
   })
-  const summary = { dateStr, enrolments: enrolments.length, sent: 0, skipped: 0, failed: 0, completed: 0, caught_up: 0, due: [] as any[] }
+  const summary = { dateStr, enrolments: enrolments.length, sent: 0, skipped: 0, failed: 0, completed: 0, caught_up: 0, held: 0, condition_skipped: 0, gave_up: 0, due: [] as any[] }
 
   // Swept rather than looped: this walks every active enrolment, of which there are more
   // than there are tenants, and was the joint-slowest scheduled job measured. See
@@ -214,6 +231,24 @@ export async function dispatchDue(opts: { force?: boolean; tenantId?: string } =
     for (let day = from; day <= to; day++) {
       const tmpl = await template(enr.plan, day)
       if (!tmpl) continue
+
+      // Campaign emails are gated on what the buyer has actually done. An unmet
+      // condition either drops this email for good (skip) or holds the whole
+      // sequence here until it is met (wait) — the latter is what lets a policy
+      // email wait for the policy to be written, rather than announcing a
+      // document that does not exist yet.
+      if (tmpl.condition) {
+        const met = await evaluateCondition(tmpl.condition, enr.tenant_id)
+        if (!met) {
+          if (tmpl.condition_unmet === 'wait') {
+            const waited = todayIdx - day
+            if (waited < (tmpl.hold_max_days ?? 14)) { summary.held++; return }   // hold the sequence, try again tomorrow
+            summary.gave_up++                                                     // waited long enough, move past it
+          }
+          summary.condition_skipped++
+          continue
+        }
+      }
       const isCatchup = day < target
       if (isCatchup) summary.caught_up++
       summary.due.push({ tenant_id: enr.tenant_id, plan: enr.plan, day, recipients: recipients.length, catchup: isCatchup })

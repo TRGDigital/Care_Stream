@@ -18,6 +18,9 @@ import {
 } from 'lucide-react'
 import { QuestionInput, EMPTY_ANSWER, answerFromRow, type AuditAnswer } from '@/components/audits/question-input'
 import { isAnswered as questionAnswered, isNarrative, visibleQuestionIds } from '@/lib/audit-questions'
+import { SignaturePad } from '@/components/audits/signature-pad'
+import { PhotoAnnotator } from '@/components/audits/photo-annotator'
+import { PreviousActionsPanel } from '@/components/audits/previous-actions-panel'
 
 type Answer = AuditAnswer
 
@@ -273,6 +276,9 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
   const [uploadingQ, setUploadingQ] = useState<string | null>(null)
   const [qsNames,   setQsNames]   = useState<Record<string, { name: string }>>({})
   const [completeError, setCompleteError] = useState('')
+  const [signature, setSignature] = useState<string | null>(null)
+  const [signedName, setSignedName] = useState('')
+  const [annotating, setAnnotating] = useState<{ qId: string; file: File } | null>(null)
   const isMobile = useIsMobileOrTablet()
   const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
@@ -288,11 +294,16 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
       for (const e of (r.evidence ?? [])) { const arr = evMap.get(e.question_id) ?? []; arr.push(e); evMap.set(e.question_id, arr) }
       setEvidence(evMap)
       setSummary({ strengths: r.strengths ?? '', improvements: r.improvements ?? '', actions_deadline: r.actions_deadline ?? '' })
+      setSignedName(r.auditor_name ?? '')
     }).catch(() => {}).finally(() => setLoading(false))
   }, [runId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function addPhoto(qId: string, f: File | null) {
     if (!f) return
+    setAnnotating({ qId, file: f })
+  }
+  async function uploadPhoto(qId: string, f: File) {
+    setAnnotating(null)
     setUploadingQ(qId)
     try {
       const img = await compressImage(f)
@@ -332,6 +343,8 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
       const all = Array.from(answers.entries()).map(([question_id, v]) => ({ question_id, ...v }))
       if (all.length) await api.audits.saveAnswers(runId, all).catch(() => {})
       await api.audits.updateRun(runId, summary).catch(() => {})
+      if (!signature || !signedName.trim()) throw new Error('Sign and type your name before finishing.')
+      await api.audits.signRun(runId, signature, signedName.trim())
       await api.audits.complete(runId)
       onExit()
     } catch (e: any) {
@@ -365,6 +378,10 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
           </div>
           {saving && <span className="shrink-0 text-xs text-neutral-mid">Saving…</span>}
         </div>
+
+        {annotating && <PhotoAnnotator file={annotating.file} onCancel={() => setAnnotating(null)} onDone={f => uploadPhoto(annotating.qId, f)} />}
+
+        {!isCompleted && <div className="mt-3"><PreviousActionsPanel token={token} runId={runId} /></div>}
 
         {/* Progress */}
         <div className="my-3">
@@ -479,8 +496,11 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
             <textarea value={summary.strengths} onChange={e => setSummary(s => ({ ...s, strengths: e.target.value }))} placeholder="Strengths identified" rows={2} className="mb-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
             <textarea value={summary.improvements} onChange={e => setSummary(s => ({ ...s, improvements: e.target.value }))} placeholder="Areas requiring improvement" rows={2} className="mb-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
             <input value={summary.actions_deadline} onChange={e => setSummary(s => ({ ...s, actions_deadline: e.target.value }))} placeholder="Deadline for actions" className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+            <p className="mb-1 text-xs font-medium text-neutral-mid">Your signature</p>
+            <SignaturePad onChange={setSignature} height={120} />
+            <input value={signedName} onChange={e => setSignedName(e.target.value)} placeholder="Your name" className="mb-3 mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
             <div className="flex items-center gap-3">
-              <button onClick={complete} disabled={completing || progress < 100} className="flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-50">
+              <button onClick={complete} disabled={completing || progress < 100 || !signature || !signedName.trim()} className="flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-50">
                 {completing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />} {approvalRequired ? 'Send for approval' : 'Complete audit'}
               </button>
               <button onClick={onExit} className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm text-neutral-mid hover:border-teal/40"><Pause size={13} /> Save &amp; exit</button>

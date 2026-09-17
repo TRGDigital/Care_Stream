@@ -2420,6 +2420,11 @@ model AuditRun {
   approval_note      String?                                // manager's send-back comment
   readiness_scores   Json?                                  // AI CQC-domain readiness scores (0-100) for this run
   action_plan_status String       @default("none")          // none | draft | approved
+  auditor_signature_key String?                              // drawn signature (PNG in S3) when completed
+  auditor_signed_name   String?
+  auditor_signed_at     DateTime?
+  manager_signature_key String?                              // drawn signature when the manager approved
+  manager_signed_at     DateTime?
   created_at         DateTime      @default(now())
   updated_at         DateTime      @updatedAt
   tenant             Tenant        @relation(fields: [tenant_id], references: [id])
@@ -2449,13 +2454,45 @@ model AuditAction {
   status      String    @default("open")       // open | in_progress | done
   source      String    @default("ai")         // ai | manual
   done_at     DateTime?
+  completion_note        String?                // what the person did to close it
+  extension_requested_to DateTime?              // more time asked for, until this date
+  extension_reason       String?
+  extension_status       String?                // pending | approved | declined
+  extension_decided_by   String?
+  reminded_at            DateTime?              // "due soon" email sent
+  overdue_notified_at    DateTime?              // "overdue" email sent
+  escalated_at           DateTime?              // escalated to managers
+  verified_result        String?                // fixed | not_fixed, checked at the next audit
+  verified_at            DateTime?
+  verified_by            String?
+  verified_run_id        String?                // the later audit it was checked in
+  verify_note            String?
   created_at  DateTime  @default(now())
   updated_at  DateTime  @updatedAt
   run         AuditRun  @relation(fields: [run_id], references: [id], onDelete: Cascade)
+  evidence    AuditActionEvidence[]
 
   @@index([run_id])
   @@index([tenant_id, status])
   @@map("audit_actions")
+}
+
+// A photo showing an action was done (for example the repaired handrail).
+model AuditActionEvidence {
+  id          String      @id @default(uuid())
+  tenant_id   String
+  action_id   String
+  s3_key      String
+  file_name   String
+  file_type   String
+  size_bytes  Int         @default(0)
+  scan_status String      @default("skipped")
+  uploaded_by String?
+  created_at  DateTime    @default(now())
+  action      AuditAction @relation(fields: [action_id], references: [id], onDelete: Cascade)
+
+  @@index([action_id])
+  @@map("audit_action_evidence")
 }
 
 // Audit trail of approval events on an audit run: who submitted it, and the care

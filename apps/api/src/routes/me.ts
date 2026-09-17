@@ -28,6 +28,7 @@ import { sendTrainingCompletionEmail } from '../services/email/outbound'
 import { generateAuditRecommendations } from './audits'
 import { prisma } from '../db/client'
 import { SECTIONS_WITH_ALL_QUESTIONS, shapeRunTemplate, visibleQuestions, answerText, outcomeFor } from '../lib/audit-questions'
+import { completeMyAction, requestExtension, storeSignature } from '../services/audits/action-closeout'
 import { managerApprove, rejectPolicy, getPolicyDocument, getAdoptionContext, getApprovalState, setExternalRecipient, EXTERNAL_LINK_TTL_DAYS } from '../services/analytics/policy-adoption'
 
 // Friendly policy title from a filename (strip extension + tidy separators).
@@ -465,6 +466,13 @@ meRouter.post('/audit-approvals/:runId/approve', async (req: Request, res: Respo
   const userId   = (req as any).user.sub
   if (!(await isCareManager(userId))) { err(res, 'FORBIDDEN', 'Not a care manager', 403); return }
   const me = await (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true, email: true, job_role: true } })
+  // The manager's drawn signature, saved with the approval.
+  if (req.body?.signature) {
+    try {
+      const key = await storeSignature(tenantId, String(req.params.runId), String(req.body.signature))
+      await (prisma as any).auditRun.updateMany({ where: { id: String(req.params.runId), tenant_id: tenantId, approval_status: 'pending_manager' }, data: { manager_signature_key: key, manager_signed_at: new Date() } })
+    } catch (e: any) { err(res, 'INVALID', e?.message ?? 'Could not save the signature.', 400); return }
+  }
   const r = await managerApproveAudit(tenantId, String(req.params.runId), me?.name || me?.email || 'Care manager', me?.job_role || '')
   if (!r) { err(res, 'NOT_FOUND', 'Not found', 404); return }
   // Now that it's approved, generate the AI recommendations (the final step of the workflow).
@@ -499,10 +507,27 @@ meRouter.patch('/actions/:id', async (req: Request, res: Response) => {
   const userId   = (req as any).user.sub
   const me = await (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true } })
   try {
-    await setMyActionStatus(tenantId, me?.name ?? '', String(req.params.id), String(req.body?.status ?? ''), userId)
+    const status = String(req.body?.status ?? '')
+    // Marking an audit action done can carry what was done. Supervision actions keep the plain status update.
+    const isAudit = await (prisma as any).auditAction.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId }, select: { id: true } }).catch(() => null)
+    if (status === 'done' && isAudit) await completeMyAction(tenantId, me?.name ?? '', String(req.params.id), req.body?.note ? String(req.body.note) : null)
+    else await setMyActionStatus(tenantId, me?.name ?? '', String(req.params.id), status, userId)
     ok(res, await getMyActions(tenantId, me?.name ?? '', userId))
   } catch (e: any) {
     err(res, 'VALIDATION_ERROR', e?.message ?? 'Could not update the action.')
+  }
+})
+
+// POST /me/actions/:id/extension — body { until, reason }: ask for more time on an audit action.
+meRouter.post('/actions/:id/extension', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const userId   = (req as any).user.sub
+  const me = await (prisma as any).user.findUnique({ where: { id: userId }, select: { name: true } })
+  try {
+    await requestExtension(tenantId, me?.name ?? '', userId, String(req.params.id), String(req.body?.until ?? ''), String(req.body?.reason ?? ''))
+    ok(res, await getMyActions(tenantId, me?.name ?? '', userId))
+  } catch (e: any) {
+    err(res, 'VALIDATION_ERROR', e?.message ?? 'Could not send the request.')
   }
 })
 

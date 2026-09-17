@@ -61,12 +61,28 @@ export async function generateActionPlanForRun(tenantId: string, runId: string):
   await createDraftActionPlan(tenantId, runId, actions)
 }
 
+// What was done, photos, more time and the re-check, for every view of an action.
+export function closeoutFields(a: any) {
+  return {
+    completion_note: a.completion_note ?? null,
+    evidence: (a.evidence ?? []).map((e: any) => ({ id: e.id, file_name: e.file_name })),
+    extension_status: a.extension_status ?? null,
+    extension_requested_to: a.extension_requested_to ? new Date(a.extension_requested_to).toISOString() : null,
+    extension_reason: a.extension_reason ?? null,
+    extension_decided_by: a.extension_decided_by ?? null,
+    verified_result: a.verified_result ?? null,
+    verified_at: a.verified_at ? new Date(a.verified_at).toISOString() : null,
+    verified_by: a.verified_by ?? null,
+    verify_note: a.verify_note ?? null,
+  }
+}
+
 export async function getActionPlan(tenantId: string, runId: string) {
   const run = await (prisma as any).auditRun.findFirst({ where: { id: runId, tenant_id: tenantId }, select: { action_plan_status: true } })
   if (!run) return null
-  const rows = await (prisma as any).auditAction.findMany({ where: { run_id: runId, tenant_id: tenantId } })
+  const rows = await (prisma as any).auditAction.findMany({ where: { run_id: runId, tenant_id: tenantId }, include: { evidence: { select: { id: true, file_name: true } } } })
   const actions = (rows as any[])
-    .map(a => ({ id: a.id, description: a.description, priority: a.priority, due_date: a.due_date ? new Date(a.due_date).toISOString() : null, assigned_to: a.assigned_to ?? null, is_external: !!a.is_external, external_name: a.external_name ?? null, status: a.status, source: a.source, done_at: a.done_at ? new Date(a.done_at).toISOString() : null }))
+    .map(a => ({ id: a.id, description: a.description, priority: a.priority, due_date: a.due_date ? new Date(a.due_date).toISOString() : null, assigned_to: a.assigned_to ?? null, is_external: !!a.is_external, external_name: a.external_name ?? null, status: a.status, source: a.source, done_at: a.done_at ? new Date(a.done_at).toISOString() : null, ...closeoutFields(a) }))
     .sort((x, y) => (PRIORITY_RANK[x.priority] ?? 1) - (PRIORITY_RANK[y.priority] ?? 1))
   return { status: run.action_plan_status as string, actions }
 }
@@ -190,7 +206,7 @@ export async function getMyActions(tenantId: string, staffName: string, userId?:
         assigned_to: { equals: name, mode: 'insensitive' },
         run: { action_plan_status: 'approved' },
       },
-      include: { run: { select: { id: true, template: { select: { name: true } } } } },
+      include: { run: { select: { id: true, template: { select: { name: true } } } }, evidence: { select: { id: true, file_name: true } } },
     }).catch(() => []) : Promise.resolve([]),
     userId ? (prisma as any).supervisionAction.findMany({ where: { tenant_id: tenantId, user_id: userId } }).catch(() => []) : Promise.resolve([]),
   ])
@@ -198,7 +214,7 @@ export async function getMyActions(tenantId: string, staffName: string, userId?:
     id: a.id, description: a.description, priority: a.priority,
     due_date: a.due_date ? new Date(a.due_date).toISOString() : null,
     status: a.status, done_at: a.done_at ? new Date(a.done_at).toISOString() : null,
-    run_id: a.run_id, audit_name: a.run?.template?.name ?? 'Audit', source: 'audit',
+    run_id: a.run_id, audit_name: a.run?.template?.name ?? 'Audit', source: 'audit', ...closeoutFields(a),
   }))
   const supActions = (supRows as any[]).map(s => ({
     id: s.id, description: s.description, priority: 'priority',
@@ -235,10 +251,11 @@ export async function countMyOpenActions(tenantId: string, staffName: string, us
 export async function getExternalActions(tenantId: string) {
   const rows = await (prisma as any).auditAction.findMany({
     where: { tenant_id: tenantId, is_external: true, run: { action_plan_status: 'approved' } },
-    include: { run: { select: { id: true, template: { select: { name: true } } } } },
+    include: { run: { select: { id: true, template: { select: { name: true } } } }, evidence: { select: { id: true, file_name: true } } },
   }).catch(() => [])
   const actions = (rows as any[])
     .map(a => ({
+      ...closeoutFields(a),
       id: a.id,
       description: a.description,
       priority: a.priority,

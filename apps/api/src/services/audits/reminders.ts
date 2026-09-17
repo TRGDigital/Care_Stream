@@ -9,6 +9,7 @@ import { notifyUsers } from '../../lib/notify'
 import { siteUrl } from '../../lib/urls'
 import { getAuditsDue, frequencyLabel, type DueAudit } from './due'
 import { processAssignmentsForTenant } from './assignments'
+import { processActionReminders } from './action-closeout'
 
 const INBOUND_DOMAIN = process.env.INBOUND_EMAIL_DOMAIN ?? 'carestreamai.co.uk'
 const WEB_URL        = siteUrl()
@@ -48,6 +49,9 @@ export async function sendDailyAuditReminders(): Promise<{ tenants: number; sent
       // Scheduled audits: missed occurrences, due-soon and overdue reminders, escalation, summary.
       const scheduled = await processAssignmentsForTenant(t).catch(e => { console.error('[audit-reminders] assignments:', e); return { emails: 0 } })
       sent += scheduled.emails
+      // Audit actions: due-soon and overdue reminders, and escalation.
+      const actionReminders = await processActionReminders(t).catch(e => { console.error('[audit-reminders] actions:', e); return { emails: 0 } })
+      sent += actionReminders.emails
 
       const { due, inProgress } = await getAuditsDue(t.id)
       if (!due.length && !inProgress) return   // was `continue` when this was a for-loop

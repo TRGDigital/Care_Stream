@@ -476,8 +476,11 @@ meRouter.post('/audit-approvals/:runId/approve', async (req: Request, res: Respo
   }
   const r = await managerApproveAudit(tenantId, String(req.params.runId), me?.name || me?.email || 'Care manager', me?.job_role || '')
   if (!r) { err(res, 'NOT_FOUND', 'Not found', 404); return }
-  // Now that it's approved, generate the AI recommendations (the final step of the workflow).
-  await generateAuditRecommendations(tenantId, String(req.params.runId)).catch(e => console.error('[audit approve] recs:', e))
+  // Recommendations are made when the audit is completed. Only audits submitted before that have none yet.
+  const approvedRun = await (prisma as any).auditRun.findFirst({ where: { id: String(req.params.runId), tenant_id: tenantId }, select: { ai_recommendations: true } })
+  if (!approvedRun?.ai_recommendations) {
+    await generateAuditRecommendations(tenantId, String(req.params.runId)).catch(e => console.error('[audit approve] recs:', e))
+  }
   // The signed-off report: saved against the audit and emailed to admins.
   await generateAndStoreAuditReport(tenantId, String(req.params.runId), { email: true }).catch(e => console.error('[audit approve] report pdf:', e))
   ok(res, r)

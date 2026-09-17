@@ -2195,13 +2195,13 @@ const GUIDE_SECTIONS: GuideSection[] = [
 
         <SectionBlock title="Manager sign-off">
           <p className="text-sm text-neutral-mid">
-            Turn on <strong>Require manager approval for completed audits</strong> in <strong>Settings → Audits</strong> and a completed audit goes to your care manager in the hub to review. They sign on screen to approve it, and both signatures, names and dates are saved to the audit and printed on the report.
+            Turn on <strong>Require manager approval for completed audits</strong> in <strong>Settings → Audits</strong> and a completed audit goes to your care manager in the hub to review, with an email letting them know. The AI recommendations are ready straight away, so the action plan can be started while it waits. They sign on screen to approve it, and both signatures, names and dates are saved to the audit and printed on the report.
           </p>
         </SectionBlock>
 
         <SectionBlock title="Reports and AI recommendations">
           <p className="text-sm text-neutral-mid">
-            On completion (or on sign-off, when approval is on) CareStream analyses every answer against the CQC key questions and writes recommendations: immediate actions, priority improvements, compliance notes for Safe, Effective, Caring, Responsive and Well-led, commendations and focus areas for next time.
+            On completion CareStream analyses every answer against the CQC key questions and writes recommendations: immediate actions, priority improvements, compliance notes for Safe, Effective, Caring, Responsive and Well-led, commendations and focus areas for next time.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
             A <strong>PDF report</strong> is saved with the audit, with the score, every answer and finding, the CQC tags, signatures and the recommendations. It is emailed to your admins automatically, which you can turn off in <strong>Settings → Audits</strong>. Use <strong>Download PDF</strong> on any completed audit to get it again.

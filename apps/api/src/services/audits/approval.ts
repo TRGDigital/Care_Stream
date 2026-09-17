@@ -4,6 +4,8 @@
 // approval flow: submit → pending_manager → approved / rejected (sent back).
 
 import { prisma } from '../../db/client'
+import { sendAuditUpdateEmail } from '../email/outbound'
+import { siteUrl } from '../../lib/urls'
 
 // Read the per-tenant toggle from Tenant.organisation_details (default OFF, so nothing
 // changes for existing tenants until they turn it on).
@@ -26,6 +28,34 @@ export async function submitAuditForApproval(tenantId: string, runId: string, su
     data: { approval_status: 'pending_manager', submitted_at: new Date(), submitted_by: submittedBy || null, approval_note: null },
   })
   await record(runId, tenantId, 'submitted', 'submitted', submittedBy || 'Auditor')
+  await notifyManagersOfSubmission(tenantId, runId, submittedBy).catch(e => console.error('[audit approval] notify managers:', e))
+}
+
+// Email everyone who can sign audits off (a care manager or registered manager) with a link to the
+// Audit sign-off view in their hub.
+async function notifyManagersOfSubmission(tenantId: string, runId: string, submittedBy: string): Promise<void> {
+  const db = prisma as any
+  const [run, users] = await Promise.all([
+    db.auditRun.findFirst({ where: { id: runId, tenant_id: tenantId }, select: { audit_month: true, template: { select: { name: true } }, tenant: { select: { name: true } } } }),
+    db.user.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { email: true, name: true, job_role: true } }),
+  ])
+  if (!run) return
+  const managers = (users as any[]).filter(u => u.email && /care manager|registered manager/i.test(String(u.job_role ?? '')))
+  const esc = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!))
+  const name = esc(run.template?.name ?? 'An audit')
+  const month = new Date(run.audit_month).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
+  const link = `${siteUrl()}/chat?view=audit-approvals`
+  for (const m of managers) {
+    await sendAuditUpdateEmail({
+      to: m.email, name: m.name || m.email, orgName: run.tenant?.name ?? '',
+      subject: `Audit ready for your sign-off: ${run.template?.name ?? 'Audit'}`,
+      bodyHtml: `
+        <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px">
+          <strong>${esc(submittedBy || 'A member of staff')}</strong> has completed the <strong>${name}</strong> audit for <strong>${month}</strong> and sent it to you to review and sign off.
+        </p>
+        <p style="margin:0 0 24px"><a href="${link}" style="display:inline-block;background:#0d9488;color:#fff;text-decoration:none;font-weight:600;padding:10px 18px;border-radius:8px">Review and sign off</a></p>`,
+    }).catch(e => console.error('[audit approval] email:', e))
+  }
 }
 
 // Manager approves — writes the approver's name + date onto the run for the audit trail.

@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
 import { AuditRecs } from '@/components/audit-recs'
+import { AuditActionPlan } from '@/components/admin/audit-action-plan'
 import { CqcReadinessCard } from '@/components/admin/cqc-readiness-card'
 import { persistentCache, hubKey } from '@/lib/page-cache'
 import { useIsMobileOrTablet } from '@/lib/use-device'
@@ -37,12 +38,12 @@ function periodLabel(audit_month: string | Date) {
 
 function isAnswered(q: any, a?: Answer) { return questionAnswered(q, a) }
 
-export function AuditsView({ token, userId }: { token: string; userId: string }) {
+export function AuditsView({ token, userId, isAdmin = false }: { token: string; userId: string; isAdmin?: boolean }) {
   const api = createApiClient(token)
   const [activeRunId, setActiveRunId] = useState<string | null>(null)
 
   if (activeRunId) {
-    return <AuditRunner token={token} runId={activeRunId} onExit={() => setActiveRunId(null)} />
+    return <AuditRunner token={token} runId={activeRunId} isAdmin={isAdmin} onExit={() => setActiveRunId(null)} />
   }
   return <AuditList api={api} token={token} userId={userId} onOpen={setActiveRunId} />
 }
@@ -262,7 +263,7 @@ function AuditList({ api, token, userId, onOpen }: { api: ReturnType<typeof crea
 
 // ─── Runner: answer questions, auto-save, complete ─────────────────────────────
 
-function AuditRunner({ token, runId, onExit }: { token: string; runId: string; onExit: () => void }) {
+function AuditRunner({ token, runId, isAdmin, onExit }: { token: string; runId: string; isAdmin: boolean; onExit: () => void }) {
   const api = createApiClient(token)
   const [run,       setRun]       = useState<any>(null)
   const [answers,   setAnswers]   = useState<Map<string, Answer>>(new Map())
@@ -346,7 +347,10 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
       if (!signature || !signedName.trim()) throw new Error('Sign and type your name before finishing.')
       await api.audits.signRun(runId, signature, signedName.trim())
       await api.audits.complete(runId)
-      onExit()
+      // Stay on the audit so the AI recommendations (and, for admins, the action plan) are shown.
+      const { run: r } = await api.audits.getRun(runId)
+      setRun(r)
+      window.scrollTo?.({ top: 0 })
     } catch (e: any) {
       setCompleteError(e?.message ?? 'The audit could not be completed. Please try again.')
     } finally { setCompleting(false) }
@@ -509,7 +513,7 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
             {completeError && <p className="mt-2 text-xs text-red-600">{completeError}</p>}
             <p className="mt-2 text-xs text-neutral-mid">
               {approvalRequired
-                ? 'Sends the audit to your care manager to review and approve. The AI recommendations are generated once they approve.'
+                ? 'Generates the AI recommendations and sends the audit to your care manager to review and sign off.'
                 : 'Completing generates AI recommendations and locks the audit. It will appear in your admin Audit section.'}
             </p>
           </div>
@@ -518,10 +522,14 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
         {isCompleted && (
           <div className="mt-6 rounded-xl border border-green-200 bg-green-50/50 p-4 text-sm text-neutral-dark">
             <p className="mb-1 flex items-center gap-1.5 font-semibold text-green-700"><CheckCircle2 size={15} /> Completed</p>
+            {run.approval_status === 'pending_manager' && <p className="mb-2 text-xs text-amber-700">Sent to your care manager to sign off.</p>}
             {run.ai_recommendations && <div className="mt-2"><p className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-mid">AI recommendations</p><AuditRecs text={run.ai_recommendations} /></div>}
             <button onClick={() => api.audits.reportPdfBlob(runId).then(b => { const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = 'audit-report.pdf'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 30_000) }).catch(() => {})}
               className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal">Download PDF report</button>
           </div>
+        )}
+        {isCompleted && isAdmin && run.ai_recommendations && (
+          <div className="mt-4"><AuditActionPlan token={token} runId={runId} canGenerate /></div>
         )}
       </div>
     </div>

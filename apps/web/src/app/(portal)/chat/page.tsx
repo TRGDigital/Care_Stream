@@ -473,7 +473,14 @@ function ChatPageInner() {
     createApiClient(session.accessToken).me.auditApprovals()
       .then(r => { const v = { is_manager: r.is_manager, count: r.audits.length }; setAuditApprovals(v); try { localStorage.setItem(`cs_audappr_${userId}`, JSON.stringify(v)) } catch { /* ignore */ } }).catch(() => {})
   }, [session?.accessToken, userId, trainingOnly])
-  useEffect(() => { refreshAuditApprovals() }, [refreshAuditApprovals])
+  useEffect(() => {
+    refreshAuditApprovals()
+    // An audit can be sent for sign-off while the hub is open: check again on focus and every few minutes.
+    const onFocus = () => refreshAuditApprovals()
+    window.addEventListener('focus', onFocus)
+    const timer = setInterval(refreshAuditApprovals, 3 * 60_000)
+    return () => { window.removeEventListener('focus', onFocus); clearInterval(timer) }
+  }, [refreshAuditApprovals])
 
   // Remember the plan's Supervisions entitlement for an instant, stable nav on reload.
   useEffect(() => {
@@ -1212,7 +1219,7 @@ function ChatPageInner() {
 
         {/* Audits view (admin-role staff only) */}
         {view === 'audits' && canAudit && session?.accessToken && (
-          <AuditsView token={session.accessToken} userId={userId} />
+          <AuditsView token={session.accessToken} userId={userId} isAdmin={isAdmin} />
         )}
 
         {/* Annual Training view */}

@@ -2213,9 +2213,11 @@ auditsRouter.post('/runs/:id/complete', requireAuditAccess, async (req: Request,
 
   const approvalRequired = await auditApprovalRequired(tenantId).catch(() => false)
 
-  // When manager approval is on, completing just marks it done and sends it to the care manager —
-  // fast, with NO AI call. The AI recommendations are generated once the manager approves.
+  // The AI recommendations are generated as soon as the audit is completed, so findings can be put
+  // into an action plan straight away. With manager approval on, the audit is then sent to the care
+  // manager to sign off, and the PDF report is saved when they do.
   if (approvalRequired) {
+    const recommendations = await generateAuditRecommendations(tenantId, run.id)
     const completed = await (prisma as any).auditRun.update({
       where: { id: run.id }, data: { status: 'completed', completed_at: new Date() },
     })
@@ -2224,7 +2226,8 @@ auditsRouter.post('/runs/:id/complete', requireAuditAccess, async (req: Request,
     completed.approval_status = 'pending_manager'
     completed.submitted_at    = new Date()
     completed.submitted_by    = run.auditor_name ?? null
-    ok(res, { run: completed, recommendations: null, approval_required: true })
+    completed.ai_recommendations = recommendations
+    ok(res, { run: completed, recommendations, approval_required: true })
     return
   }
 

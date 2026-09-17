@@ -684,7 +684,7 @@ export default function AuditRunPage() {
                   <p className="text-sm font-semibold text-neutral-dark">Ready to {approvalRequired ? 'send for approval' : 'complete'}?</p>
                   <p className="text-xs text-neutral-mid">
                     {approvalRequired
-                      ? 'This sends the audit to your care manager in the hub to review and approve. The AI recommendations are generated once they sign it off.'
+                      ? 'Completing generates the AI recommendations and sends the audit to your care manager in the hub to review and sign off.'
                       : 'Completing the audit generates AI recommendations and locks the report for printing.'}
                   </p>
                 </div>

@@ -14,6 +14,7 @@ import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch, coverageRunState } from '../services/analytics/regulation-coverage'
 import { getGapDetail } from '../services/analytics/gap-detail'
 import { scanTenantPolicies, getTenantLint } from '../services/analytics/policy-lint'
+import { addIgnore, removeIgnore, listIgnores, ALL_POLICIES } from '../services/analytics/lint-ignores'
 import { resolveSection, reopenSection, clearResolutions, listResolutions } from '../services/analytics/review-resolutions'
 import { buildAndCacheSets, getCachedSets, pendingClaimPolicies, extractClaimsBatch, runDetection, getConsistency, dismissConflict, resolveConflict, consistencyRunState } from '../services/analytics/policy-consistency'
 import { getReadinessScore } from '../services/analytics/readiness'
@@ -737,6 +738,47 @@ analyticsRouter.post('/policy-lint/:policyId/reopen', requireAdmin, async (req: 
   const tenantId = getTenantId()
   await reopenSection(tenantId, String(req.params.policyId), 'out_of_date')
   ok(res, { reopened: true })
+})
+
+// Ignore a lint finding the tenant judges wrong for their document ("there IS a policy
+// statement"). Scope 'policy' silences it for this policy; 'tenant' silences the check
+// across the whole account. Durable: unlike "mark as updated" it never lapses, because a
+// check that is wrong about a document does not become right when the document is edited.
+analyticsRouter.post('/policy-lint/:policyId/ignore', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const me = (req as any).user ?? {}
+  const signalKey = String(req.body?.signal_key ?? '').trim()
+  const scope = req.body?.scope === 'tenant' ? 'tenant' : 'policy'
+  if (!signalKey) { err(res, 'VALIDATION_ERROR', 'signal_key is required.', 400); return }
+
+  const target = scope === 'tenant' ? ALL_POLICIES : String(req.params.policyId)
+  await addIgnore(tenantId, target, signalKey, {
+    note: typeof req.body?.note === 'string' ? req.body.note.slice(0, 500) : null,
+    by:   me.name ?? me.email ?? null,
+  })
+  ok(res, { ignored: true, scope })
+})
+
+// Undo. Removing a per-policy ignore while a tenant-wide one still stands leaves the
+// finding hidden, so the response reports what is still in force.
+analyticsRouter.post('/policy-lint/:policyId/unignore', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const signalKey = String(req.body?.signal_key ?? '').trim()
+  const scope = req.body?.scope === 'tenant' ? 'tenant' : 'policy'
+  if (!signalKey) { err(res, 'VALIDATION_ERROR', 'signal_key is required.', 400); return }
+
+  const target = scope === 'tenant' ? ALL_POLICIES : String(req.params.policyId)
+  await removeIgnore(tenantId, target, signalKey)
+
+  const remaining = await listIgnores(tenantId)
+  const stillHidden = remaining.some(i =>
+    i.signal_key === signalKey && (i.policy_id === ALL_POLICIES || i.policy_id === String(req.params.policyId)))
+  ok(res, { unignored: true, scope, still_hidden: stillHidden })
+})
+
+// Everything this tenant has ignored — the list behind the undo.
+analyticsRouter.get('/policy-lint/ignores', requireAdmin, async (_req: Request, res: Response) => {
+  ok(res, { ignores: await listIgnores(getTenantId()) })
 })
 
 // ─── Cross-policy consistency (Phase 4b: clustering + claim extraction) ───────────

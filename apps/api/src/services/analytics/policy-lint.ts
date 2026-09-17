@@ -8,6 +8,7 @@
 import { prisma } from '../../db/client'
 import { resolvedPolicyIds } from './review-resolutions'
 import { downloadExtractedText } from '../storage/s3'
+import { loadIgnores } from './lint-ignores'
 import { mapLimit } from '../../lib/translate'
 import {
   type TextSignal, type LintSeverity, type LintCategory,
@@ -27,6 +28,11 @@ export interface LintFinding {
   count:         number                                 // total occurrences (text signals)
   terms:         string[]                               // DISTINCT matched strings (phrase + acronyms) — highlight/replace every one
   samples:       Array<{ match: string; index: number }> // kept for back-compat
+  // Set on read, never stored: a finding the tenant has judged wrong for this policy.
+  // It stays in the list so the UI can grey it out rather than silently vanish, but it
+  // is excluded from the score, the flagged counts, and whether the policy surfaces.
+  ignored?:       boolean
+  ignored_scope?: 'policy' | 'tenant'
 }
 
 export interface PolicyLintResult {
@@ -82,14 +88,15 @@ async function loadActiveSignals(): Promise<TextSignal[]> {
 // content problem.
 function scoreFromFindings(findings: LintFinding[]): number {
   const penalty = findings
-    .filter(f => f.kind !== 'review_currency')
+    .filter(f => f.kind !== 'review_currency' && !f.ignored)
     .reduce((sum, f) => sum + (SEVERITY_WEIGHT[f.severity] ?? 1), 0)
   return Math.max(0, 100 - penalty * 5)
 }
 
 // Content problems: what is actually wrong with the words in the document. "Flagged" in the
 // out-of-date section counts these only.
-const contentFindings = (findings: LintFinding[]): LintFinding[] => findings.filter(f => f.kind !== 'review_currency')
+const contentFindings = (findings: LintFinding[]): LintFinding[] =>
+  findings.filter(f => f.kind !== 'review_currency' && !f.ignored)
 
 // Is a finding's stale wording still present in the draft? Mirrors detection: phrases match
 // case-insensitively, acronyms/tokens match case-sensitively and word-bounded.
@@ -251,6 +258,16 @@ export async function getTenantLint(tenantId: string) {
   // Policies the admin has marked updated are hidden until the next scan re-flags them.
   const resolved = await resolvedPolicyIds(tenantId, 'out_of_date')
 
+  // Findings the tenant has judged wrong. Marked (not removed) so the modal can show them
+  // greyed with an undo; contentFindings() and scoreFromFindings() both skip them, so an
+  // ignored finding stops counting and a policy whose only findings are ignored drops off.
+  const ignores = await loadIgnores(tenantId)
+  const markIgnored = (policyId: string, findings: LintFinding[]): LintFinding[] =>
+    findings.map(f => {
+      const scope = ignores.scopeFor(policyId, f.signal_key)
+      return scope ? { ...f, ignored: true, ignored_scope: scope } : f
+    })
+
   // Review currency is reported separately from content problems: it is one blank field per
   // policy, fixed in one action, and when it sat in the findings list it accounted for 254 of
   // Ferndale's 320 findings and made 308 of 361 policies look defective.
@@ -263,8 +280,11 @@ export async function getTenantLint(tenantId: string) {
     .sort((a, b) => a.policy_name.localeCompare(b.policy_name))
 
   let withIssues = (rows as any[])
-    .filter(r => Array.isArray(r.findings) && contentFindings(r.findings as LintFinding[]).length > 0 && !resolved.has(r.policy_id))
-    .map(r => ({ policy_id: r.policy_id, policy_name: r.policy_name, score: r.score, findings: (r.findings as LintFinding[]).map(enrich), scanned_at: new Date(r.scanned_at).toISOString() }))
+    .map(r => ({ ...r, findings: markIgnored(r.policy_id, (Array.isArray(r.findings) ? r.findings : []) as LintFinding[]) }))
+    .filter(r => contentFindings(r.findings).length > 0 && !resolved.has(r.policy_id))
+    // Score is recomputed from the marked findings rather than read from the cached row,
+    // so ignoring a finding lifts the score immediately instead of after the next scan.
+    .map(r => ({ policy_id: r.policy_id, policy_name: r.policy_name, score: scoreFromFindings(r.findings), findings: (r.findings as LintFinding[]).map(enrich), scanned_at: new Date(r.scanned_at).toISOString() }))
     .sort((a, b) => a.score - b.score)   // worst first
 
   // Auto-clear findings the admin has already fixed in the draft: a text finding drops off once a

@@ -60,6 +60,43 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   const [fillBusy, setFillBusy] = useState<string | null>(null)
   const [filled, setFilled] = useState<Set<string>>(new Set())
 
+  // Ignored findings. Optimistic so the card greys out on click rather than after a round-trip;
+  // the server is the source of truth on the next load. Keyed by signal_key because that is what
+  // an ignore is actually about — the check, not the position in this list.
+  const [ignored, setIgnored] = useState<Map<string, 'policy' | 'tenant'>>(
+    new Map(findings.filter(f => f.ignored).map(f => [f.signal_key, f.ignored_scope ?? 'policy'])),
+  )
+  const [ignoreBusy, setIgnoreBusy] = useState<string | null>(null)
+  const [ignoreMenu, setIgnoreMenu] = useState<string | null>(null)
+  const [ignoreErr, setIgnoreErr] = useState('')
+
+  async function ignoreFinding(signalKey: string, scope: 'policy' | 'tenant') {
+    setIgnoreBusy(signalKey); setIgnoreErr(''); setIgnoreMenu(null)
+    const next = new Map(ignored); next.set(signalKey, scope); setIgnored(next)
+    try {
+      await createApiClient(token).analytics.lintIgnore(policyId, signalKey, scope)
+      onAdopted?.()   // refresh the list behind the modal: score and counts have moved
+    } catch (e: any) {
+      const revert = new Map(ignored); revert.delete(signalKey); setIgnored(revert)
+      setIgnoreErr(e?.message ?? 'Could not ignore that finding.')
+    } finally { setIgnoreBusy(null) }
+  }
+
+  async function unignoreFinding(signalKey: string) {
+    const scope = ignored.get(signalKey) ?? 'policy'
+    setIgnoreBusy(signalKey); setIgnoreErr('')
+    const next = new Map(ignored); next.delete(signalKey); setIgnored(next)
+    try {
+      const res = await createApiClient(token).analytics.lintUnignore(policyId, signalKey, scope)
+      // A tenant-wide ignore can still be hiding this even after the per-policy one is gone.
+      if (res.still_hidden) { const keep = new Map(next); keep.set(signalKey, 'tenant'); setIgnored(keep) }
+      onAdopted?.()
+    } catch (e: any) {
+      const revert = new Map(next); revert.set(signalKey, scope); setIgnored(revert)
+      setIgnoreErr(e?.message ?? 'Could not restore that finding.')
+    } finally { setIgnoreBusy(null) }
+  }
+
   // Review-date picker.
   const today = new Date().toISOString().slice(0, 10)
   const [reviewDate, setReviewDate] = useState(today)
@@ -853,27 +890,82 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
             {advisory.length > 0 && (
               <div className="space-y-2">
                 <p className="flex items-center gap-2 text-sm font-semibold text-neutral-dark"><Info size={15} className="text-neutral-mid" /> Also flagged</p>
-                {advisory.map((f, i) => (
-                  <div key={i} className="flex items-start gap-2 rounded-lg border border-gray-100 bg-neutral-light/30 px-4 py-2.5">
-                    {f.severity === 'high' ? <AlertTriangle size={14} className="mt-0.5 shrink-0 text-rose-500" /> : <Info size={14} className="mt-0.5 shrink-0 text-amber-500" />}
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-neutral-dark">{f.label}</p>
-                      {f.detail && (
-                        <div className="mt-1 flex items-start gap-1.5">
-                          <History size={12} className="mt-0.5 shrink-0 text-amber-600" />
-                          <p className="text-xs leading-relaxed text-neutral-dark">
-                            <span className="font-semibold text-amber-700">When this changed: </span>{f.detail}
-                            {(f.source_urls ?? []).map((u, k) => (
-                              <a key={k} href={u} target="_blank" rel="noopener noreferrer" className="ml-1.5 inline-flex items-center gap-0.5 align-baseline text-[11px] font-semibold text-amber-700 underline underline-offset-2 hover:no-underline">
-                                Source{(f.source_urls ?? []).length > 1 ? ` ${k + 1}` : ''}<ExternalLink size={10} />
-                              </a>
-                            ))}
+                {advisory.map((f, i) => {
+                  const isIgnored = ignored.has(f.signal_key)
+                  const scope = ignored.get(f.signal_key)
+                  const working = ignoreBusy === f.signal_key
+                  return (
+                  <div key={i} className={`relative rounded-lg border px-4 py-2.5 transition-colors ${isIgnored ? 'border-gray-100 bg-neutral-light/20 opacity-60' : 'border-gray-100 bg-neutral-light/30'}`}>
+                    <div className="flex items-start gap-2">
+                      {isIgnored
+                        ? <Info size={14} className="mt-0.5 shrink-0 text-neutral-mid" />
+                        : f.severity === 'high' ? <AlertTriangle size={14} className="mt-0.5 shrink-0 text-rose-500" /> : <Info size={14} className="mt-0.5 shrink-0 text-amber-500" />}
+                      <div className="min-w-0 flex-1">
+                        <p className={`text-sm font-medium ${isIgnored ? 'text-neutral-mid line-through' : 'text-neutral-dark'}`}>{f.label}</p>
+                        {f.detail && !isIgnored && (
+                          <div className="mt-1 flex items-start gap-1.5">
+                            <History size={12} className="mt-0.5 shrink-0 text-amber-600" />
+                            <p className="text-xs leading-relaxed text-neutral-dark">
+                              <span className="font-semibold text-amber-700">When this changed: </span>{f.detail}
+                              {(f.source_urls ?? []).map((u, k) => (
+                                <a key={k} href={u} target="_blank" rel="noopener noreferrer" className="ml-1.5 inline-flex items-center gap-0.5 align-baseline text-[11px] font-semibold text-amber-700 underline underline-offset-2 hover:no-underline">
+                                  Source{(f.source_urls ?? []).length > 1 ? ` ${k + 1}` : ''}<ExternalLink size={10} />
+                                </a>
+                              ))}
+                            </p>
+                          </div>
+                        )}
+                        {isIgnored && (
+                          <p className="mt-0.5 text-xs text-neutral-mid">
+                            Ignored{scope === 'tenant' ? ' for every policy' : ' for this policy'} — it will not be flagged again.
                           </p>
-                        </div>
-                      )}
+                        )}
+                      </div>
+
+                      {/* Ignore / undo. Kept on the right of the card so it reads as an action on
+                          this finding, not on the policy. */}
+                      <div className="shrink-0">
+                        {working ? (
+                          <Loader2 size={14} className="mt-1 animate-spin text-neutral-mid" />
+                        ) : isIgnored ? (
+                          <button
+                            type="button"
+                            onClick={() => unignoreFinding(f.signal_key)}
+                            className="rounded-md px-2 py-1 text-xs font-semibold text-neutral-mid underline underline-offset-2 hover:text-neutral-dark"
+                          >Undo</button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setIgnoreMenu(ignoreMenu === f.signal_key ? null : f.signal_key)}
+                            className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-semibold text-neutral-mid hover:border-gray-300 hover:text-neutral-dark"
+                          >Ignore</button>
+                        )}
+                      </div>
                     </div>
+
+                    {ignoreMenu === f.signal_key && !isIgnored && (
+                      <div className="mt-2 rounded-md border border-gray-200 bg-white p-2 shadow-sm">
+                        <p className="px-1 pb-1.5 text-[11px] text-neutral-mid">This check is wrong about this document. Stop flagging it:</p>
+                        <button
+                          type="button"
+                          onClick={() => ignoreFinding(f.signal_key, 'policy')}
+                          className="block w-full rounded px-2 py-1.5 text-left text-xs font-medium text-neutral-dark hover:bg-neutral-light/60"
+                        >For this policy only</button>
+                        <button
+                          type="button"
+                          onClick={() => ignoreFinding(f.signal_key, 'tenant')}
+                          className="block w-full rounded px-2 py-1.5 text-left text-xs font-medium text-neutral-dark hover:bg-neutral-light/60"
+                        >For every policy in this account</button>
+                        <button
+                          type="button"
+                          onClick={() => setIgnoreMenu(null)}
+                          className="block w-full rounded px-2 py-1.5 text-left text-xs text-neutral-mid hover:bg-neutral-light/60"
+                        >Cancel</button>
+                      </div>
+                    )}
                   </div>
-                ))}
+                )})}
+                {ignoreErr && <p className="text-xs text-rose-600">{ignoreErr}</p>}
               </div>
             )}
 

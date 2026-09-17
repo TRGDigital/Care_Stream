@@ -174,3 +174,12 @@ export function visibleQuestionIds(sections: any[], answers: Map<string, any>): 
   const byId = new Map<string, any>(all.map((q: any) => [q.id, q]))
   return new Set(all.filter((q: any) => isVisible(q, byId, answers)).map((q: any) => q.id))
 }
+
+// The audit summary's deadline for actions is picked as a date (YYYY-MM-DD). Audits from before the
+// date picker may hold free text, which is shown as it was typed.
+export function actionsDeadlineLabel(value: string | null | undefined): string {
+  const v = (value ?? '').trim()
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return v
+  const d = new Date(`${v}T00:00:00Z`)
+  return isNaN(d.getTime()) ? v : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+}

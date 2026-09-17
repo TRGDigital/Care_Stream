@@ -14,7 +14,7 @@ import { prisma } from '../../db/client'
 import { logoForPdf } from '../policy/policy-pdf'
 import { downloadFile, uploadAuditEvidence } from '../storage/s3'
 import { buildAuditReport } from './report'
-import { isScored } from '../../lib/audit-questions'
+import { actionsDeadlineLabel, isScored } from '../../lib/audit-questions'
 
 const db = prisma as any
 const TEAL = '#0f766e', DARK = '#111827', MID = '#6b7280', LINE = '#e5e7eb', RED = '#b91c1c', GREEN = '#15803d', AMBER = '#b45309'
@@ -162,7 +162,7 @@ export async function renderAuditReportPdf(tenantId: string, runId: string): Pro
   // ── Summary
   if (report.strengths || report.improvements || report.actions_deadline) {
     heading('Audit summary')
-    for (const [k, v] of [['Strengths identified', report.strengths], ['Areas requiring improvement', report.improvements], ['Deadline for actions', report.actions_deadline]] as Array<[string, string]>) {
+    for (const [k, v] of [['Strengths identified', report.strengths], ['Areas requiring improvement', report.improvements], ['Deadline for actions', actionsDeadlineLabel(report.actions_deadline)]] as Array<[string, string]>) {
       if (!v) continue
       ensure(30)
       doc.fillColor(DARK).font('Helvetica-Bold').fontSize(10).text(k)

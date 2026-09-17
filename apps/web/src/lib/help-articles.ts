@@ -48,6 +48,13 @@ export const HELP_CATEGORIES = [
     ],
   },
   {
+    icon: '🎓',
+    title: 'Staff Training',
+    articles: [
+      { title: 'The Training Matrix and required training by role', href: '/help/training/training-matrix' },
+    ],
+  },
+  {
     icon: '✅',
     title: 'Monthly Audits',
     articles: [

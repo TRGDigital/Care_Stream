@@ -29,6 +29,7 @@ import { sitesRouter } from './routes/sites'
 import { onboardingRouter } from './routes/onboarding'
 import { trainingRouter } from './routes/training'
 import { faceToFaceRouter } from './routes/face-to-face'
+import { trainingMatrixRouter } from './routes/training-matrix'
 import { workforceRouter } from './routes/workforce'
 import { cqcQuestionsRouter } from './routes/cqc-staff-questions'
 import { auditsRouter } from './routes/audits'
@@ -217,6 +218,7 @@ app.use('/onboarding', onboardingRouter)
 app.use('/training', trainingRouter)
 app.use('/programmes', programmesRouter)
 app.use('/face-to-face', faceToFaceRouter)
+app.use('/training-matrix', trainingMatrixRouter)
 app.use('/workforce', workforceRouter)
 app.use('/cqc-questions', cqcQuestionsRouter)
 app.use('/audits', auditsRouter)

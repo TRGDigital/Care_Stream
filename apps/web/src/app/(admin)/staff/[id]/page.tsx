@@ -9,6 +9,7 @@ import { InfoTip } from '@/components/info-tip'
 import { TrainingCertificate } from '@/components/training-certificate'
 import { SignInLinkButton } from '@/components/admin/staff/sign-in-link'
 import { SupervisionRecordModal } from '@/components/admin/supervision-record-modal'
+import { MATRIX_STATUS, MatrixBadge } from '@/components/admin/training/training-matrix-shared'
 import {
   ArrowLeft, Award, BadgeCheck, Bell, BookOpen, Brain, CalendarDays, CheckCircle2, ClipboardList, Clock, Download, Globe, GraduationCap,
   Lightbulb, ListChecks, Loader2, MessageSquare, Paperclip, Pencil, RefreshCw, RotateCcw, ShieldAlert, TrendingUp, XCircle,
@@ -28,6 +29,7 @@ const TIP = {
   remediation: "When this person gets a follow-up question wrong, how do they put it right? 'Learn & retry' means they worked through the policy-grounded micro-lesson before answering; 'Just retry' means they re-answered the same question without it. A healthy lean towards 'Learn & retry' suggests they're genuinely engaging with the learning, not just clicking through.",
   engagement: "How actively they use CareStream: questions asked in the Chat Hub, the topics they ask about, CQC prep answered, and login history. Low engagement alongside overdue training is an early warning sign.",
   trends:     "Modules and induction flows they completed in each of the last 6 months — a quick read on momentum.",
+  required:   "The training their job role must hold, as set in Training > Training Matrix (digital courses) and on the Face-to-face tab (mandatory face-to-face topics). The percentage is how much of it is in date. 'Required, not assigned' means it has not been given to them yet.",
   timeline:   "A chronological record of their training and induction activity. Handy as CQC evidence of ongoing development and supervision.",
 }
 
@@ -425,6 +427,54 @@ export default function StaffRecordPage() {
             ) : <p className="text-sm text-neutral-mid">No benchmark data.</p>}
           </div>
         </div>
+
+        {/* Required training for their role (same rules as Training > Training Matrix) */}
+        {rec.required_training && (rec.required_training.items.length > 0 || rec.required_training.safe_to_work) && (
+          <div className="pdf-card rounded-card border border-gray-100 bg-white shadow-card">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 px-5 py-3.5">
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><ListChecks size={15} className="text-teal" /> Required training for {u.job_role || 'all staff'} <InfoTip text={TIP.required} /></p>
+              {rec.required_training.compliance_pct !== null && (
+                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold leading-none ${rec.required_training.compliance_pct === 100 ? 'bg-green-100 text-green-700' : rec.required_training.compliance_pct >= 80 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+                  {rec.required_training.met}/{rec.required_training.required} in date · {rec.required_training.compliance_pct}%
+                </span>
+              )}
+            </div>
+            {rec.required_training.items.length === 0 ? (
+              <p className="px-5 py-4 text-sm text-neutral-mid">No required training is set for this role. <a href="/training?tab=matrix" className="text-teal hover:underline print:hidden">Set it in the Training Matrix</a></p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead><tr className="border-b border-gray-50 text-left text-xs text-neutral-mid">
+                  <th className="px-5 py-2 font-medium">Training</th>
+                  <th className="px-3 py-2 font-medium">Type</th>
+                  <th className="px-3 py-2 font-medium">Status</th>
+                  <th className="px-3 py-2 font-medium">Completed</th>
+                  <th className="px-3 py-2 font-medium">Valid until / due</th>
+                </tr></thead>
+                <tbody>
+                  {rec.required_training.items.map((i: any) => (
+                    <tr key={i.key} className="border-b border-gray-50 last:border-0">
+                      <td className="px-5 py-2.5 text-neutral-dark">{i.label}</td>
+                      <td className="px-3 py-2.5 text-xs text-neutral-mid">{i.kind === 'face_to_face' ? 'Face-to-face' : 'Digital'}</td>
+                      <td className="px-3 py-2.5">
+                        <span className="flex items-center gap-1.5 text-xs text-neutral-dark"><MatrixBadge cell={i} size="sm" /> {MATRIX_STATUS[i.status as keyof typeof MATRIX_STATUS]?.label ?? i.status}</span>
+                      </td>
+                      <td className="px-3 py-2.5 text-xs text-neutral-mid">{i.completed_at ? fmtDate(i.completed_at) : '—'}</td>
+                      <td className="px-3 py-2.5 text-xs text-neutral-mid">{i.valid_until ? fmtDate(i.valid_until) : i.due_date ? `Due ${fmtDate(i.due_date)}` : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            {rec.required_training.safe_to_work && (
+              <div className="flex flex-wrap items-center gap-2 border-t border-gray-100 px-5 py-3 text-xs text-neutral-mid">
+                <span className="font-medium text-neutral-dark">Safe to work checks:</span>
+                <MatrixBadge cell={rec.required_training.safe_to_work} size="sm" />
+                <span>{rec.required_training.safe_to_work.detail}</span>
+                <a href="/workforce" className="ml-auto text-teal hover:underline print:hidden">Update on the Workforce page</a>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Training record */}
         <div className="pdf-card rounded-card border border-gray-100 bg-white shadow-card">

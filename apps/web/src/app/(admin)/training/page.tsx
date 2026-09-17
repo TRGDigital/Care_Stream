@@ -34,6 +34,7 @@ import {
 const AssignModal          = dynamic(() => import('@/components/admin/training/training-modals').then(m => m.AssignModal),          { ssr: false })
 const EnrollmentModal      = dynamic(() => import('@/components/admin/training/training-modals').then(m => m.EnrollmentModal),      { ssr: false })
 const PerModuleAssignModal = dynamic(() => import('@/components/admin/training/training-modals').then(m => m.PerModuleAssignModal), { ssr: false })
+const TrainingMatrixTab    = dynamic(() => import('@/components/admin/training/training-matrix-tab').then(m => m.TrainingMatrixTab), { ssr: false })
 const RuleModal            = dynamic(() => import('@/components/admin/training/training-modals').then(m => m.RuleModal),            { ssr: false })
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -2147,10 +2148,10 @@ export default function TrainingPage() {
   const userId = session?.user?.email ?? 'guest'
   // Deep-linkable: /training?tab=modules|history|delivery|face_to_face opens
   // straight on that tab (used by CareStream Suggestions and other links).
-  const [tab,         setTab]         = useState<'compliance' | 'modules' | 'history' | 'delivery' | 'face_to_face' | 'progress'>(() => {
+  const [tab,         setTab]         = useState<'compliance' | 'modules' | 'history' | 'delivery' | 'face_to_face' | 'progress' | 'matrix'>(() => {
     if (typeof window === 'undefined') return 'compliance'
     const t = new URLSearchParams(window.location.search).get('tab')
-    return (['compliance', 'modules', 'history', 'delivery', 'face_to_face', 'progress'] as const).find(k => k === t) ?? 'compliance'
+    return (['compliance', 'modules', 'history', 'delivery', 'face_to_face', 'progress', 'matrix'] as const).find(k => k === t) ?? 'compliance'
   })
   const [staff,       setStaff]       = useState<Staff[]>([])
   const [modules,     setModules]     = useState<Module[]>([])
@@ -2299,6 +2300,7 @@ export default function TrainingPage() {
           { key: 'delivery',   label: 'Schedule Training Questions Delivery' },
           { key: 'progress',   label: 'Staff Progress' },
           { key: 'face_to_face', label: 'Face-to-face Training' },
+          { key: 'matrix',     label: 'Training Matrix' },
         ] as const).map(t => {
           const isFtf = t.key === 'face_to_face'   // distinct colour to set it apart
           return (
@@ -2340,6 +2342,10 @@ export default function TrainingPage() {
       ) : (
         <FaceToFaceManager token={session?.accessToken} />
       ))}
+
+      {tab === 'matrix' && session?.accessToken && (
+        <TrainingMatrixTab token={session.accessToken} onOpenFaceToFace={() => setTab('face_to_face')} />
+      )}
 
       {tab === 'compliance' && <>
 

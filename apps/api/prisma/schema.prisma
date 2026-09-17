@@ -1791,6 +1791,22 @@ model FaceToFaceMandatory {
   @@map("face_to_face_mandatory")
 }
 
+// Digital training each job role must hold, for the Training Matrix. job_role "*" means
+// every staff member. Face-to-face requirements stay in FaceToFaceMandatory (set on the
+// Face-to-face tab); the matrix reads both.
+model TrainingRoleRequirement {
+  id          String   @id @default(uuid())
+  tenant_id   String
+  job_role    String                                       // matches users.job_role, or "*" for all staff
+  module_id   String
+  module_name String                                       // snapshot for display
+  created_at  DateTime @default(now())
+
+  @@unique([tenant_id, job_role, module_id])
+  @@index([tenant_id])
+  @@map("training_role_requirements")
+}
+
 // ─── Onboarding ───────────────────────────────────────────────────────────────
 
 model OnboardingFlow {

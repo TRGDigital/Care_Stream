@@ -8,7 +8,7 @@ import {
   FileText, Users, MessageSquare, Mail, ClipboardCheck,
   GraduationCap, BarChart2, BookOpen, ShieldAlert, Settings, Zap, ClipboardList,
   LifeBuoy, Upload, CheckCircle, Info, UserPlus, RefreshCw, CalendarDays, Lightbulb, Loader2, Building2, BadgeCheck,
-  UserRound, BriefcaseBusiness,
+  UserRound, BriefcaseBusiness, ListChecks,
 } from 'lucide-react'
 
 function FeatureRequestModal({ open, onClose, token }: { open: boolean; onClose: () => void; token?: string }) {
@@ -548,6 +548,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <p><strong className="text-neutral-dark">Completion rings</strong>: the share of assigned items finished: training modules, induction flows, and the average quiz score across completed modules. Aim for 100%; a low average score is an early sign someone may not have understood the material.</p>
             <p><strong className="text-neutral-dark">Needs attention</strong>: a coloured banner listing anything outstanding (overdue or expired training, overdue/stalled induction, never logged in). Red = urgent.</p>
             <p><strong className="text-neutral-dark">How they compare to the team</strong>: the teal bar is this person's figure; the dark tick is your home's average. A bar sitting left of the tick is below average and may be worth a conversation.</p>
+            <p><strong className="text-neutral-dark">Required training for their role</strong>: the training their job role must hold, with a status and dates for each course, a percentage in date, and their safe to work checks from the Workforce page. It uses the same rules as the <strong>Training Matrix</strong> tab, so the two always agree, and it is included in the CQC evidence PDF.</p>
             <p><strong className="text-neutral-dark">Training record</strong>: every module with its status and <strong>score</strong> (the % of quiz questions answered correctly). "Expires" applies to annual modules due for renewal; "Overdue" means past the due date and not complete. <strong>Reset</strong> clears a module so they can retake it.</p>
             <p><strong className="text-neutral-dark">Induction record</strong>: their onboarding flows, with a bar showing steps completed and an "X/Y correct" count for the question steps.</p>
             <p><strong className="text-neutral-dark">Engagement</strong>: how actively they use CareStream: questions asked in the portal, the topics they ask about, CQC prep answered, and logins. Low engagement alongside overdue training is a useful early warning.</p>
@@ -1835,6 +1836,50 @@ const GUIDE_SECTIONS: GuideSection[] = [
           </ul>
         </SectionBlock>
         <Tip>Face-to-face is admin-only. Staff don&apos;t see the calendar; they only receive the digital module if you choose to send it to them.</Tip>
+      </div>
+    ),
+  },
+  {
+    id:      'training-matrix',
+    icon:    ListChecks,
+    title:   'Training Matrix',
+    summary: 'Set the training each job role needs, then see every staff member against it in one grid with face-to-face and safe to work checks, and export it for inspection',
+    content: (
+      <div className="space-y-5">
+        <SectionBlock title="What it's for">
+          <p className="text-sm text-neutral-mid">
+            The <strong>Training Matrix</strong> tab (under <strong>Training</strong>, next to Face-to-face Training) answers the question an inspector asks first: is every member of staff trained for the job they do? It shows each staff member against the training <strong>their job role requires</strong>, so a cook and a nurse are each measured against their own list, and gaps are flagged even when the training was never assigned.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Set the training each role needs">
+          <div className="space-y-3">
+            <Step n={1}>Go to <strong>Training</strong> and open the <strong>Training Matrix</strong> tab.</Step>
+            <Step n={2}>Click <strong>Required training by role</strong>.</Step>
+            <Step n={3}>Pick <strong>All staff</strong> for training everyone needs, then tick the courses. Courses are grouped into adhoc training, pre-built training and CPD approved courses, with a search box.</Step>
+            <Step n={4}>Pick each job role in turn and tick the extra courses that role needs, then click <strong>Save requirements</strong>.</Step>
+          </div>
+          <div className="mt-3"><Tip>Staff are matched by the <strong>job role</strong> on their staff profile, so make sure each person has one on the Staff page. Anyone without a job role is only measured against <em>All staff</em> training.</Tip></div>
+        </SectionBlock>
+        <SectionBlock title="Where face-to-face and safe to work checks come from">
+          <ul className="list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong>Face-to-face</strong>: topics you mark mandatory for a role on the <strong>Face-to-face Training</strong> tab appear in the matrix automatically, using attendance and renewal dates. They are still set on that tab; the role picker shows them for reference.</li>
+            <li><strong>Safe to work</strong> (Enterprise): DBS, right to work, passport, professional registration and references recorded on the <strong>Workforce</strong> page show as one column. Upload and update them on that page. Agency workers show as <strong>A</strong>, because their agency holds those checks.</li>
+          </ul>
+        </SectionBlock>
+        <SectionBlock title="Reading the matrix">
+          <div className="space-y-2 text-sm text-neutral-mid">
+            <p><strong className="text-neutral-dark">Summary cards</strong>: fully compliant staff, required training not yet assigned, required training expired or overdue, and renewals due in the next 60 days.</p>
+            <p><strong className="text-neutral-dark">Compliance %</strong>: next to each name, the share of their required training that is in date (green at 100%, amber from 80%, red below).</p>
+            <p><strong className="text-neutral-dark">Cells</strong>: ✓ in date, ⏳ renewal due soon, ✕ expired or overdue, P practical still to sign off, ◔ in progress, ○ assigned but not started, a red <strong>!</strong> required but not assigned, and · not required. A faded cell is training the person holds that their role does not require. Hover a cell for dates; click it to open their staff record, or the Workforce page for safe to work.</p>
+            <p><strong className="text-neutral-dark">Filters</strong>: search by name, filter by job role (including staff with no job role), and tick <strong>Gaps only</strong> to list just the people with something outstanding.</p>
+          </div>
+        </SectionBlock>
+        <SectionBlock title="Exporting for an inspection">
+          <p className="text-sm text-neutral-mid">
+            Click <strong>CSV</strong> to download the matrix as a spreadsheet, or <strong>Print / PDF</strong> for a landscape page you can print or save as PDF. Both follow the filters you have set. Each staff record also has a <strong>Required training for their role</strong> section, included in its <strong>CQC evidence (PDF)</strong>.
+          </p>
+        </SectionBlock>
+        <Tip>The Compliance tab still shows every course that has been assigned, grouped by type. The Training Matrix is the view by role requirement; use both.</Tip>
       </div>
     ),
   },

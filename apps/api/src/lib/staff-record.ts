@@ -4,6 +4,7 @@
 // "My Progress" view (/me/progress).
 
 import { prisma } from '../db/client'
+import { buildTrainingMatrix } from './training-matrix'
 
 const DAY = 86_400_000
 
@@ -405,6 +406,24 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     count: (certRows as any[]).length,
   }
 
+  // ── Required training for their role (the same rules as the Training Matrix tab) ──
+  let requiredTraining: any = null
+  const matrix = await buildTrainingMatrix(tenantId, { userId }).catch(() => null)
+  const mRow = matrix?.rows[0]
+  if (matrix && mRow) {
+    const items = matrix.columns
+      .filter(c => c.kind !== 'safe_to_work' && mRow.cells[c.key]?.required)
+      .map(c => ({ key: c.key, kind: c.kind, label: c.label, ...mRow.cells[c.key] }))
+    requiredTraining = {
+      job_role: mRow.job_role, required: mRow.required, met: mRow.met, compliance_pct: mRow.compliance_pct,
+      items, safe_to_work: mRow.cells.safe_to_work ?? null,
+    }
+    const missing = items.filter(i => i.status === 'missing').length
+    if (missing > 0) flags.push({ level: 'high', kind: 'required_missing', label: `${missing} required course${missing > 1 ? 's' : ''} for their role not yet assigned` })
+    const stw = mRow.cells.safe_to_work
+    if (stw && (stw.status === 'missing' || stw.status === 'expired')) flags.push({ level: 'high', kind: 'safe_to_work', label: `Safe to work checks: ${stw.detail}` })
+  }
+
   return {
     user: {
       id: user.id, name: user.name, email: user.email, role: user.role, job_role: user.job_role,
@@ -417,6 +436,7 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     annual_training: { items: annualTraining, summary: annualSummary },
     onboarding: { items: onboarding, summary: onboardingSummary },
     face_to_face: faceToFace,
+    required_training: requiredTraining,
     certificates,
     engagement, flags, trends, timeline, benchmarks, reading,
     induction_questions: inductionQuestions,

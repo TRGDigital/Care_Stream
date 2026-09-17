@@ -32,6 +32,32 @@ export type PolicyHistoryEntry = {
 }
 
 /** A regulation in scope with no policy behind it, from GET /analytics/gaps/missing-policies. */
+export type TrainingMatrixStatus =
+  | 'in_date' | 'due_soon' | 'expired' | 'overdue' | 'practical_due'
+  | 'in_progress' | 'not_started' | 'missing' | 'none' | 'agency'
+export type TrainingMatrixCell = {
+  status: TrainingMatrixStatus; required: boolean; enrollment_id?: string | null
+  completed_at?: string | null; due_date?: string | null; valid_until?: string | null; detail?: string | null
+}
+export type TrainingMatrix = {
+  columns: Array<{ key: string; kind: 'digital' | 'face_to_face' | 'safe_to_work'; label: string; module_id: string | null }>
+  rows: Array<{
+    user_id: string; name: string; job_role: string | null; is_agency: boolean
+    required: number; met: number; gaps: number; compliance_pct: number | null; safe_to_work_ok: boolean | null
+    cells: Record<string, TrainingMatrixCell>
+  }>
+  summary: { staff: number; fully_compliant: number; missing: number; expired_or_overdue: number; due_soon: number; no_requirements: number }
+  features: { face_to_face: boolean; workforce: boolean }
+  has_requirements: boolean
+}
+export type TrainingRequirementsConfig = {
+  items: Array<{ job_role: string; module_id: string; module_name: string }>
+  face_to_face: Array<{ job_role: string; module_id: string; module_name: string }>
+  roles: Array<{ name: string; staff: number }>
+  unassigned_staff: number
+  modules: Array<{ id: string; name: string; category: string; group: 'adhoc' | 'prebuilt' | 'cpd' }>
+}
+
 export type MissingPolicyReport = {
   analysed: boolean
   analysed_at: string | null
@@ -1159,6 +1185,14 @@ export function createApiClient(token: string) {
       conducting: () => apiFetch<{ records: Array<{ id: string; type: string; held_on: string; status: string; next_due: string | null; completed_at: string | null; supervisee_id: string; supervisee: string; supervisee_role: string | null }> }>('/me/conducting', token),
       conductingDetail: (id: string) => apiFetch<{ record: { id: string; type: string; held_on: string; next_due: string | null; status: string; completed_at: string | null; form: any; conducted_by: string | null; supervisee_id: string; supervisee: string; supervisee_role: string | null }; libraries: { training: Array<{ id: string; name: string }>; induction: Array<{ id: string; name: string }>; cqc: Array<{ id: string; name: string; domain: string }> } }>(`/me/conducting/${encodeURIComponent(id)}`, token),
       completeConducting: (id: string, body: { form: any; next_date?: string | null }) => apiFetch<{ ok: boolean }>(`/me/conducting/${encodeURIComponent(id)}/complete`, token, { method: 'POST', body: JSON.stringify(body) }),
+    },
+
+    // Training > Training Matrix: staff against the training their role requires.
+    trainingMatrix: {
+      get: () => apiFetch<TrainingMatrix>('/training-matrix', token),
+      requirements: () => apiFetch<TrainingRequirementsConfig>('/training-matrix/requirements', token),
+      saveRequirements: (items: Array<{ job_role: string; module_id: string }>) =>
+        apiFetch<{ count: number }>('/training-matrix/requirements', token, { method: 'PUT', body: JSON.stringify({ items }) }),
     },
 
     faceToFace: {

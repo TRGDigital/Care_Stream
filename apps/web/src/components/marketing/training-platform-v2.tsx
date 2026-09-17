@@ -30,10 +30,11 @@ const SECTIONS: { key: string; img: string; tint: boolean; flip: boolean }[] = [
   { key: 'matrix', img: '5', tint: false, flip: true },
 ]
 
+// Sections have three items; a section may add up to three more in its copy.
 function Items({ s, k, from }: { s: Copy; k: string; from: number }) {
   return (
     <ul className="tpitems">
-      {[1, 2, 3].map(n => {
+      {[1, 2, 3, 4, 5, 6].map(n => {
         const title = s(`${k}.i${n}.title`)
         if (!title) return null
         return (
@@ -41,7 +42,7 @@ function Items({ s, k, from }: { s: Copy; k: string; from: number }) {
             <span className="ic">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
                    strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <Shapes shapes={TRAINING_PLATFORM_ICONS[from + n - 1] ?? []} />
+                <Shapes shapes={(n <= 3 ? TRAINING_PLATFORM_ICONS[from + n - 1] : TRAINING_PLATFORM_ICONS[from + ((n - 1) % 3)]) ?? []} />
               </svg>
             </span>
             <span><b>{title}</b><p>{s(`${k}.i${n}.body`)}</p></span>

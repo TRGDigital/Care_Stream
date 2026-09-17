@@ -38,7 +38,7 @@ workforceRouter.use(async (req: Request, res: Response, next) => {
   catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } next(e) }
 })
 
-const CREDENTIAL_TYPES = ['dbs', 'right_to_work', 'passport', 'professional_registration', 'reference'] as const
+export const CREDENTIAL_TYPES = ['dbs', 'right_to_work', 'passport', 'professional_registration', 'reference'] as const
 type CredType = typeof CREDENTIAL_TYPES[number]
 
 // Traffic-light status for a credential of a given type.
@@ -53,6 +53,9 @@ function statusFor(type: string, present: boolean, expiresAt: Date | null): stri
   if (ms < now) return 'expired'
   return (ms - now) / 86_400_000 <= 30 ? 'expiring' : 'valid'
 }
+
+// The Training Matrix's "Safe to work" column uses the same rules as this register.
+export const credentialStatus = statusFor
 
 // Shape a stored credential row (or null) into the API response for one type.
 function shapeCredential(type: string, row: any) {

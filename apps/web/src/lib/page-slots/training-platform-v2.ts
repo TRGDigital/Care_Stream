@@ -51,6 +51,12 @@ export const TRAINING_PLATFORM_V2_SLOTS: SlotDef[] = [
   { key: 'matrix.i2.body', group: 'The matrix', label: 'Item 2 body', multiline: true, default: 'Annual training, adhoc policy modules and face to face sessions all appear in the same matrix, not three different systems.' },
   { key: 'matrix.i3.title', group: 'The matrix', label: 'Item 3 title', default: 'Renewals before they lapse' },
   { key: 'matrix.i3.body', group: 'The matrix', label: 'Item 3 body', multiline: true, default: 'See what is complete, in progress or outstanding the moment you open it, and what is due for renewal next.' },
+  { key: 'matrix.i4.title', group: 'The matrix', label: 'Item 4 title', default: 'Required training by job role' },
+  { key: 'matrix.i4.body', group: 'The matrix', label: 'Item 4 body', multiline: true, default: 'Set the courses each role must hold, and everyone is measured against their own list, with gaps flagged even when training was never assigned.' },
+  { key: 'matrix.i5.title', group: 'The matrix', label: 'Item 5 title', default: 'Safe to work checks alongside training' },
+  { key: 'matrix.i5.body', group: 'The matrix', label: 'Item 5 body', multiline: true, default: 'DBS, right to work and professional registration from your workforce register sit in the same row, so one view shows who is ready to work.' },
+  { key: 'matrix.i6.title', group: 'The matrix', label: 'Item 6 title', default: 'Ready for inspection' },
+  { key: 'matrix.i6.body', group: 'The matrix', label: 'Item 6 body', multiline: true, default: 'A compliance percentage for every staff member, filters for gaps and job roles, and a CSV or PDF export, with the same record on each staff profile.' },
 
   { key: 'steps.label', group: 'When someone gets it wrong', label: 'Eyebrow', default: 'When someone gets it wrong' },
   { key: 'steps.h2', group: 'When someone gets it wrong', label: 'Heading', default: 'Wrong answers become lessons, not failures' },

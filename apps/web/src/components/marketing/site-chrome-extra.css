@@ -97,3 +97,7 @@
   .cschrome .faccred-row img.wide{height:50px}
   .cschrome .faccred-pending{height:44px;font-size:.7rem}
 }
+.cschrome .faccred-note{
+  margin:10px 0 0;text-align:center;
+  font-size:.75rem;color:var(--muted);
+}

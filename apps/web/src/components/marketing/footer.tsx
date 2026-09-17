@@ -37,9 +37,12 @@ const BADGES: Badge[] = [
   },
   {
     src: '/badges/cpd-certification-service.png', w: 189, h: 120, wide: true,
-    alt: 'The CPD Certification Service',
-    href: 'https://cpduk.co.uk/',
-    label: 'CPD certified training',
+    // CareStream is an accredited CPD PROVIDER (No. 50224). The training modules
+    // themselves are still going through certification, so nothing here may say or
+    // imply "CPD certified training" — that claim belongs to a module, not to us.
+    alt: 'CPD Certification Service accredited provider',
+    href: 'https://www.cpduk.co.uk/providers/carestream',
+    label: 'CPD accredited provider',
   },
   {
     src: '/badges/ico-registered.png', w: 119, h: 120,
@@ -49,13 +52,14 @@ const BADGES: Badge[] = [
     label: 'ICO registered',
   },
   {
-    // The Disability Confident mark is Crown Copyright and must not be rebuilt or altered, and
-    // the badge differs by level (Committed / Employer / Leader). DWP issues the correct file
-    // with the accreditation, so it is dropped in here rather than recreated.
+    // Level 1, Committed (Pantone 227C). The mark is Crown Copyright and must not be
+    // rebuilt, recoloured or altered, and each level has its own badge — so the file DWP
+    // issued with the accreditation goes in public/badges and `pending` comes off. Do not
+    // substitute a redrawn or scraped copy. The badge is valid for 3 years from sign-up.
     src: '', w: 120, h: 120, pending: true,
-    alt: 'Disability Confident',
+    alt: 'Disability Confident Committed',
     href: 'https://www.gov.uk/government/collections/disability-confident-campaign',
-    label: 'Disability Confident',
+    label: 'Disability Confident Committed',
   },
 ]
 
@@ -195,6 +199,9 @@ export async function MarketingFooter() {
                 </li>
               ))}
             </ul>
+            <p className="faccred-note">
+              CPD Provider No. 50224 · ICO registration ZC221613
+            </p>
           </div>
 
           <div className="fbase">

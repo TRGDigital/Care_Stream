@@ -1,7 +1,9 @@
 /* The website AI chat. Scoped to .cschat, with the theme's tokens on the wrapper. */
 .cschat{
   --ink:#17121F;--ink-2:#3A3245;--muted:#6B6577;--line:#E9E5EF;--ground:#FFFFFF;--ground-2:#F7F5FA;
-  --accent:#7B3FBF;--accent-soft:#F3EDFA;--good:#1F8A5B;
+  --accent:#7B3FBF;--accent-2:#C2503E;--accent-soft:#F3EDFA;--good:#1F8A5B;
+  /* The home page headline's gradient ("evidence for your teams"), used as the chat's outline. */
+  --ring:linear-gradient(96deg,var(--accent) 8%,var(--accent-2) 92%);
   position:fixed;right:20px;bottom:20px;z-index:60;font-size:15px;line-height:1.5;color:var(--ink);
   -webkit-font-smoothing:antialiased;
 }
@@ -10,8 +12,8 @@
 .cschat svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* Launcher */
-.cschat-launch{position:relative;display:flex;align-items:center;gap:10px;padding:6px 18px 6px 6px;border:1px solid var(--line);
-  border-radius:999px;background:var(--ground);color:var(--ink);font-weight:650;letter-spacing:-.01em;
+.cschat-launch{position:relative;display:flex;align-items:center;gap:10px;padding:5px 18px 5px 5px;border:3px solid transparent;
+  border-radius:999px;background:linear-gradient(var(--ground),var(--ground)) padding-box,var(--ring) border-box;color:var(--ink);font-weight:650;letter-spacing:-.01em;
   box-shadow:0 2px 6px rgba(23,18,31,.08),0 14px 34px rgba(23,18,31,.16);transition:transform .2s ease,box-shadow .2s ease}
 .cschat-launch:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(23,18,31,.10),0 18px 40px rgba(23,18,31,.20)}
 .cschat-dot{position:absolute;left:36px;top:6px;width:11px;height:11px;border-radius:50%;background:var(--good);border:2px solid #fff}
@@ -24,7 +26,8 @@
 
 /* Panel */
 .cschat-panel{width:380px;height:min(640px,calc(100vh - 40px));display:flex;flex-direction:column;background:var(--ground);
-  border:1px solid var(--line);border-radius:22px;overflow:hidden;
+  border:3px solid transparent;background:linear-gradient(var(--ground),var(--ground)) padding-box,var(--ring) border-box;
+  border-radius:22px;overflow:hidden;
   box-shadow:0 4px 12px rgba(23,18,31,.08),0 30px 70px rgba(23,18,31,.22);animation:cschat-in .22s ease-out}
 .cschat.wide .cschat-panel{width:min(720px,calc(100vw - 40px));height:min(820px,calc(100vh - 40px))}
 @keyframes cschat-in{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}

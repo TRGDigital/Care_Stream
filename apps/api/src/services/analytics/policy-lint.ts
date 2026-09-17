@@ -115,6 +115,23 @@ function findingResolvedInDraft(f: LintFinding, draft: string, adoptedRefs: Set<
   return f.terms.every(t => !termInDraft(draft, t))
 }
 
+// Does the document say anywhere what it is for and who it applies to?
+//
+// Whitespace is normalised first because extraction routinely breaks a heading across a
+// line ("Policy\nStatement") or pads it out of a table cell ("Policy  Statement"). The
+// old single-space pattern missed those, and the policy then got flagged for lacking a
+// statement it plainly had — while the AI formatter, reading straight through the break,
+// rendered the heading correctly in the preview. The tenant saw one thing and the linter
+// judged another.
+//
+// Deliberately still a plain keyword test on the RAW text, not the formatted HTML: the
+// formatter can infer a heading that was never written, and a compliance check must not
+// be satisfied by something the model made up.
+export function hasStructureAnchor(text: string): boolean {
+  const flat = (text ?? '').replace(/\s+/g, ' ')
+  return /policy\s*statement|purpose|scope|\baim\b|introduction/i.test(flat)
+}
+
 // Lint a single policy's text + row. Pure function (no I/O) so it's easy to test.
 export function lintPolicyText(
   text: string,
@@ -154,7 +171,7 @@ export function lintPolicyText(
       detail: 'The extracted policy text is under ~600 characters, which usually means a stub, a cover sheet, or a failed text extraction rather than a complete policy.',
       superseded_by: null, source_urls: [], kind: 'structure', count: 1, terms: [], samples: [],
     })
-  } else if (!/policy statement|purpose|scope|\baim\b|introduction/i.test(body)) {
+  } else if (!hasStructureAnchor(body)) {
     findings.push({
       signal_key: 'missing-purpose-scope', category: 'structure', severity: 'medium',
       label: 'No policy statement, purpose or scope',

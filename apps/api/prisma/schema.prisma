@@ -155,7 +155,8 @@ model Plan {
   has_effectiveness            Boolean  @default(false)  // Effectiveness of Training analytics
   has_training_impact          Boolean  @default(false)  // audits linked to training + Training Impact analytics
   has_workforce_compliance     Boolean  @default(false)  // Enterprise: workforce compliance register (DBS/RTW/registration/references)
-  monthly_ai_credit_limit      Int?     // AI generation credits/month (training, CQC, onboarding…); null = unlimited
+  monthly_ai_credit_limit      Int?     // legacy per-action credit meter; superseded by monthly_ai_token_limit
+  monthly_ai_token_limit       Int?     // AI tokens/month, 12% of the plan's value at the reference rate; null = unlimited
   monthly_annual_license_limit Int?     // annual-training-module allocations per month (1 = one module to one staff member); null = unlimited
   price_monthly_pence          Int                       // stored in pence (UK)
   price_annual_pence           Int?     // annual price in pence, where billed annually

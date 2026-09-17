@@ -1608,6 +1608,12 @@ function TenantAiUsage({ token, id }: { token: string; id: string }) {
   if (!d) return null
   const ACTION_LABEL: Record<string, string> = { training: 'Annual training', training_image: 'Training images', cqc_questions: 'CQC questions', training_questions: 'Training questions', translation: 'Translations', policy_format: 'Policy formatting', audit_recs: 'Audit recommendations', remediation: 'Learn & retry lessons', other: 'Other' }
   const c = d.credits, q = d.queries
+  const tk = (d as any).tokens as { used: number; limit: number | null; remaining: number | null; cost_usd?: number } | undefined
+  const tokPct = tk?.limit ? Math.min(100, Math.round((tk.used / tk.limit) * 100)) : 0
+  // 6,000,000 -> "6M". Matches what the tenant sees on their own dashboard.
+  const fmtTok = (n: number) => n >= 1_000_000
+    ? `${n / 1_000_000 >= 10 ? Math.round(n / 1_000_000) : (n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
+    : n >= 1_000 ? `${Math.round(n / 1_000)}k` : String(n)
   const otherAi: Array<[string, number]> = Object.entries(d.other_ai ?? {})
 
   return (
@@ -1619,8 +1625,18 @@ function TenantAiUsage({ token, id }: { token: string; id: string }) {
 
       <div className="mb-4 grid gap-3 sm:grid-cols-2">
         <div className="rounded-lg border border-gray-100 bg-neutral-light/40 p-3">
-          <p className="text-xs font-medium text-neutral-mid">AI credits (generation)</p>
-          <p className="mt-0.5 text-xl font-bold text-neutral-dark">{c.used}<span className="text-sm font-medium text-neutral-mid"> / {c.limit ?? '∞'}</span></p>
+          <p className="text-xs font-medium text-neutral-mid">AI tokens (this month&apos;s allowance)</p>
+          <p className="mt-0.5 text-xl font-bold text-neutral-dark">{fmtTok(tk?.used ?? 0)}<span className="text-sm font-medium text-neutral-mid"> / {tk?.limit == null ? '∞' : fmtTok(tk.limit)}</span></p>
+          {tk?.limit != null && (
+            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-gray-200">
+              <div className={`h-1.5 rounded-full ${tokPct >= 90 ? 'bg-red-500' : tokPct >= 70 ? 'bg-amber-400' : 'bg-teal'}`} style={{ width: `${tokPct}%` }} />
+            </div>
+          )}
+          <p className="mt-1 text-[11px] text-neutral-mid">
+            {tk?.limit == null ? 'Unlimited on this plan' : `${fmtTok(tk.remaining ?? 0)} left`}
+            {tk?.cost_usd != null ? ` · $${tk.cost_usd.toFixed(2)} real spend` : ''}
+          </p>
+          <p className="mt-2 text-[11px] font-medium text-neutral-mid">Generations this month</p>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {Object.entries(c.by_action).length === 0
               ? <span className="text-xs text-neutral-mid">No generations yet this month.</span>

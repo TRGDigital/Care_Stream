@@ -2264,10 +2264,13 @@ function SystemReference() {
           <RefRow label="Honesty"   value="requires_practical topics flagged as knowledge-component-only; certificates worded as non-accredited knowledge assessments" />
         </div>
         <div className="mt-3 space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">AI credits (lib/plan-limits.ts)</p>
-          <RefRow label="Limit"     value="Plan.monthly_ai_credit_limit (Starter 5, Professional 25, null=unlimited). Separate meter from monthly_query_limit. ai_credit_logs (one row per action)." />
-          <RefRow label="Billable"  value="logAiCredit() billable=true — training (tailor), training_image, cqc_questions, training_questions. checkAiCreditLimit() throws AI_CREDIT_LIMIT_REACHED (402)." />
-          <RefRow label="Tracked"   value="trackAiAction() billable=false (cost visibility only, no limit) — translation, policy_format, audit_recs, remediation." />
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">AI token allowance (lib/ai-tokens.ts)</p>
+          <RefRow label="Allowance" value="Plan.monthly_ai_token_limit — Starter 6M, Professional 18M, Enterprise 30M, null=unlimited. Sized at 12% of each plan's monthly value (£85 / £230 / £385 → £10.20 / £27.60 / £46.20)." />
+          <RefRow label="Metering"  value="Tenants see TOKENS; we meter COST. Every ai_usage_events.cost_usd is converted at REFERENCE_USD_PER_MILLION = $1.98 (the blended rate across 30 days of real traffic, verified 17 Sept 2026). Sonnet therefore consumes ~2.2x its raw tokens, Haiku ~0.7x — a flat token cap would cost 3.3x more depending on model routing the tenant cannot control." />
+          <RefRow label="Enforced"  value="checkAiTokenLimit() throws AI_TOKEN_LIMIT_REACHED (402). Called from checkAiCreditLimit(), so every generation route is covered without touching each call site." />
+          <RefRow label="Not gated" value="Everyday staff Q&A is deliberately OUTSIDE the allowance — it keeps its own monthly_query_limit. Running out of tokens must never stop a carer asking what a policy says mid-shift, and chat is only ~1% of spend anyway (30 days: chat $0.32 vs policy gap analysis $24)." />
+          <RefRow label="Surfaces"  value="Tenant: /dashboard 'AI tokens' card + AiCreditsBar on AI feature pages. Platform: /platform/clients/:id shows used / allowance plus real USD spend." />
+          <RefRow label="Legacy"    value="Plan.monthly_ai_credit_limit (per-action credits) is superseded and set null on all plans; the code path remains so it is reversible. ai_credit_logs still records actions for analytics." />
         </div>
         <div className="mt-3 space-y-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-neutral-mid">Admin endpoints (requireAdmin)</p>

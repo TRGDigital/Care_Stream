@@ -76,6 +76,7 @@ const MATRIX: Group[] = [
       { label: 'Staff handbooks',             values: ['1', 'Unlimited', 'Unlimited'] },
       { label: 'Staff users',                 values: ['Up to 10', 'Unlimited', 'Unlimited'] },
       { label: 'Query limit',                 values: ['500 / month', '5,000 / month', 'Unlimited'] },
+      { label: 'AI tokens',                   values: ['6M / month', '18M / month', '30M / month'] },
       { label: 'Languages supported',         values: ['50+', '50+', '50+'] },
     ],
   },

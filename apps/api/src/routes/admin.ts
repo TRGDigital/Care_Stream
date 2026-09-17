@@ -897,11 +897,13 @@ adminRouter.get('/tenants/:id/ai-usage', async (req: Request, res: Response) => 
   try {
     const now = new Date()
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-    const [credits, queries, byAction, enrollments] = await Promise.all([
+    const { getAiTokenUsage } = await import('../lib/ai-tokens')
+    const [credits, queries, byAction, enrollments, tokens] = await Promise.all([
       getAiCreditUsage(tenantId),
       getQueryUsage(tenantId),
       (prisma as any).aiCreditLog.groupBy({ by: ['action', 'billable'], where: { tenant_id: tenantId, created_at: { gte: monthStart } }, _count: { _all: true } }).catch(() => []),
       (prisma as any).trainingEnrollment.findMany({ where: { tenant_id: tenantId }, select: { status: true, module: { select: { id: true, name: true, source: true, tenant_id: true } } } }).catch(() => []),
+      getAiTokenUsage(tenantId),
     ])
     const ai = (enrollments as any[]).filter(e => e.module?.source === 'ai_generated')
     const byModule = new Map<string, any>()
@@ -921,6 +923,7 @@ adminRouter.get('/tenants/:id/ai-usage', async (req: Request, res: Response) => 
     }
     ok(res, {
       credits:  { ...credits, by_action: billedByAction },
+      tokens,
       other_ai: trackedByAction,
       queries,
       annual_training: { modules, tailored: modules.filter(m => m.tailored).length, standard: modules.filter(m => !m.tailored).length },

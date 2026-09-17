@@ -106,10 +106,21 @@ export async function getQueryUsage(tenantId: string): Promise<Usage> {
   return { used, limit, remaining: limit === null ? null : Math.max(0, limit - used), resets_at: next.toISOString() }
 }
 
-// Throw if the tenant has no remaining AI credits this month.
+// Throw if the tenant has nothing left to spend on AI this month.
+//
+// The governing meter is now the plan's TOKEN allowance (12% of subscription
+// value, see lib/ai-tokens.ts). The older per-action credit limit is kept below
+// and still enforced if a plan sets one, so this is reversible, but the shipped
+// plans leave it null.
+//
+// Every generation route already calls this, so gating here covers all of them
+// rather than nine separate call sites. Imported dynamically because ai-tokens
+// imports PlanLimitError from this file.
 export async function checkAiCreditLimit(tenantId: string): Promise<void> {
   const { subscription_status } = await loadTenantPlan(tenantId)
   assertNotCancelled(subscription_status)
+  const { checkAiTokenLimit } = await import('./ai-tokens')
+  await checkAiTokenLimit(tenantId)
   const { used, limit } = await getAiCreditUsage(tenantId)
   if (limit !== null && used >= limit) {
     throw new PlanLimitError(

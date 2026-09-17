@@ -184,12 +184,19 @@ trainingRouter.post('/catalogue/topics/:id/archive', requireAdmin, async (req: R
   } catch (e: any) { err(res, 'ARCHIVE_FAILED', e.message, 500) }
 })
 
-// GET /training/ai-usage — AI credits + queries used this month vs plan limits
+// GET /training/ai-usage — the tenant's meters for this month.
+// `tokens` is the one that governs generation; `queries` covers everyday staff
+// Q&A, which is deliberately not gated on the token allowance. `credits` is the
+// superseded per-action meter, still returned so nothing that reads it breaks.
 trainingRouter.get('/ai-usage', requireAdmin, async (req: Request, res: Response) => {
   try {
     const tenantId = (req as any).user.tenant_id
-    const [credits, queries] = await Promise.all([getAiCreditUsage(tenantId), getQueryUsage(tenantId)])
-    ok(res, { credits, queries })
+    const { getAiTokenUsage } = await import('../lib/ai-tokens')
+    const [credits, queries, tokenUsage] = await Promise.all([
+      getAiCreditUsage(tenantId), getQueryUsage(tenantId), getAiTokenUsage(tenantId),
+    ])
+    const { cost_usd: _cost, ...tokens } = tokenUsage   // cost is platform-only
+    ok(res, { credits, queries, tokens })
   } catch (e: any) { err(res, 'FETCH_FAILED', e.message, 500) }
 })
 

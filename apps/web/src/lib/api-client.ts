@@ -801,7 +801,7 @@ export function createApiClient(token: string) {
         apiFetch<{ module: any }>('/training/catalogue/generate', token, { method: 'POST', body: JSON.stringify({ topic_id: topicId }) }),
       setTopicArchived: (id: string, archived: boolean) =>
         apiFetch<{ topic_id: string; archived: boolean }>(`/training/catalogue/topics/${id}/archive`, token, { method: 'POST', body: JSON.stringify({ archived }) }),
-      aiUsage: () => apiFetch<{ credits: { used: number; limit: number | null; remaining: number | null; resets_at: string }; queries: { used: number; limit: number | null; remaining: number | null; resets_at: string } }>('/training/ai-usage', token),
+      aiUsage: () => apiFetch<{ credits: { used: number; limit: number | null; remaining: number | null; resets_at: string }; queries: { used: number; limit: number | null; remaining: number | null; resets_at: string }; tokens: { used: number; limit: number | null; remaining: number | null; resets_at: string } }>('/training/ai-usage', token),
       moduleFull: (id: string) => apiFetch<{ module: any }>(`/training/modules/${id}/full`, token),
       standardModuleFull: (id: string) => apiFetch<{ module: {
         name: string; frequency: string | null; pass_mark: number | null; requires_practical: boolean; duration_minutes: number | null

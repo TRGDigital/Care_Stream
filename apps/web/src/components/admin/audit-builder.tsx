@@ -33,9 +33,12 @@ function conditionChoices(q: AuditEditorQuestion): Array<{ value: string; label:
   return []
 }
 
-export function AuditBuilder({ token, templateId, onClose, onCreated }: {
+export function AuditBuilder({ token, templateId, initial, importNotes, onClose, onCreated }: {
   token: string
   templateId?: string | null
+  // A draft to start from (an imported audit), not yet saved.
+  initial?: { name?: string; description?: string | null; frequency?: string; subject_scope?: string; requires_shift?: boolean; sections: Array<{ title: string; questions: AuditEditorQuestion[] }> } | null
+  importNotes?: string | null
   onClose: () => void
   onCreated: () => void
 }) {
@@ -53,6 +56,12 @@ export function AuditBuilder({ token, templateId, onClose, onCreated }: {
   const [modules, setModules]     = useState<Array<{ id: string; name: string }>>([])
   const [moduleIds, setModuleIds] = useState<string[]>([])
   const [statements, setStatements] = useState<Array<{ id: string; name: string; key_question: string }>>([])
+  useEffect(() => {
+    if (!initial) return
+    setName(initial.name ?? ''); setDesc(initial.description ?? ''); setFrequency(initial.frequency ?? 'periodic')
+    setScope(initial.subject_scope ?? 'none'); setRequiresShift(!!initial.requires_shift)
+    setSections(initial.sections.map(s => ({ id: null, key: newKey(), title: s.title, questions: s.questions.map(q => ({ ...q, id: null })) })))
+  }, [initial])
   const [saving, setSaving]       = useState(false)
   const [error, setError]         = useState('')
 
@@ -141,7 +150,7 @@ export function AuditBuilder({ token, templateId, onClose, onCreated }: {
       <div className="my-8 w-full max-w-3xl rounded-2xl bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-bold text-neutral-dark">{editing ? `Edit audit${version ? ` (version ${version})` : ''}` : 'Build your own audit'}</h2>
+            <h2 className="text-lg font-bold text-neutral-dark">{editing ? `Edit audit${version ? ` (version ${version})` : ''}` : initial ? 'Check your imported audit' : 'Build your own audit'}</h2>
             <p className="mt-0.5 text-sm text-neutral-mid">
               {editing
                 ? 'Changes apply to new and in-progress audits. Completed audits keep the questions they were answered against.'
@@ -151,6 +160,12 @@ export function AuditBuilder({ token, templateId, onClose, onCreated }: {
           <button onClick={onClose} aria-label="Close" className="rounded p-1 text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark"><X size={18} /></button>
         </div>
 
+        {initial && (
+          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            AI has turned your document into this audit. Check each question, its type and any options before you create it. Nothing is saved until you click Create audit.
+            {importNotes && <p className="mt-1.5 text-xs"><strong>Worth checking:</strong> {importNotes}</p>}
+          </div>
+        )}
         {loading ? (
           <div className="flex justify-center py-16"><Loader2 className="animate-spin text-neutral-mid" /></div>
         ) : (

@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
-import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info, Wrench, Trash2, GraduationCap, X, ClipboardList, Mail, Loader2, Pencil, Copy, EyeOff, Eye, History } from 'lucide-react'
+import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info, Wrench, Trash2, GraduationCap, X, ClipboardList, Mail, Loader2, Pencil, Copy, EyeOff, Eye, History, Upload } from 'lucide-react'
 import { clsx } from 'clsx'
 import { AuditBuilder } from '@/components/admin/audit-builder'
 import { AuditVersionsModal } from '@/components/admin/audit-versions-modal'
@@ -90,6 +90,10 @@ export default function AuditsPage() {
   const [copyHide,    setCopyHide]    = useState(true)
   const [copyBusy,    setCopyBusy]    = useState(false)
   const [copyError,   setCopyError]   = useState('')
+  const [importOpen,  setImportOpen]  = useState(false)
+  const [importing,   setImporting]   = useState(false)
+  const [importError, setImportError] = useState('')
+  const [imported,    setImported]    = useState<{ draft: any; notes: string | null } | null>(null)
   const [availOpen,   setAvailOpen]   = useState(false)
   const [linking, setLinking] = useState<any>(null)
   const [deleting,    setDeleting]    = useState<string | null>(null)
@@ -152,6 +156,16 @@ export default function AuditsPage() {
     await createApiClient(session.accessToken).audits.setTemplateHidden(t.id, hidden).catch(() => {})
     await reloadTemplates()
   }
+  async function importAudit(file: File | null) {
+    if (!file || !session?.accessToken) return
+    setImporting(true); setImportError('')
+    try {
+      const out = await createApiClient(session.accessToken).audits.importTemplate(file)
+      setImportOpen(false)
+      setImported({ draft: out.draft, notes: out.notes })
+    } catch (e: any) { setImportError(e?.message ?? 'The audit could not be imported.') } finally { setImporting(false) }
+  }
+
   async function copyAudit() {
     if (!session?.accessToken || !copying) return
     setCopyBusy(true); setCopyError('')
@@ -220,6 +234,12 @@ export default function AuditsPage() {
           >
             <Wrench size={15} /> Build your own audit{!canCustomAudits && <LockChip tier="Enterprise" />}
           </button>
+          {canCustomAudits && (
+            <button onClick={() => { setImportOpen(true); setImportError('') }}
+              className="flex items-center gap-2 rounded-btn border border-teal/40 bg-white px-4 py-2 text-sm font-medium text-teal hover:bg-teal-light/40">
+              <Upload size={15} /> Import an existing audit
+            </button>
+          )}
           <button
             onClick={() => setShowNew(v => !v)}
             className="flex items-center gap-2 rounded-btn bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark"
@@ -270,6 +290,28 @@ export default function AuditsPage() {
 
       {(showBuilder || editingId) && session?.accessToken && (
         <AuditBuilder token={session.accessToken} templateId={editingId} onClose={() => { setShowBuilder(false); setEditingId(null) }} onCreated={reloadTemplates} />
+      )}
+
+      {imported && session?.accessToken && (
+        <AuditBuilder token={session.accessToken} initial={imported.draft} importNotes={imported.notes} onClose={() => setImported(null)} onCreated={reloadTemplates} />
+      )}
+
+      {importOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => !importing && setImportOpen(false)}>
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+            <h2 className="text-base font-semibold text-neutral-dark">Import an existing audit</h2>
+            <p className="mt-1 text-sm text-neutral-mid">Upload the audit you use today: a PDF, a Word document, or a photo of the paper form. AI turns it into a CareStream audit for you to check and edit before it is created.</p>
+            <label className={clsx('mt-4 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-sm', importing ? 'border-gray-200 text-neutral-mid' : 'border-teal/40 text-teal hover:bg-teal-light/30')}>
+              {importing ? <><Loader2 size={20} className="animate-spin" /> Reading your audit. This can take up to a minute.</> : <><Upload size={20} /> Choose a file or take a photo</>}
+              <input type="file" className="hidden" disabled={importing} accept=".pdf,.docx,.odt,.txt,image/jpeg,image/png,image/webp,image/gif"
+                onChange={e => { importAudit(e.target.files?.[0] ?? null); e.currentTarget.value = '' }} />
+            </label>
+            {importError && <p className="mt-3 text-sm text-red-600">{importError}</p>}
+            <div className="mt-4 flex justify-end">
+              <button onClick={() => setImportOpen(false)} disabled={importing} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:bg-neutral-light disabled:opacity-50">Close</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {versionsOf && session?.accessToken && (

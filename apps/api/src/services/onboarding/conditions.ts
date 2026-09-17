@@ -106,13 +106,29 @@ const PREDICATES: Record<string, (tenantId: string) => Promise<ConditionResult>>
   },
 }
 
-/** Evaluate a named condition. Unknown or failing predicates return true: an
- *  email that cannot decide should send rather than hold the sequence. */
-export async function evaluateCondition(name: string | null | undefined, tenantId: string): Promise<boolean> {
-  if (!name) return true
+/** Evaluate a named condition.
+ *
+ *  `errored` matters, because the safe answer depends on what the email does
+ *  when the condition is unmet. A SKIP email that cannot decide should send: the
+ *  worst case is a nudge somebody did not need. A WAIT email that cannot decide
+ *  must NOT send, because the worst case there is telling a buyer their policy
+ *  is ready when it has not been written. The dispatcher picks accordingly.
+ *
+ *  An unknown name is not an error, it is a no-op: a typo in a condition should
+ *  never hold a whole sequence. */
+export async function evaluateCondition(
+  name: string | null | undefined,
+  tenantId: string,
+): Promise<{ met: boolean; errored: boolean }> {
+  if (!name) return { met: true, errored: false }
   const fn = PREDICATES[name]
-  if (!fn) return true
-  try { return await fn(tenantId) } catch { return true }
+  if (!fn) return { met: true, errored: false }
+  try {
+    return { met: await fn(tenantId), errored: false }
+  } catch (e: any) {
+    console.error(`[onboarding/conditions] ${name} failed for ${tenantId}:`, e?.message ?? e)
+    return { met: false, errored: true }
+  }
 }
 
 export const CONDITION_NAMES = Object.keys(PREDICATES)

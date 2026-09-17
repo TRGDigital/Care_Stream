@@ -238,9 +238,14 @@ export async function dispatchDue(opts: { force?: boolean; tenantId?: string } =
       // email wait for the policy to be written, rather than announcing a
       // document that does not exist yet.
       if (tmpl.condition) {
-        const met = await evaluateCondition(tmpl.condition, enr.tenant_id)
-        if (!met) {
-          if (tmpl.condition_unmet === 'wait') {
+        const { met, errored } = await evaluateCondition(tmpl.condition, enr.tenant_id)
+        const waiting = tmpl.condition_unmet === 'wait'
+        // A predicate that could not be evaluated sends a SKIP email (a nudge
+        // nobody needed is cheap) but never a WAIT one (announcing a policy that
+        // does not exist is not).
+        const proceed = met || (errored && !waiting)
+        if (!proceed) {
+          if (waiting) {
             const waited = todayIdx - day
             if (waited < (tmpl.hold_max_days ?? 14)) { summary.held++; return }   // hold the sequence, try again tomorrow
             summary.gave_up++                                                     // waited long enough, move past it

@@ -750,6 +750,24 @@ model GapRemediation {
 // Per-policy "mark as updated" for the out-of-date + CQC-wording sections, so a policy the
 // admin has dealt with drops off its list until the next full (re)scan re-flags it if still
 // an issue. Coverage uses GapRemediation and consistency uses PolicyConsistency.dismissed.
+// A lint finding the tenant has judged wrong for a policy — "there IS a policy statement,
+// stop telling me there isn't". Unlike PolicyReviewResolution ("mark as updated"), this is
+// per-FINDING and never lapses: a wrong check does not become right when the document is
+// edited. Cleared only by un-ignoring.
+model PolicyLintIgnore {
+  id         String   @id @default(uuid())
+  tenant_id  String
+  policy_id  String // a policy id, or '*' for every policy in this tenant
+  signal_key String
+  note       String?
+  ignored_by String?
+  ignored_at DateTime @default(now())
+
+  @@unique([tenant_id, policy_id, signal_key])
+  @@index([tenant_id])
+  @@map("policy_lint_ignores")
+}
+
 model PolicyReviewResolution {
   id          String   @id @default(uuid())
   tenant_id   String

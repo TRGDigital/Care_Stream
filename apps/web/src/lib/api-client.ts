@@ -1302,7 +1302,7 @@ export function createApiClient(token: string) {
         medium_findings: number
         policies: Array<{
           policy_id: string; policy_name: string; score: number; scanned_at: string
-          findings: Array<{ signal_key: string; category: string; severity: 'high' | 'medium' | 'low'; label: string; detail: string; superseded_by: string | null; source_urls?: string[]; kind: 'text' | 'structure' | 'review_currency'; count: number; terms: string[]; samples: Array<{ match: string; index: number }> }>
+          findings: Array<{ signal_key: string; category: string; severity: 'high' | 'medium' | 'low'; label: string; detail: string; superseded_by: string | null; source_urls?: string[]; kind: 'text' | 'structure' | 'review_currency'; count: number; terms: string[]; samples: Array<{ match: string; index: number }>; ignored?: boolean; ignored_scope?: 'policy' | 'tenant' }>
         }>
         // Review dates are reported apart from content problems: one blank field per policy,
         // fixed in one action, so they no longer flag a policy as out of date.
@@ -1346,6 +1346,19 @@ export function createApiClient(token: string) {
       reviewResolutions: () =>
         apiFetch<{ resolutions: Array<{ policy_id: string; policy_name: string; section: 'out_of_date' | 'wording'; resolved_by: string | null; resolved_at: string }> }>('/analytics/review-resolutions', token),
       lintReopen: (policyId: string) => apiFetch<{ reopened: boolean }>(`/analytics/policy-lint/${encodeURIComponent(policyId)}/reopen`, token, { method: 'POST' }),
+      // Ignore a finding the tenant judges wrong. scope 'policy' silences it for this policy,
+      // 'tenant' silences the check account-wide. Durable — it never lapses on its own.
+      lintIgnore: (policyId: string, signalKey: string, scope: 'policy' | 'tenant' = 'policy', note?: string) =>
+        apiFetch<{ ignored: boolean; scope: 'policy' | 'tenant' }>(
+          `/analytics/policy-lint/${encodeURIComponent(policyId)}/ignore`, token,
+          { method: 'POST', body: JSON.stringify({ signal_key: signalKey, scope, note }) }),
+      // still_hidden reports whether a broader ignore is keeping the finding hidden anyway.
+      lintUnignore: (policyId: string, signalKey: string, scope: 'policy' | 'tenant' = 'policy') =>
+        apiFetch<{ unignored: boolean; scope: 'policy' | 'tenant'; still_hidden: boolean }>(
+          `/analytics/policy-lint/${encodeURIComponent(policyId)}/unignore`, token,
+          { method: 'POST', body: JSON.stringify({ signal_key: signalKey, scope }) }),
+      lintIgnores: () => apiFetch<{ ignores: Array<{ policy_id: string; signal_key: string; note: string | null; ignored_by: string | null; ignored_at: string }> }>(
+        '/analytics/policy-lint/ignores', token),
       wordingResolve: (policyId: string) => apiFetch<{ resolved: boolean }>(`/analytics/wording-alignment/${encodeURIComponent(policyId)}/resolve`, token, { method: 'POST' }),
       wordingReopen: (policyId: string) => apiFetch<{ reopened: boolean }>(`/analytics/wording-alignment/${encodeURIComponent(policyId)}/reopen`, token, { method: 'POST' }),
       // Policies due for review + the dashboard "re-review these policies" action.

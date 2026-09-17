@@ -15,6 +15,50 @@ import './site-chrome-extra.css'
 // The ICO registration the theme adds is checked: ZC221613 is TRG Digital Ltd on the public
 // register, valid to 12 August 2027.
 
+// Accreditations shown above the footer base. Each links to the body that issued it, so a
+// visitor can check the claim rather than take a logo on trust. Only add a badge we actually
+// hold: an accreditation mark is a claim about the business, not decoration.
+type Badge = {
+  src: string; alt: string; href: string; label: string
+  /** Natural size of the asset, so Next can reserve the space and nothing shifts on load. */
+  w: number; h: number
+  /** Landscape lockup with fine print, so it needs a slightly larger cap to stay legible. */
+  wide?: boolean
+  /** Not yet supplied. Renders a placeholder in place of the mark. */
+  pending?: boolean
+}
+
+const BADGES: Badge[] = [
+  {
+    src: '/badges/gbc-accredited.png', w: 112, h: 120,
+    alt: 'Good Business Charter accredited',
+    href: 'https://www.goodbusinesscharter.com/',
+    label: 'Good Business Charter',
+  },
+  {
+    src: '/badges/cpd-certification-service.png', w: 189, h: 120, wide: true,
+    alt: 'The CPD Certification Service',
+    href: 'https://cpduk.co.uk/',
+    label: 'CPD certified training',
+  },
+  {
+    src: '/badges/ico-registered.png', w: 119, h: 120,
+    alt: "Registered with the Information Commissioner's Office",
+    // The same register entry the base row links to: ZC221613, TRG Digital Ltd.
+    href: 'https://ico.org.uk/ESDWebPages/Entry/ZC221613',
+    label: 'ICO registered',
+  },
+  {
+    // The Disability Confident mark is Crown Copyright and must not be rebuilt or altered, and
+    // the badge differs by level (Committed / Employer / Leader). DWP issues the correct file
+    // with the accreditation, so it is dropped in here rather than recreated.
+    src: '', w: 120, h: 120, pending: true,
+    alt: 'Disability Confident',
+    href: 'https://www.gov.uk/government/collections/disability-confident-campaign',
+    label: 'Disability Confident',
+  },
+]
+
 type LinkItem = { href: string; label: string }
 
 const USER_CASES: LinkItem[] = [
@@ -132,6 +176,25 @@ export async function MarketingFooter() {
                 {g.links.map(l => <Link href={l.href} key={l.href}>{l.label}</Link>)}
               </div>
             ))}
+          </div>
+
+          <div className="faccred">
+            <p className="faccred-lead">Accredited and registered</p>
+            <ul className="faccred-row">
+              {BADGES.map(b => (
+                <li key={b.label}>
+                  <a href={b.href} rel="noopener noreferrer" target="_blank" title={b.label}>
+                    {b.pending ? (
+                      <span className="faccred-pending" aria-label={`${b.alt} (logo to be added)`}>
+                        {b.label}
+                      </span>
+                    ) : (
+                      <img className={b.wide ? 'wide' : undefined} src={b.src} alt={b.alt} width={b.w} height={b.h} loading="lazy" />
+                    )}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div className="fbase">

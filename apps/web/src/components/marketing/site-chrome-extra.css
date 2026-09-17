@@ -49,3 +49,51 @@
 .cschrome .fcookie { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; }
 .cschrome .fcookie:hover { color: var(--ink); }
 .cschrome .fdisclaim { margin: 14px 0 0; font-size: .74rem; line-height: 1.55; color: var(--muted); max-width: 90ch; }
+
+/* ── Accreditation band ─────────────────────────────────────────────────────
+   Sits above the footer base row. The marks are set on a white card because the
+   ICO badge ships as a JPEG with a white background, which would otherwise show
+   as a pale square against the footer's --ground-2.
+
+   Normalised by HEIGHT, never by width: these are other organisations' trademarks
+   and must not be stretched, squashed or recoloured. The CPD mark is landscape and
+   carries fine print ("The CPD Certification Service"), so height alone makes it
+   unreadable next to the square marks; it gets a slightly larger cap so the lockup
+   reads at a glance. Disability Confident guidance sets a 10mm minimum height,
+   which is why nothing here drops below ~38px. */
+.cschrome .faccred{margin-top:44px}
+.cschrome .faccred-lead{
+  font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink);margin:0 0 14px;
+}
+.cschrome .faccred-row{
+  list-style:none;margin:0;padding:26px 30px;
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
+  gap:28px 56px;
+  background:#fff;border:1px solid var(--line);border-radius:14px;
+}
+.cschrome .faccred-row li{display:flex;align-items:center}
+.cschrome .faccred-row a{
+  display:inline-flex;align-items:center;
+  /* A trademark must not be tinted, so hover is opacity only. */
+  opacity:.85;transition:opacity .18s ease;
+}
+.cschrome .faccred-row a:hover,
+.cschrome .faccred-row a:focus-visible{opacity:1}
+.cschrome .faccred-row img{display:block;width:auto;height:56px}
+.cschrome .faccred-row img.wide{height:64px}
+
+/* Placeholder for a mark we hold but have not been sent the file for yet. */
+.cschrome .faccred-pending{
+  display:inline-flex;align-items:center;justify-content:center;
+  height:56px;padding:0 18px;
+  border:1px dashed var(--line);border-radius:10px;
+  font-size:.74rem;color:var(--muted);white-space:nowrap;
+}
+
+@media (max-width:760px){
+  .cschrome .faccred-row{gap:22px 34px;padding:20px 18px}
+  .cschrome .faccred-row img{height:44px}
+  .cschrome .faccred-row img.wide{height:50px}
+  .cschrome .faccred-pending{height:44px;font-size:.7rem}
+}

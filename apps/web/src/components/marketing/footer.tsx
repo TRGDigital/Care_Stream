@@ -213,7 +213,23 @@ export async function MarketingFooter() {
               <img className="cslogo" src="/logo-color.svg" alt="CareStream" width={187} height={56} />
             </span>
             <p>Policy, training and CQC evidence for care services in England. Built by people who have sat through an inspection.</p>
-            <address className="faddr">Suite Ra01, 195-197 Wood Street,<br />London, E17 3NU</address>
+            <div className="faddrrow">
+              <address className="faddr">Suite Ra01, 195-197 Wood Street,<br />London, E17 3NU</address>
+              {/* Google Preferred Sources. Our own pill so it sits in the footer's type and
+                  scale, using the G lifted from Google's official badge artwork rather than a
+                  redrawn mark. Points at the documented deeplink: Google's button script would
+                  pull news.google.com/swg/js/v1/publisher.js onto every page, and this needs
+                  nothing loaded to do the same job. */}
+              <a
+                className="fpreferred"
+                href="https://www.google.com/preferences/source?q=carestreamai.com"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <img src="/badges/google-g.png" alt="" width={112} height={112} aria-hidden="true" />
+                <span>Add to Preferred Sources</span>
+              </a>
+            </div>
             <Link className="fcontact" href="/contact">
               Contact us
               <svg viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7h8M7.5 3.5 11 7l-3.5 3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -226,16 +242,6 @@ export async function MarketingFooter() {
               <span>ICO registered: ZC221613</span>
             </a>
             <span className="fsocial">
-              {/* Google Preferred Sources, via the deeplink rather than Google's button script.
-                  The scripted version pulls news.google.com/swg/js/v1/publisher.js onto every
-                  page, which is a third-party script running before anyone touches our cookie
-                  banner. This is a plain link: nothing loads, nothing is set, and it opens the
-                  same Google preferences screen. */}
-              <a
-                href="https://www.google.com/preferences/source?q=carestreamai.com"
-                rel="noopener noreferrer"
-                target="_blank"
-              >Add us to Google preferred sources</a>
               <CookieSettingsButton className="fcookie" />
               <a href="https://www.linkedin.com/company/carestreamai/" rel="noopener noreferrer" target="_blank">LinkedIn</a>
               <a href="mailto:hello@carestreamai.com">hello@carestreamai.com</a>

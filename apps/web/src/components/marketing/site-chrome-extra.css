@@ -113,3 +113,36 @@
    spacing flips: it needs air above it, not beneath. Overrides the margin-bottom
    the ported chrome stylesheet sets, which would otherwise push the base row away. */
 .cschrome .fbrand{margin-top:46px;margin-bottom:0}
+
+
+/* Address and the Google preferred-sources pill, side by side.
+
+   The brand block caps at 30em, which is the right measure for the positioning line but
+   21px too narrow for the address and the pill together, so they wrapped. The cap moves
+   onto the paragraph itself: the sentence keeps its line length and the address row is
+   free to be as wide as it needs. */
+.cschrome .fbrand{max-width:none}
+.cschrome .fbrand p{max-width:30em}
+.cschrome .faddrrow{
+  display:flex;flex-wrap:wrap;align-items:center;gap:14px 20px;margin:0 0 4px;
+}
+/* Our own pill rather than Google's full badge image, so it carries the footer's type and
+   scale. The G itself is Google's artwork, lifted from their official badge and never
+   recoloured or reshaped. */
+.cschrome .fpreferred{
+  display:inline-flex;align-items:center;gap:9px;
+  padding:8px 15px;border:1px solid var(--line);border-radius:999px;
+  background:#fff;color:var(--ink);text-decoration:none;
+  font-size:.8rem;font-weight:600;line-height:1;white-space:nowrap;
+  transition:border-color .18s ease,box-shadow .18s ease;
+}
+.cschrome .fpreferred:hover,
+.cschrome .fpreferred:focus-visible{
+  border-color:var(--border-strong,#cfccc3);box-shadow:0 1px 3px rgba(0,0,0,.06);
+}
+.cschrome .fpreferred img{display:block;width:16px;height:16px}
+
+@media (max-width:560px){
+  .cschrome .faddrrow{gap:12px}
+  .cschrome .fpreferred{font-size:.78rem;padding:8px 13px}
+}

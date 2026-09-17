@@ -5,10 +5,9 @@ import { useCallback, useEffect, useState } from 'react'
 // The basket and the save control on a policy page. A policy is a TOGGLE, not a quantity: you
 // buy one copy of your own Safeguarding Adults Policy or none.
 //
-// Both lists live in this browser only. There is no policy checkout yet, so "Checkout" goes to
-// the contact page carrying what was collected, which is exactly where the single Buy button
-// on the current live page goes. A control that collects and then hands off is honest; one
-// that collects into nothing is not.
+// Both lists live in this browser only. "Checkout" goes to /care-policies/checkout, which sends
+// the basket to the shop's hosted Stripe checkout. A pack is held in the same basket under the
+// slug `bundle:<key>`, so switching to a pack at checkout is one basket, not a second store.
 
 const KEY_BASKET = 'cs_policy_basket'
 const KEY_SAVED = 'cs_policy_saved'
@@ -114,7 +113,6 @@ export function BasketPill() {
   const store = useStore(KEY_BASKET)
   const items = Object.values(store)
   const total = items.reduce((n, i) => n + (i.price_pence || 0), 0)
-  const about = items.length === 1 ? items[0].title : 'Policy basket'
 
   return (
     <div className={`pcbasket${items.length ? ' on' : ''}`} hidden={!items.length}>
@@ -123,7 +121,7 @@ export function BasketPill() {
         <b>{money(total)}</b>{' '}
         <span className="n">{items.length} {items.length === 1 ? 'policy' : 'policies'}</span>
       </span>
-      <a href={`/contact?about=${encodeURIComponent(about)}`}>Checkout</a>
+      <a href="/care-policies/checkout">Checkout</a>
     </div>
   )
 }
@@ -164,4 +162,36 @@ export function StickyBuyBar({ item, image }: { item: BasketItem; image: string 
       </div>
     </div>
   )
+}
+
+/** The basket for the checkout page: its items, and the changes the page can make to them. */
+export function usePolicyBasket() {
+  const store = useStore(KEY_BASKET)
+  const items = Object.values(store)
+  const remove = useCallback((slug: string) => {
+    const next = read(KEY_BASKET)
+    delete next[slug]
+    write(KEY_BASKET, next)
+    announce()
+  }, [])
+  const saveForLater = useCallback((item: BasketItem) => {
+    const basket = read(KEY_BASKET)
+    delete basket[item.slug]
+    write(KEY_BASKET, basket)
+    if (!item.slug.startsWith('bundle:')) {
+      const saved = read(KEY_SAVED)
+      saved[item.slug] = { slug: item.slug, title: item.title, price_pence: 0 }
+      write(KEY_SAVED, saved)
+    }
+    announce()
+  }, [])
+  /** Replace the policies a pack contains with the pack itself. */
+  const switchToPack = useCallback((pack: BasketItem, contains: string[]) => {
+    const basket = read(KEY_BASKET)
+    for (const slug of contains) delete basket[slug]
+    basket[pack.slug] = pack
+    write(KEY_BASKET, basket)
+    announce()
+  }, [])
+  return { items, remove, saveForLater, switchToPack }
 }

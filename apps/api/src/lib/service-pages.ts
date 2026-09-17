@@ -16,7 +16,25 @@ export const SERVICE_PAGE_SLUGS = [
   // Not an Our Services page, but built from the same blocks, so it shares the
   // template and the store rather than having a template of its own.
   'how-it-works',
+  // The nine /who-its-for/<role> pages behind the Who it's for menu. Same blocks, same store.
+  // The prefix is part of the slug because slugs here are flat; the page lives at
+  // /who-its-for/<role>.
+  'who-its-for-care-workers',
+  'who-its-for-training-managers',
+  'who-its-for-registered-managers',
+  'who-its-for-hr-and-admin-teams',
+  'who-its-for-compliance-leads',
+  'who-its-for-preparing-for-cqc',
+  'who-its-for-operations-teams',
+  'who-its-for-quality-managers',
+  'who-its-for-policy-managers',
 ] as const
+
+export const ROLE_PAGE_PREFIX = 'who-its-for-'
+
+/** The live path for a service page slug: flat, except the role pages under /who-its-for/. */
+export const servicePagePath = (slug: string) =>
+  slug.startsWith(ROLE_PAGE_PREFIX) ? `/who-its-for/${slug.slice(ROLE_PAGE_PREFIX.length)}` : `/${slug}`
 
 export type ServicePageSlug = (typeof SERVICE_PAGE_SLUGS)[number]
 

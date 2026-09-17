@@ -1,4 +1,4 @@
-// The starting copy for the seven /our-services pages, lifted out of the rebuilt content theme
+// The starting copy for the /our-services pages and the /who-its-for role pages, lifted out of the rebuilt content theme
 // by carestream-theme-preview/extract_services_content.py so nobody had to retype it.
 //
 // This is a STARTING POINT, not the source of truth. Once a page is seeded, the row in
@@ -35,6 +35,8 @@ export interface ServiceItem {
    *  that invented a sentence that appears nowhere on the page. */
   paras: string[]
   bullets: string[]
+  /** Where the item links to: a card's "Explore" line, or a pill in a row of links. */
+  href?: string
 }
 
 /** One part of a section. A section is NOT one kind: the theme builds sections out of parts
@@ -42,7 +44,7 @@ export interface ServiceItem {
  *  as a single kind flattened or lost everything but the first. */
 export interface ServicePart {
   kind: 'cards' | 'steps' | 'stats' | 'table' | 'ticks' | 'compare' | 'timeline' | 'note'
-    | 'prompts' | 'asks' | 'channels' | 'langdemo' | 'frameworks' | 'faq'
+    | 'prompts' | 'asks' | 'channels' | 'langdemo' | 'frameworks' | 'faq' | 'links'
   /** Where it sits when the section has an image: in the copy column beside it, or after the
    *  split at full width. Empty when the section has no split. */
   where: '' | 'in' | 'after'
@@ -6354,5 +6356,5550 @@ export const SERVICE_PAGE_SEEDS: ServicePageSeed[] = [
       ]
     },
     "sort": 7
+  },
+  {
+    "slug": "who-its-for-care-workers",
+    "title": "The answer you need on shift, on your own phone, in the language you think in.",
+    "meta_title": "CareStream for Care Workers | CareStreamAI",
+    "meta_description": "Policy answers on shift, on your own phone, in over 60 languages. Ask in the CareStream hub and get the answer from your home's approved policies.",
+    "hero_image_url": "/images/who-its-for/care-workers/1.webp",
+    "content": {
+      "eyebrow": "For care workers",
+      "lede": [
+        "A question comes up at 3am and there is nobody to ask. CareStream puts your home's own policies in a hub on your phone. Type or speak the question, in any language, and get the answer from the policy your manager approved, with the source it came from."
+      ],
+      "actions": [
+        {
+          "label": "Start free trial",
+          "href": "/register",
+          "style": "solid",
+          "play": false
+        },
+        {
+          "label": "Book a demo",
+          "href": "/demo",
+          "style": "ghost",
+          "play": true
+        }
+      ],
+      "toc": [],
+      "blocks": [
+        {
+          "kind": "compare",
+          "id": "",
+          "tint": true,
+          "label": "Your shift, as it is",
+          "heading": "Policies live in a folder. Questions happen on the floor.",
+          "intro": [
+            "The policy folder is in the office, written in English, and runs to hundreds of pages. When something unexpected happens on a night shift, you ask a colleague and hope they remember it right.",
+            "CareStream does not add another thing to read. It answers the question you actually have, when you have it, from the policies your home already uses."
+          ],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "compare",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Without CareStream",
+                  "tone": "dim",
+                  "title": "",
+                  "paras": [
+                    "You wait for a manager, ask whoever is nearby, or guess. If English is your second language, the written policy is harder still."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "With CareStream",
+                  "tone": "good",
+                  "title": "",
+                  "paras": [
+                    "You ask in the hub on your phone and the answer comes from your home's own approved policy, in the language you asked in, with the source named."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "ticks",
+          "id": "",
+          "tint": false,
+          "label": "What changes for you",
+          "heading": "One hub on your phone. Policies, training and questions together.",
+          "intro": [
+            "Your manager sends a one-tap sign-in link. After that the hub works like any app on your phone."
+          ],
+          "image": "/images/who-its-for/care-workers/2.webp",
+          "split": true,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "ticks",
+              "where": "in",
+              "sub": "",
+              "variant": "",
+              "items": [],
+              "bullets": [
+                "Type or speak your question, and hear the answer read back",
+                "Ask in over 60 languages. The hub detects the language and answers in it",
+                "Every answer names the policy it came from, so you can read the original",
+                "Prefer email? Send the question and the reply arrives in the same thread",
+                "Your training arrives in the same hub, ready to complete on shift",
+                "Questions are asked privately, without going through a manager first"
+              ],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "steps",
+          "id": "",
+          "tint": true,
+          "label": "How it works for you",
+          "heading": "Sign in once. Ask whenever you need to.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "steps",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "01",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Open your sign-in link",
+                  "paras": [
+                    "Your manager invites you. Tap the link on your phone and the hub opens, with no password to remember. You can install it like an app."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "02",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Ask in your own words",
+                  "paras": [
+                    "Type or speak the question in the language you are most confident in. There is no setting to change and no special command."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "03",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Get the answer and the source",
+                  "paras": [
+                    "The answer comes from your home's approved policies, in your language, with the policy it came from. Ask a follow-up and the hub keeps the context."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "asks",
+          "id": "",
+          "tint": false,
+          "label": "Questions carers ask",
+          "heading": "The questions that come up on every shift.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "asks",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Safe",
+                  "tone": "",
+                  "title": "",
+                  "paras": [
+                    "A resident has had a fall and seems fine. What do I need to do and who do I tell?"
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Employment",
+                  "tone": "",
+                  "title": "",
+                  "paras": [
+                    "How much notice do I need to give to book annual leave?"
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Medication",
+                  "tone": "",
+                  "title": "",
+                  "paras": [
+                    "A resident has refused their evening medication. What does our policy say I should do?"
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "cards",
+          "id": "",
+          "tint": true,
+          "label": "The parts you will use",
+          "heading": "Built for the person on shift, not the person in the office.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "cards",
+              "where": "",
+              "sub": "",
+              "variant": "c3",
+              "items": [
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Staff hub",
+                  "paras": [
+                    "A conversational hub in any browser, installable on your phone, with a passwordless sign-in link.",
+                    "Explore Staff hub"
+                  ],
+                  "bullets": [],
+                  "href": "/features/staff-hub"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Voice input",
+                  "paras": [
+                    "Speak the question instead of typing it, and listen to the answer read back.",
+                    "Explore Voice input"
+                  ],
+                  "bullets": [],
+                  "href": "/features/voice-input"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "60+ languages",
+                  "paras": [
+                    "The same policy answers questions in over 60 languages. Your home's documents stay in English.",
+                    "Explore 60+ languages"
+                  ],
+                  "bullets": [],
+                  "href": "/features/multi-language-support"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Email",
+                  "paras": [
+                    "Ask by email from any device. Reply to the thread to ask a follow-up.",
+                    "Explore Email"
+                  ],
+                  "bullets": [],
+                  "href": "/features/email-interface"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Training in the hub",
+                  "paras": [
+                    "Mandatory and policy-based training delivered to your phone. A wrong answer becomes a short lesson, not a fail.",
+                    "Explore Training in the hub"
+                  ],
+                  "bullets": [],
+                  "href": "/staff-training"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Resident knowledge",
+                  "paras": [
+                    "What long-serving staff know about each resident, approved by your manager and asked for by name.",
+                    "Explore Resident knowledge"
+                  ],
+                  "bullets": [],
+                  "href": "/uses/resident-knowledge"
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "faq",
+          "id": "",
+          "tint": false,
+          "label": "Questions from care workers",
+          "heading": "Frequently asked.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "faq",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Do I need to download anything?",
+                  "paras": [
+                    "No. The hub works in any browser. You can also install it on your phone like an app, straight from the sign-in link."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Which languages can I ask in?",
+                  "paras": [
+                    "Over 60. The hub detects the language of your question and answers in the same one. You do not need to choose it."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Where do the answers come from?",
+                  "paras": [
+                    "From the policies and documents your home has uploaded and approved. Every answer names the source, so you can check the original wording."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Can my manager see my questions?",
+                  "paras": [
+                    "Questions are logged so your home can show inspectors that staff use the policies. Questions about sensitive employment topics can be asked without going through a manager first."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "links",
+          "id": "",
+          "tint": true,
+          "label": "Also built for",
+          "heading": "CareStream for the rest of your team.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "links",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Training Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/training-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Registered Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/registered-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "HR and Admin Teams",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/hr-and-admin-teams"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Compliance Leads",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/compliance-leads"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Preparing for CQC",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/preparing-for-cqc"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Operations Teams",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/operations-teams"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Quality Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/quality-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Policy Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/policy-managers"
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "end",
+          "id": "",
+          "tint": false,
+          "label": "",
+          "heading": "Give your team answers on shift",
+          "intro": [
+            "Show your carers the hub on their own phones. Upload the policies you already have and see it working inside a fortnight."
+          ],
+          "image": null,
+          "flip": false,
+          "narrow": false,
+          "parts": [],
+          "actions": [
+            {
+              "label": "Start free trial",
+              "href": "/register",
+              "style": "solid",
+              "play": false
+            },
+            {
+              "label": "Book a demo",
+              "href": "/demo",
+              "style": "ghost",
+              "play": false
+            }
+          ]
+        }
+      ]
+    },
+    "sort": 8
+  },
+  {
+    "slug": "who-its-for-training-managers",
+    "title": "Assign it, track it and prove it, from one training library.",
+    "meta_title": "CareStream for Training Managers | CareStreamAI",
+    "meta_description": "Assign, track and prove care staff training from one library. One matrix for annual, adhoc and face to face training, with renewal reminders.",
+    "hero_image_url": "/images/who-its-for/training-managers/1.webp",
+    "content": {
+      "eyebrow": "For training managers",
+      "lede": [
+        "Annual courses, training built from your own policies and face to face sessions, all on one matrix. CareStream delivers training to staff phones, chases renewals for you and builds the record an inspector asks for while it happens."
+      ],
+      "actions": [
+        {
+          "label": "Start free trial",
+          "href": "/register",
+          "style": "solid",
+          "play": false
+        },
+        {
+          "label": "Book a demo",
+          "href": "/demo",
+          "style": "ghost",
+          "play": true
+        }
+      ],
+      "toc": [],
+      "blocks": [
+        {
+          "kind": "compare",
+          "id": "",
+          "tint": true,
+          "label": "The training year, as it is",
+          "heading": "The training is the easy part. The chasing and the evidence are not.",
+          "intro": [
+            "Courses sit in one system, face to face sessions on a paper register, and the matrix in a spreadsheet somebody updates when they remember. Renewals lapse quietly until an audit finds them.",
+            "CareStream puts every kind of training on the same record, so the matrix is always current and the evidence is already there."
+          ],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "compare",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Without CareStream",
+                  "tone": "dim",
+                  "title": "",
+                  "paras": [
+                    "Certificates in one place, attendance sheets in another, and a spreadsheet matrix that is out of date the day after it is updated."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "With CareStream",
+                  "tone": "good",
+                  "title": "",
+                  "paras": [
+                    "One matrix across annual, adhoc and face to face training, with renewal reminders sent before anything lapses and a per staff record ready for inspection."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "ticks",
+          "id": "",
+          "tint": false,
+          "label": "What changes for you",
+          "heading": "One matrix for everything your staff have to complete.",
+          "intro": [
+            "Every staff member, every module, every kind of training, in one live view."
+          ],
+          "image": "/images/who-its-for/training-managers/2.webp",
+          "split": true,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "ticks",
+              "where": "in",
+              "sub": "",
+              "variant": "",
+              "items": [],
+              "bullets": [
+                "A standard library covering the mandatory subjects, ready to assign",
+                "Training generated from your own policies, approved before staff see it",
+                "Face to face sessions set up in a minute, with reminders and attendance",
+                "Renewal reminders at 90, 30 and 7 days",
+                "Wrong answers become a short lesson and a fresh follow-up question",
+                "Completion, scores and learning time reported without assembling anything"
+              ],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "steps",
+          "id": "",
+          "tint": true,
+          "label": "How it works for you",
+          "heading": "Choose it, allocate it, and track every answer.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "steps",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "01",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Choose the courses",
+                  "paras": [
+                    "Pick from the mandatory library, or generate a course from one of your own policies and approve it before anyone sees it."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "02",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Allocate in one click",
+                  "paras": [
+                    "Assign by role, by person or to the whole team. Training arrives in the hub on each staff member's phone, in their language."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "03",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Track completion and evidence",
+                  "paras": [
+                    "The matrix updates as staff complete. Renewals are chased automatically and every answer is on the staff record."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "cards",
+          "id": "",
+          "tint": false,
+          "label": "The tools you will use",
+          "heading": "The complete training compliance toolkit.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "cards",
+              "where": "",
+              "sub": "",
+              "variant": "c3",
+              "items": [
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Training matrix",
+                  "paras": [
+                    "Every staff member and every module, with renewals and gaps highlighted before they become findings.",
+                    "Explore Training matrix"
+                  ],
+                  "bullets": [],
+                  "href": "/features/training-compliance-matrix-renewals-gaps"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Mandatory training by role",
+                  "paras": [
+                    "The right training list for each role, applied automatically as staff join.",
+                    "Explore Mandatory training by role"
+                  ],
+                  "bullets": [],
+                  "href": "/features/mandatory-training-by-role"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Training built from your policies",
+                  "paras": [
+                    "Turn a policy, an incident or a change into a short course your team completes that week.",
+                    "Explore Training built from your policies"
+                  ],
+                  "bullets": [],
+                  "href": "/training-platform"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Face to face training",
+                  "paras": [
+                    "Record classroom sessions on the same matrix as everything else, with attendance and hours.",
+                    "Explore Face to face training"
+                  ],
+                  "bullets": [],
+                  "href": "/features/face-to-face-training-and-matrix"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Effectiveness of training",
+                  "paras": [
+                    "See whether training landed, not just whether it was completed.",
+                    "Explore Effectiveness of training"
+                  ],
+                  "bullets": [],
+                  "href": "/features/effectiveness-of-training"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Training payroll report",
+                  "paras": [
+                    "Training hours by staff member as a PDF or CSV, ready for payroll and costing.",
+                    "Explore Training payroll report"
+                  ],
+                  "bullets": [],
+                  "href": "/features/training-payroll-report-pdf-csv-costing"
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "faq",
+          "id": "",
+          "tint": true,
+          "label": "Questions from training managers",
+          "heading": "Frequently asked.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "faq",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Can we use our own training alongside the library?",
+                  "paras": [
+                    "Yes. Courses built from your own policies and face to face sessions sit on the same matrix as the standard library, so there is one record per staff member."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "How are renewals handled?",
+                  "paras": [
+                    "CareStream sends renewal reminders at 90, 30 and 7 days, so training is renewed before it lapses rather than found lapsed at audit."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Do staff need a computer?",
+                  "paras": [
+                    "No. Training is delivered in the hub on their phone, or by email, and can be completed on shift."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "What evidence can we show an inspector?",
+                  "paras": [
+                    "A per staff record with completion dates, scores and answers, the whole team matrix, and attendance for face to face sessions."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "links",
+          "id": "",
+          "tint": false,
+          "label": "Also built for",
+          "heading": "CareStream for the rest of your team.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "links",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Care Workers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/care-workers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Registered Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/registered-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "HR and Admin Teams",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/hr-and-admin-teams"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Compliance Leads",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/compliance-leads"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Preparing for CQC",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/preparing-for-cqc"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Operations Teams",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/operations-teams"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Quality Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/quality-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Policy Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/policy-managers"
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "end",
+          "id": "",
+          "tint": false,
+          "label": "",
+          "heading": "See your training matrix build itself",
+          "intro": [
+            "Upload your staff list and your policies, allocate a course, and watch the matrix fill in."
+          ],
+          "image": null,
+          "flip": false,
+          "narrow": false,
+          "parts": [],
+          "actions": [
+            {
+              "label": "Start free trial",
+              "href": "/register",
+              "style": "solid",
+              "play": false
+            },
+            {
+              "label": "Book a demo",
+              "href": "/demo",
+              "style": "ghost",
+              "play": false
+            }
+          ]
+        }
+      ]
+    },
+    "sort": 9
+  },
+  {
+    "slug": "who-its-for-registered-managers",
+    "title": "Run the audit in minutes. Get the improvement plan straight away.",
+    "meta_title": "CareStream for Registered Managers | CareStreamAI",
+    "meta_description": "Run structured care audits in minutes and get a prioritised improvement plan straight away, while staff get policy answers without calling you.",
+    "hero_image_url": "/images/who-its-for/registered-managers/1.webp",
+    "content": {
+      "eyebrow": "For registered managers",
+      "lede": [
+        "Structured audits completed in the hub, a formatted report generated the moment they are finished, and AI recommendations prioritised for your service. Your team gets policy answers without calling you, and your readiness evidence builds itself."
+      ],
+      "actions": [
+        {
+          "label": "Start free trial",
+          "href": "/register",
+          "style": "solid",
+          "play": false
+        },
+        {
+          "label": "Book a demo",
+          "href": "/demo",
+          "style": "ghost",
+          "play": true
+        }
+      ],
+      "toc": [],
+      "blocks": [
+        {
+          "kind": "compare",
+          "id": "",
+          "tint": true,
+          "label": "Your week, as it is",
+          "heading": "Audits take an afternoon, read differently every time, and rarely lead to action.",
+          "intro": [
+            "A manual audit means a spreadsheet, a clipboard and a write up at the end of the day. The findings sit in a folder, and the same issues come back next quarter.",
+            "Meanwhile the phone rings on your day off with a question the policy already answers."
+          ],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "compare",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Without CareStream",
+                  "tone": "dim",
+                  "title": "",
+                  "paras": [
+                    "Audits on paper or spreadsheets, a different format each time, and a write up that never becomes a plan. Out of hours questions come to you."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "With CareStream",
+                  "tone": "good",
+                  "title": "",
+                  "paras": [
+                    "Guided audits in the hub with section scores, an automatic report and a prioritised improvement plan. Staff get policy answers without calling you."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "ticks",
+          "id": "",
+          "tint": false,
+          "label": "What changes for you",
+          "heading": "From guided completion to AI recommendations. One place for the whole audit.",
+          "intro": [
+            "Choose an audit, allocate it, and receive the report when it is done."
+          ],
+          "image": "/images/who-its-for/registered-managers/2.webp",
+          "split": true,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "ticks",
+              "where": "in",
+              "sub": "",
+              "variant": "",
+              "items": [],
+              "bullets": [
+                "Ten pre-built templates covering the areas CQC inspects",
+                "Build your own audits and allocate them to the right people",
+                "Photos taken on a phone, attached to the exact question",
+                "Section by section scoring, with auto-save and resume",
+                "An overall rating and a prioritised improvement plan, generated automatically",
+                "Findings linked to training, so a finding becomes a fix"
+              ],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "steps",
+          "id": "",
+          "tint": true,
+          "label": "How it works for you",
+          "heading": "Choose it, work through it, receive your report.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "steps",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "01",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Choose the audit and start",
+                  "paras": [
+                    "Pick a pre-built template or one you built yourself, and allocate it to a person, a shift or a room."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "02",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Guided completion in the hub",
+                  "paras": [
+                    "Every question is consistent and every answer is captured in the same structure, with photos where they help."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "03",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Report and recommendations",
+                  "paras": [
+                    "A formatted report with every response and section score, and an improvement plan specific to your findings."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "cards",
+          "id": "",
+          "tint": false,
+          "label": "The tools you will use",
+          "heading": "Everything a registered manager needs, in one place.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "cards",
+              "where": "",
+              "sub": "",
+              "variant": "c3",
+              "items": [
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Care audits",
+                  "paras": [
+                    "Structured audits that take minutes to complete and produce a report you can use.",
+                    "Explore Care audits"
+                  ],
+                  "bullets": [],
+                  "href": "/care-audits"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Build your own audits",
+                  "paras": [
+                    "Audits shaped around your service, with the same guided experience as the templates.",
+                    "Explore Build your own audits"
+                  ],
+                  "bullets": [],
+                  "href": "/features/build-your-own-audits"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "CQC Readiness Report",
+                  "paras": [
+                    "Your inspection readiness at a glance, built from how your team actually uses your policies.",
+                    "Explore CQC Readiness Report"
+                  ],
+                  "bullets": [],
+                  "href": "/features/cqc-readiness-report"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Policy gap detection",
+                  "paras": [
+                    "Find what your policy library is missing before an inspector asks.",
+                    "Explore Policy gap detection"
+                  ],
+                  "bullets": [],
+                  "href": "/policy-gap-detection"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Policies hub",
+                  "paras": [
+                    "Review what changed in a policy and approve it in one place.",
+                    "Explore Policies hub"
+                  ],
+                  "bullets": [],
+                  "href": "/features/care-manager-policies-hub-approve-see-what-changed"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Staff hub",
+                  "paras": [
+                    "Staff on nights get policy answers without calling you.",
+                    "Explore Staff hub"
+                  ],
+                  "bullets": [],
+                  "href": "/features/staff-hub"
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "faq",
+          "id": "",
+          "tint": true,
+          "label": "Questions from registered managers",
+          "heading": "Frequently asked.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "faq",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Can we use our own audits?",
+                  "paras": [
+                    "Yes. Build your own audits and allocate them by access level. They use the same guided completion, scoring and reports as the pre-built templates."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "What do the AI recommendations include?",
+                  "paras": [
+                    "Every completed audit produces a prioritised improvement plan specific to your findings, with an overall rating."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Can audits be completed on a phone?",
+                  "paras": [
+                    "Yes. Audits are completed in the hub on a phone or tablet, with photos attached to individual questions, and progress saves as you go."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Does this guarantee a CQC rating?",
+                  "paras": [
+                    "No. CareStream provides structured evidence of audits, policy access and staff engagement. It does not assess or influence CQC ratings."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "links",
+          "id": "",
+          "tint": false,
+          "label": "Also built for",
+          "heading": "CareStream for the rest of your team.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "links",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Care Workers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/care-workers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Training Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/training-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "HR and Admin Teams",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/hr-and-admin-teams"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Compliance Leads",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/compliance-leads"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Preparing for CQC",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/preparing-for-cqc"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Operations Teams",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/operations-teams"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Quality Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/quality-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Policy Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/policy-managers"
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "note",
+          "id": "",
+          "tint": false,
+          "label": "",
+          "heading": "",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": true,
+          "parts": [
+            {
+              "kind": "note",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [],
+              "bullets": [],
+              "header": "",
+              "footer": "",
+              "paras": [
+                "CareStream provides factual audit data and evidence of policy access and staff engagement. It does not make any assessment of, or claim to influence, CQC inspection ratings."
+              ],
+              "title": "Evidence, not a rating guarantee"
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "end",
+          "id": "",
+          "tint": false,
+          "label": "",
+          "heading": "Run your first audit this week",
+          "intro": [
+            "Choose a template, allocate it to your team and see the report and improvement plan the moment it is finished."
+          ],
+          "image": null,
+          "flip": false,
+          "narrow": false,
+          "parts": [],
+          "actions": [
+            {
+              "label": "Start free trial",
+              "href": "/register",
+              "style": "solid",
+              "play": false
+            },
+            {
+              "label": "Book a demo",
+              "href": "/demo",
+              "style": "ghost",
+              "play": false
+            }
+          ]
+        }
+      ]
+    },
+    "sort": 10
+  },
+  {
+    "slug": "who-its-for-hr-and-admin-teams",
+    "title": "Stop answering the same questions. Let your handbook answer them.",
+    "meta_title": "CareStream for HR and Admin Teams | CareStreamAI",
+    "meta_description": "Staff handbook questions answered 24/7 in any language, plus one register for DBS, right to work, registration and references with expiry alerts.",
+    "hero_image_url": "/images/who-its-for/hr-and-admin-teams/1.webp",
+    "content": {
+      "eyebrow": "For HR and admin teams",
+      "lede": [
+        "Annual leave, sick pay, disciplinary procedures: staff get the answer from your actual handbook, at any hour, in their own language. Your team keeps the checks, credentials and records that matter in one register, with expiry alerts before anything runs out."
+      ],
+      "actions": [
+        {
+          "label": "Start free trial",
+          "href": "/register",
+          "style": "solid",
+          "play": false
+        },
+        {
+          "label": "Book a demo",
+          "href": "/demo",
+          "style": "ghost",
+          "play": true
+        }
+      ],
+      "toc": [],
+      "blocks": [
+        {
+          "kind": "compare",
+          "id": "",
+          "tint": true,
+          "label": "Your inbox, as it is",
+          "heading": "Staff have employment questions every week. HR is not available every week.",
+          "intro": [
+            "The same questions arrive again and again, often out of hours, and sometimes from staff who do not fully understand their contract in English. Colleagues answer them inconsistently in the meantime.",
+            "CareStream makes the whole staff handbook answerable, so your team spends its time on the work that needs human judgement."
+          ],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "compare",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Without CareStream",
+                  "tone": "dim",
+                  "title": "",
+                  "paras": [
+                    "Staff wait for office hours, ask a manager who may not know, or go without the information they are entitled to."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "With CareStream",
+                  "tone": "good",
+                  "title": "",
+                  "paras": [
+                    "Any staff member asks in the hub or by email, at any time, and gets the answer from the right section of your handbook, in their language."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "ticks",
+          "id": "",
+          "tint": false,
+          "label": "What changes for you",
+          "heading": "Handbook answers for staff. One compliance register for you.",
+          "intro": [
+            "The questions stop landing on your desk, and the checks stop living in separate folders."
+          ],
+          "image": "/images/who-its-for/hr-and-admin-teams/2.webp",
+          "split": true,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "ticks",
+              "where": "in",
+              "sub": "",
+              "variant": "",
+              "items": [],
+              "bullets": [
+                "The full staff handbook indexed chapter by chapter",
+                "Answers in over 60 languages, with the handbook section cited",
+                "Topic analytics showing what staff ask about most",
+                "DBS, right to work, registration and references in one register",
+                "Credential uploads with expiry alerts before anything lapses",
+                "Supervisions and appraisals tracked alongside training"
+              ],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "steps",
+          "id": "",
+          "tint": true,
+          "label": "How it works for you",
+          "heading": "Upload the handbook once. Your whole team can ask anything from it.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "steps",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "01",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Upload your staff handbook",
+                  "paras": [
+                    "Add the handbook, contracts and HR policies. Large documents are indexed chapter by chapter, within minutes."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "02",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Staff ask in the hub",
+                  "paras": [
+                    "By typing or speaking, or by email, in any language. The hub detects the language and answers in it."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "03",
+                  "tag": "",
+                  "tone": "",
+                  "title": "See what staff are asking",
+                  "paras": [
+                    "Analytics show the most asked topics, so you can see where the handbook or onboarding needs to be clearer."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "asks",
+          "id": "",
+          "tint": false,
+          "label": "Questions staff ask HR",
+          "heading": "The questions that used to wait until Monday.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "asks",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Leave",
+                  "tone": "",
+                  "title": "",
+                  "paras": [
+                    "How many days of annual leave do I have left, and how much notice do I need to give?"
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Absence",
+                  "tone": "",
+                  "title": "",
+                  "paras": [
+                    "I am unwell before a shift. Who do I tell, and do I need a fit note?"
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Pay",
+                  "tone": "",
+                  "title": "",
+                  "paras": [
+                    "How do I claim back expenses for a training course?"
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "cards",
+          "id": "",
+          "tint": true,
+          "label": "The tools you will use",
+          "heading": "The complete HR toolkit for a care service.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "cards",
+              "where": "",
+              "sub": "",
+              "variant": "c3",
+              "items": [
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "HR policies and handbook",
+                  "paras": [
+                    "Handbook answers for every staff member, in any language, at any hour.",
+                    "Explore HR policies and handbook"
+                  ],
+                  "bullets": [],
+                  "href": "/hr-policies"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Workforce compliance register",
+                  "paras": [
+                    "DBS, right to work, registration and references per person, in one place.",
+                    "Explore Workforce compliance register"
+                  ],
+                  "bullets": [],
+                  "href": "/features/workforce-compliance-register-dbs-right-to-work-registration-references"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Credential expiry alerts",
+                  "paras": [
+                    "Upload credential documents and get alerts before any of them expire.",
+                    "Explore Credential expiry alerts"
+                  ],
+                  "bullets": [],
+                  "href": "/features/credential-document-uploads-expiry-alerts"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Supervisions and appraisals",
+                  "paras": [
+                    "Track supervisions and appraisals so none are missed.",
+                    "Explore Supervisions and appraisals"
+                  ],
+                  "bullets": [],
+                  "href": "/features/supervisions-and-appraisals-tracking"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Staff onboarding",
+                  "paras": [
+                    "Get a new starter safe, trained and signed off in their first week.",
+                    "Explore Staff onboarding"
+                  ],
+                  "bullets": [],
+                  "href": "/uses/staff-onboarding"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Staff compliance",
+                  "paras": [
+                    "Know who is compliant today, without chasing anyone.",
+                    "Explore Staff compliance"
+                  ],
+                  "bullets": [],
+                  "href": "/uses/staff-compliance"
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "faq",
+          "id": "",
+          "tint": false,
+          "label": "Questions from hr and admin teams",
+          "heading": "Frequently asked.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "faq",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Are staff questions private?",
+                  "paras": [
+                    "Questions about disciplinary procedures, grievances or pay can be asked in the hub or by email without going through a manager, so staff can understand their position first."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Do we need to translate the handbook?",
+                  "paras": [
+                    "No. The handbook stays in English. Answers are given in the language the staff member asked in."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Can international recruits use it from day one?",
+                  "paras": [
+                    "Yes. New starters can ask about their employment terms in their own language as soon as they are invited to the hub."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "What is tracked in the compliance register?",
+                  "paras": [
+                    "DBS checks, right to work, professional registration and references, with credential documents uploaded per person and expiry alerts."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "links",
+          "id": "",
+          "tint": true,
+          "label": "Also built for",
+          "heading": "CareStream for the rest of your team.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "links",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Care Workers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/care-workers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Training Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/training-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Registered Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/registered-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Compliance Leads",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/compliance-leads"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Preparing for CQC",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/preparing-for-cqc"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Operations Teams",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/operations-teams"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Quality Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/quality-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Policy Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/policy-managers"
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "end",
+          "id": "",
+          "tint": false,
+          "label": "",
+          "heading": "See your handbook answer the questions",
+          "intro": [
+            "Upload the handbook you already have and see staff questions answered inside a fortnight."
+          ],
+          "image": null,
+          "flip": false,
+          "narrow": false,
+          "parts": [],
+          "actions": [
+            {
+              "label": "Start free trial",
+              "href": "/register",
+              "style": "solid",
+              "play": false
+            },
+            {
+              "label": "Book a demo",
+              "href": "/demo",
+              "style": "ghost",
+              "play": false
+            }
+          ]
+        }
+      ]
+    },
+    "sort": 11
+  },
+  {
+    "slug": "who-its-for-compliance-leads",
+    "title": "Stop preparing for CQC. Start being ready for CQC.",
+    "meta_title": "CareStream for Compliance Leads | CareStreamAI",
+    "meta_description": "Track CQC readiness and gather evidence as you go: regulation coverage checked inside your policies, and a readiness report you can generate at any time.",
+    "hero_image_url": "/images/who-its-for/compliance-leads/1.webp",
+    "content": {
+      "eyebrow": "For compliance leads",
+      "lede": [
+        "A live view of which regulations your policies cover, where they fall short and exactly what to add. Evidence of how your team uses your policies builds every day, and your readiness report is generated rather than assembled under pressure."
+      ],
+      "actions": [
+        {
+          "label": "Start free trial",
+          "href": "/register",
+          "style": "solid",
+          "play": false
+        },
+        {
+          "label": "Book a demo",
+          "href": "/demo",
+          "style": "ghost",
+          "play": true
+        }
+      ],
+      "toc": [],
+      "blocks": [
+        {
+          "kind": "compare",
+          "id": "",
+          "tint": true,
+          "label": "Compliance, as it is",
+          "heading": "Policies exist. Evidence that they are used does not.",
+          "intro": [
+            "Most services can show a policy folder. Far fewer can show that staff read the current version, that the policies cover every regulation that applies, or that two policies do not contradict each other.",
+            "CareStream checks the whole library and records how it is used, so the evidence is there before anyone asks."
+          ],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "compare",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Without CareStream",
+                  "tone": "dim",
+                  "title": "",
+                  "paras": [
+                    "A policy folder, a review date spreadsheet and a week of gathering evidence when an inspection is announced."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "With CareStream",
+                  "tone": "good",
+                  "title": "",
+                  "paras": [
+                    "Regulation coverage checked inside your policies, a logged record of staff use, and a readiness report you can generate at any time."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "ticks",
+          "id": "",
+          "tint": false,
+          "label": "What changes for you",
+          "heading": "Three checks across your whole policy library.",
+          "intro": [
+            "Coverage, currency and consistency, measured rather than assumed."
+          ],
+          "image": "/images/who-its-for/compliance-leads/2.webp",
+          "split": true,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "ticks",
+              "where": "in",
+              "sub": "",
+              "variant": "",
+              "items": [],
+              "bullets": [
+                "Regulation coverage judged inside your policies: covered, partial or gap",
+                "Out of date content found, including superseded law and placeholders",
+                "Contradictions between policies surfaced across the whole set",
+                "Wording checked against the CQC quality statements",
+                "Alerts when the regulations your library relies on change",
+                "Every recommendation shows its legal basis and source"
+              ],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "steps",
+          "id": "",
+          "tint": true,
+          "label": "How it works for you",
+          "heading": "Evidence that builds itself, every day.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "steps",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "01",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Staff ask policy questions",
+                  "paras": [
+                    "Your team uses the hub and email for real questions on real shifts."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "02",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Every interaction is recorded",
+                  "paras": [
+                    "Queries, the policies used and the versions accessed are logged automatically."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "03",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Generate your readiness report",
+                  "paras": [
+                    "Produce the CQC Readiness Report when you need it, from evidence that already exists."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "cards",
+          "id": "",
+          "tint": false,
+          "label": "The tools you will use",
+          "heading": "Everything compliance needs, in one place.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "cards",
+              "where": "",
+              "sub": "",
+              "variant": "c3",
+              "items": [
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "CQC compliance",
+                  "paras": [
+                    "Readiness tracking and evidence management across your service.",
+                    "Explore CQC compliance"
+                  ],
+                  "bullets": [],
+                  "href": "/cqc-compliance"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Policy gap detection",
+                  "paras": [
+                    "Know exactly where your policies fall short, then close the gap.",
+                    "Explore Policy gap detection"
+                  ],
+                  "bullets": [],
+                  "href": "/policy-gap-detection"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "CQC wording alignment",
+                  "paras": [
+                    "Policies an inspector recognises, still written in your voice.",
+                    "Explore CQC wording alignment"
+                  ],
+                  "bullets": [],
+                  "href": "/features/cqc-wording-alignment"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Regulation change alerts",
+                  "paras": [
+                    "When the standards change, you know which policies it affects.",
+                    "Explore Regulation change alerts"
+                  ],
+                  "bullets": [],
+                  "href": "/features/regulation-change-tracking-update-alerts"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "CQC evidence pack",
+                  "paras": [
+                    "Sign-in sheets, certificates and files gathered in one place.",
+                    "Explore CQC evidence pack"
+                  ],
+                  "bullets": [],
+                  "href": "/features/cqc-evidence-pack-sign-in-sheets-certificates-files"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "CQC Readiness Report",
+                  "paras": [
+                    "Your readiness at a glance, generated from how your team uses your policies.",
+                    "Explore CQC Readiness Report"
+                  ],
+                  "bullets": [],
+                  "href": "/features/cqc-readiness-report"
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "faq",
+          "id": "",
+          "tint": true,
+          "label": "Questions from compliance leads",
+          "heading": "Frequently asked.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "faq",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "How does it know which regulations apply to us?",
+                  "paras": [
+                    "Applicability is set by your care setting and service profile, so your policies are only tested against what applies to your service."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Does it just check policy titles?",
+                  "paras": [
+                    "No. It searches the content of your whole policy library, and only flags a gap when your documents genuinely do not address the requirement."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Will it rewrite our policies?",
+                  "paras": [
+                    "It suggests changes with example wording. Nothing is adopted until you review and approve it, and accepted changes are shown as tracked changes."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Which plans include policy gap detection?",
+                  "paras": [
+                    "Policy gap detection is included on the Professional and Enterprise plans."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "links",
+          "id": "",
+          "tint": false,
+          "label": "Also built for",
+          "heading": "CareStream for the rest of your team.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "links",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Care Workers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/care-workers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Training Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/training-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Registered Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/registered-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "HR and Admin Teams",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/hr-and-admin-teams"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Preparing for CQC",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/preparing-for-cqc"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Operations Teams",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/operations-teams"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Quality Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/quality-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Policy Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/policy-managers"
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "note",
+          "id": "",
+          "tint": false,
+          "label": "",
+          "heading": "",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": true,
+          "parts": [
+            {
+              "kind": "note",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [],
+              "bullets": [],
+              "header": "",
+              "footer": "",
+              "paras": [
+                "The CareStream CQC Readiness Report provides factual audit data, evidence of policy access and staff engagement. It does not make any assessment of, or claim to influence, CQC inspection ratings."
+              ],
+              "title": "Inspection evidence, not a rating guarantee"
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "end",
+          "id": "",
+          "tint": false,
+          "label": "",
+          "heading": "See your coverage against your own policies",
+          "intro": [
+            "Upload your policy library and see where it stands inside a fortnight."
+          ],
+          "image": null,
+          "flip": false,
+          "narrow": false,
+          "parts": [],
+          "actions": [
+            {
+              "label": "Start free trial",
+              "href": "/register",
+              "style": "solid",
+              "play": false
+            },
+            {
+              "label": "Book a demo",
+              "href": "/demo",
+              "style": "ghost",
+              "play": false
+            }
+          ]
+        }
+      ]
+    },
+    "sort": 12
+  },
+  {
+    "slug": "who-its-for-preparing-for-cqc",
+    "title": "Inspectors speak to your staff directly. Make sure every one of them is ready.",
+    "meta_title": "Preparing for CQC with CareStream | CareStreamAI",
+    "meta_description": "Make sure every staff member is ready for inspection with inspector style practice questions across the five key questions, scored with feedback.",
+    "hero_image_url": "/images/who-its-for/preparing-for-cqc/1.webp",
+    "content": {
+      "eyebrow": "For services preparing for CQC",
+      "lede": [
+        "Inspector style questions across the five key questions, answered by each staff member in their own words and scored instantly. You see where every person stands before the inspector arrives, and your evidence is gathered in one place."
+      ],
+      "actions": [
+        {
+          "label": "Start free trial",
+          "href": "/register",
+          "style": "solid",
+          "play": false
+        },
+        {
+          "label": "Book a demo",
+          "href": "/demo",
+          "style": "ghost",
+          "play": true
+        }
+      ],
+      "toc": [],
+      "blocks": [
+        {
+          "kind": "compare",
+          "id": "",
+          "tint": true,
+          "label": "Inspection preparation, as it is",
+          "heading": "The staff conversation is the hardest part to prepare for.",
+          "intro": [
+            "Preparation usually focuses on documents. But inspectors speak to care workers on the floor, and to kitchen, maintenance and admin staff too, and inconsistent answers become findings.",
+            "CareStream gives every member of the team regular practice with the kind of questions inspectors ask, matched to their role and in their own language."
+          ],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "compare",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Without CareStream",
+                  "tone": "dim",
+                  "title": "",
+                  "paras": [
+                    "Staff give vague or inconsistent answers to questions they have never practised, and gaps become visible in conversation."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "With CareStream",
+                  "tone": "good",
+                  "title": "",
+                  "paras": [
+                    "Staff have practised inspector style questions across all five key questions, with a score and feedback on every answer."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "ticks",
+          "id": "",
+          "tint": false,
+          "label": "What changes for you",
+          "heading": "Know exactly where your team stands before the inspector arrives.",
+          "intro": [
+            "Readiness you can see, per person and per key question."
+          ],
+          "image": "/images/who-its-for/preparing-for-cqc/2.webp",
+          "split": true,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "ticks",
+              "where": "in",
+              "sub": "",
+              "variant": "",
+              "items": [],
+              "bullets": [
+                "A question bank mapped to Safe, Effective, Caring, Responsive and Well-led",
+                "Question sets matched to each role, not only care staff",
+                "Answers written in their own words, scored with feedback and a model answer",
+                "Questions reworded on delivery, so staff build understanding rather than scripts",
+                "Practise in their first language, with reporting kept in English",
+                "Targeted practice sent to the areas where scores are weakest"
+              ],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "steps",
+          "id": "",
+          "tint": true,
+          "label": "How it works for you",
+          "heading": "Inspector style questions, answered in their own words, scored instantly.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "steps",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "01",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Questions sent in the hub",
+                  "paras": [
+                    "Staff are notified in the hub and answer in their own time, on their own phone."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "02",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Answered in their own words",
+                  "paras": [
+                    "A real written answer, not multiple choice, in the language they are most confident in."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "03",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Scored with feedback",
+                  "paras": [
+                    "Every answer is scored with feedback and a model answer. Staff can review and try again."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "asks",
+          "id": "",
+          "tint": false,
+          "label": "A real practice question",
+          "heading": "Practice questions that mirror what an inspector asks.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "asks",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Safe",
+                  "tone": "",
+                  "title": "",
+                  "paras": [
+                    "A resident shows you an unexplained bruise and seems distressed. You are alone with them. What is your immediate responsibility?"
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Caring",
+                  "tone": "",
+                  "title": "",
+                  "paras": [
+                    "A resident tells you they feel their preferences about personal care are not being respected. How do you respond?"
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Responsive",
+                  "tone": "",
+                  "title": "",
+                  "paras": [
+                    "A family member tells you their relative has been waiting three weeks to see a GP. What steps do you take?"
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "cards",
+          "id": "",
+          "tint": true,
+          "label": "The tools you will use",
+          "heading": "The complete inspection preparation toolkit.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "cards",
+              "where": "",
+              "sub": "",
+              "variant": "c3",
+              "items": [
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "CQC staff questions",
+                  "paras": [
+                    "Inspector style questions across the five key questions, scored by AI with review and retry.",
+                    "Explore CQC staff questions"
+                  ],
+                  "bullets": [],
+                  "href": "/cqc-staff-questions"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "CQC prep questions by role",
+                  "paras": [
+                    "Question sets for nurses, carers, kitchen, maintenance and admin staff.",
+                    "Explore CQC prep questions by role"
+                  ],
+                  "bullets": [],
+                  "href": "/uses/cqc-prep-questions"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "CQC evidence pack",
+                  "paras": [
+                    "Sign-in sheets, certificates and files, gathered and ready.",
+                    "Explore CQC evidence pack"
+                  ],
+                  "bullets": [],
+                  "href": "/features/cqc-evidence-pack-sign-in-sheets-certificates-files"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "CQC Readiness Report",
+                  "paras": [
+                    "Evidence of policy access and staff engagement, generated when you need it.",
+                    "Explore CQC Readiness Report"
+                  ],
+                  "bullets": [],
+                  "href": "/features/cqc-readiness-report"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "CQC wording alignment",
+                  "paras": [
+                    "Policies that use the language of the quality statements, in your own voice.",
+                    "Explore CQC wording alignment"
+                  ],
+                  "bullets": [],
+                  "href": "/uses/cqc-wording-alignment"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "CQC Report Chat",
+                  "paras": [
+                    "After the inspection, upload the report and ask it questions.",
+                    "Explore CQC Report Chat"
+                  ],
+                  "bullets": [],
+                  "href": "/cqc-report-chat"
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "faq",
+          "id": "",
+          "tint": false,
+          "label": "Questions from services preparing for CQC",
+          "heading": "Frequently asked.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "faq",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Are the questions multiple choice?",
+                  "paras": [
+                    "No. Staff write a real answer in their own words. Each question is reworded slightly on delivery, so staff cannot memorise a fixed reply."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Can non-care staff take part?",
+                  "paras": [
+                    "Yes. Question sets are matched to the role, including kitchen, maintenance and admin staff, who inspectors also speak to."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Can staff practise in another language?",
+                  "paras": [
+                    "Yes. The question, model answer and feedback are shown in each staff member's language, and they can answer in it. Your reporting stays in English."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Does this guarantee a good rating?",
+                  "paras": [
+                    "No. CareStream helps your team practise and gives you evidence of preparation. It does not assess or influence CQC ratings."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "links",
+          "id": "",
+          "tint": true,
+          "label": "Also built for",
+          "heading": "CareStream for the rest of your team.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "links",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Care Workers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/care-workers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Training Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/training-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Registered Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/registered-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "HR and Admin Teams",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/hr-and-admin-teams"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Compliance Leads",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/compliance-leads"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Operations Teams",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/operations-teams"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Quality Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/quality-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Policy Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/policy-managers"
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "note",
+          "id": "",
+          "tint": false,
+          "label": "",
+          "heading": "",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": true,
+          "parts": [
+            {
+              "kind": "note",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [],
+              "bullets": [],
+              "header": "",
+              "footer": "",
+              "paras": [
+                "CareStream helps staff practise and records their progress. It does not make any assessment of, or claim to influence, CQC inspection ratings."
+              ],
+              "title": "Preparation, not a rating guarantee"
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "end",
+          "id": "",
+          "tint": false,
+          "label": "",
+          "heading": "See where your team stands today",
+          "intro": [
+            "Send a set of practice questions to your team and see the readiness scores come in."
+          ],
+          "image": null,
+          "flip": false,
+          "narrow": false,
+          "parts": [],
+          "actions": [
+            {
+              "label": "Start free trial",
+              "href": "/register",
+              "style": "solid",
+              "play": false
+            },
+            {
+              "label": "Book a demo",
+              "href": "/demo",
+              "style": "ghost",
+              "play": false
+            }
+          ]
+        }
+      ]
+    },
+    "sort": 13
+  },
+  {
+    "slug": "who-its-for-operations-teams",
+    "title": "When things go wrong, every staff member can reach the plan.",
+    "meta_title": "CareStream for Operations Teams | CareStreamAI",
+    "meta_description": "Business continuity plans every staff member can reach on any device, and one approved policy library across every service you run.",
+    "hero_image_url": "/images/who-its-for/operations-teams/1.webp",
+    "content": {
+      "eyebrow": "For operations teams",
+      "lede": [
+        "Your business continuity plan becomes something staff can ask, on any device, when other systems are down. Across a group, every service draws from the same approved library, and you can see each home side by side."
+      ],
+      "actions": [
+        {
+          "label": "Start free trial",
+          "href": "/register",
+          "style": "solid",
+          "play": false
+        },
+        {
+          "label": "Book a demo",
+          "href": "/demo",
+          "style": "ghost",
+          "play": true
+        }
+      ],
+      "toc": [],
+      "blocks": [
+        {
+          "kind": "compare",
+          "id": "",
+          "tint": true,
+          "label": "Continuity, as it is",
+          "heading": "Most continuity plans are written for inspectors, not for staff at 2am.",
+          "intro": [
+            "The plan exists, but it is a long document in a folder few people have read. During a staff shortage, an IT outage or severe weather, nobody has time to find the right page.",
+            "Across several services the problem multiplies: different versions, different practice, and no single view."
+          ],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "compare",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Without CareStream",
+                  "tone": "dim",
+                  "title": "",
+                  "paras": [
+                    "A plan in a folder that staff have never opened, and different versions of the same policy in different homes."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "With CareStream",
+                  "tone": "good",
+                  "title": "",
+                  "paras": [
+                    "Staff ask the plan what to do in the scenario in front of them, and every service works from the same centrally approved library."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "ticks",
+          "id": "",
+          "tint": false,
+          "label": "What changes for you",
+          "heading": "A continuity plan your whole team can actually use.",
+          "intro": [
+            "Answers in the moment, and a view across every service you run."
+          ],
+          "image": "/images/who-its-for/operations-teams/2.webp",
+          "split": true,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "ticks",
+              "where": "in",
+              "sub": "",
+              "variant": "",
+              "items": [],
+              "bullets": [
+                "Staff query the plan by scenario in the hub, by email or by voice",
+                "Accessible on any device when other systems are down",
+                "Gaps in the plan surfaced automatically",
+                "Plan updates live for staff the moment they are approved",
+                "Staff familiarisation testing, so the plan is known before it is needed",
+                "A group console to compare every service side by side"
+              ],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "steps",
+          "id": "",
+          "tint": true,
+          "label": "How it works for you",
+          "heading": "Upload the plan once. Your whole team can query it instantly.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "steps",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "01",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Upload your continuity plan",
+                  "paras": [
+                    "Add your business continuity plan alongside your policies. It is indexed within minutes."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "02",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Staff ask what to do",
+                  "paras": [
+                    "In any scenario, staff ask in the hub and get the specific procedure from your plan."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "03",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Gaps surfaced automatically",
+                  "paras": [
+                    "Questions the plan cannot answer are flagged, so you know where it needs to be stronger."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "asks",
+          "id": "",
+          "tint": false,
+          "label": "Scenarios staff ask about",
+          "heading": "The right answer during a live incident.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "asks",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Staff shortage",
+                  "tone": "",
+                  "title": "",
+                  "paras": [
+                    "Two carers have called in sick for tonight. What does our plan say I do first?"
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "IT outage",
+                  "tone": "",
+                  "title": "",
+                  "paras": [
+                    "The electronic care records are down. How do we record medication until they are back?"
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Severe weather",
+                  "tone": "",
+                  "title": "",
+                  "paras": [
+                    "The roads are closed and the day shift cannot get in. Who do I contact?"
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "cards",
+          "id": "",
+          "tint": true,
+          "label": "The tools you will use",
+          "heading": "Operational resilience, across every service.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "cards",
+              "where": "",
+              "sub": "",
+              "variant": "c3",
+              "items": [
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Business continuity",
+                  "paras": [
+                    "Plans accessible to every staff member, any time.",
+                    "Explore Business continuity"
+                  ],
+                  "bullets": [],
+                  "href": "/business-continuity"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Group console and benchmarking",
+                  "paras": [
+                    "Every home side by side, so oversight is based on comparison.",
+                    "Explore Group console and benchmarking"
+                  ],
+                  "bullets": [],
+                  "href": "/features/multi-site-group-console-and-benchmarking"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Workforce and multi-site",
+                  "paras": [
+                    "Manage staff and policies across several services from one account.",
+                    "Explore Workforce and multi-site"
+                  ],
+                  "bullets": [],
+                  "href": "/features/workforce-and-multi-site"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Advanced analytics",
+                  "paras": [
+                    "Trends and drill down across services, beyond the headline numbers.",
+                    "Explore Advanced analytics"
+                  ],
+                  "bullets": [],
+                  "href": "/features/advanced-analytics"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Document versioning",
+                  "paras": [
+                    "One approved version, with a full history behind it.",
+                    "Explore Document versioning"
+                  ],
+                  "bullets": [],
+                  "href": "/features/document-versioning"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Staff hub",
+                  "paras": [
+                    "The hub on every phone, so the plan is reachable wherever staff are.",
+                    "Explore Staff hub"
+                  ],
+                  "bullets": [],
+                  "href": "/features/staff-hub"
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "faq",
+          "id": "",
+          "tint": false,
+          "label": "Questions from operations teams",
+          "heading": "Frequently asked.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "faq",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Can staff reach the plan if our systems are down?",
+                  "paras": [
+                    "The hub works on any phone or browser, and staff can also ask by email, so the plan is not tied to an office computer."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "How do we know staff are familiar with the plan?",
+                  "paras": [
+                    "Staff familiarisation testing checks understanding before an incident, and query analytics show which parts of the plan are asked about."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Does it work across several services?",
+                  "paras": [
+                    "Yes. All services can draw from one centrally managed library, with per service analytics and a group console to compare them."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "What happens when we update the plan?",
+                  "paras": [
+                    "Once the new version is approved, staff answers come from it immediately. Superseded guidance is not used."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "links",
+          "id": "",
+          "tint": true,
+          "label": "Also built for",
+          "heading": "CareStream for the rest of your team.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "links",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Care Workers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/care-workers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Training Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/training-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Registered Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/registered-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "HR and Admin Teams",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/hr-and-admin-teams"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Compliance Leads",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/compliance-leads"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Preparing for CQC",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/preparing-for-cqc"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Quality Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/quality-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Policy Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/policy-managers"
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "end",
+          "id": "",
+          "tint": false,
+          "label": "",
+          "heading": "See your continuity plan answer questions",
+          "intro": [
+            "Upload the plan you already have and ask it the scenarios your team worries about."
+          ],
+          "image": null,
+          "flip": false,
+          "narrow": false,
+          "parts": [],
+          "actions": [
+            {
+              "label": "Start free trial",
+              "href": "/register",
+              "style": "solid",
+              "play": false
+            },
+            {
+              "label": "Book a demo",
+              "href": "/demo",
+              "style": "ghost",
+              "play": false
+            }
+          ]
+        }
+      ]
+    },
+    "sort": 14
+  },
+  {
+    "slug": "who-its-for-quality-managers",
+    "title": "Ask the report. Get the action points.",
+    "meta_title": "CareStream for Quality Managers | CareStreamAI",
+    "meta_description": "Upload an inspection report and ask it questions, get an improvement plan with every audit, and see staff knowledge gaps ranked by frequency.",
+    "hero_image_url": "/images/who-its-for/quality-managers/1.webp",
+    "content": {
+      "eyebrow": "For quality managers",
+      "lede": [
+        "Upload an inspection report and ask it questions in plain English. Every audit produces a prioritised improvement plan, and analytics surface the knowledge gaps your staff keep running into, ranked by how often they come up."
+      ],
+      "actions": [
+        {
+          "label": "Start free trial",
+          "href": "/register",
+          "style": "solid",
+          "play": false
+        },
+        {
+          "label": "Book a demo",
+          "href": "/demo",
+          "style": "ghost",
+          "play": true
+        }
+      ],
+      "toc": [],
+      "blocks": [
+        {
+          "kind": "compare",
+          "id": "",
+          "tint": true,
+          "label": "Quality work, as it is",
+          "heading": "The findings are in the reports. Finding them takes the time.",
+          "intro": [
+            "An inspection report runs to many pages. Audit results arrive in different formats. Staff questions that reveal a gap in understanding are never collected anywhere.",
+            "CareStream reads the reports with you, structures the audits and records the questions, so the action items come to you."
+          ],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "compare",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Without CareStream",
+                  "tone": "dim",
+                  "title": "",
+                  "paras": [
+                    "Reading reports end to end, collating audit write ups by hand, and learning about knowledge gaps when something goes wrong."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "With CareStream",
+                  "tone": "good",
+                  "title": "",
+                  "paras": [
+                    "Ask the report what needs doing, receive an improvement plan with every audit, and see knowledge gaps ranked by frequency."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "ticks",
+          "id": "",
+          "tint": false,
+          "label": "What changes for you",
+          "heading": "From report to action, without the hunting.",
+          "intro": [
+            "Every source of quality information, turned into something you can act on."
+          ],
+          "image": "/images/who-its-for/quality-managers/2.webp",
+          "split": true,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "ticks",
+              "where": "in",
+              "sub": "",
+              "variant": "",
+              "items": [],
+              "bullets": [
+                "Find the action points in an inspection report instantly",
+                "Findings cross referenced against your policies and the CQC framework",
+                "A prioritised improvement plan with every completed audit",
+                "Knowledge gaps flagged in real time and ranked by frequency",
+                "A monthly summary report of what staff are asking",
+                "Audit findings linked to training, and training impact measured"
+              ],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "steps",
+          "id": "",
+          "tint": true,
+          "label": "How it works for you",
+          "heading": "Three steps from report to clarity.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "steps",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "01",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Upload the report",
+                  "paras": [
+                    "Upload your CQC inspection report as a PDF. It stays private to your account."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "02",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Ask in plain English",
+                  "paras": [
+                    "Ask what the findings mean, what needs doing and where your evidence sits."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "03",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Get specific answers",
+                  "paras": [
+                    "Answers cross reference your policies and the framework, and can help you draft a factual accuracy challenge."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "asks",
+          "id": "",
+          "tint": false,
+          "label": "The questions quality managers ask",
+          "heading": "Ask the report what you need to know.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "asks",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Action points",
+                  "tone": "",
+                  "title": "",
+                  "paras": [
+                    "What are all the actions we need to take under the Safe key question?"
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Evidence",
+                  "tone": "",
+                  "title": "",
+                  "paras": [
+                    "Which of our policies cover the medication finding on page nine?"
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Challenge",
+                  "tone": "",
+                  "title": "",
+                  "paras": [
+                    "Is there anything in this report we could challenge on factual accuracy?"
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "cards",
+          "id": "",
+          "tint": true,
+          "label": "The tools you will use",
+          "heading": "Quality information, turned into action.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "cards",
+              "where": "",
+              "sub": "",
+              "variant": "c3",
+              "items": [
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "CQC Report Chat",
+                  "paras": [
+                    "Upload your inspection report and chat with it.",
+                    "Explore CQC Report Chat"
+                  ],
+                  "bullets": [],
+                  "href": "/cqc-report-chat"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Care audits",
+                  "paras": [
+                    "Structured audits with section scores, an overall rating and an improvement plan.",
+                    "Explore Care audits"
+                  ],
+                  "bullets": [],
+                  "href": "/care-audits"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Advanced analytics",
+                  "paras": [
+                    "Depth, trends and drill down across your policy and training data.",
+                    "Explore Advanced analytics"
+                  ],
+                  "bullets": [],
+                  "href": "/features/advanced-analytics"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Audits linked to training",
+                  "paras": [
+                    "Turn an audit finding into training, then see whether it worked.",
+                    "Explore Audits linked to training"
+                  ],
+                  "bullets": [],
+                  "href": "/features/audits-linked-to-training"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Training impact",
+                  "paras": [
+                    "Measure whether training changed what staff know.",
+                    "Explore Training impact"
+                  ],
+                  "bullets": [],
+                  "href": "/features/training-impact"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Cross-policy consistency",
+                  "paras": [
+                    "Find where two policies tell staff different things.",
+                    "Explore Cross-policy consistency"
+                  ],
+                  "bullets": [],
+                  "href": "/features/cross-policy-consistency-contradictions-between-policies"
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "faq",
+          "id": "",
+          "tint": false,
+          "label": "Questions from quality managers",
+          "heading": "Frequently asked.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "faq",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Is our inspection report kept private?",
+                  "paras": [
+                    "Yes. The report stays private to your account, is encrypted at rest and is never used to train AI models."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Can it help with a factual accuracy challenge?",
+                  "paras": [
+                    "It can help you identify points to challenge and draft your response. It is for information and planning, and the decision on what to submit is yours."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Where do knowledge gaps come from?",
+                  "paras": [
+                    "From the questions staff ask. Topics that come up often, or that the policies do not answer well, are flagged and ranked by frequency."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Do audit reports need formatting?",
+                  "paras": [
+                    "No. A formatted report with every response and section score is generated as soon as the audit is complete."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "links",
+          "id": "",
+          "tint": true,
+          "label": "Also built for",
+          "heading": "CareStream for the rest of your team.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "links",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Care Workers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/care-workers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Training Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/training-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Registered Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/registered-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "HR and Admin Teams",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/hr-and-admin-teams"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Compliance Leads",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/compliance-leads"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Preparing for CQC",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/preparing-for-cqc"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Operations Teams",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/operations-teams"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Policy Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/policy-managers"
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "end",
+          "id": "",
+          "tint": false,
+          "label": "",
+          "heading": "Ask your last inspection report a question",
+          "intro": [
+            "Upload the report and see the action points in minutes."
+          ],
+          "image": null,
+          "flip": false,
+          "narrow": false,
+          "parts": [],
+          "actions": [
+            {
+              "label": "Start free trial",
+              "href": "/register",
+              "style": "solid",
+              "play": false
+            },
+            {
+              "label": "Book a demo",
+              "href": "/demo",
+              "style": "ghost",
+              "play": false
+            }
+          ]
+        }
+      ]
+    },
+    "sort": 15
+  },
+  {
+    "slug": "who-its-for-policy-managers",
+    "title": "Approve it once. Every member of staff has the new version.",
+    "meta_title": "CareStream for Policy Managers | CareStreamAI",
+    "meta_description": "Distribute and update care policies with confidence: approvals with a full version history, and approved changes live for staff straight away.",
+    "hero_image_url": "/images/who-its-for/policy-managers/1.webp",
+    "content": {
+      "eyebrow": "For policy managers",
+      "lede": [
+        "A controlled path from draft to approved policy, a full version history behind every document, and approved changes published to staff answers automatically. You can see whether the change reached your team, not just that it was sent."
+      ],
+      "actions": [
+        {
+          "label": "Start free trial",
+          "href": "/register",
+          "style": "solid",
+          "play": false
+        },
+        {
+          "label": "Book a demo",
+          "href": "/demo",
+          "style": "ghost",
+          "play": true
+        }
+      ],
+      "toc": [],
+      "blocks": [
+        {
+          "kind": "compare",
+          "id": "",
+          "tint": true,
+          "label": "Policy management, as it is",
+          "heading": "Updating a policy is easy. Knowing the update landed is not.",
+          "intro": [
+            "A new version is saved, an email goes out, and the old copy is still printed in a folder on the unit. Nobody can say for certain who has seen the change, or which version a question was answered from.",
+            "CareStream keeps one approved version live, records who approved it and when, and turns the change into something staff actually learn."
+          ],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "compare",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "Without CareStream",
+                  "tone": "dim",
+                  "title": "",
+                  "paras": [
+                    "Versions in shared drives, approval by email, and no way to tell whether staff are working from the current policy."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "With CareStream",
+                  "tone": "good",
+                  "title": "",
+                  "paras": [
+                    "One approved version live in staff answers, a full approval trail and version history, and visibility of whether staff accessed the change."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "ticks",
+          "id": "",
+          "tint": false,
+          "label": "What changes for you",
+          "heading": "Control from draft to frontline.",
+          "intro": [
+            "Every step recorded, and every approved change live for staff straight away."
+          ],
+          "image": "/images/who-its-for/policy-managers/2.webp",
+          "split": true,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "ticks",
+              "where": "in",
+              "sub": "",
+              "variant": "",
+              "items": [],
+              "bullets": [
+                "Admin approval with a full version history",
+                "An optional care manager approval step, if you want one",
+                "External approval by one-off link for a consultant or trustee",
+                "Approved versions re-published to staff answers automatically",
+                "Role holder names merged into your policies",
+                "A policy change turned into staff training in a few steps"
+              ],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "steps",
+          "id": "",
+          "tint": true,
+          "label": "How it works for you",
+          "heading": "The controlled path from suggestion to policy.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "steps",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "01",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Review what changed",
+                  "paras": [
+                    "See the changes as tracked changes before anything goes live."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "02",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Approve with a trail",
+                  "paras": [
+                    "Approval is recorded with who approved what and when, including external approvers."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "03",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Staff have it immediately",
+                  "paras": [
+                    "The approved version replaces the old one in staff answers, and you can generate training from the change."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "cards",
+          "id": "",
+          "tint": false,
+          "label": "The tools you will use",
+          "heading": "Everything a policy manager needs.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "cards",
+              "where": "",
+              "sub": "",
+              "variant": "c3",
+              "items": [
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Policy approvals",
+                  "paras": [
+                    "A clear approval workflow for every policy, with the trail recorded.",
+                    "Explore Policy approvals"
+                  ],
+                  "bullets": [],
+                  "href": "/features/policy-approvals"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Document versioning",
+                  "paras": [
+                    "A full, automatic history behind every policy.",
+                    "Explore Document versioning"
+                  ],
+                  "bullets": [],
+                  "href": "/features/document-versioning"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Approval trail and re-publish",
+                  "paras": [
+                    "Sign-off recorded, and the latest version live for staff.",
+                    "Explore Approval trail and re-publish"
+                  ],
+                  "bullets": [],
+                  "href": "/features/approval-trail-auto-re-publish-to-staff-qanda"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "External approval by link",
+                  "paras": [
+                    "Get sign-off from a consultant or trustee without giving them an account.",
+                    "Explore External approval by link"
+                  ],
+                  "bullets": [],
+                  "href": "/features/external-approval-by-one-off-link-consultant-trustee"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Print-ready policies",
+                  "paras": [
+                    "Download a finished policy on your letterhead, with a sign-off block.",
+                    "Explore Print-ready policies"
+                  ],
+                  "bullets": [],
+                  "href": "/features/download-a-print-ready-policy-letterhead-sign-off"
+                },
+                {
+                  "icon": [
+                    {
+                      "tag": "path",
+                      "d": "M12 4v5M12 15v5M4 12h5M15 12h5"
+                    },
+                    {
+                      "tag": "circle",
+                      "cx": "12",
+                      "cy": "12",
+                      "r": "2.6"
+                    }
+                  ],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Training from a policy update",
+                  "paras": [
+                    "Turn a policy change into a training moment for the staff it affects.",
+                    "Explore Training from a policy update"
+                  ],
+                  "bullets": [],
+                  "href": "/features/generate-onboarding-from-a-policy-update"
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "faq",
+          "id": "",
+          "tint": true,
+          "label": "Questions from policy managers",
+          "heading": "Frequently asked.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "faq",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Can we require more than one approval?",
+                  "paras": [
+                    "Yes. Admin approval is standard, and you can add an optional care manager approval step. External reviewers can approve by a one-off link."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "What happens to the old version?",
+                  "paras": [
+                    "It is kept in the version history. Staff answers come only from the approved current version."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Can we see whether staff have seen a change?",
+                  "paras": [
+                    "Yes. CareStream tracks whether staff accessed the new version, so you know the change reached your team."
+                  ],
+                  "bullets": []
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Can we still print policies?",
+                  "paras": [
+                    "Yes. Any policy can be downloaded as a print-ready document on your letterhead with a sign-off section."
+                  ],
+                  "bullets": []
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "links",
+          "id": "",
+          "tint": false,
+          "label": "Also built for",
+          "heading": "CareStream for the rest of your team.",
+          "intro": [],
+          "image": null,
+          "split": false,
+          "flip": false,
+          "narrow": false,
+          "parts": [
+            {
+              "kind": "links",
+              "where": "",
+              "sub": "",
+              "variant": "",
+              "items": [
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Care Workers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/care-workers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Training Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/training-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Registered Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/registered-managers"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "HR and Admin Teams",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/hr-and-admin-teams"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Compliance Leads",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/compliance-leads"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Preparing for CQC",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/preparing-for-cqc"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Operations Teams",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/operations-teams"
+                },
+                {
+                  "icon": [],
+                  "flag": "",
+                  "marker": "",
+                  "tag": "",
+                  "tone": "",
+                  "title": "Quality Managers",
+                  "paras": [],
+                  "bullets": [],
+                  "href": "/who-its-for/quality-managers"
+                }
+              ],
+              "bullets": [],
+              "header": "",
+              "footer": ""
+            }
+          ],
+          "actions": []
+        },
+        {
+          "kind": "end",
+          "id": "",
+          "tint": false,
+          "label": "",
+          "heading": "See your next policy update land",
+          "intro": [
+            "Upload a policy, approve a change and see it live in staff answers straight away."
+          ],
+          "image": null,
+          "flip": false,
+          "narrow": false,
+          "parts": [],
+          "actions": [
+            {
+              "label": "Start free trial",
+              "href": "/register",
+              "style": "solid",
+              "play": false
+            },
+            {
+              "label": "Book a demo",
+              "href": "/demo",
+              "style": "ghost",
+              "play": false
+            }
+          ]
+        }
+      ]
+    },
+    "sort": 16
   }
 ]

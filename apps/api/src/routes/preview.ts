@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express'
 import { ok, err } from '../lib/response'
 import { requirePlatformAdmin } from '../middleware/auth'
 import { signPreviewToken, PREVIEW_TTL_SECONDS, type PreviewKind } from '../lib/preview-token'
+import { servicePagePath } from '../lib/service-pages'
 
 // Mints a preview link for an unpublished marketing page. Platform admin only: the console
 // already holds that token, and nothing else should be able to mint one.
@@ -15,8 +16,9 @@ const PATHS: Record<PreviewKind, (slug: string) => string> = {
   'user-case': slug => `/uses/${slug}`,
   'feature':   slug => `/features/${slug}`,
   'setting':   slug => `/${slug}`,
-  // Flat, like the care settings: /our-services is the theme's grouping, not a live URL.
-  'service-page': slug => `/${slug}`,
+  // Flat, like the care settings: /our-services is the theme's grouping, not a live URL. The
+  // role pages in the same store live under /who-its-for/.
+  'service-page': servicePagePath,
 }
 
 // POST /admin/preview { kind, slug } -> { url, expiresIn }

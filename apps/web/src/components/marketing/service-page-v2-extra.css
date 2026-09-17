@@ -5,3 +5,23 @@
  * a placed frame position:relative. The app has no data-placed, so the frames were static; anything
  * the frame positions against itself (a caption, a play badge) would anchor to the wrong box. */
 .svpage-v2 .svshot{position:relative}
+
+/* Role pages (/who-its-for/<role>): a card's closing link, and the "Also built for" row. */
+.svpage-v2 .svcard .svmore{display:inline-flex;align-items:center;gap:6px;color:var(--accent);font-weight:600;text-decoration:none}
+.svpage-v2 .svcard .svmore svg{width:13px;height:13px;transition:transform .2s ease}
+.svpage-v2 .svcard .svmore:hover svg{transform:translateX(3px)}
+.svpage-v2 .uc-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.svpage-v2 .uc-tag{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;text-decoration:none;
+  color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:6px 13px}
+.svpage-v2 .uc-tag:hover{background:#EBE0F8}
+/* The role pages' theme markup sets these two inline, which the port cannot carry: the eyebrow
+   sits at its own width, and the list beside the image is one column. */
+.svpage-v2.svrole .svhero .uc-eyebrow{display:inline-block}
+.svpage-v2.svrole .svsplit .svticks{grid-template-columns:1fr}
+
+/* The hero stacks below 1000px in the theme. The per-page port made each page's desktop hero
+   grid more specific than that mobile rule, so on a phone the hero stayed two columns and the
+   image column collapsed to nothing. This restores the theme's stacking on every page. */
+@media (max-width:1000px){
+  .svpage-v2[data-page] .svhero .svhero-in.svhero-in{grid-template-columns:minmax(0,1fr)!important}
+}

@@ -2031,6 +2031,9 @@ model TrainingEnrollment {
   baseline_at         DateTime?
   reflection          String?                     // post-completion reflective practice ("what will you do differently?")
   reflection_at       DateTime?
+  // Reminders re-sent by an admin from Training > Staff progress.
+  last_reminded_at    DateTime?
+  reminder_count      Int         @default(0)
   created_at      DateTime        @default(now())
   updated_at      DateTime        @updatedAt
   tenant          Tenant          @relation(fields: [tenant_id], references: [id])

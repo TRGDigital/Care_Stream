@@ -798,6 +798,42 @@ export async function sendStaffAllocationEmail(opts: { to: string; name: string;
   await sgMail.send({ to: opts.to, from, subject: `New ${c.noun} assigned to you — ${opts.orgName}`, html })
 }
 
+// A reminder for one allocated course, sent when an admin presses "Re-send email" in
+// Training > Staff progress. Names the course (and the due date, if there is one), because a
+// reminder that only says "you have training" is easy to ignore.
+export async function sendTrainingReminderEmail(opts: {
+  to: string; name: string; orgName: string; courseName: string; dueDate: Date | null
+  kind: 'training' | 'annual_training'; portalUrl: string
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) throw new Error('Email is not configured')
+  const c         = ALLOC_COPY[opts.kind]
+  const from      = process.env.SENDGRID_FROM_ADDRESS ?? `noreply@${INBOUND_DOMAIN}`
+  const firstName = (opts.name || '').split(' ')[0] || 'there'
+  const link      = `${opts.portalUrl.replace(/\/$/, '')}${c.path}`
+  const course    = opts.courseName.replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch] as string))
+  const due       = opts.dueDate
+    ? ` It is due by <strong>${opts.dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>.`
+    : ''
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${firstName},</p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px">
+      This is a reminder from your manager to complete <strong>${course}</strong> in CareStream.${due}
+      You can do it on your phone or computer, and your progress is saved as you go.
+    </p>
+    <div style="text-align:center;margin:0 0 28px">
+      <a href="${link}"
+         style="display:inline-block;padding:14px 32px;background:${PURPLE};color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">
+        ${c.cta}
+      </a>
+    </div>
+    ${emailFooter(opts.orgName)}
+  `)
+
+  await sgMail.send({ to: opts.to, from, subject: `Reminder: ${opts.courseName}, ${opts.orgName}`, html })
+}
+
 // ─── Training-only onboarding guide (sent to new training clients) ────────────
 // A fully branded walkthrough of the three-step setup: add staff, allocate the
 // purchased modules, staff complete them in the hub, plus how to track progress.

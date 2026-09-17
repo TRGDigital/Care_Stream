@@ -15,6 +15,52 @@ import './site-chrome-extra.css'
 // The ICO registration the theme adds is checked: ZC221613 is TRG Digital Ltd on the public
 // register, valid to 12 August 2027.
 
+// Accreditations shown above the footer base. Each links to the body that issued it, so a
+// visitor can check the claim rather than take a logo on trust. Only add a badge we actually
+// hold: an accreditation mark is a claim about the business, not decoration.
+type Badge = {
+  src: string; alt: string; href: string; label: string
+  /** Natural size of the asset, so Next can reserve the space and nothing shifts on load. */
+  w: number; h: number
+  /** Landscape lockup with fine print, so it needs a slightly larger cap to stay legible. */
+  wide?: boolean
+}
+
+const BADGES: Badge[] = [
+  {
+    src: '/badges/gbc-accredited.png', w: 112, h: 120,
+    alt: 'Good Business Charter accredited',
+    href: 'https://www.goodbusinesscharter.com/',
+    label: 'Good Business Charter',
+  },
+  {
+    src: '/badges/cpd-certification-service.png', w: 189, h: 120, wide: true,
+    // CareStream is an accredited CPD PROVIDER (No. 50224). The training modules
+    // themselves are still going through certification, so nothing here may say or
+    // imply "CPD certified training" — that claim belongs to a module, not to us.
+    alt: 'CPD Certification Service accredited provider',
+    href: 'https://www.cpduk.co.uk/providers/carestream',
+    label: 'CPD accredited provider',
+  },
+  {
+    src: '/badges/ico-registered.png', w: 119, h: 120,
+    alt: "Registered with the Information Commissioner's Office",
+    // The same register entry the base row links to: ZC221613, TRG Digital Ltd.
+    href: 'https://ico.org.uk/ESDWebPages/Entry/ZC221613',
+    label: 'ICO registered',
+  },
+  {
+    // Level 1, Committed — the file DWP issued with the accreditation. The mark is Crown
+    // Copyright: do not rebuild, recolour, stretch or substitute a redrawn copy, and do not
+    // swap in another level's badge. Valid for 3 years from sign-up, so it comes down (or
+    // moves up a level) when the accreditation is renewed.
+    src: '/badges/disability-confident-committed.png', w: 249, h: 120,
+    alt: 'Disability Confident Committed',
+    href: 'https://www.gov.uk/government/collections/disability-confident-campaign',
+    label: 'Disability Confident Committed',
+  },
+]
+
 type LinkItem = { href: string; label: string }
 
 const USER_CASES: LinkItem[] = [
@@ -110,8 +156,39 @@ export async function MarketingFooter() {
 
   return (
     <div className="cschrome">
+      {/* Accreditation strip. Deliberately OUTSIDE <footer>: these are claims about the
+          business, not footer navigation, and sitting above the footer they read as a
+          closing statement rather than small print. Rendered by MarketingFooter, so it
+          appears on the home page and every page in the (marketing) group. */}
+      <section className="faccred" aria-label="Accreditations and registrations">
+        <div className="wrap">
+          <p className="faccred-lead">Accredited and registered</p>
+          <ul className="faccred-row">
+            {BADGES.map(b => (
+              <li key={b.label}>
+                <a href={b.href} rel="noopener noreferrer" target="_blank" title={b.label}>
+                  <img className={b.wide ? 'wide' : undefined} src={b.src} alt={b.alt} width={b.w} height={b.h} loading="lazy" />
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p className="faccred-note">
+            CPD Provider No. 50224 · ICO registration ZC221613
+          </p>
+        </div>
+      </section>
+
       <footer className="site-foot">
         <div className="wrap">
+          <div className="fcols">
+            {groups.map(g => (
+              <div className={`fcol${g.wide ? ' wide' : ''}`} key={g.heading}>
+                <h4>{g.heading}</h4>
+                {g.links.map(l => <Link href={l.href} key={l.href}>{l.label}</Link>)}
+              </div>
+            ))}
+          </div>
+
           <div className="fbrand">
             <span className="brand">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -123,15 +200,6 @@ export async function MarketingFooter() {
               Contact us
               <svg viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7h8M7.5 3.5 11 7l-3.5 3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </Link>
-          </div>
-
-          <div className="fcols">
-            {groups.map(g => (
-              <div className={`fcol${g.wide ? ' wide' : ''}`} key={g.heading}>
-                <h4>{g.heading}</h4>
-                {g.links.map(l => <Link href={l.href} key={l.href}>{l.label}</Link>)}
-              </div>
-            ))}
           </div>
 
           <div className="fbase">

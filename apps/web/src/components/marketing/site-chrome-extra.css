@@ -49,3 +49,67 @@
 .cschrome .fcookie { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; }
 .cschrome .fcookie:hover { color: var(--ink); }
 .cschrome .fdisclaim { margin: 14px 0 0; font-size: .74rem; line-height: 1.55; color: var(--muted); max-width: 90ch; }
+
+/* ── Accreditation strip ────────────────────────────────────────────────────
+   A band of its own ABOVE the footer, not a row inside it: these are claims about
+   the business rather than footer navigation, and above the footer they read as a
+   closing statement instead of small print.
+
+   White ground, which also does a job — the ICO badge ships as a JPEG with a baked
+   white background, so on any tinted surface it shows as a pale square. The footer's
+   own border-top separates the two, so this band carries only a top border.
+
+   Marks are normalised by HEIGHT, never width: these are other organisations'
+   trademarks and must not be stretched, squashed or recoloured. The CPD lockup is
+   landscape with fine print, so it gets a slightly larger cap to stay legible beside
+   the square marks. Disability Confident guidance sets a 10mm minimum height, which
+   is why nothing here drops below ~52px. */
+.cschrome .faccred{
+  background:var(--ground,#fff);
+  border-top:1px solid var(--line);
+  padding:40px 0 36px;
+}
+.cschrome .faccred .wrap{max-width:var(--maxw);margin:0 auto;padding:0 40px}
+.cschrome .faccred-lead{
+  font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink);margin:0 0 18px;text-align:center;
+}
+.cschrome .faccred-row{
+  list-style:none;margin:0;padding:0;
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
+  gap:30px 84px;
+}
+.cschrome .faccred-row li{display:flex;align-items:center}
+.cschrome .faccred-row a{
+  display:inline-flex;align-items:center;
+  /* A trademark must not be tinted, so hover is opacity only. */
+  opacity:.85;transition:opacity .18s ease;
+}
+.cschrome .faccred-row a:hover,
+.cschrome .faccred-row a:focus-visible{opacity:1}
+.cschrome .faccred-row img{display:block;width:auto;height:68px}
+.cschrome .faccred-row img.wide{height:78px}
+.cschrome .faccred-note{
+  margin:16px 0 0;text-align:center;
+  font-size:.75rem;color:var(--muted);
+}
+
+/* Four marks wrapping by flex gives three ragged lines on a phone. A 2x2 grid is
+   predictable at every phone width, and each cell centres its own mark so the
+   differing aspect ratios still line up. */
+@media (max-width:760px){
+  .cschrome .faccred{padding:28px 0 24px}
+  .cschrome .faccred .wrap{padding:0 20px}
+  .cschrome .faccred-row{
+    display:grid;grid-template-columns:repeat(2,1fr);
+    gap:26px 20px;justify-items:center;
+  }
+  .cschrome .faccred-row li{justify-content:center}
+  .cschrome .faccred-row img{height:52px;max-width:100%}
+  .cschrome .faccred-row img.wide{height:58px}
+}
+
+/* The brand block now sits BELOW the link columns rather than above them, so its
+   spacing flips: it needs air above it, not beneath. Overrides the margin-bottom
+   the ported chrome stylesheet sets, which would otherwise push the base row away. */
+.cschrome .fbrand{margin-top:46px;margin-bottom:0}

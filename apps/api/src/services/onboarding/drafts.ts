@@ -285,6 +285,60 @@ export const DRAFTS_CORE: OnboardingEmail[] = [
     ctaLabel: 'See your training library',
     ctaHref:  '/training',
   },
+  {
+    draft: true,
+    subject:   'What that agency shift actually cost you',
+    preheader: 'Agency workers, their dates, their day rate and what they can see.',
+    headline:  'Agency spend, visible before the invoice arrives',
+    intro: [
+      'Agency covers the gap and nobody argues with that at 6am on a Sunday. The problem is that the cost only becomes real weeks later, on an invoice, by which point the decisions that caused it are long forgotten.',
+      'Add an agency worker to CareStream with their agency, their start and end dates and their day rate, and your staff page carries a running twelve month picture of what agency is costing you, next to the team it is covering for.',
+    ],
+    steps: [
+      { title: 'Add them as an agency worker', body: 'Choose the agency type when you add the person, then record the agency name, the dates and the day rate.' },
+      { title: 'Watch the spend panel', body: 'Agency spend over the last twelve months sits above your staff list as soon as you have bookings.' },
+      { title: 'Give them what they need', body: 'They get the same hub access to your policies as your own team, so nobody is working from guesswork on their first shift.' },
+    ],
+    tip: 'Record the day rate even when finance already has it. The value is seeing spend beside the vacancies causing it, which is the argument for recruiting.',
+    ctaLabel: 'Add an agency worker',
+    ctaHref:  '/staff',
+  },
+  {
+    draft: true,
+    subject:   'The signed sheet from your last training session',
+    preheader: 'Print it, sign it, upload it. The evidence sits with the session.',
+    headline:  'Face to face training, evidenced properly',
+    intro: [
+      'A classroom session leaves you with a sheet of signatures on a clipboard. Six months later an inspector asks who attended the moving and handling refresher in March, and the answer is in a drawer, a folder, or nowhere.',
+      'CareStream prints the sign-in sheet for you, with your attendees listed and a signature column, and lets you upload the signed copy back against the session. Attendance, signatures and any certificates live with the record rather than in a cupboard.',
+    ],
+    steps: [
+      { title: 'Print the sign-in sheet', body: 'Your attendee list, a signature column and a trainer signature line, ready for the room.' },
+      { title: 'Upload the signed copy', body: 'Photograph or scan it after the session and attach it to that session as evidence.' },
+      { title: 'Record who actually came', body: 'Mark attendance against the list, so the record shows who was there rather than who was invited.' },
+    ],
+    tip: 'Upload it the same day. The sheet that gets scanned a fortnight later is the one nobody can find.',
+    ctaLabel: 'Set up a session',
+    ctaHref:  '/training',
+  },
+  {
+    draft: true,
+    subject:   'Something happened last night. Train on it this morning.',
+    preheader: 'Push targeted questions to the right staff, hours after an incident.',
+    headline:  'The training that lands while it still matters',
+    intro: [
+      'A fall, a medication error, a safeguarding concern. The response is usually a note in the handover book and a plan to cover it at the next team meeting, three weeks away, by which point the people who needed it most have moved on.',
+      'Post-incident training closes that gap. Describe what happened, choose the topic, pick who needs it, and CareStream pushes targeted questions from that module straight to them. You can send to everyone, to the night shift only, or to named individuals.',
+    ],
+    steps: [
+      { title: 'Describe the incident', body: 'A sentence or two of context, so staff understand why this arrived today.' },
+      { title: 'Choose the topic and the audience', body: 'Everyone, day shift, night shift, or specific people. A night-time fall is a night shift conversation.' },
+      { title: 'Check who received it', body: 'You see per person whether it was delivered, and who could not be reached because they have no contact details on file.' },
+    ],
+    tip: 'Send it to the shift that was on, not the whole home. Training that is obviously aimed at the people involved gets taken seriously.',
+    ctaLabel: 'Send post-incident training',
+    ctaHref:  '/training',
+  },
 ]
 
 // ── Professional and above ────────────────────────────────────────────────────

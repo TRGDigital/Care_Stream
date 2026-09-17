@@ -909,7 +909,7 @@ export function createApiClient(token: string) {
       triggerRule: (id: string) =>
         apiFetch<{ sent_to: number; staff_names: string[] }>(`/training/delivery-rules/${id}/trigger`, token, { method: 'POST' }),
 
-      manualSend: (data: { module_id: string; target_audience: string; target_user_ids?: string[]; questions_per_send?: number }) =>
+      manualSend: (data: { module_id: string; target_audience: string; target_user_ids?: string[]; questions_per_send?: number; note?: string }) =>
         apiFetch<{ sent_to: number; staff_names: string[] }>('/training/manual-send', token, { method: 'POST', body: JSON.stringify(data) }),
 
       returnToWork: (data: { user_id: string; module_id?: string; notes?: string }) =>
@@ -920,6 +920,14 @@ export function createApiClient(token: string) {
 
       sendLog: (limit = 50) =>
         apiFetch<{ logs: any[] }>(`/training/send-log?limit=${limit}`, token),
+
+      // One entry per manual send, return to work or post-incident send, with its note and results.
+      sendEvents: (params: { type?: string; limit?: number } = {}) =>
+        apiFetch<{ events: Array<{
+          id: string; trigger_type: 'manual' | 'return_to_work' | 'post_incident'; sent_at: string; note: string | null
+          module: { id: string; name: string } | null; triggered_by: string | null; total: number; delivered: number
+          recipients: Array<{ name: string; job_role: string | null; outcome: string; delivered: boolean }>
+        }> }>(`/training/send-events?limit=${params.limit ?? 30}${params.type ? `&type=${params.type}` : ''}`, token),
     },
 
     cqcQuestions: {

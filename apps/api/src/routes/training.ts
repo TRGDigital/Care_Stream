@@ -1740,6 +1740,7 @@ trainingRouter.post('/delivery-rules/:id/trigger', async (req: Request, res: Res
       err(res, 'NO_QUESTIONS', `"${mod?.name ?? 'This module'}" has no locked questions yet, so there is nothing to send. Create and lock its questions first.`, 400); return
     }
     const questionIds = questions.slice(0, rule.questions_per_send).map((q: any) => q.id)
+    const batchId = randomUUID()
 
     let delivered = 0
     const skipped: Record<string, number> = {}
@@ -1764,6 +1765,7 @@ trainingRouter.post('/delivery-rules/:id/trigger', async (req: Request, res: Res
           module_id: rule.module_id ?? null, user_id: s.id,
           question_ids: questionIds, trigger_type: 'manual',
           triggered_by: adminId, context: `Manual trigger of rule "${rule.name}" — ${OUTCOME_NOTE[byUser.get(s.id) ?? 'failed'] ?? byUser.get(s.id)}`,
+          batch_id: batchId, note: `Sent now from the rule "${rule.name}"`,
         })),
       })
     }
@@ -1785,6 +1787,7 @@ trainingRouter.post('/manual-send', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   const adminId  = (req as any).user.sub
   const { module_id, target_audience = 'all', target_user_ids = [], questions_per_send = 3 } = req.body ?? {}
+  const note = typeof req.body?.note === 'string' && req.body.note.trim() ? req.body.note.trim().slice(0, 1000) : null
   if (!module_id) { err(res, 'INVALID', 'module_id required', 400); return }
   try {
     const staffFilter: Record<string, any> = { tenant_id: tenantId, is_active: true, role: 'staff' }
@@ -1801,6 +1804,7 @@ trainingRouter.post('/manual-send', async (req: Request, res: Response) => {
       err(res, 'NO_QUESTIONS', `"${mod?.name ?? 'This module'}" has no locked questions yet, so there is nothing to send. Create and lock its questions first.`, 400); return
     }
     const questionIds = questions.slice(0, Number(questions_per_send) || 3).map((q: any) => q.id)
+    const batchId = randomUUID()
 
     let delivered = 0
     const skipped: Record<string, number> = {}
@@ -1822,6 +1826,7 @@ trainingRouter.post('/manual-send', async (req: Request, res: Response) => {
           id: randomUUID(), tenant_id: tenantId, rule_id: null,
           module_id, user_id: s.id, question_ids: questionIds,
           trigger_type: 'manual', triggered_by: adminId, context: `Manual send — ${OUTCOME_NOTE[byUser.get(s.id) ?? 'failed'] ?? byUser.get(s.id)}`,
+          batch_id: batchId, note,
         })),
       })
     }
@@ -1892,6 +1897,7 @@ trainingRouter.post('/return-to-work', async (req: Request, res: Response) => {
         module_id, user_id,
         question_ids: questionIds, trigger_type: 'return_to_work',
         triggered_by: adminId, context: `${notes ?? 'Return to work refresher'} — ${OUTCOME_NOTE[outcome] ?? outcome}`,
+        batch_id: randomUUID(), note: typeof notes === 'string' && notes.trim() ? notes.trim().slice(0, 1000) : null,
       },
     })
     const delivered = outcome === 'sent_whatsapp' || outcome === 'sent_email'
@@ -1924,6 +1930,7 @@ trainingRouter.post('/post-incident', async (req: Request, res: Response) => {
       err(res, 'NO_QUESTIONS', `"${mod?.name ?? 'This module'}" has no locked questions yet, so there is nothing to send. Create and lock its questions first.`, 400); return
     }
     const questionIds = questions.slice(0, 3).map((q: any) => q.id)
+    const batchId = randomUUID()
 
     let delivered = 0
     const skipped: Record<string, number> = {}
@@ -1946,6 +1953,7 @@ trainingRouter.post('/post-incident', async (req: Request, res: Response) => {
           module_id, user_id: s.id, question_ids: questionIds,
           trigger_type: 'post_incident', triggered_by: adminId,
           context: `${incident_description} — ${OUTCOME_NOTE[byUser.get(s.id) ?? 'failed'] ?? byUser.get(s.id)}`,
+          batch_id: batchId, note: String(incident_description).trim().slice(0, 2000),
         })),
       })
     }
@@ -1953,6 +1961,75 @@ trainingRouter.post('/post-incident', async (req: Request, res: Response) => {
     ok(res, { sent_to: delivered, staff_names: staff.map((s: any) => s.name), skipped, message: `Delivered to ${delivered} of ${staff.length} staff${skippedNote ? ` (${skippedNote})` : ''}.` })
   } catch (e: any) {
     err(res, 'TRIGGER_FAILED', e.message, 500)
+  }
+})
+
+// GET /training/send-events — the sends an admin triggered (manual, return to work, post-incident),
+// one entry per send rather than one per staff member, with the note and each person's result.
+//
+// Rows written before batch_id existed are grouped by trigger, module, sender and timestamp (a
+// send's rows share one createMany timestamp), and their note is recovered from context, where
+// it sat in front of " — <outcome>".
+trainingRouter.get('/send-events', async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenant_id
+  const limit = Math.min(parseInt((req.query as any).limit ?? '30', 10) || 30, 100)
+  const type = String((req.query as any).type ?? '')
+  const TYPES = ['manual', 'return_to_work', 'post_incident']
+  try {
+    const rows = await (prisma as any).trainingSendLog.findMany({
+      where:   { tenant_id: tenantId, trigger_type: { in: TYPES.includes(type) ? [type] : TYPES } },
+      orderBy: { sent_at: 'desc' },
+      take:    1500,
+    })
+    const split = (context: string | null) => {
+      const c = context ?? ''
+      const at = c.lastIndexOf(' — ')
+      return at < 0 ? { before: c, outcome: '' } : { before: c.slice(0, at), outcome: c.slice(at + 3) }
+    }
+    const groups = new Map<string, any>()
+    for (const r of rows as any[]) {
+      const key = r.batch_id ?? `${r.trigger_type}|${r.module_id}|${r.triggered_by}|${new Date(r.sent_at).toISOString()}`
+      let g = groups.get(key)
+      if (!g) {
+        if (groups.size >= limit) continue
+        const { before } = split(r.context)
+        const legacyNote = r.trigger_type === 'manual'
+          ? (before.startsWith('Manual trigger of rule') ? before.replace('Manual trigger of rule', 'Sent now from the rule') : null)
+          : (before && before !== 'Return to work refresher' ? before : null)
+        g = {
+          id: key, trigger_type: r.trigger_type, module_id: r.module_id, triggered_by: r.triggered_by,
+          sent_at: r.sent_at, note: r.note ?? legacyNote, recipients: [] as any[],
+        }
+        groups.set(key, g)
+      }
+      // The oldest rows predate outcome recording and were logged as sent.
+      const outcome = split(r.context).outcome || 'sent'
+      g.recipients.push({ user_id: r.user_id, outcome, delivered: outcome === 'sent' || outcome.startsWith('delivered') })
+    }
+    const events = [...groups.values()]
+    const userIds = [...new Set(events.flatMap(e => [e.triggered_by, ...e.recipients.map((x: any) => x.user_id)]).filter(Boolean))]
+    const moduleIds = [...new Set(events.map(e => e.module_id).filter(Boolean))]
+    const [users, modules] = await Promise.all([
+      (prisma as any).user.findMany({ where: { id: { in: userIds }, tenant_id: tenantId }, select: { id: true, name: true, job_role: true } }),
+      (prisma as any).trainingModule.findMany({ where: { id: { in: moduleIds } }, select: { id: true, name: true } }),
+    ])
+    const userBy = new Map((users as any[]).map(u => [u.id, u]))
+    const moduleBy = new Map((modules as any[]).map(m => [m.id, m]))
+    ok(res, {
+      events: events.map(e => ({
+        id: e.id, trigger_type: e.trigger_type, sent_at: e.sent_at, note: e.note,
+        module: e.module_id ? (moduleBy.get(e.module_id) ?? null) : null,
+        triggered_by: e.triggered_by ? (userBy.get(e.triggered_by)?.name ?? null) : null,
+        total: e.recipients.length,
+        delivered: e.recipients.filter((x: any) => x.delivered).length,
+        recipients: e.recipients.map((x: any) => ({
+          name: userBy.get(x.user_id)?.name ?? 'Former staff member', job_role: userBy.get(x.user_id)?.job_role ?? null,
+          outcome: x.outcome, delivered: x.delivered,
+        })),
+      })),
+    })
+  } catch (e: any) {
+    err(res, 'FETCH_FAILED', e.message, 500)
   }
 })
 

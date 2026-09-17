@@ -413,7 +413,7 @@ export function RuleModal({ api, modules, staff, rule, onClose, onSaved }: {
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none"
             >
               <option value="">— All modules —</option>
-              {modules.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+              {modules.filter(m => (m.questions?.length ?? 0) > 0).map(m => <option key={m.id} value={m.id}>{m.name} ({m.questions.length} question{m.questions.length === 1 ? '' : 's'})</option>)}
             </select>
           </div>
 

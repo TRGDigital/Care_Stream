@@ -69,6 +69,20 @@ const PREDICATES: Record<string, (tenantId: string) => Promise<ConditionResult>>
     return n > 0
   },
 
+  /** True while an order sits in the product's own `awaiting_details` state.
+   *
+   *  This is the state the rest of the product keys on: writing is refused while
+   *  an order is in it ("the client has not supplied N required details yet"),
+   *  and it flips to `paid` the moment the last answer lands. Preferred over
+   *  inferring from intake_completed_at, because it is the same fact the
+   *  platform's own nudge button uses. */
+  policy_awaiting_details: async (tenantId) => {
+    const n = await (prisma as any).policyPurchase.count({
+      where: { tenant_id: tenantId, status: 'awaiting_details' },
+    })
+    return n > 0
+  },
+
   /** True once the policy has been written and is ready to read. */
   policy_drafted: async (tenantId) => {
     const n = await (prisma as any).policyPurchase.count({

@@ -152,7 +152,7 @@ const TRAINING: CampaignEmail[] = [
 const POLICY: CampaignEmail[] = [
   {
     draft: true,
-    condition: 'policy_intake_outstanding', conditionUnmet: 'skip',
+    condition: 'policy_awaiting_details', conditionUnmet: 'skip',
     subject:   'We cannot start writing until you answer these',
     preheader: 'A few questions about your service, and then it is over to us.',
     headline:  'Your policy is waiting on you',
@@ -171,7 +171,7 @@ const POLICY: CampaignEmail[] = [
   },
   {
     draft: true,
-    condition: 'policy_intake_outstanding', conditionUnmet: 'skip',
+    condition: 'policy_awaiting_details', conditionUnmet: 'skip',
     subject:   'Your policy is still on hold',
     preheader: 'Ten minutes of answers is all that stands in the way.',
     headline:  'Nothing has moved since you paid',
@@ -184,6 +184,25 @@ const POLICY: CampaignEmail[] = [
       { title: 'Ask us if you are unsure', body: 'Reply to this email. It reaches a person, not a queue.' },
       { title: 'We take it from there', body: 'Written, checked against the law, and read by a person before it reaches you.' },
     ],
+    ctaLabel: 'Finish your answers',
+    ctaHref:  '/policies',
+  },
+  {
+    draft: true,
+    condition: 'policy_awaiting_details', conditionUnmet: 'skip',
+    subject:   'Shall we just take these over the phone?',
+    preheader: 'Your order has been waiting a while. We can finish it with you in ten minutes.',
+    headline:  'Let us do the last bit with you',
+    intro: [
+      'Your policy has been waiting on a handful of details for over a week. That usually means one of two things: the questions landed at a busy moment and never came back round, or one of them is harder to answer than it looks.',
+      'Either is easily solved. Reply to this email and we will ring you, take the answers down as you talk, and have the policy written the same week. It is your money already spent, and we would rather it became a document you can use.',
+    ],
+    steps: [
+      { title: 'Reply with a time', body: 'Any working day. Ten minutes is usually plenty.' },
+      { title: 'We ask, you answer', body: 'Named leads, how your service is set up, the local contacts. No forms.' },
+      { title: 'We take it from there', body: 'Written, checked against the legislation, and with you to read and approve.' },
+    ],
+    tip: 'If you would rather finish it yourself, the questions are still open on your order and nothing has been lost.',
     ctaLabel: 'Finish your answers',
     ctaHref:  '/policies',
   },

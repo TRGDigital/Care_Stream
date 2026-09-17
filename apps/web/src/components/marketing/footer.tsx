@@ -24,8 +24,6 @@ type Badge = {
   w: number; h: number
   /** Landscape lockup with fine print, so it needs a slightly larger cap to stay legible. */
   wide?: boolean
-  /** Not yet supplied. Renders a placeholder in place of the mark. */
-  pending?: boolean
 }
 
 const BADGES: Badge[] = [
@@ -52,11 +50,11 @@ const BADGES: Badge[] = [
     label: 'ICO registered',
   },
   {
-    // Level 1, Committed (Pantone 227C). The mark is Crown Copyright and must not be
-    // rebuilt, recoloured or altered, and each level has its own badge — so the file DWP
-    // issued with the accreditation goes in public/badges and `pending` comes off. Do not
-    // substitute a redrawn or scraped copy. The badge is valid for 3 years from sign-up.
-    src: '', w: 120, h: 120, pending: true,
+    // Level 1, Committed — the file DWP issued with the accreditation. The mark is Crown
+    // Copyright: do not rebuild, recolour, stretch or substitute a redrawn copy, and do not
+    // swap in another level's badge. Valid for 3 years from sign-up, so it comes down (or
+    // moves up a level) when the accreditation is renewed.
+    src: '/badges/disability-confident-committed.png', w: 249, h: 120,
     alt: 'Disability Confident Committed',
     href: 'https://www.gov.uk/government/collections/disability-confident-campaign',
     label: 'Disability Confident Committed',
@@ -188,13 +186,7 @@ export async function MarketingFooter() {
               {BADGES.map(b => (
                 <li key={b.label}>
                   <a href={b.href} rel="noopener noreferrer" target="_blank" title={b.label}>
-                    {b.pending ? (
-                      <span className="faccred-pending" aria-label={`${b.alt} (logo to be added)`}>
-                        {b.label}
-                      </span>
-                    ) : (
-                      <img className={b.wide ? 'wide' : undefined} src={b.src} alt={b.alt} width={b.w} height={b.h} loading="lazy" />
-                    )}
+                    <img className={b.wide ? 'wide' : undefined} src={b.src} alt={b.alt} width={b.w} height={b.h} loading="lazy" />
                   </a>
                 </li>
               ))}

@@ -327,7 +327,7 @@ export async function getTrainingReceiptUrl(paymentIntentId: string | null): Pro
 
 // ─── Policy purchases ─────────────────────────────────────────────────────────
 //
-// A client buying a policy we write for them, at POLICY_PENCE each. Deliberately the same
+// A client buying a policy we write for them, at the policy shop's price for each. Deliberately the same
 // shape as the training licence flow above, which is the one-off path already proven in
 // production: hosted Checkout in payment mode, reconciled when the buyer returns, idempotent
 // on the Stripe payment id. Nothing new is invented about taking money.
@@ -343,36 +343,11 @@ export async function getTrainingReceiptUrl(paymentIntentId: string | null): Pro
 // to be written and read by a person before the client sees it. Reconcile records the
 // purchase as paid and the work starts from there.
 
-// £120 a policy. POLICY_PENCE overrides it, as TRAINING_LICENCE_PENCE does for licences, so a
-// real-money smoke test can be run for pennies before this goes near a client.
-export const POLICY_PENCE = Math.max(50, parseInt(process.env.POLICY_PENCE ?? '', 10) || 12000)
+// Policies are priced from the policy shop catalogue (see routes/policy-purchases.ts), so a
+// subscriber on /gaps pays what a shop buyer pays for the same policy. The old flat POLICY_PENCE
+// setting is deliberately no longer read: it was left at 100 after a smoke test, and honouring it
+// would have kept every policy at £1.
 
-let _policyProductId: string | null = null
-async function policyProductId(): Promise<string> {
-  const configured = process.env.STRIPE_POLICY_PRODUCT_ID
-  if (configured) return configured
-  if (_policyProductId) return _policyProductId
-  const stripe = getStripe()
-  const opts = managedPaymentsRequestOptions()
-  const name = 'CareStream Policy'
-  try {
-    const found = await stripe.products.search({ query: `active:'true' AND name:'${name}'`, limit: 1 }, opts)
-    if (found.data[0]) { _policyProductId = found.data[0].id; return _policyProductId }
-  } catch { /* search unavailable on this API version — fall through to create */ }
-  const product = await stripe.products.create({ name, tax_code: PLAN_TAX_CODE, metadata: { kind: 'policy' } }, opts)
-  _policyProductId = product.id
-  return product.id
-}
-
-async function policyPriceId(): Promise<string> {
-  const productId = await policyProductId()
-  const stripe = getStripe()
-  const prices = await stripe.prices.list({ product: productId, active: true, limit: 20 }, managedPaymentsRequestOptions())
-  const price = prices.data.find(p => p.currency === 'gbp' && p.type === 'one_time' && p.unit_amount === POLICY_PENCE)
-  if (price) return price.id
-  const created = await stripe.prices.create({ product: productId, currency: 'gbp', unit_amount: POLICY_PENCE }, managedPaymentsRequestOptions())
-  return created.id
-}
 
 // ── Policy shop checkout ──────────────────────────────────────────────────────
 // The standalone shop: someone with no CareStream account buying policies or a pack
@@ -534,6 +509,8 @@ export interface PolicyCheckoutInput {
   titles: string[]
   /** Regulation keys per title, so the writer knows what each document must answer. */
   referenceKeysByTitle: Record<string, string[]>
+  /** What each title costs, in pence: the policy shop's price for that policy. */
+  pricesByTitle: Record<string, number>
 }
 
 // The tenant's Stripe customer, created and saved if they do not have one yet.
@@ -571,14 +548,20 @@ export async function ensureTenantCustomer(tenantId: string, email: string): Pro
 
 export async function createPolicyCheckoutSession(input: PolicyCheckoutInput): Promise<string> {
   const stripe = getStripe()
-  const priceId = await policyPriceId()
   const customerId = await ensureTenantCustomer(input.tenantId, input.email)
   const titles = input.titles.map(t => t.trim()).filter(Boolean).slice(0, 25)
   if (!titles.length) throw new Error('No policies selected')
+  // Each policy at its own price, the same as the policy shop charges for it, and named on
+  // the invoice. A missing price is refused rather than guessed.
+  const prices = titles.map(t => input.pricesByTitle[t])
+  if (prices.some(p => !Number.isInteger(p) || p < 50)) throw new Error('A policy has no price')
 
   const params: Stripe.Checkout.SessionCreateParams = {
     mode:       'payment',
-    line_items: [{ price: priceId, quantity: titles.length }],
+    line_items: titles.map((t, i) => ({
+      quantity: 1,
+      price_data: { currency: 'gbp', unit_amount: prices[i], product_data: { name: t, tax_code: PLAN_TAX_CODE } },
+    })),
     // Stripe rejects customer and customer_email together, so it is one or the other.
     ...(customerId ? { customer: customerId } : { customer_email: input.email }),
     metadata: {
@@ -588,6 +571,8 @@ export async function createPolicyCheckoutSession(input: PolicyCheckoutInput): P
       // trusting anything the browser sends back. Stripe caps a metadata value at 500 chars.
       titles:    JSON.stringify(titles).slice(0, 500),
       refs:      JSON.stringify(input.referenceKeysByTitle).slice(0, 500),
+      // Aligned with titles, so reconcile records what was actually charged for each.
+      prices:    JSON.stringify(prices).slice(0, 500),
     },
     billing_address_collection: 'required',
     // The client gets a real Stripe invoice, which their /billing page already lists.
@@ -607,6 +592,8 @@ export interface PolicyCheckoutResult {
   tenantId: string | null
   titles: string[]
   referenceKeysByTitle: Record<string, string[]>
+  /** Pence charged per title; empty for sessions created before per-policy pricing. */
+  pricesByTitle: Record<string, number>
 }
 
 /** Read back a policy Checkout session to verify payment and recover what was bought. */
@@ -628,6 +615,11 @@ export async function retrievePolicyCheckoutSession(sessionId: string): Promise<
     tenantId:  md.tenant_id ?? null,
     titles:    parse<string[]>(md.titles, []),
     referenceKeysByTitle: parse<Record<string, string[]>>(md.refs, {}),
+    pricesByTitle: (() => {
+      const t = parse<string[]>(md.titles, [])
+      const p = parse<number[]>(md.prices, [])
+      return Object.fromEntries(t.map((title, i) => [title, p[i]]).filter(([, v]) => Number.isInteger(v)))
+    })(),
   }
 }
 

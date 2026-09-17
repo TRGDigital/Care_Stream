@@ -339,7 +339,8 @@ websiteChatAdminRouter.get('/conversations', async (req: Request, res: Response)
   const filter = String(req.query.filter ?? 'all')
   const limit = Math.min(100, Math.max(1, Number(req.query.limit ?? 50) || 50))
   const before = req.query.before ? new Date(String(req.query.before)) : null
-  const where: any = { message_count: { gt: 0 } }
+  // A visitor who pressed "Talk to a person" before typing anything still needs to be seen.
+  const where: any = { AND: [{ OR: [{ message_count: { gt: 0 } }, { wants_human: true }] }] }
   if (before && !isNaN(before.getTime())) where.last_message_at = { lt: before }
   if (filter === 'live') {
     where.last_message_at = { ...(where.last_message_at ?? {}), gte: new Date(Date.now() - 15 * 60_000) }

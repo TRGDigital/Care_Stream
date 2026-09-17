@@ -18,6 +18,7 @@ import { generateActionPlanForRun, getActionPlan, addAction, updateAction, delet
 import { sendActionPlanStaffEmail, sendActionPlanExternalEmail } from '../services/email/outbound'
 import {
   SECTIONS_WITH_ALL_QUESTIONS, shapeRunTemplate, visibleQuestions, isAnswered, outcomeFor, answerText, isYesNo, isNarrative,
+  actionsDeadlineLabel,
 } from '../lib/audit-questions'
 import {
   parseEditorPayload, saveTemplateStructure, createTemplateFromPayload, copyTemplate, templateForEditor,
@@ -1896,6 +1897,9 @@ auditsRouter.put('/runs/:id', requireAuditAccess, async (req: Request, res: Resp
     where: { id: req.params.id, tenant_id: tenantId },
   })
   if (!existing || !auditTemplateAllowed(req, existing.template_id)) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
+  if (actions_deadline !== undefined && actions_deadline !== null && actions_deadline !== '' && actions_deadline !== existing.actions_deadline && !/^\d{4}-\d{2}-\d{2}$/.test(String(actions_deadline))) {
+    return err(res, 'INVALID_DEADLINE', 'Choose the deadline for actions as a date.', 400)
+  }
 
   const run = await (prisma as any).auditRun.update({
     where: { id: req.params.id },
@@ -1904,7 +1908,7 @@ auditsRouter.put('/runs/:id', requireAuditAccess, async (req: Request, res: Resp
       ...(auditor_role      !== undefined && { auditor_role:    auditor_role?.trim() ?? null }),
       ...(strengths         !== undefined && { strengths }),
       ...(improvements      !== undefined && { improvements }),
-      ...(actions_deadline  !== undefined && { actions_deadline }),
+      ...(actions_deadline  !== undefined && { actions_deadline: actions_deadline || null }),
     },
   })
 
@@ -2145,7 +2149,7 @@ export async function generateAuditRecommendations(tenantId: string, runId: stri
     .replace('{{audit_results}}',     auditResultsText)
     .replace('{{strengths}}',         run.strengths ?? 'Not provided')
     .replace('{{improvements}}',      run.improvements ?? 'Not provided')
-    .replace('{{actions_deadline}}',  run.actions_deadline ?? 'Not specified')
+    .replace('{{actions_deadline}}',  actionsDeadlineLabel(run.actions_deadline) || 'Not specified')
     .replace('{{cqc_quality_statements}}', qsBlock)
 
   // If the prompt doesn't position the placeholder itself, append the statements + how to use them,

@@ -293,7 +293,8 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
       const evMap = new Map<string, any[]>()
       for (const e of (r.evidence ?? [])) { const arr = evMap.get(e.question_id) ?? []; arr.push(e); evMap.set(e.question_id, arr) }
       setEvidence(evMap)
-      setSummary({ strengths: r.strengths ?? '', improvements: r.improvements ?? '', actions_deadline: r.actions_deadline ?? '' })
+      // Older audits may hold a typed deadline; the date picker starts empty for those.
+      setSummary({ strengths: r.strengths ?? '', improvements: r.improvements ?? '', actions_deadline: /^\d{4}-\d{2}-\d{2}$/.test(r.actions_deadline ?? '') ? r.actions_deadline : '' })
       setSignedName(r.auditor_name ?? '')
     }).catch(() => {}).finally(() => setLoading(false))
   }, [runId]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -495,7 +496,10 @@ function AuditRunner({ token, runId, onExit }: { token: string; runId: string; o
             <p className="mb-3 text-sm font-semibold text-neutral-dark">Audit summary</p>
             <textarea value={summary.strengths} onChange={e => setSummary(s => ({ ...s, strengths: e.target.value }))} placeholder="Strengths identified" rows={2} className="mb-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
             <textarea value={summary.improvements} onChange={e => setSummary(s => ({ ...s, improvements: e.target.value }))} placeholder="Areas requiring improvement" rows={2} className="mb-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
-            <input value={summary.actions_deadline} onChange={e => setSummary(s => ({ ...s, actions_deadline: e.target.value }))} placeholder="Deadline for actions" className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+            <label className="mb-3 block">
+              <span className="mb-1 block text-xs font-medium text-neutral-mid">Deadline for actions</span>
+              <input type="date" value={summary.actions_deadline} min={new Date().toISOString().slice(0, 10)} onChange={e => setSummary(s => ({ ...s, actions_deadline: e.target.value }))} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />
+            </label>
             <p className="mb-1 text-xs font-medium text-neutral-mid">Your signature</p>
             <SignaturePad onChange={setSignature} height={120} />
             <input value={signedName} onChange={e => setSignedName(e.target.value)} placeholder="Your name" className="mb-3 mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none" />

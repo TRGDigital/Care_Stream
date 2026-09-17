@@ -9,7 +9,7 @@ import { AuditRecs } from '@/components/audit-recs'
 import { AuditActionPlan } from '@/components/admin/audit-action-plan'
 import { ChevronLeft, ChevronRight, ChevronDown, CheckCircle2, Circle, Printer, Sparkles, Loader2, AlertTriangle, Pause, Camera, CornerDownRight, FileDown } from 'lucide-react'
 import { QuestionInput, EMPTY_ANSWER, answerFromRow, type AuditAnswer } from '@/components/audits/question-input'
-import { isAnswered, isNarrative, isScored, isYesNo, outcomeFor, visibleQuestionIds } from '@/lib/audit-questions'
+import { actionsDeadlineLabel, isAnswered, isNarrative, isScored, isYesNo, outcomeFor, visibleQuestionIds } from '@/lib/audit-questions'
 import { SignaturePad } from '@/components/audits/signature-pad'
 import { PreviousActionsPanel } from '@/components/audits/previous-actions-panel'
 import { clsx } from 'clsx'
@@ -112,7 +112,7 @@ function PrintReport({ report, signatures }: { report: any; signatures: { audito
         <p className="font-semibold">Areas requiring improvement:</p>
         <p className="mb-3 min-h-[40px]">{report.improvements ?? ''}</p>
         <p className="font-semibold">Deadline for actions:</p>
-        <p>{report.actions_deadline ?? ''}</p>
+        <p>{actionsDeadlineLabel(report.actions_deadline)}</p>
       </div>
 
       {(report.has_auditor_signature || report.approved_by_name) && (
@@ -602,15 +602,21 @@ export default function AuditRunPage() {
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-neutral-mid">Deadline for actions</label>
-                  <input
-                    type="text"
-                    value={summary.actions_deadline}
-                    onChange={e => setSummary(s => ({ ...s, actions_deadline: e.target.value }))}
-                    onBlur={saveSummary}
-                    disabled={isCompleted}
-                    placeholder="e.g. 30 June 2026"
-                    className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-neutral-dark placeholder-gray-300 focus:border-teal focus:outline-none disabled:bg-gray-50"
-                  />
+                  {isCompleted || (summary.actions_deadline && !/^\d{4}-\d{2}-\d{2}$/.test(summary.actions_deadline)) ? (
+                    <p className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-neutral-dark">
+                      {actionsDeadlineLabel(summary.actions_deadline) || 'Not set'}
+                      {!isCompleted && <button type="button" onClick={() => setSummary(s => ({ ...s, actions_deadline: '' }))} className="ml-2 text-xs font-medium text-teal hover:underline">Choose a date</button>}
+                    </p>
+                  ) : (
+                    <input
+                      type="date"
+                      value={summary.actions_deadline}
+                      min={new Date().toISOString().slice(0, 10)}
+                      onChange={e => setSummary(s => ({ ...s, actions_deadline: e.target.value }))}
+                      onBlur={saveSummary}
+                      className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-neutral-dark focus:border-teal focus:outline-none"
+                    />
+                  )}
                 </div>
               </div>
             </div>

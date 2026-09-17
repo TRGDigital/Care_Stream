@@ -4,6 +4,7 @@ import { claimSafe } from '@/lib/training-commerce'
 import { TrainingDemo, type TrainingDemoData } from './training-demo'
 import { TrainingLibraryTabs, type LibraryTopic } from './training-library-tabs'
 import './staff-training-index-v2.css'
+import './staff-training-index-v2-extra.css'
 
 // The rebuilt /staff-training INDEX. The last page in the port.
 //

@@ -1,0 +1,85 @@
+/* The create-account page (/register), laid out like asana.com/create-account in the theme's
+   palette and type. Scoped under .csreg. The password eye comes from the auth pages' .lgpw rules,
+   restated here because this page does not load that stylesheet. */
+.csreg{
+  --ground:#FFFFFF; --ground-2:#F7F5FA; --ink:#17121F; --ink-2:#3A3245; --muted:#6B6577;
+  --line:#E2DDE9; --accent:#7B3FBF; --accent-soft:#F3EDFA; --btn-ink:#17121F; --btn-ink-text:#FFFFFF;
+  min-height:100svh; display:flex; flex-direction:column; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+  font-size:17px; line-height:1.6; -webkit-font-smoothing:antialiased; color-scheme:light;
+}
+.csreg *{box-sizing:border-box}
+.csreg :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+.csreg .rgtop{position:sticky;top:0;z-index:10;background:var(--ground);display:flex;align-items:center;
+  height:68px;padding:0 clamp(20px,5.5vw,88px)}
+.csreg .rgtop img{height:40px;width:auto;display:block}
+
+.csreg .rgmain{width:100%;max-width:470px;margin:0 auto;padding:clamp(36px,7vh,64px) 20px 0;text-align:center}
+.csreg h1{margin:0;font-size:clamp(2.2rem,4.2vw,3.1rem);line-height:1.12;letter-spacing:-.035em;font-weight:700;text-wrap:balance}
+.csreg .rgsub{margin:22px 0 40px;font-size:1rem;color:var(--muted)}
+
+.csreg label{font-size:.9rem;color:var(--ink-2)}
+.csreg .rgemail{text-align:left}
+.csreg .rgemail label{display:block;margin-bottom:6px}
+.csreg .rgjoin{display:flex}
+.csreg .rgjoin input{flex:1;min-width:0;height:52px;padding:0 16px;border:1px solid var(--line);border-right:0;
+  border-radius:12px 0 0 12px;font:inherit;font-size:.97rem;color:var(--ink);background:var(--ground)}
+.csreg .rgjoin button{flex:0 0 auto;height:52px;padding:0 30px;border:0;border-radius:0 12px 12px 0;
+  background:var(--btn-ink);color:var(--btn-ink-text);font:inherit;font-size:.97rem;font-weight:600;cursor:pointer}
+.csreg .rgjoin button:hover{background:var(--ink-2)}
+.csreg input::placeholder{color:var(--muted);opacity:.8}
+.csreg .rgjoin input:focus,.csreg .rgfield input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.csreg .rgjoin input:focus{position:relative;z-index:1;border-right:1px solid var(--accent)}
+@media (max-width:480px){
+  .csreg .rgjoin{flex-direction:column;gap:10px}
+  .csreg .rgjoin input{flex:0 0 auto;width:100%;border-right:1px solid var(--line);border-radius:12px}
+  .csreg .rgjoin button{border-radius:12px}
+}
+
+.csreg .rgalt{margin:12px 0 0;text-align:left;font-size:.86rem;color:var(--muted)}
+.csreg .rgalt a{color:var(--ink);font-weight:600;text-decoration:none}
+.csreg .rgalt a:hover{text-decoration:underline}
+
+.csreg .rgform{text-align:left;display:grid;gap:16px}
+.csreg .rgas{margin:0;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 16px;border-radius:12px;background:var(--ground-2);font-size:.9rem;color:var(--ink-2)}
+.csreg .rgas span{min-width:0;overflow-wrap:anywhere}
+.csreg .rgas button{flex:0 0 auto;border:0;background:none;padding:0;font:inherit;font-weight:600;color:var(--accent);cursor:pointer}
+.csreg .rgfield label{display:block;margin-bottom:6px}
+.csreg .rgfield input{width:100%;height:50px;padding:0 16px;border:1px solid var(--line);border-radius:12px;
+  font:inherit;font-size:.97rem;color:var(--ink);background:var(--ground)}
+.csreg .lgpw{position:relative}
+.csreg .lgpw input{padding-right:48px}
+.csreg .lgeye{position:absolute;top:50%;right:8px;transform:translateY(-50%);width:34px;height:34px;display:grid;
+  place-items:center;border:0;border-radius:8px;background:transparent;color:var(--muted);cursor:pointer}
+.csreg .lgeye svg{width:17px;height:17px}
+.csreg .lgeye:hover{background:var(--ground-2);color:var(--ink)}
+.csreg .lgeye.on{color:var(--accent)}
+.csreg .rgterms{display:flex;gap:11px;align-items:flex-start;cursor:pointer;font-size:.86rem;line-height:1.5;color:var(--muted)}
+.csreg .rgterms input{flex:0 0 auto;width:17px;height:17px;margin:2px 0 0;accent-color:var(--accent);cursor:pointer}
+.csreg .rgterms a{color:var(--ink);font-weight:600;text-decoration:none}
+.csreg .rgterms a:hover{text-decoration:underline}
+.csreg .rgbtn{height:52px;border:0;border-radius:12px;background:var(--btn-ink);color:var(--btn-ink-text);
+  font:inherit;font-size:.97rem;font-weight:600;cursor:pointer}
+.csreg .rgbtn:hover{background:var(--ink-2)}
+.csreg .rgbtn:disabled{opacity:.5;cursor:not-allowed}
+.csreg .rgerr{margin:0;font-size:.86rem;color:#B42318}
+.csreg .rgok{margin:0;padding:12px 14px;border-radius:11px;font-size:.88rem;background:#E7F5EE;color:#0E5D3C}
+
+.csreg .rgtrust{width:100%;max-width:1360px;margin:clamp(64px,11vh,110px) auto 0;padding:0 clamp(20px,4vw,40px);text-align:center}
+.csreg .rgtrust h2{margin:0 0 36px;font-size:clamp(1.6rem,2.6vw,2.2rem);line-height:1.15;letter-spacing:-.03em;font-weight:700;text-wrap:balance}
+.csreg .rglogos{display:grid;grid-template-columns:repeat(3,1fr)}
+.csreg .rglogo{display:grid;place-items:center;height:134px;padding:20px;border-color:var(--line);border-style:solid;border-width:0}
+.csreg .rglogo:nth-child(-n+3){border-bottom-width:1px}
+.csreg .rglogo:not(:nth-child(3n)){border-right-width:1px}
+.csreg .rglogo img{max-height:60px;max-width:180px;width:auto;height:auto;object-fit:contain;display:block}
+@media (max-width:640px){
+  .csreg .rglogos{grid-template-columns:repeat(2,1fr)}
+  .csreg .rglogo{height:104px;border-width:0!important}
+  .csreg .rglogo img{max-height:44px;max-width:130px}
+}
+
+.csreg .rgfoot{margin-top:auto;padding:44px 20px 36px;display:flex;justify-content:center;gap:28px;font-size:.86rem}
+.csreg .rgfoot a{color:var(--ink-2);text-decoration:none}
+.csreg .rgfoot a:hover{color:var(--accent)}

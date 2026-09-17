@@ -307,8 +307,12 @@ export function UserCasePageView({ page, readNext }: { page: UserCasePage; readN
             <div className="uc-cards">
               {readNext.map((p, i) => (
                 <Link className="uc-res" href={`/blog/${p.slug}`} key={p.slug}>
+                  {/* The post's own feature image; the theme's colour band stays behind it, and
+                      shows on its own only for a post that has no image. */}
                   <span className="uc-band"
-                        style={{ background: c.read_next_bands?.[i] ?? undefined }} />
+                        style={{ background: c.read_next_bands?.[i] ?? undefined }}>
+                    {p.feature_image_url && <SiteImage src={p.feature_image_url} alt="" />}
+                  </span>
                   <span className="body">
                     <h3>{p.title}</h3>
                     <p>{trim(p.excerpt ?? '')}</p>

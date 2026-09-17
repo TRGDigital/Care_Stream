@@ -41,7 +41,9 @@ export interface CollectionV2 {
 
 export interface Copy { (key: string): string }
 
-const money = (p: number) => `£${Math.round(p / 100)}`
+// Whole pounds as the theme prints them (£69); pence kept when there are any (£25.99). Rounding
+// every price showed a £25.99 course as £26, a figure the checkout then disagreed with.
+const money = (p: number) => `£${p % 100 === 0 ? p / 100 : (p / 100).toFixed(2)}`
 
 const Mark = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
@@ -50,11 +52,35 @@ const Mark = () => (
   </svg>
 )
 
-export function CollectionPageV2({ c, s }: { c: CollectionV2; s: Copy }) {
-  const links = (c.links ?? []).filter(l => l.label && l.url)
+export function CollectionPageV2({ c, s, siblings = [] }: {
+  c: CollectionV2
+  s: Copy
+  /** The other collections, for the "Browse the rest of the library" chips. */
+  siblings?: { label: string; url: string }[]
+}) {
   const faqs = (c.faqs ?? []).filter(f => f.question && f.answer)
   const products = c.products ?? []
   const training = c.kind === 'training'
+  const library = training
+    ? { label: 'All training modules', url: '/staff-training' }
+    : { label: 'All care policies', url: '/care-policies' }
+  // The row under the headline. Links set on the collection in the console come first; without
+  // them it falls back to what the theme shows there: the first products in the collection, then
+  // the whole library (and training pricing on a training collection).
+  const consoleLinks = (c.links ?? []).filter(l => l.label && l.url)
+  const links = consoleLinks.length > 0 ? consoleLinks : [
+    ...products.slice(0, 2).map(p => ({ label: p.title, url: p.href })),
+    library,
+    ...(training ? [{ label: 'Training pricing', url: '/pricing' }] : []),
+  ]
+  // "Browse the rest of the library": the other collections, then both whole libraries, as the
+  // theme has it. It had been built from the console links, which no collection sets, so the
+  // section never appeared.
+  const chips = [
+    ...siblings,
+    { label: 'All care policies', url: '/care-policies' },
+    { label: 'All training modules', url: '/staff-training' },
+  ]
   const noun = s('meta.noun') || 'in this collection'
 
   return (
@@ -138,13 +164,13 @@ export function CollectionPageV2({ c, s }: { c: CollectionV2; s: Copy }) {
         </section>
       )}
 
-      {links.length > 0 && (
+      {chips.length > 0 && (
         <section className="clsec cllinks">
           <div className="clwrap">
             <h2>{s('links.h2')}</h2>
             <p className="sub">{s('links.sub')}</p>
             <div className="clchips">
-              {links.map(l => (
+              {chips.map(l => (
                 <Link className="clchip" href={l.url} key={l.url}>{l.label}</Link>
               ))}
             </div>

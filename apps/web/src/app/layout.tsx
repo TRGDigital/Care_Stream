@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 import { CookieConsent } from '@/components/marketing/cookie-consent'
-import { DemoModalRoot } from '@/components/marketing/demo-modal'
+import { DemoDialog } from '@/components/marketing/demo-dialog'
 import { AltMapProvider } from '@/components/alt-map-provider'
 import { getSiteAltMap } from '@/lib/image-alts'
 import { JsonLd } from '@/components/json-ld'
@@ -100,7 +100,7 @@ gtag('config', 'G-0CD7WMQF8B');`}
           {children}
         </AltMapProvider>
         <CookieConsent />
-        <DemoModalRoot />
+        <DemoDialog />
         <SpeedInsights />
       </body>
     </html>

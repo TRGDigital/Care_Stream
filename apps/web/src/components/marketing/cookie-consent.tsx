@@ -8,6 +8,15 @@ import Link from 'next/link'
 const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID
 const STORAGE_KEY = 'cookie_consent'
 
+// Fired when the visitor answers the banner, so anything gated on consent (analytics)
+// can start or stop without waiting for a navigation.
+export const CONSENT_EVENT = 'cookie-consent-changed'
+
+/** Has the visitor accepted non-essential cookies? False until they actively do. */
+export function hasAnalyticsConsent(): boolean {
+  return getConsent() === 'accepted'
+}
+
 function loadClarity() {
   if (!CLARITY_ID || typeof window === 'undefined') return
   if ((window as any).clarity) return // already loaded
@@ -22,13 +31,41 @@ function getConsent(): string | null {
   try { return localStorage.getItem(STORAGE_KEY) } catch { return null }
 }
 
+
+// Cookies the analytics we load set on this device. Withdrawing consent has to remove
+// them: stopping the scripts leaves the identifiers behind, so the visitor is still
+// carrying an id they have just asked us not to keep.
+const ANALYTICS_COOKIE = /^(_ga|_gid|_gat|_gcl_|_clck|_clsk|_dc_gtm_)/
+
+function clearAnalyticsCookies() {
+  if (typeof document === 'undefined') return
+  // A cookie is only deleted by a matching name + path + domain, and GA sets its own on
+  // the registrable domain (.carestreamai.com), so try the host and each parent of it.
+  const host = location.hostname
+  const parts = host.split('.')
+  const domains = ['', host, ...parts.map((_, i) => '.' + parts.slice(i).join('.'))]
+  for (const raw of document.cookie.split(';')) {
+    const name = raw.trim().split('=')[0]
+    if (!name || !ANALYTICS_COOKIE.test(name)) continue
+    for (const d of domains) {
+      document.cookie =
+        `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/` + (d ? `; domain=${d}` : '')
+    }
+  }
+}
+
 export function CookieConsent() {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
     const consent = getConsent()
     if (consent === 'accepted') loadClarity()
-    else if (consent !== 'declined') setVisible(true)
+    else {
+      // Covers visitors carrying cookies from before analytics was gated, and anyone
+      // who declined on a previous visit.
+      clearAnalyticsCookies()
+      if (consent !== 'declined') setVisible(true)
+    }
 
     // Lets a future footer "Cookie settings" link re-open the banner.
     const reopen = () => setVisible(true)
@@ -37,9 +74,16 @@ export function CookieConsent() {
   }, [])
 
   const choose = (value: 'accepted' | 'declined') => {
+    const previous = getConsent()
     try { localStorage.setItem(STORAGE_KEY, value) } catch {}
     if (value === 'accepted') loadClarity()
+    else clearAnalyticsCookies()
     setVisible(false)
+    window.dispatchEvent(new Event(CONSENT_EVENT))
+    // Withdrawing consent cannot un-run a script that is already going. A reload is the
+    // only honest way to stop analytics in this tab; it only happens on an actual
+    // accepted -> declined change, so a first-time Decline does not bounce the page.
+    if (previous === 'accepted' && value === 'declined') window.location.reload()
   }
 
   if (!visible) return null

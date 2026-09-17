@@ -23,7 +23,7 @@ export interface PolicyBundle {
   key: string; title: string; description: string; price_pence: number
 }
 
-const money = (p: number) => `£${Math.round(p / 100)}`
+const money = (p: number) => `£${p % 100 === 0 ? p / 100 : (p / 100).toFixed(2)}`
 
 const rank = (key: string) => {
   const i = (CARE_POLICIES_PACK_ORDER as readonly string[]).indexOf(key)
@@ -184,7 +184,7 @@ export function CarePoliciesIndexV2({ s, products, bundles }: {
   bundles: PolicyBundle[]
 }) {
   return (
-    <div className="svpage-v2">
+    <div className="svpage-v2" data-page="care-policies">
       <section className="svhero">
         <div className="svwrap svhero-in">
           <div>

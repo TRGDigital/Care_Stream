@@ -1,0 +1,17 @@
+/* Additions to the ported /staff-training stylesheet (staff-training-index-v2.css is generated).
+ *
+ * The library intro ran straight into a small, pale search pill, so the search read as part of the
+ * paragraph and was easy to miss. The intro gets room below it, and the search is a full-size field:
+ * wider, taller, a firmer border and a soft shadow, with the icon in the accent colour. */
+.stpage-v2 .tcat-in > p{font-size:1rem;line-height:1.7;color:var(--ink-2);margin:0 0 34px;max-width:46em}
+.stpage-v2 .tsearch{max-width:560px;margin:0 0 26px}
+.stpage-v2 .tsearch input{font-size:1rem;padding:15px 20px 15px 50px;border:1.5px solid #D5CCE2;
+  box-shadow:0 1px 2px rgba(23,18,31,.05),0 8px 24px rgba(23,18,31,.07);transition:border-color .15s,box-shadow .15s}
+.stpage-v2 .tsearch input::placeholder{color:var(--muted)}
+.stpage-v2 .tsearch input:hover{border-color:#BFB2D3}
+.stpage-v2 .tsearch input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft),0 8px 24px rgba(23,18,31,.07)}
+.stpage-v2 .tsearch svg{left:19px;width:19px;height:19px;color:var(--accent)}
+@media (max-width:640px){
+  .stpage-v2 .tsearch{max-width:none}
+  .stpage-v2 .tcat-in > p{margin-bottom:26px}
+}

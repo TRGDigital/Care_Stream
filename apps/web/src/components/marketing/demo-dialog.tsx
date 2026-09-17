@@ -3,8 +3,11 @@
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { DemoForm } from './demo-form'
+import './demo-dialog.css'
 
-// The theme's Book a demo overlay, with its behaviour. Every link to /demo on the site opens it
+// The theme's Book a demo overlay, with its behaviour. Mounted once in the root layout, so every
+// page has it, including those without the site header (the /go/ landings, the console's upgrade
+// prompt); it replaces the older unthemed demo modal. Every link to /demo on the site opens it
 // instead of leaving the page; the links stay real anchors, so a modified click (new tab) and a
 // browser without JavaScript still reach /demo. On /demo itself the form is already on the page,
 // so the link scrolls to that instead.
@@ -18,6 +21,15 @@ const TICK = (
   </svg>
 )
 const FOCUSABLE = 'a[href],button:not([disabled]),input,select,textarea'
+
+// Any link that lands on the demo page, however it is written: "/demo", "/demo/", "/demo?from=x",
+// "/book-a-demo", or a full https://www.carestreamai.com/demo typed into console content.
+function isDemoLink(a: HTMLAnchorElement): boolean {
+  let url: URL
+  try { url = new URL(a.href, window.location.href) } catch { return false }
+  const ours = url.origin === window.location.origin || /(^|\.)carestreamai\.com$/.test(url.hostname)
+  return ours && /^\/(demo|book-a-demo)\/?$/.test(url.pathname)
+}
 
 export function DemoDialog() {
   const [open, setOpen] = useState(false)
@@ -40,8 +52,8 @@ export function DemoDialog() {
   useEffect(() => {
     function onClick(e: MouseEvent) {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
-      const a = (e.target as Element | null)?.closest?.('a[href="/demo"],a[href="/book-a-demo"]') as HTMLAnchorElement | null
-      if (!a || a.target === '_blank') return
+      const a = (e.target as Element | null)?.closest?.('a[href]') as HTMLAnchorElement | null
+      if (!a || a.target === '_blank' || !isDemoLink(a)) return
       if (window.location.pathname.replace(/\/$/, '') === '/demo') {
         const f = document.querySelector('.dmform')
         if (f) {
@@ -86,6 +98,7 @@ export function DemoDialog() {
   useEffect(() => { setOpen(false) }, [pathname])
 
   return (
+    <div className="csdemo">
     <div
       ref={wrapRef}
       className="dlgbd"
@@ -112,6 +125,7 @@ export function DemoDialog() {
         </div>
         <DemoForm variant="dialog" />
       </div>
+    </div>
     </div>
   )
 }

@@ -9,6 +9,7 @@ import { CollectionPageV2 } from '@/components/marketing/collection-page-v2'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { COLLECTION_V2_SLOTS } from '@/lib/page-slots/collection-v2'
 import { isV2 } from '@/lib/v2-rollout'
+import { THEME_IMAGES } from '@/lib/theme-images'
 
 // An ecommerce-style collection page: copy, the six products it sells, deeper copy, FAQs,
 // sibling links, then the services banner. The order is the order a visitor needs it in.
@@ -55,6 +56,53 @@ interface Collection {
 
 const money = (p: number) => `£${(p / 100).toFixed(p % 100 === 0 ? 0 : 2)}`
 
+// The rebuilt cards show the product's own picture, as the theme does, not the catalogue's
+// category image. A policy has its theme image in /public/images/care-policies/<slug>; a course's
+// is its module illustration on the API, the one the /staff-training library shows. The
+// catalogue image is the fallback, and it lives on the API, so it needs the API origin: as a bare
+// "/public/policy-shop/..." path it was requested from the website and every card was blank.
+const POLICY_IMAGE_SLUGS = new Set(THEME_IMAGES
+  .map(i => /^\/images\/care-policies\/([^/]+)\/1\.webp$/.exec(i.src)?.[1])
+  .filter((x): x is string => !!x))
+
+async function getCourseIllustrations(): Promise<Map<string, string>> {
+  try {
+    const res = await fetch(`${API_URL}/public/training/standard-modules`, { next: { revalidate: 3600 } })
+    if (!res.ok) return new Map()
+    const topics = ((await res.json())?.data?.topics ?? []) as { slug: string; illustration_url: string | null }[]
+    return new Map(topics.filter(t => t.illustration_url).map(t => [t.slug, `${API_URL}${t.illustration_url}`]))
+  } catch {
+    return new Map()
+  }
+}
+
+async function withCardImages(c: Collection): Promise<Collection> {
+  const courses = c.kind === 'training' ? await getCourseIllustrations() : null
+  const apiImage = (u: string | null) => (u ? (/^https?:/.test(u) ? u : `${API_URL}${u}`) : null)
+  return {
+    ...c,
+    products: (c.products ?? []).map(p => {
+      const bare = p.slug.replace(/^std-/, '')
+      const own = courses
+        ? courses.get(bare) ?? null
+        : POLICY_IMAGE_SLUGS.has(p.slug) ? `/images/care-policies/${p.slug}/1.webp` : null
+      return { ...p, image_url: own ?? apiImage(p.image_url) }
+    }),
+  }
+}
+
+// The other collections, for the "Browse the rest of the library" chips on the rebuilt page.
+async function getSiblings(slug: string): Promise<{ label: string; url: string }[]> {
+  try {
+    const res = await fetch(`${API_URL}/public/collections`, { next: { revalidate: 900 } })
+    if (!res.ok) return []
+    const all = ((await res.json())?.data?.collections ?? []) as { slug: string; title: string }[]
+    return all.filter(x => x.slug && x.title && x.slug !== slug).map(x => ({ label: x.title, url: `/collection/${x.slug}` }))
+  } catch {
+    return []
+  }
+}
+
 async function getCollection(slug: string): Promise<Collection | null> {
   try {
     const res = await fetch(`${API_URL}/public/collections/${slug}`, { next: { revalidate: 60 } })
@@ -71,7 +119,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!c) return { title: 'Collection not found' }
   const title = c.meta_title || c.title
   const description = c.meta_description || ''
-  const image = c.og_image_url || c.products?.[0]?.image_url || undefined
+  const image = c.og_image_url || (await withCardImages(c)).products?.[0]?.image_url || undefined
   return {
     title: { absolute: title },
     description,
@@ -103,7 +151,8 @@ export default async function CollectionPage(
       <>
         {Array.isArray(c.faqs) && c.faqs.length > 0
           && <JsonLd data={faqPageSchema(c.faqs.filter(f => f.question && f.answer))} />}
-        <CollectionPageV2 c={c} s={makeSlot(COLLECTION_V2_SLOTS, slots)} />
+        <CollectionPageV2 c={await withCardImages(c)} s={makeSlot(COLLECTION_V2_SLOTS, slots)}
+                          siblings={await getSiblings(slug)} />
       </>
     )
   }

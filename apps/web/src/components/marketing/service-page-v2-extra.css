@@ -1,0 +1,7 @@
+/* Additions to the ported service-page stylesheet (service-page-v2.css is generated, so these live
+ * here where a re-port cannot overwrite them).
+ *
+ * The theme's slot system stamps data-placed on every filled image frame, and its build sheet makes
+ * a placed frame position:relative. The app has no data-placed, so the frames were static; anything
+ * the frame positions against itself (a caption, a play badge) would anchor to the wrong box. */
+.svpage-v2 .svshot{position:relative}

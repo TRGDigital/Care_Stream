@@ -125,6 +125,8 @@
     border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
 .ucpage .uc-res:hover{border-color:#DCD5E8}
 .ucpage .uc-res .uc-band{height:104px;display:block;border-bottom:1px solid var(--line)}
+.ucpage .uc-res .uc-band{overflow:hidden}
+.ucpage .uc-res .uc-band img{width:100%;height:100%;object-fit:cover;display:block}
 .ucpage .uc-res .body{padding:20px}
 .ucpage .uc-res h3{font-size:.98rem;line-height:1.35;letter-spacing:-.015em;margin:0 0 8px}
 .ucpage .uc-res p{font-size:.85rem;color:var(--muted);margin:0 0 14px;line-height:1.55}

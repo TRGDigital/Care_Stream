@@ -1,4 +1,4 @@
-import { authMeta } from '../auth-meta'
+import { authMeta } from '@/app/(auth)/auth-meta'
 
 export const metadata = authMeta('Create your account', 'Start your 14 day free trial of CareStreamAI.')
 

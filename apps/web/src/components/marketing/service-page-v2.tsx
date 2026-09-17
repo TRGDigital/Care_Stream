@@ -1,7 +1,9 @@
 import { Fragment } from 'react'
 import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
+import { TocSpy } from './toc-spy'
 import './service-page-v2.css'
+import './service-page-v2-extra.css'
 
 // The rebuilt template for the seven /our-services pages and /how-it-works, at their LIVE
 // URLs (/care-audits, /cqc-compliance and the rest). No URL changes in this switchover.
@@ -398,7 +400,7 @@ export function ServicePageV2({ page, faqs = [] }: {
   const endAt = blocks.findIndex(b => b.kind === 'end')
 
   return (
-    <div className="svpage-v2">
+    <div className="svpage-v2" data-page={page.slug}>
       <section className="svhero">
         <div className="svwrap svhero-in">
           <div>
@@ -425,6 +427,7 @@ export function ServicePageV2({ page, faqs = [] }: {
           <div className="svwrap htoc-in">
             {c.toc.map(x => <a href={x.href} key={x.href}>{x.label}</a>)}
           </div>
+          <TocSpy nav=".svpage-v2 .htoc" />
         </nav>
       )}
 

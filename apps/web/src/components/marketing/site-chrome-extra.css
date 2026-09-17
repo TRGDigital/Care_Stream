@@ -49,37 +49,3 @@
 .cschrome .fcookie { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; }
 .cschrome .fcookie:hover { color: var(--ink); }
 .cschrome .fdisclaim { margin: 14px 0 0; font-size: .74rem; line-height: 1.55; color: var(--muted); max-width: 90ch; }
-
-/* The Book a demo overlay (demo-dialog.tsx), from the theme's shared sheet. Two additions: the
- * closed overlay is also visibility:hidden, so its fields cannot be tabbed into behind the page;
- * and the sent and error states, which the theme's inert form never shows. */
-.cschrome .dlgbd{position:fixed;inset:0;z-index:2000;background:rgba(23,18,31,.55);backdrop-filter:blur(3px);display:grid;place-items:center;padding:24px;opacity:0;pointer-events:none;visibility:hidden;transition:opacity .18s,visibility 0s linear .18s}
-.cschrome .dlgbd[data-open]{opacity:1;pointer-events:auto;visibility:visible;transition:opacity .18s}
-.cschrome .dlg{width:min(560px,100%);max-height:calc(100vh - 48px);overflow:auto;background:var(--ground);border-radius:18px;box-shadow:0 24px 80px rgba(23,18,31,.30);padding:30px;position:relative;transform:translateY(8px) scale(.99);transition:transform .18s;text-align:left}
-.cschrome .dlgbd[data-open] .dlg{transform:none}
-.cschrome .dlg .dlglogo{height:30px;width:auto;display:block;margin:0 auto 18px}
-.cschrome .dlg h2{font-size:1.3rem;line-height:1.2;font-weight:700;letter-spacing:-.024em;margin:0 0 6px}
-.cschrome .dlg .sub{margin:0 0 22px;font-size:.9rem;line-height:1.6;color:var(--muted)}
-.cschrome .dlg .x{position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--ground);color:var(--muted);cursor:pointer;display:grid;place-items:center;padding:0}
-.cschrome .dlg .x:hover{background:var(--ground-2);color:var(--ink)}
-.cschrome .dlg .x svg{width:14px;height:14px}
-.cschrome .dlgrow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.cschrome .dlgf{margin-bottom:14px}
-.cschrome .dlgf label{display:block;font-size:.8rem;font-weight:700;margin-bottom:6px;letter-spacing:-.01em}
-.cschrome .dlgf label i{font-style:normal;color:var(--accent)}
-.cschrome .dlgf input,.cschrome .dlgf select,.cschrome .dlgf textarea{width:100%;height:44px;border:1px solid var(--line);border-radius:11px;padding:0 13px;font-size:.93rem;font-family:inherit;color:var(--ink);background:var(--ground)}
-.cschrome .dlgf textarea{height:82px;padding:11px 13px;resize:vertical;line-height:1.55}
-.cschrome .dlgf input:focus,.cschrome .dlgf select:focus,.cschrome .dlgf textarea:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent;box-shadow:none}
-.cschrome .dlgbtn{display:block;width:100%;background:var(--btn-ink);color:var(--btn-ink-text);border:0;border-radius:12px;padding:14px;font-size:.97rem;font-weight:650;cursor:pointer;font-family:inherit;margin-top:6px}
-.cschrome .dlgbtn:hover{opacity:.9}
-.cschrome .dlgnote{margin:13px 0 0;text-align:center;font-size:.82rem;color:var(--muted)}
-.cschrome .dlgchips{display:flex;flex-wrap:wrap;gap:14px;margin:0 0 20px}
-.cschrome .dlgchips span{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;color:var(--ink-2)}
-.cschrome .dlgchips svg{width:12px;height:12px;stroke:var(--accent);flex:0 0 auto}
-.cschrome .dlgerr{margin:0 0 8px;font-size:.84rem;line-height:1.5;color:#B42318}
-.cschrome .dlgdone{border-radius:12px;padding:18px 20px;background:#E7F5EE;color:#0E5D3C}
-.cschrome .dlgdone b{display:block;font-size:1rem;margin-bottom:4px}
-.cschrome .dlgdone p{margin:0;font-size:.9rem;line-height:1.55}
-body.dlg-open{overflow:hidden}
-@media(max-width:560px){.cschrome .dlgrow{grid-template-columns:1fr}.cschrome .dlg{padding:24px}}
-@media(prefers-reduced-motion:reduce){.cschrome .dlgbd,.cschrome .dlg{transition:none}}

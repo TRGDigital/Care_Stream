@@ -24,6 +24,8 @@ type Badge = {
   w: number; h: number
   /** Landscape lockup with fine print, so it needs a slightly larger cap to stay legible. */
   wide?: boolean
+  /** Our own statement rather than a third party's mark: stays internal, no new tab. */
+  selfDeclared?: boolean
 }
 
 const BADGES: Badge[] = [
@@ -58,6 +60,18 @@ const BADGES: Badge[] = [
     alt: 'Disability Confident Committed',
     href: 'https://www.gov.uk/government/collections/disability-confident-campaign',
     label: 'Disability Confident Committed',
+  },
+  {
+    // Unlike the four above, this is NOT issued or checked by anyone: there is no general
+    // "GDPR compliant" certification, and this graphic carries no issuer. It is our own
+    // statement about how we handle data, so it links to /trust where that statement is
+    // actually made and can be read, rather than standing as a bare claim. Keep it last,
+    // after the marks a third party did issue.
+    src: '/badges/gdpr-compliant.png', w: 286, h: 120,
+    alt: 'GDPR compliant',
+    href: '/trust',
+    label: 'GDPR compliant',
+    selfDeclared: true,
   },
 ]
 
@@ -162,11 +176,15 @@ export async function MarketingFooter() {
           appears on the home page and every page in the (marketing) group. */}
       <section className="faccred" aria-label="Accreditations and registrations">
         <div className="wrap">
-          <p className="faccred-lead">Accredited and registered</p>
+          <p className="faccred-lead">Accreditations and compliance</p>
           <ul className="faccred-row">
             {BADGES.map(b => (
               <li key={b.label}>
-                <a href={b.href} rel="noopener noreferrer" target="_blank" title={b.label}>
+                <a
+                  href={b.href}
+                  title={b.label}
+                  {...(b.selfDeclared ? {} : { rel: 'noopener noreferrer', target: '_blank' })}
+                >
                   <img className={b.wide ? 'wide' : undefined} src={b.src} alt={b.alt} width={b.w} height={b.h} loading="lazy" />
                 </a>
               </li>
@@ -208,6 +226,16 @@ export async function MarketingFooter() {
               <span>ICO registered: ZC221613</span>
             </a>
             <span className="fsocial">
+              {/* Google Preferred Sources, via the deeplink rather than Google's button script.
+                  The scripted version pulls news.google.com/swg/js/v1/publisher.js onto every
+                  page, which is a third-party script running before anyone touches our cookie
+                  banner. This is a plain link: nothing loads, nothing is set, and it opens the
+                  same Google preferences screen. */}
+              <a
+                href="https://www.google.com/preferences/source?q=carestreamai.com"
+                rel="noopener noreferrer"
+                target="_blank"
+              >Add us to Google preferred sources</a>
               <CookieSettingsButton className="fcookie" />
               <a href="https://www.linkedin.com/company/carestreamai/" rel="noopener noreferrer" target="_blank">LinkedIn</a>
               <a href="mailto:hello@carestreamai.com">hello@carestreamai.com</a>

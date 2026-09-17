@@ -180,6 +180,15 @@ export async function MarketingFooter() {
 
       <footer className="site-foot">
         <div className="wrap">
+          <div className="fcols">
+            {groups.map(g => (
+              <div className={`fcol${g.wide ? ' wide' : ''}`} key={g.heading}>
+                <h4>{g.heading}</h4>
+                {g.links.map(l => <Link href={l.href} key={l.href}>{l.label}</Link>)}
+              </div>
+            ))}
+          </div>
+
           <div className="fbrand">
             <span className="brand">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -191,15 +200,6 @@ export async function MarketingFooter() {
               Contact us
               <svg viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7h8M7.5 3.5 11 7l-3.5 3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </Link>
-          </div>
-
-          <div className="fcols">
-            {groups.map(g => (
-              <div className={`fcol${g.wide ? ' wide' : ''}`} key={g.heading}>
-                <h4>{g.heading}</h4>
-                {g.links.map(l => <Link href={l.href} key={l.href}>{l.label}</Link>)}
-              </div>
-            ))}
           </div>
 
           <div className="fbase">

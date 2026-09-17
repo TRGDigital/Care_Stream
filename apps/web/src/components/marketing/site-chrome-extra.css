@@ -108,3 +108,8 @@
   .cschrome .faccred-row img{height:52px;max-width:100%}
   .cschrome .faccred-row img.wide{height:58px}
 }
+
+/* The brand block now sits BELOW the link columns rather than above them, so its
+   spacing flips: it needs air above it, not beneath. Overrides the margin-bottom
+   the ported chrome stylesheet sets, which would otherwise push the base row away. */
+.cschrome .fbrand{margin-top:46px;margin-bottom:0}

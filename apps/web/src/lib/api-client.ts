@@ -32,6 +32,24 @@ export type PolicyHistoryEntry = {
 }
 
 /** A regulation in scope with no policy behind it, from GET /analytics/gaps/missing-policies. */
+export type AuditRepeatFailure = { template_id: string; audit_name: string; subject: string | null; question: string; section: string; streak: number; last_failed: string; run_id: string }
+export type AuditInsights = {
+  months: number; overall: number | null; completed_runs: number
+  audits: Array<{ template_id: string; name: string; frequency: string; subject_scope: string; runs: number; latest_pct: number | null; previous_pct: number | null; change: number | null; series: Array<{ month: string; pct: number; runs: number }> }>
+  repeat_failures: AuditRepeatFailure[]
+}
+export type AuditTemplateInsights = {
+  template: { id: string; name: string; subject_scope: string }
+  runs: Array<{ run_id: string; completed_at: string; month: string; subject: string | null; pct: number | null; pass: number; total: number }>
+  sections: Array<{ title: string; series: Array<number | null> }>
+  questions: Array<{ text: string; section: string; outcomes: Array<'pass' | 'fail' | 'na' | 'unanswered' | 'info' | null>; fails: number; pass_rate: number | null; streak: number }>
+}
+export type AuditGroupInsights = {
+  months?: number
+  sites: Array<{ tenant_id: string; name: string; is_current: boolean; completed_runs: number; score: number | null; repeat_failures: number; open_actions: number; overdue_actions: number; overdue_scheduled: number }>
+  audits: Array<{ name: string; scores: Record<string, number> }>
+}
+
 export type AuditActionCloseout = {
   completion_note?: string | null
   evidence?: Array<{ id: string; file_name: string }>
@@ -1067,6 +1085,10 @@ export function createApiClient(token: string) {
       copyTemplate: (id: string, data: { name?: string; hide_original?: boolean }) => apiFetch<{ template: AuditEditorTemplate }>(`/audits/templates/${id}/copy`, token, { method: 'POST', body: JSON.stringify(data) }),
       setTemplateHidden: (id: string, hidden: boolean) => apiFetch<{ hidden: boolean }>(`/audits/templates/${id}/hidden`, token, { method: 'POST', body: JSON.stringify({ hidden }) }),
       templateVersions: (id: string) => apiFetch<{ versions: Array<{ version: number; changed_by: string | null; change_note: string | null; created_at: string; runs: number; question_count: number; snapshot: any }> }>(`/audits/templates/${id}/versions`, token),
+      // Trends: scores over time, repeat failures, one audit in detail, and the group comparison.
+      insights: (months = 12) => apiFetch<AuditInsights>(`/audits/insights?months=${months}`, token),
+      templateInsights: (id: string, months = 12) => apiFetch<AuditTemplateInsights>(`/audits/insights/templates/${id}?months=${months}`, token),
+      groupInsights: (months = 3) => apiFetch<AuditGroupInsights>(`/audits/insights/group?months=${months}`, token),
       // Scheduled audits: a named person, a due date and an optional repeat.
       assignments: (params: { view?: 'open' | 'overdue' | 'week' | 'completed' | 'all'; user_id?: string; mine?: boolean } = {}) =>
         apiFetch<{ assignments: AuditAssignment[]; counts: { open: number; overdue: number; due_this_week: number } }>(`/audits/assignments?view=${params.view ?? 'open'}${params.user_id ? `&user_id=${params.user_id}` : ''}${params.mine ? '&mine=1' : ''}`, token),

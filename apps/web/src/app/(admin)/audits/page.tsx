@@ -10,6 +10,7 @@ import { clsx } from 'clsx'
 import { AuditBuilder } from '@/components/admin/audit-builder'
 import { AuditVersionsModal } from '@/components/admin/audit-versions-modal'
 import { AuditSchedule } from '@/components/admin/audit-schedule'
+import { AuditInsightsPanel } from '@/components/admin/audit-insights'
 import { LinkTrainingModal } from '@/components/admin/link-training-modal'
 import { AuditActionPlan } from '@/components/admin/audit-action-plan'
 import { usePlanFeatures } from '@/lib/use-plan-features'
@@ -235,6 +236,8 @@ export default function AuditsPage() {
       {session?.accessToken && (
         <AuditSchedule token={session.accessToken} templates={templates.filter(t => !t.hidden)} rooms={rooms} staffNames={staff} />
       )}
+
+      {session?.accessToken && <AuditInsightsPanel token={session.accessToken} />}
 
       {/* ── Action plans (viewable here as well as in the hub) ───────────────────── */}
       {session?.accessToken && (

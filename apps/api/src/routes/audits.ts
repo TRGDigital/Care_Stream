@@ -28,6 +28,7 @@ import {
 import { previousActionsForRun, verifyAction, decideExtension, storeSignature } from '../services/audits/action-closeout'
 import { buildAuditReport, qualityStatementNames } from '../services/audits/report'
 import { renderAuditReportPdf, generateAndStoreAuditReport, reportFileName } from '../services/audits/report-pdf'
+import { tenantInsights, templateInsights, groupInsights } from '../services/audits/insights'
 
 export const auditsRouter = Router()
 
@@ -1513,6 +1514,31 @@ auditsRouter.delete('/templates/:id', requireAdmin, async (req: Request, res: Re
   if (!tpl) { err(res, 'NOT_FOUND', 'Audit not found (built-in audits cannot be deleted)', 404); return }
   await (prisma as any).auditTemplate.update({ where: { id: tpl.id }, data: { is_active: false } })
   ok(res, { deleted: true })
+})
+
+// ─── Trends ──────────────────────────────────────────────────────────────────
+
+const monthsParam = (v: any, dflt: number) => Math.min(Math.max(parseInt(String(v ?? dflt), 10) || dflt, 1), 36)
+
+// GET /audits/insights?months=12 — scores over time per audit, and repeat failures.
+auditsRouter.get('/insights', requireAdmin, async (req: Request, res: Response) => {
+  try { ok(res, await tenantInsights(req.user!.tenant_id, monthsParam(req.query.months, 12))) }
+  catch (e: any) { err(res, 'INSIGHTS_FAILED', e?.message ?? 'Could not load audit trends.', 500) }
+})
+
+// GET /audits/insights/group?months=3 — every home in the group side by side (empty for a single home).
+auditsRouter.get('/insights/group', requireAdmin, async (req: Request, res: Response) => {
+  try { ok(res, await groupInsights(req.user!.tenant_id, monthsParam(req.query.months, 3))) }
+  catch (e: any) { err(res, 'INSIGHTS_FAILED', e?.message ?? 'Could not load the group comparison.', 500) }
+})
+
+// GET /audits/insights/templates/:id?months=12 — one audit: runs, section trends, question results.
+auditsRouter.get('/insights/templates/:id', requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const out = await templateInsights(req.user!.tenant_id, String(req.params.id), monthsParam(req.query.months, 12))
+    if (!out) return err(res, 'NOT_FOUND', 'Audit not found', 404)
+    ok(res, out)
+  } catch (e: any) { err(res, 'INSIGHTS_FAILED', e?.message ?? 'Could not load the audit trend.', 500) }
 })
 
 // ─── Scheduled audits ─────────────────────────────────────────────────────────

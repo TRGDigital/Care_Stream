@@ -1,10 +1,17 @@
 import { MetadataRoute } from 'next'
 
 // The authenticated app routes to keep out of every crawler's index. Trailing slashes where a
-// prefix would otherwise catch a public marketing page (e.g. /staff/ must not block /staff-training).
+// prefix would otherwise catch a public marketing page (e.g. /staff/ must not block /staff-training,
+// and /training/ must not block /training-platform, which is a marketing page in the sitemap).
+//
+// /training is the console index and must still be blocked, so it is listed twice: '/training$'
+// anchors an exact match on the page itself, '/training/' covers everything beneath it. Plain
+// '/training' would be a prefix and silently swallow /training-platform. The '$' anchor is a
+// Google and Bing extension to the original robots spec; crawlers that ignore it fall back to
+// treating the line as the exact path, which is the same outcome.
 const APP_ROUTES = [
   '/dashboard', '/policies', '/staff/', '/analytics', '/settings', '/billing', '/onboarding',
-  '/knowledge', '/guides', '/queries', '/gaps', '/training', '/audits', '/cqc-questions',
+  '/knowledge', '/guides', '/queries', '/gaps', '/training$', '/training/', '/audits', '/cqc-questions',
   '/chat', '/cqc/', '/api/', '/register', '/login',
 ]
 

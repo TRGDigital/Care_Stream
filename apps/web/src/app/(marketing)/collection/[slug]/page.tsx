@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { BlogFaqs } from '@/components/marketing/blog-faqs'
 import { JsonLd } from '@/components/json-ld'
-import { faqPageSchema, SITE_URL } from '@/lib/schema'
+import { faqPageSchema, itemListSchema, SITE_URL } from '@/lib/schema'
 import { CollectionIntro } from '@/components/marketing/collection-intro'
 import { CollectionPageV2 } from '@/components/marketing/collection-page-v2'
 import { getContentSlots, makeSlot } from '@/lib/page-slots'
@@ -143,12 +143,24 @@ export default async function CollectionPage(
   const c = await getCollection(slug)
   if (!c) notFound()
 
+  // A collection page IS a list, so say so. Without ItemList these read to a crawler as an
+  // unclassified page of links; with it, the courses or policies on the page are enumerated in
+  // order with their own URLs. Built before the V2 branch so both templates emit it.
+  const listJson = itemListSchema({
+    name:  c.title,
+    path:  `/collection/${slug}`,
+    items: (c.products ?? [])
+      .filter(pr => pr.title && pr.href)
+      .map(pr => ({ name: pr.title, path: pr.href })),
+  })
+
   // Opt-in with ?v2=1 until it is signed off. The collection record is the same either way:
   // only the page furniture the theme repeats on every collection is a slot set.
   if (await isV2('collections', searchParams)) {
     const slots = await getContentSlots('/collection')
     return (
       <>
+        {listJson.numberOfItems > 0 && <JsonLd data={listJson} />}
         {Array.isArray(c.faqs) && c.faqs.length > 0
           && <JsonLd data={faqPageSchema(c.faqs.filter(f => f.question && f.answer))} />}
         <CollectionPageV2 c={await withCardImages(c)} s={makeSlot(COLLECTION_V2_SLOTS, slots)}
@@ -164,6 +176,7 @@ export default async function CollectionPage(
 
   return (
     <>
+      {listJson.numberOfItems > 0 && <JsonLd data={listJson} />}
       {faqs.length > 0 && <JsonLd data={faqPageSchema(faqs)} />}
 
       {/* ── Copy above the grid ── */}

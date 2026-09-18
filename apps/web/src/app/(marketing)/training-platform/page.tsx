@@ -14,6 +14,8 @@ import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { TRAINING_PLATFORM_V2_SLOTS } from '@/lib/page-slots/training-platform-v2'
 import { TrainingPlatformV2 } from '@/components/marketing/training-platform-v2'
 import { isV2 } from '@/lib/v2-rollout'
+import { JsonLd } from '@/components/json-ld'
+import { serviceSchema } from '@/lib/schema'
 
 export const revalidate = 60
 
@@ -68,15 +70,31 @@ function FeatureItem({ Icon, title, body }: { Icon: LucideIcon; title: string; b
 export default async function TrainingPlatformPage(
   { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
 ) {
+  // This page describes a service but carried breadcrumbs only. /features/* already uses Service
+  // for the same kind of content, so it is the consistent type here. Built before the V2 branch
+  // so the markup ships whichever template renders.
+  const serviceJson = serviceSchema({
+    name:        'Care staff training platform',
+    description: 'Assign, deliver and evidence statutory and mandatory training for care staff, in the hub, in any language, with certificates and expiry tracking.',
+    path:        '/training-platform',
+    serviceType: 'Care staff training platform',
+  })
+
   // Opt-in with ?v2=1 until it is signed off. Its own slot set, because the copy is new.
   if (await isV2('one-offs', searchParams)) {
     const slots = await getContentSlots('/training-platform')
-    return <TrainingPlatformV2 s={makeSlot(TRAINING_PLATFORM_V2_SLOTS, slots)} />
+    return (
+      <>
+        <JsonLd data={serviceJson} />
+        <TrainingPlatformV2 s={makeSlot(TRAINING_PLATFORM_V2_SLOTS, slots)} />
+      </>
+    )
   }
 
   const heroDemo = await getHeroDemo()
   return (
     <>
+      <JsonLd data={serviceJson} />
       {/* ── Hero — copy left, interactive demo focal card right ──────────── */}
       <section className="relative overflow-hidden bg-hero-gradient">
         <div className="absolute inset-0 dot-mesh" />

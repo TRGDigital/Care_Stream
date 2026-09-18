@@ -274,6 +274,104 @@ export function faqPageSchema(faqs: Array<{ question: string; answer: string }>)
 // A purchasable, self-paced online training module as schema.org/Course, with a
 // nested CourseInstance + Offer so it's eligible for Google's Course rich results
 // (and read accurately by LLM/AI search). Populate from the module's own data.
+// A purchasable training licence, for the /buy/[slug] pages. Course (on the matching
+// /staff-training page) describes what is taught; Product describes what is sold, which is
+// what lets Google show a price and availability. The two are linked with isSimilarTo so the
+// pair reads as one thing rather than two unrelated entities.
+export function productSchema(opts: {
+  name: string
+  description: string
+  path: string          // e.g. /buy/care-certificate
+  pricePence: number
+  image?: string | null
+  coursePath?: string   // e.g. /staff-training/care-certificate
+  category?: string
+}) {
+  const price = (opts.pricePence / 100).toFixed(2)
+  // Priced per learner and sold continuously, so the offer is open-ended rather than carrying
+  // a priceValidUntil that would silently expire and start throwing Search Console warnings.
+  return {
+    '@context':   'https://schema.org',
+    '@type':      'Product',
+    '@id':        `${SITE_URL}${opts.path}#product`,
+    name:         opts.name,
+    description:  opts.description,
+    url:          `${SITE_URL}${opts.path}`,
+    ...(opts.image ? { image: opts.image } : {}),
+    ...(opts.category ? { category: opts.category } : {}),
+    brand:        { '@type': 'Brand', name: SITE_NAME },
+    ...(opts.coursePath ? { isSimilarTo: { '@id': `${SITE_URL}${opts.coursePath}#course` } } : {}),
+    offers: {
+      '@type':          'Offer',
+      price,
+      priceCurrency:    'GBP',
+      availability:     'https://schema.org/InStock',
+      url:              `${SITE_URL}${opts.path}`,
+      seller:           { '@id': ORG_ID },
+      // One licence covers one member of staff.
+      eligibleQuantity: { '@type': 'QuantitativeValue', unitText: 'learner', minValue: 1 },
+    },
+  }
+}
+
+// A curated list of pages (a /collection hub). ItemList tells Google the page IS a list and
+// what is on it, rather than leaving it as an unclassified page of links.
+export function itemListSchema(opts: {
+  name: string
+  path: string
+  items: Array<{ name: string; path: string }>
+}) {
+  return {
+    '@context':       'https://schema.org',
+    '@type':          'ItemList',
+    '@id':            `${SITE_URL}${opts.path}#itemlist`,
+    name:             opts.name,
+    url:              `${SITE_URL}${opts.path}`,
+    numberOfItems:    opts.items.length,
+    itemListOrder:    'https://schema.org/ItemListUnordered',
+    itemListElement:  opts.items.map((it, i) => ({
+      '@type':    'ListItem',
+      position:   i + 1,
+      name:       it.name,
+      url:        `${SITE_URL}${it.path}`,
+    })),
+  }
+}
+
+// The subscription plans on /pricing, as one Product carrying an Offer per tier. A single
+// Product with several offers is the shape Google expects for "one thing, several price
+// points", rather than three unrelated Products competing for the same page.
+export function pricingProductSchema(opts: {
+  tiers: Array<{ name: string; pricePence: number; description?: string }>
+}) {
+  return {
+    '@context':   'https://schema.org',
+    '@type':      'Product',
+    '@id':        `${SITE_URL}/pricing#product`,
+    name:         `${SITE_NAME} subscription`,
+    description:  'Policy access, staff training and CQC evidence for UK care services, priced per service per month.',
+    url:          `${SITE_URL}/pricing`,
+    brand:        { '@type': 'Brand', name: SITE_NAME },
+    offers: opts.tiers.map(t => ({
+      '@type':          'Offer',
+      name:             t.name,
+      ...(t.description ? { description: t.description } : {}),
+      price:            (t.pricePence / 100).toFixed(2),
+      priceCurrency:    'GBP',
+      availability:     'https://schema.org/InStock',
+      url:              `${SITE_URL}/pricing`,
+      seller:           { '@id': ORG_ID },
+      priceSpecification: {
+        '@type':          'UnitPriceSpecification',
+        price:            (t.pricePence / 100).toFixed(2),
+        priceCurrency:    'GBP',
+        unitText:         'month',
+        billingIncrement: 1,
+      },
+    })),
+  }
+}
+
 export function courseSchema(opts: {
   name: string
   description: string

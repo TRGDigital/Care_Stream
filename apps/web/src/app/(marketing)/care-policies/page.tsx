@@ -13,6 +13,8 @@ import {
   CarePoliciesIndexV2, type PolicyProduct, type PolicyBundle,
 } from '@/components/marketing/care-policies-index-v2'
 import { isV2 } from '@/lib/v2-rollout'
+import { JsonLd } from '@/components/json-ld'
+import { serviceSchema } from '@/lib/schema'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -116,14 +118,27 @@ export default async function FeaturesPage(
 ) {
   const slots = await getContentSlots('/care-policies')
 
+  // This page describes a service but carried breadcrumbs only. /features/* already uses Service
+  // for the same kind of content, so it is the consistent type here. Built before the V2 branch
+  // so the markup ships whichever template renders.
+  const serviceJson = serviceSchema({
+    name:        'Care policy management',
+    description: 'Upload your care policies and give every member of staff instant, multilingual access to them, with gap detection against the CQC regulations.',
+    path:        '/care-policies',
+    serviceType: 'Care policy management software',
+  })
+
   // Opt-in with ?v2=1 until it is signed off. Its own slot set: the existing one holds only
   // 64% of the theme's strings, so reusing it would render a page part approved copy and part
   // the previous wording.
   if (await isV2('indexes', searchParams)) {
     const { products, bundles } = await getCatalogue()
     return (
-      <CarePoliciesIndexV2 s={makeSlot(CARE_POLICIES_V2_SLOTS, slots)}
-                           products={products} bundles={bundles} />
+      <>
+        <JsonLd data={serviceJson} />
+        <CarePoliciesIndexV2 s={makeSlot(CARE_POLICIES_V2_SLOTS, slots)}
+                             products={products} bundles={bundles} />
+      </>
     )
   }
 
@@ -206,6 +221,7 @@ export default async function FeaturesPage(
 
   return (
     <>
+      <JsonLd data={serviceJson} />
       {/* ── Split hero ───────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-hero-gradient">
         <div className="absolute inset-0 dot-mesh" />

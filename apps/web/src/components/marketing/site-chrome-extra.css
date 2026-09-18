@@ -49,6 +49,11 @@
 .cschrome .fcookie { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; }
 .cschrome .fcookie:hover { color: var(--ink); }
 .cschrome .fdisclaim { margin: 14px 0 0; font-size: .74rem; line-height: 1.55; color: var(--muted); max-width: 90ch; }
+.cschrome .fbuilt { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 9px;
+  margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line);
+  font-size: .74rem; color: var(--muted); text-decoration: none; transition: color .18s ease; }
+.cschrome .fbuilt:hover { color: var(--ink); }
+.cschrome .fbuilt img { height: 17px; width: auto; }
 
 /* ── Accreditation strip ────────────────────────────────────────────────────
    A band of its own ABOVE the footer, not a row inside it: these are claims about

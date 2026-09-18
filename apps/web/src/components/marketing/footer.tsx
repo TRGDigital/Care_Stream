@@ -252,6 +252,13 @@ export async function MarketingFooter() {
             advisor, and CQC Readiness Reports provide factual audit data, not a guarantee of any
             inspection rating or regulatory outcome.
           </p>
+          {/* Built by TRG Digital, as on the care sites. */}
+          <a className="fbuilt" href="https://www.trgdigital.co.uk/" rel="noopener noreferrer" target="_blank">
+            <span>This site was built by</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/trg-digital.png" alt="TRG Digital" width={900} height={209} loading="lazy" decoding="async" />
+            <span>a specialist care sector marketing agency</span>
+          </a>
         </div>
       </footer>
     </div>

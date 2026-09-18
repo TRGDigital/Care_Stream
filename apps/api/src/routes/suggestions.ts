@@ -9,6 +9,7 @@
 // is computed from cheap count/group queries in one Promise.all — no AI calls.
 
 import { Router, Request, Response } from 'express'
+import { missingPolicies } from '../services/analytics/missing-policies'
 import { prisma } from '../db/client'
 import { getTenantId } from '../db/tenant-context'
 import { requireAdmin } from '../middleware/auth'
@@ -472,6 +473,32 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
             href:  null,
           })), worstStale.count)
       }
+
+      // Rule 3b — regulations in scope with no policy behind them at all.
+      //
+      // Ranked above the review reminders on purpose. Everything else in this list is work on
+      // a document the home already has; this is a document that does not exist, which is the
+      // one thing they cannot fix by editing.
+      //
+      // Silent when the analysis has never run or is stale, exactly as the /gaps banner is. A
+      // suggestion is a claim about their compliance, and a claim we have already decided not
+      // to trust has no business being made twice.
+      try {
+        const missing = await missingPolicies(tenantId)
+        if (missing.analysed && !missing.stale && missing.missing.length > 0) {
+          const n = missing.missing.length
+          push('policies_missing', 'compliance',
+            n === 1 ? 'A policy the law requires is missing' : `${n} policies the law requires are missing`,
+            `Your policies were read against the regulations that apply to your service. ` +
+            `${n === 1 ? 'One regulation has' : `${n} regulations have`} no policy behind ` +
+            `${n === 1 ? 'it' : 'them'} at all. This is not wording to improve, it is a document you do not have.`,
+            'See what is missing', '/gaps',
+            missing.missing.slice(0, 5).map(m => ({
+              label: `${m.title}: required by ${m.regulations[0]?.official_name ?? 'a regulation in scope'}`,
+              href:  null,
+            })), n)
+        }
+      } catch { /* a suggestion is never worth failing the whole list for */ }
 
       // Rule 4 — policies due their scheduled review
       const duePolicies = ((dueReview as any)?.policies ?? []) as any[]

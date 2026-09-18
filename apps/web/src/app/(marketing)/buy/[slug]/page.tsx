@@ -7,6 +7,8 @@ import { BuyPageV2 } from '@/components/marketing/buy-page-v2'
 import { pageMetadata } from '@/lib/page-meta'
 import { fetchModules, relatedModules } from '@/lib/related-modules'
 import { isV2 } from '@/lib/v2-rollout'
+import { JsonLd } from '@/components/json-ld'
+import { productSchema } from '@/lib/schema'
 
 export const revalidate = 60
 
@@ -76,11 +78,26 @@ export default async function BuyPage(
   // dofollow internal links, not just the single one from its training page.
   const related = relatedModules(allModules, slug, { sameGroup: 3, windowCount: 4 })
 
+  // What this page SELLS, as Product + Offer. The matching /staff-training page already carries
+  // Course, which describes what is TAUGHT; without this the price printed on the page is
+  // invisible to search. Built before the V2 branch so both templates emit the same markup.
+  const productJson = productSchema({
+    name:        `${m.title} training licence`,
+    description: m.summary || `Buy ${m.title} training licences for your care staff, delivered in the CareStream hub in any language.`,
+    path:        `/buy/${slug}`,
+    pricePence:  unitPence,
+    image:       m.illustration_url ?? null,
+    coursePath:  `/staff-training/${slug}`,
+    category:    m.group_label ?? undefined,
+  })
+
   // Opt-in with ?v2=1 until it is signed off, the same as the other ported families. It renders
   // this same record, so the flag changes the design and nothing else.
   const sp = await searchParams
   if (await isV2('buy', sp)) {
     return (
+      <>
+      <JsonLd data={productJson} />
       <BuyPageV2
         module={{ ...m, slug }}
         unitPence={unitPence}
@@ -88,11 +105,13 @@ export default async function BuyPage(
         related={related.slice(0, 6).map(r => ({ slug: r.slug, title: r.title, group_label: r.group_label }))}
         apiUrl={API_URL}
       />
+      </>
     )
   }
 
   return (
     <>
+    <JsonLd data={productJson} />
     <section className="bg-neutral-light py-16 md:py-24">
       <div className="mx-auto max-w-content px-6">
         <Link href={`/staff-training/${slug}`} className="mb-8 inline-flex items-center gap-1.5 text-sm font-semibold text-teal hover:text-teal-dark">

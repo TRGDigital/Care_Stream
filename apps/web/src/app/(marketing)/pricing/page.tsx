@@ -7,6 +7,9 @@ import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { PRICING_SLOTS } from '@/lib/page-slots/pricing'
 import { PricingPageV2 } from '@/components/marketing/pricing-page-v2'
 import { isV2 } from '@/lib/v2-rollout'
+import { JsonLd } from '@/components/json-ld'
+import { pricingProductSchema } from '@/lib/schema'
+import { PRICING } from '@/lib/pricing-data'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
@@ -185,15 +188,33 @@ export default async function PricingPage(
   const linkedFeatures = await getLinkedFeatureSlugs()
   const s = makeSlot(PRICING_SLOTS, await getContentSlots('/pricing'))
 
+  // The plan prices are printed on this page but were invisible to search. Parsed out of the
+  // generated pricing data rather than retyped, so they cannot drift from what is displayed; a
+  // plan whose price string stops looking like "£85 per month" is skipped rather than guessed at.
+  const tiers = PRICING.plans
+    .map(pl => {
+      const m = /£\s?([\d,]+(?:\.\d{2})?)/.exec(pl.price || '')
+      if (!m) return null
+      return { name: pl.name, pricePence: Math.round(parseFloat(m[1].replace(/,/g, '')) * 100), description: pl.line }
+    })
+    .filter((t): t is { name: string; pricePence: number; description: string } => t !== null)
+  const pricingJson = tiers.length ? pricingProductSchema({ tiers }) : null
+
   // The rebuilt theme is opt-in with ?v2=1 until it is signed off. The plans and the
   // comparison table come from the generated pricing data, so the figures cannot drift from
   // the approved design by someone editing one of two copies.
   if (await isV2('one-offs', searchParams)) {
-    return <PricingPageV2 heading="Simple pricing, no surprises" lede={s('hero.subtitle')} />
+    return (
+      <>
+        {pricingJson && <JsonLd data={pricingJson} />}
+        <PricingPageV2 heading="Simple pricing, no surprises" lede={s('hero.subtitle')} />
+      </>
+    )
   }
 
   return (
     <>
+      {pricingJson && <JsonLd data={pricingJson} />}
       <PageHero
         label={s('hero.label')}
         title={s('hero.title')}

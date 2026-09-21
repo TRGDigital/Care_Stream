@@ -76,6 +76,8 @@ type GeneratedModule = {
   learning_content: { summary: string; outcomes: string[]; key_points: string[]; sections: GeneratedSection[] }
   questions: Array<{ id: string; text: string; options: string[]; correct: number }>
   policy_refs: Array<{ policy_id: string; title: string; section: string | null }>
+  /** The exact passages the generator read (tenant lessons only), for provenance. */
+  sources: SourcePassage[]
 }
 
 // Normalise a 4-option MCQ {question/text, options, correct}. Pads options to 4, clamps correct.
@@ -129,7 +131,17 @@ async function getPrompt(): Promise<string> {
   return DEFAULT_TRAINING_MODULE_PROMPT
 }
 
-export type HomePassages = { text: string; refs: GeneratedModule['policy_refs'] }
+// One passage the generator actually read, exactly as it was sent (after every cap), so a
+// lesson can later be checked against it. `id` is how the attribution step cites it:
+// H = this home's policy, S = the curated training seed, E = an example policy seed.
+export type SourcePassage = { id: string; kind: 'home' | 'training_seed' | 'example'; title: string; section: string | null; text: string }
+
+export type HomePassages = {
+  text: string
+  refs: GeneratedModule['policy_refs']
+  /** The same passages as `text`, one per policy chunk, trimmed to exactly what survived the cap. */
+  items: Array<{ policy_id: string | null; title: string; section: string | null; text: string }>
+}
 
 // The passages from THIS home's own indexed policies nearest to a topic. Shared by the
 // lesson generator and the question generators, so every tenant-facing generation path
@@ -146,16 +158,25 @@ export async function homePolicyPassages(tenantId: string, query: string, opts: 
     console.error('[module-gen] retrieval failed:', e?.message ?? e)
   }
   const parts: string[] = []
+  const items: HomePassages['items'] = []
   const refMap = new Map<string, { policy_id: string; title: string; section: string | null }>()
+  let used = 0
   for (const c of chunks) {
     if (!c?.chunk_text) continue
     const title = policyTitle(c.source_filename)
-    parts.push(`[${title}${c.section_heading ? `, ${c.section_heading}` : ''}]\n${String(c.chunk_text)}`)
-    if (c?.policy_id && !refMap.has(c.policy_id)) {
+    const header = `[${title}${c.section_heading ? `, ${c.section_heading}` : ''}]\n`
+    const part = `${header}${String(c.chunk_text)}`
+    parts.push(part)
+    // Mirror the join + cap below, so each item holds exactly the text the model receives.
+    const start = used + (items.length ? 2 : 0)
+    const room = maxChars - start - header.length
+    if (room > 0) items.push({ policy_id: c.policy_id ?? null, title, section: c.section_heading ?? null, text: String(c.chunk_text).slice(0, room) })
+    used = start + part.length
+    if (c?.policy_id && !refMap.has(c.policy_id) && room > 0) {
       refMap.set(c.policy_id, { policy_id: c.policy_id, title, section: c.section_heading ?? null })
     }
   }
-  return { text: parts.join('\n\n').slice(0, maxChars), refs: [...refMap.values()] }
+  return { text: parts.join('\n\n').slice(0, maxChars), refs: [...refMap.values()], items }
 }
 
 // Grounding budget for a TENANT module. The home's own passages go first and get the
@@ -173,9 +194,9 @@ export const EXAMPLE_LABEL = 'REFERENCE: ANONYMISED EXAMPLE POLICIES (not this h
 
 // Gather grounding: tenant policy chunks (RAG) + matching reference seeds.
 // tenantId null → platform/standard module: ground in reference seeds only.
-async function buildGrounding(tenantId: string | null, topic: { title: string; aliases?: string[]; care_setting?: string | null }): Promise<{ text: string; refs: GeneratedModule['policy_refs'] }> {
+async function buildGrounding(tenantId: string | null, topic: { title: string; aliases?: string[]; care_setting?: string | null }): Promise<{ text: string; refs: GeneratedModule['policy_refs']; sources: SourcePassage[] }> {
   const query = `${topic.title} ${(topic.aliases ?? []).join(' ')}`.trim()
-  const home = tenantId ? await homePolicyPassages(tenantId, query) : { text: '', refs: [] }
+  const home: HomePassages = tenantId ? await homePolicyPassages(tenantId, query) : { text: '', refs: [], items: [] }
   const refMap = new Map<string, { policy_id: string; title: string; section: string | null }>()
   for (const r of home.refs) refMap.set(r.policy_id, r)
 
@@ -184,6 +205,7 @@ async function buildGrounding(tenantId: string | null, topic: { title: string; a
   // setting-specific module (e.g. dental) be grounded in that setting's own facts
   // rather than care-home policy text.
   let seedText = ''
+  let seedTitle = ''
   try {
     const seedRef = await (prisma as any).trainingSeed.findFirst({
       where: { is_active: true, training_type: { equals: topic.title, mode: 'insensitive' } },
@@ -192,6 +214,7 @@ async function buildGrounding(tenantId: string | null, topic: { title: string; a
       // Recorded as a source so the lesson's provenance lists the curated seed as well as
       // the home's policies and the example policies. The prefix marks its kind.
       refMap.set(`training-seed:${seedRef.id}`, { policy_id: `training-seed:${seedRef.id}`, title: String(seedRef.training_type), section: null })
+      seedTitle = String(seedRef.training_type)
       seedText = [
         `Authoritative reference for "${seedRef.training_type}":`,
         seedRef.summary && `Overview: ${seedRef.summary}`,
@@ -207,6 +230,7 @@ async function buildGrounding(tenantId: string | null, topic: { title: string; a
   // For a setting-specific topic, only pull seeds from THAT setting so e.g. dental
   // generation isn't grounded in nursing-home policy text.
   const examples: string[] = []
+  const exampleMeta: Array<{ rawTitle: string; title: string; section: string | null; content: string }> = []
   const kw = topic.title.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length > 3).slice(0, 4)
   if (kw.length) {
     const keywordOr = { OR: kw.map(k => ({ OR: [{ section: { contains: k, mode: 'insensitive' } }, { title: { contains: k, mode: 'insensitive' } }] })) }
@@ -216,6 +240,7 @@ async function buildGrounding(tenantId: string | null, topic: { title: string; a
     }).catch(() => [])
     for (const s of (seeds as any[])) {
       examples.push(`${s.title}\n${s.content}`)
+      exampleMeta.push({ rawTitle: String(s.title), title: policyTitle(s.title), section: s.section ?? null, content: String(s.content ?? '') })
       const key = `seed:${s.id}`
       if (!refMap.has(key)) refMap.set(key, { policy_id: key, title: policyTitle(s.title), section: s.section ?? null })
     }
@@ -224,7 +249,7 @@ async function buildGrounding(tenantId: string | null, topic: { title: string; a
   // Platform/standard module: unchanged behaviour — the seed leads, 9,000 in total.
   if (!tenantId) {
     const parts = [seedText, ...examples].filter(Boolean)
-    return { text: parts.join('\n\n').slice(0, 9000), refs: [...refMap.values()].slice(0, 8) }
+    return { text: parts.join('\n\n').slice(0, 9000), refs: [...refMap.values()].slice(0, 8), sources: [] }
   }
 
   // Tenant module: the home's policies first, then capped reference text, labelled.
@@ -233,9 +258,27 @@ async function buildGrounding(tenantId: string | null, topic: { title: string; a
     seedText && `${SEED_LABEL}\n${seedText.slice(0, SEED_CAP)}`,
     examples.length && `${EXAMPLE_LABEL}\n${examples.join('\n\n')}`,
   ].filter(Boolean) as string[]
+  const text = blocks.join('\n\n').slice(0, TOTAL_CAP)
+
+  // The exact passages the model received, for checking the lesson against afterwards.
+  // The home and seed blocks always fit (6,000 + 2,500 < 12,000); only the example
+  // policies can be cut by the total cap, so they are trimmed to what survived.
+  const sources: SourcePassage[] = home.items.map((h, i) => ({ id: `H${i + 1}`, kind: 'home' as const, title: h.title, section: h.section, text: h.text }))
+  if (seedText) sources.push({ id: 'S1', kind: 'training_seed', title: seedTitle, section: null, text: seedText.slice(0, SEED_CAP) })
+  if (examples.length) {
+    const exampleStart = blocks.slice(0, -1).join('\n\n').length + 2 + EXAMPLE_LABEL.length + 1
+    let used = exampleStart
+    exampleMeta.forEach((e, i) => {
+      const start = used + (i ? 2 : 0) + e.rawTitle.length + 1
+      const room = TOTAL_CAP - start
+      if (room > 0) sources.push({ id: `E${i + 1}`, kind: 'example', title: e.title, section: e.section, text: e.content.slice(0, room) })
+      used = start + e.content.length
+    })
+  }
+
   // Home policies first in the refs too, so the saved provenance leads with them. Every
   // source is kept (up to 10 home policies + 1 training seed + 3 example policies).
-  return { text: blocks.join('\n\n').slice(0, TOTAL_CAP), refs: [...refMap.values()].slice(0, 14) }
+  return { text, refs: [...refMap.values()].slice(0, 14), sources }
 }
 
 function parseJson(raw: string): any {
@@ -257,8 +300,8 @@ export async function generateAnnualModuleDraft(
 ): Promise<GeneratedModule> {
   // A caller can supply explicit grounding (e.g. a compliance gap's requirements)
   // instead of the tenant's own policy extracts — used for ad-hoc gap modules.
-  const { text, refs } = opts.groundingText
-    ? { text: opts.groundingText, refs: [] as GeneratedModule['policy_refs'] }
+  const { text, refs, sources } = opts.groundingText
+    ? { text: opts.groundingText, refs: [] as GeneratedModule['policy_refs'], sources: [] as SourcePassage[] }
     : await buildGrounding(tenantId, topic)
   const promptTpl = await getPrompt()
   const practicalNote = topic.requires_practical
@@ -336,5 +379,6 @@ export async function generateAnnualModuleDraft(
     },
     questions,
     policy_refs: refs,
+    sources,
   }
 }

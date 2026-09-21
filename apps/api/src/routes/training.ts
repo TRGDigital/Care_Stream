@@ -15,6 +15,7 @@ import { facilityTypeToSetting, settingFallbackOrder, settingLabelForPrompt } fr
 import { translateQuestionsBatch, translateTextsBatch, withTranslationBudget, hubContentLang } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
 import { generateAnnualModuleDraft, balanceAnswerPositions, homePolicyPassages, HOME_LABEL } from '../services/training/moduleGenerator'
+import { recordLessonProvenance } from '../services/training/lessonAttribution'
 import { generateModuleIllustration, generateSectionImage, illustrationUrl } from '../services/training/moduleImage'
 import { pickImageSource, imagedSourceModules, fillModuleCovers } from '../services/training/coverMatch'
 import { TRAINING_TOPICS, renewalMonthsFor, TOPIC_GROUP_LABELS } from '../data/training-topics'
@@ -1562,6 +1563,10 @@ trainingRouter.post('/modules/:id/generate-lesson', async (req: Request, res: Re
       },
     })
     await logAiCredit(tenantId, 'training_lesson', module.id)
+    // Platform audit: keep the exact passages the lesson was built from and check which one
+    // supports each section and question. Runs after the save, never throws, and is not
+    // charged to the home (its AI usage is tracked under 'training_attribution').
+    await recordLessonProvenance(tenantId, module.id, updated.questions_version ?? 0, draft)
     ok(res, { module: { ...updated, illustration_url: illustrationUrl(updated.illustration_key), reused_images: !!match } })
   } catch (e: any) {
     err(res, 'GENERATION_FAILED', e.message, 500)

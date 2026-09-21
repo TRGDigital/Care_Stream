@@ -682,6 +682,11 @@ export function createPlatformClient(token: string) {
             id: string; name: string; version: number; questions: number; sections: number
             sources_recorded: boolean; home_policies: number; training_seeds: number; example_policies: number
             generated_at: string | null; enrolled: number
+            attribution: null | { failed: true } | {
+              failed: false; current: boolean
+              questions: { total: number; home: number; training_seed: number; example: number; none: number; unverified: number }
+              sections:  { total: number; home: number; training_seed: number; example: number; none: number; unverified: number }
+            }
           }>
         }>
         totals: { tenants: number; lessons: number; recorded: number }

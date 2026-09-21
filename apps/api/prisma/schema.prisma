@@ -1102,6 +1102,24 @@ model AiPrompt {
 
 // Platform-level training knowledge base used as RAG source for generating
 // training module questions. No tenant_id — shared read-only across all tenants.
+// What an ad-hoc lesson was built from, and which source supports each section and
+// question. One row per generation (latest = newest created_at). Platform-internal: read
+// only by /admin/adhoc-training, never served to homes. See manual_training_lesson_provenance.sql.
+model TrainingLessonProvenance {
+  id          String   @id @default(uuid())
+  tenant_id   String
+  module_id   String
+  version     Int      @default(0)
+  sources     Json     @default("[]")
+  attribution Json     @default("[]")
+  summary     Json     @default("{}")
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([module_id, created_at(sort: Desc)])
+  @@index([tenant_id])
+  @@map("training_lesson_provenance")
+}
+
 // One row per AI generation action that consumes a credit (training, CQC,
 // onboarding question generation, …). Powers the monthly AI-credit quota.
 model AiCreditLog {

@@ -26,6 +26,27 @@ function Sources({ m }: { m: Mod }) {
   )
 }
 
+// How much of the lesson is supported by the home's own policies, from the check run when
+// it was generated. Questions lead; sections follow.
+function HomeShare({ m }: { m: Mod }) {
+  const a = m.attribution
+  if (!a) return <span className="text-xs text-neutral-mid" title="Generated before 21 Sep 2026, when checking began. Regenerate to check it.">Not checked</span>
+  if (a.failed) return <span className="text-xs text-red-600">Check failed</span>
+  const pct = (n: number, t: number) => (t ? Math.round((n / t) * 100) : 0)
+  const q = pct(a.questions.home, a.questions.total)
+  const tone = q >= 60 ? 'bg-green-500' : q >= 30 ? 'bg-amber-500' : 'bg-red-500'
+  return (
+    <div className="min-w-[150px]" title={`Questions: ${a.questions.home} home policy, ${a.questions.training_seed} training seed, ${a.questions.example} example, ${a.questions.none} general practice, ${a.questions.unverified} unverified`}>
+      <div className="flex items-baseline gap-1.5">
+        <span className="text-sm font-semibold text-neutral-dark">{q}%</span>
+        <span className="text-xs text-neutral-mid">of questions · {pct(a.sections.home, a.sections.total)}% of sections</span>
+      </div>
+      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-100"><div className={`h-full ${tone}`} style={{ width: `${q}%` }} /></div>
+      {!a.current && <p className="mt-0.5 text-[10px] text-amber-600">Questions edited since the check</p>}
+    </div>
+  )
+}
+
 export default function AdhocTrainingPage() {
   const token = usePlatformAuth()
   const [data, setData]       = useState<Data | null>(null)
@@ -97,12 +118,13 @@ export default function AdhocTrainingPage() {
                   </button>
                   {open[t.tenant_id] && (
                     <div className="overflow-x-auto border-t border-gray-100">
-                      <table className="w-full min-w-[820px] text-sm">
+                      <table className="w-full min-w-[980px] text-sm">
                         <thead className="bg-neutral-light text-left text-xs font-medium uppercase tracking-wide text-neutral-mid">
                           <tr>
                             <th className="px-4 py-2.5">Lesson</th>
                             <th className="px-4 py-2.5">Content</th>
                             <th className="px-4 py-2.5">Sources</th>
+                            <th className="px-4 py-2.5 whitespace-nowrap">From home policies</th>
                             <th className="px-4 py-2.5 whitespace-nowrap">Last generated</th>
                             <th className="px-4 py-2.5">Enrolled</th>
                             <th className="px-4 py-2.5 text-right">Record</th>
@@ -114,6 +136,7 @@ export default function AdhocTrainingPage() {
                               <td className="px-4 py-3 font-medium text-neutral-dark">{m.name}<p className="text-xs font-normal text-neutral-mid">Question version {m.version}</p></td>
                               <td className="px-4 py-3 whitespace-nowrap text-neutral-dark">{m.sections} sections · {m.questions} questions</td>
                               <td className="px-4 py-3"><Sources m={m} /></td>
+                              <td className="px-4 py-3"><HomeShare m={m} /></td>
                               <td className="px-4 py-3 whitespace-nowrap text-xs text-neutral-mid">{when(m.generated_at)}</td>
                               <td className="px-4 py-3 text-neutral-dark">{m.enrolled}</td>
                               <td className="px-4 py-3 text-right">

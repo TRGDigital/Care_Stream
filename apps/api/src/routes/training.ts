@@ -11,10 +11,10 @@ import { sendTrainingUpdateEmail, sendTrainingReminderEmail } from '../services/
 import { getTrainingReceiptUrl, createTrainingBasketCheckoutSession } from '../services/billing/stripe'
 import { requireAdmin } from '../middleware/auth'
 import { blogImagePublicUrl, siteUrl } from '../lib/urls'
-import { facilityTypeToSetting, settingFallbackOrder } from '../lib/care-setting'
+import { facilityTypeToSetting, settingFallbackOrder, settingLabelForPrompt } from '../lib/care-setting'
 import { translateQuestionsBatch, translateTextsBatch, withTranslationBudget, hubContentLang } from '../lib/translate'
 import { languageNameForCode } from '../data/languages'
-import { generateAnnualModuleDraft, balanceAnswerPositions } from '../services/training/moduleGenerator'
+import { generateAnnualModuleDraft, balanceAnswerPositions, homePolicyPassages, HOME_LABEL } from '../services/training/moduleGenerator'
 import { generateModuleIllustration, generateSectionImage, illustrationUrl } from '../services/training/moduleImage'
 import { pickImageSource, imagedSourceModules, fillModuleCovers } from '../services/training/coverMatch'
 import { TRAINING_TOPICS, renewalMonthsFor, TOPIC_GROUP_LABELS } from '../data/training-topics'
@@ -1363,6 +1363,26 @@ async function settingSeedContextForModule(tenantId: string, moduleName: string)
   } catch { return '' }
 }
 
+// Everything a tenant question/answer generation needs to be about THIS home: the care
+// setting label and the passages from the home's own policies nearest the module topic.
+// The placeholders are filled when an edited prompt uses them; the same values are also
+// sent, labelled, in the request, so a prompt without placeholders still receives them.
+async function homeQuestionContext(tenantId: string, moduleName: string): Promise<{ setting: string; homeBlock: string }> {
+  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { facility_type: true } }).catch(() => null)
+  const setting = settingLabelForPrompt(facilityTypeToSetting(tenant?.facility_type))
+  const home = await homePolicyPassages(tenantId, moduleName, { k: 8, maxChars: 5000 })
+  const homeBlock = `${HOME_LABEL}\n${home.text || "No passage in this home's policies matched this topic."}`
+  return { setting, homeBlock }
+}
+
+function fillQuestionPrompt(tpl: string, vars: { topic: string; setting: string; count: number; homeBlock: string }): string {
+  return tpl
+    .split('{{TRAINING_TOPIC}}').join(vars.topic)
+    .split('{{CARE_SETTING}}').join(vars.setting)
+    .split('{{NUMBER_OF_QUESTIONS}}').join(String(vars.count))
+    .split('{{HOME_POLICY_EXTRACTS}}').join(vars.homeBlock)
+}
+
 // Tolerant parser — the generation prompt is admin-editable, so the model's JSON
 // shape varies. Accept a bare array or a { questions: [...] } wrapper, options as
 // strings or objects, and "correct" as an index, an A–D letter, or matching text.
@@ -1442,9 +1462,21 @@ trainingRouter.post('/modules/:id/generate-questions', async (req: Request, res:
     try { await checkAiCreditLimit(tenantId) }
     catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
 
-    const systemPrompt = await getTrainingPrompt()
+    const { setting, homeBlock } = await homeQuestionContext(tenantId, module.name)
+    const systemPrompt = fillQuestionPrompt(await getTrainingPrompt(), { topic: module.name, setting, count, homeBlock })
     const policyContext = await settingSeedContextForModule(tenantId, module.name)
-    const userMessage  = `${buildSeedContext(seed)}${policyContext ? `\n\nReference policy extracts from this home's care setting — base the questions on these where relevant:\n${policyContext}` : ''}\n\nGenerate exactly ${count} multiple-choice questions for this training topic.${QUESTION_JSON_FORMAT}`
+    const userMessage  = [
+      `TRAINING TOPIC: ${module.name}`,
+      `CARE SETTING: ${setting}`,
+      `NUMBER OF QUESTIONS: ${count}`,
+      '',
+      homeBlock,
+      '',
+      `REFERENCE: CURATED TRAINING GUIDANCE (not this home's policy; use only to fill gaps):\n${buildSeedContext(seed)}`,
+      policyContext ? `\nREFERENCE: EXAMPLE POLICIES FOR THIS CARE SETTING (not this home's policy; use only to fill gaps):\n${policyContext}` : '',
+      '',
+      `Generate exactly ${count} multiple-choice questions for this training topic. Base them on this home's own policies first; where the home's policy and the reference differ, follow the home's policy.${QUESTION_JSON_FORMAT}`,
+    ].join('\n')
 
     const raw       = await callClaude(systemPrompt, userMessage, { maxTokens: 4096, temperature: 0.6, feature: 'training' })
     const generated = parseGeneratedQuestions(raw)
@@ -1521,6 +1553,9 @@ trainingRouter.post('/modules/:id/generate-lesson', async (req: Request, res: Re
         duration_minutes:  draft.estimated_minutes,
         description:       (draft.learning_content.summary || module.name).slice(0, 500),
         illustration_key,
+        // Which of the home's policies (and reference seeds) the lesson was grounded in,
+        // so staff can open the source policy from the lesson and it can be audited.
+        policy_refs:       draft.policy_refs,
         questions_version: (module.questions_version ?? 0) + 1,
         questions_locked:  false,
         questions_locked_at: null,
@@ -1554,9 +1589,19 @@ trainingRouter.post('/modules/:id/generate-answers', async (req: Request, res: R
       return
     }
 
-    const systemPrompt = await getTrainingPrompt()
+    const { setting, homeBlock } = await homeQuestionContext(tenantId, module.name)
+    const systemPrompt = fillQuestionPrompt(await getTrainingPrompt(), { topic: module.name, setting, count: questions.length, homeBlock })
     const questionList = questions.map((q: any, i: number) => `${i + 1}. ${q.text}`).join('\n')
-    const userMessage  = `${buildSeedContext(seed)}\n\nFor each of the following questions, generate exactly 4 answer options (A, B, C, D) and identify the correct one.\nReturn the same number of questions as given, in the same order.\n\nQuestions:\n${questionList}${QUESTION_JSON_FORMAT}`
+    const userMessage  = [
+      `TRAINING TOPIC: ${module.name}`,
+      `CARE SETTING: ${setting}`,
+      '',
+      homeBlock,
+      '',
+      `REFERENCE: CURATED TRAINING GUIDANCE (not this home's policy; use only to fill gaps):\n${buildSeedContext(seed)}`,
+      '',
+      `For each of the following questions, generate exactly 4 answer options (A, B, C, D) and identify the correct one. The correct answer must agree with this home's own policies where they cover the point.\nReturn the same number of questions as given, in the same order.\n\nQuestions:\n${questionList}${QUESTION_JSON_FORMAT}`,
+    ].join('\n')
 
     const raw       = await callClaude(systemPrompt, userMessage, { maxTokens: 4096, temperature: 0.4, feature: 'training' })
     const generated = parseGeneratedQuestions(raw)

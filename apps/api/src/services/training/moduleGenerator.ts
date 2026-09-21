@@ -17,11 +17,11 @@ export const DEFAULT_TRAINING_MODULE_PROMPT = `You are a UK care-sector training
 Topic: {{topic}}
 {{practical_note}}
 
-The home's relevant policy material:
+Source material:
 """
 {{grounding}}
 """
-Ground the module in this policy material wherever possible — teach THIS home's procedures, not just generic content. Where the policies don't cover something, use standard UK care-sector good practice (CQC fundamental standards). Never invent rules that contradict the policies. Keep clinical content safe and accurate.
+The source material may be split into labelled parts. Text under "THIS HOME'S OWN POLICIES" is the home's actual policy: teach THIS home's procedures, roles, timescales and wording from it first, and where it differs from any reference text, follow the home's policy. Text labelled "REFERENCE" is not this home's policy: use it only to fill gaps the home's policies do not cover, and never present it as the home's own procedure. If the material is not labelled, treat it all as reference. Where nothing covers a point, use standard UK care-sector good practice (CQC fundamental standards). Never invent rules that contradict the home's policies. Keep clinical content safe and accurate.
 
 Build a STRUCTURED, INTERACTIVE lesson made of SECTIONS, then an ASSESSMENT bank of multiple-choice questions. Each section TEACHES one part of the topic, then makes the learner APPLY it through a real care-home scenario and a quick knowledge check.
 
@@ -57,10 +57,11 @@ Return ONLY a JSON object, no prose or markdown fences, exactly:
 Rules:
 - Produce 4 to 6 SECTIONS. EVERY section MUST include both a "scenario" and a "check" — these are required, never omit them.
 - Each "check" and each assessment question has exactly 4 options; "correct" is the 0-based index of the single best answer. Make wrong options plausible but clearly wrong against the policy/best practice.
-- Produce EXACTLY 20 assessment "questions" (a bank — staff are served a random subset). These are SEPARATE from and should not duplicate the in-section checks.
+- Produce EXACTLY 20 assessment "questions" (a bank; staff answer every question in it). These are SEPARATE from and should not duplicate the in-section checks.
 - "outcomes": 3 to 5 measurable learning outcomes (action-verb led, assessable). The assessment questions must collectively test these outcomes.
 - "estimated_minutes": a realistic estimate of total active learning time (reading the sections + scenarios + checks + the assessment), typically 20–45 minutes for an annual refresher.
-- Vary difficulty; prefer realistic care-scenario phrasing.{{lang_note}}`
+- Vary difficulty; prefer realistic care-scenario phrasing.{{lang_note}}
+- Don't use dashes in the content`
 
 type GeneratedSection = {
   heading: string
@@ -128,46 +129,73 @@ async function getPrompt(): Promise<string> {
   return DEFAULT_TRAINING_MODULE_PROMPT
 }
 
+export type HomePassages = { text: string; refs: GeneratedModule['policy_refs'] }
+
+// The passages from THIS home's own indexed policies nearest to a topic. Shared by the
+// lesson generator and the question generators, so every tenant-facing generation path
+// reads the home's policies the same way.
+export async function homePolicyPassages(tenantId: string, query: string, opts: { k?: number; maxChars?: number } = {}): Promise<HomePassages> {
+  const k = opts.k ?? 10
+  const maxChars = opts.maxChars ?? HOME_CAP
+  let chunks: any[] = []
+  try {
+    const vector = await embedText(query)
+    const matches = await queryVectors(getTenantNamespace(tenantId), vector, k)
+    chunks = matches.filter(m => (m.score ?? 0) > 0.18).map(m => m.metadata)
+  } catch (e: any) {
+    console.error('[module-gen] retrieval failed:', e?.message ?? e)
+  }
+  const parts: string[] = []
+  const refMap = new Map<string, { policy_id: string; title: string; section: string | null }>()
+  for (const c of chunks) {
+    if (!c?.chunk_text) continue
+    const title = policyTitle(c.source_filename)
+    parts.push(`[${title}${c.section_heading ? `, ${c.section_heading}` : ''}]\n${String(c.chunk_text)}`)
+    if (c?.policy_id && !refMap.has(c.policy_id)) {
+      refMap.set(c.policy_id, { policy_id: c.policy_id, title, section: c.section_heading ?? null })
+    }
+  }
+  return { text: parts.join('\n\n').slice(0, maxChars), refs: [...refMap.values()] }
+}
+
+// Grounding budget for a TENANT module. The home's own passages go first and get the
+// largest share; the curated training seed and anonymised reference policies only fill
+// gaps. Before this, the seed went first and every active seed is longer than the old
+// 9,000-character total, so a seed match cut the home's policies out entirely.
+const HOME_CAP  = 6000
+const SEED_CAP  = 2500
+const TOTAL_CAP = 12000
+
+// Labels the prompt refers to, so the model can tell the home's policy from reference text.
+export const HOME_LABEL = "THIS HOME'S OWN POLICIES (teach these; they take precedence):"
+export const SEED_LABEL = 'REFERENCE: CURATED TRAINING GUIDANCE (not this home\'s policy; use only to fill gaps):'
+export const EXAMPLE_LABEL = 'REFERENCE: ANONYMISED EXAMPLE POLICIES (not this home\'s policy; use only to fill gaps):'
+
 // Gather grounding: tenant policy chunks (RAG) + matching reference seeds.
 // tenantId null → platform/standard module: ground in reference seeds only.
 async function buildGrounding(tenantId: string | null, topic: { title: string; aliases?: string[]; care_setting?: string | null }): Promise<{ text: string; refs: GeneratedModule['policy_refs'] }> {
   const query = `${topic.title} ${(topic.aliases ?? []).join(' ')}`.trim()
-  let chunks: any[] = []
-  if (tenantId) {
-    try {
-      const vector = await embedText(query)
-      const matches = await queryVectors(getTenantNamespace(tenantId), vector, 10)
-      chunks = matches.filter(m => (m.score ?? 0) > 0.18).map(m => m.metadata)
-    } catch (e: any) {
-      console.error('[module-gen] retrieval failed:', e?.message ?? e)
-    }
-  }
-
-  const parts: string[] = []
+  const home = tenantId ? await homePolicyPassages(tenantId, query) : { text: '', refs: [] }
   const refMap = new Map<string, { policy_id: string; title: string; section: string | null }>()
-  for (const c of chunks) {
-    if (c?.chunk_text) parts.push(String(c.chunk_text))
-    if (c?.policy_id && !refMap.has(c.policy_id)) {
-      refMap.set(c.policy_id, { policy_id: c.policy_id, title: policyTitle(c.source_filename), section: c.section_heading ?? null })
-    }
-  }
+  for (const r of home.refs) refMap.set(r.policy_id, r)
 
   // Structured training-seed reference for this topic (curated in the console →
   // Training Seeds). This is the primary grounding for standard modules — it lets a
   // setting-specific module (e.g. dental) be grounded in that setting's own facts
-  // rather than care-home policy text. Prepended so it leads the grounding.
+  // rather than care-home policy text.
+  let seedText = ''
   try {
     const seedRef = await (prisma as any).trainingSeed.findFirst({
       where: { is_active: true, training_type: { equals: topic.title, mode: 'insensitive' } },
     })
     if (seedRef && (seedRef.summary || seedRef.care_context || seedRef.practical_meaning)) {
-      parts.unshift([
+      seedText = [
         `Authoritative reference for "${seedRef.training_type}":`,
         seedRef.summary && `Overview: ${seedRef.summary}`,
         seedRef.care_context && `How it applies in this care setting: ${seedRef.care_context}`,
         seedRef.care_company_interaction && `What the service must do: ${seedRef.care_company_interaction}`,
         seedRef.practical_meaning && `What it means for staff in practice: ${seedRef.practical_meaning}`,
-      ].filter(Boolean).join('\n'))
+      ].filter(Boolean).join('\n')
     }
   } catch { /* training-seed grounding is best-effort */ }
 
@@ -175,6 +203,7 @@ async function buildGrounding(tenantId: string | null, topic: { title: string; a
   // evidence base/provenance for standard (platform) modules — record them as refs.
   // For a setting-specific topic, only pull seeds from THAT setting so e.g. dental
   // generation isn't grounded in nursing-home policy text.
+  const examples: string[] = []
   const kw = topic.title.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length > 3).slice(0, 4)
   if (kw.length) {
     const keywordOr = { OR: kw.map(k => ({ OR: [{ section: { contains: k, mode: 'insensitive' } }, { title: { contains: k, mode: 'insensitive' } }] })) }
@@ -183,13 +212,26 @@ async function buildGrounding(tenantId: string | null, topic: { title: string; a
       select: { id: true, title: true, section: true, content: true }, orderBy: { reviewed: 'desc' }, take: 3,
     }).catch(() => [])
     for (const s of (seeds as any[])) {
-      parts.push(`${s.title}\n${s.content}`)
+      examples.push(`${s.title}\n${s.content}`)
       const key = `seed:${s.id}`
       if (!refMap.has(key)) refMap.set(key, { policy_id: key, title: policyTitle(s.title), section: s.section ?? null })
     }
   }
 
-  return { text: parts.join('\n\n').slice(0, 9000), refs: [...refMap.values()].slice(0, 8) }
+  // Platform/standard module: unchanged behaviour — the seed leads, 9,000 in total.
+  if (!tenantId) {
+    const parts = [seedText, ...examples].filter(Boolean)
+    return { text: parts.join('\n\n').slice(0, 9000), refs: [...refMap.values()].slice(0, 8) }
+  }
+
+  // Tenant module: the home's policies first, then capped reference text, labelled.
+  const blocks = [
+    `${HOME_LABEL}\n${home.text || "No passage in this home's policies matched this topic."}`,
+    seedText && `${SEED_LABEL}\n${seedText.slice(0, SEED_CAP)}`,
+    examples.length && `${EXAMPLE_LABEL}\n${examples.join('\n\n')}`,
+  ].filter(Boolean) as string[]
+  // Home policies first in the refs too, so the saved provenance leads with them.
+  return { text: blocks.join('\n\n').slice(0, TOTAL_CAP), refs: [...refMap.values()].slice(0, 8) }
 }
 
 function parseJson(raw: string): any {

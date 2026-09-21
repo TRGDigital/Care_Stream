@@ -17,7 +17,11 @@ import './buy-page-v2.css'
 // Console began folding some together ("Duplicate without user-selected canonical"). So the
 // page now also renders what is genuinely different per module, all from the same record:
 // outcomes, every lesson, key points, the real assessment length, renewal, the practical
-// requirement, standards, and FAQs answered from those facts.
+// requirement, and FAQs answered from those facts.
+//
+// Standards are deliberately NOT shown: only 10 modules carry them, and the stored labels are a
+// snapshot of the catalogue at mapping time (the pre-March 2025 fifteen Care Certificate
+// standards on four modules, with em dashes). Re-map them before surfacing them publicly.
 
 export interface BuyModule {
   slug: string
@@ -174,9 +178,6 @@ function moduleFaqs(m: BuyModule, lessons: string[]): [string, string][] {
        'Yes. The online module is the knowledge part. Staff also need an observed assessment in the workplace, carried out by their employer, and CareStream provides the observation checklist to record it.']
     : [`Is ${m.title} completed fully online?`,
        'Yes. It is knowledge based, so staff complete the lessons and the assessment online and receive their certificate at the end. There is no practical sign-off.'])
-  if (m.standards?.length) {
-    out.push([`Which standards does ${m.title} map to?`, `${listOf(m.standards)}.`])
-  }
   return out
 }
 
@@ -207,7 +208,6 @@ export function BuyPageV2({ module: m, unitPence, related, apiUrl }: {
     ...(qCount ? [['Assessment', `${qCount} questions, pass mark ${m.pass_mark ?? 80}%`] as [string, string]] : []),
     ...(renew ? [['Refresher', renew[0]] as [string, string]] : []),
     ['Practical assessment', m.requires_practical ? 'Yes, observed by the employer, checklist provided' : 'None, completed fully online'],
-    ...(m.standards?.length ? [['Mapped to', listOf(m.standards)] as [string, string]] : []),
   ]
   const faqs: [string, string][] = [...moduleFaqs(m, lessons), ...FAQS]
 

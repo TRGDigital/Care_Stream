@@ -36,7 +36,7 @@ export const CC_ANNUAL_2025 = {
     'Refresh working knowledge of every one of the 16 Care Certificate standards (March 2025)',
     'Apply the standards to everyday situations through workplace scenarios',
     'Identify what changed in the March 2025 update, including the new learning disability and autism standard',
-    'Demonstrate continued competence through the assessment and a manager observed practice check',
+    'Show your knowledge in the final assessment, and apply it in practice during an observed assessment by your employer',
   ],
   // Displayed under the course and included in the CPD navigation guide so the
   // stated 1.5 hours is evidenced by a timed structure.

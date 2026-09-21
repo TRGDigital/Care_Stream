@@ -225,7 +225,8 @@ function AssessmentDoc({ m }: { m: any }) {
           <H>Observed competency checklist</H>
           <p className="mb-1.5 text-sm text-neutral-dark">
             This topic also requires practical observation. A manager or competent assessor observes the participant at
-            work and signs off each point. The knowledge certificate and the signed checklist together evidence competence.
+            work and signs off each point. The signed checklist is the employer&rsquo;s own record of that observation; the course
+            certificate records completion of the course and its assessment and does not itself certify competence.
           </p>
           <ol className="list-decimal space-y-0.5 pl-5 text-sm text-neutral-dark">
             {checklist.map((c: string, i: number) => <li key={i}>{c}</li>)}
@@ -384,7 +385,7 @@ function CertificateDoc({ m }: { m: any }) {
           {m?.requires_practical && (
             <p className="mx-auto mt-2 max-w-sm rounded-lg border border-teal/25 bg-teal-light/25 px-4 py-2 text-[11px] text-neutral-dark">
               <span className="font-semibold text-teal-dark">Observed competency assessment: </span>
-              verified by Sample Manager (Registered Manager) on {fmt(new Date().toISOString())}.
+              carried out by the employer and signed off by Sample Manager (Registered Manager) on {fmt(new Date().toISOString())}.
             </p>
           )}
 
@@ -404,6 +405,11 @@ function CertificateDoc({ m }: { m: any }) {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo-color.png" alt="CareStream" className="h-8 w-auto object-contain" />
           </div>
+          <p className="mx-auto mt-2.5 max-w-md text-[8.5px] leading-relaxed text-neutral-mid">
+            This certificate is evidence that the named person completed this course and passed CareStream&apos;s assessment. It is not a
+            government recognised qualification and does not certify competence to perform a particular role, treatment or activity.
+            The employer remains responsible for ensuring training meets regulatory requirements.
+          </p>
         </div>
       </div>
     </>

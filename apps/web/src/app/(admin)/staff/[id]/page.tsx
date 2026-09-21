@@ -1012,12 +1012,14 @@ export default function StaffRecordPage() {
               expiresAt={certItem.expires_at}
               requiresPractical={certItem.requires_practical}
               practicalNote={certItem.practical_signed
-                ? `Knowledge component. Practical assessment recorded${certItem.practical_signed_by ? ` by ${certItem.practical_signed_by}` : ''}${certItem.practical_signed_at ? ` on ${fmtDate(certItem.practical_signed_at)}` : ''}.`
-                : 'This is the knowledge component. A practical / observed competency assessment is also required.'}
+                ? `Observed competency assessment carried out by the employer and signed off${certItem.practical_signed_by ? ` by ${certItem.practical_signed_by}` : ''}${certItem.practical_signed_at ? ` on ${fmtDate(certItem.practical_signed_at)}` : ''}.`
+                : 'This is the knowledge component. An observed competency assessment, carried out by the employer, is also required.'}
               cpdAccredited={certItem.cpd_accredited}
               cpdHours={certItem.cpd_hours}
               cpdProviderNumber={rec.cpd_provider_number}
               independentlyReviewed={certItem.independently_reviewed}
+              tier={certItem.tier}
+              tailored={certItem.tailored}
             />
           </div>
         </div>

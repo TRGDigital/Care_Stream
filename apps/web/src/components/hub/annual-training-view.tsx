@@ -897,7 +897,7 @@ export function CertView({ token, id, onExit, backLabel = 'CPD Approved Courses'
           expiresAt={c.expires_at}
           requiresPractical={c.requires_practical}
           practicalNote={c.practical?.signed
-            ? `Observed competency assessment verified${c.practical.signed_by ? ` by ${c.practical.signed_by}` : ''}${c.practical.signed_at ? ` on ${new Date(c.practical.signed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}.`
+            ? `Observed competency assessment carried out by the employer and signed off${c.practical.signed_by ? ` by ${c.practical.signed_by}` : ''}${c.practical.signed_at ? ` on ${new Date(c.practical.signed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}.`
             : undefined}
           cpdAccredited={c.cpd?.accredited}
           cpdHours={c.cpd?.hours}
@@ -905,6 +905,7 @@ export function CertView({ token, id, onExit, backLabel = 'CPD Approved Courses'
           independentlyReviewed={c.independently_reviewed}
           baseline={c.baseline}
           tier={c.tier}
+          tailored={c.tailored}
         />
         </div>
 

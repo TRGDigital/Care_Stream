@@ -88,6 +88,23 @@ async function buyPages(): Promise<Entry[]> {
   return []
 }
 
+// The policy shop's product pages (/care-policies/<slug>), from the same catalogue the
+// pages themselves render from, so a policy taken off sale drops out of the sitemap too.
+async function policyPages(): Promise<Entry[]> {
+  try {
+    const res = await fetch(`${API_URL}/public/policy-shop/catalogue`, { next: { revalidate: 3600 } })
+    if (res.ok) {
+      const products = ((await res.json())?.data?.products ?? []) as Array<{ slug?: string }>
+      return products
+        .filter((p): p is { slug: string } => !!p.slug)
+        .map((p) => ({ url: `/care-policies/${p.slug}`, changeFrequency: 'monthly' as const, priority: 0.7 }))
+    }
+  } catch {
+    // fall through
+  }
+  return []
+}
+
 // Blog posts are DB-driven (published in the platform admin), so pull their slugs
 // from the public API rather than hard-coding them. Falls back to none on error.
 async function blogPages(): Promise<Entry[]> {
@@ -163,8 +180,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
   // Dedupe by path (some settings also appear in MARKETING), first entry wins.
   const seen = new Set<string>()
-  const [training, buy, blog, collections, features, cms] = await Promise.all([trainingPages(), buyPages(), blogPages(), collectionPages(), featurePages(), cmsPages()])
-  const entries = [...MARKETING, ...SETTINGS, ...training, ...buy, ...blog, ...collections, ...features, ...cms].filter((e) => {
+  const [training, buy, policies, blog, collections, features, cms] = await Promise.all([trainingPages(), buyPages(), policyPages(), blogPages(), collectionPages(), featurePages(), cmsPages()])
+  const entries = [...MARKETING, ...SETTINGS, ...training, ...buy, ...policies, ...blog, ...collections, ...features, ...cms].filter((e) => {
     if (seen.has(e.url)) return false
     seen.add(e.url)
     return true

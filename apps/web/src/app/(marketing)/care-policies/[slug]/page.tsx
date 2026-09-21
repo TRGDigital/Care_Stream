@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PolicyPageV2, policyFaqs } from '@/components/marketing/policy-page-v2'
 import { faqPageSchema } from '@/lib/schema'
+import { pageMetadata } from '@/lib/page-meta'
 import {
   ShieldCheck, CheckCircle2, FileText, Scale, Star,
 } from 'lucide-react'
@@ -86,10 +87,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const data = await getProduct(slug)
   if (!data) return {}
   const price = `£${(data.product.price_pence / 100).toFixed(0)}`
-  return {
-    title: `${data.product.title} | Written for your service | CareStream AI`,
+  // pageMetadata adds the self-canonical on the www host (without it Google reported these as
+  // "Duplicate without user-selected canonical") and treats the title as absolute, so it carries
+  // the brand suffix exactly once.
+  return pageMetadata(`/care-policies/${slug}`, {
+    title: `${data.product.title} | Written for your service | CareStreamAI`,
     description: `A ${data.product.title} written for your organisation, checked by a person, and kept updated when the law changes. ${price}, delivered within 2 working days of your details.`,
-  }
+  })
 }
 
 const money = (p: number) => `£${(p / 100).toFixed(p % 100 === 0 ? 0 : 2)}`

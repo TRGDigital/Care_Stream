@@ -189,6 +189,9 @@ async function buildGrounding(tenantId: string | null, topic: { title: string; a
       where: { is_active: true, training_type: { equals: topic.title, mode: 'insensitive' } },
     })
     if (seedRef && (seedRef.summary || seedRef.care_context || seedRef.practical_meaning)) {
+      // Recorded as a source so the lesson's provenance lists the curated seed as well as
+      // the home's policies and the example policies. The prefix marks its kind.
+      refMap.set(`training-seed:${seedRef.id}`, { policy_id: `training-seed:${seedRef.id}`, title: String(seedRef.training_type), section: null })
       seedText = [
         `Authoritative reference for "${seedRef.training_type}":`,
         seedRef.summary && `Overview: ${seedRef.summary}`,
@@ -230,8 +233,9 @@ async function buildGrounding(tenantId: string | null, topic: { title: string; a
     seedText && `${SEED_LABEL}\n${seedText.slice(0, SEED_CAP)}`,
     examples.length && `${EXAMPLE_LABEL}\n${examples.join('\n\n')}`,
   ].filter(Boolean) as string[]
-  // Home policies first in the refs too, so the saved provenance leads with them.
-  return { text: blocks.join('\n\n').slice(0, TOTAL_CAP), refs: [...refMap.values()].slice(0, 8) }
+  // Home policies first in the refs too, so the saved provenance leads with them. Every
+  // source is kept (up to 10 home policies + 1 training seed + 3 example policies).
+  return { text: blocks.join('\n\n').slice(0, TOTAL_CAP), refs: [...refMap.values()].slice(0, 14) }
 }
 
 function parseJson(raw: string): any {

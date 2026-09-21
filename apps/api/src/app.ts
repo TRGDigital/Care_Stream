@@ -21,6 +21,7 @@ import { auditSeedsAdminRouter } from './routes/audit-seeds-admin'
 import { platformGlossaryRouter } from './routes/platform-glossary'
 import { platformTranslationChangesRouter } from './routes/platform-translation-changes'
 import { platformPolicyGapsRouter } from './routes/platform-policy-gaps'
+import { platformAdhocTrainingRouter } from './routes/platform-adhoc-training'
 import { platformPolicyImagesRouter } from './routes/platform-policy-images'
 import { translationSuggestionsRouter } from './routes/translation-suggestions'
 import { settingsRouter } from './routes/settings'
@@ -133,6 +134,7 @@ app.use('/admin/audit-seeds', auditSeedsAdminRouter)
 app.use('/admin/platform-glossary', platformGlossaryRouter)
 app.use('/admin/translation-changes', platformTranslationChangesRouter)
 app.use('/admin/policy-gaps', platformPolicyGapsRouter)
+app.use('/admin/adhoc-training', platformAdhocTrainingRouter)
 app.use('/admin/policy-images', platformPolicyImagesRouter)
 app.use('/admin/ai-chat', websiteChatAdminRouter)
 app.use('/admin', adminRouter)

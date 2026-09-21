@@ -36,6 +36,8 @@ import { runPolicyReviewReminders } from '../services/policies/review-reminders'
 import { runScheduledTrainingDelivery } from '../services/training/delivery-schedule'
 import { sendRenewalReminders } from '../services/training/renewalReminders'
 import { buildCronReport, sendCronReport } from '../services/ops/cron-report'
+import { buildIndexingReport } from '../services/ralfyindex/weekly-report'
+import { sendIndexingReportEmail } from '../services/email/outbound'
 
 export const cronRouter = Router()
 
@@ -176,6 +178,18 @@ cronRouter.get('/licence-renewals', (req, res) =>
 // not cut off at 3am, which is the one time an agency nurse most needs the medication policy.
 cronRouter.get('/agency-access', (req, res) =>
   job('agency-access', req, res, () => runAgencyAccess()))
+
+// Weekly (Monday 07:00 UTC): email the platform owner how many pages each site (CareStream
+// and CareAssura) pushed through RalfyIndex, the shared credit balance, and any failures.
+cronRouter.get('/indexing-report', (req, res) =>
+  job('indexing-report', req, res, async () => {
+    const report = await buildIndexingReport(7)
+    await sendIndexingReportEmail(report)
+    return {
+      balance: report.balance,
+      ...Object.fromEntries(report.sites.map(s => [s.site, s.available ? s.submitted : 'unavailable'])),
+    }
+  }))
 
 // Daily, last: email the platform owner what ran, what it captured, and — the point of the
 // whole thing — what was due and did not run at all.

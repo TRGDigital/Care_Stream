@@ -673,6 +673,27 @@ export function createPlatformClient(token: string) {
         adminFetch<{ updated: boolean }>(`/feature-requests/${id}`, token, { method: 'PATCH', body: JSON.stringify({ status }) }),
     },
 
+    adhocTraining: {
+      /** Every home with generated ad-hoc lessons, and each lesson's recorded sources. */
+      list: () => adminFetch<{
+        tenants: Array<{
+          tenant_id: string; name: string; account_number: string; last_generated_at: string | null
+          modules: Array<{
+            id: string; name: string; version: number; questions: number; sections: number
+            sources_recorded: boolean; home_policies: number; training_seeds: number; example_policies: number
+            generated_at: string | null; enrolled: number
+          }>
+        }>
+        totals: { tenants: number; lessons: number; recorded: number }
+      }>('/adhoc-training', token),
+      /** The PDF record of one lesson: questions and every source. Admin-token protected, so fetched as a blob. */
+      reportPdf: async (moduleId: string): Promise<Blob> => {
+        const res = await fetch(`${API_URL}/admin/adhoc-training/${moduleId}/report.pdf`, { headers: { Authorization: `Bearer ${token}` } })
+        if (!res.ok) throw new Error('Could not build the PDF')
+        return res.blob()
+      },
+    },
+
     serviceRequests: {
       list: (status?: string) =>
         adminFetch<{ requests: ServiceRequest[]; counts: Record<string, number>; total: number }>(

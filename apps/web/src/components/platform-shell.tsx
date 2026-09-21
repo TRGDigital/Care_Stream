@@ -6,7 +6,7 @@ import { clsx } from 'clsx'
 import { clearPlatformToken } from '@/lib/platform-api'
 import {
   LayoutDashboard, Building2, BarChart2, BookOpen, FileText, LogOut, Sparkles, PoundSterling, Newspaper, ShieldCheck, ClipboardCheck, LineChart, UserPlus, GraduationCap, Mail, Lightbulb, Award, Languages, MessageSquareText, SearchCheck, ListChecks, LifeBuoy, ShoppingCart, Milestone,
-  Scale, ImageIcon,
+  Scale, ImageIcon, FileCheck2,
 } from 'lucide-react'
 
 // Grouped so related tools sit together: business first, then the training shop,
@@ -37,6 +37,7 @@ const NAV_GROUPS: Array<{ title: string | null; items: Array<{ href: string; lab
       { href: '/platform/standard-training', label: 'Standard Training', Icon: GraduationCap },
       { href: '/platform/programmes',        label: 'Diplomas & Pathways', Icon: Award        },
       { href: '/platform/cpd-review',       label: 'CPD Review',       Icon: Award           },
+      { href: '/platform/adhoc-training',   label: 'Adhoc Training',   Icon: FileCheck2      },
     ],
   },
   {

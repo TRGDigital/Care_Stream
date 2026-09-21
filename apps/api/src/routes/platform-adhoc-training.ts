@@ -66,19 +66,33 @@ async function lastGenerated(moduleIds: string[]): Promise<Map<string, Date>> {
   return new Map((rows as any[]).map(r => [String(r.ref_id), r._max.created_at]))
 }
 
+// The newest provenance record per module (one is written each time a lesson is generated).
+// `full` adds the passages and per-item attribution, which only the PDF needs.
+async function latestProvenance(moduleIds: string[], full = false): Promise<Map<string, any>> {
+  if (!moduleIds.length) return new Map()
+  const rows = await db.trainingLessonProvenance.findMany({
+    where: { module_id: { in: moduleIds } }, orderBy: { created_at: 'desc' },
+    select: { module_id: true, version: true, summary: true, created_at: true, ...(full ? { sources: true, attribution: true } : {}) },
+  }).catch(() => [])
+  const out = new Map<string, any>()
+  for (const r of rows as any[]) if (!out.has(r.module_id)) out.set(r.module_id, r)
+  return out
+}
+
 // ─── GET /admin/adhoc-training ────────────────────────────────────────────────
 // Every home with generated ad-hoc lessons, and each lesson's sources at a glance.
 platformAdhocTrainingRouter.get('/', async (_req: Request, res: Response) => {
   try {
     const rows = await lessonRows()
     const ids = rows.map(r => String(r.id))
-    const [tenants, generated, enrolled] = await Promise.all([
+    const [tenants, generated, enrolled, provenance] = await Promise.all([
       db.tenant.findMany({
         where:  { id: { in: [...new Set(rows.map(r => String(r.tenant_id)))] } },
         select: { id: true, name: true, account_number: true },
       }),
       lastGenerated(ids),
       ids.length ? db.trainingEnrollment.groupBy({ by: ['module_id'], where: { module_id: { in: ids } }, _count: { _all: true } }).catch(() => []) : [],
+      latestProvenance(ids),
     ])
     const tenantById = new Map((tenants as any[]).map(t => [String(t.id), t]))
     const enrolledById = new Map((enrolled as any[]).map(e => [String(e.module_id), e._count._all]))
@@ -98,6 +112,14 @@ platformAdhocTrainingRouter.get('/', async (_req: Request, res: Response) => {
         home_policies: src.home.length, training_seeds: src.training_seed.length, example_policies: src.example.length,
         generated_at: at ? new Date(at).toISOString() : null,
         enrolled: enrolledById.get(String(r.id)) ?? 0,
+        // Where the content is supported, from the check run at generation. Null when the
+        // lesson was generated before checking began; `current` is false if the questions
+        // were edited after the check.
+        attribution: (() => {
+          const pv = provenance.get(String(r.id))
+          if (!pv || !pv.summary || pv.summary.error || !pv.summary.questions) return pv?.summary?.error ? { failed: true } : null
+          return { failed: false, current: Number(pv.version) === Number(r.questions_version ?? 0), questions: pv.summary.questions, sections: pv.summary.sections }
+        })(),
       })
     }
     const list = [...byTenant.values()]
@@ -146,6 +168,10 @@ platformAdhocTrainingRouter.get('/:moduleId/report.pdf', async (req: Request, re
       db.tenant.findUnique({ where: { id: String(row.tenant_id) }, select: { name: true, account_number: true } }),
       lastGenerated([String(row.id)]),
     ])
+    const pv = (await latestProvenance([String(row.id)], true)).get(String(row.id)) ?? null
+    const attrItems: any[] = Array.isArray(pv?.attribution) ? pv.attribution : []
+    const attrByRef = new Map(attrItems.map(a => [String(a.ref), a]))
+    const checkCurrent = pv ? Number(pv.version) === Number(module?.questions_version ?? 0) : false
     const src = splitSources(row.policy_refs)
     // Are the home's source policies still in its library, and under what name now?
     const homeIds = src.home.map(r => r.policy_id)
@@ -184,6 +210,21 @@ platformAdhocTrainingRouter.get('/:moduleId/report.pdf', async (req: Request, re
       doc.x = PAGE.m
     }
 
+    const KIND_TEXT: Record<string, string> = { home: "This home's policy", training_seed: 'Curated training seed', example: 'Example policy (not this home)' }
+    const KIND_COLOUR: Record<string, string> = { home: GREEN, training_seed: '#0369a1', example: AMBER }
+    // Where one section or question is supported, with the checked quote.
+    const support = (ref: string) => {
+      const a = attrByRef.get(ref)
+      if (!a) return
+      let line: string, colour: string
+      if (a.status === 'verified') { line = `Supported by: ${KIND_TEXT[a.source_kind] ?? 'Source'}, ${a.source_title}${a.source_section ? `, ${a.source_section}` : ''}`; colour = KIND_COLOUR[a.source_kind] ?? MID }
+      else if (a.status === 'none') { line = 'Not in the sources: written from general good practice'; colour = MID }
+      else { line = `Unverified: the quote given${a.source_title ? ` for ${a.source_title}` : ''} was not found in the sources`; colour = '#b91c1c' }
+      doc.font('Helvetica-Bold').fontSize(8.5).fillColor(colour).text(clean(line), PAGE.m + 14, doc.y + 2, { width: width - 14 })
+      if (a.status === 'verified' && a.quote) doc.font('Helvetica-Oblique').fontSize(8.5).fillColor(MID).text(clean(`"${a.quote}"`), PAGE.m + 14, doc.y, { width: width - 14, lineGap: 1 })
+      doc.x = PAGE.m
+    }
+
     // ── Header
     doc.font('Helvetica-Bold').fontSize(9).fillColor(ACCENT).text('CARESTREAM · AD-HOC TRAINING RECORD', { width, characterSpacing: 0.6 })
     doc.moveDown(0.3)
@@ -194,6 +235,44 @@ platformAdhocTrainingRouter.get('/:moduleId/report.pdf', async (req: Request, re
     label('Question version', String(module?.questions_version ?? 0))
     label('Assessment', `${Array.isArray(module?.questions) ? module.questions.length : 0} questions, pass mark ${module?.pass_mark ?? 80}%${module?.duration_minutes ? `, about ${module.duration_minutes} minutes` : ''}${module?.requires_practical ? ', practical sign-off required' : ''}`)
     label('Record produced', dateLong(new Date()))
+
+    // ── Where the content is supported
+    h2('Where the content comes from')
+    if (!pv) {
+      muted('Not checked. This lesson was generated before CareStream began checking each section and question against its sources (21 September 2026). Regenerate the lesson to check it.')
+    } else if (pv.summary?.error || !pv.summary?.questions) {
+      muted(`The check did not complete when this lesson was generated${pv.summary?.error ? ` (${pv.summary.error})` : ''}. The sources it read are still listed below.`)
+    } else {
+      muted('Each section and question was checked against the exact text the generator read. It is credited to the one passage that states its key fact, with a quote that was confirmed, word for word, to be in that passage.')
+      if (!checkCurrent) muted(`Note: the questions have been edited since this check (the check covers question version ${pv.version}; the lesson is now version ${module?.questions_version ?? 0}). Question numbers below may no longer line up.`)
+      const pct = (n: number, t: number) => t ? `${n} (${Math.round((n / t) * 100)}%)` : '0'
+      const rows: Array<[string, any]> = [['Assessment questions', pv.summary.questions], ['Lesson sections', pv.summary.sections]]
+      const cols = [
+        { h: '', w: 118 }, { h: "Home's policies", w: 82 }, { h: 'Training seed', w: 72 }, { h: 'Example policies', w: 76 },
+        { h: 'General practice', w: 76 }, { h: 'Unverified', w: 75 },
+      ]
+      doc.moveDown(0.3)
+      let x = PAGE.m, y = doc.y
+      doc.font('Helvetica-Bold').fontSize(8.5).fillColor(MID)
+      cols.forEach(c => { doc.text(c.h, x, y, { width: c.w }); x += c.w })
+      y += 14
+      doc.moveTo(PAGE.m, y - 3).lineTo(PAGE.w - PAGE.m, y - 3).strokeColor(LINE).lineWidth(0.6).stroke()
+      for (const [name, c] of rows) {
+        const vals = [name, pct(c.home, c.total), pct(c.training_seed, c.total), pct(c.example, c.total), pct(c.none, c.total), pct(c.unverified, c.total)]
+        x = PAGE.m
+        vals.forEach((v, i) => {
+          doc.font(i === 0 || i === 1 ? 'Helvetica-Bold' : 'Helvetica').fontSize(9).fillColor(i === 1 ? GREEN : INK).text(clean(v), x, y, { width: cols[i].w })
+          x += cols[i].w
+        })
+        y += 16
+      }
+      doc.x = PAGE.m; doc.y = y + 4
+      const byPolicy: Array<{ title: string; items: number }> = Array.isArray(pv.summary.by_home_policy) ? pv.summary.by_home_policy : []
+      if (byPolicy.length) {
+        h3("Items supported by each of the home's policies")
+        byPolicy.forEach(b => body(`${b.title}: ${b.items}`))
+      }
+    }
 
     // ── Sources
     h2('1. Sources this lesson was grounded in')
@@ -226,6 +305,7 @@ platformAdhocTrainingRouter.get('/:moduleId/report.pdf', async (req: Request, re
     ;(Array.isArray(learn.sections) ? learn.sections : []).forEach((s: any, i: number) => {
       if (doc.y > PAGE.h - PAGE.m - 120) doc.addPage()
       h3(`Section ${i + 1}: ${s?.heading ?? ''}`)
+      support(`L${i + 1}`)
       if (s?.body) body(s.body)
       if (s?.scenario?.situation) {
         doc.moveDown(0.2)
@@ -253,6 +333,7 @@ platformAdhocTrainingRouter.get('/:moduleId/report.pdf', async (req: Request, re
       doc.moveDown(0.35)
       doc.font('Helvetica-Bold').fontSize(9.5).fillColor(INK).text(`${i + 1}. ${clean(q?.text)}`, PAGE.m, doc.y, { width, lineGap: 1.5 })
       options(Array.isArray(q?.options) ? q.options : [], Number(q?.correct))
+      support(`Q${i + 1}`)
     })
 
     // ── Page numbers

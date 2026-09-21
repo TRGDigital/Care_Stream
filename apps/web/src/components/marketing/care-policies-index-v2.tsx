@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
+import { PackLink } from './policy-basket'
 import { CARE_POLICIES_PACK_ORDER } from '@/lib/page-slots/care-policies-v2'
 import './service-page-v2.css'
 
@@ -258,10 +259,10 @@ export function CarePoliciesIndexV2({ s, products, bundles }: {
                   console). Title and price stay the shop's. A pack added to the shop later
                   goes after the theme's six, with the shop's own description. */}
               {[...bundles].sort((a, b) => rank(a.key) - rank(b.key)).map(p => (
-                <Link className="pcpack" href={`/care-policies/bundles/${p.key}`} key={p.key}>
+                <PackLink className="pcpack" pack={p} key={p.key}>
                   <b>{p.title}</b><em>{money(p.price_pence)}</em>
                   <span>{s(`pack.${p.key}.desc`) || p.description}</span>
-                </Link>
+                </PackLink>
               ))}
             </div>
           )}

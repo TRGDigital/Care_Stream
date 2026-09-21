@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 
 // The basket and the save control on a policy page. A policy is a TOGGLE, not a quantity: you
 // buy one copy of your own Safeguarding Adults Policy or none.
@@ -84,6 +84,21 @@ export function AddToBasket({ item, className = '', label = 'Add to basket' }: {
       <CartIcon /> {inBasket ? 'In your basket' : label}
     </button>
   )
+}
+
+/** A pack card on the /care-policies index. There is no page per pack, so the card puts the pack
+ *  in the basket (as `bundle:<key>`, which the checkout already prices and can swap) and goes
+ *  to checkout. The href keeps it a real link: without JS it still reaches the checkout. */
+export function PackLink({ pack, className = '', children }: {
+  pack: { key: string; title: string; price_pence: number }; className?: string; children: ReactNode
+}) {
+  const add = useCallback(() => {
+    const next = read(KEY_BASKET)
+    next[`bundle:${pack.key}`] = { slug: `bundle:${pack.key}`, title: pack.title, price_pence: pack.price_pence }
+    write(KEY_BASKET, next)
+    announce()
+  }, [pack])
+  return <a className={className} href="/care-policies/checkout" onClick={add}>{children}</a>
 }
 
 export function SavePolicy({ slug, title, className = '' }: {

@@ -158,7 +158,7 @@ export function PracticalChecklistSheet({ m, onClose }: { m: any; onClose: () =>
       </div>
 
       <p className="mt-5 border-t border-gray-100 pt-2 text-[9px] leading-relaxed text-neutral-mid">
-        File the signed checklist with the staff member&rsquo;s training record. The knowledge certificate and this observed assessment together evidence competency.
+        File the signed checklist with the staff member&rsquo;s training record. This observation is the employer&rsquo;s own assessment of workplace practice; the course certificate records completion of the course and its assessment and does not itself certify competence.
       </p>
     </SheetShell>
   )

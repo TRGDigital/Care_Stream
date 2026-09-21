@@ -26,14 +26,17 @@ export type TrainingCertificateProps = {
   // Pre-course knowledge check vs the final score — the evidence that learning
   // happened, not just that a course was clicked through.
   baseline?:         { score: number | null; total: number | null } | null
-  // Which shelf the course came from — drives the header band. The CPD logo block
-  // itself still gates on cpdAccredited, never on tier alone.
+  // Which shelf the course came from. The header only says "CPD Approved Course"
+  // once the module is accredited; the CPD logo block gates on cpdAccredited too.
   tier?:             'prebuilt' | 'cpd'
+  // A tenant's own policy-tailored module. Only these may say "tailored to";
+  // platform courses (pre-built and CPD) are the same for every provider.
+  tailored?:         boolean
 }
 
 export function TrainingCertificate({
   staffName, moduleName, orgName, orgLogoUrl, score, completedAt, expiresAt, requiresPractical, practicalNote,
-  cpdAccredited, cpdHours, cpdProviderNumber, independentlyReviewed, baseline, tier,
+  cpdAccredited, cpdHours, cpdProviderNumber, independentlyReviewed, baseline, tier, tailored,
 }: TrainingCertificateProps) {
   const gainPct = baseline?.score != null && baseline?.total
     ? Math.round((baseline.score / baseline.total) * 100)
@@ -44,7 +47,7 @@ export function TrainingCertificate({
       <div className="flex items-center justify-between bg-gradient-to-r from-teal-dark via-teal to-teal-dark px-8 py-5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo-white.png" alt="CareStream" className="h-16 w-auto object-contain" />
-        <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/85">{tier === 'cpd' ? 'CPD Approved Course' : 'Staff Training'}</span>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/85">{tier === 'cpd' ? (cpdAccredited ? 'CPD Approved Course' : 'Annual Training') : 'Staff Training'}</span>
       </div>
 
       <div className="relative px-10 pb-9 pt-7 text-center">
@@ -120,7 +123,7 @@ export function TrainingCertificate({
 
         {requiresPractical && (
           <p className="mx-auto mt-5 max-w-md rounded-lg bg-amber-50 p-2.5 text-xs text-amber-700">
-            {practicalNote ?? 'This is the knowledge component. A practical / observed competency assessment is also required for this topic.'}
+            {practicalNote ?? 'This is the knowledge component. An observed competency assessment, carried out by the employer, is also required for this topic.'}
           </p>
         )}
 
@@ -131,8 +134,10 @@ export function TrainingCertificate({
           <img src="/logo-color.png" alt="CareStream" className="h-10 w-auto object-contain" />
         </div>
         <p className="mx-auto mt-3 max-w-lg text-[9.5px] leading-relaxed text-neutral-mid">
-          Tailored to {orgName ?? 'the home'}&apos;s own policies and assessed by CareStream. This records completion of a knowledge
-          assessment and is not an accredited qualification; the provider remains responsible for ensuring training meets regulatory requirements.
+          {tailored ? <>Tailored to {orgName ?? 'the home'}&apos;s own policies and assessed by CareStream. </> : null}
+          This certificate is evidence that the named person completed this course and passed CareStream&apos;s assessment. It is not a
+          government recognised qualification and does not certify competence to perform a particular role, treatment or activity.
+          The employer remains responsible for ensuring training meets regulatory requirements.
         </p>
       </div>
     </div>

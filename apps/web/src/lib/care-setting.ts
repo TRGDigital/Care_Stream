@@ -17,4 +17,6 @@ export function careSetting(input?: string | null): string {
     .replace(/\bthe home\b/gi, 'the care setting')
     .replace(/\bthis home\b/gi, 'this care setting')
     .replace(/\byour home\b/gi, 'your care setting')
+    // "All care work in our service" reads as the provider talking; the reader is the provider.
+    .replace(/\bour service\b/gi, 'your service')
 }

@@ -17,6 +17,13 @@ function sanitiseProjectName(name: string): string {
   return name.replace(/[^a-zA-Z0-9 _.-]/g, '-').slice(0, 60)
 }
 
+// The public site is served from www; the apex and http:// 308 to it. Callers build
+// URLs from siteUrl(), whose first WEB_URL entry is the apex, so without this every
+// submission pushed a redirect (all 57 between Aug and Sept were apex URLs).
+function toCanonicalHost(url: string): string {
+  return url.replace(/^https?:\/\/(www\.)?carestreamai\.com(?=[\/?#]|$)/i, 'https://www.carestreamai.com')
+}
+
 // Drop URLs we've already successfully submitted (avoids wasting credits on re-saves).
 async function filterNew(urls: string[]): Promise<string[]> {
   const existing = await (prisma as any).ralfyIndexSubmission.findMany({
@@ -37,7 +44,7 @@ export async function submitUrlsForIndexing(
   opts: { source?: 'blog' | 'page'; blogPostId?: string | null } = {},
 ): Promise<void> {
   try {
-    const clean = urls.map(u => u?.trim()).filter((u): u is string => !!u && /^https?:\/\//.test(u))
+    const clean = urls.map(u => u?.trim()).filter((u): u is string => !!u && /^https?:\/\//.test(u)).map(toCanonicalHost)
     if (!clean.length) return
 
     const cfg = await getConfig()

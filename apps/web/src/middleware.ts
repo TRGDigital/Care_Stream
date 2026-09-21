@@ -11,10 +11,14 @@ import type { NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 
 // Gated app routes (the (portal) hub + (admin) console) for the billing gate.
+// Every console page except /billing and /start, which are where a card is added. /licences,
+// /group, /workforce and /translation-review were missing, so a new trial that had not added a
+// card could reach them by typing the address.
 const GATED = [
   '/chat', '/cqc', '/progress', '/analytics', '/audits', '/cqc-questions',
   '/dashboard', '/gaps', '/guides', '/knowledge', '/onboarding', '/policies',
   '/queries', '/settings', '/staff', '/training',
+  '/licences', '/group', '/workforce', '/translation-review',
 ]
 
 // Console routes a training-only (gateway-tier) tenant cannot use — the full-CareStream

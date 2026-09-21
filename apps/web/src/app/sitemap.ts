@@ -1,6 +1,5 @@
 import { MetadataRoute } from 'next'
 import { SETTINGS_LIST } from '@/lib/settings/list'
-import { HELP_ARTICLE_PATHS } from '@/lib/help-articles'
 import { ROLE_PAGES } from '@/lib/role-pages'
 
 // Canonical host is www (the apex 308-redirects to it). The sitemap MUST use www
@@ -45,21 +44,12 @@ const MARKETING: Entry[] = [
   { url: '/demo',                                  changeFrequency: 'monthly', priority: 0.8 },
   { url: '/contact',                               changeFrequency: 'monthly', priority: 0.6 },
   { url: '/languages',                             changeFrequency: 'monthly', priority: 0.6 },
-  { url: '/help',                                  changeFrequency: 'monthly', priority: 0.5 },
   // Legal pages (static routes) — indexable, so they belong in the sitemap.
   { url: '/privacy',                               changeFrequency: 'yearly',  priority: 0.3 },
   { url: '/terms',                                 changeFrequency: 'yearly',  priority: 0.3 },
   { url: '/cookies',                               changeFrequency: 'yearly',  priority: 0.3 },
   { url: '/dpa',                                   changeFrequency: 'yearly',  priority: 0.3 },
 ]
-
-// Every Help Centre article, derived from the shared manifest so the sitemap
-// stays in lockstep with the pages that actually exist.
-const HELP: Entry[] = HELP_ARTICLE_PATHS.map((url) => ({
-  url,
-  changeFrequency: 'monthly' as const,
-  priority: 0.4,
-}))
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -174,7 +164,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Dedupe by path (some settings also appear in MARKETING), first entry wins.
   const seen = new Set<string>()
   const [training, buy, blog, collections, features, cms] = await Promise.all([trainingPages(), buyPages(), blogPages(), collectionPages(), featurePages(), cmsPages()])
-  const entries = [...MARKETING, ...HELP, ...SETTINGS, ...training, ...buy, ...blog, ...collections, ...features, ...cms].filter((e) => {
+  const entries = [...MARKETING, ...SETTINGS, ...training, ...buy, ...blog, ...collections, ...features, ...cms].filter((e) => {
     if (seen.has(e.url)) return false
     seen.add(e.url)
     return true

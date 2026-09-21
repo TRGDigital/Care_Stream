@@ -1583,3 +1583,78 @@ export async function sendCronReportEmail(report: {
     html,
   })
 }
+
+// ─── Weekly indexing report (RalfyIndex, both sites) ─────────────────────────
+
+export async function sendIndexingReportEmail(report: {
+  generated_at: string
+  days: number
+  balance: number | null
+  sites: Array<{
+    site: string; available: boolean; error?: string
+    submitted: number; failed: number | null; pending: number | null
+    breakdown: Array<{ label: string; submitted: number; pending?: number }>
+    last_submitted_at: string | null
+  }>
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set — skipping indexing report'); return }
+
+  const to   = process.env.INDEXING_REPORT_EMAIL ?? 'lenny@trgdigital.co.uk'
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc  = (s: any) => String(s ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
+  const when = (iso: string | null) =>
+    iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'never'
+
+  // A day's quota for CareAssura is about 40 URLs, so under ~300 credits is roughly a week left.
+  const LOW = 300
+  const total = report.sites.reduce((n, s) => n + s.submitted, 0)
+  const failed = report.sites.reduce((n, s) => n + (s.failed ?? 0), 0)
+  const warnings: string[] = []
+  if (report.balance === null) warnings.push('Could not read the RalfyIndex balance. The API key may have been rejected.')
+  else if (report.balance < LOW) warnings.push(`Only ${report.balance} RalfyIndex credits left. Both sites stop indexing when this reaches zero.`)
+  if (failed > 0) warnings.push(`${failed} submission${failed === 1 ? '' : 's'} failed this week.`)
+  for (const s of report.sites) {
+    if (!s.available) warnings.push(`${s.site}: ${s.error}`)
+    else if (s.submitted === 0) warnings.push(`${s.site} pushed nothing this week (last successful push: ${when(s.last_submitted_at)}).`)
+  }
+
+  const siteCard = (s: (typeof report.sites)[number]) => {
+    const rows = s.breakdown.map(b => `
+      <tr>
+        <td style="padding:5px 0;color:#374151;font-size:13px">${esc(b.label)}</td>
+        <td style="padding:5px 0;text-align:right;color:${NEUTRAL_DARK};font-size:13px;font-weight:700">${b.submitted}</td>
+        ${s.pending !== null ? `<td style="padding:5px 0 5px 14px;text-align:right;color:#6b7280;font-size:12px">${b.pending ?? 0} waiting</td>` : ''}
+      </tr>`).join('')
+    return `
+    <div style="border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;margin:0 0 12px">
+      <table style="width:100%;border-collapse:collapse"><tr>
+        <td style="color:${NEUTRAL_DARK};font-size:15px;font-weight:700">${esc(s.site)}</td>
+        <td style="text-align:right;color:${PURPLE_DARK};font-size:22px;font-weight:700">${s.available ? s.submitted : '&mdash;'}</td>
+      </tr></table>
+      <p style="margin:2px 0 8px;color:#6b7280;font-size:12px">
+        pages pushed${s.failed !== null ? ` &middot; ${s.failed} failed` : ''}${s.pending !== null ? ` &middot; ${s.pending.toLocaleString('en-GB')} still waiting in the queue` : ''}
+        &middot; last push ${when(s.last_submitted_at)}
+      </p>
+      ${rows ? `<table style="width:100%;border-collapse:collapse;border-top:1px solid #f3f4f6">${rows}</table>` : ''}
+    </div>`
+  }
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 4px">${total} page${total === 1 ? '' : 's'} sent for indexing last week</p>
+    <p style="color:#374151;font-size:13px;line-height:1.6;margin:0 0 16px">
+      RalfyIndex, the ${report.days} days to ${when(report.generated_at)}.
+      Credits remaining: <strong>${report.balance ?? 'unknown'}</strong> (shared by both sites).
+    </p>
+    ${warnings.length ? `<div style="border:1px solid #fcd34d;background:#fffbeb;border-radius:8px;padding:12px 14px;margin:0 0 14px">${warnings
+      .map(w => `<p style="margin:0 0 4px;color:#92400e;font-size:13px">${esc(w)}</p>`).join('')}</div>` : ''}
+    ${report.sites.map(siteCard).join('')}
+    ${emailFooter()}
+  `)
+
+  await sgMail.send({
+    to, from,
+    subject: `Indexing last week: ${total} page${total === 1 ? '' : 's'} pushed${warnings.length ? ' (needs a look)' : ''}`,
+    html,
+  })
+}

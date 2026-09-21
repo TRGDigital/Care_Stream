@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
-import { createPlatformClient, uploadBlogImage, fetchTrainingSeoIndex, type BlogAuthor, type BlogPost, type SitePage, type Collection, type FeaturePage, type UseCaseAllocation } from '@/lib/platform-api'
+import { createPlatformClient, uploadBlogImage, fetchTrainingSeoIndex, type BlogAuthor, type BlogPost, type SitePage, type Collection, type ProductCluster, type FeaturePage, type UseCaseAllocation } from '@/lib/platform-api'
 import { EMPTY_FEATURE_CONTENT, type FeaturePageContent } from '@/lib/feature-content'
 import { slotsForPath, type SlotDef } from '@/lib/page-slots'
 import { PlatformShell } from '@/components/platform-shell'
@@ -1960,6 +1960,8 @@ export default function BlogPage() {
   const [editCollection,   setEditCollection]   = useState<Collection | null>(null)
   const [savingCollection, setSavingCollection] = useState(false)
   const [collectionError,  setCollectionError]  = useState('')
+  // Labels for the "What this page sells" tag on each collection row.
+  const [clusters,         setClusters]         = useState<ProductCluster[]>([])
 
   // Feature pages state
   const [featurePages,       setFeaturePages]       = useState<FeaturePage[]>([])
@@ -1985,6 +1987,7 @@ export default function BlogPage() {
   useEffect(() => {
     if (!token) return
     const api = createPlatformClient(token)
+    api.collections.clusters().then(r => setClusters(r.clusters)).catch(() => {})
     Promise.all([api.blog.posts(), api.blog.authors(), api.sitePages.list().catch(() => ({ pages: [] })), fetchTrainingSeoIndex(), api.collections.list().catch(() => ({ collections: [] })), api.featurePages.list().catch(() => ({ featurePages: [] }))])
       .then(([p, a, pg, seo, col, fp]) => { setPosts(p.posts); setAuthors(a.authors); setPages(pg.pages); setTrainingPages(seo.pages); setCollections(col.collections); setFeaturePages(fp.featurePages) })
       .catch(e => setError(e.message))
@@ -2858,6 +2861,21 @@ export default function BlogPage() {
                         <div className="flex items-center gap-2">
                           <p className="truncate text-sm font-semibold text-neutral-dark">{c.title || '(untitled)'}</p>
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${STATUS_COLOURS[c.status] ?? STATUS_COLOURS.draft}`}>{c.status}</span>
+                          {(() => {
+                            const cl = clusters.find(k => k.key === c.cluster_key)
+                            if (!c.cluster_key) return (
+                              <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700" title="No themed six chosen under What this page sells">
+                                No products chosen
+                              </span>
+                            )
+                            const users = collections.filter(o => o.cluster_key === c.cluster_key).length
+                            return (
+                              <span className="shrink-0 rounded-full bg-teal/10 px-2 py-0.5 text-[10px] font-semibold text-teal"
+                                title={`What this page sells${cl ? `: ${cl.items.join(', ')}` : ''}${users > 1 ? ` (used on ${users} collections)` : ''}`}>
+                                {c.kind === 'training' ? 'Training' : 'Policies'} · {cl?.label ?? c.cluster_key}{users > 1 ? ` · ×${users}` : ''}
+                              </span>
+                            )
+                          })()}
                         </div>
                         <p className="mt-0.5 truncate text-xs text-neutral-mid">
                           /collection/{c.slug}

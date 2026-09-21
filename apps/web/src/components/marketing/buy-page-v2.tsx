@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
 import { careSetting } from '@/lib/care-setting'
+import { JsonLd } from '@/components/json-ld'
+import { faqPageSchema } from '@/lib/schema'
 import { BuyForm } from './buy-form'
 import './buy-page-v2.css'
 
@@ -10,6 +12,12 @@ import './buy-page-v2.css'
 // page are identical across modules once the title is substituted, and ALL of the remaining six
 // come from the training API. So the prose is template copy, the rest is data, and this family
 // needs no content extraction, no seed and no re-import.
+//
+// That template copy made the 98 buy pages about 80% identical to each other, and Search
+// Console began folding some together ("Duplicate without user-selected canonical"). So the
+// page now also renders what is genuinely different per module, all from the same record:
+// outcomes, every lesson, key points, the real assessment length, renewal, the practical
+// requirement, standards, and FAQs answered from those facts.
 
 export interface BuyModule {
   slug: string
@@ -20,6 +28,13 @@ export interface BuyModule {
   cpd_accredited?: boolean | null
   illustration_url?: string | null
   sections?: Array<{ heading: string; body?: string | null; image_url?: string | null }>
+  outcomes?: string[]
+  key_points?: string[]
+  standards?: string[]
+  frequency?: string | null
+  requires_practical?: boolean | null
+  question_count?: number | null
+  pass_mark?: number | null
 }
 
 export interface BuyRelated { slug: string; title: string; group_label?: string | null }
@@ -121,6 +136,50 @@ function twoSentences(text: string) {
   return parts ? parts.slice(0, 2).join(' ').trim() : (text || '').trim()
 }
 
+const RENEWAL: Record<string, [string, string]> = {
+  annual:    ['Every year',        'renews every year'],
+  biennial:  ['Every two years',   'renews every two years'],
+  triennial: ['Every three years', 'renews every three years'],
+  once:      ['Once',              'is completed once rather than renewed on a cycle'],
+}
+
+/** "A, B and C" */
+function listOf(items: string[]) {
+  return items.length < 2 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`
+}
+
+/** Questions answered from this module's own facts, ahead of the six about licensing. */
+function moduleFaqs(m: BuyModule, lessons: string[]): [string, string][] {
+  const out: [string, string][] = []
+  const q = m.question_count, pass = m.pass_mark ?? 80, mins = m.duration_minutes
+  if (mins) {
+    out.push([`How long does ${m.title} training take?`,
+      `About ${mins} minutes, across ${lessons.length} short lessons`
+      + (q ? `, followed by a ${q} question assessment with a pass mark of ${pass}%.` : '.')
+      + ' Staff can stop and pick up where they left off.'])
+  }
+  if (lessons.length) {
+    out.push([`What does the ${m.title} module cover?`,
+      `${lessons.length} lessons: ${listOf(lessons)}. Each one pairs the teaching with a care scenario and a quick check.`])
+  }
+  const renew = m.frequency ? RENEWAL[m.frequency] : undefined
+  if (renew) {
+    out.push([`How often do staff need to refresh ${m.title}?`,
+      m.frequency === 'once'
+        ? `This module ${renew[1]}. Refresh it when your policy changes or a staff member moves into a role where it matters more.`
+        : `CareStream sets this module so it ${renew[1]}. Staff and managers are reminded before a certificate lapses, so the refresher is booked before the gap appears.`])
+  }
+  out.push(m.requires_practical
+    ? [`Does ${m.title} need a practical assessment?`,
+       'Yes. The online module is the knowledge part. Staff also need an observed assessment in the workplace, carried out by their employer, and CareStream provides the observation checklist to record it.']
+    : [`Is ${m.title} completed fully online?`,
+       'Yes. It is knowledge based, so staff complete the lessons and the assessment online and receive their certificate at the end. There is no practical sign-off.'])
+  if (m.standards?.length) {
+    out.push([`Which standards does ${m.title} map to?`, `${listOf(m.standards)}.`])
+  }
+  return out
+}
+
 export function BuyPageV2({ module: m, unitPence, related, apiUrl }: {
   module: BuyModule
   unitPence: number
@@ -130,16 +189,32 @@ export function BuyPageV2({ module: m, unitPence, related, apiUrl }: {
   const minutes = m.duration_minutes ?? 0
   // Exactly the theme's line, including the fixed assessment length, which its generator
   // hard-codes rather than reading from the record.
-  const meta = [m.group_label, minutes ? `${minutes} minutes` : '', '20 question assessment',
+  const qCount = m.question_count ?? null
+  const meta = [m.group_label, minutes ? `${minutes} minutes` : '', qCount ? `${qCount} question assessment` : '',
                 m.cpd_accredited ? 'CPD approved' : '']
     .filter(Boolean).join(' · ')
   const img = (u?: string | null) => (u ? `${apiUrl}${u}` : null)
   const hero = img(m.illustration_url)
   const wide = img(m.sections?.[0]?.image_url)
-  const curriculum = (m.sections ?? []).slice(0, 5)
+  // Every lesson, not the first five: the lesson list is the most module-specific thing here.
+  const curriculum = m.sections ?? []
+  const lessons = curriculum.map(s => careSetting(s.heading)).filter(Boolean)
+  const outcomes = (m.outcomes ?? []).map(careSetting).filter(Boolean)
+  const keyPoints = (m.key_points ?? []).map(careSetting).filter(Boolean)
+  const renew = m.frequency ? RENEWAL[m.frequency] : undefined
+  const facts: [string, string][] = [
+    ...(minutes ? [['Time to complete', `About ${minutes} minutes, ${lessons.length} lessons`] as [string, string]] : []),
+    ...(qCount ? [['Assessment', `${qCount} questions, pass mark ${m.pass_mark ?? 80}%`] as [string, string]] : []),
+    ...(renew ? [['Refresher', renew[0]] as [string, string]] : []),
+    ['Practical assessment', m.requires_practical ? 'Yes, observed by the employer, checklist provided' : 'None, completed fully online'],
+    ...(m.standards?.length ? [['Mapped to', listOf(m.standards)] as [string, string]] : []),
+  ]
+  const faqs: [string, string][] = [...moduleFaqs(m, lessons), ...FAQS]
 
   return (
     <div className="bypage-v2">
+      {/* The FAQs are visible on the page, so they can be described to search as FAQPage. */}
+      <JsonLd data={faqPageSchema(faqs.map(([question, answer]) => ({ question, answer: answer.replace(/\n\n/g, ' ') })))} />
       <section className="byhero">
         <div className="bywrap">
           <Link className="byback" href={`/staff-training/${m.slug}`}>
@@ -188,7 +263,7 @@ export function BuyPageV2({ module: m, unitPence, related, apiUrl }: {
           <p className="intro">
             {careSetting(twoSentences(m.summary ?? ''))} This is the same module CareStream subscribers get,
             written for care settings rather than adapted from a generic course.
-            {minutes ? ` It runs about ${minutes} minutes and ends with a 20 question assessment.` : ''}
+            {minutes ? ` It runs about ${minutes} minutes${qCount ? ` and ends with a ${qCount} question assessment` : ''}.` : ''}
           </p>
           <div className="bysplit">
             <ul className="bycurric">
@@ -206,6 +281,42 @@ export function BuyPageV2({ module: m, unitPence, related, apiUrl }: {
               </div>
             )}
           </div>
+        </div>
+      </section>
+
+      {outcomes.length > 0 && (
+        <section className="bysec tint">
+          <div className="bywrap">
+            <span className="bylabel-sec">Learning outcomes</span>
+            <h2>What your team will be able to do.</h2>
+            <ul className="bypoints bylist">
+              {outcomes.map(o => (
+                <li key={o}><span className="ic"><Tick /></span><span>{o}</span></li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
+      <section className="bysec">
+        <div className="bywrap">
+          <span className="bylabel-sec">At a glance</span>
+          <h2>{m.title} in facts.</h2>
+          <div className="bytrust">
+            {facts.map(([title, body]) => (
+              <div key={title}><b>{title}</b><p>{body}</p></div>
+            ))}
+          </div>
+          {keyPoints.length > 0 && (
+            <>
+              <h3 className="bykp-h">What staff come away with</h3>
+              <ul className="bycurric">
+                {keyPoints.map((k, i) => (
+                  <li key={i}><span className="n" /><span><p>{k}</p></span></li>
+                ))}
+              </ul>
+            </>
+          )}
         </div>
       </section>
 
@@ -241,7 +352,7 @@ export function BuyPageV2({ module: m, unitPence, related, apiUrl }: {
           <span className="bylabel-sec">Questions</span>
           <h2>Before you buy.</h2>
           <div className="byfaq">
-            {FAQS.map(([q, a]) => (
+            {faqs.map(([q, a]) => (
               <details key={q}>
                 <summary>{q}<Plus /></summary>
                 <div className="ans">{a.split('\n\n').map((p, i) => <p key={i}>{p}</p>)}</div>

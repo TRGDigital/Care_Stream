@@ -135,7 +135,7 @@ publicTrainingRouter.get('/standard-modules/:slug', async (req: Request, res: Re
       where:   topic.shop_module_id
         ? { id: topic.shop_module_id }
         : { tenant_id: null, source: 'ai_generated', tier: 'prebuilt', topic_id: topic.id },
-      select:  { approved: true, description: true, frequency: true, duration_minutes: true, illustration_key: true, learning_content: true, standards: true, cpd_accredited: true },
+      select:  { approved: true, description: true, frequency: true, duration_minutes: true, illustration_key: true, learning_content: true, standards: true, cpd_accredited: true, questions: true, pass_mark: true },
       orderBy: [{ approved: 'desc' }, { created_at: 'desc' }],
     })
     const m = (modules as any[])[0]
@@ -171,6 +171,10 @@ publicTrainingRouter.get('/standard-modules/:slug', async (req: Request, res: Re
       frequency:          m?.frequency ?? topic.default_frequency,
       requires_practical: topic.requires_practical,
       duration_minutes:   m?.duration_minutes ?? null,
+      // The count only, never the questions: the buy and course pages state the real assessment
+      // length instead of a hard-coded 20 (nine modules have 30).
+      question_count:     Array.isArray(m?.questions) ? m.questions.length : null,
+      pass_mark:          m?.pass_mark ?? 80,
       cpd_accredited:     !!m?.cpd_accredited,
       description:        m?.description ?? null,
       summary:            typeof lc.summary === 'string' ? lc.summary : null,

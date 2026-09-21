@@ -398,3 +398,11 @@
 .hpage-v2 .shot img,.hpage-v2 .sshot img,.hpage-v2 .sscen-shot img,.hpage-v2 .uc-shot img,.hpage-v2 .wcshot img,.hpage-v2 .svshot img,.hpage-v2 .wwshot img,.hpage-v2 .wfshot img,.hpage-v2 .wfheroshot img,.hpage-v2 .tpshot img,.hpage-v2 .rgshot img,.hpage-v2 .dmshot img,.hpage-v2 .plate:not(.shotplate) img,.hpage-v2 .smock img,.hpage-v2 .ucread-art img,.hpage-v2 .pcrel-art img{display:block;width:100%!important;height:auto!important;object-fit:contain;border-radius:inherit}
 .hpage-v2 .fchips,.hpage-v2 .schips,.hpage-v2 .smock-tabs,.hpage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}
 .hpage-v2 [hidden]{display:none!important}
+
+/* Customer reviews (lib/reviews): two real quotes, side by side, stacking on narrow screens. */
+.hpage-v2 .reviews{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:24px;margin-top:40px;align-items:start}
+.hpage-v2 .review{margin:0;padding:30px 32px;background:#fff;border:1px solid var(--line);border-radius:20px;display:flex;flex-direction:column;gap:22px}
+.hpage-v2 .review blockquote{margin:0;font-size:1.02rem;line-height:1.68;color:var(--ink)}
+.hpage-v2 .review figcaption{display:flex;flex-direction:column;gap:2px;font-size:.9rem;padding-top:18px;border-top:1px solid var(--line)}
+.hpage-v2 .review figcaption b{color:var(--ink);font-weight:700}
+.hpage-v2 .review figcaption span{color:var(--muted)}

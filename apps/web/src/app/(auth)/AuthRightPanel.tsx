@@ -1,4 +1,5 @@
 import { SiteImage } from '@/components/site-image'
+import { REVIEWS } from '@/lib/reviews'
 
 // The branded panel beside every sign-in and account form, as in the theme. The theme uses the
 // one photo on both /login and /register.
@@ -49,11 +50,10 @@ export function AuthRightPanel() {
           </div>
         </div>
 
+        {/* A real review (lib/reviews), in place of the theme's placeholder quote. */}
         <figure className="lgquote">
-          <blockquote>
-            &ldquo;Staff now get instant, accurate answers instead of calling the manager at midnight. It has transformed how our team works.&rdquo;
-          </blockquote>
-          <figcaption>Registered Manager, Nursing Home, Surrey</figcaption>
+          <blockquote>&ldquo;{REVIEWS[0].excerpt}&rdquo;</blockquote>
+          <figcaption>{REVIEWS[0].name}, {REVIEWS[0].setting}</figcaption>
         </figure>
       </div>
     </aside>

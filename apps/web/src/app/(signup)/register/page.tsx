@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { PasswordInput } from '@/app/(auth)/auth-fields'
 import { SiteImage } from '@/components/site-image'
+import { REVIEWS } from '@/lib/reviews'
 import '../signup.css'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
@@ -187,6 +188,18 @@ export default function RegisterPage() {
           </form>
         )}
       </main>
+
+      <section className="rgreviews" aria-label="Customer reviews">
+        <h2>What care providers say</h2>
+        <div className="rgrevs">
+          {REVIEWS.map(rv => (
+            <figure key={rv.name}>
+              <blockquote>&ldquo;{rv.excerpt}&rdquo;</blockquote>
+              <figcaption><b>{rv.name}</b>, {rv.setting}</figcaption>
+            </figure>
+          ))}
+        </div>
+      </section>
 
       <section className="rgtrust" aria-label="Services using CareStream">
         <h2>Trusted by CQC-registered services across England</h2>

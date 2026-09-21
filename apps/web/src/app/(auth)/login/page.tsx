@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -9,7 +9,12 @@ import { PasswordInput } from '../auth-fields'
 // Where to land after signing in: the page the user was on when their session
 // expired (?callbackUrl=), else the last console page they visited (stored by
 // the admin shell), else the dashboard. Only same-site relative paths.
+// Inside the store app (cs_app cookie, set by middleware) CareStream is the staff hub only, so
+// everyone lands in the hub and there is no "register" link to a paid signup.
+const inStoreApp = () => /(?:^|;\s*)cs_app=(android|ios)\b/.test(document.cookie)
+
 function postLoginTarget(): string {
+  if (inStoreApp()) return '/chat'
   try {
     const cb = new URLSearchParams(window.location.search).get('callbackUrl')
     const safe = (p: string | null) => (p && p.startsWith('/') && !p.startsWith('//') && !p.startsWith('/login') ? p : null)
@@ -18,6 +23,8 @@ function postLoginTarget(): string {
 }
 
 export default function LoginPage() {
+  const [inApp,    setInApp]    = useState(false)
+  useEffect(() => { setInApp(inStoreApp()) }, [])
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
   const [error,    setError]    = useState('')
@@ -121,7 +128,7 @@ export default function LoginPage() {
         </>
       )}
 
-      <p className="lgalt">New to CareStream? <Link href="/register">Register your organisation</Link></p>
+      {!inApp && <p className="lgalt">New to CareStream? <Link href="/register">Register your organisation</Link></p>}
     </>
   )
 }

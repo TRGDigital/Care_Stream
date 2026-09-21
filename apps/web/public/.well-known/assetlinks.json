@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.carestreamai.hub",
+      "sha256_cert_fingerprints": [
+        "AF:35:4C:F1:F9:23:E0:63:35:A8:E1:57:7C:F6:25:63:AB:18:A4:AD:D4:42:83:20:49:15:64:2A:03:94:AA:B3"
+      ]
+    }
+  }
+]

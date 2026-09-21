@@ -519,7 +519,9 @@ trainingRouter.get('/modules', async (req: Request, res: Response) => {
     await fillModuleCovers(tenantId)
     const modules = await (prisma as any).trainingModule.findMany({
       where:   { tenant_id: tenantId, is_active: true, source: { not: 'ai_generated' } },
-      orderBy: { sort_order: 'asc' },
+      // Name breaks sort_order ties so the order is stable (ties otherwise come back in
+      // storage order, which changes whenever a module is updated).
+      orderBy: [{ sort_order: 'asc' }, { name: 'asc' }],
     })
     ok(res, { modules: (modules as any[]).map(m => ({ ...m, illustration_url: illustrationUrl(m.illustration_key) })) })
   } catch (e: any) {

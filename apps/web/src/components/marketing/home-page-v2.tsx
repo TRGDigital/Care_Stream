@@ -5,6 +5,7 @@ import { HomeShowcase, type Slide } from './home-showcase'
 import { HomeVideo } from './home-video'
 import { HomeAccordion } from './home-accordion'
 import { HomeLines } from './home-lines'
+import { REVIEWS } from '@/lib/reviews'
 import './home-page-v2.css'
 
 // The rebuilt home page.
@@ -427,18 +428,19 @@ export function HomePageV2({ s }: { s: HomeCopy }) {
           </div>
         </section>
 
+        {/* Real customer reviews, word for word (lib/reviews). This replaced a single quote that
+            came with the theme and was not from a customer. */}
         <section className="band">
-          <div className="wrap split">
-            <div>
-              <p className="eyebrow">{s('story.eyebrow')}</p>
-              <p className="quote">{s('story.quote')}</p>
-              <p className="cite">{s('story.cite')}</p>
-            </div>
-            <div className="plate-wrap">
-              <div className="plate tall">
-                <SiteImage src="/images/index/19.webp"
-                           alt="A registered manager at their desk, using CareStream" />
-              </div>
+          <div className="wrap">
+            <p className="eyebrow">{s('story.eyebrow')}</p>
+            <h2 style={{ maxWidth: '22ch' }}>{s('story.h2')}</h2>
+            <div className="reviews">
+              {REVIEWS.map(r => (
+                <figure className="review" key={r.name}>
+                  <blockquote>&ldquo;{r.quote}&rdquo;</blockquote>
+                  <figcaption><b>{r.name}</b><span>{r.setting}</span></figcaption>
+                </figure>
+              ))}
             </div>
           </div>
         </section>

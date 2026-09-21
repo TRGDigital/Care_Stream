@@ -143,9 +143,10 @@ export const HOME_V2_SLOTS: SlotDef[] = [
   { key: 'start.microcopy', group: 'Get started', label: 'Line beside the buttons', default: 'No card required' },
 
   // ── Customer story ──────────────────────────────────────────────────────────
-  { key: 'story.eyebrow', group: 'Customer story', label: 'Eyebrow', default: 'Customer story' },
-  { key: 'story.quote', group: 'Customer story', label: 'Quote', multiline: true, default: '“The inspector asked for evidence and I had it on screen before she finished the sentence.”' },
-  { key: 'story.cite', group: 'Customer story', label: 'Attribution', default: 'Registered Manager · 48-bed nursing home, West Sussex' },
+  // The reviews themselves are not slots: they are customers' own words, kept verbatim in
+  // lib/reviews.ts, so they cannot be reworded from the console.
+  { key: 'story.eyebrow', group: 'Customer story', label: 'Eyebrow', default: 'Customer reviews' },
+  { key: 'story.h2', group: 'Customer story', label: 'Heading', default: 'What care providers say' },
 
   // ── Closing call to action ──────────────────────────────────────────────────
   { key: 'cta.h2', group: 'Closing CTA', label: 'Heading', default: 'See it against your own policies' },

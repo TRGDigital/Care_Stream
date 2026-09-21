@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, GraduationCap, Globe, RefreshCw, CheckCircle2 } 
 import { BuyForm } from '@/components/marketing/buy-form'
 import { BuyPageV2 } from '@/components/marketing/buy-page-v2'
 import { pageMetadata } from '@/lib/page-meta'
+import { careSetting } from '@/lib/care-setting'
 import { fetchModules, relatedModules } from '@/lib/related-modules'
 import { isV2 } from '@/lib/v2-rollout'
 import { JsonLd } from '@/components/json-ld'
@@ -25,6 +26,13 @@ type ModuleRecord = {
   cpd_accredited?: boolean | null
   illustration_url?: string | null
   sections?: Array<{ heading: string; body?: string | null; image_url?: string | null }>
+  outcomes?: string[]
+  key_points?: string[]
+  standards?: string[]
+  frequency?: string | null
+  requires_practical?: boolean | null
+  question_count?: number | null
+  pass_mark?: number | null
 }
 
 // ONLY a 404 from the API means "no such module". Anything else (the public rate limit's 429, a
@@ -58,7 +66,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // full subscription. pageMetadata adds the self-canonical on the www host and
   // og tags, and defaults to indexable (site_pages can override the copy).
   const title = `Buy ${m.title} Training for Your Team | CareStreamAI`
-  const description = `Buy CareStream ${m.title} training licences for just your team — no full subscription needed. One licence per staff member, delivered in our hub in any language.`
+  // Led by this module's own summary, so no two buy pages share a description.
+  const lead = careSetting(m.summary?.match(/[^.!?]+[.!?]+/)?.[0]?.trim() ?? '')
+  const tail = 'One licence per staff member, no subscription, in over 60 languages.'
+  const description = lead && lead.length + tail.length < 170
+    ? `${lead} ${tail}`
+    : `Buy ${m.title} training licences for just the staff who need them. ${tail}`
   // Use the module's own illustration for the social image; pageMetadata falls back to the CareStream card if absent.
   const image = m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined
   return pageMetadata(`/buy/${slug}`, { title, description, image })

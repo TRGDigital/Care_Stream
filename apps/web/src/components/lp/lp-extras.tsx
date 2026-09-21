@@ -176,7 +176,7 @@ export function LpTrialBand() {
             <LpCta className="inline-flex items-center gap-2 rounded-full bg-neutral-dark px-8 py-4 text-sm font-semibold text-white transition-transform hover:scale-[1.02]">
               Book my demo <span aria-hidden="true">→</span>
             </LpCta>
-            <p className="text-sm text-neutral-dark/70">No card needed. Full access for 14 days.</p>
+            <p className="text-sm text-neutral-dark/70">Full access for 14 days. No charge until the trial ends.</p>
           </div>
         </div>
       </div>

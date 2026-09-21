@@ -20,7 +20,7 @@ export const HOME_V2_SLOTS: SlotDef[] = [
   { key: 'hero.lede', group: 'Hero', label: 'Sub-paragraph', multiline: true, default: 'Upload your documents once. CareStream turns them into staff answers, training, audits and inspection evidence, grounded only in what you wrote.' },
   { key: 'hero.cta', group: 'Hero', label: 'Submit button', default: 'Start free trial' },
   { key: 'hero.email.placeholder', group: 'Hero', label: 'Email field placeholder', default: 'name@yourcarehome.co.uk' },
-  { key: 'hero.microcopy', group: 'Hero', label: 'Line under the button', default: 'No card required · Set up in a day · UK data residency' },
+  { key: 'hero.microcopy', group: 'Hero', label: 'Line under the button', default: '14 day free trial · Set up in a day · UK data residency' },
 
   // ── Hero constellation ──────────────────────────────────────────────────────
   // The illustrative cards and labels around the hero copy. Illustrative figures, not claims
@@ -123,7 +123,7 @@ export const HOME_V2_SLOTS: SlotDef[] = [
   { key: 'start.lede', group: 'Get started', label: 'Paragraph', multiline: true, default: 'No implementation project, no data migration, no consultant. Upload what you already have and the rest follows.' },
   { key: 'start.s1.time', group: 'Get started', label: 'Step 1 time', default: '2 minutes' },
   { key: 'start.s1.title', group: 'Get started', label: 'Step 1 title', default: 'Sign up' },
-  { key: 'start.s1.body', group: 'Get started', label: 'Step 1 line', default: 'Work email, no card, no setup call.' },
+  { key: 'start.s1.body', group: 'Get started', label: 'Step 1 line', default: 'Work email, then choose a plan. No charge for 14 days.' },
   { key: 'start.s2.time', group: 'Get started', label: 'Step 2 time', default: '10 minutes' },
   { key: 'start.s2.title', group: 'Get started', label: 'Step 2 title', default: 'Upload your policies' },
   { key: 'start.s2.body', group: 'Get started', label: 'Step 2 line', default: 'The library you already have, as it is.' },
@@ -140,7 +140,7 @@ export const HOME_V2_SLOTS: SlotDef[] = [
   { key: 'start.end.body', group: 'Get started', label: 'Finish line', default: 'Evidence builds itself from here' },
   { key: 'start.cta1', group: 'Get started', label: 'Primary button', default: 'Start free trial' },
   { key: 'start.cta2', group: 'Get started', label: 'Secondary button', default: 'Book a walkthrough' },
-  { key: 'start.microcopy', group: 'Get started', label: 'Line beside the buttons', default: 'No card required' },
+  { key: 'start.microcopy', group: 'Get started', label: 'Line beside the buttons', default: 'No charge for 14 days' },
 
   // ── Customer story ──────────────────────────────────────────────────────────
   // The reviews themselves are not slots: they are customers' own words, kept verbatim in

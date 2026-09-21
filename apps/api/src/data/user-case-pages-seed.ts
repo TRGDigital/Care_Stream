@@ -104,7 +104,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
     "content": {
       "eyebrow": "User case",
       "lede": "Something happened on Tuesday. The learning from it should reach the people it applies to before it happens again, not in next year's annual round.",
-      "fine": "No card required · Set up in a day · UK data residency",
+      "fine": "14 day free trial · Set up in a day · UK data residency",
       "sections": [
         {
           "heading": "Generated from your own policy",
@@ -281,7 +281,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
       "cta": [
         {
           "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
+          "body": "Set this up today. No charge for 14 days.",
           "action": "Get started",
           "icon": {
             "bg": "#F1E9FA",
@@ -438,7 +438,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
     "content": {
       "eyebrow": "User case",
       "lede": "The annual round comes due for everyone at once, usually in the middle of a staffing problem. CPD accredited courses your team completes in the staff hub, with completion feeding the matrix without anyone typing it in.",
-      "fine": "No card required · Set up in a day · UK data residency",
+      "fine": "14 day free trial · Set up in a day · UK data residency",
       "sections": [
         {
           "heading": "The statutory subjects, ready to assign",
@@ -621,7 +621,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
       "cta": [
         {
           "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
+          "body": "Set this up today. No charge for 14 days.",
           "action": "Get started",
           "icon": {
             "bg": "#F1E9FA",
@@ -782,7 +782,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
     "content": {
       "eyebrow": "User case",
       "lede": "Inspectors talk to your carers, not to you. Role matched questions your team practises in the staff hub, in their own language, so nobody is asked something for the first time on the day.",
-      "fine": "No card required · Set up in a day · UK data residency",
+      "fine": "14 day free trial · Set up in a day · UK data residency",
       "sections": [
         {
           "heading": "Question sets by role",
@@ -961,7 +961,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
       "cta": [
         {
           "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
+          "body": "Set this up today. No charge for 14 days.",
           "action": "Get started",
           "icon": {
             "bg": "#F1E9FA",
@@ -1126,7 +1126,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
     "content": {
       "eyebrow": "User case",
       "lede": "Your policies describe good practice in your own words. An inspector is looking for theirs. Wording alignment reviews what you already have against the assessment framework language and proposes the edits, which you approve.",
-      "fine": "No card required · Set up in a day · UK data residency",
+      "fine": "14 day free trial · Set up in a day · UK data residency",
       "sections": [
         {
           "heading": "Reviewed against the framework, not a template",
@@ -1293,7 +1293,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
       "cta": [
         {
           "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
+          "body": "Set this up today. No charge for 14 days.",
           "action": "Get started",
           "icon": {
             "bg": "#F1E9FA",
@@ -1444,7 +1444,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
     "content": {
       "eyebrow": "User case",
       "lede": "Your best training happens in a room, with a trainer, on real equipment. It also leaves no trace an inspector can follow. Face to face sessions recorded against the same staff record as the online modules.",
-      "fine": "No card required · Set up in a day · UK data residency",
+      "fine": "14 day free trial · Set up in a day · UK data residency",
       "sections": [
         {
           "heading": "Record the session, not just the register",
@@ -1621,7 +1621,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
       "cta": [
         {
           "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
+          "body": "Set this up today. No charge for 14 days.",
           "action": "Get started",
           "icon": {
             "bg": "#F1E9FA",
@@ -1778,7 +1778,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
     "content": {
       "eyebrow": "User case",
       "lede": "Around one in five care workers in England reads English as a second language. Your policies are written in English, your read receipts say they were read, and nobody has ever checked whether they were understood. CareStream serves the same policy in over sixty languages, on the carer's own phone.",
-      "fine": "No card required · Set up in a day · UK data residency",
+      "fine": "14 day free trial · Set up in a day · UK data residency",
       "sections": [
         {
           "heading": "One library, sixty plus languages",
@@ -1963,7 +1963,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
       "cta": [
         {
           "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
+          "body": "Set this up today. No charge for 14 days.",
           "action": "Get started",
           "icon": {
             "bg": "#F1E9FA",
@@ -2127,7 +2127,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
     "content": {
       "eyebrow": "User case",
       "lede": "Half your policies were last reviewed in 2022. Rewriting all of them is not realistic and not necessary. Find what has actually been overtaken, fix that, and leave the rest alone.",
-      "fine": "No card required · Set up in a day · UK data residency",
+      "fine": "14 day free trial · Set up in a day · UK data residency",
       "sections": [
         {
           "heading": "See what is actually due",
@@ -2298,7 +2298,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
       "cta": [
         {
           "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
+          "body": "Set this up today. No charge for 14 days.",
           "action": "Get started",
           "icon": {
             "bg": "#F1E9FA",
@@ -2455,7 +2455,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
     "content": {
       "eyebrow": "User case",
       "lede": "You have a folder of policies. What nobody can tell you is what is not in it. Policy Gap Detection reads your whole library against what your service type is expected to hold, and names the absences.",
-      "fine": "No card required · Set up in a day · UK data residency",
+      "fine": "14 day free trial · Set up in a day · UK data residency",
       "sections": [
         {
           "heading": "A guided scan, not a wall of findings",
@@ -2634,7 +2634,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
       "cta": [
         {
           "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
+          "body": "Set this up today. No charge for 14 days.",
           "action": "Get started",
           "icon": {
             "bg": "#F1E9FA",
@@ -2790,7 +2790,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
     "content": {
       "eyebrow": "User case",
       "lede": "Your safeguarding policy names one reporting route. Your whistleblowing policy names another. A carer follows whichever they read last, and the difference only surfaces when something has already gone wrong.",
-      "fine": "No card required · Set up in a day · UK data residency",
+      "fine": "14 day free trial · Set up in a day · UK data residency",
       "sections": [
         {
           "heading": "Cross policy checking",
@@ -2963,7 +2963,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
       "cta": [
         {
           "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
+          "body": "Set this up today. No charge for 14 days.",
           "action": "Get started",
           "icon": {
             "bg": "#F1E9FA",
@@ -3119,7 +3119,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
     "content": {
       "eyebrow": "User case",
       "lede": "A new starter meets a resident for the first time with a care plan and not much else. The things that actually make a shift go well, what she likes to be called, the food he will genuinely eat, the routine that settles her at night, live in the heads of the people who have been there years. CareStream holds them in your knowledge base and answers questions about a resident by name.",
-      "fine": "No card required · Set up in a day · UK data residency",
+      "fine": "14 day free trial · Set up in a day · UK data residency",
       "sections": [
         {
           "heading": "Write down what your team already knows",
@@ -3305,7 +3305,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
       "cta": [
         {
           "title": "Start a free trial",
-          "body": "Set your home up in a day. No card required.",
+          "body": "Set your home up in a day. No charge for 14 days.",
           "action": "Start free trial",
           "icon": null
         },
@@ -3433,7 +3433,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
     "content": {
       "eyebrow": "User case",
       "lede": "Most services find out that someone's training lapsed when they need the certificate. Compliance should be a live position you can see, not a report you assemble under pressure.",
-      "fine": "No card required · Set up in a day · UK data residency",
+      "fine": "14 day free trial · Set up in a day · UK data residency",
       "sections": [
         {
           "heading": "A live position, not a monthly snapshot",
@@ -3610,7 +3610,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
       "cta": [
         {
           "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
+          "body": "Set this up today. No charge for 14 days.",
           "action": "Get started",
           "icon": {
             "bg": "#F1E9FA",
@@ -3774,7 +3774,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
     "content": {
       "eyebrow": "User case",
       "lede": "Staff onboarding is the moment a service is most exposed. New people are on the floor before the paperwork catches up, and the evidence that they were ready is scattered across a folder, an inbox and somebody's memory.",
-      "fine": "No card required · Set up in a day · UK data residency",
+      "fine": "14 day free trial · Set up in a day · UK data residency",
       "sections": [
         {
           "heading": "The first day pack builds itself",
@@ -3965,7 +3965,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
       "cta": [
         {
           "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
+          "body": "Set this up today. No charge for 14 days.",
           "action": "Get started",
           "icon": {
             "bg": "#F1E9FA",
@@ -4129,7 +4129,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
     "content": {
       "eyebrow": "User case",
       "lede": "Renewals fall due unevenly, cover is tight, and the plan usually lives in one person's head. A calendar that shows the collisions before you commit to dates.",
-      "fine": "No card required · Set up in a day · UK data residency",
+      "fine": "14 day free trial · Set up in a day · UK data residency",
       "sections": [
         {
           "heading": "The whole year, visible",
@@ -4304,7 +4304,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
       "cta": [
         {
           "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
+          "body": "Set this up today. No charge for 14 days.",
           "action": "Get started",
           "icon": {
             "bg": "#F1E9FA",
@@ -4461,7 +4461,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
     "content": {
       "eyebrow": "User case",
       "lede": "Your matrix is a spreadsheet somebody updates monthly, which means it is accurate on one day in thirty. A live matrix updates as people complete things, and shows competency alongside completion.",
-      "fine": "No card required · Set up in a day · UK data residency",
+      "fine": "14 day free trial · Set up in a day · UK data residency",
       "sections": [
         {
           "heading": "The grid, built properly",
@@ -4646,7 +4646,7 @@ export const USER_CASE_PAGE_SEEDS: UserCasePageSeed[] = [
       "cta": [
         {
           "title": "Start a free trial",
-          "body": "Set this up today. No card required.",
+          "body": "Set this up today. No charge for 14 days.",
           "action": "Get started",
           "icon": {
             "bg": "#F1E9FA",

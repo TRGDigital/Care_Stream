@@ -114,7 +114,7 @@ export function LandingPage({ page }: { page: LpPage }) {
           tone="warm"
           label="A risk-free way to get started"
           statement="CareStream is *free for 14 days*, for your whole team."
-          sub="No card needed. Full access for fourteen days."
+          sub="Full access for fourteen days. No charge until the trial ends."
           badge="FREE"
           image="/images/free-trial.jpg"
           imageAlt="A care worker chatting warmly with a resident over a cup of tea"

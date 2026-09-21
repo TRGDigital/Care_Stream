@@ -447,8 +447,16 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
 
   const q = search.trim().toLowerCase()
   const matchesSearch = (m: Module) => !q || m.name.toLowerCase().includes(q)
-  const statutory  = modules.filter(m => m.category === 'statutory' && matchesSearch(m))
-  const specialist = modules.filter(m => m.category === 'specialist' && matchesSearch(m))
+  // Modules with a generated lesson first, then the module's own order, then name. Without
+  // the lesson-first rule and a name tie-break, a module jumped down the list after its
+  // lesson was generated (most modules share one sort_order, and the database returns ties
+  // in storage order, which an update changes).
+  const byLessonThenOrder = (a: Module, b: Module) =>
+    (Number(moduleHasLesson(b)) - Number(moduleHasLesson(a))) ||
+    ((a.sort_order ?? 0) - (b.sort_order ?? 0)) ||
+    a.name.localeCompare(b.name)
+  const statutory  = modules.filter(m => m.category === 'statutory' && matchesSearch(m)).sort(byLessonThenOrder)
+  const specialist = modules.filter(m => m.category === 'specialist' && matchesSearch(m)).sort(byLessonThenOrder)
   const totalMatches = statutory.length + specialist.length
   const archivedMatches = archived.filter(matchesSearch)
 

@@ -56,14 +56,14 @@ To make sure our materials say the same, we have made the following changes:
   that it was carried out by the employer, and names who signed it off and
   when. It is recorded as the employer's own assessment of workplace practice,
   not as something the CPD certificate confirms.
-- The observation checklist, the course specification and the learning
+- The observation checklist, the knowledge test and assessment document and the learning
   outcomes have been reworded in the same way. The final learning outcome now
   reads: "Show your knowledge in the final assessment, and apply it in practice
   during an observed assessment by your employer."
 - The certificate will only carry the CPD Certified mark, and the heading "CPD
   Approved Course", once certification has been granted.
 
-The updated example certificate and course specification are uploaded with
+The updated delegate certificate and knowledge test and assessment documents are uploaded with
 this response.
 
 Kind regards,
@@ -77,6 +77,6 @@ TRG Digital Ltd
 ## Note to add to the case after uploading
 
 > Hello Kerri, we have uploaded our response to the second referral, along with
-> the updated course specification and example certificate. The member details,
+> the updated delegate certificate and knowledge test and assessment documents. The member details,
 > course description and target audience sections in CPD SMART have also been
 > updated. Many thanks, Len

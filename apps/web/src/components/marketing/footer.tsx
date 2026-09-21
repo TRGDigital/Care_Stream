@@ -129,7 +129,6 @@ const GET_STARTED: LinkItem[] = [
   { href: '/register', label: 'Start Free Trial' },
   { href: '/demo', label: 'Book a Demo' },
   { href: '/login', label: 'Sign In' },
-  { href: '/help', label: 'Help Centre' },
 ]
 
 // The console's footer groups, matched to the theme's columns.

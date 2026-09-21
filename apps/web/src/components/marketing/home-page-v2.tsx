@@ -44,7 +44,7 @@ const scj = { stroke: 'currentColor', strokeLinecap: 'round' as const, strokeLin
 // The thirteen product screens in "The platform", in the order the design lists them, with the
 // design's descriptions and icons.
 const SHOWCASE: Slide[] = ([
-  ['Staff Hub · 60+ Languages', '#2F6FD0', '/staff-hub', 5,
+  ['Staff Hub · 60+ Languages', '#2F6FD0', '/features/staff-hub', 5,
    'A carer asks a question in their own language and gets your policy back in it, at 3am, with the source cited.',
    <I24 key="i"><path d="M4 6h16v11H9l-5 4z" {...st} strokeWidth="1.7" /></I24>],
   ['Policy Gaps', '#7B3FBF', '/policy-gap-detection', 6,
@@ -335,7 +335,7 @@ export function HomePageV2({ s }: { s: HomeCopy }) {
                 <h2><Lines text={s('hubband.h2')} /></h2>
                 <p className="lede">{s('hubband.lede')}</p>
                 <div className="btnrow">
-                  <Link className="pill pill-solid" href="/staff-hub">{s('hubband.cta1')}</Link>
+                  <Link className="pill pill-solid" href="/features/staff-hub">{s('hubband.cta1')}</Link>
                   <Link className="pill pill-ghost" href="/languages">{s('hubband.cta2')}</Link>
                 </div>
               </div>

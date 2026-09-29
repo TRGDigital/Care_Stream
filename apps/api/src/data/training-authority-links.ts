@@ -25,6 +25,7 @@ export const TOPIC_AUTHORITY_LINKS: Record<string, AuthorityLink[]> = {
   ],
   'Mental Health Awareness': [
     SFC_STAT_MAND,
+    { label: 'Skills for Health: Mental Health Core Capabilities Framework (2026)', url: 'https://www.skillsforhealth.org.uk/resources/mental-health-core-capabilities-framework/' },
     { label: 'NHS England: mental health', url: 'https://www.england.nhs.uk/mental-health/' },
   ],
   'General Health & Safety Awareness': [

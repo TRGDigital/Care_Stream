@@ -325,8 +325,8 @@
 .mpage-v2 .mnote{display:flex;gap:11px;font-size:.87rem;line-height:1.6;color:var(--muted);
     background:var(--ground-2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
 .mpage-v2 .mnote svg{width:15px;height:15px;flex:0 0 auto;margin-top:3px;color:var(--muted)}
-.mpage-v2 .mgrid4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:26px}
-.mpage-v2 .mgrid4 > div{background:var(--ground);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
+.mpage-v2 .mgrid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-top:26px}
+.mpage-v2 .mgrid4 > div{min-width:0;overflow-wrap:anywhere;background:var(--ground);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
 .mpage-v2 .mgrid4 b{display:block;font-size:.93rem;letter-spacing:-.014em;margin-bottom:7px}
 .mpage-v2 .mgrid4 p{font-size:.85rem;line-height:1.58;color:var(--muted);margin:0;max-width:none}
 .mpage-v2 .mgrid4 .ic{width:30px;height:30px;border-radius:9px;background:var(--accent-soft);color:var(--accent);
@@ -517,10 +517,10 @@
   .mpage-v2 .mpart:nth-child(even) .mpart-copy{order:0}
 }
 @media (max-width:980px){
-  .mpage-v2 .mgrid4{grid-template-columns:1fr 1fr}
+  .mpage-v2 .mgrid4{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (max-width:560px){
-  .mpage-v2 .mgrid4{grid-template-columns:1fr}
+  .mpage-v2 .mgrid4{grid-template-columns:minmax(0,1fr)}
 }
 @media (max-width:760px){
   .mpage-v2 .mwhy{grid-template-columns:1fr}

@@ -125,19 +125,38 @@ export function PracticalChecklistSheet({ m, onClose }: { m: any; onClose: () =>
 
   return (
     <SheetShell label="Observed competency checklist" name={m?.name ?? ''} onClose={onClose}>
-      <p className="mb-4 text-sm text-neutral-dark">To be completed by a manager or competent assessor while observing the staff member. This complements the knowledge module.</p>
+      <p className="mb-2 text-sm text-neutral-dark">To be completed by a manager or competent assessor while observing the staff member. This complements the knowledge module.</p>
+      <p className="mb-4 text-sm text-neutral-dark"><strong>Every point must be observed as met.</strong> Where any point is not met, mark it, give feedback and further support on it, and arrange a re-observation. Only record the sign-off in the platform once every point has been met.</p>
 
       {items.length > 0 ? (
         <div className="mb-6">
+          <div className="flex items-end gap-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-neutral-mid">
+            <span className="flex-1">Observed criterion</span>
+            <span className="w-10 text-center">Met</span>
+            <span className="w-14 text-center">Not yet</span>
+          </div>
           {items.map((item, i) => (
-            <div key={i} className={`flex items-start gap-3 py-2 text-sm text-neutral-dark ${i > 0 ? 'border-t border-gray-100' : ''}`}>
-              <span aria-hidden="true" className="mt-0.5 inline-block h-4 w-4 shrink-0 rounded-[3px] border-2 border-neutral-dark" />
-              <span className="leading-relaxed">{item}</span>
+            <div key={i} className="flex items-start gap-3 border-t border-gray-100 py-2 text-sm text-neutral-dark">
+              <span className="flex-1 leading-relaxed">{i + 1}. {item}</span>
+              <span className="flex w-10 justify-center"><span aria-hidden="true" className="mt-0.5 inline-block h-4 w-4 rounded-[3px] border-2 border-neutral-dark" /></span>
+              <span className="flex w-14 justify-center"><span aria-hidden="true" className="mt-0.5 inline-block h-4 w-4 rounded-[3px] border-2 border-neutral-dark" /></span>
             </div>
           ))}
         </div>
       ) : (
         <p className="mb-6 text-sm text-neutral-mid">No checklist items recorded for this module.</p>
+      )}
+
+      {items.length > 0 && (
+        <div className="mb-6 space-y-4 text-sm text-neutral-dark">
+          <p className="text-xs font-semibold uppercase tracking-wide text-teal-dark">Outcome</p>
+          <p className="flex items-center gap-3"><span aria-hidden="true" className="inline-block h-4 w-4 rounded-[3px] border-2 border-neutral-dark" /> All points met: record the sign-off in the platform</p>
+          <p className="flex items-center gap-3"><span aria-hidden="true" className="inline-block h-4 w-4 rounded-[3px] border-2 border-neutral-dark" /> Not yet met: support given and re-observation arranged</p>
+          <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
+            <SignLine label="Points not yet met and support agreed" w="w-72" />
+            <SignLine label="Re-observation date" w="w-28" />
+          </div>
+        </div>
       )}
 
       <div className="mt-2 border-t-2 border-teal pt-4">

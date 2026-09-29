@@ -974,7 +974,7 @@ export default function StaffRecordPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-md rounded-card bg-white p-5 shadow-card">
             <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><CheckCircle2 size={15} className="text-teal" /> Record practical assessment</p>
-            <p className="mt-1 text-xs text-neutral-mid">{practicalModal.moduleName} — logs that the observed/practical competency was assessed, with your name and today&apos;s date.</p>
+            <p className="mt-1 text-xs text-neutral-mid">{practicalModal.moduleName}: logs that the observed/practical competency was assessed, with your name and today&apos;s date. Record this only when every point on the observation checklist has been met; if any point is not yet met, give support and arrange a re-observation first. This releases the certificate.</p>
             <label className="mt-3 block text-xs font-medium text-neutral-mid">Assessment notes (optional)</label>
             <textarea
               value={practicalModal.note}

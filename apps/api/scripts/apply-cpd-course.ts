@@ -23,6 +23,7 @@ import { CPD_HEALTH_SAFETY } from '../src/data/cpd-health-safety'
 import { CPD_COSHH } from '../src/data/cpd-coshh'
 import { CPD_END_OF_LIFE } from '../src/data/cpd-end-of-life'
 import { CPD_GDPR } from '../src/data/cpd-gdpr'
+import { CPD_MOVING_HANDLING } from '../src/data/cpd-moving-handling'
 
 const COURSES: Record<string, CpdCourse> = {
   'food-hygiene': CPD_FOOD_HYGIENE,
@@ -32,6 +33,7 @@ const COURSES: Record<string, CpdCourse> = {
   'coshh': CPD_COSHH,
   'end-of-life': CPD_END_OF_LIFE,
   'gdpr': CPD_GDPR,
+  'moving-handling': CPD_MOVING_HANDLING,
 }
 
 const prisma = new PrismaClient()

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
 import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 import { TrainingDemo, type TrainingDemoData } from './training-demo'
-import { GoogleCloud, OpenAI, Claude, Supabase, Pinecone, GoogleAds, Aws } from './tech-logos'
+import { GoogleCloud, Supabase, Pinecone, GoogleAds, Aws } from './tech-logos'
 import { careSetting } from '@/lib/care-setting'
 import { claimSafe, estimatedMinutes, refreshWord, durationText } from '@/lib/training-commerce'
 import { LanguageCheck } from './language-check'
@@ -114,8 +114,6 @@ const DELIVERY: [string, string][] = [
 // theme sets these as labelled chips, and a mark here is a name, not a brand lockup.
 const TECH = [
   { name: 'Google Cloud', Icon: GoogleCloud },
-  { name: 'OpenAI', Icon: OpenAI },
-  { name: 'Claude', Icon: Claude },
   { name: 'Supabase', Icon: Supabase },
   { name: 'Pinecone', Icon: Pinecone },
   { name: 'Google Ads', Icon: GoogleAds },
@@ -310,7 +308,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
                 {TECH.map(({ name, Icon }) => <span className="techmark" key={name}><Icon />{name}</span>)}
               </div>
               <p className="note">
-                The same AI and technology behind the world&apos;s best products powers
+                The same technology behind the world&apos;s best products powers
                 CareStream, so your team&apos;s {lower} training stays accurate, always up to date
                 with the latest guidance, and is delivered in over 60 languages.
               </p>

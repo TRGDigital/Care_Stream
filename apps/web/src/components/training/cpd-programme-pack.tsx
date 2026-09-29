@@ -68,7 +68,7 @@ function Shell({ docLabel, name, kind, onClose, children }: { docLabel: string; 
           </div>
           {children}
           <p className="mt-8 border-t border-gray-100 pt-3 text-[10px] leading-relaxed text-neutral-mid">
-            Prepared by CareStream for CPD accreditation of &ldquo;{name}&rdquo;. Generated from the live programme
+            Prepared by CareStream for CPD accreditation of &ldquo;{name}&rdquo;. Produced directly from the live programme
             structure, so this document reflects exactly what participants receive.
           </p>
         </div>

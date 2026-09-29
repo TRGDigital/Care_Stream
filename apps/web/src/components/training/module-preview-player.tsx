@@ -30,8 +30,9 @@ export type PreviewModule = {
     heading: string
     body: string
     image_url: string | null
+    image_alt?: string | null
     scenario?: { situation: string; prompt: string; answer: string } | null
-    check?: { question: string; options: string[]; correct: number | null } | null
+    check?: { question: string; options: string[]; correct: number | null; explanation?: string | null } | null
   }>
   questions: Array<{ text: string; options: string[]; correct: number | null; explanation: string | null }>
   standards: string[]
@@ -197,7 +198,7 @@ export function ModulePreviewPlayer({ m, name, onBack }: { m: PreviewModule; nam
         <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-card">
           {sections[cur.i].image_url && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={apiAssetUrl(sections[cur.i].image_url) ?? ''} alt="" className="aspect-[16/9] w-full object-cover" />
+            <img src={apiAssetUrl(sections[cur.i].image_url) ?? ''} alt={sections[cur.i].image_alt ?? ''} className="aspect-[16/9] w-full object-cover" />
           )}
           <div className="p-6">
             {sections[cur.i].heading && <p className="mb-2 text-base font-bold text-neutral-dark">{sections[cur.i].heading}</p>}
@@ -232,6 +233,7 @@ export function ModulePreviewPlayer({ m, name, onBack }: { m: PreviewModule; nam
                     </li>
                   ))}
                 </ul>
+                {sections[cur.i].check!.explanation && <p className="mt-2 text-xs text-neutral-dark">{sections[cur.i].check!.explanation}</p>}
               </div>
             ) : null}
           </div>

@@ -105,9 +105,9 @@ export default function StandardTrainingPage() {
         outcomes: Array.isArray(lc.outcomes) ? lc.outcomes : [],
         key_points: Array.isArray(lc.key_points) ? lc.key_points : [],
         sections: (Array.isArray(lc.sections) ? lc.sections : []).map((s: any) => ({
-          heading: String(s?.heading ?? ''), body: String(s?.body ?? ''), image_url: img(s?.image_key),
+          heading: String(s?.heading ?? ''), body: String(s?.body ?? ''), image_url: img(s?.image_key), image_alt: s?.image_alt ?? null,
           scenario: s?.scenario ?? null,
-          check: s?.check ? { question: String(s.check.question ?? ''), options: Array.isArray(s.check.options) ? s.check.options : [], correct: typeof s.check.correct === 'number' ? s.check.correct : null } : null,
+          check: s?.check ? { question: String(s.check.question ?? ''), options: Array.isArray(s.check.options) ? s.check.options : [], correct: typeof s.check.correct === 'number' ? s.check.correct : null, explanation: s.check.explanation ?? null } : null,
         })),
         questions: (Array.isArray(raw.questions) ? raw.questions : []).map((q: any) => ({ text: String(q?.text ?? ''), options: Array.isArray(q?.options) ? q.options : [], correct: typeof q?.correct === 'number' ? q.correct : null, explanation: q?.explanation ?? null })),
         standards: (Array.isArray(raw.standards) ? raw.standards : []).map((s: any) => s?.label).filter(Boolean),

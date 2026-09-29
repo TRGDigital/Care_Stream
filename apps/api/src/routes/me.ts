@@ -935,8 +935,9 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
     heading: String(s?.heading ?? ''),
     body: String(s?.body ?? ''),
     image_url: illustrationUrl(s?.image_key),
+    image_alt: String(s?.image_alt ?? ''),
     scenario: { situation: String(s?.scenario?.situation ?? ''), prompt: String(s?.scenario?.prompt ?? ''), answer: String(s?.scenario?.answer ?? '') },
-    check: { question: String(s?.check?.question ?? ''), options: Array.isArray(s?.check?.options) ? s.check.options.map((o: any) => String(o)) : [], correct: Number.isInteger(s?.check?.correct) ? s.check.correct : 0 },
+    check: { question: String(s?.check?.question ?? ''), options: Array.isArray(s?.check?.options) ? s.check.options.map((o: any) => String(o)) : [], correct: Number.isInteger(s?.check?.correct) ? s.check.correct : 0, explanation: String(s?.check?.explanation ?? '') },
   })).filter((s: any) => s.body || s.heading)
   let questions = (Array.isArray(m.questions) ? m.questions : []).map(({ correct: _c, ...q }: any) => ({ ...q, options: Array.isArray(q.options) ? q.options : [] }))
   // Interactive activities (order / sort / match). Additional to the sections and
@@ -965,7 +966,7 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
       // two batches → one cache read + one bulk write each, instead of dozens of
       // per-field round-trips. Reassembled below in the exact same order.
       const texts: string[] = [summary, ...outcomes, ...keyPoints]
-      for (const sec of sections as any[]) texts.push(sec.heading, sec.body, sec.scenario.situation, sec.scenario.prompt, sec.scenario.answer)
+      for (const sec of sections as any[]) texts.push(sec.heading, sec.body, sec.scenario.situation, sec.scenario.prompt, sec.scenario.answer, sec.check.explanation, sec.image_alt)
       for (const act of activities) texts.push(...collectActivityTexts(act))
       const qs = [
         ...(questions as any[]).map((q: any) => ({ text: q.text ?? '', options: q.options })),
@@ -980,8 +981,8 @@ meRouter.get('/annual-training/:enrollmentId', async (req: Request, res: Respons
       const oc = (outcomes as string[]).map(() => tTexts[p++])
       const kp = (keyPoints as string[]).map(() => tTexts[p++])
       const secs = (sections as any[]).map((sec: any) => {
-        const heading = tTexts[p++], body = tTexts[p++], situation = tTexts[p++], prompt = tTexts[p++], answer = tTexts[p++]
-        return { ...sec, heading, body, scenario: { situation, prompt, answer } }
+        const heading = tTexts[p++], body = tTexts[p++], situation = tTexts[p++], prompt = tTexts[p++], answer = tTexts[p++], explanation = tTexts[p++], image_alt = tTexts[p++]
+        return { ...sec, heading, body, image_alt, scenario: { situation, prompt, answer }, check: { ...sec.check, explanation } }
       })
       const cursor = { i: p }
       const acts = activities.map(a => applyActivityTexts(a, tTexts, cursor))

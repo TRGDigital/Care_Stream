@@ -100,7 +100,9 @@ export async function generateSectionImage(moduleId: string, sectionIndex: numbe
   const sec = sections[sectionIndex]
   if (!sec) throw new Error('Section not found')
 
-  const key = await generateImageKey(String(sec.heading || 'Care-home training'), String(sec.body || ''))
+  // A CPD course section carries its own scene (image_prompt) so each image shows
+  // what that section teaches; older sections fall back to their body text.
+  const key = await generateImageKey(String(sec.heading || 'Care-home training'), String(sec.image_prompt || sec.body || ''))
   sections[sectionIndex] = { ...sec, image_key: key }
   ;(lc as any).sections = sections
   await (prisma as any).trainingModule.update({ where: { id: moduleId }, data: { learning_content: lc } })

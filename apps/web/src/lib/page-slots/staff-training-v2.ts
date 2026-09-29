@@ -178,7 +178,7 @@ export const STAFF_TRAINING_V2_SLOTS: SlotDef[] = [
   { key: 's12.card1.title', group: 'Everything included', label: 'Card 1 title', default: 'Standard module library' },
   { key: 's12.card1.body', group: 'Everything included', label: 'Card 1 body', multiline: true, default: 'Ready-made modules for safeguarding, fire safety, manual handling, infection control, and more. Assign immediately, included as standard.' },
   { key: 's12.card2.title', group: 'Everything included', label: 'Card 2 title', default: 'Built from your policies' },
-  { key: 's12.card2.body', group: 'Everything included', label: 'Card 2 body', multiline: true, default: 'Generate a tailored module from your own policy documents. Teach, scenario, knowledge check, and a full assessment. Uses one AI credit.' },
+  { key: 's12.card2.body', group: 'Everything included', label: 'Card 2 body', multiline: true, default: 'Generate a tailored module from your own policy documents. Teach, scenario, knowledge check, and a full assessment. Uses one credit.' },
   { key: 's12.card3.title', group: 'Everything included', label: 'Card 3 title', default: 'Teach then assess' },
   { key: 's12.card3.body', group: 'Everything included', label: 'Card 3 body', multiline: true, default: 'Short teaching sections and a real scenario, then four-option multiple-choice questions. Every answer tracked and logged.' },
   { key: 's12.card4.title', group: 'Everything included', label: 'Card 4 title', default: 'Learn and retry' },

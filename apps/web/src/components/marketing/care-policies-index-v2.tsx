@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
-import { PackLink } from './policy-basket'
+import { PackLink, AddToBasket, SavePolicy, BasketPill } from './policy-basket'
 import { CARE_POLICIES_PACK_ORDER } from '@/lib/page-slots/care-policies-v2'
 import './service-page-v2.css'
+import './collection-page-v2.css'
 
 // The rebuilt /care-policies INDEX.
 //
@@ -19,7 +20,12 @@ import './service-page-v2.css'
 
 export interface Copy { (key: string): string }
 
-export interface PolicyProduct { slug: string; title: string; price_pence: number }
+export interface PolicyProduct {
+  slug: string; title: string; price_pence: number
+  /** Optional so the page still renders against an API that predates them (web and api
+   *  deploy in parallel). */
+  description?: string; meta?: string; image_url?: string | null
+}
 export interface PolicyBundle {
   key: string; title: string; description: string; price_pence: number
 }
@@ -266,12 +272,39 @@ export function CarePoliciesIndexV2({ s, products, bundles }: {
               ))}
             </div>
           )}
-          <div className="pcgrid">
-            {products.map(p => (
-              <Link className="pcrow" href={`/care-policies/${p.slug}`} key={p.slug}>
-                <b>{p.title}</b><i>{money(p.price_pence)}</i>
-              </Link>
-            ))}
+          {/* The same cards as the collection pages (and the training library): picture, title,
+              description, price, basket. Borrows the collection styles by wrapping the grid in
+              their scope, so the two cannot drift apart. */}
+          <div className="clpage-v2 pccards">
+            <div className="clgrid">
+              {products.map(p => {
+                const href = `/care-policies/${p.slug}`
+                return (
+                  <div className="clcard" key={p.slug}>
+                    <Link className="tl" href={href}>
+                      <span className="clshot">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {p.image_url && <img src={p.image_url} alt="" loading="lazy" />}
+                      </span>
+                    </Link>
+                    <div className="in">
+                      <Link className="tl" href={href}><b>{p.title}</b></Link>
+                      <p>{p.description ?? ''}</p>
+                      <div className="foot">
+                        <em>{money(p.price_pence)}</em><i>{p.meta ?? ''}</i>
+                      </div>
+                      <div className="clbuy">
+                        <AddToBasket className="clbuy-add"
+                          item={{ slug: p.slug, title: p.title, price_pence: p.price_pence }} />
+                        <SavePolicy className="clbuy-save" slug={p.slug} title={p.title} />
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            {/* The checkout pill the collection pages show once something is in the basket. */}
+            <BasketPill />
           </div>
         </div>
       </section>

@@ -15,8 +15,24 @@ import {
 import { isV2 } from '@/lib/v2-rollout'
 import { JsonLd } from '@/components/json-ld'
 import { serviceSchema } from '@/lib/schema'
+import { THEME_IMAGES } from '@/lib/theme-images'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+
+// Each card shows the policy's own theme picture, as the collection pages do, falling back to the
+// catalogue image. That one lives on the API, so it needs the API origin: as a bare
+// "/public/policy-shop/..." path it would be requested from the website and come back blank.
+const POLICY_IMAGE_SLUGS = new Set(THEME_IMAGES
+  .map(i => /^\/images\/care-policies\/([^/]+)\/1\.webp$/.exec(i.src)?.[1])
+  .filter((x): x is string => !!x))
+
+function withCardImage(p: PolicyProduct): PolicyProduct {
+  const api = p.image_url ? (/^https?:/.test(p.image_url) ? p.image_url : `${API_URL}${p.image_url}`) : null
+  return {
+    ...p,
+    image_url: POLICY_IMAGE_SLUGS.has(p.slug) ? `/images/care-policies/${p.slug}/1.webp` : api,
+  }
+}
 
 // The 66 policies and the packs, from the shop rather than from the page: a price written into
 // the page goes stale the first time one changes.
@@ -26,7 +42,7 @@ async function getCatalogue(): Promise<{ products: PolicyProduct[]; bundles: Pol
                             { next: { revalidate: 3600 } })
     if (!res.ok) return { products: [], bundles: [] }
     const d = (await res.json())?.data ?? {}
-    return { products: d.products ?? [], bundles: d.bundles ?? [] }
+    return { products: (d.products ?? []).map(withCardImage), bundles: d.bundles ?? [] }
   } catch {
     return { products: [], bundles: [] }
   }

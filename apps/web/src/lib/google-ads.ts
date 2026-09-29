@@ -8,15 +8,15 @@
 // the action → Tag setup → "send_to": 'AW-…/<label>'). A purchase with no label set
 // is simply not reported, so the site works the same until the labels are filled in.
 
-export const GOOGLE_ADS_ID = 'AW-18482081804'
+export const GOOGLE_ADS_ID = 'AW-18482372722'
 
 export const GOOGLE_ADS_LABELS = {
   // One "Purchase" action for both shops for now; each sale still carries its own value.
   // Give training its own action later to see the two apart in Google Ads.
   /** Training shop: /buy/success after a module or basket checkout. */
-  training_purchase: '4ZhaCLTanIodEIzg-OxE',
+  training_purchase: '',
   /** Policy shop: /care-policies/thank-you after a policy or bundle checkout. */
-  policy_purchase: '4ZhaCLTanIodEIzg-OxE',
+  policy_purchase: '',
 } as const
 
 export type PurchaseKind = keyof typeof GOOGLE_ADS_LABELS

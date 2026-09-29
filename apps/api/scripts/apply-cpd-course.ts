@@ -21,6 +21,7 @@ import { CPD_IPC } from '../src/data/cpd-ipc'
 import { CPD_MENTAL_HEALTH } from '../src/data/cpd-mental-health'
 import { CPD_HEALTH_SAFETY } from '../src/data/cpd-health-safety'
 import { CPD_COSHH } from '../src/data/cpd-coshh'
+import { CPD_END_OF_LIFE } from '../src/data/cpd-end-of-life'
 
 const COURSES: Record<string, CpdCourse> = {
   'food-hygiene': CPD_FOOD_HYGIENE,
@@ -28,6 +29,7 @@ const COURSES: Record<string, CpdCourse> = {
   'mental-health': CPD_MENTAL_HEALTH,
   'health-safety': CPD_HEALTH_SAFETY,
   'coshh': CPD_COSHH,
+  'end-of-life': CPD_END_OF_LIFE,
 }
 
 const prisma = new PrismaClient()

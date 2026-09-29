@@ -42,6 +42,7 @@ export const TOPIC_AUTHORITY_LINKS: Record<string, AuthorityLink[]> = {
   ],
   'End of Life / Palliative Care': [
     SFC_STAT_MAND,
+    { label: 'End of Life Care Core Skills Education and Training Framework', url: 'https://www.skillsforhealth.org.uk/content/uploads/2021/01/EoLC-Core-Skills-Training-Framework.pdf' },
     { label: 'NICE NG142: end of life care for adults, service delivery', url: 'https://www.nice.org.uk/guidance/ng142' },
   ],
   'COSHH (Control of Substances Hazardous to Health)': [

@@ -254,13 +254,17 @@ export async function sendPolicyPurchaseConfirmation(opts: {
   })
 }
 
+// Who hears about a sale. Purchases have their own address, separate from PLATFORM_NOTIFY_EMAIL
+// (new accounts, feature requests), because Len wants every order at lenny@trgdigital.co.uk.
+const PURCHASE_NOTIFY_TO = () => process.env.PURCHASE_NOTIFY_EMAIL ?? 'lenny@trgdigital.co.uk'
+
 export async function sendPolicyPurchaseNotification(opts: {
   tenantName: string; accountNumber?: string | null; titles: string[]; totalPence: number
 }): Promise<void> {
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set — skipping policy-purchase notification'); return }
 
-  const to   = process.env.PLATFORM_NOTIFY_EMAIL ?? 'len@carestreamai.com'
+  const to   = PURCHASE_NOTIFY_TO()
   const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
   const esc  = (s: any) => String(s ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
 
@@ -278,6 +282,45 @@ export async function sendPolicyPurchaseNotification(opts: {
   `)
 
   await sgMail.send({ to, from, subject: `Policy order: ${opts.tenantName} — ${opts.titles.length} ${opts.titles.length === 1 ? 'policy' : 'policies'} paid`, html })
+}
+
+// ─── Training-order notification to the platform owner ────────────────────────
+// Sent once per paid training order (shop Buy page, /basket, or in-console), from the
+// reconcile step, which is idempotent on the Stripe payment id.
+export async function sendTrainingPurchaseNotification(opts: {
+  tenantName: string; accountNumber?: string | null; buyerName: string | null; buyerEmail: string | null
+  lines: { title: string; qty: number }[]; totalPence: number
+  source: 'new_account' | 'existing_account' | 'console'
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set — skipping training-purchase notification'); return }
+
+  const to   = PURCHASE_NOTIFY_TO()
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc  = (s: any) => String(s ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
+  const licences = opts.lines.reduce((n, l) => n + l.qty, 0)
+  const courses  = opts.lines.length
+  const how = opts.source === 'new_account' ? 'New training-only account created'
+            : opts.source === 'console' ? 'Bought from inside their CareStream console'
+            : 'Added to their existing account'
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 6px">🎓 Training order paid</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 14px">
+      <strong>${esc(opts.tenantName)}</strong>${opts.accountNumber ? ` (${esc(opts.accountNumber)})` : ''} has paid
+      £${(opts.totalPence / 100).toFixed(2)} for ${licences} ${licences === 1 ? 'licence' : 'licences'}
+      across ${courses} ${courses === 1 ? 'course' : 'courses'}:
+    </p>
+    <ul style="margin:0 0 14px;padding-left:20px;color:#374151;font-size:14px">
+      ${opts.lines.map(l => `<li style="padding:2px 0">${l.qty} × ${esc(l.title)}</li>`).join('')}
+    </ul>
+    <p style="color:#374151;font-size:13px;line-height:1.6;margin:0 0 18px">
+      Buyer: ${esc(opts.buyerName || '—')}${opts.buyerEmail ? ` &lt;${esc(opts.buyerEmail)}&gt;` : ''}<br>${how}.
+    </p>
+    ${emailFooter()}
+  `)
+
+  await sgMail.send({ to, from, subject: `Training order: ${opts.tenantName} — ${licences} ${licences === 1 ? 'licence' : 'licences'}, £${(opts.totalPence / 100).toFixed(2)} paid`, html })
 }
 
 // ─── Feature-request notification to the platform owner ─────────────────────────

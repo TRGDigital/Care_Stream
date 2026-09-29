@@ -19,11 +19,13 @@ import type { CpdCourse } from '../src/data/cpd-course-types'
 import { CPD_FOOD_HYGIENE } from '../src/data/cpd-food-hygiene'
 import { CPD_IPC } from '../src/data/cpd-ipc'
 import { CPD_MENTAL_HEALTH } from '../src/data/cpd-mental-health'
+import { CPD_HEALTH_SAFETY } from '../src/data/cpd-health-safety'
 
 const COURSES: Record<string, CpdCourse> = {
   'food-hygiene': CPD_FOOD_HYGIENE,
   'ipc': CPD_IPC,
   'mental-health': CPD_MENTAL_HEALTH,
+  'health-safety': CPD_HEALTH_SAFETY,
 }
 
 const prisma = new PrismaClient()

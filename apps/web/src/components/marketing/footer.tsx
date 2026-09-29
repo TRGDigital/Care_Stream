@@ -36,6 +36,15 @@ const BADGES: Badge[] = [
     label: 'Good Business Charter',
   },
   {
+    src: '/badges/cpd-certified.png', w: 132, h: 120,
+    // The CPD Certified trademark (lib/cpd.ts). Its guidelines restrict it to certified material;
+    // Len chose, knowing that, to show it site-wide (29 Sept 2026), so it is labelled as certified
+    // TRAINING, never as an accreditation of the company.
+    alt: 'CPD Certified training, The CPD Certification Service',
+    href: 'https://www.cpduk.co.uk/providers/carestream',
+    label: 'CPD Certified training',
+  },
+  {
     src: '/badges/ico-registered.png', w: 119, h: 120,
     alt: "Registered with the Information Commissioner's Office",
     // The same register entry the base row links to: ZC221613, TRG Digital Ltd.
@@ -181,8 +190,8 @@ export async function MarketingFooter() {
             ))}
           </ul>
           <p className="faccred-note">
-            {/* The CPD Certification Service's own logo is theirs alone (members may never use it),
-                so membership is stated in text. Swap in the CPD Member logo once supplied. */}
+            {/* The CPD Certification Service's own generic logo is theirs alone (members may never
+                use it), so provider membership is stated in text. */}
             CPD Provider No. 50224 · ICO registration ZC221613
           </p>
         </div>

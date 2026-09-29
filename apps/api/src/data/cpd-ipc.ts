@@ -164,7 +164,7 @@ export const CPD_IPC: CpdCourse = {
         correct: 2,
         explanation: 'Gloves are the most contaminated item, so they come off first. Then the apron or gown, hand hygiene, then eye protection and mask, and hand hygiene again.',
       },
-      image_prompt: 'A care worker at a doorway of a resident bedroom putting on a disposable plastic apron, with a box of nitrile gloves and a pack of surgical masks on a small PPE station trolley beside them.',
+      image_prompt: 'A care worker at the doorway of a resident bedroom tying a disposable plastic apron with bare hands, no gloves on yet, a closed box of nitrile gloves and a pack of surgical masks waiting on a small PPE trolley beside them.',
       image_alt: 'A care worker putting on a disposable apron at a PPE station outside a bedroom',
     },
     {

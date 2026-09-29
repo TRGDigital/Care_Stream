@@ -182,7 +182,7 @@ export const CPD_MOVING_HANDLING: CpdCourse = {
         correct: 2,
         explanation: 'Twisting while supporting weight is one of the most harmful movements for the lower back. Move your feet and keep your body facing the direction of travel.',
       },
-      image_prompt: 'Two care workers standing either side of an older woman in an armchair, both with a stable wide stance and bent knees, one speaking to agree a command, the woman smiling and ready to move, clean care home lounge.',
+      image_prompt: 'An older woman in an armchair pushing herself up using her own hands on the armrests, leaning forward, with a walking frame in front of her, and two care workers standing close either side with a stable stance, hands open and not holding her arms, one of them speaking a command, clean care home lounge.',
       image_alt: 'Two care workers with a stable stance agreeing a command before helping a woman in an armchair',
     },
     {

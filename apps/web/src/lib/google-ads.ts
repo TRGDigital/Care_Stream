@@ -14,9 +14,9 @@ export const GOOGLE_ADS_LABELS = {
   // One "Purchase" action for both shops for now; each sale still carries its own value.
   // Give training its own action later to see the two apart in Google Ads.
   /** Training shop: /buy/success after a module or basket checkout. */
-  training_purchase: '',
+  training_purchase: 'sxmICMGrq4odEPLAiu1E',
   /** Policy shop: /care-policies/thank-you after a policy or bundle checkout. */
-  policy_purchase: '',
+  policy_purchase: 'sxmICMGrq4odEPLAiu1E',
 } as const
 
 export type PurchaseKind = keyof typeof GOOGLE_ADS_LABELS

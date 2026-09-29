@@ -231,6 +231,11 @@ function AssessmentDoc({ m }: { m: any }) {
           <ol className="list-decimal space-y-0.5 pl-5 text-sm text-neutral-dark">
             {checklist.map((c: string, i: number) => <li key={i}>{c}</li>)}
           </ol>
+          <p className="mt-2 text-sm text-neutral-dark">
+            <strong>Pass rule</strong>: every point must be observed as met. Where any point is not met, the assessor records
+            which on the observation record, the participant is given further support and directed learning on those points,
+            and a re-observation is arranged. The certificate stays pending until a full observation is signed off in the platform.
+          </p>
         </>
       )}
     </>
@@ -437,7 +442,7 @@ function NavigationDoc({ m }: { m: any }) {
     { t: 'See your result', d: `You need ${m?.pass_mark ?? 80}% to pass and your score is shown straight away. If you do not pass, you are returned to the lesson and can retake the assessment, up to three attempts. See "If you do not pass" below.` },
     { t: 'Give feedback and reflect', d: 'You rate the course on six points: content quality, ease of navigation, accessibility, interactivity, how confident you feel using the learning, and how useful it was for your role. You can add a comment, and write a short reflective note on what you will do differently at work, which is kept on your record. The six ratings are required, and the certificate follows.' },
     ...(m?.requires_practical
-      ? [{ t: 'Complete your observed competency assessment', d: 'This course also has a practical part. Your manager or a competent assessor watches you at work and signs off each point of the observation checklist. Until they record that sign-off, your certificate shows as pending and tells you what is outstanding.' }]
+      ? [{ t: 'Complete your observed competency assessment', d: 'This course also has a practical part. Your manager or a competent assessor watches you at work and signs off each point of the observation checklist. Every point must be met. If any point is not met yet, they tell you which, you get support and further learning on it, and they observe you again. Until they record a full sign-off, your certificate shows as pending and tells you what is outstanding.' }]
       : []),
     { t: 'Get your certificate', d: `Your certificate is saved to your training record once you have passed and given your feedback${m?.requires_practical ? ', and your manager has recorded the observed competency sign-off. The certificate names who verified your observed assessment and when' : ''}. You can view, print or download it at any time.` },
   ]

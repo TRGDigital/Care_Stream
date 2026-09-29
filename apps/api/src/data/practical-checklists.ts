@@ -12,6 +12,8 @@
 // Keyed by the standard-library topic title; matched with the same normalisation
 // the programme templates use, so punctuation drift does not break the lookup.
 
+import { MOVING_HANDLING_CHECKLIST } from './cpd-moving-handling'
+
 export const PRACTICAL_CHECKLISTS: Record<string, string[]> = {
 
   // ── Universal ──────────────────────────────────────────────────────────────
@@ -28,18 +30,8 @@ export const PRACTICAL_CHECKLISTS: Record<string, string[]> = {
     'Knows how to raise a safeguarding concern and can say who they would tell',
   ],
 
-  'Moving and Handling of People': [
-    'Checks the person\'s handling risk assessment and care plan before moving them',
-    'Explains the move to the person and gains their agreement',
-    'Clears and prepares the area, checking floor, footwear and obstacles',
-    'Checks the equipment is serviced, undamaged and within its safe working load',
-    'Selects the correct sling type and size, and fits it correctly',
-    'Adopts a stable base, keeps the load close, and avoids twisting or stooping',
-    'Gives clear commands and moves in time with a colleague when working in a pair',
-    'Encourages the person to do what they can for themselves',
-    'Checks the person is comfortable and safely positioned afterwards',
-    'Stops and reassesses if the person shows pain, distress or resistance',
-  ],
+  // Source of truth: MOVING_HANDLING_CHECKLIST in cpd-moving-handling.ts (the CPD course).
+  'Moving and Handling of People': MOVING_HANDLING_CHECKLIST,
 
   'First Aid / Basic Life Support': [
     'Checks for danger and makes the scene safe before approaching',

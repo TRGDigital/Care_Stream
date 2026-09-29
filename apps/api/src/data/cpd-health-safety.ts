@@ -118,7 +118,7 @@ export const CPD_HEALTH_SAFETY: CpdCourse = {
         correct: 2,
         explanation: 'A hazard is anything that could cause harm. Risk is how likely it is that someone will be harmed, and how badly. Risk assessment is about reducing risk to an acceptable level.',
       },
-      image_prompt: 'A senior care worker and an older woman sitting together at a kitchen table reviewing a care plan document with a pen, a kettle and a lidded mug on the counter behind them, collaborative and friendly.',
+      image_prompt: 'A senior care worker and an older woman sitting together at a kitchen table looking at a sheet of paper with simple tick boxes and no writing on it, a kettle and a lidded mug on the counter behind them, collaborative and friendly.',
       image_alt: 'A senior care worker and an older woman reviewing a care plan together at a kitchen table',
     },
     {

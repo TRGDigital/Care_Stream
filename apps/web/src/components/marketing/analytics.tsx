@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Script from 'next/script'
 import { CONSENT_EVENT, hasAnalyticsConsent } from './cookie-consent'
+import { GOOGLE_ADS_ID } from '@/lib/google-ads'
 
 // Google Tag Manager + GA4, loaded ONLY once the visitor has accepted cookies.
 //
@@ -52,7 +53,8 @@ export function Analytics() {
         {`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
-gtag('config', '${GA4_ID}');`}
+gtag('config', '${GA4_ID}');
+gtag('config', '${GOOGLE_ADS_ID}');`}
       </Script>
     </>
   )

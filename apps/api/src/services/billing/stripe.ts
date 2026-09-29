@@ -290,6 +290,8 @@ export interface TrainingCheckoutResult {
   email:        string | null
   customerName: string | null
   metadata:     Record<string, string>
+  /** What was actually charged, after any discount. Reported to Google Ads as the conversion value. */
+  amountTotalPence: number
 }
 
 // Retrieve a training Checkout session to verify payment + read its metadata
@@ -307,6 +309,7 @@ export async function retrieveTrainingCheckoutSession(sessionId: string): Promis
     email:        session.customer_details?.email ?? session.customer_email ?? null,
     customerName: session.customer_details?.name ?? null,
     metadata:     (session.metadata ?? {}) as Record<string, string>,
+    amountTotalPence: session.amount_total ?? 0,
   }
 }
 

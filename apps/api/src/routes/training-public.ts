@@ -539,7 +539,10 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
 
     // Idempotent: if licences already exist for this payment, just report success.
     const existing = await (prisma as any).trainingLicense.findFirst({ where: { stripe_payment_id: s.paymentId }, select: { id: true } })
-    if (existing) { res.json({ data: { provisioned: true, already: true, email: s.email } }); return }
+    // value_pence + transaction_id let the thank-you page report the sale to Google Ads;
+    // the id is the payment, so a refreshed page is de-duplicated rather than counted twice.
+    const conversion = { value_pence: s.amountTotalPence, transaction_id: s.paymentId }
+    if (existing) { res.json({ data: { provisioned: true, already: true, email: s.email, ...conversion } }); return }
 
     const orgName   = s.metadata.org_name || 'Your service'
     const email     = (s.email || s.metadata.email || '').toLowerCase()
@@ -648,7 +651,7 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
       await sendStaffLoginLinkEmail({ to: email, name: adminName, link, expiresMins: 14 * 24 * 60 }).catch((e: any) => console.error('[training-checkout] login email failed:', e?.message ?? e))
     }
 
-    res.json({ data: { provisioned: true, email, licences: totalLicences, modules: items.length } })
+    res.json({ data: { provisioned: true, email, licences: totalLicences, modules: items.length, ...conversion } })
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'reconcile failed' })
   }

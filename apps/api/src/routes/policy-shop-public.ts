@@ -479,7 +479,8 @@ policyShopPublicRouter.post('/reconcile', async (req: Request, res: Response) =>
       }).catch((e: any) => console.error('[policy-shop] platform notify failed:', e?.message ?? e))
     }
 
-    ok(res, { created: created.length, new_account: isNewAccount, email })
+    // value_pence + transaction_id let the thank-you page report the sale to Google Ads.
+    ok(res, { created: created.length, new_account: isNewAccount, email, value_pence: result.amountTotalPence, transaction_id: result.paymentId })
   } catch (e: any) {
     err(res, 'RECONCILE_FAILED', e?.message ?? 'could not confirm that purchase', 500)
   }

@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle2, Loader2, Mail, AlertTriangle, FileText } from 'lucide-react'
+import { reportPurchase } from '@/lib/google-ads'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -50,6 +51,7 @@ export function PolicyPurchaseSuccess() {
           created: body.data.created ?? 0,
           newAccount: !!body.data.new_account,
         })
+        reportPurchase('policy_purchase', body.data.value_pence, body.data.transaction_id)
       } catch (e: any) {
         setState({
           status: 'error',

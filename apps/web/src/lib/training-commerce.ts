@@ -51,6 +51,17 @@ export function refreshWord(f: string | null | undefined): string {
     : f === 'once' ? 'once, usually at induction' : 'regularly'
 }
 
+/** A course length as people say it: "35 minutes" under an hour, whole or half hours as
+ *  "1.5 hours" / "2 hours", anything else as "1 hr 20 min". */
+export function durationText(minutes: number): string {
+  if (minutes < 60) return `${minutes} minutes`
+  if (minutes % 30 === 0) {
+    const hours = minutes / 60
+    return `${hours} hour${hours === 1 ? '' : 's'}`
+  }
+  return `${Math.floor(minutes / 60)} hr ${minutes % 60} min`
+}
+
 export function formatDuration(minutes: number): string {
   if (minutes < 60) return `~${minutes} min`
   const h = Math.floor(minutes / 60)

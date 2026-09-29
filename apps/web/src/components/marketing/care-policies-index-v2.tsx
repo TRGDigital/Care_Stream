@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
-import { PackLink, AddToBasket, SavePolicy, BasketPill } from './policy-basket'
+import { PackLink } from './policy-basket'
+import { PolicyCatalogueGrid } from './policy-catalogue-grid'
 import { CARE_POLICIES_PACK_ORDER } from '@/lib/page-slots/care-policies-v2'
 import './service-page-v2.css'
 import './collection-page-v2.css'
@@ -272,40 +273,7 @@ export function CarePoliciesIndexV2({ s, products, bundles }: {
               ))}
             </div>
           )}
-          {/* The same cards as the collection pages (and the training library): picture, title,
-              description, price, basket. Borrows the collection styles by wrapping the grid in
-              their scope, so the two cannot drift apart. */}
-          <div className="clpage-v2 pccards">
-            <div className="clgrid">
-              {products.map(p => {
-                const href = `/care-policies/${p.slug}`
-                return (
-                  <div className="clcard" key={p.slug}>
-                    <Link className="tl" href={href}>
-                      <span className="clshot">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        {p.image_url && <img src={p.image_url} alt="" loading="lazy" />}
-                      </span>
-                    </Link>
-                    <div className="in">
-                      <Link className="tl" href={href}><b>{p.title}</b></Link>
-                      <p>{p.description ?? ''}</p>
-                      <div className="foot">
-                        <em>{money(p.price_pence)}</em><i>{p.meta ?? ''}</i>
-                      </div>
-                      <div className="clbuy">
-                        <AddToBasket className="clbuy-add"
-                          item={{ slug: p.slug, title: p.title, price_pence: p.price_pence }} />
-                        <SavePolicy className="clbuy-save" slug={p.slug} title={p.title} />
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-            {/* The checkout pill the collection pages show once something is in the basket. */}
-            <BasketPill />
-          </div>
+          <PolicyCatalogueGrid products={products} />
         </div>
       </section>
     </div>

@@ -114,7 +114,7 @@ async function getRelatedTopics(currentSlug: string): Promise<LibraryTopic[]> {
 // Live one-lesson + one-question taster for this module (null if not yet built).
 async function getModuleDemo(slug: string): Promise<TrainingDemoData | null> {
   try {
-    const res = await fetch(`${API_URL}/public/training/standard-modules/${encodeURIComponent(slug)}/demo?v=2`, { next: { revalidate: 3600 } })
+    const res = await fetch(`${API_URL}/public/training/standard-modules/${encodeURIComponent(slug)}/demo?v=3`, { next: { revalidate: 3600 } })
     if (res.ok) return (await res.json())?.data?.demo ?? null
   } catch { /* fall through */ }
   return null
@@ -157,6 +157,7 @@ export default async function TrainingModulePage(
     'Completed in the hub in over 60 languages',
     'A certificate for every staff member, for your CQC evidence',
     'A wrong answer triggers a follow-up lesson, so gaps are closed',
+    ...(m.cpd_accredited ? ['CPD Certified Course'] : []),
   ]
   const techLogos = [
     { name: 'Google Cloud', Icon: GoogleCloud },

@@ -21,6 +21,17 @@ export type TrainingDemoData = {
 }
 
 type Step = 'lesson' | 'question' | 'result'
+
+/** A lesson as readable paragraphs: split at the line breaks it was written with, and where a
+ *  long lesson has none, every two sentences, so it never shows as one block of text. */
+function lessonParagraphs(text: string): string[] {
+  const byLine = text.split(/\n+/).map((t) => t.trim()).filter(Boolean)
+  if (byLine.length > 1 || text.length < 400) return byLine
+  const sentences = text.match(/[^.!?]+[.!?]+(?:\s+|$)|[^.!?]+$/g)?.map((t) => t.trim()).filter(Boolean) ?? [text]
+  const out: string[] = []
+  for (let i = 0; i < sentences.length; i += 2) out.push(sentences.slice(i, i + 2).join(' '))
+  return out
+}
 const STEPS: { key: Step; label: string }[] = [
   { key: 'lesson', label: 'Lesson' },
   { key: 'question', label: 'Question' },
@@ -125,7 +136,9 @@ export function TrainingDemo({
         <div className="p-7 md:p-9">
           <span className="mb-4 inline-block text-xs font-bold uppercase tracking-wide text-teal">Lesson 1 of {demo.total_sections}</span>
           <h3 className="mb-3 text-2xl font-bold text-neutral-dark">{L.heading}</h3>
-          <p className="mb-8 whitespace-pre-line leading-relaxed text-neutral-mid">{L.body}</p>
+          <div className="mb-8 space-y-3 leading-relaxed text-neutral-mid">
+            {lessonParagraphs(L.body).map((para, i) => <p key={i}>{para}</p>)}
+          </div>
           <button
             type="button"
             onClick={() => { setStep('question'); track('demo_started') }}
@@ -338,7 +351,7 @@ export function TrainingDemo({
                 for a care home ("Understanding Falls Risk in Our Home"). English only; the
                 translations are left as saved. */}
             <h3>{lang === 'eng' ? careSetting(L.heading) : L.heading}</h3>
-            <p>{lang === 'eng' ? careSetting(L.body) : L.body}</p>
+            {lessonParagraphs(lang === 'eng' ? careSetting(L.body) : L.body).map((para, i) => <p key={i}>{para}</p>)}
             <button type="button" className="tbtn solid" style={{ fontSize: '.85rem', padding: '10px 18px' }}
                     onClick={() => { setStep('question'); track('demo_continue') }}>
               Continue to the question

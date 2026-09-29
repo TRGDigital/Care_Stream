@@ -109,10 +109,14 @@ policyShopPublicRouter.get('/catalogue', async (_req: Request, res: Response) =>
     // Bundles come back alongside the products because the rebuilt /care-policies page lists
     // both, and a second request for six rows is a second thing that can fail on the page that
     // sells them. Existing callers read `products` and are unaffected.
-    const [products, bundles] = await Promise.all([
+    //
+    // Description, image and regulation count are there for the /care-policies cards, which
+    // match the collection pages' cards and are built the same way as collections-public.ts.
+    const [rows, bundles] = await Promise.all([
       (prisma as any).policyProduct.findMany({
         where:   { active: true },
-        select:  { slug: true, title: true, price_pence: true, taster: true },
+        select:  { slug: true, title: true, price_pence: true, taster: true,
+                   description: true, image_key: true, reference_keys: true },
         orderBy: [{ sort_order: 'asc' }, { title: 'asc' }],
       }),
       (prisma as any).policyBundle.findMany({
@@ -121,6 +125,15 @@ policyShopPublicRouter.get('/catalogue', async (_req: Request, res: Response) =>
         orderBy: [{ price_pence: 'asc' }],
       }),
     ])
+    const products = rows.map(({ image_key, reference_keys, ...p }: any) => {
+      const regs = (reference_keys ?? []).length
+      return {
+        ...p,
+        description: p.description ?? '',
+        meta: regs ? `${regs} regulation${regs === 1 ? '' : 's'}` : '',
+        image_url: shopImageUrl(image_key),
+      }
+    })
     ok(res, { products, bundles })
   } catch (e: any) {
     err(res, 'CATALOGUE_FAILED', e?.message ?? 'could not read the catalogue', 500)

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
 import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 import { TrainingDemo, type TrainingDemoData } from './training-demo'
+import { GoogleCloud, OpenAI, Claude, Supabase, Pinecone, GoogleAds, Aws } from './tech-logos'
 import { careSetting } from '@/lib/care-setting'
 import { claimSafe, estimatedMinutes, refreshWord, durationText } from '@/lib/training-commerce'
 import { LanguageCheck } from './language-check'
@@ -111,7 +112,15 @@ const DELIVERY: [string, string][] = [
 
 // The technology marks under the hero. Plain text rather than the app's logo components: the
 // theme sets these as labelled chips, and a mark here is a name, not a brand lockup.
-const TECH = ['Google Cloud', 'OpenAI', 'Claude', 'Supabase', 'Pinecone', 'Google Ads', 'AWS']
+const TECH = [
+  { name: 'Google Cloud', Icon: GoogleCloud },
+  { name: 'OpenAI', Icon: OpenAI },
+  { name: 'Claude', Icon: Claude },
+  { name: 'Supabase', Icon: Supabase },
+  { name: 'Pinecone', Icon: Pinecone },
+  { name: 'Google Ads', Icon: GoogleAds },
+  { name: 'AWS', Icon: Aws },
+]
 
 const LANGUAGE_POINTS = [
   'One tap flips any lesson or question into their language, instantly.',
@@ -259,6 +268,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               <li><Tick />Completed in the hub in over 60 languages</li>
               <li><Tick />A certificate for every staff member, for your CQC evidence</li>
               <li><Tick />A wrong answer triggers a follow-up lesson, so gaps are closed</li>
+              {m.cpd_accredited && <li><Tick />CPD Certified Course</li>}
             </ul>
 
             <div className="mbuy">
@@ -297,7 +307,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
             <div className="mtech">
               <p className="cap">Specialists in the technology behind it all</p>
               <div className="marks">
-                {TECH.map(t => <span className="techmark" key={t}>{t}</span>)}
+                {TECH.map(({ name, Icon }) => <span className="techmark" key={name}><Icon />{name}</span>)}
               </div>
               <p className="note">
                 The same AI and technology behind the world&apos;s best products powers

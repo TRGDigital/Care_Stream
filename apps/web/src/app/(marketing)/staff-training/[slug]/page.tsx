@@ -17,7 +17,7 @@ import { ModuleCard, type LibraryTopic } from '@/components/marketing/training-l
 import { CartButton } from '@/components/marketing/cart-button'
 import { TrainingDemo, type TrainingDemoData } from '@/components/marketing/training-demo'
 import { ModulePageV2 } from '@/components/marketing/module-page-v2'
-import { GoogleCloud, OpenAI, Claude, Supabase, Pinecone, GoogleAds, Aws } from '@/components/marketing/tech-logos'
+import { GoogleCloud, Supabase, Pinecone, GoogleAds, Aws } from '@/components/marketing/tech-logos'
 import { TrainingHubPreview } from '@/components/marketing/training-hub-preview'
 import { TrainingLanguageSection } from '@/components/marketing/training-language-section'
 import { TrainingCpdFeatures } from '@/components/marketing/training-cpd-features'
@@ -164,8 +164,6 @@ export default async function TrainingModulePage(
   ]
   const techLogos = [
     { name: 'Google Cloud', Icon: GoogleCloud },
-    { name: 'OpenAI', Icon: OpenAI },
-    { name: 'Claude', Icon: Claude },
     { name: 'Supabase', Icon: Supabase },
     { name: 'Pinecone', Icon: Pinecone },
     { name: 'Google Ads', Icon: GoogleAds },
@@ -340,7 +338,7 @@ export default async function TrainingModulePage(
                   ))}
                 </div>
                 <p className="mt-3 max-w-xl text-xs leading-relaxed text-neutral-mid">
-                  The same AI and technology behind the world&apos;s best products powers CareStream, so your
+                  The same technology behind the world&apos;s best products powers CareStream, so your
                   team&apos;s {m.title.toLowerCase()} training stays accurate, always up to date with the latest
                   guidance, and is delivered in{' '}
                   <Link href="/languages" className="font-semibold text-teal hover:text-teal-dark">over 60 languages</Link>.

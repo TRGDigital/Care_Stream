@@ -8,7 +8,7 @@ import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { SiteImage } from '@/components/site-image'
 import { EditableContentBlock } from '@/components/marketing/editable-content-block'
 import { TrainingLibraryTabs } from '@/components/marketing/training-library-tabs'
-import { GoogleCloud, OpenAI, Claude, Supabase, Pinecone, GoogleAds, Aws } from '@/components/marketing/tech-logos'
+import { GoogleCloud, Supabase, Pinecone, GoogleAds, Aws } from '@/components/marketing/tech-logos'
 import { TrainingCpdFeatures } from '@/components/marketing/training-cpd-features'
 import { TrainingFollowUpLoop } from '@/components/marketing/training-follow-up-loop'
 import { TrainingDemo, type TrainingDemoData } from '@/components/marketing/training-demo'
@@ -273,8 +273,6 @@ export default async function StaffTrainingPage(
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   {[
                     { name: 'Google Cloud', Icon: GoogleCloud },
-                    { name: 'OpenAI', Icon: OpenAI },
-                    { name: 'Claude', Icon: Claude },
                     { name: 'Supabase', Icon: Supabase },
                     { name: 'Pinecone', Icon: Pinecone },
                     { name: 'Google Ads', Icon: GoogleAds },
@@ -287,7 +285,7 @@ export default async function StaffTrainingPage(
                   ))}
                 </div>
                 <p className="mt-3 max-w-xl text-xs leading-relaxed text-neutral-mid">
-                  The same AI and technology behind the world&apos;s best products powers CareStream, so your
+                  The same technology behind the world&apos;s best products powers CareStream, so your
                   team&apos;s care certificate training stays accurate, always up to date with the latest
                   guidance, and is delivered in{' '}
                   <Link href="/languages" className="font-semibold text-teal hover:text-teal-dark">over 60 languages</Link>.

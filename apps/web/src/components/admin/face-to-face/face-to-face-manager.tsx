@@ -220,7 +220,7 @@ export function FaceToFaceManager({ token }: { token?: string }) {
         <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-teal/30" /> Face-to-face</span>
         <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-orange-200" /> Policy training</span>
         <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-indigo-200" /> Pre-built training</span>
-        <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-violet-200" /> CPD approved courses</span>
+        <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-violet-200" /> Annual training</span>
         <span className="text-neutral-mid/80">+N allocated · ✓N completed</span>
       </div>
       {loading && <p className="mt-3 text-center text-sm text-neutral-mid">Loading…</p>}
@@ -399,7 +399,7 @@ function DayDetail({ dayKey, sessions, training, onClose, onNew, onOpenSession }
         {/* CPD approved courses */}
         {cpd.length > 0 && (
           <div className="mb-4">
-            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-violet-600">CPD approved courses</p>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-violet-600">Annual training</p>
             <EventList rows={cpd} color="text-violet-600" />
           </div>
         )}
@@ -1125,7 +1125,7 @@ function PayrollModal({ api, year, month, onClose }: {
     }
     for (const r of (data?.adhoc ?? [])) rows.push(['Policy', r.name, r.title, '', '', '', d(r.allocated_at), d(r.completed_at), '', '', '', ''])
     for (const r of (data?.prebuilt ?? [])) rows.push(['Pre-built', r.name, r.title, '', '', '', d(r.allocated_at), d(r.completed_at), '', '', '', ''])
-    for (const r of (data?.cpd ?? [])) rows.push(['CPD approved', r.name, r.title, '', '', '', d(r.allocated_at), d(r.completed_at), '', '', '', ''])
+    for (const r of (data?.cpd ?? [])) rows.push(['Annual training', r.name, r.title, '', '', '', d(r.allocated_at), d(r.completed_at), '', '', '', ''])
     const csv = [header, ...rows].map(row => row.map(esc).join(',')).join('\r\n')
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -1172,7 +1172,7 @@ function PayrollModal({ api, year, month, onClose }: {
             <div className="rounded-lg border-2 border-blue-500 bg-blue-50 p-2"><p className="text-lg font-bold text-blue-700">{f2fRows.length}</p>Face-to-face{totalHoursOwed > 0 && <span className="mt-0.5 block font-semibold text-amber-700">{f2fRows.filter((r: any) => pay(r.status, r.owed_pay) === 'Yes').length} payable · {totalHoursOwed}h{anyRates && totalCostPence > 0 ? ` · ${gbp(totalCostPence)}` : ''}</span>}</div>
             <div className="rounded-lg border border-gray-200 p-2"><p className="text-lg font-bold text-orange-600">{data?.adhoc.length ?? 0}</p>Policy</div>
             <div className="rounded-lg border border-gray-200 p-2"><p className="text-lg font-bold text-indigo-600">{data?.prebuilt.length ?? 0}</p>Pre-built</div>
-            <div className="rounded-lg border border-gray-200 p-2"><p className="text-lg font-bold text-violet-600">{data?.cpd.length ?? 0}</p>CPD approved</div>
+            <div className="rounded-lg border border-gray-200 p-2"><p className="text-lg font-bold text-violet-600">{data?.cpd.length ?? 0}</p>Annual training</div>
           </div>
         )}
 
@@ -1253,7 +1253,7 @@ function PayrollModal({ api, year, month, onClose }: {
             </table>
           )}
 
-          <h2 style={sectionTitle}>CPD approved courses</h2>
+          <h2 style={sectionTitle}>Annual training</h2>
           {(data?.cpd.length ?? 0) === 0 ? <p style={{ fontSize: 12, color: '#6b7280' }}>None this month.</p> : (
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead><tr><th style={th}>Staff</th><th style={th}>Course</th><th style={th}>Allocated</th><th style={th}>Completed</th></tr></thead>

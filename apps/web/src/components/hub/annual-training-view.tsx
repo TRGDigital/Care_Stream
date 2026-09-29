@@ -123,8 +123,8 @@ function AnnualList({ token, userId, onOpen, onCert, secondLang = null, reviewer
   if (!items.length) return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 py-16 text-center">
       <GraduationCap size={36} className="text-gray-300" />
-      <p className="font-medium text-neutral-dark">No CPD approved courses assigned</p>
-      <p className="text-sm text-neutral-mid">When your manager assigns a CPD approved course, it&apos;ll appear here for you to complete.</p>
+      <p className="font-medium text-neutral-dark">No annual training assigned</p>
+      <p className="text-sm text-neutral-mid">When your manager assigns an annual training course, it&apos;ll appear here for you to complete.</p>
     </div>
   )
 
@@ -175,7 +175,7 @@ function AnnualList({ token, userId, onOpen, onCert, secondLang = null, reviewer
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
       <div className="mx-auto max-w-5xl">
-        <h2 className="mb-1 flex items-center gap-2 text-xl font-bold text-neutral-dark"><GraduationCap size={20} className="text-teal" /> {reviewer ? 'CPD Review' : 'CPD Approved Courses'}</h2>
+        <h2 className="mb-1 flex items-center gap-2 text-xl font-bold text-neutral-dark"><GraduationCap size={20} className="text-teal" /> {reviewer ? 'CPD Review' : 'Annual Training'}</h2>
         <p className="mb-5 text-sm text-neutral-mid">{reviewer
           ? 'Open each module to go through it as a learner (lesson, scenarios, assessment and live follow-ups), then add your notes and status below it.'
           : 'Your CPD courses — richer lessons with interactive activities. Read the lesson, pass the assessment, get your certificate.'}</p>
@@ -204,7 +204,7 @@ function Scale({ label, low, high, value, onChange }: { label: string; low: stri
 
 // ─── Take a module (learn → assess → result) ──────────────────────────────────
 
-export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel = 'CPD Approved Courses', secondLang = null, switchArea = 'annual' }: { token: string; id: string; name: string; onExit: (toCert: boolean) => void; onTalkToPolicy?: (policyId: string, title: string) => void; backLabel?: string; secondLang?: { name: string } | null; switchArea?: 'annual' | 'training' }) {
+export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel = 'Annual Training', secondLang = null, switchArea = 'annual' }: { token: string; id: string; name: string; onExit: (toCert: boolean) => void; onTalkToPolicy?: (policyId: string, title: string) => void; backLabel?: string; secondLang?: { name: string } | null; switchArea?: 'annual' | 'training' }) {
   const api = createApiClient(token)
   const [data, setData] = useState<any>(null)            // first-language module (the default)
   const [data2, setData2] = useState<any>(null)          // second-language version, fetched lazily + cached
@@ -841,7 +841,7 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
 
 // ─── Certificate ──────────────────────────────────────────────────────────────
 
-export function CertView({ token, id, onExit, backLabel = 'CPD Approved Courses' }: { token: string; id: string; onExit: () => void; backLabel?: string }) {
+export function CertView({ token, id, onExit, backLabel = 'Annual Training' }: { token: string; id: string; onExit: () => void; backLabel?: string }) {
   const api = createApiClient(token)
   const [c, setC] = useState<any>(null)
   const [loading, setLoading] = useState(true)

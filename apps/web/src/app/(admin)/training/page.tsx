@@ -723,7 +723,7 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
           {view === 'live'
             ? 'Your own training modules — generated from your uploaded policies (using your AI tokens) and fully editable. Archive any you don’t need; archived modules aren’t shown to staff and can be restored anytime.'
             : view === 'prebuilt'
-              ? 'Built by CareStream and ready to assign to your staff — these don’t use any of your AI tokens. The choice of tier is always yours: pre-built is a legitimate pick for a refresher, with CPD approved courses available separately above.'
+              ? 'Built by CareStream and ready to assign to your staff — these don’t use any of your AI tokens. The choice of tier is always yours: pre-built is a legitimate pick for a refresher, with annual training courses available separately above.'
               : 'These modules are hidden from staff. Restore any to move it back into the live list.'}
         </p>
       </div>
@@ -2232,7 +2232,7 @@ export default function TrainingPage() {
   }
   const aiGrids = [
     { key: 'prebuilt', title: 'Pre-built training',    ...aiGridFor(false) },
-    { key: 'cpd',      title: 'CPD approved courses',  ...aiGridFor(true) },
+    { key: 'cpd',      title: 'Annual training',  ...aiGridFor(true) },
   ]
 
   // Summary stats
@@ -2279,7 +2279,7 @@ export default function TrainingPage() {
         </div>
         <div className="flex items-center gap-2">
           <Link href="/training/annual" className="flex items-center gap-2 rounded-lg border border-teal/40 bg-teal-light/30 px-4 py-2 text-sm font-medium text-teal hover:bg-teal-light/50">
-            CPD approved courses
+            Annual training
           </Link>
           {SHOW_DIPLOMAS && (
             <Link href="/training/diplomas" className="flex items-center gap-2 rounded-lg border border-teal/40 bg-teal-light/30 px-4 py-2 text-sm font-medium text-teal hover:bg-teal-light/50">

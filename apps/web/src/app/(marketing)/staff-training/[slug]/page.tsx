@@ -30,6 +30,7 @@ import { TrainingVideo } from '@/components/marketing/training-video'
 import { estimatedMinutes, formatDuration, refreshWord } from '@/lib/training-commerce'
 import { careSetting } from '@/lib/care-setting'
 import { isV2 } from '@/lib/v2-rollout'
+import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 
 export const revalidate = 60
 
@@ -274,6 +275,10 @@ export default async function TrainingModulePage(
                 <span className="inline-flex items-center gap-2 rounded-full bg-teal-light px-3 py-1 text-xs font-bold uppercase tracking-widest text-teal">
                   <ShieldCheck size={14} /> CQC-aligned · Care Certificate framework
                 </span>
+                {m.cpd_accredited && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified, The CPD Certification Service" className="h-14 w-auto" />
+                )}
               </div>
               <h1 className="mb-6 max-w-xl text-4xl font-extrabold leading-[1.05] tracking-tight text-neutral-dark md:text-5xl lg:text-6xl">
                 {m.title} training that gets your team CQC-ready

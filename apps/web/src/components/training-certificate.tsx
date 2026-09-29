@@ -3,6 +3,7 @@
 // globals.css can isolate + colour-print just the certificate.
 
 import { Award, ShieldCheck } from 'lucide-react'
+import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 
 function fmt(d?: string | null): string {
   if (!d) return '—'
@@ -26,8 +27,8 @@ export type TrainingCertificateProps = {
   // Pre-course knowledge check vs the final score — the evidence that learning
   // happened, not just that a course was clicked through.
   baseline?:         { score: number | null; total: number | null } | null
-  // Which shelf the course came from. The header only says "CPD Approved Course"
-  // once the module is accredited; the CPD logo block gates on cpdAccredited too.
+  // Which shelf the course came from. The header only says "CPD Certified Course"
+  // once the module is certified; the CPD Certified logo gates on cpdAccredited too.
   tier?:             'prebuilt' | 'cpd'
   // A tenant's own policy-tailored module. Only these may say "tailored to";
   // platform courses (pre-built and CPD) are the same for every provider.
@@ -47,7 +48,7 @@ export function TrainingCertificate({
       <div className="flex items-center justify-between bg-gradient-to-r from-teal-dark via-teal to-teal-dark px-8 py-5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo-white.png" alt="CareStream" className="h-16 w-auto object-contain" />
-        <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/85">{tier === 'cpd' ? (cpdAccredited ? 'CPD Approved Course' : 'Annual Training') : 'Staff Training'}</span>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/85">{tier === 'cpd' ? (cpdAccredited ? 'CPD Certified Course' : 'Annual Training') : 'Staff Training'}</span>
       </div>
 
       <div className="relative px-10 pb-9 pt-7 text-center">
@@ -112,11 +113,14 @@ export function TrainingCertificate({
         )}
 
         {cpdAccredited && (
-          <div className="mx-auto mt-5 flex max-w-md items-center justify-center gap-3 rounded-lg border border-teal/30 bg-teal-light/30 px-4 py-2.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-teal text-[9px] font-bold leading-tight text-teal">CPD</span>
+          // The CPD Certified trademark exactly as supplied: no border, frame or added
+          // text on it (the wording sits beside it, not on it). See lib/cpd.ts.
+          <div className="mx-auto mt-6 flex max-w-md items-center justify-center gap-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified, The CPD Certification Service" className="h-24 w-auto" />
             <div className="text-left">
-              <p className="text-xs font-semibold text-teal-dark">CPD Certified{cpdHours != null ? ` · ${cpdHours} CPD hour${cpdHours === 1 ? '' : 's'}` : ''}</p>
-              <p className="text-[10px] text-neutral-mid">{cpdProviderNumber ? `The CPD Certification Service, Provider ${cpdProviderNumber}` : 'Accredited continuing professional development'}</p>
+              <p className="text-xs font-semibold text-teal-dark">CPD Certified Course{cpdHours != null ? ` · ${cpdHours} CPD hour${cpdHours === 1 ? '' : 's'}` : ''}</p>
+              <p className="text-[10px] text-neutral-mid">Certified by The CPD Certification Service{cpdProviderNumber ? `, provider ${cpdProviderNumber}` : ''}</p>
             </div>
           </div>
         )}

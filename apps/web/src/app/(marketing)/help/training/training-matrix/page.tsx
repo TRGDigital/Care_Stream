@@ -22,7 +22,7 @@ export default function Page() {
         { type: 'bullets', items: [
           'Pick All staff and tick the courses everyone must hold, such as safeguarding or fire safety.',
           'Pick each job role in turn and tick the extra courses that role needs.',
-          'Courses are grouped into adhoc training, pre-built training and CPD approved courses, with a search box.',
+          'Courses are grouped into adhoc training, pre-built training and annual training, with a search box.',
           'Click Save requirements. The matrix updates straight away.',
         ] },
         { type: 'note', text: 'Staff are matched by the job role on their staff profile. Anyone without a job role is only measured against All staff training, so set a role for everyone on the Staff page.' },

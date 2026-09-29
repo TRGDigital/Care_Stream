@@ -1855,7 +1855,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <div className="space-y-3">
             <Step n={1}>Go to <strong>Training</strong> and open the <strong>Training Matrix</strong> tab.</Step>
             <Step n={2}>Click <strong>Required training by role</strong>.</Step>
-            <Step n={3}>Pick <strong>All staff</strong> for training everyone needs, then tick the courses. Courses are grouped into adhoc training, pre-built training and CPD approved courses, with a search box.</Step>
+            <Step n={3}>Pick <strong>All staff</strong> for training everyone needs, then tick the courses. Courses are grouped into adhoc training, pre-built training and annual training, with a search box.</Step>
             <Step n={4}>Pick each job role in turn and tick the extra courses that role needs, then click <strong>Save requirements</strong>.</Step>
           </div>
           <div className="mt-3"><Tip>Staff are matched by the <strong>job role</strong> on their staff profile, so make sure each person has one on the Staff page. Anyone without a job role is only measured against <em>All staff</em> training.</Tip></div>

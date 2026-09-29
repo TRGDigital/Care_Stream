@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
+import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 import { TrainingDemo, type TrainingDemoData } from './training-demo'
 import { careSetting } from '@/lib/care-setting'
 import { claimSafe, estimatedMinutes, refreshWord } from '@/lib/training-commerce'
@@ -245,6 +246,12 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               <Link href="/staff-training">Staff training</Link>
               <span>/</span><span>{m.group_label}</span>
               <span className="tag">CQC aligned</span>
+              {m.cpd_accredited && (
+                // The CPD Certified trademark: used unaltered, no border or added text, and
+                // only on courses the CPD Certification Service has certified (cpd_accredited).
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className="cpdmark" src={CPD_CERTIFIED_LOGO} alt="CPD Certified, The CPD Certification Service" />
+              )}
             </div>
             <h1>{m.title} training that gets your team CQC-ready</h1>
             <ul className="mbullets">
@@ -321,10 +328,18 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
             <p className="cap"><Tick /> Available Languages (60+)</p>
             <LanguageCheck />
           </div>
-          <div className="mstat pub">
-            <p className="cap">Course Published by</p>
-            <SiteImage src="/images/_shared/mod1.png" alt="CareStream" />
-          </div>
+          {m.cpd_accredited ? (
+            <div className="mstat pub cpd">
+              <p className="cap">CPD Certified Course</p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified, The CPD Certification Service" />
+            </div>
+          ) : (
+            <div className="mstat pub">
+              <p className="cap">Course Published by</p>
+              <SiteImage src="/images/_shared/mod1.png" alt="CareStream" />
+            </div>
+          )}
         </div>
       </div>
 

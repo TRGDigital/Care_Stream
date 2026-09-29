@@ -38,8 +38,11 @@ function withCardImage(p: PolicyProduct): PolicyProduct {
 // the page goes stale the first time one changes.
 async function getCatalogue(): Promise<{ products: PolicyProduct[]; bundles: PolicyBundle[] }> {
   try {
-    const res = await fetch(`${API_URL}/public/policy-shop/catalogue`,
-                            { next: { revalidate: 3600 } })
+    // `?cards=1` is ignored by the API. It exists to give this fetch a new cache key: the data
+    // cache outlives deploys, so the catalogue cached before the cards' fields existed would
+    // otherwise be served without descriptions for up to its revalidate window.
+    const res = await fetch(`${API_URL}/public/policy-shop/catalogue?cards=1`,
+                            { next: { revalidate: 600 } })
     if (!res.ok) return { products: [], bundles: [] }
     const d = (await res.json())?.data ?? {}
     return { products: (d.products ?? []).map(withCardImage), bundles: d.bundles ?? [] }

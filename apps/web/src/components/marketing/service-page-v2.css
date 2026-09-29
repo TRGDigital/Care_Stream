@@ -428,3 +428,18 @@
    and base type, which must not paint over this band's tint. */
 .svpage-v2[data-page="care-policies"] .pccards{background:transparent;font-size:inherit}
 .svpage-v2[data-page="care-policies"] .pccards .clgrid{padding-bottom:0}
+
+/* The search above the policy cards: the training library's search field (.tsearch in
+   staff-training-index-v2*.css), so the two libraries search the same way. */
+.svpage-v2[data-page="care-policies"] .pcsearch{position:relative;display:block;max-width:560px;margin:34px 0 26px}
+.svpage-v2[data-page="care-policies"] .pcsearch input{font:inherit;font-size:1rem;width:100%;padding:15px 20px 15px 50px;
+  border:1.5px solid #D5CCE2;border-radius:999px;background:var(--ground);color:var(--ink);
+  box-shadow:0 1px 2px rgba(23,18,31,.05),0 8px 24px rgba(23,18,31,.07);transition:border-color .15s,box-shadow .15s}
+.svpage-v2[data-page="care-policies"] .pcsearch input::placeholder{color:var(--muted)}
+.svpage-v2[data-page="care-policies"] .pcsearch input:hover{border-color:#BFB2D3}
+.svpage-v2[data-page="care-policies"] .pcsearch input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft),0 8px 24px rgba(23,18,31,.07)}
+.svpage-v2[data-page="care-policies"] .pcsearch svg{position:absolute;left:19px;top:50%;transform:translateY(-50%);width:19px;height:19px;color:var(--accent)}
+.svpage-v2[data-page="care-policies"] .pcnote{font-size:.88rem;line-height:1.6;color:var(--muted);margin:0 0 24px}
+.svpage-v2[data-page="care-policies"] .pcempty{padding:50px 0;text-align:center;color:var(--muted);font-size:.95rem}
+.svpage-v2[data-page="care-policies"] .pccards [hidden]{display:none}
+@media (max-width:640px){.svpage-v2[data-page="care-policies"] .pcsearch{max-width:none}}

@@ -49,6 +49,11 @@ export const TOPIC_AUTHORITY_LINKS: Record<string, AuthorityLink[]> = {
     SFC_STAT_MAND,
     { label: 'HSE: COSHH, Control of Substances Hazardous to Health', url: 'https://www.hse.gov.uk/coshh/' },
   ],
+  'GDPR / Data Protection': [
+    SFC_STAT_MAND,
+    { label: 'NHS England: Data Security and Protection Toolkit', url: 'https://www.dsptoolkit.nhs.uk/' },
+    { label: 'ICO: guide to the data protection principles', url: 'https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/data-protection-principles/a-guide-to-the-data-protection-principles/' },
+  ],
   'Symptom Management in Palliative Care': [
     SFC_STAT_MAND,
     { label: 'NICE NG31: care of dying adults in the last days of life', url: 'https://www.nice.org.uk/guidance/ng31' },

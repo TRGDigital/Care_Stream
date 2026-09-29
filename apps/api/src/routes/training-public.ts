@@ -9,7 +9,7 @@ import { createTrainingCheckoutSession, createTrainingBasketCheckoutSession, TRA
 import { createLoginLink } from '../lib/login-tokens'
 import { siteUrl } from '../lib/urls'
 import { translateTextsBatch, translateQuestionsBatch } from '../lib/translate'
-import { sendStaffLoginLinkEmail, sendPasswordSetupEmail, sendTrainingOnboardingGuideEmail } from '../services/email/outbound'
+import { sendStaffLoginLinkEmail, sendPasswordSetupEmail, sendTrainingOnboardingGuideEmail, sendTrainingPurchaseNotification } from '../services/email/outbound'
 import { enrolInCampaign } from '../services/onboarding/dispatch'
 import { hashPassword } from '../services/auth/password'
 import crypto from 'crypto'
@@ -575,9 +575,10 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
     // licences straight to that tenant — no provisioning, no sign-in/password emails.
     let user = email ? await (prisma as any).user.findUnique({ where: { email }, select: { id: true, tenant_id: true, name: true } }) : null
     let tenantId = ''
+    let source: 'new_account' | 'existing_account' | 'console' = 'existing_account'
     if (consoleTenantId) {
       const t = await (prisma as any).tenant.findUnique({ where: { id: consoleTenantId }, select: { id: true } })
-      if (t) tenantId = t.id
+      if (t) { tenantId = t.id; source = 'console' }
     }
     // Otherwise: attach to an existing account if the email is already known, else
     // create a new training-only tenant + admin.
@@ -595,6 +596,7 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
         data: { tenant_id: tenant.id, email, name: adminName, role: 'admin', email_verified: true, password_hash: tempHash },
       })
       tenantId = tenant.id
+      source = 'new_account'
 
       // New account: alongside the magic sign-in link, send a set-your-password email
       // (7-day token via the standard reset flow) so the buyer always has a second way
@@ -626,6 +628,7 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
     // (falling back to its pre-built one) — so allocation never resolves by topic and
     // a purchase can never land on the other tier once a topic carries both.
     let totalLicences = 0
+    const orderLines: { title: string; qty: number }[] = []
     for (const it of items) {
       const topic = bySlug.get(it.slug)
       let moduleId: string | null = topic?.shop_module_id ?? null
@@ -643,7 +646,19 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
         })),
       })
       totalLicences += it.qty
+      orderLines.push({ title: topic?.title ?? it.slug, qty: it.qty })
     }
+
+    // Tell the platform owner. Only reached for a new payment: a repeat reconcile returns
+    // early above (licences already exist for this payment id).
+    const buyerTenant = tenantId
+      ? await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true, account_number: true } }).catch(() => null)
+      : null
+    sendTrainingPurchaseNotification({
+      tenantName: buyerTenant?.name ?? orgName, accountNumber: buyerTenant?.account_number ?? null,
+      buyerName: adminName, buyerEmail: email || null,
+      lines: orderLines, totalPence: s.amountTotalPence, source,
+    }).catch((e: any) => console.error('[training-checkout] platform notify failed:', e?.message ?? e))
 
     // Sign-in email only for shop purchases — a console buyer is already signed in.
     if (!consoleTenantId && user) {

@@ -3,7 +3,7 @@ import { SiteImage } from '@/components/site-image'
 import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 import { TrainingDemo, type TrainingDemoData } from './training-demo'
 import { careSetting } from '@/lib/care-setting'
-import { claimSafe, estimatedMinutes, refreshWord } from '@/lib/training-commerce'
+import { claimSafe, estimatedMinutes, refreshWord, durationText } from '@/lib/training-commerce'
 import { LanguageCheck } from './language-check'
 import { ThemeModuleCard, type LibraryTopic } from './training-library-tabs'
 import { TrainingAddButton, TrainingCartLink, TrainingSaveButton } from './training-cart-buttons'
@@ -231,7 +231,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
           <span className="who">
             <b>{m.title}</b>
             <span className="meta">
-              <Clock /> ~{est} min to complete<i>·</i>{price} per staff member
+              <Clock /> {est < 60 ? `~${est} min` : durationText(est)} to complete<i>·</i>{price} per staff member
             </span>
           </span>
           <TrainingSaveButton slug={m.slug} title={m.title} />
@@ -318,7 +318,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
         <div className="mstats-in">
           <div className="mstat">
             <p className="cap"><Clock /> Avg. Duration</p>
-            <p className="val">About {est} minutes</p>
+            <p className="val">About {durationText(est)}</p>
           </div>
           <div className="mstat">
             <p className="cap"><Tick /> Certificate</p>
@@ -573,7 +573,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
                 <li><Tick />Instant certificate on completion</li>
                 <li><Tick />Flexible learning, anytime, on any device</li>
                 <li><Tick />Content kept up to date with UK care regulations</li>
-                <li><Tick />Time to complete: ~{est} min</li>
+                <li><Tick />Time to complete: {est < 60 ? `~${est} min` : durationText(est)}</li>
               </ul>
             </div>
             <figure className="mwhy-photo">

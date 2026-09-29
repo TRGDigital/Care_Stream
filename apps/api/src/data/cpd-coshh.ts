@@ -208,7 +208,7 @@ export const CPD_COSHH: CpdCourse = {
         correct: 2,
         explanation: 'Polythene gloves are designed for food handling and give little protection against chemicals. Use the glove type specified on the COSHH assessment, often nitrile.',
       },
-      image_prompt: 'A care worker putting on safety goggles and blue nitrile gloves in a care home kitchen before descaling a kettle, a descaler bottle with a hazard pictogram on the counter, bright and clean.',
+      image_prompt: 'A care worker putting on safety goggles and blue nitrile gloves in a fully drawn care home kitchen with walls and cupboards behind, before descaling a kettle, a descaler bottle showing a red bordered diamond corrosion pictogram (liquid dripping onto a hand and a surface) on the counter.',
       image_alt: 'A care worker putting on goggles and nitrile gloves before using a descaler',
     },
     {

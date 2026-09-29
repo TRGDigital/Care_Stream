@@ -665,7 +665,7 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
               ) : sec ? (
                 /* ── Section step (teach OR check), same image on both ── */
                 <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-                  {sec.image_url && <img src={apiAssetUrl(sec.image_url) ?? ''} alt="" className="aspect-[16/9] w-full object-cover" />}
+                  {sec.image_url && <img src={apiAssetUrl(sec.image_url) ?? ''} alt={sec.image_alt ?? ''} className="aspect-[16/9] w-full object-cover" />}
                   <div className="p-5">
                     {cur.type === 'teach' ? (
                       <>
@@ -735,7 +735,8 @@ export function TakeModule({ token, id, name, onExit, onTalkToPolicy, backLabel 
                             )
                           })}
                         </div>
-                        {picked != null && <p className={`mt-1.5 text-xs font-medium ${isRight ? 'text-green-600' : 'text-amber-600'}`}>{isRight ? 'Correct.' : 'Not quite — the right answer is highlighted.'}</p>}
+                        {picked != null && <p className={`mt-1.5 text-xs font-medium ${isRight ? 'text-green-600' : 'text-amber-600'}`}>{isRight ? 'Correct.' : 'Not quite, the right answer is highlighted.'}</p>}
+                        {picked != null && sec.check.explanation && <p className="mt-1 text-xs text-neutral-dark">{sec.check.explanation}</p>}
                         {learnActive?.can_suggest && learnActive.source_sections?.[cur.i] && (
                           <SuggestTranslation token={token} langCode={learnActive.lang_code} contextLabel={`${name} — quick check`}
                             fields={[

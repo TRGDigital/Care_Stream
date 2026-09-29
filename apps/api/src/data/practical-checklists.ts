@@ -13,6 +13,7 @@
 // the programme templates use, so punctuation drift does not break the lookup.
 
 import { MOVING_HANDLING_CHECKLIST } from './cpd-moving-handling'
+import { MEDICATION_CHECKLIST } from './cpd-medication'
 
 export const PRACTICAL_CHECKLISTS: Record<string, string[]> = {
 
@@ -46,19 +47,8 @@ export const PRACTICAL_CHECKLISTS: Record<string, string[]> = {
     'Hands over clearly to the ambulance crew and records the event',
   ],
 
-  'Medication Administration and Competency': [
-    'Washes hands and prepares a clean, uninterrupted space before starting',
-    'Checks the person\'s identity against the MAR chart',
-    'Applies the six rights — right person, medicine, dose, route, time and documentation',
-    'Checks the medicine label, strength and expiry date against the MAR',
-    'Checks for known allergies before administering',
-    'Explains the medicine to the person and gains consent',
-    'Administers by the prescribed route without touching tablets directly',
-    'Stays to confirm the medicine has been taken before signing',
-    'Signs the MAR immediately after administration, never in advance',
-    'Records a refusal, omission or error correctly and reports it straight away',
-    'Stores medicines and controlled drugs securely, and records stock accurately',
-  ],
+  // Source of truth: MEDICATION_CHECKLIST in cpd-medication.ts (the CPD course).
+  'Medication Administration and Competency': MEDICATION_CHECKLIST,
 
   'Positive Behaviour Support / De-escalation': [
     'Reads and follows the person\'s behaviour support plan and known triggers',

@@ -36,15 +36,6 @@ const BADGES: Badge[] = [
     label: 'Good Business Charter',
   },
   {
-    src: '/badges/cpd-certification-service.png', w: 189, h: 120, wide: true,
-    // CareStream is an accredited CPD PROVIDER (No. 50224). The training modules
-    // themselves are still going through certification, so nothing here may say or
-    // imply "CPD certified training" — that claim belongs to a module, not to us.
-    alt: 'CPD Certification Service accredited provider',
-    href: 'https://www.cpduk.co.uk/providers/carestream',
-    label: 'CPD accredited provider',
-  },
-  {
     src: '/badges/ico-registered.png', w: 119, h: 120,
     alt: "Registered with the Information Commissioner's Office",
     // The same register entry the base row links to: ZC221613, TRG Digital Ltd.
@@ -190,6 +181,8 @@ export async function MarketingFooter() {
             ))}
           </ul>
           <p className="faccred-note">
+            {/* The CPD Certification Service's own logo is theirs alone (members may never use it),
+                so membership is stated in text. Swap in the CPD Member logo once supplied. */}
             CPD Provider No. 50224 · ICO registration ZC221613
           </p>
         </div>

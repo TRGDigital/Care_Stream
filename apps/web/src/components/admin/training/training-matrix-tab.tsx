@@ -16,7 +16,7 @@ const ALL_STAFF = '*'
 
 const LEGEND: TrainingMatrixStatus[] = ['in_date', 'due_soon', 'expired', 'overdue', 'practical_due', 'in_progress', 'not_started', 'missing', 'none']
 const KIND_LABEL = { digital: 'Digital', face_to_face: 'Face-to-face', safe_to_work: 'Workforce' } as const
-const GROUP_LABEL = { adhoc: 'Adhoc training', prebuilt: 'Pre-built training', cpd: 'CPD approved courses' } as const
+const GROUP_LABEL = { adhoc: 'Adhoc training', prebuilt: 'Pre-built training', cpd: 'Annual training' } as const
 
 const fmt = (d?: string | null) => d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : ''
 

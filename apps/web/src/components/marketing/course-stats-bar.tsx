@@ -8,6 +8,7 @@
 import { useMemo, useState } from 'react'
 import { Clock, Globe, Search, CheckCircle2, Award } from 'lucide-react'
 import { COURSE_LANGUAGES } from '@/lib/languages'
+import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 
 function formatDuration(min?: number | null): string {
   if (!min || min <= 0) return '45 to 90 minutes'
@@ -97,20 +98,18 @@ export function CourseStatsBar({ durationMinutes, cpdAccredited = false }: { dur
           </div>
         </div>
 
-        {/* Publisher, and the CPD-Accredited mark once a course is approved */}
+        {/* Publisher, or the CPD Certified mark once the CPD Certification Service has
+            certified the course (see lib/cpd.ts for the trademark rules). */}
         <div className="flex items-center justify-center gap-4 md:pl-5">
           <div className="text-center">
-            <p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">Course Published by</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-neutral-mid">{cpdAccredited ? 'CPD Certified Course' : 'Course Published by'}</p>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-color.png" alt="CareStream" className="mx-auto mt-2 h-12 w-auto" />
+            <img
+              src={cpdAccredited ? CPD_CERTIFIED_LOGO : '/logo-color.png'}
+              alt={cpdAccredited ? 'CPD Certified, The CPD Certification Service' : 'CareStream'}
+              className={cpdAccredited ? 'mx-auto mt-2 h-16 w-auto' : 'mx-auto mt-2 h-12 w-auto'}
+            />
           </div>
-          {cpdAccredited && (
-            <div className="flex items-center gap-2 border-l border-gray-100 pl-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/cpd-approved.png" alt="CPD Certification Service" className="h-9 w-auto" />
-              <p className="text-xs leading-tight text-neutral-dark">CPD<br /><span className="font-bold">Accredited</span></p>
-            </div>
-          )}
         </div>
       </div>
     </div>

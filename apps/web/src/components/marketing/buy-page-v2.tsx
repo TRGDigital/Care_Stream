@@ -192,7 +192,7 @@ export function BuyPageV2({ module: m, unitPence, related, apiUrl }: {
   // hard-codes rather than reading from the record.
   const qCount = m.question_count ?? null
   const meta = [m.group_label, minutes ? `${minutes} minutes` : '', qCount ? `${qCount} question assessment` : '',
-                m.cpd_accredited ? 'CPD approved' : '']
+                m.cpd_accredited ? 'CPD Certified' : '']
     .filter(Boolean).join(' · ')
   const img = (u?: string | null) => (u ? `${apiUrl}${u}` : null)
   const hero = img(m.illustration_url)

@@ -128,7 +128,7 @@ function sessionRef(id: string): string {
 }
 
 const RETURN_LABEL: Record<'induction' | 'training' | 'followup' | 'annual' | 'audits', string> = {
-  induction: 'My Induction', training: 'My Training', followup: 'Follow-up', annual: 'CPD Approved Courses', audits: 'Audits',
+  induction: 'My Induction', training: 'My Training', followup: 'Follow-up', annual: 'Annual Training', audits: 'Audits',
 }
 
 const CATEGORY_LABELS: Record<DocumentCategory, { title: string; subtitle: string }> = {
@@ -980,7 +980,7 @@ function ChatPageInner() {
             className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'annual' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
           >
             <GraduationCap size={15} />
-            CPD Approved Courses
+            Annual Training
             {navCounts.annual > 0 && <NavBadge count={navCounts.annual} className="bg-teal" />}
           </button>
           {navCounts.programmes > 0 && (

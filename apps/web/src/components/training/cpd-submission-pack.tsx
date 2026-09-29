@@ -346,7 +346,7 @@ function CertificateDoc({ m }: { m: any }) {
         <div className="flex items-center justify-between bg-gradient-to-r from-teal-dark via-teal to-teal-dark px-6 py-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo-white.png" alt="CareStream" className="h-12 w-auto object-contain" />
-          <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/85">CPD Approved Course</span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/85">CPD Certified Course</span>
         </div>
 
         <div className="px-8 pb-7 pt-6 text-center">

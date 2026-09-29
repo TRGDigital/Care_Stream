@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Minus, Plus, Loader2, ShieldCheck } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
@@ -18,13 +19,16 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
   const [org, setOrg]     = useState('')
   const [busy, setBusy]   = useState(false)
   const [error, setError] = useState('')
+  // The same required agreement as the basket checkouts (checkout-page.tsx): this form takes a
+  // payment too, and was the one route to Stripe that never showed the terms.
+  const [agreed, setAgreed] = useState(false)
 
   const total = qty * unitPence
   const setQ = (n: number) => setQty(Math.max(1, Math.min(500, n)))
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (busy) return
+    if (busy || !agreed) return
     setError('')
     if (!org.trim()) { setError('Please enter your organisation name.'); return }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) { setError('Please enter a valid email address.'); return }
@@ -81,7 +85,14 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
             {error}
           </p>
         )}
-        <button className="bybtn" type="submit" disabled={busy}>
+        <label className="byterms">
+          <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} required />
+          <span>
+            By continuing, I agree to CareStream&apos;s <Link href="/terms" target="_blank">Terms and Conditions</Link>
+            {' '}and acknowledge the <Link href="/privacy" target="_blank">Privacy Policy</Link>.
+          </span>
+        </label>
+        <button className="bybtn" type="submit" disabled={busy || !agreed}>
           {busy ? 'Starting secure checkout…' : 'Continue to payment'}
         </button>
         <p className="bysecure">
@@ -134,7 +145,16 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
 
       {error && <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
 
-      <button type="submit" disabled={busy}
+      <label className="mb-4 flex cursor-pointer items-start gap-2.5 text-xs leading-relaxed text-neutral-mid">
+        <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} required
+          className="mt-0.5 h-4 w-4 shrink-0 accent-teal" />
+        <span>
+          By continuing, I agree to CareStream&apos;s <Link href="/terms" target="_blank" className="font-semibold text-neutral-dark underline">Terms and Conditions</Link>
+          {' '}and acknowledge the <Link href="/privacy" target="_blank" className="font-semibold text-neutral-dark underline">Privacy Policy</Link>.
+        </span>
+      </label>
+
+      <button type="submit" disabled={busy || !agreed}
         className="flex w-full items-center justify-center gap-2 rounded-btn bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700 disabled:opacity-60">
         {busy ? <><Loader2 size={16} className="animate-spin" /> Starting secure checkout…</> : <>Continue to payment</>}
       </button>

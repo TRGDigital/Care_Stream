@@ -218,3 +218,9 @@
    runs as two columns on the tinted band. */
 .bypage-v2 .bylist{margin-top:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:14px 28px}
 .bypage-v2 .bykp-h{margin:40px 0 14px}
+
+/* The terms agreement above the pay button, matching the basket checkouts' .ckterms. */
+.bypage-v2 .byterms{display:flex;gap:10px;align-items:flex-start;font-size:.82rem;line-height:1.5;color:var(--muted);margin:16px 0 0;cursor:pointer}
+.bypage-v2 .byterms input{width:17px;height:17px;margin:2px 0 0;accent-color:var(--accent);flex:0 0 auto}
+.bypage-v2 .byterms a{color:var(--ink);font-weight:600}
+.bypage-v2 .bybtn[disabled]{opacity:.45;cursor:not-allowed}

@@ -38,7 +38,7 @@ export const CPD_FOOD_HYGIENE: CpdCourse = {
   summary:
     'Eight short lessons, each with a care scenario, an interactive activity and a quick check with an ' +
     'explanation. You start with a five question knowledge check so your learning gain can be measured, and ' +
-    'finish with a 16 question assessment with a pass mark of 80%. Skills for Care recommends refreshing food ' +
+    'finish with a 32 question assessment with a pass mark of 80%. Skills for Care recommends refreshing food ' +
     'hygiene at least every three years; this course is designed to be taken every year.',
   outcomes: [
     'Explain why food safety matters for the people you support, and the legal duties on your workplace and on you',
@@ -60,14 +60,14 @@ export const CPD_FOOD_HYGIENE: CpdCourse = {
   timings: [
     { part: 'Pre-course knowledge check, 5 questions', minutes: 3 },
     { part: 'Section 1. Importance of food safety: why it matters in care', minutes: 5 },
-    { part: 'Section 2. Good hygiene: personal hygiene and fitness to work', minutes: 6 },
-    { part: 'Section 3. Requirements and practices: chilling, storage and dates', minutes: 6 },
-    { part: 'Section 4. Requirements and practices: cooking, hot holding, cooling and reheating', minutes: 6 },
-    { part: 'Section 5. Requirements and practices: preventing cross contamination', minutes: 5 },
-    { part: 'Section 6. Requirements and practices: cleaning, disinfecting and pests', minutes: 6 },
-    { part: 'Section 7. Requirements and practices: allergens, special diets and texture modified food', minutes: 6 },
+    { part: 'Section 2. Good hygiene: personal hygiene and fitness to work', minutes: 5 },
+    { part: 'Section 3. Requirements and practices: chilling, storage and dates', minutes: 5 },
+    { part: 'Section 4. Requirements and practices: cooking, hot holding, cooling and reheating', minutes: 5 },
+    { part: 'Section 5. Requirements and practices: preventing cross contamination', minutes: 4 },
+    { part: 'Section 6. Requirements and practices: cleaning, disinfecting and pests', minutes: 5 },
+    { part: 'Section 7. Requirements and practices: allergens, special diets and texture modified food', minutes: 5 },
     { part: 'Section 8. Good hygiene when supporting people with food and drink: mealtimes, gift food, records and reporting', minutes: 5 },
-    { part: 'Final assessment, 16 questions', minutes: 9 },
+    { part: 'Final assessment, 32 questions', minutes: 15 },
     { part: 'Feedback and reflection', minutes: 3 },
   ],
   baseline: [
@@ -102,7 +102,7 @@ export const CPD_FOOD_HYGIENE: CpdCourse = {
     },
     {
       heading: 'Personal hygiene and fitness to work',
-      minutes: 6,
+      minutes: 5,
       body:
         'Hands are the main route by which germs and allergens reach food. Wash and dry your hands before handling food or anything that touches food, and every time you come from another task. In a care setting that includes after helping someone use the toilet, emptying a commode or catheter bag, handling soiled linen or clothing, touching bins, raw meat, raw eggs or unwashed vegetables, touching pets or their bowls, and after coughing, sneezing or touching your face or phone. Use soap and warm running water, rub every surface of both hands for at least 20 seconds, rinse, and dry thoroughly with a disposable paper towel. Hand gel does not replace washing before you handle food, and it works less well than washing against norovirus.\n\n' +
         'What you wear matters. Before serving food or helping someone to eat, put on a clean or disposable apron, so that germs from personal care on your uniform cannot reach the food. Tie back long hair, keep nails short and free of varnish, and keep jewellery to a plain band. Cover cuts and sores with a brightly coloured waterproof dressing, usually blue, so it can be seen if it falls off.\n\n' +
@@ -124,7 +124,7 @@ export const CPD_FOOD_HYGIENE: CpdCourse = {
     },
     {
       heading: 'Chilling, storage and dates',
-      minutes: 6,
+      minutes: 5,
       body:
         'Cold slows the growth of bacteria but does not kill them, so chilled food is only safe while it stays cold. The law in England, Wales and Northern Ireland requires chilled food to be kept at 8°C or below. Fridges are set at 5°C or below so there is a margin when the door is opened, and the FSA\'s care home guidance asks that fridges run at or below 5°C. Freezers run at minus 18°C or below. Fridge and freezer temperatures are checked and recorded at least daily, and a reading out of range is reported at once so the food can be assessed by someone responsible.\n\n' +
         'Store food so that nothing can drip or spread. Raw meat, poultry and fish go in sealed containers on the bottom shelf, below ready to eat food such as cooked meats, cheese, desserts and salads. Cover and label everything once opened, with what it is and the date. Unless the label says otherwise, use opened food within two days. Rotate stock so the oldest food, still in date, is used first, and put chilled and frozen deliveries away straight away. Chilled food can be kept out of the fridge for no more than four hours, for example on a buffet; after that it must be thrown away.\n\n' +
@@ -146,7 +146,7 @@ export const CPD_FOOD_HYGIENE: CpdCourse = {
     },
     {
       heading: 'Cooking, hot holding, cooling and reheating',
-      minutes: 6,
+      minutes: 5,
       body:
         'Thorough cooking kills most harmful bacteria. The FSA\'s standard advice is to cook food until the centre reaches 70°C for two minutes. Other combinations give the same safety, such as 75°C for 30 seconds or 80°C for 6 seconds, which is why many kitchens simply check for 75°C. Push a clean, disinfected probe thermometer into the thickest part. Poultry, pork, burgers, sausages and rolled joints must have no pink meat and the juices must run clear. Probes are checked regularly for accuracy: in iced water they should read between minus 1°C and 1°C, and in boiling water between 99°C and 101°C.\n\n' +
         'Hot food that is not served straight away must be kept at 63°C or above. It can be kept below 63°C for up to two hours, once. After that it must be cooled quickly to 8°C or below, or thrown away. This matters in care, where meals are kept for people who are out, asleep or eating late. A plate left covered on the side is sitting in the danger zone, between 8°C and 63°C, where bacteria multiply fastest.\n\n' +
@@ -169,7 +169,7 @@ export const CPD_FOOD_HYGIENE: CpdCourse = {
     },
     {
       heading: 'Preventing cross contamination',
-      minutes: 5,
+      minutes: 4,
       body:
         'Cross contamination is the spread of harmful bacteria, viruses or allergens from one place to another: from raw food to ready to eat food, from hands, cloths and equipment to food, and in a care setting from personal care, laundry, pets and medicines into the kitchen. It is one of the most common causes of food poisoning, and you cannot see it happening.\n\n' +
         'The most important rule is to keep raw and ready to eat food apart at every stage: delivery, storage, preparation, cooking and serving. Use separate chopping boards, knives and utensils for raw and ready to eat food. Many kitchens use colour coding, and you follow your kitchen\'s system every time. Complex equipment that is hard to clean inside, such as slicers, mincers and vacuum packers, must never be used for both raw and ready to eat food, because the FSA\'s E. coli O157 guidance accepts that cleaning cannot be relied on to remove all bacteria from it. Do not wash raw chicken or other raw meat: splashes spread bacteria around the sink and worktop, and cooking kills them anyway.\n\n' +
@@ -191,7 +191,7 @@ export const CPD_FOOD_HYGIENE: CpdCourse = {
     },
     {
       heading: 'Cleaning, disinfecting and pests',
-      minutes: 6,
+      minutes: 5,
       body:
         'Cleaning removes dirt, grease and food. Disinfecting kills bacteria and viruses. You need both, in that order, because a disinfectant cannot work through grease. This is the two stage clean. First clean the surface with hot soapy water or a detergent and rinse it. Then apply a disinfectant and leave it for the full contact time on the label before wiping or rinsing. Check the product: to be sure it kills bacteria, its label should show BS EN 1276 or BS EN 13697. A spray that is wiped straight off has not disinfected anything.\n\n' +
         'Clean as you go, and always clean and disinfect surfaces and equipment after raw food and before ready to eat food. Food contact surfaces, chopping boards, utensils, fridge handles, taps, light switches, bins and trolleys all need regular cleaning, and your workplace\'s cleaning schedule sets what is cleaned, how often and with which products. A commercial dishwasher is the most reliable way to clean and disinfect crockery and utensils; report it if it is not reaching its temperature.\n\n' +
@@ -214,7 +214,7 @@ export const CPD_FOOD_HYGIENE: CpdCourse = {
     },
     {
       heading: 'Allergens, special diets and texture modified food',
-      minutes: 6,
+      minutes: 5,
       body:
         'UK law requires food businesses, including care settings that provide meals, to give accurate information about 14 allergens when they are ingredients: celery, cereals containing gluten (such as wheat, rye, barley and oats), crustaceans, eggs, fish, lupin, milk, molluscs, mustard, tree nuts, peanuts, sesame, soya, and sulphur dioxide and sulphites. A reaction can range from itching and swelling to anaphylaxis, a life threatening reaction affecting breathing and circulation, and a trace can be enough. Coeliac disease is not an allergy, but gluten causes real harm, so the same care is needed.\n\n' +
         'The information must be right every time. Kitchens keep allergen information for every dish, usually a matrix or recipe cards, and it must be updated whenever a recipe or supplier changes, because a substitute product can bring a new allergen. Before you serve, check the person\'s documented allergies and diet in their care plan against the dish, not from memory. If you are unsure what is in something, do not guess and do not serve it until you have checked. Some people cannot remember or tell you their allergies, which makes your check the only safeguard. If your workplace wraps food on site before it is offered, for example sandwiches for a café, ask your manager whether it needs a full ingredients label under the prepacked for direct sale rules, sometimes called Natasha\'s Law.\n\n' +
@@ -400,24 +400,48 @@ export const CPD_FOOD_HYGIENE: CpdCourse = {
     { term: 'Probe thermometer', definition: 'A thermometer pushed into the centre of food to check its core temperature. It is cleaned and disinfected between uses.' },
   ],
   practical_checklist: [],
-  // Final assessment: two questions per section, 16 in total, 80% to pass (13 of
-  // 16), maximum three attempts before the learner is returned to the lesson.
+  // Final assessment: four questions per section, 32 in total, 80% to pass (26 of
+  // 32), maximum three attempts before the learner is returned to the lesson.
   questions: [
+    // Section 1. Why food safety matters in care
     { id: 'q1', text: 'Which group is most likely to become seriously ill from food poisoning?', options: ['Healthy adults aged 20 to 40', 'Older people, and people who are unwell or taking some medicines', 'Staff who eat at work', 'Nobody in particular'], correct: 1 },
     { id: 'q2', text: 'Which germ can grow slowly even at fridge temperatures, and is a particular risk to older people?', options: ['Listeria', 'Campylobacter', 'Clostridium perfringens', 'Norovirus'], correct: 0 },
-    { id: 'q3', text: 'Which of these must you report to your manager before working with food?', options: ['Someone you live with has diarrhoea', 'You slept badly', 'A small clean cut covered with a blue waterproof dressing', 'You have been on holiday in the UK'], correct: 0 },
-    { id: 'q4', text: 'Before helping someone to eat after giving personal care, you should:', options: ['Use hand gel', 'Wash and dry your hands and put on a clean apron', 'Put gloves on over unwashed hands', 'Wipe your hands on your uniform'], correct: 1 },
-    { id: 'q5', text: 'Fridges in care settings should run at:', options: ['5°C or below', '8°C to 10°C', 'Exactly 0°C', 'Room temperature for dairy products'], correct: 0 },
-    { id: 'q6', text: 'Unless the label says otherwise, opened chilled food should be used within:', options: ['A week', 'Five days', 'Two days', 'Its best before date'], correct: 2 },
-    { id: 'q7', text: 'The FSA\'s standard advice for cooking food is a core temperature of:', options: ['63°C for 2 minutes', '70°C for 2 minutes', '50°C for 10 minutes', '100°C for 1 minute'], correct: 1 },
-    { id: 'q8', text: 'How many times can food be reheated?', options: ['Twice', 'As often as needed, if it is steaming hot', 'Never', 'Once'], correct: 3 },
-    { id: 'q9', text: 'Where should raw meat be stored in a fridge?', options: ['On the top shelf', 'Next to cooked meat', 'On the bottom shelf, sealed, below ready to eat food', 'In the door'], correct: 2 },
-    { id: 'q10', text: 'Why should raw chicken not be washed before cooking?', options: ['It removes the flavour', 'It makes the meat tough', 'It is only allowed in commercial kitchens', 'Splashes spread bacteria around the sink and worktop'], correct: 3 },
-    { id: 'q11', text: 'Which code on a disinfectant label shows it meets the standard for killing bacteria?', options: ['ISO 9001', 'BS 5839', 'BS EN 1276 or BS EN 13697', 'Any product will do, all sprays kill bacteria'], correct: 2 },
-    { id: 'q12', text: 'Kitchenettes and mini kitchens on units should be:', options: ['On a cleaning schedule, and cleaned and disinfected before food is prepared', 'Cleaned only when they look dirty', 'Left to residents to clean', 'Cleaned once a week'], correct: 0 },
-    { id: 'q13', text: 'Which of these is one of the 14 allergens?', options: ['Sesame', 'Tomato', 'Chicken', 'Rice'], correct: 0 },
-    { id: 'q14', text: 'A drink is served thinner than the IDDSI level in a person\'s care plan. What is the main risk?', options: ['There is no risk', 'Choking or aspiration pneumonia', 'Food poisoning', 'An allergic reaction'], correct: 1 },
-    { id: 'q15', text: 'Chilled food brought in by a family as a gift should be:', options: ['Left in the person\'s room', 'Thrown away straight away', 'Frozen', 'Labelled with the person\'s name and date, and kept in the fridge'], correct: 3 },
-    { id: 'q16', text: 'Two residents develop vomiting on the same day. You should:', options: ['Wait to see if anyone else becomes ill', 'Clean the rooms and say nothing', 'Tell the senior on duty straight away so the outbreak procedure can start', 'Stop giving them drinks'], correct: 2 },
+    { id: 'q3', text: 'Which law makes it an offence to serve food that is unsafe?', options: ['The Care Act 2014', 'The Food Safety Act 1990', 'The Mental Capacity Act 2005', 'The Equality Act 2010'], correct: 1 },
+    { id: 'q4', text: 'Most care settings meet the legal requirement for a written food safety management system by using:', options: ['A CQC inspection report', 'The weekly menu', 'The staff rota', 'The Safer Food, Better Business pack'], correct: 3 },
+    // Section 2. Personal hygiene and fitness to work
+    { id: 'q5', text: 'Which of these must you report to your manager before working with food?', options: ['Someone you live with has diarrhoea', 'You slept badly', 'A small clean cut covered with a blue waterproof dressing', 'You have been on holiday in the UK'], correct: 0 },
+    { id: 'q6', text: 'Before helping someone to eat after giving personal care, you should:', options: ['Use hand gel', 'Wash and dry your hands and put on a clean apron', 'Put gloves on over unwashed hands', 'Wipe your hands on your uniform'], correct: 1 },
+    { id: 'q7', text: 'How long should you rub your hands together with soap when washing them?', options: ['5 seconds', 'Until the soap bubbles', 'At least 20 seconds', 'At least 2 minutes'], correct: 2 },
+    { id: 'q8', text: 'Why is a cut covered with a brightly coloured, usually blue, waterproof dressing?', options: ['It is easy to spot if it falls into food', 'Blue dressings heal faster', 'Blue is the NHS colour', 'It is needed for allergy control'], correct: 0 },
+    // Section 3. Chilling, storage and dates
+    { id: 'q9', text: 'Fridges in care settings should run at:', options: ['5°C or below', '8°C to 10°C', 'Exactly 0°C', 'Room temperature for dairy products'], correct: 0 },
+    { id: 'q10', text: 'Unless the label says otherwise, opened chilled food should be used within:', options: ['A week', 'Five days', 'Two days', 'Its best before date'], correct: 2 },
+    { id: 'q11', text: 'A kitchenette fridge reads 11°C at the start of your shift. What should you do first?', options: ['Turn the dial down and carry on', 'Report and record it, so someone responsible can decide whether the food is safe', 'Throw everything away yourself without telling anyone', 'Use the food if it still feels cold'], correct: 1 },
+    { id: 'q12', text: 'Which date on a label is about safety rather than quality?', options: ['Best before', 'Display until', 'Use by', 'Packed on'], correct: 2 },
+    // Section 4. Cooking, hot holding, cooling and reheating
+    { id: 'q13', text: 'The FSA\'s standard advice for cooking food is a core temperature of:', options: ['63°C for 2 minutes', '70°C for 2 minutes', '50°C for 10 minutes', '100°C for 1 minute'], correct: 1 },
+    { id: 'q14', text: 'How many times can food be reheated?', options: ['Twice', 'As often as needed, if it is steaming hot', 'Never', 'Once'], correct: 3 },
+    { id: 'q15', text: 'Hot food that is not being served straight away must be kept at:', options: ['40°C or above', '50°C or above', 'Room temperature under a cover', '63°C or above'], correct: 3 },
+    { id: 'q16', text: 'Why should microwaved food be stirred and left to stand before you check its temperature?', options: ['To stop the plate cracking', 'Microwaves heat unevenly and can leave cold spots', 'To improve the flavour', 'It is a fire safety rule'], correct: 1 },
+    // Section 5. Preventing cross contamination
+    { id: 'q17', text: 'Where should raw meat be stored in a fridge?', options: ['On the top shelf', 'Next to cooked meat', 'On the bottom shelf, sealed, below ready to eat food', 'In the door'], correct: 2 },
+    { id: 'q18', text: 'Why should raw chicken not be washed before cooking?', options: ['It removes the flavour', 'It makes the meat tough', 'It is only allowed in commercial kitchens', 'Splashes spread bacteria around the sink and worktop'], correct: 3 },
+    { id: 'q19', text: 'Kitchen cloths and mops should be:', options: ['Used anywhere in the building', 'Shared with the laundry team', 'Kept for kitchen use only', 'Used in bathrooms first, then the kitchen'], correct: 2 },
+    { id: 'q20', text: 'Does cooking make an allergen safe for someone who is allergic to it?', options: ['Yes, heat destroys allergens', 'Only for nut allergens', 'Only above 100°C', 'No, cooking does not make an allergen safe'], correct: 3 },
+    // Section 6. Cleaning, disinfecting and pests
+    { id: 'q21', text: 'Which code on a disinfectant label shows it meets the standard for killing bacteria?', options: ['ISO 9001', 'BS 5839', 'BS EN 1276 or BS EN 13697', 'Any product will do, all sprays kill bacteria'], correct: 2 },
+    { id: 'q22', text: 'Kitchenettes and mini kitchens on units should be:', options: ['On a cleaning schedule, and cleaned and disinfected before food is prepared', 'Cleaned only when they look dirty', 'Left to residents to clean', 'Cleaned once a week'], correct: 0 },
+    { id: 'q23', text: 'Why must a surface be cleaned before it is disinfected?', options: ['Disinfectant cannot work through grease and food', 'Cleaning is quicker', 'Disinfectant stains dirty surfaces', 'It saves disinfectant'], correct: 0 },
+    { id: 'q24', text: 'Someone has vomited in a lounge near the dining area. You should:', options: ['Leave it for housekeeping at the end of the shift', 'Wear a disposable apron and gloves, clean then disinfect the area, and wash your hands', 'Cover it with a paper towel for now', 'Spray air freshener and carry on'], correct: 1 },
+    // Section 7. Allergens, special diets and texture modified food
+    { id: 'q25', text: 'Which of these is one of the 14 allergens?', options: ['Sesame', 'Tomato', 'Chicken', 'Rice'], correct: 0 },
+    { id: 'q26', text: 'A drink is served thinner than the IDDSI level in a person\'s care plan. What is the main risk?', options: ['There is no risk', 'Choking or aspiration pneumonia', 'Food poisoning', 'An allergic reaction'], correct: 1 },
+    { id: 'q27', text: 'Which of these could be a sign of anaphylaxis?', options: ['A mild headache', 'Feeling full after a meal', 'Swelling of the lips or tongue and difficulty breathing', 'A single sneeze'], correct: 2 },
+    { id: 'q28', text: 'Why must allergen information be updated when a supplier changes a product?', options: ['Prices change', 'A substitute product can contain a different allergen', 'The law requires a new menu every month', 'Suppliers ask for it'], correct: 1 },
+    // Section 8. Mealtimes, gift food, records and reporting
+    { id: 'q29', text: 'Chilled food brought in by a family as a gift should be:', options: ['Left in the person\'s room', 'Thrown away straight away', 'Frozen', 'Labelled with the person\'s name and date, and kept in the fridge'], correct: 3 },
+    { id: 'q30', text: 'Two residents develop vomiting on the same day. You should:', options: ['Wait to see if anyone else becomes ill', 'Clean the rooms and say nothing', 'Tell the senior on duty straight away so the outbreak procedure can start', 'Stop giving them drinks'], correct: 2 },
+    { id: 'q31', text: 'Before people eat, as well as washing your own hands, you should:', options: ['Help them to clean their hands', 'Give them hand gel after the meal', 'Ask their family to do it', 'Nothing more is needed'], correct: 0 },
+    { id: 'q32', text: 'Food that might have caused people to become ill should be:', options: ['Thrown away straight away', 'Eaten by staff to test it', 'Reheated and served', 'Kept until your manager says otherwise, as it may help the investigation'], correct: 3 },
   ],
 }

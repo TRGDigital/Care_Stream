@@ -104,8 +104,12 @@
 .bypage-v2 .bypoints b{display:block;letter-spacing:-.012em}
 .bypage-v2 .bypoints span{color:var(--muted);font-size:.89rem}
 .bypage-v2 .bymod{display:flex;align-items:center;gap:16px;margin-bottom:16px}
-.bypage-v2 .bythumbshot{width:84px;height:84px;flex:0 0 auto;background:var(--plate);border:1px solid var(--line);
-    border-radius:14px;overflow:hidden;display:grid;place-items:center;text-align:center;padding:8px}
+.bypage-v2 .bythumbshot{width:84px;height:84px;flex:0 0 auto;border-radius:14px;overflow:hidden;display:block}
+/* The course image on its own: no tinted frame or outline round it. */
+.bypage-v2 .bythumbshot img{display:block;width:100%;height:100%;object-fit:cover;border-radius:14px}
+/* The eyebrow with the CPD Certified mark beside it, for certified courses. */
+.bypage-v2 .byeyerow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.bypage-v2 .bycpd{height:52px;width:auto;display:block}
 .bypage-v2 .bythumbshot span{font-size:.5rem;line-height:1.3;color:var(--muted)}
 .bypage-v2 .bythumbshot b{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
     font-size:.44rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin-bottom:3px}

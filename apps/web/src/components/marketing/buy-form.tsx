@@ -15,7 +15,8 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
   slug: string; moduleName: string; unitPence: number; variant?: 'default' | 'theme'
 }) {
   // The theme's form opens at eight licences, a typical team, not one.
-  const [qty, setQty]     = useState(variant === 'theme' ? 8 : 1)
+  // Always start at one licence; the buyer steps it up if they need more.
+  const [qty, setQty]     = useState(1)
   // "Buy now" on a course page arrives with ?qty=1 so the licence count starts at what was asked
   // for. Read after mount: useSearchParams would need a Suspense boundary on this static page.
   // Reaching this page is the second stage of a course's funnel (after its course page).

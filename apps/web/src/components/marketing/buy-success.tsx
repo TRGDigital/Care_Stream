@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle2, Loader2, Mail, AlertTriangle } from 'lucide-react'
 import { reportPurchase } from '@/lib/google-ads'
+import { fi } from '@/lib/funnel-insights'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -31,6 +32,7 @@ export function BuySuccess() {
         if (!res.ok || !body?.data?.provisioned) throw new Error(body?.error ?? 'We could not confirm your payment.')
         setState({ status: 'done', email: body.data.email })
         reportPurchase('training_purchase', body.data.value_pence, body.data.transaction_id)
+        fi('purchase', { funnel: 'training', qty: body.data.licences })
       } catch (e: any) {
         setState({ status: 'error', message: e?.message ?? 'Something went wrong confirming your purchase.' })
       }

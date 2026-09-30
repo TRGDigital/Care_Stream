@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { fi } from '@/lib/funnel-insights'
 
 // The basket and the save control on a policy page. A policy is a TOGGLE, not a quantity: you
 // buy one copy of your own Safeguarding Adults Policy or none.
@@ -72,7 +73,7 @@ export function AddToBasket({ item, className = '', label = 'Add to basket' }: {
   const toggle = useCallback(() => {
     const next = read(KEY_BASKET)
     if (next[item.slug]) delete next[item.slug]
-    else next[item.slug] = item
+    else { next[item.slug] = item; fi('add_to_basket', { funnel: 'policies', option: item.title, qty: 1 }) }
     write(KEY_BASKET, next)
     announce()
   }, [item])
@@ -95,6 +96,7 @@ export function PackLink({ pack, className = '', children }: {
   const add = useCallback(() => {
     const next = read(KEY_BASKET)
     next[`bundle:${pack.key}`] = { slug: `bundle:${pack.key}`, title: pack.title, price_pence: pack.price_pence }
+    fi('add_to_basket', { funnel: 'policies', option: pack.title, qty: 1 })
     write(KEY_BASKET, next)
     announce()
   }, [pack])

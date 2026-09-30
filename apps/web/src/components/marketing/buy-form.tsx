@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Minus, Plus, Loader2, ShieldCheck } from 'lucide-react'
+import { fi } from '@/lib/funnel-insights'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 const gbp = (pence: number) => `£${(pence / 100).toFixed(2)}`
@@ -33,6 +34,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
     if (!org.trim()) { setError('Please enter your organisation name.'); return }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) { setError('Please enter a valid email address.'); return }
     setBusy(true)
+    fi('checkout_start', { funnel: 'training', option: slug, qty })
     try {
       const res = await fetch(`${API_URL}/public/training/checkout`, {
         method:  'POST',

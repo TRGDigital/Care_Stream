@@ -20,6 +20,7 @@ import { CourseStickyBar } from '@/components/marketing/course-sticky-bar'
 import { TrainingFollowUpLoop } from '@/components/marketing/training-follow-up-loop'
 import { TrainingVideo } from '@/components/marketing/training-video'
 import { estimatedMinutes, formatDuration } from '@/lib/training-commerce'
+import { FunnelInsightsTracker } from '@/components/marketing/funnel-insights-tracker'
 
 // PPC landing pages for the training modules (ad traffic only). Deliberately
 // noindex + no site nav — a single-goal conversion page. The public /staff-training
@@ -82,11 +83,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 function CtaRow({ buyHref, className = '', showSecondary = true }: { buyHref: string; className?: string; showSecondary?: boolean }) {
   return (
     <div className={`flex flex-col gap-3 sm:flex-row ${className}`}>
-      <Link href={buyHref} className="rounded-btn bg-blue-600 px-8 py-4 text-center text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700">
+      <Link href={buyHref} data-fi="buy-now" className="rounded-btn bg-blue-600 px-8 py-4 text-center text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700">
         Buy now for your team
       </Link>
       {showSecondary && (
-        <a href="#enquire" className="rounded-btn border-2 border-gray-200 px-8 py-4 text-center text-sm font-semibold text-neutral-dark transition-colors hover:border-teal hover:text-teal">
+        <a href="#enquire" data-fi="team-pricing" className="rounded-btn border-2 border-gray-200 px-8 py-4 text-center text-sm font-semibold text-neutral-dark transition-colors hover:border-teal hover:text-teal">
           Get team pricing
         </a>
       )}
@@ -170,6 +171,7 @@ export default async function GoLandingPage({
 
   return (
     <div className="min-h-screen bg-white pb-20 lg:pb-0">
+      <FunnelInsightsTracker />
       {/* Slim header — no nav, one goal */}
       <header className="border-b border-gray-100">
         <div className="mx-auto flex max-w-content items-center justify-between px-6 py-1.5">

@@ -6,6 +6,7 @@ import { BreadcrumbsJsonLd } from '@/components/breadcrumbs-json-ld'
 import { MarketingAgentTools } from '@/components/agent/marketing-agent-tools'
 import { PopEmbed } from '@/components/marketing/pop-embed'
 import { WebsiteChat } from '@/components/marketing/website-chat'
+import { FunnelInsightsTracker } from '@/components/marketing/funnel-insights-tracker'
 
 export default async function MarketingLayout({ children }: { children: React.ReactNode }) {
   const altMap = await getSiteAltMap()
@@ -17,6 +18,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
       <div className="flex min-h-screen flex-col">
         <MarketingNav />
         <main className="flex-1">{children}</main>
+        <FunnelInsightsTracker />
         <MarketingFooter />
       </div>
       <WebsiteChat />

@@ -5,6 +5,7 @@ import { JsonLd } from '@/components/json-ld'
 import { faqPageSchema } from '@/lib/schema'
 import { BuyForm } from './buy-form'
 import './buy-page-v2.css'
+import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 
 // The rebuilt /buy/<slug> template. Renders the SAME module record the current page renders.
 //
@@ -208,6 +209,8 @@ export function BuyPageV2({ module: m, unitPence, related, apiUrl }: {
   apiUrl: string
 }) {
   const minutes = m.duration_minutes ?? 0
+  // CPD hours as the certificate states them: the course length in hours, to one decimal place.
+  const cpdHours = minutes ? Math.round((minutes / 60) * 10) / 10 : null
   // Exactly the theme's line, including the fixed assessment length, which its generator
   // hard-codes rather than reading from the record.
   const qCount = m.question_count ?? null
@@ -249,7 +252,14 @@ export function BuyPageV2({ module: m, unitPence, related, apiUrl }: {
                   </div>
                 )}
                 <div>
-                  <span className="byeyebrow">Buy training · no subscription</span>
+                  <div className="byeyerow">
+                    <span className="byeyebrow">Buy training · no subscription</span>
+                    {m.cpd_accredited && (
+                      // CPD Certified trademark exactly as supplied: no border, frame or added text (lib/cpd.ts).
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img className="bycpd" src={CPD_CERTIFIED_LOGO} alt="CPD Certified" />
+                    )}
+                  </div>
                   <p className="bymod-meta">{meta}</p>
                 </div>
               </div>
@@ -260,6 +270,14 @@ export function BuyPageV2({ module: m, unitPence, related, apiUrl }: {
                 complete <strong>{m.title}</strong> module, in the language they think in.
               </p>
               <ul className="bypoints">
+                {m.cpd_accredited && (
+                  <li>
+                    <span className="ic"><Tick /></span>
+                    <span><b>CPD Certified Course</b><span>
+                      Certified by The CPD Certification Service{cpdHours ? `, worth ${cpdHours} CPD hour${cpdHours === 1 ? '' : 's'}` : ''}. Every certificate carries the CPD Certified mark.
+                    </span></span>
+                  </li>
+                )}
                 {POINTS.map(([title, body]) => (
                   <li key={title}>
                     <span className="ic"><Tick /></span>

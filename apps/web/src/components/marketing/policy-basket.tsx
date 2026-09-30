@@ -125,6 +125,46 @@ export function SavePolicy({ slug, title, className = '' }: {
   )
 }
 
+/** The page's main action: put this policy in the basket (if it is not already) and go
+ *  straight to checkout. A real link, so it still reaches checkout without JS. Logged as its
+ *  own event so PPC traffic that buys directly can be told apart from the basket. */
+export function BuyNowPolicy({ item, className = '', label = 'Buy now' }: {
+  item: BasketItem; className?: string; label?: string
+}) {
+  const add = useCallback(() => {
+    const next = read(KEY_BASKET)
+    if (!next[item.slug]) next[item.slug] = item
+    write(KEY_BASKET, next)
+    announce()
+    fi('buy_now_click', { funnel: 'policies', option: item.title, qty: 1 })
+  }, [item])
+  return (
+    <a className={`pcadd pcbuynow ${className}`.trim()} href="/care-policies/checkout" onClick={add}>
+      <CartIcon /> {label}
+    </a>
+  )
+}
+
+/** The secondary action under Buy now, as plain text. */
+export function AddToBasketText({ item, className = '' }: { item: BasketItem; className?: string }) {
+  const store = useStore(KEY_BASKET)
+  const inBasket = !!store[item.slug]
+  const toggle = useCallback(() => {
+    const next = read(KEY_BASKET)
+    if (next[item.slug]) delete next[item.slug]
+    else { next[item.slug] = item; fi('add_to_basket', { funnel: 'policies', option: item.title, qty: 1 }) }
+    write(KEY_BASKET, next)
+    announce()
+  }, [item])
+  return (
+    <p className={`pctextadd ${className}`.trim()}>
+      {inBasket
+        ? <>In your basket &middot; <a href="/care-policies/checkout">Checkout</a> &middot; <button type="button" onClick={toggle}>Remove</button></>
+        : <>or <button type="button" onClick={toggle}>add to basket</button></>}
+    </p>
+  )
+}
+
 /** The pill, bottom right. Hidden entirely while the basket is empty. */
 export function BasketPill() {
   const store = useStore(KEY_BASKET)
@@ -175,7 +215,7 @@ export function StickyBuyBar({ item, image }: { item: BasketItem; image: string 
           <span className="meta">{money(item.price_pence)} one-off<i>·</i>Delivered within 2 working days</span>
         </span>
         <SavePolicy slug={item.slug} title={item.title} />
-        <AddToBasket item={item} />
+        <BuyNowPolicy item={item} />
       </div>
     </div>
   )

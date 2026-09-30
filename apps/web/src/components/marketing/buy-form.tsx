@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Minus, Plus, Loader2, ShieldCheck } from 'lucide-react'
 import { fi } from '@/lib/funnel-insights'
@@ -16,6 +16,12 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
 }) {
   // The theme's form opens at eight licences, a typical team, not one.
   const [qty, setQty]     = useState(variant === 'theme' ? 8 : 1)
+  // "Buy now" on a course page arrives with ?qty=1 so the licence count starts at what was asked
+  // for. Read after mount: useSearchParams would need a Suspense boundary on this static page.
+  useEffect(() => {
+    const q = Number(new URLSearchParams(window.location.search).get('qty'))
+    if (Number.isFinite(q) && q >= 1) setQty(Math.min(500, Math.floor(q)))
+  }, [])
   const [email, setEmail] = useState('')
   const [org, setOrg]     = useState('')
   const [busy, setBusy]   = useState(false)

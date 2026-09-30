@@ -7,6 +7,7 @@ import { SiteImage } from '@/components/site-image'
 import { useCart } from '@/lib/cart-store'
 import { UNIT_PENCE, gbp, estimatedMinutes, formatDuration, TRAINING_ACCREDITED } from '@/lib/training-commerce'
 import { CartButton } from './cart-button'
+import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 import { SaveCourseButton } from './save-course-button'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
@@ -42,6 +43,7 @@ export type LibraryTopic = {
   description: string | null
   illustration_url: string | null
   duration_minutes?: number | null
+  cpd_accredited?: boolean
 }
 
 type Props = {
@@ -100,6 +102,10 @@ export function ModuleCard({ t, accent, settingLabel }: { t: LibraryTopic; accen
         </div>
       </Link>
       <div className="flex flex-1 flex-col p-5 sm:p-6">
+        {t.cpd_accredited && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified" className="mb-2" style={{ height: 44, width: 'auto' }} />
+        )}
         <Link href={`/staff-training/${t.slug}`}>
           <h4 className="mb-2 text-lg font-bold leading-snug text-neutral-dark transition group-hover:text-teal">{t.title}</h4>
         </Link>
@@ -203,6 +209,11 @@ export function ThemeModuleCard({ t, settingLabel, bulk, hidden }: {
         <div className="badges">
           {t.requires_practical && <span className="tbadge prac">Practical assessment</span>}
         </div>
+        {t.cpd_accredited && (
+          // CPD Certified trademark exactly as supplied: no border or added text (see lib/cpd.ts).
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified" style={{ display: 'block', alignSelf: 'flex-start', height: 52, width: 'auto', aspectRatio: 'auto', objectFit: 'contain', marginBottom: 10 }} />
+        )}
         <h4>{t.title}</h4>
         <p className="desc">
           {t.description ?? GROUP_BLURB[t.group_key] ?? 'A mandatory training subject, ready to assign.'}

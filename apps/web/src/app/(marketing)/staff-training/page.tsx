@@ -36,6 +36,7 @@ type CatalogueTopic = {
   duration_minutes: number | null
   pass_mark: number | null
   illustration_url: string | null
+  cpd_accredited?: boolean
 }
 
 type Catalogue = { groups: Record<string, string>; settings: Array<{ key: string; label: string }>; topics: CatalogueTopic[] }

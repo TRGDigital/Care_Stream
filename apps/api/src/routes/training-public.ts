@@ -541,15 +541,6 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
     const existing = await (prisma as any).trainingLicense.findFirst({ where: { stripe_payment_id: s.paymentId }, select: { id: true } })
     // value_pence + transaction_id let the thank-you page report the sale to Google Ads;
     // the id is the payment, so a refreshed page is de-duplicated rather than counted twice.
-    const conversion = { value_pence: s.amountTotalPence, transaction_id: s.paymentId }
-    if (existing) { res.json({ data: { provisioned: true, already: true, email: s.email, ...conversion } }); return }
-
-    const orgName   = s.metadata.org_name || 'Your service'
-    const email     = (s.email || s.metadata.email || '').toLowerCase()
-    const adminName = s.customerName || orgName
-    const consoleTenantId = String(s.metadata.tenant_id || '')
-    if (!email && !consoleTenantId) { res.status(400).json({ error: 'No email on the payment' }); return }
-
     // Build the list of {slug, qty} to provision — from the basket metadata for a
     // multi-course order, otherwise the single module.
     let items: { slug: string; qty: number }[] = []
@@ -566,6 +557,18 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
       if (slug) items = [{ slug, qty }]
     }
     if (!items.length) { res.status(400).json({ error: 'No items on the payment' }); return }
+
+    // value_pence + transaction_id report the sale to Google Ads; products names each course for
+    // Funnel Insights' per-product funnels.
+    const conversion = { value_pence: s.amountTotalPence, transaction_id: s.paymentId, products: items }
+    if (existing) { res.json({ data: { provisioned: true, already: true, email: s.email, ...conversion } }); return }
+
+    const orgName   = s.metadata.org_name || 'Your service'
+    const email     = (s.email || s.metadata.email || '').toLowerCase()
+    const adminName = s.customerName || orgName
+    const consoleTenantId = String(s.metadata.tenant_id || '')
+    if (!email && !consoleTenantId) { res.status(400).json({ error: 'No email on the payment' }); return }
+
 
     const topics = await (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true }, select: { id: true, title: true, shop_module_id: true } })
     const bySlug = new Map((topics as any[]).map(t => [slugify(t.title), t] as const))

@@ -73,7 +73,7 @@ export function AddToBasket({ item, className = '', label = 'Add to basket' }: {
   const toggle = useCallback(() => {
     const next = read(KEY_BASKET)
     if (next[item.slug]) delete next[item.slug]
-    else { next[item.slug] = item; fi('add_to_basket', { funnel: 'policies', option: item.title, qty: 1 }) }
+    else { next[item.slug] = item; fi('add_to_basket', { funnel: 'policies', option: item.slug, label: item.title, qty: 1 }) }
     write(KEY_BASKET, next)
     announce()
   }, [item])
@@ -96,7 +96,7 @@ export function PackLink({ pack, className = '', children }: {
   const add = useCallback(() => {
     const next = read(KEY_BASKET)
     next[`bundle:${pack.key}`] = { slug: `bundle:${pack.key}`, title: pack.title, price_pence: pack.price_pence }
-    fi('add_to_basket', { funnel: 'policies', option: pack.title, qty: 1 })
+    fi('add_to_basket', { funnel: 'policies', option: `bundle:${pack.key}`, label: pack.title, qty: 1 })
     write(KEY_BASKET, next)
     announce()
   }, [pack])
@@ -136,7 +136,7 @@ export function BuyNowPolicy({ item, className = '', label = 'Buy now' }: {
     if (!next[item.slug]) next[item.slug] = item
     write(KEY_BASKET, next)
     announce()
-    fi('buy_now_click', { funnel: 'policies', option: item.title, qty: 1 })
+    fi('buy_now_click', { funnel: 'policies', option: item.slug, label: item.title, qty: 1 })
   }, [item])
   return (
     <a className={`pcadd pcbuynow ${className}`.trim()} href="/care-policies/checkout" onClick={add}>
@@ -152,7 +152,7 @@ export function AddToBasketText({ item, className = '' }: { item: BasketItem; cl
   const toggle = useCallback(() => {
     const next = read(KEY_BASKET)
     if (next[item.slug]) delete next[item.slug]
-    else { next[item.slug] = item; fi('add_to_basket', { funnel: 'policies', option: item.title, qty: 1 }) }
+    else { next[item.slug] = item; fi('add_to_basket', { funnel: 'policies', option: item.slug, label: item.title, qty: 1 }) }
     write(KEY_BASKET, next)
     announce()
   }, [item])

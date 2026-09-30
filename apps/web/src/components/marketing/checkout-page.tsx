@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { useCart, trackBasketEvent } from '@/lib/cart-store'
 import { useSavedCourses } from '@/lib/saved-courses'
@@ -189,7 +189,11 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [mounted, setMounted] = useState(false)
-  useEffect(() => { setMounted(true); fi('basket_view', { funnel: 'training', qty: cart.snapshot().reduce((n, i) => n + i.qty, 0) }) }, [])
+  // Reaching checkout counts against each course in the basket, not the checkout page.
+  useEffect(() => {
+    setMounted(true)
+    cart.snapshot().forEach(i => fi('basket_view', { funnel: 'training', option: i.slug, label: i.title, qty: i.qty }))
+  }, [])
 
   const tiers = [...DISCOUNT_TIERS].sort((a, b) => a.min - b.min)
   const next = tiers.find(t => totalQty < t.min)
@@ -203,7 +207,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
     if (problem) { setError(problem); return }
     setError(''); setBusy(true)
     items.forEach(i => trackBasketEvent('checkout', i.slug, i.qty))
-    fi('checkout_start', { funnel: 'training', qty: totalQty })
+    items.forEach(i => fi('checkout_start', { funnel: 'training', option: i.slug, label: i.title, qty: i.qty }))
     try {
       const res = await fetch(`${API_URL}/public/training/checkout-basket`, {
         method: 'POST',
@@ -372,7 +376,14 @@ export function PolicyCheckout() {
   const [error, setError] = useState('')
   const [mounted, setMounted] = useState(false)
   const [packs, setPacks] = useState<Record<string, Pack[]>>({})
-  useEffect(() => { setMounted(true); fi('basket_view', { funnel: 'policies' }) }, [])
+  useEffect(() => setMounted(true), [])
+  // Reaching checkout counts against each policy or pack in it, once the basket has loaded.
+  const viewed = useRef(false)
+  useEffect(() => {
+    if (!mounted || viewed.current || items.length === 0) return
+    viewed.current = true
+    items.forEach(i => fi('basket_view', { funnel: 'policies', option: i.slug, label: i.title, qty: 1 }))
+  }, [mounted, items])
 
   const policies = items.filter(i => !i.slug.startsWith(BUNDLE))
   const total = items.reduce((n, i) => n + (i.price_pence || 0), 0)
@@ -410,7 +421,7 @@ export function PolicyCheckout() {
     const problem = detailsError(org, name, email)
     if (problem) { setError(problem); return }
     setError(''); setBusy(true)
-    fi('checkout_start', { funnel: 'policies', qty: items.length })
+    items.forEach(i => fi('checkout_start', { funnel: 'policies', option: i.slug, label: i.title, qty: 1 }))
     try {
       const res = await fetch(`${API_URL}/public/policy-shop/checkout`, {
         method: 'POST',

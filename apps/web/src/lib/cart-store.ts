@@ -55,7 +55,7 @@ export const cart = {
     if (existing) items = items.map((i) => (i.slug === item.slug ? { ...i, qty: Math.min(500, i.qty + qty) } : i))
     else items = [...items, { slug: item.slug, title: item.title, qty, unitPence: item.unitPence ?? UNIT_PENCE }]
     trackBasketEvent('add', item.slug, qty)
-    fi('add_to_basket', { funnel: 'training', option: item.title || item.slug, qty })
+    fi('add_to_basket', { funnel: 'training', option: item.slug, label: item.title, qty })
     persist()
   },
   setQty(slug: string, qty: number) {

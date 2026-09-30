@@ -493,7 +493,9 @@ policyShopPublicRouter.post('/reconcile', async (req: Request, res: Response) =>
     }
 
     // value_pence + transaction_id let the thank-you page report the sale to Google Ads.
-    ok(res, { created: created.length, new_account: isNewAccount, email, value_pence: result.amountTotalPence, transaction_id: result.paymentId })
+    ok(res, { created: created.length, new_account: isNewAccount, email, value_pence: result.amountTotalPence, transaction_id: result.paymentId,
+      // Each policy or pack bought, for Funnel Insights' per-product funnels.
+      products: result.items.map((i: { kind: string; key: string }) => ({ slug: i.kind === 'bundle' ? `bundle:${i.key}` : i.key, qty: 1 })) })
   } catch (e: any) {
     err(res, 'RECONCILE_FAILED', e?.message ?? 'could not confirm that purchase', 500)
   }

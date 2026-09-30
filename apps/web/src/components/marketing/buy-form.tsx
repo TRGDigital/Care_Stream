@@ -18,6 +18,9 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
   const [qty, setQty]     = useState(variant === 'theme' ? 8 : 1)
   // "Buy now" on a course page arrives with ?qty=1 so the licence count starts at what was asked
   // for. Read after mount: useSearchParams would need a Suspense boundary on this static page.
+  // Reaching this page is the second stage of a course's funnel (after its course page).
+  useEffect(() => { fi('buy_page', { funnel: 'training', option: slug, label: moduleName }) }, [slug, moduleName])
+
   useEffect(() => {
     const q = Number(new URLSearchParams(window.location.search).get('qty'))
     if (Number.isFinite(q) && q >= 1) setQty(Math.min(500, Math.floor(q)))
@@ -40,7 +43,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
     if (!org.trim()) { setError('Please enter your organisation name.'); return }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) { setError('Please enter a valid email address.'); return }
     setBusy(true)
-    fi('checkout_start', { funnel: 'training', option: slug, qty })
+    fi('checkout_start', { funnel: 'training', option: slug, label: moduleName, qty })
     try {
       const res = await fetch(`${API_URL}/public/training/checkout`, {
         method:  'POST',

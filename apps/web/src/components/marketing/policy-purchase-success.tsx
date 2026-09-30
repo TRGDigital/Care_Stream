@@ -53,7 +53,7 @@ export function PolicyPurchaseSuccess() {
           newAccount: !!body.data.new_account,
         })
         reportPurchase('policy_purchase', body.data.value_pence, body.data.transaction_id)
-        fi('purchase', { funnel: 'policies', qty: body.data.created })
+        for (const p of body.data.products ?? []) fi('purchase', { funnel: 'policies', option: p.slug, qty: p.qty })
       } catch (e: any) {
         setState({
           status: 'error',

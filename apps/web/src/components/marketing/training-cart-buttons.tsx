@@ -95,7 +95,7 @@ export function TrainingAddTextLink({ slug, title, unitPence, className = '' }: 
   }
   return (
     <p className={`textadd ${className}`.trim()}>
-      or <button type="button" onClick={() => { cart.add({ slug, title, unitPence }); fi('add_to_basket', { funnel: 'training', option: slug, qty: 1 }) }}>add to basket</button>
+      or <button type="button" onClick={() => cart.add({ slug, title, unitPence })}>add to basket</button>
     </p>
   )
 }

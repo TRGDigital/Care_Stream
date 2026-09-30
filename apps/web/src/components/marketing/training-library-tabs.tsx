@@ -102,10 +102,6 @@ export function ModuleCard({ t, accent, settingLabel }: { t: LibraryTopic; accen
         </div>
       </Link>
       <div className="flex flex-1 flex-col p-5 sm:p-6">
-        {t.cpd_accredited && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified" className="mb-2" style={{ height: 44, width: 'auto' }} />
-        )}
         <Link href={`/staff-training/${t.slug}`}>
           <h4 className="mb-2 text-lg font-bold leading-snug text-neutral-dark transition group-hover:text-teal">{t.title}</h4>
         </Link>
@@ -147,7 +143,15 @@ export function ModuleCard({ t, accent, settingLabel }: { t: LibraryTopic; accen
           </div>
           <SaveCourseButton slug={t.slug} title={t.title} compact className="rounded-xl" />
         </div>
-        <p className="mt-2 text-center text-[11px] text-neutral-mid">Bulk discounts from 10+ licences</p>
+        {t.cpd_accredited ? (
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <p className="text-[11px] text-neutral-mid">Bulk discounts from 10+ licences</p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified" style={{ height: 44, width: 'auto' }} />
+          </div>
+        ) : (
+          <p className="mt-2 text-center text-[11px] text-neutral-mid">Bulk discounts from 10+ licences</p>
+        )}
       </div>
     </div>
   )
@@ -209,11 +213,6 @@ export function ThemeModuleCard({ t, settingLabel, bulk, hidden }: {
         <div className="badges">
           {t.requires_practical && <span className="tbadge prac">Practical assessment</span>}
         </div>
-        {t.cpd_accredited && (
-          // CPD Certified trademark exactly as supplied: no border or added text (see lib/cpd.ts).
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified" style={{ display: 'block', alignSelf: 'flex-start', height: 52, width: 'auto', aspectRatio: 'auto', objectFit: 'contain', marginBottom: 10 }} />
-        )}
         <h4>{t.title}</h4>
         <p className="desc">
           {t.description ?? GROUP_BLURB[t.group_key] ?? 'A mandatory training subject, ready to assign.'}
@@ -240,7 +239,17 @@ export function ThemeModuleCard({ t, settingLabel, bulk, hidden }: {
           )}
           <SaveCourseButton variant="theme" slug={t.slug} title={t.title} className="tsave" />
         </div>
-        <p className="tbulk">{bulk}</p>
+        {t.cpd_accredited ? (
+          // Bulk note left, CPD Certified mark bottom right under the save button. The
+          // trademark is shown exactly as supplied: no border or added text (see lib/cpd.ts).
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 10 }}>
+            <p className="tbulk" style={{ margin: 0, textAlign: 'left' }}>{bulk}</p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified" style={{ display: 'block', flex: '0 0 auto', height: 44, width: 'auto', aspectRatio: 'auto', objectFit: 'contain' }} />
+          </div>
+        ) : (
+          <p className="tbulk">{bulk}</p>
+        )}
       </div>
     </div>
   )

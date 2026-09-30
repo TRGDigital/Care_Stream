@@ -843,3 +843,36 @@ export async function handleWebhook(payload: Buffer, signature: string): Promise
       break // ignore unhandled event types
   }
 }
+
+/** What a paid Checkout session was worth, for Funnel Insights' revenue reporting: the
+ *  subtotal after any volume pricing, the discount-code reduction, VAT, the code used, and
+ *  each line in the order it was created. Pence throughout. */
+export async function retrieveSaleBreakdown(sessionId: string): Promise<{
+  subtotal: number
+  discount: number
+  tax: number
+  code: string | null
+  lines: { name: string; subtotal: number; quantity: number }[]
+} | null> {
+  const stripe = getStripe()
+  const session = await stripe.checkout.sessions.retrieve(
+    sessionId,
+    // Stripe expands at most four levels, so the promotion code's text is fetched separately.
+    { expand: ['line_items', 'total_details.breakdown'] },
+    managedPaymentsRequestOptions(),
+  )
+  if (!session || session.payment_status !== 'paid') return null
+  const d = session.total_details?.breakdown?.discounts?.[0]?.discount as any
+  let code: string | null = d ? (d.coupon?.name ?? d.coupon?.id ?? null) : null
+  const promo = typeof d?.promotion_code === 'string' ? d.promotion_code : d?.promotion_code?.id
+  if (promo) {
+    try { code = (await stripe.promotionCodes.retrieve(promo, {}, managedPaymentsRequestOptions())).code ?? code } catch { /* keep the coupon name */ }
+  }
+  return {
+    subtotal: session.amount_subtotal ?? 0,
+    discount: session.total_details?.amount_discount ?? 0,
+    tax: session.total_details?.amount_tax ?? 0,
+    code,
+    lines: (session.line_items?.data ?? []).map(l => ({ name: l.description ?? '', subtotal: l.amount_subtotal ?? 0, quantity: l.quantity ?? 1 })),
+  }
+}

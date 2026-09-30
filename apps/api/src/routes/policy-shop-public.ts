@@ -22,6 +22,7 @@ import {
 import crypto from 'crypto'
 import { intakeStateFor } from '../services/policy-writer/intake'
 import { enrolInCampaign } from '../services/onboarding/dispatch'
+import { reportPolicySale } from '../services/analytics/funnel-insights'
 
 export const policyShopPublicRouter = Router()
 
@@ -375,6 +376,8 @@ policyShopPublicRouter.post('/reconcile', async (req: Request, res: Response) =>
     const email = (result.email ?? '').toLowerCase()
     if (!email) return err(res, 'NO_EMAIL', 'That payment carries no email address', 400)
 
+    // Revenue to Funnel Insights, one line per policy or pack (idempotent there).
+    await reportPolicySale(sessionId, result.paymentId, result.items)
     const lines = await expandBasket(result.items)
     if (!lines.length) return err(res, 'NOTHING_TO_DO', 'That payment had nothing we could fulfil', 400)
 

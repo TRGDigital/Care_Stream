@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle2, Loader2, Mail, AlertTriangle } from 'lucide-react'
 import { reportPurchase } from '@/lib/google-ads'
-import { fi } from '@/lib/funnel-insights'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -32,7 +31,7 @@ export function BuySuccess() {
         if (!res.ok || !body?.data?.provisioned) throw new Error(body?.error ?? 'We could not confirm your payment.')
         setState({ status: 'done', email: body.data.email })
         reportPurchase('training_purchase', body.data.value_pence, body.data.transaction_id)
-        for (const p of body.data.products ?? []) fi('purchase', { funnel: 'training', option: p.slug, qty: p.qty })
+        // Purchases reach Funnel Insights from the server once Stripe confirms (with revenue).
       } catch (e: any) {
         setState({ status: 'error', message: e?.message ?? 'Something went wrong confirming your purchase.' })
       }

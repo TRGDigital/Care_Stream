@@ -13,6 +13,7 @@ import { sendStaffLoginLinkEmail, sendPasswordSetupEmail, sendTrainingOnboarding
 import { enrolInCampaign } from '../services/onboarding/dispatch'
 import { hashPassword } from '../services/auth/password'
 import crypto from 'crypto'
+import { reportTrainingSale } from '../services/analytics/funnel-insights'
 
 const slugify = (s: string): string =>
   s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
@@ -561,6 +562,8 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
     // value_pence + transaction_id report the sale to Google Ads; products names each course for
     // Funnel Insights' per-product funnels.
     const conversion = { value_pence: s.amountTotalPence, transaction_id: s.paymentId, products: items }
+    // Revenue to Funnel Insights (idempotent there, so the already-provisioned path is safe too).
+    await reportTrainingSale(sessionId, s.paymentId, items, s.metadata.module_name)
     if (existing) { res.json({ data: { provisioned: true, already: true, email: s.email, ...conversion } }); return }
 
     const orgName   = s.metadata.org_name || 'Your service'

@@ -7,7 +7,7 @@ import { careSetting } from '@/lib/care-setting'
 import { claimSafe, estimatedMinutes, refreshWord, durationText } from '@/lib/training-commerce'
 import { LanguageCheck } from './language-check'
 import { ThemeModuleCard, type LibraryTopic } from './training-library-tabs'
-import { TrainingAddButton, TrainingCartLink, TrainingSaveButton } from './training-cart-buttons'
+import { TrainingAddButton, TrainingCartLink, TrainingSaveButton, BuyNowLink, TrainingAddTextLink } from './training-cart-buttons'
 import { StickyBarReveal } from './sticky-bar-reveal'
 import './module-page-v2.css'
 
@@ -242,7 +242,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
             </span>
           </span>
           <TrainingSaveButton slug={m.slug} title={m.title} />
-          <Link className="add" href={buyHref}>Start course now</Link>
+          <BuyNowLink slug={m.slug} className="add" />
         </div>
       </div>
 
@@ -276,9 +276,10 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
                   was no multi-module basket; there is one now (the training cart, checked out
                   at /basket), and the /staff-training library already adds to it. */}
               <div className="mrow">
-                <TrainingAddButton {...addLabel} />
+                <BuyNowLink slug={m.slug} className="add" />
                 <TrainingSaveButton slug={m.slug} title={m.title} />
               </div>
+              <TrainingAddTextLink {...addLabel} />
             </div>
 
             <p className="mprice-line">
@@ -654,11 +655,12 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
       <section className="tend">
         <div className="mwrap tend-in">
           <h2>Give your team {lower} training that actually sticks.</h2>
-          <p>Add it to your basket, allocate it in seconds, and let the evidence build itself.</p>
+          <p>Buy your licences, allocate them in seconds, and let the evidence build itself.</p>
           <div className="row">
-            <TrainingAddButton {...addLabel} className="tbtn solid" label={`Add to basket · ${price}`} />
+            <BuyNowLink slug={m.slug} className="tbtn solid" label={`Buy now · ${price}`} />
             <Link className="tbtn ghost" href="/demo">Book a demo</Link>
           </div>
+          <TrainingAddTextLink {...addLabel} className="center" />
         </div>
       </section>
 

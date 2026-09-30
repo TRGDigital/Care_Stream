@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
 import { PolicyIntakeGame } from './policy-intake-game'
-import { AddToBasket, BasketPill, SavePolicy, StickyBuyBar } from './policy-basket'
+import { AddToBasket, AddToBasketText, BasketPill, BuyNowPolicy, SavePolicy, StickyBuyBar } from './policy-basket'
 import './policy-page-v2.css'
 
 // The rebuilt /care-policies/<slug> template. Renders the SAME shop API record the current page
@@ -221,9 +221,10 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
                 No subscription needed. First year of updates included, £12 a year after that.
               </p>
               <div className="pcbuyrow">
-                <AddToBasket item={item} />
+                <BuyNowPolicy item={item} />
                 <SavePolicy slug={product.slug} title={product.title} />
               </div>
+              <AddToBasketText item={item} />
             </div>
 
             <p className="pcnote">

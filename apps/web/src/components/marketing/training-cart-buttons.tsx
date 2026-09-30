@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useCart } from '@/lib/cart-store'
 import { gbp } from '@/lib/training-commerce'
+import { fi } from '@/lib/funnel-insights'
 import { SaveCourseButton } from './save-course-button'
 
 // The TRAINING cart's controls, in the rebuilt theme's markup, for pages outside the training
@@ -63,5 +64,38 @@ export function TrainingCartLink() {
       <Cart /> <span>View basket</span> <span className="count">{totalQty}</span>
       <span>{gbp(pct ? net : gross)}</span>
     </Link>
+  )
+}
+
+/** The page's main action: straight to this course's purchase page with one licence set.
+ *  Logged as its own event so PPC traffic that buys directly can be told apart from the basket. */
+export function BuyNowLink({ slug, className = '', label = 'Buy now' }: {
+  slug: string; className?: string; label?: string
+}) {
+  return (
+    <Link className={className} href={`/buy/${slug}?qty=1`}
+          onClick={() => fi('buy_now_click', { funnel: 'training', option: slug, qty: 1 })}>
+      {label}
+    </Link>
+  )
+}
+
+/** The secondary action under Buy now, as plain text: adds one licence to the training basket. */
+export function TrainingAddTextLink({ slug, title, unitPence, className = '' }: {
+  slug: string; title: string; unitPence: number; className?: string
+}) {
+  const { items, cart } = useCart()
+  const inCart = items.find(i => i.slug === slug)
+  if (inCart) {
+    return (
+      <p className={`textadd ${className}`.trim()}>
+        {inCart.qty} in your basket &middot; <Link href="/basket">View basket</Link>
+      </p>
+    )
+  }
+  return (
+    <p className={`textadd ${className}`.trim()}>
+      or <button type="button" onClick={() => { cart.add({ slug, title, unitPence }); fi('add_to_basket', { funnel: 'training', option: slug, qty: 1 }) }}>add to basket</button>
+    </p>
   )
 }

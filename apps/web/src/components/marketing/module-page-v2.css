@@ -584,3 +584,10 @@
 .mpage-v2 .shot img,.mpage-v2 .sshot img,.mpage-v2 .sscen-shot img,.mpage-v2 .uc-shot img,.mpage-v2 .wcshot img,.mpage-v2 .svshot img,.mpage-v2 .wwshot img,.mpage-v2 .wfshot img,.mpage-v2 .wfheroshot img,.mpage-v2 .tpshot img,.mpage-v2 .rgshot img,.mpage-v2 .dmshot img,.mpage-v2 .plate:not(.shotplate) img,.mpage-v2 .smock img,.mpage-v2 .ucread-art img,.mpage-v2 .pcrel-art img{display:block;width:100%!important;height:auto!important;object-fit:contain;border-radius:inherit}
 .mpage-v2 .fchips,.mpage-v2 .schips,.mpage-v2 .smock-tabs,.mpage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}
 .mpage-v2 [hidden]{display:none!important}
+
+/* Secondary "add to basket" under Buy now, as plain text. */
+.mpage-v2 .textadd{margin:0 0 10px;font-size:.84rem;color:var(--muted)}
+.mpage-v2 .textadd.center{text-align:center;margin-top:14px}
+.mpage-v2 .textadd button,.mpage-v2 .textadd a{background:none;border:0;padding:0;font:inherit;color:var(--accent);
+  text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.mpage-v2 .mrow a.add{text-decoration:none}

@@ -200,9 +200,15 @@
 @media (min-width:1181px){
   .bypage-v2 .fcol.wide{grid-column:span 1}
 }
+/* "What is in this module": the lesson image on its own, with no tinted frame, outline or
+   shadow round it, and held in view beside the lesson list as the list scrolls. */
+.bypage-v2 .byshot.wide{position:sticky;top:calc(var(--chrome) + 22px);display:block;
+    background:none;border:0;padding:0;box-shadow:none;aspect-ratio:auto;border-radius:16px;overflow:hidden}
+.bypage-v2 .byshot.wide img{display:block;width:100%;height:auto;border-radius:16px}
 @media(max-width:1000px){
   .bypage-v2 .byhero-in, .bypage-v2 .bysplit{grid-template-columns:minmax(0,1fr)}
   .bypage-v2 .bypanel{position:static}
+  .bypage-v2 .byshot.wide{position:static}
   .bypage-v2 .bysteps, .bypage-v2 .bytrust, .bypage-v2 .byother{grid-template-columns:1fr 1fr}
 }
 @media(max-width:640px){

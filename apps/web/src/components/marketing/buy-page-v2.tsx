@@ -130,14 +130,34 @@ const FAQS: [string, string][] = [
    + 'payment, get in touch and we will raise one.'],
 ]
 
+/** Split into sentences. A full stop only ends a sentence when a capital (or the end) follows,
+ *  and never after an abbreviation such as "etc." or "e.g.": "the Health and Safety at Work
+ *  etc. Act 1974" was being cut to "The Health and Safety at Work etc." */
+const ABBREV = /(?:\betc|\be\.g|\bi\.e|\bDr|\bMr|\bMrs|\bMs|\bSt|\bNo|\bvs)\.$/i
+function sentences(text: string): string[] {
+  const t = (text || '').trim()
+  const out: string[] = []
+  let start = 0
+  const re = /[.!?]+(?=\s+["'\u201c(]?[A-Z0-9]|\s*$)/g
+  let m: RegExpExecArray | null
+  while ((m = re.exec(t))) {
+    const end = m.index + m[0].length
+    if (ABBREV.test(t.slice(start, end))) continue
+    out.push(t.slice(start, end).trim())
+    start = end
+  }
+  if (start < t.length && t.slice(start).trim()) out.push(t.slice(start).trim())
+  return out
+}
+
 function firstSentence(text: string) {
-  return (text || '').match(/[^.!?]+[.!?]+/)?.[0].trim() ?? text
+  return sentences(text)[0] ?? (text || '')
 }
 
 /** The first two sentences, which is what the theme's generator uses for the intro. */
 function twoSentences(text: string) {
-  const parts = (text || '').match(/[^.!?]+[.!?]+/g)
-  return parts ? parts.slice(0, 2).join(' ').trim() : (text || '').trim()
+  const parts = sentences(text)
+  return parts.length ? parts.slice(0, 2).join(' ') : (text || '').trim()
 }
 
 const RENEWAL: Record<string, [string, string]> = {

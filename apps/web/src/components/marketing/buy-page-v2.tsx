@@ -96,7 +96,7 @@ const TRUST: [string, string][] = [
   ['Their first language',
    'Over 60 languages, chosen per staff member. Your reporting stays in English.'],
   ['No subscription',
-   'Buy one module for one person if that is all you need. Nothing recurring.'],
+   'Buy training for one person if that is all you need. Nothing recurring.'],
   ['Twelve months to use it',
    'Licences do not expire the moment you buy. Staff have a year to complete.'],
 ]
@@ -105,12 +105,12 @@ const TRUST: [string, string][] = [
 const FAQS: [string, string][] = [
   ['Do I need a CareStream subscription to buy this?',
    'No. This page exists precisely so you do not. You buy the licences you need, your staff '
-   + 'complete the module in the CareStream hub, and that is the end of it. There is no trial '
+   + 'complete the training in the CareStream hub, and that is the end of it. There is no trial '
    + 'to start, no card kept on file, and no subscription that begins quietly afterwards.'
    + '\n\nIf you later decide you want the full platform, anything your staff have already '
    + 'completed carries across into your account.'],
   ['What does one licence actually cover?',
-   'One licence covers one named member of staff for this one module, including the lesson, the '
+   'One licence covers one named member of staff for this training, including the lesson, the '
    + 'assessment, any follow-up questions triggered by a wrong answer, and their certificate. '
    + 'Licences are not shared between people, because the completion record has to belong to an '
    + 'individual to be worth anything at inspection.'],
@@ -184,19 +184,19 @@ function moduleFaqs(m: BuyModule, lessons: string[]): [string, string][] {
       + ' Staff can stop and pick up where they left off.'])
   }
   if (lessons.length) {
-    out.push([`What does the ${m.title} module cover?`,
+    out.push([`What does the ${m.title} training cover?`,
       `${lessons.length} lessons: ${listOf(lessons)}. Each one pairs the teaching with a care scenario and a quick check.`])
   }
   const renew = m.frequency ? RENEWAL[m.frequency] : undefined
   if (renew) {
     out.push([`How often do staff need to refresh ${m.title}?`,
       m.frequency === 'once'
-        ? `This module ${renew[1]}. Refresh it when your policy changes or a staff member moves into a role where it matters more.`
-        : `CareStream sets this module so it ${renew[1]}. Staff and managers are reminded before a certificate lapses, so the refresher is booked before the gap appears.`])
+        ? `This training ${renew[1]}. Refresh it when your policy changes or a staff member moves into a role where it matters more.`
+        : `CareStream sets this training so it ${renew[1]}. Staff and managers are reminded before a certificate lapses, so the refresher is booked before the gap appears.`])
   }
   out.push(m.requires_practical
     ? [`Does ${m.title} need a practical assessment?`,
-       'Yes. The online module is the knowledge part. Staff also need an observed assessment in the workplace, carried out by their employer, and CareStream provides the observation checklist to record it.']
+       'Yes. The online training is the knowledge part. Staff also need an observed assessment in the workplace, carried out by their employer, and CareStream provides the observation checklist to record it.']
     : [`Is ${m.title} completed fully online?`,
        'Yes. It is knowledge based, so staff complete the lessons and the assessment online and receive their certificate at the end. There is no practical sign-off.'])
   return out
@@ -265,9 +265,9 @@ export function BuyPageV2({ module: m, unitPence, related, apiUrl }: {
               </div>
               <h1>{m.title} training for your team</h1>
               <p className="lede">
-                Licence this one module for the staff who need it. No CareStream subscription, no
+                Licence this training for just the staff who need it. No CareStream subscription, no
                 minimum order, no annual contract. One licence covers one member of staff for the
-                complete <strong>{m.title}</strong> module, in the language they think in.
+                complete <strong>{m.title}</strong> training, in the language they think in.
               </p>
               <ul className="bypoints">
                 {m.cpd_accredited && (
@@ -296,10 +296,10 @@ export function BuyPageV2({ module: m, unitPence, related, apiUrl }: {
 
       <section className="bysec">
         <div className="bywrap">
-          <span className="bylabel-sec">What is in this module</span>
+          <span className="bylabel-sec">What is in this training</span>
           <h2>{m.title}, start to finish.</h2>
           <p className="intro">
-            {careSetting(twoSentences(m.summary ?? ''))} This is the same module CareStream subscribers get,
+            {careSetting(twoSentences(m.summary ?? ''))} This is the same training CareStream subscribers get,
             written for care settings rather than adapted from a generic course.
             {minutes ? ` It runs about ${minutes} minutes${qCount ? ` and ends with a ${qCount} question assessment` : ''}.` : ''}
           </p>
@@ -403,7 +403,7 @@ export function BuyPageV2({ module: m, unitPence, related, apiUrl }: {
       {related.length > 0 && (
         <section className="bysec">
           <div className="bywrap">
-            <span className="bylabel-sec">Other modules</span>
+            <span className="bylabel-sec">Other training</span>
             <h2>Licence any of these the same way.</h2>
             <p className="intro">Same price, same terms, no subscription needed.</p>
             <div className="byother">

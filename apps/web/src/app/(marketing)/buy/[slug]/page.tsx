@@ -144,7 +144,7 @@ export default async function BuyPage(
             </p>
             <ul className="space-y-3">
               {[
-                { Icon: GraduationCap, text: 'A full teach-then-assess module with a real scenario and an assessment' },
+                { Icon: GraduationCap, text: 'Full teach-then-assess training with a real scenario and an assessment' },
                 { Icon: Globe,         text: 'Completed in the hub in over 60 languages' },
                 { Icon: RefreshCw,     text: 'Wrong answers trigger a short follow-up lesson, so the gap is closed' },
                 { Icon: CheckCircle2,  text: 'A completion record and certificate for your CQC evidence' },
@@ -169,7 +169,7 @@ export default async function BuyPage(
     {related.length > 0 && (
       <section className="bg-white py-16">
         <div className="mx-auto max-w-content px-6">
-          <h2 className="mb-2 text-2xl font-extrabold text-neutral-dark md:text-3xl">Buy other training modules</h2>
+          <h2 className="mb-2 text-2xl font-extrabold text-neutral-dark md:text-3xl">Buy other training</h2>
           <p className="mb-8 text-neutral-mid">Licence any of these for your team the same way, no full subscription needed.</p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {related.map((r) => (

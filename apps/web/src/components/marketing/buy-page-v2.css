@@ -116,6 +116,9 @@
 .bypage-v2 .bythumbshot em{display:none}
 .bypage-v2 .bymod-meta{margin:6px 0 0;font-size:.83rem;color:var(--muted)}
 .bypage-v2 .bycol{position:sticky;top:calc(var(--chrome) + 22px)}
+/* With an offer card under it the column is taller than a laptop screen, so pinning it would
+   keep the card out of view for good: let it scroll with the page instead. */
+.bypage-v2 .bycol:has(.lofr){position:static}
 .bypage-v2 .bypanel{background:var(--ground);
     border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);padding:26px}
 .bypage-v2 .byprice{display:flex;align-items:baseline;gap:9px;margin-bottom:4px}

@@ -673,3 +673,5 @@
   .pcpage-v2 .mpe-thumb img{display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover}
 }
 @media(max-width:400px){ .pcpage-v2 .mpe-thumb{flex-basis:80px;width:80px} }
+.pcpage-v2 .mpe-gallery{grid-template-columns:minmax(0,1fr)}
+.pcpage-v2 .mpe-gallery > *{min-width:0}

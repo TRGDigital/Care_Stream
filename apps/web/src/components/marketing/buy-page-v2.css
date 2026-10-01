@@ -269,3 +269,6 @@
 .bypage-v2 .byfree span{color:#D9CFE6}
 .bypage-v2 .byfree .byfree-lb{justify-self:start;padding:3px 10px;border-radius:999px;background:#F28C38;color:#1F1530;
     font-size:.74rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.bypage-v2 .byprice{flex-wrap:wrap}
+.bypage-v2 .bywas{font-size:1.05rem;color:var(--muted)}
+.bypage-v2 .byapplied{font-style:normal;font-size:.72rem;font-weight:800;padding:3px 10px;border-radius:999px;background:#F28C38;color:#1F1530;align-self:center}

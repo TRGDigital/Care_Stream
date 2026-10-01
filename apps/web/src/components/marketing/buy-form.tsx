@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Minus, Plus, Loader2, ShieldCheck } from 'lucide-react'
 import { fi, fiAttribution } from '@/lib/funnel-insights'
-import { useOffers, licenceDeal, money2 } from '@/lib/offers'
+import { useOffers, licenceDeal, money2, paidForTotal } from '@/lib/offers'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 const gbp = (pence: number) => `£${(pence / 100).toFixed(2)}`
@@ -37,11 +37,13 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
 
   // A live offer from the calendar: free licences on top, or a percentage off each licence.
   // The API works out the same at checkout.
-  const deal = licenceDeal(useOffers(), slug, qty)
+  const offers = useOffers()
+  const deal = licenceDeal(offers, slug, qty)
   const free = deal.free
   const each = deal.pct ? Math.round(unitPence * (1 - deal.pct / 100)) : unitPence
   const effective = free ? Math.floor((each * qty) / (qty + free)) : each
   const total = qty * each
+  const applied = !!deal.offer && (free > 0 || deal.pct > 0)
   const setQ = (n: number) => setQty(Math.max(1, Math.min(500, n)))
 
   async function submit(e: React.FormEvent) {
@@ -70,25 +72,34 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
   if (variant === 'theme') {
     return (
       <form className="bypanel" onSubmit={submit}>
-        <div className="byprice"><b>{gbp(unitPence)}</b><span>per staff member, one-off payment</span></div>
+        {/* With an offer the price per staff member is the offer price (2 for 1: half), the full
+            price struck through, and the count is the licences received, so "2 for 1" reads at a
+            glance: 2 licences, £12.99 each, Offer applied. `qty` stays the PAID count. */}
+        <div className="byprice">
+          {effective < unitPence && <s className="bywas">{gbp(unitPence)}</s>}
+          <b>{gbp(effective)}</b><span>per staff member, one-off payment</span>
+          {applied && <em className="byapplied">Offer applied</em>}
+        </div>
 
-        <label className="bylabel" htmlFor="byq">Number of licences</label>
+        <label className="bylabel" htmlFor="byq">{applied && free > 0 ? 'Licences you receive' : 'Number of licences'}</label>
         <div className="byqty">
           <div className="bystep">
             <button type="button" onClick={() => setQ(qty - 1)} aria-label="Fewer licences">−</button>
-            <input id="byq" type="number" min={1} max={500} value={qty}
-                   onChange={e => setQ(parseInt(e.target.value || '1', 10))} />
+            <input id="byq" type="number" min={1} max={1000} value={qty + free}
+                   onChange={e => setQ(paidForTotal(offers, slug, parseInt(e.target.value || '1', 10)))} />
             <button type="button" onClick={() => setQ(qty + 1)} aria-label="More licences">+</button>
           </div>
           {/* Inline, as the theme has it, rather than a class of my own invention. */}
-          <span style={{ fontSize: '.86rem', color: 'var(--muted)' }}>{gbp(unitPence)} each</span>
+          <span style={{ fontSize: '.86rem', color: 'var(--muted)' }}>
+            {free > 0 ? <><b style={{ color: 'var(--ink)' }}>{qty} paid + {free} free</b></> : <>{gbp(each)} each</>}
+          </span>
         </div>
-        {deal.offer && (free > 0 || deal.pct > 0) && (
+        {applied && (
           <div className="byfree">
             <span className="byfree-emoji" aria-hidden="true">🎃</span>
             <div className="byfree-tx">
-              <span className="byfree-lb">{deal.offer.label ?? 'Offer'} applied</span>
-              <b>{free > 0 ? `+ ${free} free: you receive ${qty + free} licences` : `${deal.pct}% off every licence`}</b>
+              <span className="byfree-lb">{deal.offer!.label ?? 'Offer'} applied</span>
+              <b>{free > 0 ? `You receive ${qty + free} licences for ${gbp(total)}` : `${deal.pct}% off every licence`}</b>
               <span>Just {money2(effective)} per staff member</span>
             </div>
           </div>
@@ -120,7 +131,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
             {' '}and acknowledge the <Link href="/privacy" target="_blank">Privacy Policy</Link>.
           </span>
         </label>
-        <button className={`bybtn${deal.offer && (free > 0 || deal.pct > 0) ? ' offerbtn' : ''}`} type="submit" disabled={busy || !agreed}>
+        <button className={`bybtn${applied ? ' offerbtn' : ''}`} type="submit" disabled={busy || !agreed}>
           {busy ? 'Starting secure checkout…' : 'Continue to payment'}
         </button>
         <p className="bysecure">

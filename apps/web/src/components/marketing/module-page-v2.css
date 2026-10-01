@@ -685,3 +685,30 @@
 .mpage-v2 .mpe-guarantee p:last-child{margin:0}
 .mpage-v2 .mpe-guarantee a{color:var(--accent);font-weight:600}
 @media(max-width:560px){ .mpage-v2 .mpe-tile.wide{flex-direction:column;align-items:flex-start} }
+
+/* Compact buy column: it pins from the top with the guarantee in view on a laptop screen. */
+.mpage-v2 .mpe-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    padding-bottom:8px;margin-bottom:8px;border-bottom:1px solid var(--line)}
+.mpage-v2 .mpe-top .mcrumb{margin:0}
+.mpage-v2 .mpe-top .mpe-rating{margin:0;padding:0;border:0;font-size:.76rem}
+.mpage-v2 .mpe-eyerow .cpdmark{height:38px}
+.mpage-v2 .mpe h1{font-size:clamp(1.4rem, .7vw + 1.05rem, 1.8rem);margin:2px 0 10px}
+.mpage-v2 .mpe-quote{padding:8px 12px;margin-bottom:10px}
+.mpage-v2 .mpe-quote p{font-size:.8rem;margin-bottom:3px}
+.mpage-v2 .mpe-buy.mbuy{padding-top:10px}
+.mpage-v2 .mpe-offerline{padding:9px 12px;margin-bottom:10px}
+.mpage-v2 .mpe-offerline p{font-size:.85rem}
+.mpage-v2 .mpe-offer-emoji{font-size:1.6rem}
+.mpage-v2 .mpe-price{margin-bottom:8px}
+.mpage-v2 .mpe-price b{font-size:1.75rem}
+.mpage-v2 .mpe-qty{flex-wrap:nowrap;margin-bottom:8px}
+.mpage-v2 .mpe-qty label{width:auto}
+.mpage-v2 .mpe-stock{margin-bottom:10px;font-size:.82rem}
+.mpage-v2 .mpe-buy .mrow{margin-bottom:6px}
+.mpage-v2 .mpe-buy .textadd{margin-bottom:0}
+.mpage-v2 .mpe-trust{grid-template-columns:1fr 1fr;gap:5px 14px;margin-top:10px;padding-top:10px}
+.mpage-v2 .mpe-trust li{font-size:.78rem}
+.mpage-v2 .mpe-guarantee{margin-top:14px;padding:0 14px 10px}
+.mpage-v2 .mpe-guarantee h3{font-size:.92rem;margin-bottom:4px}
+.mpage-v2 .mpe-guarantee p{font-size:.76rem;line-height:1.5;margin-bottom:6px}
+@media(max-width:560px){ .mpage-v2 .mpe-trust{grid-template-columns:1fr} .mpage-v2 .mpe-qty{flex-wrap:wrap} }

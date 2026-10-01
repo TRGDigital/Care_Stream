@@ -262,14 +262,16 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
           </div>
 
           <aside className="mpe-info">
-            <div className="mcrumb">
-              <Link href="/staff-training">Staff training</Link>
-              <span>/</span><span>{m.group_label}</span>
+            <div className="mpe-top">
+              <div className="mcrumb">
+                <Link href="/staff-training">Staff training</Link>
+                <span>/</span><span>{m.group_label}</span>
+              </div>
+              <p className="mpe-rating">
+                <span className="row"><Star /><Star /><Star /><Star /><Star /></span>
+                Trusted by UK care providers
+              </p>
             </div>
-            <p className="mpe-rating">
-              <span className="row"><Star /><Star /><Star /><Star /><Star /></span>
-              Trusted by UK care providers
-            </p>
             <div className="mpe-eyerow">
               <span className="mpe-eyebrow">CQC aligned{m.cpd_accredited ? ' · CPD Certified' : ''}</span>
               {m.cpd_accredited && (
@@ -291,25 +293,18 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
 
             <ul className="mpe-trust">
               {m.cpd_accredited && <li><Tick />CPD Certified, {durationText(est)} of CPD</li>}
-              <li><Tick />A certificate for every staff member, for your CQC evidence</li>
-              <li><Tick />Mapped to the Care Certificate framework, CQC aligned</li>
-              <li><Tick />Wrong answers trigger a follow-up lesson, so gaps are closed</li>
+              <li><Tick />A certificate for every staff member</li>
+              <li><Tick />Mapped to the Care Certificate, CQC aligned</li>
+              <li><Tick />Wrong answers get a follow-up lesson</li>
             </ul>
 
             <div className="mpe-guarantee">
               <h3><span>Our guarantee</span></h3>
               <p>
-                CareStream&apos;s mission is to give every care team training that is easy to complete and
-                stands up at inspection, at a price that works for any size of provider.
+                {m.cpd_accredited ? 'CPD Certified, and ' : ''}kept up to date whenever the standards or CQC
+                guidance change. Licences last 12 months: no subscription, no minimum order.
               </p>
-              <p>
-                {m.cpd_accredited ? 'CPD Certified by The CPD Certification Service, and ' : ''}kept up to date
-                when the standards or CQC guidance change. Licences last 12 months, with no subscription
-                and no minimum order.
-              </p>
-              <p>
-                Built by people who have worked in care homes. <Link href="/about">Read the CareStream story</Link>.
-              </p>
+              <p>Built by people who have worked in care homes. <Link href="/about">Read our story</Link>.</p>
             </div>
           </aside>
 

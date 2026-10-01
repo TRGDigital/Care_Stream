@@ -7,7 +7,7 @@ import { careSetting } from '@/lib/care-setting'
 import { claimSafe, estimatedMinutes, refreshWord, durationText } from '@/lib/training-commerce'
 import { LanguageCheck } from './language-check'
 import { ThemeModuleCard, type LibraryTopic } from './training-library-tabs'
-import { LicenceOfferCard } from './licence-offer'
+import { LicenceOfferCard, OfferBarChip } from './licence-offer'
 import { TrainingAddButton, TrainingCartLink, TrainingSaveButton, BuyNowLink, TrainingAddTextLink } from './training-cart-buttons'
 import { StickyBarReveal } from './sticky-bar-reveal'
 import './module-page-v2.css'
@@ -242,6 +242,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               <Clock /> {est < 60 ? `~${est} min` : durationText(est)} to complete<i>·</i>{price} per staff member
             </span>
           </span>
+          <OfferBarChip slug={m.slug} />
           <TrainingSaveButton slug={m.slug} title={m.title} />
           <BuyNowLink slug={m.slug} className="add" />
         </div>

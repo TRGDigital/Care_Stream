@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { Minus, Plus, Loader2, ShieldCheck } from 'lucide-react'
 import { fi } from '@/lib/funnel-insights'
 import { freeLicences, activeOffer } from '@/lib/offers'
-import { LicenceOfferCard } from './licence-offer'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 const gbp = (pence: number) => `£${(pence / 100).toFixed(2)}`
@@ -66,7 +65,6 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
 
   if (variant === 'theme') {
     return (
-      <div className="bycol">
       <form className="bypanel" onSubmit={submit}>
         <div className="byprice"><b>{gbp(unitPence)}</b><span>per staff member</span></div>
         <p className="note">One-off payment. No renewal unless you buy again.</p>
@@ -84,9 +82,12 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
         </div>
         {free > 0 && (
           <div className="byfree">
-            <span className="byfree-lb">Halloween offer applied</span>
-            <b>+ {free} free {free === 1 ? 'licence' : 'licences'}: you receive {qty + free} licences</b>
-            <span>That is {activeOffer(slug)?.effectivePrice} per staff member. Every licence you buy comes with one free.</span>
+            <span className="byfree-emoji" aria-hidden="true">🎃</span>
+            <div className="byfree-tx">
+              <span className="byfree-lb">Halloween offer applied</span>
+              <b>+ {free} free {free === 1 ? 'licence' : 'licences'}: you receive {qty + free} licences</b>
+              <span>That is {activeOffer(slug)?.effectivePrice} per staff member. Every licence you buy comes with one free.</span>
+            </div>
           </div>
         )}
 
@@ -125,8 +126,6 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
           Card payment handled by Stripe. We never see your card details.
         </p>
       </form>
-      <LicenceOfferCard slug={slug} />
-      </div>
     )
   }
 

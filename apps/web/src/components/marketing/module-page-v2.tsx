@@ -11,6 +11,7 @@ import { LicenceOfferCard, OfferBarChip } from './licence-offer'
 import { TrainingAddButton, TrainingCartLink, TrainingSaveButton, BuyNowLink, TrainingAddTextLink } from './training-cart-buttons'
 import { StickyBarReveal } from './sticky-bar-reveal'
 import { ModuleBuyPanel } from './module-buy-panel'
+import { StickyFit } from './sticky-fit'
 import { REVIEWS } from '@/lib/reviews'
 import './module-page-v2.css'
 
@@ -253,6 +254,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
       {/* Above the fold, laid out like a shop product page: the course on the left as a gallery
           (picture, proof, a real lesson to try, the standards it covers), and everything needed to
           buy on the right, held in view until the gallery ends. */}
+      <StickyFit selector=".mpage-v2 .mpe-info" />
       <section className="mhero mpe">
         <div className="mwrap mpe-in">
           <div className="mpe-main">
@@ -293,26 +295,39 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               <li><Tick />Mapped to the Care Certificate framework, CQC aligned</li>
               <li><Tick />Wrong answers trigger a follow-up lesson, so gaps are closed</li>
             </ul>
+
+            <div className="mpe-guarantee">
+              <h3><span>Our guarantee</span></h3>
+              <p>
+                CareStream&apos;s mission is to give every care team training that is easy to complete and
+                stands up at inspection, at a price that works for any size of provider.
+              </p>
+              <p>
+                {m.cpd_accredited ? 'CPD Certified by The CPD Certification Service, and ' : ''}kept up to date
+                when the standards or CQC guidance change. Licences last 12 months, with no subscription
+                and no minimum order.
+              </p>
+              <p>
+                Built by people who have worked in care homes. <Link href="/about">Read the CareStream story</Link>.
+              </p>
+            </div>
           </aside>
 
           <div className="mpe-gallery">
-            <div className="mpe-pair">
-              {REVIEWS[1] && (
-                <figure className="mpe-tile dark">
-                  <span className="row"><Star /><Star /><Star /><Star /><Star /></span>
-                  <blockquote>&ldquo;{REVIEWS[1].excerpt}&rdquo;</blockquote>
-                  <figcaption>{REVIEWS[1].name}, {REVIEWS[1].setting}</figcaption>
-                </figure>
-              )}
-              <figure className="mpe-tile light">
-                {m.cpd_accredited
-                  // eslint-disable-next-line @next/next/no-img-element
-                  ? <img className="mpe-cpdbig" src={CPD_CERTIFIED_LOGO} alt="CPD Certified, The CPD Certification Service" />
-                  : null}
+            <figure className="mpe-tile light wide">
+              {m.cpd_accredited
+                // eslint-disable-next-line @next/next/no-img-element
+                ? <img className="mpe-cpdbig" src={CPD_CERTIFIED_LOGO} alt="CPD Certified, The CPD Certification Service" />
+                : null}
+              <div>
                 <b>{m.cpd_accredited ? 'CPD Certified course' : 'CQC aligned course'}</b>
-                <span>{sections.length ? `${sections.length} sections` : 'Full course'} · {durationText(est)} · a scored final assessment and a certificate for every learner</span>
-              </figure>
-            </div>
+                <span>
+                  {m.cpd_accredited ? 'Certified by The CPD Certification Service. ' : ''}
+                  {sections.length ? `${sections.length} sections` : 'The full course'}, about {durationText(est)}, a scored final
+                  assessment and a certificate for every learner.
+                </span>
+              </div>
+            </figure>
 
             {demo && (
               <div className="mpe-demo">

@@ -24,9 +24,10 @@ export function ModuleBuyPanel({ slug, title, unitPence }: { slug: string; title
   return (
     <div className="mpe-buy mbuy">
       {offer && (
-        <p className="mpe-offerline">
-          <b>🎃 {offer.label}: {offer.headline}.</b> {endsText(offer)}. Applied automatically at checkout.
-        </p>
+        <div className="mpe-offerline">
+          <span className="mpe-offer-emoji" aria-hidden="true">🎃</span>
+          <p><b>{offer.label}: {offer.headline}.</b> {endsText(offer)}. Applied automatically at checkout.</p>
+        </div>
       )}
       <div className="mpe-price">
         {headline < unitPence && <s>{money2(unitPence)}</s>}

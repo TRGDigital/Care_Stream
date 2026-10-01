@@ -594,13 +594,13 @@
 
 /* ── Product-page hero (mpe): gallery on the left, the buy column on the right, held in view
       until the gallery ends. On a phone: main picture, then the buy column, then the gallery. ── */
+.mpage-v2 .mpe .mwrap.mpe-in{max-width:1360px}
 .mpage-v2 .mpe-in{display:grid;grid-template-columns:minmax(0,1.32fr) minmax(0,1fr);
-    grid-template-areas:"main info" "gal info";column-gap:44px;row-gap:14px;align-items:start;
-    padding-block:22px 64px}
+    grid-template-areas:"main info" "gal info";column-gap:52px;row-gap:14px;align-items:start;
+    padding-block:22px 128px}
 .mpage-v2 .mpe-main{grid-area:main}
 .mpage-v2 .mpe-gallery{grid-area:gal;display:grid;gap:14px;min-width:0}
-.mpage-v2 .mpe-info{grid-area:info;position:sticky;top:calc(var(--chrome) + 14px);align-self:start;
-    max-height:calc(100vh - var(--chrome) - 24px);overflow-y:auto;scrollbar-width:thin;padding:2px 2px 8px}
+.mpage-v2 .mpe-info{grid-area:info;position:sticky;top:calc(var(--chrome) + 14px);align-self:start;padding:2px 2px 8px}
 .mpage-v2 .mpe-shot{border-radius:16px;overflow:hidden;background:var(--plate,#F2EEF8)}
 .mpage-v2 .mpe-shot img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover}
 
@@ -619,8 +619,11 @@
 .mpage-v2 .mpe-quote p{margin:0 0 6px;font-size:.86rem;line-height:1.5;color:var(--ink-2)}
 .mpage-v2 .mpe-quote cite{display:flex;align-items:center;gap:8px;font-style:normal;font-size:.76rem;color:var(--muted)}
 .mpage-v2 .mpe-buy.mbuy{background:none;border:0;border-top:1px solid var(--line);border-radius:0;box-shadow:none;padding:12px 0 0}
-.mpage-v2 .mpe-offerline{margin:0 0 8px;font-size:.9rem;line-height:1.5;color:var(--ink-2)}
-.mpage-v2 .mpe-offerline b{color:var(--ink)}
+.mpage-v2 .mpe-offerline{display:flex;gap:12px;align-items:center;margin:0 0 12px;padding:12px 14px;border-radius:12px;
+    background:#1F1530;color:#D9CFE6}
+.mpage-v2 .mpe-offerline p{margin:0;font-size:.9rem;line-height:1.5}
+.mpage-v2 .mpe-offerline b{color:#F28C38}
+.mpage-v2 .mpe-offer-emoji{font-size:1.9rem;line-height:1;flex:0 0 auto}
 .mpage-v2 .mpe-price{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 10px;margin-bottom:2px}
 .mpage-v2 .mpe-price s{font-size:1.05rem;color:var(--muted)}
 .mpage-v2 .mpe-price b{font-size:1.9rem;letter-spacing:-.035em;font-variant-numeric:tabular-nums}
@@ -665,9 +668,20 @@
 
 @media(max-width:960px){
   .mpage-v2 .mpe-in{grid-template-columns:minmax(0,1fr);grid-template-areas:"main" "info" "gal";padding-block:14px 48px}
-  .mpage-v2 .mpe-info{position:static;max-height:none;overflow:visible;padding:4px 0 10px}
+  .mpage-v2 .mpe-info{position:static;padding:4px 0 10px}
 }
 @media(max-width:560px){
   .mpage-v2 .mpe-pair, .mpage-v2 .mpe-grid{grid-template-columns:1fr}
   .mpage-v2 .mpe-tile{min-height:0}
 }
+
+/* CPD tile across the gallery, and the guarantee box under the trust lines */
+.mpage-v2 .mpe-tile.wide{flex-direction:row;align-items:center;gap:22px;min-height:0;padding:22px 26px}
+.mpage-v2 .mpe-tile.wide > div{display:flex;flex-direction:column;gap:6px}
+.mpage-v2 .mpe-guarantee{margin-top:16px;border:1px solid var(--ink);border-radius:4px;padding:0 18px 14px;text-align:center}
+.mpage-v2 .mpe-guarantee h3{margin:-0.7em 0 8px;font-size:1rem;font-weight:700;letter-spacing:-.01em}
+.mpage-v2 .mpe-guarantee h3 span{background:var(--ground);padding:0 10px}
+.mpage-v2 .mpe-guarantee p{margin:0 0 10px;font-size:.82rem;line-height:1.6;color:var(--ink-2)}
+.mpage-v2 .mpe-guarantee p:last-child{margin:0}
+.mpage-v2 .mpe-guarantee a{color:var(--accent);font-weight:600}
+@media(max-width:560px){ .mpage-v2 .mpe-tile.wide{flex-direction:column;align-items:flex-start} }

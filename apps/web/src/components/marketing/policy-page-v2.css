@@ -660,18 +660,10 @@
 .pcpage-v2 .mpe-buy .pcadd{font-size:1rem}
 .pcpage-v2 .mpe-trust.mpe-trust-list li span{color:inherit;font-size:inherit}
 
-/* Phones: no full-width picture above the fold. The picture becomes a thumbnail beside the
-   title, and the buy column follows straight after. */
-.pcpage-v2 .mpe-titlerow{display:block}
-.pcpage-v2 .mpe-thumb{display:none}
+/* Phones: no hero picture at all. The page opens on the title and the buy column. */
 @media(max-width:960px){
   .pcpage-v2 .mpe-in{grid-template-areas:"info" "gal"}
   .pcpage-v2 .mpe-main{display:none}
-  .pcpage-v2 .mpe-titlerow{display:flex;align-items:flex-start;gap:14px}
-  .pcpage-v2 .mpe-titlerow h1{flex:1 1 auto;min-width:0}
-  .pcpage-v2 .mpe-thumb{display:block;flex:0 0 96px;width:96px;margin-top:6px;border-radius:12px;overflow:hidden;background:var(--plate,#F2EEF8)}
-  .pcpage-v2 .mpe-thumb img{display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover}
 }
-@media(max-width:400px){ .pcpage-v2 .mpe-thumb{flex-basis:80px;width:80px} }
 .pcpage-v2 .mpe-gallery{grid-template-columns:minmax(0,1fr)}
 .pcpage-v2 .mpe-gallery > *{min-width:0}

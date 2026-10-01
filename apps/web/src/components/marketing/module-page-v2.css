@@ -748,18 +748,10 @@
 .mpage-v2 .mpe-guarantee h3{font-size:1.02rem;margin-bottom:6px}
 .mpage-v2 .mpe-guarantee p{font-size:.86rem;line-height:1.6;margin-bottom:8px}
 
-/* Phones: no full-width picture above the fold. The picture becomes a thumbnail beside the
-   title, and the buy column follows straight after. */
-.mpage-v2 .mpe-titlerow{display:block}
-.mpage-v2 .mpe-thumb{display:none}
+/* Phones: no hero picture at all. The page opens on the title and the buy column. */
 @media(max-width:960px){
   .mpage-v2 .mpe-in{grid-template-areas:"info" "gal"}
   .mpage-v2 .mpe-main{display:none}
-  .mpage-v2 .mpe-titlerow{display:flex;align-items:flex-start;gap:14px}
-  .mpage-v2 .mpe-titlerow h1{flex:1 1 auto;min-width:0}
-  .mpage-v2 .mpe-thumb{display:block;flex:0 0 96px;width:96px;margin-top:6px;border-radius:12px;overflow:hidden;background:var(--plate,#F2EEF8)}
-  .mpage-v2 .mpe-thumb img{display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover}
 }
-@media(max-width:400px){ .mpage-v2 .mpe-thumb{flex-basis:80px;width:80px} }
 .mpage-v2 .mpe-gallery{grid-template-columns:minmax(0,1fr)}
 .mpage-v2 .mpe-gallery > *{min-width:0}

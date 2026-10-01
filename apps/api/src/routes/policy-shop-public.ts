@@ -381,7 +381,7 @@ policyShopPublicRouter.post('/reconcile', async (req: Request, res: Response) =>
     if (!email) return err(res, 'NO_EMAIL', 'That payment carries no email address', 400)
 
     // Revenue to Funnel Insights, one line per policy or pack (idempotent there).
-    await reportPolicySale(sessionId, result.paymentId, result.items)
+    await reportPolicySale(sessionId, result.paymentId, result.items, result.freeKeys, result.offerKey)
     const lines = await expandBasket(result.items, result.freeKeys)
     if (!lines.length) return err(res, 'NOTHING_TO_DO', 'That payment had nothing we could fulfil', 400)
 

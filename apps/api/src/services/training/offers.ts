@@ -24,6 +24,11 @@ export function freeLicencesFor(slug: string, qty: number, now = Date.now()): nu
 // (apps/web/src/lib/offers.ts freePolicySlugs).
 const POLICY_OFFER = { key: 'halloween-2026-policies-2for1', starts: '2026-10-01T00:00:00+01:00', ends: '2026-11-01T00:00:00+00:00' }
 
+/** The live policy offer's key, for tagging sales; null when none is running. */
+export function activePolicyOfferKey(now = Date.now()): string | null {
+  return policyOfferActive(now) ? POLICY_OFFER.key : null
+}
+
 export function policyOfferActive(now = Date.now()): boolean {
   return now >= Date.parse(POLICY_OFFER.starts) && now < Date.parse(POLICY_OFFER.ends)
 }

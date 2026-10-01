@@ -565,7 +565,7 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
     // Funnel Insights' per-product funnels.
     const conversion = { value_pence: s.amountTotalPence, transaction_id: s.paymentId, products: items }
     // Revenue to Funnel Insights (idempotent there, so the already-provisioned path is safe too).
-    await reportTrainingSale(sessionId, s.paymentId, items, s.metadata.module_name)
+    await reportTrainingSale(sessionId, s.paymentId, items, s.metadata.module_name, s.metadata.offer || null)
     if (existing) { res.json({ data: { provisioned: true, already: true, email: s.email, ...conversion } }); return }
 
     const orgName   = s.metadata.org_name || 'Your service'

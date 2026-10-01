@@ -223,6 +223,8 @@ export function InvoiceRequest({ funnel, items, className = '' }: { funnel: 'tra
         <div className="sq-overlay" role="dialog" aria-modal="true" aria-labelledby="su-inv-t" onClick={e => { if (e.target === e.currentTarget) setOpen(false) }}>
           <div className="sq-box su-inv">
             <button type="button" className="sq-close" aria-label="Close" onClick={() => setOpen(false)}>×</button>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="sq-logo" src="/logo-color.svg" alt="CareStream" />
             {state === 'sent' ? (
               <>
                 <h2 id="su-inv-t">Thank you, your request is with us</h2>

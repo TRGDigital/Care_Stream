@@ -50,3 +50,6 @@
 .su-sumextras{display:grid;gap:10px;margin:14px 0 4px;padding-top:12px;border-top:1px solid var(--line,#E9E5EF)}
 .su-sumextras > b{font-size:.92rem}
 @media(max-width:560px){.su-inv-grid{grid-template-columns:1fr}}
+.su-sumextras .su-share-open{border:2px solid #F28C38;border-style:solid;background:#FFF6EE}
+.su-sumextras .su-share-open:hover{border-color:#E57A22}
+.su-sumextras .su-share-form{border:2px solid #F28C38;background:#FFF6EE}

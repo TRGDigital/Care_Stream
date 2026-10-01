@@ -324,7 +324,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
             <AddonOption k="team-setup" checked={teamSetup} onChange={setTeamSetup} />
             <ShareBasket funnel="training" items={items.map(i => ({ slug: i.slug, qty: i.qty }))} />
           </> : null}
-          invoice={{ funnel: 'training', items: items.map(i => `${i.qty} × ${i.title}`) }}
+          invoice={{ funnel: 'training', items: [...items.map(i => `${i.qty} × ${i.title}`), ...(teamSetup ? [ADDONS['team-setup'].title] : [])] }}
           sub="One-off payment. No subscription."
           assurances={[
             ['Fourteen day refund', 'If a licence has not been started, tell us within fourteen days and we refund it in full.'],
@@ -586,7 +586,7 @@ export function PolicyCheckout() {
             <AddonOption k="priority-policy" checked={priority} onChange={setPriority} />
             <ShareBasket funnel="policies" items={items.map(i => i.slug)} />
           </> : null}
-          invoice={{ funnel: 'policies', items: items.map(i => i.title) }}
+          invoice={{ funnel: 'policies', items: [...items.map(i => i.title), ...(priority ? [ADDONS['priority-policy'].title] : [])] }}
           sub="One-off. £12 a year per policy after the first year, cancel anytime."
           assurances={[
             ['Fourteen day refund', 'If a policy is not right for your service, tell us within fourteen days and we refund it in full.'],

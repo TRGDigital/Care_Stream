@@ -9,6 +9,15 @@
 .lofr-hd{display:block;font-size:1.05rem;font-weight:800;color:#fff}
 .lofr p{margin:6px 0 0;font-size:.86rem;color:#D9CFE6}
 .lofr-end{display:block;margin-top:8px;font-size:.8rem;font-weight:700;color:#F6B37A}
+.lofr-price{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;margin-top:8px}
+.lofr-price b{font-size:2rem;font-weight:800;letter-spacing:-.03em;line-height:1;color:#F28C38}
+.lofr-price span{font-size:.86rem;color:#D9CFE6}
+.lofr-price s{margin-left:4px;color:#A99BBB}
+.lofr p.lofr-multi{margin-top:8px;padding:8px 10px;border-radius:9px;background:rgba(242,140,56,.16);color:#FFD9B8;font-weight:700}
+/* Buy buttons while an offer is live: the offer's orange, dark text for contrast. */
+a.offerbtn,button.offerbtn{background:#F28C38 !important;color:#1F1530 !important;border-color:#F28C38 !important}
+a.offerbtn:hover,button.offerbtn:hover{background:#E57A22 !important}
 .lofr.compact{padding:12px 14px;margin-top:10px}
 .lofr.compact .lofr-ic{flex-basis:34px;width:34px;height:34px}
 .lofr.compact .lofr-hd{font-size:.95rem}
+.lofr.compact .lofr-price b{font-size:1.5rem}

@@ -1,5 +1,7 @@
 'use client'
 
+import { activeOffer } from '@/lib/offers'
+import './licence-offer.css'
 import Link from 'next/link'
 import { useCart } from '@/lib/cart-store'
 import { gbp } from '@/lib/training-commerce'
@@ -72,8 +74,10 @@ export function TrainingCartLink() {
 export function BuyNowLink({ slug, className = '', label = 'Buy now' }: {
   slug: string; className?: string; label?: string
 }) {
+  // While an offer is live on this course the button takes the offer's orange.
+  const cls = activeOffer(slug) ? `${className} offerbtn`.trim() : className
   return (
-    <Link className={className} href={`/buy/${slug}?qty=1`}
+    <Link className={cls} href={`/buy/${slug}?qty=1`}
           onClick={() => fi('buy_now_click', { funnel: 'training', option: slug, qty: 1 })}>
       {label}
     </Link>

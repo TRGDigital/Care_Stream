@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Minus, Plus, Loader2, ShieldCheck } from 'lucide-react'
 import { fi } from '@/lib/funnel-insights'
-import { freeLicences } from '@/lib/offers'
+import { freeLicences, activeOffer } from '@/lib/offers'
 import { LicenceOfferCard } from './licence-offer'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
@@ -83,10 +83,11 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
           <span style={{ fontSize: '.86rem', color: 'var(--muted)' }}>{gbp(unitPence)} each</span>
         </div>
         {free > 0 && (
-          <p className="byfree">
-            + {free} free {free === 1 ? 'licence' : 'licences'} with the Halloween offer.
-            You receive <b>{qty + free} licences</b>.
-          </p>
+          <div className="byfree">
+            <span className="byfree-lb">Halloween offer applied</span>
+            <b>+ {free} free {free === 1 ? 'licence' : 'licences'}: you receive {qty + free} licences</b>
+            <span>That is {activeOffer(slug)?.effectivePrice} per staff member. Every licence you buy comes with one free.</span>
+          </div>
         )}
 
         <div className="byfield">
@@ -115,7 +116,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
             {' '}and acknowledge the <Link href="/privacy" target="_blank">Privacy Policy</Link>.
           </span>
         </label>
-        <button className="bybtn" type="submit" disabled={busy || !agreed}>
+        <button className={`bybtn${free > 0 ? ' offerbtn' : ''}`} type="submit" disabled={busy || !agreed}>
           {busy ? 'Starting secure checkout…' : 'Continue to payment'}
         </button>
         <p className="bysecure">

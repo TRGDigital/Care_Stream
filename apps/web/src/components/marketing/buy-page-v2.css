@@ -237,4 +237,7 @@
 .bypage-v2 .bybtn[disabled]{opacity:.45;cursor:not-allowed}
 
 /* The free licences a live offer adds, under the licence count. */
-.bypage-v2 .byfree{margin:-4px 0 14px;padding:9px 12px;border-radius:10px;background:#FFF1E4;color:#7A3A0C;font-size:.85rem;line-height:1.4}
+.bypage-v2 .byfree{display:grid;gap:3px;margin:-4px 0 16px;padding:12px 14px;border-radius:12px;background:#1F1530;color:#F6F1FB;font-size:.86rem;line-height:1.4}
+.bypage-v2 .byfree b{color:#F28C38;font-size:.98rem}
+.bypage-v2 .byfree span{color:#D9CFE6}
+.bypage-v2 .byfree .byfree-lb{justify-self:start;padding:2px 9px;border-radius:999px;background:#F28C38;color:#1F1530;font-size:.7rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase}

@@ -12,6 +12,11 @@ export interface LicenceOffer {
   headline: string
   reason: string
   endsText: string
+  // What one licence works out at with the offer, and the normal price it replaces.
+  effectivePrice: string
+  normalPrice: string
+  // How the offer scales with quantity, in a line.
+  multiText: string
 }
 
 export const OFFERS: LicenceOffer[] = [
@@ -24,6 +29,9 @@ export const OFFERS: LicenceOffer[] = [
     headline: 'Buy one licence, get the second free',
     reason: 'For Halloween, every Care Certificate licence you buy comes with a second one free. Two staff members trained for the price of one, added to your order automatically.',
     endsText: 'Ends midnight, Saturday 31 October',
+    effectivePrice: '£12.99',
+    normalPrice: '£25.99',
+    multiText: 'Every licence you buy comes with one free: buy 1 get 2, buy 5 get 10, buy 10 get 20.',
   },
 ]
 

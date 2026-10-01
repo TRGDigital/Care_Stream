@@ -30,6 +30,11 @@ export function LicenceOfferCard({ slug, compact = false }: { slug: string; comp
       <div className="lofr-tx">
         <span className="lofr-lb">{o.label}</span>
         <b className="lofr-hd">{o.headline}</b>
+        <div className="lofr-price">
+          <b>{o.effectivePrice}</b>
+          <span>per staff member <s>{o.normalPrice}</s></span>
+        </div>
+        <p className="lofr-multi">{o.multiText}</p>
         {!compact && <p>{o.reason}</p>}
         <span className="lofr-end">
           {o.endsText}{left <= 7 ? ` · ${left === 1 ? 'last day' : `${left} days left`}` : ''}

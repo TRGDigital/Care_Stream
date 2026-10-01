@@ -8,7 +8,7 @@ import {
 } from '../services/billing/stripe'
 import { cleanAttribution } from '../services/analytics/funnel-insights'
 import { getOffers, licenceDeal, policyDeal } from '../services/offers'
-import { sendBasketShareEmail } from '../services/email/outbound'
+import { sendBasketShareEmail, sendInvoiceRequestEmail } from '../services/email/outbound'
 
 // Shop extras that sit around the checkouts:
 //   POST /public/shop/share-basket   email a basket to a manager for sign-off, with a link back
@@ -127,5 +127,26 @@ shopExtrasRouter.post('/post-purchase', async (req: Request, res: Response) => {
     res.json({ data: { url } })
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'could not start the offer' })
+  }
+})
+
+// POST /public/shop/invoice-request: a buyer who cannot pay by card asks for an invoice from the
+// basket or the buy page. Sends their details and basket to the platform owner to raise it.
+shopExtrasRouter.post('/invoice-request', shareLimiter, async (req: Request, res: Response) => {
+  try {
+    const t = (v: unknown, n: number) => String(v ?? '').trim().replace(/[<>]/g, '').slice(0, n)
+    const b = req.body ?? {}
+    const f = {
+      funnel: (b.funnel === 'policies' ? 'policies' : 'training') as 'training' | 'policies',
+      org: t(b.org, 200), name: t(b.name, 120), email: t(b.email, 200).toLowerCase(), phone: t(b.phone, 40),
+      address: t(b.address, 500), po: t(b.po, 80), note: t(b.note, 1000),
+      items: (Array.isArray(b.items) ? b.items : []).slice(0, 40).map((i: unknown) => t(i, 200)).filter(Boolean),
+    }
+    if (!f.org || !f.name || !f.address) { res.status(400).json({ error: 'Please fill in your organisation, name and billing address' }); return }
+    if (!EMAIL.test(f.email)) { res.status(400).json({ error: 'Please enter a valid email address' }); return }
+    await sendInvoiceRequestEmail(f)
+    res.json({ data: { sent: true } })
+  } catch (e: any) {
+    res.status(500).json({ error: e?.message ?? 'could not send the request' })
   }
 })

@@ -258,7 +258,7 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
               <p>Built by people who have worked in care homes. <Link href="/about">Read our story</Link>.</p>
             </div>
 
-            <ProductFaqs title={`About the ${product.title}`} faqs={policyProductFaqs(product, regulations, elements)} />
+            <ProductFaqs title="About this policy" faqs={policyProductFaqs(product, regulations, elements)} />
             <PolicyDocMock p={product} regs={regulations} elements={elements} />
           </aside>
 

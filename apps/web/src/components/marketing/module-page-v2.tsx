@@ -322,7 +322,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               <p>Built by people who have worked in care homes. <Link href="/about">Read our story</Link>.</p>
             </div>
 
-            <ProductFaqs title={`About ${m.title}`} faqs={trainingFaqs(faqModule)} />
+            <ProductFaqs title="About this course" faqs={trainingFaqs(faqModule)} />
             <SampleCertificate m={faqModule} />
           </aside>
 

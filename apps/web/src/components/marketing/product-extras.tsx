@@ -21,6 +21,20 @@ function someOf(items: string[], n: number) {
 
 const lowerFirst = (s: string) => (/^[A-Z][a-z]/.test(s) ? s.charAt(0).toLowerCase() + s.slice(1) : s)
 
+// A policy's own intake labels, as they read inside a sentence. Proper names keep their capitals.
+const KEEP_CAPS = /^(Gas Safe|Caldicott|Freedom to Speak Up|ICO|CQC)/
+const inSentence = (label: string) => (KEEP_CAPS.test(label) ? label : lowerFirst(label))
+const isFact = (label: string) => /^(date|ico registration|regulated activities)/i.test(label)
+/** "your fire safety officer" */
+const personPhrase = (label: string) => `your ${inSentence(label)}`
+/** "the date of your last fire risk assessment", "your ICO registration number" */
+function factPhrase(label: string): string {
+  const m = label.match(/^date of (last )?(.*)$/i)
+  if (m) return `the date of your ${m[1] ? 'last ' : ''}${inSentence(m[2])}`
+  if (/^regulated activities/i.test(label)) return 'the regulated activities and services you provide'
+  return `your ${inSentence(label)}`
+}
+
 export function ProductFaqs({ title, faqs }: { title: string; faqs: Faq[] }) {
   return (
     <div className="pxfaq">
@@ -59,13 +73,13 @@ export function trainingFaqs(m: FaqModule): Faq[] {
   const pass = m.pass_mark ?? 80
   const time = durationText(m.estMinutes)
   const out: Faq[] = []
-  out.push([`What do I get when I buy ${m.title}?`,
+  out.push([`What do I get when I buy ${m.title} training?`,
     `One licence per member of staff, to use within 12 months. Each licence covers the complete ${m.title} course`
     + `${lessons.length ? ` (${lessons.length} lessons)` : ''}, the ${q ? `${q} question ` : ''}assessment, a follow-up lesson on anything they get wrong, `
     + `and a certificate with their name, score and completion date.${m.cpd_accredited ? ' The course is CPD Certified, so the certificate carries the CPD Certified mark.' : ''}`])
   if (lessons.length) {
     out.push([`What does the course cover?`,
-      `${lessons.length} lessons: ${someOf(lessons.map(lowerFirst), 6)}. Each lesson pairs the teaching with a care scenario and a quick check.`])
+      `${lessons.length} lessons: ${someOf(lessons, 6)}. Each lesson pairs the teaching with a care scenario and a quick check.`])
   }
   out.push([`How long does it take?`,
     `About ${time}${q ? `, finishing with a ${q} question assessment (pass mark ${pass}%)` : ''}. Staff can stop and pick up where they left off, on a phone, tablet or computer.`])
@@ -96,7 +110,7 @@ export function SampleCertificate({ m }: { m: FaqModule }) {
         <TrainingCertificate
           staffName="Sam Taylor"
           moduleName={m.title}
-          orgName="Your care service"
+          orgName="Oakhaven Care Home"
           score={92}
           completedAt={done.toISOString()}
           expiresAt={m.frequency === 'once' ? null : renews.toISOString()}
@@ -123,7 +137,9 @@ export interface FaqRegulation { reference_key: string; official_name: string; r
 const ownFields = (p: FaqPolicy) => (p.intake_fields ?? []).filter(f => !f.shared)
 
 export function policyProductFaqs(p: FaqPolicy, regs: FaqRegulation[], elements: number): Faq[] {
-  const own = ownFields(p).map(f => lowerFirst(f.label))
+  const own = ownFields(p)
+  const people = own.filter(f => !isFact(f.label)).map(f => personPhrase(f.label))
+  const facts = own.filter(f => isFact(f.label)).map(f => factPhrase(f.label))
   const laws = regs.map(r => r.official_name)
   const out: Faq[] = []
   out.push([`What do I get when I buy the ${p.title}?`,
@@ -131,17 +147,15 @@ export function policyProductFaqs(p: FaqPolicy, regs: FaqRegulation[], elements:
     + 'It comes with a companion document setting out the law it was written against, and the first year of updates is included.'])
   if (laws.length) {
     out.push([`Which laws and regulations does it cover?`,
-      `${listOf(laws)}. Before a person signs it off, it is checked against all ${elements} required elements of ${laws.length === 1 ? 'it' : 'them'}.`])
+      `It is written against ${laws.length === 1 ? 'one piece of legislation' : `${laws.length} pieces of legislation and regulation`}: ${laws.join('; ')}. `
+      + `Before a person signs it off, it is checked against all ${elements} required elements.`])
   }
   out.push([`What will you ask me?`,
-    `Your registered company and service details, CQC provider and location IDs, registered manager and nominated individual`
-    + `${own.length ? `, plus ${listOf(own)}` : ''}. About three minutes, and the company details are reused for every other policy you buy.`])
-  const named = own.filter(o => !/date/i.test(o))
-  if (named.length) {
-    out.push([`Who is named in it?`,
-      `Your registered manager and nominated individual, and ${listOf(named)}${own.some(o => /date/i.test(o)) ? `, with ${own.filter(o => /date/i.test(o)).join(' and ')} stated` : ''}. `
-      + 'When one of them changes, tell us once and every policy that names them is updated.'])
-  }
+    `Your company and service details (name, address, CQC provider and location IDs), your registered manager and your nominated individual`
+    + `${people.length || facts.length ? `, plus ${listOf([...people, ...facts])}` : ''}. It takes about three minutes, and the company details are reused for every other policy you buy.`])
+  out.push([`Who is named in it?`,
+    `${listOf(['Your registered manager', 'your nominated individual', ...people])}.`
+    + `${facts.length ? ` It also records ${listOf(facts)}.` : ''} When someone changes, tell us once and every policy that names them is updated.`])
   out.push([`How quickly will I get it?`,
     'Within 2 working days of your answers, or within 24 hours if you add priority delivery for £15 in your basket.'])
   out.push([`What happens after the first year?`,
@@ -157,10 +171,10 @@ export function PolicyDocMock({ p, regs, elements }: { p: FaqPolicy; regs: FaqRe
   const own = ownFields(p)
   const people = [
     { label: 'Registered manager', value: 'Your registered manager' },
-    ...own.filter(f => !/date/i.test(f.label)).map(f => ({ label: f.label, value: `Your ${lowerFirst(f.label)}` })),
+    ...own.filter(f => !isFact(f.label)).map(f => ({ label: f.label, value: `Your ${inSentence(f.label)}` })),
     { label: 'Nominated individual', value: 'Your nominated individual' },
   ].slice(0, 4)
-  const dates = own.filter(f => /date/i.test(f.label))
+  const dates = own.filter(f => isFact(f.label))
   const covers = regs.flatMap(r => r.key_facts.slice(0, 2)).slice(0, 4)
   return (
     <figure className="pxdoc" aria-label={`Sample page from the ${p.title}, partly redacted`}>
@@ -178,7 +192,7 @@ export function PolicyDocMock({ p, regs, elements }: { p: FaqPolicy; regs: FaqRe
         <p className="pxdoc-h">1. Who is responsible</p>
         <table className="pxdoc-people"><tbody>
           {people.map(x => <tr key={x.label}><th>{x.label}</th><td><i className="merge">{x.value}</i></td></tr>)}
-          {dates.map(d => <tr key={d.key}><th>{d.label}</th><td><i className="merge">Your date</i></td></tr>)}
+          {dates.map(d => <tr key={d.key}><th>{d.label}</th><td><i className="merge">{/^date/i.test(d.label) ? 'Your date' : 'Your answer'}</i></td></tr>)}
         </tbody></table>
 
         {regs.length > 0 && <>

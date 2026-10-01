@@ -82,6 +82,12 @@ const allowedOrigins = (process.env.WEB_URL ?? '')
 
 // Any carestreamai.com origin (apex + subdomains: www, demos, etc.)
 const CARESTREAM_ORIGIN = /^https:\/\/([a-z0-9-]+\.)?carestreamai\.com$/
+// Named demo links for page drafts shown to Len before release (Vercel aliases we own). Only
+// these exact hosts, never *.vercel.app, which anyone can deploy to.
+const DEMO_ORIGINS = new Set([
+  'https://carestream-course-page-demo.vercel.app',
+  'https://carestream-policy-page-demo.vercel.app',
+])
 
 app.use(cors({
   origin: (origin, cb) => {
@@ -92,6 +98,7 @@ app.use(cors({
     if (allowedOrigins.includes(origin)) return cb(null, true)
     // Allow first-party subdomains (e.g. demos.carestreamai.com landing pages)
     if (CARESTREAM_ORIGIN.test(origin)) return cb(null, true)
+    if (DEMO_ORIGINS.has(origin)) return cb(null, true)
     cb(new Error(`CORS: origin not allowed — ${origin}`))
   },
   credentials: true,

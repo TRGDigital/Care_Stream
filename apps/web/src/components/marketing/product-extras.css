@@ -27,7 +27,7 @@
   border:1.5px dashed #CFC8DA;font-size:.62rem;color:#8A8296;text-align:center}
 .pxdoc-letter .meta{font-size:.72rem;color:#6B6577}
 .pxdoc-letter .meta b{display:block;font-size:.9rem;color:#17121F}
-.pxdoc-page h4{margin:14px 0 6px;font-size:1.12rem;letter-spacing:-.02em;color:#17121F}
+.pxdoc-page h4{margin:14px 0 6px;font-size:1.12rem;font-weight:800;letter-spacing:-.02em;color:#17121F}
 .pxdoc-ver{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.7rem;color:#6B6577;margin-bottom:12px}
 .pxdoc-h{margin:12px 0 6px;font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#7B3FBF}
 .pxdoc-people{width:100%;border-collapse:collapse;font-size:.78rem}
@@ -35,7 +35,7 @@
 .pxdoc-people td{padding:4px 0}
 .pxdoc-people tr+tr th,.pxdoc-people tr+tr td{border-top:1px solid #F0EDF4}
 .pxdoc .merge{font-style:normal;padding:1px 6px;border-radius:5px;background:#F1EAFB;color:#5B2C93;font-weight:600;white-space:nowrap}
-.pxdoc-law,.pxdoc-covers{margin:0;padding-left:18px}
+.pxdoc-law,.pxdoc-covers{margin:0;padding-left:18px;list-style:disc}
 .pxdoc-law li,.pxdoc-covers li{margin:2px 0}
 .pxdoc-bars{display:grid;gap:7px;margin:14px 0 10px;filter:blur(.4px)}
 .pxdoc-bars i{display:block;height:8px;border-radius:4px;background:#ECE8F2}

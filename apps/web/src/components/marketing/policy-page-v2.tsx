@@ -211,6 +211,7 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
           (its picture, the three-minute build, the law it is checked against), and everything
           needed to buy on the right, held in view until the gallery ends. */}
       <StickyFit selector=".pcpage-v2 .mpe-info" />
+      <StickyFit selector=".pcpage-v2 .mpe-gallery" />
       <ExitQuestion funnel="policies" product={product.slug} />
       <section className="pchero mpe">
         <div className="pcwrap mpe-in">

@@ -755,3 +755,6 @@
 }
 .mpage-v2 .mpe-gallery{grid-template-columns:minmax(0,1fr)}
 .mpage-v2 .mpe-gallery > *{min-width:0}
+
+/* Whichever column is shorter stays in view while the other scrolls, so neither leaves a gap. */
+@media(min-width:961px){ .mpage-v2 .mpe-gallery{position:sticky;align-self:start} }

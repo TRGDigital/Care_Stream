@@ -265,6 +265,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
           (picture, proof, a real lesson to try, the standards it covers), and everything needed to
           buy on the right, held in view until the gallery ends. */}
       <StickyFit selector=".mpage-v2 .mpe-info" />
+      <StickyFit selector=".mpage-v2 .mpe-gallery" />
       <ExitQuestion funnel="training" product={m.slug} />
       <section className="mhero mpe">
         <div className="mwrap mpe-in">

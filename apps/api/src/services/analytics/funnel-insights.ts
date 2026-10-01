@@ -1,5 +1,6 @@
 import { prisma } from '../../db/client'
 import type { Attribution } from './attribution'
+import { ADDONS, type AddonKey } from '../shop/addons'
 export { cleanAttribution, attributionMeta, attributionFromMeta, type Attribution } from './attribution'
 import { retrieveSaleBreakdown, TRAINING_LICENCE_PENCE } from '../billing/stripe'
 
@@ -58,13 +59,14 @@ async function send(funnel: 'training' | 'policies', transactionId: string, code
 }
 
 /** Training: one Stripe line at the (volume) unit price × all licences, split per course. */
-export async function reportTrainingSale(sessionId: string, transactionId: string | null, items: { slug: string; qty: number; free?: number; unit?: number }[], moduleName?: string, offer?: string | null, attribution: Attribution | null = null) {
+export async function reportTrainingSale(sessionId: string, transactionId: string | null, items: { slug: string; qty: number; free?: number; unit?: number }[], moduleName?: string, offer?: string | null, attribution: Attribution | null = null, addons: AddonKey[] = []) {
   try {
     if (!transactionId || !items.length) return
     const b = await retrieveSaleBreakdown(sessionId)
     if (!b) return
     // Split what Stripe charged by what each course cost (an offer can price one course lower).
-    const afterVolume = share(b.subtotal, items.map(i => i.qty * (i.unit ?? 1)))
+    const addonPence = addons.reduce((t, k) => t + ADDONS[k].pence, 0)
+    const afterVolume = share(Math.max(0, b.subtotal - addonPence), items.map(i => i.qty * (i.unit ?? 1)))
     const lines: Line[] = items.map((i, n) => ({
       product: i.slug,
       label: items.length === 1 ? moduleName : undefined,
@@ -74,12 +76,13 @@ export async function reportTrainingSale(sessionId: string, transactionId: strin
       freeQty: i.free ?? 0,
       freeValue: TRAINING_LICENCE_PENCE * (i.free ?? 0),
     }))
+    for (const k of addons) lines.push({ product: `addon:${k}`, label: ADDONS[k].name, qty: 1, list: ADDONS[k].pence, afterVolume: ADDONS[k].pence })
     await send('training', transactionId, b.code, b.tax, b.discount, lines, offer || null, attribution)
   } catch { /* reporting never affects the sale */ }
 }
 
 /** Policies: one Stripe line per policy or pack, in basket order. */
-export async function reportPolicySale(sessionId: string, transactionId: string | null, items: { kind: string; key: string }[], freeKeys: string[] = [], offer: string | null = null, attribution: Attribution | null = null) {
+export async function reportPolicySale(sessionId: string, transactionId: string | null, items: { kind: string; key: string }[], freeKeys: string[] = [], offer: string | null = null, attribution: Attribution | null = null, addons: AddonKey[] = []) {
   try {
     if (!transactionId || !items.length) return
     const b = await retrieveSaleBreakdown(sessionId)
@@ -101,6 +104,7 @@ export async function reportPolicySale(sessionId: string, transactionId: string 
       const amount = sl?.subtotal ?? 0
       return { product: i.kind === 'bundle' ? `bundle:${i.key}` : i.key, label: sl?.name || undefined, qty: 1, list: amount, afterVolume: amount }
     })
+    for (const k of addons) lines.push({ product: `addon:${k}`, label: ADDONS[k].name, qty: 1, list: ADDONS[k].pence, afterVolume: ADDONS[k].pence })
     await send('policies', transactionId, b.code, b.tax, b.discount, lines, offer, attribution)
   } catch { /* reporting never affects the sale */ }
 }

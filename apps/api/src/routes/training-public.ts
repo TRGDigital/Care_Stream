@@ -14,6 +14,7 @@ import { enrolInCampaign } from '../services/onboarding/dispatch'
 import { hashPassword } from '../services/auth/password'
 import crypto from 'crypto'
 import { reportTrainingSale, cleanAttribution, attributionFromMeta } from '../services/analytics/funnel-insights'
+import { markBasketPaid } from '../services/shop/basket-recovery'
 import { ADDONS, cleanAddons, addonsFromMeta } from '../services/shop/addons'
 
 const slugify = (s: string): string =>
@@ -570,6 +571,7 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
     const conversion = { value_pence: s.amountTotalPence, transaction_id: s.paymentId, products: items, post_purchase: s.metadata.post_purchase === '1', module_slug: s.metadata.module_slug || items[0]?.slug || null }
     // Revenue to Funnel Insights (idempotent there, so the already-provisioned path is safe too).
     await reportTrainingSale(sessionId, s.paymentId, items, s.metadata.module_name, s.metadata.offer || null, attributionFromMeta(s.metadata), addonsFromMeta(s.metadata))
+    await markBasketPaid(s.email, 'training')
     if (existing) { res.json({ data: { provisioned: true, already: true, email: s.email, ...conversion } }); return }
 
     const orgName   = s.metadata.org_name || 'Your service'

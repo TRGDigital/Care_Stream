@@ -26,6 +26,7 @@ import { runKnowledgeGapDailyJob } from '../services/knowledge-gaps/digest'
 import { sendDailyAuditReminders } from '../services/audits/reminders'
 import { sendLicenceRenewalReminders } from '../services/training/licence-renewals'
 import { runOfferChanges } from '../services/offers'
+import { runBasketRecovery, sendBasketRecoveryPreview } from '../services/shop/basket-recovery'
 import { dispatchDue } from '../services/onboarding/dispatch'
 import { seedOnboardingEmails } from '../services/onboarding/seed'
 import { checkRegulationSources } from '../services/regulations/source-monitor'
@@ -197,6 +198,14 @@ cronRouter.get('/indexing-report', (req, res) =>
 // every page it changed on. Offers turn over at midnight UK time; the 00:05 run catches it.
 cronRouter.get('/offer-changes', (req, res) =>
   job('offer-changes', req, res, () => runOfferChanges()))
+
+// Basket recovery emails (services/shop/basket-recovery.ts). Sends only with BASKET_RECOVERY_LIVE=1.
+cronRouter.get('/basket-recovery', (req, res) =>
+  job('basket-recovery', req, res, () => runBasketRecovery()))
+
+// Both recovery emails, for both shops, with sample baskets, to the platform owner to approve.
+cronRouter.get('/basket-recovery-preview', (req, res) =>
+  job('basket-recovery-preview', req, res, () => sendBasketRecoveryPreview(process.env.PURCHASE_NOTIFY_EMAIL ?? 'lenny@trgdigital.co.uk')))
 
 // Daily, last: email the platform owner what ran, what it captured, and — the point of the
 // whole thing — what was due and did not run at all.

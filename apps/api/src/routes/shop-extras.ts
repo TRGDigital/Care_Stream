@@ -9,6 +9,8 @@ import {
 import { cleanAttribution } from '../services/analytics/funnel-insights'
 import { getOffers, licenceDeal, policyDeal } from '../services/offers'
 import { sendBasketShareEmail, sendInvoiceRequestEmail } from '../services/email/outbound'
+import { priceBasket } from '../services/shop/basket-pricing'
+import { saveBasket, optOutByToken } from '../services/shop/basket-recovery'
 
 // Shop extras that sit around the checkouts:
 //   POST /public/shop/share-basket   email a basket to a manager for sign-off, with a link back
@@ -37,49 +39,10 @@ shopExtrasRouter.post('/share-basket', shareLimiter, async (req: Request, res: R
     if (!EMAIL.test(to)) { res.status(400).json({ error: 'Please enter a valid email address' }); return }
     if (!fromName) { res.status(400).json({ error: 'Please add your name so they know who sent it' }); return }
     const offers = await getOffers()
-    const base = siteUrl().replace(/\/$/, '')
-
-    let lines: { title: string; detail: string; pence: number }[] = []
-    let link = ''
-    if (funnel === 'training') {
-      const topics = await (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true }, select: { title: true } })
-      const bySlug = new Map((topics as any[]).map(t => [slugify(t.title), t.title] as const))
-      const items = (Array.isArray(req.body?.items) ? req.body.items : []).slice(0, 25)
-        .map((i: any) => ({ slug: String(i?.slug ?? ''), qty: Math.max(1, Math.min(500, Math.floor(Number(i?.qty) || 1))) }))
-        .filter((i: any) => bySlug.has(i.slug))
-      if (!items.length) { res.status(400).json({ error: 'The basket is empty' }); return }
-      lines = items.map((i: any) => {
-        const d = licenceDeal(offers, i.slug, i.qty)
-        const unit = d.pct ? Math.round(TRAINING_LICENCE_PENCE * (1 - d.pct / 100)) : TRAINING_LICENCE_PENCE
-        return {
-          title: bySlug.get(i.slug)!,
-          detail: `${i.qty + d.free} ${i.qty + d.free === 1 ? 'licence' : 'licences'}${d.free ? ` (${i.qty} paid + ${d.free} free with the ${d.offer?.label ?? 'offer'})` : ''}`,
-          pence: unit * i.qty,
-        }
-      })
-      link = `${base}/basket?items=${encodeURIComponent(items.map((i: any) => `${i.slug}:${i.qty}`).join(','))}`
-    } else {
-      const keys: string[] = (Array.isArray(req.body?.items) ? req.body.items : []).slice(0, 30).map((k: any) => String(k ?? '')).filter((k: string) => /^(bundle:)?[a-z0-9-]{2,80}$/.test(k))
-      const slugs = keys.filter(k => !k.startsWith('bundle:'))
-      const packs = keys.filter(k => k.startsWith('bundle:')).map(k => k.slice(7))
-      const [products, bundles] = await Promise.all([
-        (prisma as any).policyProduct.findMany({ where: { slug: { in: slugs }, active: true }, select: { slug: true, title: true, price_pence: true } }),
-        (prisma as any).policyBundle.findMany({ where: { key: { in: packs }, active: true }, select: { key: true, title: true, price_pence: true } }),
-      ])
-      const rows = [
-        ...(products as any[]).map(p => ({ kind: 'policy' as const, key: p.slug, title: p.title, pence: p.price_pence })),
-        ...(bundles as any[]).map(b => ({ kind: 'bundle' as const, key: b.key, title: b.title, pence: b.price_pence })),
-      ]
-      if (!rows.length) { res.status(400).json({ error: 'The basket is empty' }); return }
-      const deal = policyDeal(offers, rows)
-      lines = rows.map((r, n) => ({
-        title: r.title,
-        detail: deal.free.has(n) ? `Free with the ${deal.offer?.label ?? 'offer'}` : deal.pence[n] < r.pence ? `${money(r.pence)} before the offer` : 'Written for your service',
-        pence: deal.pence[n],
-      }))
-      link = `${base}/care-policies/checkout?items=${encodeURIComponent(rows.map(r => (r.kind === 'bundle' ? `bundle:${r.key}` : r.key)).join(','))}`
-    }
-    const total = lines.reduce((t, l) => t + l.pence, 0)
+    const basket = await priceBasket(funnel, req.body?.items, offers)
+    if (!basket) { res.status(400).json({ error: 'The basket is empty' }); return }
+    const { lines, link } = basket
+    const total = basket.totalPence
     const offer = offers.find(o => o.range === funnel || o.range === 'both')
     await sendBasketShareEmail({ to, fromName, note, funnel, lines, totalPence: total, link, offer: offer ? { label: offer.label ?? offer.name, headline: offer.headline ?? '', ends_on: offer.ends_on } : null })
     res.json({ data: { sent: true } })
@@ -149,4 +112,49 @@ shopExtrasRouter.post('/invoice-request', shareLimiter, async (req: Request, res
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'could not send the request' })
   }
+})
+
+// POST /public/shop/basket: the basket page and the buy page save the basket once a valid email
+// is typed (and again at checkout), so a buyer who is interrupted can be sent a link back to it.
+// Items are stored as sent and priced from the catalogue only when an email goes out.
+const basketLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, max: 60, standardHeaders: true, legacyHeaders: false,
+  keyGenerator: (req) => req.ip ?? 'unknown',
+  message: { error: 'Too many requests' },
+})
+shopExtrasRouter.post('/basket', basketLimiter, async (req: Request, res: Response) => {
+  try {
+    const b = req.body ?? {}
+    const t = (v: unknown, n: number) => String(v ?? '').trim().replace(/[<>]/g, '').slice(0, n)
+    const email = t(b.email, 160).toLowerCase()
+    if (!EMAIL.test(email)) { res.status(400).json({ error: 'Please enter a valid email address' }); return }
+    const funnel = b.funnel === 'policies' ? 'policies' : 'training'
+    const items = funnel === 'training'
+      ? (Array.isArray(b.items) ? b.items : []).slice(0, 25)
+        .map((i: any) => ({ slug: t(i?.slug, 80), qty: Math.max(1, Math.min(500, Math.floor(Number(i?.qty) || 1))) }))
+        .filter((i: any) => /^[a-z0-9-]{2,80}$/.test(i.slug))
+      : (Array.isArray(b.items) ? b.items : []).slice(0, 30).map((k: any) => t(k, 90)).filter((k: string) => /^(bundle:)?[a-z0-9-]{2,80}$/.test(k))
+    if (!items.length) { res.json({ data: { saved: false } }); return }
+    await saveBasket({
+      email, name: t(b.name, 80), org: t(b.org, 120), funnel, items, page: t(b.page, 200),
+      attribution: cleanAttribution(b.attribution), checkout: b.checkout === true,
+    })
+    res.json({ data: { saved: true } })
+  } catch (e: any) {
+    res.status(500).json({ error: 'Could not save the basket' })
+  }
+})
+
+// GET /public/shop/basket-optout?t=: the "Stop basket reminders" link in a recovery email.
+shopExtrasRouter.get('/basket-optout', async (req: Request, res: Response) => {
+  const done = await optOutByToken(String(req.query.t ?? '')).catch(() => false)
+  const msg = done || req.query.t === 'preview'
+    ? 'Done. You will not get any more basket reminders from CareStream.'
+    : 'That link has expired, but you can reply to any CareStream email and we will stop them.'
+  res.type('html').send(`<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>CareStream</title>
+<body style="margin:0;font-family:system-ui,sans-serif;background:#F7F5FA;color:#1A1530;display:grid;place-items:center;min-height:100vh">
+<div style="max-width:420px;margin:24px;padding:28px;background:#fff;border-radius:16px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.06)">
+<img src="https://www.carestreamai.com/logo-color.svg" alt="CareStream" style="height:34px;margin-bottom:14px">
+<p style="font-size:16px;line-height:1.6;margin:0 0 16px">${msg}</p>
+<a href="https://www.carestreamai.com" style="color:#7B3FBF;font-weight:600">Back to CareStream</a></div></body>`)
 })

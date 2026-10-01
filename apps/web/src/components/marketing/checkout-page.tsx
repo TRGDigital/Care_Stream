@@ -394,7 +394,7 @@ const BUNDLE = 'bundle:'
 const policyImage = (slug: string) => `/images/care-policies/${slug}/1.webp`
 
 export function PolicyCheckout() {
-  const { items, remove, saveForLater, switchToPack } = usePolicyBasket()
+  const { items, add, remove, saveForLater, switchToPack } = usePolicyBasket()
   const [org, setOrg] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -582,10 +582,14 @@ export function PolicyCheckout() {
             </li>
           )}
         </ul>
+        {policies.length > 0 && (
+          <div className="ckoffer ckoffer-pad">
+            <AddAnotherPolicy basket={items} offers={offers} rows={rows} packMembers={packMembers} onAdd={add} unpaired={unpaired} />
+          </div>
+        )}
         {policyOfferLive && policies.length > 0 && (
           <div className="ckoffer ckoffer-pad">
-            <PolicyOfferCard compact
-              cta={unpaired ? { href: '/care-policies', label: 'Choose your free policy' } : undefined} />
+            <PolicyOfferCard compact />
           </div>
         )}
       </div>
@@ -618,5 +622,64 @@ export function PolicyCheckout() {
         </div>
       </div>
     </Shell>
+  )
+}
+
+// ── "Add another policy" on the policy basket ────────────────────────────────
+// A picker of every policy not yet in the basket. While an offer is running, the ones that would
+// come out free (worked out with the same rules checkout uses) are listed first, so choosing the
+// free second policy of a 2 for 1 is one step, without leaving the basket.
+type CatalogueRow = { slug: string; title: string; price_pence: number }
+let catalogueCache: Promise<CatalogueRow[]> | null = null
+function loadCatalogue(): Promise<CatalogueRow[]> {
+  catalogueCache ??= fetch(`${API_URL}/public/policy-shop/catalogue`).then(r => r.json())
+    .then(b => ((b?.data?.products ?? []) as CatalogueRow[]).map(p => ({ slug: p.slug, title: p.title, price_pence: p.price_pence })))
+    .catch(() => { catalogueCache = null; return [] })
+  return catalogueCache
+}
+
+function AddAnotherPolicy({ basket, offers, rows, packMembers, onAdd, unpaired }: {
+  basket: BasketItem[]
+  offers: Parameters<typeof policyDeal>[0]
+  rows: Parameters<typeof policyDeal>[1]
+  packMembers: Record<string, string[]>
+  onAdd: (item: BasketItem) => void
+  unpaired: boolean
+}) {
+  const [all, setAll] = useState<CatalogueRow[]>([])
+  const [pick, setPick] = useState('')
+  useEffect(() => { loadCatalogue().then(setAll) }, [])
+  const inBasket = new Set(basket.map(b => b.slug))
+  const options = all.filter(p => !inBasket.has(p.slug)).sort((a, b) => a.title.localeCompare(b.title))
+  const wouldBeFree = (p: CatalogueRow) => {
+    const trial = [...rows, { kind: 'policy' as const, key: p.slug, pence: p.price_pence }]
+    return policyDeal(offers, trial, packMembers).free.has(trial.length - 1)
+  }
+  const free = options.filter(wouldBeFree)
+  const rest = options.filter(p => !free.includes(p))
+  if (!options.length) return null
+  const chosen = options.find(p => p.slug === pick)
+  const money0 = (p: number) => `£${(p / 100).toFixed(p % 100 ? 2 : 0)}`
+  return (
+    <div className="ckaddpol">
+      <label htmlFor="ckaddpol">{free.length && unpaired ? 'Add your free policy' : 'Add another policy'}</label>
+      <div className="ckaddpol-row">
+        <select id="ckaddpol" value={pick} onChange={e => setPick(e.target.value)}>
+          <option value="">{free.length && unpaired ? `Choose from ${free.length} policies you can add free` : 'Choose a policy'}</option>
+          {free.length > 0 && (
+            <optgroup label="Free with your offer">
+              {free.map(p => <option key={p.slug} value={p.slug}>{p.title}: free (normally {money0(p.price_pence)})</option>)}
+            </optgroup>
+          )}
+          <optgroup label={free.length ? 'Other policies' : 'All policies'}>
+            {rest.map(p => <option key={p.slug} value={p.slug}>{p.title}: {money0(p.price_pence)}</option>)}
+          </optgroup>
+        </select>
+        <button type="button" disabled={!chosen}
+                onClick={() => { if (chosen) { onAdd({ slug: chosen.slug, title: chosen.title, price_pence: chosen.price_pence }); setPick('') } }}>
+          Add to order
+        </button>
+      </div>
+    </div>
   )
 }

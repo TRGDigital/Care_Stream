@@ -712,3 +712,7 @@
 .mpage-v2 .mpe-guarantee h3{font-size:.92rem;margin-bottom:4px}
 .mpage-v2 .mpe-guarantee p{font-size:.76rem;line-height:1.5;margin-bottom:6px}
 @media(max-width:560px){ .mpage-v2 .mpe-trust{grid-template-columns:1fr} .mpage-v2 .mpe-qty{flex-wrap:wrap} }
+/* The course page's ticks: one per line, larger (the policy page keeps the two-column version) */
+.mpage-v2 .mpe-trust.mpe-trust-list{grid-template-columns:1fr;gap:6px}
+.mpage-v2 .mpe-trust.mpe-trust-list li{font-size:.9rem;white-space:nowrap}
+@media(max-width:1180px){ .mpage-v2 .mpe-trust.mpe-trust-list li{white-space:normal} }

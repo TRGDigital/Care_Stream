@@ -291,11 +291,12 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
 
             <ModuleBuyPanel slug={m.slug} title={m.title} unitPence={unitPence} />
 
-            <ul className="mpe-trust">
-              {m.cpd_accredited && <li><Tick />CPD Certified, {durationText(est)} of CPD</li>}
-              <li><Tick />A certificate for every staff member</li>
-              <li><Tick />Mapped to the Care Certificate, CQC aligned</li>
-              <li><Tick />Wrong answers get a follow-up lesson</li>
+            <ul className="mpe-trust mpe-trust-list">
+              <li><Tick />CQC-aligned, mapped to the Care Certificate framework</li>
+              <li><Tick />Completed in the hub in over 60 languages</li>
+              <li><Tick />A certificate for every staff member, for your CQC evidence</li>
+              <li><Tick />A wrong answer triggers a follow-up lesson, so gaps are closed</li>
+              {m.cpd_accredited && <li><Tick />CPD Certified Course</li>}
             </ul>
 
             <div className="mpe-guarantee">

@@ -716,3 +716,34 @@
 .mpage-v2 .mpe-trust.mpe-trust-list{grid-template-columns:1fr;gap:6px}
 .mpage-v2 .mpe-trust.mpe-trust-list li{font-size:.9rem;white-space:nowrap}
 @media(max-width:1180px){ .mpage-v2 .mpe-trust.mpe-trust-list li{white-space:normal} }
+
+/* Course page buy column back to full size (Len, 1 Oct): readable first, the column scrolls with
+   the page until its foot is in view on shorter screens (StickyFit). */
+.mpage-v2 .mpe-top .mpe-rating{font-size:.84rem}
+.mpage-v2 .mpe-info .mcrumb{font-size:.72rem}
+.mpage-v2 .mpe-eyebrow{font-size:.74rem}
+.mpage-v2 .mpe-eyerow .cpdmark{height:50px}
+.mpage-v2 .mpe h1{font-size:clamp(1.6rem, .9vw + 1.25rem, 2.15rem);margin:4px 0 14px}
+.mpage-v2 .mpe-quote{padding:11px 14px;margin-bottom:14px}
+.mpage-v2 .mpe-quote p{font-size:.9rem;margin-bottom:6px}
+.mpage-v2 .mpe-quote cite{font-size:.8rem}
+.mpage-v2 .mpe-offerline{padding:12px 15px;margin-bottom:14px}
+.mpage-v2 .mpe-offerline p{font-size:.95rem}
+.mpage-v2 .mpe-offer-emoji{font-size:2rem}
+.mpage-v2 .mpe-price b{font-size:2.1rem}
+.mpage-v2 .mpe-price span{font-size:.92rem}
+.mpage-v2 .mpe-price s{font-size:1.15rem}
+.mpage-v2 .mpe-badge{font-size:.8rem}
+.mpage-v2 .mpe-qty{margin-bottom:12px}
+.mpage-v2 .mpe-qty label{font-size:.9rem}
+.mpage-v2 .mpe-qtynote{font-size:.92rem}
+.mpage-v2 .mpe-step button{width:42px;height:44px}
+.mpage-v2 .mpe-step input{height:44px;font-size:1.05rem}
+.mpage-v2 .mpe-stock{font-size:.92rem;margin-bottom:14px}
+.mpage-v2 .mpe-buy .mrow .add{font-size:1rem;padding:14px 18px}
+.mpage-v2 .mpe-buy .textadd{font-size:.9rem}
+.mpage-v2 .mpe-trust.mpe-trust-list{gap:8px;margin-top:14px;padding-top:14px}
+.mpage-v2 .mpe-trust.mpe-trust-list li{font-size:.98rem}
+.mpage-v2 .mpe-guarantee{margin-top:18px;padding:0 18px 14px}
+.mpage-v2 .mpe-guarantee h3{font-size:1.02rem;margin-bottom:6px}
+.mpage-v2 .mpe-guarantee p{font-size:.86rem;line-height:1.6;margin-bottom:8px}

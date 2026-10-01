@@ -76,3 +76,21 @@ export function PolicyOfferCard({ pricePence, compact = false, cta }: {
     </aside>
   )
 }
+
+// The offer, squeezed into the dark bar that slides in at the top of a course or policy page
+// once its buy box has scrolled away.
+export function OfferBarChip({ slug, policy = false }: { slug?: string; policy?: boolean }) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => { setNow(Date.now()) }, [])
+  const licence = !policy && slug ? activeOffer(slug, now) : null
+  if (policy ? !policyOfferActive(now) : !licence) return null
+  return (
+    <span className="lofr-chip">
+      <span className="lofr-chip-ic" aria-hidden="true">🎃</span>
+      <span className="lofr-chip-tx">
+        <b>Halloween 2 for 1</b>
+        <span>{policy ? 'Buy 1 policy, get a second free' : `Buy 1 licence, get 1 free: ${licence!.effectivePrice} each`} · ends 31 Oct</span>
+      </span>
+    </span>
+  )
+}

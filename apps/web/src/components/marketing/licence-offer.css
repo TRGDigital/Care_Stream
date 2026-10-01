@@ -26,3 +26,11 @@ a.offerbtn:hover,button.offerbtn:hover{background:#E57A22 !important}
 .lofr-cta{display:inline-block;margin-top:10px;padding:9px 16px;border-radius:10px;background:#F28C38;color:#1F1530;
   font-weight:800;font-size:.88rem;text-decoration:none}
 .lofr-cta:hover{background:#E57A22}
+.lofr-chip{display:inline-flex;align-items:center;gap:10px;flex:0 1 auto;min-width:0;padding:7px 14px 7px 10px;
+  border:1.5px solid #F28C38;border-radius:12px;background:rgba(242,140,56,.12);color:#fff;line-height:1.25}
+.lofr-chip-ic{font-size:1.6rem;line-height:1}
+.lofr-chip-tx{display:grid;min-width:0}
+.lofr-chip-tx b{font-size:.86rem;font-weight:800;color:#F28C38;white-space:nowrap}
+.lofr-chip-tx span{font-size:.78rem;color:rgba(255,255,255,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:900px){.lofr-chip-tx span{display:none}.lofr-chip{padding:6px 10px}}
+@media(max-width:560px){.lofr-chip-tx{display:none}.lofr-chip{padding:4px 8px}.lofr-chip-ic{font-size:1.4rem}}

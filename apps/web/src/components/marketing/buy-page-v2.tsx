@@ -6,6 +6,7 @@ import { faqPageSchema } from '@/lib/schema'
 import { BuyForm } from './buy-form'
 import { LicenceOfferCard } from './licence-offer'
 import { ExitQuestion } from './shop-questions'
+import { StickyFit } from './sticky-fit'
 import './buy-page-v2.css'
 import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 
@@ -238,6 +239,7 @@ export function BuyPageV2({ module: m, unitPence, related, apiUrl }: {
   return (
     <div className="bypage-v2">
       <ExitQuestion funnel="training" product={m.slug} />
+      <StickyFit selector=".bypage-v2 .bybuy" />
       {/* The FAQs are visible on the page, so they can be described to search as FAQPage. */}
       <JsonLd data={faqPageSchema(faqs.map(([question, answer]) => ({ question, answer: answer.replace(/\n\n/g, ' ') })))} />
       <div className="bywrap">

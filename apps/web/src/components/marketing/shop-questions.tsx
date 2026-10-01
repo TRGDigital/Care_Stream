@@ -75,6 +75,8 @@ export function ExitQuestion({ funnel, product }: { funnel: Funnel; product?: st
     <div className="sq-overlay" role="dialog" aria-modal="true" aria-labelledby="sq-title" onClick={e => { if (e.target === e.currentTarget) setOpen(false) }}>
       <div className="sq-box">
         <button type="button" className="sq-close" aria-label="Close" onClick={() => setOpen(false)}>×</button>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="sq-logo" src="/logo-color.svg" alt="CareStream" />
         {sent ? (
           <>
             <h2 id="sq-title">Thank you, that really helps</h2>

@@ -1,5 +1,5 @@
-.su-addon{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border:1.5px solid #E2DEE8;border-radius:12px;background:#fff;cursor:pointer;text-align:left}
-.su-addon.on{border-color:#F28C38;background:#FFF6EE}
+.su-addon{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border:2px solid #F28C38;border-radius:12px;background:#FFF6EE;cursor:pointer;text-align:left}
+.su-addon.on{border-color:#E57A22;background:#FFEBD9;box-shadow:0 0 0 3px rgba(242,140,56,.18)}
 .su-addon input{width:18px;height:18px;margin-top:2px;accent-color:#F28C38;flex:0 0 auto}
 .su-addon b{display:block;font-size:.95rem;color:#17121F}
 .su-addon em{font-style:normal;color:#B4581A;margin-left:4px}
@@ -37,3 +37,16 @@
 .su-pp-list .su-pp-sum s{color:#A99BBB}
 .su-pp-go{width:100%;height:48px;border:0;border-radius:11px;background:#F28C38;color:#1F1530;font:inherit;font-weight:800;cursor:pointer}
 .su-pp-go[disabled]{opacity:.5;cursor:not-allowed}
+
+.su-invoice{display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 4px;padding:12px 14px;border:1.5px solid #F28C38;border-radius:12px;background:#FFF6EE;color:#3A3245;font:inherit;font-size:.84rem;line-height:1.45;text-align:left;cursor:pointer}
+.su-invoice b{display:block;color:#1F1530;font-size:.92rem;margin-bottom:2px}
+.su-invoice > span:last-child{font-size:1.2rem;color:#B4581A}
+.su-inv{max-width:600px;max-height:calc(100vh - 32px);overflow-y:auto}
+.su-inv-items{margin:0 0 12px;padding:8px 12px 8px 28px;border-radius:10px;background:#F7F5FA;font-size:.86rem;color:#3A3245}
+.su-inv-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.su-inv-grid label{display:grid;gap:4px;font-size:.82rem;font-weight:600;color:#3A3245}
+.su-inv-grid .wide{grid-column:1/-1}
+.su-inv-grid input,.su-inv-grid textarea{border:1.5px solid #E2DEE8;border-radius:10px;padding:9px 11px;font:inherit;font-size:.9rem;font-weight:400}
+.su-sumextras{display:grid;gap:10px;margin:14px 0 4px;padding-top:12px;border-top:1px solid var(--line,#E9E5EF)}
+.su-sumextras > b{font-size:.92rem}
+@media(max-width:560px){.su-inv-grid{grid-template-columns:1fr}}

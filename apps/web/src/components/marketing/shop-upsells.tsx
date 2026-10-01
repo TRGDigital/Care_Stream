@@ -5,6 +5,7 @@ import { useOffers, licenceDeal } from '@/lib/offers'
 import { UNIT_PENCE } from '@/lib/training-commerce'
 import { fi, fiAttribution } from '@/lib/funnel-insights'
 import './shop-upsells.css'
+import './shop-questions.css'
 
 // The shop's extras, beside the checkouts (prices are set by the API; these are for display):
 //   AddonOption           a £15 time-saver ticked into the order (team set-up, priority delivery)
@@ -190,5 +191,67 @@ export function PostPurchasePolicies({ sessionId, bought }: { sessionId: string;
         {busy ? 'Opening secure checkout…' : 'Add to my order'}
       </button>
     </div>
+  )
+}
+
+// "Need an invoice or purchase order?": an overlay that takes what we need to raise an invoice
+// (organisation, contact, billing address, PO number) with the basket attached, and sends it to us.
+export function InvoiceRequest({ funnel, items, className = '' }: { funnel: 'training' | 'policies'; items: string[]; className?: string }) {
+  const [open, setOpen] = useState(false)
+  const [f, setF] = useState({ org: '', name: '', email: '', phone: '', address: '', po: '', note: '' })
+  const [state, setState] = useState<'idle' | 'busy' | 'sent'>('idle')
+  const [error, setError] = useState('')
+  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF(x => ({ ...x, [k]: e.target.value }))
+  const send = async () => {
+    setState('busy'); setError('')
+    try {
+      const res = await fetch(`${API_URL}/public/shop/invoice-request`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ funnel, items, ...f }),
+      })
+      const b = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(b?.error ?? 'Could not send. Please try again.')
+      setState('sent'); fi('lead', { funnel, option: 'invoice_request', label: 'Invoice requested' })
+    } catch (e: any) { setError(e?.message ?? 'Could not send.'); setState('idle') }
+  }
+  return (
+    <>
+      <button type="button" className={`su-invoice ${className}`.trim()} onClick={() => setOpen(true)}>
+        <span><b>Need an invoice or purchase order?</b>Pay by bank transfer against an invoice. Request one here.</span>
+        <span aria-hidden="true">→</span>
+      </button>
+      {open && (
+        <div className="sq-overlay" role="dialog" aria-modal="true" aria-labelledby="su-inv-t" onClick={e => { if (e.target === e.currentTarget) setOpen(false) }}>
+          <div className="sq-box su-inv">
+            <button type="button" className="sq-close" aria-label="Close" onClick={() => setOpen(false)}>×</button>
+            {state === 'sent' ? (
+              <>
+                <h2 id="su-inv-t">Thank you, your request is with us</h2>
+                <p>We will email your invoice to {f.email} within one working day. Your order starts as soon as it is paid.</p>
+                <button type="button" className="sq-send" onClick={() => setOpen(false)}>Close</button>
+              </>
+            ) : (
+              <>
+                <h2 id="su-inv-t">Request an invoice</h2>
+                <p>We will email an invoice for {items.length ? 'the items in your basket' : 'your order'} within one working day. Pay by bank transfer and your order starts as soon as it arrives.</p>
+                {items.length > 0 && <ul className="su-inv-items">{items.map(i => <li key={i}>{i}</li>)}</ul>}
+                <div className="su-inv-grid">
+                  <label>Organisation name *<input value={f.org} onChange={set('org')} /></label>
+                  <label>Your name *<input value={f.name} onChange={set('name')} /></label>
+                  <label>Email for the invoice *<input type="email" value={f.email} onChange={set('email')} /></label>
+                  <label>Phone<input type="tel" value={f.phone} onChange={set('phone')} /></label>
+                  <label className="wide">Billing address *<textarea rows={3} value={f.address} onChange={set('address')} /></label>
+                  <label>Purchase order number<input value={f.po} onChange={set('po')} placeholder="If you have one" /></label>
+                  <label>Anything else<input value={f.note} onChange={set('note')} /></label>
+                </div>
+                {error && <p className="su-err">{error}</p>}
+                <button type="button" className="sq-send" disabled={state === 'busy' || !f.org.trim() || !f.name.trim() || !f.email.trim() || !f.address.trim()} onClick={send}>
+                  {state === 'busy' ? 'Sending…' : 'Request my invoice'}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </>
   )
 }

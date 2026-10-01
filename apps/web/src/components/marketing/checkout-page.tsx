@@ -10,7 +10,7 @@ import { LicenceOfferCard, PolicyOfferCard } from './licence-offer'
 import { usePolicyBasket, type BasketItem } from './policy-basket'
 import { PaymentLogos } from './payment-logos'
 import { ExitQuestion } from './shop-questions'
-import { AddonOption, ShareBasket, ADDONS } from './shop-upsells'
+import { AddonOption, ShareBasket, InvoiceRequest, ADDONS } from './shop-upsells'
 import './checkout-page.css'
 import { fi, fiAttribution } from '@/lib/funnel-insights'
 
@@ -88,8 +88,11 @@ function Details({ orgLabel, orgPlaceholder, emailNote, org, setOrg, name, setNa
   )
 }
 
-function Summary({ lines, total, sub, assurances, ready, busy, error, onPay }: {
+function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, extras, invoice }: {
   lines: ReactNode; total: number; sub: string
+  /** "Save yourself time": the add-on and the send-to-manager link, above the total. */
+  extras?: ReactNode
+  invoice: { funnel: 'training' | 'policies'; items: string[] }
   assurances: [string, string][]
   ready: boolean; busy: boolean; error: string
   onPay: (agreed: boolean) => void
@@ -100,6 +103,7 @@ function Summary({ lines, total, sub, assurances, ready, busy, error, onPay }: {
       <div className="ckpanel"><div className="in">
         <h2>Order summary</h2>
         <div className="cklines">{lines}</div>
+        {extras && <div className="su-sumextras"><b>Save yourself time</b>{extras}</div>}
         <div className="cktotal"><span>Total</span><b>{money(total)}</b></div>
         <p className="cksub">{sub}</p>
         <label className="ckterms">
@@ -117,10 +121,7 @@ function Summary({ lines, total, sub, assurances, ready, busy, error, onPay }: {
         <PaymentLogos className="ckpaylogos" />
         <p className="cksecure"><Lock />Payment is taken on Stripe&apos;s secure page. We never see your card details.</p>
         {/* Care groups often cannot pay by card: the invoice and purchase order route, in plain view. */}
-        <Link className="ckinvoice" href="/contact?about=Invoice%20or%20purchase%20order">
-          <span><b>Need an invoice or purchase order?</b>Pay by bank transfer against an invoice. Talk to us and we will set it up.</span>
-          <span aria-hidden="true">→</span>
-        </Link>
+        <InvoiceRequest funnel={invoice.funnel} items={invoice.items} />
         <ul className="ckassure">
           {assurances.map(([t, d]) => <li key={t}><Tick /><span><b>{t}</b>{d}</span></li>)}
         </ul>
@@ -319,6 +320,11 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
             {teamSetup && <div><span>Team set-up, done for you</span><b>{money(ADDONS['team-setup'].pence)}</b></div>}
           </>}
           total={payNow}
+          extras={items.length ? <>
+            <AddonOption k="team-setup" checked={teamSetup} onChange={setTeamSetup} />
+            <ShareBasket funnel="training" items={items.map(i => ({ slug: i.slug, qty: i.qty }))} />
+          </> : null}
+          invoice={{ funnel: 'training', items: items.map(i => `${i.qty} × ${i.title}`) }}
           sub="One-off payment. No subscription."
           assurances={[
             ['Fourteen day refund', 'If a licence has not been started, tell us within fourteen days and we refund it in full.'],
@@ -402,13 +408,6 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
           <p>Annual training is included on CareStream plans, alongside policies, audits and CQC preparation.</p>
         </div>
         <Link href="/pricing">Compare plans</Link>
-      </div>
-
-      <div className="ckpanel"><div className="ckpanel-hd"><h2>Save yourself time</h2><span>Optional</span></div>
-        <div className="ckextras">
-          <AddonOption k="team-setup" checked={teamSetup} onChange={setTeamSetup} />
-          <ShareBasket funnel="training" items={items.map(i => ({ slug: i.slug, qty: i.qty }))} />
-        </div>
       </div>
 
       <Details orgLabel="Organisation name" orgPlaceholder="Oakhaven Care Home"
@@ -583,6 +582,11 @@ export function PolicyCheckout() {
             <div><span>First year of updates</span><b>Included</b></div>
           </>}
           total={total}
+          extras={items.length ? <>
+            <AddonOption k="priority-policy" checked={priority} onChange={setPriority} />
+            <ShareBasket funnel="policies" items={items.map(i => i.slug)} />
+          </> : null}
+          invoice={{ funnel: 'policies', items: items.map(i => i.title) }}
           sub="One-off. £12 a year per policy after the first year, cancel anytime."
           assurances={[
             ['Fourteen day refund', 'If a policy is not right for your service, tell us within fourteen days and we refund it in full.'],
@@ -669,13 +673,6 @@ export function PolicyCheckout() {
           </button>
         </div>
       )}
-
-      <div className="ckpanel"><div className="ckpanel-hd"><h2>Save yourself time</h2><span>Optional</span></div>
-        <div className="ckextras">
-          <AddonOption k="priority-policy" checked={priority} onChange={setPriority} />
-          <ShareBasket funnel="policies" items={items.map(i => i.slug)} />
-        </div>
-      </div>
 
       <Details orgLabel="Registered company name" orgPlaceholder="Oakhaven Care Ltd"
                emailNote="We send the receipt and the link to your questions here."

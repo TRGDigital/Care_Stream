@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Minus, Plus, Loader2, ShieldCheck } from 'lucide-react'
 import { fi, fiAttribution } from '@/lib/funnel-insights'
 import { PaymentLogos } from './payment-logos'
-import { AddonOption, ADDONS } from './shop-upsells'
+import { AddonOption, InvoiceRequest, ADDONS } from './shop-upsells'
 import { useOffers, licenceDeal, money2, paidForTotal } from '@/lib/offers'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
@@ -144,9 +144,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
           <li>A certificate for every staff member</li>
           <li>14-day refund on any licence not yet started</li>
         </ul>
-        <a className="byinvoice" href="/contact?about=Invoice%20or%20purchase%20order">
-          <b>Need an invoice or purchase order?</b> Pay by bank transfer: talk to us →
-        </a>
+        <InvoiceRequest funnel="training" items={[`${qty + free} × ${moduleName} licences${free ? ` (${qty} paid + ${free} free)` : ''}${teamSetup ? ' + team set-up' : ''}`]} />
       </form>
     )
   }

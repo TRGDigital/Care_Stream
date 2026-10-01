@@ -71,15 +71,15 @@ export function TrainingCartLink() {
 
 /** The page's main action: straight to this course's purchase page with one licence set.
  *  Logged as its own event so PPC traffic that buys directly can be told apart from the basket. */
-export function BuyNowLink({ slug, className = '', label = 'Buy now' }: {
-  slug: string; className?: string; label?: string
+export function BuyNowLink({ slug, className = '', label = 'Buy now', qty = 1 }: {
+  slug: string; className?: string; label?: string; qty?: number
 }) {
   // While an offer is live on this course the button takes the offer's orange.
   const offers = useOffers()
   const cls = licenceOffer(offers, slug) ? `${className} offerbtn`.trim() : className
   return (
-    <Link className={cls} href={`/buy/${slug}?qty=1`}
-          onClick={() => fi('buy_now_click', { funnel: 'training', option: slug, qty: 1 })}>
+    <Link className={cls} href={`/buy/${slug}?qty=${qty}`}
+          onClick={() => fi('buy_now_click', { funnel: 'training', option: slug, qty })}>
       {label}
     </Link>
   )

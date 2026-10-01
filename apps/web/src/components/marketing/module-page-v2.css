@@ -591,3 +591,83 @@
 .mpage-v2 .textadd button,.mpage-v2 .textadd a{background:none;border:0;padding:0;font:inherit;color:var(--accent);
   text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .mpage-v2 .mrow a.add{text-decoration:none}
+
+/* ── Product-page hero (mpe): gallery on the left, the buy column on the right, held in view
+      until the gallery ends. On a phone: main picture, then the buy column, then the gallery. ── */
+.mpage-v2 .mpe-in{display:grid;grid-template-columns:minmax(0,1.32fr) minmax(0,1fr);
+    grid-template-areas:"main info" "gal info";column-gap:44px;row-gap:14px;align-items:start;
+    padding-block:22px 64px}
+.mpage-v2 .mpe-main{grid-area:main}
+.mpage-v2 .mpe-gallery{grid-area:gal;display:grid;gap:14px;min-width:0}
+.mpage-v2 .mpe-info{grid-area:info;position:sticky;top:calc(var(--chrome) + 14px);align-self:start;
+    max-height:calc(100vh - var(--chrome) - 24px);overflow-y:auto;scrollbar-width:thin;padding:2px 2px 8px}
+.mpage-v2 .mpe-shot{border-radius:16px;overflow:hidden;background:var(--plate,#F2EEF8)}
+.mpage-v2 .mpe-shot img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover}
+
+/* the buy column */
+.mpage-v2 .mpe-info .mcrumb{margin-bottom:8px}
+.mpage-v2 .mpe-rating{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:.82rem;color:var(--muted);
+    padding-bottom:10px;border-bottom:1px solid var(--line)}
+.mpage-v2 .mpe-rating .row, .mpage-v2 .mpe-quote .row, .mpage-v2 .mpe-tile .row{display:inline-flex;gap:2px;color:#F2A33A}
+.mpage-v2 .mpe-rating svg, .mpage-v2 .mpe-quote svg, .mpage-v2 .mpe-tile .row svg{width:14px;height:14px}
+.mpage-v2 .mpe-eyerow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.mpage-v2 .mpe-eyebrow{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.68rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--accent)}
+.mpage-v2 .mpe-eyerow .cpdmark{height:52px;width:auto}
+.mpage-v2 .mpe h1{font-size:clamp(1.55rem, .8vw + 1.2rem, 2.05rem);line-height:1.14;letter-spacing:-.03em;margin:6px 0 12px}
+.mpage-v2 .mpe-quote{margin:0 0 14px;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--ground)}
+.mpage-v2 .mpe-quote p{margin:0 0 6px;font-size:.86rem;line-height:1.5;color:var(--ink-2)}
+.mpage-v2 .mpe-quote cite{display:flex;align-items:center;gap:8px;font-style:normal;font-size:.76rem;color:var(--muted)}
+.mpage-v2 .mpe-buy.mbuy{background:none;border:0;border-top:1px solid var(--line);border-radius:0;box-shadow:none;padding:12px 0 0}
+.mpage-v2 .mpe-offerline{margin:0 0 8px;font-size:.9rem;line-height:1.5;color:var(--ink-2)}
+.mpage-v2 .mpe-offerline b{color:var(--ink)}
+.mpage-v2 .mpe-price{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 10px;margin-bottom:2px}
+.mpage-v2 .mpe-price s{font-size:1.05rem;color:var(--muted)}
+.mpage-v2 .mpe-price b{font-size:1.9rem;letter-spacing:-.035em;font-variant-numeric:tabular-nums}
+.mpage-v2 .mpe-price span{font-size:.85rem;color:var(--muted)}
+.mpage-v2 .mpe-badge{font-style:normal;font-size:.72rem;font-weight:800;padding:3px 10px;border-radius:999px;background:#F28C38;color:#1F1530;align-self:center}
+.mpage-v2 .mpe-sub{font-size:.8rem;color:var(--muted);margin:0 0 12px}
+.mpage-v2 .mpe-qty{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin-bottom:10px}
+.mpage-v2 .mpe-qty label{font-size:.8rem;font-weight:700;width:100%}
+.mpage-v2 .mpe-step{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--ground)}
+.mpage-v2 .mpe-step button{width:38px;height:40px;border:0;background:var(--ground);font-size:1.05rem;cursor:pointer;color:var(--muted)}
+.mpage-v2 .mpe-step button:hover{background:var(--ground-2);color:var(--ink)}
+.mpage-v2 .mpe-step input{width:54px;height:40px;border:0;border-inline:1px solid var(--line);text-align:center;font:inherit;font-weight:700}
+.mpage-v2 .mpe-qtynote{font-size:.84rem;color:var(--ink-2)}
+.mpage-v2 .mpe-stock{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-size:.85rem;color:#1F8A5B;font-weight:600}
+.mpage-v2 .mpe-stock svg{width:16px;height:16px;flex:0 0 auto}
+.mpage-v2 .mpe-trust{list-style:none;margin:12px 0 0;padding:12px 0 0;border-top:1px solid var(--line);display:grid;gap:7px}
+.mpage-v2 .mpe-trust li{display:flex;gap:9px;align-items:flex-start;font-size:.85rem;color:var(--ink-2);line-height:1.45}
+.mpage-v2 .mpe-trust svg{width:15px;height:15px;flex:0 0 auto;margin-top:2px;color:#1F8A5B}
+
+/* the gallery */
+.mpage-v2 .mpe-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.mpage-v2 .mpe-tile{margin:0;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:10px;justify-content:center;min-height:240px}
+.mpage-v2 .mpe-tile.dark{background:#1F1530;color:#F6F1FB}
+.mpage-v2 .mpe-tile.dark blockquote{margin:0;font-size:.95rem;line-height:1.55}
+.mpage-v2 .mpe-tile.dark figcaption{font-size:.8rem;color:#D9CFE6}
+.mpage-v2 .mpe-tile.light{background:var(--ground-2);border:1px solid var(--line);align-items:flex-start}
+.mpage-v2 .mpe-tile.light b{font-size:1.1rem}
+.mpage-v2 .mpe-tile.light span{font-size:.86rem;color:var(--ink-2);line-height:1.5}
+.mpage-v2 .mpe-cpdbig{height:84px;width:auto}
+.mpage-v2 .mpe-demo{border:1px solid var(--line);border-radius:16px;padding:16px;background:var(--ground)}
+.mpage-v2 .mpe-cap{margin:0 0 10px;font-weight:700;color:var(--accent);font-size:.9rem}
+.mpage-v2 .mpe-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.mpage-v2 .mpe-std{margin:0;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--ground)}
+.mpage-v2 .mpe-std img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+.mpage-v2 .mpe-std figcaption{padding:9px 12px;font-size:.8rem;font-weight:600;color:var(--ink-2)}
+.mpage-v2 .mpe-banner{border-radius:16px;background:#1F1530;color:#F6F1FB;padding:34px 30px;text-align:center}
+.mpage-v2 .mpe-banner h2{color:#fff;font-size:clamp(1.3rem, 1vw + 1rem, 1.8rem);margin:0 0 12px}
+.mpage-v2 .mpe-banner p{max-width:52ch;margin:0 auto 18px;color:#D9CFE6;line-height:1.6}
+.mpage-v2 .mpe-banner-facts{display:flex;justify-content:center;flex-wrap:wrap;gap:10px 26px;font-size:.9rem;color:#D9CFE6}
+.mpage-v2 .mpe-banner-facts b{color:#F28C38;font-size:1.2rem;margin-right:4px}
+.mpage-v2 .mpe .mtech{margin-top:4px}
+
+@media(max-width:960px){
+  .mpage-v2 .mpe-in{grid-template-columns:minmax(0,1fr);grid-template-areas:"main" "info" "gal";padding-block:14px 48px}
+  .mpage-v2 .mpe-info{position:static;max-height:none;overflow:visible;padding:4px 0 10px}
+}
+@media(max-width:560px){
+  .mpage-v2 .mpe-pair, .mpage-v2 .mpe-grid{grid-template-columns:1fr}
+  .mpage-v2 .mpe-tile{min-height:0}
+}

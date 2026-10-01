@@ -10,6 +10,8 @@ import { ThemeModuleCard, type LibraryTopic } from './training-library-tabs'
 import { LicenceOfferCard, OfferBarChip } from './licence-offer'
 import { TrainingAddButton, TrainingCartLink, TrainingSaveButton, BuyNowLink, TrainingAddTextLink } from './training-cart-buttons'
 import { StickyBarReveal } from './sticky-bar-reveal'
+import { ModuleBuyPanel } from './module-buy-panel'
+import { REVIEWS } from '@/lib/reviews'
 import './module-page-v2.css'
 
 // The rebuilt /staff-training/<slug> template. Renders the SAME module record and the same demo
@@ -248,13 +250,26 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
         </div>
       </div>
 
-      <section className="mhero">
-        <div className="mwrap mhero-in">
-          <div>
+      {/* Above the fold, laid out like a shop product page: the course on the left as a gallery
+          (picture, proof, a real lesson to try, the standards it covers), and everything needed to
+          buy on the right, held in view until the gallery ends. */}
+      <section className="mhero mpe">
+        <div className="mwrap mpe-in">
+          <div className="mpe-main">
+            {hero && <div className="mpe-shot"><SiteImage src={hero} alt={`${m.title} training for care staff`} priority /></div>}
+          </div>
+
+          <aside className="mpe-info">
             <div className="mcrumb">
               <Link href="/staff-training">Staff training</Link>
               <span>/</span><span>{m.group_label}</span>
-              <span className="tag">CQC aligned</span>
+            </div>
+            <p className="mpe-rating">
+              <span className="row"><Star /><Star /><Star /><Star /><Star /></span>
+              Trusted by UK care providers
+            </p>
+            <div className="mpe-eyerow">
+              <span className="mpe-eyebrow">CQC aligned{m.cpd_accredited ? ' · CPD Certified' : ''}</span>
               {m.cpd_accredited && (
                 // The CPD Certified trademark: used unaltered, no border or added text, and
                 // only on courses the CPD Certification Service has certified (cpd_accredited).
@@ -263,48 +278,73 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               )}
             </div>
             <h1>{m.title} training that gets your team CQC-ready</h1>
-            <ul className="mbullets">
-              <li><Tick />CQC-aligned, mapped to the Care Certificate framework</li>
-              <li><Tick />Completed in the hub in over 60 languages</li>
+            {REVIEWS[0]?.short && (
+              <blockquote className="mpe-quote">
+                <p>&ldquo;{REVIEWS[0].short}&rdquo;</p>
+                <cite><span className="row"><Star /><Star /><Star /><Star /><Star /></span> {REVIEWS[0].name}, {REVIEWS[0].setting}</cite>
+              </blockquote>
+            )}
+
+            <ModuleBuyPanel slug={m.slug} title={m.title} unitPence={unitPence} />
+
+            <ul className="mpe-trust">
+              {m.cpd_accredited && <li><Tick />CPD Certified, {durationText(est)} of CPD</li>}
               <li><Tick />A certificate for every staff member, for your CQC evidence</li>
-              <li><Tick />A wrong answer triggers a follow-up lesson, so gaps are closed</li>
-              {m.cpd_accredited && <li><Tick />CPD Certified Course</li>}
+              <li><Tick />Mapped to the Care Certificate framework, CQC aligned</li>
+              <li><Tick />Wrong answers trigger a follow-up lesson, so gaps are closed</li>
             </ul>
+          </aside>
 
-            <div className="mbuy">
-              <div className="price"><b>{price}</b><span>per staff member, one off</span></div>
-              <p className="sub">No subscription needed. Bulk discounts from 10+ licences.</p>
-              {/* The theme's basket. The first version sent this to /buy/<slug> because there
-                  was no multi-module basket; there is one now (the training cart, checked out
-                  at /basket), and the /staff-training library already adds to it. */}
-              <div className="mrow">
-                <BuyNowLink slug={m.slug} className="add" />
-                <TrainingSaveButton slug={m.slug} title={m.title} />
+          <div className="mpe-gallery">
+            <div className="mpe-pair">
+              {REVIEWS[1] && (
+                <figure className="mpe-tile dark">
+                  <span className="row"><Star /><Star /><Star /><Star /><Star /></span>
+                  <blockquote>&ldquo;{REVIEWS[1].excerpt}&rdquo;</blockquote>
+                  <figcaption>{REVIEWS[1].name}, {REVIEWS[1].setting}</figcaption>
+                </figure>
+              )}
+              <figure className="mpe-tile light">
+                {m.cpd_accredited
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img className="mpe-cpdbig" src={CPD_CERTIFIED_LOGO} alt="CPD Certified, The CPD Certification Service" />
+                  : null}
+                <b>{m.cpd_accredited ? 'CPD Certified course' : 'CQC aligned course'}</b>
+                <span>{sections.length ? `${sections.length} sections` : 'Full course'} · {durationText(est)} · a scored final assessment and a certificate for every learner</span>
+              </figure>
+            </div>
+
+            {demo && (
+              <div className="mpe-demo">
+                <p className="mpe-cap">Try it: a real lesson and question from this course</p>
+                <TrainingDemo demo={demo} buyHref={buyHref} variant="theme" place="module" />
               </div>
-              <TrainingAddTextLink {...addLabel} />
-            </div>
-            <LicenceOfferCard slug={m.slug} />
+            )}
 
-            <p className="mprice-line">
-              From <b>{price} per staff member</b>, one-off. No subscription needed.
-            </p>
-            {/* The theme's two hand-drawn arrows: across to the demo on desktop, down to it on
-                a phone. One generic arrow left the phone layout with none. */}
-            <div className="mcue">
-              <span>Try it: a real lesson &amp; question</span>
-              <svg width="88" height="30" viewBox="0 0 88 30" fill="none" className="across" aria-hidden="true">
-                <path d="M3 16 C 30 17, 56 19, 80 11" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                <path d="M70 4 L 83 11 L 69 19" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <svg width="26" height="34" viewBox="0 0 26 34" fill="none" className="down" aria-hidden="true">
-                <path d="M13 2 C 13 16, 11 22, 13 28" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                <path d="M6 22 L 13 30 L 20 22" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+            {sections.some(s => s.image_url) && (
+              <div className="mpe-grid">
+                {sections.filter(s => s.image_url).slice(0, 4).map((s, i) => (
+                  <figure key={i} className="mpe-std">
+                    <SiteImage src={img(s.image_url)!} alt={cs(s.heading)} />
+                    <figcaption>{cs(s.heading)}</figcaption>
+                  </figure>
+                ))}
+              </div>
+            )}
+
+            <div className="mpe-banner">
+              <h2>A certificate for every member of your team</h2>
+              <p>
+                Each staff member completes {m.title} in the hub, in their own language, and gets a dated,
+                named certificate for your training file the moment they pass. You see who has finished,
+                their score and their certificate from your dashboard.
+              </p>
+              <div className="mpe-banner-facts">
+                <span><b>60+</b> languages</span>
+                <span><b>{durationText(est)}</b> to complete</span>
+                <span><b>1</b> certificate per person</span>
+              </div>
             </div>
-            <p className="mstars">
-              <span className="row"><Star /><Star /><Star /><Star /><Star /></span>
-              {' '}Trusted by UK care providers
-            </p>
 
             <div className="mtech">
               <p className="cap">Specialists in the technology behind it all</p>
@@ -318,8 +358,6 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               </p>
             </div>
           </div>
-
-          {demo && <TrainingDemo demo={demo} buyHref={buyHref} variant="theme" place="module" />}
         </div>
       </section>
 

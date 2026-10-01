@@ -262,5 +262,13 @@ export function usePolicyBasket() {
     write(KEY_BASKET, basket)
     announce()
   }, [])
-  return { items, remove, saveForLater, switchToPack }
+  /** Add a policy straight from the basket page (the "add another policy" picker). */
+  const add = useCallback((item: BasketItem) => {
+    const basket = read(KEY_BASKET)
+    if (!basket[item.slug]) basket[item.slug] = item
+    write(KEY_BASKET, basket)
+    announce()
+    fi('add_to_basket', { funnel: 'policies', option: item.slug, label: item.title, qty: 1 })
+  }, [])
+  return { items, add, remove, saveForLater, switchToPack }
 }

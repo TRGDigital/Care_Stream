@@ -30,3 +30,14 @@ export function fiAttribution(): { session: string; source: string; campaign: st
     return a && typeof a.session === 'string' ? a : null
   } catch { return null }
 }
+
+/** An answer to one of the on-site questions (the exit question, the thank-you question), sent to
+ *  Funnel Insights › Feedback. Anonymous: the visit's session id, the page and the answer. */
+export function fiFeedback(f: { kind: 'exit' | 'almost_stopped'; choice?: string; answer?: string; product?: string; funnel?: string }) {
+  if (typeof window === 'undefined') return
+  try {
+    const a = fiAttribution()
+    const body = JSON.stringify({ site: 'carestream', ...f, page: location.pathname, session: a?.session })
+    fetch('https://trg-funnel-insights.vercel.app/api/feedback', { method: 'POST', body, keepalive: true, headers: { 'Content-Type': 'text/plain' } }).catch(() => {})
+  } catch { /* feedback must never break the page */ }
+}

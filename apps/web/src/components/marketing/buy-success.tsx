@@ -3,12 +3,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { AlmostStopped } from './shop-questions'
+import { PostPurchaseTraining } from './shop-upsells'
 import { CheckCircle2, Loader2, Mail, AlertTriangle } from 'lucide-react'
 import { reportPurchase } from '@/lib/google-ads'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
-type State = { status: 'working' | 'done' | 'error'; email?: string; message?: string }
+type State = { status: 'working' | 'done' | 'error'; email?: string; message?: string; slug?: string | null; postPurchase?: boolean }
 
 export function BuySuccess() {
   const params = useSearchParams()
@@ -29,7 +31,7 @@ export function BuySuccess() {
         })
         const body = await res.json()
         if (!res.ok || !body?.data?.provisioned) throw new Error(body?.error ?? 'We could not confirm your payment.')
-        setState({ status: 'done', email: body.data.email })
+        setState({ status: 'done', email: body.data.email, slug: body.data.module_slug, postPurchase: !!body.data.post_purchase })
         reportPurchase('training_purchase', body.data.value_pence, body.data.transaction_id)
         // Purchases reach Funnel Insights from the server once Stripe confirms (with revenue).
       } catch (e: any) {
@@ -65,6 +67,11 @@ export function BuySuccess() {
             <div>
               <Link href="/login" className="btn-amber rounded-btn px-8 py-3.5 text-sm">Go to sign in</Link>
             </div>
+            {state.slug && !state.postPurchase && (
+              <PostPurchaseTraining sessionId={sessionId} slug={state.slug}
+                title={state.slug.replace(/-/g, ' ').replace(/^./, c => c.toUpperCase())} />
+            )}
+            <AlmostStopped funnel="training" />
           </>
         )}
 

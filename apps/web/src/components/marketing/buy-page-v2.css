@@ -93,7 +93,7 @@
 .bypage-v2 .bybuy{grid-area:buy;align-self:start;position:sticky;top:calc(var(--chrome) + 16px)}
 /* The pinned block is compact enough for a laptop screen; on a shorter one it scrolls inside itself
    rather than hiding the pay button below the fold. */
-.bypage-v2 .bybuy .bypanel{max-height:calc(100vh - var(--chrome) - 32px);overflow-y:auto;padding:22px 24px}
+.bypage-v2 .bybuy .bypanel{padding:22px 24px}
 .bypage-v2 .bybuy .byprice{margin-bottom:16px}
 .bypage-v2 .bybuy .byqty{margin-bottom:14px}
 .bypage-v2 .bybuy .byfield{margin-bottom:10px}
@@ -269,3 +269,25 @@
 .bypage-v2 .byfree span{color:#D9CFE6}
 .bypage-v2 .byfree .byfree-lb{justify-self:start;padding:3px 10px;border-radius:999px;background:#F28C38;color:#1F1530;
     font-size:.74rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.bypage-v2 .byprice{flex-wrap:wrap}
+.bypage-v2 .bywas{font-size:1.05rem;color:var(--muted)}
+.bypage-v2 .byapplied{font-style:normal;font-size:.72rem;font-weight:800;padding:3px 10px;border-radius:999px;background:#F28C38;color:#1F1530;align-self:center}
+.bypage-v2 .bypaylogos{justify-content:center}
+.bypage-v2 .byreassure{list-style:none;margin:12px 0 0;padding:10px 0 0;border-top:1px solid var(--line);display:grid;gap:5px}
+.bypage-v2 .byreassure li{font-size:.84rem;color:var(--ink-2);padding-left:20px;position:relative}
+.bypage-v2 .byreassure li::before{content:'';position:absolute;left:2px;top:4px;width:10px;height:6px;border-left:2px solid #1F8A5B;border-bottom:2px solid #1F8A5B;transform:rotate(-45deg)}
+.bypage-v2 .byinvoice{display:block;margin-top:12px;padding:10px 12px;border:1.5px solid #F28C38;border-radius:10px;background:#FFF6EE;color:#3A3245;font-size:.84rem;text-decoration:none}
+.bypage-v2 .byinvoice b{color:#1F1530}
+.bypage-v2 .byaddon{margin-top:14px}
+.bypage-v2 .byaddon .su-addon{padding:11px 12px}
+.bypage-v2 .byaddon .su-addon small{font-size:.8rem}
+
+/* Phones: title and paragraph, then the purchase box, then the bullet points and the rest. */
+@media(max-width:1000px){
+  .bypage-v2 .bylayout{display:flex;flex-direction:column}
+  .bypage-v2 .byintro{display:contents}
+  .bypage-v2 .byintro > *{order:1}
+  .bypage-v2 .bybuy{order:2;margin-bottom:28px}
+  .bypage-v2 .byintro > .bypoints, .bypage-v2 .byintro > :not(.bymod):not(h1):not(.lede){order:3}
+  .bypage-v2 .byrest{order:4;padding-top:28px;border-top:1px solid var(--line)}
+}

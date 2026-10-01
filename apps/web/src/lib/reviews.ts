@@ -8,6 +8,9 @@
 export interface Review {
   quote:   string
   excerpt: string
+  /** A shorter cut for a product page, same rules as excerpt. */
+  short?:  string
+  shortPolicies?: string
   name:    string
   setting: string
 }
@@ -28,6 +31,13 @@ export const REVIEWS: Review[] = [
       'I haven’t found anything else as comprehensive, easy to use, or as clever… The fact that staff '
       + 'can ask questions (and receive the correct answers from both our company policies and relevant '
       + 'regulations) in their own language is truly groundbreaking.',
+    short:
+      'I haven’t found anything else as comprehensive, easy to use, or as clever… The training modules and '
+      + 'matrix are extremely useful.',
+    /** For a policy page, same rules. */
+    shortPolicies:
+      'I haven’t found anything else as comprehensive, easy to use, or as clever; to have a tool such as this '
+      + 'for our company policies to act as a living on-hand guide for my staff.',
     name:    'A. Arbery',
     setting: 'Nursing Home',
   },

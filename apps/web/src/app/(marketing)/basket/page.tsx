@@ -20,11 +20,12 @@ async function loadModules(): Promise<Record<string, ModuleInfo>> {
     if (!res.ok) return {}
     const body = await res.json()
     const topics = (body?.data?.topics ?? []) as {
-      slug: string; illustration_url: string | null; duration_minutes: number | null
+      slug: string; title?: string; illustration_url: string | null; duration_minutes: number | null
     }[]
     return Object.fromEntries(topics.map(t => [t.slug, {
       image: t.illustration_url ? `${API_URL}${t.illustration_url}` : null,
       minutes: t.duration_minutes,
+      title: t.title,
     }]))
   } catch {
     // The basket still works without images: they are decoration, not the order.

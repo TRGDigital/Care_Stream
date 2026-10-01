@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, createElement, useContext, useEffect, useState, type ReactNode } from 'react'
-import { isLive, type Offer } from './offer-rules'
+import { isLive, licenceDeal, type Offer } from './offer-rules'
 
 export * from './offer-rules'
 
@@ -30,3 +30,14 @@ export function useOffers(): Offer[] {
 
 export const money = (p: number) => `£${(p / 100).toFixed(p % 100 ? 2 : 0)}`
 export const money2 = (p: number) => `£${(p / 100).toFixed(2)}`
+
+// Licence counts as the buyer sees them: the TOTAL they receive (2 for 1 shows 2, 4, 6). The
+// stepper moves the paid count by one; a typed total is met with the fewest paid licences.
+export function totalFor(offers: Offer[], slug: string, paid: number): number {
+  return paid + licenceDeal(offers, slug, paid).free
+}
+export function paidForTotal(offers: Offer[], slug: string, total: number): number {
+  let paid = 1
+  while (paid < 500 && totalFor(offers, slug, paid) < total) paid++
+  return paid
+}

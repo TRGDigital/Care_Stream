@@ -8,6 +8,9 @@ import { UNIT_PENCE, DISCOUNT_TIERS, discountPctForQty } from '@/lib/training-co
 import { useOffers, licenceDeal, policyDeal } from '@/lib/offers'
 import { LicenceOfferCard, PolicyOfferCard } from './licence-offer'
 import { usePolicyBasket, type BasketItem } from './policy-basket'
+import { PaymentLogos } from './payment-logos'
+import { ExitQuestion } from './shop-questions'
+import { AddonOption, ShareBasket, InvoiceRequest, ADDONS } from './shop-upsells'
 import './checkout-page.css'
 import { fi, fiAttribution } from '@/lib/funnel-insights'
 
@@ -85,8 +88,11 @@ function Details({ orgLabel, orgPlaceholder, emailNote, org, setOrg, name, setNa
   )
 }
 
-function Summary({ lines, total, sub, assurances, ready, busy, error, onPay }: {
+function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, extras, invoice }: {
   lines: ReactNode; total: number; sub: string
+  /** "Save yourself time": the add-on and the send-to-manager link, above the total. */
+  extras?: ReactNode
+  invoice: { funnel: 'training' | 'policies'; items: string[] }
   assurances: [string, string][]
   ready: boolean; busy: boolean; error: string
   onPay: (agreed: boolean) => void
@@ -97,6 +103,7 @@ function Summary({ lines, total, sub, assurances, ready, busy, error, onPay }: {
       <div className="ckpanel"><div className="in">
         <h2>Order summary</h2>
         <div className="cklines">{lines}</div>
+        {extras && <div className="su-sumextras"><b>Save yourself time</b>{extras}</div>}
         <div className="cktotal"><span>Total</span><b>{money(total)}</b></div>
         <p className="cksub">{sub}</p>
         <label className="ckterms">
@@ -108,14 +115,16 @@ function Summary({ lines, total, sub, assurances, ready, busy, error, onPay }: {
         </label>
         <button className="ckpay" type="button" id="ckpay" data-fi-copy="pay_button" disabled={!ready || !agreed || busy}
                 onClick={() => onPay(agreed)}>
-          <Lock />{busy ? 'Starting secure checkout…' : 'Continue to secure payment'}
+          <Lock />{busy ? 'Starting secure checkout…' : 'Checkout securely'}
         </button>
         {error && <p className="ckerr" role="alert">{error}</p>}
+        <PaymentLogos className="ckpaylogos" />
         <p className="cksecure"><Lock />Payment is taken on Stripe&apos;s secure page. We never see your card details.</p>
+        {/* Care groups often cannot pay by card: the invoice and purchase order route, in plain view. */}
+        <InvoiceRequest funnel={invoice.funnel} items={invoice.items} />
         <ul className="ckassure">
           {assurances.map(([t, d]) => <li key={t}><Tick /><span><b>{t}</b>{d}</span></li>)}
         </ul>
-        <p className="ckhelp">Need an invoice or a larger order? <Link href="/contact">Talk to us</Link></p>
       </div></div>
     </aside>
   )
@@ -145,7 +154,7 @@ function Shell({ back, title, lede, children, summary, total, empty }: {
         <div className="ckmbar">
           <div><span>Total</span><b>{money(total)}</b></div>
           <button type="button" onClick={() => document.getElementById('ckpay')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>
-            Checkout
+            Checkout securely
           </button>
         </div>
       )}
@@ -180,7 +189,7 @@ function detailsError(org: string, name: string, email: string) {
 
 // ── Training ──────────────────────────────────────────────────────────────────
 
-export interface ModuleInfo { image: string | null; minutes: number | null }
+export interface ModuleInfo { image: string | null; minutes: number | null; title?: string }
 
 export function TrainingCheckout({ modules }: { modules: Record<string, ModuleInfo> }) {
   const { items, totalQty, gross, discount, pct, net, cart } = useCart()
@@ -191,10 +200,22 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [mounted, setMounted] = useState(false)
+  const [teamSetup, setTeamSetup] = useState(false)
   // Reaching checkout counts against each course in the basket, not the checkout page.
   useEffect(() => {
     setMounted(true)
+    // A basket sent for approval arrives as ?items=slug:qty,…: rebuild it, then tidy the URL.
+    const shared = new URLSearchParams(window.location.search).get('items')
+    if (shared) {
+      for (const part of shared.split(',').slice(0, 25)) {
+        const [slug, q] = part.split(':')
+        if (!/^[a-z0-9-]{2,80}$/.test(slug || '') || cart.snapshot().some(i => i.slug === slug)) continue
+        cart.add({ slug, title: modules[slug]?.title ?? slug.replace(/-/g, ' ').replace(/^./, c => c.toUpperCase()), unitPence: UNIT_PENCE, qty: Math.max(1, Math.min(500, parseInt(q || '1', 10) || 1)) })
+      }
+      window.history.replaceState(null, '', window.location.pathname)
+    }
     cart.snapshot().forEach(i => fi('basket_view', { funnel: 'training', option: i.slug, label: i.title, qty: i.qty }))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const tiers = [...DISCOUNT_TIERS].sort((a, b) => a.min - b.min)
@@ -214,7 +235,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
     return n + i.qty * (Math.round(i.unitPence * (1 - pct / 100)) - Math.round(i.unitPence * (1 - d.pct / 100)))
   }, 0)
   const offerLabel = items.map(i => deals[i.slug].offer?.label).find(Boolean) ?? 'Offer'
-  const payNow = net - offerSaving
+  const payNow = net - offerSaving + (teamSetup && items.length ? ADDONS['team-setup'].pence : 0)
 
   async function pay() {
     const problem = detailsError(org, name, email)
@@ -229,6 +250,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
         body: JSON.stringify({
           attribution: fiAttribution(),
           items: items.map(i => ({ module_slug: i.slug, quantity: i.qty })),
+          addons: teamSetup ? ['team-setup'] : [],
           email: email.trim(), org_name: org.trim(), name: name.trim(),
         }),
       })
@@ -280,6 +302,8 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
     : null
 
   return (
+    <>
+    <ExitQuestion funnel="training" />
     <Shell
       back={['/staff-training', 'Continue browsing training']}
       title="Your basket"
@@ -293,13 +317,19 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
             {discount > 0 && <div className="save"><span>Volume discount ({pct}%)</span><b>−{money(discount)}</b></div>}
             {offerSaving > 0 && <div className="save"><span>{offerLabel}</span><b>−{money(offerSaving)}</b></div>}
             {freeQty > 0 && <div className="save"><span>{offerLabel}: {freeQty} free {freeQty === 1 ? 'licence' : 'licences'}</span><b>Free</b></div>}
+            {teamSetup && <div><span>Team set-up, done for you</span><b>{money(ADDONS['team-setup'].pence)}</b></div>}
           </>}
           total={payNow}
+          extras={items.length ? <>
+            <AddonOption k="team-setup" checked={teamSetup} onChange={setTeamSetup} />
+            <ShareBasket funnel="training" items={items.map(i => ({ slug: i.slug, qty: i.qty }))} />
+          </> : null}
+          invoice={{ funnel: 'training', items: [...items.map(i => `${i.qty} × ${i.title}`), ...(teamSetup ? [ADDONS['team-setup'].title] : [])] }}
           sub="One-off payment. No subscription."
           assurances={[
-            ['Sign-in link by email', 'Courses are ready to allocate as soon as payment completes.'],
-            ['Licences stay with your team', 'Assign each licence to a staff member from your dashboard.'],
-            ['Invoice for your records', 'A receipt is emailed with every order.'],
+            ['Fourteen day refund', 'If a licence has not been started, tell us within fourteen days and we refund it in full.'],
+            ['Instant access', 'Courses are ready to allocate as soon as payment completes, with a sign-in link by email.'],
+            ['Licences stay with your team', 'Assign each licence to a staff member from your dashboard. A receipt comes with every order.'],
           ]}
           ready={items.length > 0}
           busy={busy}
@@ -321,6 +351,9 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
                   <div className="meta">
                     {money(i.unitPence)} per licence{info?.minutes ? ` · ${info.minutes} minutes` : ''}
                   </div>
+                  <ul className="ckreassure">
+                    <li><Tick />Instant access</li><li><Tick />A certificate for every learner</li><li><Tick />14-day refund if unstarted</li>
+                  </ul>
                   {deals[i.slug].free > 0 && (
                     <div className="ckfree">
                       + {deals[i.slug].free} free with the {deals[i.slug].offer?.label ?? 'offer'}: {i.qty + deals[i.slug].free} licences in total
@@ -383,6 +416,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
 
       {savedPanel}
     </Shell>
+    </>
   )
 }
 
@@ -394,13 +428,32 @@ const BUNDLE = 'bundle:'
 const policyImage = (slug: string) => `/images/care-policies/${slug}/1.webp`
 
 export function PolicyCheckout() {
-  const { items, remove, saveForLater, switchToPack } = usePolicyBasket()
+  const { items, add, remove, saveForLater, switchToPack } = usePolicyBasket()
   const [org, setOrg] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [mounted, setMounted] = useState(false)
+  const [priority, setPriority] = useState(false)
+  // A basket sent for approval arrives as ?items=slug,bundle:key,…: rebuild it from the shop's prices.
+  useEffect(() => {
+    const shared = new URLSearchParams(window.location.search).get('items')
+    if (!shared) return
+    const want = shared.split(',').filter(k => /^(bundle:)?[a-z0-9-]{2,80}$/.test(k)).slice(0, 30)
+    fetch(`${API_URL}/public/policy-shop/catalogue`).then(r => r.json()).then(b => {
+      const products = (b?.data?.products ?? []) as { slug: string; title: string; price_pence: number }[]
+      const bundles = (b?.data?.bundles ?? []) as { key: string; title: string; price_pence: number }[]
+      for (const k of want) {
+        const row = k.startsWith(BUNDLE)
+          ? bundles.find(x => `${BUNDLE}${x.key}` === k) && { slug: k, title: bundles.find(x => `${BUNDLE}${x.key}` === k)!.title, price_pence: bundles.find(x => `${BUNDLE}${x.key}` === k)!.price_pence }
+          : products.find(x => x.slug === k)
+        if (row) add({ slug: row.slug, title: row.title, price_pence: row.price_pence })
+      }
+      window.history.replaceState(null, '', window.location.pathname)
+    }).catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const [packs, setPacks] = useState<Record<string, Pack[]>>({})
   useEffect(() => setMounted(true), [])
   // Reaching checkout counts against each policy or pack in it, once the basket has loaded.
@@ -425,7 +478,7 @@ export function PolicyCheckout() {
   const free = new Set([...deal.free].map(n => items[n].slug))
   const priceOf = (slug: string) => deal.pence[items.findIndex(i => i.slug === slug)] ?? 0
   const offerValue = items.reduce((n, i, k) => n + (i.price_pence || 0) - deal.pence[k], 0)
-  const total = gross - offerValue
+  const total = gross - offerValue + (priority && items.length ? ADDONS['priority-policy'].pence : 0)
   const policyOfferLive = offers.some(o => o.range === 'policies' || o.range === 'both')
   // A gift policy the offer adds: shown as its own free line, priced from the shop.
   const [gift, setGift] = useState<{ slug: string; title: string; price_pence: number } | null>(null)
@@ -485,6 +538,7 @@ export function PolicyCheckout() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           attribution: fiAttribution(),
+          addons: priority ? ['priority-policy'] : [],
           email: email.trim(), org_name: org.trim(), name: name.trim(),
           items: items.map(i => i.slug.startsWith(BUNDLE)
             ? { kind: 'bundle', key: i.slug.slice(BUNDLE.length) }
@@ -507,6 +561,8 @@ export function PolicyCheckout() {
   const label = policies.length === count ? `${count} ${count === 1 ? 'policy' : 'policies'}` : noun(count)
 
   return (
+    <>
+    <ExitQuestion funnel="policies" />
     <Shell
       back={['/care-policies', 'Continue browsing policies']}
       title="Your policy basket"
@@ -522,9 +578,15 @@ export function PolicyCheckout() {
             <div><span>{label}</span><b>{money(gross)}</b></div>
             {offerValue > 0 && <div className="save"><span>{deal.offer?.label ?? 'Offer'}{free.size ? `: ${free.size} free ${free.size === 1 ? 'policy' : 'policies'}` : ''}</span><b>−{money(offerValue)}</b></div>}
             {gift && <div className="save"><span>{deal.offer?.label ?? 'Offer'}: {gift.title} added free</span><b>Free</b></div>}
+            {priority && <div><span>Priority delivery within 24 hours</span><b>{money(ADDONS['priority-policy'].pence)}</b></div>}
             <div><span>First year of updates</span><b>Included</b></div>
           </>}
           total={total}
+          extras={items.length ? <>
+            <AddonOption k="priority-policy" checked={priority} onChange={setPriority} />
+            <ShareBasket funnel="policies" items={items.map(i => i.slug)} />
+          </> : null}
+          invoice={{ funnel: 'policies', items: [...items.map(i => i.title), ...(priority ? [ADDONS['priority-policy'].title] : [])] }}
           sub="One-off. £12 a year per policy after the first year, cancel anytime."
           assurances={[
             ['Fourteen day refund', 'If a policy is not right for your service, tell us within fourteen days and we refund it in full.'],
@@ -554,6 +616,9 @@ export function PolicyCheckout() {
                     {pack ? 'Every policy in the pack, personalised to your service'
                           : 'Personalised to your service · delivered within 2 working days'}
                   </div>
+                  <ul className="ckreassure">
+                    <li><Tick />Read and approved by a person</li><li><Tick />Delivered in 2 working days</li><li><Tick />14-day refund</li>
+                  </ul>
                   {free.has(i.slug) && <div className="ckfree">Free with the {deal.offer?.label ?? 'offer'}</div>}
                   <div className="acts">
                     {!pack && <button type="button" onClick={() => saveForLater(i)}>Save for later</button>}
@@ -582,10 +647,14 @@ export function PolicyCheckout() {
             </li>
           )}
         </ul>
+        {policies.length > 0 && (
+          <div className="ckoffer ckoffer-pad">
+            <AddAnotherPolicy basket={items} offers={offers} rows={rows} packMembers={packMembers} onAdd={add} unpaired={unpaired} />
+          </div>
+        )}
         {policyOfferLive && policies.length > 0 && (
           <div className="ckoffer ckoffer-pad">
-            <PolicyOfferCard compact
-              cta={unpaired ? { href: '/care-policies', label: 'Choose your free policy' } : undefined} />
+            <PolicyOfferCard compact />
           </div>
         )}
       </div>
@@ -609,7 +678,7 @@ export function PolicyCheckout() {
                emailNote="We send the receipt and the link to your questions here."
                org={org} setOrg={setOrg} name={name} setName={setName} email={email} setEmail={setEmail} />
 
-      <div className="ckpanel">
+      <div className="ckpanel ckafter">
         <div className="ckpanel-hd"><h2>What happens after you pay</h2><span>Once payment is confirmed</span></div>
         <div className="cknext">
           <div><span>01</span><b>Finish the short questions</b><p>About three minutes per policy. Company details you enter once are reused for every policy.</p></div>
@@ -618,5 +687,65 @@ export function PolicyCheckout() {
         </div>
       </div>
     </Shell>
+    </>
+  )
+}
+
+// ── "Add another policy" on the policy basket ────────────────────────────────
+// A picker of every policy not yet in the basket. While an offer is running, the ones that would
+// come out free (worked out with the same rules checkout uses) are listed first, so choosing the
+// free second policy of a 2 for 1 is one step, without leaving the basket.
+type CatalogueRow = { slug: string; title: string; price_pence: number }
+let catalogueCache: Promise<CatalogueRow[]> | null = null
+function loadCatalogue(): Promise<CatalogueRow[]> {
+  catalogueCache ??= fetch(`${API_URL}/public/policy-shop/catalogue`).then(r => r.json())
+    .then(b => ((b?.data?.products ?? []) as CatalogueRow[]).map(p => ({ slug: p.slug, title: p.title, price_pence: p.price_pence })))
+    .catch(() => { catalogueCache = null; return [] })
+  return catalogueCache
+}
+
+function AddAnotherPolicy({ basket, offers, rows, packMembers, onAdd, unpaired }: {
+  basket: BasketItem[]
+  offers: Parameters<typeof policyDeal>[0]
+  rows: Parameters<typeof policyDeal>[1]
+  packMembers: Record<string, string[]>
+  onAdd: (item: BasketItem) => void
+  unpaired: boolean
+}) {
+  const [all, setAll] = useState<CatalogueRow[]>([])
+  const [pick, setPick] = useState('')
+  useEffect(() => { loadCatalogue().then(setAll) }, [])
+  const inBasket = new Set(basket.map(b => b.slug))
+  const options = all.filter(p => !inBasket.has(p.slug)).sort((a, b) => a.title.localeCompare(b.title))
+  const wouldBeFree = (p: CatalogueRow) => {
+    const trial = [...rows, { kind: 'policy' as const, key: p.slug, pence: p.price_pence }]
+    return policyDeal(offers, trial, packMembers).free.has(trial.length - 1)
+  }
+  const free = options.filter(wouldBeFree)
+  const rest = options.filter(p => !free.includes(p))
+  if (!options.length) return null
+  const chosen = options.find(p => p.slug === pick)
+  const money0 = (p: number) => `£${(p / 100).toFixed(p % 100 ? 2 : 0)}`
+  return (
+    <div className="ckaddpol">
+      <label htmlFor="ckaddpol">{free.length && unpaired ? 'Add your free policy' : 'Add another policy'}</label>
+      <div className="ckaddpol-row">
+        <select id="ckaddpol" value={pick} onChange={e => setPick(e.target.value)}>
+          <option value="">{free.length && unpaired ? `Choose from ${free.length} policies you can add free` : 'Choose a policy'}</option>
+          {free.length > 0 && (
+            <optgroup label="Free with your offer">
+              {free.map(p => <option key={p.slug} value={p.slug}>{p.title}: free (normally {money0(p.price_pence)})</option>)}
+            </optgroup>
+          )}
+          <optgroup label={free.length ? 'Other policies' : 'All policies'}>
+            {rest.map(p => <option key={p.slug} value={p.slug}>{p.title}: {money0(p.price_pence)}</option>)}
+          </optgroup>
+        </select>
+        <button type="button" disabled={!chosen}
+                onClick={() => { if (chosen) { onAdd({ slug: chosen.slug, title: chosen.title, price_pence: chosen.price_pence }); setPick('') } }}>
+          Add to order
+        </button>
+      </div>
+    </div>
   )
 }

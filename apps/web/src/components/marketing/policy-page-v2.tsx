@@ -3,6 +3,11 @@ import { SiteImage } from '@/components/site-image'
 import { PolicyIntakeGame } from './policy-intake-game'
 import { AddToBasket, AddToBasketText, BasketPill, BuyNowPolicy, SavePolicy, StickyBuyBar } from './policy-basket'
 import { PolicyOfferCard } from './licence-offer'
+import { PolicyBuyPanel } from './policy-buy-panel'
+import { StickyFit } from './sticky-fit'
+import { REVIEWS } from '@/lib/reviews'
+import { PaymentLogos } from './payment-logos'
+import { ExitQuestion } from './shop-questions'
 import './policy-page-v2.css'
 
 // The rebuilt /care-policies/<slug> template. Renders the SAME shop API record the current page
@@ -201,69 +206,98 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
     <div className="pcpage-v2">
       <StickyBuyBar item={item} image={hero} />
 
-      <section className="pchero">
-        <div className="pcwrap pchero-in">
-          <div>
-            <div className="pccrumb">
-              <Link href="/care-policies">Care Policies</Link><span>/</span><b>{product.title}</b>
-            </div>
-            <span className="pcpill"><Shield />Personalised · Human-reviewed · Kept updated</span>
-            <h1>A {product.title} written for your service</h1>
-            <ul className="pcticks">
-              <li><Tick /><span>Written for your organisation, not a template with your logo on it</span></li>
-              <li><Tick /><span>Read and approved by a person before it carries your name</span></li>
-              <li><Tick /><span>Verified against all {elements} required elements of the legislation below</span></li>
-              <li><Tick /><span>Kept updated when the law changes, so it never quietly goes stale</span></li>
-            </ul>
-
-            <div className="pcbuycard">
-              <div className="price"><b>{price}</b><span>one-off, for your policy</span></div>
-              <p className="sub">
-                No subscription needed. First year of updates included, £12 a year after that.
-              </p>
-              <div className="pcbuyrow">
-                <BuyNowPolicy item={item} />
-                <SavePolicy slug={product.slug} title={product.title} />
-              </div>
-              <AddToBasketText item={item} />
-            </div>
-            <PolicyOfferCard slug={product.slug} pricePence={product.price_pence} />
-
-            <p className="pcnote">
-              One-off, first year of updates included. Delivered within <b>2 working days</b> of
-              your details.{pack && <> Also in the <b>{pack.title}</b>, 20 policies for {money(pack.price_pence)}.</>}
-            </p>
-
-            <div className="pccue">
-              <span>Build it now: {questions} questions, three minutes</span>
-              <svg width="88" height="30" viewBox="0 0 88 30" fill="none" className="across" aria-hidden="true">
-                <path d="M3 16 C 30 17, 56 19, 80 11" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                <path d="M70 4 L 83 11 L 69 19" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <svg width="26" height="34" viewBox="0 0 26 34" fill="none" className="down" aria-hidden="true">
-                <path d="M13 2 C 13 16, 11 22, 13 28" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                <path d="M6 22 L 13 30 L 20 22" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-
-            <p className="pctrust">
-              <span className="pcstars"><Star /><Star /><Star /><Star /><Star /></span>
-              Trusted by UK care providers
-            </p>
+      {/* Above the fold, laid out like a shop product page: the policy on the left as a gallery
+          (its picture, the three-minute build, the law it is checked against), and everything
+          needed to buy on the right, held in view until the gallery ends. */}
+      <StickyFit selector=".pcpage-v2 .mpe-info" />
+      <ExitQuestion funnel="policies" product={product.slug} />
+      <section className="pchero mpe">
+        <div className="pcwrap mpe-in">
+          <div className="mpe-main">
+            <div className="mpe-shot"><SiteImage src={hero} alt={`${product.title} for care services`} priority /></div>
           </div>
 
-          {/* The intake game IS the buying journey, and it already exists as a component: the
-              theme rebuilt it in plain JavaScript from this very file, so the port reuses the
-              original rather than reimplementing the copy. */}
-          <PolicyIntakeGame
-            slug={product.slug}
-            title={product.title}
-            pricePence={product.price_pence}
-            fields={product.intake_fields}
-            buyHref={`/contact?about=${encodeURIComponent(product.title)}`}
-            variant="theme"
-            heroImage={hero}
-          />
+          <aside className="mpe-info">
+            <div className="mpe-top">
+              <div className="pccrumb">
+                <Link href="/care-policies">Care Policies</Link><span>/</span><b>{product.title}</b>
+              </div>
+              <p className="mpe-rating">
+                <span className="row"><Star /><Star /><Star /><Star /><Star /></span>
+                Trusted by UK care providers
+              </p>
+            </div>
+            <span className="mpe-eyebrow">Personalised · Human-reviewed · Kept updated</span>
+            <h1>A {product.title} written for your service</h1>
+            {REVIEWS[0]?.shortPolicies && (
+              <blockquote className="mpe-quote">
+                <p>&ldquo;{REVIEWS[0].shortPolicies}&rdquo;</p>
+                <cite><span className="row"><Star /><Star /><Star /><Star /><Star /></span> {REVIEWS[0].name}, {REVIEWS[0].setting}</cite>
+              </blockquote>
+            )}
+
+            <PolicyBuyPanel item={item} />
+
+            <PaymentLogos />
+
+            <ul className="mpe-trust mpe-trust-list">
+              <li><Tick /><span>Written for your organisation, not a template</span></li>
+              <li><Tick /><span>Read and approved by a person</span></li>
+              <li><Tick /><span>Checked against {elements} required elements</span></li>
+              <li><Tick /><span>Updated when the law changes</span></li>
+            </ul>
+
+            <div className="mpe-guarantee">
+              <h3><span>Our guarantee</span></h3>
+              <p>
+                If a policy is not right for your service, tell us within fourteen days and we refund it in
+                full. Every policy is read by a person before it carries your name, and the first year of
+                updates is included.
+              </p>
+              <p>Built by people who have worked in care homes. <Link href="/about">Read our story</Link>.</p>
+            </div>
+          </aside>
+
+          <div className="mpe-gallery">
+            {/* The intake game IS the buying journey: build the policy now, in about three minutes. */}
+            <div className="mpe-demo">
+              <p className="mpe-cap">Build it now: {questions} questions, about three minutes</p>
+              <PolicyIntakeGame
+                slug={product.slug}
+                title={product.title}
+                pricePence={product.price_pence}
+                fields={product.intake_fields}
+                buyHref={`/contact?about=${encodeURIComponent(product.title)}`}
+                variant="theme"
+                heroImage={null}
+              />
+            </div>
+
+            {regulations.length > 0 && (
+              <figure className="mpe-tile light wide mpe-laws">
+                <div>
+                  <b>Checked against the law, line by line</b>
+                  <span>Structured from these, then verified against all {elements} required elements before a person signs it off.</span>
+                  <ul>
+                    {regulations.slice(0, 5).map(r => <li key={r.reference_key}><Tick /> {r.official_name}</li>)}
+                  </ul>
+                </div>
+              </figure>
+            )}
+
+            <div className="mpe-banner">
+              <h2>Your policy, written for your service</h2>
+              <p>
+                Answer a few questions once and your {product.title} is written in your name, about your
+                service and your people, read by a person, and delivered as a branded, print-ready document.
+              </p>
+              <div className="mpe-banner-facts">
+                <span><b>{questions}</b> questions</span>
+                <span><b>2</b> working days</span>
+                <span><b>{elements}</b> elements checked</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

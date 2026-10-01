@@ -10,6 +10,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { AlmostStopped } from './shop-questions'
+import { PostPurchasePolicies } from './shop-upsells'
 import { CheckCircle2, Loader2, Mail, AlertTriangle, FileText } from 'lucide-react'
 import { reportPurchase } from '@/lib/google-ads'
 
@@ -17,7 +19,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
 type State =
   | { status: 'working' }
-  | { status: 'done'; email?: string; created: number; newAccount: boolean }
+  | { status: 'done'; email?: string; created: number; newAccount: boolean; postPurchase: boolean; bought: string[] }
   | { status: 'error'; message: string; sessionId: string }
 
 export function PolicyPurchaseSuccess() {
@@ -50,6 +52,8 @@ export function PolicyPurchaseSuccess() {
           email: body.data.email,
           created: body.data.created ?? 0,
           newAccount: !!body.data.new_account,
+          postPurchase: !!body.data.post_purchase,
+          bought: (body.data.bought ?? []) as string[],
         })
         reportPurchase('policy_purchase', body.data.value_pence, body.data.transaction_id)
         // Purchases reach Funnel Insights from the server once Stripe confirms (with revenue).
@@ -100,6 +104,8 @@ export function PolicyPurchaseSuccess() {
                 <FileText size={15} /> Browse the other policies
               </Link>
             </div>
+            {!state.postPurchase && <PostPurchasePolicies sessionId={sessionId} bought={state.bought} />}
+            <AlmostStopped funnel="policies" />
           </>
         )}
 

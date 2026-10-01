@@ -177,7 +177,8 @@
 @media (max-width:1020px){
   .ckgrid{display:flex;flex-direction:column;gap:18px}
   .ckgrid > .ckcol{display:contents}
-  .ckgrid > .ckcol > *{order:1}
+  .ckgrid > .ckcol > *{order:1;width:100%;align-self:stretch;box-sizing:border-box}
+  .ckgrid > .cksum{width:100%}
   .ckgrid > .cksum{order:2}
   .ckgrid > .ckcol > .ckafter{order:3}
 }

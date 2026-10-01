@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Minus, Plus, Loader2, ShieldCheck } from 'lucide-react'
 import { fi } from '@/lib/funnel-insights'
+import { freeLicences, activeOffer } from '@/lib/offers'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 const gbp = (pence: number) => `£${(pence / 100).toFixed(2)}`
@@ -35,6 +36,8 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
   const [agreed, setAgreed] = useState(false)
 
   const total = qty * unitPence
+  // A live offer (the Halloween 2 for 1) adds free licences on top; the API adds the same.
+  const free = freeLicences(slug, qty)
   const setQ = (n: number) => setQty(Math.max(1, Math.min(500, n)))
 
   async function submit(e: React.FormEvent) {
@@ -63,8 +66,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
   if (variant === 'theme') {
     return (
       <form className="bypanel" onSubmit={submit}>
-        <div className="byprice"><b>{gbp(unitPence)}</b><span>per staff member</span></div>
-        <p className="note">One-off payment. No renewal unless you buy again.</p>
+        <div className="byprice"><b>{gbp(unitPence)}</b><span>per staff member, one-off payment</span></div>
 
         <label className="bylabel" htmlFor="byq">Number of licences</label>
         <div className="byqty">
@@ -77,6 +79,16 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
           {/* Inline, as the theme has it, rather than a class of my own invention. */}
           <span style={{ fontSize: '.86rem', color: 'var(--muted)' }}>{gbp(unitPence)} each</span>
         </div>
+        {free > 0 && (
+          <div className="byfree">
+            <span className="byfree-emoji" aria-hidden="true">🎃</span>
+            <div className="byfree-tx">
+              <span className="byfree-lb">Halloween offer applied</span>
+              <b>+ {free} free: you receive {qty + free} licences</b>
+              <span>Just {activeOffer(slug)?.effectivePrice} per staff member</span>
+            </div>
+          </div>
+        )}
 
         <div className="byfield">
           <label className="bylabel" htmlFor="byorg">Your service</label>
@@ -104,7 +116,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
             {' '}and acknowledge the <Link href="/privacy" target="_blank">Privacy Policy</Link>.
           </span>
         </label>
-        <button className="bybtn" type="submit" disabled={busy || !agreed}>
+        <button className={`bybtn${free > 0 ? ' offerbtn' : ''}`} type="submit" disabled={busy || !agreed}>
           {busy ? 'Starting secure checkout…' : 'Continue to payment'}
         </button>
         <p className="bysecure">

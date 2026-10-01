@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useCart, trackBasketEvent } from '@/lib/cart-store'
 import { useSavedCourses } from '@/lib/saved-courses'
 import { UNIT_PENCE, DISCOUNT_TIERS, discountPctForQty } from '@/lib/training-commerce'
+import { freeLicences } from '@/lib/offers'
+import { LicenceOfferCard } from './licence-offer'
 import { usePolicyBasket, type BasketItem } from './policy-basket'
 import './checkout-page.css'
 import { fi } from '@/lib/funnel-insights'
@@ -201,6 +203,8 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
   const from = prev?.min ?? 0
   const barPct = next ? Math.min(100, ((totalQty - from) / (next.min - from)) * 100) : 100
   const current = discountPctForQty(totalQty)
+  // Licences a live offer adds free (the Halloween 2 for 1); the API adds the same at payment.
+  const freeQty = items.reduce((n, i) => n + freeLicences(i.slug, i.qty), 0)
 
   async function pay() {
     const problem = detailsError(org, name, email)
@@ -276,6 +280,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
           lines={<>
             <div><span>{totalQty} {totalQty === 1 ? 'licence' : 'licences'}</span><b>{money(gross)}</b></div>
             {discount > 0 && <div className="save"><span>Volume discount ({pct}%)</span><b>−{money(discount)}</b></div>}
+            {freeQty > 0 && <div className="save"><span>Halloween offer: {freeQty} free {freeQty === 1 ? 'licence' : 'licences'}</span><b>Free</b></div>}
           </>}
           total={net}
           sub="One-off payment. No subscription."
@@ -304,6 +309,11 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
                   <div className="meta">
                     {money(i.unitPence)} per licence{info?.minutes ? ` · ${info.minutes} minutes` : ''}
                   </div>
+                  {freeLicences(i.slug, i.qty) > 0 && (
+                    <div className="ckfree">
+                      + {freeLicences(i.slug, i.qty)} free with the Halloween offer: {i.qty * 2} licences in total
+                    </div>
+                  )}
                   <div className="acts">
                     <button type="button" onClick={() => { savedCourses.add({ slug: i.slug, title: i.title }); cart.remove(i.slug) }}>Save for later</button>
                     <button type="button" onClick={() => cart.remove(i.slug)}>Remove</button>
@@ -318,6 +328,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
                   </div>
                   <span className="ckprice">{money(i.qty * i.unitPence)}</span>
                 </div>
+                {freeLicences(i.slug, i.qty) > 0 && <div className="ckoffer"><LicenceOfferCard slug={i.slug} compact /></div>}
               </li>
             )
           })}

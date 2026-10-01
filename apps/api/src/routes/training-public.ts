@@ -544,18 +544,20 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
     // the id is the payment, so a refreshed page is de-duplicated rather than counted twice.
     // Build the list of {slug, qty} to provision — from the basket metadata for a
     // multi-course order, otherwise the single module.
-    let items: { slug: string; qty: number }[] = []
+    // `free` is the licences a live offer added at checkout (never charged; capped at the paid qty).
+    let items: { slug: string; qty: number; free: number }[] = []
+    const freeOf = (f: unknown, qty: number) => Math.max(0, Math.min(qty, Math.floor(Number(f) || 0)))
     if (s.metadata.kind === 'training_basket' && s.metadata.basket) {
       try {
-        items = (JSON.parse(s.metadata.basket) as Array<{ s: string; q: number }>)
-          .map(b => ({ slug: String(b.s), qty: Math.max(1, Math.min(500, Math.floor(Number(b.q) || 1))) }))
+        items = (JSON.parse(s.metadata.basket) as Array<{ s: string; q: number; f?: number }>)
+          .map(b => { const qty = Math.max(1, Math.min(500, Math.floor(Number(b.q) || 1))); return { slug: String(b.s), qty, free: freeOf(b.f, qty) } })
           .filter(b => b.slug)
       } catch { items = [] }
     }
     if (!items.length) {
       const slug = s.metadata.module_slug || ''
       const qty  = Math.max(1, Math.min(500, parseInt(s.metadata.quantity || '1', 10) || 1))
-      if (slug) items = [{ slug, qty }]
+      if (slug) items = [{ slug, qty, free: freeOf(s.metadata.free, qty) }]
     }
     if (!items.length) { res.status(400).json({ error: 'No items on the payment' }); return }
 
@@ -651,8 +653,17 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
           price_pence: TRAINING_LICENCE_PENCE, currency: 'gbp', stripe_payment_id: s.paymentId, renewal_due_at: renewalDue,
         })),
       })
-      totalLicences += it.qty
-      orderLines.push({ title: topic?.title ?? it.slug, qty: it.qty })
+      // Offer licences: the same seat, recorded at £0 so revenue reporting stays true.
+      if (it.free > 0) {
+        await (prisma as any).trainingLicense.createMany({
+          data: Array.from({ length: it.free }, () => ({
+            tenant_id: tenantId, topic_id: topic?.id ?? null, module_id: moduleId, module_slug: it.slug, module_name: topic?.title ?? it.slug,
+            price_pence: 0, currency: 'gbp', stripe_payment_id: s.paymentId, renewal_due_at: renewalDue,
+          })),
+        })
+      }
+      totalLicences += it.qty + it.free
+      orderLines.push({ title: `${topic?.title ?? it.slug}${it.free ? ` (incl. ${it.free} free, Halloween offer)` : ''}`, qty: it.qty + it.free })
     }
 
     // Tell the platform owner. Only reached for a new payment: a repeat reconcile returns

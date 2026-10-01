@@ -4,6 +4,7 @@ import { careSetting } from '@/lib/care-setting'
 import { JsonLd } from '@/components/json-ld'
 import { faqPageSchema } from '@/lib/schema'
 import { BuyForm } from './buy-form'
+import { LicenceOfferCard } from './licence-offer'
 import './buy-page-v2.css'
 import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 
@@ -219,7 +220,6 @@ export function BuyPageV2({ module: m, unitPence, related, apiUrl }: {
     .filter(Boolean).join(' · ')
   const img = (u?: string | null) => (u ? `${apiUrl}${u}` : null)
   const hero = img(m.illustration_url)
-  const wide = img(m.sections?.[0]?.image_url)
   // Every lesson, not the first five: the lesson list is the most module-specific thing here.
   const curriculum = m.sections ?? []
   const lessons = curriculum.map(s => careSetting(s.heading)).filter(Boolean)
@@ -238,188 +238,173 @@ export function BuyPageV2({ module: m, unitPence, related, apiUrl }: {
     <div className="bypage-v2">
       {/* The FAQs are visible on the page, so they can be described to search as FAQPage. */}
       <JsonLd data={faqPageSchema(faqs.map(([question, answer]) => ({ question, answer: answer.replace(/\n\n/g, ' ') })))} />
-      <section className="byhero">
-        <div className="bywrap">
-          <Link className="byback" href={`/staff-training/${m.slug}`}>
-            <Back /> Back to {m.title}
-          </Link>
-          <div className="byhero-in">
-            <div>
-              <div className="bymod">
-                {hero && (
-                  <div className="bythumbshot">
-                    <SiteImage src={hero} alt={m.title} priority />
-                  </div>
-                )}
-                <div>
-                  <div className="byeyerow">
-                    <span className="byeyebrow">Buy training · no subscription</span>
-                    {m.cpd_accredited && (
-                      // CPD Certified trademark exactly as supplied: no border, frame or added text (lib/cpd.ts).
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img className="bycpd" src={CPD_CERTIFIED_LOGO} alt="CPD Certified" />
-                    )}
-                  </div>
-                  <p className="bymod-meta">{meta}</p>
+      <div className="bywrap">
+        <Link className="byback" href={`/staff-training/${m.slug}`}>
+          <Back /> Back to {m.title}
+        </Link>
+        {/* Two columns for the whole page: the purchase block stays in view on the right while
+            everything about the training scrolls past on the left. On a phone it sits straight
+            after the introduction instead. */}
+        <div className="bylayout">
+          <div className="byintro">
+            <div className="bymod">
+              {hero && (
+                <div className="bythumbshot">
+                  <SiteImage src={hero} alt={m.title} priority />
                 </div>
+              )}
+              <div>
+                <div className="byeyerow">
+                  <span className="byeyebrow">Buy training · no subscription</span>
+                  {m.cpd_accredited && (
+                    // CPD Certified trademark exactly as supplied: no border, frame or added text (lib/cpd.ts).
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img className="bycpd" src={CPD_CERTIFIED_LOGO} alt="CPD Certified" />
+                  )}
+                </div>
+                <p className="bymod-meta">{meta}</p>
               </div>
-              <h1>{m.title} training for your team</h1>
-              <p className="lede">
-                Licence this training for just the staff who need it. No CareStream subscription, no
-                minimum order, no annual contract. One licence covers one member of staff for the
-                complete <strong>{m.title}</strong> training, in the language they think in.
-              </p>
-              <ul className="bypoints">
-                {m.cpd_accredited && (
-                  <li>
-                    <span className="ic"><Tick /></span>
-                    <span><b>CPD Certified Course</b><span>
-                      Certified by The CPD Certification Service{cpdHours ? `, worth ${cpdHours} CPD hour${cpdHours === 1 ? '' : 's'}` : ''}. Every certificate carries the CPD Certified mark.
-                    </span></span>
-                  </li>
-                )}
-                {POINTS.map(([title, body]) => (
-                  <li key={title}>
-                    <span className="ic"><Tick /></span>
-                    <span><b>{title}</b><span>{body}</span></span>
-                  </li>
-                ))}
-              </ul>
             </div>
-
-            {/* The real checkout, in the theme's panel. One form component, two skins, so the
-                payment path cannot drift from the one the current page uses. */}
-            <BuyForm slug={m.slug} moduleName={m.title} unitPence={unitPence} variant="theme" />
-          </div>
-        </div>
-      </section>
-
-      <section className="bysec">
-        <div className="bywrap">
-          <span className="bylabel-sec">What is in this training</span>
-          <h2>{m.title}, start to finish.</h2>
-          <p className="intro">
-            {careSetting(twoSentences(m.summary ?? ''))} This is the same training CareStream subscribers get,
-            written for care settings rather than adapted from a generic course.
-            {minutes ? ` It runs about ${minutes} minutes${qCount ? ` and ends with a ${qCount} question assessment` : ''}.` : ''}
-          </p>
-          <div className="bysplit">
-            <ul className="bycurric">
-              {curriculum.map((s, i) => (
-                <li key={i}>
-                  <span className="n" />
-                  {/* The theme lists each lesson with its first sentence, not the whole body. */}
-                  <span><b>{careSetting(s.heading)}</b>{s.body && <p>{careSetting(firstSentence(s.body))}</p>}</span>
+            <h1>{m.title} training for your team</h1>
+            <p className="lede">
+              Licence this training for just the staff who need it. No CareStream subscription, no
+              minimum order, no annual contract. One licence covers one member of staff for the
+              complete <strong>{m.title}</strong> training, in the language they think in.
+            </p>
+            <ul className="bypoints">
+              {m.cpd_accredited && (
+                <li>
+                  <span className="ic"><Tick /></span>
+                  <span><b>CPD Certified Course</b><span>
+                    Certified by The CPD Certification Service{cpdHours ? `, worth ${cpdHours} CPD hour${cpdHours === 1 ? '' : 's'}` : ''}. Every certificate carries the CPD Certified mark.
+                  </span></span>
+                </li>
+              )}
+              {POINTS.map(([title, body]) => (
+                <li key={title}>
+                  <span className="ic"><Tick /></span>
+                  <span><b>{title}</b><span>{body}</span></span>
                 </li>
               ))}
             </ul>
-            {wide && (
-              <div className="byshot wide">
-                <SiteImage src={wide} alt={careSetting(curriculum[0]?.heading) || m.title} />
+            <LicenceOfferCard slug={m.slug} />
+          </div>
+
+          {/* The real checkout, in the theme's panel. One form component, two skins, so the
+              payment path cannot drift from the one the current page uses. */}
+          <div className="bybuy">
+            <BuyForm slug={m.slug} moduleName={m.title} unitPence={unitPence} variant="theme" />
+          </div>
+
+          <div className="byrest">
+            <section className="bysec">
+              <span className="bylabel-sec">What is in this training</span>
+              <h2>{m.title}, start to finish.</h2>
+              <p className="intro">
+                {careSetting(twoSentences(m.summary ?? ''))} This is the same training CareStream subscribers get,
+                written for care settings rather than adapted from a generic course.
+                {minutes ? ` It runs about ${minutes} minutes${qCount ? ` and ends with a ${qCount} question assessment` : ''}.` : ''}
+              </p>
+              <ul className="bycurric">
+                {curriculum.map((s, i) => (
+                  <li key={i}>
+                    <span className="n" />
+                    {/* The theme lists each lesson with its first sentence, not the whole body. */}
+                    <span><b>{careSetting(s.heading)}</b>{s.body && <p>{careSetting(firstSentence(s.body))}</p>}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            {outcomes.length > 0 && (
+              <section className="bysec tint">
+                <span className="bylabel-sec">Learning outcomes</span>
+                <h2>What your team will be able to do.</h2>
+                <ul className="bypoints bylist">
+                  {outcomes.map(o => (
+                    <li key={o}><span className="ic"><Tick /></span><span>{o}</span></li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            <section className="bysec">
+              <span className="bylabel-sec">At a glance</span>
+              <h2>{m.title} in facts.</h2>
+              <div className="bytrust">
+                {facts.map(([title, body]) => (
+                  <div key={title}><b>{title}</b><p>{body}</p></div>
+                ))}
               </div>
+              {keyPoints.length > 0 && (
+                <>
+                  <h3 className="bykp-h">What staff come away with</h3>
+                  <ul className="bycurric">
+                    {keyPoints.map((k, i) => (
+                      <li key={i}><span className="n" /><span><p>{k}</p></span></li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </section>
+
+            <section className="bysec tint">
+              <span className="bylabel-sec">After you buy</span>
+              <h2>Three steps, and nothing to set up.</h2>
+              <div className="bysteps">
+                {STEPS.map(([title, body], i) => (
+                  <div className="bystepcard" key={title}>
+                    <span className="n">{String(i + 1).padStart(2, '0')}</span>
+                    <b>{title}</b><p>{body}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="bysec">
+              <span className="bylabel-sec">What you get</span>
+              <h2>Everything a licence includes.</h2>
+              <div className="bytrust">
+                {TRUST.map(([title, body]) => (
+                  <div key={title}><b>{title}</b><p>{body}</p></div>
+                ))}
+              </div>
+            </section>
+
+            <section className="bysec tint">
+              <span className="bylabel-sec">Questions</span>
+              <h2>Before you buy.</h2>
+              <div className="byfaq">
+                {faqs.map(([q, a]) => (
+                  <details key={q}>
+                    <summary>{q}<Plus /></summary>
+                    <div className="ans">{a.split('\n\n').map((p, i) => <p key={i}>{p}</p>)}</div>
+                  </details>
+                ))}
+              </div>
+            </section>
+
+            {related.length > 0 && (
+              <section className="bysec">
+                <span className="bylabel-sec">Other training</span>
+                <h2>Licence any of these the same way.</h2>
+                <p className="intro">Same price, same terms, no subscription needed.</p>
+                <div className="byother">
+                  {related.map(r => (
+                    <Link href={`/buy/${r.slug}`} key={r.slug}>
+                      <span>
+                        {r.group_label && <span className="grp">{r.group_label}</span>}
+                        <b>{r.title}</b>
+                      </span>
+                      <Arrow />
+                    </Link>
+                  ))}
+                </div>
+              </section>
             )}
           </div>
         </div>
-      </section>
-
-      {outcomes.length > 0 && (
-        <section className="bysec tint">
-          <div className="bywrap">
-            <span className="bylabel-sec">Learning outcomes</span>
-            <h2>What your team will be able to do.</h2>
-            <ul className="bypoints bylist">
-              {outcomes.map(o => (
-                <li key={o}><span className="ic"><Tick /></span><span>{o}</span></li>
-              ))}
-            </ul>
-          </div>
-        </section>
-      )}
-
-      <section className="bysec">
-        <div className="bywrap">
-          <span className="bylabel-sec">At a glance</span>
-          <h2>{m.title} in facts.</h2>
-          <div className="bytrust">
-            {facts.map(([title, body]) => (
-              <div key={title}><b>{title}</b><p>{body}</p></div>
-            ))}
-          </div>
-          {keyPoints.length > 0 && (
-            <>
-              <h3 className="bykp-h">What staff come away with</h3>
-              <ul className="bycurric">
-                {keyPoints.map((k, i) => (
-                  <li key={i}><span className="n" /><span><p>{k}</p></span></li>
-                ))}
-              </ul>
-            </>
-          )}
-        </div>
-      </section>
-
-      <section className="bysec tint">
-        <div className="bywrap">
-          <span className="bylabel-sec">After you buy</span>
-          <h2>Three steps, and nothing to set up.</h2>
-          <div className="bysteps">
-            {STEPS.map(([title, body], i) => (
-              <div className="bystepcard" key={title}>
-                <span className="n">{String(i + 1).padStart(2, '0')}</span>
-                <b>{title}</b><p>{body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="bysec">
-        <div className="bywrap">
-          <span className="bylabel-sec">What you get</span>
-          <h2>Everything a licence includes.</h2>
-          <div className="bytrust">
-            {TRUST.map(([title, body]) => (
-              <div key={title}><b>{title}</b><p>{body}</p></div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="bysec tint">
-        <div className="bywrap">
-          <span className="bylabel-sec">Questions</span>
-          <h2>Before you buy.</h2>
-          <div className="byfaq">
-            {faqs.map(([q, a]) => (
-              <details key={q}>
-                <summary>{q}<Plus /></summary>
-                <div className="ans">{a.split('\n\n').map((p, i) => <p key={i}>{p}</p>)}</div>
-              </details>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {related.length > 0 && (
-        <section className="bysec">
-          <div className="bywrap">
-            <span className="bylabel-sec">Other training</span>
-            <h2>Licence any of these the same way.</h2>
-            <p className="intro">Same price, same terms, no subscription needed.</p>
-            <div className="byother">
-              {related.map(r => (
-                <Link href={`/buy/${r.slug}`} key={r.slug}>
-                  <span>
-                    {r.group_label && <span className="grp">{r.group_label}</span>}
-                    <b>{r.title}</b>
-                  </span>
-                  <Arrow />
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      </div>
     </div>
   )
 }

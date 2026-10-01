@@ -7,6 +7,7 @@ import { careSetting } from '@/lib/care-setting'
 import { claimSafe, estimatedMinutes, refreshWord, durationText } from '@/lib/training-commerce'
 import { LanguageCheck } from './language-check'
 import { ThemeModuleCard, type LibraryTopic } from './training-library-tabs'
+import { LicenceOfferCard } from './licence-offer'
 import { TrainingAddButton, TrainingCartLink, TrainingSaveButton, BuyNowLink, TrainingAddTextLink } from './training-cart-buttons'
 import { StickyBarReveal } from './sticky-bar-reveal'
 import './module-page-v2.css'
@@ -281,6 +282,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               </div>
               <TrainingAddTextLink {...addLabel} />
             </div>
+            <LicenceOfferCard slug={m.slug} />
 
             <p className="mprice-line">
               From <b>{price} per staff member</b>, one-off. No subscription needed.

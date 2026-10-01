@@ -137,3 +137,8 @@
 .ckpage .ckmbar button{background:var(--btn-ink);color:#fff;border:0;border-radius:999px;padding:12px 20px;font:inherit;font-weight:650;font-size:.92rem}
 .ckpage h1,.ckpage h2{font-weight:700;color:var(--ink)}
 .ckpage *,.ckpage *::before,.ckpage *::after{box-sizing:border-box}
+
+/* A live offer on a basket line: the free licences it adds, and the offer card under the line. */
+.ckfree{margin-top:4px;font-size:.84rem;font-weight:700;color:#B4581A}
+.ckoffer{grid-column:1/-1}
+.ckoffer .lofr{margin-top:0}

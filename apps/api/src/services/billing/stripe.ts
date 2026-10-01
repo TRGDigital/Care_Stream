@@ -10,6 +10,7 @@
 
 import Stripe from 'stripe'
 import { prisma } from '../../db/client'
+import { freeLicencesFor } from '../training/offers'
 
 // API version Managed Payments requires. Applied per-request to product/price
 // creation and Checkout Session creation only — NOT to the client globally.
@@ -140,7 +141,7 @@ export async function createCheckoutSession(tenantId: string, planId: string, in
   // Managed Payments: Stripe becomes merchant of record and settles tax.
   if (managedPaymentsEnabled()) (params as any).managed_payments = { enabled: true }
 
-  const session = await stripe.checkout.sessions.create(params, managedPaymentsRequestOptions())
+  const session = await createSessionWithOfferNote(stripe, params)
   if (!session.url) throw new Error('Stripe did not return a checkout URL')
   return session.url
 }
@@ -184,6 +185,18 @@ async function trainingPriceId(): Promise<string> {
   return created.id
 }
 
+// The offer note on the Stripe page is a nicety: if Stripe refuses custom_text (managed
+// payments can restrict fields), start the session without it rather than fail the sale.
+async function createSessionWithOfferNote(stripe: Stripe, params: Stripe.Checkout.SessionCreateParams) {
+  try {
+    return await stripe.checkout.sessions.create(params, managedPaymentsRequestOptions())
+  } catch (e) {
+    if (!params.custom_text) throw e
+    const { custom_text: _note, ...rest } = params
+    return await stripe.checkout.sessions.create(rest, managedPaymentsRequestOptions())
+  }
+}
+
 export interface TrainingCheckoutInput {
   moduleSlug: string
   moduleName: string
@@ -198,12 +211,15 @@ export async function createTrainingCheckoutSession(input: TrainingCheckoutInput
   const stripe = getStripe()
   const priceId = await trainingPriceId()
   const qty = Math.max(1, Math.min(500, Math.floor(input.quantity || 1)))
+  const free = freeLicencesFor(input.moduleSlug, qty)
   const params: Stripe.Checkout.SessionCreateParams = {
     mode:         'payment',
     line_items:   [{ price: priceId, quantity: qty }],
     customer_email: input.email,
+    ...(free ? { custom_text: { submit: { message: `Halloween offer: ${free} free ${free === 1 ? 'licence' : 'licences'} added, so you receive ${qty + free} in total.` } } } : {}),
     metadata: {
       kind:        'training_licence',
+      ...(free ? { free: String(free) } : {}),
       module_slug: input.moduleSlug,
       module_name: input.moduleName.slice(0, 250),
       quantity:    String(qty),
@@ -215,7 +231,7 @@ export async function createTrainingCheckoutSession(input: TrainingCheckoutInput
     cancel_url:  `${webUrl()}/staff-training/${input.moduleSlug}?buy=cancelled`,
   }
   if (managedPaymentsEnabled()) (params as any).managed_payments = { enabled: true }
-  const session = await stripe.checkout.sessions.create(params, managedPaymentsRequestOptions())
+  const session = await createSessionWithOfferNote(stripe, params)
   if (!session.url) throw new Error('Stripe did not return a checkout URL')
   return session.url
 }
@@ -259,15 +275,20 @@ export async function createTrainingBasketCheckoutSession(input: TrainingBasketC
 
   const totalQty = items.reduce((s, i) => s + i.quantity, 0)
   const pct = trainingDiscountPct(totalQty)
+  // Free licences from a live offer, per course. Not charged and not counted towards the
+  // volume discount; provisioned on reconcile from the `f` in the basket metadata.
+  const freeOf = (i: TrainingBasketItem) => freeLicencesFor(i.moduleSlug, i.quantity)
+  const totalFree = items.reduce((s, i) => s + freeOf(i), 0)
   const unit = Math.round(TRAINING_LICENCE_PENCE * (1 - pct / 100))
 
   const params: Stripe.Checkout.SessionCreateParams = {
     mode:       'payment',
     line_items: [{ price_data: { currency: 'gbp', product: productId, unit_amount: unit }, quantity: totalQty }],
     customer_email: input.email,
+    ...(totalFree ? { custom_text: { submit: { message: `Halloween offer: ${totalFree} free ${totalFree === 1 ? 'licence' : 'licences'} added to your order.` } } } : {}),
     metadata: {
       kind:         'training_basket',
-      basket:       JSON.stringify(items.map(i => ({ s: i.moduleSlug, q: i.quantity }))).slice(0, 480),
+      basket:       JSON.stringify(items.map(i => (freeOf(i) ? { s: i.moduleSlug, q: i.quantity, f: freeOf(i) } : { s: i.moduleSlug, q: i.quantity }))).slice(0, 480),
       total_qty:    String(totalQty),
       discount_pct: String(pct),
       org_name:     input.orgName.slice(0, 250),
@@ -279,7 +300,7 @@ export async function createTrainingBasketCheckoutSession(input: TrainingBasketC
     cancel_url:  `${webUrl()}${input.cancelPath ?? '/basket?buy=cancelled'}`,
   }
   if (managedPaymentsEnabled()) (params as any).managed_payments = { enabled: true }
-  const session = await stripe.checkout.sessions.create(params, managedPaymentsRequestOptions())
+  const session = await createSessionWithOfferNote(stripe, params)
   if (!session.url) throw new Error('Stripe did not return a checkout URL')
   return session.url
 }
@@ -584,7 +605,7 @@ export async function createPolicyCheckoutSession(input: PolicyCheckoutInput): P
     cancel_url:  `${webUrl()}/gaps?policy_purchase=cancelled`,
   }
   if (managedPaymentsEnabled()) (params as any).managed_payments = { enabled: true }
-  const session = await stripe.checkout.sessions.create(params, managedPaymentsRequestOptions())
+  const session = await createSessionWithOfferNote(stripe, params)
   if (!session.url) throw new Error('Stripe did not return a checkout URL')
   return session.url
 }

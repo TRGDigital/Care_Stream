@@ -478,3 +478,10 @@
 
 /* The Halloween offer card under the buy card: the same width as the card above it. */
 .pcpage-v2 .lofr{max-width:520px;box-sizing:border-box}
+
+/* The "Let's build your policy" card beside the buy card: held in view while the buy card and
+   the offer scroll past, and released at the end of the hero, before "Built from the law".
+   Pinned below the dark buy bar, which slides in over the top of the page at the same time. */
+@media (min-width:1051px){
+  .pcpage-v2 .pchero-in > :last-child{position:sticky;top:calc(var(--chrome) + 84px)}
+}

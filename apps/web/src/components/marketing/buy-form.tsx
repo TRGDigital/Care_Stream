@@ -102,7 +102,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
             <span className="byfree-emoji" aria-hidden="true">🎃</span>
             <div className="byfree-tx">
               <span className="byfree-lb">{deal.offer!.label ?? 'Offer'} applied</span>
-              <b>{free > 0 ? `You receive ${qty + free} licences for ${gbp(total)}` : `${deal.pct}% off every licence`}</b>
+              <b>{free > 0 ? `You receive ${qty + free} licences for ${gbp(qty * each)}` : `${deal.pct}% off every licence`}</b>
               <span>Just {money2(effective)} per staff member</span>
             </div>
           </div>

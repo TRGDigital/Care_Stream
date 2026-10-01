@@ -15,6 +15,7 @@ import { StickyFit } from './sticky-fit'
 import { REVIEWS } from '@/lib/reviews'
 import { PaymentLogos } from './payment-logos'
 import { ExitQuestion } from './shop-questions'
+import { ProductFaqs, SampleCertificate, trainingFaqs, type FaqModule } from './product-extras'
 import './module-page-v2.css'
 
 // The rebuilt /staff-training/<slug> template. Renders the SAME module record and the same demo
@@ -48,6 +49,8 @@ export interface TrainingModule {
   requires_practical?: boolean
   duration_minutes?: number | null
   cpd_accredited?: boolean
+  question_count?: number | null
+  pass_mark?: number | null
   summary?: string | null
   outcomes?: string[]
   key_points?: string[]
@@ -231,6 +234,11 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
   // estimate the library cards do.
   const est = estimatedMinutes(m.group_key, m.duration_minutes)
   const addLabel = { slug: m.slug, title: m.title, unitPence }
+  const faqModule: FaqModule = {
+    title: m.title, duration_minutes: m.duration_minutes, estMinutes: est, sections,
+    question_count: m.question_count, pass_mark: m.pass_mark, frequency: m.frequency,
+    requires_practical: m.requires_practical, cpd_accredited: m.cpd_accredited,
+  }
 
   return (
     <div className="mpage-v2">
@@ -313,6 +321,9 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               </p>
               <p>Built by people who have worked in care homes. <Link href="/about">Read our story</Link>.</p>
             </div>
+
+            <ProductFaqs title={`About ${m.title}`} faqs={trainingFaqs(faqModule)} />
+            <SampleCertificate m={faqModule} />
           </aside>
 
           <div className="mpe-gallery">

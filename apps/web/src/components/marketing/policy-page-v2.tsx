@@ -8,6 +8,7 @@ import { StickyFit } from './sticky-fit'
 import { REVIEWS } from '@/lib/reviews'
 import { PaymentLogos } from './payment-logos'
 import { ExitQuestion } from './shop-questions'
+import { ProductFaqs, PolicyDocMock, policyProductFaqs } from './product-extras'
 import './policy-page-v2.css'
 
 // The rebuilt /care-policies/<slug> template. Renders the SAME shop API record the current page
@@ -256,6 +257,9 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
               </p>
               <p>Built by people who have worked in care homes. <Link href="/about">Read our story</Link>.</p>
             </div>
+
+            <ProductFaqs title={`About the ${product.title}`} faqs={policyProductFaqs(product, regulations, elements)} />
+            <PolicyDocMock p={product} regs={regulations} elements={elements} />
           </aside>
 
           <div className="mpe-gallery">

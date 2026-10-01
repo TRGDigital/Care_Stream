@@ -257,3 +257,25 @@ export function InvoiceRequest({ funnel, items, className = '' }: { funnel: 'tra
     </>
   )
 }
+
+/** Saves the basket for basket recovery once a valid email is in and typing has paused, and again
+ *  whenever the basket changes. Fire and forget: it must never get in the way of buying. */
+export function useSaveBasket(b: {
+  funnel: 'training' | 'policies'; email: string; name?: string; org?: string
+  items: Array<{ slug: string; qty: number }> | string[]
+}) {
+  const key = JSON.stringify(b.items)
+  useEffect(() => {
+    const email = b.email.trim()
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || !b.items.length) return
+    const t = setTimeout(() => {
+      fetch(`${API_URL}/public/shop/basket`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
+        body: JSON.stringify({ funnel: b.funnel, email, name: b.name ?? '', org: b.org ?? '', items: b.items,
+                               page: location.pathname, attribution: fiAttribution() }),
+      }).catch(() => {})
+    }, 1500)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [b.funnel, b.email, b.name, b.org, key])
+}

@@ -1,3 +1,4 @@
+import { prisma } from '../../db/client'
 import { retrieveSaleBreakdown, TRAINING_LICENCE_PENCE } from '../billing/stripe'
 
 // Reports a confirmed sale to Funnel Insights (trg-funnel-insights.vercel.app) server to
@@ -6,7 +7,9 @@ import { retrieveSaleBreakdown, TRAINING_LICENCE_PENCE } from '../billing/stripe
 // Idempotent on the Funnel Insights side (transaction + product), so a refreshed thank-you
 // page or a retry never double counts. Never throws: a reporting failure must not touch the sale.
 
-type Line = { product: string; label?: string; qty: number; list: number; afterVolume: number }
+// freeQty / freeValue: items given free under an offer (the Halloween 2 for 1), and what they
+// would have cost at list. offer: the offer key the sale was made under.
+type Line = { product: string; label?: string; qty: number; list: number; afterVolume: number; freeQty?: number; freeValue?: number }
 
 const URL_ = process.env.FI_INGEST_URL || 'https://trg-funnel-insights.vercel.app/api/ingest'
 
@@ -19,7 +22,7 @@ function share(total: number, weights: number[]): number[] {
   return out
 }
 
-async function send(funnel: 'training' | 'policies', transactionId: string, code: string | null, tax: number, discount: number, lines: Line[]) {
+async function send(funnel: 'training' | 'policies', transactionId: string, code: string | null, tax: number, discount: number, lines: Line[], offer: string | null = null) {
   const secret = process.env.FI_INGEST_SECRET
   if (!secret || !lines.length) return
   const codeShare = share(discount, lines.map(l => l.afterVolume))
@@ -38,6 +41,9 @@ async function send(funnel: 'training' | 'policies', transactionId: string, code
       code: codeShare[i] ? code : null,
       revenue_pence: Math.max(0, l.afterVolume - (codeShare[i] ?? 0)),
       tax_pence: taxShare[i],
+      free_qty: l.freeQty ?? 0,
+      free_value_pence: l.freeValue ?? 0,
+      offer_key: offer,
     })),
   }
   await fetch(URL_, {
@@ -49,7 +55,7 @@ async function send(funnel: 'training' | 'policies', transactionId: string, code
 }
 
 /** Training: one Stripe line at the (volume) unit price × all licences, split per course. */
-export async function reportTrainingSale(sessionId: string, transactionId: string | null, items: { slug: string; qty: number }[], moduleName?: string) {
+export async function reportTrainingSale(sessionId: string, transactionId: string | null, items: { slug: string; qty: number; free?: number }[], moduleName?: string, offer?: string | null) {
   try {
     if (!transactionId || !items.length) return
     const b = await retrieveSaleBreakdown(sessionId)
@@ -61,22 +67,36 @@ export async function reportTrainingSale(sessionId: string, transactionId: strin
       qty: i.qty,
       list: TRAINING_LICENCE_PENCE * i.qty,
       afterVolume: afterVolume[n] ?? 0,
+      freeQty: i.free ?? 0,
+      freeValue: TRAINING_LICENCE_PENCE * (i.free ?? 0),
     }))
-    await send('training', transactionId, b.code, b.tax, b.discount, lines)
+    await send('training', transactionId, b.code, b.tax, b.discount, lines, offer || null)
   } catch { /* reporting never affects the sale */ }
 }
 
 /** Policies: one Stripe line per policy or pack, in basket order. */
-export async function reportPolicySale(sessionId: string, transactionId: string | null, items: { kind: string; key: string }[]) {
+export async function reportPolicySale(sessionId: string, transactionId: string | null, items: { kind: string; key: string }[], freeKeys: string[] = [], offer: string | null = null) {
   try {
     if (!transactionId || !items.length) return
     const b = await retrieveSaleBreakdown(sessionId)
     if (!b) return
+    // Free policies come last in the basket and have no Stripe line of their own (they are
+    // named on the paid line they pair with), so their value is read from the catalogue.
+    const free = new Set(freeKeys)
+    const freeRows = free.size
+      ? await (prisma as any).policyProduct.findMany({ where: { slug: { in: [...free] } }, select: { slug: true, title: true, price_pence: true } })
+      : []
+    const freeBy = new Map<string, any>((freeRows as any[]).map(r => [r.slug, r]))
+    const paidCount = items.length - [...items].filter(i => i.kind === 'policy' && free.has(i.key)).length
     const lines: Line[] = items.map((i, n) => {
+      if (i.kind === 'policy' && free.has(i.key) && n >= paidCount) {
+        const p = freeBy.get(i.key)
+        return { product: i.key, label: p?.title, qty: 1, list: 0, afterVolume: 0, freeQty: 1, freeValue: p?.price_pence ?? 0 }
+      }
       const sl = b.lines[n]
       const amount = sl?.subtotal ?? 0
       return { product: i.kind === 'bundle' ? `bundle:${i.key}` : i.key, label: sl?.name || undefined, qty: 1, list: amount, afterVolume: amount }
     })
-    await send('policies', transactionId, b.code, b.tax, b.discount, lines)
+    await send('policies', transactionId, b.code, b.tax, b.discount, lines, offer)
   } catch { /* reporting never affects the sale */ }
 }

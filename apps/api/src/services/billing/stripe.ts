@@ -10,7 +10,7 @@
 
 import Stripe from 'stripe'
 import { prisma } from '../../db/client'
-import { freeLicencesFor, freePolicyPairs } from '../training/offers'
+import { freeLicencesFor, freePolicyPairs, activeLicenceOffer, activePolicyOfferKey } from '../training/offers'
 
 // API version Managed Payments requires. Applied per-request to product/price
 // creation and Checkout Session creation only — NOT to the client globally.
@@ -219,7 +219,7 @@ export async function createTrainingCheckoutSession(input: TrainingCheckoutInput
     ...(free ? { custom_text: { submit: { message: `Halloween offer: ${free} free ${free === 1 ? 'licence' : 'licences'} added, so you receive ${qty + free} in total.` } } } : {}),
     metadata: {
       kind:        'training_licence',
-      ...(free ? { free: String(free) } : {}),
+      ...(free ? { free: String(free), offer: activeLicenceOffer(input.moduleSlug)?.key ?? '' } : {}),
       module_slug: input.moduleSlug,
       module_name: input.moduleName.slice(0, 250),
       quantity:    String(qty),
@@ -291,6 +291,8 @@ export async function createTrainingBasketCheckoutSession(input: TrainingBasketC
       basket:       JSON.stringify(items.map(i => (freeOf(i) ? { s: i.moduleSlug, q: i.quantity, f: freeOf(i) } : { s: i.moduleSlug, q: i.quantity }))).slice(0, 480),
       total_qty:    String(totalQty),
       discount_pct: String(pct),
+      // The offer behind any free licences, so Funnel Insights can credit the sale to it.
+      ...(totalFree ? { offer: items.map(i => freeOf(i) ? activeLicenceOffer(i.moduleSlug)?.key : null).find(Boolean) ?? '' } : {}),
       org_name:     input.orgName.slice(0, 250),
       email:        input.email,
       ...(input.tenantId ? { tenant_id: input.tenantId } : {}),
@@ -401,6 +403,8 @@ export interface ShopCheckoutResult {
   items: ShopItem[]
   /** Policy slugs that were free under an offer (recorded at £0). */
   freeKeys: string[]
+  /** The offer those were free under, for reporting. */
+  offerKey: string | null
 }
 
 /** Resolve what the buyer actually gets charged, from the catalogue, never from input. */
@@ -499,7 +503,7 @@ export async function createShopCheckoutSession(input: {
       // if expanded, and the expansion belongs to the catalogue anyway — reconcile
       // reads the pack's contents from the database rather than from this string.
       items: JSON.stringify(priced.map(p => `${p.item.kind === 'bundle' ? 'b' : 'p'}:${p.item.key}`)).slice(0, 500),
-      ...(pairs.size ? { free: String(pairs.size) } : {}),
+      ...(pairs.size ? { free: String(pairs.size), offer: activePolicyOfferKey() ?? '' } : {}),
       ...(input.orgName ? { org_name: input.orgName.slice(0, 200) } : {}),
       ...(input.buyerName ? { buyer_name: input.buyerName.slice(0, 200) } : {}),
     },
@@ -535,6 +539,7 @@ export async function retrieveShopCheckoutSession(sessionId: string): Promise<Sh
 
   return {
     freeKeys,
+    offerKey: md.offer || null,
     paid: session.payment_status === 'paid',
     paymentId: typeof session.payment_intent === 'string'
       ? session.payment_intent

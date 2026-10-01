@@ -678,7 +678,7 @@ export function PolicyCheckout() {
                emailNote="We send the receipt and the link to your questions here."
                org={org} setOrg={setOrg} name={name} setName={setName} email={email} setEmail={setEmail} />
 
-      <div className="ckpanel">
+      <div className="ckpanel ckafter">
         <div className="ckpanel-hd"><h2>What happens after you pay</h2><span>Once payment is confirmed</span></div>
         <div className="cknext">
           <div><span>01</span><b>Finish the short questions</b><p>About three minutes per policy. Company details you enter once are reused for every policy.</p></div>

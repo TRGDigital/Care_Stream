@@ -172,3 +172,12 @@
 .ckreassure svg{width:12px;height:12px}
 .ckextras{display:grid;gap:10px;padding:16px 24px 20px}
 @media(max-width:640px){.ckextras{padding:14px 16px 16px}}
+
+/* Phones and tablets: the basket and details, then the order summary, then what happens next. */
+@media (max-width:1020px){
+  .ckgrid{display:flex;flex-direction:column;gap:18px}
+  .ckgrid > .ckcol{display:contents}
+  .ckgrid > .ckcol > *{order:1}
+  .ckgrid > .cksum{order:2}
+  .ckgrid > .ckcol > .ckafter{order:3}
+}

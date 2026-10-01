@@ -228,7 +228,10 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
               </p>
             </div>
             <span className="mpe-eyebrow">Personalised · Human-reviewed · Kept updated</span>
-            <h1>A {product.title} written for your service</h1>
+            <div className="mpe-titlerow">
+              <h1>A {product.title} written for your service</h1>
+              <div className="mpe-thumb" aria-hidden="true"><SiteImage src={hero} alt="" /></div>
+            </div>
             {REVIEWS[0]?.shortPolicies && (
               <blockquote className="mpe-quote">
                 <p>&ldquo;{REVIEWS[0].shortPolicies}&rdquo;</p>

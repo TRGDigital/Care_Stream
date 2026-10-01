@@ -105,3 +105,10 @@
   .cschat-launch{transition:none}
 }
 @media print{.cschat{display:none}}
+
+/* Phones: the launcher is just the face, so it covers less of the page. */
+@media (max-width:760px){
+  .cschat-launch{padding:3px;gap:0}
+  .cschat-launch > span:not(.cschat-av){position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .cschat-dot{left:auto;right:0;top:0}
+}

@@ -281,3 +281,13 @@
 .bypage-v2 .byaddon{margin-top:14px}
 .bypage-v2 .byaddon .su-addon{padding:11px 12px}
 .bypage-v2 .byaddon .su-addon small{font-size:.8rem}
+
+/* Phones: title and paragraph, then the purchase box, then the bullet points and the rest. */
+@media(max-width:1000px){
+  .bypage-v2 .bylayout{display:flex;flex-direction:column}
+  .bypage-v2 .byintro{display:contents}
+  .bypage-v2 .byintro > *{order:1}
+  .bypage-v2 .bybuy{order:2;margin-bottom:28px}
+  .bypage-v2 .byintro > .bypoints, .bypage-v2 .byintro > :not(.bymod):not(h1):not(.lede){order:3}
+  .bypage-v2 .byrest{order:4;padding-top:28px;border-top:1px solid var(--line)}
+}

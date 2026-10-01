@@ -284,7 +284,10 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
                 <img className="cpdmark" src={CPD_CERTIFIED_LOGO} alt="CPD Certified, The CPD Certification Service" />
               )}
             </div>
-            <h1>{m.title} training that gets your team CQC-ready</h1>
+            <div className="mpe-titlerow">
+              <h1>{m.title} training that gets your team CQC-ready</h1>
+              {hero && <div className="mpe-thumb" aria-hidden="true"><SiteImage src={hero} alt="" /></div>}
+            </div>
             {REVIEWS[0]?.short && (
               <blockquote className="mpe-quote">
                 <p>&ldquo;{REVIEWS[0].short}&rdquo;</p>

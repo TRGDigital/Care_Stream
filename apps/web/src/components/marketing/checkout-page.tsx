@@ -280,7 +280,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
           lines={<>
             <div><span>{totalQty} {totalQty === 1 ? 'licence' : 'licences'}</span><b>{money(gross)}</b></div>
             {discount > 0 && <div className="save"><span>Volume discount ({pct}%)</span><b>−{money(discount)}</b></div>}
-            {freeQty > 0 && <div className="save"><span>Halloween offer: {freeQty} free {freeQty === 1 ? 'licence' : 'licences'}</span><b>{money(0)}</b></div>}
+            {freeQty > 0 && <div className="save"><span>Halloween offer: {freeQty} free {freeQty === 1 ? 'licence' : 'licences'}</span><b>Free</b></div>}
           </>}
           total={net}
           sub="One-off payment. No subscription."

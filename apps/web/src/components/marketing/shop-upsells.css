@@ -1,0 +1,39 @@
+.su-addon{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border:1.5px solid #E2DEE8;border-radius:12px;background:#fff;cursor:pointer;text-align:left}
+.su-addon.on{border-color:#F28C38;background:#FFF6EE}
+.su-addon input{width:18px;height:18px;margin-top:2px;accent-color:#F28C38;flex:0 0 auto}
+.su-addon b{display:block;font-size:.95rem;color:#17121F}
+.su-addon em{font-style:normal;color:#B4581A;margin-left:4px}
+.su-addon small{display:block;margin-top:3px;font-size:.84rem;line-height:1.5;color:#6B6577}
+.su-share{margin-top:4px}
+.su-share-open{width:100%;text-align:left;padding:12px 14px;border:1.5px dashed #CFC8DA;border-radius:12px;background:#fff;font:inherit;font-size:.9rem;color:#3A3245;cursor:pointer}
+.su-share-open:hover{border-color:#7B3FBF}
+.su-share-open b{color:#17121F}
+.su-share-form{display:grid;gap:8px;padding:14px;border:1.5px solid #E2DEE8;border-radius:12px;background:#F7F5FA}
+.su-share-form b{font-size:.95rem}
+.su-share-form p{margin:0;font-size:.84rem;color:#6B6577}
+.su-share-form input,.su-share-form textarea{width:100%;border:1px solid #E2DEE8;border-radius:10px;padding:9px 11px;font:inherit;font-size:.9rem;background:#fff}
+.su-share-form button{height:42px;border:0;border-radius:10px;background:#1F1530;color:#fff;font:inherit;font-weight:700;cursor:pointer}
+.su-share-form button[disabled]{opacity:.45;cursor:not-allowed}
+.su-ok{margin:0;padding:12px 14px;border-radius:12px;background:#E7F5EE;color:#0E5D3C;font-size:.9rem;font-weight:600}
+.su-err{margin:0;color:#B42318;font-size:.85rem}
+.su-pp{max-width:560px;margin:26px auto 0;padding:22px;border-radius:16px;background:#1F1530;color:#F6F1FB;text-align:left}
+.su-pp-tag{display:inline-block;padding:3px 10px;border-radius:999px;background:#F28C38;color:#1F1530;font-size:.75rem;font-weight:800}
+.su-pp h3{margin:10px 0 6px;font-size:1.25rem;color:#fff}
+.su-pp p{margin:0 0 14px;font-size:.9rem;color:#D9CFE6;line-height:1.5}
+.su-pp-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.su-step{display:flex;align-items:center;border:1px solid rgba(255,255,255,.25);border-radius:10px;overflow:hidden}
+.su-step button{width:38px;height:40px;border:0;background:transparent;color:#fff;font-size:1.1rem;cursor:pointer}
+.su-step span{min-width:44px;text-align:center;font-weight:800}
+.su-pp-price{font-size:.95rem}
+.su-pp-price b{color:#F28C38;font-size:1.15rem;margin:0 4px}
+.su-pp-price s{color:#A99BBB}
+.su-pp select{flex:1;min-width:0;height:42px;border-radius:10px;border:0;padding:0 10px;font:inherit;font-size:.88rem}
+.su-add{height:42px;padding:0 16px;border:0;border-radius:10px;background:#fff;color:#1F1530;font-weight:700;cursor:pointer}
+.su-pp-list{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:6px}
+.su-pp-list li{display:flex;justify-content:space-between;align-items:center;font-size:.9rem;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,.08)}
+.su-pp-list li button{border:0;background:none;color:#D9CFE6;font-size:1.1rem;cursor:pointer}
+.su-pp-list .su-pp-sum{background:none;justify-content:flex-end;gap:8px}
+.su-pp-list .su-pp-sum b{color:#F28C38}
+.su-pp-list .su-pp-sum s{color:#A99BBB}
+.su-pp-go{width:100%;height:48px;border:0;border-radius:11px;background:#F28C38;color:#1F1530;font:inherit;font-weight:800;cursor:pointer}
+.su-pp-go[disabled]{opacity:.5;cursor:not-allowed}

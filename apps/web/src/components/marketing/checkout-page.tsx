@@ -10,6 +10,7 @@ import { LicenceOfferCard, PolicyOfferCard } from './licence-offer'
 import { usePolicyBasket, type BasketItem } from './policy-basket'
 import { PaymentLogos } from './payment-logos'
 import { ExitQuestion } from './shop-questions'
+import { AddonOption, ShareBasket, ADDONS } from './shop-upsells'
 import './checkout-page.css'
 import { fi, fiAttribution } from '@/lib/funnel-insights'
 
@@ -187,7 +188,7 @@ function detailsError(org: string, name: string, email: string) {
 
 // ── Training ──────────────────────────────────────────────────────────────────
 
-export interface ModuleInfo { image: string | null; minutes: number | null }
+export interface ModuleInfo { image: string | null; minutes: number | null; title?: string }
 
 export function TrainingCheckout({ modules }: { modules: Record<string, ModuleInfo> }) {
   const { items, totalQty, gross, discount, pct, net, cart } = useCart()
@@ -198,10 +199,22 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [mounted, setMounted] = useState(false)
+  const [teamSetup, setTeamSetup] = useState(false)
   // Reaching checkout counts against each course in the basket, not the checkout page.
   useEffect(() => {
     setMounted(true)
+    // A basket sent for approval arrives as ?items=slug:qty,…: rebuild it, then tidy the URL.
+    const shared = new URLSearchParams(window.location.search).get('items')
+    if (shared) {
+      for (const part of shared.split(',').slice(0, 25)) {
+        const [slug, q] = part.split(':')
+        if (!/^[a-z0-9-]{2,80}$/.test(slug || '') || cart.snapshot().some(i => i.slug === slug)) continue
+        cart.add({ slug, title: modules[slug]?.title ?? slug.replace(/-/g, ' ').replace(/^./, c => c.toUpperCase()), unitPence: UNIT_PENCE, qty: Math.max(1, Math.min(500, parseInt(q || '1', 10) || 1)) })
+      }
+      window.history.replaceState(null, '', window.location.pathname)
+    }
     cart.snapshot().forEach(i => fi('basket_view', { funnel: 'training', option: i.slug, label: i.title, qty: i.qty }))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const tiers = [...DISCOUNT_TIERS].sort((a, b) => a.min - b.min)
@@ -221,7 +234,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
     return n + i.qty * (Math.round(i.unitPence * (1 - pct / 100)) - Math.round(i.unitPence * (1 - d.pct / 100)))
   }, 0)
   const offerLabel = items.map(i => deals[i.slug].offer?.label).find(Boolean) ?? 'Offer'
-  const payNow = net - offerSaving
+  const payNow = net - offerSaving + (teamSetup && items.length ? ADDONS['team-setup'].pence : 0)
 
   async function pay() {
     const problem = detailsError(org, name, email)
@@ -236,6 +249,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
         body: JSON.stringify({
           attribution: fiAttribution(),
           items: items.map(i => ({ module_slug: i.slug, quantity: i.qty })),
+          addons: teamSetup ? ['team-setup'] : [],
           email: email.trim(), org_name: org.trim(), name: name.trim(),
         }),
       })
@@ -302,6 +316,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
             {discount > 0 && <div className="save"><span>Volume discount ({pct}%)</span><b>−{money(discount)}</b></div>}
             {offerSaving > 0 && <div className="save"><span>{offerLabel}</span><b>−{money(offerSaving)}</b></div>}
             {freeQty > 0 && <div className="save"><span>{offerLabel}: {freeQty} free {freeQty === 1 ? 'licence' : 'licences'}</span><b>Free</b></div>}
+            {teamSetup && <div><span>Team set-up, done for you</span><b>{money(ADDONS['team-setup'].pence)}</b></div>}
           </>}
           total={payNow}
           sub="One-off payment. No subscription."
@@ -389,6 +404,13 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
         <Link href="/pricing">Compare plans</Link>
       </div>
 
+      <div className="ckpanel"><div className="ckpanel-hd"><h2>Save yourself time</h2><span>Optional</span></div>
+        <div className="ckextras">
+          <AddonOption k="team-setup" checked={teamSetup} onChange={setTeamSetup} />
+          <ShareBasket funnel="training" items={items.map(i => ({ slug: i.slug, qty: i.qty }))} />
+        </div>
+      </div>
+
       <Details orgLabel="Organisation name" orgPlaceholder="Oakhaven Care Home"
                emailNote="We send the receipt and your sign-in link here."
                org={org} setOrg={setOrg} name={name} setName={setName} email={email} setEmail={setEmail} />
@@ -414,6 +436,25 @@ export function PolicyCheckout() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [mounted, setMounted] = useState(false)
+  const [priority, setPriority] = useState(false)
+  // A basket sent for approval arrives as ?items=slug,bundle:key,…: rebuild it from the shop's prices.
+  useEffect(() => {
+    const shared = new URLSearchParams(window.location.search).get('items')
+    if (!shared) return
+    const want = shared.split(',').filter(k => /^(bundle:)?[a-z0-9-]{2,80}$/.test(k)).slice(0, 30)
+    fetch(`${API_URL}/public/policy-shop/catalogue`).then(r => r.json()).then(b => {
+      const products = (b?.data?.products ?? []) as { slug: string; title: string; price_pence: number }[]
+      const bundles = (b?.data?.bundles ?? []) as { key: string; title: string; price_pence: number }[]
+      for (const k of want) {
+        const row = k.startsWith(BUNDLE)
+          ? bundles.find(x => `${BUNDLE}${x.key}` === k) && { slug: k, title: bundles.find(x => `${BUNDLE}${x.key}` === k)!.title, price_pence: bundles.find(x => `${BUNDLE}${x.key}` === k)!.price_pence }
+          : products.find(x => x.slug === k)
+        if (row) add({ slug: row.slug, title: row.title, price_pence: row.price_pence })
+      }
+      window.history.replaceState(null, '', window.location.pathname)
+    }).catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const [packs, setPacks] = useState<Record<string, Pack[]>>({})
   useEffect(() => setMounted(true), [])
   // Reaching checkout counts against each policy or pack in it, once the basket has loaded.
@@ -438,7 +479,7 @@ export function PolicyCheckout() {
   const free = new Set([...deal.free].map(n => items[n].slug))
   const priceOf = (slug: string) => deal.pence[items.findIndex(i => i.slug === slug)] ?? 0
   const offerValue = items.reduce((n, i, k) => n + (i.price_pence || 0) - deal.pence[k], 0)
-  const total = gross - offerValue
+  const total = gross - offerValue + (priority && items.length ? ADDONS['priority-policy'].pence : 0)
   const policyOfferLive = offers.some(o => o.range === 'policies' || o.range === 'both')
   // A gift policy the offer adds: shown as its own free line, priced from the shop.
   const [gift, setGift] = useState<{ slug: string; title: string; price_pence: number } | null>(null)
@@ -498,6 +539,7 @@ export function PolicyCheckout() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           attribution: fiAttribution(),
+          addons: priority ? ['priority-policy'] : [],
           email: email.trim(), org_name: org.trim(), name: name.trim(),
           items: items.map(i => i.slug.startsWith(BUNDLE)
             ? { kind: 'bundle', key: i.slug.slice(BUNDLE.length) }
@@ -537,6 +579,7 @@ export function PolicyCheckout() {
             <div><span>{label}</span><b>{money(gross)}</b></div>
             {offerValue > 0 && <div className="save"><span>{deal.offer?.label ?? 'Offer'}{free.size ? `: ${free.size} free ${free.size === 1 ? 'policy' : 'policies'}` : ''}</span><b>−{money(offerValue)}</b></div>}
             {gift && <div className="save"><span>{deal.offer?.label ?? 'Offer'}: {gift.title} added free</span><b>Free</b></div>}
+            {priority && <div><span>Priority delivery within 24 hours</span><b>{money(ADDONS['priority-policy'].pence)}</b></div>}
             <div><span>First year of updates</span><b>Included</b></div>
           </>}
           total={total}
@@ -626,6 +669,13 @@ export function PolicyCheckout() {
           </button>
         </div>
       )}
+
+      <div className="ckpanel"><div className="ckpanel-hd"><h2>Save yourself time</h2><span>Optional</span></div>
+        <div className="ckextras">
+          <AddonOption k="priority-policy" checked={priority} onChange={setPriority} />
+          <ShareBasket funnel="policies" items={items.map(i => i.slug)} />
+        </div>
+      </div>
 
       <Details orgLabel="Registered company name" orgPlaceholder="Oakhaven Care Ltd"
                emailNote="We send the receipt and the link to your questions here."

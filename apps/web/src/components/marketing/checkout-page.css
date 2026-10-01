@@ -170,3 +170,5 @@
 .ckreassure{list-style:none;margin:6px 0 2px;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px}
 .ckreassure li{display:inline-flex;align-items:center;gap:5px;font-size:.78rem;color:#1F8A5B;font-weight:600}
 .ckreassure svg{width:12px;height:12px}
+.ckextras{display:grid;gap:10px;padding:16px 24px 20px}
+@media(max-width:640px){.ckextras{padding:14px 16px 16px}}

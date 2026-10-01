@@ -278,3 +278,6 @@
 .bypage-v2 .byreassure li::before{content:'';position:absolute;left:2px;top:4px;width:10px;height:6px;border-left:2px solid #1F8A5B;border-bottom:2px solid #1F8A5B;transform:rotate(-45deg)}
 .bypage-v2 .byinvoice{display:block;margin-top:12px;padding:10px 12px;border:1.5px solid #F28C38;border-radius:10px;background:#FFF6EE;color:#3A3245;font-size:.84rem;text-decoration:none}
 .bypage-v2 .byinvoice b{color:#1F1530}
+.bypage-v2 .byaddon{margin-top:14px}
+.bypage-v2 .byaddon .su-addon{padding:11px 12px}
+.bypage-v2 .byaddon .su-addon small{font-size:.8rem}

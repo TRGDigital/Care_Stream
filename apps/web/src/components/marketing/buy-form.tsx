@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Minus, Plus, Loader2, ShieldCheck } from 'lucide-react'
 import { fi, fiAttribution } from '@/lib/funnel-insights'
 import { PaymentLogos } from './payment-logos'
+import { AddonOption, ADDONS } from './shop-upsells'
 import { useOffers, licenceDeal, money2, paidForTotal } from '@/lib/offers'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
@@ -43,7 +44,8 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
   const free = deal.free
   const each = deal.pct ? Math.round(unitPence * (1 - deal.pct / 100)) : unitPence
   const effective = free ? Math.floor((each * qty) / (qty + free)) : each
-  const total = qty * each
+  const [teamSetup, setTeamSetup] = useState(false)
+  const total = qty * each + (teamSetup ? ADDONS['team-setup'].pence : 0)
   const applied = !!deal.offer && (free > 0 || deal.pct > 0)
   const setQ = (n: number) => setQty(Math.max(1, Math.min(500, n)))
 
@@ -59,7 +61,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
       const res = await fetch(`${API_URL}/public/training/checkout`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ module_slug: slug, quantity: qty, email: email.trim(), org_name: org.trim(), attribution: fiAttribution() }),
+        body:    JSON.stringify({ module_slug: slug, quantity: qty, email: email.trim(), org_name: org.trim(), attribution: fiAttribution(), addons: teamSetup ? ['team-setup'] : [] }),
       })
       const body = await res.json()
       if (!res.ok || !body?.data?.url) throw new Error(body?.error ?? 'Could not start checkout. Please try again.')
@@ -117,6 +119,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
                  placeholder="manager@yourhome.co.uk" />
         </div>
 
+        <div className="byaddon"><AddonOption k="team-setup" checked={teamSetup} onChange={setTeamSetup} /></div>
         <div className="bytotal"><span>Total</span><b>{gbp(total)}</b></div>
         {/* The theme's panel has no error state, because its form does nothing. This one takes
             a payment, so it needs one: the existing `note` styling, in the warning colour. */}

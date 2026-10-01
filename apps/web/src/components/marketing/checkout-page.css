@@ -142,3 +142,7 @@
 .ckfree{margin-top:4px;font-size:.84rem;font-weight:700;color:#B4581A}
 .ckoffer{grid-column:1/-1}
 .ckoffer .lofr{margin-top:0}
+.ckoffer-pad{padding:0 24px 22px}
+.ckwas{color:var(--muted);font-weight:500;margin-right:4px}
+.ckfreetag{color:#B4581A;font-weight:800}
+@media(max-width:640px){.ckoffer-pad{padding:0 16px 16px}}

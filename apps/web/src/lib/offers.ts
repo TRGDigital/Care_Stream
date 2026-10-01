@@ -43,3 +43,30 @@ export function activeOffer(slug: string, now = Date.now()): LicenceOffer | null
 export function freeLicences(slug: string, qty: number, now = Date.now()): number {
   return activeOffer(slug, now) ? Math.max(0, Math.floor(qty)) : 0
 }
+
+// Policies: buy one, get a second free. Applies to individual policies only (packs are
+// already priced as a bundle). Policies are paired most expensive first and the cheaper of
+// each pair is free, so the buyer always pays for the higher priced one.
+export const POLICY_OFFER = {
+  key: 'halloween-2026-policies-2for1',
+  starts: '2026-10-01T00:00:00+01:00',
+  ends: '2026-11-01T00:00:00+00:00',
+  label: 'Halloween offer',
+  headline: 'Buy one policy, get a second free',
+  multiText: 'Add any second policy at the same price or less and it is free: buy 2 pay for 1, buy 4 pay for 2. Individual policies only.',
+  reason: 'For Halloween, every policy you buy brings a second one free. Two policies written for your service for the price of one, applied automatically in your basket.',
+  endsText: 'Ends midnight, Saturday 31 October',
+}
+
+export function policyOfferActive(now = Date.now()): boolean {
+  return now >= Date.parse(POLICY_OFFER.starts) && now < Date.parse(POLICY_OFFER.ends)
+}
+
+// The slugs that are free under the policy offer. Mirrors the API (services/training/offers.ts).
+export function freePolicySlugs(items: { slug: string; price_pence: number }[], now = Date.now()): Set<string> {
+  if (!policyOfferActive(now)) return new Set()
+  const sorted = items.filter(i => !i.slug.startsWith('bundle:'))
+    .map((i, n) => ({ ...i, n }))
+    .sort((a, b) => b.price_pence - a.price_pence || a.n - b.n)
+  return new Set(sorted.filter((_, k) => k % 2 === 1).map(i => i.slug))
+}

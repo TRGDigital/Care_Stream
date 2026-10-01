@@ -11,6 +11,7 @@
 import Stripe from 'stripe'
 import { prisma } from '../../db/client'
 import { getOffers, licenceDeal, policyDeal } from '../offers'
+import { attributionMeta, type Attribution } from '../analytics/attribution'
 
 // API version Managed Payments requires. Applied per-request to product/price
 // creation and Checkout Session creation only — NOT to the client globally.
@@ -198,6 +199,7 @@ async function createSessionWithOfferNote(stripe: Stripe, params: Stripe.Checkou
 }
 
 export interface TrainingCheckoutInput {
+  attribution?: Attribution | null
   moduleSlug: string
   moduleName: string
   quantity: number
@@ -222,6 +224,7 @@ export async function createTrainingCheckoutSession(input: TrainingCheckoutInput
     line_items:   [line],
     customer_email: input.email,
     metadata: {
+      ...attributionMeta(input.attribution),
       kind:        'training_licence',
       ...(deal.offer ? { offer: deal.offer.key, unit: String(unit) } : {}),
       ...(deal.free ? { free: String(deal.free) } : {}),
@@ -254,6 +257,7 @@ export function trainingDiscountPct(totalQty: number): number {
 
 export interface TrainingBasketItem { moduleSlug: string; moduleName: string; quantity: number }
 export interface TrainingBasketCheckoutInput {
+  attribution?: Attribution | null
   items: TrainingBasketItem[]
   email: string
   orgName: string
@@ -298,6 +302,7 @@ export async function createTrainingBasketCheckoutSession(input: TrainingBasketC
     line_items: [...byUnit].map(([amount, quantity]) => ({ price_data: { currency: 'gbp', product: productId, unit_amount: amount }, quantity })),
     customer_email: input.email,
     metadata: {
+      ...attributionMeta(input.attribution),
       kind:         'training_basket',
       basket:       JSON.stringify(items.map((i, n) => ({
         s: i.moduleSlug, q: i.quantity,
@@ -420,6 +425,7 @@ export interface ShopCheckoutResult {
   freeKeys: string[]
   /** The offer those were free under, for reporting. */
   offerKey: string | null
+  metadata: Record<string, string>
   /** What each item cost after an offer, aligned with items; null when no offer applied. */
   prices: number[] | null
 }
@@ -461,6 +467,7 @@ async function priceShopItems(items: ShopItem[]): Promise<Array<{
 }
 
 export async function createShopCheckoutSession(input: {
+  attribution?: Attribution | null
   email: string
   items: ShopItem[]
   /** From the checkout page's details form, kept on the session for whoever fulfils it. */
@@ -526,6 +533,7 @@ export async function createShopCheckoutSession(input: {
     })),
     ...(existingCustomer ? { customer: existingCustomer } : { customer_email: input.email }),
     metadata: {
+      ...attributionMeta(input.attribution),
       kind: 'policy_shop',
       // Keys only. A 65-policy pack would blow Stripe's 500-character metadata limit
       // if expanded, and the expansion belongs to the catalogue anyway — reconcile
@@ -569,6 +577,7 @@ export async function retrieveShopCheckoutSession(sessionId: string): Promise<Sh
   return {
     freeKeys,
     offerKey: md.offer || null,
+    metadata: md,
     prices: (() => { try { const v = JSON.parse(md.pp || 'null'); return Array.isArray(v) && v.length === items.length ? v.map(Number) : null } catch { return null } })(),
     paid: session.payment_status === 'paid',
     paymentId: typeof session.payment_intent === 'string'

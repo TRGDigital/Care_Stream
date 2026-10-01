@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Minus, Plus, Loader2, ShieldCheck } from 'lucide-react'
-import { fi } from '@/lib/funnel-insights'
+import { fi, fiAttribution } from '@/lib/funnel-insights'
 import { useOffers, licenceDeal, money2 } from '@/lib/offers'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
@@ -56,7 +56,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
       const res = await fetch(`${API_URL}/public/training/checkout`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ module_slug: slug, quantity: qty, email: email.trim(), org_name: org.trim() }),
+        body:    JSON.stringify({ module_slug: slug, quantity: qty, email: email.trim(), org_name: org.trim(), attribution: fiAttribution() }),
       })
       const body = await res.json()
       if (!res.ok || !body?.data?.url) throw new Error(body?.error ?? 'Could not start checkout. Please try again.')

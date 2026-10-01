@@ -13,7 +13,7 @@ import { sendStaffLoginLinkEmail, sendPasswordSetupEmail, sendTrainingOnboarding
 import { enrolInCampaign } from '../services/onboarding/dispatch'
 import { hashPassword } from '../services/auth/password'
 import crypto from 'crypto'
-import { reportTrainingSale } from '../services/analytics/funnel-insights'
+import { reportTrainingSale, cleanAttribution, attributionFromMeta } from '../services/analytics/funnel-insights'
 
 const slugify = (s: string): string =>
   s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
@@ -475,7 +475,7 @@ publicTrainingRouter.post('/checkout', async (req: Request, res: Response) => {
     const topic = (topics as any[]).find(t => slugify(t.title) === slug)
     if (!topic) { res.status(404).json({ error: 'Unknown training module' }); return }
 
-    const url = await createTrainingCheckoutSession({ moduleSlug: slug, moduleName: topic.title, quantity: qty, email: mail, orgName: org })
+    const url = await createTrainingCheckoutSession({ moduleSlug: slug, moduleName: topic.title, quantity: qty, email: mail, orgName: org, attribution: cleanAttribution(req.body?.attribution) })
     res.json({ data: { url } })
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'checkout failed' })
@@ -508,7 +508,7 @@ publicTrainingRouter.post('/checkout-basket', async (req: Request, res: Response
     }
     if (!built.length) { res.status(400).json({ error: 'No valid items in the basket' }); return }
 
-    const url = await createTrainingBasketCheckoutSession({ items: built, email: mail, orgName: org })
+    const url = await createTrainingBasketCheckoutSession({ items: built, email: mail, orgName: org, attribution: cleanAttribution(req.body?.attribution) })
     res.json({ data: { url } })
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'checkout failed' })
@@ -568,7 +568,7 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
     // Funnel Insights' per-product funnels.
     const conversion = { value_pence: s.amountTotalPence, transaction_id: s.paymentId, products: items }
     // Revenue to Funnel Insights (idempotent there, so the already-provisioned path is safe too).
-    await reportTrainingSale(sessionId, s.paymentId, items, s.metadata.module_name, s.metadata.offer || null)
+    await reportTrainingSale(sessionId, s.paymentId, items, s.metadata.module_name, s.metadata.offer || null, attributionFromMeta(s.metadata))
     if (existing) { res.json({ data: { provisioned: true, already: true, email: s.email, ...conversion } }); return }
 
     const orgName   = s.metadata.org_name || 'Your service'

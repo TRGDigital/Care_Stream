@@ -153,3 +153,8 @@
 .ckaddpol button{height:42px;padding:0 16px;border:0;border-radius:10px;background:#F28C38;color:#1F1530;font-weight:800;cursor:pointer;white-space:nowrap}
 .ckaddpol button[disabled]{opacity:.45;cursor:not-allowed}
 @media(max-width:560px){.ckaddpol-row{flex-direction:column}}
+/* The column's own track must not grow to its widest child: a select sizes itself to its longest
+   option ("… free (normally £39)"), which pushed the basket under the order summary. */
+.ckcol{grid-template-columns:minmax(0,1fr)}
+.ckpanel, .ckaddpol{min-width:0}
+.ckaddpol select{width:100%;max-width:100%;text-overflow:ellipsis}

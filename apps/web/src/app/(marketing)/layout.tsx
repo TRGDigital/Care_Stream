@@ -7,10 +7,13 @@ import { MarketingAgentTools } from '@/components/agent/marketing-agent-tools'
 import { PopEmbed } from '@/components/marketing/pop-embed'
 import { WebsiteChat } from '@/components/marketing/website-chat'
 import { FunnelInsightsTracker } from '@/components/marketing/funnel-insights-tracker'
+import { OffersProvider } from '@/lib/offers'
+import { getActiveOffers } from '@/lib/offers-server'
 
 export default async function MarketingLayout({ children }: { children: React.ReactNode }) {
-  const altMap = await getSiteAltMap()
+  const [altMap, offers] = await Promise.all([getSiteAltMap(), getActiveOffers()])
   return (
+    <OffersProvider offers={offers}>
     <AltMapProvider map={altMap}>
       <BreadcrumbsJsonLd />
       <MarketingAgentTools />
@@ -23,5 +26,6 @@ export default async function MarketingLayout({ children }: { children: React.Re
       </div>
       <WebsiteChat />
     </AltMapProvider>
+    </OffersProvider>
   )
 }

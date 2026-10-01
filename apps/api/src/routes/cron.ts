@@ -25,6 +25,7 @@ import { ok, err } from '../lib/response'
 import { runKnowledgeGapDailyJob } from '../services/knowledge-gaps/digest'
 import { sendDailyAuditReminders } from '../services/audits/reminders'
 import { sendLicenceRenewalReminders } from '../services/training/licence-renewals'
+import { runOfferChanges } from '../services/offers'
 import { dispatchDue } from '../services/onboarding/dispatch'
 import { seedOnboardingEmails } from '../services/onboarding/seed'
 import { checkRegulationSources } from '../services/regulations/source-monitor'
@@ -190,6 +191,12 @@ cronRouter.get('/indexing-report', (req, res) =>
       ...Object.fromEntries(report.sites.map(s => [s.site, s.available ? s.submitted : 'unavailable'])),
     }
   }))
+
+// Hourly: sync the offer calendar from Funnel Insights into site_offers (what the shop pages
+// show and checkout charges), then email the platform owner when an offer starts or ends, with
+// every page it changed on. Offers turn over at midnight UK time; the 00:05 run catches it.
+cronRouter.get('/offer-changes', (req, res) =>
+  job('offer-changes', req, res, () => runOfferChanges()))
 
 // Daily, last: email the platform owner what ran, what it captured, and — the point of the
 // whole thing — what was due and did not run at all.

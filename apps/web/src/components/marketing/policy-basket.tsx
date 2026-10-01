@@ -1,6 +1,6 @@
 'use client'
 
-import { policyOfferActive } from '@/lib/offers'
+import { useOffers, policyOffer } from '@/lib/offers'
 import { OfferBarChip } from './licence-offer'
 import './licence-offer.css'
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
@@ -142,7 +142,7 @@ export function BuyNowPolicy({ item, className = '', label = 'Buy now' }: {
     fi('buy_now_click', { funnel: 'policies', option: item.slug, label: item.title, qty: 1 })
   }, [item])
   // While the policy offer is live the button takes the offer's orange.
-  const offer = policyOfferActive() ? ' offerbtn' : ''
+  const offer = policyOffer(useOffers(), item.slug) ? ' offerbtn' : ''
   return (
     <a className={`pcadd pcbuynow ${className}${offer}`.trim()} href="/care-policies/checkout" onClick={add}>
       <CartIcon /> {label}
@@ -219,7 +219,7 @@ export function StickyBuyBar({ item, image }: { item: BasketItem; image: string 
           <b>{item.title}</b>
           <span className="meta">{money(item.price_pence)} one-off<i>·</i>Delivered within 2 working days</span>
         </span>
-        <OfferBarChip policy />
+        <OfferBarChip slug={item.slug} policy />
         <SavePolicy slug={item.slug} title={item.title} />
         <BuyNowPolicy item={item} />
       </div>

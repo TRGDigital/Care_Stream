@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useCart, trackBasketEvent } from '@/lib/cart-store'
 import { useSavedCourses } from '@/lib/saved-courses'
 import { UNIT_PENCE, DISCOUNT_TIERS, discountPctForQty } from '@/lib/training-commerce'
-import { freeLicences, freePolicySlugs, policyOfferActive } from '@/lib/offers'
+import { useOffers, licenceDeal, policyDeal } from '@/lib/offers'
 import { LicenceOfferCard, PolicyOfferCard } from './licence-offer'
 import { usePolicyBasket, type BasketItem } from './policy-basket'
 import './checkout-page.css'
@@ -203,8 +203,18 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
   const from = prev?.min ?? 0
   const barPct = next ? Math.min(100, ((totalQty - from) / (next.min - from)) * 100) : 100
   const current = discountPctForQty(totalQty)
-  // Licences a live offer adds free (the Halloween 2 for 1); the API adds the same at payment.
-  const freeQty = items.reduce((n, i) => n + freeLicences(i.slug, i.qty), 0)
+  // A live offer per course: free licences, or a percentage off that replaces the volume tier
+  // when it is bigger. The API prices the order the same way at payment.
+  const offers = useOffers()
+  const deals = Object.fromEntries(items.map(i => [i.slug, licenceDeal(offers, i.slug, i.qty)]))
+  const freeQty = items.reduce((n, i) => n + deals[i.slug].free, 0)
+  const offerSaving = items.reduce((n, i) => {
+    const d = deals[i.slug]
+    if (d.pct <= pct) return n
+    return n + i.qty * (Math.round(i.unitPence * (1 - pct / 100)) - Math.round(i.unitPence * (1 - d.pct / 100)))
+  }, 0)
+  const offerLabel = items.map(i => deals[i.slug].offer?.label).find(Boolean) ?? 'Offer'
+  const payNow = net - offerSaving
 
   async function pay() {
     const problem = detailsError(org, name, email)
@@ -273,16 +283,17 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
       back={['/staff-training', 'Continue browsing training']}
       title="Your basket"
       lede="Training licences for your team. Allocate each one to a staff member once payment completes."
-      total={net}
+      total={payNow}
       empty={empty}
       summary={
         <Summary
           lines={<>
             <div><span>{totalQty} {totalQty === 1 ? 'licence' : 'licences'}</span><b>{money(gross)}</b></div>
             {discount > 0 && <div className="save"><span>Volume discount ({pct}%)</span><b>−{money(discount)}</b></div>}
-            {freeQty > 0 && <div className="save"><span>Halloween offer: {freeQty} free {freeQty === 1 ? 'licence' : 'licences'}</span><b>Free</b></div>}
+            {offerSaving > 0 && <div className="save"><span>{offerLabel}</span><b>−{money(offerSaving)}</b></div>}
+            {freeQty > 0 && <div className="save"><span>{offerLabel}: {freeQty} free {freeQty === 1 ? 'licence' : 'licences'}</span><b>Free</b></div>}
           </>}
-          total={net}
+          total={payNow}
           sub="One-off payment. No subscription."
           assurances={[
             ['Sign-in link by email', 'Courses are ready to allocate as soon as payment completes.'],
@@ -309,10 +320,13 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
                   <div className="meta">
                     {money(i.unitPence)} per licence{info?.minutes ? ` · ${info.minutes} minutes` : ''}
                   </div>
-                  {freeLicences(i.slug, i.qty) > 0 && (
+                  {deals[i.slug].free > 0 && (
                     <div className="ckfree">
-                      + {freeLicences(i.slug, i.qty)} free with the Halloween offer: {i.qty * 2} licences in total
+                      + {deals[i.slug].free} free with the {deals[i.slug].offer?.label ?? 'offer'}: {i.qty + deals[i.slug].free} licences in total
                     </div>
+                  )}
+                  {deals[i.slug].pct > pct && (
+                    <div className="ckfree">{deals[i.slug].offer?.label}: {deals[i.slug].pct}% off every licence</div>
                   )}
                   <div className="acts">
                     <button type="button" onClick={() => { savedCourses.add({ slug: i.slug, title: i.title }); cart.remove(i.slug) }}>Save for later</button>
@@ -328,7 +342,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
                   </div>
                   <span className="ckprice">{money(i.qty * i.unitPence)}</span>
                 </div>
-                {freeLicences(i.slug, i.qty) > 0 && <div className="ckoffer"><LicenceOfferCard slug={i.slug} compact /></div>}
+                {deals[i.slug].offer && <div className="ckoffer"><LicenceOfferCard slug={i.slug} compact /></div>}
               </li>
             )
           })}
@@ -398,12 +412,37 @@ export function PolicyCheckout() {
 
   const policies = items.filter(i => !i.slug.startsWith(BUNDLE))
   const gross = items.reduce((n, i) => n + (i.price_pence || 0), 0)
-  // Halloween 2 for 1: the cheaper policy of each pair is free. The API works out the same pairs.
-  const free = freePolicySlugs(items)
-  const freeValue = items.reduce((n, i) => n + (free.has(i.slug) ? i.price_pence || 0 : 0), 0)
-  const total = gross - freeValue
-  // An unpaired policy: one more would be free.
-  const unpaired = policyOfferActive() && policies.length % 2 === 1
+  // A live policy offer from the calendar (2 for 1, a gift policy, % off, a pack bonus). The API
+  // prices the basket with the same rules at payment.
+  const offers = useOffers()
+  const packMembers: Record<string, string[]> = {}
+  for (const p of policies) for (const b of packs[p.slug] ?? []) (packMembers[b.key] ??= []).push(p.slug)
+  const rows = items.map(i => (i.slug.startsWith(BUNDLE)
+    ? { kind: 'bundle' as const, key: i.slug.slice(BUNDLE.length), pence: i.price_pence || 0 }
+    : { kind: 'policy' as const, key: i.slug, pence: i.price_pence || 0 }))
+  const deal = policyDeal(offers, rows, packMembers)
+  const free = new Set([...deal.free].map(n => items[n].slug))
+  const priceOf = (slug: string) => deal.pence[items.findIndex(i => i.slug === slug)] ?? 0
+  const offerValue = items.reduce((n, i, k) => n + (i.price_pence || 0) - deal.pence[k], 0)
+  const total = gross - offerValue
+  const policyOfferLive = offers.some(o => o.range === 'policies' || o.range === 'both')
+  // A gift policy the offer adds: shown as its own free line, priced from the shop.
+  const [gift, setGift] = useState<{ slug: string; title: string; price_pence: number } | null>(null)
+  useEffect(() => {
+    if (!deal.gift) { setGift(null); return }
+    if (gift?.slug === deal.gift) return
+    let live = true
+    fetch(`${API_URL}/public/policy-shop/products/${deal.gift}`).then(r => r.json()).then(b => {
+      const p = b?.data?.product ?? b?.data
+      if (live && p?.title) setGift({ slug: deal.gift!, title: p.title, price_pence: p.price_pence || 0 })
+    }).catch(() => {})
+    return () => { live = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deal.gift])
+  // An unpaired policy under a 2 for 1: one more would be free.
+  const groupOffer = deal.offer?.kind === 'group_free' || offers.some(o => o.kind === 'group_free' && (o.range === 'policies' || o.range === 'both'))
+  const group = Math.max(2, Number(offers.find(o => o.kind === 'group_free')?.params?.group) || 2)
+  const unpaired = groupOffer && policies.length % group !== 0
 
   // Which packs each policy in the basket belongs to, read from the shop per policy, so the
   // offer to switch is only ever made for a pack that really contains everything in the basket.
@@ -479,7 +518,8 @@ export function PolicyCheckout() {
         <Summary
           lines={<>
             <div><span>{label}</span><b>{money(gross)}</b></div>
-            {freeValue > 0 && <div className="save"><span>Halloween offer: {free.size} free {free.size === 1 ? 'policy' : 'policies'}</span><b>−{money(freeValue)}</b></div>}
+            {offerValue > 0 && <div className="save"><span>{deal.offer?.label ?? 'Offer'}{free.size ? `: ${free.size} free ${free.size === 1 ? 'policy' : 'policies'}` : ''}</span><b>−{money(offerValue)}</b></div>}
+            {gift && <div className="save"><span>{deal.offer?.label ?? 'Offer'}: {gift.title} added free</span><b>Free</b></div>}
             <div><span>First year of updates</span><b>Included</b></div>
           </>}
           total={total}
@@ -512,7 +552,7 @@ export function PolicyCheckout() {
                     {pack ? 'Every policy in the pack, personalised to your service'
                           : 'Personalised to your service · delivered within 2 working days'}
                   </div>
-                  {free.has(i.slug) && <div className="ckfree">Free with the Halloween 2 for 1 offer</div>}
+                  {free.has(i.slug) && <div className="ckfree">Free with the {deal.offer?.label ?? 'offer'}</div>}
                   <div className="acts">
                     {!pack && <button type="button" onClick={() => saveForLater(i)}>Save for later</button>}
                     <button type="button" onClick={() => remove(i.slug)}>Remove</button>
@@ -521,13 +561,26 @@ export function PolicyCheckout() {
                 <div className="ckright">
                   {free.has(i.slug)
                     ? <span className="ckprice"><s className="ckwas">{money(i.price_pence)}</s> <span className="ckfreetag">Free</span></span>
-                    : <span className="ckprice">{money(i.price_pence)}</span>}
+                    : priceOf(i.slug) < (i.price_pence || 0)
+                      ? <span className="ckprice"><s className="ckwas">{money(i.price_pence)}</s> {money(priceOf(i.slug))}</span>
+                      : <span className="ckprice">{money(i.price_pence)}</span>}
                 </div>
               </li>
             )
           })}
+          {gift && (
+            <li className="ckitem" key={`gift:${gift.slug}`}>
+              <span className="ckthumb"><img src={policyImage(gift.slug)} alt="" /></span>
+              <div className="ckinfo">
+                <Link href={`/care-policies/${gift.slug}`}>{gift.title}</Link>
+                <div className="meta">Personalised to your service · delivered within 2 working days</div>
+                <div className="ckfree">Added free with the {deal.offer?.label ?? 'offer'}</div>
+              </div>
+              <div className="ckright"><span className="ckprice"><s className="ckwas">{money(gift.price_pence)}</s> <span className="ckfreetag">Free</span></span></div>
+            </li>
+          )}
         </ul>
-        {policyOfferActive() && policies.length > 0 && (
+        {policyOfferLive && policies.length > 0 && (
           <div className="ckoffer ckoffer-pad">
             <PolicyOfferCard compact
               cta={unpaired ? { href: '/care-policies', label: 'Choose your free policy' } : undefined} />

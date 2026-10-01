@@ -34,3 +34,4 @@ a.offerbtn:hover,button.offerbtn:hover{background:#E57A22 !important}
 .lofr-chip-tx span{font-size:.78rem;color:rgba(255,255,255,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:900px){.lofr-chip-tx span{display:none}.lofr-chip{padding:6px 10px}}
 @media(max-width:560px){.lofr-chip-tx{display:none}.lofr-chip{padding:4px 8px}.lofr-chip-ic{font-size:1.4rem}}
+.lofr-list{max-width:760px;margin:0 0 22px}

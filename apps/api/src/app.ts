@@ -45,6 +45,7 @@ import { previewAdminRouter } from './routes/preview'
 import { userCasesAdminRouter } from './routes/user-cases-admin'
 import { servicePagesAdminRouter } from './routes/service-pages-admin'
 import { publicTrainingRouter } from './routes/training-public'
+import { publicOffersRouter } from './routes/offers-public'
 import { publicTrainingReviewRouter } from './routes/training-review-public'
 import { publicPolicyReviewRouter } from './routes/policy-review-public'
 import { publicPagesRouter } from './routes/pages-public'
@@ -165,6 +166,7 @@ app.use('/public/policy-shop', policyShopPublicRouter)
 
 // Public training-module illustrations (no tenant data), no auth. Must be mounted BEFORE requireAuth.
 app.use('/public/training', publicTrainingRouter)
+app.use('/public/offers', publicOffersRouter)
 
 // Public external review/sign-off of standard modules (password-gated), no auth. BEFORE requireAuth.
 app.use('/public/training-review', publicTrainingReviewRouter)

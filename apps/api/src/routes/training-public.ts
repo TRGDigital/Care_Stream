@@ -545,19 +545,22 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
     // Build the list of {slug, qty} to provision — from the basket metadata for a
     // multi-course order, otherwise the single module.
     // `free` is the licences a live offer added at checkout (never charged; capped at the paid qty).
-    let items: { slug: string; qty: number; free: number }[] = []
-    const freeOf = (f: unknown, qty: number) => Math.max(0, Math.min(qty, Math.floor(Number(f) || 0)))
+    // `unit` is what each paid licence cost (an offer price or the volume tier).
+    let items: { slug: string; qty: number; free: number; unit: number }[] = []
+    const freeOf = (f: unknown, qty: number) => Math.max(0, Math.min(qty * 4, Math.floor(Number(f) || 0)))
+    const tierUnit = Math.round(TRAINING_LICENCE_PENCE * (1 - (Number(s.metadata.discount_pct) || 0) / 100))
+    const unitOf = (u: unknown, fallback: number) => (Number.isFinite(Number(u)) && Number(u) > 0 ? Math.floor(Number(u)) : fallback)
     if (s.metadata.kind === 'training_basket' && s.metadata.basket) {
       try {
-        items = (JSON.parse(s.metadata.basket) as Array<{ s: string; q: number; f?: number }>)
-          .map(b => { const qty = Math.max(1, Math.min(500, Math.floor(Number(b.q) || 1))); return { slug: String(b.s), qty, free: freeOf(b.f, qty) } })
+        items = (JSON.parse(s.metadata.basket) as Array<{ s: string; q: number; f?: number; u?: number }>)
+          .map(b => { const qty = Math.max(1, Math.min(500, Math.floor(Number(b.q) || 1))); return { slug: String(b.s), qty, free: freeOf(b.f, qty), unit: unitOf(b.u, tierUnit) } })
           .filter(b => b.slug)
       } catch { items = [] }
     }
     if (!items.length) {
       const slug = s.metadata.module_slug || ''
       const qty  = Math.max(1, Math.min(500, parseInt(s.metadata.quantity || '1', 10) || 1))
-      if (slug) items = [{ slug, qty, free: freeOf(s.metadata.free, qty) }]
+      if (slug) items = [{ slug, qty, free: freeOf(s.metadata.free, qty), unit: unitOf(s.metadata.unit, TRAINING_LICENCE_PENCE) }]
     }
     if (!items.length) { res.status(400).json({ error: 'No items on the payment' }); return }
 
@@ -650,7 +653,7 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
       await (prisma as any).trainingLicense.createMany({
         data: Array.from({ length: it.qty }, () => ({
           tenant_id: tenantId, topic_id: topic?.id ?? null, module_id: moduleId, module_slug: it.slug, module_name: topic?.title ?? it.slug,
-          price_pence: TRAINING_LICENCE_PENCE, currency: 'gbp', stripe_payment_id: s.paymentId, renewal_due_at: renewalDue,
+          price_pence: it.unit, currency: 'gbp', stripe_payment_id: s.paymentId, renewal_due_at: renewalDue,
         })),
       })
       // Offer licences: the same seat, recorded at £0 so revenue reporting stays true.
@@ -663,7 +666,7 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
         })
       }
       totalLicences += it.qty + it.free
-      orderLines.push({ title: `${topic?.title ?? it.slug}${it.free ? ` (incl. ${it.free} free, Halloween offer)` : ''}`, qty: it.qty + it.free })
+      orderLines.push({ title: `${topic?.title ?? it.slug}${it.free ? ` (incl. ${it.free} free with the offer)` : ''}`, qty: it.qty + it.free })
     }
 
     // Tell the platform owner. Only reached for a new payment: a repeat reconcile returns

@@ -55,12 +55,13 @@ async function send(funnel: 'training' | 'policies', transactionId: string, code
 }
 
 /** Training: one Stripe line at the (volume) unit price × all licences, split per course. */
-export async function reportTrainingSale(sessionId: string, transactionId: string | null, items: { slug: string; qty: number; free?: number }[], moduleName?: string, offer?: string | null) {
+export async function reportTrainingSale(sessionId: string, transactionId: string | null, items: { slug: string; qty: number; free?: number; unit?: number }[], moduleName?: string, offer?: string | null) {
   try {
     if (!transactionId || !items.length) return
     const b = await retrieveSaleBreakdown(sessionId)
     if (!b) return
-    const afterVolume = share(b.subtotal, items.map(i => i.qty))
+    // Split what Stripe charged by what each course cost (an offer can price one course lower).
+    const afterVolume = share(b.subtotal, items.map(i => i.qty * (i.unit ?? 1)))
     const lines: Line[] = items.map((i, n) => ({
       product: i.slug,
       label: items.length === 1 ? moduleName : undefined,

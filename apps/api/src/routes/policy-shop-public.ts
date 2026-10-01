@@ -304,12 +304,14 @@ policyShopPublicRouter.post('/checkout', async (req: Request, res: Response) => 
  *  amount charged. A pack's price is apportioned across its contents rather than each
  *  policy carrying its full list price: otherwise 20 rows at list would claim £1,360
  *  against a £495 payment, and every revenue figure downstream would be wrong. */
-async function expandBasket(items: ShopItem[], freeKeys: string[] = []): Promise<Array<{
+async function expandBasket(items: ShopItem[], freeKeys: string[] = [], prices: number[] | null = null): Promise<Array<{
   slug: string; title: string; pence: number; reference_keys: string[]
 }>> {
   const out: Array<{ slug: string; title: string; pence: number; reference_keys: string[] }> = []
 
-  for (const item of items) {
+  for (const [idx, item] of items.entries()) {
+    // What this item actually cost after an offer, when the session recorded it.
+    const paid = prices ? Math.max(0, Math.floor(prices[idx] ?? 0)) : null
     if (item.kind === 'policy') {
       const p = await (prisma as any).policyProduct.findUnique({
         where: { slug: item.key },
@@ -319,7 +321,7 @@ async function expandBasket(items: ShopItem[], freeKeys: string[] = []): Promise
       // still sum to what Stripe took.
       const free = freeKeys.indexOf(item.key)
       if (free >= 0) freeKeys = freeKeys.filter((_, n) => n !== free)
-      if (p) out.push({ slug: p.slug, title: p.title, pence: free >= 0 ? 0 : p.price_pence, reference_keys: p.reference_keys ?? [] })
+      if (p) out.push({ slug: p.slug, title: p.title, pence: paid ?? (free >= 0 ? 0 : p.price_pence), reference_keys: p.reference_keys ?? [] })
       continue
     }
 
@@ -335,8 +337,9 @@ async function expandBasket(items: ShopItem[], freeKeys: string[] = []): Promise
 
     // Integer apportionment: an even split, with the remainder pence given to the
     // first rows, so the total is exactly what Stripe took. No rounding leak.
-    const base = Math.floor(bundle.price_pence / members.length)
-    let remainder = bundle.price_pence - base * members.length
+    const packPence = paid ?? bundle.price_pence
+    const base = Math.floor(packPence / members.length)
+    let remainder = packPence - base * members.length
     for (const m of members as any[]) {
       const extra = remainder > 0 ? 1 : 0
       remainder -= extra
@@ -382,7 +385,7 @@ policyShopPublicRouter.post('/reconcile', async (req: Request, res: Response) =>
 
     // Revenue to Funnel Insights, one line per policy or pack (idempotent there).
     await reportPolicySale(sessionId, result.paymentId, result.items, result.freeKeys, result.offerKey)
-    const lines = await expandBasket(result.items, result.freeKeys)
+    const lines = await expandBasket(result.items, result.freeKeys, result.prices)
     if (!lines.length) return err(res, 'NOTHING_TO_DO', 'That payment had nothing we could fulfil', 400)
 
     // ── the account ──────────────────────────────────────────────────────────

@@ -10,7 +10,7 @@
 
 import Stripe from 'stripe'
 import { prisma } from '../../db/client'
-import { freeLicencesFor, freePolicyPairs, activeLicenceOffer, activePolicyOfferKey } from '../training/offers'
+import { getOffers, licenceDeal, policyDeal } from '../offers'
 
 // API version Managed Payments requires. Applied per-request to product/price
 // creation and Checkout Session creation only — NOT to the client globally.
@@ -209,17 +209,22 @@ export interface TrainingCheckoutInput {
 // (reconcile-on-return) — see reconcileTrainingCheckout — not via webhook.
 export async function createTrainingCheckoutSession(input: TrainingCheckoutInput): Promise<string> {
   const stripe = getStripe()
-  const priceId = await trainingPriceId()
   const qty = Math.max(1, Math.min(500, Math.floor(input.quantity || 1)))
-  const free = freeLicencesFor(input.moduleSlug, qty)
+  // A live offer from the calendar: free licences (provisioned on reconcile from `free`) or a
+  // percentage off, charged as a one-off price on the same product.
+  const deal = licenceDeal(await getOffers(), input.moduleSlug, qty)
+  const unit = deal.pct ? Math.round(TRAINING_LICENCE_PENCE * (1 - deal.pct / 100)) : TRAINING_LICENCE_PENCE
+  const line: Stripe.Checkout.SessionCreateParams.LineItem = deal.pct
+    ? { price_data: { currency: 'gbp', product: await trainingProductId(), unit_amount: unit }, quantity: qty }
+    : { price: await trainingPriceId(), quantity: qty }
   const params: Stripe.Checkout.SessionCreateParams = {
     mode:         'payment',
-    line_items:   [{ price: priceId, quantity: qty }],
+    line_items:   [line],
     customer_email: input.email,
-    ...(free ? { custom_text: { submit: { message: `Halloween offer: ${free} free ${free === 1 ? 'licence' : 'licences'} added, so you receive ${qty + free} in total.` } } } : {}),
     metadata: {
       kind:        'training_licence',
-      ...(free ? { free: String(free), offer: activeLicenceOffer(input.moduleSlug)?.key ?? '' } : {}),
+      ...(deal.offer ? { offer: deal.offer.key, unit: String(unit) } : {}),
+      ...(deal.free ? { free: String(deal.free) } : {}),
       module_slug: input.moduleSlug,
       module_name: input.moduleName.slice(0, 250),
       quantity:    String(qty),
@@ -275,24 +280,34 @@ export async function createTrainingBasketCheckoutSession(input: TrainingBasketC
 
   const totalQty = items.reduce((s, i) => s + i.quantity, 0)
   const pct = trainingDiscountPct(totalQty)
-  // Free licences from a live offer, per course. Not charged and not counted towards the
-  // volume discount; provisioned on reconcile from the `f` in the basket metadata.
-  const freeOf = (i: TrainingBasketItem) => freeLicencesFor(i.moduleSlug, i.quantity)
-  const totalFree = items.reduce((s, i) => s + freeOf(i), 0)
   const unit = Math.round(TRAINING_LICENCE_PENCE * (1 - pct / 100))
+  // A live offer per course: free licences (not charged, not counted towards the volume tier;
+  // provisioned on reconcile from `f`), or a percentage off that replaces the volume discount
+  // when it is bigger (its unit price travels as `u`).
+  const offers = await getOffers()
+  const deals = items.map(i => {
+    const d = licenceDeal(offers, i.moduleSlug, i.quantity)
+    return { ...d, unit: d.pct > pct ? Math.round(TRAINING_LICENCE_PENCE * (1 - d.pct / 100)) : unit }
+  })
+  const offerKey = deals.find(d => d.offer && (d.free || d.unit !== unit))?.offer?.key
+  const byUnit = new Map<number, number>()
+  items.forEach((i, n) => byUnit.set(deals[n].unit, (byUnit.get(deals[n].unit) ?? 0) + i.quantity))
 
   const params: Stripe.Checkout.SessionCreateParams = {
     mode:       'payment',
-    line_items: [{ price_data: { currency: 'gbp', product: productId, unit_amount: unit }, quantity: totalQty }],
+    line_items: [...byUnit].map(([amount, quantity]) => ({ price_data: { currency: 'gbp', product: productId, unit_amount: amount }, quantity })),
     customer_email: input.email,
-    ...(totalFree ? { custom_text: { submit: { message: `Halloween offer: ${totalFree} free ${totalFree === 1 ? 'licence' : 'licences'} added to your order.` } } } : {}),
     metadata: {
       kind:         'training_basket',
-      basket:       JSON.stringify(items.map(i => (freeOf(i) ? { s: i.moduleSlug, q: i.quantity, f: freeOf(i) } : { s: i.moduleSlug, q: i.quantity }))).slice(0, 480),
+      basket:       JSON.stringify(items.map((i, n) => ({
+        s: i.moduleSlug, q: i.quantity,
+        ...(deals[n].free ? { f: deals[n].free } : {}),
+        ...(deals[n].unit !== unit ? { u: deals[n].unit } : {}),
+      }))).slice(0, 480),
       total_qty:    String(totalQty),
       discount_pct: String(pct),
-      // The offer behind any free licences, so Funnel Insights can credit the sale to it.
-      ...(totalFree ? { offer: items.map(i => freeOf(i) ? activeLicenceOffer(i.moduleSlug)?.key : null).find(Boolean) ?? '' } : {}),
+      // The offer behind any free licences or offer price, so Funnel Insights can credit the sale to it.
+      ...(offerKey ? { offer: offerKey } : {}),
       org_name:     input.orgName.slice(0, 250),
       email:        input.email,
       ...(input.tenantId ? { tenant_id: input.tenantId } : {}),
@@ -405,6 +420,8 @@ export interface ShopCheckoutResult {
   freeKeys: string[]
   /** The offer those were free under, for reporting. */
   offerKey: string | null
+  /** What each item cost after an offer, aligned with items; null when no offer applied. */
+  prices: number[] | null
 }
 
 /** Resolve what the buyer actually gets charged, from the catalogue, never from input. */
@@ -453,21 +470,32 @@ export async function createShopCheckoutSession(input: {
   const items = input.items.slice(0, 30)
   if (!items.length) throw new Error('Nothing to buy')
   const allPriced = await priceShopItems(items)
-  // Halloween 2 for 1: the cheaper policy of each pair is free. Free policies get no Stripe
-  // line of their own (managed payments will not show a custom note, and a £0 line is not
-  // guaranteed); instead each is named on the line of the policy it is paired with, so the
-  // buyer sees it on the payment page and the invoice. They travel last in the metadata,
-  // counted by `free`, so reconcile records them at £0 and line n still matches item n.
-  const pairs = freePolicyPairs(allPriced.map(p => ({ kind: p.item.kind, pence: p.pence })))
-  const freeNameFor = new Map<number, string>()
-  for (const [f, paid] of pairs) freeNameFor.set(paid, allPriced[f].name)
-  const order = [...allPriced.keys()].filter(n => !pairs.has(n)).concat([...pairs.keys()].sort((a, b) => a - b))
-  const paidCount = allPriced.length - pairs.size
+  // A live offer from the calendar. Free policies get no Stripe line of their own (a £0 line is
+  // not guaranteed and managed payments will not show a note); they are named on the first paid
+  // line instead, so the buyer sees them on the payment page and the invoice. They travel last
+  // in the metadata, counted by `free`, and `pp` carries what each item cost after the offer so
+  // reconcile records exactly what was charged.
+  const offers = await getOffers()
+  const packMembers: Record<string, string[]> = {}
+  for (const o of offers.filter(o => o.kind === 'pack_bonus')) {
+    const pack = String(o.params.pack || '')
+    if (!allPriced.some(p => p.item.kind === 'bundle' && p.item.key === pack)) continue
+    const members = await (prisma as any).policyProduct.findMany({ where: { bundle_keys: { has: pack }, active: true }, select: { slug: true } })
+    packMembers[pack] = (members as any[]).map(m => m.slug)
+  }
+  const deal = policyDeal(offers, allPriced.map(p => ({ kind: p.item.kind, key: p.item.key, pence: p.pence })), packMembers)
+  if (deal.gift) {
+    const gift = await priceShopItems([{ kind: 'policy', key: deal.gift }]).catch(() => [])
+    if (gift[0]) { allPriced.push(gift[0]); deal.pence.push(0); deal.free.add(allPriced.length - 1) }
+  }
+  const order = [...allPriced.keys()].filter(n => !deal.free.has(n)).concat([...deal.free].sort((a, b) => a - b))
+  const paidCount = allPriced.length - deal.free.size
   const priced = order.map(n => allPriced[n])
-  const lineName = (n: number) => freeNameFor.has(n)
-    ? `${allPriced[n].name} + ${freeNameFor.get(n)} (free, Halloween 2 for 1)`.slice(0, 250)
+  const freeNames = [...deal.free].sort((a, b) => a - b).map(n => allPriced[n].name)
+  const lineName = (n: number) => n === order[0] && freeNames.length
+    ? `${allPriced[n].name} + ${freeNames.join(' + ')} (free, ${deal.offer?.label ?? 'offer'})`.slice(0, 250)
     : allPriced[n].name
-  const totalPence = priced.slice(0, paidCount).reduce((n, p) => n + p.pence, 0)
+  const totalPence = order.slice(0, paidCount).reduce((t, n) => t + deal.pence[n], 0)
   if (totalPence < 50) throw new Error('Basket total is below the minimum Stripe will charge')
 
   const stripe = getStripe()
@@ -492,7 +520,7 @@ export async function createShopCheckoutSession(input: {
       quantity: 1,
       price_data: {
         currency: 'gbp',
-        unit_amount: allPriced[n].pence,
+        unit_amount: deal.pence[n],
         product_data: { name: lineName(n), tax_code: PLAN_TAX_CODE },
       },
     })),
@@ -503,7 +531,8 @@ export async function createShopCheckoutSession(input: {
       // if expanded, and the expansion belongs to the catalogue anyway — reconcile
       // reads the pack's contents from the database rather than from this string.
       items: JSON.stringify(priced.map(p => `${p.item.kind === 'bundle' ? 'b' : 'p'}:${p.item.key}`)).slice(0, 500),
-      ...(pairs.size ? { free: String(pairs.size), offer: activePolicyOfferKey() ?? '' } : {}),
+      ...(deal.offer ? { offer: deal.offer.key, pp: JSON.stringify(order.map(n => deal.pence[n])).slice(0, 500) } : {}),
+      ...(deal.free.size ? { free: String(deal.free.size) } : {}),
       ...(input.orgName ? { org_name: input.orgName.slice(0, 200) } : {}),
       ...(input.buyerName ? { buyer_name: input.buyerName.slice(0, 200) } : {}),
     },
@@ -540,6 +569,7 @@ export async function retrieveShopCheckoutSession(sessionId: string): Promise<Sh
   return {
     freeKeys,
     offerKey: md.offer || null,
+    prices: (() => { try { const v = JSON.parse(md.pp || 'null'); return Array.isArray(v) && v.length === items.length ? v.map(Number) : null } catch { return null } })(),
     paid: session.payment_status === 'paid',
     paymentId: typeof session.payment_intent === 'string'
       ? session.payment_intent

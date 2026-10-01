@@ -12,6 +12,7 @@ import Stripe from 'stripe'
 import { prisma } from '../../db/client'
 import { getOffers, licenceDeal, policyDeal } from '../offers'
 import { attributionMeta, type Attribution } from '../analytics/attribution'
+import { ADDONS, type AddonKey } from '../shop/addons'
 
 // API version Managed Payments requires. Applied per-request to product/price
 // creation and Checkout Session creation only — NOT to the client globally.
@@ -22,7 +23,7 @@ const PLAN_TAX_CODE = 'txcd_10103100'
 const TRIAL_DAYS = 14
 
 let _stripe: Stripe | null = null
-function getStripe(): Stripe {
+export function getStripe(): Stripe {
   if (!_stripe) {
     if (!process.env.STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY is not configured')
     _stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
@@ -36,7 +37,7 @@ function managedPaymentsEnabled(): boolean {
 
 // Per-request options pinning the preview API version Managed Payments needs.
 // Undefined when Managed Payments is off, so calls use the account default.
-function managedPaymentsRequestOptions(): Stripe.RequestOptions | undefined {
+export function managedPaymentsRequestOptions(): Stripe.RequestOptions | undefined {
   return managedPaymentsEnabled()
     ? ({ apiVersion: MANAGED_PAYMENTS_API_VERSION } as any)
     : undefined
@@ -198,7 +199,18 @@ async function createSessionWithOfferNote(stripe: Stripe, params: Stripe.Checkou
   }
 }
 
+/** Stripe line items for paid add-ons (team set-up, priority delivery). */
+function addonLines(keys: AddonKey[] | undefined): Stripe.Checkout.SessionCreateParams.LineItem[] {
+  return (keys ?? []).map(k => ({
+    quantity: 1,
+    price_data: { currency: 'gbp', unit_amount: ADDONS[k].pence, product_data: { name: ADDONS[k].name, tax_code: PLAN_TAX_CODE } },
+  }))
+}
+
 export interface TrainingCheckoutInput {
+  addons?: AddonKey[]
+  /** A post-purchase offer: this percentage off each licence (any live free-licence offer still applies). */
+  forcePct?: number
   attribution?: Attribution | null
   moduleSlug: string
   moduleName: string
@@ -215,18 +227,21 @@ export async function createTrainingCheckoutSession(input: TrainingCheckoutInput
   // A live offer from the calendar: free licences (provisioned on reconcile from `free`) or a
   // percentage off, charged as a one-off price on the same product.
   const deal = licenceDeal(await getOffers(), input.moduleSlug, qty)
+  if (input.forcePct) deal.pct = Math.max(deal.pct, Math.min(90, Math.floor(input.forcePct)))
   const unit = deal.pct ? Math.round(TRAINING_LICENCE_PENCE * (1 - deal.pct / 100)) : TRAINING_LICENCE_PENCE
   const line: Stripe.Checkout.SessionCreateParams.LineItem = deal.pct
     ? { price_data: { currency: 'gbp', product: await trainingProductId(), unit_amount: unit }, quantity: qty }
     : { price: await trainingPriceId(), quantity: qty }
   const params: Stripe.Checkout.SessionCreateParams = {
     mode:         'payment',
-    line_items:   [line],
+    line_items:   [line, ...addonLines(input.addons)],
     customer_email: input.email,
     metadata: {
       ...attributionMeta(input.attribution),
       kind:        'training_licence',
-      ...(deal.offer ? { offer: deal.offer.key, unit: String(unit) } : {}),
+      ...(deal.offer || input.forcePct ? { offer: input.forcePct ? 'post-purchase' : deal.offer!.key, unit: String(unit) } : {}),
+      ...(input.forcePct ? { post_purchase: '1' } : {}),
+      ...(input.addons?.length ? { addons: input.addons.join(',') } : {}),
       ...(deal.free ? { free: String(deal.free) } : {}),
       module_slug: input.moduleSlug,
       module_name: input.moduleName.slice(0, 250),
@@ -257,6 +272,7 @@ export function trainingDiscountPct(totalQty: number): number {
 
 export interface TrainingBasketItem { moduleSlug: string; moduleName: string; quantity: number }
 export interface TrainingBasketCheckoutInput {
+  addons?: AddonKey[]
   attribution?: Attribution | null
   items: TrainingBasketItem[]
   email: string
@@ -299,7 +315,7 @@ export async function createTrainingBasketCheckoutSession(input: TrainingBasketC
 
   const params: Stripe.Checkout.SessionCreateParams = {
     mode:       'payment',
-    line_items: [...byUnit].map(([amount, quantity]) => ({ price_data: { currency: 'gbp', product: productId, unit_amount: amount }, quantity })),
+    line_items: [...[...byUnit].map(([amount, quantity]) => ({ price_data: { currency: 'gbp', product: productId, unit_amount: amount }, quantity })), ...addonLines(input.addons)],
     customer_email: input.email,
     metadata: {
       ...attributionMeta(input.attribution),
@@ -313,6 +329,7 @@ export async function createTrainingBasketCheckoutSession(input: TrainingBasketC
       discount_pct: String(pct),
       // The offer behind any free licences or offer price, so Funnel Insights can credit the sale to it.
       ...(offerKey ? { offer: offerKey } : {}),
+      ...(input.addons?.length ? { addons: input.addons.join(',') } : {}),
       org_name:     input.orgName.slice(0, 250),
       email:        input.email,
       ...(input.tenantId ? { tenant_id: input.tenantId } : {}),
@@ -468,6 +485,9 @@ async function priceShopItems(items: ShopItem[]): Promise<Array<{
 
 export async function createShopCheckoutSession(input: {
   attribution?: Attribution | null
+  addons?: AddonKey[]
+  /** A post-purchase offer: this percentage off each individual policy; no other offer applies. */
+  forcePct?: number
   email: string
   items: ShopItem[]
   /** From the checkout page's details form, kept on the session for whoever fulfils it. */
@@ -490,7 +510,10 @@ export async function createShopCheckoutSession(input: {
     const members = await (prisma as any).policyProduct.findMany({ where: { bundle_keys: { has: pack }, active: true }, select: { slug: true } })
     packMembers[pack] = (members as any[]).map(m => m.slug)
   }
-  const deal = policyDeal(offers, allPriced.map(p => ({ kind: p.item.kind, key: p.item.key, pence: p.pence })), packMembers)
+  const pct = input.forcePct ? Math.min(90, Math.floor(input.forcePct)) : 0
+  const deal = pct
+    ? { offer: null, pence: allPriced.map(p => (p.item.kind === 'policy' ? Math.round(p.pence * (1 - pct / 100)) : p.pence)), free: new Set<number>(), gift: null as string | null }
+    : policyDeal(offers, allPriced.map(p => ({ kind: p.item.kind, key: p.item.key, pence: p.pence })), packMembers)
   if (deal.gift) {
     const gift = await priceShopItems([{ kind: 'policy', key: deal.gift }]).catch(() => [])
     if (gift[0]) { allPriced.push(gift[0]); deal.pence.push(0); deal.free.add(allPriced.length - 1) }
@@ -502,7 +525,7 @@ export async function createShopCheckoutSession(input: {
   const lineName = (n: number) => n === order[0] && freeNames.length
     ? `${allPriced[n].name} + ${freeNames.join(' + ')} (free, ${deal.offer?.label ?? 'offer'})`.slice(0, 250)
     : allPriced[n].name
-  const totalPence = order.slice(0, paidCount).reduce((t, n) => t + deal.pence[n], 0)
+  const totalPence = order.slice(0, paidCount).reduce((t, n) => t + deal.pence[n], 0) + (input.addons ?? []).reduce((t, k) => t + ADDONS[k].pence, 0)
   if (totalPence < 50) throw new Error('Basket total is below the minimum Stripe will charge')
 
   const stripe = getStripe()
@@ -523,14 +546,14 @@ export async function createShopCheckoutSession(input: {
 
   const params: Stripe.Checkout.SessionCreateParams = {
     mode: 'payment',
-    line_items: order.slice(0, paidCount).map(n => ({
+    line_items: [...order.slice(0, paidCount).map(n => ({
       quantity: 1,
       price_data: {
         currency: 'gbp',
         unit_amount: deal.pence[n],
         product_data: { name: lineName(n), tax_code: PLAN_TAX_CODE },
       },
-    })),
+    })), ...addonLines(input.addons)],
     ...(existingCustomer ? { customer: existingCustomer } : { customer_email: input.email }),
     metadata: {
       ...attributionMeta(input.attribution),
@@ -539,7 +562,9 @@ export async function createShopCheckoutSession(input: {
       // if expanded, and the expansion belongs to the catalogue anyway — reconcile
       // reads the pack's contents from the database rather than from this string.
       items: JSON.stringify(priced.map(p => `${p.item.kind === 'bundle' ? 'b' : 'p'}:${p.item.key}`)).slice(0, 500),
-      ...(deal.offer ? { offer: deal.offer.key, pp: JSON.stringify(order.map(n => deal.pence[n])).slice(0, 500) } : {}),
+      ...(deal.offer || pct ? { offer: pct ? 'post-purchase' : deal.offer!.key, pp: JSON.stringify(order.map(n => deal.pence[n])).slice(0, 500) } : {}),
+      ...(pct ? { post_purchase: '1' } : {}),
+      ...(input.addons?.length ? { addons: input.addons.join(',') } : {}),
       ...(deal.free.size ? { free: String(deal.free.size) } : {}),
       ...(input.orgName ? { org_name: input.orgName.slice(0, 200) } : {}),
       ...(input.buyerName ? { buyer_name: input.buyerName.slice(0, 200) } : {}),

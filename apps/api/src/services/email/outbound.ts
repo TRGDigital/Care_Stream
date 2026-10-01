@@ -1751,3 +1751,35 @@ export async function sendOfferChangeEmail(opts: {
   const names = [...opts.started.map(s => `${s.offer.name} started`), ...opts.ended.map(s => `${s.offer.name} ended`)]
   await sgMail.send({ to, from, subject: `CareStream offers: ${names.join(', ')}`.slice(0, 200), html })
 }
+
+// ─── A basket shared for sign-off ───────────────────────────────────────────────
+// A buyer sends their basket to the person who approves the spend (a manager, the owner, the
+// finance office), with the prices, any offer and one button that rebuilds the basket to buy.
+export async function sendBasketShareEmail(opts: {
+  to: string; fromName: string; note: string; funnel: 'training' | 'policies'
+  lines: { title: string; detail: string; pence: number }[]; totalPence: number; link: string
+  offer: { label: string; headline: string; ends_on: string } | null
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) throw new Error('Email is not configured')
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc = (s: any) => String(s ?? '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c] as string))
+  const gbp = (p: number) => `£${(p / 100).toFixed(2)}`
+  const what = opts.funnel === 'training' ? 'staff training' : 'care policies'
+  const ends = opts.offer ? new Date(`${opts.offer.ends_on}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) : ''
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:17px;font-weight:700;margin:0 0 8px">${esc(opts.fromName)} has sent you a CareStream basket to approve</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 14px">It is for ${what}. Everything is below, with one button to buy it.</p>
+    ${opts.note ? `<blockquote style="margin:0 0 16px;padding:10px 14px;border-left:3px solid #7B3FBF;background:#F7F5FA;color:#374151;font-size:14px;line-height:1.6">${esc(opts.note)}</blockquote>` : ''}
+    <table style="width:100%;border-collapse:collapse;font-size:14px;margin:0 0 6px">
+      ${opts.lines.map(l => `<tr><td style="padding:8px 0;border-bottom:1px solid #eee"><strong>${esc(l.title)}</strong><br><span style="color:#6b7280;font-size:12px">${esc(l.detail)}</span></td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;white-space:nowrap">${l.pence ? gbp(l.pence) : 'Free'}</td></tr>`).join('')}
+      <tr><td style="padding:10px 0;font-weight:700">Total</td><td style="padding:10px 0;text-align:right;font-weight:700">${gbp(opts.totalPence)}</td></tr>
+    </table>
+    <p style="color:#6b7280;font-size:12px;margin:0 0 16px">One-off payment, no subscription. Prices are confirmed at checkout.</p>
+    ${opts.offer ? `<p style="margin:0 0 16px;padding:10px 14px;border-radius:8px;background:#1F1530;color:#F6F1FB;font-size:13px">🎃 <strong style="color:#F28C38">${esc(opts.offer.label)}: ${esc(opts.offer.headline)}.</strong> Ends midnight, ${esc(ends)}.</p>` : ''}
+    <p style="margin:0 0 18px"><a href="${esc(opts.link)}" style="display:inline-block;background:#F28C38;color:#1F1530;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">View the basket and buy</a></p>
+    <p style="color:#374151;font-size:13px;line-height:1.6;margin:0 0 16px">Prefer to pay by invoice or purchase order? <a href="https://www.carestreamai.com/contact?about=Invoice%20or%20purchase%20order" style="color:#7B3FBF">Ask us for an invoice</a> and we will set it up.</p>
+    ${emailFooter()}
+  `)
+  await sgMail.send({ to: opts.to, from, replyTo: from, subject: `${opts.fromName} has sent you a CareStream basket to approve`, html })
+}

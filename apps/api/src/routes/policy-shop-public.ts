@@ -23,6 +23,7 @@ import crypto from 'crypto'
 import { intakeStateFor } from '../services/policy-writer/intake'
 import { enrolInCampaign } from '../services/onboarding/dispatch'
 import { reportPolicySale, cleanAttribution, attributionFromMeta } from '../services/analytics/funnel-insights'
+import { ADDONS, cleanAddons, addonsFromMeta } from '../services/shop/addons'
 
 export const policyShopPublicRouter = Router()
 
@@ -288,7 +289,7 @@ policyShopPublicRouter.post('/checkout', async (req: Request, res: Response) => 
     // Optional, from the checkout page's details form. Free text, so trimmed and capped.
     const orgName = String(req.body?.org_name ?? '').trim().slice(0, 200)
     const buyerName = String(req.body?.name ?? '').trim().slice(0, 200)
-    const { url, totalPence } = await createShopCheckoutSession({ email, items, orgName, buyerName, attribution: cleanAttribution(req.body?.attribution) })
+    const { url, totalPence } = await createShopCheckoutSession({ email, items, orgName, buyerName, attribution: cleanAttribution(req.body?.attribution), addons: cleanAddons(req.body?.addons, 'policies') })
     ok(res, { url, total_pence: totalPence })
   } catch (e: any) {
     // Price lookup failures are the buyer's problem to see (a policy went inactive
@@ -384,7 +385,7 @@ policyShopPublicRouter.post('/reconcile', async (req: Request, res: Response) =>
     if (!email) return err(res, 'NO_EMAIL', 'That payment carries no email address', 400)
 
     // Revenue to Funnel Insights, one line per policy or pack (idempotent there).
-    await reportPolicySale(sessionId, result.paymentId, result.items, result.freeKeys, result.offerKey, attributionFromMeta(result.metadata))
+    await reportPolicySale(sessionId, result.paymentId, result.items, result.freeKeys, result.offerKey, attributionFromMeta(result.metadata), addonsFromMeta(result.metadata))
     const lines = await expandBasket(result.items, result.freeKeys, result.prices)
     if (!lines.length) return err(res, 'NOTHING_TO_DO', 'That payment had nothing we could fulfil', 400)
 
@@ -497,13 +498,15 @@ policyShopPublicRouter.post('/reconcile', async (req: Request, res: Response) =>
       sendPolicyPurchaseNotification({
         tenantName: tenant?.name ?? 'Policy customer',
         accountNumber: tenant?.account_number ?? null,
-        titles: created,
+        // Priority delivery is a promise with a clock on it: it leads the notification.
+        titles: [...addonsFromMeta(result.metadata).map(k => `ADD-ON PAID: ${ADDONS[k].name}`), ...created],
         totalPence: result.amountTotalPence,
       }).catch((e: any) => console.error('[policy-shop] platform notify failed:', e?.message ?? e))
     }
 
     // value_pence + transaction_id let the thank-you page report the sale to Google Ads.
     ok(res, { created: created.length, new_account: isNewAccount, email, value_pence: result.amountTotalPence, transaction_id: result.paymentId,
+      post_purchase: result.metadata.post_purchase === '1', bought: result.items.filter((i: { kind: string }) => i.kind === 'policy').map((i: { key: string }) => i.key),
       // Each policy or pack bought, for Funnel Insights' per-product funnels.
       products: result.items.map((i: { kind: string; key: string }) => ({ slug: i.kind === 'bundle' ? `bundle:${i.key}` : i.key, qty: 1 })) })
   } catch (e: any) {

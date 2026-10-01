@@ -14,6 +14,7 @@ import { enrolInCampaign } from '../services/onboarding/dispatch'
 import { hashPassword } from '../services/auth/password'
 import crypto from 'crypto'
 import { reportTrainingSale, cleanAttribution, attributionFromMeta } from '../services/analytics/funnel-insights'
+import { ADDONS, cleanAddons, addonsFromMeta } from '../services/shop/addons'
 
 const slugify = (s: string): string =>
   s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
@@ -475,7 +476,7 @@ publicTrainingRouter.post('/checkout', async (req: Request, res: Response) => {
     const topic = (topics as any[]).find(t => slugify(t.title) === slug)
     if (!topic) { res.status(404).json({ error: 'Unknown training module' }); return }
 
-    const url = await createTrainingCheckoutSession({ moduleSlug: slug, moduleName: topic.title, quantity: qty, email: mail, orgName: org, attribution: cleanAttribution(req.body?.attribution) })
+    const url = await createTrainingCheckoutSession({ moduleSlug: slug, moduleName: topic.title, quantity: qty, email: mail, orgName: org, attribution: cleanAttribution(req.body?.attribution), addons: cleanAddons(req.body?.addons, 'training') })
     res.json({ data: { url } })
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'checkout failed' })
@@ -508,7 +509,7 @@ publicTrainingRouter.post('/checkout-basket', async (req: Request, res: Response
     }
     if (!built.length) { res.status(400).json({ error: 'No valid items in the basket' }); return }
 
-    const url = await createTrainingBasketCheckoutSession({ items: built, email: mail, orgName: org, attribution: cleanAttribution(req.body?.attribution) })
+    const url = await createTrainingBasketCheckoutSession({ items: built, email: mail, orgName: org, attribution: cleanAttribution(req.body?.attribution), addons: cleanAddons(req.body?.addons, 'training') })
     res.json({ data: { url } })
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'checkout failed' })
@@ -566,9 +567,9 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
 
     // value_pence + transaction_id report the sale to Google Ads; products names each course for
     // Funnel Insights' per-product funnels.
-    const conversion = { value_pence: s.amountTotalPence, transaction_id: s.paymentId, products: items }
+    const conversion = { value_pence: s.amountTotalPence, transaction_id: s.paymentId, products: items, post_purchase: s.metadata.post_purchase === '1', module_slug: s.metadata.module_slug || items[0]?.slug || null }
     // Revenue to Funnel Insights (idempotent there, so the already-provisioned path is safe too).
-    await reportTrainingSale(sessionId, s.paymentId, items, s.metadata.module_name, s.metadata.offer || null, attributionFromMeta(s.metadata))
+    await reportTrainingSale(sessionId, s.paymentId, items, s.metadata.module_name, s.metadata.offer || null, attributionFromMeta(s.metadata), addonsFromMeta(s.metadata))
     if (existing) { res.json({ data: { provisioned: true, already: true, email: s.email, ...conversion } }); return }
 
     const orgName   = s.metadata.org_name || 'Your service'
@@ -674,6 +675,9 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
     const buyerTenant = tenantId
       ? await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true, account_number: true } }).catch(() => null)
       : null
+    // Paid add-ons (team set-up) are work for us: they lead the notification.
+    for (const k of addonsFromMeta(s.metadata)) orderLines.unshift({ title: `ADD-ON PAID: ${ADDONS[k].name}`, qty: 1 })
+    if (s.metadata.post_purchase === '1') orderLines.unshift({ title: 'Post-purchase offer (extra licences)', qty: 0 })
     sendTrainingPurchaseNotification({
       tenantName: buyerTenant?.name ?? orgName, accountNumber: buyerTenant?.account_number ?? null,
       buyerName: adminName, buyerEmail: email || null,

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Minus, Plus, Loader2, ShieldCheck } from 'lucide-react'
 import { fi, fiAttribution } from '@/lib/funnel-insights'
+import { PaymentLogos } from './payment-logos'
 import { useOffers, licenceDeal, money2, paidForTotal } from '@/lib/offers'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
@@ -131,14 +132,18 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
             {' '}and acknowledge the <Link href="/privacy" target="_blank">Privacy Policy</Link>.
           </span>
         </label>
-        <button className={`bybtn${applied ? ' offerbtn' : ''}`} type="submit" disabled={busy || !agreed}>
-          {busy ? 'Starting secure checkout…' : 'Continue to payment'}
+        <button className="bybtn offerbtn" type="submit" disabled={busy || !agreed}>
+          {busy ? 'Starting secure checkout…' : 'Checkout securely'}
         </button>
-        <p className="bysecure">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"
-               strokeLinejoin="round" aria-hidden="true"><path d="M12 3l7 3v6c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z" /><path d="M9 12l2 2 4-4" /></svg>
-          Card payment handled by Stripe. We never see your card details.
-        </p>
+        <PaymentLogos className="bypaylogos" />
+        <ul className="byreassure">
+          <li>Instant access: your team can start today</li>
+          <li>A certificate for every staff member</li>
+          <li>14-day refund on any licence not yet started</li>
+        </ul>
+        <a className="byinvoice" href="/contact?about=Invoice%20or%20purchase%20order">
+          <b>Need an invoice or purchase order?</b> Pay by bank transfer: talk to us →
+        </a>
       </form>
     )
   }

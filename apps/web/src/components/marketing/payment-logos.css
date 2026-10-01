@@ -1,0 +1,6 @@
+.paylogos{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:12px 0 0}
+.paylogo{display:inline-grid;place-items:center;height:26px;min-width:44px;padding:3px 6px;border:1px solid #E2DEE8;border-radius:5px;background:#fff}
+.paylogo svg{height:16px;width:auto;display:block}
+.paylogo.mc svg{height:18px}
+.paysecure{display:inline-flex;align-items:center;gap:5px;margin-left:4px;font-size:.76rem;color:#6B6577}
+.paysecure svg{width:13px;height:13px;color:#1F8A5B}

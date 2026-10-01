@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { AlmostStopped } from './shop-questions'
 import { CheckCircle2, Loader2, Mail, AlertTriangle } from 'lucide-react'
 import { reportPurchase } from '@/lib/google-ads'
 
@@ -65,6 +66,7 @@ export function BuySuccess() {
             <div>
               <Link href="/login" className="btn-amber rounded-btn px-8 py-3.5 text-sm">Go to sign in</Link>
             </div>
+            <AlmostStopped funnel="training" />
           </>
         )}
 

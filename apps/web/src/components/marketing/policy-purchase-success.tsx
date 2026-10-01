@@ -10,6 +10,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { AlmostStopped } from './shop-questions'
 import { CheckCircle2, Loader2, Mail, AlertTriangle, FileText } from 'lucide-react'
 import { reportPurchase } from '@/lib/google-ads'
 
@@ -100,6 +101,7 @@ export function PolicyPurchaseSuccess() {
                 <FileText size={15} /> Browse the other policies
               </Link>
             </div>
+            <AlmostStopped funnel="policies" />
           </>
         )}
 

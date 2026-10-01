@@ -13,6 +13,8 @@ import { StickyBarReveal } from './sticky-bar-reveal'
 import { ModuleBuyPanel } from './module-buy-panel'
 import { StickyFit } from './sticky-fit'
 import { REVIEWS } from '@/lib/reviews'
+import { PaymentLogos } from './payment-logos'
+import { ExitQuestion } from './shop-questions'
 import './module-page-v2.css'
 
 // The rebuilt /staff-training/<slug> template. Renders the SAME module record and the same demo
@@ -255,6 +257,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
           (picture, proof, a real lesson to try, the standards it covers), and everything needed to
           buy on the right, held in view until the gallery ends. */}
       <StickyFit selector=".mpage-v2 .mpe-info" />
+      <ExitQuestion funnel="training" product={m.slug} />
       <section className="mhero mpe">
         <div className="mwrap mpe-in">
           <div className="mpe-main">
@@ -291,6 +294,8 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
 
             <ModuleBuyPanel slug={m.slug} title={m.title} unitPence={unitPence} />
 
+            <PaymentLogos />
+
             <ul className="mpe-trust mpe-trust-list">
               <li><Tick />CQC-aligned, mapped to the Care Certificate framework</li>
               <li><Tick />Completed in the hub in over 60 languages</li>
@@ -302,7 +307,8 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
             <div className="mpe-guarantee">
               <h3><span>Our guarantee</span></h3>
               <p>
-                {m.cpd_accredited ? 'CPD Certified, and ' : ''}kept up to date whenever the standards or CQC
+                If a licence has not been started, tell us within fourteen days and we refund it in full.
+                {m.cpd_accredited ? ' CPD Certified, and kept' : ' Kept'} up to date whenever the standards or CQC
                 guidance change. Licences last 12 months: no subscription, no minimum order.
               </p>
               <p>Built by people who have worked in care homes. <Link href="/about">Read our story</Link>.</p>

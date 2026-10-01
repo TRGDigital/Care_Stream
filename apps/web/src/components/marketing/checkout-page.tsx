@@ -8,6 +8,8 @@ import { UNIT_PENCE, DISCOUNT_TIERS, discountPctForQty } from '@/lib/training-co
 import { useOffers, licenceDeal, policyDeal } from '@/lib/offers'
 import { LicenceOfferCard, PolicyOfferCard } from './licence-offer'
 import { usePolicyBasket, type BasketItem } from './policy-basket'
+import { PaymentLogos } from './payment-logos'
+import { ExitQuestion } from './shop-questions'
 import './checkout-page.css'
 import { fi, fiAttribution } from '@/lib/funnel-insights'
 
@@ -108,14 +110,19 @@ function Summary({ lines, total, sub, assurances, ready, busy, error, onPay }: {
         </label>
         <button className="ckpay" type="button" id="ckpay" data-fi-copy="pay_button" disabled={!ready || !agreed || busy}
                 onClick={() => onPay(agreed)}>
-          <Lock />{busy ? 'Starting secure checkout…' : 'Continue to secure payment'}
+          <Lock />{busy ? 'Starting secure checkout…' : 'Checkout securely'}
         </button>
         {error && <p className="ckerr" role="alert">{error}</p>}
+        <PaymentLogos className="ckpaylogos" />
         <p className="cksecure"><Lock />Payment is taken on Stripe&apos;s secure page. We never see your card details.</p>
+        {/* Care groups often cannot pay by card: the invoice and purchase order route, in plain view. */}
+        <Link className="ckinvoice" href="/contact?about=Invoice%20or%20purchase%20order">
+          <span><b>Need an invoice or purchase order?</b>Pay by bank transfer against an invoice. Talk to us and we will set it up.</span>
+          <span aria-hidden="true">→</span>
+        </Link>
         <ul className="ckassure">
           {assurances.map(([t, d]) => <li key={t}><Tick /><span><b>{t}</b>{d}</span></li>)}
         </ul>
-        <p className="ckhelp">Need an invoice or a larger order? <Link href="/contact">Talk to us</Link></p>
       </div></div>
     </aside>
   )
@@ -145,7 +152,7 @@ function Shell({ back, title, lede, children, summary, total, empty }: {
         <div className="ckmbar">
           <div><span>Total</span><b>{money(total)}</b></div>
           <button type="button" onClick={() => document.getElementById('ckpay')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>
-            Checkout
+            Checkout securely
           </button>
         </div>
       )}
@@ -280,6 +287,8 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
     : null
 
   return (
+    <>
+    <ExitQuestion funnel="training" />
     <Shell
       back={['/staff-training', 'Continue browsing training']}
       title="Your basket"
@@ -297,9 +306,9 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
           total={payNow}
           sub="One-off payment. No subscription."
           assurances={[
-            ['Sign-in link by email', 'Courses are ready to allocate as soon as payment completes.'],
-            ['Licences stay with your team', 'Assign each licence to a staff member from your dashboard.'],
-            ['Invoice for your records', 'A receipt is emailed with every order.'],
+            ['Fourteen day refund', 'If a licence has not been started, tell us within fourteen days and we refund it in full.'],
+            ['Instant access', 'Courses are ready to allocate as soon as payment completes, with a sign-in link by email.'],
+            ['Licences stay with your team', 'Assign each licence to a staff member from your dashboard. A receipt comes with every order.'],
           ]}
           ready={items.length > 0}
           busy={busy}
@@ -321,6 +330,9 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
                   <div className="meta">
                     {money(i.unitPence)} per licence{info?.minutes ? ` · ${info.minutes} minutes` : ''}
                   </div>
+                  <ul className="ckreassure">
+                    <li><Tick />Instant access</li><li><Tick />A certificate for every learner</li><li><Tick />14-day refund if unstarted</li>
+                  </ul>
                   {deals[i.slug].free > 0 && (
                     <div className="ckfree">
                       + {deals[i.slug].free} free with the {deals[i.slug].offer?.label ?? 'offer'}: {i.qty + deals[i.slug].free} licences in total
@@ -383,6 +395,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
 
       {savedPanel}
     </Shell>
+    </>
   )
 }
 
@@ -507,6 +520,8 @@ export function PolicyCheckout() {
   const label = policies.length === count ? `${count} ${count === 1 ? 'policy' : 'policies'}` : noun(count)
 
   return (
+    <>
+    <ExitQuestion funnel="policies" />
     <Shell
       back={['/care-policies', 'Continue browsing policies']}
       title="Your policy basket"
@@ -554,6 +569,9 @@ export function PolicyCheckout() {
                     {pack ? 'Every policy in the pack, personalised to your service'
                           : 'Personalised to your service · delivered within 2 working days'}
                   </div>
+                  <ul className="ckreassure">
+                    <li><Tick />Read and approved by a person</li><li><Tick />Delivered in 2 working days</li><li><Tick />14-day refund</li>
+                  </ul>
                   {free.has(i.slug) && <div className="ckfree">Free with the {deal.offer?.label ?? 'offer'}</div>}
                   <div className="acts">
                     {!pack && <button type="button" onClick={() => saveForLater(i)}>Save for later</button>}
@@ -622,6 +640,7 @@ export function PolicyCheckout() {
         </div>
       </div>
     </Shell>
+    </>
   )
 }
 

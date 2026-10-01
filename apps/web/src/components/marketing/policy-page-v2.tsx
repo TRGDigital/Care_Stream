@@ -6,6 +6,8 @@ import { PolicyOfferCard } from './licence-offer'
 import { PolicyBuyPanel } from './policy-buy-panel'
 import { StickyFit } from './sticky-fit'
 import { REVIEWS } from '@/lib/reviews'
+import { PaymentLogos } from './payment-logos'
+import { ExitQuestion } from './shop-questions'
 import './policy-page-v2.css'
 
 // The rebuilt /care-policies/<slug> template. Renders the SAME shop API record the current page
@@ -208,6 +210,7 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
           (its picture, the three-minute build, the law it is checked against), and everything
           needed to buy on the right, held in view until the gallery ends. */}
       <StickyFit selector=".pcpage-v2 .mpe-info" />
+      <ExitQuestion funnel="policies" product={product.slug} />
       <section className="pchero mpe">
         <div className="pcwrap mpe-in">
           <div className="mpe-main">
@@ -235,7 +238,9 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
 
             <PolicyBuyPanel item={item} />
 
-            <ul className="mpe-trust">
+            <PaymentLogos />
+
+            <ul className="mpe-trust mpe-trust-list">
               <li><Tick /><span>Written for your organisation, not a template</span></li>
               <li><Tick /><span>Read and approved by a person</span></li>
               <li><Tick /><span>Checked against {elements} required elements</span></li>

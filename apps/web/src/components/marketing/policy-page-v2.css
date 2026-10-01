@@ -618,3 +618,44 @@
 .pcpage-v2 .mpe-laws li{display:flex;gap:8px;font-size:.84rem;color:var(--ink-2)}
 .pcpage-v2 .mpe-laws li svg{width:14px;height:14px;flex:0 0 auto;margin-top:3px;color:#1F8A5B}
 .pcpage-v2 .mpe-demo .pcgame{box-shadow:none}
+
+/* Policy buy column at full size, ticks one per line (matches the course page) */
+/* The course page's ticks: one per line, larger (the policy page keeps the two-column version) */
+.pcpage-v2 .mpe-trust.mpe-trust-list{grid-template-columns:1fr;gap:6px}
+.pcpage-v2 .mpe-trust.mpe-trust-list li{font-size:.9rem;white-space:nowrap}
+@media(max-width:1180px){ .pcpage-v2 .mpe-trust.mpe-trust-list li{white-space:normal} }
+
+/* Course page buy column back to full size (Len, 1 Oct): readable first, the column scrolls with
+   the page until its foot is in view on shorter screens (StickyFit). */
+.pcpage-v2 .mpe-top .mpe-rating{font-size:.84rem}
+.pcpage-v2 .mpe-info .mcrumb{font-size:.72rem}
+.pcpage-v2 .mpe-eyebrow{font-size:.74rem}
+.pcpage-v2 .mpe-eyerow .cpdmark{height:50px}
+.pcpage-v2 .mpe h1{font-size:clamp(1.6rem, .9vw + 1.25rem, 2.15rem);margin:4px 0 14px}
+.pcpage-v2 .mpe-quote{padding:11px 14px;margin-bottom:14px}
+.pcpage-v2 .mpe-quote p{font-size:.9rem;margin-bottom:6px}
+.pcpage-v2 .mpe-quote cite{font-size:.8rem}
+.pcpage-v2 .mpe-offerline{padding:12px 15px;margin-bottom:14px}
+.pcpage-v2 .mpe-offerline p{font-size:.95rem}
+.pcpage-v2 .mpe-offer-emoji{font-size:2rem}
+.pcpage-v2 .mpe-price b{font-size:2.1rem}
+.pcpage-v2 .mpe-price span{font-size:.92rem}
+.pcpage-v2 .mpe-price s{font-size:1.15rem}
+.pcpage-v2 .mpe-badge{font-size:.8rem}
+.pcpage-v2 .mpe-qty{margin-bottom:12px}
+.pcpage-v2 .mpe-qty label{font-size:.9rem}
+.pcpage-v2 .mpe-qtynote{font-size:.92rem}
+.pcpage-v2 .mpe-step button{width:42px;height:44px}
+.pcpage-v2 .mpe-step input{height:44px;font-size:1.05rem}
+.pcpage-v2 .mpe-stock{font-size:.92rem;margin-bottom:14px}
+.pcpage-v2 .mpe-buy .mrow .add{font-size:1rem;padding:14px 18px}
+.pcpage-v2 .mpe-buy .textadd{font-size:.9rem}
+.pcpage-v2 .mpe-trust.mpe-trust-list{gap:8px;margin-top:14px;padding-top:14px}
+.pcpage-v2 .mpe-trust.mpe-trust-list li{font-size:.98rem}
+.pcpage-v2 .mpe-guarantee{margin-top:18px;padding:0 18px 14px}
+.pcpage-v2 .mpe-guarantee h3{font-size:1.02rem;margin-bottom:6px}
+.pcpage-v2 .mpe-guarantee p{font-size:.86rem;line-height:1.6;margin-bottom:8px}
+
+.pcpage-v2 .mpe-dealnote{font-size:.95rem}
+.pcpage-v2 .mpe-buy .pcadd{font-size:1rem}
+.pcpage-v2 .mpe-trust.mpe-trust-list li span{color:inherit;font-size:inherit}

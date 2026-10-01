@@ -227,7 +227,7 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
               </div>
               <AddToBasketText item={item} />
             </div>
-            <PolicyOfferCard pricePence={product.price_pence} />
+            <PolicyOfferCard slug={product.slug} pricePence={product.price_pence} />
 
             <p className="pcnote">
               One-off, first year of updates included. Delivered within <b>2 working days</b> of

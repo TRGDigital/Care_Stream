@@ -34,6 +34,7 @@ export const SCHEDULED_JOBS: ScheduledJob[] = [
   { job: 'supervision-reminders',     cadence: 'daily',  graceHours: 26, matters: 'Staff are reminded the day before a supervision or appraisal' },
   { job: 'audit-reminders',           cadence: 'daily',  graceHours: 26, matters: 'Admins are chased to finish audits and start recurring ones' },
   { job: 'onboarding-emails',         cadence: 'daily',  graceHours: 26, matters: 'New tenants receive their onboarding drip' },
+  { job: 'offer-changes',             cadence: 'daily',  graceHours: 3,  matters: 'Shop offers follow the calendar and Len hears when one starts or ends' },
   { job: 'licence-renewals',          cadence: 'daily',  graceHours: 26, matters: 'Training licence holders are warned before renewal' },
   { job: 'indexing-report',           cadence: 'weekly', graceHours: 8 * 24, matters: 'The Monday email of pages pushed to RalfyIndex by both sites, and the credit balance' },
   { job: 'regulation-source-monitor', cadence: 'weekly', graceHours: 8 * 24, matters: 'Legislation and guidance pages are fingerprinted so changes get noticed' },

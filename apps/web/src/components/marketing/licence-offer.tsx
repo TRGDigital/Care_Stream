@@ -1,96 +1,118 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { activeOffer, policyOfferActive, POLICY_OFFER, type LicenceOffer } from '@/lib/offers'
+import { useOffers, licenceOffer, licenceEffectivePence, policyOffer, endsText, money, money2, type Offer } from '@/lib/offers'
+import { UNIT_PENCE } from '@/lib/training-commerce'
 import './licence-offer.css'
 
-// Whole days left, counted to the offer's end. Shown only in the final week, when it is a
-// real reason to act; before that the end date alone says it.
-function daysLeft(o: LicenceOffer, now: number) {
-  return Math.ceil((Date.parse(o.ends) - now) / 86_400_000)
-}
+// The offer cards and the sticky-bar chip, for whichever offer the calendar has running. Every
+// offer brings its own badge, headline and "how it works" line; the price line is worked out
+// from its mechanic. Nothing renders when no offer covers the product.
 
-// The offer card that sits under a course's buy box. Rendered for the server's clock, then
-// re-checked in the browser so a cached page stops showing it once the offer has ended.
-export function LicenceOfferCard({ slug, compact = false }: { slug: string; compact?: boolean }) {
+function useLeft(o: Offer | null) {
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => { setNow(Date.now()) }, [])
-  const o = activeOffer(slug, now)
-  if (!o) return null
-  const left = daysLeft(o, now)
+  return o ? Math.ceil((Date.parse(o.ends_at) - now) / 86_400_000) : 0
+}
+
+// Whole days left, shown only in the final week, when it is a real reason to act.
+function Ends({ o }: { o: Offer }) {
+  const left = useLeft(o)
   return (
-    <aside className={`lofr${compact ? ' compact' : ''}`} aria-label={o.label}>
-      <svg className="lofr-ic" viewBox="0 0 48 48" aria-hidden="true">
-        <path d="M24 13c-2-4 1-7 4-8" fill="none" stroke="#5B8C3A" strokeWidth="3" strokeLinecap="round" />
-        <ellipse cx="17" cy="29" rx="10" ry="13" fill="#E8792B" />
-        <ellipse cx="31" cy="29" rx="10" ry="13" fill="#E8792B" />
-        <ellipse cx="24" cy="29" rx="9" ry="14" fill="#F28C38" />
-        <path d="M17 26l4 3h-6zM31 26l-4 3h6zM17 35c4 3 10 3 14 0l-3 1-2-2-2 2-2-2-2 2z" fill="#2A1B12" />
-      </svg>
-      <div className="lofr-tx">
-        <span className="lofr-lb">{o.label}</span>
-        <b className="lofr-hd">{o.headline}</b>
-        <div className="lofr-price">
-          <b>{o.effectivePrice}</b>
-          <span>per staff member <s>{o.normalPrice}</s></span>
-        </div>
-        <p className="lofr-multi">{o.multiText}</p>
-        {!compact && <p>{o.reason}</p>}
-        <span className="lofr-end">
-          {o.endsText}{left <= 7 ? ` · ${left === 1 ? 'last day' : `${left} days left`}` : ''}
-        </span>
-      </div>
-    </aside>
+    <span className="lofr-end">
+      {endsText(o)}{left <= 7 ? ` · ${left <= 1 ? 'last day' : `${left} days left`}` : ''}
+    </span>
   )
 }
 
-// The policy version: the same card, priced as "two policies for the price of this one".
-export function PolicyOfferCard({ pricePence, compact = false, cta }: {
-  pricePence?: number; compact?: boolean; cta?: { href: string; label: string }
+function Card({ o, price, compact, cta }: {
+  o: Offer; price?: React.ReactNode; compact?: boolean; cta?: { href: string; label: string }
 }) {
-  const [now, setNow] = useState(() => Date.now())
-  useEffect(() => { setNow(Date.now()) }, [])
-  if (!policyOfferActive(now)) return null
-  const o = POLICY_OFFER
-  const left = Math.ceil((Date.parse(o.ends) - now) / 86_400_000)
-  const money = (p: number) => `£${(p / 100).toFixed(p % 100 ? 2 : 0)}`
   return (
-    <aside className={`lofr${compact ? ' compact' : ''}`} aria-label={o.label}>
+    <aside className={`lofr${compact ? ' compact' : ''}`} aria-label={o.label ?? o.name}>
       <span className="lofr-emoji" aria-hidden="true">🎃</span>
       <div className="lofr-tx">
-        <span className="lofr-lb">{o.label}</span>
-        <b className="lofr-hd">{o.headline}</b>
-        {pricePence ? (
-          <div className="lofr-price">
-            <b>{money(pricePence)}</b>
-            <span>for two policies</span>
-          </div>
-        ) : null}
-        <p className="lofr-multi">{o.multiText}</p>
-        {!compact && <p>{o.reason}</p>}
+        <span className="lofr-lb">{o.label ?? o.name}</span>
+        {o.headline && <b className="lofr-hd">{o.headline}</b>}
+        {price}
+        {o.multi_text && <p className="lofr-multi">{o.multi_text}</p>}
         {cta && <a className="lofr-cta" href={cta.href}>{cta.label}</a>}
-        <span className="lofr-end">
-          {o.endsText}{left <= 7 ? ` · ${left === 1 ? 'last day' : `${left} days left`}` : ''}
-        </span>
+        <Ends o={o} />
       </div>
     </aside>
   )
 }
 
-// The offer, squeezed into the dark bar that slides in at the top of a course or policy page
-// once its buy box has scrolled away.
-export function OfferBarChip({ slug, policy = false }: { slug?: string; policy?: boolean }) {
-  const [now, setNow] = useState(() => Date.now())
-  useEffect(() => { setNow(Date.now()) }, [])
-  const licence = !policy && slug ? activeOffer(slug, now) : null
-  if (policy ? !policyOfferActive(now) : !licence) return null
+/** Under a course's buy box. */
+export function LicenceOfferCard({ slug, compact = false }: { slug: string; compact?: boolean }) {
+  const o = licenceOffer(useOffers(), slug)
+  if (!o) return null
+  const each = licenceEffectivePence(o, UNIT_PENCE)
+  return (
+    <Card o={o} compact={compact} price={each < UNIT_PENCE ? (
+      <div className="lofr-price"><b>{money2(each)}</b><span>per staff member <s>{money2(UNIT_PENCE)}</s></span></div>
+    ) : null} />
+  )
+}
+
+/** Under a policy's (or pack's) buy box, or in the basket (no slug: the policy offer running). */
+export function PolicyOfferCard({ slug, pricePence, compact = false, cta }: {
+  slug?: string; pricePence?: number; compact?: boolean; cta?: { href: string; label: string }
+}) {
+  const offers = useOffers()
+  const o = slug ? policyOffer(offers, slug)
+    : offers.find(x => x.range === 'policies' || x.range === 'both') ?? null
+  if (!o) return null
+  return <Card o={o} compact={compact} cta={cta} price={pricePence ? <PolicyPrice o={o} price={pricePence} /> : null} />
+}
+
+function PolicyPrice({ o, price }: { o: Offer; price: number }) {
+  const p = o.params || {}
+  if (o.kind === 'group_free') {
+    const g = Math.max(2, Number(p.group) || 2)
+    return g === 2
+      ? <div className="lofr-price"><b>{money(price)}</b><span>for two policies</span></div>
+      : <div className="lofr-price"><b>{g} for {g - 1}</b><span>policies</span></div>
+  }
+  if (o.kind === 'percent_off') {
+    const now = Math.round(price * (1 - (Number(p.pct) || 0) / 100))
+    return <div className="lofr-price"><b>{money2(now)}</b><span>{Number(p.pct)}% off <s>{money(price)}</s></span></div>
+  }
+  if (o.kind === 'amount_off') {
+    return <div className="lofr-price"><b>{money(Math.max(0, price - (Number(p.pence) || 0)))}</b><span><s>{money(price)}</s></span></div>
+  }
+  if (o.kind === 'pack_bonus') {
+    return <div className="lofr-price"><b>+{Number(p.free) || 0} free</b><span>policies with the pack</span></div>
+  }
+  return null
+}
+
+/** In the dark bar that slides in at the top of a course or policy page once its buy box has
+ *  scrolled away. */
+export function OfferBarChip({ slug, policy = false }: { slug: string; policy?: boolean }) {
+  const offers = useOffers()
+  const o = policy ? policyOffer(offers, slug) : licenceOffer(offers, slug)
+  if (!o) return null
+  const each = !policy ? licenceEffectivePence(o, UNIT_PENCE) : UNIT_PENCE
+  const end = new Date(`${o.ends_on}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'Europe/London' })
   return (
     <span className="lofr-chip">
       <span className="lofr-chip-ic" aria-hidden="true">🎃</span>
       <span className="lofr-chip-tx">
-        <b>Halloween 2 for 1</b>
-        <span>{policy ? 'Buy 1 policy, get a second free' : `Buy 1 licence, get 1 free: ${licence!.effectivePrice} each`} · ends 31 Oct</span>
+        <b>{o.label ?? o.name}</b>
+        <span>{o.headline ?? ''}{!policy && each < UNIT_PENCE ? `: ${money2(each)} each` : ''} · ends {end}</span>
       </span>
     </span>
   )
+}
+
+/** On the /care-policies list: the offer on a pack if one is running, otherwise the policy offer. */
+export function PolicyListOffer({ bundles }: { bundles: { key: string; price_pence: number }[] }) {
+  const offers = useOffers()
+  for (const b of bundles) {
+    const o = policyOffer(offers, `bundle:${b.key}`)
+    if (o && o.kind !== 'group_free' && o.kind !== 'gift') return <div className="lofr-list"><Card o={o} price={<PolicyPrice o={o} price={b.price_pence} />} /></div>
+  }
+  const o = offers.find(x => x.range === 'policies' || x.range === 'both')
+  return o ? <div className="lofr-list"><Card o={o} /></div> : null
 }

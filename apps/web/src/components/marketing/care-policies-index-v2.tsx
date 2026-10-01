@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
 import { PackLink } from './policy-basket'
 import { PolicyCatalogueGrid } from './policy-catalogue-grid'
+import { PolicyListOffer } from './licence-offer'
 import { CARE_POLICIES_PACK_ORDER } from '@/lib/page-slots/care-policies-v2'
 import './service-page-v2.css'
 import './collection-page-v2.css'
@@ -260,6 +261,7 @@ export function CarePoliciesIndexV2({ s, products, bundles }: {
               66 while the grid beneath it lists 64. */}
           <h2>{s('cat.h2').replace(/\ball \d+\b/i, m => `${m.split(' ')[0]} ${products.length}`)}</h2>
           <p className="lede3">{s('cat.lede')}</p>
+          <PolicyListOffer bundles={bundles} />
           {bundles.length > 0 && (
             <div className="pcpacks">
               {/* In the theme's order, with the theme's one-line descriptions (editable in the

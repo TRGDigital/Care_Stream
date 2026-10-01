@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Minus, Plus, Loader2, ShieldCheck } from 'lucide-react'
 import { fi } from '@/lib/funnel-insights'
-import { freeLicences, activeOffer } from '@/lib/offers'
+import { useOffers, licenceDeal, money2 } from '@/lib/offers'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 const gbp = (pence: number) => `£${(pence / 100).toFixed(2)}`
@@ -35,9 +35,13 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
   // payment too, and was the one route to Stripe that never showed the terms.
   const [agreed, setAgreed] = useState(false)
 
-  const total = qty * unitPence
-  // A live offer (the Halloween 2 for 1) adds free licences on top; the API adds the same.
-  const free = freeLicences(slug, qty)
+  // A live offer from the calendar: free licences on top, or a percentage off each licence.
+  // The API works out the same at checkout.
+  const deal = licenceDeal(useOffers(), slug, qty)
+  const free = deal.free
+  const each = deal.pct ? Math.round(unitPence * (1 - deal.pct / 100)) : unitPence
+  const effective = free ? Math.floor((each * qty) / (qty + free)) : each
+  const total = qty * each
   const setQ = (n: number) => setQty(Math.max(1, Math.min(500, n)))
 
   async function submit(e: React.FormEvent) {
@@ -79,13 +83,13 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
           {/* Inline, as the theme has it, rather than a class of my own invention. */}
           <span style={{ fontSize: '.86rem', color: 'var(--muted)' }}>{gbp(unitPence)} each</span>
         </div>
-        {free > 0 && (
+        {deal.offer && (free > 0 || deal.pct > 0) && (
           <div className="byfree">
             <span className="byfree-emoji" aria-hidden="true">🎃</span>
             <div className="byfree-tx">
-              <span className="byfree-lb">Halloween offer applied</span>
-              <b>+ {free} free: you receive {qty + free} licences</b>
-              <span>Just {activeOffer(slug)?.effectivePrice} per staff member</span>
+              <span className="byfree-lb">{deal.offer.label ?? 'Offer'} applied</span>
+              <b>{free > 0 ? `+ ${free} free: you receive ${qty + free} licences` : `${deal.pct}% off every licence`}</b>
+              <span>Just {money2(effective)} per staff member</span>
             </div>
           </div>
         )}
@@ -116,7 +120,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
             {' '}and acknowledge the <Link href="/privacy" target="_blank">Privacy Policy</Link>.
           </span>
         </label>
-        <button className={`bybtn${free > 0 ? ' offerbtn' : ''}`} type="submit" disabled={busy || !agreed}>
+        <button className={`bybtn${deal.offer && (free > 0 || deal.pct > 0) ? ' offerbtn' : ''}`} type="submit" disabled={busy || !agreed}>
           {busy ? 'Starting secure checkout…' : 'Continue to payment'}
         </button>
         <p className="bysecure">

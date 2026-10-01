@@ -1701,3 +1701,53 @@ export async function sendIndexingReportEmail(report: {
     html,
   })
 }
+
+// ─── Offer changes, to the platform owner ──────────────────────────────────────
+// Sent by the hourly offer job when an offer from the calendar starts or ends on the site,
+// with every page it changed on, so nothing about a promotion goes live unnoticed.
+type OfferForEmail = { name: string; label: string | null; headline: string | null; multi_text: string | null; kind: string; range: string; starts_on: string; ends_on: string; key: string }
+export async function sendOfferChangeEmail(opts: {
+  started: { offer: OfferForEmail; pages: { label: string; url: string }[] }[]
+  ended: { offer: OfferForEmail; pages: { label: string; url: string }[] }[]
+  upcoming: OfferForEmail[]
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set, skipping offer change email'); return }
+  const to = process.env.OFFER_NOTIFY_EMAIL ?? 'lenny@trgdigital.co.uk'
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc = (s: any) => String(s ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
+  const day = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+  const range = (r: string) => ({ training: 'Training', policies: 'Policies', both: 'Training and policies' } as Record<string, string>)[r] ?? r
+
+  const block = (title: string, colour: string, items: typeof opts.started) => items.map(({ offer: o, pages }) => `
+    <div style="border:1px solid #e5e7eb;border-left:4px solid ${colour};border-radius:8px;padding:14px 16px;margin:0 0 14px">
+      <p style="margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:${colour}">${title} · ${esc(range(o.range))}</p>
+      <p style="margin:0 0 4px;font-size:16px;font-weight:700;color:${NEUTRAL_DARK}">${esc(o.name)}</p>
+      ${o.headline ? `<p style="margin:0 0 6px;font-size:14px;color:#374151">${esc(o.headline)}</p>` : ''}
+      ${o.multi_text ? `<p style="margin:0 0 6px;font-size:13px;color:#6b7280">${esc(o.multi_text)}</p>` : ''}
+      <p style="margin:0 0 10px;font-size:13px;color:#374151">${day(o.starts_on)} to ${day(o.ends_on)} (ends midnight)</p>
+      <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:${NEUTRAL_DARK}">${title === 'Started' ? 'Now showing on' : 'Removed from'} ${pages.length} ${pages.length === 1 ? 'page' : 'pages'}:</p>
+      <ul style="margin:0;padding-left:18px;font-size:12px;line-height:1.6;color:#374151">
+        ${pages.map(p => `<li><a href="${esc(p.url)}" style="color:#7B3FBF">${esc(p.label)}</a></li>`).join('')}
+      </ul>
+    </div>`).join('')
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 6px">🎃 CareStream offers have changed</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 16px">The offer calendar has moved on. Here is what changed on the site, and where.</p>
+    ${block('Started', '#15803d', opts.started)}
+    ${block('Ended', '#6b7280', opts.ended)}
+    ${opts.upcoming.length ? `
+      <p style="margin:6px 0 6px;font-size:13px;font-weight:700;color:${NEUTRAL_DARK}">Coming up next</p>
+      <ul style="margin:0 0 16px;padding-left:18px;font-size:13px;line-height:1.6;color:#374151">
+        ${opts.upcoming.map(o => `<li><strong>${esc(o.name)}</strong> (${esc(range(o.range))}): ${day(o.starts_on)} to ${day(o.ends_on)}</li>`).join('')}
+      </ul>` : ''}
+    <p style="color:#6b7280;font-size:12px;line-height:1.6;margin:0 0 16px">
+      Track how each offer is doing at <a href="https://trg-funnel-insights.vercel.app/offers" style="color:#7B3FBF">Funnel Insights › Offers</a>,
+      where the calendar is also edited.
+    </p>
+    ${emailFooter()}
+  `)
+  const names = [...opts.started.map(s => `${s.offer.name} started`), ...opts.ended.map(s => `${s.offer.name} ended`)]
+  await sgMail.send({ to, from, subject: `CareStream offers: ${names.join(', ')}`.slice(0, 200), html })
+}

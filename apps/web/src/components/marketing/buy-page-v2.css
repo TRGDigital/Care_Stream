@@ -115,7 +115,8 @@
     font-size:.44rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin-bottom:3px}
 .bypage-v2 .bythumbshot em{display:none}
 .bypage-v2 .bymod-meta{margin:6px 0 0;font-size:.83rem;color:var(--muted)}
-.bypage-v2 .bypanel{position:sticky;top:calc(var(--chrome) + 22px);background:var(--ground);
+.bypage-v2 .bycol{position:sticky;top:calc(var(--chrome) + 22px)}
+.bypage-v2 .bypanel{background:var(--ground);
     border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);padding:26px}
 .bypage-v2 .byprice{display:flex;align-items:baseline;gap:9px;margin-bottom:4px}
 .bypage-v2 .byprice b{font-size:2.1rem;letter-spacing:-.035em;line-height:1}
@@ -211,7 +212,7 @@
 .bypage-v2 .byshot.wide img{display:block;width:100%;height:auto;border-radius:16px}
 @media(max-width:1000px){
   .bypage-v2 .byhero-in, .bypage-v2 .bysplit{grid-template-columns:minmax(0,1fr)}
-  .bypage-v2 .bypanel{position:static}
+  .bypage-v2 .bycol{position:static}
   .bypage-v2 .byshot.wide{position:static}
   .bypage-v2 .bysteps, .bypage-v2 .bytrust, .bypage-v2 .byother{grid-template-columns:1fr 1fr}
 }
@@ -234,3 +235,6 @@
 .bypage-v2 .byterms input{width:17px;height:17px;margin:2px 0 0;accent-color:var(--accent);flex:0 0 auto}
 .bypage-v2 .byterms a{color:var(--ink);font-weight:600}
 .bypage-v2 .bybtn[disabled]{opacity:.45;cursor:not-allowed}
+
+/* The free licences a live offer adds, under the licence count. */
+.bypage-v2 .byfree{margin:-4px 0 14px;padding:9px 12px;border-radius:10px;background:#FFF1E4;color:#7A3A0C;font-size:.85rem;line-height:1.4}

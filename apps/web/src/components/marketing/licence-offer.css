@@ -1,0 +1,14 @@
+/* Offer card under a course's buy box. Self-contained colours so it reads the same on the
+   course page, the buy page and the basket, whichever theme surrounds it. */
+.lofr{display:flex;gap:14px;align-items:flex-start;margin-top:14px;padding:16px 18px;border-radius:14px;
+  background:#1F1530;color:#F6F1FB;text-align:left;line-height:1.45}
+.lofr-ic{flex:0 0 44px;width:44px;height:44px}
+.lofr-tx{min-width:0}
+.lofr-lb{display:inline-block;margin-bottom:4px;padding:2px 9px;border-radius:999px;background:#F28C38;color:#1F1530;
+  font-size:.72rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.lofr-hd{display:block;font-size:1.05rem;font-weight:800;color:#fff}
+.lofr p{margin:6px 0 0;font-size:.86rem;color:#D9CFE6}
+.lofr-end{display:block;margin-top:8px;font-size:.8rem;font-weight:700;color:#F6B37A}
+.lofr.compact{padding:12px 14px;margin-top:10px}
+.lofr.compact .lofr-ic{flex-basis:34px;width:34px;height:34px}
+.lofr.compact .lofr-hd{font-size:.95rem}

@@ -66,8 +66,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
   if (variant === 'theme') {
     return (
       <form className="bypanel" onSubmit={submit}>
-        <div className="byprice"><b>{gbp(unitPence)}</b><span>per staff member</span></div>
-        <p className="note">One-off payment. No renewal unless you buy again.</p>
+        <div className="byprice"><b>{gbp(unitPence)}</b><span>per staff member, one-off payment</span></div>
 
         <label className="bylabel" htmlFor="byq">Number of licences</label>
         <div className="byqty">
@@ -85,8 +84,8 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
             <span className="byfree-emoji" aria-hidden="true">🎃</span>
             <div className="byfree-tx">
               <span className="byfree-lb">Halloween offer applied</span>
-              <b>+ {free} free {free === 1 ? 'licence' : 'licences'}: you receive {qty + free} licences</b>
-              <span>That is {activeOffer(slug)?.effectivePrice} per staff member. Every licence you buy comes with one free.</span>
+              <b>+ {free} free: you receive {qty + free} licences</b>
+              <span>Just {activeOffer(slug)?.effectivePrice} per staff member</span>
             </div>
           </div>
         )}

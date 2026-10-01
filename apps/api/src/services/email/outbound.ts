@@ -1809,3 +1809,62 @@ export async function sendInvoiceRequestEmail(opts: {
   `)
   await sgMail.send({ to: PURCHASE_NOTIFY_TO(), from, replyTo: opts.email, subject: `Invoice requested: ${opts.org}`.slice(0, 150), html })
 }
+
+// ─── Basket recovery: a buyer left the shop with something in their basket ──────
+// Stage 1 about an hour after they stopped, stage 2 the next day. Each carries the priced basket,
+// one button back to it, and a link that stops these reminders for good. Replies reach a person.
+const RECOVERY_REVIEW = {
+  training: 'I haven’t found anything else as comprehensive, easy to use, or as clever… The training modules and matrix are extremely useful.',
+  policies: 'I haven’t found anything else as comprehensive, easy to use, or as clever; to have a tool such as this for our company policies to act as a living on-hand guide for my staff.',
+}
+export async function sendBasketRecoveryEmail(opts: {
+  to: string; stage: 1 | 2; name: string; org: string; funnel: 'training' | 'policies'
+  lines: { title: string; detail: string; pence: number }[]; totalPence: number; link: string
+  offer: { label: string; headline: string; ends_on: string } | null
+  optOutUrl: string; subjectPrefix?: string
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) throw new Error('Email is not configured')
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc = (s: any) => String(s ?? '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c] as string))
+  const gbp = (p: number) => `£${(p / 100).toFixed(2)}`
+  const training = opts.funnel === 'training'
+  const what = training ? 'staff training' : 'care policies'
+  const first = (opts.name || '').trim().split(/\s+/)[0] || ''
+  const ends = opts.offer ? new Date(`${opts.offer.ends_on}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) : ''
+  const forOrg = opts.org ? ` for ${esc(opts.org)}` : ''
+  const why = training
+    ? ['Staff can start the same day, in over 60 languages', 'A certificate for every staff member, ready for your CQC evidence', 'Any licence not yet started is refunded in full within 14 days']
+    : ['Written for your service and read by a person before it carries your name', 'Delivered within 2 working days of your answers', 'Not right for your service? Refunded in full within 14 days']
+  const tick = '<span style="color:#1F8A5B;font-weight:700">&#10003;</span>'
+
+  const intro = opts.stage === 1
+    ? `You were part way through ordering ${what}${forOrg}. We have kept everything, so you can pick up exactly where you left off.`
+    : opts.offer
+      ? `Your basket${forOrg} is still saved, and the ${esc(opts.offer.label)} price in it ends at midnight on ${esc(ends)}.`
+      : `Your basket${forOrg} is still saved. If something stopped you, reply to this email and a real person will help.`
+  const subject = (opts.subjectPrefix ?? '') + (opts.stage === 1
+    ? 'Your CareStream basket is saved'
+    : opts.offer ? `${opts.offer.label} ends ${ends}: your basket is still saved` : `Still need ${what}? Your basket is saved`)
+  const link = `${opts.link}${opts.link.includes('?') ? '&' : '?'}utm_source=carestream&utm_medium=email&utm_campaign=basket_recovery_${opts.stage}`
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:18px;font-weight:700;margin:0 0 8px">${first ? `${esc(first)}, your` : 'Your'} basket is saved</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 16px">${intro}</p>
+    <table style="width:100%;border-collapse:collapse;font-size:14px;margin:0 0 6px">
+      ${opts.lines.map(l => `<tr><td style="padding:8px 0;border-bottom:1px solid #eee"><strong>${esc(l.title)}</strong><br><span style="color:#6b7280;font-size:12px">${esc(l.detail)}</span></td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;white-space:nowrap">${l.pence ? gbp(l.pence) : 'Free'}</td></tr>`).join('')}
+      <tr><td style="padding:10px 0;font-weight:700">Total</td><td style="padding:10px 0;text-align:right;font-weight:700">${gbp(opts.totalPence)}</td></tr>
+    </table>
+    <p style="color:#6b7280;font-size:12px;margin:0 0 16px">One-off payment, no subscription. Prices are confirmed at checkout.</p>
+    ${opts.offer ? `<p style="margin:0 0 16px;padding:10px 14px;border-radius:8px;background:#1F1530;color:#F6F1FB;font-size:13px">🎃 <strong style="color:#F28C38">${esc(opts.offer.label)}: ${esc(opts.offer.headline)}.</strong> Ends midnight, ${esc(ends)}.</p>` : ''}
+    <p style="margin:0 0 20px"><a href="${esc(link)}" style="display:inline-block;background:#F28C38;color:#1F1530;font-weight:700;text-decoration:none;padding:13px 24px;border-radius:10px">Return to my basket</a></p>
+    <table style="font-size:13px;color:#374151;margin:0 0 18px;border-collapse:collapse">
+      ${why.map(w => `<tr><td style="padding:3px 8px 3px 0;vertical-align:top">${tick}</td><td style="padding:3px 0">${w}</td></tr>`).join('')}
+    </table>
+    ${opts.stage === 2 ? `<blockquote style="margin:0 0 18px;padding:10px 14px;border-left:3px solid #7B3FBF;background:#F7F5FA;color:#374151;font-size:13px;line-height:1.6">&ldquo;${esc(RECOVERY_REVIEW[opts.funnel])}&rdquo;<br><span style="color:#6b7280;font-size:12px">A. Arbery, Nursing Home</span></blockquote>` : ''}
+    <p style="color:#374151;font-size:13px;line-height:1.6;margin:0 0 16px">Need sign-off first, or prefer to pay by invoice or purchase order? Just reply to this email and we will sort it out. CareStream is built by people who have worked in care homes.</p>
+    ${emailFooter()}
+    <p style="color:#9ca3af;font-size:11px;line-height:1.5;margin:12px 0 0">You are receiving this because you started an order on carestreamai.com. <a href="${esc(opts.optOutUrl)}" style="color:#9ca3af">Stop basket reminders</a>.</p>
+  `)
+  await sgMail.send({ to: opts.to, from, replyTo: PURCHASE_NOTIFY_TO(), subject: subject.slice(0, 150), html })
+}

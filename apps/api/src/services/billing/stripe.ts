@@ -877,6 +877,13 @@ export async function handleWebhook(payload: Buffer, signature: string): Promise
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session
       const tenantId = session.metadata?.tenant_id || session.client_reference_id || undefined
+      // A shop order paid: close the buyer's saved basket so no recovery email follows, even if
+      // they never come back to the thank-you page. Lazy import: the recovery service imports this file.
+      const shopKind = session.metadata?.kind
+      if (session.payment_status === 'paid' && ['training_licence', 'training_basket', 'policy_shop'].includes(String(shopKind))) {
+        const { markBasketPaid } = await import('../shop/basket-recovery')
+        await markBasketPaid(session.customer_details?.email ?? session.customer_email, shopKind === 'policy_shop' ? 'policies' : 'training')
+      }
       if (tenantId && session.subscription) {
         // Use the subscription's real status (trialing → trialling) rather than
         // assuming 'active' — a card-up-front trial completes as 'trialing'.

@@ -304,7 +304,7 @@ policyShopPublicRouter.post('/checkout', async (req: Request, res: Response) => 
  *  amount charged. A pack's price is apportioned across its contents rather than each
  *  policy carrying its full list price: otherwise 20 rows at list would claim £1,360
  *  against a £495 payment, and every revenue figure downstream would be wrong. */
-async function expandBasket(items: ShopItem[]): Promise<Array<{
+async function expandBasket(items: ShopItem[], freeKeys: string[] = []): Promise<Array<{
   slug: string; title: string; pence: number; reference_keys: string[]
 }>> {
   const out: Array<{ slug: string; title: string; pence: number; reference_keys: string[] }> = []
@@ -315,7 +315,11 @@ async function expandBasket(items: ShopItem[]): Promise<Array<{
         where: { slug: item.key },
         select: { slug: true, title: true, price_pence: true, reference_keys: true },
       })
-      if (p) out.push({ slug: p.slug, title: p.title, pence: p.price_pence, reference_keys: p.reference_keys ?? [] })
+      // A policy free under an offer (the Halloween 2 for 1) is recorded at £0, so the rows
+      // still sum to what Stripe took.
+      const free = freeKeys.indexOf(item.key)
+      if (free >= 0) freeKeys = freeKeys.filter((_, n) => n !== free)
+      if (p) out.push({ slug: p.slug, title: p.title, pence: free >= 0 ? 0 : p.price_pence, reference_keys: p.reference_keys ?? [] })
       continue
     }
 
@@ -378,7 +382,7 @@ policyShopPublicRouter.post('/reconcile', async (req: Request, res: Response) =>
 
     // Revenue to Funnel Insights, one line per policy or pack (idempotent there).
     await reportPolicySale(sessionId, result.paymentId, result.items)
-    const lines = await expandBasket(result.items)
+    const lines = await expandBasket(result.items, result.freeKeys)
     if (!lines.length) return err(res, 'NOTHING_TO_DO', 'That payment had nothing we could fulfil', 400)
 
     // ── the account ──────────────────────────────────────────────────────────

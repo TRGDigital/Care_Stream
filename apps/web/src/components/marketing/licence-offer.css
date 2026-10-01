@@ -21,3 +21,8 @@ a.offerbtn:hover,button.offerbtn:hover{background:#E57A22 !important}
 .lofr.compact .lofr-ic{flex-basis:34px;width:34px;height:34px}
 .lofr.compact .lofr-hd{font-size:.95rem}
 .lofr.compact .lofr-price b{font-size:1.5rem}
+.lofr-emoji{flex:0 0 auto;font-size:2.3rem;line-height:1}
+.lofr.compact .lofr-emoji{font-size:1.8rem}
+.lofr-cta{display:inline-block;margin-top:10px;padding:9px 16px;border-radius:10px;background:#F28C38;color:#1F1530;
+  font-weight:800;font-size:.88rem;text-decoration:none}
+.lofr-cta:hover{background:#E57A22}

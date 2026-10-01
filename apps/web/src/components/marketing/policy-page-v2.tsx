@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
 import { PolicyIntakeGame } from './policy-intake-game'
 import { AddToBasket, AddToBasketText, BasketPill, BuyNowPolicy, SavePolicy, StickyBuyBar } from './policy-basket'
+import { PolicyOfferCard } from './licence-offer'
 import './policy-page-v2.css'
 
 // The rebuilt /care-policies/<slug> template. Renders the SAME shop API record the current page
@@ -226,6 +227,7 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
               </div>
               <AddToBasketText item={item} />
             </div>
+            <PolicyOfferCard pricePence={product.price_pence} />
 
             <p className="pcnote">
               One-off, first year of updates included. Delivered within <b>2 working days</b> of

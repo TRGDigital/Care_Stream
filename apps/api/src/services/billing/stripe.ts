@@ -10,7 +10,7 @@
 
 import Stripe from 'stripe'
 import { prisma } from '../../db/client'
-import { freeLicencesFor } from '../training/offers'
+import { freeLicencesFor, freePolicyPairs } from '../training/offers'
 
 // API version Managed Payments requires. Applied per-request to product/price
 // creation and Checkout Session creation only — NOT to the client globally.
@@ -399,6 +399,8 @@ export interface ShopCheckoutResult {
   customerId: string | null
   amountTotalPence: number
   items: ShopItem[]
+  /** Policy slugs that were free under an offer (recorded at £0). */
+  freeKeys: string[]
 }
 
 /** Resolve what the buyer actually gets charged, from the catalogue, never from input. */
@@ -446,8 +448,22 @@ export async function createShopCheckoutSession(input: {
 }): Promise<{ url: string; totalPence: number }> {
   const items = input.items.slice(0, 30)
   if (!items.length) throw new Error('Nothing to buy')
-  const priced = await priceShopItems(items)
-  const totalPence = priced.reduce((n, p) => n + p.pence, 0)
+  const allPriced = await priceShopItems(items)
+  // Halloween 2 for 1: the cheaper policy of each pair is free. Free policies get no Stripe
+  // line of their own (managed payments will not show a custom note, and a £0 line is not
+  // guaranteed); instead each is named on the line of the policy it is paired with, so the
+  // buyer sees it on the payment page and the invoice. They travel last in the metadata,
+  // counted by `free`, so reconcile records them at £0 and line n still matches item n.
+  const pairs = freePolicyPairs(allPriced.map(p => ({ kind: p.item.kind, pence: p.pence })))
+  const freeNameFor = new Map<number, string>()
+  for (const [f, paid] of pairs) freeNameFor.set(paid, allPriced[f].name)
+  const order = [...allPriced.keys()].filter(n => !pairs.has(n)).concat([...pairs.keys()].sort((a, b) => a - b))
+  const paidCount = allPriced.length - pairs.size
+  const priced = order.map(n => allPriced[n])
+  const lineName = (n: number) => freeNameFor.has(n)
+    ? `${allPriced[n].name} + ${freeNameFor.get(n)} (free, Halloween 2 for 1)`.slice(0, 250)
+    : allPriced[n].name
+  const totalPence = priced.slice(0, paidCount).reduce((n, p) => n + p.pence, 0)
   if (totalPence < 50) throw new Error('Basket total is below the minimum Stripe will charge')
 
   const stripe = getStripe()
@@ -468,12 +484,12 @@ export async function createShopCheckoutSession(input: {
 
   const params: Stripe.Checkout.SessionCreateParams = {
     mode: 'payment',
-    line_items: priced.map(p => ({
+    line_items: order.slice(0, paidCount).map(n => ({
       quantity: 1,
       price_data: {
         currency: 'gbp',
-        unit_amount: p.pence,
-        product_data: { name: p.name, tax_code: PLAN_TAX_CODE },
+        unit_amount: allPriced[n].pence,
+        product_data: { name: lineName(n), tax_code: PLAN_TAX_CODE },
       },
     })),
     ...(existingCustomer ? { customer: existingCustomer } : { customer_email: input.email }),
@@ -482,7 +498,8 @@ export async function createShopCheckoutSession(input: {
       // Keys only. A 65-policy pack would blow Stripe's 500-character metadata limit
       // if expanded, and the expansion belongs to the catalogue anyway — reconcile
       // reads the pack's contents from the database rather than from this string.
-      items: JSON.stringify(items.map(i => `${i.kind === 'bundle' ? 'b' : 'p'}:${i.key}`)).slice(0, 500),
+      items: JSON.stringify(priced.map(p => `${p.item.kind === 'bundle' ? 'b' : 'p'}:${p.item.key}`)).slice(0, 500),
+      ...(pairs.size ? { free: String(pairs.size) } : {}),
       ...(input.orgName ? { org_name: input.orgName.slice(0, 200) } : {}),
       ...(input.buyerName ? { buyer_name: input.buyerName.slice(0, 200) } : {}),
     },
@@ -512,8 +529,12 @@ export async function retrieveShopCheckoutSession(sessionId: string): Promise<Sh
       return { kind: prefix === 'b' ? 'bundle' : 'policy', key: rest.join(':') } as ShopItem
     })
   } catch { items = [] }
+  // The last `free` items were free under an offer (createShopCheckoutSession orders them last).
+  const freeCount = Math.max(0, Math.min(items.length, parseInt(md.free || '0', 10) || 0))
+  const freeKeys = items.slice(items.length - freeCount).filter(i => i.kind === 'policy').map(i => i.key)
 
   return {
+    freeKeys,
     paid: session.payment_status === 'paid',
     paymentId: typeof session.payment_intent === 'string'
       ? session.payment_intent

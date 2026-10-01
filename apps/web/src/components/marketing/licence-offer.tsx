@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { activeOffer, type LicenceOffer } from '@/lib/offers'
+import { activeOffer, policyOfferActive, POLICY_OFFER, type LicenceOffer } from '@/lib/offers'
 import './licence-offer.css'
 
 // Whole days left, counted to the offer's end. Shown only in the final week, when it is a
@@ -36,6 +36,39 @@ export function LicenceOfferCard({ slug, compact = false }: { slug: string; comp
         </div>
         <p className="lofr-multi">{o.multiText}</p>
         {!compact && <p>{o.reason}</p>}
+        <span className="lofr-end">
+          {o.endsText}{left <= 7 ? ` · ${left === 1 ? 'last day' : `${left} days left`}` : ''}
+        </span>
+      </div>
+    </aside>
+  )
+}
+
+// The policy version: the same card, priced as "two policies for the price of this one".
+export function PolicyOfferCard({ pricePence, compact = false, cta }: {
+  pricePence?: number; compact?: boolean; cta?: { href: string; label: string }
+}) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => { setNow(Date.now()) }, [])
+  if (!policyOfferActive(now)) return null
+  const o = POLICY_OFFER
+  const left = Math.ceil((Date.parse(o.ends) - now) / 86_400_000)
+  const money = (p: number) => `£${(p / 100).toFixed(p % 100 ? 2 : 0)}`
+  return (
+    <aside className={`lofr${compact ? ' compact' : ''}`} aria-label={o.label}>
+      <span className="lofr-emoji" aria-hidden="true">🎃</span>
+      <div className="lofr-tx">
+        <span className="lofr-lb">{o.label}</span>
+        <b className="lofr-hd">{o.headline}</b>
+        {pricePence ? (
+          <div className="lofr-price">
+            <b>{money(pricePence)}</b>
+            <span>for two policies</span>
+          </div>
+        ) : null}
+        <p className="lofr-multi">{o.multiText}</p>
+        {!compact && <p>{o.reason}</p>}
+        {cta && <a className="lofr-cta" href={cta.href}>{cta.label}</a>}
         <span className="lofr-end">
           {o.endsText}{left <= 7 ? ` · ${left === 1 ? 'last day' : `${left} days left`}` : ''}
         </span>

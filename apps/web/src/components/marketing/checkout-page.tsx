@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { useCart, trackBasketEvent } from '@/lib/cart-store'
 import { useSavedCourses } from '@/lib/saved-courses'
 import { UNIT_PENCE, DISCOUNT_TIERS, discountPctForQty } from '@/lib/training-commerce'
-import { freeLicences } from '@/lib/offers'
-import { LicenceOfferCard } from './licence-offer'
+import { freeLicences, freePolicySlugs, policyOfferActive } from '@/lib/offers'
+import { LicenceOfferCard, PolicyOfferCard } from './licence-offer'
 import { usePolicyBasket, type BasketItem } from './policy-basket'
 import './checkout-page.css'
 import { fi } from '@/lib/funnel-insights'
@@ -397,7 +397,13 @@ export function PolicyCheckout() {
   }, [mounted, items])
 
   const policies = items.filter(i => !i.slug.startsWith(BUNDLE))
-  const total = items.reduce((n, i) => n + (i.price_pence || 0), 0)
+  const gross = items.reduce((n, i) => n + (i.price_pence || 0), 0)
+  // Halloween 2 for 1: the cheaper policy of each pair is free. The API works out the same pairs.
+  const free = freePolicySlugs(items)
+  const freeValue = items.reduce((n, i) => n + (free.has(i.slug) ? i.price_pence || 0 : 0), 0)
+  const total = gross - freeValue
+  // An unpaired policy: one more would be free.
+  const unpaired = policyOfferActive() && policies.length % 2 === 1
 
   // Which packs each policy in the basket belongs to, read from the shop per policy, so the
   // offer to switch is only ever made for a pack that really contains everything in the basket.
@@ -472,7 +478,8 @@ export function PolicyCheckout() {
       summary={
         <Summary
           lines={<>
-            <div><span>{label}</span><b>{money(total)}</b></div>
+            <div><span>{label}</span><b>{money(gross)}</b></div>
+            {freeValue > 0 && <div className="save"><span>Halloween offer: {free.size} free {free.size === 1 ? 'policy' : 'policies'}</span><b>−{money(freeValue)}</b></div>}
             <div><span>First year of updates</span><b>Included</b></div>
           </>}
           total={total}
@@ -505,16 +512,27 @@ export function PolicyCheckout() {
                     {pack ? 'Every policy in the pack, personalised to your service'
                           : 'Personalised to your service · delivered within 2 working days'}
                   </div>
+                  {free.has(i.slug) && <div className="ckfree">Free with the Halloween 2 for 1 offer</div>}
                   <div className="acts">
                     {!pack && <button type="button" onClick={() => saveForLater(i)}>Save for later</button>}
                     <button type="button" onClick={() => remove(i.slug)}>Remove</button>
                   </div>
                 </div>
-                <div className="ckright"><span className="ckprice">{money(i.price_pence)}</span></div>
+                <div className="ckright">
+                  {free.has(i.slug)
+                    ? <span className="ckprice"><s className="ckwas">{money(i.price_pence)}</s> <span className="ckfreetag">Free</span></span>
+                    : <span className="ckprice">{money(i.price_pence)}</span>}
+                </div>
               </li>
             )
           })}
         </ul>
+        {policyOfferActive() && policies.length > 0 && (
+          <div className="ckoffer ckoffer-pad">
+            <PolicyOfferCard compact
+              cta={unpaired ? { href: '/care-policies', label: 'Choose your free policy' } : undefined} />
+          </div>
+        )}
       </div>
 
       {offer && (

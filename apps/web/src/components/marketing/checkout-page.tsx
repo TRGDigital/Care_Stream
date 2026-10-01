@@ -9,7 +9,7 @@ import { useOffers, licenceDeal, policyDeal } from '@/lib/offers'
 import { LicenceOfferCard, PolicyOfferCard } from './licence-offer'
 import { usePolicyBasket, type BasketItem } from './policy-basket'
 import './checkout-page.css'
-import { fi } from '@/lib/funnel-insights'
+import { fi, fiAttribution } from '@/lib/funnel-insights'
 
 // The checkout design approved in the content theme, for both shops: /basket (training
 // licences) and /care-policies/checkout (written policies). They are separate pages because they
@@ -227,6 +227,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          attribution: fiAttribution(),
           items: items.map(i => ({ module_slug: i.slug, quantity: i.qty })),
           email: email.trim(), org_name: org.trim(), name: name.trim(),
         }),
@@ -483,6 +484,7 @@ export function PolicyCheckout() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          attribution: fiAttribution(),
           email: email.trim(), org_name: org.trim(), name: name.trim(),
           items: items.map(i => i.slug.startsWith(BUNDLE)
             ? { kind: 'bundle', key: i.slug.slice(BUNDLE.length) }

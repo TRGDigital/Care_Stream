@@ -19,3 +19,14 @@ export function fi(type: string, props: Record<string, unknown> = {}) {
     w.fi(type, props)
   } catch { /* analytics must never break the shop */ }
 }
+
+/** Where this visit came from (anonymous session id, source, utm_campaign, Google click flag),
+ *  sent with a checkout so the sale can be credited to the ad campaign that brought it. */
+export function fiAttribution(): { session: string; source: string; campaign: string; gclid: boolean } | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const w = window as unknown as { fi?: { attribution?: () => any } }
+    const a = w.fi?.attribution?.()
+    return a && typeof a.session === 'string' ? a : null
+  } catch { return null }
+}

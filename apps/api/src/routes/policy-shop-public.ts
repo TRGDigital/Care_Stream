@@ -22,7 +22,7 @@ import {
 import crypto from 'crypto'
 import { intakeStateFor } from '../services/policy-writer/intake'
 import { enrolInCampaign } from '../services/onboarding/dispatch'
-import { reportPolicySale } from '../services/analytics/funnel-insights'
+import { reportPolicySale, cleanAttribution, attributionFromMeta } from '../services/analytics/funnel-insights'
 
 export const policyShopPublicRouter = Router()
 
@@ -288,7 +288,7 @@ policyShopPublicRouter.post('/checkout', async (req: Request, res: Response) => 
     // Optional, from the checkout page's details form. Free text, so trimmed and capped.
     const orgName = String(req.body?.org_name ?? '').trim().slice(0, 200)
     const buyerName = String(req.body?.name ?? '').trim().slice(0, 200)
-    const { url, totalPence } = await createShopCheckoutSession({ email, items, orgName, buyerName })
+    const { url, totalPence } = await createShopCheckoutSession({ email, items, orgName, buyerName, attribution: cleanAttribution(req.body?.attribution) })
     ok(res, { url, total_pence: totalPence })
   } catch (e: any) {
     // Price lookup failures are the buyer's problem to see (a policy went inactive
@@ -384,7 +384,7 @@ policyShopPublicRouter.post('/reconcile', async (req: Request, res: Response) =>
     if (!email) return err(res, 'NO_EMAIL', 'That payment carries no email address', 400)
 
     // Revenue to Funnel Insights, one line per policy or pack (idempotent there).
-    await reportPolicySale(sessionId, result.paymentId, result.items, result.freeKeys, result.offerKey)
+    await reportPolicySale(sessionId, result.paymentId, result.items, result.freeKeys, result.offerKey, attributionFromMeta(result.metadata))
     const lines = await expandBasket(result.items, result.freeKeys, result.prices)
     if (!lines.length) return err(res, 'NOTHING_TO_DO', 'That payment had nothing we could fulfil', 400)
 

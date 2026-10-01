@@ -1,4 +1,6 @@
 import { prisma } from '../../db/client'
+import type { Attribution } from './attribution'
+export { cleanAttribution, attributionMeta, attributionFromMeta, type Attribution } from './attribution'
 import { retrieveSaleBreakdown, TRAINING_LICENCE_PENCE } from '../billing/stripe'
 
 // Reports a confirmed sale to Funnel Insights (trg-funnel-insights.vercel.app) server to
@@ -22,7 +24,7 @@ function share(total: number, weights: number[]): number[] {
   return out
 }
 
-async function send(funnel: 'training' | 'policies', transactionId: string, code: string | null, tax: number, discount: number, lines: Line[], offer: string | null = null) {
+async function send(funnel: 'training' | 'policies', transactionId: string, code: string | null, tax: number, discount: number, lines: Line[], offer: string | null = null, attribution: Attribution | null = null) {
   const secret = process.env.FI_INGEST_SECRET
   if (!secret || !lines.length) return
   const codeShare = share(discount, lines.map(l => l.afterVolume))
@@ -30,6 +32,7 @@ async function send(funnel: 'training' | 'policies', transactionId: string, code
   const body = {
     site: 'carestream',
     transaction_id: transactionId,
+    attribution,
     lines: lines.map((l, i) => ({
       product: l.product,
       label: l.label,
@@ -55,7 +58,7 @@ async function send(funnel: 'training' | 'policies', transactionId: string, code
 }
 
 /** Training: one Stripe line at the (volume) unit price × all licences, split per course. */
-export async function reportTrainingSale(sessionId: string, transactionId: string | null, items: { slug: string; qty: number; free?: number; unit?: number }[], moduleName?: string, offer?: string | null) {
+export async function reportTrainingSale(sessionId: string, transactionId: string | null, items: { slug: string; qty: number; free?: number; unit?: number }[], moduleName?: string, offer?: string | null, attribution: Attribution | null = null) {
   try {
     if (!transactionId || !items.length) return
     const b = await retrieveSaleBreakdown(sessionId)
@@ -71,12 +74,12 @@ export async function reportTrainingSale(sessionId: string, transactionId: strin
       freeQty: i.free ?? 0,
       freeValue: TRAINING_LICENCE_PENCE * (i.free ?? 0),
     }))
-    await send('training', transactionId, b.code, b.tax, b.discount, lines, offer || null)
+    await send('training', transactionId, b.code, b.tax, b.discount, lines, offer || null, attribution)
   } catch { /* reporting never affects the sale */ }
 }
 
 /** Policies: one Stripe line per policy or pack, in basket order. */
-export async function reportPolicySale(sessionId: string, transactionId: string | null, items: { kind: string; key: string }[], freeKeys: string[] = [], offer: string | null = null) {
+export async function reportPolicySale(sessionId: string, transactionId: string | null, items: { kind: string; key: string }[], freeKeys: string[] = [], offer: string | null = null, attribution: Attribution | null = null) {
   try {
     if (!transactionId || !items.length) return
     const b = await retrieveSaleBreakdown(sessionId)
@@ -98,6 +101,6 @@ export async function reportPolicySale(sessionId: string, transactionId: string 
       const amount = sl?.subtotal ?? 0
       return { product: i.kind === 'bundle' ? `bundle:${i.key}` : i.key, label: sl?.name || undefined, qty: 1, list: amount, afterVolume: amount }
     })
-    await send('policies', transactionId, b.code, b.tax, b.discount, lines, offer)
+    await send('policies', transactionId, b.code, b.tax, b.discount, lines, offer, attribution)
   } catch { /* reporting never affects the sale */ }
 }

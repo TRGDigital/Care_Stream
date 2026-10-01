@@ -4,6 +4,7 @@ import { useOffers, policyOffer } from '@/lib/offers'
 import { OfferBarChip } from './licence-offer'
 import './licence-offer.css'
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
 import { fi } from '@/lib/funnel-insights'
 
 // The basket and the save control on a policy page. A policy is a TOGGLE, not a quantity: you
@@ -134,14 +135,19 @@ export function SavePolicy({ slug, title, className = '' }: {
 export function BuyNowPolicy({ item, className = '', label = 'Buy now' }: {
   item: BasketItem; className?: string; label?: string
 }) {
-  const add = useCallback(() => {
+  const router = useRouter()
+  // In-app navigation rather than a full page load: the visit (and the ad campaign it came from)
+  // is held in page memory, so a reload would cut the sale off from its campaign. The href stays
+  // for anyone without JavaScript.
+  const add = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
     const next = read(KEY_BASKET)
     if (!next[item.slug]) next[item.slug] = item
     write(KEY_BASKET, next)
     announce()
     fi('buy_now_click', { funnel: 'policies', option: item.slug, label: item.title, qty: 1 })
-  }, [item])
-  // While the policy offer is live the button takes the offer's orange.
+    if (!e.metaKey && !e.ctrlKey && !e.shiftKey) { e.preventDefault(); router.push('/care-policies/checkout') }
+  }, [item, router])
+  // While a policy offer is live the button takes the offer's orange.
   const offer = policyOffer(useOffers(), item.slug) ? ' offerbtn' : ''
   return (
     <a className={`pcadd pcbuynow ${className}${offer}`.trim()} href="/care-policies/checkout" onClick={add}>

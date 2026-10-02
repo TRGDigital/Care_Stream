@@ -6,6 +6,7 @@ import { PolicyOfferCard } from './licence-offer'
 import { PolicyBuyPanel } from './policy-buy-panel'
 import { ScrollSequence } from './scroll-sequence'
 import { REVIEWS } from '@/lib/reviews'
+import { POLICY_CRO } from '@/lib/policy-cro'
 import { PaymentLogos } from './payment-logos'
 import { ExitQuestion } from './shop-questions'
 import { CaptureOverlay } from './capture-overlay'
@@ -54,13 +55,6 @@ const Tick = () => (
     <path d="M4 12.5 9.5 18 20 6.5" />
   </svg>
 )
-
-// One line under the title saying who the policy is for. Add a policy's slug to show it there.
-const WHO_FOR: Record<string, string> = {
-  'data-protection-gdpr':
-    'Perfect for services who need a GDPR policy that meets UK GDPR, the Data Protection Act 2018 and what CQC '
-    + 'inspectors look for.',
-}
 
 const Star = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -218,6 +212,7 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
   const elements = regulations.reduce((n, r) => n + (r.required_elements_count || 0), 0)
   const hero = `/images/care-policies/${product.slug}/1.webp`
   const item = { slug: product.slug, title: product.title, price_pence: product.price_pence }
+  const cro = POLICY_CRO[product.slug] ?? {}
   // The theme mentions a pack only on the twenty policies in the Statutory Starter Pack. Taking
   // the first bundle named the Governance & Data Pack on /caldicott, which the theme does not.
   const pack = bundles.find(b => b.key === 'statutory-starter')
@@ -252,7 +247,12 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
             </div>
             <span className="mpe-eyebrow">Personalised · Human-reviewed · Kept updated</span>
             <h1>A {product.title} written for your service</h1>
-            {WHO_FOR[product.slug] && <p className="mpe-for">{WHO_FOR[product.slug]}</p>}
+            {cro.whoFor && <p className="mpe-for">{cro.whoFor}</p>}
+            {cro.benefits && (
+              <ul className="mpe-benefits">
+                {cro.benefits.map(b => <li key={b}><Tick />{b}</li>)}
+              </ul>
+            )}
             {(REVIEWS[0]?.policies?.[product.slug] ?? REVIEWS[0]?.shortPolicies) && (
               <blockquote className="mpe-quote">
                 <p>&ldquo;{REVIEWS[0].policies?.[product.slug] ?? REVIEWS[0].shortPolicies}&rdquo;</p>
@@ -286,6 +286,15 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
           </aside>
 
           <div className="mpe-gallery">
+            {cro.moments?.length ? (
+              <div className="mpe-moments">
+                <h2>When you need this policy</h2>
+                <ul>
+                  {cro.moments.map(x => <li key={x.title}><b>{x.title}</b><span>{x.body}</span></li>)}
+                </ul>
+              </div>
+            ) : null}
+
             {/* The intake game IS the buying journey: build the policy now, in about three minutes. */}
             <div className="mpe-demo">
               <p className="mpe-cap">Build it now: {questions} questions, about three minutes</p>

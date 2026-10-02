@@ -335,6 +335,21 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               <p>Built by people who have worked in care homes. <Link href="/about">Read our story</Link>.</p>
             </div>
 
+            {/* Our story: who is behind CareStream and why, in the founder's words, on every course. */}
+            <div className="mpe-story">
+              <SiteImage src="/images/founder/len-burgess.webp" alt="Len Burgess, founder of CareStream" width={88} height={88} className="mpe-story-photo" />
+              <div>
+                <h3>Our story</h3>
+                <p>
+                  I worked in the care industry for a number of years and saw first hand how hard it is for overseas
+                  care staff to understand their training when it is only in English. So I built CareStream:{' '}
+                  {m.cpd_accredited ? 'CPD Certified training' : 'training'} your team can take in over 60 languages, so every
+                  carer understands it, not just passes it. Today it helps care teams right across the UK.
+                </p>
+                <p className="mpe-story-sign">Len Burgess, Founder</p>
+              </div>
+            </div>
+
             <ProductFaqs title="About this course" faqs={trainingFaqs(faqModule)} />
             <SampleCertificate m={faqModule} />
           </aside>

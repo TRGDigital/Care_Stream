@@ -775,3 +775,11 @@
 .mpage-v2 .mpe-moments li b{font-size:.92rem}
 .mpage-v2 .mpe-moments li span{font-size:.86rem;line-height:1.5;color:var(--ink-2)}
 @media (max-width:640px){.mpage-v2 .mpe-moments ul{grid-template-columns:1fr}.mpage-v2 .mpe-moments{padding:16px}}
+
+/* Our story: the founder's photo and why CareStream exists, in the right-hand column. */
+.mpage-v2 .mpe-story{display:grid;grid-template-columns:88px 1fr;gap:16px;align-items:start;margin-top:18px;padding:18px;border-radius:14px;background:#fff;border:1px solid var(--line)}
+.mpage-v2 .mpe-story-photo{width:88px;height:88px;border-radius:50%;object-fit:cover;display:block}
+.mpage-v2 .mpe-story h3{margin:0 0 6px;font-size:1rem;font-weight:700;letter-spacing:-.01em}
+.mpage-v2 .mpe-story p{margin:0 0 8px;font-size:.88rem;line-height:1.55;color:var(--ink-2)}
+.mpage-v2 .mpe-story .mpe-story-sign{margin:0;font-size:.82rem;font-weight:700;color:var(--ink)}
+@media (max-width:420px){.mpage-v2 .mpe-story{grid-template-columns:64px 1fr;gap:12px;padding:14px}.mpage-v2 .mpe-story-photo{width:64px;height:64px}}

@@ -10,7 +10,8 @@
 
 import Stripe from 'stripe'
 import { prisma } from '../../db/client'
-import { getOffers, licenceDeal, policyDeal } from '../offers'
+import { licenceDeal, policyDeal } from '../offers'
+import { offersWithLock } from '../offers/locks'
 import { attributionMeta, type Attribution } from '../analytics/attribution'
 import { ADDONS, type AddonKey } from '../shop/addons'
 
@@ -209,6 +210,8 @@ function addonLines(keys: AddonKey[] | undefined): Stripe.Checkout.SessionCreate
 
 export interface TrainingCheckoutInput {
   addons?: AddonKey[]
+  /** An offer held on a personal link (email capture lock-in). */
+  lock?: string
   /** A post-purchase offer: this percentage off each licence (any live free-licence offer still applies). */
   forcePct?: number
   attribution?: Attribution | null
@@ -226,7 +229,7 @@ export async function createTrainingCheckoutSession(input: TrainingCheckoutInput
   const qty = Math.max(1, Math.min(500, Math.floor(input.quantity || 1)))
   // A live offer from the calendar: free licences (provisioned on reconcile from `free`) or a
   // percentage off, charged as a one-off price on the same product.
-  const deal = licenceDeal(await getOffers(), input.moduleSlug, qty)
+  const deal = licenceDeal(await offersWithLock(input.lock), input.moduleSlug, qty)
   if (input.forcePct) deal.pct = Math.max(deal.pct, Math.min(90, Math.floor(input.forcePct)))
   const unit = deal.pct ? Math.round(TRAINING_LICENCE_PENCE * (1 - deal.pct / 100)) : TRAINING_LICENCE_PENCE
   const line: Stripe.Checkout.SessionCreateParams.LineItem = deal.pct
@@ -273,6 +276,7 @@ export function trainingDiscountPct(totalQty: number): number {
 export interface TrainingBasketItem { moduleSlug: string; moduleName: string; quantity: number }
 export interface TrainingBasketCheckoutInput {
   addons?: AddonKey[]
+  lock?: string
   attribution?: Attribution | null
   items: TrainingBasketItem[]
   email: string
@@ -304,7 +308,7 @@ export async function createTrainingBasketCheckoutSession(input: TrainingBasketC
   // A live offer per course: free licences (not charged, not counted towards the volume tier;
   // provisioned on reconcile from `f`), or a percentage off that replaces the volume discount
   // when it is bigger (its unit price travels as `u`).
-  const offers = await getOffers()
+  const offers = await offersWithLock(input.lock)
   const deals = items.map(i => {
     const d = licenceDeal(offers, i.moduleSlug, i.quantity)
     return { ...d, unit: d.pct > pct ? Math.round(TRAINING_LICENCE_PENCE * (1 - d.pct / 100)) : unit }
@@ -485,6 +489,7 @@ async function priceShopItems(items: ShopItem[]): Promise<Array<{
 
 export async function createShopCheckoutSession(input: {
   attribution?: Attribution | null
+  lock?: string
   addons?: AddonKey[]
   /** A post-purchase offer: this percentage off each individual policy; no other offer applies. */
   forcePct?: number
@@ -502,7 +507,7 @@ export async function createShopCheckoutSession(input: {
   // line instead, so the buyer sees them on the payment page and the invoice. They travel last
   // in the metadata, counted by `free`, and `pp` carries what each item cost after the offer so
   // reconcile records exactly what was charged.
-  const offers = await getOffers()
+  const offers = await offersWithLock(input.lock)
   const packMembers: Record<string, string[]> = {}
   for (const o of offers.filter(o => o.kind === 'pack_bonus')) {
     const pack = String(o.params.pack || '')

@@ -27,6 +27,7 @@ import { sendDailyAuditReminders } from '../services/audits/reminders'
 import { sendLicenceRenewalReminders } from '../services/training/licence-renewals'
 import { runOfferChanges } from '../services/offers'
 import { runBasketRecovery, sendBasketRecoveryPreview } from '../services/shop/basket-recovery'
+import { sendCapturePreview } from '../services/shop/email-capture'
 import { dispatchDue } from '../services/onboarding/dispatch'
 import { seedOnboardingEmails } from '../services/onboarding/seed'
 import { checkRegulationSources } from '../services/regulations/source-monitor'
@@ -204,6 +205,10 @@ cronRouter.get('/basket-recovery', (req, res) =>
   job('basket-recovery', req, res, () => runBasketRecovery()))
 
 // Both recovery emails, for both shops, with sample baskets, to the platform owner to approve.
+// The email capture emails (checklists and an offer lock) to the platform owner to approve.
+cronRouter.get('/capture-preview', (req, res) =>
+  job('capture-preview', req, res, () => sendCapturePreview(process.env.PURCHASE_NOTIFY_EMAIL ?? 'lenny@trgdigital.co.uk')))
+
 cronRouter.get('/basket-recovery-preview', (req, res) =>
   job('basket-recovery-preview', req, res, () => sendBasketRecoveryPreview(process.env.PURCHASE_NOTIFY_EMAIL ?? 'lenny@trgdigital.co.uk')))
 

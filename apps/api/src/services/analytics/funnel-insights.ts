@@ -138,6 +138,19 @@ export async function reportEmailEvent(e: {
   })
 }
 
+/** A buyer's review from the review request form, to Funnel Insights › Feedback for approval.
+ *  Returns whether Funnel Insights saved it (the API keeps its own copy either way). */
+export async function reportReview(r: {
+  ref: string; funnel: 'training' | 'policies'; product: string; productTitle: string
+  rating: number; body: string; displayName: string; setting: string; consent: boolean
+}): Promise<boolean> {
+  const out = await postFi('/api/reviews', {
+    site: 'carestream', ref: r.ref, funnel: r.funnel, product: r.product, product_title: r.productTitle,
+    rating: r.rating, body: r.body, display_name: r.displayName, setting: r.setting, consent: r.consent,
+  })
+  return out?.ok === true
+}
+
 /** A sign-up from an on-site overlay, to the Funnel Insights list. Returns the list's
  *  unsubscribe token (null if Funnel Insights could not be reached). */
 export async function reportSubscriber(s: Record<string, unknown>): Promise<string | null> {

@@ -27,6 +27,7 @@ import { sendDailyAuditReminders } from '../services/audits/reminders'
 import { sendLicenceRenewalReminders } from '../services/training/licence-renewals'
 import { runOfferChanges } from '../services/offers'
 import { runBasketRecovery, sendBasketRecoveryPreview } from '../services/shop/basket-recovery'
+import { runReviewRequests, sendReviewRequestPreview } from '../services/shop/review-requests'
 import { sendCapturePreview } from '../services/shop/email-capture'
 import { dispatchDue } from '../services/onboarding/dispatch'
 import { seedOnboardingEmails } from '../services/onboarding/seed'
@@ -211,6 +212,14 @@ cronRouter.get('/capture-preview', (req, res) =>
 
 cronRouter.get('/basket-recovery-preview', (req, res) =>
   job('basket-recovery-preview', req, res, () => sendBasketRecoveryPreview(process.env.PURCHASE_NOTIFY_EMAIL ?? 'lenny@trgdigital.co.uk')))
+
+// Review requests, 7 days after a training order (services/shop/review-requests.ts). Sends only
+// with REVIEW_REQUESTS_LIVE=1; the preview goes to the platform owner to approve.
+cronRouter.get('/review-requests', (req, res) =>
+  job('review-requests', req, res, () => runReviewRequests()))
+
+cronRouter.get('/review-requests-preview', (req, res) =>
+  job('review-requests-preview', req, res, () => sendReviewRequestPreview(process.env.PURCHASE_NOTIFY_EMAIL ?? 'lenny@trgdigital.co.uk')))
 
 // Daily, last: email the platform owner what ran, what it captured, and — the point of the
 // whole thing — what was due and did not run at all.

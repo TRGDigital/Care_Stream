@@ -51,12 +51,15 @@ function hasBasket(): boolean {
   } catch { return false }
 }
 
-async function loadCampaigns(): Promise<Campaign[]> {
+/** Live campaigns, kept for five minutes in this tab. A preview always reads them fresh, so an
+ *  edit in Funnel Insights (copy, an uploaded image) shows on the next load. */
+async function loadCampaigns(fresh = false): Promise<Campaign[]> {
   try {
     const cached = JSON.parse(sessionStorage.getItem('cs_capture_cfg') || 'null')
-    if (cached && Date.now() - cached.at < 5 * 60_000) return cached.campaigns
+    if (!fresh && cached && Date.now() - cached.at < 5 * 60_000) return cached.campaigns
   } catch { /* none */ }
-  const r = await fetch(`${FI}/api/capture-config?site=carestream`).then(x => x.json()).catch(() => null)
+  const r = await fetch(`${FI}/api/capture-config?site=carestream${fresh ? `&t=${Date.now()}` : ''}`, { cache: fresh ? 'no-store' : 'default' })
+    .then(x => x.json()).catch(() => null)
   const campaigns = (r?.campaigns ?? []) as Campaign[]
   try { sessionStorage.setItem('cs_capture_cfg', JSON.stringify({ at: Date.now(), campaigns })) } catch { /* blocked */ }
   return campaigns
@@ -99,7 +102,7 @@ export function CaptureOverlay({ funnel, product, title, image }: {
     const preview = ['preview', 'A', 'B'].includes(new URLSearchParams(location.search).get('capture') ?? '')
     if (!preview && (session('cs-exitq') || hasBasket() || store.get('cs_capture_signed', false))) return
     let alive = true
-    loadCampaigns().then(list => {
+    loadCampaigns(preview).then(list => {
       if (!alive) return
       const c = list.find(x => x.funnel === funnel && (!x.pages?.length || x.pages.includes(product)) && x.variants?.length === 2)
       if (!c) return

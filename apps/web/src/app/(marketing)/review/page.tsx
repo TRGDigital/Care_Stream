@@ -3,7 +3,7 @@ import { Suspense } from 'react'
 import { ReviewForm } from '@/components/marketing/review-form'
 
 export const metadata: Metadata = {
-  title: 'Leave a review | CareStreamAI',
+  title: 'Leave a review',
   robots: { index: false, follow: false },
 }
 

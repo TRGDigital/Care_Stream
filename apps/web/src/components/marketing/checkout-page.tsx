@@ -486,6 +486,8 @@ export function PolicyCheckout({ compact = false, onProgress }: {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const [packs, setPacks] = useState<Record<string, Pack[]>>({})
+  // The policies that go with each one in the basket (shared laws), for the picker.
+  const [complements, setComplements] = useState<Record<string, { slug: string; title: string }[]>>({})
   useEffect(() => setMounted(true), [])
   // Reaching checkout counts against each policy or pack in it, once the basket has loaded.
   const viewed = useRef(false)
@@ -541,6 +543,8 @@ export function PolicyCheckout({ compact = false, onProgress }: {
         const res = await fetch(`${API_URL}/public/policy-shop/products/${slug}`)
         const body = await res.json()
         const bundles = (body?.data?.bundles ?? []) as { key: string; title: string; price_pence: number }[]
+        const goesWith = (body?.data?.complements ?? []) as { slug: string; title: string }[]
+        if (live) setComplements(c => ({ ...c, [slug]: goesWith }))
         return [slug, bundles.map(b => ({ ...b, contains: [] }))] as const
       } catch {
         return [slug, []] as const
@@ -682,7 +686,9 @@ export function PolicyCheckout({ compact = false, onProgress }: {
         </ul>
         {policies.length > 0 && (
           <div className="ckoffer ckoffer-pad">
-            <AddAnotherPolicy basket={items} offers={offers} rows={rows} packMembers={packMembers} onAdd={add} unpaired={unpaired} />
+            <AddAnotherPolicy basket={items} offers={offers} rows={rows} packMembers={packMembers} onAdd={add} unpaired={unpaired}
+                              goesWith={policies.flatMap(p => (complements[p.slug] ?? []).map(c => c.slug))}
+                              goesWithTitle={policies[0]?.title} />
           </div>
         )}
         {policyOfferLive && policies.length > 0 && (
@@ -737,8 +743,11 @@ function loadCatalogue(): Promise<CatalogueRow[]> {
   return catalogueCache
 }
 
-function AddAnotherPolicy({ basket, offers, rows, packMembers, onAdd, unpaired }: {
+function AddAnotherPolicy({ basket, offers, rows, packMembers, onAdd, unpaired, goesWith = [], goesWithTitle }: {
   basket: BasketItem[]
+  /** Policies that go with the ones in the basket (shared laws), listed first. */
+  goesWith?: string[]
+  goesWithTitle?: string
   offers: Parameters<typeof policyDeal>[0]
   rows: Parameters<typeof policyDeal>[1]
   packMembers: Record<string, string[]>
@@ -754,23 +763,32 @@ function AddAnotherPolicy({ basket, offers, rows, packMembers, onAdd, unpaired }
     const trial = [...rows, { kind: 'policy' as const, key: p.slug, pence: p.price_pence }]
     return policyDeal(offers, trial, packMembers).free.has(trial.length - 1)
   }
-  const free = options.filter(wouldBeFree)
-  const rest = options.filter(p => !free.includes(p))
+  // First the policies that go with what is in the basket, in order, then the free ones, then the rest.
+  const firstSlugs = [...new Set(goesWith)].filter(s => !inBasket.has(s))
+  const first = firstSlugs.map(s => options.find(p => p.slug === s)).filter((p): p is CatalogueRow => !!p).slice(0, 6)
+  const free = options.filter(p => wouldBeFree(p) && !first.includes(p))
+  const rest = options.filter(p => !free.includes(p) && !first.includes(p))
+  const freeCount = free.length + first.filter(wouldBeFree).length
   if (!options.length) return null
   const chosen = options.find(p => p.slug === pick)
   const money0 = (p: number) => `£${(p / 100).toFixed(p % 100 ? 2 : 0)}`
   return (
     <div className="ckaddpol">
-      <label htmlFor="ckaddpol">{free.length && unpaired ? 'Add your free policy' : 'Add another policy'}</label>
+      <label htmlFor="ckaddpol">{freeCount && unpaired ? 'Add your free policy' : 'Add another policy'}</label>
       <div className="ckaddpol-row">
         <select id="ckaddpol" value={pick} onChange={e => setPick(e.target.value)}>
-          <option value="">{free.length && unpaired ? `Choose from ${free.length} policies you can add free` : 'Choose a policy'}</option>
+          <option value="">{freeCount && unpaired ? `Choose from ${freeCount} policies you can add free` : 'Choose a policy'}</option>
+          {first.length > 0 && (
+            <optgroup label={goesWithTitle && basket.length === 1 ? `Goes well with your ${goesWithTitle}` : 'Goes well with your basket'}>
+              {first.map(p => <option key={p.slug} value={p.slug}>{p.title}: {wouldBeFree(p) ? `free (normally ${money0(p.price_pence)})` : money0(p.price_pence)}</option>)}
+            </optgroup>
+          )}
           {free.length > 0 && (
             <optgroup label="Free with your offer">
               {free.map(p => <option key={p.slug} value={p.slug}>{p.title}: free (normally {money0(p.price_pence)})</option>)}
             </optgroup>
           )}
-          <optgroup label={free.length ? 'Other policies' : 'All policies'}>
+          <optgroup label={free.length || first.length ? 'Other policies' : 'All policies'}>
             {rest.map(p => <option key={p.slug} value={p.slug}>{p.title}: {money0(p.price_pence)}</option>)}
           </optgroup>
         </select>

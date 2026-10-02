@@ -291,3 +291,4 @@
   .bypage-v2 .byintro > .bypoints, .bypage-v2 .byintro > :not(.bymod):not(h1):not(.lede){order:3}
   .bypage-v2 .byrest{order:4;padding-top:28px;border-top:1px solid var(--line)}
 }
+.bypage-v2 .bynote-save{display:block;margin-top:5px;font-size:.76rem;color:var(--muted);line-height:1.4}

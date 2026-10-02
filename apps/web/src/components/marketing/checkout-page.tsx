@@ -10,7 +10,7 @@ import { LicenceOfferCard, PolicyOfferCard } from './licence-offer'
 import { usePolicyBasket, type BasketItem } from './policy-basket'
 import { PaymentLogos } from './payment-logos'
 import { ExitQuestion } from './shop-questions'
-import { AddonOption, ShareBasket, InvoiceRequest, ADDONS } from './shop-upsells'
+import { AddonOption, ShareBasket, InvoiceRequest, ADDONS, useSaveBasket } from './shop-upsells'
 import './checkout-page.css'
 import { fi, fiAttribution } from '@/lib/funnel-insights'
 
@@ -81,7 +81,7 @@ function Details({ orgLabel, orgPlaceholder, emailNote, org, setOrg, name, setNa
           <label htmlFor="ckemail">Work email</label>
           <input id="ckemail" type="email" required autoComplete="email" placeholder="name@yourcarehome.co.uk"
                  value={email} onChange={e => setEmail(e.target.value)} />
-          <small>{emailNote}</small>
+          <small>{emailNote} If you get interrupted, we will email you a link back to your basket.</small>
         </div>
       </form>
     </div>
@@ -197,6 +197,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
   const [org, setOrg] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  useSaveBasket({ funnel: 'training', email, name, org, items: items.map(i => ({ slug: i.slug, qty: i.qty })) })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [mounted, setMounted] = useState(false)
@@ -432,6 +433,7 @@ export function PolicyCheckout() {
   const [org, setOrg] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  useSaveBasket({ funnel: 'policies', email, name, org, items: items.map(i => i.slug) })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [mounted, setMounted] = useState(false)

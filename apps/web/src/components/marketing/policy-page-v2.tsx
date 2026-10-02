@@ -8,6 +8,7 @@ import { StickyFit } from './sticky-fit'
 import { REVIEWS } from '@/lib/reviews'
 import { PaymentLogos } from './payment-logos'
 import { ExitQuestion } from './shop-questions'
+import { ProductFaqs, PolicyDocMock, policyProductFaqs } from './product-extras'
 import './policy-page-v2.css'
 
 // The rebuilt /care-policies/<slug> template. Renders the SAME shop API record the current page
@@ -210,6 +211,7 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
           (its picture, the three-minute build, the law it is checked against), and everything
           needed to buy on the right, held in view until the gallery ends. */}
       <StickyFit selector=".pcpage-v2 .mpe-info" />
+      <StickyFit selector=".pcpage-v2 .mpe-gallery" />
       <ExitQuestion funnel="policies" product={product.slug} />
       <section className="pchero mpe">
         <div className="pcwrap mpe-in">
@@ -256,6 +258,9 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
               </p>
               <p>Built by people who have worked in care homes. <Link href="/about">Read our story</Link>.</p>
             </div>
+
+            <ProductFaqs title="About this policy" faqs={policyProductFaqs(product, regulations, elements)} />
+            <PolicyDocMock p={product} regs={regulations} elements={elements} />
           </aside>
 
           <div className="mpe-gallery">

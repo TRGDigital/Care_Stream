@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Minus, Plus, Loader2, ShieldCheck } from 'lucide-react'
 import { fi, fiAttribution } from '@/lib/funnel-insights'
 import { PaymentLogos } from './payment-logos'
-import { AddonOption, InvoiceRequest, ADDONS } from './shop-upsells'
+import { AddonOption, InvoiceRequest, ADDONS, useSaveBasket } from './shop-upsells'
 import { useOffers, licenceDeal, money2, paidForTotal } from '@/lib/offers'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
@@ -31,6 +31,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
   }, [])
   const [email, setEmail] = useState('')
   const [org, setOrg]     = useState('')
+  useSaveBasket({ funnel: 'training', email, org, items: [{ slug, qty }] })
   const [busy, setBusy]   = useState(false)
   const [error, setError] = useState('')
   // The same required agreement as the basket checkouts (checkout-page.tsx): this form takes a
@@ -117,6 +118,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
           <label className="bylabel" htmlFor="byem">Where to send the licences</label>
           <input id="byem" type="email" value={email} onChange={e => setEmail(e.target.value)}
                  placeholder="manager@yourhome.co.uk" />
+          <small className="bynote-save">If you get interrupted, we will email you a link back to your order.</small>
         </div>
 
         <div className="byaddon"><AddonOption k="team-setup" checked={teamSetup} onChange={setTeamSetup} /></div>

@@ -758,3 +758,6 @@
 
 /* Whichever column is shorter stays in view while the other scrolls, so neither leaves a gap. */
 @media(min-width:961px){ .mpage-v2 .mpe-gallery{position:sticky;align-self:start} }
+/* The buy column spans both rows: its extra height goes to the gallery row, never between the
+   picture and the gallery. */
+@media(min-width:961px){ .mpage-v2 .mpe-in{grid-template-rows:auto 1fr} }

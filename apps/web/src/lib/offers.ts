@@ -57,3 +57,19 @@ export function paidForTotal(offers: Offer[], slug: string, total: number): numb
   while (paid < 500 && totalFor(offers, slug, paid) < total) paid++
   return paid
 }
+
+// The emoji beside an offer, from its badge or name, so each event in the calendar looks like
+// itself (the pumpkin was fixed for Halloween). First match wins; anything new gets a gift.
+const OFFER_EMOJI: [RegExp, string][] = [
+  [/halloween/i, '🎃'], [/bonfire|firework|festival of lights|diwali/i, '🎆'], [/christmas|boxing day/i, '🎄'],
+  [/new year/i, '🎉'], [/burns/i, '📜'], [/black friday/i, '🏷️'], [/small business/i, '🛍️'], [/valentine/i, '❤️'],
+  [/pancake/i, '🥞'], [/mothering/i, '💐'], [/st patrick/i, '☘️'], [/st george/i, '🌹'], [/easter/i, '🐣'],
+  [/spring/i, '🌷'], [/bank holiday/i, '🌤️'], [/nurses/i, '🩺'], [/carers/i, '💜'], [/wimbledon/i, '🎾'],
+  [/heatwave/i, '🌡️'], [/summer|solstice|longest day/i, '☀️'], [/carnival/i, '🎊'],
+  [/september|school|training year|intake/i, '🎒'], [/october|older persons/i, '🍂'], [/november|movember/i, '🍁'],
+  [/new season|fashion/i, '✨'], [/data protection/i, '🔒'], [/cqc/i, '📋'],
+]
+export function offerEmoji(o: Pick<Offer, 'label' | 'name'> | null | undefined): string {
+  const text = `${o?.label ?? ''} ${o?.name ?? ''}`
+  return OFFER_EMOJI.find(([re]) => re.test(text))?.[1] ?? '🎁'
+}

@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { useOffers, licenceOffer, policyOffer, type Offer } from '@/lib/offers'
 import { fiAttribution } from '@/lib/funnel-insights'
 import { rememberLock } from '@/lib/offer-lock'
+import { OfferLine } from './offer-line'
 import './capture-overlay.css'
 
 // The email capture overlay on course and policy pages. Campaigns (triggers, copy and a 50/50
@@ -204,6 +205,8 @@ export function CaptureOverlay({ funnel, product, title, image }: {
         <div className="co-copy">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="co-logo" src="/logo-color.svg" alt="CareStream" />
+          {/* The same offer box as the page, so the overlay confirms the offer they have just seen. */}
+          {offer && step !== 3 && <OfferLine offer={offer} funnel={funnel} className="co-offerline" />}
           {step === 1 && <>
             {shown.eyebrow && <p className="co-eyebrow">{fill(shown.eyebrow)}</p>}
             <h2 id="co-title">{fill(shown.headline)}</h2>

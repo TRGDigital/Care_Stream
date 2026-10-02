@@ -7,7 +7,7 @@ import { fi, fiAttribution } from '@/lib/funnel-insights'
 import { offerLock } from '@/lib/offer-lock'
 import { PaymentLogos } from './payment-logos'
 import { AddonOption, InvoiceRequest, ADDONS, useSaveBasket } from './shop-upsells'
-import { useOffers, licenceDeal, money2, paidForTotal } from '@/lib/offers'
+import { useOffers, licenceDeal, money2, paidForTotal, offerEmoji } from '@/lib/offers'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 const gbp = (pence: number) => `£${(pence / 100).toFixed(2)}`
@@ -101,7 +101,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
         </div>
         {applied && (
           <div className="byfree">
-            <span className="byfree-emoji" aria-hidden="true">🎃</span>
+            <span className="byfree-emoji" aria-hidden="true">{offerEmoji(deal.offer)}</span>
             <div className="byfree-tx">
               <span className="byfree-lb">{deal.offer!.label ?? 'Offer'} applied</span>
               <b>{free > 0 ? `You receive ${qty + free} licences for ${gbp(qty * each)}` : `${deal.pct}% off every licence`}</b>

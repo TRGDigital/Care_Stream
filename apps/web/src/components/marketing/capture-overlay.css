@@ -37,3 +37,10 @@
   .co-copy h2{font-size:1.35rem}
 }
 @media (prefers-reduced-motion:reduce){ .co-overlay,.co-box{animation:none} }
+
+/* The page's offer box, repeated in the overlay. */
+.co-offerline{display:flex;gap:12px;align-items:center;margin:0 0 18px;padding:12px 14px;border-radius:12px;background:#1F1530;color:#D9CFE6}
+.co-offerline p{margin:0;font-size:.88rem;line-height:1.5}
+.co-offerline b{color:#F28C38}
+.co-offerline .mpe-offer-emoji{font-size:1.8rem;line-height:1;flex:0 0 auto}
+@media(max-width:720px){ .co-offerline{margin-bottom:14px;padding:10px 12px} .co-offerline p{font-size:.82rem} }

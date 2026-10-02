@@ -1,5 +1,6 @@
 'use client'
 
+import { OfferLine } from './offer-line'
 import { useOffers, policyOffer, endsText, money2 } from '@/lib/offers'
 import { AddToBasketText, BuyNowPolicy, SavePolicy } from './policy-basket'
 
@@ -20,10 +21,7 @@ export function PolicyBuyPanel({ item }: { item: { slug: string; title: string; 
   return (
     <div className="mpe-buy pcbuycard">
       {o && (
-        <div className="mpe-offerline">
-          <span className="mpe-offer-emoji" aria-hidden="true">🎃</span>
-          <p><b>{o.label}: {o.headline}.</b> {endsText(o)}. Applied automatically in your basket.</p>
-        </div>
+        <OfferLine offer={o} funnel="policies" />
       )}
       <div className="mpe-price">
         {now < price && <s>{money(price)}</s>}

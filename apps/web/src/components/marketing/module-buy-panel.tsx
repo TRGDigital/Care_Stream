@@ -57,7 +57,7 @@ export function ModuleBuyPanel({ slug, title, unitPence }: { slug: string; title
       </p>
 
       <div className="mrow">
-        <BuyNowLink slug={slug} qty={paid} className="add" label={`Buy now · ${money2(cost)}`} />
+        <BuyNowLink slug={slug} qty={paid} className="add" label={`Add to basket · ${money2(cost)}`} />
         <TrainingSaveButton slug={slug} title={title} />
       </div>
       <TrainingAddTextLink slug={slug} title={title} unitPence={unitPence} />

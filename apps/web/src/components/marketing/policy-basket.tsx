@@ -132,7 +132,7 @@ export function SavePolicy({ slug, title, className = '' }: {
 /** The page's main action: put this policy in the basket (if it is not already) and go
  *  straight to checkout. A real link, so it still reaches checkout without JS. Logged as its
  *  own event so PPC traffic that buys directly can be told apart from the basket. */
-export function BuyNowPolicy({ item, className = '', label = 'Buy now' }: {
+export function BuyNowPolicy({ item, className = '', label = 'Add to basket' }: {
   item: BasketItem; className?: string; label?: string
 }) {
   const router = useRouter()
@@ -163,7 +163,7 @@ export function BuyNowPolicy({ item, className = '', label = 'Buy now' }: {
   )
 }
 
-/** The secondary action under Buy now, as plain text. */
+/** Under the main button: shown once this policy is in the basket (checkout or remove it). */
 export function AddToBasketText({ item, className = '' }: { item: BasketItem; className?: string }) {
   const store = useStore(KEY_BASKET)
   const inBasket = !!store[item.slug]
@@ -174,11 +174,18 @@ export function AddToBasketText({ item, className = '' }: { item: BasketItem; cl
     write(KEY_BASKET, next)
     announce()
   }, [item])
+  // On a policy page, "Checkout" opens its cart drawer rather than the basket page.
+  const openCart = (e: React.MouseEvent) => {
+    if ((window as unknown as { __csPolicyDrawer?: string }).__csPolicyDrawer !== item.slug) return
+    e.preventDefault()
+    window.dispatchEvent(new CustomEvent('cs-policy-drawer', { detail: { slug: item.slug } }))
+  }
+  if (!inBasket) return null
   return (
     <p className={`pctextadd ${className}`.trim()}>
       {inBasket
-        ? <>In your basket &middot; <a href="/care-policies/checkout">Checkout</a> &middot; <button type="button" onClick={toggle}>Remove</button></>
-        : <>or <button type="button" onClick={toggle}>add to basket</button></>}
+        ? <>In your basket &middot; <a href="/care-policies/checkout" onClick={openCart}>Checkout</a> &middot; <button type="button" onClick={toggle}>Remove</button></>
+        : null}
     </p>
   )
 }

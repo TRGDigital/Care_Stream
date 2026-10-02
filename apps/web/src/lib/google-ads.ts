@@ -74,7 +74,7 @@ export function reportPageView(url: string) {
 // Tag setup → send_to 'AW-…/<label>'); with no label nothing is sent.
 export const GOOGLE_ADS_MICRO_LABELS = {
   add_to_basket: 'LQAfCMju-Y0dEPLAiu1E',
-  begin_checkout: '',
+  begin_checkout: 'BCnkCI61-40dEPLAiu1E',
 } as const
 
 export type MicroKind = keyof typeof GOOGLE_ADS_MICRO_LABELS

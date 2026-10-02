@@ -3,6 +3,7 @@ import { getStripe, managedPaymentsRequestOptions } from '../billing/stripe'
 import { getOffers, type Offer } from '../offers'
 import { sendBasketRecoveryEmail } from '../email/outbound'
 import { priceBasket } from './basket-pricing'
+import { reportEmailEvent } from '../analytics/funnel-insights'
 
 // Basket recovery. The basket page and the buy page save the basket (with the buyer's email) the
 // moment a valid email is typed, into public.shop_baskets: one open row per email and shop.
@@ -17,11 +18,15 @@ const API_PUBLIC = () => (process.env.API_PUBLIC_URL || 'https://api.carestreama
 const optOutUrl = (token: string) => `${API_PUBLIC()}/public/shop/basket-optout?t=${encodeURIComponent(token)}`
 type Funnel = 'training' | 'policies'
 
+/** Product keys from stored basket items: training [{slug}], policies ["slug" | "bundle:key"]. */
+const productsOf = (items: unknown): string[] =>
+  (Array.isArray(items) ? items : []).map((i: any) => (typeof i === 'string' ? i : String(i?.slug ?? ''))).filter(Boolean)
+
 export async function saveBasket(b: {
   email: string; name: string; org: string; funnel: Funnel; items: unknown; page: string
   attribution: unknown; checkout: boolean
 }): Promise<void> {
-  await (prisma as any).$executeRawUnsafe(
+  const rows = await (prisma as any).$queryRawUnsafe(
     `insert into public.shop_baskets (email, name, org, funnel, items, page, attribution, checkout_started_at)
      values ($1, nullif($2, ''), nullif($3, ''), $4, $5::jsonb, nullif($6, ''), $7::jsonb, case when $8 then now() end)
      on conflict (lower(email), funnel) where paid_at is null do update set
@@ -32,18 +37,32 @@ export async function saveBasket(b: {
        page = coalesce(excluded.page, shop_baskets.page),
        attribution = coalesce(excluded.attribution, shop_baskets.attribution),
        checkout_started_at = coalesce(excluded.checkout_started_at, shop_baskets.checkout_started_at),
-       updated_at = now()`,
+       updated_at = now()
+     returning id, (xmax = 0) as inserted`,
     b.email, b.name, b.org, b.funnel, JSON.stringify(b.items ?? []), b.page,
-    b.attribution ? JSON.stringify(b.attribution) : null, b.checkout)
+    b.attribution ? JSON.stringify(b.attribution) : null, b.checkout) as any[]
+  const row = rows?.[0]
+  if (row?.inserted) await reportEmailEvent({ kind: 'basket_saved', ref: String(row.id), funnel: b.funnel, products: productsOf(b.items) })
 }
 
-/** Close the open basket for this buyer: they paid. Never throws (it sits in the payment path). */
-export async function markBasketPaid(email: string | null | undefined, funnel: Funnel): Promise<void> {
+/** Close the open basket for this buyer: they paid. If a recovery email had gone out, the order
+ *  is reported to Funnel Insights as recovered. Never throws (it sits in the payment path). */
+export async function markBasketPaid(email: string | null | undefined, funnel: Funnel,
+                                     sale?: { products: string[]; valuePence: number }): Promise<void> {
   const e = String(email ?? '').trim().toLowerCase()
   if (!e) return
-  await (prisma as any).$executeRawUnsafe(
-    `update public.shop_baskets set paid_at = now() where lower(email) = $1 and funnel = $2 and paid_at is null`, e, funnel,
-  ).catch(() => {})
+  try {
+    const rows = await (prisma as any).$queryRawUnsafe(
+      `update public.shop_baskets set paid_at = now() where lower(email) = $1 and funnel = $2 and paid_at is null
+       returning id, items, email1_at, email2_at`, e, funnel) as any[]
+    for (const r of rows ?? []) {
+      if (!r.email1_at) continue
+      await reportEmailEvent({
+        kind: 'recovered', ref: String(r.id), stage: r.email2_at ? 2 : 1, funnel,
+        products: sale?.products?.length ? sale.products : productsOf(r.items), valuePence: sale?.valuePence ?? 0,
+      })
+    }
+  } catch { /* never in the way of a payment */ }
 }
 
 export async function optOutByToken(token: string): Promise<boolean> {
@@ -108,6 +127,7 @@ export async function runBasketRecovery(): Promise<Record<string, unknown>> {
       })
       await (prisma as any).$executeRawUnsafe(`update public.shop_baskets set ${stamp} = now() where id = $1::uuid`, b.id)
       if (b.stage === 1) out.sent1++; else out.sent2++
+      await reportEmailEvent({ kind: 'recovery_sent', ref: String(b.id), stage: b.stage, funnel: b.funnel, products: productsOf(basket.items), valuePence: basket.totalPence })
     } catch (e) {
       out.errors++
       console.error('[basket-recovery]', b.id, (e as Error)?.message)

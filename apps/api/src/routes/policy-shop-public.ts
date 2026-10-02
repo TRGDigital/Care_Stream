@@ -387,7 +387,7 @@ policyShopPublicRouter.post('/reconcile', async (req: Request, res: Response) =>
 
     // Revenue to Funnel Insights, one line per policy or pack (idempotent there).
     await reportPolicySale(sessionId, result.paymentId, result.items, result.freeKeys, result.offerKey, attributionFromMeta(result.metadata), addonsFromMeta(result.metadata))
-    await markBasketPaid(email, 'policies')
+    await markBasketPaid(email, 'policies', { products: result.items.map((i: any) => (i.kind === 'bundle' ? `bundle:${i.key}` : i.key)), valuePence: result.amountTotalPence ?? 0 })
     const lines = await expandBasket(result.items, result.freeKeys, result.prices)
     if (!lines.length) return err(res, 'NOTHING_TO_DO', 'That payment had nothing we could fulfil', 400)
 

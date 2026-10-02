@@ -21,7 +21,7 @@ export type PolicyChecklist = {
 }
 export type ChecklistData = TrainingChecklist | PolicyChecklist
 
-const PURPLE = '#5B2C93', ACCENT = '#7B3FBF', ORANGE = '#F28C38', INK = '#1A1530', BODY = '#3A3245', MUTED = '#6B6577', LINE = '#E4DEEC'
+const ORANGE = '#F28C38', INK = '#1A1530', BODY = '#3A3245', MUTED = '#6B6577', LINE = '#E4DEEC'
 const SITE = 'https://www.carestreamai.com'
 const RENEW: Record<string, string> = { annual: 'every year', biennial: 'every two years', triennial: 'every three years' }
 
@@ -29,7 +29,7 @@ let logoCache: Buffer | null | undefined
 async function logo(): Promise<Buffer | null> {
   if (logoCache !== undefined) return logoCache
   try {
-    const r = await fetch(`${SITE}/logo-white.png`, { signal: AbortSignal.timeout(5000) })
+    const r = await fetch(`${SITE}/logo-color.png`, { signal: AbortSignal.timeout(5000) })
     logoCache = r.ok ? Buffer.from(await r.arrayBuffer()) : null
   } catch { logoCache = null }
   return logoCache
@@ -162,20 +162,20 @@ export async function checklistPdf(d: ChecklistData): Promise<Buffer> {
   const W = doc.page.width - 100
   const bottom = () => doc.page.height - 70
 
-  // Header band
-  doc.rect(0, 0, doc.page.width, 92).fill(PURPLE)
-  if (logoPng) { try { doc.image(logoPng, 50, 26, { height: 40 }) } catch { /* no logo */ } }
-  doc.fillColor('#E9DDF8').font('Helvetica-Bold').fontSize(9).text('FREE CHECKLIST', 50, 40, { width: W, align: 'right', characterSpacing: 1.5 })
-  doc.y = 116
+  // Header: the colour logo on white, as on the site, with an orange rule beneath.
+  if (logoPng) { try { doc.image(logoPng, 50, 34, { height: 36 }) } catch { /* no logo */ } }
+  doc.fillColor('#B4581A').font('Helvetica-Bold').fontSize(9).text('FREE CHECKLIST', 50, 48, { width: W, align: 'right', characterSpacing: 1.5 })
+  doc.rect(50, 86, W, 2).fill(ORANGE)
+  doc.y = 110
 
   doc.fillColor(INK).font('Helvetica-Bold').fontSize(22).text(c.heading, 50, doc.y, { width: W })
   doc.moveDown(0.15)
-  doc.fillColor(ACCENT).font('Helvetica-Bold').fontSize(13).text('What to check before you buy', { width: W })
+  doc.fillColor(MUTED).font('Helvetica-Bold').fontSize(13).text('What to check before you buy', { width: W })
   doc.moveDown(0.5)
   doc.fillColor(BODY).font('Helvetica').fontSize(10.5).text(c.intro, { width: W, lineGap: 2 })
   doc.moveDown(0.8)
 
-  const box = (x: number, y: number) => doc.lineWidth(1).roundedRect(x, y + 1.5, 9, 9, 1.5).strokeColor(ACCENT).stroke()
+  const box = (x: number, y: number) => doc.lineWidth(1).roundedRect(x, y + 1.5, 9, 9, 1.5).strokeColor(INK).stroke()
 
   for (const s of c.sections) {
     if (doc.y > bottom() - 60) doc.addPage()
@@ -198,8 +198,8 @@ export async function checklistPdf(d: ChecklistData): Promise<Buffer> {
   const panelH = 46 + c.panel.length * 16 + 34
   if (doc.y + panelH > bottom()) doc.addPage()
   const py = doc.y
-  doc.roundedRect(50, py, W, panelH, 10).fill('#F6F1FB')
-  doc.fillColor(PURPLE).font('Helvetica-Bold').fontSize(12.5).text(`How CareStream's ${d.title}${d.funnel === 'training' ? ' course' : ''} measures up`, 66, py + 14, { width: W - 32 })
+  doc.roundedRect(50, py, W, panelH, 10).fill('#FFF6EE')
+  doc.fillColor(INK).font('Helvetica-Bold').fontSize(12.5).text(`How CareStream's ${d.title}${d.funnel === 'training' ? ' course' : ''} measures up`, 66, py + 14, { width: W - 32 })
   let y = py + 38
   for (const p of c.panel) {
     doc.lineWidth(1.6).strokeColor('#1F8A5B').moveTo(66, y + 6).lineTo(69.5, y + 9.5).lineTo(75, y + 2.5).stroke()

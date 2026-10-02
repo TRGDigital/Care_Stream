@@ -9,7 +9,7 @@ import { siteUrl } from '../../lib/urls'
 // without the buyer's consent and that approval. Never a reminder, never twice for one order.
 //
 // Sending is off unless REVIEW_REQUESTS_LIVE=1, and the pg_cron job is only scheduled once Len has
-// approved the email (the preview job sends him one).
+// approved the email (the preview job sends him one). Approved and switched on 2 Oct 2026.
 
 type Funnel = 'training'
 

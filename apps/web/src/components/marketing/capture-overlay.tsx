@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useOffers, licenceOffer, policyOffer, type Offer } from '@/lib/offers'
 import { fiAttribution } from '@/lib/funnel-insights'
 import { rememberLock } from '@/lib/offer-lock'
@@ -192,7 +193,8 @@ export function CaptureOverlay({ funnel, product, title, image }: {
   }
 
   const img = shown.image || image
-  return (
+  // On <body>, so no stacking context on the page (sticky columns, transforms) can sit above it.
+  return createPortal(
     <div className="co-overlay" role="dialog" aria-modal="true" aria-labelledby="co-title" onClick={e => { if (e.target === e.currentTarget) close() }}>
       <div className={`co-box${img ? '' : ' noimg'}`}>
         <button type="button" className="co-close" aria-label="Close" onClick={close}>×</button>
@@ -236,6 +238,7 @@ export function CaptureOverlay({ funnel, product, title, image }: {
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

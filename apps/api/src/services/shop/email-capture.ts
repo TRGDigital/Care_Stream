@@ -81,12 +81,14 @@ function offerOn(offers: Offer[], funnel: Funnel, slug: string): Offer | null {
 }
 
 export type CaptureResult = {
-  kind: 'checklist' | 'lockin'
+  kind: 'checklist' | 'lockin' | 'quiz'
   lock?: { token: string; expires_on: string; label: string }
 }
 
 export async function captureSignup(b: {
-  email: string; name: string; funnel: Funnel; product: string; kind: 'checklist' | 'lockin'
+  email: string; name: string; funnel: Funnel; product: string; kind: 'checklist' | 'lockin' | 'quiz'
+  /** The quiz variant's answers, sent back with the checklist. */
+  quiz?: { q: string; a: 'yes' | 'unsure' | 'no' }[]
   campaign_id: string; variant: string; consent_text: string; page: string
   attribution: { session?: string; source?: string; campaign?: string } | null; emailStatus: string
 }): Promise<CaptureResult> {
@@ -131,7 +133,9 @@ export async function captureSignup(b: {
     const pdf = await checklistPdf(data)
     await sendChecklistEmail({
       to: b.email, name: b.name, productName, funnel: b.funnel, pdf, filename: `${b.product}-checklist.pdf`,
-      link: `${path}?utm_source=carestream&utm_medium=email&utm_campaign=capture_checklist`, unsubscribeUrl,
+      link: `${path}?utm_source=carestream&utm_medium=email&utm_campaign=capture_${kind === 'quiz' ? 'quiz' : 'checklist'}`, unsubscribeUrl,
+      quiz: kind === 'quiz' ? b.quiz : undefined,
+      requiredCount: data.funnel === 'policies' ? data.regulations.reduce((n, r) => n + r.elements.length, 0) : undefined,
     })
   }
   return { kind, ...(lock ? { lock } : {}) }

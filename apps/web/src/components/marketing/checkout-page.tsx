@@ -89,7 +89,7 @@ function Details({ orgLabel, orgPlaceholder, emailNote, org, setOrg, name, setNa
   )
 }
 
-function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, extras, invoice }: {
+function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, extras, invoice, termsBelow = false }: {
   lines: ReactNode; total: number; sub: string
   /** "Save yourself time": the add-on and the send-to-manager link, above the total. */
   extras?: ReactNode
@@ -97,8 +97,10 @@ function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, ext
   assurances: [string, string][]
   ready: boolean; busy: boolean; error: string
   onPay: (agreed: boolean) => void
+  /** In the cart drawer the terms are stated at its foot, with no tick box. */
+  termsBelow?: boolean
 }) {
-  const [agreed, setAgreed] = useState(false)
+  const [agreed, setAgreed] = useState(termsBelow)
   return (
     <aside className="cksum">
       <div className="ckpanel"><div className="in">
@@ -107,13 +109,13 @@ function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, ext
         {extras && <div className="su-sumextras"><b>Save yourself time</b>{extras}</div>}
         <div className="cktotal"><span>Total</span><b>{money(total)}</b></div>
         <p className="cksub">{sub}</p>
-        <label className="ckterms">
+        {!termsBelow && <label className="ckterms">
           <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} />
           <span>
             By continuing, I agree to CareStream&apos;s <Link href="/terms" target="_blank">Terms and Conditions</Link>
             {' '}and acknowledge the <Link href="/privacy" target="_blank">Privacy Policy</Link>.
           </span>
-        </label>
+        </label>}
         <button className="ckpay" type="button" id="ckpay" data-fi-copy="pay_button" disabled={!ready || !agreed || busy}
                 onClick={() => onPay(agreed)}>
           <Lock />{busy ? 'Starting secure checkout…' : 'Checkout securely'}
@@ -131,11 +133,25 @@ function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, ext
   )
 }
 
-function Shell({ back, title, lede, children, summary, total, empty }: {
+function Shell({ back, title, lede, children, summary, total, empty, compact = false }: {
   back: [string, string]; title: string; lede: string
   children: ReactNode; summary: ReactNode; total: number
   empty: ReactNode | null
+  /** Inside a cart drawer: one column, no page heading, steps or mobile pay bar. */
+  compact?: boolean
 }) {
+  if (compact) {
+    return (
+      <div className="ckpage ckcompact">
+        {empty ?? (
+          <div className="ckgrid">
+            <div className="ckcol">{children}</div>
+            {summary}
+          </div>
+        )}
+      </div>
+    )
+  }
   return (
     <main className="ckpage">
       <div className="ckwrap">
@@ -429,7 +445,11 @@ interface Pack { key: string; title: string; price_pence: number; contains: stri
 const BUNDLE = 'bundle:'
 const policyImage = (slug: string) => `/images/care-policies/${slug}/1.webp`
 
-export function PolicyCheckout() {
+export function PolicyCheckout({ compact = false, onProgress }: {
+  /** In the policy page's cart drawer (policy-drawer.tsx). */
+  compact?: boolean
+  onProgress?: (p: { details: boolean; agreed: boolean }) => void
+} = {}) {
   const { items, add, remove, saveForLater, switchToPack } = usePolicyBasket()
   const [org, setOrg] = useState('')
   const [name, setName] = useState('')
@@ -439,6 +459,9 @@ export function PolicyCheckout() {
   const [error, setError] = useState('')
   const [mounted, setMounted] = useState(false)
   const [priority, setPriority] = useState(false)
+  useEffect(() => {
+    onProgress?.({ details: !detailsError(org, name, email), agreed: true })
+  }, [org, name, email, onProgress])
   // A basket sent for approval arrives as ?items=slug,bundle:key,…: rebuild it from the shop's prices.
   useEffect(() => {
     const shared = new URLSearchParams(window.location.search).get('items')
@@ -565,8 +588,9 @@ export function PolicyCheckout() {
 
   return (
     <>
-    <ExitQuestion funnel="policies" />
+    {!compact && <ExitQuestion funnel="policies" />}
     <Shell
+      compact={compact}
       back={['/care-policies', 'Continue browsing policies']}
       title="Your policy basket"
       lede="Each policy is written for your service, read by a person and delivered as a branded, print-ready document."
@@ -600,6 +624,7 @@ export function PolicyCheckout() {
           busy={busy}
           error={error}
           onPay={pay}
+          termsBelow={compact}
         />
       }
     >
@@ -681,14 +706,14 @@ export function PolicyCheckout() {
                emailNote="We send the receipt and the link to your questions here."
                org={org} setOrg={setOrg} name={name} setName={setName} email={email} setEmail={setEmail} />
 
-      <div className="ckpanel ckafter">
+      {!compact && <div className="ckpanel ckafter">
         <div className="ckpanel-hd"><h2>What happens after you pay</h2><span>Once payment is confirmed</span></div>
         <div className="cknext">
           <div><span>01</span><b>Finish the short questions</b><p>About three minutes per policy. Company details you enter once are reused for every policy.</p></div>
           <div><span>02</span><b>We write and check it</b><p>Written for your service and read by a person before it carries your name.</p></div>
           <div><span>03</span><b>Delivered to your account</b><p>Within 2 working days, as a branded, print-ready document on your letterhead.</p></div>
         </div>
-      </div>
+      </div>}
     </Shell>
     </>
   )

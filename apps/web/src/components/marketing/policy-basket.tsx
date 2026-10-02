@@ -145,7 +145,14 @@ export function BuyNowPolicy({ item, className = '', label = 'Buy now' }: {
     write(KEY_BASKET, next)
     announce()
     fi('buy_now_click', { funnel: 'policies', option: item.slug, label: item.title, qty: 1 })
-    if (!e.metaKey && !e.ctrlKey && !e.shiftKey) { e.preventDefault(); router.push('/care-policies/checkout') }
+    if (e.metaKey || e.ctrlKey || e.shiftKey) return
+    e.preventDefault()
+    // On a policy page the basket opens as a cart drawer over the page (policy-drawer.tsx).
+    if ((window as unknown as { __csPolicyDrawer?: string }).__csPolicyDrawer === item.slug) {
+      window.dispatchEvent(new CustomEvent('cs-policy-drawer', { detail: { slug: item.slug } }))
+      return
+    }
+    router.push('/care-policies/checkout')
   }, [item, router])
   // While a policy offer is live the button takes the offer's orange.
   const offer = policyOffer(useOffers(), item.slug) ? ' offerbtn' : ''

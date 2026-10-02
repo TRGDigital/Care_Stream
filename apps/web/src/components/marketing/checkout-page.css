@@ -182,3 +182,20 @@
   .ckgrid > .cksum{order:2}
   .ckgrid > .ckcol > .ckafter{order:3}
 }
+
+/* The policy basket inside the cart drawer: one column, basket then details then the summary. */
+.ckcompact{min-height:0;padding:12px 0 0;background:none}
+.ckcompact .ckgrid{display:flex;flex-direction:column;gap:14px}
+.ckcompact .ckgrid > .ckcol{display:contents}
+.ckcompact .ckgrid > .ckcol > *{order:1;width:100%}
+.ckcompact .ckgrid > .cksum{order:2;position:static;width:100%}
+.ckcompact .ckpanel{border-radius:0;border-left:0;border-right:0;box-shadow:none}
+.ckcompact .ckitem{grid-template-columns:64px minmax(0,1fr);gap:12px;padding:14px 18px}
+.ckcompact .ckthumb{width:64px}
+.ckcompact .ckright{grid-column:1/-1;justify-content:space-between}
+.ckcompact .ckpanel-hd,.ckcompact .ckform,.ckcompact .cksum .in{padding-left:18px;padding-right:18px}
+.ckcompact .ckform{grid-template-columns:1fr}
+.ckcompact .ckoffer-pad{padding:0 18px 16px}
+.ckcompact .ckupsell{grid-template-columns:1fr;margin:0 18px}
+.ckcompact .ckreassure{display:none}
+.ckcompact .ckmbar{display:none!important}

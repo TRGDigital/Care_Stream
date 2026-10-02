@@ -421,7 +421,8 @@ export function TrainingDemo({
               </p>
               <div className="row">
                 <Link className="tbtn solid" href={buyHref} onClick={e => openBuyDrawer(e, buyHref)}>Add to basket</Link>
-                <a className="tbtn ghost" href="#courses">Browse the courses</a>
+                {/* On a course page there is nothing to browse to: one clear next step. */}
+                {place !== 'module' && <a className="tbtn ghost" href="#courses">Browse the courses</a>}
               </div>
               <button type="button" className="demo-again" onClick={again}>Try the demo again</button>
             </div>

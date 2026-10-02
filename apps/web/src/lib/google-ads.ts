@@ -73,7 +73,7 @@ export function reportPageView(url: string) {
 // Each needs its conversion action's label from Google Ads (Goals → Conversions → the action →
 // Tag setup → send_to 'AW-…/<label>'); with no label nothing is sent.
 export const GOOGLE_ADS_MICRO_LABELS = {
-  add_to_basket: '',
+  add_to_basket: 'LQAfCMju-Y0dEPLAiu1E',
   begin_checkout: '',
 } as const
 

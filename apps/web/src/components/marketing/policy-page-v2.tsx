@@ -226,7 +226,7 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
       <ScrollSequence root=".pcpage-v2 .mpe-in" />
       <ExitQuestion funnel="policies" product={product.slug} />
       <CaptureOverlay funnel="policies" product={product.slug} title={product.title} image={hero} quiz={quizFor(regulations, elements)} />
-      <PolicyDrawer slug={product.slug} title={product.title} />
+      <PolicyDrawer slug={product.slug} title={product.title} pricePence={product.price_pence} />
       <section className="pchero mpe">
         <div className="pcwrap mpe-in">
           <div className="mpe-main">

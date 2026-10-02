@@ -279,3 +279,12 @@ export function usePolicyBasket() {
   }, [])
   return { items, add, remove, saveForLater, switchToPack }
 }
+
+/** Puts one policy in the basket if it is not there already (the policy page's /cart address). */
+export function ensureInPolicyBasket(item: BasketItem) {
+  const next = read(KEY_BASKET)
+  if (next[item.slug]) return
+  next[item.slug] = item
+  write(KEY_BASKET, next)
+  announce()
+}

@@ -18,7 +18,8 @@ import './capture-overlay.css'
 //
 // Never shown with the exit question (each suppresses the other for the visit), to anyone who has
 // reached for Buy now, Checkout or Add to basket, to anyone with something in their basket, or
-// again within the campaign's repeat days. ?capture=preview shows it at once, for checking copy.
+// again within the campaign's repeat days. ?capture=preview shows it at once (?capture=A or B for a
+// given variant), for checking copy.
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 const FI = 'https://trg-funnel-insights.vercel.app'
@@ -95,7 +96,7 @@ export function CaptureOverlay({ funnel, product, title, image }: {
 
   // Choose the campaign and this visitor's variant.
   useEffect(() => {
-    const preview = new URLSearchParams(location.search).get('capture') === 'preview'
+    const preview = ['preview', 'A', 'B'].includes(new URLSearchParams(location.search).get('capture') ?? '')
     if (!preview && (session('cs-exitq') || hasBasket() || store.get('cs_capture_signed', false))) return
     let alive = true
     loadCampaigns().then(list => {
@@ -105,7 +106,10 @@ export function CaptureOverlay({ funnel, product, title, image }: {
       const seen = store.get<Record<string, number>>('cs_capture_seen', {})
       if (!preview && seen[c.id] && Date.now() - seen[c.id] < c.repeat_days * 86400000) return
       const picks = store.get<Record<string, 'A' | 'B'>>('cs_capture_variant', {})
-      let key = picks[c.id]
+      // ?capture=A or ?capture=B shows that variant now, for checking copy and images; the
+      // visitor's own assignment is left alone.
+      const forced = new URLSearchParams(location.search).get('capture')
+      let key = forced === 'A' || forced === 'B' ? forced : picks[c.id]
       if (!key) {
         const wa = Math.max(0, c.variants[0].weight), wb = Math.max(0, c.variants[1].weight)
         key = Math.random() * ((wa + wb) || 1) < wa ? 'A' : 'B'
@@ -132,7 +136,7 @@ export function CaptureOverlay({ funnel, product, title, image }: {
   // Triggers: active seconds on the page and scroll depth.
   useEffect(() => {
     if (!campaign || !shown || open || fired.current) return
-    const preview = new URLSearchParams(location.search).get('capture') === 'preview'
+    const preview = ['preview', 'A', 'B'].includes(new URLSearchParams(location.search).get('capture') ?? '')
     let seconds = 0, depth = 0, done = false
     const fire = () => {
       if (done) return

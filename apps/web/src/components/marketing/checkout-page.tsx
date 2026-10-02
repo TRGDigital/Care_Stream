@@ -58,16 +58,20 @@ function Steps() {
 }
 
 /** Organisation, name and email. Shared, because both orders need the same three. */
-function Details({ orgLabel, orgPlaceholder, emailNote, org, setOrg, name, setName, email, setEmail }: {
+function Details({ orgLabel, orgPlaceholder, emailNote, org, setOrg, name, setName, email, setEmail, emailOnly = false }: {
   orgLabel: string; orgPlaceholder: string; emailNote: string
   org: string; setOrg: (v: string) => void
   name: string; setName: (v: string) => void
   email: string; setEmail: (v: string) => void
+  /** The cart drawer asks for the email only: Stripe takes the name and billing details, and the
+   *  policy questions after payment take the company details. */
+  emailOnly?: boolean
 }) {
   return (
     <div className="ckpanel">
-      <div className="ckpanel-hd"><h2>Your details</h2><span>For the receipt and your account</span></div>
+      <div className="ckpanel-hd"><h2>{emailOnly ? 'Your email' : 'Your details'}</h2><span>For the receipt and your account</span></div>
       <form className="ckform" onSubmit={e => e.preventDefault()}>
+        {!emailOnly && <>
         <div className="ckfield">
           <label htmlFor="ckorg">{orgLabel}</label>
           <input id="ckorg" required autoComplete="organization" placeholder={orgPlaceholder}
@@ -78,6 +82,7 @@ function Details({ orgLabel, orgPlaceholder, emailNote, org, setOrg, name, setNa
           <input id="ckname" required autoComplete="name" placeholder="Sam Taylor"
                  value={name} onChange={e => setName(e.target.value)} />
         </div>
+        </>}
         <div className="ckfield full">
           <label htmlFor="ckemail">Work email</label>
           <input id="ckemail" type="email" required autoComplete="email" placeholder="name@yourcarehome.co.uk"
@@ -89,7 +94,7 @@ function Details({ orgLabel, orgPlaceholder, emailNote, org, setOrg, name, setNa
   )
 }
 
-function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, extras, invoice }: {
+function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, extras, invoice, termsBelow = false }: {
   lines: ReactNode; total: number; sub: string
   /** "Save yourself time": the add-on and the send-to-manager link, above the total. */
   extras?: ReactNode
@@ -97,8 +102,10 @@ function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, ext
   assurances: [string, string][]
   ready: boolean; busy: boolean; error: string
   onPay: (agreed: boolean) => void
+  /** In the cart drawer the terms are stated at its foot, with no tick box. */
+  termsBelow?: boolean
 }) {
-  const [agreed, setAgreed] = useState(false)
+  const [agreed, setAgreed] = useState(termsBelow)
   return (
     <aside className="cksum">
       <div className="ckpanel"><div className="in">
@@ -107,13 +114,13 @@ function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, ext
         {extras && <div className="su-sumextras"><b>Save yourself time</b>{extras}</div>}
         <div className="cktotal"><span>Total</span><b>{money(total)}</b></div>
         <p className="cksub">{sub}</p>
-        <label className="ckterms">
+        {!termsBelow && <label className="ckterms">
           <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} />
           <span>
             By continuing, I agree to CareStream&apos;s <Link href="/terms" target="_blank">Terms and Conditions</Link>
             {' '}and acknowledge the <Link href="/privacy" target="_blank">Privacy Policy</Link>.
           </span>
-        </label>
+        </label>}
         <button className="ckpay" type="button" id="ckpay" data-fi-copy="pay_button" disabled={!ready || !agreed || busy}
                 onClick={() => onPay(agreed)}>
           <Lock />{busy ? 'Starting secure checkout…' : 'Checkout securely'}
@@ -131,11 +138,25 @@ function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, ext
   )
 }
 
-function Shell({ back, title, lede, children, summary, total, empty }: {
+function Shell({ back, title, lede, children, summary, total, empty, compact = false }: {
   back: [string, string]; title: string; lede: string
   children: ReactNode; summary: ReactNode; total: number
   empty: ReactNode | null
+  /** Inside a cart drawer: one column, no page heading, steps or mobile pay bar. */
+  compact?: boolean
 }) {
+  if (compact) {
+    return (
+      <div className="ckpage ckcompact">
+        {empty ?? (
+          <div className="ckgrid">
+            <div className="ckcol">{children}</div>
+            {summary}
+          </div>
+        )}
+      </div>
+    )
+  }
   return (
     <main className="ckpage">
       <div className="ckwrap">
@@ -181,9 +202,9 @@ function payError(e: unknown) {
 }
 
 /** Validates the details form; returns the message to show, or '' when it can go ahead. */
-function detailsError(org: string, name: string, email: string) {
-  if (!org.trim()) return 'Please enter your organisation name.'
-  if (!name.trim()) return 'Please enter your full name.'
+function detailsError(org: string, name: string, email: string, emailOnly = false) {
+  if (!emailOnly && !org.trim()) return 'Please enter your organisation name.'
+  if (!emailOnly && !name.trim()) return 'Please enter your full name.'
   if (!EMAIL.test(email.trim())) return 'Please enter a valid work email address.'
   return ''
 }
@@ -429,7 +450,11 @@ interface Pack { key: string; title: string; price_pence: number; contains: stri
 const BUNDLE = 'bundle:'
 const policyImage = (slug: string) => `/images/care-policies/${slug}/1.webp`
 
-export function PolicyCheckout() {
+export function PolicyCheckout({ compact = false, onProgress }: {
+  /** In the policy page's cart drawer (policy-drawer.tsx). */
+  compact?: boolean
+  onProgress?: (p: { details: boolean; agreed: boolean }) => void
+} = {}) {
   const { items, add, remove, saveForLater, switchToPack } = usePolicyBasket()
   const [org, setOrg] = useState('')
   const [name, setName] = useState('')
@@ -439,6 +464,9 @@ export function PolicyCheckout() {
   const [error, setError] = useState('')
   const [mounted, setMounted] = useState(false)
   const [priority, setPriority] = useState(false)
+  useEffect(() => {
+    onProgress?.({ details: !detailsError(org, name, email, compact), agreed: true })
+  }, [org, name, email, onProgress])
   // A basket sent for approval arrives as ?items=slug,bundle:key,…: rebuild it from the shop's prices.
   useEffect(() => {
     const shared = new URLSearchParams(window.location.search).get('items')
@@ -458,6 +486,8 @@ export function PolicyCheckout() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const [packs, setPacks] = useState<Record<string, Pack[]>>({})
+  // The policies that go with each one in the basket (shared laws), for the picker.
+  const [complements, setComplements] = useState<Record<string, { slug: string; title: string }[]>>({})
   useEffect(() => setMounted(true), [])
   // Reaching checkout counts against each policy or pack in it, once the basket has loaded.
   const viewed = useRef(false)
@@ -513,6 +543,8 @@ export function PolicyCheckout() {
         const res = await fetch(`${API_URL}/public/policy-shop/products/${slug}`)
         const body = await res.json()
         const bundles = (body?.data?.bundles ?? []) as { key: string; title: string; price_pence: number }[]
+        const goesWith = (body?.data?.complements ?? []) as { slug: string; title: string }[]
+        if (live) setComplements(c => ({ ...c, [slug]: goesWith }))
         return [slug, bundles.map(b => ({ ...b, contains: [] }))] as const
       } catch {
         return [slug, []] as const
@@ -531,7 +563,7 @@ export function PolicyCheckout() {
   }, [policies, packs])
 
   async function pay() {
-    const problem = detailsError(org, name, email)
+    const problem = detailsError(org, name, email, compact)
     if (problem) { setError(problem); return }
     setError(''); setBusy(true)
     items.forEach(i => fi('checkout_start', { funnel: 'policies', option: i.slug, label: i.title, qty: 1 }))
@@ -565,8 +597,9 @@ export function PolicyCheckout() {
 
   return (
     <>
-    <ExitQuestion funnel="policies" />
+    {!compact && <ExitQuestion funnel="policies" />}
     <Shell
+      compact={compact}
       back={['/care-policies', 'Continue browsing policies']}
       title="Your policy basket"
       lede="Each policy is written for your service, read by a person and delivered as a branded, print-ready document."
@@ -600,6 +633,7 @@ export function PolicyCheckout() {
           busy={busy}
           error={error}
           onPay={pay}
+          termsBelow={compact}
         />
       }
     >
@@ -652,7 +686,9 @@ export function PolicyCheckout() {
         </ul>
         {policies.length > 0 && (
           <div className="ckoffer ckoffer-pad">
-            <AddAnotherPolicy basket={items} offers={offers} rows={rows} packMembers={packMembers} onAdd={add} unpaired={unpaired} />
+            <AddAnotherPolicy basket={items} offers={offers} rows={rows} packMembers={packMembers} onAdd={add} unpaired={unpaired}
+                              goesWith={policies.flatMap(p => (complements[p.slug] ?? []).map(c => c.slug))}
+                              goesWithTitle={policies[0]?.title} />
           </div>
         )}
         {policyOfferLive && policies.length > 0 && (
@@ -679,16 +715,16 @@ export function PolicyCheckout() {
 
       <Details orgLabel="Registered company name" orgPlaceholder="Oakhaven Care Ltd"
                emailNote="We send the receipt and the link to your questions here."
-               org={org} setOrg={setOrg} name={name} setName={setName} email={email} setEmail={setEmail} />
+               org={org} setOrg={setOrg} name={name} setName={setName} email={email} setEmail={setEmail} emailOnly={compact} />
 
-      <div className="ckpanel ckafter">
+      {!compact && <div className="ckpanel ckafter">
         <div className="ckpanel-hd"><h2>What happens after you pay</h2><span>Once payment is confirmed</span></div>
         <div className="cknext">
           <div><span>01</span><b>Finish the short questions</b><p>About three minutes per policy. Company details you enter once are reused for every policy.</p></div>
           <div><span>02</span><b>We write and check it</b><p>Written for your service and read by a person before it carries your name.</p></div>
           <div><span>03</span><b>Delivered to your account</b><p>Within 2 working days, as a branded, print-ready document on your letterhead.</p></div>
         </div>
-      </div>
+      </div>}
     </Shell>
     </>
   )
@@ -707,8 +743,11 @@ function loadCatalogue(): Promise<CatalogueRow[]> {
   return catalogueCache
 }
 
-function AddAnotherPolicy({ basket, offers, rows, packMembers, onAdd, unpaired }: {
+function AddAnotherPolicy({ basket, offers, rows, packMembers, onAdd, unpaired, goesWith = [], goesWithTitle }: {
   basket: BasketItem[]
+  /** Policies that go with the ones in the basket (shared laws), listed first. */
+  goesWith?: string[]
+  goesWithTitle?: string
   offers: Parameters<typeof policyDeal>[0]
   rows: Parameters<typeof policyDeal>[1]
   packMembers: Record<string, string[]>
@@ -724,23 +763,32 @@ function AddAnotherPolicy({ basket, offers, rows, packMembers, onAdd, unpaired }
     const trial = [...rows, { kind: 'policy' as const, key: p.slug, pence: p.price_pence }]
     return policyDeal(offers, trial, packMembers).free.has(trial.length - 1)
   }
-  const free = options.filter(wouldBeFree)
-  const rest = options.filter(p => !free.includes(p))
+  // First the policies that go with what is in the basket, in order, then the free ones, then the rest.
+  const firstSlugs = [...new Set(goesWith)].filter(s => !inBasket.has(s))
+  const first = firstSlugs.map(s => options.find(p => p.slug === s)).filter((p): p is CatalogueRow => !!p).slice(0, 6)
+  const free = options.filter(p => wouldBeFree(p) && !first.includes(p))
+  const rest = options.filter(p => !free.includes(p) && !first.includes(p))
+  const freeCount = free.length + first.filter(wouldBeFree).length
   if (!options.length) return null
   const chosen = options.find(p => p.slug === pick)
   const money0 = (p: number) => `£${(p / 100).toFixed(p % 100 ? 2 : 0)}`
   return (
     <div className="ckaddpol">
-      <label htmlFor="ckaddpol">{free.length && unpaired ? 'Add your free policy' : 'Add another policy'}</label>
+      <label htmlFor="ckaddpol">{freeCount && unpaired ? 'Add your free policy' : 'Add another policy'}</label>
       <div className="ckaddpol-row">
         <select id="ckaddpol" value={pick} onChange={e => setPick(e.target.value)}>
-          <option value="">{free.length && unpaired ? `Choose from ${free.length} policies you can add free` : 'Choose a policy'}</option>
+          <option value="">{freeCount && unpaired ? `Choose from ${freeCount} policies you can add free` : 'Choose a policy'}</option>
+          {first.length > 0 && (
+            <optgroup label={goesWithTitle && basket.length === 1 ? `Goes well with your ${goesWithTitle}` : 'Goes well with your basket'}>
+              {first.map(p => <option key={p.slug} value={p.slug}>{p.title}: {wouldBeFree(p) ? `free (normally ${money0(p.price_pence)})` : money0(p.price_pence)}</option>)}
+            </optgroup>
+          )}
           {free.length > 0 && (
             <optgroup label="Free with your offer">
               {free.map(p => <option key={p.slug} value={p.slug}>{p.title}: free (normally {money0(p.price_pence)})</option>)}
             </optgroup>
           )}
-          <optgroup label={free.length ? 'Other policies' : 'All policies'}>
+          <optgroup label={free.length || first.length ? 'Other policies' : 'All policies'}>
             {rest.map(p => <option key={p.slug} value={p.slug}>{p.title}: {money0(p.price_pence)}</option>)}
           </optgroup>
         </select>

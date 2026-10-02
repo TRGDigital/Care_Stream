@@ -14,6 +14,7 @@ import { AddonOption, ShareBasket, InvoiceRequest, ADDONS, useSaveBasket } from 
 import './checkout-page.css'
 import { fi, fiAttribution } from '@/lib/funnel-insights'
 import { offerLock } from '@/lib/offer-lock'
+import { reportMicro } from '@/lib/google-ads'
 import { useRemembered } from '@/lib/remembered'
 
 // The checkout design approved in the content theme, for both shops: /basket (training
@@ -282,6 +283,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
     setError(''); setBusy(true)
     items.forEach(i => trackBasketEvent('checkout', i.slug, i.qty))
     items.forEach(i => fi('checkout_start', { funnel: 'training', option: i.slug, label: i.title, qty: i.qty }))
+    reportMicro('begin_checkout', 'training-basket')
     try {
       const res = await fetch(`${API_URL}/public/training/checkout-basket`, {
         method: 'POST',
@@ -590,6 +592,7 @@ export function PolicyCheckout({ compact = false, onProgress }: {
     if (problem) { setError(problem); return }
     setError(''); setBusy(true)
     items.forEach(i => fi('checkout_start', { funnel: 'policies', option: i.slug, label: i.title, qty: 1 }))
+    reportMicro('begin_checkout', 'policy-basket')
     try {
       const res = await fetch(`${API_URL}/public/policy-shop/checkout`, {
         method: 'POST',

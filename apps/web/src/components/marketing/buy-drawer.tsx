@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { BuyForm } from './buy-form'
 import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
-import { reportPageView } from '@/lib/google-ads'
+import { reportPageView, reportMicro } from '@/lib/google-ads'
 import './buy-page-v2.css'
 import './buy-drawer.css'
 
@@ -44,7 +44,8 @@ export function CartDrawer({ slug, base, flag, event, title, subtitle, top, chil
       pushed.current = true
     }
     reportPageView(location.href)
-  }, [base])
+    reportMicro('add_to_basket', slug)
+  }, [base, slug])
 
   const close = useCallback(() => {
     setOpen(null)

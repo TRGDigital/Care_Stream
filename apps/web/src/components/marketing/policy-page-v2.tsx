@@ -8,6 +8,7 @@ import { StickyFit } from './sticky-fit'
 import { REVIEWS } from '@/lib/reviews'
 import { PaymentLogos } from './payment-logos'
 import { ExitQuestion } from './shop-questions'
+import { CaptureOverlay } from './capture-overlay'
 import { ProductFaqs, PolicyDocMock, policyProductFaqs } from './product-extras'
 import './policy-page-v2.css'
 
@@ -213,6 +214,7 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
       <StickyFit selector=".pcpage-v2 .mpe-info" />
       <StickyFit selector=".pcpage-v2 .mpe-gallery" />
       <ExitQuestion funnel="policies" product={product.slug} />
+      <CaptureOverlay funnel="policies" product={product.slug} title={product.title} image={hero} />
       <section className="pchero mpe">
         <div className="pcwrap mpe-in">
           <div className="mpe-main">

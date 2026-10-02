@@ -13,6 +13,7 @@ import { ExitQuestion } from './shop-questions'
 import { AddonOption, ShareBasket, InvoiceRequest, ADDONS, useSaveBasket } from './shop-upsells'
 import './checkout-page.css'
 import { fi, fiAttribution } from '@/lib/funnel-insights'
+import { offerLock } from '@/lib/offer-lock'
 
 // The checkout design approved in the content theme, for both shops: /basket (training
 // licences) and /care-policies/checkout (written policies). They are separate pages because they
@@ -249,7 +250,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          attribution: fiAttribution(),
+          attribution: fiAttribution(), lock: offerLock(),
           items: items.map(i => ({ module_slug: i.slug, quantity: i.qty })),
           addons: teamSetup ? ['team-setup'] : [],
           email: email.trim(), org_name: org.trim(), name: name.trim(),
@@ -539,7 +540,7 @@ export function PolicyCheckout() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          attribution: fiAttribution(),
+          attribution: fiAttribution(), lock: offerLock(),
           addons: priority ? ['priority-policy'] : [],
           email: email.trim(), org_name: org.trim(), name: name.trim(),
           items: items.map(i => i.slug.startsWith(BUNDLE)

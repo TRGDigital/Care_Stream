@@ -15,6 +15,7 @@ import { StickyFit } from './sticky-fit'
 import { REVIEWS } from '@/lib/reviews'
 import { PaymentLogos } from './payment-logos'
 import { ExitQuestion } from './shop-questions'
+import { CaptureOverlay } from './capture-overlay'
 import { ProductFaqs, SampleCertificate, trainingFaqs, type FaqModule } from './product-extras'
 import './module-page-v2.css'
 
@@ -267,6 +268,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
       <StickyFit selector=".mpage-v2 .mpe-info" />
       <StickyFit selector=".mpage-v2 .mpe-gallery" />
       <ExitQuestion funnel="training" product={m.slug} />
+      <CaptureOverlay funnel="training" product={m.slug} title={m.title} image={hero} />
       <section className="mhero mpe">
         <div className="mwrap mpe-in">
           <div className="mpe-main">

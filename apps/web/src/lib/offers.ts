@@ -2,6 +2,7 @@
 
 import { createContext, createElement, useContext, useEffect, useState, type ReactNode } from 'react'
 import { isLive, licenceDeal, type Offer } from './offer-rules'
+import { offerLock } from './offer-lock'
 
 export * from './offer-rules'
 
@@ -11,8 +12,23 @@ export * from './offer-rules'
 
 const OffersContext = createContext<Offer[]>([])
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+
 export function OffersProvider({ offers, children }: { offers: Offer[]; children: ReactNode }) {
-  return createElement(OffersContext.Provider, { value: offers }, children)
+  // An offer held on a personal link (lib/offer-lock.ts) joins the live ones in this browser.
+  const [held, setHeld] = useState<Offer | null>(null)
+  useEffect(() => {
+    const load = () => {
+      const token = offerLock()
+      if (!token) return
+      fetch(`${API_URL}/public/offers/lock/${token}`).then(r => r.json()).then(j => setHeld(j?.data?.offer ?? null)).catch(() => {})
+    }
+    load()
+    window.addEventListener('cs-offer-lock', load)
+    return () => window.removeEventListener('cs-offer-lock', load)
+  }, [])
+  const value = held && !offers.some(o => o.key === held.key && isLive(o)) ? [...offers, held] : offers
+  return createElement(OffersContext.Provider, { value }, children)
 }
 
 /** The offers live right now. Re-checked in the browser, so a page cached across midnight drops

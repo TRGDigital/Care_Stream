@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Minus, Plus, Loader2, ShieldCheck } from 'lucide-react'
 import { fi, fiAttribution } from '@/lib/funnel-insights'
+import { offerLock } from '@/lib/offer-lock'
 import { PaymentLogos } from './payment-logos'
 import { AddonOption, InvoiceRequest, ADDONS, useSaveBasket } from './shop-upsells'
 import { useOffers, licenceDeal, money2, paidForTotal } from '@/lib/offers'
@@ -62,7 +63,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
       const res = await fetch(`${API_URL}/public/training/checkout`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ module_slug: slug, quantity: qty, email: email.trim(), org_name: org.trim(), attribution: fiAttribution(), addons: teamSetup ? ['team-setup'] : [] }),
+        body:    JSON.stringify({ module_slug: slug, quantity: qty, email: email.trim(), org_name: org.trim(), attribution: fiAttribution(), lock: offerLock(), addons: teamSetup ? ['team-setup'] : [] }),
       })
       const body = await res.json()
       if (!res.ok || !body?.data?.url) throw new Error(body?.error ?? 'Could not start checkout. Please try again.')

@@ -21,7 +21,7 @@ import './capture-overlay.css'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 const FI = 'https://trg-funnel-insights.vercel.app'
-const CONSENT = 'We will also email you CareStream offers and guides every two weeks. Unsubscribe at any time.'
+const CONSENT = 'By signing up, you agree to our terms and conditions, including receiving our offers by email.'
 
 type Variant = {
   key: 'A' | 'B'; kind: 'lockin' | 'checklist'; weight: number
@@ -89,6 +89,8 @@ export function CaptureOverlay({ funnel, product, title, image }: {
   const [suggestion, setSuggestion] = useState('')
   const [result, setResult] = useState<{ kind: string; lock?: { expires_on: string; label: string } } | null>(null)
   const emailRef = useRef<HTMLInputElement>(null)
+  // Once shown (and so once closed), never again on this page view.
+  const fired = useRef(false)
 
   // Choose the campaign and this visitor's variant.
   useEffect(() => {
@@ -128,7 +130,7 @@ export function CaptureOverlay({ funnel, product, title, image }: {
 
   // Triggers: active seconds on the page and scroll depth.
   useEffect(() => {
-    if (!campaign || !shown || open) return
+    if (!campaign || !shown || open || fired.current) return
     const preview = new URLSearchParams(location.search).get('capture') === 'preview'
     let seconds = 0, depth = 0, done = false
     const fire = () => {
@@ -137,6 +139,7 @@ export function CaptureOverlay({ funnel, product, title, image }: {
       if (preview || (campaign.trigger_mode === 'either' ? timeOk || scrollOk : timeOk && scrollOk)) {
         if (!preview && (session('cs-exitq') || hasBasket())) { done = true; return }
         done = true
+        fired.current = true
         session('cs-exitq', true)   // the exit question stays away for this visit
         store.set('cs_capture_seen', { ...store.get<Record<string, number>>('cs_capture_seen', {}), [campaign.id]: Date.now() })
         setOpen(true)
@@ -215,7 +218,7 @@ export function CaptureOverlay({ funnel, product, title, image }: {
             <label className="co-field">Work email<input ref={emailRef} type="email" required value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" placeholder="name@yourservice.co.uk" /></label>
             {error && <p className="co-err">{error}{suggestion && <> <button type="button" onClick={() => { setEmail(suggestion); setError(''); setSuggestion('') }}>Use {suggestion}</button></>}</p>}
             <button className="co-btn" disabled={busy || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())}>{busy ? 'Sending…' : fill(shown.step2_button)}</button>
-            <p className="co-consent">{CONSENT}</p>
+            <p className="co-consent">By signing up, you agree to our <a href="/terms#marketing-emails" target="_blank" rel="noopener">terms and conditions</a>, including receiving our offers by email.</p>
           </form>}
           {step === 3 && <>
             {result?.kind === 'lockin' && result.lock ? <>

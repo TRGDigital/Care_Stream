@@ -53,6 +53,11 @@ export function CartDrawer({ slug, base, flag, event, title, subtitle, top, chil
     else history.replaceState(null, '', `${base}${location.search}`)
   }, [base])
 
+  // Remember the product page, so the basket's back link returns here rather than to the catalogue.
+  useEffect(() => {
+    try { sessionStorage.setItem(flag === '__csBuyDrawer' ? 'cs_last_course' : 'cs_last_policy', JSON.stringify({ path: base, title: subtitle })) } catch { /* blocked */ }
+  }, [flag, base, subtitle])
+
   useEffect(() => {
     const w = window as unknown as Record<string, string | undefined>
     w[flag] = slug

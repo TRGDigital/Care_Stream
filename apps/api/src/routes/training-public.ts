@@ -477,7 +477,7 @@ publicTrainingRouter.post('/checkout', async (req: Request, res: Response) => {
     const topic = (topics as any[]).find(t => slugify(t.title) === slug)
     if (!topic) { res.status(404).json({ error: 'Unknown training module' }); return }
 
-    const url = await createTrainingCheckoutSession({ moduleSlug: slug, moduleName: topic.title, quantity: qty, email: mail, orgName: org, attribution: cleanAttribution(req.body?.attribution), addons: cleanAddons(req.body?.addons, 'training') })
+    const url = await createTrainingCheckoutSession({ moduleSlug: slug, moduleName: topic.title, quantity: qty, email: mail, orgName: org, attribution: cleanAttribution(req.body?.attribution), addons: cleanAddons(req.body?.addons, 'training'), lock: typeof req.body?.lock === 'string' ? req.body.lock : undefined })
     res.json({ data: { url } })
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'checkout failed' })
@@ -510,7 +510,7 @@ publicTrainingRouter.post('/checkout-basket', async (req: Request, res: Response
     }
     if (!built.length) { res.status(400).json({ error: 'No valid items in the basket' }); return }
 
-    const url = await createTrainingBasketCheckoutSession({ items: built, email: mail, orgName: org, attribution: cleanAttribution(req.body?.attribution), addons: cleanAddons(req.body?.addons, 'training') })
+    const url = await createTrainingBasketCheckoutSession({ items: built, email: mail, orgName: org, attribution: cleanAttribution(req.body?.attribution), addons: cleanAddons(req.body?.addons, 'training'), lock: typeof req.body?.lock === 'string' ? req.body.lock : undefined })
     res.json({ data: { url } })
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'checkout failed' })

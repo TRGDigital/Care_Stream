@@ -1868,3 +1868,54 @@ export async function sendBasketRecoveryEmail(opts: {
   `)
   await sgMail.send({ to: opts.to, from, replyTo: PURCHASE_NOTIFY_TO(), subject: subject.slice(0, 150), html })
 }
+
+// ─── Email capture: the free checklist, and an offer held for 30 days ───────────────────────
+function captureFooter(unsubscribeUrl: string): string {
+  const esc = (s: any) => String(s ?? '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c] as string))
+  return `<p style="color:#9ca3af;font-size:11px;line-height:1.5;margin:12px 0 0">You are receiving this because you asked for it on carestreamai.com, and we will email you CareStream offers and guides every two weeks. <a href="${esc(unsubscribeUrl)}" style="color:#9ca3af">Unsubscribe</a>.</p>`
+}
+
+export async function sendChecklistEmail(opts: {
+  to: string; name: string; productName: string; funnel: 'training' | 'policies'
+  pdf: Buffer; filename: string; link: string; unsubscribeUrl: string
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) throw new Error('Email is not configured')
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc = (s: any) => String(s ?? '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c] as string))
+  const first = (opts.name || '').trim().split(/\s+/)[0] || ''
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:18px;font-weight:700;margin:0 0 8px">${first ? `${esc(first)}, here` : 'Here'} is your ${esc(opts.productName)} checklist</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 14px">It is attached as a PDF. Use it to check any ${esc(opts.productName)} before you buy it, ${opts.funnel === 'training' ? 'whichever provider it comes from' : 'whether you buy one, write your own or have one written'}, so it stands up when CQC asks to see it.</p>
+    <p style="margin:0 0 18px"><a href="${esc(opts.link)}" style="display:inline-block;background:#F28C38;color:#1F1530;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See how ours measures up</a></p>
+    <p style="color:#374151;font-size:13px;line-height:1.6;margin:0 0 16px">Questions? Just reply to this email. CareStream is built by people who have worked in care homes.</p>
+    ${emailFooter()}
+    ${captureFooter(opts.unsubscribeUrl)}
+  `)
+  await sgMail.send({
+    to: opts.to, from, replyTo: PURCHASE_NOTIFY_TO(), subject: `Your ${opts.productName} checklist`.slice(0, 150), html,
+    attachments: [{ content: opts.pdf.toString('base64'), filename: opts.filename, type: 'application/pdf', disposition: 'attachment' }],
+  })
+}
+
+export async function sendOfferLockEmail(opts: {
+  to: string; name: string; productName: string; link: string
+  offerLabel: string; offerHeadline: string; expiresOn: string; unsubscribeUrl: string
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) throw new Error('Email is not configured')
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc = (s: any) => String(s ?? '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c] as string))
+  const first = (opts.name || '').trim().split(/\s+/)[0] || ''
+  const until = new Date(`${opts.expiresOn}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:18px;font-weight:700;margin:0 0 8px">${first ? `${esc(first)}, your` : 'Your'} ${esc(opts.offerLabel)} is held until ${esc(until)}</p>
+    <p style="margin:0 0 14px;padding:10px 14px;border-radius:8px;background:#1F1530;color:#F6F1FB;font-size:13px"><strong style="color:#F28C38">${esc(opts.offerLabel)}:</strong> ${esc(opts.offerHeadline)}</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 14px">Use your personal link any time before ${esc(until)} and the offer is applied to ${esc(opts.productName)} at checkout, even after it has ended on the site.</p>
+    <p style="margin:0 0 18px"><a href="${esc(opts.link)}" style="display:inline-block;background:#F28C38;color:#1F1530;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Use my offer</a></p>
+    <p style="color:#374151;font-size:13px;line-height:1.6;margin:0 0 16px">Need sign-off first, or prefer to pay by invoice? Just reply to this email and we will sort it out.</p>
+    ${emailFooter()}
+    ${captureFooter(opts.unsubscribeUrl)}
+  `)
+  await sgMail.send({ to: opts.to, from, replyTo: PURCHASE_NOTIFY_TO(), subject: `Your ${opts.offerLabel} is held until ${until}`.slice(0, 150), html })
+}

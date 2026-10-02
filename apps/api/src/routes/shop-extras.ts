@@ -11,6 +11,7 @@ import { getOffers, licenceDeal, policyDeal } from '../services/offers'
 import { sendBasketShareEmail, sendInvoiceRequestEmail } from '../services/email/outbound'
 import { priceBasket } from '../services/shop/basket-pricing'
 import { saveBasket, optOutByToken } from '../services/shop/basket-recovery'
+import { captureSignup, checkEmail } from '../services/shop/email-capture'
 
 // Shop extras that sit around the checkouts:
 //   POST /public/shop/share-basket   email a basket to a manager for sign-off, with a link back
@@ -157,4 +158,37 @@ shopExtrasRouter.get('/basket-optout', async (req: Request, res: Response) => {
 <img src="https://www.carestreamai.com/logo-color.svg" alt="CareStream" style="height:34px;margin-bottom:14px">
 <p style="font-size:16px;line-height:1.6;margin:0 0 16px">${msg}</p>
 <a href="https://www.carestreamai.com" style="color:#7B3FBF;font-weight:600">Back to CareStream</a></div></body>`)
+})
+
+// POST /public/shop/capture: the second step of a product page overlay (Funnel Insights › Email
+// capture). Checks the address, then sends the checklist or holds the offer, and adds the
+// sign-up to the Funnel Insights list. An address that will not receive email is turned back
+// with any suggested correction, so the visitor can fix a typo.
+const captureLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false,
+  keyGenerator: (req) => req.ip ?? 'unknown',
+  message: { error: 'Too many sign-ups from here. Please try again later.' },
+})
+shopExtrasRouter.post('/capture', captureLimiter, async (req: Request, res: Response) => {
+  try {
+    const b = req.body ?? {}
+    const t = (v: unknown, n: number) => String(v ?? '').trim().replace(/[<>]/g, '').slice(0, n)
+    const email = t(b.email, 160).toLowerCase()
+    const product = t(b.product, 90)
+    if (!EMAIL.test(email)) { res.status(400).json({ error: 'Please enter a valid email address' }); return }
+    if (!/^[a-z0-9-]{2,90}$/.test(product)) { res.status(400).json({ error: 'Unknown product' }); return }
+    const check = await checkEmail(email)
+    if (check.status === 'undeliverable') {
+      res.status(400).json({ error: check.suggestion ? `That address does not look right. Did you mean ${check.suggestion}?` : 'That address cannot receive email. Please check it.', suggestion: check.suggestion ?? null })
+      return
+    }
+    const result = await captureSignup({
+      email, name: t(b.name, 80), funnel: b.funnel === 'policies' ? 'policies' : 'training', product,
+      kind: b.kind === 'lockin' ? 'lockin' : 'checklist', campaign_id: t(b.campaign_id, 40), variant: t(b.variant, 2),
+      consent_text: t(b.consent_text, 400), page: t(b.page, 200), attribution: cleanAttribution(b.attribution), emailStatus: check.status,
+    })
+    res.json({ data: result })
+  } catch (e: any) {
+    res.status(e?.message === 'Unknown product' ? 400 : 500).json({ error: e?.message === 'Unknown product' ? 'Unknown product' : 'Sorry, that did not go through. Please try again.' })
+  }
 })

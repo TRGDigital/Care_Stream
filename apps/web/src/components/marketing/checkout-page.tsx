@@ -14,6 +14,7 @@ import { AddonOption, ShareBasket, InvoiceRequest, ADDONS, useSaveBasket } from 
 import './checkout-page.css'
 import { fi, fiAttribution } from '@/lib/funnel-insights'
 import { offerLock } from '@/lib/offer-lock'
+import { useRemembered } from '@/lib/remembered'
 
 // The checkout design approved in the content theme, for both shops: /basket (training
 // licences) and /care-policies/checkout (written policies). They are separate pages because they
@@ -229,9 +230,9 @@ export interface ModuleInfo { image: string | null; minutes: number | null; titl
 export function TrainingCheckout({ modules }: { modules: Record<string, ModuleInfo> }) {
   const { items, totalQty, gross, discount, pct, net, cart } = useCart()
   const { items: saved, savedCourses } = useSavedCourses()
-  const [org, setOrg] = useState('')
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
+  const [org, setOrg] = useRemembered('org')
+  const [name, setName] = useRemembered('name')
+  const [email, setEmail] = useRemembered('email')
   useSaveBasket({ funnel: 'training', email, name, org, items: items.map(i => ({ slug: i.slug, qty: i.qty })) })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -469,9 +470,9 @@ export function PolicyCheckout({ compact = false, onProgress }: {
   onProgress?: (p: { details: boolean; agreed: boolean }) => void
 } = {}) {
   const { items, add, remove, saveForLater, switchToPack } = usePolicyBasket()
-  const [org, setOrg] = useState('')
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
+  const [org, setOrg] = useRemembered('org')
+  const [name, setName] = useRemembered('name')
+  const [email, setEmail] = useRemembered('email')
   useSaveBasket({ funnel: 'policies', email, name, org, items: items.map(i => i.slug) })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')

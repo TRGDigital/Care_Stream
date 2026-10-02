@@ -4,7 +4,7 @@ import { PolicyIntakeGame } from './policy-intake-game'
 import { AddToBasket, AddToBasketText, BasketPill, BuyNowPolicy, SavePolicy, StickyBuyBar } from './policy-basket'
 import { PolicyOfferCard } from './licence-offer'
 import { PolicyBuyPanel } from './policy-buy-panel'
-import { StickyFit } from './sticky-fit'
+import { ScrollSequence } from './scroll-sequence'
 import { REVIEWS } from '@/lib/reviews'
 import { PaymentLogos } from './payment-logos'
 import { ExitQuestion } from './shop-questions'
@@ -222,8 +222,7 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
       {/* Above the fold, laid out like a shop product page: the policy on the left as a gallery
           (its picture, the three-minute build, the law it is checked against), and everything
           needed to buy on the right, held in view until the gallery ends. */}
-      <StickyFit selector=".pcpage-v2 .mpe-info" />
-      <StickyFit selector=".pcpage-v2 .mpe-gallery" />
+      <ScrollSequence root=".pcpage-v2 .mpe-in" />
       <ExitQuestion funnel="policies" product={product.slug} />
       <CaptureOverlay funnel="policies" product={product.slug} title={product.title} image={hero} quiz={quizFor(regulations, elements)} />
       <section className="pchero mpe">

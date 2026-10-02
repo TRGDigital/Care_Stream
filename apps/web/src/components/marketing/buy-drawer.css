@@ -1,0 +1,14 @@
+/* The course page's buy drawer: slides in from the right; full width on a phone. */
+.bd-overlay{position:fixed;inset:0;z-index:1000;background:rgba(23,18,31,.45);animation:bd-fade .2s ease}
+.bd-panel{position:absolute;top:0;right:0;bottom:0;width:min(460px,100vw);display:flex;flex-direction:column;background:#fff;
+  box-shadow:-20px 0 60px rgba(23,18,31,.25);animation:bd-slide .28s cubic-bezier(.2,.8,.2,1)}
+.bd-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid #EEEAF3}
+.bd-head b{display:block;font-size:1.05rem;color:#17121F}
+.bd-head span{display:block;font-size:.84rem;color:#6B6577}
+.bd-close{width:36px;height:36px;border:0;border-radius:50%;background:#F4F1F8;font-size:1.5rem;line-height:1;color:#3A3245;cursor:pointer}
+.bd-body{flex:1;overflow-y:auto;overscroll-behavior:contain;background:#fff!important}
+.bd-body.bypage-v2 .bybuy{position:static;top:auto}
+.bd-body.bypage-v2 .bybuy .bypanel{border:0;box-shadow:none;border-radius:0;padding:20px 22px 28px}
+@keyframes bd-fade{from{opacity:0}to{opacity:1}}
+@keyframes bd-slide{from{transform:translateX(100%)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){ .bd-overlay,.bd-panel{animation:none} }

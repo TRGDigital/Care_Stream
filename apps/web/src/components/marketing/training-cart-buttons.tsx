@@ -79,7 +79,15 @@ export function BuyNowLink({ slug, className = '', label = 'Buy now', qty = 1 }:
   const cls = licenceOffer(offers, slug) ? `${className} offerbtn`.trim() : className
   return (
     <Link className={cls} href={`/buy/${slug}?qty=${qty}`}
-          onClick={() => fi('buy_now_click', { funnel: 'training', option: slug, qty })}>
+          onClick={e => {
+            fi('buy_now_click', { funnel: 'training', option: slug, qty })
+            // On a course page the buy panel opens as a drawer over the page (buy-drawer.tsx);
+            // the link to /buy/ stays for anywhere without one, and for search engines.
+            if ((window as unknown as { __csBuyDrawer?: string }).__csBuyDrawer === slug) {
+              e.preventDefault()
+              window.dispatchEvent(new CustomEvent('cs-buy-drawer', { detail: { slug, qty } }))
+            }
+          }}>
       {label}
     </Link>
   )

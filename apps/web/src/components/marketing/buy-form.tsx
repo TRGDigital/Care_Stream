@@ -15,18 +15,21 @@ const gbp = (pence: number) => `£${(pence / 100).toFixed(2)}`
 // Two skins, one checkout. The rebuilt theme styles this panel with its own `by*` classes; the
 // logic, the validation and the call to /public/training/checkout are shared, so the two cannot
 // drift apart the way a second copy of the form would.
-export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
+export function BuyForm({ slug, moduleName, unitPence, variant = 'default', initialQty }: {
   slug: string; moduleName: string; unitPence: number; variant?: 'default' | 'theme'
+  /** Licences to start at when opened in the course page's buy drawer (rather than ?qty=). */
+  initialQty?: number
 }) {
   // The theme's form opens at eight licences, a typical team, not one.
   // Always start at one licence; the buyer steps it up if they need more.
-  const [qty, setQty]     = useState(1)
+  const [qty, setQty]     = useState(initialQty && initialQty >= 1 ? Math.min(500, Math.floor(initialQty)) : 1)
   // "Buy now" on a course page arrives with ?qty=1 so the licence count starts at what was asked
   // for. Read after mount: useSearchParams would need a Suspense boundary on this static page.
   // Reaching this page is the second stage of a course's funnel (after its course page).
   useEffect(() => { fi('buy_page', { funnel: 'training', option: slug, label: moduleName }) }, [slug, moduleName])
 
   useEffect(() => {
+    if (initialQty) return
     const q = Number(new URLSearchParams(window.location.search).get('qty'))
     if (Number.isFinite(q) && q >= 1) setQty(Math.min(500, Math.floor(q)))
   }, [])

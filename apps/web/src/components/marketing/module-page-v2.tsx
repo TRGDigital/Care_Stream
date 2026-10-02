@@ -325,30 +325,37 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               {m.cpd_accredited && <li><Tick />CPD Certified Course</li>}
             </ul>
 
-            <div className="mpe-guarantee">
-              <h3><span>Our guarantee</span></h3>
-              <p>
-                If a licence has not been started, tell us within fourteen days and we refund it in full.
-                {m.cpd_accredited ? ' CPD Certified, and kept' : ' Kept'} up to date whenever the standards or CQC
-                guidance change. Licences last 12 months: no subscription, no minimum order.
-              </p>
-              <p>Built by people who have worked in care homes. <Link href="/about">Read our story</Link>.</p>
-            </div>
-
-            {/* Our story: who is behind CareStream and why, in the founder's words, on every course. */}
-            <div className="mpe-story">
-              <SiteImage src="/images/founder/len-burgess.webp" alt="Len Burgess, founder of CareStream" width={88} height={88} className="mpe-story-photo" />
+            {/* Our guarantee and our story: the two reasons to trust us, as cards that stand out. */}
+            <div className="mpe-promise">
+              <span className="mpe-promise-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6L12 3Z" /><path d="m8.5 12 2.5 2.5 4.5-5" />
+                </svg>
+              </span>
               <div>
-                <h3>Our story</h3>
+                <p className="mpe-promise-eyebrow">Our guarantee</p>
+                <h3>Full refund within 14 days</h3>
                 <p>
-                  I worked in the care industry for a number of years and saw first hand how hard it is for overseas
-                  care staff to understand their training when it is only in English. So I built CareStream:{' '}
-                  {m.cpd_accredited ? 'CPD Certified training' : 'training'} your team can take in over 60 languages, so every
-                  carer understands it, not just passes it. Today it helps care teams right across the UK.
+                  If a licence has not been started, tell us within fourteen days and we refund it in full.
+                  {m.cpd_accredited ? ' CPD Certified, and kept' : ' Kept'} up to date whenever the standards or CQC
+                  guidance change. Licences last 12 months: no subscription, no minimum order.
                 </p>
-                <p className="mpe-story-sign">Len Burgess, Founder</p>
               </div>
             </div>
+
+            <figure className="mpe-story">
+              <SiteImage src="/images/founder/len-burgess.webp" alt="Len Burgess, founder of CareStream" width={96} height={96} className="mpe-story-photo" />
+              <figcaption>
+                <p className="mpe-promise-eyebrow">Our story</p>
+                <blockquote>
+                  &ldquo;I worked in the care industry for a number of years and saw first hand how hard it is for overseas
+                  care staff to understand their training when it is only in English. So I built CareStream:{' '}
+                  {m.cpd_accredited ? 'CPD Certified training' : 'training'} your team can take in over 60 languages, so every
+                  carer understands it, not just passes it. Today it helps care teams right across the UK.&rdquo;
+                </blockquote>
+                <p className="mpe-story-sign"><b>Len Burgess</b> Founder, CareStream · <Link href="/about">Read our story</Link></p>
+              </figcaption>
+            </figure>
 
             <ProductFaqs title="About this course" faqs={trainingFaqs(faqModule)} />
             <SampleCertificate m={faqModule} />

@@ -30,3 +30,7 @@
 .bd-cpd b{display:block;font-size:.9rem;color:#17121F}
 .bd-cpd span{display:block;font-size:.78rem;line-height:1.45;color:#6B6577}
 @media(max-width:420px){ .bd-steps .t{font-size:.72rem} .bd-cpd img{height:44px} }
+
+/* The terms, stated at the foot of the drawer (no tick box here). */
+.bd-terms{margin:0;padding:14px 22px 22px;font-size:.78rem;line-height:1.5;color:#6B6577;border-top:1px solid #EEEAF3}
+.bd-terms a{color:#3A3245;font-weight:600;text-decoration:underline}

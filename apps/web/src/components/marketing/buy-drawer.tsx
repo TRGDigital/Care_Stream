@@ -90,8 +90,8 @@ export function BuyDrawer({ slug, moduleName, unitPence, cpd = null }: {
   }, [])
 
   if (!open) return null
-  // Step 1 is done on opening; 2 once the service and a valid email are in; 3 once the terms are agreed.
-  const done = 1 + (progress.details ? 1 : 0) + (progress.details && progress.agreed ? 1 : 0)
+  // Step 1 is done on opening; 2 once the service and a valid email are in; then payment is next.
+  const done = 1 + (progress.details ? 1 : 0)
   return createPortal(
     <div className="bd-overlay" onClick={e => { if (e.target === e.currentTarget) close() }}>
       <aside className="bd-panel" role="dialog" aria-modal="true" aria-label={`Buy ${moduleName}`}>
@@ -118,8 +118,12 @@ export function BuyDrawer({ slug, moduleName, unitPence, cpd = null }: {
           )}
           <div className="bybuy">
             <BuyForm key={open.n} slug={slug} moduleName={moduleName} unitPence={unitPence} variant="theme"
-                     initialQty={open.qty} onProgress={onProgress} />
+                     initialQty={open.qty} onProgress={onProgress} termsBelow />
           </div>
+          <p className="bd-terms">
+            By continuing to checkout, you agree to CareStream&apos;s <a href="/terms" target="_blank" rel="noopener">Terms and Conditions</a>
+            {' '}and acknowledge the <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.
+          </p>
         </div>
       </aside>
     </div>,

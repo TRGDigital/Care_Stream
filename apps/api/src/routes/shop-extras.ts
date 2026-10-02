@@ -11,7 +11,8 @@ import { getOffers, licenceDeal, policyDeal } from '../services/offers'
 import { sendBasketShareEmail, sendInvoiceRequestEmail } from '../services/email/outbound'
 import { priceBasket } from '../services/shop/basket-pricing'
 import { saveBasket, optOutByToken } from '../services/shop/basket-recovery'
-import { captureSignup, checkEmail } from '../services/shop/email-capture'
+import { captureSignup, checkEmail, loadChecklist } from '../services/shop/email-capture'
+import { checklistPdf } from '../services/shop/checklist-pdf'
 
 // Shop extras that sit around the checkouts:
 //   POST /public/shop/share-basket   email a basket to a manager for sign-off, with a link back
@@ -190,5 +191,27 @@ shopExtrasRouter.post('/capture', captureLimiter, async (req: Request, res: Resp
     res.json({ data: result })
   } catch (e: any) {
     res.status(e?.message === 'Unknown product' ? 400 : 500).json({ error: e?.message === 'Unknown product' ? 'Unknown product' : 'Sorry, that did not go through. Please try again.' })
+  }
+})
+
+// GET /public/shop/checklist-pdf?funnel=&product=: the checklist PDF exactly as the overlay sends
+// it, for Funnel Insights › Email capture to open. Server to server only (Bearer FI_INGEST_SECRET),
+// so the checklists never become a public download that skips the sign-up.
+shopExtrasRouter.get('/checklist-pdf', async (req: Request, res: Response) => {
+  const want = process.env.FI_INGEST_SECRET || ''
+  const got = String(req.headers.authorization ?? '').replace(/^Bearer\s+/i, '')
+  if (!want || got !== want) { res.status(401).json({ error: 'unauthorised' }); return }
+  const funnel = req.query.funnel === 'policies' ? 'policies' : 'training'
+  const product = String(req.query.product ?? '')
+  if (!/^[a-z0-9-]{2,90}$/.test(product)) { res.status(400).json({ error: 'Unknown product' }); return }
+  try {
+    const data = await loadChecklist(funnel, product)
+    if (!data) { res.status(404).json({ error: 'Unknown product' }); return }
+    const pdf = await checklistPdf(data)
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', `inline; filename="${product}-checklist.pdf"`)
+    res.send(pdf)
+  } catch {
+    res.status(500).json({ error: 'Could not build the checklist' })
   }
 })

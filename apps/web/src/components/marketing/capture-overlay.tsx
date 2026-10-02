@@ -37,6 +37,8 @@ type Variant = {
 type Campaign = {
   id: string; name: string; funnel: 'training' | 'policies'; pages: string[]
   trigger_seconds: number; trigger_scroll: number; trigger_mode: 'both' | 'either'; repeat_days: number
+  /** Opening second per product page, when the campaign follows the median time on page. */
+  page_seconds?: Record<string, number>
   variants: Variant[]
 }
 
@@ -158,7 +160,7 @@ export function CaptureOverlay({ funnel, product, title, image, quiz }: {
     let seconds = 0, depth = 0, done = false
     const fire = () => {
       if (done) return
-      const timeOk = seconds >= campaign.trigger_seconds, scrollOk = depth >= campaign.trigger_scroll
+      const timeOk = seconds >= (campaign.page_seconds?.[product] ?? campaign.trigger_seconds), scrollOk = depth >= campaign.trigger_scroll
       if (preview || (campaign.trigger_mode === 'either' ? timeOk || scrollOk : timeOk && scrollOk)) {
         if (!preview && (session('cs-exitq') || hasBasket())) { done = true; return }
         done = true

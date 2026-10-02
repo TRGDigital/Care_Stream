@@ -675,3 +675,15 @@
 /* The buy column spans both rows: its extra height goes to the gallery row, never between the
    picture and the gallery. */
 @media(min-width:961px){ .pcpage-v2 .mpe-in{grid-template-rows:auto 1fr} }
+
+/* Two benefit ticks under the title, and "When you need this policy" (lib/policy-cro.ts). */
+.pcpage-v2 .mpe-benefits{list-style:none;margin:-4px 0 14px;padding:0;display:flex;flex-direction:column;gap:6px}
+.pcpage-v2 .mpe-benefits li{display:flex;align-items:flex-start;gap:6px;font-size:.88rem;font-weight:600;line-height:1.4;color:var(--ink)}
+.pcpage-v2 .mpe-benefits svg{width:16px;height:16px;flex:none;margin-top:2px;color:#1f9d55}
+.pcpage-v2 .mpe-moments{border:1px solid var(--line);border-radius:16px;padding:20px 22px;background:#fff}
+.pcpage-v2 .mpe-moments h2{margin:0 0 12px;font-size:1.1rem}
+.pcpage-v2 .mpe-moments ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pcpage-v2 .mpe-moments li{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:12px;background:var(--ground);border-left:3px solid #F28C38}
+.pcpage-v2 .mpe-moments li b{font-size:.92rem}
+.pcpage-v2 .mpe-moments li span{font-size:.86rem;line-height:1.5;color:var(--ink-2)}
+@media (max-width:640px){.pcpage-v2 .mpe-moments ul{grid-template-columns:1fr}.pcpage-v2 .mpe-moments{padding:16px}}

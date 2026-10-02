@@ -243,7 +243,7 @@ export function CaptureOverlay({ funnel, product, title, image, quiz }: {
             return <>
               <p className="co-eyebrow">Question {i + 1} of 3</p>
               <div className="co-progress" aria-hidden="true">{[0, 1, 2].map(n => <i key={n} className={n <= i ? 'on' : ''} />)}</div>
-              <p className="co-qlabel">Does your current policy do this?</p>
+              <p className="co-qlabel">Does your current policy cover this?</p>
               <h2 id="co-title" className="co-q">{quiz.questions[i]}</h2>
               <div className="co-answers">
                 {ANSWERS.map(([a, label]) => (

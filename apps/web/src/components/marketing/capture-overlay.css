@@ -47,9 +47,10 @@
 
 /* The picture keeps its own shape: the panel is as tall as the picture needs (up to the window),
    so a portrait photo is shown whole rather than cropped and enlarged. */
-.co-box.fitted{align-items:start}
 .co-box.fitted .co-copy{align-self:center}
-.co-box.fitted .co-art{aspect-ratio:var(--art-ratio);max-height:calc(100vh - 32px);align-self:start}
+/* At least as tall as the picture's own shape needs at this width (the art column is about 49% of
+   the box), so a portrait photo shows whole; never shorter than the copy beside it. */
+.co-box.fitted .co-art{align-self:stretch;min-height:min(calc(min(860px, 100vw - 32px) * .488 / var(--art-ratio)), calc(100vh - 32px))}
 .co-art img{image-rendering:auto}
 
 /* The quiz variant */

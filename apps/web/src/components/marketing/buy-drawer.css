@@ -1,0 +1,36 @@
+/* The course page's buy drawer: slides in from the right; full width on a phone. */
+.bd-overlay{position:fixed;inset:0;z-index:1000;background:rgba(23,18,31,.45);animation:bd-fade .2s ease}
+.bd-panel{position:absolute;top:0;right:0;bottom:0;width:min(460px,100vw);display:flex;flex-direction:column;background:#fff;
+  box-shadow:-20px 0 60px rgba(23,18,31,.25);animation:bd-slide .28s cubic-bezier(.2,.8,.2,1)}
+.bd-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid #EEEAF3}
+.bd-head b{display:block;font-size:1.05rem;color:#17121F}
+.bd-head span{display:block;font-size:.84rem;color:#6B6577}
+.bd-close{width:36px;height:36px;border:0;border-radius:50%;background:#F4F1F8;font-size:1.5rem;line-height:1;color:#3A3245;cursor:pointer}
+.bd-body{flex:1;overflow-y:auto;overscroll-behavior:contain;background:#fff!important}
+.bd-body.bypage-v2 .bybuy{position:static;top:auto}
+.bd-body.bypage-v2 .bybuy .bypanel{border:0;box-shadow:none;border-radius:0;padding:20px 22px 28px}
+@keyframes bd-fade{from{opacity:0}to{opacity:1}}
+@keyframes bd-slide{from{transform:translateX(100%)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){ .bd-overlay,.bd-panel{animation:none} }
+
+/* Progress: three steps with a bar that fills as the order is completed. */
+.bd-steps{position:relative;display:flex;justify-content:space-between;gap:6px;margin:0;padding:12px 20px 16px;list-style:none;border-bottom:1px solid #EEEAF3}
+.bd-steps li{display:flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;color:#9A93A6;z-index:1}
+.bd-steps .n{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#EEEAF3;color:#6B6577;font-size:.72rem;font-weight:800}
+.bd-steps li.done{color:#1F8A5B}
+.bd-steps li.done .n{background:#1F8A5B;color:#fff}
+.bd-steps li.now{color:#17121F}
+.bd-steps li.now .n{background:#F28C38;color:#1F1530}
+.bd-bar{position:absolute;left:20px;right:20px;bottom:6px;height:4px;border-radius:2px;background:#EEEAF3;overflow:hidden}
+.bd-bar::after{content:'';position:absolute;inset:0 auto 0 0;width:var(--p);background:linear-gradient(90deg,#1F8A5B,#F28C38);transition:width .35s ease}
+
+/* The small CPD banner, as under the course page's picture. */
+.bd-cpd{display:flex;align-items:center;gap:14px;margin:16px 22px 0;padding:12px 14px;border:1px solid #ECE8F2;border-radius:12px;background:#FAF8FC}
+.bd-cpd img{height:52px;width:auto;flex:0 0 auto}
+.bd-cpd b{display:block;font-size:.9rem;color:#17121F}
+.bd-cpd span{display:block;font-size:.78rem;line-height:1.45;color:#6B6577}
+@media(max-width:420px){ .bd-steps .t{font-size:.72rem} .bd-cpd img{height:44px} }
+
+/* The terms, stated at the foot of the drawer (no tick box here). */
+.bd-terms{margin:0;padding:14px 22px 22px;font-size:.78rem;line-height:1.5;color:#6B6577;border-top:1px solid #EEEAF3}
+.bd-terms a{color:#3A3245;font-weight:600;text-decoration:underline}

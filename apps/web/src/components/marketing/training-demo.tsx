@@ -2,6 +2,7 @@
 
 import { Fragment, useRef, useState } from 'react'
 import Link from 'next/link'
+import { openBuyDrawer } from './training-cart-buttons'
 import { CheckCircle2, XCircle, Sparkles, ArrowRight, ArrowLeft, RotateCcw, Send, Info, Globe } from 'lucide-react'
 import { SiteImage } from '@/components/site-image'
 import { careSetting } from '@/lib/care-setting'
@@ -263,6 +264,7 @@ export function TrainingDemo({
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link
               href={buyHref}
+              onClick={e => openBuyDrawer(e, buyHref)}
               className="flex-1 rounded-btn bg-blue-600 px-6 py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700"
             >
               Buy now for your team
@@ -418,7 +420,7 @@ export function TrainingDemo({
                 That is how the training works. Give your whole team the full {demo.title} module.
               </p>
               <div className="row">
-                <Link className="tbtn solid" href={buyHref}>Buy now for your team</Link>
+                <Link className="tbtn solid" href={buyHref} onClick={e => openBuyDrawer(e, buyHref)}>Buy now for your team</Link>
                 <a className="tbtn ghost" href="#courses">Browse the courses</a>
               </div>
               <button type="button" className="demo-again" onClick={again}>Try the demo again</button>

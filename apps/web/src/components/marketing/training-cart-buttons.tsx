@@ -79,7 +79,15 @@ export function BuyNowLink({ slug, className = '', label = 'Buy now', qty = 1 }:
   const cls = licenceOffer(offers, slug) ? `${className} offerbtn`.trim() : className
   return (
     <Link className={cls} href={`/buy/${slug}?qty=${qty}`}
-          onClick={() => fi('buy_now_click', { funnel: 'training', option: slug, qty })}>
+          onClick={e => {
+            fi('buy_now_click', { funnel: 'training', option: slug, qty })
+            // On a course page the buy panel opens as a drawer over the page (buy-drawer.tsx);
+            // the link to /buy/ stays for anywhere without one, and for search engines.
+            if ((window as unknown as { __csBuyDrawer?: string }).__csBuyDrawer === slug) {
+              e.preventDefault()
+              window.dispatchEvent(new CustomEvent('cs-buy-drawer', { detail: { slug, qty } }))
+            }
+          }}>
       {label}
     </Link>
   )
@@ -103,4 +111,12 @@ export function TrainingAddTextLink({ slug, title, unitPence, className = '' }: 
       or <button type="button" onClick={() => cart.add({ slug, title, unitPence })}>add to basket</button>
     </p>
   )
+}
+
+/** For any other link to /buy/<slug>: opens the course page's buy drawer instead, when there is one. */
+export function openBuyDrawer(e: { preventDefault: () => void }, href: string) {
+  const m = href.match(/^\/buy\/([a-z0-9-]+)(?:\?qty=(\d+))?/)
+  if (!m || (window as unknown as { __csBuyDrawer?: string }).__csBuyDrawer !== m[1]) return
+  e.preventDefault()
+  window.dispatchEvent(new CustomEvent('cs-buy-drawer', { detail: { slug: m[1], qty: Number(m[2]) || 1 } }))
 }

@@ -1878,6 +1878,8 @@ function captureFooter(unsubscribeUrl: string): string {
 export async function sendChecklistEmail(opts: {
   to: string; name: string; productName: string; funnel: 'training' | 'policies'
   pdf: Buffer; filename: string; link: string; unsubscribeUrl: string
+  /** From the quiz variant: their three answers, shown as results above the checklist. */
+  quiz?: { q: string; a: 'yes' | 'unsure' | 'no' }[]; requiredCount?: number
 }): Promise<void> {
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) throw new Error('Email is not configured')
@@ -1885,7 +1887,14 @@ export async function sendChecklistEmail(opts: {
   const esc = (s: any) => String(s ?? '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c] as string))
   const first = (opts.name || '').trim().split(/\s+/)[0] || ''
   const html = emailWrapper(`
-    <p style="color:${NEUTRAL_DARK};font-size:18px;font-weight:700;margin:0 0 8px">${first ? `${esc(first)}, here` : 'Here'} is your ${esc(opts.productName)} checklist</p>
+    <p style="color:${NEUTRAL_DARK};font-size:18px;font-weight:700;margin:0 0 8px">${first ? `${esc(first)}, here` : 'Here'} ${opts.quiz?.length ? 'are your results and' : 'is'} your ${esc(opts.productName)} checklist</p>
+    ${opts.quiz?.length ? (() => {
+      const covered = opts.quiz.filter(x => x.a === 'yes').length
+      const mark = { yes: ['&#10003; Yes', '#1F8A5B'], unsure: ['? Not sure', '#B4581A'], no: ['&#10007; No', '#B42318'] } as const
+      return `<p style="margin:0 0 8px;font-size:15px;color:#374151"><strong style="color:#F28C38;font-size:22px">${covered} of 3</strong> covered in your current policy</p>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;margin:0 0 10px">${opts.quiz.map(x => `<tr><td style="padding:7px 0;border-bottom:1px solid #eee;color:#374151">${esc(x.q)}</td><td style="padding:7px 0 7px 10px;border-bottom:1px solid #eee;white-space:nowrap;font-weight:700;color:${mark[x.a][1]}">${mark[x.a][0]}</td></tr>`).join('')}</table>
+      <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 14px">${covered === 3 ? 'A good start.' : `Your policy may be missing ${3 - covered} of these.`} An inspector expects ${opts.requiredCount ? `all ${opts.requiredCount} required elements` : 'every required element'} to be covered, not just these three. The checklist attached lists every one.</p>`
+    })() : ''}
     <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 14px">It is attached as a PDF. Use it to check any ${esc(opts.productName)} before you buy it, ${opts.funnel === 'training' ? 'whichever provider it comes from' : 'whether you buy one, write your own or have one written'}, so it stands up when CQC asks to see it.</p>
     <p style="margin:0 0 18px"><a href="${esc(opts.link)}" style="display:inline-block;background:#F28C38;color:#1F1530;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See how ours measures up</a></p>
     <p style="color:#374151;font-size:13px;line-height:1.6;margin:0 0 16px">Questions? Just reply to this email. CareStream is built by people who have worked in care homes.</p>
@@ -1893,7 +1902,7 @@ export async function sendChecklistEmail(opts: {
     ${captureFooter(opts.unsubscribeUrl)}
   `)
   await sgMail.send({
-    to: opts.to, from, replyTo: PURCHASE_NOTIFY_TO(), subject: `Your ${opts.productName} checklist`.slice(0, 150), html,
+    to: opts.to, from, replyTo: PURCHASE_NOTIFY_TO(), subject: `${opts.quiz?.length ? 'Your results and ' : 'Your '}${opts.productName} checklist`.slice(0, 150), html,
     attachments: [{ content: opts.pdf.toString('base64'), filename: opts.filename, type: 'application/pdf', disposition: 'attachment' }],
   })
 }

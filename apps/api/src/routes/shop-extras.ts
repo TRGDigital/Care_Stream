@@ -185,7 +185,8 @@ shopExtrasRouter.post('/capture', captureLimiter, async (req: Request, res: Resp
     }
     const result = await captureSignup({
       email, name: t(b.name, 80), funnel: b.funnel === 'policies' ? 'policies' : 'training', product,
-      kind: b.kind === 'lockin' ? 'lockin' : 'checklist', campaign_id: t(b.campaign_id, 40), variant: t(b.variant, 2),
+      kind: b.kind === 'lockin' ? 'lockin' : b.kind === 'quiz' ? 'quiz' : 'checklist', campaign_id: t(b.campaign_id, 40), variant: t(b.variant, 2),
+      quiz: (Array.isArray(b.quiz) ? b.quiz : []).slice(0, 3).map((x: any) => ({ q: t(x?.q, 400), a: ['yes', 'unsure', 'no'].includes(x?.a) ? x.a : 'unsure' })).filter((x: any) => x.q),
       consent_text: t(b.consent_text, 400), page: t(b.page, 200), attribution: cleanAttribution(b.attribution), emailStatus: check.status,
     })
     res.json({ data: result })

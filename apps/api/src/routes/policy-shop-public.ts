@@ -12,7 +12,7 @@ import { ok, err } from '../lib/response'
 import { downloadFile } from '../services/storage/s3'
 import { shopImageUrl } from '../services/policy-shop/shopImage'
 import { questionsForReferenceKeys } from '../data/policy-intake-questions'
-import { createShopCheckoutSession, retrieveShopCheckoutSession, type ShopItem } from '../services/billing/stripe'
+import { safeReturnPath, createShopCheckoutSession, retrieveShopCheckoutSession, type ShopItem } from '../services/billing/stripe'
 import { createLoginLink } from '../lib/login-tokens'
 import { siteUrl } from '../lib/urls'
 import { hashPassword } from '../services/auth/password'
@@ -259,7 +259,7 @@ policyShopPublicRouter.post('/checkout', async (req: Request, res: Response) => 
     // Optional, from the checkout page's details form. Free text, so trimmed and capped.
     const orgName = String(req.body?.org_name ?? '').trim().slice(0, 200)
     const buyerName = String(req.body?.name ?? '').trim().slice(0, 200)
-    const { url, totalPence } = await createShopCheckoutSession({ email, items, orgName, buyerName, attribution: cleanAttribution(req.body?.attribution), addons: cleanAddons(req.body?.addons, 'policies'), lock: typeof req.body?.lock === 'string' ? req.body.lock : undefined })
+    const { url, totalPence } = await createShopCheckoutSession({ email, items, orgName, buyerName, attribution: cleanAttribution(req.body?.attribution), addons: cleanAddons(req.body?.addons, 'policies'), lock: typeof req.body?.lock === 'string' ? req.body.lock : undefined, returnPath: safeReturnPath(req.body?.return_path) })
     ok(res, { url, total_pence: totalPence })
   } catch (e: any) {
     // Price lookup failures are the buyer's problem to see (a policy went inactive

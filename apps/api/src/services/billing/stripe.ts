@@ -208,7 +208,16 @@ function addonLines(keys: AddonKey[] | undefined): Stripe.Checkout.SessionCreate
   }))
 }
 
+/** A page on our own site to come back to from Stripe's back arrow: the course or policy page (or its
+ *  /cart) the buyer was on. Anything else falls back to the default for that checkout. */
+export function safeReturnPath(raw: unknown): string | undefined {
+  const p = typeof raw === 'string' ? raw.trim() : ''
+  return /^\/(staff-training|care-policies|buy|basket)(\/[a-z0-9-]+)*\/?$/.test(p) && p.length <= 200 ? p : undefined
+}
+
 export interface TrainingCheckoutInput {
+  /** Where Stripe's back arrow returns to (safeReturnPath). */
+  returnPath?: string
   addons?: AddonKey[]
   /** An offer held on a personal link (email capture lock-in). */
   lock?: string
@@ -254,7 +263,7 @@ export async function createTrainingCheckoutSession(input: TrainingCheckoutInput
     },
     billing_address_collection: 'required',
     success_url: `${webUrl()}/buy/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url:  `${webUrl()}/staff-training/${input.moduleSlug}?buy=cancelled`,
+    cancel_url:  `${webUrl()}${input.returnPath ?? `/staff-training/${input.moduleSlug}`}?buy=cancelled`,
   }
   if (managedPaymentsEnabled()) (params as any).managed_payments = { enabled: true }
   const session = await createSessionWithOfferNote(stripe, params)
@@ -488,6 +497,8 @@ async function priceShopItems(items: ShopItem[]): Promise<Array<{
 }
 
 export async function createShopCheckoutSession(input: {
+  /** Where Stripe's back arrow returns to (safeReturnPath). */
+  returnPath?: string
   attribution?: Attribution | null
   lock?: string
   addons?: AddonKey[]
@@ -577,7 +588,7 @@ export async function createShopCheckoutSession(input: {
     billing_address_collection: 'required',
     invoice_creation: { enabled: true },
     success_url: `${webUrl()}/care-policies/thank-you?session={CHECKOUT_SESSION_ID}`,
-    cancel_url:  `${webUrl()}/care-policies`,
+    cancel_url:  `${webUrl()}${input.returnPath ?? '/care-policies'}`,
   }
   if (managedPaymentsEnabled()) (params as any).managed_payments = { enabled: true }
 

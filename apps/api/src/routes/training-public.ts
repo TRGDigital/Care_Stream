@@ -5,7 +5,7 @@ import { illustrationUrl } from '../services/training/moduleImage'
 import { TOPIC_GROUP_LABELS } from '../data/training-topics'
 import { authorityLinksFor } from '../data/training-authority-links'
 import { CARE_SETTINGS, SETTING_LABELS } from '../lib/care-setting'
-import { createTrainingCheckoutSession, createTrainingBasketCheckoutSession, TRAINING_LICENCE_PENCE, retrieveTrainingCheckoutSession } from '../services/billing/stripe'
+import { safeReturnPath, createTrainingCheckoutSession, createTrainingBasketCheckoutSession, TRAINING_LICENCE_PENCE, retrieveTrainingCheckoutSession } from '../services/billing/stripe'
 import { createLoginLink } from '../lib/login-tokens'
 import { siteUrl } from '../lib/urls'
 import { translateTextsBatch, translateQuestionsBatch } from '../lib/translate'
@@ -477,7 +477,7 @@ publicTrainingRouter.post('/checkout', async (req: Request, res: Response) => {
     const topic = (topics as any[]).find(t => slugify(t.title) === slug)
     if (!topic) { res.status(404).json({ error: 'Unknown training module' }); return }
 
-    const url = await createTrainingCheckoutSession({ moduleSlug: slug, moduleName: topic.title, quantity: qty, email: mail, orgName: org, attribution: cleanAttribution(req.body?.attribution), addons: cleanAddons(req.body?.addons, 'training'), lock: typeof req.body?.lock === 'string' ? req.body.lock : undefined })
+    const url = await createTrainingCheckoutSession({ moduleSlug: slug, moduleName: topic.title, quantity: qty, email: mail, orgName: org, attribution: cleanAttribution(req.body?.attribution), addons: cleanAddons(req.body?.addons, 'training'), lock: typeof req.body?.lock === 'string' ? req.body.lock : undefined, returnPath: safeReturnPath(req.body?.return_path) })
     res.json({ data: { url } })
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'checkout failed' })
@@ -510,7 +510,7 @@ publicTrainingRouter.post('/checkout-basket', async (req: Request, res: Response
     }
     if (!built.length) { res.status(400).json({ error: 'No valid items in the basket' }); return }
 
-    const url = await createTrainingBasketCheckoutSession({ items: built, email: mail, orgName: org, attribution: cleanAttribution(req.body?.attribution), addons: cleanAddons(req.body?.addons, 'training'), lock: typeof req.body?.lock === 'string' ? req.body.lock : undefined })
+    const url = await createTrainingBasketCheckoutSession({ items: built, email: mail, orgName: org, attribution: cleanAttribution(req.body?.attribution), addons: cleanAddons(req.body?.addons, 'training'), lock: typeof req.body?.lock === 'string' ? req.body.lock : undefined, cancelPath: safeReturnPath(req.body?.return_path) })
     res.json({ data: { url } })
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'checkout failed' })

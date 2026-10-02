@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Minus, Plus, Loader2, ShieldCheck } from 'lucide-react'
 import { fi, fiAttribution } from '@/lib/funnel-insights'
 import { offerLock } from '@/lib/offer-lock'
+import { useRemembered } from '@/lib/remembered'
 import { PaymentLogos } from './payment-logos'
 import { AddonOption, InvoiceRequest, ADDONS, useSaveBasket } from './shop-upsells'
 import { useOffers, licenceDeal, money2, paidForTotal, offerEmoji } from '@/lib/offers'
@@ -37,8 +38,8 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default', init
     const q = Number(new URLSearchParams(window.location.search).get('qty'))
     if (Number.isFinite(q) && q >= 1) setQty(Math.min(500, Math.floor(q)))
   }, [])
-  const [email, setEmail] = useState('')
-  const [org, setOrg]     = useState('')
+  const [email, setEmail] = useRemembered('email')
+  const [org, setOrg]     = useRemembered('org')
   useSaveBasket({ funnel: 'training', email, org, items: [{ slug, qty }] })
   const [busy, setBusy]   = useState(false)
   const [error, setError] = useState('')

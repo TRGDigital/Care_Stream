@@ -163,18 +163,21 @@ export function SiteHeader() {
     <div className="cschrome cschrome-head">
       <header id="hdr" ref={ref} className={stuck ? 'stuck' : undefined}>
         <div className="wrap">
-          <nav className="nav" aria-label="Main">
+          {/* Funnel Insights counts the header (data-fi, public/t.js on Funnel Insights): opening a menu is
+              "nav-open", following any header link is "nav-leave", so the product pages can show how
+              often the top menu takes a buyer away. */}
+          <nav className="nav" aria-label="Main" data-fi="nav-leave">
             <Link className="brand" href="/" onClick={close}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img className="cslogo" src="/logo-color.svg" alt="CareStream" width={187} height={56} />
             </Link>
             <Link className="navbtn" href="/about" onClick={close}>About Care Stream</Link>
             <Link className="navbtn" href="/how-it-works" onClick={close}>How It Works</Link>
-            <button type="button" className="navbtn" aria-expanded={open === 'm1'} aria-controls="m1"
+            <button type="button" className="navbtn" aria-expanded={open === 'm1'} aria-controls="m1" data-fi="nav-open"
                     onClick={() => toggle('m1')} onMouseEnter={() => hover('m1')}>
               Our Services <Chev />
             </button>
-            <button type="button" className="navbtn" aria-expanded={open === 'm2'} aria-controls="m2"
+            <button type="button" className="navbtn" aria-expanded={open === 'm2'} aria-controls="m2" data-fi="nav-open"
                     onClick={() => toggle('m2')} onMouseEnter={() => hover('m2')}>
               Who It&rsquo;s For <Chev />
             </button>
@@ -190,7 +193,7 @@ export function SiteHeader() {
               <Link className="navbtn" href="/login" onClick={close}>Sign in</Link>
               <Link className="pill pill-ghost" href="/demo" onClick={close}>Book a demo</Link>
               <Link className="pill pill-solid" href="/register" onClick={close}>Start free trial</Link>
-              <button type="button" className="iconbtn menubtn" aria-label={mobile ? 'Close menu' : 'Open menu'}
+              <button type="button" className="iconbtn menubtn" data-fi="nav-open" aria-label={mobile ? 'Close menu' : 'Open menu'}
                       aria-expanded={mobile} onClick={() => { setOpen(null); setMobile(m => !m) }}>
                 <svg viewBox="0 0 20 20" fill="none" width="18" height="18" aria-hidden="true">
                   {mobile
@@ -202,7 +205,7 @@ export function SiteHeader() {
           </nav>
         </div>
 
-        <div className="mega-host">
+        <div className="mega-host" data-fi="nav-leave">
           <div className={`mega${open === 'm1' ? ' open' : ''}`} id="m1">
             <Items items={MEGA_SERVICES} onPick={close} />
             <Cols cols={[POLICY_COLLECTIONS, TRAINING_COLLECTIONS, FEATURES]} onPick={close} />
@@ -216,17 +219,17 @@ export function SiteHeader() {
         </div>
 
         {/* Below 1280px: the theme's nav links are hidden, so the same destinations live here. */}
-        <div className="mnav" hidden={!mobile}>
+        <div className="mnav" hidden={!mobile} data-fi="nav-leave">
           <div className="wrap">
             <Link href="/about" onClick={close}>About Care Stream</Link>
             <Link href="/how-it-works" onClick={close}>How It Works</Link>
             <details>
-              <summary>Our Services <Chev /></summary>
+              <summary data-fi="nav-open">Our Services <Chev /></summary>
               <Items items={MEGA_SERVICES} onPick={close} />
               <Cols cols={[POLICY_COLLECTIONS, TRAINING_COLLECTIONS, FEATURES]} onPick={close} />
             </details>
             <details>
-              <summary>Who It&rsquo;s For <Chev /></summary>
+              <summary data-fi="nav-open">Who It&rsquo;s For <Chev /></summary>
               <Items items={MEGA_WHO} onPick={close} />
               <Cols cols={[SETTINGS_A, SETTINGS_B]} onPick={close} />
             </details>

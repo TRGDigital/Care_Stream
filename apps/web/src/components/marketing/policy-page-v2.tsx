@@ -58,8 +58,8 @@ const Tick = () => (
 // One line under the title saying who the policy is for. Add a policy's slug to show it there.
 const WHO_FOR: Record<string, string> = {
   'data-protection-gdpr':
-    'Perfect for registered managers and owners of care homes, nursing homes and home care services who need a '
-    + 'GDPR policy that meets UK GDPR, the Data Protection Act 2018 and what CQC inspectors look for.',
+    'Perfect for services who need a GDPR policy that meets UK GDPR, the Data Protection Act 2018 and what CQC '
+    + 'inspectors look for.',
 }
 
 const Star = () => (

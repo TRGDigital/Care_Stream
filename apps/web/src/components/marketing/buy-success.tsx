@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { AlmostStopped } from './shop-questions'
+import { BuyerQuestions } from './shop-questions'
 import { PostPurchaseTraining } from './shop-upsells'
 import { CheckCircle2, Loader2, Mail, AlertTriangle } from 'lucide-react'
 import { reportPurchase } from '@/lib/google-ads'
@@ -15,12 +15,16 @@ type State = { status: 'working' | 'done' | 'error'; email?: string; message?: s
 export function BuySuccess() {
   const params = useSearchParams()
   const sessionId = params.get('session_id') ?? ''
+  // ?preview=1: the finished page with a sample order, for checking the page itself. Nothing is
+  // confirmed, reported to Google Ads or saved.
+  const preview = params.get('preview') === '1'
   const [state, setState] = useState<State>({ status: 'working' })
   const ran = useRef(false)
 
   useEffect(() => {
     if (ran.current) return
     ran.current = true
+    if (preview) { setState({ status: 'done', email: 'sam@example.com', slug: 'care-certificate', postPurchase: true }); return }
     if (!sessionId) { setState({ status: 'error', message: 'Missing checkout reference.' }); return }
     ;(async () => {
       try {
@@ -38,7 +42,7 @@ export function BuySuccess() {
         setState({ status: 'error', message: e?.message ?? 'Something went wrong confirming your purchase.' })
       }
     })()
-  }, [sessionId])
+  }, [sessionId, preview])
 
   return (
     <section className="bg-neutral-light py-20 md:py-28">
@@ -71,7 +75,7 @@ export function BuySuccess() {
               <PostPurchaseTraining sessionId={sessionId} slug={state.slug}
                 title={state.slug.replace(/-/g, ' ').replace(/^./, c => c.toUpperCase())} />
             )}
-            <AlmostStopped funnel="training" />
+            <BuyerQuestions funnel="training" product={state.slug} preview={preview} />
           </>
         )}
 

@@ -13,6 +13,7 @@ import { StickyBarReveal } from './sticky-bar-reveal'
 import { ModuleBuyPanel } from './module-buy-panel'
 import { ScrollSequence } from './scroll-sequence'
 import { REVIEWS } from '@/lib/reviews'
+import { COURSE_CRO } from '@/lib/course-cro'
 import { PaymentLogos } from './payment-logos'
 import { ExitQuestion } from './shop-questions'
 import { CaptureOverlay } from './capture-overlay'
@@ -72,13 +73,6 @@ export interface RelatedModule {
   duration_minutes?: number | null
   requires_practical?: boolean
   illustration_url?: string | null
-}
-
-// One line under the title saying who the course is for. Add a course's slug to show it there.
-const WHO_FOR: Record<string, string> = {
-  'care-certificate':
-    'Perfect for new care workers, healthcare assistants and support workers starting out in health and social care, '
-    + 'and for managers inducting new starters in their first 12 weeks.',
 }
 
 const Tick = () => (
@@ -243,6 +237,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
   // estimate the library cards do.
   const est = estimatedMinutes(m.group_key, m.duration_minutes)
   const addLabel = { slug: m.slug, title: m.title, unitPence }
+  const cro = COURSE_CRO[m.slug] ?? {}
   const faqModule: FaqModule = {
     title: m.title, duration_minutes: m.duration_minutes, estMinutes: est, sections,
     question_count: m.question_count, pass_mark: m.pass_mark, frequency: m.frequency,
@@ -305,7 +300,12 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               )}
             </div>
             <h1>{m.title} training that gets your team CQC-ready</h1>
-            {WHO_FOR[m.slug] && <p className="mpe-for">{WHO_FOR[m.slug]}</p>}
+            {cro.whoFor && <p className="mpe-for">{cro.whoFor}</p>}
+            {cro.benefits && (
+              <ul className="mpe-benefits">
+                {cro.benefits.map(b => <li key={b}><Tick />{b}</li>)}
+              </ul>
+            )}
             {(REVIEWS[0]?.courses?.[m.slug] ?? REVIEWS[0]?.short) && (
               <blockquote className="mpe-quote">
                 <p>&ldquo;{REVIEWS[0].courses?.[m.slug] ?? REVIEWS[0].short}&rdquo;</p>
@@ -354,6 +354,17 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
                 </span>
               </div>
             </figure>
+
+            {cro.moments?.length ? (
+              <div className="mpe-moments">
+                <h2>When you need this course</h2>
+                <ul>
+                  {cro.moments.map(x => (
+                    <li key={x.title}><b>{x.title}</b><span>{x.body.replace('{duration}', durationText(est))}</span></li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
 
             {demo && (
               <div className="mpe-demo">

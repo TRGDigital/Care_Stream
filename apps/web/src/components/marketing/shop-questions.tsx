@@ -11,7 +11,8 @@ import './shop-questions.css'
 // what stopped them. Quick choices, because a tick gets answered far more than an empty box, plus
 // a box for anything else. Never shown to anyone who has clicked Buy now or Checkout.
 //
-// AlmostStopped: on the thank-you pages. What almost stopped a buyer is usually what actually
+// BuyerQuestions: on the thank-you pages, what happened just before they looked, then
+// AlmostStopped: what almost stopped them. What almost stopped a buyer is usually what actually
 // stopped the people who left, so it is the best guide to what to fix.
 
 type Funnel = 'training' | 'policies'
@@ -21,6 +22,15 @@ const EXIT_CHOICES: Record<Funnel, string[]> = {
     'I am comparing other training providers', 'Not sure it covers what we need', 'Just looking for now'],
   policies: ['I need to check with my manager first', 'The price', 'I need to pay by invoice or purchase order',
     'I am comparing other policy providers', 'Not sure it fits our service', 'Just looking for now'],
+}
+// What happened just before they looked: the moments that send a manager looking (DRIP's
+// "category entry points"). The answers decide what the course page's "When you need this"
+// section and the ad headlines lead with (lib/course-cro.ts).
+const TRIGGER_CHOICES: Record<Funnel, string[]> = {
+  training: ['A new starter joined', 'A CQC inspection is coming', 'Training was due for renewal',
+    'CQC, the local authority or a commissioner asked for it', 'Staff needed it in their own language', 'An incident or complaint'],
+  policies: ['A CQC inspection is coming', 'Our policy was out of date', 'An incident, breach or complaint',
+    'CQC, the local authority or a commissioner asked for it', 'We are opening or registering a service', 'A change in the law or guidance'],
 }
 const ALMOST_CHOICES = ['No, it was easy', 'The price', 'I needed approval first', 'Not sure it would cover what we need',
   'The checkout or payment', 'Something about the website']
@@ -99,7 +109,26 @@ export function ExitQuestion({ funnel, product }: { funnel: Funnel; product?: st
   )
 }
 
-export function AlmostStopped({ funnel }: { funnel: Funnel }) {
+/** On the thank-you pages, first: what happened just before they looked. Then AlmostStopped. */
+export function BuyerQuestions({ funnel, product, preview = false }: { funnel: Funnel; product?: string | null; preview?: boolean }) {
+  const [picked, setPicked] = useState('')
+  const [text, setText] = useState('')
+  const [sent, setSent] = useState(false)
+  if (sent) return <AlmostStopped funnel={funnel} preview={preview} />
+  return (
+    <div className="sq-card">
+      <h3>What happened just before you looked for this {funnel === 'training' ? 'course' : 'policy'}?</h3>
+      <Choices choices={TRIGGER_CHOICES[funnel]} picked={picked} setPicked={setPicked} />
+      <textarea value={text} onChange={e => setText(e.target.value)} maxLength={1000} rows={2} placeholder="Tell us more (optional)" />
+      <button type="button" className="sq-send" disabled={!picked && !text.trim()}
+              onClick={() => { if (!preview) fiFeedback({ kind: 'trigger', choice: picked || undefined, answer: text || undefined, funnel, product: product ?? undefined }); setSent(true) }}>
+        Send
+      </button>
+    </div>
+  )
+}
+
+export function AlmostStopped({ funnel, preview = false }: { funnel: Funnel; preview?: boolean }) {
   const [picked, setPicked] = useState('')
   const [text, setText] = useState('')
   const [sent, setSent] = useState(false)
@@ -110,7 +139,7 @@ export function AlmostStopped({ funnel }: { funnel: Funnel }) {
       <Choices choices={ALMOST_CHOICES} picked={picked} setPicked={setPicked} />
       <textarea value={text} onChange={e => setText(e.target.value)} maxLength={1000} rows={2} placeholder="Tell us more (optional)" />
       <button type="button" className="sq-send" disabled={!picked && !text.trim()}
-              onClick={() => { fiFeedback({ kind: 'almost_stopped', choice: picked || undefined, answer: text || undefined, funnel }); setSent(true) }}>
+              onClick={() => { if (!preview) fiFeedback({ kind: 'almost_stopped', choice: picked || undefined, answer: text || undefined, funnel }); setSent(true) }}>
         Send
       </button>
     </div>

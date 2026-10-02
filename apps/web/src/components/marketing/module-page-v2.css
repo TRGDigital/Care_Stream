@@ -763,3 +763,15 @@
 /* The buy column spans both rows: its extra height goes to the gallery row, never between the
    picture and the gallery. */
 @media(min-width:961px){ .mpage-v2 .mpe-in{grid-template-rows:auto 1fr} }
+
+/* Who it is for, the two benefits under it, and "When you need this course" (lib/course-cro.ts). */
+.mpage-v2 .mpe-benefits{list-style:none;margin:-4px 0 14px;padding:0;display:flex;flex-wrap:wrap;gap:6px 16px}
+.mpage-v2 .mpe-benefits li{display:flex;align-items:center;gap:6px;font-size:.88rem;font-weight:600;color:var(--ink)}
+.mpage-v2 .mpe-benefits svg{width:16px;height:16px;flex:none;color:#1f9d55}
+.mpage-v2 .mpe-moments{border:1px solid var(--line);border-radius:16px;padding:20px 22px;background:#fff}
+.mpage-v2 .mpe-moments h2{margin:0 0 12px;font-size:1.1rem}
+.mpage-v2 .mpe-moments ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mpage-v2 .mpe-moments li{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:12px;background:var(--ground);border-left:3px solid #F28C38}
+.mpage-v2 .mpe-moments li b{font-size:.92rem}
+.mpage-v2 .mpe-moments li span{font-size:.86rem;line-height:1.5;color:var(--ink-2)}
+@media (max-width:640px){.mpage-v2 .mpe-moments ul{grid-template-columns:1fr}.mpage-v2 .mpe-moments{padding:16px}}

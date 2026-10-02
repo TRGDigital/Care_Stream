@@ -95,8 +95,10 @@ function Details({ orgLabel, orgPlaceholder, emailNote, org, setOrg, name, setNa
   )
 }
 
-function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, extras, invoice, termsBelow = false }: {
+function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, extras, invoice, termsBelow = false, was }: {
   lines: ReactNode; total: number; sub: string
+  /** The total before the offer, shown struck through beside the total when the offer saved them money. */
+  was?: number
   /** "Save yourself time": the add-on and the send-to-manager link, above the total. */
   extras?: ReactNode
   invoice: { funnel: 'training' | 'policies'; items: string[] }
@@ -113,7 +115,7 @@ function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, ext
         <h2>Order summary</h2>
         <div className="cklines">{lines}</div>
         {extras && <div className="su-sumextras"><b>Save yourself time</b>{extras}</div>}
-        <div className="cktotal"><span>Total</span><b>{money(total)}</b></div>
+        <div className="cktotal"><span>Total</span><b>{was && was > total ? <s className="ckwastotal">{money(was)}</s> : null}{money(total)}</b></div>
         <p className="cksub">{sub}</p>
         {!termsBelow && <label className="ckterms">
           <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} />
@@ -625,13 +627,24 @@ export function PolicyCheckout({ compact = false, onProgress }: {
       summary={
         <Summary
           lines={<>
-            <div><span>{label}</span><b>{money(gross)}</b></div>
+            {/* What they are buying, one line each, the free one marked free. */}
+            {items.map(i => (
+              <div className="ckline-item" key={i.slug}>
+                <span>{i.title}</span>
+                <b>{free.has(i.slug)
+                  ? <><s className="ckwas">{money(i.price_pence)}</s> <span className="ckfreetag">Free</span></>
+                  : priceOf(i.slug) < (i.price_pence || 0)
+                    ? <><s className="ckwas">{money(i.price_pence)}</s> {money(priceOf(i.slug))}</>
+                    : money(i.price_pence)}</b>
+              </div>
+            ))}
             {offerValue > 0 && <div className="save"><span>{deal.offer?.label ?? 'Offer'}{free.size ? `: ${free.size} free ${free.size === 1 ? 'policy' : 'policies'}` : ''}</span><b>−{money(offerValue)}</b></div>}
             {gift && <div className="save"><span>{deal.offer?.label ?? 'Offer'}: {gift.title} added free</span><b>Free</b></div>}
             {priority && <div><span>Priority delivery within 24 hours</span><b>{money(ADDONS['priority-policy'].pence)}</b></div>}
             <div><span>First year of updates</span><b>Included</b></div>
           </>}
           total={total}
+          was={offerValue > 0 ? total + offerValue : undefined}
           extras={items.length ? <>
             <AddonOption k="priority-policy" checked={priority} onChange={setPriority} />
             <ShareBasket funnel="policies" items={items.map(i => i.slug)} />

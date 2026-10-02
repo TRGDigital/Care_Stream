@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Minus, Plus, Loader2, ShieldCheck } from 'lucide-react'
 import { fi, fiAttribution } from '@/lib/funnel-insights'
 import { offerLock } from '@/lib/offer-lock'
+import { reportMicro } from '@/lib/google-ads'
 import { useRemembered } from '@/lib/remembered'
 import { PaymentLogos } from './payment-logos'
 import { AddonOption, InvoiceRequest, ADDONS, useSaveBasket } from './shop-upsells'
@@ -70,6 +71,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default', init
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) { setError('Please enter a valid email address.'); return }
     setBusy(true)
     fi('checkout_start', { funnel: 'training', option: slug, label: moduleName, qty })
+    reportMicro('begin_checkout', slug)
     try {
       const res = await fetch(`${API_URL}/public/training/checkout`, {
         method:  'POST',

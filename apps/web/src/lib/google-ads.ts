@@ -67,3 +67,27 @@ export function reportPageView(url: string) {
   if (typeof gtag !== 'function') return
   gtag('event', 'page_view', { send_to: GOOGLE_ADS_ID, page_location: url, page_path: new URL(url).pathname, page_title: document.title })
 }
+
+// Micro-conversions, valued at nothing, for Maximise conversions while purchases are few:
+// "Add to cart" (the cart drawer opens) and "Begin checkout" (Checkout securely is pressed).
+// Each needs its conversion action's label from Google Ads (Goals → Conversions → the action →
+// Tag setup → send_to 'AW-…/<label>'); with no label nothing is sent.
+export const GOOGLE_ADS_MICRO_LABELS = {
+  add_to_basket: '',
+  begin_checkout: '',
+} as const
+
+export type MicroKind = keyof typeof GOOGLE_ADS_MICRO_LABELS
+
+/** Reports a micro-conversion once per product per visit (Google Ads also counts "One" per click). */
+export function reportMicro(kind: MicroKind, product: string) {
+  if (typeof window === 'undefined') return
+  const label = GOOGLE_ADS_MICRO_LABELS[kind]
+  if (!label) return
+  const key = `gads-micro:${kind}:${product}`
+  try { if (sessionStorage.getItem(key)) return } catch {}
+  const gtag = (window as unknown as { gtag?: Gtag }).gtag
+  if (typeof gtag !== 'function') return
+  gtag('event', 'conversion', { send_to: `${GOOGLE_ADS_ID}/${label}` })
+  try { sessionStorage.setItem(key, '1') } catch {}
+}

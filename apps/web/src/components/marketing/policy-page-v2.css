@@ -687,3 +687,24 @@
 .pcpage-v2 .mpe-moments li b{font-size:.92rem}
 .pcpage-v2 .mpe-moments li span{font-size:.86rem;line-height:1.5;color:var(--ink-2)}
 @media (max-width:640px){.pcpage-v2 .mpe-moments ul{grid-template-columns:1fr}.pcpage-v2 .mpe-moments{padding:16px}}
+
+/* Our guarantee and our story (right-hand column): cards that stand out, as on the course pages. */
+.pcpage-v2 .mpe-promise-eyebrow{margin:0 0 2px !important;font-size:.72rem !important;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#B4581A !important}
+.pcpage-v2 .mpe-promise{display:grid;grid-template-columns:48px 1fr;gap:14px;align-items:start;margin-top:18px;padding:18px;border-radius:16px;background:#FFF4E8;border:1.5px solid #F28C38}
+.pcpage-v2 .mpe-promise-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:#F28C38;color:#fff}
+.pcpage-v2 .mpe-promise-icon svg{width:26px;height:26px}
+.pcpage-v2 .mpe-promise h3{margin:0 0 6px;font-size:1.08rem;font-weight:800;letter-spacing:-.01em;color:var(--ink)}
+.pcpage-v2 .mpe-promise p{margin:0;font-size:.86rem;line-height:1.55;color:var(--ink-2)}
+.pcpage-v2 .mpe-promise .mpe-promise-more{margin-top:8px}
+.pcpage-v2 .mpe-promise a,.pcpage-v2 .mpe-story a{color:var(--accent);font-weight:600}
+.pcpage-v2 .mpe-story{display:grid;grid-template-columns:96px 1fr;gap:16px;align-items:start;margin:14px 0 0;padding:20px;border-radius:16px;background:#F3ECFA;border:1.5px solid #D9C6EE}
+.pcpage-v2 .mpe-story-photo{width:96px;height:96px;border-radius:50%;object-fit:cover;display:block;border:3px solid #fff;box-shadow:0 0 0 3px #F28C38}
+.pcpage-v2 .mpe-story blockquote{margin:0 0 10px;font-size:.92rem;line-height:1.6;font-style:italic;color:var(--ink)}
+.pcpage-v2 .mpe-story .mpe-story-sign{margin:0;font-size:.8rem;color:var(--ink-2)}
+.pcpage-v2 .mpe-story .mpe-story-sign b{display:block;font-size:.92rem;color:var(--ink)}
+@media (max-width:420px){
+  .pcpage-v2 .mpe-story{grid-template-columns:1fr;justify-items:start;padding:16px}
+  .pcpage-v2 .mpe-story-photo{width:76px;height:76px}
+  .pcpage-v2 .mpe-promise{grid-template-columns:40px 1fr;padding:14px}
+  .pcpage-v2 .mpe-promise-icon{width:40px;height:40px}
+}

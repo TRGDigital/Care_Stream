@@ -271,15 +271,35 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
               <li><Tick /><span>Updated when the law changes</span></li>
             </ul>
 
-            <div className="mpe-guarantee">
-              <h3><span>Our guarantee</span></h3>
-              <p>
-                If a policy is not right for your service, tell us within fourteen days and we refund it in
-                full. Every policy is read by a person before it carries your name, and the first year of
-                updates is included.
-              </p>
-              <p>Built by people who have worked in care homes. <Link href="/about">Read our story</Link>.</p>
+            {/* Our guarantee, and (where written) our story: the reasons to trust us, as cards that stand out. */}
+            <div className="mpe-promise">
+              <span className="mpe-promise-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6L12 3Z" /><path d="m8.5 12 2.5 2.5 4.5-5" />
+                </svg>
+              </span>
+              <div>
+                <p className="mpe-promise-eyebrow">Our guarantee</p>
+                <h3>Full refund within 14 days</h3>
+                <p>
+                  If a policy is not right for your service, tell us within fourteen days and we refund it in
+                  full. Every policy is read by a person before it carries your name, and the first year of
+                  updates is included.
+                </p>
+                {!cro.story && <p className="mpe-promise-more">Built by people who have worked in care homes. <Link href="/about">Read our story</Link>.</p>}
+              </div>
             </div>
+
+            {cro.story && (
+              <figure className="mpe-story">
+                <SiteImage src="/images/founder/len-burgess.webp" alt="Len Burgess, founder of CareStream" width={96} height={96} className="mpe-story-photo" />
+                <figcaption>
+                  <p className="mpe-promise-eyebrow">Our story</p>
+                  <blockquote>&ldquo;{cro.story}&rdquo;</blockquote>
+                  <p className="mpe-story-sign"><b>Len Burgess</b> Founder, CareStream · <Link href="/about">Read our story</Link></p>
+                </figcaption>
+              </figure>
+            )}
 
             <ProductFaqs title="About this policy" faqs={policyProductFaqs(product, regulations, elements)} />
             <PolicyDocMock p={product} regs={regulations} elements={elements} />

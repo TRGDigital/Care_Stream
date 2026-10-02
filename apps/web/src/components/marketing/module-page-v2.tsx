@@ -11,7 +11,7 @@ import { LicenceOfferCard, OfferBarChip } from './licence-offer'
 import { TrainingAddButton, TrainingCartLink, TrainingSaveButton, BuyNowLink, TrainingAddTextLink } from './training-cart-buttons'
 import { StickyBarReveal } from './sticky-bar-reveal'
 import { ModuleBuyPanel } from './module-buy-panel'
-import { StickyFit } from './sticky-fit'
+import { ScrollSequence } from './scroll-sequence'
 import { REVIEWS } from '@/lib/reviews'
 import { PaymentLogos } from './payment-logos'
 import { ExitQuestion } from './shop-questions'
@@ -265,8 +265,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
       {/* Above the fold, laid out like a shop product page: the course on the left as a gallery
           (picture, proof, a real lesson to try, the standards it covers), and everything needed to
           buy on the right, held in view until the gallery ends. */}
-      <StickyFit selector=".mpage-v2 .mpe-info" />
-      <StickyFit selector=".mpage-v2 .mpe-gallery" />
+      <ScrollSequence root=".mpage-v2 .mpe-in" />
       <ExitQuestion funnel="training" product={m.slug} />
       <CaptureOverlay funnel="training" product={m.slug} title={m.title} image={hero} />
       <section className="mhero mpe">

@@ -112,3 +112,11 @@ export function TrainingAddTextLink({ slug, title, unitPence, className = '' }: 
     </p>
   )
 }
+
+/** For any other link to /buy/<slug>: opens the course page's buy drawer instead, when there is one. */
+export function openBuyDrawer(e: { preventDefault: () => void }, href: string) {
+  const m = href.match(/^\/buy\/([a-z0-9-]+)(?:\?qty=(\d+))?/)
+  if (!m || (window as unknown as { __csBuyDrawer?: string }).__csBuyDrawer !== m[1]) return
+  e.preventDefault()
+  window.dispatchEvent(new CustomEvent('cs-buy-drawer', { detail: { slug: m[1], qty: Number(m[2]) || 1 } }))
+}

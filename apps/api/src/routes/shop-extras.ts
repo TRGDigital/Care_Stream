@@ -13,6 +13,7 @@ import { priceBasket } from '../services/shop/basket-pricing'
 import { saveBasket, optOutByToken } from '../services/shop/basket-recovery'
 import { captureSignup, checkEmail, loadChecklist } from '../services/shop/email-capture'
 import { checklistPdf } from '../services/shop/checklist-pdf'
+import { reviewRequestByToken, submitReview } from '../services/shop/review-requests'
 
 // Shop extras that sit around the checkouts:
 //   POST /public/shop/share-basket   email a basket to a manager for sign-off, with a link back
@@ -214,5 +215,41 @@ shopExtrasRouter.get('/checklist-pdf', async (req: Request, res: Response) => {
     res.send(pdf)
   } catch {
     res.status(500).json({ error: 'Could not build the checklist' })
+  }
+})
+
+// The review form linked from the review request email (/review?t=<token> on the site).
+//   GET  /public/shop/review?t=   what the form needs: the course name and the buyer's name
+//   POST /public/shop/review      { t, rating, body, display_name, setting, consent }
+const reviewLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false,
+  keyGenerator: (req) => req.ip ?? 'unknown',
+  message: { error: 'Too many attempts. Please try again later.' },
+})
+
+shopExtrasRouter.get('/review', reviewLimiter, async (req: Request, res: Response) => {
+  try {
+    const r = await reviewRequestByToken(String(req.query.t ?? ''))
+    if (!r) { res.status(404).json({ error: 'This review link is not valid.' }); return }
+    res.json({ data: { product_name: r.productName, product_slug: r.productSlug, name: r.name, org: r.org, done: r.done, preview: !!r.preview } })
+  } catch (e: any) {
+    res.status(500).json({ error: e?.message ?? 'failed' })
+  }
+})
+
+shopExtrasRouter.post('/review', reviewLimiter, async (req: Request, res: Response) => {
+  try {
+    const clean = (v: unknown, n: number) => String(v ?? '').replace(/[<>]/g, '').trim().slice(0, n)
+    const rating = Math.round(Number(req.body?.rating))
+    const body = clean(req.body?.body, 2000)
+    if (!(rating >= 1 && rating <= 5)) { res.status(400).json({ error: 'Please choose a star rating.' }); return }
+    if (body.length < 3) { res.status(400).json({ error: 'Please write a few words about the course.' }); return }
+    const out = await submitReview(String(req.body?.t ?? ''), {
+      rating, body, displayName: clean(req.body?.display_name, 80), setting: clean(req.body?.setting, 80), consent: req.body?.consent === true,
+    })
+    if (out === 'unknown') { res.status(404).json({ error: 'This review link is not valid.' }); return }
+    res.json({ data: { saved: out === 'ok', preview: out === 'preview' } })
+  } catch (e: any) {
+    res.status(500).json({ error: e?.message ?? 'failed' })
   }
 })

@@ -11,6 +11,8 @@ export interface Review {
   /** A shorter cut for a product page, same rules as excerpt. */
   short?:  string
   shortPolicies?: string
+  /** What the same customer said about one course, shown on that course's page (by slug). */
+  courses?: Record<string, string>
   name:    string
   setting: string
 }
@@ -38,6 +40,11 @@ export const REVIEWS: Review[] = [
     shortPolicies:
       'I haven’t found anything else as comprehensive, easy to use, or as clever; to have a tool such as this '
       + 'for our company policies to act as a living on-hand guide for my staff.',
+    courses: {
+      'care-certificate':
+        'Superb care certificate training, our team loved it, and it really helped them having it in '
+        + 'multiple languages so they could understand everything in detail',
+    },
     name:    'A. Arbery',
     setting: 'Nursing Home',
   },

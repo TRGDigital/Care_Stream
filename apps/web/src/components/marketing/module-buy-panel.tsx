@@ -1,5 +1,6 @@
 'use client'
 
+import { OfferLine } from './offer-line'
 import { useState } from 'react'
 import { useOffers, licenceDeal, licenceOffer, licenceEffectivePence, endsText, money2, totalFor, paidForTotal } from '@/lib/offers'
 import { BuyNowLink, TrainingAddTextLink, TrainingSaveButton } from './training-cart-buttons'
@@ -26,10 +27,7 @@ export function ModuleBuyPanel({ slug, title, unitPence }: { slug: string; title
   return (
     <div className="mpe-buy mbuy">
       {offer && (
-        <div className="mpe-offerline">
-          <span className="mpe-offer-emoji" aria-hidden="true">🎃</span>
-          <p><b>{offer.label}: {offer.headline}.</b> {endsText(offer)}. Applied automatically at checkout.</p>
-        </div>
+        <OfferLine offer={offer} funnel="training" />
       )}
       <div className="mpe-price">
         {headline < unitPence && <s>{money2(unitPence)}</s>}

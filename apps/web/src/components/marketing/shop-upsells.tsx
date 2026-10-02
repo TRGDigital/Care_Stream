@@ -122,7 +122,7 @@ export function PostPurchaseTraining({ sessionId, slug, title }: { sessionId: st
   const total = paid + deal.free
   return (
     <div className="su-pp">
-      <span className="su-pp-tag">🎃 Your order qualifies · {text} left</span>
+      <span className="su-pp-tag">🎁 Your order qualifies · {text} left</span>
       <h3>Add more {title} licences at {POST_PURCHASE_PCT}% off</h3>
       <p>A one-time offer for the next 15 minutes{deal.free ? `, on top of the ${deal.offer?.label ?? 'offer'}` : ''}. Same account, nothing to fill in again.</p>
       <div className="su-pp-row">
@@ -164,7 +164,7 @@ export function PostPurchasePolicies({ sessionId, bought }: { sessionId: string;
   const now = chosen.reduce((t, p) => t + Math.round(p.price_pence * (1 - POST_PURCHASE_PCT / 100)), 0)
   return (
     <div className="su-pp">
-      <span className="su-pp-tag">🎃 Your order qualifies · {text} left</span>
+      <span className="su-pp-tag">🎁 Your order qualifies · {text} left</span>
       <h3>Add more policies at {POST_PURCHASE_PCT}% off</h3>
       <p>A one-time offer for the next 15 minutes. Written for your service from the answers you have already given us.</p>
       <div className="su-pp-row">

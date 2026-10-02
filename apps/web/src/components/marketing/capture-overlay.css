@@ -1,0 +1,84 @@
+/* The email capture overlay: copy and commits on the left, the product picture on the right.
+   On a phone it rises from the bottom and the picture is left out. */
+.co-overlay{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:16px;background:rgba(23,18,31,.55);
+  animation:co-fade .2s ease}
+.co-box{position:relative;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);width:min(860px,100%);max-height:calc(100vh - 32px);
+  overflow:hidden;border-radius:20px;background:#fff;box-shadow:0 30px 80px rgba(23,18,31,.35)}
+.co-box.noimg{grid-template-columns:1fr;width:min(520px,100%)}
+.co-copy{padding:30px 32px 26px;overflow-y:auto;display:flex;flex-direction:column}
+.co-logo{height:30px;width:auto;align-self:center;margin-bottom:22px}
+.co-eyebrow{margin:0 0 8px;font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#B4581A}
+.co-copy h2{margin:0 0 10px;font-weight:800;font-size:1.65rem;line-height:1.15;letter-spacing:-.025em;color:#17121F}
+.co-body{margin:0 0 18px;font-size:.98rem;line-height:1.6;color:#3A3245}
+.co-btn{width:100%;height:52px;border:0;border-radius:12px;background:#F28C38;color:#1F1530;font:inherit;font-size:1.02rem;font-weight:800;cursor:pointer;
+  box-shadow:0 6px 18px rgba(242,140,56,.35)}
+.co-btn:hover{background:#E57A22}
+.co-btn[disabled]{opacity:.55;cursor:not-allowed;box-shadow:none}
+.co-decline{margin:12px auto 0;background:none;border:0;font:inherit;font-size:.86rem;color:#6B6577;text-decoration:underline;cursor:pointer}
+.co-field{display:grid;gap:5px;margin:0 0 12px;font-size:.84rem;font-weight:700;color:#3A3245}
+.co-field input{height:46px;border:1.5px solid #E2DEE8;border-radius:10px;padding:0 13px;font:inherit;font-size:1rem;font-weight:400}
+.co-field input:focus{outline:none;border-color:#7B3FBF;box-shadow:0 0 0 3px rgba(123,63,191,.15)}
+.co-err{margin:-4px 0 12px;font-size:.86rem;color:#B42318}
+.co-err button{background:none;border:0;padding:0;font:inherit;font-weight:700;color:#7B3FBF;text-decoration:underline;cursor:pointer}
+.co-consent{margin:12px 0 0;font-size:.76rem;line-height:1.5;color:#6B6577}
+.co-consent a{color:#3A3245;text-decoration:underline}
+.co-art{position:relative;background:#F2EEF8}
+.co-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.co-close{position:absolute;top:12px;right:14px;z-index:2;width:36px;height:36px;border:0;border-radius:50%;background:rgba(255,255,255,.92);
+  font-size:1.5rem;line-height:1;color:#3A3245;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+@keyframes co-fade{from{opacity:0}to{opacity:1}}
+@keyframes co-rise{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@media(max-width:720px){
+  .co-overlay{place-items:end center;padding:0}
+  .co-box,.co-box.noimg{grid-template-columns:1fr;width:100%;border-radius:20px 20px 0 0;max-height:88vh;animation:co-rise .25s ease}
+  .co-art{display:none}
+  .co-copy{padding:22px 20px calc(20px + env(safe-area-inset-bottom))}
+  .co-logo{height:26px;margin-bottom:14px}
+  .co-copy h2{font-size:1.35rem}
+}
+@media (prefers-reduced-motion:reduce){ .co-overlay,.co-box{animation:none} }
+
+/* The page's offer box, repeated in the overlay. */
+.co-offerline{display:flex;gap:12px;align-items:center;margin:0 0 18px;padding:12px 14px;border-radius:12px;background:#1F1530;color:#D9CFE6}
+.co-offerline p{margin:0;font-size:.88rem;line-height:1.5}
+.co-offerline b{color:#F28C38}
+.co-offerline .mpe-offer-emoji{font-size:1.8rem;line-height:1;flex:0 0 auto}
+@media(max-width:720px){ .co-offerline{margin-bottom:14px;padding:10px 12px} .co-offerline p{font-size:.82rem} }
+
+/* The picture keeps its own shape: the panel is as tall as the picture needs (up to the window),
+   so a portrait photo is shown whole rather than cropped and enlarged. */
+.co-box.fitted .co-copy{align-self:center}
+/* At least as tall as the picture's own shape needs at this width (the art column is about 49% of
+   the box), so a portrait photo shows whole; never shorter than the copy beside it. */
+.co-box.fitted .co-art{align-self:stretch;min-height:min(calc(min(860px, 100vw - 32px) * .488 / var(--art-ratio)), calc(100vh - 32px))}
+.co-art img{image-rendering:auto}
+
+/* The quiz variant */
+.co-progress{display:flex;gap:6px;margin:0 0 14px}
+.co-progress i{flex:1;height:5px;border-radius:3px;background:#ECE8F2}
+.co-progress i.on{background:#F28C38}
+.co-qlabel{margin:0 0 6px;font-size:.84rem;font-weight:700;color:#6B6577}
+.co-copy h2.co-q{font-size:1.2rem;line-height:1.35;font-weight:700;letter-spacing:-.01em}
+.co-answers{display:grid;gap:8px;margin-top:6px}
+.co-answers button{height:48px;border:1.5px solid #E2DEE8;border-radius:12px;background:#fff;font:inherit;font-size:1rem;font-weight:700;color:#17121F;cursor:pointer}
+.co-answers button:hover{border-color:#F28C38;background:#FFF6EE}
+.co-score{display:flex;align-items:baseline;gap:8px;margin:0 0 6px}
+.co-score b{font-size:2.6rem;line-height:1;color:#F28C38;font-weight:800}
+.co-score span{font-size:.95rem;font-weight:700;color:#3A3245}
+
+/* Desktop: a larger logo and more room between each part, now the overlay is taller. */
+@media(min-width:721px){
+  .co-copy{padding:40px 42px 34px}
+  .co-logo{height:48px;margin-bottom:28px}
+  .co-offerline{margin-bottom:28px}
+  .co-eyebrow{margin-bottom:12px}
+  .co-copy h2{margin-bottom:16px}
+  .co-body{margin-bottom:28px}
+  .co-decline{margin-top:18px}
+  .co-field{margin-bottom:16px}
+  .co-progress{margin-bottom:18px}
+  .co-qlabel{margin-bottom:10px}
+  .co-answers{gap:10px;margin-top:12px}
+  .co-score{margin-bottom:12px}
+}
+@media(max-width:720px){ .co-logo{height:32px;margin-bottom:16px} }

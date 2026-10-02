@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Minus, Plus, Loader2, ShieldCheck } from 'lucide-react'
 import { fi, fiAttribution } from '@/lib/funnel-insights'
+import { offerLock } from '@/lib/offer-lock'
 import { PaymentLogos } from './payment-logos'
 import { AddonOption, InvoiceRequest, ADDONS, useSaveBasket } from './shop-upsells'
-import { useOffers, licenceDeal, money2, paidForTotal } from '@/lib/offers'
+import { useOffers, licenceDeal, money2, paidForTotal, offerEmoji } from '@/lib/offers'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 const gbp = (pence: number) => `£${(pence / 100).toFixed(2)}`
@@ -62,7 +63,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
       const res = await fetch(`${API_URL}/public/training/checkout`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ module_slug: slug, quantity: qty, email: email.trim(), org_name: org.trim(), attribution: fiAttribution(), addons: teamSetup ? ['team-setup'] : [] }),
+        body:    JSON.stringify({ module_slug: slug, quantity: qty, email: email.trim(), org_name: org.trim(), attribution: fiAttribution(), lock: offerLock(), addons: teamSetup ? ['team-setup'] : [] }),
       })
       const body = await res.json()
       if (!res.ok || !body?.data?.url) throw new Error(body?.error ?? 'Could not start checkout. Please try again.')
@@ -100,7 +101,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default' }: {
         </div>
         {applied && (
           <div className="byfree">
-            <span className="byfree-emoji" aria-hidden="true">🎃</span>
+            <span className="byfree-emoji" aria-hidden="true">{offerEmoji(deal.offer)}</span>
             <div className="byfree-tx">
               <span className="byfree-lb">{deal.offer!.label ?? 'Offer'} applied</span>
               <b>{free > 0 ? `You receive ${qty + free} licences for ${gbp(qty * each)}` : `${deal.pct}% off every licence`}</b>

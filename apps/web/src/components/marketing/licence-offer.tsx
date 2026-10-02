@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useOffers, licenceOffer, licenceEffectivePence, policyOffer, endsText, money, money2, type Offer } from '@/lib/offers'
+import { useOffers, licenceOffer, licenceEffectivePence, policyOffer, endsText, money, money2, offerEmoji, type Offer } from '@/lib/offers'
 import { UNIT_PENCE } from '@/lib/training-commerce'
 import './licence-offer.css'
 
@@ -30,7 +30,7 @@ function Card({ o, price, compact, cta }: {
 }) {
   return (
     <aside className={`lofr${compact ? ' compact' : ''}`} aria-label={o.label ?? o.name}>
-      <span className="lofr-emoji" aria-hidden="true">🎃</span>
+      <span className="lofr-emoji" aria-hidden="true">{offerEmoji(o)}</span>
       <div className="lofr-tx">
         <span className="lofr-lb">{o.label ?? o.name}</span>
         {o.headline && <b className="lofr-hd">{o.headline}</b>}
@@ -97,7 +97,7 @@ export function OfferBarChip({ slug, policy = false }: { slug: string; policy?: 
   const end = new Date(`${o.ends_on}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'Europe/London' })
   return (
     <span className="lofr-chip">
-      <span className="lofr-chip-ic" aria-hidden="true">🎃</span>
+      <span className="lofr-chip-ic" aria-hidden="true">{offerEmoji(o)}</span>
       <span className="lofr-chip-tx">
         <b>{o.label ?? o.name}</b>
         <span>{o.headline ?? ''}{!policy && each < UNIT_PENCE ? `: ${money2(each)} each` : ''} · ends {end}</span>

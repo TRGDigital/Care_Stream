@@ -44,3 +44,23 @@
 .co-offerline b{color:#F28C38}
 .co-offerline .mpe-offer-emoji{font-size:1.8rem;line-height:1;flex:0 0 auto}
 @media(max-width:720px){ .co-offerline{margin-bottom:14px;padding:10px 12px} .co-offerline p{font-size:.82rem} }
+
+/* The picture keeps its own shape: the panel is as tall as the picture needs (up to the window),
+   so a portrait photo is shown whole rather than cropped and enlarged. */
+.co-box.fitted{align-items:start}
+.co-box.fitted .co-copy{align-self:center}
+.co-box.fitted .co-art{aspect-ratio:var(--art-ratio);max-height:calc(100vh - 32px);align-self:start}
+.co-art img{image-rendering:auto}
+
+/* The quiz variant */
+.co-progress{display:flex;gap:6px;margin:0 0 14px}
+.co-progress i{flex:1;height:5px;border-radius:3px;background:#ECE8F2}
+.co-progress i.on{background:#F28C38}
+.co-qlabel{margin:0 0 6px;font-size:.84rem;font-weight:700;color:#6B6577}
+.co-copy h2.co-q{font-size:1.2rem;line-height:1.35;font-weight:700;letter-spacing:-.01em}
+.co-answers{display:grid;gap:8px;margin-top:6px}
+.co-answers button{height:48px;border:1.5px solid #E2DEE8;border-radius:12px;background:#fff;font:inherit;font-size:1rem;font-weight:700;color:#17121F;cursor:pointer}
+.co-answers button:hover{border-color:#F28C38;background:#FFF6EE}
+.co-score{display:flex;align-items:baseline;gap:8px;margin:0 0 6px}
+.co-score b{font-size:2.6rem;line-height:1;color:#F28C38;font-weight:800}
+.co-score span{font-size:.95rem;font-weight:700;color:#3A3245}

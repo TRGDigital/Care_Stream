@@ -185,6 +185,17 @@ function CompareMark({ mark }: { mark: Mark }) {
   return <span className="cvno"><Cross /></span>
 }
 
+/** Three things the law says this policy must do, for the overlay's quiz: the shortest required
+ *  element from each regulation in turn, so the questions are quick to read and span the law. */
+function quizFor(regs: PolicyRegulation[], count: number) {
+  const pools = regs.map(r => [...r.key_facts].sort((a, b) => a.length - b.length))
+  const out: string[] = []
+  for (let round = 0; out.length < 3 && round < 6; round++) {
+    for (const pool of pools) { if (pool[round] && out.length < 3 && !out.includes(pool[round])) out.push(pool[round]) }
+  }
+  return out.length >= 3 ? { questions: out, count } : null
+}
+
 export function PolicyPageV2({ product, regulations, related, bundles, catalogueCount }: {
   product: PolicyProduct
   regulations: PolicyRegulation[]
@@ -214,7 +225,7 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
       <StickyFit selector=".pcpage-v2 .mpe-info" />
       <StickyFit selector=".pcpage-v2 .mpe-gallery" />
       <ExitQuestion funnel="policies" product={product.slug} />
-      <CaptureOverlay funnel="policies" product={product.slug} title={product.title} image={hero} />
+      <CaptureOverlay funnel="policies" product={product.slug} title={product.title} image={hero} quiz={quizFor(regulations, elements)} />
       <section className="pchero mpe">
         <div className="pcwrap mpe-in">
           <div className="mpe-main">

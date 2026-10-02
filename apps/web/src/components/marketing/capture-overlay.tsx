@@ -19,14 +19,18 @@ import './capture-overlay.css'
 // Never shown with the exit question (each suppresses the other for the visit), to anyone who has
 // reached for Buy now, Checkout or Add to basket, to anyone with something in their basket, or
 // again within the campaign's repeat days. ?capture=preview shows it at once (?capture=A or B for a
-// given variant), for checking copy.
+// given variant, C too), for checking copy.
+//
+// A quiz variant (policies): three yes / not sure / no questions on what the law says the policy
+// must cover, a result, then the email form; the results come with the full checklist.
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 const FI = 'https://trg-funnel-insights.vercel.app'
 const CONSENT = 'By signing up, you agree to our terms and conditions, including receiving our offers by email.'
 
+type Key = 'A' | 'B' | 'C'
 type Variant = {
-  key: 'A' | 'B'; kind: 'lockin' | 'checklist'; weight: number
+  key: Key; kind: 'lockin' | 'checklist' | 'quiz'; weight: number
   eyebrow: string; headline: string; body: string; button: string; decline: string
   step2_headline: string; step2_body: string; step2_button: string; image: string
 }
@@ -65,7 +69,7 @@ async function loadCampaigns(fresh = false): Promise<Campaign[]> {
   return campaigns
 }
 
-function report(c: Campaign, v: Variant, stage: 'shown' | 'step1' | 'signup' | 'closed', inTest: boolean, product: string) {
+function report(c: Campaign, v: Variant, stage: 'shown' | 'step1' | 'quiz_done' | 'signup' | 'closed', inTest: boolean, product: string) {
   try {
     const mobile = window.matchMedia?.('(pointer: coarse)').matches && window.innerWidth < 768
     fetch(`${FI}/api/capture-event`, {
@@ -76,8 +80,13 @@ function report(c: Campaign, v: Variant, stage: 'shown' | 'step1' | 'signup' | '
   } catch { /* never in the way */ }
 }
 
-export function CaptureOverlay({ funnel, product, title, image }: {
+type Answer = 'yes' | 'unsure' | 'no'
+const ANSWERS: [Answer, string][] = [['yes', 'Yes'], ['unsure', 'Not sure'], ['no', 'No']]
+
+export function CaptureOverlay({ funnel, product, title, image, quiz }: {
   funnel: 'training' | 'policies'; product: string; title: string; image?: string | null
+  /** For a quiz variant: three things this policy must do, and how many required elements it has. */
+  quiz?: { questions: string[]; count: number } | null
 }) {
   const offers = useOffers()
   const offer: Offer | null = useMemo(
@@ -86,7 +95,9 @@ export function CaptureOverlay({ funnel, product, title, image }: {
   const [variant, setVariant] = useState<Variant | null>(null)
   const [inTest, setInTest] = useState(true)
   const [open, setOpen] = useState(false)
-  const [step, setStep] = useState<1 | 2 | 3>(1)
+  const [step, setStep] = useState<1 | 'quiz' | 'result' | 2 | 3>(1)
+  const [answers, setAnswers] = useState<Answer[]>([])
+  const [artRatio, setArtRatio] = useState(0)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
@@ -99,23 +110,25 @@ export function CaptureOverlay({ funnel, product, title, image }: {
 
   // Choose the campaign and this visitor's variant.
   useEffect(() => {
-    const preview = ['preview', 'A', 'B'].includes(new URLSearchParams(location.search).get('capture') ?? '')
+    const preview = ['preview', 'A', 'B', 'C'].includes(new URLSearchParams(location.search).get('capture') ?? '')
     if (!preview && (session('cs-exitq') || hasBasket() || store.get('cs_capture_signed', false))) return
     let alive = true
     loadCampaigns(preview).then(list => {
       if (!alive) return
-      const c = list.find(x => x.funnel === funnel && (!x.pages?.length || x.pages.includes(product)) && x.variants?.length === 2)
+      const c = list.find(x => x.funnel === funnel && (!x.pages?.length || x.pages.includes(product)) && x.variants?.length >= 2)
       if (!c) return
       const seen = store.get<Record<string, number>>('cs_capture_seen', {})
       if (!preview && seen[c.id] && Date.now() - seen[c.id] < c.repeat_days * 86400000) return
-      const picks = store.get<Record<string, 'A' | 'B'>>('cs_capture_variant', {})
+      const picks = store.get<Record<string, Key>>('cs_capture_variant', {})
       // ?capture=A or ?capture=B shows that variant now, for checking copy and images; the
       // visitor's own assignment is left alone.
       const forced = new URLSearchParams(location.search).get('capture')
-      let key = forced === 'A' || forced === 'B' ? forced : picks[c.id]
-      if (!key) {
-        const wa = Math.max(0, c.variants[0].weight), wb = Math.max(0, c.variants[1].weight)
-        key = Math.random() * ((wa + wb) || 1) < wa ? 'A' : 'B'
+      let key: Key | undefined = forced === 'A' || forced === 'B' || forced === 'C' ? forced : picks[c.id]
+      if (!key || !c.variants.some(v => v.key === key)) {
+        // Weighted pick across the campaign's variants (two or three).
+        const total = c.variants.reduce((t, v) => t + Math.max(0, v.weight), 0) || 1
+        let r = Math.random() * total
+        key = (c.variants.find(v => (r -= Math.max(0, v.weight)) < 0) ?? c.variants[0]).key
         store.set('cs_capture_variant', { ...picks, [c.id]: key })
       }
       setCampaign(c)
@@ -128,18 +141,20 @@ export function CaptureOverlay({ funnel, product, title, image }: {
   // leave the view out of the comparison.
   const shown = useMemo(() => {
     if (!campaign || !variant) return null
-    if (variant.kind !== 'lockin' || offer) return variant
-    return campaign.variants.find(v => v.kind !== 'lockin') ?? null
-  }, [campaign, variant, offer])
+    const usable = (v: Variant) => (v.kind === 'lockin' ? !!offer : v.kind === 'quiz' ? (quiz?.questions.length ?? 0) >= 3 : true)
+    if (usable(variant)) return variant
+    return campaign.variants.find(v => v.kind === 'checklist') ?? null
+  }, [campaign, variant, offer, quiz])
   useEffect(() => {
     if (!campaign) return
-    setInTest(!campaign.variants.some(v => v.kind === 'lockin') || !!offer)
-  }, [campaign, offer])
+    // Only views where every variant could have shown count in the comparison.
+    setInTest(campaign.variants.every(v => (v.kind === 'lockin' ? !!offer : v.kind === 'quiz' ? (quiz?.questions.length ?? 0) >= 3 : true)))
+  }, [campaign, offer, quiz])
 
   // Triggers: active seconds on the page and scroll depth.
   useEffect(() => {
     if (!campaign || !shown || open || fired.current) return
-    const preview = ['preview', 'A', 'B'].includes(new URLSearchParams(location.search).get('capture') ?? '')
+    const preview = ['preview', 'A', 'B', 'C'].includes(new URLSearchParams(location.search).get('capture') ?? '')
     let seconds = 0, depth = 0, done = false
     const fire = () => {
       if (done) return
@@ -181,6 +196,7 @@ export function CaptureOverlay({ funnel, product, title, image }: {
     .replace(/\{offer\}/g, offer?.label || offer?.name || 'offer')
     .replace(/\{headline\}/g, (offer?.headline || '').replace(/\.$/, ''))
     .replace(/\{date\}/g, until)
+    .replace(/\{count\}/g, String(quiz?.count ?? ''))
   const close = () => { if (step !== 3) report(campaign, shown, 'closed', inTest, product); setOpen(false) }
 
   const submit = async (e: React.FormEvent) => {
@@ -190,7 +206,8 @@ export function CaptureOverlay({ funnel, product, title, image }: {
       const res = await fetch(`${API_URL}/public/shop/capture`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ campaign_id: campaign.id, variant: shown.key, kind: shown.kind, funnel, product, email: email.trim(), name: name.trim(),
-                               page: location.pathname, attribution: fiAttribution(), consent_text: CONSENT }),
+                               page: location.pathname, attribution: fiAttribution(), consent_text: CONSENT,
+                               quiz: shown.kind === 'quiz' && quiz ? quiz.questions.slice(0, 3).map((q, i) => ({ q, a: answers[i] ?? 'unsure' })) : undefined }),
       })
       const j = await res.json().catch(() => null)
       if (!res.ok) { setError(j?.error ?? 'Sorry, that did not go through. Please try again.'); setSuggestion(j?.suggestion ?? ''); return }
@@ -207,7 +224,7 @@ export function CaptureOverlay({ funnel, product, title, image }: {
   // On <body>, so no stacking context on the page (sticky columns, transforms) can sit above it.
   return createPortal(
     <div className="co-overlay" role="dialog" aria-modal="true" aria-labelledby="co-title" onClick={e => { if (e.target === e.currentTarget) close() }}>
-      <div className={`co-box${img ? '' : ' noimg'}`}>
+      <div className={`co-box${img ? '' : ' noimg'}${artRatio ? ' fitted' : ''}`} style={artRatio ? { ['--art-ratio' as string]: String(artRatio) } : undefined}>
         <button type="button" className="co-close" aria-label="Close" onClick={close}>×</button>
         <div className="co-copy">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -218,9 +235,41 @@ export function CaptureOverlay({ funnel, product, title, image }: {
             {shown.eyebrow && <p className="co-eyebrow">{fill(shown.eyebrow)}</p>}
             <h2 id="co-title">{fill(shown.headline)}</h2>
             <p className="co-body">{fill(shown.body)}</p>
-            <button type="button" className="co-btn" onClick={() => { report(campaign, shown, 'step1', inTest, product); setStep(2) }}>{fill(shown.button)}</button>
+            <button type="button" className="co-btn" onClick={() => { report(campaign, shown, 'step1', inTest, product); setStep(shown.kind === 'quiz' ? 'quiz' : 2) }}>{fill(shown.button)}</button>
             {shown.decline && <button type="button" className="co-decline" onClick={close}>{fill(shown.decline)}</button>}
           </>}
+          {step === 'quiz' && quiz && (() => {
+            const i = answers.length
+            return <>
+              <p className="co-eyebrow">Question {i + 1} of 3</p>
+              <div className="co-progress" aria-hidden="true">{[0, 1, 2].map(n => <i key={n} className={n <= i ? 'on' : ''} />)}</div>
+              <p className="co-qlabel">Does your current policy do this?</p>
+              <h2 id="co-title" className="co-q">{quiz.questions[i]}</h2>
+              <div className="co-answers">
+                {ANSWERS.map(([a, label]) => (
+                  <button type="button" key={a} onClick={() => {
+                    const next = [...answers, a]
+                    setAnswers(next)
+                    if (next.length >= 3) { report(campaign, shown, 'quiz_done', inTest, product); setStep('result') }
+                  }}>{label}</button>
+                ))}
+              </div>
+            </>
+          })()}
+          {step === 'result' && quiz && (() => {
+            const covered = answers.filter(a => a === 'yes').length
+            return <>
+              <p className="co-eyebrow">Your result</p>
+              <div className="co-score"><b>{covered}</b><span>of 3 covered</span></div>
+              <h2 id="co-title">{covered === 3 ? 'A good start' : `Your policy may be missing ${3 - covered} of 3`}</h2>
+              <p className="co-body">
+                {covered === 3
+                  ? `Inspectors look for all ${quiz.count} required elements in ${aProduct}, not just these three. Check the rest with the full checklist.`
+                  : `Those three are among ${quiz.count} required elements an inspector expects ${aProduct} to cover. Get your results and the full checklist, so you can check every one.`}
+              </p>
+              <button type="button" className="co-btn" onClick={() => setStep(2)}>Email me my results</button>
+            </>
+          })()}
           {step === 2 && <form onSubmit={submit} noValidate>
             <h2 id="co-title">{fill(shown.step2_headline)}</h2>
             <p className="co-body">{fill(shown.step2_body)}</p>
@@ -239,7 +288,7 @@ export function CaptureOverlay({ funnel, product, title, image }: {
               </p>
             </> : <>
               <h2 id="co-title">Check your inbox</h2>
-              <p className="co-body">Your {productName} checklist is on its way to {email.trim()}. It should arrive in a minute or two.</p>
+              <p className="co-body">Your {result?.kind === 'quiz' ? 'results and ' : ''}{productName} checklist {result?.kind === 'quiz' ? 'are' : 'is'} on its way to {email.trim()}. It should arrive in a minute or two.</p>
             </>}
             <button type="button" className="co-btn" onClick={() => setOpen(false)}>Carry on browsing</button>
           </>}
@@ -247,7 +296,7 @@ export function CaptureOverlay({ funnel, product, title, image }: {
         {img && (
           <div className="co-art">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={img} alt="" />
+            <img src={img} alt="" onLoad={e => { const t = e.currentTarget; if (t.naturalWidth && t.naturalHeight) setArtRatio(t.naturalWidth / t.naturalHeight) }} />
           </div>
         )}
       </div>

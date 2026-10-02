@@ -108,3 +108,39 @@ export async function reportPolicySale(sessionId: string, transactionId: string 
     await send('policies', transactionId, b.code, b.tax, b.discount, lines, offer, attribution)
   } catch { /* reporting never affects the sale */ }
 }
+
+// ─── Email capture and basket recovery ──────────────────────────────────────────────────────
+const FI_BASE = URL_.replace(/\/api\/ingest$/, '')
+
+async function postFi(path: string, body: unknown): Promise<any> {
+  const secret = process.env.FI_INGEST_SECRET
+  if (!secret) return null
+  try {
+    const r = await fetch(`${FI_BASE}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${secret}` },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(4000),
+    })
+    return await r.json().catch(() => null)
+  } catch { return null }
+}
+
+/** A basket saved, a recovery email sent, or an order paid after one (anonymous: the basket id
+ *  and its products, never the email). Never throws. */
+export async function reportEmailEvent(e: {
+  kind: 'basket_saved' | 'recovery_sent' | 'recovered'; ref: string; stage?: number
+  funnel: 'training' | 'policies'; products: string[]; valuePence?: number
+}): Promise<void> {
+  await postFi('/api/email-events', {
+    site: 'carestream', kind: e.kind, ref: e.ref, stage: e.stage ?? 0, funnel: e.funnel,
+    products: e.products, value_pence: e.valuePence ?? 0,
+  })
+}
+
+/** A sign-up from an on-site overlay, to the Funnel Insights list. Returns the list's
+ *  unsubscribe token (null if Funnel Insights could not be reached). */
+export async function reportSubscriber(s: Record<string, unknown>): Promise<string | null> {
+  const r = await postFi('/api/subscribers', { site: 'carestream', ...s })
+  return typeof r?.unsubscribe_token === 'string' ? r.unsubscribe_token : null
+}

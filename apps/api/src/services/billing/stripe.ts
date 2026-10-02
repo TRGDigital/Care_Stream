@@ -882,7 +882,7 @@ export async function handleWebhook(payload: Buffer, signature: string): Promise
       const shopKind = session.metadata?.kind
       if (session.payment_status === 'paid' && ['training_licence', 'training_basket', 'policy_shop'].includes(String(shopKind))) {
         const { markBasketPaid } = await import('../shop/basket-recovery')
-        await markBasketPaid(session.customer_details?.email ?? session.customer_email, shopKind === 'policy_shop' ? 'policies' : 'training')
+        await markBasketPaid(session.customer_details?.email ?? session.customer_email, shopKind === 'policy_shop' ? 'policies' : 'training', { products: [], valuePence: session.amount_total ?? 0 })
       }
       if (tenantId && session.subscription) {
         // Use the subscription's real status (trialing → trialling) rather than

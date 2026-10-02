@@ -292,3 +292,11 @@
   .bypage-v2 .byrest{order:4;padding-top:28px;border-top:1px solid var(--line)}
 }
 .bypage-v2 .bynote-save{display:block;margin-top:5px;font-size:.76rem;color:var(--muted);line-height:1.4}
+
+/* The order lines above the total (cart drawer and buy page). */
+.bypage-v2 .bylines{display:grid;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line,#E9E5EF);font-size:.9rem}
+.bypage-v2 .bylines div{display:flex;justify-content:space-between;gap:12px}
+.bypage-v2 .bylines span{color:var(--ink,#17121F);min-width:0}
+.bypage-v2 .bylines b{white-space:nowrap;font-weight:650}
+.bypage-v2 .bylines s{color:var(--muted,#6B6577);font-weight:500;margin-right:6px}
+.bypage-v2 .bytotal .bywastotal{font-size:1rem;font-weight:600;color:var(--muted,#6B6577);margin-right:8px;letter-spacing:0}

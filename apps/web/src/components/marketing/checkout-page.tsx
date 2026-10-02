@@ -352,13 +352,20 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
       summary={
         <Summary
           lines={<>
-            <div><span>{totalQty} {totalQty === 1 ? 'licence' : 'licences'}</span><b>{money(gross)}</b></div>
+            {/* Each course and its licences; the free ones are counted in and shown in the offer line. */}
+            {items.map(i => (
+              <div className="ckline-item" key={i.slug}>
+                <span>{modules[i.slug]?.title ?? i.title} · {i.qty + deals[i.slug].free} {i.qty + deals[i.slug].free === 1 ? 'licence' : 'licences'}</span>
+                <b>{deals[i.slug].free > 0 && <s className="ckwas">{money((i.qty + deals[i.slug].free) * UNIT_PENCE)}</s>} {money(i.qty * UNIT_PENCE)}</b>
+              </div>
+            ))}
             {discount > 0 && <div className="save"><span>Volume discount ({pct}%)</span><b>−{money(discount)}</b></div>}
             {offerSaving > 0 && <div className="save"><span>{offerLabel}</span><b>−{money(offerSaving)}</b></div>}
             {freeQty > 0 && <div className="save"><span>{offerLabel}: {freeQty} free {freeQty === 1 ? 'licence' : 'licences'}</span><b>Free</b></div>}
             {teamSetup && <div><span>Team set-up, done for you</span><b>{money(ADDONS['team-setup'].pence)}</b></div>}
           </>}
           total={payNow}
+          was={(() => { const full = items.reduce((n, i) => n + (i.qty + deals[i.slug].free) * UNIT_PENCE, 0) + (teamSetup ? ADDONS['team-setup'].pence : 0); return full > payNow ? full : undefined })()}
           extras={items.length ? <>
             <AddonOption k="team-setup" checked={teamSetup} onChange={setTeamSetup} />
             <ShareBasket funnel="training" items={items.map(i => ({ slug: i.slug, qty: i.qty }))} />

@@ -134,7 +134,14 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default', init
         </div>
 
         <div className="byaddon"><AddonOption k="team-setup" checked={teamSetup} onChange={setTeamSetup} /></div>
-        <div className="bytotal"><span>Total</span><b>{gbp(total)}</b></div>
+        {/* What they are buying: the course and its licences at full price struck through when the
+            offer gives some free, the add-on, then the total against what it would have cost. */}
+        <div className="bylines">
+          <div><span>{moduleName} · {qty + free} {qty + free === 1 ? 'licence' : 'licences'}</span>
+            <b>{(qty + free) * unitPence > qty * each && <s>{gbp((qty + free) * unitPence)}</s>}{gbp(qty * each)}</b></div>
+          {teamSetup && <div><span>Team set-up, done for you</span><b>{gbp(ADDONS['team-setup'].pence)}</b></div>}
+        </div>
+        <div className="bytotal"><span>Total</span><b>{(qty + free) * unitPence > qty * each && <s className="bywastotal">{gbp((qty + free) * unitPence + (teamSetup ? ADDONS['team-setup'].pence : 0))}</s>}{gbp(total)}</b></div>
         {/* The theme's panel has no error state, because its form does nothing. This one takes
             a payment, so it needs one: the existing `note` styling, in the warning colour. */}
         {error && (

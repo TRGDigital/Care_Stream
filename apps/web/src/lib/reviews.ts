@@ -13,6 +13,8 @@ export interface Review {
   shortPolicies?: string
   /** What the same customer said about one course, shown on that course's page (by slug). */
   courses?: Record<string, string>
+  /** The same for one policy, shown on that policy's page (by slug). */
+  policies?: Record<string, string>
   name:    string
   setting: string
 }
@@ -44,6 +46,11 @@ export const REVIEWS: Review[] = [
       'care-certificate':
         'Superb care certificate training, our team loved it, and it really helped them having it in '
         + 'multiple languages so they could understand everything in detail',
+    },
+    policies: {
+      'data-protection-gdpr':
+        'The policy was delivered incredibly quickly and the quality of it was superb, I really like the legal '
+        + 'basic PDF that came with it and showed how it was written and what legislation it covers. Brilliant service.',
     },
     name:    'A. Arbery',
     setting: 'Nursing Home',

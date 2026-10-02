@@ -55,6 +55,13 @@ const Tick = () => (
   </svg>
 )
 
+// One line under the title saying who the policy is for. Add a policy's slug to show it there.
+const WHO_FOR: Record<string, string> = {
+  'data-protection-gdpr':
+    'Perfect for registered managers and owners of care homes, nursing homes and home care services who need a '
+    + 'GDPR policy that meets UK GDPR, the Data Protection Act 2018 and what CQC inspectors look for.',
+}
+
 const Star = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
     <path d="m12 3.6 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.8l5.9-.9z" />
@@ -245,9 +252,10 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
             </div>
             <span className="mpe-eyebrow">Personalised · Human-reviewed · Kept updated</span>
             <h1>A {product.title} written for your service</h1>
-            {REVIEWS[0]?.shortPolicies && (
+            {WHO_FOR[product.slug] && <p className="mpe-for">{WHO_FOR[product.slug]}</p>}
+            {(REVIEWS[0]?.policies?.[product.slug] ?? REVIEWS[0]?.shortPolicies) && (
               <blockquote className="mpe-quote">
-                <p>&ldquo;{REVIEWS[0].shortPolicies}&rdquo;</p>
+                <p>&ldquo;{REVIEWS[0].policies?.[product.slug] ?? REVIEWS[0].shortPolicies}&rdquo;</p>
                 <cite><span className="row"><Star /><Star /><Star /><Star /><Star /></span> {REVIEWS[0].name}, {REVIEWS[0].setting}</cite>
               </blockquote>
             )}

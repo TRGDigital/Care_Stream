@@ -162,7 +162,9 @@ export function CaptureOverlay({ funnel, product, title, image }: {
 
   const productName = funnel === 'training' ? `${title} training` : title
   const until = new Date(Date.now() + 30 * 86400000).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })
+  const aProduct = funnel === 'training' ? productName : `a ${productName}`
   const fill = (s: string) => (s || '')
+    .replace(/\{a_product\}/g, aProduct)
     .replace(/\{product\}/g, productName)
     .replace(/\{offer\}/g, offer?.label || offer?.name || 'offer')
     .replace(/\{headline\}/g, (offer?.headline || '').replace(/\.$/, ''))

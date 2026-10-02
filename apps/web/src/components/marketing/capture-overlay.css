@@ -65,3 +65,20 @@
 .co-score{display:flex;align-items:baseline;gap:8px;margin:0 0 6px}
 .co-score b{font-size:2.6rem;line-height:1;color:#F28C38;font-weight:800}
 .co-score span{font-size:.95rem;font-weight:700;color:#3A3245}
+
+/* Desktop: a larger logo and more room between each part, now the overlay is taller. */
+@media(min-width:721px){
+  .co-copy{padding:40px 42px 34px}
+  .co-logo{height:48px;margin-bottom:28px}
+  .co-offerline{margin-bottom:28px}
+  .co-eyebrow{margin-bottom:12px}
+  .co-copy h2{margin-bottom:16px}
+  .co-body{margin-bottom:28px}
+  .co-decline{margin-top:18px}
+  .co-field{margin-bottom:16px}
+  .co-progress{margin-bottom:18px}
+  .co-qlabel{margin-bottom:10px}
+  .co-answers{gap:10px;margin-top:12px}
+  .co-score{margin-bottom:12px}
+}
+@media(max-width:720px){ .co-logo{height:32px;margin-bottom:16px} }

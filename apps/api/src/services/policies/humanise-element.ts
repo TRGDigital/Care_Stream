@@ -48,7 +48,7 @@ export function humaniseElement(element: string): string {
     words[1] = thirdPerson(words[1])
   }
 
-  const tail = words.join(' ')
+  const tail = conjugateLater(words.join(' '))
   // A prohibition reads naturally with the bare verb: "Does not require staff to…"
   // rather than "Nots require…".
   const head = negated
@@ -57,4 +57,35 @@ export function humaniseElement(element: string): string {
       ? `${cap(adverb)} ${thirdPerson(verb)}`
       : cap(thirdPerson(verb))
   return `${head}${tail ? ` ${tail}` : ''}`.replace(/\s+/g, ' ').trim()
+}
+
+// A later verb that also hangs off "Policy must" ("Policy must establish a 72-hour timeline … and
+// designate who can …") is conjugated too, so it reads "… and designates who can …". Only clear
+// policy-level verbs, and only where nothing in between could own the verb instead ("staff to
+// identify and record", "staff must notice and report", "who could answer"): when in doubt the
+// wording is left as written.
+const LATER_VERBS = new Set(['designate', 'acknowledge', 'identify', 'require', 'specify', 'clarify', 'state', 'confirm',
+  'define', 'prohibit', 'mandate', 'implement', 'include', 'provide', 'establish', 'ensure', 'distinguish', 'recognise'])
+const OWNS_VERB = /\b(must|will|shall|should|can|could|may|might|who|which)\b|\bto (?!(?:residents?|families|family|the|a|an|their|his|her|its|this|that|these|those|any|all|each|every|people|individuals?)\b)[a-z]+/i
+
+function conjugateLater(tail: string): string {
+  // Look at the text outside brackets, so an aside's commas and words do not count.
+  let out = tail
+  const re = /(,?) and ([a-z]+) /g
+  let m: RegExpExecArray | null
+  const edits: { at: number; len: number; text: string }[] = []
+  while ((m = re.exec(tail))) {
+    const verb = m[2]
+    if (!LATER_VERBS.has(verb)) continue
+    const before = tail.slice(0, m.index).replace(/\([^()]*\)/g, '')
+    const commaJoin = m[1] === ','
+    // ", and require …" after a single clause belongs to the policy even past a "to ensure";
+    // a plain "and" only when nothing before it could own the verb.
+    const ok = commaJoin ? (before.match(/,/g) ?? []).length === 0 : !OWNS_VERB.test(before)
+    if (!ok) continue
+    const at = m.index + m[0].length - verb.length - 1
+    edits.push({ at, len: verb.length, text: thirdPerson(verb) })
+  }
+  for (const e of edits.reverse()) out = out.slice(0, e.at) + e.text + out.slice(e.at + e.len)
+  return out
 }

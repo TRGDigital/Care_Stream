@@ -143,19 +143,22 @@ policyShopPublicRouter.get('/products/:slug', async (req: Request, res: Response
     const myPacks = new Set<string>((product.bundle_keys ?? []).filter((k: string) => !['complete-library', 'statutory-starter'].includes(k)))
     const everyone = await (prisma as any).policyProduct.findMany({
       where: { active: true, slug: { not: product.slug } },
-      select: { slug: true, title: true, reference_keys: true, bundle_keys: true, sort_order: true },
+      select: { slug: true, title: true, description: true, price_pence: true, taster: true, image_key: true, reference_keys: true, bundle_keys: true, sort_order: true },
     }).catch(() => [] as any[])
-    const complements = (everyone as any[])
+    const ranked = (everyone as any[])
       .map(p => ({
-        slug: p.slug as string, title: p.title as string,
+        p,
         laws: (p.reference_keys ?? []).filter((k: string) => mine.has(k)).length,
         packs: (p.bundle_keys ?? []).filter((k: string) => myPacks.has(k)).length,
-        order: p.sort_order ?? 0,
       }))
-      .filter(p => p.laws > 0 || p.packs > 0)
-      .sort((a, b) => b.laws - a.laws || b.packs - a.packs || a.order - b.order)
+      .filter(x => x.laws > 0 || x.packs > 0)
+      .sort((a, b) => b.laws - a.laws || b.packs - a.packs || (a.p.sort_order ?? 0) - (b.p.sort_order ?? 0))
       .slice(0, 6)
-      .map(({ slug, title }) => ({ slug, title }))
+      .map(x => x.p)
+    const complements = ranked.map(p => ({ slug: p.slug as string, title: p.title as string }))
+    // The page's "Related policies" use the same companions; the old pack siblings fill in only
+    // when a policy shares no law or specialist pack with any other.
+    const relatedList = ranked.length ? ranked : (related as any[])
 
     ok(res, {
       product: {
@@ -189,7 +192,7 @@ policyShopPublicRouter.get('/products/:slug', async (req: Request, res: Response
         key_facts: (Array.isArray(r.required_elements) ? r.required_elements : []).slice(0, 6).map(humaniseElement),
       })),
       complements,
-      related: (related as any[]).map(r => ({
+      related: (relatedList as any[]).map(r => ({
         slug: r.slug, title: r.title, description: r.description,
         price_pence: r.price_pence, taster: r.taster, image_url: shopImageUrl(r.image_key),
       })),

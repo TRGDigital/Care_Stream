@@ -802,3 +802,8 @@
 .mpage-v2 .mpe-demo .demo-cta .row .tbtn.solid:hover{background:#E57E2A}
 .mpage-v2 .mpe-demo .demo-cta .lead{text-align:center}
 .mpage-v2 .mpe-demo .demo-again{display:block;margin-left:auto;margin-right:auto}
+
+/* The sticky bar: the time and price wrap under each other rather than running into the offer chip. */
+.mpage-v2 .mbar .meta{flex-wrap:wrap;row-gap:2px;white-space:normal}
+.mpage-v2 .mbar .meta .t{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.mpage-v2 .mbar-in > *:not(.who){flex-shrink:0}

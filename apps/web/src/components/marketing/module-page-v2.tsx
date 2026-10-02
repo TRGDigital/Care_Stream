@@ -256,7 +256,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
           <span className="who">
             <b>{m.title}</b>
             <span className="meta">
-              <Clock /> {est < 60 ? `~${est} min` : durationText(est)} to complete<i>·</i>{price} per staff member
+              <span className="t"><Clock /> {est < 60 ? `~${est} min` : durationText(est)} to complete</span><i>·</i><span className="t">{price} per staff member</span>
             </span>
           </span>
           <OfferBarChip slug={m.slug} />

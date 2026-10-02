@@ -135,6 +135,28 @@ policyShopPublicRouter.get('/products/:slug', async (req: Request, res: Response
         }).catch(() => [] as any[])
       : []
 
+    // Complements: the policies most likely bought with this one, for the basket's "add your free
+    // policy" picker. Ranked by the laws they share (Data Protection and GDPR shares UK GDPR, the
+    // DPA and Caldicott with Confidentiality, Caldicott, Information Governance and Records
+    // Management), then by a specialist pack in common (not the starter pack or the library).
+    const mine = new Set<string>(product.reference_keys ?? [])
+    const myPacks = new Set<string>((product.bundle_keys ?? []).filter((k: string) => !['complete-library', 'statutory-starter'].includes(k)))
+    const everyone = await (prisma as any).policyProduct.findMany({
+      where: { active: true, slug: { not: product.slug } },
+      select: { slug: true, title: true, reference_keys: true, bundle_keys: true, sort_order: true },
+    }).catch(() => [] as any[])
+    const complements = (everyone as any[])
+      .map(p => ({
+        slug: p.slug as string, title: p.title as string,
+        laws: (p.reference_keys ?? []).filter((k: string) => mine.has(k)).length,
+        packs: (p.bundle_keys ?? []).filter((k: string) => myPacks.has(k)).length,
+        order: p.sort_order ?? 0,
+      }))
+      .filter(p => p.laws > 0 || p.packs > 0)
+      .sort((a, b) => b.laws - a.laws || b.packs - a.packs || a.order - b.order)
+      .slice(0, 6)
+      .map(({ slug, title }) => ({ slug, title }))
+
     ok(res, {
       product: {
         slug: product.slug, title: product.title, description: product.description,
@@ -166,6 +188,7 @@ policyShopPublicRouter.get('/products/:slug', async (req: Request, res: Response
         // reader rather than for the writer.
         key_facts: (Array.isArray(r.required_elements) ? r.required_elements : []).slice(0, 6).map(humaniseElement),
       })),
+      complements,
       related: (related as any[]).map(r => ({
         slug: r.slug, title: r.title, description: r.description,
         price_pence: r.price_pence, taster: r.taster, image_url: shopImageUrl(r.image_key),

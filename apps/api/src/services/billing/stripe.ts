@@ -188,16 +188,48 @@ async function trainingPriceId(): Promise<string> {
   return created.id
 }
 
-// The offer note on the Stripe page is a nicety: if Stripe refuses custom_text (managed
-// payments can restrict fields), start the session without it rather than fail the sale.
+// The extras on the Stripe page are niceties: the offer note (custom_text) and each line's
+// description and picture. If Stripe refuses any of them (managed payments restricts fields),
+// start the session without them rather than fail the sale.
+function plainLines(params: Stripe.Checkout.SessionCreateParams): Stripe.Checkout.SessionCreateParams {
+  const { custom_text: _note, ...rest } = params
+  return {
+    ...rest,
+    line_items: (params.line_items ?? []).map(l => {
+      const pd = l.price_data?.product_data
+      if (!pd) return l
+      const { description: _d, images: _i, ...name } = pd
+      return { ...l, price_data: { ...l.price_data!, product_data: name } }
+    }),
+  }
+}
 async function createSessionWithOfferNote(stripe: Stripe, params: Stripe.Checkout.SessionCreateParams) {
   try {
     return await stripe.checkout.sessions.create(params, managedPaymentsRequestOptions())
   } catch (e) {
-    if (!params.custom_text) throw e
-    const { custom_text: _note, ...rest } = params
-    return await stripe.checkout.sessions.create(rest, managedPaymentsRequestOptions())
+    const plain = plainLines(params)
+    if (JSON.stringify(plain) === JSON.stringify(params)) throw e
+    console.warn('[stripe] session extras refused, retrying plain:', (e as Error)?.message)
+    return await stripe.checkout.sessions.create(plain, managedPaymentsRequestOptions())
   }
+}
+
+// Pictures and words for the lines on the Stripe page (what the buyer is paying for).
+const API_PUBLIC = (process.env.API_PUBLIC_URL || 'https://api.carestreamai.com').replace(/\/$/, '')
+const SITE_PUBLIC = 'https://www.carestreamai.com'
+const slugOf = (s: string) => s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+async function courseImage(slug: string): Promise<string[]> {
+  try {
+    const topics = await (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true }, select: { id: true, title: true, shop_module_id: true } })
+    const t = (topics as any[]).find(x => slugOf(x.title) === slug)
+    if (!t) return []
+    const m = await (prisma as any).trainingModule.findFirst({
+      where: t.shop_module_id ? { id: t.shop_module_id } : { tenant_id: null, tier: 'prebuilt', topic_id: t.id, illustration_key: { not: null } },
+      select: { illustration_key: true },
+    })
+    const file = String(m?.illustration_key ?? '').split('/').pop()
+    return file ? [`${API_PUBLIC}/public/training/image/${file}`] : []
+  } catch { return [] }
 }
 
 /** Stripe line items for paid add-ons (team set-up, priority delivery). */
@@ -241,9 +273,22 @@ export async function createTrainingCheckoutSession(input: TrainingCheckoutInput
   const deal = licenceDeal(await offersWithLock(input.lock), input.moduleSlug, qty)
   if (input.forcePct) deal.pct = Math.max(deal.pct, Math.min(90, Math.floor(input.forcePct)))
   const unit = deal.pct ? Math.round(TRAINING_LICENCE_PENCE * (1 - deal.pct / 100)) : TRAINING_LICENCE_PENCE
-  const line: Stripe.Checkout.SessionCreateParams.LineItem = deal.pct
-    ? { price_data: { currency: 'gbp', product: await trainingProductId(), unit_amount: unit }, quantity: qty }
-    : { price: await trainingPriceId(), quantity: qty }
+  const total = qty + deal.free
+  const line: Stripe.Checkout.SessionCreateParams.LineItem = {
+    quantity: qty,
+    price_data: {
+      currency: 'gbp', unit_amount: unit,
+      product_data: {
+        name: `${input.moduleName} training licence`.slice(0, 250),
+        description: (deal.free
+          ? `${total} licences: ${qty} paid + ${deal.free} free with the ${deal.offer?.label ?? 'offer'}. `
+          : `${qty} ${qty === 1 ? 'licence' : 'licences'}, one per member of staff. `)
+          + 'Each lasts 12 months, with a certificate on completion. Any licence not started is refunded in full within 14 days.',
+        images: await courseImage(input.moduleSlug),
+        tax_code: PLAN_TAX_CODE,
+      },
+    },
+  }
   const params: Stripe.Checkout.SessionCreateParams = {
     mode:         'payment',
     line_items:   [line, ...addonLines(input.addons)],
@@ -567,7 +612,14 @@ export async function createShopCheckoutSession(input: {
       price_data: {
         currency: 'gbp',
         unit_amount: deal.pence[n],
-        product_data: { name: lineName(n), tax_code: PLAN_TAX_CODE },
+        product_data: {
+          name: lineName(n),
+          description: allPriced[n].item.kind === 'bundle'
+            ? 'Every policy in the pack, written for your service, read by a person and kept up to date.'
+            : 'Written for your service and read by a person before it carries your name. Delivered within 2 working days of your answers, first year of updates included.',
+          ...(allPriced[n].item.kind === 'policy' ? { images: [`${SITE_PUBLIC}/images/care-policies/${allPriced[n].item.key}/1.webp`] } : {}),
+          tax_code: PLAN_TAX_CODE,
+        },
       },
     })), ...addonLines(input.addons)],
     ...(existingCustomer ? { customer: existingCustomer } : { customer_email: input.email }),
@@ -592,7 +644,8 @@ export async function createShopCheckoutSession(input: {
   }
   if (managedPaymentsEnabled()) (params as any).managed_payments = { enabled: true }
 
-  const session = await stripe.checkout.sessions.create(params, opts)
+  void opts
+  const session = await createSessionWithOfferNote(stripe, params)
   if (!session.url) throw new Error('Stripe did not return a checkout URL')
   return { url: session.url, totalPence }
 }

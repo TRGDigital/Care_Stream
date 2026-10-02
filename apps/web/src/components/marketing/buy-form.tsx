@@ -73,7 +73,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default', init
       const res = await fetch(`${API_URL}/public/training/checkout`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ module_slug: slug, quantity: qty, email: email.trim(), org_name: org.trim(), attribution: fiAttribution(), lock: offerLock(), addons: teamSetup ? ['team-setup'] : [] }),
+        body:    JSON.stringify({ module_slug: slug, quantity: qty, email: email.trim(), org_name: org.trim(), attribution: fiAttribution(), lock: offerLock(), return_path: location.pathname, addons: teamSetup ? ['team-setup'] : [] }),
       })
       const body = await res.json()
       if (!res.ok || !body?.data?.url) throw new Error(body?.error ?? 'Could not start checkout. Please try again.')

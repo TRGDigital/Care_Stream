@@ -138,6 +138,19 @@ function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, ext
   )
 }
 
+/** "Back to <the product they were on>", or the catalogue when there is none this visit. */
+function BackLink({ fallback }: { fallback: [string, string] }) {
+  const [to, setTo] = useState<[string, string]>(fallback)
+  useEffect(() => {
+    try {
+      const key = fallback[0].startsWith('/staff-training') ? 'cs_last_course' : 'cs_last_policy'
+      const last = JSON.parse(sessionStorage.getItem(key) || 'null')
+      if (last?.path && last?.title) setTo([last.path, `Back to ${last.title}`])
+    } catch { /* none */ }
+  }, [fallback[0]]) // eslint-disable-line react-hooks/exhaustive-deps
+  return <Link className="ckback" href={to[0]}><Back />{to[1]}</Link>
+}
+
 function Shell({ back, title, lede, children, summary, total, empty, compact = false }: {
   back: [string, string]; title: string; lede: string
   children: ReactNode; summary: ReactNode; total: number
@@ -160,7 +173,7 @@ function Shell({ back, title, lede, children, summary, total, empty, compact = f
   return (
     <main className="ckpage">
       <div className="ckwrap">
-        <Link className="ckback" href={back[0]}><Back />{back[1]}</Link>
+        <BackLink fallback={back} />
         <div className="ckhead">
           <div><h1>{title}</h1><p>{lede}</p></div>
           <Steps />
@@ -271,7 +284,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          attribution: fiAttribution(), lock: offerLock(),
+          attribution: fiAttribution(), lock: offerLock(), return_path: location.pathname,
           items: items.map(i => ({ module_slug: i.slug, quantity: i.qty })),
           addons: teamSetup ? ['team-setup'] : [],
           email: email.trim(), org_name: org.trim(), name: name.trim(),
@@ -572,7 +585,7 @@ export function PolicyCheckout({ compact = false, onProgress }: {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          attribution: fiAttribution(), lock: offerLock(),
+          attribution: fiAttribution(), lock: offerLock(), return_path: location.pathname,
           addons: priority ? ['priority-policy'] : [],
           email: email.trim(), org_name: org.trim(), name: name.trim(),
           items: items.map(i => i.slug.startsWith(BUNDLE)

@@ -269,7 +269,8 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
       <ScrollSequence root=".mpage-v2 .mpe-in" />
       <ExitQuestion funnel="training" product={m.slug} />
       <CaptureOverlay funnel="training" product={m.slug} title={m.title} image={hero} />
-      <BuyDrawer slug={m.slug} moduleName={m.title} unitPence={unitPence} />
+      <BuyDrawer slug={m.slug} moduleName={m.title} unitPence={unitPence}
+                 cpd={m.cpd_accredited ? { sections: sections.length, duration: durationText(est) } : null} />
       <section className="mhero mpe">
         <div className="mwrap mpe-in">
           <div className="mpe-main">

@@ -58,3 +58,12 @@ export function reportPurchase(kind: PurchaseKind, valuePence: number | undefine
   }
   send()
 }
+
+/** A page view for an address the page moved to without loading (the course page's /cart/ drawer),
+ *  so Google Ads audiences built on that URL include it. Only when the consent-gated tag is loaded. */
+export function reportPageView(url: string) {
+  if (typeof window === 'undefined') return
+  const gtag = (window as unknown as { gtag?: Gtag }).gtag
+  if (typeof gtag !== 'function') return
+  gtag('event', 'page_view', { send_to: GOOGLE_ADS_ID, page_location: url, page_path: new URL(url).pathname, page_title: document.title })
+}

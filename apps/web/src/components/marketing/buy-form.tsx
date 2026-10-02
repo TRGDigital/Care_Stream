@@ -15,10 +15,12 @@ const gbp = (pence: number) => `£${(pence / 100).toFixed(2)}`
 // Two skins, one checkout. The rebuilt theme styles this panel with its own `by*` classes; the
 // logic, the validation and the call to /public/training/checkout are shared, so the two cannot
 // drift apart the way a second copy of the form would.
-export function BuyForm({ slug, moduleName, unitPence, variant = 'default', initialQty }: {
+export function BuyForm({ slug, moduleName, unitPence, variant = 'default', initialQty, onProgress }: {
   slug: string; moduleName: string; unitPence: number; variant?: 'default' | 'theme'
   /** Licences to start at when opened in the course page's buy drawer (rather than ?qty=). */
   initialQty?: number
+  /** For the drawer's progress bar: details complete, terms agreed. */
+  onProgress?: (p: { details: boolean; agreed: boolean }) => void
 }) {
   // The theme's form opens at eight licences, a typical team, not one.
   // Always start at one licence; the buyer steps it up if they need more.
@@ -41,6 +43,9 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default', init
   // The same required agreement as the basket checkouts (checkout-page.tsx): this form takes a
   // payment too, and was the one route to Stripe that never showed the terms.
   const [agreed, setAgreed] = useState(false)
+  useEffect(() => {
+    onProgress?.({ details: !!org.trim() && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim()), agreed })
+  }, [org, email, agreed, onProgress])
 
   // A live offer from the calendar: free licences on top, or a percentage off each licence.
   // The API works out the same at checkout.

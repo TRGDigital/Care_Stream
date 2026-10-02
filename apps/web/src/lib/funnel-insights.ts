@@ -33,7 +33,7 @@ export function fiAttribution(): { session: string; source: string; campaign: st
 
 /** An answer to one of the on-site questions (the exit question, the thank-you question), sent to
  *  Funnel Insights › Feedback. Anonymous: the visit's session id, the page and the answer. */
-export function fiFeedback(f: { kind: 'exit' | 'almost_stopped'; choice?: string; answer?: string; product?: string; funnel?: string }) {
+export function fiFeedback(f: { kind: 'exit' | 'almost_stopped' | 'trigger'; choice?: string; answer?: string; product?: string; funnel?: string }) {
   if (typeof window === 'undefined') return
   try {
     const a = fiAttribution()

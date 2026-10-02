@@ -1928,3 +1928,26 @@ export async function sendOfferLockEmail(opts: {
   `)
   await sgMail.send({ to: opts.to, from, replyTo: PURCHASE_NOTIFY_TO(), subject: `Your ${opts.offerLabel} is held until ${until}`.slice(0, 150), html })
 }
+
+// ─── Review request: one email, 7 days after a training order (services/shop/review-requests.ts) ───
+export async function sendReviewRequestEmail(opts: {
+  to: string; name: string; productName: string; link: string; subjectPrefix?: string
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) throw new Error('Email is not configured')
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc = (s: any) => String(s ?? '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c] as string))
+  const first = (opts.name || '').trim().split(/\s+/)[0] || ''
+  const star = (n: number) => `<a href="${esc(`${opts.link}&stars=${n}`)}" style="text-decoration:none;color:#F2A33A;font-size:30px;line-height:1;padding:0 2px">&#9733;</a>`
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:18px;font-weight:700;margin:0 0 8px">${first ? `${esc(first)}, how` : 'How'} is ${esc(opts.productName)} going?</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 16px">It has been a week since your team started. We would love to know how they are finding it. It takes under a minute, and it helps other care managers choose the right training.</p>
+    <p style="color:#374151;font-size:14px;font-weight:600;margin:0 0 6px">How would you rate it?</p>
+    <p style="margin:0 0 18px">${[1, 2, 3, 4, 5].map(star).join('')}</p>
+    <p style="margin:0 0 20px"><a href="${esc(opts.link)}" style="display:inline-block;background:#F28C38;color:#1F1530;font-weight:700;text-decoration:none;padding:13px 24px;border-radius:10px">Leave a short review</a></p>
+    <p style="color:#374151;font-size:13px;line-height:1.6;margin:0 0 16px">Something not right? Just reply to this email and a real person will sort it out. CareStream is built by people who have worked in care homes.</p>
+    ${emailFooter()}
+    <p style="color:#9ca3af;font-size:11px;line-height:1.5;margin:12px 0 0">You are receiving this once because you bought training on carestreamai.com. We will not ask again for this order.</p>
+  `)
+  await sgMail.send({ to: opts.to, from, replyTo: PURCHASE_NOTIFY_TO(), subject: `${opts.subjectPrefix ?? ''}How is ${opts.productName} going for your team?`.slice(0, 150), html })
+}

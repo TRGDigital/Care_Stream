@@ -763,3 +763,47 @@
 /* The buy column spans both rows: its extra height goes to the gallery row, never between the
    picture and the gallery. */
 @media(min-width:961px){ .mpage-v2 .mpe-in{grid-template-rows:auto 1fr} }
+
+/* Who it is for, the two benefits under it, and "When you need this course" (lib/course-cro.ts). */
+.mpage-v2 .mpe-benefits{list-style:none;margin:-4px 0 14px;padding:0;display:flex;flex-wrap:wrap;gap:6px 16px}
+.mpage-v2 .mpe-benefits li{display:flex;align-items:center;gap:6px;font-size:.88rem;font-weight:600;color:var(--ink)}
+.mpage-v2 .mpe-benefits svg{width:16px;height:16px;flex:none;color:#1f9d55}
+.mpage-v2 .mpe-moments{border:1px solid var(--line);border-radius:16px;padding:20px 22px;background:#fff}
+.mpage-v2 .mpe-moments h2{margin:0 0 12px;font-size:1.1rem}
+.mpage-v2 .mpe-moments ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mpage-v2 .mpe-moments li{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:12px;background:var(--ground);border-left:3px solid #F28C38}
+.mpage-v2 .mpe-moments li b{font-size:.92rem}
+.mpage-v2 .mpe-moments li span{font-size:.86rem;line-height:1.5;color:var(--ink-2)}
+@media (max-width:640px){.mpage-v2 .mpe-moments ul{grid-template-columns:1fr}.mpage-v2 .mpe-moments{padding:16px}}
+
+/* Our guarantee and our story (right-hand column): cards that stand out from the column. */
+.mpage-v2 .mpe-promise-eyebrow{margin:0 0 2px !important;font-size:.72rem !important;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#B4581A !important}
+.mpage-v2 .mpe-promise{display:grid;grid-template-columns:48px 1fr;gap:14px;align-items:start;margin-top:18px;padding:18px;border-radius:16px;background:#FFF4E8;border:1.5px solid #F28C38}
+.mpage-v2 .mpe-promise-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:#F28C38;color:#fff}
+.mpage-v2 .mpe-promise-icon svg{width:26px;height:26px}
+.mpage-v2 .mpe-promise h3{margin:0 0 6px;font-size:1.08rem;font-weight:800;letter-spacing:-.01em;color:var(--ink)}
+.mpage-v2 .mpe-promise p{margin:0;font-size:.86rem;line-height:1.55;color:var(--ink-2)}
+.mpage-v2 .mpe-story{display:grid;grid-template-columns:96px 1fr;gap:16px;align-items:start;margin:14px 0 0;padding:20px;border-radius:16px;background:#F3ECFA;border:1.5px solid #D9C6EE}
+.mpage-v2 .mpe-story-photo{width:96px;height:96px;border-radius:50%;object-fit:cover;display:block;border:3px solid #fff;box-shadow:0 0 0 3px #F28C38}
+.mpage-v2 .mpe-story blockquote{margin:0 0 10px;font-size:.92rem;line-height:1.6;font-style:italic;color:var(--ink)}
+.mpage-v2 .mpe-story .mpe-story-sign{margin:0;font-size:.8rem;color:var(--ink-2)}
+.mpage-v2 .mpe-story .mpe-story-sign b{display:block;font-size:.92rem;color:var(--ink)}
+.mpage-v2 .mpe-story a{color:var(--accent);font-weight:600}
+@media (max-width:420px){
+  .mpage-v2 .mpe-story{grid-template-columns:1fr;justify-items:start;padding:16px}
+  .mpage-v2 .mpe-story-photo{width:76px;height:76px}
+  .mpage-v2 .mpe-promise{grid-template-columns:40px 1fr;padding:14px}
+  .mpage-v2 .mpe-promise-icon{width:40px;height:40px}
+}
+
+/* The demo's "Add to basket" at the end of the lesson: the page's orange buy button, full width. */
+.mpage-v2 .mpe-demo .demo-cta .row{display:flex}
+.mpage-v2 .mpe-demo .demo-cta .row .tbtn.solid{flex:1;justify-content:center;text-align:center;padding:14px 20px;font-size:.95rem;font-weight:800;border-radius:12px;background:#F28C38;color:#1F1530}
+.mpage-v2 .mpe-demo .demo-cta .row .tbtn.solid:hover{background:#E57E2A}
+.mpage-v2 .mpe-demo .demo-cta .lead{text-align:center}
+.mpage-v2 .mpe-demo .demo-again{display:block;margin-left:auto;margin-right:auto}
+
+/* The sticky bar: the time and price wrap under each other rather than running into the offer chip. */
+.mpage-v2 .mbar .meta{flex-wrap:wrap;row-gap:2px;white-space:normal}
+.mpage-v2 .mbar .meta .t{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.mpage-v2 .mbar-in > *:not(.who){flex-shrink:0}

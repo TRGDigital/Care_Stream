@@ -13,6 +13,7 @@ import { StickyBarReveal } from './sticky-bar-reveal'
 import { ModuleBuyPanel } from './module-buy-panel'
 import { ScrollSequence } from './scroll-sequence'
 import { REVIEWS } from '@/lib/reviews'
+import { COURSE_CRO } from '@/lib/course-cro'
 import { PaymentLogos } from './payment-logos'
 import { ExitQuestion } from './shop-questions'
 import { CaptureOverlay } from './capture-overlay'
@@ -72,13 +73,6 @@ export interface RelatedModule {
   duration_minutes?: number | null
   requires_practical?: boolean
   illustration_url?: string | null
-}
-
-// One line under the title saying who the course is for. Add a course's slug to show it there.
-const WHO_FOR: Record<string, string> = {
-  'care-certificate':
-    'Perfect for new care workers, healthcare assistants and support workers starting out in health and social care, '
-    + 'and for managers inducting new starters in their first 12 weeks.',
 }
 
 const Tick = () => (
@@ -243,6 +237,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
   // estimate the library cards do.
   const est = estimatedMinutes(m.group_key, m.duration_minutes)
   const addLabel = { slug: m.slug, title: m.title, unitPence }
+  const cro = COURSE_CRO[m.slug] ?? {}
   const faqModule: FaqModule = {
     title: m.title, duration_minutes: m.duration_minutes, estMinutes: est, sections,
     question_count: m.question_count, pass_mark: m.pass_mark, frequency: m.frequency,
@@ -261,7 +256,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
           <span className="who">
             <b>{m.title}</b>
             <span className="meta">
-              <Clock /> {est < 60 ? `~${est} min` : durationText(est)} to complete<i>·</i>{price} per staff member
+              <span className="t"><Clock /> {est < 60 ? `~${est} min` : durationText(est)} to complete</span><i>·</i><span className="t">{price} per staff member</span>
             </span>
           </span>
           <OfferBarChip slug={m.slug} />
@@ -305,7 +300,12 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               )}
             </div>
             <h1>{m.title} training that gets your team CQC-ready</h1>
-            {WHO_FOR[m.slug] && <p className="mpe-for">{WHO_FOR[m.slug]}</p>}
+            {cro.whoFor && <p className="mpe-for">{cro.whoFor}</p>}
+            {cro.benefits && (
+              <ul className="mpe-benefits">
+                {cro.benefits.map(b => <li key={b}><Tick />{b}</li>)}
+              </ul>
+            )}
             {(REVIEWS[0]?.courses?.[m.slug] ?? REVIEWS[0]?.short) && (
               <blockquote className="mpe-quote">
                 <p>&ldquo;{REVIEWS[0].courses?.[m.slug] ?? REVIEWS[0].short}&rdquo;</p>
@@ -325,15 +325,37 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               {m.cpd_accredited && <li><Tick />CPD Certified Course</li>}
             </ul>
 
-            <div className="mpe-guarantee">
-              <h3><span>Our guarantee</span></h3>
-              <p>
-                If a licence has not been started, tell us within fourteen days and we refund it in full.
-                {m.cpd_accredited ? ' CPD Certified, and kept' : ' Kept'} up to date whenever the standards or CQC
-                guidance change. Licences last 12 months: no subscription, no minimum order.
-              </p>
-              <p>Built by people who have worked in care homes. <Link href="/about">Read our story</Link>.</p>
+            {/* Our guarantee and our story: the two reasons to trust us, as cards that stand out. */}
+            <div className="mpe-promise">
+              <span className="mpe-promise-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6L12 3Z" /><path d="m8.5 12 2.5 2.5 4.5-5" />
+                </svg>
+              </span>
+              <div>
+                <p className="mpe-promise-eyebrow">Our guarantee</p>
+                <h3>Full refund within 14 days</h3>
+                <p>
+                  If a licence has not been started, tell us within fourteen days and we refund it in full.
+                  {m.cpd_accredited ? ' CPD Certified, and kept' : ' Kept'} up to date whenever the standards or CQC
+                  guidance change. Licences last 12 months: no subscription, no minimum order.
+                </p>
+              </div>
             </div>
+
+            <figure className="mpe-story">
+              <SiteImage src="/images/founder/len-burgess.webp" alt="Len Burgess, founder of CareStream" width={96} height={96} className="mpe-story-photo" />
+              <figcaption>
+                <p className="mpe-promise-eyebrow">Our story</p>
+                <blockquote>
+                  &ldquo;I worked in the care industry for a number of years and saw first hand how hard it is for overseas
+                  care staff to understand their training when it is only in English. So I built CareStream:{' '}
+                  {m.cpd_accredited ? 'CPD Certified training' : 'training'} your team can take in over 60 languages, so every
+                  carer understands it, not just passes it. Today it helps care teams right across the UK.&rdquo;
+                </blockquote>
+                <p className="mpe-story-sign"><b>Len Burgess</b> Founder, CareStream · <Link href="/about">Read our story</Link></p>
+              </figcaption>
+            </figure>
 
             <ProductFaqs title="About this course" faqs={trainingFaqs(faqModule)} />
             <SampleCertificate m={faqModule} />
@@ -354,6 +376,17 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
                 </span>
               </div>
             </figure>
+
+            {cro.moments?.length ? (
+              <div className="mpe-moments">
+                <h2>When you need this course</h2>
+                <ul>
+                  {cro.moments.map(x => (
+                    <li key={x.title}><b>{x.title}</b><span>{x.body.replace('{duration}', durationText(est))}</span></li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
 
             {demo && (
               <div className="mpe-demo">

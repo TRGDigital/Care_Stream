@@ -5,7 +5,8 @@
 // be something the policy actually covers: check it against the policy's required elements.
 
 export interface PolicyMoment { title: string; body: string }
-export interface PolicyCro { whoFor?: string; benefits?: [string, string]; moments?: PolicyMoment[] }
+/** story: the founder's "Our story" in his words for this policy page. Only shown where Len has approved it. */
+export interface PolicyCro { whoFor?: string; benefits?: [string, string]; moments?: PolicyMoment[]; story?: string }
 
 export const POLICY_CRO: Record<string, PolicyCro> = {
   'data-protection-gdpr': {
@@ -13,6 +14,12 @@ export const POLICY_CRO: Record<string, PolicyCro> = {
       'Perfect for services who need a GDPR policy that meets UK GDPR, the Data Protection Act 2018 and what CQC '
       + 'inspectors look for.',
     benefits: ['Covers UK GDPR, the Data Protection Act 2018 and the Caldicott Principles', 'Written for your service, delivered in 2 working days'],
+    story:
+      'I worked in the care industry for a number of years and saw first hand how many services rely on policy templates '
+      + 'that are out of date, generic, or not written for the way they actually work. When CQC asks how you handle '
+      + 'residents’ information, a template does not stand up. So I built CareStream: policies written for your service, '
+      + 'checked against the law line by line and read by a person before they carry your name. Today it helps care '
+      + 'services right across the UK.',
     moments: [
       {
         title: 'A CQC inspection is coming',

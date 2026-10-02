@@ -71,7 +71,7 @@ export function TrainingCartLink() {
 
 /** The page's main action: straight to this course's purchase page with one licence set.
  *  Logged as its own event so PPC traffic that buys directly can be told apart from the basket. */
-export function BuyNowLink({ slug, className = '', label = 'Buy now', qty = 1 }: {
+export function BuyNowLink({ slug, className = '', label = 'Add to basket', qty = 1 }: {
   slug: string; className?: string; label?: string; qty?: number
 }) {
   // While an offer is live on this course the button takes the offer's orange.
@@ -93,22 +93,18 @@ export function BuyNowLink({ slug, className = '', label = 'Buy now', qty = 1 }:
   )
 }
 
-/** The secondary action under Buy now, as plain text: adds one licence to the training basket. */
-export function TrainingAddTextLink({ slug, title, unitPence, className = '' }: {
+/** Under the main button: how many of this course are already in the training basket. */
+export function TrainingAddTextLink({ slug, className = '' }: {
   slug: string; title: string; unitPence: number; className?: string
 }) {
-  const { items, cart } = useCart()
+  // Only says what is already in the basket: the main button reads "Add to basket" and opens the
+  // cart, so an "or add to basket" link here would repeat it.
+  const { items } = useCart()
   const inCart = items.find(i => i.slug === slug)
-  if (inCart) {
-    return (
-      <p className={`textadd ${className}`.trim()}>
-        {inCart.qty} in your basket &middot; <Link href="/basket">View basket</Link>
-      </p>
-    )
-  }
+  if (!inCart) return null
   return (
     <p className={`textadd ${className}`.trim()}>
-      or <button type="button" onClick={() => cart.add({ slug, title, unitPence })}>add to basket</button>
+      {inCart.qty} in your basket &middot; <Link href="/basket">View basket</Link>
     </p>
   )
 }

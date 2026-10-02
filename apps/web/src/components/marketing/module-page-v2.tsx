@@ -731,7 +731,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
           <h2>Give your team {lower} training that actually sticks.</h2>
           <p>Buy your licences, allocate them in seconds, and let the evidence build itself.</p>
           <div className="row">
-            <BuyNowLink slug={m.slug} className="tbtn solid" label={`Buy now · ${price}`} />
+            <BuyNowLink slug={m.slug} className="tbtn solid" label={`Add to basket · ${price}`} />
             <Link className="tbtn ghost" href="/demo">Book a demo</Link>
           </div>
           <TrainingAddTextLink {...addLabel} className="center" />

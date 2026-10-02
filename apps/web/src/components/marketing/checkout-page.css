@@ -204,3 +204,9 @@
 .ckcompact .ckgrid > .ckcol > .ckupsell{width:auto;margin:0 18px;box-sizing:border-box;min-width:0}
 .ckcompact .ckupsell button{width:100%}
 .ckcompact .ckupsell{padding:16px 18px;gap:12px}
+
+/* The policy summary lists each policy; the struck total is what it would have cost without the offer. */
+.cklines .ckline-item span{color:var(--ink);min-width:0}
+.cklines .ckline-item b{white-space:nowrap;font-weight:650}
+.cklines .ckline-item .ckfreetag{color:var(--good);font-weight:800}
+.cktotal .ckwastotal{font-size:1.05rem;font-weight:600;color:var(--muted);margin-right:8px;letter-spacing:0}

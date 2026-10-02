@@ -74,6 +74,13 @@ export interface RelatedModule {
   illustration_url?: string | null
 }
 
+// One line under the title saying who the course is for. Add a course's slug to show it there.
+const WHO_FOR: Record<string, string> = {
+  'care-certificate':
+    'Perfect for new care workers, healthcare assistants and support workers starting out in health and social care, '
+    + 'and for managers inducting new starters in their first 12 weeks.',
+}
+
 const Tick = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"
        strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -298,9 +305,10 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               )}
             </div>
             <h1>{m.title} training that gets your team CQC-ready</h1>
-            {REVIEWS[0]?.short && (
+            {WHO_FOR[m.slug] && <p className="mpe-for">{WHO_FOR[m.slug]}</p>}
+            {(REVIEWS[0]?.courses?.[m.slug] ?? REVIEWS[0]?.short) && (
               <blockquote className="mpe-quote">
-                <p>&ldquo;{REVIEWS[0].short}&rdquo;</p>
+                <p>&ldquo;{REVIEWS[0].courses?.[m.slug] ?? REVIEWS[0].short}&rdquo;</p>
                 <cite><span className="row"><Star /><Star /><Star /><Star /><Star /></span> {REVIEWS[0].name}, {REVIEWS[0].setting}</cite>
               </blockquote>
             )}

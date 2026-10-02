@@ -190,9 +190,10 @@
 .ckcompact .ckgrid > .ckcol > *{order:1;width:100%}
 .ckcompact .ckgrid > .cksum{order:2;position:static;width:100%}
 .ckcompact .ckpanel{border-radius:0;border-left:0;border-right:0;box-shadow:none}
-.ckcompact .ckitem{grid-template-columns:64px minmax(0,1fr);gap:12px;padding:14px 18px}
+.ckcompact .ckitem{grid-template-columns:64px minmax(0,1fr) auto;gap:12px;align-items:start;padding:14px 18px}
 .ckcompact .ckthumb{width:64px}
-.ckcompact .ckright{grid-column:1/-1;justify-content:space-between}
+/* The price sits level with the policy's name, on the right. */
+.ckcompact .ckright{grid-column:auto;align-self:start;justify-content:flex-end;text-align:right;padding-top:1px}
 .ckcompact .ckpanel-hd,.ckcompact .ckform,.ckcompact .cksum .in{padding-left:18px;padding-right:18px}
 .ckcompact .ckform{grid-template-columns:1fr}
 .ckcompact .ckoffer-pad{padding:0 18px 16px}

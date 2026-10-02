@@ -58,16 +58,20 @@ function Steps() {
 }
 
 /** Organisation, name and email. Shared, because both orders need the same three. */
-function Details({ orgLabel, orgPlaceholder, emailNote, org, setOrg, name, setName, email, setEmail }: {
+function Details({ orgLabel, orgPlaceholder, emailNote, org, setOrg, name, setName, email, setEmail, emailOnly = false }: {
   orgLabel: string; orgPlaceholder: string; emailNote: string
   org: string; setOrg: (v: string) => void
   name: string; setName: (v: string) => void
   email: string; setEmail: (v: string) => void
+  /** The cart drawer asks for the email only: Stripe takes the name and billing details, and the
+   *  policy questions after payment take the company details. */
+  emailOnly?: boolean
 }) {
   return (
     <div className="ckpanel">
-      <div className="ckpanel-hd"><h2>Your details</h2><span>For the receipt and your account</span></div>
+      <div className="ckpanel-hd"><h2>{emailOnly ? 'Your email' : 'Your details'}</h2><span>For the receipt and your account</span></div>
       <form className="ckform" onSubmit={e => e.preventDefault()}>
+        {!emailOnly && <>
         <div className="ckfield">
           <label htmlFor="ckorg">{orgLabel}</label>
           <input id="ckorg" required autoComplete="organization" placeholder={orgPlaceholder}
@@ -78,6 +82,7 @@ function Details({ orgLabel, orgPlaceholder, emailNote, org, setOrg, name, setNa
           <input id="ckname" required autoComplete="name" placeholder="Sam Taylor"
                  value={name} onChange={e => setName(e.target.value)} />
         </div>
+        </>}
         <div className="ckfield full">
           <label htmlFor="ckemail">Work email</label>
           <input id="ckemail" type="email" required autoComplete="email" placeholder="name@yourcarehome.co.uk"
@@ -197,9 +202,9 @@ function payError(e: unknown) {
 }
 
 /** Validates the details form; returns the message to show, or '' when it can go ahead. */
-function detailsError(org: string, name: string, email: string) {
-  if (!org.trim()) return 'Please enter your organisation name.'
-  if (!name.trim()) return 'Please enter your full name.'
+function detailsError(org: string, name: string, email: string, emailOnly = false) {
+  if (!emailOnly && !org.trim()) return 'Please enter your organisation name.'
+  if (!emailOnly && !name.trim()) return 'Please enter your full name.'
   if (!EMAIL.test(email.trim())) return 'Please enter a valid work email address.'
   return ''
 }
@@ -460,7 +465,7 @@ export function PolicyCheckout({ compact = false, onProgress }: {
   const [mounted, setMounted] = useState(false)
   const [priority, setPriority] = useState(false)
   useEffect(() => {
-    onProgress?.({ details: !detailsError(org, name, email), agreed: true })
+    onProgress?.({ details: !detailsError(org, name, email, compact), agreed: true })
   }, [org, name, email, onProgress])
   // A basket sent for approval arrives as ?items=slug,bundle:key,…: rebuild it from the shop's prices.
   useEffect(() => {
@@ -554,7 +559,7 @@ export function PolicyCheckout({ compact = false, onProgress }: {
   }, [policies, packs])
 
   async function pay() {
-    const problem = detailsError(org, name, email)
+    const problem = detailsError(org, name, email, compact)
     if (problem) { setError(problem); return }
     setError(''); setBusy(true)
     items.forEach(i => fi('checkout_start', { funnel: 'policies', option: i.slug, label: i.title, qty: 1 }))
@@ -704,7 +709,7 @@ export function PolicyCheckout({ compact = false, onProgress }: {
 
       <Details orgLabel="Registered company name" orgPlaceholder="Oakhaven Care Ltd"
                emailNote="We send the receipt and the link to your questions here."
-               org={org} setOrg={setOrg} name={name} setName={setName} email={email} setEmail={setEmail} />
+               org={org} setOrg={setOrg} name={name} setName={setName} email={email} setEmail={setEmail} emailOnly={compact} />
 
       {!compact && <div className="ckpanel ckafter">
         <div className="ckpanel-hd"><h2>What happens after you pay</h2><span>Once payment is confirmed</span></div>

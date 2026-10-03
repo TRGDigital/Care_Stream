@@ -74,7 +74,7 @@ export function LanguageSlide({ langs, still = false }: { langs: { code: string;
 }
 
 /** "Try before you buy": opens the same live lesson and question as the page's demo, in an overlay. */
-export function TryBeforeYouBuy({ slug, children }: { slug: string; children: ReactNode }) {
+export function TryBeforeYouBuy({ slug, withActivity = false, children }: { slug: string; withActivity?: boolean; children: ReactNode }) {
   const [open, setOpen] = useState(false)
   // Add to basket inside the demo opens the cart drawer: close this first so the drawer shows.
   useEffect(() => {
@@ -94,7 +94,7 @@ export function TryBeforeYouBuy({ slug, children }: { slug: string; children: Re
     <>
       <button type="button" className="hg-try" data-fi="try-demo"
               onClick={() => { setOpen(true); fi('cta', { funnel: 'training', option: slug, label: 'try-before-you-buy' }) }}>
-        <span aria-hidden="true">▶</span> Try before you buy <small>a real lesson and question, 2 minutes</small>
+        <span aria-hidden="true">▶</span> Try before you buy <small>{withActivity ? 'a real lesson, question and activity, 3 minutes' : 'a real lesson and question, 2 minutes'}</small>
       </button>
       {open && createPortal(
         <div className="hg-overlay" onClick={e => { if (e.target === e.currentTarget) setOpen(false) }}>

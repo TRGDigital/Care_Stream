@@ -375,7 +375,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
             )}
 
             {demo && (
-              <TryBeforeYouBuy slug={m.slug}>
+              <TryBeforeYouBuy slug={m.slug} withActivity={!!demo.activity}>
                 <TrainingDemo demo={demo} buyHref={buyHref} variant="theme" place="module" />
               </TryBeforeYouBuy>
             )}

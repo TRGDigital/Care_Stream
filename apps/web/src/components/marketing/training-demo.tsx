@@ -347,7 +347,7 @@ export function TrainingDemo({
     return (
       <div className="demo" id="demo">
         <div className="demo-top">
-          <b>{place === 'module' ? 'Try it · a real lesson and question' : demo.title}</b>
+          <b>{place === 'module' ? `Try it · a real lesson, question${activity ? ' and activity' : ''}` : demo.title}</b>
           <span className="demo-step">Try it &middot; step {n} of {steps.length}</span>
         </div>
         <div className="demo-steps">

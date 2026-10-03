@@ -19,7 +19,7 @@ export type TrainingDemoData = {
   total_questions: number
   // Saved translations of the demo (English stays canonical; option order preserved
   // so the `correct` index is unchanged). Present only for languages that exist.
-  translations?: Record<string, { lesson: { heading: string; body: string }; question: { text: string; options: string[]; explanation: string | null } }>
+  translations?: Record<string, { lesson: { heading: string; body: string }; question: { text: string; options: string[]; explanation: string | null }; activity?: Activity | null }>
   /** The module's interactive activity after this lesson (match, sort or order), as in the hub. */
   activity?: Activity | null
 }
@@ -78,7 +78,9 @@ export function TrainingDemo({
   const Q = tr ? { text: tr.question.text, options: tr.question.options, correct: question.correct, explanation: tr.question.explanation } : question
 
   // On a course page, the module's own interactive activity follows the result, then the buy step.
-  const activity = variant === 'theme' && demo.activity ? demo.activity : null
+  // In another language the activity's words are that language's saved translation (same ids
+  // and answers); with no translation saved it stays in English.
+  const activity = variant === 'theme' && demo.activity ? (tr?.activity ?? demo.activity) : null
   const steps = activity ? [...STEPS, { key: 'activity' as Step, label: 'Activity' }] : STEPS
   const stepIdx = steps.findIndex((s) => s.key === step)
   const answered = selected !== null
@@ -452,7 +454,7 @@ export function TrainingDemo({
         {activity && (
           <div hidden={step !== 'activity'}>
             <div className="demo-act">
-              <ActivityStep act={activity} onAttempt={() => track('demo_activity_attempt')} />
+              <ActivityStep key={lang} act={activity} onAttempt={() => track('demo_activity_attempt')} />
             </div>
             <div className="demo-res">{buyCta}</div>
           </div>

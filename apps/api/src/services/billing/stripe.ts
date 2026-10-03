@@ -272,7 +272,12 @@ export async function createTrainingCheckoutSession(input: TrainingCheckoutInput
   // percentage off, charged as a one-off price on the same product.
   const deal = licenceDeal(await offersWithLock(input.lock), input.moduleSlug, qty)
   if (input.forcePct) deal.pct = Math.max(deal.pct, Math.min(90, Math.floor(input.forcePct)))
-  const unit = deal.pct ? Math.round(TRAINING_LICENCE_PENCE * (1 - deal.pct / 100)) : TRAINING_LICENCE_PENCE
+  // The team (volume) discount on the paid licences, as in the basket checkout: an offer's
+  // percentage replaces it only when bigger, and an offer's free licences come on top.
+  const teamPct = trainingDiscountPct(qty)
+  const pct = Math.max(deal.pct, teamPct)
+  const unit = pct ? Math.round(TRAINING_LICENCE_PENCE * (1 - pct / 100)) : TRAINING_LICENCE_PENCE
+  const team = teamPct > deal.pct ? `Team price: ${teamPct}% off for ${qty} licences. ` : ''
   const total = qty + deal.free
   const line: Stripe.Checkout.SessionCreateParams.LineItem = {
     quantity: qty,
@@ -283,6 +288,7 @@ export async function createTrainingCheckoutSession(input: TrainingCheckoutInput
         description: (deal.free
           ? `${total} licences: ${qty} paid + ${deal.free} free with the ${deal.offer?.label ?? 'offer'}. `
           : `${qty} ${qty === 1 ? 'licence' : 'licences'}, one per member of staff. `)
+          + team
           + 'Each lasts 12 months, with a certificate on completion. Any licence not started is refunded in full within 14 days.',
         images: await courseImage(input.moduleSlug),
         tax_code: PLAN_TAX_CODE,

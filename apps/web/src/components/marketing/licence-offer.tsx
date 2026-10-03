@@ -25,17 +25,19 @@ function Ends({ o }: { o: Offer }) {
   )
 }
 
-function Card({ o, price, compact, cta, label }: {
+function Card({ o, price, compact, cta, label, headline, note }: {
   o: Offer; price?: React.ReactNode; compact?: boolean; cta?: { href: string; label: string }; label?: string
+  /** Replace the offer's own headline and rules, e.g. with what it has given this basket. */
+  headline?: string; note?: string
 }) {
   return (
     <aside className={`lofr${compact ? ' compact' : ''}`} aria-label={o.label ?? o.name}>
       <span className="lofr-emoji" aria-hidden="true">{offerEmoji(o)}</span>
       <div className="lofr-tx">
         <span className="lofr-lb">{label ?? o.label ?? o.name}</span>
-        {o.headline && <b className="lofr-hd">{o.headline}</b>}
+        {(headline ?? o.headline) && <b className="lofr-hd">{headline ?? o.headline}</b>}
         {price}
-        {o.multi_text && <p className="lofr-multi">{o.multi_text}</p>}
+        {(note ?? o.multi_text) && <p className="lofr-multi">{note ?? o.multi_text}</p>}
         {cta && <a className="lofr-cta" href={cta.href}>{cta.label}</a>}
         <Ends o={o} />
       </div>
@@ -58,8 +60,10 @@ export function LicenceOfferCard({ slug, compact = false }: { slug: string; comp
 /** Under a policy's (or pack's) buy box, or in the basket (no slug: the policy offer running). */
 /** `applied` (the basket only): true once the offer takes something off, so the buyer can see it
  *  working ("Halloween offer applied"); false while it does not yet, e.g. one policy under a 2 for 1. */
-export function PolicyOfferCard({ slug, pricePence, compact = false, cta, applied }: {
+export function PolicyOfferCard({ slug, pricePence, compact = false, cta, applied, appliedHeadline, appliedNote }: {
   slug?: string; pricePence?: number; compact?: boolean; cta?: { href: string; label: string }; applied?: boolean
+  /** With `applied`: what the offer has given this basket, in place of the offer's rules. */
+  appliedHeadline?: string; appliedNote?: string
 }) {
   const offers = useOffers()
   const o = slug ? policyOffer(offers, slug)
@@ -69,7 +73,9 @@ export function PolicyOfferCard({ slug, pricePence, compact = false, cta, applie
   const label = applied === undefined ? undefined
     : applied ? `${name} applied`
     : o.kind === 'group_free' ? `${name}: your second policy is free` : name
-  return <Card o={o} compact={compact} cta={cta} label={label} price={pricePence ? <PolicyPrice o={o} price={pricePence} /> : null} />
+  return <Card o={o} compact={compact} cta={cta} label={label}
+               headline={applied ? appliedHeadline : undefined} note={applied ? appliedNote : undefined}
+               price={pricePence ? <PolicyPrice o={o} price={pricePence} /> : null} />
 }
 
 function PolicyPrice({ o, price }: { o: Offer; price: number }) {

@@ -846,6 +846,7 @@
 .mpage-v2 .mpe-list:not(.mpe-cert):not(.mpe-res){background:#F3ECFA;border:1.5px solid #DCCBEF}
 .mpage-v2 .mpe-list ol{counter-reset:std;display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .mpage-v2 .mpe-list ol li{counter-increment:std;display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:#fff;font-size:.88rem;line-height:1.35;font-weight:600;color:var(--ink)}
+.mpage-v2 .mpe-list ol li::after{content:'✓';margin-left:auto;flex:none;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#1F8A5B;color:#fff;font-size:.74rem;font-weight:800}
 .mpage-v2 .mpe-list ol li::before{content:counter(std);flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#6B3FA0;color:#fff;font-size:.78rem;font-weight:800}
 
 /* Assessment and certificate: warm cream, an orange rule, icon tiles. */

@@ -14,6 +14,7 @@ import { ModuleBuyPanel } from './module-buy-panel'
 import { ScrollSequence } from './scroll-sequence'
 import { REVIEWS } from '@/lib/reviews'
 import { COURSE_CRO } from '@/lib/course-cro'
+import { HeroGallery, LanguageSlide, TryBeforeYouBuy, type GallerySlide } from './hero-gallery'
 import { PaymentLogos } from './payment-logos'
 import { ExitQuestion } from './shop-questions'
 import { CaptureOverlay } from './capture-overlay'
@@ -244,6 +245,52 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
     requires_practical: m.requires_practical, cpd_accredited: m.cpd_accredited,
   }
 
+  // The hero as a product gallery: the picture, then real views of what is being bought.
+  const LANG_NAMES: Record<string, string> = { eng: 'English', pol: 'Polski', hin: 'हिन्दी' }
+  const langs = demo?.lesson ? [
+    { code: 'eng', name: 'English', lesson: { heading: demo.lesson.heading, body: demo.lesson.body } },
+    ...Object.entries(demo.translations ?? {}).filter(([c]) => LANG_NAMES[c]).map(([c, t]) => ({ code: c, name: LANG_NAMES[c]!, lesson: t.lesson })),
+  ] : []
+  const gallery: GallerySlide[] = [
+    ...(hero ? [{
+      key: 'course', label: 'The course',
+      thumb: <SiteImage src={hero} alt="" />,
+      body: (
+        <>
+          <div className="mpe-shot"><SiteImage src={hero} alt={`${m.title} training for care staff`} priority /></div>
+          <div className="hg-badges">
+            {m.cpd_accredited && <span><b>✓</b> CPD Certified</span>}
+            <span><b>60+</b> languages</span>
+            <span><b>✓</b> Certificate for every learner</span>
+          </div>
+        </>
+      ),
+    }] : []),
+    ...(langs.length > 1 ? [{ key: 'language', label: 'In their language', thumb: <span aria-hidden="true">🌍</span>, body: <LanguageSlide langs={langs} /> }] : []),
+    { key: 'certificate', label: 'The certificate', thumb: <span aria-hidden="true">🏅</span>, body: <div className="hg-cert"><SampleCertificate m={faqModule} /></div> },
+    {
+      key: 'dashboard', label: 'Your dashboard', thumb: <span aria-hidden="true">📊</span>,
+      body: (
+        <div className="hg-dash">
+          <div className="hg-dash-head"><b>{m.title}: your team</b><span>Example of the manager&apos;s view</span></div>
+          <div className="hg-dash-kpis">
+            <div><b>12</b><span>staff allocated</span></div>
+            <div><b>9</b><span>certificates issued</span></div>
+            <div><b>91%</b><span>average score</span></div>
+          </div>
+          <table>
+            <tbody>
+              <tr><td>Amara O.</td><td>English</td><td><span className="hg-st ok">Passed 94%</span></td></tr>
+              <tr><td>Piotr K.</td><td>Polski</td><td><span className="hg-st ok">Passed 88%</span></td></tr>
+              <tr><td>Priya S.</td><td>हिन्दी</td><td><span className="hg-st go">In progress</span></td></tr>
+              <tr><td>Grace M.</td><td>English</td><td><span className="hg-st new">Not started</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      ),
+    },
+  ]
+
   return (
     <div className="mpage-v2">
       {/* The bar that follows the reader down the page. Its action is the theme's own: straight
@@ -276,7 +323,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
       <section className="mhero mpe">
         <div className="mwrap mpe-in">
           <div className="mpe-main">
-            {hero && <div className="mpe-shot"><SiteImage src={hero} alt={`${m.title} training for care staff`} priority /></div>}
+            <HeroGallery slides={gallery} />
             {/* The course at a glance: the facts a manager checks first. */}
             <ul className="mpe-stats">
               {sections.length > 0 && <li><b>{sections.length}</b><span>{m.slug === 'care-certificate' ? 'standards covered' : 'lessons'}</span></li>}
@@ -322,6 +369,11 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               </blockquote>
             )}
 
+            {demo && (
+              <TryBeforeYouBuy slug={m.slug}>
+                <TrainingDemo demo={demo} buyHref={buyHref} variant="theme" place="module" />
+              </TryBeforeYouBuy>
+            )}
             <ModuleBuyPanel slug={m.slug} title={m.title} unitPence={unitPence} />
 
             <PaymentLogos />

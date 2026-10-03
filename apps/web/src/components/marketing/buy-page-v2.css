@@ -300,3 +300,4 @@
 .bypage-v2 .bylines b{white-space:nowrap;font-weight:650}
 .bypage-v2 .bylines s{color:var(--muted,#6B6577);font-weight:500;margin-right:6px}
 .bypage-v2 .bytotal .bywastotal{font-size:1rem;font-weight:600;color:var(--muted,#6B6577);margin-right:8px;letter-spacing:0}
+.bypage-v2 .byteam{margin:6px 0 0;font-size:.82rem;font-weight:600;color:#1F8A5B}

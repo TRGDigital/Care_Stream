@@ -151,3 +151,11 @@
   .cschrome .faddrrow{gap:12px}
   .cschrome .fpreferred{font-size:.78rem;padding:8px 13px}
 }
+
+/* The team quote bar above the header, on the staff training pages (site-header.tsx). */
+.cs-teambar{background:#1F1530;color:#F6F1FB;text-align:center;font-size:.86rem;line-height:1.3}
+.cs-teambar a{display:block;padding:9px 16px;color:inherit;text-decoration:none}
+.cs-teambar a:hover b{text-decoration:underline}
+.cs-teambar b{color:#F28C38;font-weight:800;margin-left:4px}
+.cs-teambar span{color:#F28C38;font-weight:800;margin-left:2px}
+@media (max-width:640px){.cs-teambar{font-size:.78rem}.cs-teambar a{padding:8px 12px}}

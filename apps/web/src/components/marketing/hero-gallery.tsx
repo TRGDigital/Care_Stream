@@ -34,10 +34,11 @@ export function HeroGallery({ slides }: { slides: GallerySlide[] }) {
 }
 
 type Lesson = { heading: string; body: string }
+type Question = { text: string; options: string[] } | null
 
 /** The demo lesson in English and each saved translation, switchable, as the learner sees it. */
-export function LanguageSlide({ langs }: { langs: { code: string; name: string; lesson: Lesson }[] }) {
-  const [code, setCode] = useState(langs.find(l => l.code !== 'eng')?.code ?? langs[0]?.code)
+export function LanguageSlide({ langs }: { langs: { code: string; name: string; lesson: Lesson; question: Question }[] }) {
+  const [code, setCode] = useState((langs.find(l => l.code === 'pol') ?? langs.find(l => l.code !== 'eng') ?? langs[0])?.code)
   const cur = langs.find(l => l.code === code) ?? langs[0]
   if (!cur) return null
   const paras = cur.lesson.body.split(/\n+/).map(t => t.trim()).filter(Boolean).slice(0, 2)
@@ -53,7 +54,13 @@ export function LanguageSlide({ langs }: { langs: { code: string; name: string; 
       </div>
       <div className="hg-lang-card" lang={cur.code === 'pol' ? 'pl' : cur.code === 'hin' ? 'hi' : 'en'}>
         <h3>{cur.lesson.heading}</h3>
-        {paras.map((p, n) => <p key={n}>{p.length > 420 ? `${p.slice(0, 420).replace(/\s+\S*$/, '')}…` : p}</p>)}
+        {paras.slice(0, 1).map((p, n) => <p key={n}>{p.length > 360 ? `${p.slice(0, 360).replace(/\s+\S*$/, '')}…` : p}</p>)}
+        {cur.question && (
+          <div className="hg-lang-q">
+            <b>{cur.question.text}</b>
+            <ul>{cur.question.options.slice(0, 4).map((o, n) => <li key={n}><span>{String.fromCharCode(65 + n)}</span>{o}</li>)}</ul>
+          </div>
+        )}
       </div>
       <p className="hg-foot">A real lesson from this course. Over 60 languages are available in the hub.</p>
     </div>

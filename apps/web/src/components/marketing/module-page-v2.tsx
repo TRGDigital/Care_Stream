@@ -248,8 +248,8 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
   // The hero as a product gallery: the picture, then real views of what is being bought.
   const LANG_NAMES: Record<string, string> = { eng: 'English', pol: 'Polski', hin: 'हिन्दी' }
   const langs = demo?.lesson ? [
-    { code: 'eng', name: 'English', lesson: { heading: demo.lesson.heading, body: demo.lesson.body } },
-    ...Object.entries(demo.translations ?? {}).filter(([c]) => LANG_NAMES[c]).map(([c, t]) => ({ code: c, name: LANG_NAMES[c]!, lesson: t.lesson })),
+    { code: 'eng', name: 'English', lesson: { heading: demo.lesson.heading, body: demo.lesson.body }, question: demo.question ? { text: demo.question.text, options: demo.question.options } : null },
+    ...Object.entries(demo.translations ?? {}).filter(([c]) => LANG_NAMES[c]).map(([c, t]) => ({ code: c, name: LANG_NAMES[c]!, lesson: t.lesson, question: t.question ? { text: t.question.text, options: t.question.options } : null })),
   ] : []
   const gallery: GallerySlide[] = [
     ...(hero ? [{
@@ -284,8 +284,11 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               <tr><td>Piotr K.</td><td>Polski</td><td><span className="hg-st ok">Passed 88%</span></td></tr>
               <tr><td>Priya S.</td><td>हिन्दी</td><td><span className="hg-st go">In progress</span></td></tr>
               <tr><td>Grace M.</td><td>English</td><td><span className="hg-st new">Not started</span></td></tr>
+              <tr><td>Ioana P.</td><td>Română</td><td><span className="hg-st ok">Passed 90%</span></td></tr>
+              <tr><td>Tunde A.</td><td>English</td><td><span className="hg-st ok">Passed 86%</span></td></tr>
             </tbody>
           </table>
+          <p className="hg-dash-foot">Download any certificate as a PDF, and send reminders to anyone who has not started.</p>
         </div>
       ),
     },

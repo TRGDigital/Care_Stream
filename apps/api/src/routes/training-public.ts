@@ -238,6 +238,18 @@ publicTrainingRouter.get('/standard-modules/:slug/demo', async (req: Request, re
       ? { text: String(q.text), options: q.options.map(String), correct: q.correct as number, explanation: q.explanation ? String(q.explanation) : null }
       : null
 
+    // The interactive activity that follows the demo's lesson in the module (match, sort or
+    // order), exactly as learners get it in the hub. Formative, not marked. Null if none.
+    const acts = Array.isArray(lc.activities) ? lc.activities : []
+    const act = acts.find((a: any) => a?.after_section === firstIdx && ['match', 'sort', 'order'].includes(a?.type)) ?? null
+    const activity = act ? {
+      id: String(act.id ?? `demo-${slug}`), type: act.type, title: String(act.title ?? ''), instructions: String(act.instructions ?? ''),
+      after_section: firstIdx,
+      ...(act.type === 'order' ? { steps: (act.steps ?? []).map(String) } : {}),
+      ...(act.type === 'sort' ? { bins: act.bins ?? [], items: act.items ?? [] } : {}),
+      ...(act.type === 'match' ? { pairs: act.pairs ?? [] } : {}),
+    } : null
+
     // Saved Polish + Hindi translations of the demo. Generated once (call with
     // ?gen=1), then read from cache on every render — zero runtime translation cost.
     const translations: Record<string, { lesson: { heading: string; body: string }; question: { text: string; options: string[]; explanation: string | null } }> = {}
@@ -302,6 +314,7 @@ publicTrainingRouter.get('/standard-modules/:slug/demo', async (req: Request, re
       total_sections: secs.length,
       total_questions: qs.length,
       translations,
+      activity,
     } } })
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'failed' })

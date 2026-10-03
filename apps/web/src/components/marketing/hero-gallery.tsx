@@ -33,11 +33,17 @@ export function HeroGallery({ slides }: { slides: GallerySlide[] }) {
   )
 }
 
+/** A slide shrunk to a thumbnail: the real view, scaled down, not clickable inside. */
+export function Mini({ children }: { children: ReactNode }) {
+  return <div className="hg-mini" aria-hidden="true">{children}</div>
+}
+
 type Lesson = { heading: string; body: string }
 type Question = { text: string; options: string[] } | null
 
 /** The demo lesson in English and each saved translation, switchable, as the learner sees it. */
-export function LanguageSlide({ langs }: { langs: { code: string; name: string; lesson: Lesson; question: Question }[] }) {
+/** `still`: no buttons (for the thumbnail, which is itself a button). */
+export function LanguageSlide({ langs, still = false }: { langs: { code: string; name: string; lesson: Lesson; question: Question }[]; still?: boolean }) {
   const [code, setCode] = useState((langs.find(l => l.code === 'pol') ?? langs.find(l => l.code !== 'eng') ?? langs[0])?.code)
   const cur = langs.find(l => l.code === code) ?? langs[0]
   if (!cur) return null
@@ -47,9 +53,9 @@ export function LanguageSlide({ langs }: { langs: { code: string; name: string; 
       <div className="hg-lang-bar">
         <span>Your staff choose their language</span>
         <div>
-          {langs.map(l => (
-            <button key={l.code} type="button" className={l.code === code ? 'on' : ''} onClick={() => setCode(l.code)}>{l.name}</button>
-          ))}
+          {langs.map(l => still
+            ? <span key={l.code} className={`hg-lang-pill${l.code === code ? ' on' : ''}`}>{l.name}</span>
+            : <button key={l.code} type="button" className={l.code === code ? 'on' : ''} onClick={() => setCode(l.code)}>{l.name}</button>)}
         </div>
       </div>
       <div className="hg-lang-card" lang={cur.code === 'pol' ? 'pl' : cur.code === 'hin' ? 'hi' : 'en'}>

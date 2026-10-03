@@ -4,6 +4,7 @@ import { Fragment, useRef, useState } from 'react'
 import Link from 'next/link'
 import { openBuyDrawer } from './training-cart-buttons'
 import { CheckCircle2, XCircle, Sparkles, ArrowRight, ArrowLeft, RotateCcw, Send, Info, Globe } from 'lucide-react'
+import { ActivityStep, type Activity } from '@/components/hub/activity-step'
 import { SiteImage } from '@/components/site-image'
 import { careSetting } from '@/lib/care-setting'
 
@@ -19,9 +20,11 @@ export type TrainingDemoData = {
   // Saved translations of the demo (English stays canonical; option order preserved
   // so the `correct` index is unchanged). Present only for languages that exist.
   translations?: Record<string, { lesson: { heading: string; body: string }; question: { text: string; options: string[]; explanation: string | null } }>
+  /** The module's interactive activity after this lesson (match, sort or order), as in the hub. */
+  activity?: Activity | null
 }
 
-type Step = 'lesson' | 'question' | 'result'
+type Step = 'lesson' | 'question' | 'result' | 'activity'
 
 /** A lesson as readable paragraphs: split at the line breaks it was written with, and where a
  *  long lesson has none, every two sentences, so it never shows as one block of text. */
@@ -74,7 +77,10 @@ export function TrainingDemo({
   const L = tr ? { heading: tr.lesson.heading, body: tr.lesson.body, image_url: lesson.image_url } : lesson
   const Q = tr ? { text: tr.question.text, options: tr.question.options, correct: question.correct, explanation: tr.question.explanation } : question
 
-  const stepIdx = STEPS.findIndex((s) => s.key === step)
+  // On a course page, the module's own interactive activity follows the result, then the buy step.
+  const activity = variant === 'theme' && demo.activity ? demo.activity : null
+  const steps = activity ? [...STEPS, { key: 'activity' as Step, label: 'Activity' }] : STEPS
+  const stepIdx = steps.findIndex((s) => s.key === step)
   const answered = selected !== null
   const isCorrect = selected === Q.correct
 
@@ -323,14 +329,29 @@ export function TrainingDemo({
            strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
     )
 
+    // The buy step: after the result, or after the activity when there is one.
+    const buyCta = (
+            <div className="demo-cta">
+              <p className="lead">
+                That is how the training works. Give your whole team the full {demo.title} module.
+              </p>
+              <div className="row">
+                <Link className="tbtn solid" href={buyHref} onClick={e => openBuyDrawer(e, buyHref)}>Add to basket</Link>
+                {/* On a course page there is nothing to browse to: one clear next step. */}
+                {place !== 'module' && <a className="tbtn ghost" href="#courses">Browse the courses</a>}
+              </div>
+              <button type="button" className="demo-again" onClick={again}>Try the demo again</button>
+            </div>
+    )
+
     return (
       <div className="demo" id="demo">
         <div className="demo-top">
           <b>{place === 'module' ? 'Try it · a real lesson and question' : demo.title}</b>
-          <span className="demo-step">Try it &middot; step {n} of {STEPS.length}</span>
+          <span className="demo-step">Try it &middot; step {n} of {steps.length}</span>
         </div>
         <div className="demo-steps">
-          {STEPS.map((s, i) => (
+          {steps.map((s, i) => (
             <Fragment key={s.key}>
               {i > 0 && <span className="bar" />}
               <span className={`s${i === stepIdx ? ' on' : i < stepIdx ? ' done' : ''}`}>
@@ -415,19 +436,27 @@ export function TrainingDemo({
                 every attempt is recorded for your CQC evidence.
               </p>
             </div>
-            <div className="demo-cta">
-              <p className="lead">
-                That is how the training works. Give your whole team the full {demo.title} module.
-              </p>
-              <div className="row">
-                <Link className="tbtn solid" href={buyHref} onClick={e => openBuyDrawer(e, buyHref)}>Add to basket</Link>
-                {/* On a course page there is nothing to browse to: one clear next step. */}
-                {place !== 'module' && <a className="tbtn ghost" href="#courses">Browse the courses</a>}
+            {activity ? (
+              <div className="demo-cta">
+                <p className="lead">Next: one of the course&apos;s interactive activities, exactly as your staff get it.</p>
+                <div className="row">
+                  <button type="button" className="tbtn solid" onClick={() => { setStep('activity'); track('demo_activity') }}>
+                    Try the interactive activity
+                  </button>
+                </div>
               </div>
-              <button type="button" className="demo-again" onClick={again}>Try the demo again</button>
-            </div>
+            ) : buyCta}
           </div>
         </div>
+
+        {activity && (
+          <div hidden={step !== 'activity'}>
+            <div className="demo-act">
+              <ActivityStep act={activity} onAttempt={() => track('demo_activity_attempt')} />
+            </div>
+            <div className="demo-res">{buyCta}</div>
+          </div>
+        )}
 
         <div className="demo-foot">
           <span>{demo.total_sections} sections &middot; {demo.total_questions} questions in the full {place === 'module' ? 'module' : 'course'}</span>

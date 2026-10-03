@@ -9,7 +9,7 @@
 .mpage-v2 .hg-thumbs button{display:flex;flex-direction:column;gap:6px;padding:6px;border:2px solid transparent;border-radius:12px;background:#fff;cursor:pointer;font:inherit;text-align:center}
 .mpage-v2 .hg-thumbs button:hover{border-color:#E2DEE8}
 .mpage-v2 .hg-thumbs button.on{border-color:#F28C38}
-.mpage-v2 .hg-thumb{display:grid;place-items:center;height:64px;border-radius:8px;overflow:hidden;background:#F3ECFA;font-size:1.6rem}
+.mpage-v2 .hg-thumb{position:relative;display:block;aspect-ratio:4/3;border-radius:8px;overflow:hidden;background:#F3ECFA}
 .mpage-v2 .hg-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .mpage-v2 .hg-label{font-size:.76rem;font-weight:700;color:var(--ink);line-height:1.2}
 
@@ -20,6 +20,8 @@
 .mpage-v2 .hg-lang-bar div{display:flex;gap:6px}
 .mpage-v2 .hg-lang-bar button{padding:6px 12px;border-radius:999px;border:1.5px solid #DCCBEF;background:#fff;font:inherit;font-size:.82rem;font-weight:700;color:var(--ink);cursor:pointer}
 .mpage-v2 .hg-lang-bar button.on{background:#1F1530;border-color:#1F1530;color:#fff}
+.mpage-v2 .hg-lang-pill{padding:6px 12px;border-radius:999px;border:1.5px solid #DCCBEF;background:#fff;font-size:.82rem;font-weight:700}
+.mpage-v2 .hg-lang-pill.on{background:#1F1530;border-color:#1F1530;color:#fff}
 .mpage-v2 .hg-lang-card{flex:1;overflow:hidden;padding:18px 20px;border-radius:14px;background:#fff;box-shadow:0 10px 30px rgba(23,18,31,.08)}
 .mpage-v2 .hg-lang-card h3{margin:0 0 10px;font-size:1.1rem}
 .mpage-v2 .hg-lang-card p{margin:0 0 10px;font-size:.92rem;line-height:1.6;color:var(--ink-2)}
@@ -63,3 +65,9 @@
 .mpage-v2 .hg-lang-q li{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border:1.5px solid #E2DEE8;border-radius:10px;font-size:.88rem;line-height:1.4;color:var(--ink-2)}
 .mpage-v2 .hg-lang-q li span{flex:none;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#F3ECFA;color:#6B3FA0;font-size:.74rem;font-weight:800}
 .mpage-v2 .hg-dash-foot{margin:auto 0 0;padding-top:10px;font-size:.8rem;color:var(--ink-2)}
+
+/* Thumbnails are the slides themselves at a fifth of the size (720 by 540 drawn, scaled to fit). */
+.mpage-v2 .hg-mini{position:absolute;top:0;left:0;width:720px;height:540px;transform:scale(var(--hg-s,.215));transform-origin:top left;pointer-events:none}
+.mpage-v2 .hg-mini > *{height:100%}
+.mpage-v2 .hg-thumb > img{position:absolute;inset:0}
+.mpage-v2 .demo-act{padding:18px 22px 0}

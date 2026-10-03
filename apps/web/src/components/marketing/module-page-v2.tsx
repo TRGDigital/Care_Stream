@@ -14,7 +14,7 @@ import { ModuleBuyPanel } from './module-buy-panel'
 import { ScrollSequence } from './scroll-sequence'
 import { REVIEWS } from '@/lib/reviews'
 import { COURSE_CRO } from '@/lib/course-cro'
-import { HeroGallery, LanguageSlide, TryBeforeYouBuy, type GallerySlide } from './hero-gallery'
+import { HeroGallery, LanguageSlide, Mini, TryBeforeYouBuy, type GallerySlide } from './hero-gallery'
 import { PaymentLogos } from './payment-logos'
 import { ExitQuestion } from './shop-questions'
 import { CaptureOverlay } from './capture-overlay'
@@ -252,26 +252,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
   const langs = demo?.lesson ? [
     ...Object.entries(demo.translations ?? {}).filter(([c]) => LANG_NAMES[c]).map(([c, t]) => ({ code: c, name: LANG_NAMES[c]!, lesson: t.lesson, question: t.question ? { text: t.question.text, options: t.question.options } : null })),
   ] : []
-  const gallery: GallerySlide[] = [
-    ...(hero ? [{
-      key: 'course', label: 'The course',
-      thumb: <SiteImage src={hero} alt="" />,
-      body: (
-        <>
-          <div className="mpe-shot"><SiteImage src={hero} alt={`${m.title} training for care staff`} priority /></div>
-          <div className="hg-badges">
-            {m.cpd_accredited && <span><b>✓</b> CPD Certified</span>}
-            <span><b>60+</b> languages</span>
-            <span><b>✓</b> Certificate for every learner</span>
-          </div>
-        </>
-      ),
-    }] : []),
-    ...(langs.length > 0 ? [{ key: 'language', label: 'In their language', thumb: <span aria-hidden="true">🌍</span>, body: <LanguageSlide langs={langs} /> }] : []),
-    { key: 'certificate', label: 'The certificate', thumb: <span aria-hidden="true">🏅</span>, body: <div className="hg-cert"><SampleCertificate m={faqModule} /></div> },
-    {
-      key: 'dashboard', label: 'Your dashboard', thumb: <span aria-hidden="true">📊</span>,
-      body: (
+  const dashboard = (
         <div className="hg-dash">
           <div className="hg-dash-head"><b>{m.title}: your team</b><span>Example of the manager&apos;s view</span></div>
           <div className="hg-dash-kpis">
@@ -291,7 +272,27 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
           </table>
           <p className="hg-dash-foot">Download any certificate as a PDF, and send reminders to anyone who has not started.</p>
         </div>
+  )
+  const gallery: GallerySlide[] = [
+    ...(hero ? [{
+      key: 'course', label: 'The course',
+      thumb: <SiteImage src={hero} alt="" />,
+      body: (
+        <>
+          <div className="mpe-shot"><SiteImage src={hero} alt={`${m.title} training for care staff`} priority /></div>
+          <div className="hg-badges">
+            {m.cpd_accredited && <span><b>✓</b> CPD Certified</span>}
+            <span><b>60+</b> languages</span>
+            <span><b>✓</b> Certificate for every learner</span>
+          </div>
+        </>
       ),
+    }] : []),
+    ...(langs.length > 0 ? [{ key: 'language', label: 'In their language', thumb: <Mini><LanguageSlide langs={langs} still /></Mini>, body: <LanguageSlide langs={langs} /> }] : []),
+    { key: 'certificate', label: 'The certificate', thumb: <Mini><div className="hg-cert"><SampleCertificate m={faqModule} /></div></Mini>, body: <div className="hg-cert"><SampleCertificate m={faqModule} /></div> },
+    {
+      key: 'dashboard', label: 'Your dashboard', thumb: <Mini>{dashboard}</Mini>,
+      body: dashboard,
     },
   ]
 

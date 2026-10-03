@@ -551,6 +551,20 @@ export function PolicyCheckout({ compact = false, onProgress }: {
     return () => { live = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deal.gift])
+  // Once the offer has given something, the offer box says what (in place of its rules): which
+  // policies are free and the saving, and for a 2 for 1, that the next pair earns another free one.
+  const freeTitles = [...items.filter(i => free.has(i.slug)).map(i => i.title), ...(gift ? [gift.title] : [])]
+  const appliedSaving = offerValue + (gift?.price_pence ?? 0)
+  const andList = (a: string[]) => (a.length < 2 ? a[0] ?? '' : `${a.slice(0, -1).join(', ')} and ${a[a.length - 1]}`)
+  const appliedOffer = {
+    headline: appliedSaving > 0 ? `You save ${money(appliedSaving)}` : undefined,
+    note: freeTitles.length
+      ? `Your ${andList(freeTitles)} ${freeTitles.length > 1 ? 'are' : 'is'} free with the ${deal.offer?.label ?? 'offer'}.`
+        + (deal.offer?.kind === 'group_free'
+          ? (policies.length % 2 ? ' Add one more policy and another one is free.' : ' Add two more policies and one of them is free too.')
+          : '')
+      : undefined,
+  }
   // An unpaired policy under a 2 for 1: one more would be free.
   const groupOffer = deal.offer?.kind === 'group_free' || offers.some(o => o.kind === 'group_free' && (o.range === 'policies' || o.range === 'both'))
   const group = Math.max(2, Number(offers.find(o => o.kind === 'group_free')?.params?.group) || 2)
@@ -730,7 +744,7 @@ export function PolicyCheckout({ compact = false, onProgress }: {
         )}
         {policyOfferLive && policies.length > 0 && (
           <div className="ckoffer ckoffer-pad">
-            <PolicyOfferCard compact />
+            <PolicyOfferCard compact applied={offerValue > 0 || !!gift} appliedHeadline={appliedOffer.headline} appliedNote={appliedOffer.note} />
           </div>
         )}
       </div>

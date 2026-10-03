@@ -9,6 +9,7 @@ import { safeReturnPath, createTrainingCheckoutSession, createTrainingBasketChec
 import { createLoginLink } from '../lib/login-tokens'
 import { siteUrl } from '../lib/urls'
 import { translateTextsBatch, translateQuestionsBatch } from '../lib/translate'
+import { normaliseActivities, collectActivityTexts, applyActivityTexts, type Activity } from '../lib/training-activities'
 import { sendStaffLoginLinkEmail, sendPasswordSetupEmail, sendTrainingOnboardingGuideEmail, sendTrainingPurchaseNotification } from '../services/email/outbound'
 import { enrolInCampaign } from '../services/onboarding/dispatch'
 import { hashPassword } from '../services/auth/password'
@@ -240,28 +241,24 @@ publicTrainingRouter.get('/standard-modules/:slug/demo', async (req: Request, re
 
     // The interactive activity that follows the demo's lesson in the module (match, sort or
     // order), exactly as learners get it in the hub. Formative, not marked. Null if none.
-    const acts = Array.isArray(lc.activities) ? lc.activities : []
-    const act = acts.find((a: any) => a?.after_section === firstIdx && ['match', 'sort', 'order'].includes(a?.type)) ?? null
-    const activity = act ? {
-      id: String(act.id ?? `demo-${slug}`), type: act.type, title: String(act.title ?? ''), instructions: String(act.instructions ?? ''),
-      after_section: firstIdx,
-      ...(act.type === 'order' ? { steps: (act.steps ?? []).map(String) } : {}),
-      ...(act.type === 'sort' ? { bins: act.bins ?? [], items: act.items ?? [] } : {}),
-      ...(act.type === 'match' ? { pairs: act.pairs ?? [] } : {}),
-    } : null
+    const activity: Activity | null = firstIdx >= 0
+      ? normaliseActivities(lc.activities).find(a => a.after_section === firstIdx) ?? null
+      : null
 
     // Saved Polish + Hindi translations of the demo. Generated once (call with
     // ?gen=1), then read from cache on every render — zero runtime translation cost.
-    const translations: Record<string, { lesson: { heading: string; body: string }; question: { text: string; options: string[]; explanation: string | null } }> = {}
+    const translations: Record<string, { lesson: { heading: string; body: string }; question: { text: string; options: string[]; explanation: string | null }; activity?: Activity | null }> = {}
     try {
       const rows: any[] = await (prisma as any).$queryRawUnsafe(
-        `select lang, lesson, question from demo_translations where topic_slug = $1 and lang in ('pol','hin')`,
+        `select lang, lesson, question, activity from demo_translations where topic_slug = $1 and lang in ('pol','hin')`,
         slug,
       )
       for (const r of rows) {
         translations[r.lang] = {
           lesson:   typeof r.lesson === 'string' ? JSON.parse(r.lesson) : r.lesson,
           question: typeof r.question === 'string' ? JSON.parse(r.question) : r.question,
+          // Only when it is the translation of this activity (the demo's activity can change).
+          activity: r.activity && activity && r.activity.id === activity.id ? (typeof r.activity === 'string' ? JSON.parse(r.activity) : r.activity) : null,
         }
       }
       // Generate + cache translations. Warm ONE language per request (?gen=pol /
@@ -293,12 +290,18 @@ publicTrainingRouter.get('/standard-modules/:slug/demo', async (req: Request, re
           // Defensive: keep only the heading line (a long body occasionally bleeds in).
           const lessonT = { heading: (headingT || lesson.heading).split('\n\n')[0].trim(), body: bodyT }
           const questionT = { text: qT.text, options: qT.options, explanation: explT }
+          // The activity, through the same helpers the hub translates activities with.
+          let activityT: Activity | null = null
+          if (activity) {
+            const aT = await translateTextsBatch(collectActivityTexts(activity), lang)
+            activityT = applyActivityTexts(activity, aT, { i: 0 })
+          }
           await (prisma as any).$executeRawUnsafe(
-            `insert into demo_translations (topic_slug, lang, lesson, question) values ($1, $2, $3::jsonb, $4::jsonb)
-             on conflict (topic_slug, lang) do update set lesson = excluded.lesson, question = excluded.question, created_at = now()`,
-            slug, lang, JSON.stringify(lessonT), JSON.stringify(questionT),
+            `insert into demo_translations (topic_slug, lang, lesson, question, activity) values ($1, $2, $3::jsonb, $4::jsonb, $5::jsonb)
+             on conflict (topic_slug, lang) do update set lesson = excluded.lesson, question = excluded.question, activity = excluded.activity, created_at = now()`,
+            slug, lang, JSON.stringify(lessonT), JSON.stringify(questionT), activityT ? JSON.stringify(activityT) : null,
           )
-          translations[lang] = { lesson: lessonT, question: questionT }
+          translations[lang] = { lesson: lessonT, question: questionT, activity: activityT }
         }
       }
     } catch {

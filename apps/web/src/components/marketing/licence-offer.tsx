@@ -25,14 +25,14 @@ function Ends({ o }: { o: Offer }) {
   )
 }
 
-function Card({ o, price, compact, cta }: {
-  o: Offer; price?: React.ReactNode; compact?: boolean; cta?: { href: string; label: string }
+function Card({ o, price, compact, cta, label }: {
+  o: Offer; price?: React.ReactNode; compact?: boolean; cta?: { href: string; label: string }; label?: string
 }) {
   return (
     <aside className={`lofr${compact ? ' compact' : ''}`} aria-label={o.label ?? o.name}>
       <span className="lofr-emoji" aria-hidden="true">{offerEmoji(o)}</span>
       <div className="lofr-tx">
-        <span className="lofr-lb">{o.label ?? o.name}</span>
+        <span className="lofr-lb">{label ?? o.label ?? o.name}</span>
         {o.headline && <b className="lofr-hd">{o.headline}</b>}
         {price}
         {o.multi_text && <p className="lofr-multi">{o.multi_text}</p>}
@@ -56,14 +56,20 @@ export function LicenceOfferCard({ slug, compact = false }: { slug: string; comp
 }
 
 /** Under a policy's (or pack's) buy box, or in the basket (no slug: the policy offer running). */
-export function PolicyOfferCard({ slug, pricePence, compact = false, cta }: {
-  slug?: string; pricePence?: number; compact?: boolean; cta?: { href: string; label: string }
+/** `applied` (the basket only): true once the offer takes something off, so the buyer can see it
+ *  working ("Halloween offer applied"); false while it does not yet, e.g. one policy under a 2 for 1. */
+export function PolicyOfferCard({ slug, pricePence, compact = false, cta, applied }: {
+  slug?: string; pricePence?: number; compact?: boolean; cta?: { href: string; label: string }; applied?: boolean
 }) {
   const offers = useOffers()
   const o = slug ? policyOffer(offers, slug)
     : offers.find(x => x.range === 'policies' || x.range === 'both') ?? null
   if (!o) return null
-  return <Card o={o} compact={compact} cta={cta} price={pricePence ? <PolicyPrice o={o} price={pricePence} /> : null} />
+  const name = o.label ?? o.name
+  const label = applied === undefined ? undefined
+    : applied ? `${name} applied`
+    : o.kind === 'group_free' ? `${name}: your second policy is free` : name
+  return <Card o={o} compact={compact} cta={cta} label={label} price={pricePence ? <PolicyPrice o={o} price={pricePence} /> : null} />
 }
 
 function PolicyPrice({ o, price }: { o: Offer; price: number }) {

@@ -730,7 +730,7 @@ export function PolicyCheckout({ compact = false, onProgress }: {
         )}
         {policyOfferLive && policies.length > 0 && (
           <div className="ckoffer ckoffer-pad">
-            <PolicyOfferCard compact />
+            <PolicyOfferCard compact applied={offerValue > 0 || !!gift} />
           </div>
         )}
       </div>

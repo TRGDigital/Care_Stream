@@ -9,6 +9,7 @@ import { reportMicro } from '@/lib/google-ads'
 import { useRemembered } from '@/lib/remembered'
 import { PaymentLogos } from './payment-logos'
 import { AddonOption, InvoiceRequest, ADDONS, useSaveBasket } from './shop-upsells'
+import { DISCOUNT_TIERS, discountPctForQty } from '@/lib/training-commerce'
 import { useOffers, licenceDeal, money2, paidForTotal, offerEmoji } from '@/lib/offers'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
@@ -56,7 +57,12 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default', init
   const offers = useOffers()
   const deal = licenceDeal(offers, slug, qty)
   const free = deal.free
-  const each = deal.pct ? Math.round(unitPence * (1 - deal.pct / 100)) : unitPence
+  // The team (volume) discount on the paid licences, as the API charges it: an offer's percentage
+  // replaces it only when bigger; an offer's free licences come on top.
+  const teamPct = discountPctForQty(qty)
+  const pct = Math.max(deal.pct, teamPct)
+  const team = teamPct > deal.pct
+  const each = pct ? Math.round(unitPence * (1 - pct / 100)) : unitPence
   const effective = free ? Math.floor((each * qty) / (qty + free)) : each
   const [teamSetup, setTeamSetup] = useState(false)
   const total = qty * each + (teamSetup ? ADDONS['team-setup'].pence : 0)
@@ -97,6 +103,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default', init
           {effective < unitPence && <s className="bywas">{gbp(unitPence)}</s>}
           <b>{gbp(effective)}</b><span>per staff member, one-off payment</span>
           {applied && <em className="byapplied">Offer applied</em>}
+          {!applied && team && <em className="byapplied">Team price</em>}
         </div>
 
         <label className="bylabel" htmlFor="byq">{applied && free > 0 ? 'Licences you receive' : 'Number of licences'}</label>
@@ -112,6 +119,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default', init
             {free > 0 ? <><b style={{ color: 'var(--ink)' }}>{qty} paid + {free} free</b></> : <>{gbp(each)} each</>}
           </span>
         </div>
+        {team && <p className="byteam">Team price: {teamPct}% off every licence when you buy {DISCOUNT_TIERS.find(t => t.pct === teamPct)?.min} or more.</p>}
         {applied && (
           <div className="byfree">
             <span className="byfree-emoji" aria-hidden="true">{offerEmoji(deal.offer)}</span>

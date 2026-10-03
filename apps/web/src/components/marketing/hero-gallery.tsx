@@ -54,7 +54,7 @@ export function LanguageSlide({ langs }: { langs: { code: string; name: string; 
       </div>
       <div className="hg-lang-card" lang={cur.code === 'pol' ? 'pl' : cur.code === 'hin' ? 'hi' : 'en'}>
         <h3>{cur.lesson.heading}</h3>
-        {paras.slice(0, 1).map((p, n) => <p key={n}>{p.length > 360 ? `${p.slice(0, 360).replace(/\s+\S*$/, '')}…` : p}</p>)}
+        {paras.slice(0, 1).map((p, n) => <p key={n}>{p.length > 230 ? `${p.slice(0, 230).replace(/\s+\S*$/, '')}…` : p}</p>)}
         {cur.question && (
           <div className="hg-lang-q">
             <b>{cur.question.text}</b>

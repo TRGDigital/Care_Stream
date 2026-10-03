@@ -245,10 +245,11 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
     requires_practical: m.requires_practical, cpd_accredited: m.cpd_accredited,
   }
 
-  // The hero as a product gallery: the picture, then real views of what is being bought.
+  // The hero as a product gallery: the picture, then real views of what is being bought. The
+  // language view shows the saved translations only: they are of a different lesson from the
+  // English demo, so an English tab beside them would not match.
   const LANG_NAMES: Record<string, string> = { eng: 'English', pol: 'Polski', hin: 'हिन्दी' }
   const langs = demo?.lesson ? [
-    { code: 'eng', name: 'English', lesson: { heading: demo.lesson.heading, body: demo.lesson.body }, question: demo.question ? { text: demo.question.text, options: demo.question.options } : null },
     ...Object.entries(demo.translations ?? {}).filter(([c]) => LANG_NAMES[c]).map(([c, t]) => ({ code: c, name: LANG_NAMES[c]!, lesson: t.lesson, question: t.question ? { text: t.question.text, options: t.question.options } : null })),
   ] : []
   const gallery: GallerySlide[] = [
@@ -266,7 +267,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
         </>
       ),
     }] : []),
-    ...(langs.length > 1 ? [{ key: 'language', label: 'In their language', thumb: <span aria-hidden="true">🌍</span>, body: <LanguageSlide langs={langs} /> }] : []),
+    ...(langs.length > 0 ? [{ key: 'language', label: 'In their language', thumb: <span aria-hidden="true">🌍</span>, body: <LanguageSlide langs={langs} /> }] : []),
     { key: 'certificate', label: 'The certificate', thumb: <span aria-hidden="true">🏅</span>, body: <div className="hg-cert"><SampleCertificate m={faqModule} /></div> },
     {
       key: 'dashboard', label: 'Your dashboard', thumb: <span aria-hidden="true">📊</span>,

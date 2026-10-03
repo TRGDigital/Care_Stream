@@ -266,8 +266,12 @@ export async function translateQuestionsBatch(
     const toWrite: Array<{ hash: string; translated: any }> = []
     for (const { i, t } of fresh) {
       results[i] = t
-      _qCache.set(memKey(questions[i]), t)
-      toWrite.push({ hash: hashes.get(i)!, translated: t })
+      // A failed translation comes back as the English: use it for now, but never cache it,
+      // or the question would stay in English for that language until the cache is cleared.
+      if (t?.text && t.text !== questions[i].text) {
+        _qCache.set(memKey(questions[i]), t)
+        toWrite.push({ hash: hashes.get(i)!, translated: t })
+      }
     }
     await cacheWriteMany(cacheLang, toWrite)
   }

@@ -290,6 +290,8 @@ publicTrainingRouter.get('/standard-modules/:slug/demo', async (req: Request, re
           // Defensive: keep only the heading line (a long body occasionally bleeds in).
           const lessonT = { heading: (headingT || lesson.heading).split('\n\n')[0].trim(), body: bodyT }
           const questionT = { text: qT.text, options: qT.options, explanation: explT }
+          // Translation unavailable (it fell back to English): keep what is saved, never overwrite with English.
+          if (bodyT === lesson.body || qT.text === question.text) { console.warn(`[training-public] demo translation to ${lang} failed for ${slug}`); continue }
           // The activity, through the same helpers the hub translates activities with.
           let activityT: Activity | null = null
           if (activity) {

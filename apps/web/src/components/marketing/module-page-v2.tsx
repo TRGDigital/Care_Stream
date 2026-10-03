@@ -4,7 +4,7 @@ import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 import { TrainingDemo, type TrainingDemoData } from './training-demo'
 import { GoogleCloud, Supabase, Pinecone, GoogleAds, Aws } from './tech-logos'
 import { careSetting } from '@/lib/care-setting'
-import { claimSafe, estimatedMinutes, refreshWord, durationText } from '@/lib/training-commerce'
+import { claimSafe, estimatedMinutes, refreshWord, durationText, DISCOUNT_TIERS } from '@/lib/training-commerce'
 import { LanguageCheck } from './language-check'
 import { ThemeModuleCard, type LibraryTopic } from './training-library-tabs'
 import { LicenceOfferCard, OfferBarChip } from './licence-offer'
@@ -14,6 +14,7 @@ import { ModuleBuyPanel } from './module-buy-panel'
 import { ScrollSequence } from './scroll-sequence'
 import { REVIEWS } from '@/lib/reviews'
 import { COURSE_CRO } from '@/lib/course-cro'
+import { HeroGallery, LanguageSlide, Mini, TryBeforeYouBuy, type GallerySlide } from './hero-gallery'
 import { PaymentLogos } from './payment-logos'
 import { ExitQuestion } from './shop-questions'
 import { CaptureOverlay } from './capture-overlay'
@@ -244,6 +245,57 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
     requires_practical: m.requires_practical, cpd_accredited: m.cpd_accredited,
   }
 
+  // The hero as a product gallery: the picture, then real views of what is being bought. The
+  // language view shows the saved translations only: they are of a different lesson from the
+  // English demo, so an English tab beside them would not match.
+  const LANG_NAMES: Record<string, string> = { eng: 'English', pol: 'Polski', hin: 'हिन्दी' }
+  const langs = demo?.lesson ? [
+    ...Object.entries(demo.translations ?? {}).filter(([c]) => LANG_NAMES[c]).map(([c, t]) => ({ code: c, name: LANG_NAMES[c]!, lesson: t.lesson, question: t.question ? { text: t.question.text, options: t.question.options } : null })),
+  ] : []
+  const dashboard = (
+        <div className="hg-dash">
+          <div className="hg-dash-head"><b>{m.title}: your team</b><span>Example of the manager&apos;s view</span></div>
+          <div className="hg-dash-kpis">
+            <div><b>12</b><span>staff allocated</span></div>
+            <div><b>9</b><span>certificates issued</span></div>
+            <div><b>91%</b><span>average score</span></div>
+          </div>
+          <table>
+            <tbody>
+              <tr><td>Amara O.</td><td>English</td><td><span className="hg-st ok">Passed 94%</span></td></tr>
+              <tr><td>Piotr K.</td><td>Polski</td><td><span className="hg-st ok">Passed 88%</span></td></tr>
+              <tr><td>Priya S.</td><td>हिन्दी</td><td><span className="hg-st go">In progress</span></td></tr>
+              <tr><td>Grace M.</td><td>English</td><td><span className="hg-st new">Not started</span></td></tr>
+              <tr><td>Ioana P.</td><td>Română</td><td><span className="hg-st ok">Passed 90%</span></td></tr>
+              <tr><td>Tunde A.</td><td>English</td><td><span className="hg-st ok">Passed 86%</span></td></tr>
+            </tbody>
+          </table>
+          <p className="hg-dash-foot">Download any certificate as a PDF, and send reminders to anyone who has not started.</p>
+        </div>
+  )
+  const gallery: GallerySlide[] = [
+    ...(hero ? [{
+      key: 'course', label: 'The course',
+      thumb: <SiteImage src={hero} alt="" />,
+      body: (
+        <>
+          <div className="mpe-shot"><SiteImage src={hero} alt={`${m.title} training for care staff`} priority /></div>
+          <div className="hg-badges">
+            {m.cpd_accredited && <span><b>✓</b> CPD Certified</span>}
+            <span><b>60+</b> languages</span>
+            <span><b>✓</b> Certificate for every learner</span>
+          </div>
+        </>
+      ),
+    }] : []),
+    ...(langs.length > 0 ? [{ key: 'language', label: 'In their language', thumb: <Mini><LanguageSlide langs={langs} still /></Mini>, body: <LanguageSlide langs={langs} /> }] : []),
+    { key: 'certificate', label: 'The certificate', thumb: <Mini><div className="hg-cert"><SampleCertificate m={faqModule} /></div></Mini>, body: <div className="hg-cert"><SampleCertificate m={faqModule} /></div> },
+    {
+      key: 'dashboard', label: 'Your dashboard', thumb: <Mini>{dashboard}</Mini>,
+      body: dashboard,
+    },
+  ]
+
   return (
     <div className="mpage-v2">
       {/* The bar that follows the reader down the page. Its action is the theme's own: straight
@@ -276,7 +328,16 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
       <section className="mhero mpe">
         <div className="mwrap mpe-in">
           <div className="mpe-main">
-            {hero && <div className="mpe-shot"><SiteImage src={hero} alt={`${m.title} training for care staff`} priority /></div>}
+            <HeroGallery slides={gallery} />
+            {/* The course at a glance: the facts a manager checks first. */}
+            <ul className="mpe-stats">
+              {sections.length > 0 && <li><b>{sections.length}</b><span>{m.slug === 'care-certificate' ? 'standards covered' : 'lessons'}</span></li>}
+              <li><b>{durationText(est)}</b><span>to complete</span></li>
+              {m.cpd_accredited
+                ? <li><b>{Math.round(((m.duration_minutes || est) / 60) * 10) / 10}</b><span>CPD hours</span></li>
+                : <li><b>60+</b><span>languages</span></li>}
+              {cro.updated ? <li><b>{cro.updated}</b><span>last updated</span></li> : <li><b>{m.pass_mark ?? 80}%</b><span>pass mark</span></li>}
+            </ul>
           </div>
 
           <aside className="mpe-info">
@@ -313,9 +374,35 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               </blockquote>
             )}
 
+            {demo && (
+              <TryBeforeYouBuy slug={m.slug} withActivity={!!demo.activity}>
+                <TrainingDemo demo={demo} buyHref={buyHref} variant="theme" place="module" />
+              </TryBeforeYouBuy>
+            )}
             <ModuleBuyPanel slug={m.slug} title={m.title} unitPence={unitPence} />
 
             <PaymentLogos />
+
+            {/* Team prices: the same volume tiers the checkout charges (training-commerce.ts). */}
+            <div className="mpe-team">
+              <p className="mpe-promise-eyebrow">Team pricing</p>
+              <table>
+                <tbody>
+                  {[{ min: 1, pct: 0 }, ...[...DISCOUNT_TIERS].reverse()].map((t, i, all) => {
+                    const next = all[i + 1]
+                    return (
+                      <tr key={t.min}>
+                        <td>{next ? `${t.min} to ${next.min - 1}` : `${t.min}+`} licences</td>
+                        <td>{t.pct ? <span className="mpe-team-off">{t.pct}% off</span> : ''}</td>
+                        <td><b>{money(Math.round(unitPence * (1 - t.pct / 100)))}</b> each</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+              <p className="mpe-team-note">Applied automatically in your basket. With an offer on, you get whichever saving is bigger, plus any free licences it gives.</p>
+              <p className="mpe-team-quote">Training a large team or several homes? <Link href={`/contact?about=${encodeURIComponent(`${m.title} quote for a team`)}`}>Get a quote or pay by invoice</Link></p>
+            </div>
 
             <ul className="mpe-trust mpe-trust-list">
               <li><Tick />CQC-aligned, mapped to the Care Certificate framework</li>
@@ -405,6 +492,40 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
                 ))}
               </div>
             )}
+
+            {sections.length > 0 && (
+              <div className="mpe-list">
+                <h2>{m.slug === 'care-certificate' ? `All ${sections.length} Care Certificate standards, covered` : `What the course covers: ${sections.length} lessons`}</h2>
+                <ol>
+                  {sections.map((x, i) => <li key={i}>{cs(x.heading).replace(/^Standard \d+:\s*/, '')}</li>)}
+                </ol>
+              </div>
+            )}
+
+            {/* Assessment and certificate: exactly what a learner does and gets. */}
+            <div className="mpe-list mpe-cert">
+              <h2>Assessment and certificate</h2>
+              <ul>
+                <li><b>{m.question_count ? `${m.question_count} question assessment` : 'A final assessment'}</b> with a pass mark of {m.pass_mark ?? 80}%.</li>
+                <li><b>A follow-up lesson</b> on anything a learner gets wrong, so the gaps are closed, not just scored.</li>
+                <li><b>A named, dated certificate</b> the moment they pass{m.cpd_accredited ? ', carrying the CPD Certified mark and CPD hours' : ''}, ready to download as a PDF.</li>
+                <li><b>Kept on their training record</b> in your dashboard, ready for your CQC evidence.</li>
+                {m.requires_practical && <li><b>An observation checklist</b> for the observed workplace assessment the employer carries out.</li>}
+                {m.slug === 'care-certificate' && <li><b>Portable:</b> the Care Certificate does not expire and moves with the worker between employers. Refresher training is still good practice.</li>}
+              </ul>
+            </div>
+
+            {cro.resources?.length ? (
+              <div className="mpe-list mpe-res">
+                <h2>Free {m.title} resources</h2>
+                <p>Official guidance from Skills for Care, free to download. Useful alongside the course.</p>
+                <ul>
+                  {cro.resources.map(r => (
+                    <li key={r.url}><a href={r.url} target="_blank" rel="noopener noreferrer">{r.label}</a><span>{r.note}</span></li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
 
             <div className="mpe-banner">
               <h2>A certificate for every member of your team</h2>

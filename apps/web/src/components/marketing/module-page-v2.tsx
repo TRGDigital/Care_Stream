@@ -246,10 +246,10 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
   }
 
   // The hero as a product gallery: the picture, then real views of what is being bought. The
-  // language view shows the saved translations only: they are of a different lesson from the
-  // English demo, so an English tab beside them would not match.
+  // language view is the demo lesson and its question in English and each saved translation.
   const LANG_NAMES: Record<string, string> = { eng: 'English', pol: 'Polski', hin: 'हिन्दी' }
   const langs = demo?.lesson ? [
+    { code: 'eng', name: 'English', lesson: { heading: demo.lesson.heading, body: demo.lesson.body }, question: demo.question ? { text: demo.question.text, options: demo.question.options } : null },
     ...Object.entries(demo.translations ?? {}).filter(([c]) => LANG_NAMES[c]).map(([c, t]) => ({ code: c, name: LANG_NAMES[c]!, lesson: t.lesson, question: t.question ? { text: t.question.text, options: t.question.options } : null })),
   ] : []
   const dashboard = (
@@ -288,7 +288,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
         </>
       ),
     }] : []),
-    ...(langs.length > 0 ? [{ key: 'language', label: 'In their language', thumb: <Mini><LanguageSlide langs={langs} still /></Mini>, body: <LanguageSlide langs={langs} /> }] : []),
+    ...(langs.length > 1 ? [{ key: 'language', label: 'In their language', thumb: <Mini><LanguageSlide langs={langs} still /></Mini>, body: <LanguageSlide langs={langs} /> }] : []),
     { key: 'certificate', label: 'The certificate', thumb: <Mini><div className="hg-cert"><SampleCertificate m={faqModule} /></div></Mini>, body: <div className="hg-cert"><SampleCertificate m={faqModule} /></div> },
     {
       key: 'dashboard', label: 'Your dashboard', thumb: <Mini>{dashboard}</Mini>,

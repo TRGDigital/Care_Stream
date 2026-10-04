@@ -327,6 +327,8 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
                  cpd={m.cpd_accredited ? { sections: sections.length, duration: durationText(est) } : null} />
       <section className="mhero mpe">
         <div className="mwrap mpe-in">
+          {/* The picture and the gallery move as one column (scroll-sequence.tsx). */}
+          <div className="mpe-left">
           <div className="mpe-main">
             <HeroGallery slides={gallery} />
             {/* The course at a glance: the facts a manager checks first. */}
@@ -338,6 +340,113 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
                 : <li><b>60+</b><span>languages</span></li>}
               {cro.updated ? <li><b>{cro.updated}</b><span>last updated</span></li> : <li><b>{m.pass_mark ?? 80}%</b><span>pass mark</span></li>}
             </ul>
+          </div>
+
+          <div className="mpe-gallery">
+            <figure className="mpe-tile light wide">
+              {m.cpd_accredited
+                // eslint-disable-next-line @next/next/no-img-element
+                ? <img className="mpe-cpdbig" src={CPD_CERTIFIED_LOGO} alt="CPD Certified, The CPD Certification Service" />
+                : null}
+              <div>
+                <b>{m.cpd_accredited ? 'CPD Certified course' : 'CQC aligned course'}</b>
+                <span>
+                  {m.cpd_accredited ? 'Certified by The CPD Certification Service. ' : ''}
+                  {sections.length ? `${sections.length} sections` : 'The full course'}, about {durationText(est)}, a scored final
+                  assessment and a certificate for every learner.
+                </span>
+              </div>
+            </figure>
+
+            {cro.moments?.length ? (
+              <div className="mpe-moments">
+                <h2>When you need this course</h2>
+                <ul>
+                  {cro.moments.map(x => (
+                    <li key={x.title}><b>{x.title}</b><span>{x.body.replace('{duration}', durationText(est))}</span></li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            {demo && (
+              <div className="mpe-demo">
+                <p className="mpe-cap">Try it: a real lesson and question from this course</p>
+                <TrainingDemo demo={demo} buyHref={buyHref} variant="theme" place="module" />
+              </div>
+            )}
+
+            {sections.some(s => s.image_url) && (
+              <div className="mpe-grid">
+                {sections.filter(s => s.image_url).slice(0, 4).map((s, i) => (
+                  <figure key={i} className="mpe-std">
+                    <SiteImage src={img(s.image_url)!} alt={cs(s.heading)} />
+                    <figcaption>{cs(s.heading)}</figcaption>
+                  </figure>
+                ))}
+              </div>
+            )}
+
+            {sections.length > 0 && (
+              <div className="mpe-list">
+                <h2>{m.slug === 'care-certificate' ? `All ${sections.length} Care Certificate standards, covered` : `What the course covers: ${sections.length} lessons`}</h2>
+                <ol>
+                  {sections.map((x, i) => <li key={i}>{cs(x.heading).replace(/^Standard \d+:\s*/, '')}</li>)}
+                </ol>
+              </div>
+            )}
+
+            {/* Assessment and certificate: exactly what a learner does and gets. */}
+            <div className="mpe-list mpe-cert">
+              <h2>Assessment and certificate</h2>
+              <ul>
+                <li><b>{m.question_count ? `${m.question_count} question assessment` : 'A final assessment'}</b> with a pass mark of {m.pass_mark ?? 80}%.</li>
+                <li><b>A follow-up lesson</b> on anything a learner gets wrong, so the gaps are closed, not just scored.</li>
+                <li><b>A named, dated certificate</b> the moment they pass{m.cpd_accredited ? ', carrying the CPD Certified mark and CPD hours' : ''}, ready to download as a PDF.</li>
+                <li><b>Kept on their training record</b> in your dashboard, ready for your CQC evidence.</li>
+                {m.requires_practical && <li><b>An observation checklist</b> for the observed workplace assessment the employer carries out.</li>}
+                {m.slug === 'care-certificate' && <li><b>Portable:</b> the Care Certificate does not expire and moves with the worker between employers. Refresher training is still good practice.</li>}
+              </ul>
+            </div>
+
+            {cro.resources?.length ? (
+              <div className="mpe-list mpe-res">
+                <h2>Free {m.title} resources</h2>
+                <p>Official guidance from Skills for Care, free to download. Useful alongside the course.</p>
+                <ul>
+                  {cro.resources.map(r => (
+                    <li key={r.url}><a href={r.url} target="_blank" rel="noopener noreferrer">{r.label}</a><span>{r.note}</span></li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            <div className="mpe-banner">
+              <h2>A certificate for every member of your team</h2>
+              <p>
+                Each staff member completes {m.title} in the hub, in their own language, and gets a dated,
+                named certificate for your training file the moment they pass. You see who has finished,
+                their score and their certificate from your dashboard.
+              </p>
+              <div className="mpe-banner-facts">
+                <span><b>60+</b> languages</span>
+                <span><b>{durationText(est)}</b> to complete</span>
+                <span><b>1</b> certificate per person</span>
+              </div>
+            </div>
+
+            <div className="mtech">
+              <p className="cap">Specialists in the technology behind it all</p>
+              <div className="marks">
+                {TECH.map(({ name, Icon }) => <span className="techmark" key={name}><Icon />{name}</span>)}
+              </div>
+              <p className="note">
+                The same technology behind the world&apos;s best products powers
+                CareStream, so your team&apos;s {lower} training stays accurate, always up to date
+                with the latest guidance, and is delivered in over 60 languages.
+              </p>
+            </div>
+          </div>
           </div>
 
           <aside className="mpe-info">
@@ -447,112 +556,6 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
             <ProductFaqs title="About this course" faqs={trainingFaqs(faqModule)} />
             <SampleCertificate m={faqModule} />
           </aside>
-
-          <div className="mpe-gallery">
-            <figure className="mpe-tile light wide">
-              {m.cpd_accredited
-                // eslint-disable-next-line @next/next/no-img-element
-                ? <img className="mpe-cpdbig" src={CPD_CERTIFIED_LOGO} alt="CPD Certified, The CPD Certification Service" />
-                : null}
-              <div>
-                <b>{m.cpd_accredited ? 'CPD Certified course' : 'CQC aligned course'}</b>
-                <span>
-                  {m.cpd_accredited ? 'Certified by The CPD Certification Service. ' : ''}
-                  {sections.length ? `${sections.length} sections` : 'The full course'}, about {durationText(est)}, a scored final
-                  assessment and a certificate for every learner.
-                </span>
-              </div>
-            </figure>
-
-            {cro.moments?.length ? (
-              <div className="mpe-moments">
-                <h2>When you need this course</h2>
-                <ul>
-                  {cro.moments.map(x => (
-                    <li key={x.title}><b>{x.title}</b><span>{x.body.replace('{duration}', durationText(est))}</span></li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            {demo && (
-              <div className="mpe-demo">
-                <p className="mpe-cap">Try it: a real lesson and question from this course</p>
-                <TrainingDemo demo={demo} buyHref={buyHref} variant="theme" place="module" />
-              </div>
-            )}
-
-            {sections.some(s => s.image_url) && (
-              <div className="mpe-grid">
-                {sections.filter(s => s.image_url).slice(0, 4).map((s, i) => (
-                  <figure key={i} className="mpe-std">
-                    <SiteImage src={img(s.image_url)!} alt={cs(s.heading)} />
-                    <figcaption>{cs(s.heading)}</figcaption>
-                  </figure>
-                ))}
-              </div>
-            )}
-
-            {sections.length > 0 && (
-              <div className="mpe-list">
-                <h2>{m.slug === 'care-certificate' ? `All ${sections.length} Care Certificate standards, covered` : `What the course covers: ${sections.length} lessons`}</h2>
-                <ol>
-                  {sections.map((x, i) => <li key={i}>{cs(x.heading).replace(/^Standard \d+:\s*/, '')}</li>)}
-                </ol>
-              </div>
-            )}
-
-            {/* Assessment and certificate: exactly what a learner does and gets. */}
-            <div className="mpe-list mpe-cert">
-              <h2>Assessment and certificate</h2>
-              <ul>
-                <li><b>{m.question_count ? `${m.question_count} question assessment` : 'A final assessment'}</b> with a pass mark of {m.pass_mark ?? 80}%.</li>
-                <li><b>A follow-up lesson</b> on anything a learner gets wrong, so the gaps are closed, not just scored.</li>
-                <li><b>A named, dated certificate</b> the moment they pass{m.cpd_accredited ? ', carrying the CPD Certified mark and CPD hours' : ''}, ready to download as a PDF.</li>
-                <li><b>Kept on their training record</b> in your dashboard, ready for your CQC evidence.</li>
-                {m.requires_practical && <li><b>An observation checklist</b> for the observed workplace assessment the employer carries out.</li>}
-                {m.slug === 'care-certificate' && <li><b>Portable:</b> the Care Certificate does not expire and moves with the worker between employers. Refresher training is still good practice.</li>}
-              </ul>
-            </div>
-
-            {cro.resources?.length ? (
-              <div className="mpe-list mpe-res">
-                <h2>Free {m.title} resources</h2>
-                <p>Official guidance from Skills for Care, free to download. Useful alongside the course.</p>
-                <ul>
-                  {cro.resources.map(r => (
-                    <li key={r.url}><a href={r.url} target="_blank" rel="noopener noreferrer">{r.label}</a><span>{r.note}</span></li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            <div className="mpe-banner">
-              <h2>A certificate for every member of your team</h2>
-              <p>
-                Each staff member completes {m.title} in the hub, in their own language, and gets a dated,
-                named certificate for your training file the moment they pass. You see who has finished,
-                their score and their certificate from your dashboard.
-              </p>
-              <div className="mpe-banner-facts">
-                <span><b>60+</b> languages</span>
-                <span><b>{durationText(est)}</b> to complete</span>
-                <span><b>1</b> certificate per person</span>
-              </div>
-            </div>
-
-            <div className="mtech">
-              <p className="cap">Specialists in the technology behind it all</p>
-              <div className="marks">
-                {TECH.map(({ name, Icon }) => <span className="techmark" key={name}><Icon />{name}</span>)}
-              </div>
-              <p className="note">
-                The same technology behind the world&apos;s best products powers
-                CareStream, so your team&apos;s {lower} training stays accurate, always up to date
-                with the latest guidance, and is delivered in over 60 languages.
-              </p>
-            </div>
-          </div>
         </div>
       </section>
 

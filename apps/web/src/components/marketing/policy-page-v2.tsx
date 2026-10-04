@@ -231,8 +231,61 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
       <PolicyDrawer slug={product.slug} title={product.title} pricePence={product.price_pence} />
       <section className="pchero mpe">
         <div className="pcwrap mpe-in">
+          {/* The picture and the gallery move as one column (scroll-sequence.tsx). */}
+          <div className="mpe-left">
           <div className="mpe-main">
             <div className="mpe-shot"><SiteImage src={hero} alt={`${product.title} for care services`} priority /></div>
+          </div>
+
+          <div className="mpe-gallery">
+            {cro.moments?.length ? (
+              <div className="mpe-moments">
+                <h2>When you need this policy</h2>
+                <ul>
+                  {cro.moments.map(x => <li key={x.title}><b>{x.title}</b><span>{x.body}</span></li>)}
+                </ul>
+              </div>
+            ) : null}
+
+            {/* The intake game IS the buying journey: build the policy now, in about three minutes. */}
+            <div className="mpe-demo">
+              <p className="mpe-cap">Build it now: {questions} questions, about three minutes</p>
+              <PolicyIntakeGame
+                slug={product.slug}
+                title={product.title}
+                pricePence={product.price_pence}
+                fields={product.intake_fields}
+                buyHref={`/contact?about=${encodeURIComponent(product.title)}`}
+                variant="theme"
+                heroImage={null}
+              />
+            </div>
+
+            {regulations.length > 0 && (
+              <figure className="mpe-tile light wide mpe-laws">
+                <div>
+                  <b>Checked against the law, line by line</b>
+                  <span>Structured from these, then verified against all {elements} required elements before a person signs it off.</span>
+                  <ul>
+                    {regulations.slice(0, 5).map(r => <li key={r.reference_key}><Tick /> {r.official_name}</li>)}
+                  </ul>
+                </div>
+              </figure>
+            )}
+
+            <div className="mpe-banner">
+              <h2>Your policy, written for your service</h2>
+              <p>
+                Answer a few questions once and your {product.title} is written in your name, about your
+                service and your people, read by a person, and delivered as a branded, print-ready document.
+              </p>
+              <div className="mpe-banner-facts">
+                <span><b>{questions}</b> questions</span>
+                <span><b>2</b> working days</span>
+                <span><b>{elements}</b> elements checked</span>
+              </div>
+            </div>
+          </div>
           </div>
 
           <aside className="mpe-info">
@@ -304,56 +357,6 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
             <ProductFaqs title="About this policy" faqs={policyProductFaqs(product, regulations, elements)} />
             <PolicyDocMock p={product} regs={regulations} elements={elements} />
           </aside>
-
-          <div className="mpe-gallery">
-            {cro.moments?.length ? (
-              <div className="mpe-moments">
-                <h2>When you need this policy</h2>
-                <ul>
-                  {cro.moments.map(x => <li key={x.title}><b>{x.title}</b><span>{x.body}</span></li>)}
-                </ul>
-              </div>
-            ) : null}
-
-            {/* The intake game IS the buying journey: build the policy now, in about three minutes. */}
-            <div className="mpe-demo">
-              <p className="mpe-cap">Build it now: {questions} questions, about three minutes</p>
-              <PolicyIntakeGame
-                slug={product.slug}
-                title={product.title}
-                pricePence={product.price_pence}
-                fields={product.intake_fields}
-                buyHref={`/contact?about=${encodeURIComponent(product.title)}`}
-                variant="theme"
-                heroImage={null}
-              />
-            </div>
-
-            {regulations.length > 0 && (
-              <figure className="mpe-tile light wide mpe-laws">
-                <div>
-                  <b>Checked against the law, line by line</b>
-                  <span>Structured from these, then verified against all {elements} required elements before a person signs it off.</span>
-                  <ul>
-                    {regulations.slice(0, 5).map(r => <li key={r.reference_key}><Tick /> {r.official_name}</li>)}
-                  </ul>
-                </div>
-              </figure>
-            )}
-
-            <div className="mpe-banner">
-              <h2>Your policy, written for your service</h2>
-              <p>
-                Answer a few questions once and your {product.title} is written in your name, about your
-                service and your people, read by a person, and delivered as a branded, print-ready document.
-              </p>
-              <div className="mpe-banner-facts">
-                <span><b>{questions}</b> questions</span>
-                <span><b>2</b> working days</span>
-                <span><b>{elements}</b> elements checked</span>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 

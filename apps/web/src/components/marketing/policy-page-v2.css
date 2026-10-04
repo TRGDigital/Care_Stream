@@ -708,3 +708,11 @@
   .pcpage-v2 .mpe-promise{grid-template-columns:40px 1fr;padding:14px}
   .pcpage-v2 .mpe-promise-icon{width:40px;height:40px}
 }
+
+/* The right column scrolls first, then the left (scroll-sequence.tsx). The left side (picture and
+   gallery) is one block, mpe-left, so it can hold still as a whole while the buy column scrolls. */
+.pcpage-v2 .mpe-in{grid-template-areas:"left info";grid-template-rows:auto}
+.pcpage-v2 .mpe-left{grid-area:left;display:grid;row-gap:14px;min-width:0;align-content:start}
+.pcpage-v2 .mpe-left > .mpe-main,.pcpage-v2 .mpe-left > .mpe-gallery{grid-area:auto}
+@media(min-width:961px){ .pcpage-v2 .mpe-left{position:sticky;align-self:start} .pcpage-v2 .mpe-gallery{position:static} }
+@media(max-width:960px){ .pcpage-v2 .mpe-in{grid-template-areas:"info" "left"} }

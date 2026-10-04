@@ -868,3 +868,11 @@
   .mpage-v2 .mpe-list ol,.mpage-v2 .mpe-cert ul,.mpage-v2 .mpe-res ul{grid-template-columns:1fr}
   .mpage-v2 .mpe-list{padding:18px}
 }
+
+/* The right column scrolls first, then the left (scroll-sequence.tsx). The left side (picture and
+   gallery) is one block, mpe-left, so it can hold still as a whole while the buy column scrolls. */
+.mpage-v2 .mpe-in{grid-template-areas:"left info";grid-template-rows:auto}
+.mpage-v2 .mpe-left{grid-area:left;display:grid;row-gap:14px;min-width:0;align-content:start}
+.mpage-v2 .mpe-left > .mpe-main,.mpage-v2 .mpe-left > .mpe-gallery{grid-area:auto}
+@media(min-width:961px){ .mpage-v2 .mpe-left{position:sticky;align-self:start} .mpage-v2 .mpe-gallery{position:static} }
+@media(max-width:960px){ .mpage-v2 .mpe-in{grid-template-areas:"info" "left"} }

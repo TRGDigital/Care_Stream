@@ -248,6 +248,7 @@ export default async function TrainingModulePage(
           related={related}
           unitPence={unitPence}
           apiUrl={API_URL}
+          intent={typeof sp?.intent === 'string' ? sp.intent : undefined}
         />
       </>
     )

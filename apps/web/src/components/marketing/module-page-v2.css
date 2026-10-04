@@ -876,3 +876,11 @@
 .mpage-v2 .mpe-left > .mpe-main,.mpage-v2 .mpe-left > .mpe-gallery{grid-area:auto}
 @media(min-width:961px){ .mpage-v2 .mpe-left{position:sticky;align-self:start} .mpage-v2 .mpe-gallery{position:static} }
 @media(max-width:960px){ .mpage-v2 .mpe-in{grid-template-areas:"info" "left"} }
+
+/* An ad group's version of the page (?intent=): the label above the headline, and the moment it leads with. */
+.mpage-v2 .mpe-intent-tag{display:inline-block;margin:0 0 8px;padding:4px 12px;border-radius:999px;background:#FFF1E2;color:#B4581A;font-size:.78rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.mpage-v2 .mpe-moments li.lead{background:#FFF4E8;border-left-color:#F28C38;box-shadow:inset 0 0 0 1.5px #F5C79A}
+
+/* Team pricing above the buy box (price version): space before "Try before you buy". */
+.mpage-v2 .mpe-team + .hg-try{margin-top:18px}
+.mpage-v2 .mpe-info > .mpe-team:first-of-type{margin-bottom:0}

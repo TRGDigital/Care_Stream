@@ -11,8 +11,8 @@ import './hero-gallery.css'
 
 export interface GallerySlide { key: string; label: string; thumb: ReactNode; body: ReactNode }
 
-export function HeroGallery({ slides }: { slides: GallerySlide[] }) {
-  const [i, setI] = useState(0)
+export function HeroGallery({ slides, start }: { slides: GallerySlide[]; start?: string }) {
+  const [i, setI] = useState(() => Math.max(0, slides.findIndex(s => s.key === start)))
   const slide = slides[i] ?? slides[0]
   if (!slide) return null
   return (

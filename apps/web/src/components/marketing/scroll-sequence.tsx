@@ -34,8 +34,16 @@ export function ScrollSequence({ root, offset = 82, gap = 16 }: { root: string; 
     fit()
     const ro = new ResizeObserver(fit)
     ro.observe(left); ro.observe(info)
+    // Content that settles late (an offer, a font, an image) can change a column's height
+    // without the observer catching it in time, so check again while the page scrolls.
+    let seen = ''
+    const check = () => {
+      const now = `${left.offsetHeight}|${info.offsetHeight}|${window.innerHeight}`
+      if (now !== seen) { seen = now; fit() }
+    }
+    window.addEventListener('scroll', check, { passive: true })
     window.addEventListener('resize', fit)
-    return () => { ro.disconnect(); window.removeEventListener('resize', fit) }
+    return () => { ro.disconnect(); window.removeEventListener('resize', fit); window.removeEventListener('scroll', check) }
   }, [root, offset, gap])
   return null
 }

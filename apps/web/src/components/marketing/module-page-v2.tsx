@@ -219,12 +219,14 @@ function CompareMark({ mark }: { mark: Mark3 }) {
   )
 }
 
-export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
+export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, intent: intentKey }: {
   module: TrainingModule
   demo: TrainingDemoData | null
   related: LibraryTopic[]
   unitPence: number
   apiUrl: string
+  /** ?intent= on the ad group's Final URL: the version of the top of the page for that ad group. */
+  intent?: string
 }) {
   const cs = careSetting
   const minutes = m.duration_minutes ?? 0
@@ -239,6 +241,8 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
   const est = estimatedMinutes(m.group_key, m.duration_minutes)
   const addLabel = { slug: m.slug, title: m.title, unitPence }
   const cro = COURSE_CRO[m.slug] ?? {}
+  const it = intentKey ? cro.intents?.[intentKey] : undefined
+  const lowestPence = Math.round(unitPence * (1 - Math.max(...DISCOUNT_TIERS.map(t => t.pct)) / 100))
   const faqModule: FaqModule = {
     title: m.title, duration_minutes: m.duration_minutes, estMinutes: est, sections,
     question_count: m.question_count, pass_mark: m.pass_mark, frequency: m.frequency,
@@ -252,6 +256,29 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
     { code: 'eng', name: 'English', lesson: { heading: demo.lesson.heading, body: demo.lesson.body }, question: demo.question ? { text: demo.question.text, options: demo.question.options } : null },
     ...Object.entries(demo.translations ?? {}).filter(([c]) => LANG_NAMES[c]).map(([c, t]) => ({ code: c, name: LANG_NAMES[c]!, lesson: t.lesson, question: t.question ? { text: t.question.text, options: t.question.options } : null })),
   ] : []
+  // Team prices: the same volume tiers the checkout charges (training-commerce.ts).
+  const teamPricing = (
+            <div className="mpe-team">
+              <p className="mpe-promise-eyebrow">Team pricing</p>
+              <table>
+                <tbody>
+                  {[{ min: 1, pct: 0 }, ...[...DISCOUNT_TIERS].reverse()].map((t, i, all) => {
+                    const next = all[i + 1]
+                    return (
+                      <tr key={t.min}>
+                        <td>{next ? `${t.min} to ${next.min - 1}` : `${t.min}+`} licences</td>
+                        <td>{t.pct ? <span className="mpe-team-off">{t.pct}% off</span> : ''}</td>
+                        <td><b>{money(Math.round(unitPence * (1 - t.pct / 100)))}</b> each</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+              <p className="mpe-team-note">Applied automatically in your basket. With an offer on, you get whichever saving is bigger, plus any free licences it gives.</p>
+              <p className="mpe-team-quote">Training a large team or several homes? <Link href={`/contact?about=${encodeURIComponent(`${m.title} quote for a team`)}`}>Get a quote or pay by invoice</Link></p>
+            </div>
+  )
+
   const dashboard = (
         <div className="hg-dash">
           <div className="hg-dash-head"><b>{m.title}: your team</b><span>Example of the manager&apos;s view</span></div>
@@ -320,6 +347,8 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
       {/* Above the fold, laid out like a shop product page: the course on the left as a gallery
           (picture, proof, a real lesson to try, the standards it covers), and everything needed to
           buy on the right, held in view until the gallery ends. */}
+      {/* Funnel Insights reports each ad group's version of the page as a variant. */}
+      {it && <meta name="fi-variant" content={intentKey} />}
       <ScrollSequence root=".mpage-v2 .mpe-in" />
       <ExitQuestion funnel="training" product={m.slug} />
       <CaptureOverlay funnel="training" product={m.slug} title={m.title} image={hero} />
@@ -330,7 +359,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
           {/* The picture and the gallery move as one column (scroll-sequence.tsx). */}
           <div className="mpe-left">
           <div className="mpe-main">
-            <HeroGallery slides={gallery} />
+            <HeroGallery slides={gallery} start={it?.slide} />
             {/* The course at a glance: the facts a manager checks first. */}
             <ul className="mpe-stats">
               {sections.length > 0 && <li><b>{sections.length}</b><span>{m.slug === 'care-certificate' ? 'standards covered' : 'lessons'}</span></li>}
@@ -362,8 +391,10 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               <div className="mpe-moments">
                 <h2>When you need this course</h2>
                 <ul>
-                  {cro.moments.map(x => (
-                    <li key={x.title}><b>{x.title}</b><span>{x.body.replace('{duration}', durationText(est))}</span></li>
+                  {(it?.moment != null && cro.moments[it.moment]
+                    ? [cro.moments[it.moment]!, ...cro.moments.filter((_, n) => n !== it.moment)]
+                    : cro.moments).map((x, n) => (
+                    <li key={x.title} className={it?.moment != null && n === 0 ? 'lead' : undefined}><b>{x.title}</b><span>{x.body.replace('{duration}', durationText(est))}</span></li>
                   ))}
                 </ul>
               </div>
@@ -469,8 +500,9 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
                 <img className="cpdmark" src={CPD_CERTIFIED_LOGO} alt="CPD Certified, The CPD Certification Service" />
               )}
             </div>
-            <h1>{m.title} training that gets your team CQC-ready</h1>
-            {cro.whoFor && <p className="mpe-for">{cro.whoFor}</p>}
+            {it && <p className="mpe-intent-tag">{it.tag}</p>}
+            <h1>{it ? it.headline.replace('{from}', money(lowestPence)) : `${m.title} training that gets your team CQC-ready`}</h1>
+            {(it?.sub ?? cro.whoFor) && <p className="mpe-for">{it?.sub ?? cro.whoFor}</p>}
             {cro.benefits && (
               <ul className="mpe-benefits">
                 {cro.benefits.map(b => <li key={b}><Tick />{b}</li>)}
@@ -483,6 +515,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
               </blockquote>
             )}
 
+            {it?.pricingFirst && teamPricing}
             {demo && (
               <TryBeforeYouBuy slug={m.slug} withActivity={!!demo.activity}>
                 <TrainingDemo demo={demo} buyHref={buyHref} variant="theme" place="module" />
@@ -492,26 +525,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl }: {
 
             <PaymentLogos />
 
-            {/* Team prices: the same volume tiers the checkout charges (training-commerce.ts). */}
-            <div className="mpe-team">
-              <p className="mpe-promise-eyebrow">Team pricing</p>
-              <table>
-                <tbody>
-                  {[{ min: 1, pct: 0 }, ...[...DISCOUNT_TIERS].reverse()].map((t, i, all) => {
-                    const next = all[i + 1]
-                    return (
-                      <tr key={t.min}>
-                        <td>{next ? `${t.min} to ${next.min - 1}` : `${t.min}+`} licences</td>
-                        <td>{t.pct ? <span className="mpe-team-off">{t.pct}% off</span> : ''}</td>
-                        <td><b>{money(Math.round(unitPence * (1 - t.pct / 100)))}</b> each</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-              <p className="mpe-team-note">Applied automatically in your basket. With an offer on, you get whichever saving is bigger, plus any free licences it gives.</p>
-              <p className="mpe-team-quote">Training a large team or several homes? <Link href={`/contact?about=${encodeURIComponent(`${m.title} quote for a team`)}`}>Get a quote or pay by invoice</Link></p>
-            </div>
+            {!it?.pricingFirst && teamPricing}
 
             <ul className="mpe-trust mpe-trust-list">
               <li><Tick />CQC-aligned, mapped to the Care Certificate framework</li>

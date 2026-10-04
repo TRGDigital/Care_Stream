@@ -11,13 +11,28 @@
 // Site copy rules apply: no em or en dashes, and nothing the course cannot back up.
 
 export interface CourseMoment { title: string; body: string }
-export interface CourseCro { whoFor?: string; benefits?: [string, string]; moments?: CourseMoment[] }
+export interface CourseResource { label: string; url: string; note: string }
+/** updated: when the course content was last reviewed, shown in the stats strip ("September 2026").
+ *  resources: free official resources for managers, linked from the page (check each link works). */
+export interface CourseCro {
+  whoFor?: string; benefits?: [string, string]; moments?: CourseMoment[]
+  updated?: string; resources?: CourseResource[]
+}
 
 export const COURSE_CRO: Record<string, CourseCro> = {
   'care-certificate': {
     whoFor:
       'Perfect for new care workers, healthcare assistants and support workers starting out in health and social care, '
       + 'and for managers inducting new starters in their first 12 weeks.',
+    updated: 'September 2026',
+    resources: [
+      { label: 'The Care Certificate standards (March 2025)', url: 'https://www.skillsforcare.org.uk/resources/documents/Developing-your-workforce/Care-Certificate/Care-Certificate-Standards/Care-Certificate-standards-March-2025.pdf', note: 'The 16 standards in full, from Skills for Care.' },
+      { label: 'Summary of the 2025 changes', url: 'https://www.skillsforcare.org.uk/resources/documents/Developing-your-workforce/Care-Certificate/Care-Certificate-Standards/Summary-of-changes-to-Care-Certificate-standards-March-2025.pdf', note: 'What changed in March 2025, including the new Standard 16.' },
+      { label: 'Assessor and employer guide', url: 'https://www.skillsforcare.org.uk/resources/documents/Developing-your-workforce/Care-Certificate/Care-Certificate-Standards/Care-Certificate-assessor-and-employer-guide-March-2025.pdf', note: 'How to assess staff in the workplace and sign the certificate off.' },
+      { label: 'Self-assessment tool', url: 'https://www.skillsforcare.org.uk/resources/documents/Developing-your-workforce/Care-Certificate/Care-Certificate-Standards/Care-Certificate-self-assessment-tool-March-2025.pdf', note: 'For new starters to check what they already know.' },
+      { label: 'Recommended routes for adult social care', url: 'https://www.skillsforcare.org.uk/resources/documents/Developing-your-workforce/Care-Certificate/Care-Certificate-Standards/Care-Certificate-recommended-routes-for-adult-social-care-2025.pdf', note: 'How to fit the Care Certificate into your induction.' },
+      { label: 'Questions and answers (October 2025)', url: 'https://www.skillsforcare.org.uk/resources/documents/Developing-your-workforce/Care-Certificate/Care-Certificate-Standards/Care-Certificate-standards-FAQs.pdf', note: 'Skills for Care’s answers to common questions.' },
+    ],
     benefits: ['Covers all 16 Care Certificate standards', 'Taken in your staff’s own language, 60+ to choose from'],
     moments: [
       {

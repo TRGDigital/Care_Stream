@@ -807,3 +807,64 @@
 .mpage-v2 .mbar .meta{flex-wrap:wrap;row-gap:2px;white-space:normal}
 .mpage-v2 .mbar .meta .t{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .mpage-v2 .mbar-in > *:not(.who){flex-shrink:0}
+
+/* Each block has its own look, so the page reads as distinct sections rather than a stack of
+   identical white cards. */
+
+/* The course at a glance: a dark band under the hero picture, figures in orange. */
+.mpage-v2 .mpe-stats{list-style:none;margin:12px 0 0;padding:6px;display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-radius:16px;background:#1F1530}
+.mpage-v2 .mpe-stats li{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:3px;padding:14px 8px}
+.mpage-v2 .mpe-stats li + li{border-left:1px solid rgba(255,255,255,.14)}
+.mpage-v2 .mpe-stats b{font-size:1.15rem;font-weight:800;color:#F28C38;line-height:1.2}
+.mpage-v2 .mpe-stats span{font-size:.74rem;letter-spacing:.04em;text-transform:uppercase;color:rgba(246,241,251,.75)}
+@media (max-width:640px){.mpage-v2 .mpe-stats{grid-template-columns:repeat(2,1fr)}.mpage-v2 .mpe-stats li:nth-child(3){border-left:0}.mpage-v2 .mpe-stats li:nth-child(n+3){border-top:1px solid rgba(255,255,255,.14)}}
+
+/* Team pricing: mint green, a ribbon heading, the biggest saving highlighted. */
+.mpage-v2 .mpe-team{position:relative;margin-top:18px;padding:22px 18px 16px;border-radius:16px;background:#EEF8F2;border:1.5px solid #9FD6B8}
+.mpage-v2 .mpe-team .mpe-promise-eyebrow{position:absolute;top:-11px;left:16px;padding:3px 12px !important;border-radius:999px;background:#1F8A5B;color:#fff !important}
+.mpage-v2 .mpe-team table{width:100%;border-collapse:separate;border-spacing:0 4px;margin:2px 0 8px;font-size:.88rem}
+.mpage-v2 .mpe-team td{padding:8px 10px;background:#fff;color:var(--ink-2)}
+.mpage-v2 .mpe-team td:first-child{border-radius:10px 0 0 10px}
+.mpage-v2 .mpe-team td:last-child{border-radius:0 10px 10px 0;text-align:right;white-space:nowrap}
+.mpage-v2 .mpe-team td:nth-child(2){text-align:center}
+.mpage-v2 .mpe-team td b{color:var(--ink);font-size:.95rem}
+.mpage-v2 .mpe-team tr:last-child td{background:#1F8A5B;color:#fff}
+.mpage-v2 .mpe-team tr:last-child td b{color:#fff}
+.mpage-v2 .mpe-team tr:last-child .mpe-team-off{background:#fff;color:#1F8A5B}
+.mpage-v2 .mpe-team-off{display:inline-block;padding:2px 8px;border-radius:999px;background:#D3EFDF;color:#1F6B47;font-size:.74rem;font-weight:800}
+.mpage-v2 .mpe-team-note{margin:0 0 10px;font-size:.78rem;color:#2D5A44}
+.mpage-v2 .mpe-team-quote{margin:0;padding:10px 12px;border-radius:10px;background:#fff;font-size:.86rem;color:var(--ink-2)}
+.mpage-v2 .mpe-team-quote a{color:#1F8A5B;font-weight:800}
+
+/* Shared shape for the left-column sections; each has its own colour below. */
+.mpage-v2 .mpe-list{border-radius:18px;padding:24px}
+.mpage-v2 .mpe-list h2{margin:0 0 14px;font-size:1.2rem;letter-spacing:-.015em}
+.mpage-v2 .mpe-list > p{margin:-6px 0 14px;font-size:.9rem;color:var(--ink-2)}
+.mpage-v2 .mpe-list ul,.mpage-v2 .mpe-list ol{margin:0;padding:0;list-style:none}
+
+/* All the standards: lavender, numbered white tiles. */
+.mpage-v2 .mpe-list:not(.mpe-cert):not(.mpe-res){background:#F3ECFA;border:1.5px solid #DCCBEF}
+.mpage-v2 .mpe-list ol{counter-reset:std;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mpage-v2 .mpe-list ol li{counter-increment:std;display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:#fff;font-size:.88rem;line-height:1.35;font-weight:600;color:var(--ink)}
+.mpage-v2 .mpe-list ol li::after{content:'✓';margin-left:auto;flex:none;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#1F8A5B;color:#fff;font-size:.74rem;font-weight:800}
+.mpage-v2 .mpe-list ol li::before{content:counter(std);flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#6B3FA0;color:#fff;font-size:.78rem;font-weight:800}
+
+/* Assessment and certificate: warm cream, an orange rule, icon tiles. */
+.mpage-v2 .mpe-cert{background:#FFF8EF;border:1.5px solid #F5D3B0;border-top:5px solid #F28C38}
+.mpage-v2 .mpe-cert ul{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mpage-v2 .mpe-cert ul li{position:relative;padding:12px 12px 12px 46px;border-radius:12px;background:#fff;font-size:.86rem;line-height:1.5;color:var(--ink-2)}
+.mpage-v2 .mpe-cert ul li::before{content:'✓';position:absolute;left:12px;top:12px;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#F28C38;color:#fff;font-size:.8rem;font-weight:800}
+.mpage-v2 .mpe-cert ul li b{display:block;color:var(--ink);margin-bottom:1px}
+
+/* Free resources: pale blue, download cards. */
+.mpage-v2 .mpe-res{background:#EEF4FB;border:1.5px solid #C6D9EF}
+.mpage-v2 .mpe-res ul{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mpage-v2 .mpe-res ul li{position:relative;display:flex;flex-direction:column;gap:3px;padding:12px 12px 12px 48px;border-radius:12px;background:#fff}
+.mpage-v2 .mpe-res ul li::before{content:'↓';position:absolute;left:12px;top:12px;display:grid;place-items:center;width:26px;height:26px;border-radius:8px;background:#2F6FB5;color:#fff;font-weight:800;font-size:.9rem}
+.mpage-v2 .mpe-res a{font-size:.9rem;font-weight:700;color:#1E4E86;text-decoration:none}
+.mpage-v2 .mpe-res a:hover{text-decoration:underline}
+.mpage-v2 .mpe-res span{font-size:.82rem;color:var(--ink-2)}
+@media (max-width:640px){
+  .mpage-v2 .mpe-list ol,.mpage-v2 .mpe-cert ul,.mpage-v2 .mpe-res ul{grid-template-columns:1fr}
+  .mpage-v2 .mpe-list{padding:18px}
+}

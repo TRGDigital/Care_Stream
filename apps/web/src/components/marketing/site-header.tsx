@@ -161,6 +161,15 @@ export function SiteHeader() {
 
   return (
     <div className="cschrome cschrome-head">
+      {/* On the staff training pages only: a quote route for teams, above the header (it scrolls
+          away; the header stays). Static, no motion. */}
+      {pathname?.startsWith('/staff-training') && (
+        <div className="cs-teambar">
+          <Link href={`/contact?about=${encodeURIComponent('Training quote for a team')}`} data-fi="team-quote-bar">
+            Training 10 or more staff across several courses? <b>Get a quote</b> <span aria-hidden="true">→</span>
+          </Link>
+        </div>
+      )}
       <header id="hdr" ref={ref} className={stuck ? 'stuck' : undefined}>
         <div className="wrap">
           {/* Funnel Insights counts the header (data-fi, public/t.js on Funnel Insights): opening a menu is

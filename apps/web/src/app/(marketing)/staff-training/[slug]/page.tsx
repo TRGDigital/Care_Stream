@@ -117,7 +117,7 @@ async function getRelatedTopics(currentSlug: string): Promise<LibraryTopic[]> {
 // Live one-lesson + one-question taster for this module (null if not yet built).
 async function getModuleDemo(slug: string): Promise<TrainingDemoData | null> {
   try {
-    const res = await fetch(`${API_URL}/public/training/standard-modules/${encodeURIComponent(slug)}/demo?v=3`, { next: { revalidate: 3600 } })
+    const res = await fetch(`${API_URL}/public/training/standard-modules/${encodeURIComponent(slug)}/demo?v=5`, { next: { revalidate: 3600 } })
     if (res.ok) return (await res.json())?.data?.demo ?? null
   } catch { /* fall through */ }
   return null

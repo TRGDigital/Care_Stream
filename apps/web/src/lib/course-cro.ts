@@ -39,8 +39,8 @@ export const COURSE_CRO: Record<string, CourseCro> = {
     updated: 'September 2026',
     intents: {
       price: {
-        tag: 'Team pricing', headline: 'Care Certificate training for your whole team, from {from} per staff member',
-        sub: 'One licence per member of staff, with team prices from 10 licences and a quote for larger groups. No subscription.',
+        tag: 'Team pricing', headline: 'Care Certificate training for your whole team, with team prices from 10 licences',
+        sub: 'One licence per member of staff, up to 40% off for larger teams, and a quote for several homes. No subscription.',
         pricingFirst: true, slide: 'dashboard',
       },
       staff: {

@@ -4,12 +4,19 @@
 // (the moments that send a manager looking, each with how the policy answers it). Every claim must
 // be something the policy actually covers: check it against the policy's required elements.
 
+import { GDPR_POLICY_INTENTS } from './policy-cro-gdpr'
+
 export interface PolicyMoment { title: string; body: string }
+/** A version of the top of the page for one Google Ads ad group or sitelink (?intent=<key>), so
+ *  the page opens on what the ad promised. moment: the "When you need this policy" moment to lead with. */
+export interface PolicyIntent { tag: string; headline: string; sub: string; moment?: number }
 /** story: the founder's "Our story" in his words for this policy page. Only shown where Len has approved it. */
-export interface PolicyCro { whoFor?: string; benefits?: [string, string]; moments?: PolicyMoment[]; story?: string }
+export interface PolicyCro { whoFor?: string; benefits?: [string, string]; moments?: PolicyMoment[]; story?: string; intents?: Record<string, PolicyIntent> }
 
 export const POLICY_CRO: Record<string, PolicyCro> = {
   'data-protection-gdpr': {
+    // Ad group and sitelink versions, written in the keyword tool (scripts/gdpr_plan.py).
+    intents: GDPR_POLICY_INTENTS,
     whoFor:
       'Perfect for services who need a GDPR policy that meets UK GDPR, the Data Protection Act 2018 and what CQC '
       + 'inspectors look for.',

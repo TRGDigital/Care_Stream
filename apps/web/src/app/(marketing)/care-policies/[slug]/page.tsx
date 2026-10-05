@@ -136,6 +136,7 @@ export default async function PolicyProductPage(
           related={data.related ?? []}
           bundles={bundlesV2}
           catalogueCount={count}
+          intent={typeof sp?.intent === 'string' ? sp.intent : undefined}
         />
       </>
     )

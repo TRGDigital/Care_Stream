@@ -198,8 +198,10 @@ function quizFor(regs: PolicyRegulation[], count: number) {
   return out.length >= 3 ? { questions: out, count } : null
 }
 
-export function PolicyPageV2({ product, regulations, related, bundles, catalogueCount }: {
+export function PolicyPageV2({ product, regulations, related, bundles, catalogueCount, intent: intentKey }: {
   product: PolicyProduct
+  /** ?intent= on an ad's Final URL or a sitelink: the version of the top of the page it opens on. */
+  intent?: string
   regulations: PolicyRegulation[]
   related: PolicyRelated[]
   bundles: PolicyBundle[]
@@ -213,6 +215,10 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
   const hero = `/images/care-policies/${product.slug}/1.webp`
   const item = { slug: product.slug, title: product.title, price_pence: product.price_pence }
   const cro = POLICY_CRO[product.slug] ?? {}
+  const it = intentKey ? cro.intents?.[intentKey] : undefined
+  const moments = cro.moments && it?.moment != null && cro.moments[it.moment]
+    ? [cro.moments[it.moment]!, ...cro.moments.filter((_, n) => n !== it.moment)]
+    : cro.moments
   // The theme mentions a pack only on the twenty policies in the Statutory Starter Pack. Taking
   // the first bundle named the Governance & Data Pack on /caldicott, which the theme does not.
   const pack = bundles.find(b => b.key === 'statutory-starter')
@@ -220,6 +226,7 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
 
   return (
     <div className="pcpage-v2">
+      {it && <meta name="fi-variant" content={intentKey} />}
       <StickyBuyBar item={item} image={hero} />
 
       {/* Above the fold, laid out like a shop product page: the policy on the left as a gallery
@@ -242,7 +249,7 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
               <div className="mpe-moments">
                 <h2>When you need this policy</h2>
                 <ul>
-                  {cro.moments.map(x => <li key={x.title}><b>{x.title}</b><span>{x.body}</span></li>)}
+                  {moments!.map((x, n) => <li key={x.title} className={it?.moment != null && n === 0 ? 'lead' : undefined}><b>{x.title}</b><span>{x.body}</span></li>)}
                 </ul>
               </div>
             ) : null}
@@ -298,9 +305,9 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
                 Trusted by UK care providers
               </p>
             </div>
-            <span className="mpe-eyebrow">Personalised · Human-reviewed · Kept updated</span>
-            <h1>A {product.title} written for your service</h1>
-            {cro.whoFor && <p className="mpe-for">{cro.whoFor}</p>}
+            {it ? <p className="mpe-intent-tag">{it.tag}</p> : <span className="mpe-eyebrow">Personalised · Human-reviewed · Kept updated</span>}
+            <h1>{it ? it.headline : `A ${product.title} written for your service`}</h1>
+            {(it?.sub ?? cro.whoFor) && <p className="mpe-for">{it?.sub ?? cro.whoFor}</p>}
             {cro.benefits && (
               <ul className="mpe-benefits">
                 {cro.benefits.map(b => <li key={b}><Tick />{b}</li>)}

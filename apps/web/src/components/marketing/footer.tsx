@@ -133,15 +133,18 @@ const GET_STARTED: LinkItem[] = [
 ]
 
 // The console's footer groups, matched to the theme's columns.
-const GROUPS: { heading: string; consoleGroup: string | null; links: LinkItem[]; wide?: boolean }[] = [
+// `then`: a second list under its own heading in the same column (Get started sits under
+// Buying training).
+type Group = { heading: string; consoleGroup: string | null; links: LinkItem[]; wide?: boolean }
+const GROUPS: (Group & { then?: Group })[] = [
   { heading: 'User cases', consoleGroup: null, links: USER_CASES, wide: true },
   { heading: 'Product', consoleGroup: 'Product', links: PRODUCT },
   { heading: 'Who we serve', consoleGroup: 'Who We Serve', links: WHO_WE_SERVE },
   // What a buyer checks when they come back after an ad (the offer, team prices, refunds, CPD).
-  { heading: 'Buying training', consoleGroup: null, links: SHOP_INFO_LINKS },
+  { heading: 'Buying training', consoleGroup: null, links: SHOP_INFO_LINKS,
+    then: { heading: 'Get started', consoleGroup: 'Get Started', links: GET_STARTED } },
   { heading: 'Trust & legal', consoleGroup: 'Trust & Legal', links: TRUST },
   { heading: 'Company', consoleGroup: 'Company', links: COMPANY },
-  { heading: 'Get started', consoleGroup: 'Get Started', links: GET_STARTED },
 ]
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
@@ -162,13 +165,14 @@ const stripBrand = (t: string) => t.replace(/\s*\|\s*CareStream\s*$/i, '').trim(
 
 export async function MarketingFooter() {
   const dbPages = await getFooterPages()
-  const groups = GROUPS.map(g => {
+  const withConsole = (g: Group): Group => {
     const extra = dbPages
       .filter(p => g.consoleGroup && p.footer_group === g.consoleGroup && !g.links.some(l => l.href === p.path))
       .sort((a, b) => (a.footer_sort || 0) - (b.footer_sort || 0))
       .map(p => ({ href: p.path, label: p.footer_label || stripBrand(p.title || p.path) }))
     return { ...g, links: [...g.links, ...extra] }
-  })
+  }
+  const groups = GROUPS.map(g => ({ ...withConsole(g), then: g.then && withConsole(g.then) }))
 
   return (
     <div className="cschrome">
@@ -207,6 +211,12 @@ export async function MarketingFooter() {
               <div className={`fcol${g.wide ? ' wide' : ''}`} key={g.heading}>
                 <h4>{g.heading}</h4>
                 {g.links.map(l => <Link href={l.href} key={l.href}>{l.label}</Link>)}
+                {g.then && (
+                  <>
+                    <h4 className="fcol-then">{g.then.heading}</h4>
+                    {g.then.links.map(l => <Link href={l.href} key={l.href}>{l.label}</Link>)}
+                  </>
+                )}
               </div>
             ))}
           </div>

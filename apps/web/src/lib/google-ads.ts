@@ -85,7 +85,7 @@ export const GOOGLE_ADS_MICRO_LABELS = {
   /** "Try before you buy" pressed on a course page. Label from Google Ads once the action exists. */
   try_demo: '',
   /** An enquiry sent from a "Get a quote" link (the contact form with ?about=). Label to add. */
-  quote_request: '',
+  quote_request: 'NWEnCOCX1ZEdEPLAiu1E',
 } as const
 
 export type MicroKind = keyof typeof GOOGLE_ADS_MICRO_LABELS

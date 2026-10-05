@@ -1,12 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { fiFeedback } from '@/lib/funnel-insights'
+import { fi, fiFeedback } from '@/lib/funnel-insights'
 import './shop-questions.css'
 
 // Two short questions that tell us what is costing sales. Answers go to Funnel Insights › Feedback.
 //
-// ExitQuestion: when someone on a course, policy, buy or basket page is about to leave (the
+// ExitQuestion: two stages. First a small ask ("Before you leave, can you answer a quick
+// question?"); only if they say yes, the full question. When someone on a course, policy, buy or basket page is about to leave (the
 // pointer heads for the browser bar on a computer; a long pause on a phone), ask once per visit
 // what stopped them. Quick choices, because a tick gets answered far more than an empty box, plus
 // a box for anything else. Never shown to anyone who has clicked Buy now or Checkout.
@@ -51,11 +52,14 @@ function Choices({ choices, picked, setPicked }: { choices: string[]; picked: st
 
 export function ExitQuestion({ funnel, product }: { funnel: Funnel; product?: string }) {
   const [open, setOpen] = useState(false)
+  const [stage, setStage] = useState<'ask' | 'questions'>('ask')
   const [picked, setPicked] = useState('')
   const [text, setText] = useState('')
   const [sent, setSent] = useState(false)
 
   useEffect(() => {
+    // ?exitq=1 shows it straight away, for checking it without leaving the page.
+    if (new URLSearchParams(window.location.search).get('exitq') === '1') { setOpen(true); return }
     if (once('cs-exitq')) return
     // Anyone who reaches for Buy now or Checkout is not leaving unhappy: never ask them.
     const buying = (e: Event) => {
@@ -77,6 +81,26 @@ export function ExitQuestion({ funnel, product }: { funnel: Funnel; product?: st
   }, [])
 
   if (!open) return null
+  const answer = (yes: boolean) => {
+    fi('cta', { funnel, option: product, label: yes ? 'exit-question-yes' : 'exit-question-no' })
+    if (yes) setStage('questions'); else setOpen(false)
+  }
+  // Stage 1: the small ask. The full question only appears if they agree.
+  if (stage === 'ask') {
+    return (
+      <div className="sq-overlay sq-overlay-light" role="dialog" aria-modal="true" aria-labelledby="sq-ask-title" onClick={e => { if (e.target === e.currentTarget) setOpen(false) }}>
+        <div className="sq-box sq-ask">
+          <button type="button" className="sq-close" aria-label="Close" onClick={() => setOpen(false)}>×</button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="sq-logo" src="/logo-color.svg" alt="CareStream" />
+          <h2 id="sq-ask-title">Before you leave, can you answer a quick question?</h2>
+          <p>It takes one tap and helps us make this better for care teams like yours.</p>
+          <button type="button" className="sq-send" onClick={() => answer(true)}>Yes, happy to help</button>
+          <button type="button" className="sq-later" onClick={() => answer(false)}>No thanks</button>
+        </div>
+      </div>
+    )
+  }
   const send = () => {
     fiFeedback({ kind: 'exit', choice: picked || undefined, answer: text || undefined, funnel, product })
     setSent(true)

@@ -36,7 +36,7 @@ export function BuySuccess() {
         const body = await res.json()
         if (!res.ok || !body?.data?.provisioned) throw new Error(body?.error ?? 'We could not confirm your payment.')
         setState({ status: 'done', email: body.data.email, slug: body.data.module_slug, postPurchase: !!body.data.post_purchase })
-        reportPurchase('training_purchase', body.data.value_pence, body.data.transaction_id)
+        reportPurchase('training_purchase', body.data.value_pence, body.data.transaction_id, body.data.email)
         // Purchases reach Funnel Insights from the server once Stripe confirms (with revenue).
       } catch (e: any) {
         setState({ status: 'error', message: e?.message ?? 'Something went wrong confirming your purchase.' })

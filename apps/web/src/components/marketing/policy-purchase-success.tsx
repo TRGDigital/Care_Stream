@@ -55,7 +55,7 @@ export function PolicyPurchaseSuccess() {
           postPurchase: !!body.data.post_purchase,
           bought: (body.data.bought ?? []) as string[],
         })
-        reportPurchase('policy_purchase', body.data.value_pence, body.data.transaction_id)
+        reportPurchase('policy_purchase', body.data.value_pence, body.data.transaction_id, body.data.email)
         // Purchases reach Funnel Insights from the server once Stripe confirms (with revenue).
       } catch (e: any) {
         setState({

@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { useAgentForm } from '@/components/agent/use-agent-form'
+import { reportMicro } from '@/lib/google-ads'
+import { fi } from '@/lib/funnel-insights'
 
 const Arrow = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
@@ -35,13 +37,24 @@ export function ContactForm({
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
+  // A "Get a quote" (or other product) link arrives with ?about=…: say what it is about, so the
+  // team sees it in the enquiry, and count it as a quote request in Google Ads and Funnel Insights.
+  const about = () => {
+    try { return (new URLSearchParams(window.location.search).get('about') || '').trim().slice(0, 120) } catch { return '' }
+  }
+
   async function submitLead(values: ContactValues, source: 'web' | 'agent') {
+    const a = about()
     const res = await fetch(`${API_URL}/public/marketing/leads`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'contact', source, ...values }),
+      body: JSON.stringify({ type: 'contact', source, ...values, message: a ? `[About: ${a}]\n\n${values.message}` : values.message }),
     })
     if (!res.ok) throw new Error('submit failed')
+    if (a) {
+      fi('lead', { funnel: /polic/i.test(a) ? 'policies' : 'training', label: a })
+      if (/quote|invoice|team/i.test(a)) reportMicro('quote_request', 'contact')
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {

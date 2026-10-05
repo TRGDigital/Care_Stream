@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { CookieSettingsButton } from './cookie-consent'
 import { SETTINGS_LIST } from '@/lib/settings/list'
+import { SHOP_INFO_LINKS } from '@/lib/shop-info-links'
 import './site-chrome.css'
 import './site-chrome-extra.css'
 
@@ -136,6 +137,8 @@ const GROUPS: { heading: string; consoleGroup: string | null; links: LinkItem[];
   { heading: 'User cases', consoleGroup: null, links: USER_CASES, wide: true },
   { heading: 'Product', consoleGroup: 'Product', links: PRODUCT },
   { heading: 'Who we serve', consoleGroup: 'Who We Serve', links: WHO_WE_SERVE },
+  // What a buyer checks when they come back after an ad (the offer, team prices, refunds, CPD).
+  { heading: 'Buying training', consoleGroup: null, links: SHOP_INFO_LINKS },
   { heading: 'Trust & legal', consoleGroup: 'Trust & Legal', links: TRUST },
   { heading: 'Company', consoleGroup: 'Company', links: COMPANY },
   { heading: 'Get started', consoleGroup: 'Get Started', links: GET_STARTED },

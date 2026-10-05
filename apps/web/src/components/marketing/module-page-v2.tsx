@@ -315,7 +315,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
         </>
       ),
     }] : []),
-    ...(langs.length > 1 ? [{ key: 'language', label: 'In their language', thumb: <Mini><LanguageSlide langs={langs} still /></Mini>, body: <LanguageSlide langs={langs} /> }] : []),
+    ...(langs.length > 1 ? [{ key: 'language', label: 'In their language', thumb: <Mini><LanguageSlide langs={langs} still /></Mini>, body: <LanguageSlide langs={langs} start={it?.lang} /> }] : []),
     { key: 'certificate', label: 'The certificate', thumb: <Mini><div className="hg-cert"><SampleCertificate m={faqModule} /></div></Mini>, body: <div className="hg-cert"><SampleCertificate m={faqModule} /></div> },
     {
       key: 'dashboard', label: 'Your dashboard', thumb: <Mini>{dashboard}</Mini>,

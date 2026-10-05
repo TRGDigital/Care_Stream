@@ -44,8 +44,8 @@ type Question = { text: string; options: string[] } | null
 
 /** The demo lesson in English and each saved translation, switchable, as the learner sees it. */
 /** `still`: no buttons (for the thumbnail, which is itself a button). */
-export function LanguageSlide({ langs, still = false }: { langs: { code: string; name: string; lesson: Lesson; question: Question }[]; still?: boolean }) {
-  const [code, setCode] = useState((langs.find(l => l.code === 'pol') ?? langs.find(l => l.code !== 'eng') ?? langs[0])?.code)
+export function LanguageSlide({ langs, still = false, start }: { langs: { code: string; name: string; lesson: Lesson; question: Question }[]; still?: boolean; start?: string }) {
+  const [code, setCode] = useState((langs.find(l => l.code === start) ?? langs.find(l => l.code === 'pol') ?? langs.find(l => l.code !== 'eng') ?? langs[0])?.code)
   const cur = langs.find(l => l.code === code) ?? langs[0]
   if (!cur) return null
   const paras = cur.lesson.body.split(/\n+/).map(t => t.trim()).filter(Boolean).slice(0, 2)

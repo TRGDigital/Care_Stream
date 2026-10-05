@@ -83,7 +83,7 @@ export const GOOGLE_ADS_MICRO_LABELS = {
   add_to_basket: 'LQAfCMju-Y0dEPLAiu1E',
   begin_checkout: 'BCnkCI61-40dEPLAiu1E',
   /** "Try before you buy" pressed on a course page. Label from Google Ads once the action exists. */
-  try_demo: '',
+  try_demo: '56UuCOSq1ZEdEPLAiu1E',
   /** An enquiry sent from a "Get a quote" link (the contact form with ?about=). Label to add. */
   quote_request: 'NWEnCOCX1ZEdEPLAiu1E',
 } as const

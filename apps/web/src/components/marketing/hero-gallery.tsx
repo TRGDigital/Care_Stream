@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { fi } from '@/lib/funnel-insights'
+import { reportMicro } from '@/lib/google-ads'
 import './hero-gallery.css'
 
 // The course page's hero as a product gallery, like a shop's product photos: the main picture and
@@ -93,7 +94,7 @@ export function TryBeforeYouBuy({ slug, withActivity = false, children }: { slug
   return (
     <>
       <button type="button" className="hg-try" data-fi="try-demo"
-              onClick={() => { setOpen(true); fi('cta', { funnel: 'training', option: slug, label: 'try-before-you-buy' }) }}>
+              onClick={() => { setOpen(true); fi('cta', { funnel: 'training', option: slug, label: 'try-before-you-buy' }); reportMicro('try_demo', slug) }}>
         <span aria-hidden="true">▶</span> Try before you buy <small>{withActivity ? 'a real lesson, question and activity, 3 minutes' : 'a real lesson and question, 2 minutes'}</small>
       </button>
       {open && createPortal(

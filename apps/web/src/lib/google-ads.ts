@@ -28,7 +28,7 @@ type Gtag = (...args: unknown[]) => void
  * to load, because the thank-you page can finish confirming the payment before it has.
  * Each transaction is sent once per browser; Google also de-duplicates on transaction_id.
  */
-export function reportPurchase(kind: PurchaseKind, valuePence: number | undefined, transactionId: string | undefined) {
+export function reportPurchase(kind: PurchaseKind, valuePence: number | undefined, transactionId: string | undefined, email?: string) {
   if (typeof window === 'undefined') return
   const label = GOOGLE_ADS_LABELS[kind]
   if (!label || !transactionId) return
@@ -46,6 +46,11 @@ export function reportPurchase(kind: PurchaseKind, valuePence: number | undefine
       if (++tries < 40) window.setTimeout(send, 250)
       return
     }
+    // Enhanced conversions: the buyer's email, which the Google tag hashes (SHA-256) in the
+    // browser before sending, so Google can match the sale to the ad click when cookies
+    // could not. Google only uses it when the visitor granted ad_user_data (cookie consent).
+    // Needs "Enhanced conversions for web → Google tag" switched on in Google Ads.
+    if (email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) gtag('set', 'user_data', { email: email.trim().toLowerCase() })
     gtag('event', 'conversion', {
       send_to: `${GOOGLE_ADS_ID}/${label}`,
       value: Math.max(0, (valuePence ?? 0) / 100),
@@ -68,13 +73,19 @@ export function reportPageView(url: string) {
   gtag('event', 'page_view', { send_to: GOOGLE_ADS_ID, page_location: url, page_path: new URL(url).pathname, page_title: document.title })
 }
 
-// Micro-conversions, valued at nothing, for Maximise conversions while purchases are few:
-// "Add to cart" (the cart drawer opens) and "Begin checkout" (Checkout securely is pressed).
+// Micro-conversions for smart bidding while purchases are few: "Add to cart" (the cart drawer
+// opens), "Begin checkout" (Checkout securely is pressed), "Try before you buy" (the demo opened)
+// and "Quote request" (an enquiry from a Get a quote link). Their values are set on each action in
+// Google Ads, not here.
 // Each needs its conversion action's label from Google Ads (Goals → Conversions → the action →
 // Tag setup → send_to 'AW-…/<label>'); with no label nothing is sent.
 export const GOOGLE_ADS_MICRO_LABELS = {
   add_to_basket: 'LQAfCMju-Y0dEPLAiu1E',
   begin_checkout: 'BCnkCI61-40dEPLAiu1E',
+  /** "Try before you buy" pressed on a course page. Label from Google Ads once the action exists. */
+  try_demo: '',
+  /** An enquiry sent from a "Get a quote" link (the contact form with ?about=). Label to add. */
+  quote_request: '',
 } as const
 
 export type MicroKind = keyof typeof GOOGLE_ADS_MICRO_LABELS

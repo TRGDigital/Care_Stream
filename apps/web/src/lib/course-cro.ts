@@ -10,6 +10,9 @@
 //
 // Site copy rules apply: no em or en dashes, and nothing the course cannot back up.
 
+// The sitelink versions (one per sitelink in the keyword tool) sit beside the ad-group versions.
+import { CARE_CERTIFICATE_SITELINK_INTENTS } from './course-cro-sitelinks'
+
 export interface CourseMoment { title: string; body: string }
 export interface CourseResource { label: string; url: string; note: string }
 /** updated: when the course content was last reviewed, shown in the stats strip ("September 2026").
@@ -24,6 +27,7 @@ export interface CourseIntent {
   slide?: 'course' | 'language' | 'certificate' | 'dashboard'  // the gallery view it opens on
   moment?: number                // the "When you need this" moment to lead with
   pricingFirst?: boolean         // team pricing and the quote above the buy box
+  lang?: string                  // the language the language view opens on ('pol', 'hin')
 }
 export interface CourseCro {
   whoFor?: string; benefits?: [string, string]; moments?: CourseMoment[]
@@ -73,6 +77,7 @@ export const COURSE_CRO: Record<string, CourseCro> = {
         sub: 'Certified by The CPD Certification Service. 1.5 CPD hours, and the CPD mark on every certificate.',
         slide: 'certificate',
       },
+      ...CARE_CERTIFICATE_SITELINK_INTENTS,
     },
     resources: [
       { label: 'The Care Certificate standards (March 2025)', url: 'https://www.skillsforcare.org.uk/resources/documents/Developing-your-workforce/Care-Certificate/Care-Certificate-Standards/Care-Certificate-standards-March-2025.pdf', note: 'The 16 standards in full, from Skills for Care.' },

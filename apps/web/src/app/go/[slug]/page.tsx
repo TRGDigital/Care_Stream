@@ -21,6 +21,7 @@ import { TrainingFollowUpLoop } from '@/components/marketing/training-follow-up-
 import { TrainingVideo } from '@/components/marketing/training-video'
 import { estimatedMinutes, formatDuration } from '@/lib/training-commerce'
 import { FunnelInsightsTracker } from '@/components/marketing/funnel-insights-tracker'
+import { FunnelInsightsVisitor } from '@/components/marketing/funnel-insights-visitor'
 
 // PPC landing pages for the training modules (ad traffic only). Deliberately
 // noindex + no site nav — a single-goal conversion page. The public /staff-training
@@ -172,6 +173,7 @@ export default async function GoLandingPage({
   return (
     <div className="min-h-screen bg-white pb-20 lg:pb-0">
       <FunnelInsightsTracker />
+      <FunnelInsightsVisitor />
       {/* Slim header — no nav, one goal */}
       <header className="border-b border-gray-100">
         <div className="mx-auto flex max-w-content items-center justify-between px-6 py-1.5">

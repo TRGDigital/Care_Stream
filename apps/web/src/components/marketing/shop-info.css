@@ -1,0 +1,43 @@
+/* The buyer information pages (offers, team pricing, refunds, CPD certified, reviews): the pages
+ * someone reads when they come back to check us out after an ad. Same tokens as the course page. */
+.shopinfo {
+  --accent: #7B3FBF; --accent-soft: #F3EDFA; --good: #1F8A5B; --ink: #17121F; --ink-2: #3A3245;
+  --line: #E9E5EF; --muted: #6B6577; --plate: #F2EEF8; --ground-2: #F7F5FA; --orange: #E8702A; --r: 14px;
+  color: var(--ink); background: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+  font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+.shopinfo .si-wrap { max-width: 920px; margin: 0 auto; padding: 56px 20px 72px; }
+.shopinfo .si-eyebrow { margin: 0 0 10px; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.shopinfo h1 { margin: 0 0 14px; font-size: clamp(2.1rem, 4.6vw, 3.2rem); line-height: 1.06; letter-spacing: -.03em; font-weight: 700; text-wrap: balance; }
+.shopinfo .si-lead { margin: 0 0 32px; font-size: 1.15rem; color: var(--ink-2); max-width: 720px; }
+.shopinfo h2 { margin: 40px 0 12px; font-size: 1.5rem; letter-spacing: -.02em; line-height: 1.2; }
+.shopinfo h3 { margin: 0 0 6px; font-size: 1.1rem; letter-spacing: -.01em; }
+.shopinfo p { margin: 0 0 14px; }
+.shopinfo a { color: var(--accent); font-weight: 600; text-underline-offset: 2px; }
+.shopinfo .si-card { border: 1px solid var(--line); border-radius: var(--r); padding: 22px 24px; background: #fff; box-shadow: 0 1px 2px rgba(23,18,31,.04), 0 12px 32px rgba(23,18,31,.05); margin: 0 0 16px; }
+.shopinfo .si-card.hl { background: var(--accent-soft); border-color: #E0D2F2; }
+.shopinfo .si-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.shopinfo .si-grid .si-card { margin: 0; }
+.shopinfo .si-ticks { list-style: none; padding: 0; margin: 0 0 14px; }
+.shopinfo .si-ticks li { position: relative; padding-left: 30px; margin: 0 0 10px; }
+.shopinfo .si-ticks li::before { content: ""; position: absolute; left: 0; top: .3em; width: 18px; height: 18px; border-radius: 50%; background: var(--good) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 12.5 4 4 8-9'/%3E%3C/svg%3E") center / 12px no-repeat; }
+.shopinfo table { width: 100%; border-collapse: collapse; margin: 0 0 14px; font-size: 16px; }
+.shopinfo th, .shopinfo td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--line); }
+.shopinfo th { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 700; }
+.shopinfo td.r, .shopinfo th.r { text-align: right; }
+.shopinfo .si-off { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #E6F4EC; color: var(--good); font-weight: 700; font-size: 14px; }
+.shopinfo .si-btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; border-radius: 999px; background: var(--orange); color: #fff; font-weight: 700; text-decoration: none; }
+.shopinfo .si-btn.ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+.shopinfo .si-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 22px 0 0; }
+.shopinfo .si-note { font-size: 14px; color: var(--muted); }
+.shopinfo .si-tag { display: inline-block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); background: var(--accent-soft); padding: 3px 9px; border-radius: 999px; margin-bottom: 10px; }
+.shopinfo .si-ends { font-size: 14px; color: var(--muted); }
+.shopinfo .si-quote { margin: 0 0 10px; font-style: italic; font-size: 1.05rem; }
+.shopinfo .si-related { margin-top: 44px; padding-top: 24px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 10px 22px; font-size: 15px; }
+.shopinfo .si-cpd { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.shopinfo .si-cpd img { width: 120px; height: auto; }
+@media (max-width: 560px) {
+  .shopinfo .si-wrap { padding: 36px 16px 56px; }
+  .shopinfo th, .shopinfo td { padding: 9px 6px; font-size: 15px; }
+}

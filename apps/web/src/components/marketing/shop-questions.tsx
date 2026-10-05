@@ -120,7 +120,7 @@ export function ExitQuestion({ funnel, product }: { funnel: Funnel; product?: st
           </>
         ) : (
           <>
-            <h2 id="sq-title">Before you go: what stopped you buying today?</h2>
+            <h2 id="sq-title">What stopped you buying today?</h2>
             <p>One tap. It helps us make this better for care teams like yours.</p>
             <Choices choices={EXIT_CHOICES[funnel]} picked={picked} setPicked={setPicked} />
             <textarea value={text} onChange={e => setText(e.target.value)} maxLength={1000} rows={2}

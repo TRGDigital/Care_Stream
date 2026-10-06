@@ -715,3 +715,85 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
     res.status(500).json({ error: e?.message ?? 'reconcile failed' })
   }
 })
+
+
+// POST /public/training/grant — free courses granted by a trusted TRG site (first: the carer
+// profile site), not bought. Server to server only: the caller signs
+// `${ts}|${source}|${grant_id}|${email}|${course_slugs.join(',')}` with TRAINING_GRANT_SECRET
+// (HMAC-SHA256, hex) and sends it as X-Grant-Signature with X-Grant-Timestamp (ms).
+// Only courses whose shop module is CPD certified can be granted. Each course becomes a £0
+// licence tagged `grant:<source>:<grant_id>` (so grants never mix with Stripe sales and a
+// repeat call is a no-op), allocated straight to the person, with an enrolment so they can
+// start at once. A new person gets their own training-only tenant and a staff sign-in.
+const GRANT_SECRET = process.env.TRAINING_GRANT_SECRET || ''
+publicTrainingRouter.post('/grant', async (req: Request, res: Response) => {
+  try {
+    if (!GRANT_SECRET) { res.status(503).json({ error: 'Grants are not configured' }); return }
+    const ts = String(req.header('x-grant-timestamp') ?? '')
+    const sig = String(req.header('x-grant-signature') ?? '')
+    const source = String(req.body?.source ?? '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30)
+    const grantId = String(req.body?.grant_id ?? '').replace(/[^A-Za-z0-9-]/g, '').slice(0, 64)
+    const email = String(req.body?.email ?? '').trim().toLowerCase()
+    const name = String(req.body?.name ?? '').trim().slice(0, 120)
+    const slugs: string[] = Array.isArray(req.body?.course_slugs) ? req.body.course_slugs.map((x: unknown) => String(x)).slice(0, 12) : []
+    const want = crypto.createHmac('sha256', GRANT_SECRET).update(`${ts}|${source}|${grantId}|${email}|${slugs.join(',')}`).digest('hex')
+    const fresh = Math.abs(Date.now() - Number(ts)) < 5 * 60 * 1000
+    if (!fresh || sig.length !== want.length || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(want))) { res.status(401).json({ error: 'Bad signature' }); return }
+    if (!source || !grantId || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || name.length < 2 || !slugs.length) { res.status(400).json({ error: 'source, grant_id, email, name and course_slugs are required' }); return }
+
+    // Resolve each slug to its topic and the CPD certified shop module; refuse anything else.
+    const topics = await (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true }, select: { id: true, title: true, shop_module_id: true } })
+    const bySlug = new Map((topics as any[]).map(t => [slugify(t.title), t] as const))
+    const courses: { slug: string; topic: any; moduleId: string }[] = []
+    for (const slug of slugs) {
+      const topic = bySlug.get(slug)
+      const mod = topic?.shop_module_id
+        ? await (prisma as any).trainingModule.findFirst({ where: { id: topic.shop_module_id, cpd_accredited: true, approved: true, is_active: true }, select: { id: true } })
+        : null
+      if (!topic || !mod) { res.status(400).json({ error: `Not a grantable course: ${slug}` }); return }
+      courses.push({ slug, topic, moduleId: mod.id })
+    }
+
+    // The person: an existing CareStream account keeps its tenant; otherwise a new
+    // training-only tenant with them as a staff learner (they train in the staff hub).
+    let user = await (prisma as any).user.findUnique({ where: { email }, select: { id: true, tenant_id: true, name: true } })
+    let created = false
+    if (!user) {
+      const tenant = await (prisma as any).tenant.create({
+        data: { name, slug: await uniqueTrainingSlug(name), email_domain: `grant-${grantId}`.slice(0, 60), tier: 'training_only', subscription_status: 'active', branding_signoff: 'The CareStream Team' },
+      })
+      const tempHash = await hashPassword(crypto.randomBytes(12).toString('base64url'))
+      user = await (prisma as any).user.create({ data: { tenant_id: tenant.id, email, name, role: 'staff', email_verified: true, password_hash: tempHash } })
+      created = true
+    }
+
+    const paymentRef = `grant:${source}:${grantId}`
+    const renewalDue = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+    const results: { slug: string; title: string; enrollment_id: string | null; already: boolean }[] = []
+    for (const c of courses) {
+      const had = await (prisma as any).trainingLicense.findFirst({ where: { stripe_payment_id: paymentRef, module_slug: c.slug }, select: { id: true } })
+      if (!had) {
+        await (prisma as any).trainingLicense.create({
+          data: { tenant_id: user.tenant_id, topic_id: c.topic.id, module_id: c.moduleId, module_slug: c.slug, module_name: c.topic.title,
+            price_pence: 0, currency: 'gbp', stripe_payment_id: paymentRef, renewal_due_at: renewalDue, user_id: user.id },
+        })
+      }
+      let enr = await (prisma as any).trainingEnrollment.findFirst({ where: { tenant_id: user.tenant_id, user_id: user.id, module_id: c.moduleId, status: { not: 'expired' } }, select: { id: true } })
+      if (!enr) enr = await (prisma as any).trainingEnrollment.create({ data: { tenant_id: user.tenant_id, user_id: user.id, module_id: c.moduleId, status: 'not_started' }, select: { id: true } })
+      results.push({ slug: c.slug, title: c.topic.title, enrollment_id: enr?.id ?? null, already: !!had })
+    }
+
+    // A sign-in link whenever something new was granted (14 days, one use).
+    let emailed = false
+    if (results.some(r => !r.already)) {
+      const link = await createLoginLink(user.id, user.tenant_id, 14 * 24 * 60 * 60 * 1000)
+      await sendStaffLoginLinkEmail({ to: email, name: user.name || name, link, expiresMins: 14 * 24 * 60 })
+        .then(() => { emailed = true })
+        .catch((e: any) => console.error('[training-grant] login email failed:', e?.message ?? e))
+    }
+    res.json({ data: { granted: results, new_account: created, emailed } })
+  } catch (e: any) {
+    console.error('[training-grant] failed:', e?.message ?? e)
+    res.status(500).json({ error: 'grant failed' })
+  }
+})

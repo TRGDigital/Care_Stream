@@ -443,3 +443,78 @@ export function courseSchema(opts: {
     },
   }
 }
+
+/** A care policy as a Product: written to order for the buyer's service, delivered as a digital
+ *  document within 2 working days, with the 14 day refund guarantee and what it is checked against.
+ *  `review` only when the page shows a customer's words about this specific policy. */
+export function policyProductSchema(opts: {
+  slug: string
+  title: string
+  description: string
+  pricePence: number
+  image?: string
+  laws: string[]
+  elements: number
+  review?: { body: string; author: string; setting: string; rating?: number }
+}) {
+  const url = `${SITE_URL}/care-policies/${opts.slug}`
+  const prop = (name: string, value: string | number) => ({ '@type': 'PropertyValue', name, value })
+  return {
+    '@context':   'https://schema.org',
+    '@type':      'Product',
+    '@id':        `${url}#product`,
+    name:         opts.title,
+    description:  opts.description,
+    url,
+    sku:          `policy-${opts.slug}`,
+    category:     'Care policies and procedures',
+    ...(opts.image ? { image: opts.image } : {}),
+    brand:        { '@type': 'Brand', name: SITE_NAME },
+    audience:     { '@type': 'BusinessAudience', audienceType: 'CQC registered care providers in England' },
+    additionalProperty: [
+      ...opts.laws.map(l => prop('Checked against', l)),
+      ...(opts.elements ? [prop('Required elements checked', opts.elements)] : []),
+      prop('Written for', 'Your service, not a template'),
+      prop('Reviewed', 'Read and approved by a person'),
+      prop('Updates', 'First year of updates included'),
+      prop('Format', 'Print-ready PDF on your letterhead, and in your dashboard'),
+    ],
+    offers: {
+      '@type':         'Offer',
+      url,
+      price:           (opts.pricePence / 100).toFixed(2),
+      priceCurrency:   'GBP',
+      // Written to order and delivered within 2 working days: available to buy now.
+      availability:    'https://schema.org/InStock',
+      itemCondition:   'https://schema.org/NewCondition',
+      seller:          { '@id': ORG_ID },
+      shippingDetails: {
+        '@type': 'OfferShippingDetails',
+        shippingRate: { '@type': 'MonetaryAmount', value: '0', currency: 'GBP' },
+        shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'GB' },
+        deliveryTime: {
+          '@type': 'ShippingDeliveryTime',
+          handlingTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 2, unitCode: 'DAY' },
+          transitTime:  { '@type': 'QuantitativeValue', minValue: 0, maxValue: 0, unitCode: 'DAY' },
+        },
+      },
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'GB',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 14,
+        // A digital document: nothing is sent back. The refund is in full (refunds page).
+        returnFees: 'https://schema.org/FreeReturn',
+        merchantReturnLink: `${SITE_URL}/refunds`,
+      },
+    },
+    ...(opts.review ? {
+      review: {
+        '@type': 'Review',
+        reviewBody: opts.review.body,
+        reviewRating: { '@type': 'Rating', ratingValue: opts.review.rating ?? 5, bestRating: 5 },
+        author: { '@type': 'Person', name: opts.review.author },
+      },
+    } : {}),
+  }
+}

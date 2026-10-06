@@ -237,7 +237,13 @@ export default async function TrainingModulePage(
     teaches: courseTeaches,
     languages: COURSE_LANGUAGE_CODES,
     pricePence: unitPence,
-    workloadMinutes: Math.min(120, Math.max(30, sectionsToShow.length * 10)),
+    // The certified courses have a set length (60 or 90 minutes); others are estimated from sections.
+    workloadMinutes: m.cpd_accredited && m.duration_minutes ? m.duration_minutes : Math.min(120, Math.max(30, sectionsToShow.length * 10)),
+    ...(m.cpd_accredited ? {
+      cpd: { hours: Math.round(((m.duration_minutes || 60) / 60) * 10) / 10 },
+      syllabus: sections.map((s) => s.heading),
+    } : {}),
+    image: m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined,
   })
 
   // The rebuilt design. It renders this same record and the same demo payload, so the flag

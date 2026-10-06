@@ -9,6 +9,7 @@ import { HeroGallery, Mini, type GallerySlide } from './hero-gallery'
 import { REVIEWS } from '@/lib/reviews'
 import { POLICY_CRO } from '@/lib/policy-cro'
 import { PaymentLogos } from './payment-logos'
+import { InvoiceRequest } from './shop-upsells'
 import { ExitQuestion } from './shop-questions'
 import { CaptureOverlay } from './capture-overlay'
 import { PolicyDrawer } from './policy-drawer'
@@ -380,6 +381,9 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
             <PolicyBuyPanel item={item} />
 
             <PaymentLogos />
+            {/* Care groups and councils often cannot pay by card: the same invoice and purchase order
+                request the training page and the checkout offer, with this policy filled in. */}
+            <InvoiceRequest funnel="policies" items={[`1 × ${product.title}`]} className="pcinvoice" />
 
             <ul className="mpe-trust mpe-trust-list">
               <li><Tick /><span>Written for your organisation, not a template</span></li>

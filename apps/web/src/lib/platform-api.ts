@@ -159,6 +159,7 @@ export interface TenantSummary {
   created_at:          string
   plan:                PlanLimits | null
   sub_tenant_count:    number
+  private_origin?:     string | null  // set for a private learner account created by a partner site's free-course grant, e.g. "Carer Badge"
   stats: {
     policyCount:          number
     handbookCount:        number

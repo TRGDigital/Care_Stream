@@ -144,10 +144,16 @@ export default function ClientsPage() {
                             <span className="rounded bg-neutral-light px-1.5 py-0.5 font-mono text-xs font-medium text-neutral-dark">{t.account_number}</span>
                           )}
                           <p className="text-xs text-neutral-mid">{t.slug}</p>
-                          {t.tier === 'training_only' && (
+                          {t.tier === 'training_only' && !t.private_origin && (
                             <span className="flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
                               <GraduationCap size={10} />
                               Training only
+                            </span>
+                          )}
+                          {t.private_origin && (
+                            <span title="A carer's own account, set up when they claimed free courses on a partner site. Not an employer." className="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">
+                              <GraduationCap size={10} />
+                              Private account · {t.private_origin}
                             </span>
                           )}
                           {t.tier === 'policies_only' && (
@@ -164,7 +170,7 @@ export default function ClientsPage() {
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-neutral-mid">{t.tier === 'training_only' ? 'Training module' : t.tier === 'policies_only' ? 'Policy purchase' : (t.plan?.name ?? '—')}</td>
+                      <td className="px-4 py-3 text-neutral-mid">{t.private_origin ? 'Free courses' : t.tier === 'training_only' ? 'Training module' : t.tier === 'policies_only' ? 'Policy purchase' : (t.plan?.name ?? '—')}</td>
                       <td className="px-4 py-3">
                         <StatusBadge status={t.subscription_status} />
                       </td>

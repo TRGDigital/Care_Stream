@@ -768,8 +768,9 @@ publicTrainingRouter.post('/grant', async (req: Request, res: Response) => {
     }
     let created = false
     if (!user) {
+      const tSlug = await uniqueTrainingSlug(name)
       const tenant = await (prisma as any).tenant.create({
-        data: { name, slug: await uniqueTrainingSlug(name), email_domain: `grant-${grantId}`.slice(0, 60), tier: 'training_only', subscription_status: 'active', branding_signoff: 'The CareStream Team' },
+        data: { name, slug: tSlug, email_domain: tSlug, tier: 'training_only', subscription_status: 'active', branding_signoff: 'The CareStream Team' },
       })
       const tempHash = await hashPassword(crypto.randomBytes(12).toString('base64url'))
       user = await (prisma as any).user.create({ data: { tenant_id: tenant.id, email, name, role: 'staff', email_verified: true, password_hash: tempHash } })

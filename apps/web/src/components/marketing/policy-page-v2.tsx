@@ -5,6 +5,7 @@ import { AddToBasket, AddToBasketText, BasketPill, BuyNowPolicy, SavePolicy, Sti
 import { PolicyOfferCard } from './licence-offer'
 import { PolicyBuyPanel } from './policy-buy-panel'
 import { ScrollSequence } from './scroll-sequence'
+import { HeroGallery, Mini, type GallerySlide } from './hero-gallery'
 import { REVIEWS } from '@/lib/reviews'
 import { POLICY_CRO } from '@/lib/policy-cro'
 import { PaymentLogos } from './payment-logos'
@@ -198,8 +199,10 @@ function quizFor(regs: PolicyRegulation[], count: number) {
   return out.length >= 3 ? { questions: out, count } : null
 }
 
-export function PolicyPageV2({ product, regulations, related, bundles, catalogueCount }: {
+export function PolicyPageV2({ product, regulations, related, bundles, catalogueCount, intent: intentKey }: {
   product: PolicyProduct
+  /** ?intent= on an ad's Final URL or a sitelink: the version of the top of the page it opens on. */
+  intent?: string
   regulations: PolicyRegulation[]
   related: PolicyRelated[]
   bundles: PolicyBundle[]
@@ -213,13 +216,78 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
   const hero = `/images/care-policies/${product.slug}/1.webp`
   const item = { slug: product.slug, title: product.title, price_pence: product.price_pence }
   const cro = POLICY_CRO[product.slug] ?? {}
+  const it = intentKey ? cro.intents?.[intentKey] : undefined
+  const moments = cro.moments && it?.moment != null && cro.moments[it.moment]
+    ? [cro.moments[it.moment]!, ...cro.moments.filter((_, n) => n !== it.moment)]
+    : cro.moments
   // The theme mentions a pack only on the twenty policies in the Statutory Starter Pack. Taking
   // the first bundle named the Governance & Data Pack on /caldicott, which the theme does not.
   const pack = bundles.find(b => b.key === 'statutory-starter')
   const faqs = policyFaqs(product, elements, pack, catalogueCount)
+  // A page of the real document (structure and personalisation, not the wording): shown in the
+  // hero gallery and again in "What the document actually looks like".
+  const samplePage = (
+    <div className="cvpage" aria-label="Sample page from the policy, partly redacted">
+      <div className="cvletter">
+        <b>Your service name here</b><span>Approved · Version 1.0</span>
+      </div>
+      <p className="cvsec">Section 4 · Roles and responsibilities</p>
+      <h4>Who is accountable, by name</h4>
+      <p>
+        Overall accountability for this policy rests with{' '}
+        <span className="merge">your registered manager</span>, supported by{' '}
+        <span className="merge">your nominated individual</span>. Day to day
+        responsibility sits with <span className="merge">your named lead</span>, who is
+        the first point of contact for staff at{' '}
+        <span className="merge">your service address</span>.
+      </p>
+      <div className="cvbars"><i /><i /><i /><i /><i /><i /></div>
+      <p className="cvredact">
+        <Shield /> The remaining wording is written for the organisation buying it, so it
+        is not shown here.
+      </p>
+    </div>
+  )
+  // The hero as a product gallery, like the course page: the policy, a page of it, the law it is
+  // checked against and the questions we ask. Static: nothing moves on its own.
+  const lawView = (
+    <div className="hg-pc">
+      <h3>Checked against the law, line by line</h3>
+      <p>Structured from these, then verified against all {elements} required elements before a person signs it off.</p>
+      <ul className="hg-pc-laws">{regulations.slice(0, 5).map(r => (
+        <li key={r.reference_key}><Tick /><span><b>{r.official_name}</b>{r.summary && <em>{r.summary}</em>}{r.required_elements_count > 0 && <small>{r.required_elements_count} required elements checked</small>}</span></li>
+      ))}</ul>
+    </div>
+  )
+  const questionsView = (
+    <div className="hg-pc">
+      <h3>What we ask you, so none of it is assumed</h3>
+      <ol>{(product.intake_fields ?? []).slice(0, 6).map((f, n) => <li key={f.key}><b>{n + 1}</b>{f.label}</li>)}</ol>
+      <p className="hg-pc-foot">{questions} questions in all, about three minutes. Your answers are written into the policy.</p>
+    </div>
+  )
+  const gallery: GallerySlide[] = [
+    {
+      key: 'policy', label: 'The policy', thumb: <SiteImage src={hero} alt="" />,
+      body: (
+        <>
+          <div className="mpe-shot"><SiteImage src={hero} alt={`${product.title} for care services`} priority /></div>
+          <div className="hg-badges">
+            <span><b>✓</b> Written for your service</span>
+            <span><b>✓</b> Read by a person</span>
+            <span><b>2</b> working days</span>
+          </div>
+        </>
+      ),
+    },
+    { key: 'page', label: 'A page of it', thumb: <Mini>{samplePage}</Mini>, body: samplePage },
+    ...(regulations.length ? [{ key: 'law', label: 'The law it meets', thumb: <Mini>{lawView}</Mini>, body: lawView }] : []),
+    ...(questions ? [{ key: 'questions', label: 'What we ask', thumb: <Mini>{questionsView}</Mini>, body: questionsView }] : []),
+  ]
 
   return (
     <div className="pcpage-v2">
+      {it && <meta name="fi-variant" content={intentKey} />}
       <StickyBuyBar item={item} image={hero} />
 
       {/* Above the fold, laid out like a shop product page: the policy on the left as a gallery
@@ -234,7 +302,14 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
           {/* The picture and the gallery move as one column (scroll-sequence.tsx). */}
           <div className="mpe-left">
           <div className="mpe-main">
-            <div className="mpe-shot"><SiteImage src={hero} alt={`${product.title} for care services`} priority /></div>
+            <HeroGallery slides={gallery} start={it?.slide} />
+            {/* The policy at a glance: the facts a manager checks first. */}
+            <ul className="mpe-stats">
+              <li><b>{elements}</b><span>elements checked</span></li>
+              <li><b>2 days</b><span>to deliver</span></li>
+              <li><b>{regulations.length}</b><span>{regulations.length === 1 ? 'law and standard' : 'laws and standards'}</span></li>
+              <li><b>1 year</b><span>of updates</span></li>
+            </ul>
           </div>
 
           <div className="mpe-gallery">
@@ -242,7 +317,7 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
               <div className="mpe-moments">
                 <h2>When you need this policy</h2>
                 <ul>
-                  {cro.moments.map(x => <li key={x.title}><b>{x.title}</b><span>{x.body}</span></li>)}
+                  {moments!.map((x, n) => <li key={x.title} className={it?.moment != null && n === 0 ? 'lead' : undefined}><b>{x.title}</b><span>{x.body}</span></li>)}
                 </ul>
               </div>
             ) : null}
@@ -261,17 +336,6 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
               />
             </div>
 
-            {regulations.length > 0 && (
-              <figure className="mpe-tile light wide mpe-laws">
-                <div>
-                  <b>Checked against the law, line by line</b>
-                  <span>Structured from these, then verified against all {elements} required elements before a person signs it off.</span>
-                  <ul>
-                    {regulations.slice(0, 5).map(r => <li key={r.reference_key}><Tick /> {r.official_name}</li>)}
-                  </ul>
-                </div>
-              </figure>
-            )}
 
             <div className="mpe-banner">
               <h2>Your policy, written for your service</h2>
@@ -298,9 +362,9 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
                 Trusted by UK care providers
               </p>
             </div>
-            <span className="mpe-eyebrow">Personalised · Human-reviewed · Kept updated</span>
-            <h1>A {product.title} written for your service</h1>
-            {cro.whoFor && <p className="mpe-for">{cro.whoFor}</p>}
+            {it ? <p className="mpe-intent-tag">{it.tag}</p> : <span className="mpe-eyebrow">Personalised · Human-reviewed · Kept updated</span>}
+            <h1>{it ? it.headline : `A ${product.title} written for your service`}</h1>
+            {(it?.sub ?? cro.whoFor) && <p className="mpe-for">{it?.sub ?? cro.whoFor}</p>}
             {cro.benefits && (
               <ul className="mpe-benefits">
                 {cro.benefits.map(b => <li key={b}><Tick />{b}</li>)}
@@ -505,26 +569,7 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
                 ))}
               </ol>
             </div>
-            <div className="cvpage" aria-label="Sample page from the policy, partly redacted">
-              <div className="cvletter">
-                <b>Your service name here</b><span>Approved · Version 1.0</span>
-              </div>
-              <p className="cvsec">Section 4 · Roles and responsibilities</p>
-              <h4>Who is accountable, by name</h4>
-              <p>
-                Overall accountability for this policy rests with{' '}
-                <span className="merge">your registered manager</span>, supported by{' '}
-                <span className="merge">your nominated individual</span>. Day to day
-                responsibility sits with <span className="merge">your named lead</span>, who is
-                the first point of contact for staff at{' '}
-                <span className="merge">your service address</span>.
-              </p>
-              <div className="cvbars"><i /><i /><i /><i /><i /><i /></div>
-              <p className="cvredact">
-                <Shield /> The remaining wording is written for the organisation buying it, so it
-                is not shown here.
-              </p>
-            </div>
+            {samplePage}
           </div>
         </div>
       </section>

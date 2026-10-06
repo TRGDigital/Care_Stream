@@ -716,3 +716,30 @@
 .pcpage-v2 .mpe-left > .mpe-main,.pcpage-v2 .mpe-left > .mpe-gallery{grid-area:auto}
 @media(min-width:961px){ .pcpage-v2 .mpe-left{position:sticky;align-self:start} .pcpage-v2 .mpe-gallery{position:static} }
 @media(max-width:960px){ .pcpage-v2 .mpe-in{grid-template-areas:"info" "left"} }
+/* Ad group and sitelink versions (?intent=): the label above the headline, and the moment the ad
+   promised, first and highlighted. Same as the course page. */
+.pcpage-v2 .mpe-intent-tag{display:inline-block;margin:0 0 8px;padding:4px 12px;border-radius:999px;background:#FFF1E2;color:#B4581A;font-size:.78rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.pcpage-v2 .mpe-moments li.lead{background:#FFF4E8;border-left-color:#F28C38;box-shadow:inset 0 0 0 1.5px #F5C79A}
+
+/* The policy at a glance under the gallery, as on the course page. */
+.pcpage-v2 .mpe-stats{list-style:none;margin:12px 0 0;padding:6px;display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-radius:16px;background:#1F1530}
+.pcpage-v2 .mpe-stats li{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:3px;padding:14px 8px}
+.pcpage-v2 .mpe-stats li + li{border-left:1px solid rgba(255,255,255,.14)}
+.pcpage-v2 .mpe-stats b{font-size:1.15rem;font-weight:800;color:#F28C38;line-height:1.2}
+.pcpage-v2 .mpe-stats span{font-size:.74rem;letter-spacing:.04em;text-transform:uppercase;color:rgba(246,241,251,.75)}
+@media (max-width:640px){.pcpage-v2 .mpe-stats{grid-template-columns:repeat(2,1fr)}.pcpage-v2 .mpe-stats li:nth-child(3){border-left:0}.pcpage-v2 .mpe-stats li:nth-child(n+3){border-top:1px solid rgba(255,255,255,.14)}}
+/* Gallery views: a page of the policy, the law it is checked against, the questions we ask. */
+.pcpage-v2 .hg-pc{height:100%;padding:18px 20px;background:#fff;overflow:hidden;display:flex;flex-direction:column;gap:10px}
+.pcpage-v2 .hg-pc h3{margin:0;font-size:1.05rem}
+.pcpage-v2 .hg-pc p{margin:0;font-size:.86rem;color:var(--ink-2)}
+.pcpage-v2 .hg-pc ul,.pcpage-v2 .hg-pc ol{margin:0;padding:0;list-style:none;display:grid;gap:7px}
+.pcpage-v2 .hg-pc li{display:flex;gap:8px;align-items:flex-start;font-size:.86rem;line-height:1.4}
+.pcpage-v2 .hg-pc ol li{padding:8px 10px;border-radius:10px;background:var(--ground-2,#F7F5FA)}
+.pcpage-v2 .hg-pc ol li b{color:#F28C38;min-width:18px}
+.pcpage-v2 .hg-pc .hg-pc-foot{margin-top:auto;font-size:.78rem;color:var(--muted)}
+.pcpage-v2 .hg-main .cvpage{height:100%;margin:0;border-radius:0;box-shadow:none;overflow:hidden}
+.pcpage-v2 .hg-pc li svg{width:16px;height:16px;flex:0 0 16px;margin-top:2px;color:#1F8A5B}
+.pcpage-v2 .hg-pc-laws li{padding:10px 12px;border-radius:12px;background:var(--ground-2,#F7F5FA)}
+.pcpage-v2 .hg-pc-laws li span{display:flex;flex-direction:column;gap:3px}
+.pcpage-v2 .hg-pc-laws em{font-style:normal;font-size:.8rem;color:var(--ink-2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pcpage-v2 .hg-pc-laws small{font-size:.74rem;font-weight:700;color:#1F8A5B}

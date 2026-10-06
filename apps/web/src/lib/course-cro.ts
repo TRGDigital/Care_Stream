@@ -12,6 +12,7 @@
 
 // The sitelink versions (one per sitelink in the keyword tool) sit beside the ad-group versions.
 import { CARE_CERTIFICATE_SITELINK_INTENTS } from './course-cro-sitelinks'
+import { CPD_COURSE_CRO } from './course-cro-cpd'
 
 export interface CourseMoment { title: string; body: string }
 export interface CourseResource { label: string; url: string; note: string }
@@ -36,6 +37,8 @@ export interface CourseCro {
 }
 
 export const COURSE_CRO: Record<string, CourseCro> = {
+  // The nine annual refreshers certified in October 2026.
+  ...CPD_COURSE_CRO,
   'care-certificate': {
     whoFor:
       'Perfect for new care workers, healthcare assistants and support workers starting out in health and social care, '

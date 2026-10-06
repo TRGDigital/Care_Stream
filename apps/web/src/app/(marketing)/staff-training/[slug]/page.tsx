@@ -69,7 +69,7 @@ async function getModule(slug: string): Promise<ModuleDetail | null> {
   // ?v= is only a cache key: bump it when a module's record changes in a way the page must show
   // at once (the data cache outlives deploys and holds a fetch for up to an hour). v=2: the Care
   // Certificate's switch to its CPD Certified module, 29 Sept 2026.
-  const url = `${API_URL}/public/training/standard-modules/${encodeURIComponent(slug)}?v=2`
+  const url = `${API_URL}/public/training/standard-modules/${encodeURIComponent(slug)}?v=3`
   for (let attempt = 0; attempt < 2; attempt++) {
     // An hour, not a minute: module records change rarely, and every refetch spends the shared
     // per-IP public rate limit that all server-side page renders draw on.
@@ -117,7 +117,7 @@ async function getRelatedTopics(currentSlug: string): Promise<LibraryTopic[]> {
 // Live one-lesson + one-question taster for this module (null if not yet built).
 async function getModuleDemo(slug: string): Promise<TrainingDemoData | null> {
   try {
-    const res = await fetch(`${API_URL}/public/training/standard-modules/${encodeURIComponent(slug)}/demo?v=5`, { next: { revalidate: 3600 } })
+    const res = await fetch(`${API_URL}/public/training/standard-modules/${encodeURIComponent(slug)}/demo?v=6`, { next: { revalidate: 3600 } })
     if (res.ok) return (await res.json())?.data?.demo ?? null
   } catch { /* fall through */ }
   return null

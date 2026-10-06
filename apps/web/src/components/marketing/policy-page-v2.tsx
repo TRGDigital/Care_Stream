@@ -254,7 +254,9 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
     <div className="hg-pc">
       <h3>Checked against the law, line by line</h3>
       <p>Structured from these, then verified against all {elements} required elements before a person signs it off.</p>
-      <ul>{regulations.slice(0, 6).map(r => <li key={r.reference_key}><Tick /> {r.official_name}</li>)}</ul>
+      <ul className="hg-pc-laws">{regulations.slice(0, 5).map(r => (
+        <li key={r.reference_key}><Tick /><span><b>{r.official_name}</b>{r.summary && <em>{r.summary}</em>}{r.required_elements_count > 0 && <small>{r.required_elements_count} required elements checked</small>}</span></li>
+      ))}</ul>
     </div>
   )
   const questionsView = (

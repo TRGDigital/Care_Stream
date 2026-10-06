@@ -658,6 +658,14 @@ adminRouter.get('/tenants', async (_req: Request, res: Response) => {
   const subTenantMap  = toMap(subTenants as any[], 'parent_tenant_id')
   const annualMap     = toMap(annualMonth as any[])
 
+  // Private learner accounts created by a TRG site's free-course grant (POST /public/training/grant):
+  // their licences carry `grant:<source>:<id>`, so the list can say which site they came from.
+  const GRANT_SOURCES: Record<string, string> = { carerbadge: 'Carer Badge', shiftwise: 'Carer Badge' }
+  const granted = await (prisma as any).trainingLicense.findMany({
+    where: { stripe_payment_id: { startsWith: 'grant:' } }, select: { tenant_id: true, stripe_payment_id: true }, distinct: ['tenant_id'],
+  })
+  const originMap = new Map<string, string>((granted as any[]).map(g => [g.tenant_id, GRANT_SOURCES[String(g.stripe_payment_id).split(':')[1]] ?? 'Partner site']))
+
   const withStats = tenants.map((t: any) => {
     const p = policyByTenant.get(t.id) ?? { internal: 0, handbook: 0 }
     const annualUsed  = annualMap.get(t.id) ?? 0
@@ -676,6 +684,7 @@ adminRouter.get('/tenants', async (_req: Request, res: Response) => {
         annualLicenseLimit:   annualLimit,
       },
       sub_tenant_count: subTenantMap.get(t.id) ?? 0,
+      private_origin: t.tier === 'training_only' ? (originMap.get(t.id) ?? null) : null,
     }
   })
 

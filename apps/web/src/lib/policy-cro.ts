@@ -8,8 +8,9 @@ import { GDPR_POLICY_INTENTS } from './policy-cro-gdpr'
 
 export interface PolicyMoment { title: string; body: string }
 /** A version of the top of the page for one Google Ads ad group or sitelink (?intent=<key>), so
- *  the page opens on what the ad promised. moment: the "When you need this policy" moment to lead with. */
-export interface PolicyIntent { tag: string; headline: string; sub: string; moment?: number }
+ *  the page opens on what the ad promised. moment: the "When you need this policy" moment to lead with;
+ *  slide: the gallery view it opens on. */
+export interface PolicyIntent { tag: string; headline: string; sub: string; moment?: number; slide?: 'policy' | 'page' | 'law' | 'questions' }
 /** story: the founder's "Our story" in his words for this policy page. Only shown where Len has approved it. */
 export interface PolicyCro { whoFor?: string; benefits?: [string, string]; moments?: PolicyMoment[]; story?: string; intents?: Record<string, PolicyIntent> }
 

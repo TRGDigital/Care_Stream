@@ -528,7 +528,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
             {!it?.pricingFirst && teamPricing}
 
             <ul className="mpe-trust mpe-trust-list">
-              <li><Tick />CQC-aligned, mapped to the Care Certificate framework</li>
+              <li><Tick />{m.slug === 'care-certificate' ? 'CQC-aligned, mapped to the Care Certificate framework' : 'CQC-aligned, written for UK care settings'}</li>
               <li><Tick />Completed in the hub in over 60 languages</li>
               <li><Tick />A certificate for every staff member, for your CQC evidence</li>
               <li><Tick />A wrong answer triggers a follow-up lesson, so gaps are closed</li>

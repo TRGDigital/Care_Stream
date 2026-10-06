@@ -156,7 +156,8 @@ export default async function TrainingModulePage(
   const unitPrice = (unitPence / 100).toFixed(2)
 
   const heroBullets = [
-    'CQC-aligned, mapped to the Care Certificate framework',
+    // Only the Care Certificate is mapped to the Care Certificate framework.
+    m.slug === 'care-certificate' ? 'CQC-aligned, mapped to the Care Certificate framework' : 'CQC-aligned, written for UK care settings',
     'Completed in the hub in over 60 languages',
     'A certificate for every staff member, for your CQC evidence',
     'A wrong answer triggers a follow-up lesson, so gaps are closed',

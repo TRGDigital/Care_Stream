@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PolicyPageV2, policyFaqs } from '@/components/marketing/policy-page-v2'
-import { faqPageSchema } from '@/lib/schema'
+import { faqPageSchema, policyProductSchema, SITE_URL } from '@/lib/schema'
+import { REVIEWS } from '@/lib/reviews'
 import { pageMetadata } from '@/lib/page-meta'
 import {
   ShieldCheck, CheckCircle2, FileText, Scale, Star,
@@ -123,12 +124,19 @@ export default async function PolicyProductPage(
       bundlesV2.find(b => b.key === 'statutory-starter'), count)
     return (
       <>
-        <JsonLd data={{
-          '@context': 'https://schema.org', '@type': 'Product',
-          name: data.product.title,
+        <JsonLd data={policyProductSchema({
+          slug: data.product.slug,
+          title: data.product.title,
           description: data.product.description,
-          offers: { '@type': 'Offer', priceCurrency: 'GBP', price: (data.product.price_pence / 100).toFixed(2), availability: 'https://schema.org/PreOrder' },
-        }} />
+          pricePence: data.product.price_pence,
+          image: `${SITE_URL}/images/care-policies/${data.product.slug}/1.webp`,
+          laws: regs.map(r => r.official_name),
+          elements: regs.reduce((n, r) => n + (r.required_elements_count || 0), 0),
+          // Only a review the page shows about this policy (lib/reviews.ts policies[slug]).
+          review: REVIEWS[0]?.policies?.[data.product.slug]
+            ? { body: REVIEWS[0].policies[data.product.slug]!, author: REVIEWS[0].name, setting: REVIEWS[0].setting }
+            : undefined,
+        })} />
         <JsonLd data={faqPageSchema(faqsV2)} />
         <PolicyPageV2
           product={data.product}

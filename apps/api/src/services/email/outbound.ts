@@ -1951,3 +1951,52 @@ export async function sendReviewRequestEmail(opts: {
   `)
   await sgMail.send({ to: opts.to, from, replyTo: PURCHASE_NOTIFY_TO(), subject: `${opts.subjectPrefix ?? ''}How is ${opts.productName} going for your team?`.slice(0, 150), html })
 }
+
+// ─── Daily Google Ads search term review ────────────────────────────────────────
+export type DigestTerm = { term: string; why: string; groups: string[]; clicks: number; impressions: number; cost_pence: number; conversions: number }
+export type SearchTermsDigest = {
+  from: string; to: string; link: string
+  accounts: { site: string; name: string; latest_day: string | null; negatives: DigestTerm[]; keywords: DigestTerm[]; check: DigestTerm[] }[]
+}
+
+export async function sendSearchTermsDigestEmail(d: SearchTermsDigest): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set, skipping search terms digest'); return }
+  const to = process.env.SEARCH_TERMS_DIGEST_EMAIL ?? 'lenny@trgdigital.co.uk'
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc = (s: any) => String(s ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
+  const day = (iso: string | null) => iso ? new Date(`${iso}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : 'no data yet'
+  const money = (p: number) => `£${(p / 100).toFixed(2)}`
+  const list = (title: string, colour: string, howTo: string, terms: DigestTerm[], match: (t: string) => string) => !terms.length ? '' : `
+    <p style="margin:14px 0 4px;font-size:13px;font-weight:700;color:${colour};text-transform:uppercase;letter-spacing:.04em">${title} (${terms.length})</p>
+    <p style="margin:0 0 6px;font-size:12px;color:#6b7280">${howTo}</p>
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      ${terms.map(t => `<tr>
+        <td style="padding:6px 8px;border-top:1px solid #f0f0f0"><strong style="font-family:Menlo,Consolas,monospace;color:${NEUTRAL_DARK}">${esc(match(t.term))}</strong>
+          <div style="color:#6b7280;font-size:12px">${esc(t.why)}${t.groups.length ? ` · ${esc(t.groups.join(', '))}` : ''}</div></td>
+        <td style="padding:6px 8px;border-top:1px solid #f0f0f0;white-space:nowrap;color:#374151;font-size:12px;text-align:right">${t.clicks} clicks · ${money(t.cost_pence)}</td>
+      </tr>`).join('')}
+    </table>`
+  const total = d.accounts.reduce((n, a) => n + a.negatives.length + a.keywords.length + a.check.length, 0)
+  const sections = d.accounts.map(a => `
+    <div style="border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin:0 0 16px">
+      <p style="margin:0 0 2px;font-size:16px;font-weight:700;color:${NEUTRAL_DARK}">${esc(a.name)}</p>
+      <p style="margin:0;font-size:12px;color:#6b7280">Search terms up to ${day(a.latest_day)}</p>
+      ${!a.negatives.length && !a.keywords.length && !a.check.length ? '<p style="margin:10px 0 0;font-size:13px;color:#15803d">Nothing to action today.</p>' : ''}
+      ${list('Add as negative keywords', '#b91c1c', 'Add each to the campaign&apos;s negative keywords (shown in phrase match).', a.negatives, t => `"${t}"`)}
+      ${list('Add as keywords', '#15803d', 'These converted and are not keywords yet: add them to the ad group shown.', a.keywords, t => `[${t}]`)}
+      ${list('Check', '#b45309', 'Money spent with no conversion yet: add as a negative only if it is not a buyer search.', a.check, t => t)}
+    </div>`).join('')
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 6px">Your daily search terms check</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 16px">
+      ${total ? `${total} search ${total === 1 ? 'term needs' : 'terms need'} a decision across your Google Ads accounts (last 14 days).` : 'Nothing needs a decision today across your Google Ads accounts.'}
+      When you have added one in Google Ads, press <strong>Actioned</strong> next to it in
+      <a href="${esc(d.link)}" style="color:#7B3FBF">Funnel Insights › Ads › Search terms</a> and it will drop off this email.
+    </p>
+    ${sections}
+    ${emailFooter()}
+  `)
+  const subject = total ? `Search terms to check: ${d.accounts.map(a => `${a.name} ${a.negatives.length} negatives, ${a.keywords.length} keywords`).join(' · ')}` : 'Search terms: nothing to action today'
+  await sgMail.send({ to, from, subject: subject.slice(0, 200), html })
+}

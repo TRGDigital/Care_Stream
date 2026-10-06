@@ -26,6 +26,7 @@ import { runKnowledgeGapDailyJob } from '../services/knowledge-gaps/digest'
 import { sendDailyAuditReminders } from '../services/audits/reminders'
 import { sendLicenceRenewalReminders } from '../services/training/licence-renewals'
 import { runOfferChanges } from '../services/offers'
+import { runSearchTermsDigest } from '../services/ads/search-terms-digest'
 import { runBasketRecovery, sendBasketRecoveryPreview } from '../services/shop/basket-recovery'
 import { runReviewRequests, sendReviewRequestPreview } from '../services/shop/review-requests'
 import { sendCapturePreview } from '../services/shop/email-capture'
@@ -200,6 +201,11 @@ cronRouter.get('/indexing-report', (req, res) =>
 // every page it changed on. Offers turn over at midnight UK time; the 00:05 run catches it.
 cronRouter.get('/offer-changes', (req, res) =>
   job('offer-changes', req, res, () => runOfferChanges()))
+
+// Daily 08:00 UK: Len's Google Ads search term review (negatives, keywords to add, terms to check)
+// for CareStream and TRG Digital, from Funnel Insights. pg_cron job cs-search-terms-digest.
+cronRouter.get('/search-terms-digest', (req, res) =>
+  job('search-terms-digest', req, res, () => runSearchTermsDigest()))
 
 // Basket recovery emails (services/shop/basket-recovery.ts). Sends only with BASKET_RECOVERY_LIVE=1.
 cronRouter.get('/basket-recovery', (req, res) =>

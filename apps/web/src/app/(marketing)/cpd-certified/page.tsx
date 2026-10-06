@@ -5,33 +5,64 @@ import { ShopInfoPage } from '@/components/marketing/shop-info'
 
 // What "CPD Certified" means on our training, and the proof: the listing on The CPD Certification
 // Service's register. The CPD Certified mark is only used for certified training (lib/cpd.ts); the
-// service's own logo is never used. Add a course here when it is certified.
+// service's own logo is never used.
+//
+// The list builds itself from the training catalogue: any course whose module is flagged
+// cpd_accredited appears here with its CPD hours. Add its title and the month it was certified
+// to CERTIFIED_INFO when a course is certified (docs/cpd-certification-checklist.md).
 
-export const generateMetadata = () => pageMetadata('/cpd-certified', {
-  title: 'CPD Certified Care Staff Training | CareStreamAI',
-  description: 'Ten CareStream care training courses are certified by The CPD Certification Service, including the Care Certificate, with the CPD mark on every certificate and a listing you can check yourself.',
-})
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+export const revalidate = 900
 
-const CERTIFIED = [
-  { slug: 'care-certificate', title: 'Care Certificate', hours: '1.5 CPD hours', since: 'September 2026' },
-  { slug: 'coshh-control-of-substances-hazardous-to-health', title: 'COSHH: Safe Use of Hazardous Substances', hours: '1 CPD hour', since: 'October 2026' },
-  { slug: 'end-of-life-palliative-care', title: 'End of Life and Palliative Care', hours: '1 CPD hour', since: 'October 2026' },
-  { slug: 'food-hygiene', title: 'Food Hygiene Annual Refresher', hours: '1 CPD hour', since: 'October 2026' },
-  { slug: 'gdpr-data-protection', title: 'GDPR and Data Protection Annual Refresher', hours: '1 CPD hour', since: 'October 2026' },
-  { slug: 'general-health-and-safety-awareness', title: 'General Health and Safety Awareness: Annual Refresher', hours: '1 CPD hour', since: 'October 2026' },
-  { slug: 'infection-prevention-and-control', title: 'Infection Prevention and Control Annual Refresher', hours: '1 CPD hour', since: 'October 2026' },
-  { slug: 'medication-administration-and-competency', title: 'Medication Administration: Annual Refresher', hours: '1 CPD hour', since: 'October 2026' },
-  { slug: 'mental-health-awareness', title: 'Mental Health Awareness', hours: '1 CPD hour', since: 'October 2026' },
-  { slug: 'moving-and-handling-of-people', title: 'Moving and Handling of People: Annual Refresher', hours: '1 CPD hour', since: 'October 2026' },
-]
+// The certified course's own title and the month it was certified. A newly certified course still
+// appears without an entry here (catalogue title, "Recently"); add one when you can.
+const CERTIFIED_INFO: Record<string, { title: string; since: string }> = {
+  'care-certificate': { title: 'Care Certificate', since: 'September 2026' },
+  'coshh-control-of-substances-hazardous-to-health': { title: 'COSHH: Safe Use of Hazardous Substances', since: 'October 2026' },
+  'end-of-life-palliative-care': { title: 'End of Life and Palliative Care', since: 'October 2026' },
+  'food-hygiene': { title: 'Food Hygiene Annual Refresher', since: 'October 2026' },
+  'gdpr-data-protection': { title: 'GDPR and Data Protection Annual Refresher', since: 'October 2026' },
+  'general-health-and-safety-awareness': { title: 'General Health and Safety Awareness: Annual Refresher', since: 'October 2026' },
+  'infection-prevention-and-control': { title: 'Infection Prevention and Control Annual Refresher', since: 'October 2026' },
+  'medication-administration-and-competency': { title: 'Medication Administration: Annual Refresher', since: 'October 2026' },
+  'mental-health-awareness': { title: 'Mental Health Awareness', since: 'October 2026' },
+  'moving-and-handling-of-people': { title: 'Moving and Handling of People: Annual Refresher', since: 'October 2026' },
+}
+const WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve']
+const countWord = (n: number) => WORDS[n] ?? String(n)
 
-export default function CpdCertifiedPage() {
+type Certified = { slug: string; title: string; hours: string; since: string }
+
+async function getCertified(): Promise<Certified[]> {
+  try {
+    const res = await fetch(`${API_URL}/public/training/standard-modules`, { next: { revalidate: 900 } })
+    if (!res.ok) return []
+    const topics = ((await res.json())?.data?.topics ?? []) as Array<{ slug: string; title: string; cpd_accredited?: boolean; duration_minutes?: number | null }>
+    return topics.filter(t => t.cpd_accredited).map(t => {
+      const h = Math.round(((t.duration_minutes || 60) / 60) * 10) / 10
+      return { slug: t.slug, title: CERTIFIED_INFO[t.slug]?.title ?? t.title, hours: `${h} ${h === 1 ? 'CPD hour' : 'CPD hours'}`, since: CERTIFIED_INFO[t.slug]?.since ?? 'Recently' }
+    }).sort((a, b) => Number(b.slug === 'care-certificate') - Number(a.slug === 'care-certificate') || a.title.localeCompare(b.title))
+  } catch {
+    return []
+  }
+}
+
+export async function generateMetadata() {
+  const n = (await getCertified()).length
+  return pageMetadata('/cpd-certified', {
+    title: 'CPD Certified Care Staff Training | CareStreamAI',
+    description: `${countWord(n)} CareStream care training courses are certified by The CPD Certification Service, including the Care Certificate, with the CPD mark on every certificate and a listing you can check yourself.`,
+  })
+}
+
+export default async function CpdCertifiedPage() {
+  const CERTIFIED = await getCertified()
   return (
     <ShopInfoPage
       path="/cpd-certified"
       eyebrow="CPD Certified"
       title="CPD Certified care staff training"
-      lead="Ten of our courses are independently reviewed and certified by The CPD Certification Service, so you know they meet recognised standards for continuing professional development."
+      lead={`${countWord(CERTIFIED.length)} of our courses are independently reviewed and certified by The CPD Certification Service, so you know they meet recognised standards for continuing professional development.`}
     >
       <div className="si-card si-cpd">
         {/* eslint-disable-next-line @next/next/no-img-element */}

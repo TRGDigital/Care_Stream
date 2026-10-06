@@ -886,12 +886,25 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
       {related.length > 0 && (
         <section className="msec mlast">
           <div className="mwrap msec-in">
-            <span className="mlabel">Related training modules</span>
-            <h2>More training your team may need</h2>
-            <p>
-              More mandatory and role-specific training CareStream delivers to your team, in the
-              hub, in any language. Add any of these to your basket.
-            </p>
+            {related.every(r => r.cpd_accredited) ? (
+              <>
+                <span className="mlabel">Related CPD Certified training</span>
+                <h2>More CPD Certified training your team may need</h2>
+                <p>
+                  Every course below is certified by The CPD Certification Service, delivered in the
+                  hub, in any language. Add any of these to your basket.
+                </p>
+              </>
+            ) : (
+              <>
+                <span className="mlabel">Related training modules</span>
+                <h2>More training your team may need</h2>
+                <p>
+                  More mandatory and role-specific training CareStream delivers to your team, in the
+                  hub, in any language. Add any of these to your basket.
+                </p>
+              </>
+            )}
             {/* The library's own theme card, so a related module reads, prices and adds to the
                 basket exactly as it does on /staff-training. Built from the API: the theme's
                 cards ship an unsubstituted image token and repeat one module on every card,

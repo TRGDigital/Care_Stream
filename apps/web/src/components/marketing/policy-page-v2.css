@@ -743,3 +743,4 @@
 .pcpage-v2 .hg-pc-laws li span{display:flex;flex-direction:column;gap:3px}
 .pcpage-v2 .hg-pc-laws em{font-style:normal;font-size:.8rem;color:var(--ink-2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .pcpage-v2 .hg-pc-laws small{font-size:.74rem;font-weight:700;color:#1F8A5B}
+.pcpage-v2 .pcinvoice{margin-top:12px;width:100%}

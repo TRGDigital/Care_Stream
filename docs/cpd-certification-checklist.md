@@ -20,7 +20,7 @@ and getModuleDemo in `staff-training/[slug]/page.tsx`.
 
 ## Still to do by hand
 1. Back up first (`cpd_switch_backup`), then set the flag and shop_module_id in the database.
-2. Add the month certified to `CERTIFIED_SINCE` in `app/(marketing)/cpd-certified/page.tsx`.
+2. Add its title and the month certified to `CERTIFIED_INFO` in `app/(marketing)/cpd-certified/page.tsx`.
 3. Replace the demo lesson translations (`demo_translations`, pol and hin) because the demo now
    comes from the certified module.
 4. Write the course page copy in `lib/course-cro-cpd.ts` (who it is for, benefits, moments,

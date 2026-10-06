@@ -415,7 +415,8 @@ export function courseSchema(opts: {
         }
       : 'Certificate of completion',
     ...(opts.cpd ? {
-      numberOfCredits:  { '@type': 'StructuredValue', value: opts.cpd.hours, name: opts.cpd.hours === 1 ? 'CPD hour' : 'CPD hours' },
+      // schema.org's StructuredValue has no 'value' property, so the CPD hours are its name.
+      numberOfCredits:  { '@type': 'StructuredValue', name: `${opts.cpd.hours} ${opts.cpd.hours === 1 ? 'CPD hour' : 'CPD hours'}` },
     } : {}),
     coursePrerequisites:          'None. Open to all care staff.',
     isAccessibleForFree:          false,
@@ -437,7 +438,8 @@ export function courseSchema(opts: {
       '@type':         'CourseInstance',
       courseMode:      'online',
       courseWorkload:  `PT${minutes}M`,
-      instructor:      { '@type': 'Organization', name: SITE_NAME, '@id': ORG_ID },
+      // No 'instructor': schema.org only accepts a Person there, and the course is self-paced
+      // online with no named tutor. The provider already names CareStream.
     },
   }
 }

@@ -724,7 +724,8 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
 // Only courses whose shop module is CPD certified can be granted. Each course becomes a £0
 // licence tagged `grant:<source>:<grant_id>` (so grants never mix with Stripe sales and a
 // repeat call is a no-op), allocated straight to the person, with an enrolment so they can
-// start at once. A new person gets their own training-only tenant and a staff sign-in.
+// start at once. Courses only ever go into an individual account (see below), never an
+// employer's; a new person gets their own training-only tenant and a staff sign-in.
 const GRANT_SECRET = process.env.TRAINING_GRANT_SECRET || ''
 publicTrainingRouter.post('/grant', async (req: Request, res: Response) => {
   try {
@@ -754,9 +755,17 @@ publicTrainingRouter.post('/grant', async (req: Request, res: Response) => {
       courses.push({ slug, topic, moduleId: mod.id })
     }
 
-    // The person: an existing CareStream account keeps its tenant; otherwise a new
-    // training-only tenant with them as a staff learner (they train in the staff hub).
+    // The person needs an INDIVIDUAL account: a training-only tenant that is theirs alone. Free
+    // courses never go into an employer's account (the employer would see the licence, and the
+    // course is the carer's, not the employer's). Emails are unique, so if this one already belongs
+    // to an employer's account we refuse with EMPLOYER_ACCOUNT and the site asks the carer for a
+    // personal email address instead.
     let user = await (prisma as any).user.findUnique({ where: { email }, select: { id: true, tenant_id: true, name: true } })
+    if (user) {
+      const tenant = await (prisma as any).tenant.findUnique({ where: { id: user.tenant_id }, select: { tier: true } })
+      const others = await (prisma as any).user.count({ where: { tenant_id: user.tenant_id, id: { not: user.id } } })
+      if (tenant?.tier !== 'training_only' || others > 0) { res.status(409).json({ error: 'EMPLOYER_ACCOUNT' }); return }
+    }
     let created = false
     if (!user) {
       const tenant = await (prisma as any).tenant.create({

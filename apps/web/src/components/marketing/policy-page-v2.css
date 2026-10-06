@@ -738,3 +738,4 @@
 .pcpage-v2 .hg-pc ol li b{color:#F28C38;min-width:18px}
 .pcpage-v2 .hg-pc .hg-pc-foot{margin-top:auto;font-size:.78rem;color:var(--muted)}
 .pcpage-v2 .hg-main .cvpage{height:100%;margin:0;border-radius:0;box-shadow:none;overflow:hidden}
+.pcpage-v2 .hg-pc li svg{width:16px;height:16px;flex:0 0 16px;margin-top:2px;color:#1F8A5B}

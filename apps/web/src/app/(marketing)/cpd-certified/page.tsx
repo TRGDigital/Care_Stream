@@ -9,11 +9,20 @@ import { ShopInfoPage } from '@/components/marketing/shop-info'
 
 export const generateMetadata = () => pageMetadata('/cpd-certified', {
   title: 'CPD Certified Care Staff Training | CareStreamAI',
-  description: 'Our Care Certificate training is certified by The CPD Certification Service: 1.5 CPD hours, the CPD mark on every certificate, and a listing you can check yourself.',
+  description: 'Ten CareStream care training courses are certified by The CPD Certification Service, including the Care Certificate, with the CPD mark on every certificate and a listing you can check yourself.',
 })
 
 const CERTIFIED = [
   { slug: 'care-certificate', title: 'Care Certificate', hours: '1.5 CPD hours', since: 'September 2026' },
+  { slug: 'coshh-control-of-substances-hazardous-to-health', title: 'COSHH: Safe Use of Hazardous Substances', hours: '1 CPD hour', since: 'October 2026' },
+  { slug: 'end-of-life-palliative-care', title: 'End of Life and Palliative Care', hours: '1 CPD hour', since: 'October 2026' },
+  { slug: 'food-hygiene', title: 'Food Hygiene Annual Refresher', hours: '1 CPD hour', since: 'October 2026' },
+  { slug: 'gdpr-data-protection', title: 'GDPR and Data Protection Annual Refresher', hours: '1 CPD hour', since: 'October 2026' },
+  { slug: 'general-health-and-safety-awareness', title: 'General Health and Safety Awareness: Annual Refresher', hours: '1 CPD hour', since: 'October 2026' },
+  { slug: 'infection-prevention-and-control', title: 'Infection Prevention and Control Annual Refresher', hours: '1 CPD hour', since: 'October 2026' },
+  { slug: 'medication-administration-and-competency', title: 'Medication Administration: Annual Refresher', hours: '1 CPD hour', since: 'October 2026' },
+  { slug: 'mental-health-awareness', title: 'Mental Health Awareness', hours: '1 CPD hour', since: 'October 2026' },
+  { slug: 'moving-and-handling-of-people', title: 'Moving and Handling of People: Annual Refresher', hours: '1 CPD hour', since: 'October 2026' },
 ]
 
 export default function CpdCertifiedPage() {
@@ -22,7 +31,7 @@ export default function CpdCertifiedPage() {
       path="/cpd-certified"
       eyebrow="CPD Certified"
       title="CPD Certified care staff training"
-      lead="Our training is independently reviewed by The CPD Certification Service, so you know it meets recognised standards for continuing professional development."
+      lead="Ten of our courses are independently reviewed and certified by The CPD Certification Service, so you know they meet recognised standards for continuing professional development."
     >
       <div className="si-card si-cpd">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -42,7 +51,7 @@ export default function CpdCertifiedPage() {
           ))}
         </tbody>
       </table>
-      <p className="si-note">More of our courses are with The CPD Certification Service for review. Each is added here once it is certified.</p>
+      <p className="si-note">Each course is added here once The CPD Certification Service has certified it.</p>
 
       <h2>What it means for your staff</h2>
       <ul className="si-ticks">

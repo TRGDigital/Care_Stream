@@ -134,7 +134,7 @@ export default async function GoLandingPage({
   const headline = (hParam ? hParam.slice(0, 90) : '') || `${m.title} training that gets your team CQC-ready`
 
   const bullets = [
-    'CQC-aligned, mapped to the Care Certificate framework',
+    slug === 'care-certificate' ? 'CQC-aligned, mapped to the Care Certificate framework' : 'CQC-aligned, written for UK care settings',
     'Ready made courses built for real learning, not box ticking',
     'Completed in the hub in over 60 languages',
     'A certificate for every staff member, for your CQC evidence',

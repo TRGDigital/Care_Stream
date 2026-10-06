@@ -33,7 +33,6 @@ export function organizationSchema() {
     logo:         `${SITE_URL}/logo-color.png`,
     email:        'hello@carestreamai.com',
     description:  'AI-powered policy access and compliance platform for UK care providers: instant, multilingual access to your own policies and training, in the hub or by email.',
-    sameAs:       ['https://www.linkedin.com/company/carestreamai/'],
     address: {
       '@type':         'PostalAddress',
       streetAddress:   'Suite Ra01, 195-197 Wood Street',
@@ -42,11 +41,17 @@ export function organizationSchema() {
       postalCode:      'E17 3NU',
       addressCountry:  'GB',
     },
-    identifier: {
-      '@type':      'PropertyValue',
-      propertyID:   'Companies House',
-      value:        '11731704',
+    identifier: [
+      { '@type': 'PropertyValue', propertyID: 'Companies House', value: '11731704' },
+      // CPD provider membership (https://www.cpduk.co.uk/providers/carestream).
+      { '@type': 'PropertyValue', propertyID: 'CPD Provider No.', value: '50224' },
+    ],
+    memberOf: {
+      '@type':  'Organization',
+      name:     'The CPD Certification Service',
+      url:      'https://www.cpduk.co.uk/',
     },
+    sameAs:       ['https://www.linkedin.com/company/carestreamai/', 'https://www.cpduk.co.uk/providers/carestream'],
     contactPoint: {
       '@type':       'ContactPoint',
       contactType:   'customer support',
@@ -381,9 +386,16 @@ export function courseSchema(opts: {
   languages: string[]   // BCP-47 codes
   pricePence: number
   workloadMinutes?: number
+  /** Set for courses certified by The CPD Certification Service: the certificate is recognised
+   *  by them and worth this many CPD hours. */
+  cpd?: { hours: number }
+  /** The course's lessons, in order (Google's Course "syllabusSections"). */
+  syllabus?: string[]
+  image?: string
 }) {
   const price = (opts.pricePence / 100).toFixed(2)
   const minutes = Math.max(15, Math.round(opts.workloadMinutes ?? 60))
+  const CPD_SERVICE = { '@type': 'Organization', name: 'The CPD Certification Service', url: 'https://www.cpduk.co.uk/' }
   return {
     '@context':                   'https://schema.org',
     '@type':                      'Course',
@@ -392,7 +404,24 @@ export function courseSchema(opts: {
     description:                  opts.description,
     url:                          `${SITE_URL}${opts.path}`,
     provider:                     { '@type': 'Organization', name: SITE_NAME, url: SITE_URL, '@id': ORG_ID },
-    educationalCredentialAwarded: 'Certificate of completion',
+    ...(opts.image ? { image: opts.image } : {}),
+    educationalCredentialAwarded: opts.cpd
+      ? {
+          '@type':            'EducationalOccupationalCredential',
+          name:               'CPD Certified Course certificate',
+          credentialCategory: 'Certificate',
+          description:        'A named, dated certificate with the CPD mark for each learner who passes the knowledge assessment. It evidences completion of CPD Certified training; it is not a qualification.',
+          recognizedBy:       CPD_SERVICE,
+        }
+      : 'Certificate of completion',
+    ...(opts.cpd ? {
+      numberOfCredits:  { '@type': 'StructuredValue', value: opts.cpd.hours, name: opts.cpd.hours === 1 ? 'CPD hour' : 'CPD hours' },
+    } : {}),
+    coursePrerequisites:          'None. Open to all care staff.',
+    isAccessibleForFree:          false,
+    ...(opts.syllabus?.length ? {
+      syllabusSections: opts.syllabus.map((name, i) => ({ '@type': 'Syllabus', name, position: i + 1 })),
+    } : {}),
     ...(opts.teaches.length ? { teaches: opts.teaches } : {}),
     inLanguage:                   opts.languages,
     audience:                     { '@type': 'EducationalAudience', educationalRole: 'UK care staff' },

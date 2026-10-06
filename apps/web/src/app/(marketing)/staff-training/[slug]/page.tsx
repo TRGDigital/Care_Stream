@@ -103,6 +103,14 @@ async function getRelatedTopics(currentSlug: string): Promise<LibraryTopic[]> {
     const res = await fetch(`${API_URL}/public/training/standard-modules`, { next: { revalidate: 900 } })
     if (!res.ok) return []
     const topics = ((await res.json())?.data?.topics ?? []) as LibraryTopic[]
+    // On a CPD Certified course, the related modules are the other CPD Certified courses (same
+    // subject group first), so a buyer can see everything else that carries the CPD mark.
+    const current = topics.find((t) => t.slug === currentSlug)
+    if (current?.cpd_accredited) {
+      return topics
+        .filter((t) => t.cpd_accredited && t.slug !== currentSlug)
+        .sort((a, b) => Number(b.group_key === current.group_key) - Number(a.group_key === current.group_key) || a.title.localeCompare(b.title))
+    }
     const links = topics.map((t) => ({ slug: t.slug, title: t.title, group_key: t.group_key }))
     const bySlug = new Map(topics.map((t) => [t.slug, t]))
     return relatedModules(links, currentSlug, { sameGroup: 3, windowCount: 6 })

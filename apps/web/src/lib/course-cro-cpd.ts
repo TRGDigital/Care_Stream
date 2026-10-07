@@ -30,6 +30,21 @@ export const CPD_COURSE_CRO: Record<string, CourseCro> = {
       SFC_GUIDE,
       { label: 'Food Standards Agency: online food safety training', url: 'https://www.food.gov.uk/business-guidance/online-food-safety-training', note: 'The Food Standards Agency’s own free courses, including allergen training.' },
     ],
+    // Ad group and sitelink versions (?intent=<key>), from cpd-keyword-tool scripts/food_hygiene_plan.py.
+    // The campaign bids on generic food hygiene searches, so every version says plainly it is for care.
+    intents: {
+      'care-homes': { tag: "For care homes", headline: "Food hygiene training for care home staff", sub: "Short, scenario based lessons for carers who prepare, handle or serve food, with a CPD Certified certificate for each one.", slide: 'dashboard', moment: 0 },
+      'home-care': { tag: "For home care", headline: "Food hygiene training for home carers", sub: "For carers who prepare meals in people’s homes: storage, cooking, reheating and cross contamination, learned on a phone between visits.", slide: 'course', moment: 0 },
+      'price': { tag: "Team pricing", headline: "Food hygiene training from {from} per member of staff", sub: "One licence per learner, up to 40% off for larger teams, applied automatically. No subscription.", slide: 'dashboard', pricingFirst: true },
+      'quote': { tag: "Several homes", headline: "Food hygiene training for a large team or several homes", sub: "Ask for a quote, pay by invoice if you prefer, and see who has finished in every home from one dashboard.", slide: 'dashboard', pricingFirst: true },
+      'refresher': { tag: "Annual refresher", headline: "Your care team’s annual food hygiene refresher, online", sub: "Renew everyone’s food hygiene training in one go, with a dated certificate for each learner.", slide: 'dashboard', moment: 1 },
+      'certificate': { tag: "Your certificate", headline: "A CPD Certified food hygiene certificate for every carer", sub: "Named, dated and downloadable, ready for environmental health or CQC. Built for care settings, not catering.", slide: 'certificate', moment: 3 },
+      'online': { tag: "Online course", headline: "Online food hygiene training built for care settings", sub: "Short lessons carers can take on a phone between shifts, covering storage, cross contamination and allergens.", slide: 'course', moment: 0 },
+      'cpd': { tag: "CPD Certified", headline: "CPD Certified food hygiene training for care staff", sub: "Certified by The CPD Certification Service, with the CPD mark on every learner’s certificate.", slide: 'certificate' },
+      'languages': { tag: "60+ languages", headline: "Food hygiene training in your staff’s own language", sub: "Every lesson in over 60 languages, including Hindi, Polish and Romanian, so carers understand it, not just pass it.", slide: 'language', moment: 0, lang: 'hin' },
+      'allergens': { tag: "Allergens and special diets", headline: "Food hygiene training that covers allergens and texture modified food", sub: "A whole lesson on allergens, special diets and texture modified food, for the people you care for.", slide: 'course', moment: 2 },
+      'inspection': { tag: "Inspection ready", headline: "Food hygiene evidence for environmental health and CQC", sub: "Every learner gets a dated, CPD Certified certificate, and your dashboard shows who is up to date.", slide: 'dashboard', moment: 3 },
+    },
   },
   // Lessons: what COSHH is, how substances cause harm, pictograms labels and safety data sheets,
   // COSHH assessments and control, using and storing safely, PPE and skin care, body fluids water

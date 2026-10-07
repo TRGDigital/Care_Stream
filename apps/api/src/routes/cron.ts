@@ -27,6 +27,7 @@ import { sendDailyAuditReminders } from '../services/audits/reminders'
 import { sendLicenceRenewalReminders } from '../services/training/licence-renewals'
 import { runOfferChanges } from '../services/offers'
 import { runSearchTermsDigest } from '../services/ads/search-terms-digest'
+import { runConversionMilestones } from '../services/ads/conversion-milestones'
 import { runBasketRecovery, sendBasketRecoveryPreview } from '../services/shop/basket-recovery'
 import { runReviewRequests, sendReviewRequestPreview } from '../services/shop/review-requests'
 import { sendCapturePreview } from '../services/shop/email-capture'
@@ -206,6 +207,11 @@ cronRouter.get('/offer-changes', (req, res) =>
 // for CareStream and TRG Digital, from Funnel Insights. pg_cron job cs-search-terms-digest.
 cronRouter.get('/search-terms-digest', (req, res) =>
   job('search-terms-digest', req, res, () => runSearchTermsDigest()))
+
+// Bid strategy milestones (services/ads/conversion-milestones.ts): emails Len when a Google Ads
+// campaign reaches 30 or 50 confirmed sales or leads in 30 days. pg_cron job cs-conversion-milestones.
+cronRouter.get('/conversion-milestones', (req, res) =>
+  job('conversion-milestones', req, res, () => runConversionMilestones()))
 
 // Basket recovery emails (services/shop/basket-recovery.ts). Sends only with BASKET_RECOVERY_LIVE=1.
 cronRouter.get('/basket-recovery', (req, res) =>

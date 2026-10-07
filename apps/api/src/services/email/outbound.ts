@@ -2000,3 +2000,39 @@ export async function sendSearchTermsDigestEmail(d: SearchTermsDigest): Promise<
   const subject = total ? `Search terms to check: ${d.accounts.map(a => `${a.name} ${a.negatives.length} negatives, ${a.keywords.length} keywords`).join(' · ')}` : 'Search terms: nothing to action today'
   await sgMail.send({ to, from, subject: subject.slice(0, 200), html })
 }
+
+// ─── Bid strategy milestone: a Google Ads campaign reached 30 or 50 confirmed sales or leads in 30 days ───
+export type ConversionMilestone = {
+  site: string; account: string; campaign_id: string; campaign: string; threshold: number
+  confirmed: number; google_conv: number; kind: string; advice: string
+}
+
+export async function sendConversionMilestoneEmail(link: string, due: ConversionMilestone[]): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) throw new Error('SENDGRID_API_KEY not set')
+  const to = process.env.CONVERSION_MILESTONE_EMAIL ?? process.env.SEARCH_TERMS_DIGEST_EMAIL ?? 'lenny@trgdigital.co.uk'
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc = (s: any) => String(s ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
+  const rows = due.map(m => `
+    <div style="border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin:0 0 12px">
+      <p style="margin:0 0 2px;font-size:12px;color:#6b7280">${esc(m.account)}</p>
+      <p style="margin:0 0 6px;font-size:16px;font-weight:700;color:${NEUTRAL_DARK}">${esc(m.campaign)}</p>
+      <p style="margin:0 0 8px;font-size:14px;color:#374151"><strong>${m.confirmed} confirmed ${esc(m.kind)}</strong> in the last 30 days (milestone ${m.threshold}). Google Ads counted ${m.google_conv}.</p>
+      <p style="margin:0;font-size:14px;color:#15803d;font-weight:600">${esc(m.advice)}</p>
+    </div>`).join('')
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 6px">Time to change a bid strategy</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 16px">
+      ${due.length === 1 ? 'A Google Ads campaign has' : `${due.length} Google Ads campaigns have`} enough confirmed sales or leads for smart bidding.
+      Change it in Google Ads › Campaign › Settings › Bidding. If Google&apos;s own count is much lower, check the campaign&apos;s primary conversion actions first.
+      Progress for every campaign is in <a href="${esc(link)}" style="color:#7B3FBF">Funnel Insights › Ads</a>.
+    </p>
+    ${rows}
+    ${emailFooter()}
+  `)
+  const subject = due.length === 1
+    ? `${due[0].campaign}: ${due[0].confirmed} ${due[0].kind} in 30 days, ready for ${due[0].threshold >= 50 ? 'a target' : 'Maximise conversions'}`
+    : `${due.length} campaigns ready for a new bid strategy`
+  await sgMail.send({ to, from, subject: subject.slice(0, 200), html })
+}
+

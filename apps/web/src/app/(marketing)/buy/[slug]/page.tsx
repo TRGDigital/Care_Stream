@@ -62,9 +62,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const m = await getModule(slug)
   if (!m) return { title: 'Buy training | CareStreamAI' }
-  // Indexable transactional page: buy training licences for one module without a
-  // full subscription. pageMetadata adds the self-canonical on the www host and
-  // og tags, and defaults to indexable (site_pages can override the copy).
+  // The checkout page for one module. NOT indexed (Len, 2026-10-08): Search Console reported the
+  // /buy pages as duplicates of their /staff-training course pages, which are the ones to rank.
+  // Followed, so links from it still count. pageMetadata adds the self-canonical and og tags.
   const title = `Buy ${m.title} Training for Your Team | CareStreamAI`
   // Led by this module's own summary, so no two buy pages share a description.
   const lead = careSetting(m.summary?.match(/[^.!?]+[.!?]+/)?.[0]?.trim() ?? '')
@@ -74,7 +74,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     : `Buy ${m.title} training licences for just the staff who need them. ${tail}`
   // Use the module's own illustration for the social image; pageMetadata falls back to the CareStream card if absent.
   const image = m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined
-  return pageMetadata(`/buy/${slug}`, { title, description, image })
+  return { ...(await pageMetadata(`/buy/${slug}`, { title, description, image })), robots: { index: false, follow: true } }
 }
 
 export default async function BuyPage(

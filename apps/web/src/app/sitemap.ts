@@ -76,6 +76,9 @@ async function trainingPages(): Promise<Entry[]> {
 
 // The per-module purchase pages mirror the staff-training slugs, so derive their
 // /buy/<slug> paths from the same seo-index feed. Falls back to none on error.
+// No longer listed (2026-10-08): the /buy pages are noindex, checkout pages that duplicated the
+// course pages. Kept so the list can come back if they are ever made indexable again.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function buyPages(): Promise<Entry[]> {
   try {
     const res = await fetch(`${API_URL}/public/training/seo-index`, { next: { revalidate: 900 } })
@@ -184,8 +187,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
   // Dedupe by path (some settings also appear in MARKETING), first entry wins.
   const seen = new Set<string>()
-  const [training, buy, policies, blog, collections, features, cms] = await Promise.all([trainingPages(), buyPages(), policyPages(), blogPages(), collectionPages(), featurePages(), cmsPages()])
-  const entries = [...MARKETING, ...SETTINGS, ...training, ...buy, ...policies, ...blog, ...collections, ...features, ...cms].filter((e) => {
+  const [training, policies, blog, collections, features, cms] = await Promise.all([trainingPages(), policyPages(), blogPages(), collectionPages(), featurePages(), cmsPages()])
+  const entries = [...MARKETING, ...SETTINGS, ...training, ...policies, ...blog, ...collections, ...features, ...cms].filter((e) => {
     if (seen.has(e.url)) return false
     seen.add(e.url)
     return true

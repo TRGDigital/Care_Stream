@@ -15,6 +15,7 @@
 
 .cc-offerbar { background: #FFF4E5; color: #7A3E00; border-bottom: 1px solid #F5D9B3; text-align: center; padding: 10px 16px; font-size: 15px }
 .cc-offerbar span { margin-left: 8px; font-weight: 600; white-space: nowrap }
+.cc-offerbar .cc-emoji { margin: 0 6px 0 0; font-size: 18px; vertical-align: -2px }
 
 .cc-wrap { max-width: 1280px; margin: 0 auto; padding: 0 16px; display: grid; gap: 32px }
 @media (min-width: 1024px) { .cc-wrap { grid-template-columns: minmax(0,1fr) 340px; padding: 0 24px; align-items: start } }
@@ -130,7 +131,7 @@
 
 /* Summary: sticky column on desktop, a sheet from the bottom bar on phones */
 .cc-aside { display: none }
-@media (min-width: 1024px) { .cc-aside { display: block; position: sticky; top: 88px; padding-top: 40px; max-height: calc(100vh - 88px); overflow-y: auto; padding-bottom: 24px } }
+@media (min-width: 1024px) { .cc-aside { display: block; position: sticky; top: 88px; padding-top: 40px } }
 .cc-aside.open { display: block; position: fixed; inset: auto 0 0 0; z-index: 60; padding: 0; max-height: 85vh; overflow-y: auto; box-shadow: 0 -12px 40px rgba(0,0,0,.2) }
 @media (min-width: 1024px) { .cc-aside.open { position: sticky; inset: auto; box-shadow: none; max-height: none; padding-top: 40px } }
 .cc-sum { border: 1px solid var(--line); border-radius: var(--r); padding: 18px; background: #fff; box-shadow: var(--shadow) }

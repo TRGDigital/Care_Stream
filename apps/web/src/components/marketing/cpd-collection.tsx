@@ -88,11 +88,11 @@ const BENEFITS = [
   'No subscription. Card or invoice',
 ]
 
-export function CpdCollection({ courses, intentKey, review, hl = '' }: {
-  courses: CpdCourse[]; intentKey: string; review: Review | null; hl?: string
+export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' }: {
+  courses: CpdCourse[]; intentKey: string; focus?: string; review: Review | null; hl?: string
 }) {
   const hlRe = useMemo(() => (hl && hl !== '1' ? hlPattern(hl) : null), [hl])
-  const intent = intentFor(intentKey)
+  const intent = intentFor(intentKey, focus)
   const offers = useOffers()
   const offer = licenceOffer(offers, 'food-hygiene')
   const { items, bundles, totalQty, net } = useCart()

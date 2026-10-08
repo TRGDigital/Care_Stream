@@ -1,0 +1,264 @@
+{
+ "versions": {
+  "mandatory-care-workers": {
+   "tag": "Mandatory training",
+   "headline": "CPD Certified mandatory training for care workers",
+   "sub": "Every course a care worker needs each year, online and CPD Certified, with a certificate for every learner. Buy one course or a bundle for the team.",
+   "topic": "mandatory training for care workers",
+   "who": "care workers"
+  },
+  "mandatory-health-social-care": {
+   "tag": "Health and social care",
+   "headline": "Mandatory training in health and social care, CPD Certified",
+   "sub": "Ten short courses for health and social care staff, about an hour each on any phone, with a CPD Certified certificate for each one.",
+   "topic": "mandatory training in health and social care",
+   "who": "health and social care staff"
+  },
+  "cqc-mandatory-training": {
+   "tag": "CQC mandatory training",
+   "headline": "CQC mandatory training with the evidence inspectors ask to see",
+   "sub": "Every learner gets a named, dated, CPD Certified certificate, and your dashboard shows who is up to date before an inspection.",
+   "topic": "CQC mandatory training",
+   "who": "care staff"
+  },
+  "core-mandatory-training": {
+   "tag": "Core and mandatory",
+   "headline": "Core and mandatory training for care staff, following national guidance",
+   "sub": "The statutory and mandatory training care workers are expected to have, in ten CPD Certified courses built for care settings.",
+   "topic": "core and mandatory training",
+   "who": "care staff"
+  },
+  "care-home-staff-training": {
+   "tag": "For care homes",
+   "headline": "Mandatory training for care home and nursing home staff",
+   "sub": "Train the whole home at once, in short lessons staff take on a phone between shifts, and see who has finished from one dashboard.",
+   "topic": "care home staff training",
+   "who": "care home staff"
+  },
+  "care-home-elearning": {
+   "tag": "E-learning for care homes",
+   "headline": "E-learning for care homes, CPD Certified",
+   "sub": "Scenario based lessons written for care homes, about an hour a course, with a CPD Certified certificate for every member of staff.",
+   "topic": "e-learning for care homes",
+   "who": "care home staff"
+  },
+  "domiciliary-care-training": {
+   "tag": "Domiciliary care",
+   "headline": "Domiciliary care training, CPD Certified and on any phone",
+   "sub": "Mandatory training your domiciliary care staff can do on a phone between visits, with a certificate and a record you can show CQC.",
+   "topic": "domiciliary care training",
+   "who": "domiciliary care staff"
+  },
+  "home-care-worker-training": {
+   "tag": "Home care workers",
+   "headline": "Online training for home care workers",
+   "sub": "Short courses home care workers can take between visits, each CPD Certified, with a certificate for every learner.",
+   "topic": "home care worker training",
+   "who": "home care workers"
+  },
+  "support-worker-training": {
+   "tag": "Support workers",
+   "headline": "Mandatory training for support workers and supported living teams",
+   "sub": "Ten CPD Certified courses for support workers, supported living and live in care teams, on any phone, in over 60 languages.",
+   "topic": "mandatory training for support workers",
+   "who": "support workers"
+  },
+  "care-training-provider": {
+   "tag": "Care training provider",
+   "headline": "A CPD Certified care training provider that only works in care",
+   "sub": "Every course is written for care settings, certified by The CPD Certification Service and taught in over 60 languages.",
+   "topic": "care training",
+   "who": "care providers"
+  },
+  "cpd-health-social-care": {
+   "tag": "CPD for health and social care",
+   "headline": "CPD Certified courses for health and social care staff",
+   "sub": "Certified by The CPD Certification Service, with the CPD mark and CPD hours on every learner’s certificate.",
+   "topic": "CPD for health and social care",
+   "who": "health and social care staff"
+  },
+  "care-worker-training-courses": {
+   "tag": "Care worker training",
+   "headline": "Care worker training courses, CPD Certified",
+   "sub": "Ten training courses for care workers, about an hour each, with a CPD Certified certificate when they pass.",
+   "topic": "care worker training courses",
+   "who": "care workers"
+  },
+  "care-worker-online-courses": {
+   "tag": "Online courses for care workers",
+   "headline": "Online courses for care workers, about an hour each",
+   "sub": "Short, scenario based online courses care workers can do between shifts, each with a CPD Certified certificate.",
+   "topic": "online courses for care workers",
+   "who": "care workers"
+  },
+  "moving-and-handling-carers": {
+   "tag": "Moving and handling",
+   "headline": "Moving and handling training for carers",
+   "sub": "Safe moving and handling for care staff, with a practical checklist your manager signs off. Add the other eight refreshers and save with a bundle.",
+   "topic": "moving and handling training for carers",
+   "who": "carers",
+   "feature": "moving-and-handling-of-people",
+   "bundle": "refresher"
+  },
+  "medication-training-carers": {
+   "tag": "Medication training",
+   "headline": "Medication training for carers, online",
+   "sub": "Safe administration, records and errors, with a practical checklist for observation and a CPD Certified certificate.",
+   "topic": "medication training for carers",
+   "who": "carers",
+   "feature": "medication-administration-and-competency",
+   "bundle": "refresher"
+  },
+  "health-and-safety-care-workers": {
+   "tag": "Health and safety",
+   "headline": "Health and safety training for care workers",
+   "sub": "Health and safety written for care settings, about an hour on any phone, with a CPD Certified certificate.",
+   "topic": "health and safety training for care workers",
+   "who": "care workers",
+   "feature": "general-health-and-safety-awareness",
+   "bundle": "refresher"
+  },
+  "health-social-care-courses": {
+   "tag": "Health and social care courses",
+   "headline": "Short CPD Certified courses in health and social care",
+   "sub": "For people working in care: about an hour each, on any phone. These are CPD courses, not diplomas or qualifications.",
+   "topic": "health and social care courses",
+   "who": "people working in care"
+  },
+  "health-social-care-elearning": {
+   "tag": "Learn from home",
+   "headline": "Health and social care e-learning you can do from home",
+   "sub": "Ten CPD Certified courses for people working in care, about an hour each on any phone. Not a diploma or a qualification.",
+   "topic": "health and social care e-learning",
+   "who": "people working in care"
+  },
+  "health-care-courses": {
+   "tag": "Health care courses",
+   "headline": "Short online health care courses for care staff",
+   "sub": "About an hour each, scenario based, with a CPD Certified certificate. Short courses for care staff, not qualifications.",
+   "topic": "health care courses",
+   "who": "care staff"
+  },
+  "health-care-training-online": {
+   "tag": "Interactive training",
+   "headline": "Interactive online health care training",
+   "sub": "Real care scenarios, quick checks after every lesson and a CPD Certified certificate at the end of each course.",
+   "topic": "online health care training",
+   "who": "care staff"
+  },
+  "online-care-training": {
+   "tag": "Online care training",
+   "headline": "Online care training, CPD Certified",
+   "sub": "Ten short courses built for care settings, each with a CPD Certified certificate for every learner.",
+   "topic": "online care training",
+   "who": "care staff"
+  },
+  "care-courses-online": {
+   "tag": "Care courses online",
+   "headline": "Care courses online, about an hour each",
+   "sub": "Ten CPD Certified care courses on any phone, from moving and handling to medication, with a certificate for each.",
+   "topic": "care courses online",
+   "who": "care staff"
+  },
+  "social-care-elearning": {
+   "tag": "Social care e-learning",
+   "headline": "Social care training online, CPD Certified",
+   "sub": "Scenario based social care e-learning for care staff, about an hour a course, with a CPD Certified certificate.",
+   "topic": "social care e-learning",
+   "who": "care staff"
+  },
+  "online-courses-for-carers": {
+   "tag": "Courses for carers",
+   "headline": "Online courses for carers, with a certificate for each",
+   "sub": "About an hour each on any phone, in over 60 languages, with a CPD Certified certificate when you pass.",
+   "topic": "online courses for carers",
+   "who": "carers"
+  },
+  "online-training-for-carers": {
+   "tag": "Training for carers",
+   "headline": "Online training for carers, on any phone",
+   "sub": "Short lessons carers can do between shifts, in over 60 languages, each course CPD Certified.",
+   "topic": "online training for carers",
+   "who": "carers"
+  },
+  "care-assistant-courses": {
+   "tag": "Care assistant courses",
+   "headline": "Care assistant courses online: the Care Certificate and nine more",
+   "sub": "Starting out as a care assistant? The Complete CPD bundle covers the Care Certificate and all nine mandatory courses, each CPD Certified.",
+   "topic": "care assistant courses",
+   "who": "new care assistants",
+   "chip": "starters",
+   "bundle": "complete"
+  },
+  "home-care-courses": {
+   "tag": "Home care courses",
+   "headline": "Home care courses online, learned between visits",
+   "sub": "Short CPD Certified courses for home carers, on any phone, with a certificate for each course.",
+   "topic": "home care courses",
+   "who": "home carers"
+  },
+  "mandatory-training-list": {
+   "tag": "What staff need",
+   "headline": "The mandatory training care workers need, in one place",
+   "sub": "See which courses each role needs, then buy them one at a time or as a bundle. Every course is CPD Certified.",
+   "topic": "mandatory training for care workers",
+   "who": "care workers"
+  }
+ },
+ "focus": {
+  "bundles": {
+   "tag": "Bundles",
+   "headline": "{Topic}: save with a bundle",
+   "sub": "All nine annual refreshers for £139 per learner, or all ten courses with the Care Certificate for £159. You always get the best price."
+  },
+  "refreshers": {
+   "tag": "Annual refreshers",
+   "headline": "{Topic}: all nine annual refreshers in one bundle",
+   "chip": "refreshers",
+   "bundle": "refresher",
+   "sub": "One price per learner for every annual refresher {who} need, each course CPD Certified."
+  },
+  "new-starters": {
+   "tag": "New starters",
+   "headline": "{Topic} for new starters",
+   "chip": "starters",
+   "bundle": "complete",
+   "sub": "The Complete CPD bundle covers the Care Certificate and all nine mandatory courses for each new starter."
+  },
+  "price": {
+   "tag": "Team prices",
+   "headline": "{Topic} with team prices",
+   "sub": "£25.99 a course, up to 40% off for larger teams, or a bundle price per learner. No subscription."
+  },
+  "languages": {
+   "tag": "60+ languages",
+   "headline": "{Topic} in your staff’s own language",
+   "sub": "Every lesson in over 60 languages, including Polish, Romanian and Hindi, so {who} understand it, not just pass it."
+  },
+  "certificates": {
+   "tag": "Certificates",
+   "headline": "{Topic} with a CPD Certified certificate for every learner",
+   "sub": "Named, dated and downloadable, with the CPD mark and CPD hours, ready for supervision and CQC."
+  },
+  "cqc": {
+   "tag": "CQC evidence",
+   "headline": "{Topic} with the evidence CQC asks to see",
+   "sub": "A dated, CPD Certified certificate for every learner, and a dashboard showing who is up to date."
+  },
+  "dashboard": {
+   "tag": "Manager dashboard",
+   "headline": "{Topic} you can track from one dashboard",
+   "sub": "See who has finished, by person and course, and who is due a refresher, without chasing anyone."
+  },
+  "phone": {
+   "tag": "Any phone",
+   "headline": "{Topic} on any phone, about an hour a course",
+   "sub": "Short, scenario based lessons {who} can do between shifts, with a certificate when they pass."
+  },
+  "quote": {
+   "tag": "Several services",
+   "headline": "{Topic} for a large team or several services",
+   "sub": "Ask for a quote, pay by invoice if you prefer, and see who has finished in every service from one dashboard."
+  }
+ }
+}

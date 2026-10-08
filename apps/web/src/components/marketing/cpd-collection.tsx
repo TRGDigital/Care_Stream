@@ -177,7 +177,8 @@ export function CpdCollection({ courses, intentKey, review, hl = '' }: {
                 const b = BUNDLES[k]
                 const n = learners[k]
                 const q = bundleQuote(offers, k, Math.max(1, n))
-                const pick = intent.bundle === k
+                // Most popular: the Annual refresher bundle, unless this version points at the other one.
+                const pick = (intent.bundle ?? 'refresher') === k
                 return (
                   <div className={`cc-bundle${pick ? ' pick' : ''}`} key={k}>
                     {pick && <span className="cc-flag">Most popular</span>}

@@ -37,7 +37,7 @@ export function SetupChecklist({ token, tenantId, tier = 'full' }: { token: stri
         save({
           policies: false, gaps: false, training: false, onboarding: false, query: false,
           staff:     u.status === 'fulfilled' && ((u.value as any)?.users ?? []).filter((x: any) => x?.is_active !== false).length > 1,
-          allocated: Array.isArray(lic) && lic.some((x: any) => x?.user_id),
+          allocated: Array.isArray(lic) && lic.some((x: any) => x?.allocated_to),
         })
       }).catch(() => {})
       return

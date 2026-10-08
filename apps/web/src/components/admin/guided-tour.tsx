@@ -169,7 +169,7 @@ export function GuidedTour({ token, tenantId, tier, openSignal }: {
         const lic = l.status === 'fulfilled' ? ((l.value as any)?.licences ?? []) : []
         setDone({
           staff:    u.status === 'fulfilled' && ((u.value as any)?.users ?? []).filter((x: any) => x?.is_active !== false).length > 1,
-          licences: Array.isArray(lic) && lic.some((x: any) => x?.user_id),
+          licences: Array.isArray(lic) && lic.some((x: any) => x?.allocated_to),
         })
       })
       return

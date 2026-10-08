@@ -7,6 +7,7 @@ import { createApiClient } from '@/lib/api-client'
 import { AiUsageCards } from '@/components/ai-usage'
 import { SetupChecklist } from '@/components/admin/setup-checklist'
 import { PlanCard } from '@/components/admin/plan-card'
+import { TrainingOnlyDashboard } from '@/components/admin/training-only-dashboard'
 import { persistentCache } from '@/lib/page-cache'
 import { BookOpen, ChevronDown, FileText, Info, Lightbulb, Mail, MessageSquare, Mic, Users, CalendarClock, Loader2, RefreshCw, Check } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -238,6 +239,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!session?.accessToken) return
+    // Training-only clients see TrainingOnlyDashboard, which loads its own data.
+    if ((session.user as any)?.tier === 'training_only') return
     const api = createApiClient(session.accessToken)
 
     Promise.allSettled([
@@ -295,6 +298,11 @@ export default function DashboardPage() {
       if (cached) persistentCache.set(`admin-dashboard-${userId}`, { ...cached, dueReview: n })
       return n
     })
+  }
+
+  // Training-only clients (bought course licences from the shop) get a dashboard about their training.
+  if ((session?.user as any)?.tier === 'training_only' && session?.accessToken) {
+    return <TrainingOnlyDashboard token={session.accessToken} userId={(session.user as any)?.id ?? ''} name={session.user?.name} />
   }
 
   return (

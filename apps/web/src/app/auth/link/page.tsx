@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { signIn } from 'next-auth/react'
+import { getSession, signIn } from 'next-auth/react'
 import { AlertCircle, Loader2, LogIn } from 'lucide-react'
 
 // Magic-link landing. The token is SINGLE-USE, so it must only be consumed on a
@@ -21,7 +21,12 @@ function LinkConsumer() {
     setState('busy')
     try {
       const res = await signIn('credentials', { mode: 'magic', token, redirect: false })
-      if (res?.ok) router.replace('/chat')
+      if (res?.ok) {
+        // A training-only buyer's manager lands on their dashboard (licences to allocate), not
+        // the staff hub; everyone else goes to the hub as before.
+        const u = (await getSession())?.user as { tier?: string; role?: string } | undefined
+        router.replace(u?.tier === 'training_only' && u?.role === 'admin' ? '/dashboard' : '/chat')
+      }
       else setState('error')
     } catch {
       setState('error')

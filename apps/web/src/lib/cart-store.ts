@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from 'react'
 import { UNIT_PENCE, orderTotals } from './training-commerce'
+import { BUNDLE_PREFIX } from './bundle-rules'
 import { fi } from '@/lib/funnel-insights'
 
 // A tiny localStorage-backed cart store — no provider needed. Holds one line per
@@ -83,7 +84,15 @@ export function useCart() {
     () => items,
     () => EMPTY,
   )
-  const totalQty = list.reduce((s, i) => s + i.qty, 0)
+  // CPD course bundles ("bundle:<key>", qty = learners) sit in the same store but are priced
+  // apart (lib/bundle-rules.ts, best price wins): `items` and the team discount are single
+  // courses only, `bundles` the bundle lines. bundleListPence is the bundles at their bundle price,
+  // for a quick total where the live offers are not to hand.
+  const singles = list.filter((i) => !i.slug.startsWith(BUNDLE_PREFIX))
+  const bundles = list.filter((i) => i.slug.startsWith(BUNDLE_PREFIX))
+  const totalQty = singles.reduce((s, i) => s + i.qty, 0)
   const totals = orderTotals(totalQty)
-  return { items: list, totalQty, ...totals, cart }
+  const bundleLearners = bundles.reduce((s, i) => s + i.qty, 0)
+  const bundleListPence = bundles.reduce((s, i) => s + i.qty * i.unitPence, 0)
+  return { items: singles, bundles, totalQty, bundleLearners, bundleListPence, ...totals, cart }
 }

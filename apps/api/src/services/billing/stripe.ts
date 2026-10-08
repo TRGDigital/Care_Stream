@@ -12,6 +12,7 @@ import Stripe from 'stripe'
 import { prisma } from '../../db/client'
 import { licenceDeal, policyDeal } from '../offers'
 import { offersWithLock } from '../offers/locks'
+import { BUNDLES, bundleQuote, type BundleKey } from '../offers/bundle-rules'
 import { attributionMeta, type Attribution } from '../analytics/attribution'
 import { ADDONS, type AddonKey } from '../shop/addons'
 
@@ -339,6 +340,8 @@ export interface TrainingBasketCheckoutInput {
   lock?: string
   attribution?: Attribution | null
   items: TrainingBasketItem[]
+  /** CPD course bundles (lib bundle-rules): each a line of `learners`, priced best price wins. */
+  bundles?: { key: BundleKey; learners: number }[]
   email: string
   orgName: string
   // In-console purchase by an existing, signed-in tenant: licences attach straight to
@@ -360,7 +363,11 @@ export async function createTrainingBasketCheckoutSession(input: TrainingBasketC
     .map(i => ({ ...i, quantity: Math.max(1, Math.min(500, Math.floor(i.quantity || 1))) }))
     .filter(i => i.moduleSlug)
     .slice(0, 25)
-  if (!items.length) throw new Error('Basket is empty')
+  const bundleReq = (input.bundles ?? [])
+    .filter(b => b && BUNDLES[b.key])
+    .map(b => ({ key: b.key, learners: Math.max(1, Math.min(500, Math.floor(b.learners || 1))) }))
+    .slice(0, 2)
+  if (!items.length && !bundleReq.length) throw new Error('Basket is empty')
 
   const totalQty = items.reduce((s, i) => s + i.quantity, 0)
   const pct = trainingDiscountPct(totalQty)
@@ -369,6 +376,9 @@ export async function createTrainingBasketCheckoutSession(input: TrainingBasketC
   // provisioned on reconcile from `f`), or a percentage off that replaces the volume discount
   // when it is bigger (its unit price travels as `u`).
   const offers = await offersWithLock(input.lock)
+  // Bundles: their own line each, at the best price for that many learners (bundle-rules.ts).
+  // Recorded as key:learners:perLearner, so reconcile gives every learner each bundled course.
+  const bundleLines = bundleReq.map(b => ({ ...b, q: bundleQuote(offers, b.key, b.learners, TRAINING_LICENCE_PENCE) }))
   const deals = items.map(i => {
     const d = licenceDeal(offers, i.moduleSlug, i.quantity)
     return { ...d, unit: d.pct > pct ? Math.round(TRAINING_LICENCE_PENCE * (1 - d.pct / 100)) : unit }
@@ -379,7 +389,15 @@ export async function createTrainingBasketCheckoutSession(input: TrainingBasketC
 
   const params: Stripe.Checkout.SessionCreateParams = {
     mode:       'payment',
-    line_items: [...[...byUnit].map(([amount, quantity]) => ({ price_data: { currency: 'gbp', product: productId, unit_amount: amount }, quantity })), ...addonLines(input.addons)],
+    line_items: [
+      ...[...byUnit].map(([amount, quantity]) => ({ price_data: { currency: 'gbp', product: productId, unit_amount: amount }, quantity })),
+      ...bundleLines.map(b => ({
+        price_data: { currency: 'gbp', unit_amount: b.q.perLearner,
+                      product_data: { name: `${BUNDLES[b.key].name} (${BUNDLES[b.key].slugs.length} CPD courses), per learner`, tax_code: PLAN_TAX_CODE } },
+        quantity: b.learners,
+      })),
+      ...addonLines(input.addons),
+    ],
     customer_email: input.email,
     metadata: {
       ...attributionMeta(input.attribution),
@@ -389,6 +407,7 @@ export async function createTrainingBasketCheckoutSession(input: TrainingBasketC
         ...(deals[n].free ? { f: deals[n].free } : {}),
         ...(deals[n].unit !== unit ? { u: deals[n].unit } : {}),
       }))).slice(0, 480),
+      ...(bundleLines.length ? { bundles: bundleLines.map(b => `${b.key}:${b.learners}:${b.q.perLearner}`).join(',') } : {}),
       total_qty:    String(totalQty),
       discount_pct: String(pct),
       // The offer behind any free licences or offer price, so Funnel Insights can credit the sale to it.

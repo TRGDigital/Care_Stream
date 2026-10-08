@@ -1,5 +1,6 @@
-import { licenceDeal, type Offer } from './offer-rules'
-import { UNIT_PENCE, discountPctForQty } from './training-commerce'
+import { type Offer } from './offer-rules'
+import { UNIT_PENCE } from './training-commerce'
+import { bundleQuote as sharedQuote, type BundleKey } from './bundle-rules'
 
 // The CPD courses collection page (/staff-training/cpd-courses): the landing page for the two CPD
 // category Google Ads campaigns (cpd-keyword-tool slugs cpd-high-intent and cpd-wider-reach).
@@ -36,40 +37,12 @@ export const CPD_COURSE_INFO: Record<string, { title: string; short: string }> =
 export const CPD_SLUGS = Object.keys(CPD_COURSE_INFO)
 export const REFRESHER_SLUGS = CPD_SLUGS.filter(s => s !== 'care-certificate')
 
-export type BundleKey = 'complete' | 'refresher'
-export const BUNDLES: Record<BundleKey, { key: BundleKey; name: string; who: string; slugs: string[]; pence: number }> = {
-  complete: { key: 'complete', name: 'Complete CPD bundle', who: 'For new starters', slugs: CPD_SLUGS, pence: 15900 },
-  refresher: { key: 'refresher', name: 'Annual refresher bundle', who: 'For existing staff', slugs: REFRESHER_SLUGS, pence: 13900 },
-}
-
-/** What these courses cost as single licences for `learners` people each, under the live offers
- *  and the team discount, the way checkout prices them: free licences from a "buy X get Y" offer
- *  come on top, an offer's percentage replaces the team discount only when it is bigger. */
-export function singlesPence(offers: Offer[], slugs: string[], learners: number): number {
-  if (learners < 1) return 0
-  const paid = slugs.map(slug => {
-    let p = 1
-    while (p < learners && p + licenceDeal(offers, slug, p).free < learners) p++
-    return { slug, p }
-  })
-  const team = discountPctForQty(paid.reduce((t, x) => t + x.p, 0))
-  return paid.reduce((t, { slug, p }) => {
-    const d = licenceDeal(offers, slug, p)
-    const pct = Math.max(team, d.pct)
-    return t + Math.round(UNIT_PENCE * (1 - pct / 100)) * p
-  }, 0)
-}
-
-export type BundleQuote = { pence: number; bundlePence: number; singlesPence: number; listPence: number; winner: 'bundle' | 'singles' }
-
-export function bundleQuote(offers: Offer[], key: BundleKey, learners: number): BundleQuote {
-  const b = BUNDLES[key]
-  const bundlePence = b.pence * learners
-  const singles = singlesPence(offers, b.slugs, learners)
-  const listPence = UNIT_PENCE * b.slugs.length * learners
-  return singles < bundlePence
-    ? { pence: singles, bundlePence, singlesPence: singles, listPence, winner: 'singles' }
-    : { pence: bundlePence, bundlePence, singlesPence: singles, listPence, winner: 'bundle' }
+// Bundles and their price live in bundle-rules.ts (shared with the API, so checkout charges the
+// same). bundleQuote here is that, at the shop's licence price.
+export { BUNDLES, type BundleKey } from './bundle-rules'
+export function bundleQuote(offers: Offer[], key: BundleKey, learners: number) {
+  const q = sharedQuote(offers, key, learners, UNIT_PENCE)
+  return { ...q, pence: q.total, listPence: q.listTotal }
 }
 
 // ─── Page versions (?intent=) ─────────────────────────────────────────────────

@@ -183,3 +183,6 @@
 .cc-mbar em { font-style: normal; font-weight: 700; background: #fff; color: var(--ink); border-radius: 8px; padding: 4px 10px; font-size: 14px }
 @media (min-width: 1024px) { .cc-mbar { display: none } }
 
+
+/* ?hl= keyword highlights (the keyword tool's highlight link) */
+.cpdc mark.cc-hl { background: #FFE45C; color: inherit; padding: 0 2px; border-radius: 3px }

@@ -10,10 +10,10 @@ import { gbp } from '@/lib/training-commerce'
 // cart is empty but courses have been saved for later, it becomes the way back to
 // them (they live on /basket); without this a saved course would be unreachable.
 export function CartButton() {
-  const { totalQty, net } = useCart()
+  const { totalQty, net, bundleLearners, bundleListPence } = useCart()
   const { items: saved } = useSavedCourses()
 
-  if (totalQty === 0) {
+  if (totalQty + bundleLearners === 0) {
     if (saved.length === 0) return null
     return (
       <Link
@@ -36,9 +36,9 @@ export function CartButton() {
     >
       <span className="relative">
         <ShoppingCart size={20} />
-        <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[11px] font-bold text-blue-700">{totalQty}</span>
+        <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[11px] font-bold text-blue-700">{totalQty + bundleLearners}</span>
       </span>
-      View basket · {gbp(net)}
+      View basket · {gbp(net + bundleListPence)}
       {saved.length > 0 && <span className="border-l border-white/30 pl-3 text-xs font-medium text-white/80">{saved.length} saved</span>}
     </Link>
   )

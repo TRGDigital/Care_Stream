@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useCart, cart } from '@/lib/cart-store'
 import { useOffers, licenceOffer, money2 } from '@/lib/offers'
 import { UNIT_PENCE, gbp } from '@/lib/training-commerce'
@@ -18,8 +18,8 @@ import './cpd-collection.css'
 
 // The CPD courses collection page (lib/cpd-collection.ts), layout A (Len, 2026-10-08): hero,
 // bundles, then the course grid, with "Your training" (summary, benefits and the team finder)
-// in a sticky column. Single courses go in the real training basket. Bundles are DISPLAY ONLY
-// until bundle checkout is built: they sit in this page's summary and checkout says so.
+// in a sticky column. Courses and bundles go in the real training basket ("bundle:<key>" with
+// the learners as quantity) and check out together on /basket, priced best price wins.
 //
 // Each card links to the course's own page (where it can be bought too) with ?from=cpd-courses,
 // and logs `collection_click` to Funnel Insights. A sale there is still credited to the ad: Funnel
@@ -39,6 +39,42 @@ const CartIcon = () => (
 // The offer's emoji, shown wherever the offer is named on this page.
 const offerEmoji = (label?: string | null) => (/halloween/i.test(label ?? '') ? '🎃 ' : '')
 
+// ?hl=<keyword>|<keyword>|… (the keyword tool's "Open with keyword highlights" link) marks the ad
+// group's keywords in yellow wherever the page copy uses them: the whole keyword, or a run of two
+// or more of its words, or one of its distinctive words.
+const HL_SKIP = new Set(['for', 'the', 'and', 'with', 'from', 'to', 'of', 'in', 'a', 'an', 'uk', 'care', 'training', 'course', 'courses', 'online', 'staff'])
+function hlPattern(raw: string): RegExp | null {
+  const kws = raw.split('|').map(k => k.trim().toLowerCase()).filter(Boolean).slice(0, 20)
+  const parts = new Set<string>()
+  for (const k of kws) {
+    const w = k.split(/\s+/)
+    for (let n = w.length; n >= 1; n--) for (let i = 0; i + n <= w.length; i++) {
+      const run = w.slice(i, i + n)
+      if (n === 1 && (HL_SKIP.has(run[0]) || run[0].length < 4)) continue
+      if (n > 1 && run.every(x => HL_SKIP.has(x))) continue
+      parts.add(run.join(' '))
+    }
+  }
+  if (!parts.size) return null
+  const esc = [...parts].sort((a, b) => b.length - a.length).map(x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+  return new RegExp(`\\b(${esc.join('|')})\\b`, 'gi')
+}
+const HlContext = createContext<RegExp | null>(null)
+function H({ children }: { children: string }): ReactNode {
+  const re = useContext(HlContext)
+  if (!re) return children
+  const out: ReactNode[] = []
+  let last = 0
+  for (const m of children.matchAll(re)) {
+    if (m.index! > last) out.push(children.slice(last, m.index))
+    out.push(<mark key={m.index} className="cc-hl">{m[0]}</mark>)
+    last = m.index! + m[0].length
+  }
+  if (!out.length) return children
+  out.push(children.slice(last))
+  return <>{out}</>
+}
+
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })
 
 const BENEFITS = [
@@ -51,14 +87,18 @@ const BENEFITS = [
   'No subscription. Card or invoice',
 ]
 
-export function CpdCollection({ courses, intentKey, review }: {
-  courses: CpdCourse[]; intentKey: string; review: Review | null
+export function CpdCollection({ courses, intentKey, review, hl = '' }: {
+  courses: CpdCourse[]; intentKey: string; review: Review | null; hl?: string
 }) {
+  const hlRe = useMemo(() => (hl && hl !== '1' ? hlPattern(hl) : null), [hl])
   const intent = intentFor(intentKey)
   const offers = useOffers()
   const offer = licenceOffer(offers, 'food-hygiene')
-  const { items, totalQty, net } = useCart()
-  const [learners, setLearners] = useState<Record<BundleKey, number>>({ complete: 0, refresher: 0 })
+  const { items, bundles, totalQty, net } = useCart()
+  const learners: Record<BundleKey, number> = {
+    complete: bundles.find(b => b.slug === 'bundle:complete')?.qty ?? 0,
+    refresher: bundles.find(b => b.slug === 'bundle:refresher')?.qty ?? 0,
+  }
   const [chip, setChip] = useState<Chip>(intent.chip ?? 'all')
   const [sheet, setSheet] = useState(false)
   // The whole right column (Your training and the finder) is sticky. When it is taller than the
@@ -91,11 +131,10 @@ export function CpdCollection({ courses, intentKey, review }: {
 
   const setBundle = (k: BundleKey, n: number) => {
     const v = Math.max(0, Math.min(500, n))
-    if (v > learners[k]) {
-      fi('add_to_basket', { funnel: 'training', option: `bundle:${k}`, label: BUNDLES[k].name, qty: v - learners[k] })
-      reportMicro('add_to_basket', `bundle-${k}`)
-    }
-    setLearners(s => ({ ...s, [k]: v }))
+    const slug = `bundle:${k}`
+    if (v === 0) cart.remove(slug)
+    else if (!learners[k]) { cart.add({ slug, title: BUNDLES[k].name, unitPence: BUNDLES[k].pence, qty: v }); reportMicro('add_to_basket', `bundle-${k}`) }
+    else cart.setQty(slug, v)
   }
   const captureCourse = courses.find(c => c.slug === (intent.feature ?? 'care-certificate')) ?? courses[0] ?? { slug: 'care-certificate', title: 'Care Certificate', image: null }
   const titleOf = (slug: string, fallback: string) => courses.find(c => c.slug === slug)?.title ?? fallback
@@ -103,6 +142,7 @@ export function CpdCollection({ courses, intentKey, review }: {
   const finder = <Finder offers={offers} onPick={(k, n) => setBundle(k, n)} />
 
   return (
+    <HlContext.Provider value={hlRe}>
     <div className="cpdc">
       {offer && (
         <div className="cc-offerbar">
@@ -113,14 +153,14 @@ export function CpdCollection({ courses, intentKey, review }: {
       <div className="cc-wrap">
         <div className="cc-main">
           <section className="cc-hero">
-            <p className="cc-eb">{intent.tag}</p>
-            <h1>{intent.headline}</h1>
-            <p className="cc-lede">{intent.sub}</p>
+            <p className="cc-eb"><H>{intent.tag}</H></p>
+            <h1><H>{intent.headline}</H></h1>
+            <p className="cc-lede"><H>{intent.sub}</H></p>
             <ul className="cc-trust">
-              <li><Tick />CPD Certified, all 10 courses</li>
-              <li><Tick />Every lesson in 60+ languages</li>
-              <li><Tick />A certificate for every learner</li>
-              <li><Tick />Manager dashboard included</li>
+              <li><Tick /><H>{'CPD Certified, all 10 courses'}</H></li>
+              <li><Tick /><H>{'Every lesson in 60+ languages'}</H></li>
+              <li><Tick /><H>{'A certificate for every learner'}</H></li>
+              <li><Tick /><H>{'Manager dashboard included'}</H></li>
             </ul>
             <div className="cc-cpdbanner">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -141,8 +181,8 @@ export function CpdCollection({ courses, intentKey, review }: {
                   <div className={`cc-bundle${pick ? ' pick' : ''}`} key={k}>
                     {pick && <span className="cc-flag">Most popular</span>}
                     <p className="cc-who">{b.who}</p>
-                    <h3>{b.name}</h3>
-                    <p className="cc-incl">{k === 'complete' ? 'The Care Certificate and all 9 annual refreshers' : 'All 9 annual refreshers, every year'}</p>
+                    <h3><H>{b.name}</H></h3>
+                    <p className="cc-incl"><H>{k === 'complete' ? 'The Care Certificate and all 9 annual refreshers' : 'All 9 annual refreshers, every year'}</H></p>
                     <div className="cc-price"><b>{money2(b.pence)}</b><span>per learner</span><s>{money2(UNIT_PENCE * b.slugs.length)}</s></div>
                     <p className="cc-save">Save {Math.round((1 - b.pence / (UNIT_PENCE * b.slugs.length)) * 100)}% on single courses</p>
                     {n > 0 ? (
@@ -193,8 +233,8 @@ export function CpdCollection({ courses, intentKey, review }: {
                       <img className="cc-cpd" src={CPD_CERTIFIED_LOGO} alt="" width={44} height={40} />
                     </Link>
                     <div className="cc-in">
-                      <h3>{c.title}</h3>
-                      <p>{c.short}</p>
+                      <h3><H>{c.title}</H></h3>
+                      <p><H>{c.short}</H></p>
                       <div className="cc-meta">
                         <span>{c.minutes} min</span>
                         <span>{Math.round(c.minutes / 6) / 10} CPD {c.minutes === 60 ? 'hour' : 'hours'}</span>
@@ -299,9 +339,7 @@ export function CpdCollection({ courses, intentKey, review }: {
             ))}
             {items.length > 0 && totalQty >= 10 && <div className="cc-line sub"><div><span>Single courses after team discount</span></div><div className="cc-amt">{gbp(net)}</div></div>}
             {lineCount > 0 && <div className="cc-total"><span>Total</span><b>{money2(grand)}</b></div>}
-            {lineCount > 0 && (bundleLines.length
-              ? <p className="cc-demo">Demo: bundle checkout is being built. Single courses already check out from the <Link href="/basket">basket</Link>.</p>
-              : <Link className="cc-checkout" href="/basket">Go to checkout</Link>)}
+            {lineCount > 0 && <Link className="cc-checkout" href="/basket">Go to checkout</Link>}
             <p className="cc-quote">Training a large team or several homes? <Link href={`/contact?about=${encodeURIComponent('CPD courses quote for a team')}`}>Get a quote or pay by invoice</Link></p>
             <ul className="cc-sumticks">
               {BENEFITS.map(b => <li key={b}><Tick />{b}</li>)}
@@ -322,6 +360,7 @@ export function CpdCollection({ courses, intentKey, review }: {
         </button>
       )}
     </div>
+    </HlContext.Provider>
   )
 }
 

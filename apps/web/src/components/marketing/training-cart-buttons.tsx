@@ -58,13 +58,13 @@ export function TrainingSaveButton({ slug, title, className = '' }: {
 /** The floating "View basket" link, with the licence count and the discounted total from the
  *  cart store, so it cannot disagree with the checkout. Hidden while the cart is empty. */
 export function TrainingCartLink() {
-  const { totalQty, gross, pct, net } = useCart()
-  if (!totalQty) return null
+  const { totalQty, gross, pct, net, bundleLearners, bundleListPence } = useCart()
+  if (!totalQty && !bundleLearners) return null
   return (
     // /basket, the app's basket and checkout: /buy on its own is not a page (theme's link).
     <Link className="mcart" href="/basket">
-      <Cart /> <span>View basket</span> <span className="count">{totalQty}</span>
-      <span>{gbp(pct ? net : gross)}</span>
+      <Cart /> <span>View basket</span> <span className="count">{totalQty + bundleLearners}</span>
+      <span>{gbp((pct ? net : gross) + bundleListPence)}</span>
     </Link>
   )
 }

@@ -17,6 +17,7 @@ import crypto from 'crypto'
 import { reportTrainingSale, cleanAttribution, attributionFromMeta } from '../services/analytics/funnel-insights'
 import { markBasketPaid } from '../services/shop/basket-recovery'
 import { ADDONS, cleanAddons, addonsFromMeta } from '../services/shop/addons'
+import { BUNDLES, bundleOf, type BundleKey } from '../services/offers/bundle-rules'
 
 const slugify = (s: string): string =>
   s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
@@ -518,17 +519,21 @@ publicTrainingRouter.post('/checkout-basket', async (req: Request, res: Response
     const bySlug = new Map((topics as any[]).map(t => [slugify(t.title), t.title] as const))
 
     const built: { moduleSlug: string; moduleName: string; quantity: number }[] = []
+    // CPD course bundles arrive as "bundle:<key>" with the learners as the quantity.
+    const bundles: { key: BundleKey; learners: number }[] = []
     for (const it of items) {
       const slug = String(it?.module_slug ?? '').trim()
       const qty  = Math.floor(Number(it?.quantity))
       if (!slug || !Number.isFinite(qty) || qty < 1) continue
+      const bundle = bundleOf(slug)
+      if (bundle) { if (!bundles.some(b => b.key === bundle.key)) bundles.push({ key: bundle.key, learners: qty }); continue }
       const name = bySlug.get(slug)
       if (!name) { res.status(404).json({ error: `Unknown training module: ${slug}` }); return }
       built.push({ moduleSlug: slug, moduleName: name, quantity: qty })
     }
-    if (!built.length) { res.status(400).json({ error: 'No valid items in the basket' }); return }
+    if (!built.length && !bundles.length) { res.status(400).json({ error: 'No valid items in the basket' }); return }
 
-    const url = await createTrainingBasketCheckoutSession({ items: built, email: mail, orgName: org, attribution: cleanAttribution(req.body?.attribution), addons: cleanAddons(req.body?.addons, 'training'), lock: typeof req.body?.lock === 'string' ? req.body.lock : undefined, cancelPath: safeReturnPath(req.body?.return_path) })
+    const url = await createTrainingBasketCheckoutSession({ items: built, bundles, email: mail, orgName: org, attribution: cleanAttribution(req.body?.attribution), addons: cleanAddons(req.body?.addons, 'training'), lock: typeof req.body?.lock === 'string' ? req.body.lock : undefined, cancelPath: safeReturnPath(req.body?.return_path) })
     res.json({ data: { url } })
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'checkout failed' })
@@ -576,6 +581,16 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
           .map(b => { const qty = Math.max(1, Math.min(500, Math.floor(Number(b.q) || 1))); return { slug: String(b.s), qty, free: freeOf(b.f, qty), unit: unitOf(b.u, tierUnit) } })
           .filter(b => b.slug)
       } catch { items = [] }
+    }
+    // CPD course bundles (metadata.bundles "key:learners:perLearner,…"): every learner gets a
+    // licence for each course in the bundle. `unit` shares the bundle price across its courses.
+    for (const part of String(s.metadata.bundles ?? '').split(',').filter(Boolean)) {
+      const [key, n, per] = part.split(':')
+      const b = BUNDLES[key as BundleKey]
+      const learners = Math.max(1, Math.min(500, Math.floor(Number(n) || 0)))
+      if (!b || !Number(n)) continue
+      const unit = Math.max(1, Math.round((Number(per) || b.pence) / b.slugs.length))
+      for (const slug of b.slugs) items.push({ slug, qty: learners, free: 0, unit })
     }
     if (!items.length) {
       const slug = s.metadata.module_slug || ''
@@ -695,6 +710,10 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
     const buyerTenant = tenantId
       ? await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true, account_number: true } }).catch(() => null)
       : null
+    for (const part of String(s.metadata.bundles ?? '').split(',').filter(Boolean)) {
+      const [key, n] = part.split(':')
+      if (BUNDLES[key as BundleKey]) orderLines.unshift({ title: `BUNDLE: ${BUNDLES[key as BundleKey].name}, ${n} learners (licences listed below)`, qty: 0 })
+    }
     // Paid add-ons (team set-up) are work for us: they lead the notification.
     for (const k of addonsFromMeta(s.metadata)) orderLines.unshift({ title: `ADD-ON PAID: ${ADDONS[k].name}`, qty: 1 })
     if (s.metadata.post_purchase === '1') orderLines.unshift({ title: 'Post-purchase offer (extra licences)', qty: 0 })

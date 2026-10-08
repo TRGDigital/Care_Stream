@@ -6,6 +6,7 @@ import { useCart, trackBasketEvent } from '@/lib/cart-store'
 import { useSavedCourses } from '@/lib/saved-courses'
 import { UNIT_PENCE, DISCOUNT_TIERS, discountPctForQty } from '@/lib/training-commerce'
 import { useOffers, licenceDeal, policyDeal } from '@/lib/offers'
+import { bundleOf, bundleQuote, type BundleKey } from '@/lib/bundle-rules'
 import { LicenceOfferCard, PolicyOfferCard } from './licence-offer'
 import { usePolicyBasket, type BasketItem } from './policy-basket'
 import { PaymentLogos } from './payment-logos'
@@ -231,7 +232,7 @@ function detailsError(org: string, name: string, email: string, emailOnly = fals
 export interface ModuleInfo { image: string | null; minutes: number | null; title?: string }
 
 export function TrainingCheckout({ modules }: { modules: Record<string, ModuleInfo> }) {
-  const { items, totalQty, gross, discount, pct, net, cart } = useCart()
+  const { items, bundles, totalQty, gross, discount, pct, net, cart } = useCart()
   const { items: saved, savedCourses } = useSavedCourses()
   const [org, setOrg] = useRemembered('org')
   const [name, setName] = useRemembered('name')
@@ -275,7 +276,14 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
     return n + i.qty * (Math.round(i.unitPence * (1 - pct / 100)) - Math.round(i.unitPence * (1 - d.pct / 100)))
   }, 0)
   const offerLabel = items.map(i => deals[i.slug].offer?.label).find(Boolean) ?? 'Offer'
-  const payNow = net - offerSaving + (teamSetup && items.length ? ADDONS['team-setup'].pence : 0)
+  // CPD course bundles (lib/bundle-rules.ts): each priced best price wins, nothing stacks on them.
+  const bundleRows = bundles.map(i => {
+    const b = bundleOf(i.slug)
+    return b ? { slug: i.slug, b, n: i.qty, q: bundleQuote(offers, b.key as BundleKey, i.qty, UNIT_PENCE) } : null
+  }).filter((r): r is NonNullable<typeof r> => !!r)
+  const bundleTotal = bundleRows.reduce((t, r) => t + r.q.total, 0)
+  const any = items.length + bundleRows.length > 0
+  const payNow = net - offerSaving + bundleTotal + (teamSetup && any ? ADDONS['team-setup'].pence : 0)
 
   async function pay() {
     const problem = detailsError(org, name, email)
@@ -283,6 +291,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
     setError(''); setBusy(true)
     items.forEach(i => trackBasketEvent('checkout', i.slug, i.qty))
     items.forEach(i => fi('checkout_start', { funnel: 'training', option: i.slug, label: i.title, qty: i.qty }))
+    bundleRows.forEach(r => fi('checkout_start', { funnel: 'training', option: r.slug, label: r.b.name, qty: r.n }))
     reportMicro('begin_checkout', 'training-basket')
     try {
       const res = await fetch(`${API_URL}/public/training/checkout-basket`, {
@@ -290,7 +299,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           attribution: fiAttribution(), lock: offerLock(), return_path: location.pathname,
-          items: items.map(i => ({ module_slug: i.slug, quantity: i.qty })),
+          items: [...items.map(i => ({ module_slug: i.slug, quantity: i.qty })), ...bundleRows.map(r => ({ module_slug: r.slug, quantity: r.n }))],
           addons: teamSetup ? ['team-setup'] : [],
           email: email.trim(), org_name: org.trim(), name: name.trim(),
         }),
@@ -337,7 +346,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
 
   if (!mounted) return <main className="ckpage" aria-busy="true" />
 
-  const empty = items.length === 0
+  const empty = !any
     ? <Empty title="Your basket is empty" text="Browse the training library and add the courses your team needs."
              href="/staff-training" cta="Browse training" extra={savedPanel} />
     : null
@@ -354,6 +363,12 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
       summary={
         <Summary
           lines={<>
+            {bundleRows.map(r => (
+              <div className="ckline-item" key={r.slug}>
+                <span>{r.b.name} · {r.n} {r.n === 1 ? 'learner' : 'learners'}</span>
+                <b>{r.q.listTotal > r.q.total && <s className="ckwas">{money(r.q.listTotal)}</s>} {money(r.q.total)}</b>
+              </div>
+            ))}
             {/* Each course and its licences; the free ones are counted in and shown in the offer line. */}
             {items.map(i => (
               <div className="ckline-item" key={i.slug}>
@@ -367,19 +382,19 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
             {teamSetup && <div><span>Team set-up, done for you</span><b>{money(ADDONS['team-setup'].pence)}</b></div>}
           </>}
           total={payNow}
-          was={(() => { const full = items.reduce((n, i) => n + (i.qty + deals[i.slug].free) * UNIT_PENCE, 0) + (teamSetup ? ADDONS['team-setup'].pence : 0); return full > payNow ? full : undefined })()}
-          extras={items.length ? <>
+          was={(() => { const full = items.reduce((n, i) => n + (i.qty + deals[i.slug].free) * UNIT_PENCE, 0) + bundleRows.reduce((n, r) => n + r.q.listTotal, 0) + (teamSetup ? ADDONS['team-setup'].pence : 0); return full > payNow ? full : undefined })()}
+          extras={any ? <>
             <AddonOption k="team-setup" checked={teamSetup} onChange={setTeamSetup} />
             <ShareBasket funnel="training" items={items.map(i => ({ slug: i.slug, qty: i.qty }))} />
           </> : null}
-          invoice={{ funnel: 'training', items: [...items.map(i => `${i.qty} × ${i.title}`), ...(teamSetup ? [ADDONS['team-setup'].title] : [])] }}
+          invoice={{ funnel: 'training', items: [...bundleRows.map(r => `${r.n} × ${r.b.name} (${r.b.slugs.length} CPD courses per learner)`), ...items.map(i => `${i.qty} × ${i.title}`), ...(teamSetup ? [ADDONS['team-setup'].title] : [])] }}
           sub="One-off payment. No subscription."
           assurances={[
             ['Fourteen day refund', 'If a licence has not been started, tell us within fourteen days and we refund it in full.'],
             ['Instant access', 'Courses are ready to allocate as soon as payment completes, with a sign-in link by email.'],
             ['Licences stay with your team', 'Assign each licence to a staff member from your dashboard. A receipt comes with every order.'],
           ]}
-          ready={items.length > 0}
+          ready={any}
           busy={busy}
           error={error}
           onPay={pay}
@@ -387,8 +402,31 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
       }
     >
       <div className="ckpanel">
-        <div className="ckpanel-hd"><h2>In your basket</h2><span>{items.length} {items.length === 1 ? 'course' : 'courses'}</span></div>
+        <div className="ckpanel-hd"><h2>In your basket</h2><span>{items.length + bundleRows.length} {items.length + bundleRows.length === 1 ? 'item' : 'items'}</span></div>
         <ul className="ckitems">
+          {bundleRows.map(r => (
+            <li className="ckitem" key={r.slug}>
+              <span className="ckthumb">{modules[r.b.slugs[1]]?.image && <img src={modules[r.b.slugs[1]]!.image!} alt="" />}</span>
+              <div className="ckinfo">
+                <Link href="/staff-training/cpd-courses?intent=bundles">{r.b.name}</Link>
+                <div className="meta">{money(r.b.pence)} per learner · {r.b.slugs.length} CPD Certified courses each</div>
+                <ul className="ckreassure">
+                  <li><Tick />A licence for every course, for every learner</li><li><Tick />You always get the best price</li>
+                </ul>
+                {r.q.winner === 'singles' && <div className="ckfree">The live offer beats the bundle price for {r.n} learners, so you pay {money(r.q.total)}</div>}
+                <div className="acts"><button type="button" onClick={() => cart.remove(r.slug)}>Remove</button></div>
+              </div>
+              <div className="ckright">
+                <div className="ckqty">
+                  <button type="button" aria-label="Fewer learners" onClick={() => (r.n <= 1 ? cart.remove(r.slug) : cart.setQty(r.slug, r.n - 1))}>−</button>
+                  <input type="number" min={1} value={r.n} aria-label={`Learners for ${r.b.name}`}
+                         onChange={e => cart.setQty(r.slug, parseInt(e.target.value || '1', 10))} />
+                  <button type="button" aria-label="More learners" onClick={() => cart.setQty(r.slug, r.n + 1)}>+</button>
+                </div>
+                <span className="ckprice">{money(r.q.total)}</span>
+              </div>
+            </li>
+          ))}
           {items.map(i => {
             const info = modules[i.slug]
             return (

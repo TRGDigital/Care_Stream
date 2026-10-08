@@ -38,5 +38,5 @@ export default async function CpdCoursesPage({ searchParams }: { searchParams: R
   const courses = await getCourses()
   const r = REVIEWS[0]
   const review = r ? { quote: r.short ?? r.excerpt, name: r.name, setting: r.setting } : null
-  return <CpdCollection courses={courses} intentKey={one(searchParams.intent)} review={review} />
+  return <CpdCollection courses={courses} intentKey={one(searchParams.intent)} review={review} hl={one(searchParams.hl)} />
 }

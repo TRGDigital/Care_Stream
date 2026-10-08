@@ -137,14 +137,12 @@
 /* Summary: sticky column on desktop, a sheet from the bottom bar on phones */
 .cc-aside { display: none }
 @media (min-width: 1024px) {
-  .cc-wrap { align-items: stretch }
-  .cc-aside { display: block; padding-top: 40px; padding-bottom: 24px }
-  /* The summary card stays in view while the courses scroll, until the page ends. */
-  .cc-sum { position: sticky; top: 88px; z-index: 2 }
+  /* The whole column is sticky; its top is set in cpd-collection.tsx so a tall column still fits. */
+  .cc-aside { display: block; position: sticky; top: 88px; margin-top: 32px }
 }
 .cc-aside.open { display: block; position: fixed; inset: auto 0 0 0; z-index: 60; padding: 0; max-height: 85vh; overflow-y: auto; box-shadow: 0 -12px 40px rgba(0,0,0,.2) }
 @media (min-width: 1024px) { .cc-aside.open { position: sticky; inset: auto; box-shadow: none; max-height: none; padding-top: 40px } }
-.cc-sum { border: 1px solid var(--line); border-radius: var(--r); padding: 18px; background: #fff; box-shadow: var(--shadow) }
+.cc-sum { border: 1px solid var(--line); border-radius: var(--r); padding: 16px; background: #fff; box-shadow: var(--shadow) }
 .cc-aside.open .cc-sum { border-radius: 16px 16px 0 0 }
 .cc-sumhead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px }
 .cc-sumhead h2 { font-size: 1.2rem }
@@ -163,12 +161,18 @@
 .cc-total b { font-size: 1.5rem }
 .cc-quote { font-size: 13px; color: var(--ink-2); margin: 12px 0 0 }
 .cc-demo { font-size: 13px; background: #FFF4E5; color: #7A3E00; border-radius: 10px; padding: 10px 12px; margin: 12px 0 0 }
-.cc-sumticks { list-style: none; padding: 14px 0 0; margin: 14px 0 0; border-top: 1px solid var(--line); display: grid; gap: 8px; font-size: 14px; color: var(--ink-2) }
+.cc-sumticks { list-style: none; padding: 12px 0 0; margin: 12px 0 0; border-top: 1px solid var(--line); display: grid; gap: 5px; font-size: 13.5px; color: var(--ink-2) }
 .cc-sumticks li { display: flex; gap: 8px; align-items: flex-start }
 .cc-sumticks svg { margin-top: 3px }
-.cc-finder-desk { margin-top: 16px }
-.cc-finder-desk .cc-finder { padding: 16px }
-.cc-finder-desk .cc-finder h2 { font-size: 1.15rem }
+.cc-finder-desk { margin-top: 12px }
+.cc-finder-desk .cc-finder { padding: 14px 16px }
+.cc-finder-desk .cc-finder h2 { font-size: 1.05rem; margin-bottom: 2px }
+.cc-finder-desk .cc-finder .cc-eb { margin-bottom: 4px }
+.cc-finder-desk .cc-finder fieldset { margin-top: 10px }
+.cc-finder-desk .cc-finder legend { font-size: 14px; margin-bottom: 6px }
+.cc-finder-desk .cc-opts { gap: 6px }
+.cc-finder-desk .cc-finderhint { margin-top: 10px; font-size: 13px }
+.cc-finder-desk .cc-step button { width: 30px; height: 30px }
 .cc-finder-desk .cc-opts button { padding: 6px 11px; font-size: 13px }
 .cc-finder-mobile { display: block }
 @media (min-width: 1024px) { .cc-finder-mobile { display: none } }

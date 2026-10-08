@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useCart, cart } from '@/lib/cart-store'
 import { useOffers, licenceOffer, money2 } from '@/lib/offers'
 import { UNIT_PENCE, gbp } from '@/lib/training-commerce'
@@ -42,13 +42,13 @@ const offerEmoji = (label?: string | null) => (/halloween/i.test(label ?? '') ? 
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })
 
 const BENEFITS = [
-  'Every course CPD Certified, with the CPD mark on each certificate',
-  'Staff learn in their own language, from over 60',
-  'Short lessons on any phone, about an hour a course',
-  'Named, dated certificates ready for CQC',
-  'See who has finished from your dashboard',
-  'You always get the best price, offer or bundle',
-  'No subscription. Pay by card or invoice',
+  'CPD mark on every certificate',
+  'Staff learn in 60+ languages',
+  'About an hour a course, any phone',
+  'Dated certificates ready for CQC',
+  'See who has finished, at a glance',
+  'Always the best price, offer or bundle',
+  'No subscription. Card or invoice',
 ]
 
 export function CpdCollection({ courses, intentKey, review }: {
@@ -61,6 +61,20 @@ export function CpdCollection({ courses, intentKey, review }: {
   const [learners, setLearners] = useState<Record<BundleKey, number>>({ complete: 0, refresher: 0 })
   const [chip, setChip] = useState<Chip>(intent.chip ?? 'all')
   const [sheet, setSheet] = useState(false)
+  // The whole right column (Your training and the finder) is sticky. When it is taller than the
+  // window it scrolls with the page until its bottom is in view, then sticks (a negative top), so
+  // it never needs a scrollbar of its own and nothing slides under anything.
+  const asideRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const el = asideRef.current
+    if (!el) return
+    const fit = () => { el.style.top = window.innerWidth >= 1024 ? `${Math.min(88, window.innerHeight - el.offsetHeight - 12)}px` : '' }
+    fit()
+    const ro = new ResizeObserver(fit)
+    ro.observe(el)
+    window.addEventListener('resize', fit)
+    return () => { ro.disconnect(); window.removeEventListener('resize', fit) }
+  }, [])
 
   const ordered = useMemo(() => {
     const f = intent.feature
@@ -265,7 +279,7 @@ export function CpdCollection({ courses, intentKey, review }: {
           </section>
         </div>
 
-        <aside className={`cc-aside${sheet ? ' open' : ''}`} id="summary" aria-label="Your training">
+        <aside ref={asideRef} className={`cc-aside${sheet ? ' open' : ''}`} id="summary" aria-label="Your training">
           <div className="cc-sum">
             <div className="cc-sumhead"><h2>Your training</h2><button type="button" className="cc-x" onClick={() => setSheet(false)} aria-label="Close">×</button></div>
             {lineCount === 0 && <p className="cc-empty">Add a bundle or a course to see your price.</p>}

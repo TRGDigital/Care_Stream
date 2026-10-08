@@ -378,13 +378,7 @@ export async function createTrainingBasketCheckoutSession(input: TrainingBasketC
   const offers = await offersWithLock(input.lock)
   // Bundles: their own line each, at the best price for that many learners (bundle-rules.ts).
   // Recorded as key:learners:perLearner, so reconcile gives every learner each bundled course.
-  // TEMPORARY (Len, 2026-10-08): bundles cost £1 per learner for Len's own test orders, so the
-  // whole flow (payment, licences, emails) can be checked for real. Remove after the test.
-  const bundleTest = /^lenny(\+[a-z0-9-]+)?@trgdigital\.co\.uk$/i.test(input.email.trim())
-  const bundleLines = bundleReq.map(b => {
-    const q = bundleQuote(offers, b.key, b.learners, TRAINING_LICENCE_PENCE)
-    return { ...b, q: bundleTest ? { ...q, perLearner: 100, total: 100 * b.learners } : q }
-  })
+  const bundleLines = bundleReq.map(b => ({ ...b, q: bundleQuote(offers, b.key, b.learners, TRAINING_LICENCE_PENCE) }))
   const deals = items.map(i => {
     const d = licenceDeal(offers, i.moduleSlug, i.quantity)
     return { ...d, unit: d.pct > pct ? Math.round(TRAINING_LICENCE_PENCE * (1 - d.pct / 100)) : unit }

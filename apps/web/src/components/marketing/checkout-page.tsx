@@ -97,7 +97,7 @@ function Details({ orgLabel, orgPlaceholder, emailNote, org, setOrg, name, setNa
   )
 }
 
-function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, extras, invoice, termsBelow = false, was }: {
+function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, extras, invoice, termsBelow = false, was, fix }: {
   lines: ReactNode; total: number; sub: string
   /** The total before the offer, shown struck through beside the total when the offer saved them money. */
   was?: number
@@ -106,6 +106,8 @@ function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, ext
   invoice: { funnel: 'training' | 'policies'; items: string[] }
   assurances: [string, string][]
   ready: boolean; busy: boolean; error: string
+  /** A field shown under the error, so a missing detail can be filled in without leaving the summary. */
+  fix?: ReactNode
   onPay: (agreed: boolean) => void
   /** In the cart drawer the terms are stated at its foot, with no tick box. */
   termsBelow?: boolean
@@ -131,6 +133,7 @@ function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, ext
           <Lock />{busy ? 'Starting secure checkout…' : 'Checkout securely'}
         </button>
         {error && <p className="ckerr" role="alert">{error}</p>}
+        {error && fix}
         <PaymentLogos className="ckpaylogos" />
         <p className="cksecure"><Lock />Payment is taken on Stripe&apos;s secure page. We never see your card details.</p>
         {/* Care groups often cannot pay by card: the invoice and purchase order route, in plain view. */}
@@ -218,6 +221,23 @@ function payError(e: unknown) {
   if (e instanceof TypeError) return 'We could not reach the secure payment page. Please check your connection and try again.'
   return e instanceof Error && e.message ? e.message : 'Something went wrong. Please try again.'
 }
+
+/** The field for a missing organisation or name, shown under the error in the order summary. */
+function FixField({ error, org, setOrg, name, setName, orgLabel = 'Organisation name' }: {
+  error: string; org: string; setOrg: (v: string) => void; name: string; setName: (v: string) => void; orgLabel?: string
+}) {
+  const which = error === ORG_MISSING ? 'org' : error === NAME_MISSING ? 'name' : null
+  if (!which) return null
+  return (
+    <label className="ckfix">
+      <span>{which === 'org' ? orgLabel : 'Your full name'}</span>
+      <input autoFocus value={which === 'org' ? org : name} autoComplete={which === 'org' ? 'organization' : 'name'}
+             onChange={e => (which === 'org' ? setOrg : setName)(e.target.value)} />
+    </label>
+  )
+}
+const ORG_MISSING = 'Please enter your organisation name.'
+const NAME_MISSING = 'Please enter your full name.'
 
 /** Validates the details form; returns the message to show, or '' when it can go ahead. */
 function detailsError(org: string, name: string, email: string, emailOnly = false) {
@@ -397,6 +417,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
           ready={any}
           busy={busy}
           error={error}
+          fix={<FixField error={error} org={org} setOrg={setOrg} name={name} setName={setName} />}
           onPay={pay}
         />
       }
@@ -721,6 +742,7 @@ export function PolicyCheckout({ compact = false, onProgress }: {
           ready={count > 0}
           busy={busy}
           error={error}
+          fix={<FixField error={error} org={org} setOrg={setOrg} name={name} setName={setName} />}
           onPay={pay}
           termsBelow={compact}
         />

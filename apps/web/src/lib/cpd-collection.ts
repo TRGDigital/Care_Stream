@@ -48,7 +48,7 @@ export function bundleQuote(offers: Offer[], key: BundleKey, learners: number) {
 
 // ─── Page versions (?intent=) ─────────────────────────────────────────────────
 // feature: the course shown first and highlighted. chip: the filter the grid opens on.
-export type CpdIntent = { tag: string; headline: string; sub: string; feature?: string; chip?: Chip; bundle?: BundleKey }
+export type CpdIntent = { tag: string; headline: string; sub: string; feature?: string; chip?: Chip; bundle?: BundleKey; topic?: string }
 export type Chip = 'all' | 'refreshers' | 'starters' | 'practical'
 
 const SUB = 'Ten short courses built for care settings, each with a CPD Certified certificate for every learner. Buy one course, or a bundle for the whole team.'
@@ -91,7 +91,7 @@ export function intentFor(k?: string | null, focus?: string | null): CpdIntent {
   const v = AD_VERSIONS.versions[k ?? '']
   if (!v) return CPD_INTENTS[k ?? ''] ?? CPD_INTENTS['']
   const f = focus ? AD_VERSIONS.focus[focus] : undefined
-  if (!f) return { tag: v.tag, headline: v.headline, sub: v.sub, feature: v.feature, chip: v.chip, bundle: v.bundle }
+  if (!f) return { tag: v.tag, headline: v.headline, sub: v.sub, feature: v.feature, chip: v.chip, bundle: v.bundle, topic: v.topic }
   const fill = (t: string) => t.replace('{Topic}', v.topic.charAt(0).toUpperCase() + v.topic.slice(1)).replace('{topic}', v.topic).replace('{who}', v.who)
-  return { tag: f.tag, headline: fill(f.headline), sub: fill(f.sub), feature: v.feature, chip: f.chip ?? v.chip, bundle: f.bundle ?? v.bundle }
+  return { tag: f.tag, headline: fill(f.headline), sub: fill(f.sub), feature: v.feature, chip: f.chip ?? v.chip, bundle: f.bundle ?? v.bundle, topic: v.topic }
 }

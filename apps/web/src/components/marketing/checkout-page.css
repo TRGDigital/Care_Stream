@@ -210,3 +210,8 @@
 .cklines .ckline-item b{white-space:nowrap;font-weight:650}
 .cklines .ckline-item .ckfreetag{color:var(--good);font-weight:800}
 .cktotal .ckwastotal{font-size:1.05rem;font-weight:600;color:var(--muted);margin-right:8px;letter-spacing:0}
+
+/* The missing organisation or name, filled in under the error in the order summary (FixField). */
+.ckfix{display:flex;flex-direction:column;gap:6px;margin:8px 0 0;font-size:14px;font-weight:600}
+.ckfix input{border:1px solid #d6d0e0;border-radius:8px;padding:10px 12px;font:inherit;font-weight:400}
+.ckfix input:focus{outline:2px solid #7B3FBF;outline-offset:1px}

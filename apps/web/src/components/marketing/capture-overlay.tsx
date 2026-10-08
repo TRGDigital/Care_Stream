@@ -85,8 +85,11 @@ function report(c: Campaign, v: Variant, stage: 'shown' | 'step1' | 'quiz_done' 
 type Answer = 'yes' | 'unsure' | 'no'
 const ANSWERS: [Answer, string][] = [['yes', 'Yes'], ['unsure', 'Not sure'], ['no', 'No']]
 
-export function CaptureOverlay({ funnel, product, title, image, quiz }: {
+export function CaptureOverlay({ funnel, product, title, image, quiz, offerName }: {
   funnel: 'training' | 'policies'; product: string; title: string; image?: string | null
+  /** What the offer (lock-in) version calls the product, in place of "<title> training": the CPD
+   *  courses page passes its ad group's keyword phrase, e.g. "care home staff training". */
+  offerName?: string | null
   /** For a quiz variant: three things this policy must do, and how many required elements it has. */
   quiz?: { questions: string[]; count: number } | null
 }) {
@@ -189,7 +192,7 @@ export function CaptureOverlay({ funnel, product, title, image, quiz }: {
 
   if (!open || !campaign || !shown) return null
 
-  const productName = funnel === 'training' ? `${title} training` : title
+  const productName = shown.kind === 'lockin' && offerName ? offerName : funnel === 'training' ? `${title} training` : title
   const until = new Date(Date.now() + 30 * 86400000).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })
   const aProduct = funnel === 'training' ? productName : `a ${productName}`
   const fill = (s: string) => (s || '')

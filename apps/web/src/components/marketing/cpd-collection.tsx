@@ -355,7 +355,7 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
       {/* The same exit question and email capture as the course pages. The capture needs a real
           course for its checklist and offer: the ad group's course, otherwise the Care Certificate. */}
       <ExitQuestion funnel="training" product={intent.feature ?? 'cpd-courses'} />
-      <CaptureOverlay funnel="training" product={captureCourse.slug} title={captureCourse.title} image={captureCourse.image} />
+      <CaptureOverlay funnel="training" product={captureCourse.slug} title={captureCourse.title} image={captureCourse.image} offerName={intent.topic ?? 'CPD Certified mandatory training'} />
 
       {lineCount > 0 && (
         <button type="button" className="cc-mbar" onClick={() => setSheet(true)}>

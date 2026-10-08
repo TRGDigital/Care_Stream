@@ -1,12 +1,11 @@
-import Link from 'next/link'
 import { CpdCollection } from '@/components/marketing/cpd-collection'
 import { CPD_COURSE_INFO, CPD_SLUGS, type CpdCourse } from '@/lib/cpd-collection'
 import { apiAssetUrl } from '@/lib/api-client'
 import { REVIEWS } from '@/lib/reviews'
 
 // The CPD courses collection: the landing page for the CPD category Google Ads campaigns, one
-// ?intent= version per ad group (lib/cpd-collection.ts). ?layout=a|b|c picks the design while
-// Len chooses one (cpd-collection.tsx); noindex until then.
+// ?intent= version per ad group (lib/cpd-collection.ts). Layout A chosen by Len 2026-10-08.
+// noindex while it is a demo.
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 export const revalidate = 300
@@ -34,23 +33,10 @@ async function getCourses(): Promise<CpdCourse[]> {
   }
 }
 
-const LAYOUTS = [['a', 'A: Collection'], ['b', 'B: Finder first'], ['c', 'C: Bundles first']] as const
-
 export default async function CpdCoursesPage({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
   const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? ''
-  const layout = (['a', 'b', 'c'].includes(one(searchParams.layout)) ? one(searchParams.layout) : 'a') as 'a' | 'b' | 'c'
-  const intent = one(searchParams.intent)
   const courses = await getCourses()
   const r = REVIEWS[0]
   const review = r ? { quote: r.short ?? r.excerpt, name: r.name, setting: r.setting } : null
-  const q = (l: string) => `?${new URLSearchParams({ ...(intent ? { intent } : {}), layout: l }).toString()}`
-  return (
-    <>
-      <div className="cc-demobar">
-        <span>Demo layouts:</span>
-        {LAYOUTS.map(([k, label]) => <Link key={k} href={q(k)} className={k === layout ? 'on' : ''}>{label}</Link>)}
-      </div>
-      <CpdCollection courses={courses} variant={layout} intentKey={intent} review={review} />
-    </>
-  )
+  return <CpdCollection courses={courses} intentKey={one(searchParams.intent)} review={review} />
 }

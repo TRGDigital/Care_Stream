@@ -53,7 +53,17 @@
 .cc-step button { width: 34px; height: 34px; border-radius: 8px; border: 0; background: var(--ground-2); font-size: 18px; font-weight: 700 }
 .cc-step input { width: 52px; text-align: center; border: 0; font-size: 16px; font-weight: 700; background: transparent }
 .cc-best { margin: 12px 0 0; font-size: 14px; color: var(--ink-2); background: #EEF8F2; border-radius: 10px; padding: 10px 12px }
-.cc-add, .cc-checkout { display: block; width: 100%; margin-top: 14px; text-align: center; background: var(--ink); color: #fff !important; border: 0; border-radius: 10px; padding: 12px 16px; font-weight: 700; text-decoration: none }
+.cc-add, .cc-checkout { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 14px; text-align: center; border: 0; border-radius: 10px; padding: 12px 16px; font-weight: 700; text-decoration: none }
+.cc-add { background: #F28C38; color: #1F1530 !important }
+.cc-add:hover { background: #E57A22 }
+.cc-add svg { width: 18px; height: 18px }
+.cc-checkout { background: var(--ink); color: #fff !important }
+.cc-remove { background: none; border: 0; padding: 0; margin-top: 10px; color: var(--muted); font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 2px }
+.cc-remove:hover { color: #C0392B }
+.cc-incart { display: flex; align-items: center; gap: 14px; flex-wrap: wrap }
+.cc-incart .cc-remove { margin-top: 0 }
+.cc-in .cc-add { margin-top: 4px }
+.cc-more { font-size: 14px; color: var(--accent); text-decoration: underline; text-underline-offset: 2px }
 .cc-bnote { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 14px }
 
 /* Grid */
@@ -79,9 +89,6 @@
 .cc-foot { display: flex; align-items: center; gap: 10px; margin-top: auto; padding-top: 6px }
 .cc-foot b { font-size: 1.15rem }
 .cc-offer { font-size: 12px; font-weight: 700; color: #7A3E00; background: #FFF4E5; border-radius: 99px; padding: 3px 9px }
-.cpdc .cc-cardadd { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--ink); border-radius: 10px; padding: 10px 12px; background: #fff; font-weight: 700; color: var(--ink) }
-.cpdc .cc-cardadd svg { width: 17px; height: 17px }
-.cpdc span.cc-cardadd button { border: 0; background: var(--ground-2); border-radius: 6px; width: 30px; height: 30px; font-weight: 700 }
 
 /* Finder */
 .cc-finder { border: 2px solid var(--accent); border-radius: var(--r); padding: 20px; background: #fff; box-shadow: var(--shadow) }
@@ -123,7 +130,7 @@
 
 /* Summary: sticky column on desktop, a sheet from the bottom bar on phones */
 .cc-aside { display: none }
-@media (min-width: 1024px) { .cc-aside { display: block; position: sticky; top: 88px; padding-top: 40px } }
+@media (min-width: 1024px) { .cc-aside { display: block; position: sticky; top: 88px; padding-top: 40px; max-height: calc(100vh - 88px); overflow-y: auto; padding-bottom: 24px } }
 .cc-aside.open { display: block; position: fixed; inset: auto 0 0 0; z-index: 60; padding: 0; max-height: 85vh; overflow-y: auto; box-shadow: 0 -12px 40px rgba(0,0,0,.2) }
 @media (min-width: 1024px) { .cc-aside.open { position: sticky; inset: auto; box-shadow: none; max-height: none; padding-top: 40px } }
 .cc-sum { border: 1px solid var(--line); border-radius: var(--r); padding: 18px; background: #fff; box-shadow: var(--shadow) }
@@ -133,23 +140,30 @@
 .cc-x { border: 0; background: none; font-size: 26px; line-height: 1 }
 @media (min-width: 1024px) { .cc-x { display: none } }
 .cc-empty { color: var(--muted); font-size: 14px; margin: 0 }
-.cc-line { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px }
+.cc-line { display: grid; grid-template-columns: minmax(0,1fr) auto 24px; align-items: start; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px }
 .cc-line b { display: block }
 .cc-line span { color: var(--muted); font-size: 13px }
-.cc-line.sub { border-bottom: 0 }
+.cc-line.sub { border-bottom: 0; grid-template-columns: minmax(0,1fr) auto 24px }
+.cc-del { border: 0; background: var(--ground-2); border-radius: 6px; width: 24px; height: 24px; line-height: 1; font-size: 16px; color: var(--muted) }
+.cc-del:hover { color: #C0392B }
 .cc-amt { text-align: right; font-weight: 700; white-space: nowrap }
 .cc-amt s { display: block; color: var(--muted); font-weight: 400; font-size: 12px }
 .cc-total { display: flex; justify-content: space-between; align-items: baseline; padding-top: 10px; margin-top: 4px; border-top: 2px solid var(--ink) }
 .cc-total b { font-size: 1.5rem }
 .cc-demo { font-size: 13px; background: #FFF4E5; color: #7A3E00; border-radius: 10px; padding: 10px 12px; margin: 12px 0 0 }
-.cc-sumticks { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 6px; font-size: 13px; color: var(--ink-2) }
-.cc-sumticks li { display: flex; gap: 6px; align-items: center }
+.cc-sumticks { list-style: none; padding: 14px 0 0; margin: 14px 0 0; border-top: 1px solid var(--line); display: grid; gap: 8px; font-size: 14px; color: var(--ink-2) }
+.cc-sumticks li { display: flex; gap: 8px; align-items: flex-start }
+.cc-sumticks svg { margin-top: 3px }
+.cc-finder-desk { margin-top: 16px }
+.cc-finder-desk .cc-finder { padding: 16px }
+.cc-finder-desk .cc-finder h2 { font-size: 1.15rem }
+.cc-finder-desk .cc-opts button { padding: 6px 11px; font-size: 13px }
+.cc-finder-mobile { display: block }
+@media (min-width: 1024px) { .cc-finder-mobile { display: none } }
+@media (max-width: 1023px) { .cc-finder-desk { display: none } }
 
 .cc-mbar { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 55; display: flex; align-items: center; gap: 10px; border: 0; border-radius: 12px; background: var(--ink); color: #fff; padding: 14px 16px; box-shadow: 0 8px 30px rgba(0,0,0,.25) }
 .cc-mbar span { flex: 1; text-align: left; font-size: 14px }
 .cc-mbar em { font-style: normal; font-weight: 700; background: #fff; color: var(--ink); border-radius: 8px; padding: 4px 10px; font-size: 14px }
 @media (min-width: 1024px) { .cc-mbar { display: none } }
 
-.cc-demobar { background: #17121F; color: #fff; font-size: 13px; padding: 8px 16px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; align-items: center }
-.cc-demobar a { color: #fff; border: 1px solid rgba(255,255,255,.35); border-radius: 99px; padding: 2px 10px; text-decoration: none; font-weight: 600 }
-.cc-demobar a.on { background: #fff; color: #17121F }

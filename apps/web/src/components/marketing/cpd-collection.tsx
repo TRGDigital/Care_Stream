@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useCart, cart } from '@/lib/cart-store'
 import { useOffers, licenceOffer, money2 } from '@/lib/offers'
 import { UNIT_PENCE, gbp } from '@/lib/training-commerce'
@@ -33,6 +33,9 @@ const CartIcon = () => (
   </svg>
 )
 
+// The offer's emoji, shown wherever the offer is named on this page.
+const offerEmoji = (label?: string | null) => (/halloween/i.test(label ?? '') ? '🎃 ' : '')
+
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })
 
 const BENEFITS = [
@@ -55,19 +58,6 @@ export function CpdCollection({ courses, intentKey, review }: {
   const [learners, setLearners] = useState<Record<BundleKey, number>>({ complete: 0, refresher: 0 })
   const [chip, setChip] = useState<Chip>(intent.chip ?? 'all')
   const [sheet, setSheet] = useState(false)
-  // "Your training" sticks without a scrollbar of its own: when it is taller than the window it
-  // scrolls with the page and then sticks with its bottom in view (a negative sticky top).
-  const asideRef = useRef<HTMLElement>(null)
-  useEffect(() => {
-    const el = asideRef.current
-    if (!el) return
-    const fit = () => { el.style.top = window.innerWidth >= 1024 ? `${Math.min(88, window.innerHeight - el.offsetHeight - 16)}px` : '' }
-    fit()
-    const ro = new ResizeObserver(fit)
-    ro.observe(el)
-    window.addEventListener('resize', fit)
-    return () => { ro.disconnect(); window.removeEventListener('resize', fit) }
-  }, [])
 
   const ordered = useMemo(() => {
     const f = intent.feature
@@ -95,7 +85,7 @@ export function CpdCollection({ courses, intentKey, review }: {
     <div className="cpdc">
       {offer && (
         <div className="cc-offerbar">
-          {/halloween/i.test(offer.label ?? '') && <span className="cc-emoji" aria-hidden="true">🎃</span>}
+          {offerEmoji(offer.label) && <span className="cc-emoji" aria-hidden="true">🎃</span>}
           <b>{offer.label}:</b> {offer.headline} <span>Ends {fmtDate(offer.ends_on)}</span>
         </div>
       )}
@@ -111,6 +101,11 @@ export function CpdCollection({ courses, intentKey, review }: {
               <li><Tick />A certificate for every learner</li>
               <li><Tick />Manager dashboard included</li>
             </ul>
+            <div className="cc-cpdbanner">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified" width={64} height={58} />
+              <p><b>Every course is CPD Certified</b> by The CPD Certification Service. CareStream is CPD Provider No. 50224, and every certificate shows the CPD mark and CPD hours. <Link href="/cpd-certified">Check our listing</Link></p>
+            </div>
           </section>
 
           <section className="cc-sec">
@@ -186,7 +181,7 @@ export function CpdCollection({ courses, intentKey, review }: {
                       </div>
                       <div className="cc-foot">
                         <b>{gbp(UNIT_PENCE)}</b>
-                        {o && <span className="cc-offer">{o.label}</span>}
+                        {o && <span className="cc-offer">{offerEmoji(o.label)}{o.label}</span>}
                       </div>
                       {inCart ? (
                         <div className="cc-incart">
@@ -263,7 +258,7 @@ export function CpdCollection({ courses, intentKey, review }: {
           </section>
         </div>
 
-        <aside ref={asideRef} className={`cc-aside${sheet ? ' open' : ''}`} id="summary" aria-label="Your training">
+        <aside className={`cc-aside${sheet ? ' open' : ''}`} id="summary" aria-label="Your training">
           <div className="cc-sum">
             <div className="cc-sumhead"><h2>Your training</h2><button type="button" className="cc-x" onClick={() => setSheet(false)} aria-label="Close">×</button></div>
             {lineCount === 0 && <p className="cc-empty">Add a bundle or a course to see your price.</p>}

@@ -123,7 +123,7 @@ export function CpdCollection({ courses, intentKey, review }: {
                 const pick = intent.bundle === k
                 return (
                   <div className={`cc-bundle${pick ? ' pick' : ''}`} key={k}>
-                    {pick && <span className="cc-flag">Best for you</span>}
+                    {pick && <span className="cc-flag">Most popular</span>}
                     <p className="cc-who">{b.who}</p>
                     <h3>{b.name}</h3>
                     <p className="cc-incl">{k === 'complete' ? 'The Care Certificate and all 9 annual refreshers' : 'All 9 annual refreshers, every year'}</p>

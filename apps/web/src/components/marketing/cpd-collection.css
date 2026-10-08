@@ -58,7 +58,8 @@
 .cc-add { background: #F28C38; color: #1F1530 !important }
 .cc-add:hover { background: #E57A22 }
 .cc-add svg { width: 18px; height: 18px }
-.cc-checkout { background: var(--ink); color: #fff !important }
+.cc-checkout { background: #F28C38; color: #1F1530 !important }
+.cc-checkout:hover { background: #E57A22 }
 .cc-remove { background: none; border: 0; padding: 0; margin-top: 10px; color: var(--muted); font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 2px }
 .cc-remove:hover { color: #C0392B }
 .cc-incart { display: flex; align-items: center; gap: 14px; flex-wrap: wrap }

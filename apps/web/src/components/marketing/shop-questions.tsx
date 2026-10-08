@@ -64,7 +64,7 @@ export function ExitQuestion({ funnel, product }: { funnel: Funnel; product?: st
     // Anyone who reaches for Buy now or Checkout is not leaving unhappy: never ask them.
     const buying = (e: Event) => {
       const t = e.target as HTMLElement | null
-      if (t?.closest('.offerbtn, .ckpay, .bybtn, .pcbuynow, .add')) once('cs-exitq', true)
+      if (t?.closest('.offerbtn, .ckpay, .bybtn, .pcbuynow, .add, .cc-add, .cc-checkout')) once('cs-exitq', true)
     }
     const show = () => { if (!once('cs-exitq')) { once('cs-exitq', true); setOpen(true) } }
     const leave = (e: MouseEvent) => { if (e.clientY <= 0 && !e.relatedTarget) show() }

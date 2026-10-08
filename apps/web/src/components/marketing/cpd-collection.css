@@ -123,7 +123,7 @@
 .cc-cpdbox img { flex: none; width: 90px; height: auto }
 .cc-cpdbox p { margin: 6px 0 0; font-size: 14px; color: var(--ink-2) }
 .cc-proofgrid figure { margin: 0; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden }
-.cc-proofgrid figure img { width: 100%; display: block; aspect-ratio: 16 / 10; object-fit: contain; background: var(--ground-2); padding: 12px; box-sizing: border-box }
+.cc-proofgrid figure img { width: 100%; display: block; aspect-ratio: 1600 / 860; object-fit: contain; background: var(--ground-2) }
 .cc-proofgrid figcaption { padding: 10px 14px; font-size: 14px; font-weight: 600 }
 .cc-review { margin: 20px 0 0; border-left: 4px solid var(--accent); padding: 4px 0 4px 18px }
 .cc-review p { margin: 0; font-size: 17px; color: var(--ink-2) }
@@ -161,6 +161,7 @@
 .cc-amt s { display: block; color: var(--muted); font-weight: 400; font-size: 12px }
 .cc-total { display: flex; justify-content: space-between; align-items: baseline; padding-top: 10px; margin-top: 4px; border-top: 2px solid var(--ink) }
 .cc-total b { font-size: 1.5rem }
+.cc-quote { font-size: 13px; color: var(--ink-2); margin: 12px 0 0 }
 .cc-demo { font-size: 13px; background: #FFF4E5; color: #7A3E00; border-radius: 10px; padding: 10px 12px; margin: 12px 0 0 }
 .cc-sumticks { list-style: none; padding: 14px 0 0; margin: 14px 0 0; border-top: 1px solid var(--line); display: grid; gap: 8px; font-size: 14px; color: var(--ink-2) }
 .cc-sumticks li { display: flex; gap: 8px; align-items: flex-start }

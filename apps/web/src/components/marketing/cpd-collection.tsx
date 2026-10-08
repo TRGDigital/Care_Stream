@@ -7,6 +7,9 @@ import { useOffers, licenceOffer, money2 } from '@/lib/offers'
 import { UNIT_PENCE, gbp } from '@/lib/training-commerce'
 import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 import { fi } from '@/lib/funnel-insights'
+import { reportMicro } from '@/lib/google-ads'
+import { ExitQuestion } from './shop-questions'
+import { CaptureOverlay } from './capture-overlay'
 import {
   BUNDLES, bundleQuote, intentFor, REFRESHER_SLUGS,
   type BundleKey, type Chip, type CpdCourse,
@@ -74,9 +77,13 @@ export function CpdCollection({ courses, intentKey, review }: {
 
   const setBundle = (k: BundleKey, n: number) => {
     const v = Math.max(0, Math.min(500, n))
-    if (v > learners[k]) fi('add_to_basket', { funnel: 'training', option: `bundle:${k}`, label: BUNDLES[k].name, qty: v - learners[k] })
+    if (v > learners[k]) {
+      fi('add_to_basket', { funnel: 'training', option: `bundle:${k}`, label: BUNDLES[k].name, qty: v - learners[k] })
+      reportMicro('add_to_basket', `bundle-${k}`)
+    }
     setLearners(s => ({ ...s, [k]: v }))
   }
+  const captureCourse = courses.find(c => c.slug === (intent.feature ?? 'care-certificate')) ?? courses[0] ?? { slug: 'care-certificate', title: 'Care Certificate', image: null }
   const titleOf = (slug: string, fallback: string) => courses.find(c => c.slug === slug)?.title ?? fallback
 
   const finder = <Finder offers={offers} onPick={(k, n) => setBundle(k, n)} />
@@ -190,7 +197,7 @@ export function CpdCollection({ courses, intentKey, review }: {
                           <button type="button" className="cc-remove" onClick={() => cart.remove(c.slug)}>Remove</button>
                         </div>
                       ) : (
-                        <button type="button" className="cc-add" onClick={() => cart.add({ slug: c.slug, title: c.title, unitPence: UNIT_PENCE })}>
+                        <button type="button" className="cc-add" onClick={() => { cart.add({ slug: c.slug, title: c.title, unitPence: UNIT_PENCE }); reportMicro('add_to_basket', c.slug) }}>
                           <CartIcon /> Add to basket
                         </button>
                       )}
@@ -281,6 +288,7 @@ export function CpdCollection({ courses, intentKey, review }: {
             {lineCount > 0 && (bundleLines.length
               ? <p className="cc-demo">Demo: bundle checkout is being built. Single courses already check out from the <Link href="/basket">basket</Link>.</p>
               : <Link className="cc-checkout" href="/basket">Go to checkout</Link>)}
+            <p className="cc-quote">Training a large team or several homes? <Link href={`/contact?about=${encodeURIComponent('CPD courses quote for a team')}`}>Get a quote or pay by invoice</Link></p>
             <ul className="cc-sumticks">
               {BENEFITS.map(b => <li key={b}><Tick />{b}</li>)}
             </ul>
@@ -288,6 +296,11 @@ export function CpdCollection({ courses, intentKey, review }: {
           <div className="cc-finder-desk">{finder}</div>
         </aside>
       </div>
+
+      {/* The same exit question and email capture as the course pages. The capture needs a real
+          course for its checklist and offer: the ad group's course, otherwise the Care Certificate. */}
+      <ExitQuestion funnel="training" product={intent.feature ?? 'cpd-courses'} />
+      <CaptureOverlay funnel="training" product={captureCourse.slug} title={captureCourse.title} image={captureCourse.image} />
 
       {lineCount > 0 && (
         <button type="button" className="cc-mbar" onClick={() => setSheet(true)}>

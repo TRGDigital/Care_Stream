@@ -178,7 +178,7 @@ export function CaptureOverlay({ funnel, product, title, image, quiz }: {
       fire()
     }
     // Anyone reaching for Buy now, Checkout or Add to basket is not shown it.
-    const buying = (e: Event) => { if ((e.target as HTMLElement | null)?.closest('.offerbtn, .ckpay, .bybtn, .pcbuynow, .add')) done = true }
+    const buying = (e: Event) => { if ((e.target as HTMLElement | null)?.closest('.offerbtn, .ckpay, .bybtn, .pcbuynow, .add, .cc-add, .cc-checkout')) done = true }
     window.addEventListener('scroll', onScroll, { passive: true })
     document.addEventListener('click', buying, true)
     onScroll()

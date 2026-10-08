@@ -223,21 +223,25 @@ function payError(e: unknown) {
 }
 
 /** The field for a missing organisation or name, shown under the error in the order summary. */
-function FixField({ error, org, setOrg, name, setName, orgLabel = 'Organisation name' }: {
-  error: string; org: string; setOrg: (v: string) => void; name: string; setName: (v: string) => void; orgLabel?: string
+function FixField({ error, org, setOrg, name, setName, email, setEmail, orgLabel = 'Organisation name' }: {
+  error: string; org: string; setOrg: (v: string) => void; name: string; setName: (v: string) => void
+  email: string; setEmail: (v: string) => void; orgLabel?: string
 }) {
-  const which = error === ORG_MISSING ? 'org' : error === NAME_MISSING ? 'name' : null
-  if (!which) return null
+  const f = error === ORG_MISSING ? { label: orgLabel, value: org, set: setOrg, auto: 'organization', type: 'text' }
+    : error === NAME_MISSING ? { label: 'Your full name', value: name, set: setName, auto: 'name', type: 'text' }
+    : error === EMAIL_MISSING ? { label: 'Work email', value: email, set: setEmail, auto: 'email', type: 'email' }
+    : null
+  if (!f) return null
   return (
     <label className="ckfix">
-      <span>{which === 'org' ? orgLabel : 'Your full name'}</span>
-      <input autoFocus value={which === 'org' ? org : name} autoComplete={which === 'org' ? 'organization' : 'name'}
-             onChange={e => (which === 'org' ? setOrg : setName)(e.target.value)} />
+      <span>{f.label}</span>
+      <input autoFocus type={f.type} value={f.value} autoComplete={f.auto} onChange={e => f.set(e.target.value)} />
     </label>
   )
 }
 const ORG_MISSING = 'Please enter your organisation name.'
 const NAME_MISSING = 'Please enter your full name.'
+const EMAIL_MISSING = 'Please enter a valid work email address.'
 
 /** Validates the details form; returns the message to show, or '' when it can go ahead. */
 function detailsError(org: string, name: string, email: string, emailOnly = false) {
@@ -417,7 +421,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
           ready={any}
           busy={busy}
           error={error}
-          fix={<FixField error={error} org={org} setOrg={setOrg} name={name} setName={setName} />}
+          fix={<FixField error={error} org={org} setOrg={setOrg} name={name} setName={setName} email={email} setEmail={setEmail} />}
           onPay={pay}
         />
       }
@@ -742,7 +746,7 @@ export function PolicyCheckout({ compact = false, onProgress }: {
           ready={count > 0}
           busy={busy}
           error={error}
-          fix={<FixField error={error} org={org} setOrg={setOrg} name={name} setName={setName} />}
+          fix={<FixField error={error} org={org} setOrg={setOrg} name={name} setName={setName} email={email} setEmail={setEmail} />}
           onPay={pay}
           termsBelow={compact}
         />

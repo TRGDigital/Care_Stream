@@ -1,5 +1,6 @@
 'use client'
 
+import { reportMicro } from '@/lib/google-ads'
 import { useEffect, useState } from 'react'
 import { useOffers, licenceDeal } from '@/lib/offers'
 import { UNIT_PENCE } from '@/lib/training-commerce'
@@ -248,6 +249,70 @@ export function InvoiceRequest({ funnel, items, className = '' }: { funnel: 'tra
                 {error && <p className="su-err">{error}</p>}
                 <button type="button" className="sq-send" disabled={state === 'busy' || !f.org.trim() || !f.name.trim() || !f.email.trim() || !f.address.trim()} onClick={send}>
                   {state === 'busy' ? 'Sending…' : 'Request my invoice'}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+// "Get a quote or pay by invoice" on the CPD courses page: an overlay that stays on the page and
+// sends their details and basket to us (POST /public/shop/quote-request → lenny@trgdigital.co.uk).
+// Counts as the Quote request micro-conversion in Google Ads.
+export function QuoteRequest({ items, label, className = '' }: { items: string[]; label: React.ReactNode; className?: string }) {
+  const [open, setOpen] = useState(false)
+  const [f, setF] = useState({ org: '', name: '', email: '', phone: '', staff: '', services: '', note: '' })
+  const [state, setState] = useState<'idle' | 'busy' | 'sent'>('idle')
+  const [error, setError] = useState('')
+  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF(x => ({ ...x, [k]: e.target.value }))
+  const send = async () => {
+    setState('busy'); setError('')
+    try {
+      const res = await fetch(`${API_URL}/public/shop/quote-request`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...f, items, page: location.pathname + location.search }),
+      })
+      const b = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(b?.error ?? 'Could not send. Please try again.')
+      setState('sent')
+      fi('lead', { funnel: 'training', option: 'quote_request', label: 'Quote requested' })
+      reportMicro('quote_request', 'cpd-courses')
+    } catch (e: any) { setError(e?.message ?? 'Could not send.'); setState('idle') }
+  }
+  return (
+    <>
+      <button type="button" className={className} onClick={() => setOpen(true)}>{label}</button>
+      {open && (
+        <div className="sq-overlay" role="dialog" aria-modal="true" aria-labelledby="su-quote-t" onClick={e => { if (e.target === e.currentTarget) setOpen(false) }}>
+          <div className="sq-box su-inv">
+            <button type="button" className="sq-close" aria-label="Close" onClick={() => setOpen(false)}>×</button>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="sq-logo" src="/logo-color.svg" alt="CareStream" />
+            {state === 'sent' ? (
+              <>
+                <h2 id="su-quote-t">Thank you, your request is with us</h2>
+                <p>We will email your quote to {f.email} within one working day. You can pay by card or by invoice.</p>
+                <button type="button" className="sq-send" onClick={() => setOpen(false)}>Close</button>
+              </>
+            ) : (
+              <>
+                <h2 id="su-quote-t">Get a quote for your team</h2>
+                <p>Tell us a little about your team and we will email a quote within one working day. Pay by card or by invoice, whichever suits you.</p>
+                {items.length > 0 && <ul className="su-inv-items">{items.map(i => <li key={i}>{i}</li>)}</ul>}
+                <div className="su-inv-grid">
+                  <label>Organisation name *<input value={f.org} onChange={set('org')} /></label>
+                  <label>Your name *<input value={f.name} onChange={set('name')} /></label>
+                  <label>Email *<input type="email" value={f.email} onChange={set('email')} /></label>
+                  <label>Phone<input type="tel" value={f.phone} onChange={set('phone')} /></label>
+                  <label>Staff to train<input inputMode="numeric" value={f.staff} onChange={set('staff')} placeholder="Roughly" /></label>
+                  <label>Homes or services<input inputMode="numeric" value={f.services} onChange={set('services')} placeholder="How many" /></label>
+                  <label className="wide">Anything else<textarea rows={3} value={f.note} onChange={set('note')} placeholder="Courses you need, timings, a purchase order" /></label>
+                </div>
+                {error && <p className="su-err">{error}</p>}
+                <button type="button" className="sq-send" disabled={state === 'busy' || !f.org.trim() || !f.name.trim() || !f.email.trim()} onClick={send}>
+                  {state === 'busy' ? 'Sending…' : 'Send my quote request'}
                 </button>
               </>
             )}

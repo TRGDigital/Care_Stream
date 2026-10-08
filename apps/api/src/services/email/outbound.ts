@@ -1810,6 +1810,31 @@ export async function sendInvoiceRequestEmail(opts: {
   await sgMail.send({ to: PURCHASE_NOTIFY_TO(), from, replyTo: opts.email, subject: `Invoice requested: ${opts.org}`.slice(0, 150), html })
 }
 
+// A quote request from the CPD courses page (Get a quote overlay): their details and basket, to the
+// platform owner, who replies to the buyer directly.
+export async function sendQuoteRequestEmail(opts: {
+  org: string; name: string; email: string; phone: string; staff: string; services: string
+  note: string; items: string[]; page: string
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) throw new Error('Email is not configured')
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc = (s: any) => String(s ?? '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c] as string))
+  const row = (k: string, v: string) => v ? `<tr><td style="padding:5px 10px 5px 0;color:#6b7280;vertical-align:top;white-space:nowrap">${k}</td><td style="padding:5px 0">${esc(v).replace(/\n/g, '<br>')}</td></tr>` : ''
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 6px">💬 Quote requested (CPD training)</p>
+    <p style="color:#374151;font-size:14px;margin:0 0 12px">${esc(opts.org)} would like a quote. Reply to this email to reach them.</p>
+    <table style="font-size:14px;border-collapse:collapse;margin:0 0 14px">
+      ${row('Organisation', opts.org)}${row('Contact', opts.name)}${row('Email', opts.email)}${row('Phone', opts.phone)}
+      ${row('Staff to train', opts.staff)}${row('Homes or services', opts.services)}${row('Note', opts.note)}${row('Page', opts.page)}
+    </table>
+    <p style="margin:0 0 6px;font-size:14px;font-weight:700">In their basket</p>
+    <ul style="margin:0 0 16px;padding-left:18px;font-size:14px">${opts.items.map(i => `<li>${esc(i)}</li>`).join('') || '<li>(empty)</li>'}</ul>
+    ${emailFooter()}
+  `)
+  await sgMail.send({ to: PURCHASE_NOTIFY_TO(), from, replyTo: opts.email, subject: `Quote requested: ${opts.org}`.slice(0, 150), html })
+}
+
 // ─── Basket recovery: a buyer left the shop with something in their basket ──────
 // Stage 1 about an hour after they stopped, stage 2 the next day. Each carries the priced basket,
 // one button back to it, and a link that stops these reminders for good. Replies reach a person.

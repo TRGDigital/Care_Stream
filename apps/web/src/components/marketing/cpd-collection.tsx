@@ -10,6 +10,7 @@ import { fi } from '@/lib/funnel-insights'
 import { reportMicro } from '@/lib/google-ads'
 import { ExitQuestion } from './shop-questions'
 import { CaptureOverlay } from './capture-overlay'
+import { QuoteRequest } from './shop-upsells'
 import {
   BUNDLES, bundleQuote, intentFor, REFRESHER_SLUGS,
   type BundleKey, type Chip, type CpdCourse,
@@ -340,7 +341,8 @@ export function CpdCollection({ courses, intentKey, review, hl = '' }: {
             {items.length > 0 && totalQty >= 10 && <div className="cc-line sub"><div><span>Single courses after team discount</span></div><div className="cc-amt">{gbp(net)}</div></div>}
             {lineCount > 0 && <div className="cc-total"><span>Total</span><b>{money2(grand)}</b></div>}
             {lineCount > 0 && <Link className="cc-checkout" href="/basket">Go to checkout</Link>}
-            <p className="cc-quote">Training a large team or several homes? <Link href={`/contact?about=${encodeURIComponent('CPD courses quote for a team')}`}>Get a quote or pay by invoice</Link></p>
+            <p className="cc-quote">Training a large team or several homes? <QuoteRequest className="cc-quotebtn" label="Get a quote or pay by invoice"
+              items={[...bundleLines.map(l => `${l.n} × ${BUNDLES[l.k].name}`), ...items.map(i => `${i.qty} × ${titleOf(i.slug, i.title)}`)]} /></p>
             <ul className="cc-sumticks">
               {BENEFITS.map(b => <li key={b}><Tick />{b}</li>)}
             </ul>

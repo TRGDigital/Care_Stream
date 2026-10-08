@@ -78,7 +78,7 @@ export default function LicencesPage() {
         </Link>
       </div>
       <p className="mb-6 mt-1 max-w-3xl text-sm text-neutral-mid">
-        Each licence is one staff member on one training module. Allocate a licence to a staff member to assign them the module in the hub. Add staff on the <Link href="/staff" className="font-semibold text-teal hover:underline">Staff</Link> page first.
+        Each licence is one person on one training module. Allocate it to a member of staff, or to yourself if you are doing the course, and it appears in their training hub straight away. Add staff on the <Link href="/staff" className="font-semibold text-teal hover:underline">Staff</Link> page.
       </p>
 
       {/* Summary */}
@@ -132,8 +132,8 @@ export default function LicencesPage() {
                         onChange={(e) => e.target.value && allocate(l.id, e.target.value)}
                         className="rounded-lg border border-gray-200 px-2 py-1.5 text-xs"
                       >
-                        <option value="" disabled>Choose staff…</option>
-                        {staff.map(s => <option key={s.id} value={s.id}>{s.name} ({s.email})</option>)}
+                        <option value="" disabled>Choose who…</option>
+                        {[...staff].sort((a, b) => Number(b.email === session?.user?.email) - Number(a.email === session?.user?.email)).map(s => <option key={s.id} value={s.id}>{s.email === session?.user?.email ? `${s.name} (you)` : `${s.name} (${s.email})`}</option>)}
                       </select>
                     ) : (
                       <button

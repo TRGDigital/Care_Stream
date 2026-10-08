@@ -264,8 +264,8 @@ export interface TrainingCheckoutInput {
   orgName: string
 }
 
-// Hosted one-off Checkout for N training licences. Provisioning happens on return
-// (reconcile-on-return) — see reconcileTrainingCheckout — not via webhook.
+// Hosted one-off Checkout for N training licences. Provisioning happens on return and from the
+// checkout.session.completed webhook, whichever comes first (reconcileTrainingCheckout).
 export async function createTrainingCheckoutSession(input: TrainingCheckoutInput): Promise<string> {
   const stripe = getStripe()
   const qty = Math.max(1, Math.min(500, Math.floor(input.quantity || 1)))
@@ -977,6 +977,14 @@ export async function handleWebhook(payload: Buffer, signature: string): Promise
       if (session.payment_status === 'paid' && ['training_licence', 'training_basket', 'policy_shop'].includes(String(shopKind))) {
         const { markBasketPaid } = await import('../shop/basket-recovery')
         await markBasketPaid(session.customer_details?.email ?? session.customer_email, shopKind === 'policy_shop' ? 'policies' : 'training', { products: [], valuePence: session.amount_total ?? 0 })
+      }
+      // A training purchase is provisioned here too, not only when the buyer's browser reaches the
+      // return page: a buyer who closes the tab after paying still gets their account and
+      // licences. The same code as the return page, claimed per payment, so it runs once.
+      if (session.payment_status === 'paid' && ['training_licence', 'training_basket'].includes(String(shopKind))) {
+        const { reconcileTrainingCheckout } = await import('../../routes/training-public')
+        const r = await reconcileTrainingCheckout(session.id)
+        console.log(`[stripe] training checkout ${session.id}: ${r.status} ${JSON.stringify(r.body?.data ?? r.body).slice(0, 160)}`)
       }
       if (tenantId && session.subscription) {
         // Use the subscription's real status (trialing → trialling) rather than

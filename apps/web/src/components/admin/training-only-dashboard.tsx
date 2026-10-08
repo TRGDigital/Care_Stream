@@ -86,7 +86,8 @@ export function TrainingOnlyDashboard({ token, userId, name }: { token: string; 
   // ── Getting started ──
   const steps = [
     { done: summary.total > 0, title: 'Buy your training', text: 'Licences for the courses your team needs.', href: '/training', cta: 'Buy training' },
-    { done: users.length > 0, title: 'Add your staff', text: 'Add each person once. They sign in on their own phone.', href: '/staff', cta: 'Add staff' },
+    // You count as one user, so the step is done once someone else is added or a licence is allocated.
+    { done: users.length > 1 || summary.allocated > 0, title: 'Add your staff', text: 'Add each person once. Doing a course yourself? Skip this and allocate one to you.', href: '/staff', cta: 'Add staff' },
     { done: summary.allocated > 0, title: 'Allocate a licence to each person', text: 'Pick who does which course. It appears in their training straight away.', href: '/licences', cta: 'Allocate licences' },
     { done: complete.length > 0, title: 'Staff complete their courses', text: 'Short lessons in their own language, with a certificate when they pass.', href: '/analytics', cta: 'See progress' },
   ]

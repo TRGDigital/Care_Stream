@@ -244,8 +244,8 @@ const NAME_MISSING = 'Please enter your full name.'
 const EMAIL_MISSING = 'Please enter a valid work email address.'
 
 /** Validates the details form; returns the message to show, or '' when it can go ahead. */
-function detailsError(org: string, name: string, email: string, emailOnly = false) {
-  if (!emailOnly && !org.trim()) return 'Please enter your organisation name.'
+function detailsError(org: string, name: string, email: string, emailOnly = false, orgOptional = false) {
+  if (!emailOnly && !orgOptional && !org.trim()) return 'Please enter your organisation name.'
   if (!emailOnly && !name.trim()) return 'Please enter your full name.'
   if (!EMAIL.test(email.trim())) return 'Please enter a valid work email address.'
   return ''
@@ -310,7 +310,8 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
   const payNow = net - offerSaving + bundleTotal + (teamSetup && any ? ADDONS['team-setup'].pence : 0)
 
   async function pay() {
-    const problem = detailsError(org, name, email)
+    // Training: no organisation needed, someone can buy a course for themselves.
+    const problem = detailsError(org, name, email, false, true)
     if (problem) { setError(problem); return }
     setError(''); setBusy(true)
     items.forEach(i => trackBasketEvent('checkout', i.slug, i.qty))
@@ -521,7 +522,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
         <Link href="/pricing">Compare plans</Link>
       </div>
 
-      <Details orgLabel="Organisation name" orgPlaceholder="Oakhaven Care Home"
+      <Details orgLabel="Organisation name (optional)" orgPlaceholder="Leave blank if it is just for you"
                emailNote="We send the receipt and your sign-in link here."
                org={org} setOrg={setOrg} name={name} setName={setName} email={email} setEmail={setEmail} />
 

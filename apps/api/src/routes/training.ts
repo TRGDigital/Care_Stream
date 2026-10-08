@@ -754,7 +754,9 @@ trainingRouter.get('/licences', requireAdmin, async (req: Request, res: Response
   try {
     const [licences, staff, users] = await Promise.all([
       (prisma as any).trainingLicense.findMany({ where: { tenant_id: tenantId }, orderBy: [{ module_name: 'asc' }, { purchased_at: 'asc' }] }),
-      (prisma as any).user.findMany({ where: { tenant_id: tenantId, role: 'staff', is_active: true }, select: { id: true, name: true, email: true }, orderBy: { name: 'asc' } }),
+      // Everyone active in the organisation, managers included: a sole carer who bought a course
+      // for themselves (or a manager doing a course too) allocates a licence to their own account.
+      (prisma as any).user.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { id: true, name: true, email: true, role: true }, orderBy: [{ role: 'desc' }, { name: 'asc' }] }),
       (prisma as any).user.findMany({ where: { tenant_id: tenantId }, select: { id: true, name: true, email: true } }),
     ])
     const userById = new Map((users as any[]).map(u => [u.id, u]))
@@ -871,6 +873,11 @@ trainingRouter.post('/licences/:id/allocate', requireAdmin, async (req: Request,
       }
     }
     ok(res, { allocated: true })
+    // Tell the staff member their course is ready (the same email the full plan sends on
+    // assignment). Not when a manager allocates a licence to themselves.
+    if (userId !== adminId) {
+      notifyStaffAllocation(tenantId, [userId], 'annual_training').catch(e => console.error('[training/licences/allocate] staff email error:', e))
+    }
   } catch (e: any) { err(res, 'ALLOCATE_FAILED', e.message, 500) }
 })
 

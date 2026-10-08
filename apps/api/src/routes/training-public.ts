@@ -486,8 +486,10 @@ publicTrainingRouter.post('/checkout', async (req: Request, res: Response) => {
     const qty  = Math.floor(Number(quantity))
     const mail = String(email ?? '').trim().toLowerCase()
     const org  = String(org_name ?? '').trim()
-    if (!slug || !org || !Number.isFinite(qty) || qty < 1) {
-      res.status(400).json({ error: 'module_slug, quantity and org_name are required' }); return
+    // org_name is optional: someone buying a course for themselves has no organisation, and the
+    // account is then named after them (reconcile).
+    if (!slug || !Number.isFinite(qty) || qty < 1) {
+      res.status(400).json({ error: 'module_slug and quantity are required' }); return
     }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) { res.status(400).json({ error: 'A valid email is required' }); return }
 
@@ -512,7 +514,7 @@ publicTrainingRouter.post('/checkout-basket', async (req: Request, res: Response
     const mail = String(email ?? '').trim().toLowerCase()
     const org  = String(org_name ?? '').trim()
     if (!Array.isArray(items) || items.length === 0) { res.status(400).json({ error: 'items are required' }); return }
-    if (!org) { res.status(400).json({ error: 'org_name is required' }); return }
+    // org_name is optional (see /checkout above).
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) { res.status(400).json({ error: 'A valid email is required' }); return }
 
     const topics = await (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true }, select: { title: true } })
@@ -554,14 +556,16 @@ async function uniqueTrainingSlug(orgName: string): Promise<string> {
 // POST /public/training/checkout/reconcile — after the Stripe return, verify the
 // payment and provision: a training-only tenant + admin user + N licences (pooled,
 // unallocated) + a passwordless login email. Idempotent on the Stripe payment id.
-publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Response) => {
-  try {
-    const sessionId = String(req.body?.session_id ?? '').trim()
-    if (!sessionId) { res.status(400).json({ error: 'session_id is required' }); return }
+// Provision a paid shop checkout: the training-only account (or the buyer's existing one), the
+// licences, the emails and the sale report. Called by the return page (POST /checkout/reconcile)
+// and by Stripe's checkout.session.completed webhook, so a buyer who closes the tab after paying
+// still gets their account. Idempotent: licences exist for the payment, or another call has
+// claimed it (training_checkout_claims), and the call reports it as done.
+export async function reconcileTrainingCheckout(sessionId: string): Promise<{ status: number; body: any }> {
 
     const s = await retrieveTrainingCheckoutSession(sessionId)
-    if (!s) { res.status(404).json({ error: 'Checkout session not found' }); return }
-    if (!s.paid) { res.status(402).json({ error: 'Payment not complete yet' }); return }
+    if (!s) return { status: 404, body: { error: 'Checkout session not found' } }
+    if (!s.paid) return { status: 402, body: { error: 'Payment not complete yet' } }
 
     // Idempotent: if licences already exist for this payment, just report success.
     const existing = await (prisma as any).trainingLicense.findFirst({ where: { stripe_payment_id: s.paymentId }, select: { id: true } })
@@ -597,7 +601,7 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
       const qty  = Math.max(1, Math.min(500, parseInt(s.metadata.quantity || '1', 10) || 1))
       if (slug) items = [{ slug, qty, free: freeOf(s.metadata.free, qty), unit: unitOf(s.metadata.unit, TRAINING_LICENCE_PENCE) }]
     }
-    if (!items.length) { res.status(400).json({ error: 'No items on the payment' }); return }
+    if (!items.length) return { status: 400, body: { error: 'No items on the payment' } }
 
     // value_pence + transaction_id report the sale to Google Ads; products names each course for
     // Funnel Insights' per-product funnels.
@@ -605,13 +609,19 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
     // Revenue to Funnel Insights (idempotent there, so the already-provisioned path is safe too).
     await reportTrainingSale(sessionId, s.paymentId, items, s.metadata.module_name, s.metadata.offer || null, attributionFromMeta(s.metadata), addonsFromMeta(s.metadata))
     await markBasketPaid(s.email, 'training', { products: items.map(i => i.slug), valuePence: s.amountTotalPence ?? 0 })
-    if (existing) { res.json({ data: { provisioned: true, already: true, email: s.email, ...conversion } }); return }
+    if (existing) return { status: 200, body: { data: { provisioned: true, already: true, email: s.email, ...conversion } } }
+    // The return page and Stripe's webhook can both arrive for the same payment: only the first to
+    // claim it provisions; the other reports it as done.
+    const claimed = await (prisma as any).$queryRaw`insert into training_checkout_claims (payment_id) values (${s.paymentId}) on conflict do nothing returning payment_id`
+    if (!Array.isArray(claimed) || !claimed.length) return { status: 200, body: { data: { provisioned: true, already: true, email: s.email, ...conversion } } }
+    try {
 
-    const orgName   = s.metadata.org_name || 'Your service'
+    // No organisation given (someone buying for themselves): the account takes their name.
+    const orgName   = s.metadata.org_name || s.customerName || s.email?.split('@')[0] || 'Your account'
     const email     = (s.email || s.metadata.email || '').toLowerCase()
     const adminName = s.customerName || orgName
     const consoleTenantId = String(s.metadata.tenant_id || '')
-    if (!email && !consoleTenantId) { res.status(400).json({ error: 'No email on the payment' }); return }
+    if (!email && !consoleTenantId) { await releaseClaim(s.paymentId); return { status: 400, body: { error: 'No email on the payment' } } }
 
 
     const topics = await (prisma as any).trainingTopic.findMany({ where: { tenant_id: null, is_active: true }, select: { id: true, title: true, shop_module_id: true } })
@@ -729,7 +739,25 @@ publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Respo
       await sendStaffLoginLinkEmail({ to: email, name: adminName, link, expiresMins: 14 * 24 * 60 }).catch((e: any) => console.error('[training-checkout] login email failed:', e?.message ?? e))
     }
 
-    res.json({ data: { provisioned: true, email, licences: totalLicences, modules: items.length, ...conversion } })
+    return { status: 200, body: { data: { provisioned: true, email, licences: totalLicences, modules: items.length, ...conversion } } }
+    } catch (e) {
+      // Let the next call (the webhook's retry, or the return page) try again.
+      await releaseClaim(s.paymentId)
+      throw e
+    }
+}
+
+async function releaseClaim(paymentId: string | null) {
+  if (!paymentId) return
+  await (prisma as any).$executeRaw`delete from training_checkout_claims where payment_id = ${paymentId}`.catch(() => {})
+}
+
+publicTrainingRouter.post('/checkout/reconcile', async (req: Request, res: Response) => {
+  try {
+    const sessionId = String(req.body?.session_id ?? '').trim()
+    if (!sessionId) { res.status(400).json({ error: 'session_id is required' }); return }
+    const r = await reconcileTrainingCheckout(sessionId)
+    res.status(r.status).json(r.body)
   } catch (e: any) {
     res.status(500).json({ error: e?.message ?? 'reconcile failed' })
   }

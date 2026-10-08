@@ -49,7 +49,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default', init
   // payment too, and was the one route to Stripe that never showed the terms.
   const [agreed, setAgreed] = useState(termsBelow)
   useEffect(() => {
-    onProgress?.({ details: !!org.trim() && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim()), agreed })
+    onProgress?.({ details: /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim()), agreed })
   }, [org, email, agreed, onProgress])
 
   // A live offer from the calendar: free licences on top, or a percentage off each licence.
@@ -73,7 +73,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default', init
     e.preventDefault()
     if (busy || !agreed) return
     setError('')
-    if (!org.trim()) { setError('Please enter your organisation name.'); return }
+    // The organisation is optional: someone can buy a course for themselves.
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) { setError('Please enter a valid email address.'); return }
     setBusy(true)
     fi('checkout_start', { funnel: 'training', option: slug, label: moduleName, qty })
@@ -132,9 +132,9 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default', init
         )}
 
         <div className="byfield">
-          <label className="bylabel" htmlFor="byorg">Your service</label>
+          <label className="bylabel" htmlFor="byorg">Your service (optional)</label>
           <input id="byorg" type="text" value={org} onChange={e => setOrg(e.target.value)}
-                 placeholder="Ferndale Nursing Home" />
+                 placeholder="Leave blank if it is just for you" />
         </div>
         <div className="byfield">
           <label className="bylabel" htmlFor="byem">Where to send the licences</label>
@@ -201,8 +201,8 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default', init
       {/* Buyer details */}
       <div className="mb-5 grid gap-4">
         <div>
-          <label className="mb-1 block text-sm font-bold text-neutral-dark">Organisation name</label>
-          <input value={org} onChange={(e) => setOrg(e.target.value)} placeholder="e.g. Bright Smiles Dental"
+          <label className="mb-1 block text-sm font-bold text-neutral-dark">Organisation name (optional)</label>
+          <input value={org} onChange={(e) => setOrg(e.target.value)} placeholder="Leave blank if it is just for you"
             className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-teal focus:outline-none" />
         </div>
         <div>

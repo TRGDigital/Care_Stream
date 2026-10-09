@@ -10,7 +10,7 @@ import { cleanAttribution } from '../services/analytics/funnel-insights'
 import { getOffers, licenceDeal, policyDeal } from '../services/offers'
 import { sendBasketShareEmail, sendInvoiceRequestEmail, sendQuoteRequestEmail } from '../services/email/outbound'
 import { priceBasket } from '../services/shop/basket-pricing'
-import { saveBasket, optOutByToken } from '../services/shop/basket-recovery'
+import { saveBasket, optOutByToken, listRecoveryBaskets } from '../services/shop/basket-recovery'
 import { captureSignup, checkEmail, loadChecklist } from '../services/shop/email-capture'
 import { checklistPdf } from '../services/shop/checklist-pdf'
 import { reviewRequestByToken, submitReview } from '../services/shop/review-requests'
@@ -235,6 +235,21 @@ shopExtrasRouter.get('/checklist-pdf', async (req: Request, res: Response) => {
     res.send(pdf)
   } catch {
     res.status(500).json({ error: 'Could not build the checklist' })
+  }
+})
+
+// GET /public/shop/recovery-baskets: every basket in the recovery sequence (last 60 days) and
+// where it is, for Funnel Insights › Recovery. Server to server only (Bearer FI_INGEST_SECRET):
+// buyers' emails go to Funnel Insights' page and are never stored there.
+shopExtrasRouter.get('/recovery-baskets', async (req: Request, res: Response) => {
+  const want = process.env.FI_INGEST_SECRET || ''
+  const got = String(req.headers.authorization ?? '').replace(/^Bearer\s+/i, '')
+  if (!want || got !== want) { res.status(401).json({ error: 'unauthorised' }); return }
+  try {
+    res.setHeader('Cache-Control', 'no-store')
+    res.json({ data: await listRecoveryBaskets() })
+  } catch {
+    res.status(500).json({ error: 'Could not load the baskets' })
   }
 })
 

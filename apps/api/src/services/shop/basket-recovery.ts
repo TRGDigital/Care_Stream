@@ -136,18 +136,19 @@ export async function runBasketRecovery(): Promise<Record<string, unknown>> {
   return out
 }
 
-/** Every basket saved in the last 60 days and where it is in the sequence, for Funnel Insights ›
+/** Every basket saved in the last `days` (default 60, at most 90) and where it is in the sequence, for Funnel Insights ›
  *  Recovery (server to server, Bearer FI_INGEST_SECRET). Emails leave only in this response:
  *  Funnel Insights shows them and never stores them. */
-export async function listRecoveryBaskets(): Promise<Record<string, unknown>> {
+export async function listRecoveryBaskets(days = 60): Promise<Record<string, unknown>> {
+  const window = Math.max(1, Math.min(90, Math.floor(days) || 60))
   const rows = await (prisma as any).$queryRawUnsafe(
     `select b.id, b.email, b.name, b.org, b.funnel, b.items, b.created_at, b.updated_at,
             b.email1_at, b.email2_at, b.paid_at, b.checkout_started_at,
             exists (select 1 from public.shop_basket_optouts o where o.email = lower(b.email)) as opted_out
      from public.shop_baskets b
-     where b.created_at > now() - interval '60 days'
+     where b.created_at > now() - make_interval(days => $1::int)
      order by b.created_at desc
-     limit 500`) as any[]
+     limit 1000`, window) as any[]
   let cron: boolean | null = null
   try {
     const j = await (prisma as any).$queryRawUnsafe(`select active from cron.job where jobname = 'cs-basket-recovery'`) as any[]
@@ -194,7 +195,7 @@ export async function listRecoveryBaskets(): Promise<Record<string, unknown>> {
       opted_out: !!b.opted_out, state, position, next_due,
     })
   }
-  return { sending_live: process.env.BASKET_RECOVERY_LIVE === '1', cron_scheduled: cron, baskets }
+  return { sending_live: process.env.BASKET_RECOVERY_LIVE === '1', cron_scheduled: cron, days: window, baskets }
 }
 
 /** Both stages for both shops, with sample baskets, to the platform owner for approval. */

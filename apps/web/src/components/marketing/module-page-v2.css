@@ -884,3 +884,25 @@
 /* Team pricing above the buy box (price version): space before "Try before you buy". */
 .mpage-v2 .mpe-team + .hg-try{margin-top:18px}
 .mpage-v2 .mpe-info > .mpe-team:first-of-type{margin-bottom:0}
+
+/* Phones: the buy panel (offer, price, licences, Add to basket) comes straight after the headline,
+   so ad visitors see it on the first screen. Everything else keeps its order below it. Layout only:
+   same components, so Add to basket still fires the same tracking. Desktop is unchanged. */
+@media(max-width:760px){
+  .mpage-v2 .mpe-info{display:flex;flex-direction:column}
+  .mpage-v2 .mpe-info > *{order:10}
+  .mpage-v2 .mpe-info > .mpe-eyerow{order:1;margin-bottom:6px}
+  .mpage-v2 .mpe-info > .mpe-intent-tag{order:2;align-self:flex-start;margin-bottom:6px}
+  .mpage-v2 .mpe-info > h1{order:3;margin-bottom:10px}
+  .mpage-v2 .mpe-info > .mpe-buy{order:4}
+  .mpage-v2 .mpe-info > .paylogos{order:5}
+  .mpage-v2 .mpe-info > .mpe-for{order:6;margin:14px 0 10px}
+  .mpage-v2 .mpe-info > .mpe-top{display:none}
+  .mpage-v2 .mpe-eyerow .cpdmark{height:34px}
+  .mpage-v2 .mpe-buy.mbuy{border-top:0;padding-top:0}
+  .mpage-v2 .mpe-offerline{padding:8px 11px;margin-bottom:8px}
+  .mpage-v2 .mpe-offerline p{font-size:.82rem;line-height:1.4}
+  .mpage-v2 .mpe-price{margin-bottom:6px}
+  .mpage-v2 .mpe-price b{font-size:1.6rem}
+  .mpage-v2 .mpe-stock{margin-bottom:8px;font-size:.8rem}
+}

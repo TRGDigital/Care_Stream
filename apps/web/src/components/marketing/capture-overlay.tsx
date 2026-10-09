@@ -28,19 +28,32 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 const FI = 'https://trg-funnel-insights.vercel.app'
 const CONSENT = 'By signing up, you agree to our terms and conditions, including receiving our offers by email.'
 
-type Key = 'A' | 'B' | 'C'
+// D is the hold-out: a 'control' variant that is assigned by the same split but shows nothing. At the
+// moment the overlay would have opened it logs 'held_out', so FI can compare what people do next with
+// and without the overlay from the same starting point.
+type Key = 'A' | 'B' | 'C' | 'D'
+type Kind = 'lockin' | 'checklist' | 'quiz' | 'control'
 type Variant = {
-  key: Key; kind: 'lockin' | 'checklist' | 'quiz'; weight: number
+  key: Key; kind: Kind; weight: number
   eyebrow: string; headline: string; body: string; button: string; decline: string
   step2_headline: string; step2_body: string; step2_button: string; image: string
 }
+const KNOWN: Kind[] = ['lockin', 'checklist', 'quiz', 'control']
 type Campaign = {
   id: string; name: string; funnel: 'training' | 'policies'; pages: string[]
   trigger_seconds: number; trigger_scroll: number; trigger_mode: 'both' | 'either'; repeat_days: number
   /** Opening second per product page, when the campaign follows the median time on page. */
   page_seconds?: Record<string, number>
+  /** Phones: their own triggers (set = used instead of the ones above, and the median option is ignored).
+   *  mobile_past_buy waits until the buy panel has scrolled off the top of the screen. */
+  mobile_trigger_seconds?: number | null; mobile_trigger_scroll?: number | null
+  mobile_trigger_mode?: 'both' | 'either' | null; mobile_past_buy?: boolean
   variants: Variant[]
 }
+
+const isMobile = () => { try { return !!window.matchMedia?.('(pointer: coarse)').matches && window.innerWidth < 768 } catch { return false } }
+// The block with the price and the buy button: course and policy pages (.mpe-buy), the CPD bundles page.
+const BUY_ANCHOR = '[data-capture-anchor], .mpe-buy, .cc-bundles'
 
 const store = {
   get<T>(k: string, d: T): T { try { return JSON.parse(localStorage.getItem(k) || 'null') ?? d } catch { return d } },
@@ -71,9 +84,9 @@ async function loadCampaigns(fresh = false): Promise<Campaign[]> {
   return campaigns
 }
 
-function report(c: Campaign, v: Variant, stage: 'shown' | 'step1' | 'quiz_done' | 'signup' | 'closed', inTest: boolean, product: string) {
+function report(c: Campaign, v: Variant, stage: 'shown' | 'held_out' | 'step1' | 'quiz_done' | 'signup' | 'closed', inTest: boolean, product: string) {
   try {
-    const mobile = window.matchMedia?.('(pointer: coarse)').matches && window.innerWidth < 768
+    const mobile = isMobile()
     fetch(`${FI}/api/capture-event`, {
       method: 'POST', keepalive: true, headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ site: 'carestream', campaign: c.id, variant: v.key, stage, in_test: inTest, page: location.pathname,
@@ -115,20 +128,22 @@ export function CaptureOverlay({ funnel, product, title, image, quiz, offerName 
 
   // Choose the campaign and this visitor's variant.
   useEffect(() => {
-    const preview = ['preview', 'A', 'B', 'C'].includes(new URLSearchParams(location.search).get('capture') ?? '')
+    const preview = ['preview', 'A', 'B', 'C', 'D'].includes(new URLSearchParams(location.search).get('capture') ?? '')
     if (!preview && (session('cs-exitq') || hasBasket() || store.get('cs_capture_signed', false))) return
     let alive = true
     loadCampaigns(preview).then(list => {
       if (!alive) return
-      const c = list.find(x => x.funnel === funnel && (!x.pages?.length || x.pages.includes(product)) && x.variants?.length >= 2)
-      if (!c) return
+      // A variant kind this page does not know is left out of the split (never shown empty).
+      const found = list.find(x => x.funnel === funnel && (!x.pages?.length || x.pages.includes(product)) && x.variants?.length >= 2)
+      const c = found ? { ...found, variants: found.variants.filter(v => KNOWN.includes(v.kind)) } : null
+      if (!c || c.variants.length < 2) return
       const seen = store.get<Record<string, number>>('cs_capture_seen', {})
       if (!preview && seen[c.id] && Date.now() - seen[c.id] < c.repeat_days * 86400000) return
       const picks = store.get<Record<string, Key>>('cs_capture_variant', {})
       // ?capture=A or ?capture=B shows that variant now, for checking copy and images; the
       // visitor's own assignment is left alone.
       const forced = new URLSearchParams(location.search).get('capture')
-      let key: Key | undefined = forced === 'A' || forced === 'B' || forced === 'C' ? forced : picks[c.id]
+      let key: Key | undefined = forced === 'A' || forced === 'B' || forced === 'C' || forced === 'D' ? forced : picks[c.id]
       if (!key || !c.variants.some(v => v.key === key)) {
         // Weighted pick across the campaign's variants (two or three).
         const total = c.variants.reduce((t, v) => t + Math.max(0, v.weight), 0) || 1
@@ -152,24 +167,34 @@ export function CaptureOverlay({ funnel, product, title, image, quiz, offerName 
   }, [campaign, variant, offer, quiz])
   useEffect(() => {
     if (!campaign) return
-    // Only views where every variant could have shown count in the comparison.
+    // Only views where every variant could have shown count in the comparison (the control always can).
     setInTest(campaign.variants.every(v => (v.kind === 'lockin' ? !!offer : v.kind === 'quiz' ? (quiz?.questions.length ?? 0) >= 3 : true)))
   }, [campaign, offer, quiz])
 
   // Triggers: active seconds on the page and scroll depth.
   useEffect(() => {
     if (!campaign || !shown || open || fired.current) return
-    const preview = ['preview', 'A', 'B', 'C'].includes(new URLSearchParams(location.search).get('capture') ?? '')
+    const preview = ['preview', 'A', 'B', 'C', 'D'].includes(new URLSearchParams(location.search).get('capture') ?? '')
+    // Phones get their own triggers when the campaign sets them (the median-time option is then ignored).
+    const phone = isMobile() && campaign.mobile_trigger_seconds != null
+    const needSeconds = phone ? campaign.mobile_trigger_seconds! : (campaign.page_seconds?.[product] ?? campaign.trigger_seconds)
+    const needScroll = phone ? (campaign.mobile_trigger_scroll ?? campaign.trigger_scroll) : campaign.trigger_scroll
+    const mode = phone ? (campaign.mobile_trigger_mode ?? 'both') : campaign.trigger_mode
+    const anchor = phone && campaign.mobile_past_buy ? document.querySelector<HTMLElement>(BUY_ANCHOR) : null
     let seconds = 0, depth = 0, done = false
     const fire = () => {
       if (done) return
-      const timeOk = seconds >= (campaign.page_seconds?.[product] ?? campaign.trigger_seconds), scrollOk = depth >= campaign.trigger_scroll
-      if (preview || (campaign.trigger_mode === 'either' ? timeOk || scrollOk : timeOk && scrollOk)) {
+      const timeOk = seconds >= needSeconds
+      // Past the buy panel: its bottom edge has scrolled above the top of the screen. Pages without one
+      // fall back to the scroll depth.
+      const scrollOk = anchor ? anchor.getBoundingClientRect().bottom < 0 : depth >= needScroll
+      if (preview || (mode === 'either' ? timeOk || scrollOk : timeOk && scrollOk)) {
         if (!preview && (session('cs-exitq') || hasBasket())) { done = true; return }
         done = true
         fired.current = true
-        session('cs-exitq', true)   // the exit question stays away for this visit
+        session('cs-exitq', true)   // the exit question stays away for this visit (the control too, so both groups match)
         store.set('cs_capture_seen', { ...store.get<Record<string, number>>('cs_capture_seen', {}), [campaign.id]: Date.now() })
+        if (shown.kind === 'control') { report(campaign, shown, 'held_out', inTest, product); return }
         setOpen(true)
         report(campaign, shown, 'shown', inTest, product)
       }
@@ -190,7 +215,7 @@ export function CaptureOverlay({ funnel, product, title, image, quiz, offerName 
 
   useEffect(() => { if (step === 2) setTimeout(() => emailRef.current?.focus(), 50) }, [step])
 
-  if (!open || !campaign || !shown) return null
+  if (!open || !campaign || !shown || shown.kind === 'control') return null
 
   const productName = shown.kind === 'lockin' && offerName ? offerName : funnel === 'training' ? `${title} training` : title
   const until = new Date(Date.now() + 30 * 86400000).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })

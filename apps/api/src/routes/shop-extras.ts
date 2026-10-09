@@ -238,7 +238,7 @@ shopExtrasRouter.get('/checklist-pdf', async (req: Request, res: Response) => {
   }
 })
 
-// GET /public/shop/recovery-baskets: every basket in the recovery sequence (last 60 days) and
+// GET /public/shop/recovery-baskets?days=: every basket in the recovery sequence (last 60 days, ?days= up to 90) and
 // where it is, for Funnel Insights › Recovery. Server to server only (Bearer FI_INGEST_SECRET):
 // buyers' emails go to Funnel Insights' page and are never stored there.
 shopExtrasRouter.get('/recovery-baskets', async (req: Request, res: Response) => {
@@ -247,7 +247,7 @@ shopExtrasRouter.get('/recovery-baskets', async (req: Request, res: Response) =>
   if (!want || got !== want) { res.status(401).json({ error: 'unauthorised' }); return }
   try {
     res.setHeader('Cache-Control', 'no-store')
-    res.json({ data: await listRecoveryBaskets() })
+    res.json({ data: await listRecoveryBaskets(Number(req.query.days) || 60) })
   } catch {
     res.status(500).json({ error: 'Could not load the baskets' })
   }

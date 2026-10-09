@@ -187,3 +187,37 @@
 
 /* ?hl= keyword highlights (the keyword tool's highlight link) */
 .cpdc mark.cc-hl { background: #FFE45C; color: inherit; padding: 0 2px; border-radius: 3px }
+
+/* Fit the bundles on the first screen. The CPD box now sits below the bundles (.cc-cpdwrap). */
+.cc-hero { padding-top: 24px }
+.cc-bundlesec { padding-top: 24px }
+.cc-cpdwrap .cc-cpdbanner { margin-top: 8px }
+/* Laptops with a short screen: a tighter hero and bundle card, so the bundle prices and
+   Add bundle buttons show without scrolling. Tall desktop screens are unchanged. */
+@media (min-width: 1024px) and (max-height: 920px) {
+  .cc-offerbar { padding: 7px 16px; font-size: 14px }
+  .cc-hero { padding-top: 16px }
+  .cc-eb { margin-bottom: 6px; font-size: 12px }
+  .cpdc h1 { font-size: clamp(1.75rem, 2.5vw, 2.2rem) }
+  .cc-lede { font-size: 15.5px; margin-top: 8px; max-width: 760px }
+  .cc-trust { margin-top: 8px; font-size: 14px }
+  .cc-bundlesec { padding-top: 16px }
+  .cc-bundlesec .cc-h2s { font-size: 1.45rem; margin-bottom: 14px !important }
+  .cc-bundle { padding: 14px 18px }
+  .cc-bundle h3 { font-size: 1.2rem }
+  .cc-incl { margin: 4px 0 6px; font-size: 14px }
+  .cc-price b { font-size: 1.7rem }
+  .cc-save { margin: 0 0 8px }
+  .cc-add { margin-top: 8px; padding: 10px 16px }
+}
+/* Phones: the bundles come straight after the headline; the intro and ticks follow them. */
+@media (max-width: 699px) {
+  .cc-main { display: flex; flex-direction: column }
+  .cc-main > * { order: 10 }
+  .cc-hero { display: contents }
+  .cc-hero > .cc-eb { order: 1; margin-top: 20px }
+  .cc-hero > h1 { order: 2 }
+  .cc-main > .cc-bundlesec { order: 3; padding-top: 18px }
+  .cc-hero > .cc-herobody { order: 4; padding-top: 18px }
+  .cc-main > .cc-cpdwrap { order: 5 }
+}

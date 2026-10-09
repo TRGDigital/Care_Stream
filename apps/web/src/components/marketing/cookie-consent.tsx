@@ -89,24 +89,27 @@ export function CookieConsent() {
   if (!visible) return null
 
   return (
-    <div className="fixed inset-x-4 bottom-4 z-[60] mx-auto max-w-2xl rounded-2xl bg-white p-5 shadow-elevated ring-1 ring-black/5 sm:p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        <p className="flex-1 text-sm leading-relaxed text-neutral-mid">
-          We use cookies to understand how visitors use our site so we can improve it. You can accept or decline.{' '}
-          <Link href="/cookies" className="font-medium text-teal underline">Cookie Policy</Link>.
+    // Phones: a compact strip along the bottom (one short line, Decline and Accept side by side, the
+    // same size) so it does not cover the buy panel. From md up: the original card.
+    <div className="fixed inset-x-0 bottom-0 z-[60] bg-white px-3 py-2 shadow-elevated ring-1 ring-black/5 md:inset-x-4 md:bottom-4 md:mx-auto md:max-w-2xl md:rounded-2xl md:p-6">
+      <div className="flex flex-row items-center gap-3 md:gap-4">
+        <p className="flex-1 text-xs leading-snug text-neutral-mid md:text-sm md:leading-relaxed">
+          <span className="md:hidden">We use cookies to improve our site.</span>
+          <span className="hidden md:inline">We use cookies to understand how visitors use our site so we can improve it. You can accept or decline.</span>{' '}
+          <Link href="/cookies" className="font-medium text-teal underline">Cookie Policy</Link>
         </p>
-        <div className="flex shrink-0 gap-3">
+        <div className="flex shrink-0 gap-2 md:gap-3">
           <button
             type="button"
             onClick={() => choose('declined')}
-            className="rounded-btn border-2 border-gray-200 px-5 py-2.5 text-sm font-semibold text-neutral-dark transition-colors hover:border-teal hover:text-teal"
+            className="rounded-btn border-2 border-gray-200 px-3 py-1.5 text-xs font-semibold text-neutral-dark transition-colors hover:border-teal hover:text-teal md:px-5 md:py-2.5 md:text-sm"
           >
             Decline
           </button>
           <button
             type="button"
             onClick={() => choose('accepted')}
-            className="rounded-btn bg-teal px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-dark"
+            className="rounded-btn border-2 border-teal bg-teal px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-teal-dark md:px-5 md:py-2.5 md:text-sm"
           >
             Accept
           </button>

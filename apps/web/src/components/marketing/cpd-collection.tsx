@@ -156,21 +156,18 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
           <section className="cc-hero">
             <p className="cc-eb"><H>{intent.tag}</H></p>
             <h1><H>{intent.headline}</H></h1>
-            <p className="cc-lede"><H>{intent.sub}</H></p>
-            <ul className="cc-trust">
-              <li><Tick /><H>{'CPD Certified, all 10 courses'}</H></li>
-              <li><Tick /><H>{'Every lesson in 60+ languages'}</H></li>
-              <li><Tick /><H>{'A certificate for every learner'}</H></li>
-              <li><Tick /><H>{'Manager dashboard included'}</H></li>
-            </ul>
-            <div className="cc-cpdbanner">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified" width={64} height={58} />
-              <p><b>Every course is CPD Certified</b> by The CPD Certification Service. CareStream is CPD Provider No. 50224, and every certificate shows the CPD mark and CPD hours. <Link href="/cpd-certified">Check our listing</Link></p>
+            <div className="cc-herobody">
+              <p className="cc-lede"><H>{intent.sub}</H></p>
+              <ul className="cc-trust">
+                <li><Tick /><H>{'CPD Certified, all 10 courses'}</H></li>
+                <li><Tick /><H>{'Every lesson in 60+ languages'}</H></li>
+                <li><Tick /><H>{'A certificate for every learner'}</H></li>
+                <li><Tick /><H>{'Manager dashboard included'}</H></li>
+              </ul>
             </div>
           </section>
 
-          <section className="cc-sec">
+          <section className="cc-sec cc-bundlesec">
             <h2 className="cc-h2s">Save with a bundle</h2>
             <div className="cc-bundles" id="bundles">
               {(['complete', 'refresher'] as BundleKey[]).map(k => {
@@ -206,6 +203,15 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
               <p className="cc-bnote">You always get the best price. If an offer on single courses works out cheaper for your team, that is what you pay.</p>
             </div>
           </section>
+
+          {/* Below the bundles so the bundle prices are on the first screen of a laptop. */}
+          <div className="cc-cpdwrap">
+            <div className="cc-cpdbanner">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified" width={64} height={58} />
+              <p><b>Every course is CPD Certified</b> by The CPD Certification Service. CareStream is CPD Provider No. 50224, and every certificate shows the CPD mark and CPD hours. <Link href="/cpd-certified">Check our listing</Link></p>
+            </div>
+          </div>
 
           {/* On phones the finder sits here; on desktop it is in the Your training column. */}
           <section className="cc-sec cc-finder-mobile">{finder}</section>

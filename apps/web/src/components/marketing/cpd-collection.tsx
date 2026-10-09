@@ -10,6 +10,7 @@ import { fi } from '@/lib/funnel-insights'
 import { reportMicro } from '@/lib/google-ads'
 import { ExitQuestion } from './shop-questions'
 import { CaptureOverlay } from './capture-overlay'
+import { SecondPageOffer } from './second-page-offer'
 import { QuoteRequest } from './shop-upsells'
 import {
   BUNDLES, bundleQuote, intentFor, REFRESHER_SLUGS,
@@ -362,6 +363,7 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
           course for its checklist and offer: the ad group's course, otherwise the Care Certificate. */}
       <ExitQuestion funnel="training" product={intent.feature ?? 'cpd-courses'} />
       <CaptureOverlay funnel="training" product={captureCourse.slug} title={captureCourse.title} image={captureCourse.image} offerName={intent.topic ?? 'CPD Certified mandatory training'} />
+      <SecondPageOffer funnel="training" product={captureCourse.slug} title={captureCourse.title} />
 
       {lineCount > 0 && (
         <button type="button" className="cc-mbar" onClick={() => setSheet(true)}>

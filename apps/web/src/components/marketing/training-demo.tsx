@@ -272,7 +272,7 @@ export function TrainingDemo({
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link
               href={buyHref}
-              onClick={e => openBuyDrawer(e, buyHref)}
+              onClick={e => openBuyDrawer(e, buyHref, 'demo_end')}
               className="flex-1 rounded-btn bg-blue-600 px-6 py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700"
             >
               Add to basket
@@ -338,7 +338,7 @@ export function TrainingDemo({
                 That is how the training works. Give your whole team the full {demo.title} module.
               </p>
               <div className="row">
-                <Link className="tbtn solid" href={buyHref} onClick={e => openBuyDrawer(e, buyHref)}>Add to basket</Link>
+                <Link className="tbtn solid" href={buyHref} onClick={e => openBuyDrawer(e, buyHref, 'demo_end')}>Add to basket</Link>
                 {/* On a course page there is nothing to browse to: one clear next step. */}
                 {place !== 'module' && <a className="tbtn ghost" href="#courses">Browse the courses</a>}
               </div>

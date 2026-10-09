@@ -39,7 +39,7 @@ export function PolicyBuyPanel({ item }: { item: { slug: string; title: string; 
         Delivered within 2 working days of your answers
       </p>
       <div className="pcbuyrow">
-        <BuyNowPolicy item={item} />
+        <BuyNowPolicy item={item} position="policy_hero" />
         <SavePolicy slug={item.slug} title={item.title} />
       </div>
       <AddToBasketText item={item} />

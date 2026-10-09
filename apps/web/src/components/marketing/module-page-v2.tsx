@@ -341,7 +341,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
           </span>
           <OfferBarChip slug={m.slug} />
           <TrainingSaveButton slug={m.slug} title={m.title} />
-          <BuyNowLink slug={m.slug} className="add" />
+          <BuyNowLink slug={m.slug} className="add" position="sticky_bar" price={price} />
         </div>
       </div>
 
@@ -913,7 +913,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
                 which is a bug in its generator rather than a design to copy. */}
             <div className="tgrid" style={{ marginTop: 24 }}>
               {related.map(r => (
-                <ThemeModuleCard key={r.slug} t={r} bulk="Bulk discounts from 10+ licences" />
+                <ThemeModuleCard key={r.slug} t={r} bulk="Bulk discounts from 10+ licences" position="related_card" />
               ))}
             </div>
           </div>
@@ -925,7 +925,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
           <h2>Give your team {lower} training that actually sticks.</h2>
           <p>Buy your licences, allocate them in seconds, and let the evidence build itself.</p>
           <div className="row">
-            <BuyNowLink slug={m.slug} className="tbtn solid" label={`Add to basket · ${price}`} />
+            <BuyNowLink slug={m.slug} className="tbtn solid" label={`Add to basket · ${price}`} position="closing_section" price={price} />
             <Link className="tbtn ghost" href="/demo">Book a demo</Link>
           </div>
           <TrainingAddTextLink {...addLabel} className="center" />

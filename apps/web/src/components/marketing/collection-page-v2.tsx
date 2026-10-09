@@ -124,7 +124,7 @@ export function CollectionPageV2({ c, s, siblings = [] }: {
                     <div className="clbuy">
                       {training ? (
                         <>
-                          <TrainingAddButton className="clbuy-add" slug={p.slug} title={p.title}
+                          <TrainingAddButton position="collection_card" className="clbuy-add" slug={p.slug} title={p.title}
                                              unitPence={p.price_pence} />
                           <TrainingSaveButton className="clbuy-save" slug={p.slug} title={p.title} />
                         </>

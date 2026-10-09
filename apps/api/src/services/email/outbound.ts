@@ -2061,3 +2061,41 @@ export async function sendConversionMilestoneEmail(link: string, due: Conversion
   await sgMail.send({ to, from, subject: subject.slice(0, 200), html })
 }
 
+// ─── Reminders from Funnel Insights › CRO ideas, emailed when due (cron /reminders) ───
+export type ReminderPosition = { position: string; label: string; clicks: number; mobile: number; desktop: number; ad: number; not_ad: number }
+export type DueReminder = {
+  id: number; site: string; kind: string; title: string; body: string | null; link: string | null; due_at: string
+  data?: { days?: number; total?: number; positions?: ReminderPosition[]; note?: string | null; error?: string }
+}
+
+export async function sendReminderEmail(r: DueReminder, links: { cro: string; changes: string }): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) throw new Error('SENDGRID_API_KEY not set')
+  const to = process.env.REMINDER_EMAIL ?? process.env.CONVERSION_MILESTONE_EMAIL ?? process.env.SEARCH_TERMS_DIGEST_EMAIL ?? 'lenny@trgdigital.co.uk'
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc = (s: any) => String(s ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
+  const td = 'padding:8px 10px;border-bottom:1px solid #e5e7eb;font-size:14px;color:#374151'
+  let data = ''
+  if (r.kind === 'cta_test') {
+    const d = r.data || {}
+    const pos = d.positions || []
+    data = d.error ? `<p style="color:#b45309;font-size:14px">Button click data could not be read: ${esc(d.error)}</p>`
+      : !pos.length ? `<p style="color:#6b7280;font-size:14px">${esc(d.note || 'No position data yet')} (${d.total ?? 0} Add to basket clicks in the last ${d.days ?? 14} days).</p>`
+      : `<p style="color:${NEUTRAL_DARK};font-size:15px;font-weight:700;margin:16px 0 6px">Add to basket clicks by button, last ${d.days ?? 14} days</p>
+         <table style="border-collapse:collapse;width:100%">
+           <tr><th align="left" style="${td};font-weight:700">Button</th><th align="right" style="${td};font-weight:700">Clicks</th><th align="right" style="${td};font-weight:700">Phone</th><th align="right" style="${td};font-weight:700">Computer</th><th align="right" style="${td};font-weight:700">From ads</th></tr>
+           ${pos.map(p => `<tr><td style="${td}">${esc(p.label)}</td><td align="right" style="${td};font-weight:700">${p.clicks}</td><td align="right" style="${td}">${p.mobile}</td><td align="right" style="${td}">${p.desktop}</td><td align="right" style="${td}">${p.ad}</td></tr>`).join('')}
+         </table>`
+  }
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 8px">${esc(r.title)}</p>
+    ${r.body ? `<p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 12px;white-space:pre-wrap">${esc(r.body)}</p>` : ''}
+    ${data}
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:16px 0 0">
+      ${r.link ? `<a href="${esc(r.link)}" style="color:#7B3FBF">Open the link</a> · ` : ''}<a href="${esc(links.cro)}" style="color:#7B3FBF">CRO ideas</a> · <a href="${esc(links.changes)}" style="color:#7B3FBF">Campaign changes</a>
+    </p>
+    ${emailFooter()}
+  `)
+  await sgMail.send({ to, from, subject: `Reminder: ${r.title}`.slice(0, 200), html })
+}
+

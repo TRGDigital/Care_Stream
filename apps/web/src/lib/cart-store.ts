@@ -50,13 +50,13 @@ export function trackBasketEvent(kind: 'add' | 'checkout', moduleSlug: string, q
 }
 
 export const cart = {
-  add(item: Omit<CartItem, 'qty'> & { qty?: number }) {
+  add(item: Omit<CartItem, 'qty'> & { qty?: number }, position?: string) {
     const qty = Math.max(1, Math.min(500, item.qty ?? 1))
     const existing = items.find((i) => i.slug === item.slug)
     if (existing) items = items.map((i) => (i.slug === item.slug ? { ...i, qty: Math.min(500, i.qty + qty) } : i))
     else items = [...items, { slug: item.slug, title: item.title, qty, unitPence: item.unitPence ?? UNIT_PENCE }]
     trackBasketEvent('add', item.slug, qty)
-    fi('add_to_basket', { funnel: 'training', option: item.slug, label: item.title, qty })
+    fi('add_to_basket', { funnel: 'training', option: item.slug, label: item.title, qty, position })
     persist()
   },
   setQty(slug: string, qty: number) {

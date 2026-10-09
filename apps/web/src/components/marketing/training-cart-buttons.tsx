@@ -7,6 +7,7 @@ import { useCart } from '@/lib/cart-store'
 import { gbp } from '@/lib/training-commerce'
 import { fi } from '@/lib/funnel-insights'
 import { SaveCourseButton } from './save-course-button'
+import { useCtaTest } from '@/lib/cta-tests'
 
 // The TRAINING cart's controls, in the rebuilt theme's markup, for pages outside the training
 // library itself: the training collection pages.
@@ -25,10 +26,12 @@ const Cart = () => (
 )
 
 /** Add a module to the training cart, then step the quantity once it is in. */
-export function TrainingAddButton({ slug, title, unitPence, className = '', label = 'Add to basket' }: {
+export function TrainingAddButton({ slug, title, unitPence, className = '', label = 'Add to basket', position }: {
   slug: string; title: string; unitPence: number; className?: string
   /** The theme's closing band reads "Add to basket · £25.99". */
   label?: string
+  /** Which button this is on the page, sent with the click (Funnel Insights › Buttons). */
+  position?: string
 }) {
   const { items, cart } = useCart()
   const inCart = items.find(i => i.slug === slug)
@@ -43,7 +46,7 @@ export function TrainingAddButton({ slug, title, unitPence, className = '', labe
   }
   return (
     <button type="button" className={`add ${className}`.trim()}
-            onClick={() => cart.add({ slug, title, unitPence })}>
+            onClick={() => cart.add({ slug, title, unitPence }, position)}>
       <Cart /> {label}
     </button>
   )
@@ -71,16 +74,22 @@ export function TrainingCartLink() {
 
 /** The page's main action: straight to this course's purchase page with one licence set.
  *  Logged as its own event so PPC traffic that buys directly can be told apart from the basket. */
-export function BuyNowLink({ slug, className = '', label = 'Add to basket', qty = 1 }: {
+export function BuyNowLink({ slug, className = '', label = 'Add to basket', qty = 1, position, price }: {
   slug: string; className?: string; label?: string; qty?: number
+  /** Which button this is on the page (hero_panel, sticky_bar, closing_section...), sent with the
+   *  click and used by Funnel Insights button tests. */
+  position?: string
+  /** The price shown on the button, for a test's {price} wording. */
+  price?: string
 }) {
   // While an offer is live on this course the button takes the offer's orange.
   const offers = useOffers()
   const cls = licenceOffer(offers, slug) ? `${className} offerbtn`.trim() : className
+  const test = useCtaTest('training', position || '', price)
   return (
-    <Link className={cls} href={`/buy/${slug}?qty=${qty}`}
+    <Link className={cls} href={`/buy/${slug}?qty=${qty}`} style={test?.style}
           onClick={e => {
-            fi('buy_now_click', { funnel: 'training', option: slug, qty })
+            fi('buy_now_click', { funnel: 'training', option: slug, qty, position, cta_test: test?.test, cta_variant: test?.variant })
             // On a course page the buy panel opens as a drawer over the page (buy-drawer.tsx);
             // the link to /buy/ stays for anywhere without one, and for search engines.
             if ((window as unknown as { __csBuyDrawer?: string }).__csBuyDrawer === slug) {
@@ -88,7 +97,7 @@ export function BuyNowLink({ slug, className = '', label = 'Add to basket', qty 
               window.dispatchEvent(new CustomEvent('cs-buy-drawer', { detail: { slug, qty } }))
             }
           }}>
-      {label}
+      {test?.label ?? label}
     </Link>
   )
 }
@@ -110,8 +119,9 @@ export function TrainingAddTextLink({ slug, className = '' }: {
 }
 
 /** For any other link to /buy/<slug>: opens the course page's buy drawer instead, when there is one. */
-export function openBuyDrawer(e: { preventDefault: () => void }, href: string) {
+export function openBuyDrawer(e: { preventDefault: () => void }, href: string, position?: string) {
   const m = href.match(/^\/buy\/([a-z0-9-]+)(?:\?qty=(\d+))?/)
+  if (m && position) fi('buy_now_click', { funnel: 'training', option: m[1], qty: Number(m[2]) || 1, position })
   if (!m || (window as unknown as { __csBuyDrawer?: string }).__csBuyDrawer !== m[1]) return
   e.preventDefault()
   window.dispatchEvent(new CustomEvent('cs-buy-drawer', { detail: { slug: m[1], qty: Number(m[2]) || 1 } }))

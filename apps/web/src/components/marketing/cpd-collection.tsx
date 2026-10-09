@@ -135,7 +135,7 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
     const v = Math.max(0, Math.min(500, n))
     const slug = `bundle:${k}`
     if (v === 0) cart.remove(slug)
-    else if (!learners[k]) { cart.add({ slug, title: BUNDLES[k].name, unitPence: BUNDLES[k].pence, qty: v }); reportMicro('add_to_basket', `bundle-${k}`) }
+    else if (!learners[k]) { cart.add({ slug, title: BUNDLES[k].name, unitPence: BUNDLES[k].pence, qty: v }, 'bundle_card'); reportMicro('add_to_basket', `bundle-${k}`) }
     else cart.setQty(slug, v)
   }
   const captureCourse = courses.find(c => c.slug === (intent.feature ?? 'care-certificate')) ?? courses[0] ?? { slug: 'care-certificate', title: 'Care Certificate', image: null }
@@ -260,7 +260,7 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
                           <button type="button" className="cc-remove" onClick={() => cart.remove(c.slug)}>Remove</button>
                         </div>
                       ) : (
-                        <button type="button" className="cc-add" onClick={() => { cart.add({ slug: c.slug, title: c.title, unitPence: UNIT_PENCE }); reportMicro('add_to_basket', c.slug) }}>
+                        <button type="button" className="cc-add" onClick={() => { cart.add({ slug: c.slug, title: c.title, unitPence: UNIT_PENCE }, 'course_card'); reportMicro('add_to_basket', c.slug) }}>
                           <CartIcon /> Add to basket
                         </button>
                       )}

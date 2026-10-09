@@ -6,6 +6,7 @@ import './licence-offer.css'
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { fi } from '@/lib/funnel-insights'
+import { useCtaTest } from '@/lib/cta-tests'
 
 // The basket and the save control on a policy page. A policy is a TOGGLE, not a quantity: you
 // buy one copy of your own Safeguarding Adults Policy or none.
@@ -67,20 +68,22 @@ const HeartIcon = () => (
   </svg>
 )
 
-export function AddToBasket({ item, className = '', label = 'Add to basket' }: {
+export function AddToBasket({ item, className = '', label = 'Add to basket', position }: {
   item: BasketItem; className?: string
   /** The intake game's finale reads "Add to basket · £59" in the theme. */
   label?: string
+  /** Which button this is on the page, sent with the click (Funnel Insights › Buttons). */
+  position?: string
 }) {
   const store = useStore(KEY_BASKET)
   const inBasket = !!store[item.slug]
   const toggle = useCallback(() => {
     const next = read(KEY_BASKET)
     if (next[item.slug]) delete next[item.slug]
-    else { next[item.slug] = item; fi('add_to_basket', { funnel: 'policies', option: item.slug, label: item.title, qty: 1 }) }
+    else { next[item.slug] = item; fi('add_to_basket', { funnel: 'policies', option: item.slug, label: item.title, qty: 1, position }) }
     write(KEY_BASKET, next)
     announce()
-  }, [item])
+  }, [item, position])
 
   return (
     <button type="button" className={`pcadd ${className}`.trim()} onClick={toggle}
@@ -132,10 +135,13 @@ export function SavePolicy({ slug, title, className = '' }: {
 /** The page's main action: put this policy in the basket (if it is not already) and go
  *  straight to checkout. A real link, so it still reaches checkout without JS. Logged as its
  *  own event so PPC traffic that buys directly can be told apart from the basket. */
-export function BuyNowPolicy({ item, className = '', label = 'Add to basket' }: {
+export function BuyNowPolicy({ item, className = '', label = 'Add to basket', position }: {
   item: BasketItem; className?: string; label?: string
+  /** Which button this is (policy_hero, sticky_bar), sent with the click and used by button tests. */
+  position?: string
 }) {
   const router = useRouter()
+  const test = useCtaTest('policies', position || '', money(item.price_pence))
   // In-app navigation rather than a full page load: the visit (and the ad campaign it came from)
   // is held in page memory, so a reload would cut the sale off from its campaign. The href stays
   // for anyone without JavaScript.
@@ -144,7 +150,7 @@ export function BuyNowPolicy({ item, className = '', label = 'Add to basket' }: 
     if (!next[item.slug]) next[item.slug] = item
     write(KEY_BASKET, next)
     announce()
-    fi('buy_now_click', { funnel: 'policies', option: item.slug, label: item.title, qty: 1 })
+    fi('buy_now_click', { funnel: 'policies', option: item.slug, label: item.title, qty: 1, position, cta_test: test?.test, cta_variant: test?.variant })
     if (e.metaKey || e.ctrlKey || e.shiftKey) return
     e.preventDefault()
     // On a policy page the basket opens as a cart drawer over the page (policy-drawer.tsx).
@@ -153,12 +159,12 @@ export function BuyNowPolicy({ item, className = '', label = 'Add to basket' }: 
       return
     }
     router.push('/care-policies/checkout')
-  }, [item, router])
+  }, [item, router, position, test])
   // While a policy offer is live the button takes the offer's orange.
   const offer = policyOffer(useOffers(), item.slug) ? ' offerbtn' : ''
   return (
-    <a className={`pcadd pcbuynow ${className}${offer}`.trim()} href="/care-policies/checkout" onClick={add}>
-      <CartIcon /> {label}
+    <a className={`pcadd pcbuynow ${className}${offer}`.trim()} href="/care-policies/checkout" onClick={add} style={test?.style}>
+      <CartIcon /> {test?.label ?? label}
     </a>
   )
 }
@@ -241,7 +247,7 @@ export function StickyBuyBar({ item, image }: { item: BasketItem; image: string 
         </span>
         <OfferBarChip slug={item.slug} policy />
         <SavePolicy slug={item.slug} title={item.title} />
-        <BuyNowPolicy item={item} />
+        <BuyNowPolicy item={item} position="sticky_bar" />
       </div>
     </div>
   )

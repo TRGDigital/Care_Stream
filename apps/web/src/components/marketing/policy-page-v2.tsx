@@ -617,7 +617,7 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
                     <p>{rp.description}</p>
                     <div className="pcrelf">
                       <b>{money(rp.price_pence)}</b>
-                      <AddToBasket className="pcrelbuy" item={{
+                      <AddToBasket className="pcrelbuy" position="related_card" item={{
                         slug: rp.slug, title: rp.title, price_pence: rp.price_pence,
                       }} />
                     </div>

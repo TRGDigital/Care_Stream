@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useCart, trackBasketEvent } from '@/lib/cart-store'
 import { useSavedCourses } from '@/lib/saved-courses'
 import { UNIT_PENCE, DISCOUNT_TIERS, discountPctForQty } from '@/lib/training-commerce'
-import { useOffers, licenceDeal, policyDeal } from '@/lib/offers'
+import { useOffers, offersNow, licenceDeal, policyDeal } from '@/lib/offers'
 import { bundleOf, bundleQuote, type BundleKey } from '@/lib/bundle-rules'
 import { LicenceOfferCard, PolicyOfferCard } from './licence-offer'
 import { usePolicyBasket, type BasketItem } from './policy-basket'
@@ -15,6 +15,7 @@ import { AddonOption, ShareBasket, InvoiceRequest, ADDONS, useSaveBasket } from 
 import './checkout-page.css'
 import { fi, fiAttribution } from '@/lib/funnel-insights'
 import { offerLock } from '@/lib/offer-lock'
+import { licenceLinePence, shareTotal } from '@/lib/basket-value'
 import { reportMicro } from '@/lib/google-ads'
 import { useRemembered } from '@/lib/remembered'
 
@@ -279,7 +280,10 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
       }
       window.history.replaceState(null, '', window.location.pathname)
     }
-    cart.snapshot().forEach(i => fi('basket_view', { funnel: 'training', option: i.slug, label: i.title, qty: i.qty }))
+    const lines = cart.snapshot()
+    const singles = lines.filter(i => !i.slug.startsWith('bundle:')).reduce((n, i) => n + i.qty, 0)
+    const values = lines.map(i => licenceLinePence(offersNow(), i.slug, i.qty, singles, i.unitPence))
+    lines.forEach((i, k) => fi('basket_view', { funnel: 'training', option: i.slug, label: i.title, qty: i.qty, value_pence: values[k] }))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -315,8 +319,11 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
     if (problem) { setError(problem); return }
     setError(''); setBusy(true)
     items.forEach(i => trackBasketEvent('checkout', i.slug, i.qty))
-    items.forEach(i => fi('checkout_start', { funnel: 'training', option: i.slug, label: i.title, qty: i.qty }))
-    bundleRows.forEach(r => fi('checkout_start', { funnel: 'training', option: r.slug, label: r.b.name, qty: r.n }))
+    // value_pence: the total shown (payNow) split across the lines by what each costs, so the
+    // lines add up to it to the penny (lib/basket-value.ts).
+    const values = shareTotal(payNow, [...items.map(i => licenceLinePence(offers, i.slug, i.qty, totalQty, i.unitPence)), ...bundleRows.map(r => r.q.total)])
+    items.forEach((i, k) => fi('checkout_start', { funnel: 'training', option: i.slug, label: i.title, qty: i.qty, value_pence: values[k] }))
+    bundleRows.forEach((r, k) => fi('checkout_start', { funnel: 'training', option: r.slug, label: r.b.name, qty: r.n, value_pence: values[items.length + k] }))
     reportMicro('begin_checkout', 'training-basket')
     try {
       const res = await fetch(`${API_URL}/public/training/checkout-basket`, {
@@ -583,7 +590,9 @@ export function PolicyCheckout({ compact = false, onProgress }: {
   useEffect(() => {
     if (!mounted || viewed.current || items.length === 0) return
     viewed.current = true
-    items.forEach(i => fi('basket_view', { funnel: 'policies', option: i.slug, label: i.title, qty: 1 }))
+    // total and deal are worked out below; this runs after the render that set them.
+    const values = shareTotal(total, deal.pence)
+    items.forEach((i, k) => fi('basket_view', { funnel: 'policies', option: i.slug, label: i.title, qty: 1, value_pence: values[k] }))
   }, [mounted, items])
 
   const policies = items.filter(i => !i.slug.startsWith(BUNDLE))
@@ -669,7 +678,8 @@ export function PolicyCheckout({ compact = false, onProgress }: {
     const problem = detailsError(org, name, email, compact)
     if (problem) { setError(problem); return }
     setError(''); setBusy(true)
-    items.forEach(i => fi('checkout_start', { funnel: 'policies', option: i.slug, label: i.title, qty: 1 }))
+    const values = shareTotal(total, deal.pence)
+    items.forEach((i, k) => fi('checkout_start', { funnel: 'policies', option: i.slug, label: i.title, qty: 1, value_pence: values[k] }))
     reportMicro('begin_checkout', 'policy-basket')
     try {
       const res = await fetch(`${API_URL}/public/policy-shop/checkout`, {

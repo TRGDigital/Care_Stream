@@ -1,6 +1,7 @@
 'use client'
 
-import { useOffers, licenceOffer } from '@/lib/offers'
+import { useOffers, offersNow, licenceOffer } from '@/lib/offers'
+import { licenceLinePence } from '@/lib/basket-value'
 import './licence-offer.css'
 import Link from 'next/link'
 import { useCart } from '@/lib/cart-store'
@@ -89,7 +90,7 @@ export function BuyNowLink({ slug, className = '', label = 'Add to basket', qty 
   return (
     <Link className={cls} href={`/buy/${slug}?qty=${qty}`} style={test?.style}
           onClick={e => {
-            fi('buy_now_click', { funnel: 'training', option: slug, qty, position, cta_test: test?.test, cta_variant: test?.variant })
+            fi('buy_now_click', { funnel: 'training', option: slug, qty, position, cta_test: test?.test, cta_variant: test?.variant, value_pence: licenceLinePence(offers, slug, qty) })
             // On a course page the buy panel opens as a drawer over the page (buy-drawer.tsx);
             // the link to /buy/ stays for anywhere without one, and for search engines.
             if ((window as unknown as { __csBuyDrawer?: string }).__csBuyDrawer === slug) {
@@ -121,7 +122,7 @@ export function TrainingAddTextLink({ slug, className = '' }: {
 /** For any other link to /buy/<slug>: opens the course page's buy drawer instead, when there is one. */
 export function openBuyDrawer(e: { preventDefault: () => void }, href: string, position?: string) {
   const m = href.match(/^\/buy\/([a-z0-9-]+)(?:\?qty=(\d+))?/)
-  if (m && position) fi('buy_now_click', { funnel: 'training', option: m[1], qty: Number(m[2]) || 1, position })
+  if (m && position) fi('buy_now_click', { funnel: 'training', option: m[1], qty: Number(m[2]) || 1, position, value_pence: licenceLinePence(offersNow(), m[1], Number(m[2]) || 1) })
   if (!m || (window as unknown as { __csBuyDrawer?: string }).__csBuyDrawer !== m[1]) return
   e.preventDefault()
   window.dispatchEvent(new CustomEvent('cs-buy-drawer', { detail: { slug: m[1], qty: Number(m[2]) || 1 } }))

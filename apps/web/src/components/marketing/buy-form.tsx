@@ -76,7 +76,7 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default', init
     // The organisation is optional: someone can buy a course for themselves.
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) { setError('Please enter a valid email address.'); return }
     setBusy(true)
-    fi('checkout_start', { funnel: 'training', option: slug, label: moduleName, qty })
+    fi('checkout_start', { funnel: 'training', option: slug, label: moduleName, qty, value_pence: total })
     reportMicro('begin_checkout', slug)
     try {
       const res = await fetch(`${API_URL}/public/training/checkout`, {

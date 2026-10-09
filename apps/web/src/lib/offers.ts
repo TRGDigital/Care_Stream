@@ -28,8 +28,14 @@ export function OffersProvider({ offers, children }: { offers: Offer[]; children
     return () => window.removeEventListener('cs-offer-lock', load)
   }, [])
   const value = held && !offers.some(o => o.key === held.key && isLive(o)) ? [...offers, held] : offers
+  current = value
   return createElement(OffersContext.Provider, { value }, children)
 }
+
+// The same offers for code outside React (the cart store, click handlers), so the value sent with
+// a shop event is priced like the basket.
+let current: Offer[] = []
+export const offersNow = (): Offer[] => current.filter(o => isLive(o))
 
 /** The offers live right now. Re-checked in the browser, so a page cached across midnight drops
  *  an offer that has ended and picks up the next one it already holds. */

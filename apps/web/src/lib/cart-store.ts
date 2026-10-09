@@ -4,6 +4,8 @@ import { useSyncExternalStore } from 'react'
 import { UNIT_PENCE, orderTotals } from './training-commerce'
 import { BUNDLE_PREFIX } from './bundle-rules'
 import { fi } from '@/lib/funnel-insights'
+import { offersNow } from './offers'
+import { licenceLinePence } from './basket-value'
 
 // A tiny localStorage-backed cart store — no provider needed. Holds one line per
 // course (slug) with a quantity; volume discount is applied to the total quantity.
@@ -56,7 +58,10 @@ export const cart = {
     if (existing) items = items.map((i) => (i.slug === item.slug ? { ...i, qty: Math.min(500, i.qty + qty) } : i))
     else items = [...items, { slug: item.slug, title: item.title, qty, unitPence: item.unitPence ?? UNIT_PENCE }]
     trackBasketEvent('add', item.slug, qty)
-    fi('add_to_basket', { funnel: 'training', option: item.slug, label: item.title, qty, position })
+    // value_pence: what the licences just added cost in this basket (lib/basket-value.ts).
+    const singles = items.filter((i) => !i.slug.startsWith(BUNDLE_PREFIX)).reduce((n, i) => n + i.qty, 0)
+    const value_pence = licenceLinePence(offersNow(), item.slug, qty, singles, item.unitPence ?? UNIT_PENCE)
+    fi('add_to_basket', { funnel: 'training', option: item.slug, label: item.title, qty, position, value_pence })
     persist()
   },
   setQty(slug: string, qty: number) {

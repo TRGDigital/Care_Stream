@@ -1,6 +1,7 @@
 'use client'
 
-import { useOffers, policyOffer } from '@/lib/offers'
+import { useOffers, offersNow, policyOffer } from '@/lib/offers'
+import { policyItemPence } from '@/lib/basket-value'
 import { OfferBarChip } from './licence-offer'
 import './licence-offer.css'
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
@@ -80,7 +81,7 @@ export function AddToBasket({ item, className = '', label = 'Add to basket', pos
   const toggle = useCallback(() => {
     const next = read(KEY_BASKET)
     if (next[item.slug]) delete next[item.slug]
-    else { next[item.slug] = item; fi('add_to_basket', { funnel: 'policies', option: item.slug, label: item.title, qty: 1, position }) }
+    else { next[item.slug] = item; fi('add_to_basket', { funnel: 'policies', option: item.slug, label: item.title, qty: 1, position, value_pence: policyItemPence(offersNow(), item.slug, item.price_pence || 0) }) }
     write(KEY_BASKET, next)
     announce()
   }, [item, position])
@@ -103,7 +104,7 @@ export function PackLink({ pack, className = '', children }: {
   const add = useCallback(() => {
     const next = read(KEY_BASKET)
     next[`bundle:${pack.key}`] = { slug: `bundle:${pack.key}`, title: pack.title, price_pence: pack.price_pence }
-    fi('add_to_basket', { funnel: 'policies', option: `bundle:${pack.key}`, label: pack.title, qty: 1 })
+    fi('add_to_basket', { funnel: 'policies', option: `bundle:${pack.key}`, label: pack.title, qty: 1, value_pence: policyItemPence(offersNow(), `bundle:${pack.key}`, pack.price_pence) })
     write(KEY_BASKET, next)
     announce()
   }, [pack])
@@ -150,7 +151,7 @@ export function BuyNowPolicy({ item, className = '', label = 'Add to basket', po
     if (!next[item.slug]) next[item.slug] = item
     write(KEY_BASKET, next)
     announce()
-    fi('buy_now_click', { funnel: 'policies', option: item.slug, label: item.title, qty: 1, position, cta_test: test?.test, cta_variant: test?.variant })
+    fi('buy_now_click', { funnel: 'policies', option: item.slug, label: item.title, qty: 1, position, cta_test: test?.test, cta_variant: test?.variant, value_pence: policyItemPence(offersNow(), item.slug, item.price_pence || 0) })
     if (e.metaKey || e.ctrlKey || e.shiftKey) return
     e.preventDefault()
     // On a policy page the basket opens as a cart drawer over the page (policy-drawer.tsx).
@@ -176,7 +177,7 @@ export function AddToBasketText({ item, className = '' }: { item: BasketItem; cl
   const toggle = useCallback(() => {
     const next = read(KEY_BASKET)
     if (next[item.slug]) delete next[item.slug]
-    else { next[item.slug] = item; fi('add_to_basket', { funnel: 'policies', option: item.slug, label: item.title, qty: 1 }) }
+    else { next[item.slug] = item; fi('add_to_basket', { funnel: 'policies', option: item.slug, label: item.title, qty: 1, value_pence: policyItemPence(offersNow(), item.slug, item.price_pence || 0) }) }
     write(KEY_BASKET, next)
     announce()
   }, [item])
@@ -288,7 +289,7 @@ export function usePolicyBasket() {
     if (!basket[item.slug]) basket[item.slug] = item
     write(KEY_BASKET, basket)
     announce()
-    fi('add_to_basket', { funnel: 'policies', option: item.slug, label: item.title, qty: 1 })
+    fi('add_to_basket', { funnel: 'policies', option: item.slug, label: item.title, qty: 1, value_pence: policyItemPence(offersNow(), item.slug, item.price_pence || 0) })
   }, [])
   return { items, add, remove, saveForLater, switchToPack }
 }

@@ -36,7 +36,7 @@ export function AddonOption({ k, checked, onChange }: { k: AddonKey; checked: bo
     <label className={`su-addon${checked ? ' on' : ''}`}>
       <input type="checkbox" checked={checked} onChange={e => {
         onChange(e.target.checked)
-        if (e.target.checked) fi('add_to_basket', { funnel: k === 'team-setup' ? 'training' : 'policies', option: `addon:${k}`, label: a.title, qty: 1 })
+        if (e.target.checked) fi('add_to_basket', { funnel: k === 'team-setup' ? 'training' : 'policies', option: `addon:${k}`, label: a.title, qty: 1, value_pence: a.pence })
       }} />
       <span>
         <b>{a.title} <em>+{gbp(a.pence)}</em></b>

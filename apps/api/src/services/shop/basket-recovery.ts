@@ -136,6 +136,67 @@ export async function runBasketRecovery(): Promise<Record<string, unknown>> {
   return out
 }
 
+/** Every basket saved in the last 60 days and where it is in the sequence, for Funnel Insights ›
+ *  Recovery (server to server, Bearer FI_INGEST_SECRET). Emails leave only in this response:
+ *  Funnel Insights shows them and never stores them. */
+export async function listRecoveryBaskets(): Promise<Record<string, unknown>> {
+  const rows = await (prisma as any).$queryRawUnsafe(
+    `select b.id, b.email, b.name, b.org, b.funnel, b.items, b.created_at, b.updated_at,
+            b.email1_at, b.email2_at, b.paid_at, b.checkout_started_at,
+            exists (select 1 from public.shop_basket_optouts o where o.email = lower(b.email)) as opted_out
+     from public.shop_baskets b
+     where b.created_at > now() - interval '60 days'
+     order by b.created_at desc
+     limit 500`) as any[]
+  let cron: boolean | null = null
+  try {
+    const j = await (prisma as any).$queryRawUnsafe(`select active from cron.job where jobname = 'cs-basket-recovery'`) as any[]
+    cron = j.length ? !!j[0].active : false
+  } catch { cron = null }
+  const offers = await getOffers()
+  const now = Date.now()
+  const H = 3600000
+  const baskets = []
+  for (const b of rows) {
+    let lines: { title: string; detail: string; pence: number }[] = []
+    let totalPence: number | null = null
+    try {
+      const priced = await priceBasket(b.funnel, b.items, offers)
+      if (priced) { lines = priced.lines; totalPence = priced.totalPence }
+    } catch { /* show the basket without a price */ }
+    const created = new Date(b.created_at).getTime()
+    const updated = new Date(b.updated_at).getTime()
+    const e1 = b.email1_at ? new Date(b.email1_at).getTime() : null
+    let position: string
+    let state: 'in_progress' | 'finished' | 'recovered' | 'paid' | 'opted_out' | 'expired'
+    let next_due: string | null = null
+    if (b.paid_at) {
+      state = e1 ? 'recovered' : 'paid'
+      position = e1 ? 'Paid (recovered)' : 'Paid before any email'
+    } else if (b.opted_out) {
+      state = 'opted_out'; position = 'Opted out'
+    } else if (b.email2_at) {
+      state = 'finished'; position = 'Finished: both emails sent'
+    } else if (e1) {
+      const due = Math.max(e1 + 23 * H, updated + H)
+      if (created + 7 * 24 * H < now && due > created + 7 * 24 * H) { state = 'expired'; position = 'Email 1 sent, email 2 not sent (past 7 days)' }
+      else { state = 'in_progress'; next_due = new Date(due).toISOString(); position = 'Email 1 sent, email 2 due' }
+    } else if (created + 7 * 24 * H < now) {
+      state = 'expired'; position = 'Expired (older than 7 days, not emailed)'
+    } else {
+      state = 'in_progress'; next_due = new Date(updated + H).toISOString(); position = 'Waiting for email 1'
+    }
+    baskets.push({
+      id: String(b.id), email: b.email, name: b.name ?? null, org: b.org ?? null, funnel: b.funnel,
+      lines: lines.map(l => ({ title: l.title, detail: l.detail })), item_count: Array.isArray(b.items) ? b.items.length : 0,
+      total_pence: totalPence, saved_at: b.created_at, last_updated: b.updated_at,
+      checkout_started_at: b.checkout_started_at, email1_at: b.email1_at, email2_at: b.email2_at, paid_at: b.paid_at,
+      opted_out: !!b.opted_out, state, position, next_due,
+    })
+  }
+  return { sending_live: process.env.BASKET_RECOVERY_LIVE === '1', cron_scheduled: cron, baskets }
+}
+
 /** Both stages for both shops, with sample baskets, to the platform owner for approval. */
 export async function sendBasketRecoveryPreview(to: string): Promise<Record<string, unknown>> {
   const offers = await getOffers()

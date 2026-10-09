@@ -9,6 +9,7 @@ import { getSiteAltMap } from '@/lib/image-alts'
 import { JsonLd } from '@/components/json-ld'
 import { organizationSchema, webSiteSchema, siteNavigationSchema } from '@/lib/schema'
 import { SpeedInsights } from '@vercel/speed-insights/next'
+import Script from 'next/script'
 
 // `variable` exposes the self-hosted font as a CSS var so Tailwind's `font-sans`
 // (and the html-level default) resolve to it — removing any reliance on a
@@ -68,6 +69,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             has accepted cookies. The preconnect stays: it opens no connection on its
             own, it only makes the handshake faster if and when consent is given. */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />
+        {/* Funnel Insights keeps one anonymous visit together across a full page load by carrying its
+            random visit id in internal links as ?fis= (nothing is stored on the device). Take it out of
+            the address bar before anything else runs, so it never reaches Google tags, shared links,
+            bookmarks or search engines; the tracker reads it from window.__fis. */}
+        <Script id="fi-fis" strategy="beforeInteractive">
+          {`try{var u=new URL(location.href),f=u.searchParams.get('fis');if(f){window.__fis=f;u.searchParams.delete('fis');history.replaceState(history.state,'',u.pathname+u.search+u.hash)}}catch(e){}`}
+        </Script>
       </head>
       <body className={inter.className}>
         <JsonLd data={[organizationSchema(), webSiteSchema(), siteNavigationSchema()]} />

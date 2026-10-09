@@ -39,7 +39,9 @@ type Variant = {
   step2_headline: string; step2_body: string; step2_button: string; image: string
 }
 const KNOWN: Kind[] = ['lockin', 'checklist', 'quiz', 'control']
-type Campaign = {
+export type SecondVariant = { key: string; kind: 'message' | 'offer'; weight: number; eyebrow?: string; headline: string; body: string; button: string; link?: string; offer_key?: string }
+export type SecondPage = { status: 'off' | 'live'; control?: number; seconds?: number; variants?: SecondVariant[] }
+export type Campaign = {
   id: string; name: string; funnel: 'training' | 'policies'; pages: string[]
   trigger_seconds: number; trigger_scroll: number; trigger_mode: 'both' | 'either'; repeat_days: number
   /** Opening second per product page, when the campaign follows the median time on page. */
@@ -48,6 +50,8 @@ type Campaign = {
    *  mobile_past_buy waits until the buy panel has scrolled off the top of the screen. */
   mobile_trigger_seconds?: number | null; mobile_trigger_scroll?: number | null
   mobile_trigger_mode?: 'both' | 'either' | null; mobile_past_buy?: boolean
+  /** Optional second overlay on the visitor's next product page (see second-page-offer.tsx). */
+  second_page?: SecondPage | null
   variants: Variant[]
 }
 
@@ -55,13 +59,13 @@ const isMobile = () => { try { return !!window.matchMedia?.('(pointer: coarse)')
 // The block with the price and the buy button: course and policy pages (.mpe-buy), the CPD bundles page.
 const BUY_ANCHOR = '[data-capture-anchor], .mpe-buy, .cc-bundles'
 
-const store = {
+export const store = {
   get<T>(k: string, d: T): T { try { return JSON.parse(localStorage.getItem(k) || 'null') ?? d } catch { return d } },
   set(k: string, v: unknown) { try { localStorage.setItem(k, JSON.stringify(v)) } catch { /* blocked */ } },
 }
-const session = (k: string, set = false) => { try { if (set) sessionStorage.setItem(k, '1'); return sessionStorage.getItem(k) === '1' } catch { return false } }
+export const session = (k: string, set = false) => { try { if (set) sessionStorage.setItem(k, '1'); return sessionStorage.getItem(k) === '1' } catch { return false } }
 
-function hasBasket(): boolean {
+export function hasBasket(): boolean {
   try {
     const t = JSON.parse(localStorage.getItem('cs_training_cart') || 'null')
     const p = JSON.parse(localStorage.getItem('cs_policy_basket') || 'null')
@@ -72,7 +76,7 @@ function hasBasket(): boolean {
 
 /** Live campaigns, kept for five minutes in this tab. A preview always reads them fresh, so an
  *  edit in Funnel Insights (copy, an uploaded image) shows on the next load. */
-async function loadCampaigns(fresh = false): Promise<Campaign[]> {
+export async function loadCampaigns(fresh = false): Promise<Campaign[]> {
   try {
     const cached = JSON.parse(sessionStorage.getItem('cs_capture_cfg') || 'null')
     if (!fresh && cached && Date.now() - cached.at < 5 * 60_000) return cached.campaigns
@@ -193,6 +197,7 @@ export function CaptureOverlay({ funnel, product, title, image, quiz, offerName 
         done = true
         fired.current = true
         session('cs-exitq', true)   // the exit question stays away for this visit (the control too, so both groups match)
+        try { sessionStorage.setItem('cs-cap-first', location.pathname) } catch { /* blocked */ }   // for the second-page offer
         store.set('cs_capture_seen', { ...store.get<Record<string, number>>('cs_capture_seen', {}), [campaign.id]: Date.now() })
         if (shown.kind === 'control') { report(campaign, shown, 'held_out', inTest, product); return }
         setOpen(true)

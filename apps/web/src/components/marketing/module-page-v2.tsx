@@ -18,6 +18,7 @@ import { HeroGallery, LanguageSlide, Mini, TryBeforeYouBuy, type GallerySlide } 
 import { PaymentLogos } from './payment-logos'
 import { ExitQuestion } from './shop-questions'
 import { CaptureOverlay } from './capture-overlay'
+import { SecondPageOffer } from './second-page-offer'
 import { BuyDrawer } from './buy-drawer'
 import { ProductFaqs, SampleCertificate, trainingFaqs, type FaqModule } from './product-extras'
 import './module-page-v2.css'
@@ -352,6 +353,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
       <ScrollSequence root=".mpage-v2 .mpe-in" />
       <ExitQuestion funnel="training" product={m.slug} />
       <CaptureOverlay funnel="training" product={m.slug} title={m.title} image={hero} />
+      <SecondPageOffer funnel="training" product={m.slug} title={m.title} />
       <BuyDrawer slug={m.slug} moduleName={m.title} unitPence={unitPence}
                  cpd={m.cpd_accredited ? { sections: sections.length, duration: durationText(est) } : null} />
       <section className="mhero mpe">

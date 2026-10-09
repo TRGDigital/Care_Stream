@@ -28,6 +28,7 @@ import { sendLicenceRenewalReminders } from '../services/training/licence-renewa
 import { runOfferChanges } from '../services/offers'
 import { runSearchTermsDigest } from '../services/ads/search-terms-digest'
 import { runConversionMilestones } from '../services/ads/conversion-milestones'
+import { runReminders } from '../services/ads/reminders'
 import { runBasketRecovery, sendBasketRecoveryPreview } from '../services/shop/basket-recovery'
 import { runReviewRequests, sendReviewRequestPreview } from '../services/shop/review-requests'
 import { sendCapturePreview } from '../services/shop/email-capture'
@@ -212,6 +213,11 @@ cronRouter.get('/search-terms-digest', (req, res) =>
 // campaign reaches 30 or 50 confirmed sales or leads in 30 days. pg_cron job cs-conversion-milestones.
 cronRouter.get('/conversion-milestones', (req, res) =>
   job('conversion-milestones', req, res, () => runConversionMilestones()))
+
+// Reminders Len sets in Funnel Insights › CRO ideas (services/ads/reminders.ts), emailed on the
+// morning they fall due. pg_cron job cs-reminders, daily 08:00 UTC.
+cronRouter.get('/reminders', (req, res) =>
+  job('reminders', req, res, () => runReminders()))
 
 // Basket recovery emails (services/shop/basket-recovery.ts). Sends only with BASKET_RECOVERY_LIVE=1.
 cronRouter.get('/basket-recovery', (req, res) =>

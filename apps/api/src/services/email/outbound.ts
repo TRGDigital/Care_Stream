@@ -1842,15 +1842,84 @@ const RECOVERY_REVIEW = {
   training: 'I haven’t found anything else as comprehensive, easy to use, or as clever… The training modules and matrix are extremely useful.',
   policies: 'I haven’t found anything else as comprehensive, easy to use, or as clever; to have a tool such as this for our company policies to act as a living on-hand guide for my staff.',
 }
-export async function sendBasketRecoveryEmail(opts: {
-  to: string; stage: 1 | 2; name: string; org: string; funnel: 'training' | 'policies'
+/** What is true of the training courses in a basket, read from their shop modules, so email 3
+ *  only claims CPD or a workplace sign-off where the course really has it. */
+export type BasketCourseFacts = { cpdTitles: string[]; practicalTitles: string[]; courseCount: number }
+type BasketRecoveryOpts = {
+  to: string; stage: 1 | 2 | 3; name: string; org: string; funnel: 'training' | 'policies'
   lines: { title: string; detail: string; pence: number }[]; totalPence: number; link: string
   offer: { label: string; headline: string; ends_on: string } | null
   optOutUrl: string; subjectPrefix?: string
-}): Promise<void> {
+  /** Stage 3, training only. Without it no CPD or sign-off answer is given. */
+  facts?: BasketCourseFacts
+}
+
+// Stage 3, about 72 hours after the first: the last one. Not a harder push: answers to what
+// usually holds a care manager back (is it CPD, language, who signs off competence), and the
+// invoice or purchase order offer up front. An offer is mentioned only when one in the offer
+// engine is really applied to the basket, with its real end date.
+export function renderBasketRecoveryEmail3(opts: Omit<BasketRecoveryOpts, 'to' | 'stage'>): { subject: string; html: string } {
+  const esc = (s: any) => String(s ?? '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c] as string))
+  const gbp = (p: number) => `£${(p / 100).toFixed(2)}`
+  const training = opts.funnel === 'training'
+  const first = (opts.name || '').trim().split(/\s+/)[0] || ''
+  const forOrg = opts.org ? ` for ${esc(opts.org)}` : ''
+  const ends = opts.offer ? new Date(`${opts.offer.ends_on}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) : ''
+  const list = (t: string[]) => t.length <= 1 ? (t[0] ?? '') : `${t.slice(0, -1).join(', ')} and ${t[t.length - 1]}`
+  const f = opts.facts
+
+  const qa: [string, string][] = training
+    ? [
+        f && f.cpdTitles.length
+          ? ['Is it CPD certified?', f.cpdTitles.length === f.courseCount
+              ? `Yes. ${f.courseCount === 1 ? `${esc(f.cpdTitles[0])} is` : 'Every course in your basket is'} CPD Certified, and each learner gets a certificate with their name on it the moment they pass.`
+              : `${esc(list(f.cpdTitles))} ${f.cpdTitles.length === 1 ? 'is' : 'are'} CPD Certified. Every learner gets a certificate with their name on it the moment they pass.`]
+          : ['Do staff get a certificate?', 'Yes. Each learner gets a certificate with their name on it the moment they pass.'],
+        ['What if English is not their first language?', 'Every lesson is available in over 60 languages, chosen for each staff member. Your reports stay in English.'],
+        f && f.practicalTitles.length
+          ? ['Who signs off competence?', `You do. The knowledge and its assessment are online. For ${esc(list(f.practicalTitles))}, you or your assessor observe each competency at work and sign it off, using the observation checklist we provide.`]
+          : ['Can staff start straight away?', 'Yes. Allocate a licence to each member of staff and they can begin the same day, on any phone.'],
+      ]
+    : [
+        ['Is it written for my service?', 'Yes. Each policy is written for your service and read by a person before it carries your name.'],
+        ['How long does it take?', 'Delivered within 2 working days of your answers.'],
+        ['What if it is not right for us?', 'It is refunded in full within 14 days.'],
+      ]
+
+  const subject = (opts.subjectPrefix ?? '') + (training ? 'Any questions before your staff start?' : 'Any questions before you order your policies?')
+  const link = `${opts.link}${opts.link.includes('?') ? '&' : '?'}utm_source=carestream&utm_medium=email&utm_campaign=basket_recovery_3`
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:18px;font-weight:700;margin:0 0 8px">${first ? `${esc(first)}, any` : 'Any'} questions before you buy?</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 16px">Your basket${forOrg} is still saved. This is our last reminder, so here are quick answers to what care managers usually ask us first.</p>
+    <table style="width:100%;border-collapse:collapse;font-size:14px;margin:0 0 6px">
+      ${opts.lines.map(l => `<tr><td style="padding:8px 0;border-bottom:1px solid #eee"><strong>${esc(l.title)}</strong><br><span style="color:#6b7280;font-size:12px">${esc(l.detail)}</span></td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;white-space:nowrap">${l.pence ? gbp(l.pence) : 'Free'}</td></tr>`).join('')}
+      <tr><td style="padding:10px 0;font-weight:700">Total</td><td style="padding:10px 0;text-align:right;font-weight:700;white-space:nowrap">${gbp(opts.totalPence)} + VAT</td></tr>
+    </table>
+    <p style="color:#6b7280;font-size:12px;margin:0 0 16px">VAT is added at checkout. One-off payment, no subscription.</p>
+    ${opts.offer ? `<p style="margin:0 0 16px;padding:10px 14px;border-radius:8px;background:#1F1530;color:#F6F1FB;font-size:13px;line-height:1.5"><strong style="color:#F28C38">${esc(opts.offer.label)}: ${esc(opts.offer.headline)}.</strong> It is applied to your basket until midnight on ${esc(ends)}.</p>` : ''}
+    <p style="margin:0 0 20px"><a href="${esc(link)}" style="display:inline-block;background:#F28C38;color:#1F1530;font-weight:700;text-decoration:none;padding:13px 24px;border-radius:10px">Return to my basket</a></p>
+    <div style="margin:0 0 20px;padding:14px 16px;border-radius:10px;border:1px solid #E4D9F2;background:#F7F5FA">
+      <p style="color:${NEUTRAL_DARK};font-size:15px;font-weight:700;margin:0 0 4px">Need an invoice or purchase order for your manager?</p>
+      <p style="color:#374151;font-size:14px;line-height:1.6;margin:0">Reply to this email and we will send one. You can also forward this email to whoever signs off spending.</p>
+    </div>
+    ${qa.map(([q, a]) => `<p style="color:${NEUTRAL_DARK};font-size:14px;font-weight:700;margin:0 0 2px">${q}</p><p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 14px">${a}</p>`).join('')}
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:4px 0 16px">Something else on your mind? Just reply and a real person will answer. CareStream is built by people who have worked in care homes.</p>
+    ${emailFooter().replace(' &mdash; Powered', ', powered')}
+    <p style="color:#9ca3af;font-size:11px;line-height:1.5;margin:12px 0 0">You are receiving this because you started an order on carestreamai.com. This is the last reminder about this basket. <a href="${esc(opts.optOutUrl)}" style="color:#9ca3af">Stop basket reminders</a>.</p>
+  `)
+  return { subject: subject.slice(0, 150), html }
+}
+
+export async function sendBasketRecoveryEmail(opts: BasketRecoveryOpts): Promise<void> {
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) throw new Error('Email is not configured')
   const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  if (opts.stage === 3) {
+    const { subject, html } = renderBasketRecoveryEmail3(opts)
+    await sgMail.send({ to: opts.to, from, replyTo: PURCHASE_NOTIFY_TO(), subject, html })
+    return
+  }
   const esc = (s: any) => String(s ?? '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c] as string))
   const gbp = (p: number) => `£${(p / 100).toFixed(2)}`
   const training = opts.funnel === 'training'

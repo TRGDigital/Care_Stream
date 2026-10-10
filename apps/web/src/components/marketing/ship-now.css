@@ -6,6 +6,9 @@
   margin:0 0 3px;padding:1px 6px;border-radius:3px;background:#f9a825;color:#000;font:700 10px/1.4 system-ui,sans-serif;
   letter-spacing:0;text-transform:none;white-space:normal}
 .shipdemo [data-shipnow] [data-shipnow]::before{display:none}
+/* Flex rows: the label sits above them instead of taking a column. */
+.shipdemo .ppc-links,.shipdemo .ppc-flinks,.shipdemo .sn-cpd,.shipdemo .sn-stripe{position:relative;padding-top:16px}
+.shipdemo .ppc-links::before,.shipdemo .ppc-flinks::before,.shipdemo .sn-cpd::before,.shipdemo .sn-stripe::before{position:absolute;top:0;left:0;margin:0;white-space:nowrap}
 
 /* ── Stripped header and footer for Google Ads visitors (html.ppc-strip). */
 .ppc-only{display:none !important}
@@ -52,4 +55,7 @@ html.ppc-strip .site-foot .fbuilt{display:none !important}
 .sn-lines{margin:8px 0 0;display:grid;gap:4px;font-size:.88rem}
 .sn-lines div{display:flex;justify-content:space-between;gap:12px}
 .sn-lines .inc{font-weight:800;font-size:1rem}
-.sn-each{font-size:.82rem;color:var(--muted,#5b6470);margin-top:3px}
+.sn-each{font-size:.82rem;color:var(--muted,#5b6470);margin:4px 0 10px}
+/* The new Stripe line says it in full, so the logo row's short version steps aside. */
+.sn-stripe ~ .paylogos .paysecure{display:none}
+.sn-mvat{display:block;font-size:.7rem;font-weight:500;opacity:.8}

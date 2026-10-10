@@ -212,7 +212,9 @@ function Shell({ back, title, lede, children, summary, total, empty, compact = f
       </div>
       {!empty && (
         <div className="ckmbar">
-          <div><span>Total</span><b>{money(total)}</b></div>
+          {SHIP_NOW && back[0].startsWith('/staff-training')
+            ? <div {...sn('vat', 'VAT')}><span>Total + VAT</span><b>{money(total)}</b><span className="sn-mvat">{money(withVat(total).inc)} inc VAT</span></div>
+            : <div><span>Total</span><b>{money(total)}</b></div>}
           <button type="button" onClick={() => document.getElementById('ckpay')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>
             Checkout securely
           </button>

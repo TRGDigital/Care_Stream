@@ -382,7 +382,7 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
 
       {lineCount > 0 && (
         <button type="button" className="cc-mbar" onClick={() => setSheet(true)}>
-          <span>{lineCount} in your training</span><b>{money2(grand)}</b><em>Review</em>
+          <span>{lineCount} in your training</span><b>{money2(grand)}{SHIP_NOW && <span {...sn('vat', 'VAT')} className="sn-mvat">+ VAT</span>}</b><em>Review</em>
         </button>
       )}
     </div>

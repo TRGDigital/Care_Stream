@@ -1,22 +1,25 @@
 import { prisma } from '../../db/client'
 import { getStripe, managedPaymentsRequestOptions } from '../billing/stripe'
 import { getOffers, type Offer } from '../offers'
-import { sendBasketRecoveryEmail } from '../email/outbound'
+import { sendBasketRecoveryEmail, type BasketCourseFacts } from '../email/outbound'
 import { priceBasket } from './basket-pricing'
 import { reportEmailEvent } from '../analytics/funnel-insights'
 
 // Basket recovery. The basket page and the buy page save the basket (with the buyer's email) the
 // moment a valid email is typed, into public.shop_baskets: one open row per email and shop.
 // A paid order closes it (reconcile, the Stripe webhook, or the check below). If it is still
-// open an hour after the buyer last touched it, stage 1 goes; the next day, stage 2. Never more,
-// never to an address that has opted out, and never if Stripe shows they paid since.
+// open an hour after the buyer last touched it, stage 1 goes; the next day, stage 2; and, only
+// with BASKET_RECOVERY_EMAIL3_LIVE=1, stage 3 about 72 hours after stage 1. Never more, never to
+// an address that has opted out, and never if Stripe shows they paid since.
 //
 // Sending is off unless BASKET_RECOVERY_LIVE=1, and the pg_cron job (cs-basket-recovery) is only
-// scheduled once Len has approved the emails.
+// scheduled once Len has approved the emails. Stage 3 has its own switch on top of that
+// (BASKET_RECOVERY_EMAIL3_LIVE=1), off until Len approves it.
 
 const API_PUBLIC = () => (process.env.API_PUBLIC_URL || 'https://api.carestreamai.com').replace(/\/$/, '')
 const optOutUrl = (token: string) => `${API_PUBLIC()}/public/shop/basket-optout?t=${encodeURIComponent(token)}`
 type Funnel = 'training' | 'policies'
+const email3Live = () => process.env.BASKET_RECOVERY_EMAIL3_LIVE === '1'
 
 /** Product keys from stored basket items: training [{slug}], policies ["slug" | "bundle:key"]. */
 const productsOf = (items: unknown): string[] =>
@@ -54,11 +57,11 @@ export async function markBasketPaid(email: string | null | undefined, funnel: F
   try {
     const rows = await (prisma as any).$queryRawUnsafe(
       `update public.shop_baskets set paid_at = now() where lower(email) = $1 and funnel = $2 and paid_at is null
-       returning id, items, email1_at, email2_at`, e, funnel) as any[]
+       returning id, items, email1_at, email2_at, email3_at`, e, funnel) as any[]
     for (const r of rows ?? []) {
       if (!r.email1_at) continue
       await reportEmailEvent({
-        kind: 'recovered', ref: String(r.id), stage: r.email2_at ? 2 : 1, funnel,
+        kind: 'recovered', ref: String(r.id), stage: r.email3_at ? 3 : r.email2_at ? 2 : 1, funnel,
         products: sale?.products?.length ? sale.products : productsOf(r.items), valuePence: sale?.valuePence ?? 0,
       })
     }
@@ -91,43 +94,81 @@ function offerFor(offers: Offer[], funnel: Funnel, lines: { detail: string }[]) 
   return { label: o.label ?? o.name, headline: o.headline ?? '', ends_on: o.ends_on }
 }
 
-const DUE = `
+/** Training only: which courses in the basket are CPD Certified, and which need an observed
+ *  workplace sign-off, read from each course's shop module (the module the shop sells). */
+async function courseFacts(funnel: Funnel, lines: { title: string }[]): Promise<BasketCourseFacts | undefined> {
+  if (funnel !== 'training') return undefined
+  const titles = lines.map(l => l.title)
+  const topics = await (prisma as any).trainingTopic.findMany({
+    where: { tenant_id: null, is_active: true, title: { in: titles } }, select: { title: true, shop_module_id: true } }) as any[]
+  const ids = topics.map(t => t.shop_module_id).filter(Boolean)
+  const mods = ids.length ? await (prisma as any).trainingModule.findMany({
+    where: { id: { in: ids } }, select: { id: true, cpd_accredited: true, approved: true, is_active: true, requires_practical: true } }) as any[] : []
+  const byId = new Map(mods.map(m => [m.id, m] as const))
+  const modOf = (title: string) => byId.get(topics.find(t => t.title === title)?.shop_module_id)
+  return {
+    courseCount: titles.length,
+    cpdTitles: titles.filter(t => { const m = modOf(t); return !!(m?.cpd_accredited && m.approved && m.is_active) }),
+    practicalTitles: titles.filter(t => !!modOf(t)?.requires_practical),
+  }
+}
+
+// Stages 1 and 2 as before. Stage 3 (only when switched on): email 2 has gone, email 1 went at
+// least 72 hours ago but no more than 96 (so switching it on never mails old baskets), the buyer
+// has not touched the basket for an hour, and nothing has been paid under that address since the
+// basket was saved (Stripe is checked again before sending).
+const DUE = (withThird: boolean) => `
   select b.id, b.email, b.name, b.org, b.funnel, b.items, b.token, b.created_at,
-         case when b.email1_at is null then 1 else 2 end as stage
+         case when b.email1_at is null then 1 when b.email2_at is null then 2 else 3 end as stage
   from public.shop_baskets b
-  where b.paid_at is null and b.email2_at is null
+  where b.paid_at is null
     and b.updated_at < now() - interval '1 hour'
-    and b.created_at > now() - interval '7 days'
-    and (b.email1_at is null or b.email1_at < now() - interval '23 hours')
     and not exists (select 1 from public.shop_basket_optouts o where o.email = lower(b.email))
+    and (
+      (b.email2_at is null
+        and b.created_at > now() - interval '7 days'
+        and (b.email1_at is null or b.email1_at < now() - interval '23 hours'))
+      ${withThird ? `or (b.email2_at is not null and b.email3_at is null
+        and b.email1_at < now() - interval '72 hours'
+        and b.email1_at > now() - interval '96 hours'
+        and b.email2_at < now() - interval '24 hours'
+        and not exists (select 1 from public.shop_baskets p
+                        where lower(p.email) = lower(b.email) and p.paid_at > b.created_at))` : ''}
+    )
   order by b.updated_at
   limit 40`
 
 export async function runBasketRecovery(): Promise<Record<string, unknown>> {
   if (process.env.BASKET_RECOVERY_LIVE !== '1') return { disabled: true }
-  const due = await (prisma as any).$queryRawUnsafe(DUE) as any[]
-  const out = { due: due.length, sent1: 0, sent2: 0, paid: 0, empty: 0, stripe_unknown: 0, errors: 0 }
+  const third = email3Live()
+  const due = await (prisma as any).$queryRawUnsafe(DUE(third)) as any[]
+  const out = { due: due.length, sent1: 0, sent2: 0, sent3: 0, email3_live: third, paid: 0, empty: 0, stripe_unknown: 0, errors: 0 }
   if (!due.length) return out
   const offers = await getOffers()
   for (const b of due) {
-    const stamp = b.stage === 1 ? 'email1_at' : 'email2_at'
+    const stage = Number(b.stage) as 1 | 2 | 3
+    const stamp = stage === 1 ? 'email1_at' : stage === 2 ? 'email2_at' : 'email3_at'
     try {
       let paid: boolean
       try { paid = await paidAtStripeSince(b.email, new Date(b.created_at)) } catch { out.stripe_unknown++; continue }
       if (paid) { await markBasketPaid(b.email, b.funnel); out.paid++; continue }
       const basket = await priceBasket(b.funnel, b.items, offers)
       if (!basket) {
-        await (prisma as any).$executeRawUnsafe(`update public.shop_baskets set email1_at = coalesce(email1_at, now()), email2_at = now() where id = $1::uuid`, b.id)
+        // Emptied: close the sequence (stage 3 is stamped too, so it never comes back to it).
+        await (prisma as any).$executeRawUnsafe(stage === 3
+          ? `update public.shop_baskets set email3_at = now() where id = $1::uuid`
+          : `update public.shop_baskets set email1_at = coalesce(email1_at, now()), email2_at = now() where id = $1::uuid`, b.id)
         out.empty++; continue
       }
       await sendBasketRecoveryEmail({
-        to: b.email, stage: b.stage, name: b.name ?? '', org: b.org ?? '', funnel: b.funnel,
+        to: b.email, stage, name: b.name ?? '', org: b.org ?? '', funnel: b.funnel,
         lines: basket.lines, totalPence: basket.totalPence, link: basket.link,
         offer: offerFor(offers, b.funnel, basket.lines), optOutUrl: optOutUrl(b.token),
+        facts: stage === 3 ? await courseFacts(b.funnel, basket.lines) : undefined,
       })
       await (prisma as any).$executeRawUnsafe(`update public.shop_baskets set ${stamp} = now() where id = $1::uuid`, b.id)
-      if (b.stage === 1) out.sent1++; else out.sent2++
-      await reportEmailEvent({ kind: 'recovery_sent', ref: String(b.id), stage: b.stage, funnel: b.funnel, products: productsOf(basket.items), valuePence: basket.totalPence })
+      if (stage === 1) out.sent1++; else if (stage === 2) out.sent2++; else out.sent3++
+      await reportEmailEvent({ kind: 'recovery_sent', ref: String(b.id), stage, funnel: b.funnel, products: productsOf(basket.items), valuePence: basket.totalPence })
     } catch (e) {
       out.errors++
       console.error('[basket-recovery]', b.id, (e as Error)?.message)
@@ -143,7 +184,7 @@ export async function listRecoveryBaskets(days = 60): Promise<Record<string, unk
   const window = Math.max(1, Math.min(90, Math.floor(days) || 60))
   const rows = await (prisma as any).$queryRawUnsafe(
     `select b.id, b.email, b.name, b.org, b.funnel, b.items, b.created_at, b.updated_at,
-            b.email1_at, b.email2_at, b.paid_at, b.checkout_started_at,
+            b.email1_at, b.email2_at, b.email3_at, b.paid_at, b.checkout_started_at,
             exists (select 1 from public.shop_basket_optouts o where o.email = lower(b.email)) as opted_out
      from public.shop_baskets b
      where b.created_at > now() - make_interval(days => $1::int)
@@ -155,6 +196,7 @@ export async function listRecoveryBaskets(days = 60): Promise<Record<string, unk
     cron = j.length ? !!j[0].active : false
   } catch { cron = null }
   const offers = await getOffers()
+  const third = email3Live()
   const now = Date.now()
   const H = 3600000
   const baskets = []
@@ -176,8 +218,15 @@ export async function listRecoveryBaskets(days = 60): Promise<Record<string, unk
       position = e1 ? 'Paid (recovered)' : 'Paid before any email'
     } else if (b.opted_out) {
       state = 'opted_out'; position = 'Opted out'
+    } else if (b.email3_at) {
+      state = 'finished'; position = 'Finished: all three emails sent'
+    } else if (b.email2_at && third && e1) {
+      // Mirrors DUE: email 3 goes 72 to 96 hours after email 1, an hour after the last touch.
+      const due = Math.max(e1 + 72 * H, updated + H)
+      if (due > e1 + 96 * H || (now > e1 + 96 * H)) { state = 'finished'; position = 'Finished: emails 1 and 2 sent (email 3 window passed)' }
+      else { state = 'in_progress'; next_due = new Date(due).toISOString(); position = 'Email 2 sent, email 3 due' }
     } else if (b.email2_at) {
-      state = 'finished'; position = 'Finished: both emails sent'
+      state = 'finished'; position = third ? 'Finished: emails 1 and 2 sent' : 'Finished: both emails sent'
     } else if (e1) {
       const due = Math.max(e1 + 23 * H, updated + H)
       if (created + 7 * 24 * H < now && due > created + 7 * 24 * H) { state = 'expired'; position = 'Email 1 sent, email 2 not sent (past 7 days)' }
@@ -191,14 +240,15 @@ export async function listRecoveryBaskets(days = 60): Promise<Record<string, unk
       id: String(b.id), email: b.email, name: b.name ?? null, org: b.org ?? null, funnel: b.funnel,
       lines: lines.map(l => ({ title: l.title, detail: l.detail })), item_count: Array.isArray(b.items) ? b.items.length : 0,
       total_pence: totalPence, saved_at: b.created_at, last_updated: b.updated_at,
-      checkout_started_at: b.checkout_started_at, email1_at: b.email1_at, email2_at: b.email2_at, paid_at: b.paid_at,
+      checkout_started_at: b.checkout_started_at, email1_at: b.email1_at, email2_at: b.email2_at, email3_at: b.email3_at ?? null, paid_at: b.paid_at,
       opted_out: !!b.opted_out, state, position, next_due,
     })
   }
-  return { sending_live: process.env.BASKET_RECOVERY_LIVE === '1', cron_scheduled: cron, days: window, baskets }
+  return { sending_live: process.env.BASKET_RECOVERY_LIVE === '1', email3_live: third, cron_scheduled: cron, days: window, baskets }
 }
 
-/** Both stages for both shops, with sample baskets, to the platform owner for approval. */
+/** All three stages for both shops, with sample baskets, to the platform owner for approval
+ *  (stage 3 is previewed even while BASKET_RECOVERY_EMAIL3_LIVE is off: that is how it gets approved). */
 export async function sendBasketRecoveryPreview(to: string): Promise<Record<string, unknown>> {
   const offers = await getOffers()
   const samples: Array<{ funnel: Funnel; items: unknown }> = [
@@ -209,12 +259,14 @@ export async function sendBasketRecoveryPreview(to: string): Promise<Record<stri
   for (const s of samples) {
     const basket = await priceBasket(s.funnel, s.items, offers)
     if (!basket) continue
-    for (const stage of [1, 2] as const) {
+    const facts = await courseFacts(s.funnel, basket.lines)
+    for (const stage of [1, 2, 3] as const) {
       await sendBasketRecoveryEmail({
         to, stage, name: 'Sam Taylor', org: 'Oakhaven Care Home', funnel: s.funnel,
         lines: basket.lines, totalPence: basket.totalPence, link: basket.link,
         offer: offerFor(offers, s.funnel, basket.lines), optOutUrl: `${API_PUBLIC()}/public/shop/basket-optout?t=preview`,
-        subjectPrefix: `[Preview ${s.funnel} ${stage === 1 ? '1 hour' : 'next day'}] `,
+        subjectPrefix: `[Preview ${s.funnel} ${stage === 1 ? '1 hour' : stage === 2 ? 'next day' : '72 hours'}] `,
+        facts: stage === 3 ? facts : undefined,
       })
       sent.push(`${s.funnel}-${stage}`)
     }

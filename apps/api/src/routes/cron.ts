@@ -219,11 +219,13 @@ cronRouter.get('/conversion-milestones', (req, res) =>
 cronRouter.get('/reminders', (req, res) =>
   job('reminders', req, res, () => runReminders()))
 
-// Basket recovery emails (services/shop/basket-recovery.ts). Sends only with BASKET_RECOVERY_LIVE=1.
+// Basket recovery emails (services/shop/basket-recovery.ts). Sends only with BASKET_RECOVERY_LIVE=1;
+// the third email also needs BASKET_RECOVERY_EMAIL3_LIVE=1.
 cronRouter.get('/basket-recovery', (req, res) =>
   job('basket-recovery', req, res, () => runBasketRecovery()))
 
-// Both recovery emails, for both shops, with sample baskets, to the platform owner to approve.
+// All three recovery emails (email 3 even while BASKET_RECOVERY_EMAIL3_LIVE is off), for both shops,
+// with sample baskets, to the platform owner to approve.
 // The email capture emails (checklists and an offer lock) to the platform owner to approve.
 cronRouter.get('/capture-preview', (req, res) =>
   job('capture-preview', req, res, () => sendCapturePreview(process.env.PURCHASE_NOTIFY_EMAIL ?? 'lenny@trgdigital.co.uk')))

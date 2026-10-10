@@ -13,7 +13,7 @@
 // The attributes and the CSS are harmless when left in; to remove them, delete ship-now.css and
 // its import, and the data-shipnow / data-shipnow-label attributes.
 
-export const SHIP_NOW_LIVE = false
+export const SHIP_NOW_LIVE = true
 
 export const SHIP_NOW = SHIP_NOW_LIVE || process.env.NEXT_PUBLIC_SHIP_NOW_PREVIEW === '1'
 

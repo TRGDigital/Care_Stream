@@ -1,0 +1,55 @@
+/* "Ship now" batch (lib/ship-now.ts). */
+
+/* ── The review highlight: only with ?shipdemo=1 (html.shipdemo). Delete this block to remove it. */
+.shipdemo [data-shipnow]{background:#fff59d !important;outline:2px solid #f9a825 !important;outline-offset:1px;color:#1a1a1a}
+.shipdemo [data-shipnow]::before{content:attr(data-shipnow-label);display:block;width:max-content;max-width:100%;
+  margin:0 0 3px;padding:1px 6px;border-radius:3px;background:#f9a825;color:#000;font:700 10px/1.4 system-ui,sans-serif;
+  letter-spacing:0;text-transform:none;white-space:normal}
+.shipdemo [data-shipnow] [data-shipnow]::before{display:none}
+
+/* ── Stripped header and footer for Google Ads visitors (html.ppc-strip). */
+.ppc-only{display:none !important}
+html.ppc-strip .ppc-only{display:flex !important}
+html.ppc-strip .cs-teambar,
+html.ppc-strip .cschrome .nav .navbtn,
+html.ppc-strip .cschrome .util > :not(.ppc-only),
+html.ppc-strip .cschrome .mega-host,
+html.ppc-strip .cschrome .mnav,
+html.ppc-strip .site-foot .fcols,
+html.ppc-strip .site-foot .fpreferred,
+html.ppc-strip .site-foot .fbuilt{display:none !important}
+.ppc-links{align-items:center;gap:10px}
+.ppc-links .ppc-q{font-size:.86rem;color:inherit;text-decoration:none;white-space:nowrap}
+.ppc-links .ppc-q b{color:var(--accent,#0d7a72);font-weight:700}
+.ppc-links .ppc-basket{position:relative;display:grid;place-items:center;width:40px;height:40px;border-radius:999px;
+  border:1px solid rgba(0,0,0,.12);color:inherit}
+.ppc-links .ppc-count{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 4px;border-radius:999px;
+  background:#F28C38;color:#fff;font-size:.7rem;font-weight:800;display:grid;place-items:center}
+.ppc-flinks{gap:18px;flex-wrap:wrap;margin:6px 0 14px}
+.ppc-flinks a{color:inherit;font-weight:600}
+@media (max-width:420px){.ppc-links .ppc-q{font-size:.78rem}}
+
+/* ── Shared bits of the new copy. */
+.sn-vat{display:block;margin-top:4px;font-size:.84rem;color:var(--muted,#5b6470);font-weight:500}
+.sn-vat b{color:var(--ink,#17202a);font-weight:700}
+.sn-meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 0 2px;font-size:.86rem;color:var(--ink,#17202a)}
+.sn-meta span{display:inline-flex;align-items:center;gap:6px}
+.sn-meta svg{width:15px;height:15px;color:var(--accent,#0d7a72)}
+.sn-fresh{margin:6px 0 0;font-size:.82rem;color:var(--muted,#5b6470)}
+.sn-fresh b{color:var(--ink,#17202a)}
+.sn-stripe{display:flex;align-items:flex-start;gap:6px;margin:8px 0 0;font-size:.8rem;line-height:1.4;color:var(--muted,#5b6470)}
+.sn-stripe svg{flex:0 0 14px;width:14px;height:14px;margin-top:2px}
+.sn-cpd{display:flex;align-items:center;gap:12px;margin:12px 0 0}
+.sn-cpd img{height:64px;width:auto}
+.sn-cpd span{font-size:.82rem;line-height:1.35;color:var(--muted,#5b6470)}
+.sn-cpd b{display:block;color:var(--ink,#17202a)}
+.sn-sfc{margin:10px 0 0;font-size:.84rem;line-height:1.45;color:var(--muted,#5b6470)}
+.sn-signoff{margin:16px 0 0;padding:16px 18px;border:1px solid rgba(0,0,0,.1);border-radius:14px;background:#fff}
+.sn-signoff h3{margin:0 0 10px;font-size:1.02rem;font-weight:800;color:var(--ink,#17202a)}
+.sn-signoff dl{margin:0;display:grid;gap:10px}
+.sn-signoff dt{font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--accent,#0d7a72)}
+.sn-signoff dd{margin:2px 0 0;font-size:.9rem;line-height:1.5;color:var(--ink,#17202a)}
+.sn-lines{margin:8px 0 0;display:grid;gap:4px;font-size:.88rem}
+.sn-lines div{display:flex;justify-content:space-between;gap:12px}
+.sn-lines .inc{font-weight:800;font-size:1rem}
+.sn-each{font-size:.82rem;color:var(--muted,#5b6470);margin-top:3px}

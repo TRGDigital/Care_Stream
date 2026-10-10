@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useOffers, licenceOffer, licenceDeal, licenceEffectivePence, money2, offerEmoji } from '@/lib/offers'
 import { BuyNowLink } from './training-cart-buttons'
 import type { Test1Variant } from '@/lib/ab-test1'
+import { SHIP_NOW, sn, withVat } from '@/lib/ship-now'
 
 // Test 1, headline first on mobile (lib/ab-test1.ts). Only variant B renders the offer line and the
 // bottom bar; Test1Assign renders for both variants whenever the visit is in the test.
@@ -112,6 +113,7 @@ export function Test1StickyBar({ slug, unitPence, anchor }: { slug: string; unit
         {headline < unitPence && <s>{money2(unitPence)}</s>}
         <b>{money2(headline)}</b>
         <span>per staff member{fromQty ? ` on ${fromQty}+` : ''}</span>
+        {SHIP_NOW && <span className="t1bar-vat" {...sn('vat', 'VAT')}>+ VAT ({money2(withVat(headline).inc)} inc)</span>}
       </div>
       <BuyNowLink slug={slug} className="add" position="mobile_sticky_bar" price={money2(cost)} />
     </div>

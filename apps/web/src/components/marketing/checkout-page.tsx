@@ -18,6 +18,7 @@ import { offerLock } from '@/lib/offer-lock'
 import { licenceLinePence, shareTotal } from '@/lib/basket-value'
 import { reportMicro } from '@/lib/google-ads'
 import { useRemembered } from '@/lib/remembered'
+import { SHIP_NOW, sn, withVat } from '@/lib/ship-now'
 
 // The checkout design approved in the content theme, for both shops: /basket (training
 // licences) and /care-policies/checkout (written policies). They are separate pages because they
@@ -98,7 +99,7 @@ function Details({ orgLabel, orgPlaceholder, emailNote, org, setOrg, name, setNa
   )
 }
 
-function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, extras, invoice, termsBelow = false, was, fix }: {
+function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, extras, invoice, termsBelow = false, was, fix, vat = false }: {
   lines: ReactNode; total: number; sub: string
   /** The total before the offer, shown struck through beside the total when the offer saved them money. */
   was?: number
@@ -112,15 +113,29 @@ function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, ext
   onPay: (agreed: boolean) => void
   /** In the cart drawer the terms are stated at its foot, with no tick box. */
   termsBelow?: boolean
+  /** Ship now (lib/ship-now.ts): the total ex VAT, the VAT and the total inc VAT (training basket). */
+  vat?: boolean
 }) {
   const [agreed, setAgreed] = useState(termsBelow)
+  const showVat = SHIP_NOW && vat
   return (
     <aside className="cksum">
       <div className="ckpanel"><div className="in">
         <h2>Order summary</h2>
         <div className="cklines">{lines}</div>
         {extras && <div className="su-sumextras"><b>Save yourself time</b>{extras}</div>}
-        <div className="cktotal"><span>Total</span><b>{was && was > total ? <s className="ckwastotal">{money(was)}</s> : null}{money(total)}</b></div>
+        {showVat ? (
+          // Stripe adds VAT at payment from the billing address; this is the UK 20%.
+          <div {...sn('vat-total', 'Total ex VAT, VAT, inc VAT')}>
+            <div className="cktotal"><span>Total ex VAT</span><b>{was && was > total ? <s className="ckwastotal">{money(was)}</s> : null}{money(total)}</b></div>
+            <div className="sn-lines">
+              <div><span>VAT (20%)</span><span>{money(withVat(total).vat)}</span></div>
+              <div className="inc"><span>Total inc VAT</span><span>{money(withVat(total).inc)}</span></div>
+            </div>
+          </div>
+        ) : (
+          <div className="cktotal"><span>Total</span><b>{was && was > total ? <s className="ckwastotal">{money(was)}</s> : null}{money(total)}</b></div>
+        )}
         <p className="cksub">{sub}</p>
         {!termsBelow && <label className="ckterms">
           <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} />
@@ -133,10 +148,11 @@ function Summary({ lines, total, sub, assurances, ready, busy, error, onPay, ext
                 onClick={() => onPay(agreed)}>
           <Lock />{busy ? 'Starting secure checkout…' : 'Checkout securely'}
         </button>
+        {SHIP_NOW && <p className="sn-stripe" {...sn('stripe-line', 'Stripe line')}><Lock />Secure payment by Stripe. We never see or store your card details.</p>}
         {error && <p className="ckerr" role="alert">{error}</p>}
         {error && fix}
         <PaymentLogos className="ckpaylogos" />
-        <p className="cksecure"><Lock />Payment is taken on Stripe&apos;s secure page. We never see your card details.</p>
+        {!SHIP_NOW && <p className="cksecure"><Lock />Payment is taken on Stripe&apos;s secure page. We never see your card details.</p>}
         {/* Care groups often cannot pay by card: the invoice and purchase order route, in plain view. */}
         <InvoiceRequest funnel={invoice.funnel} items={invoice.items} />
         <ul className="ckassure">
@@ -421,6 +437,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
           </> : null}
           invoice={{ funnel: 'training', items: [...bundleRows.map(r => `${r.n} × ${r.b.name} (${r.b.slugs.length} CPD courses per learner)`), ...items.map(i => `${i.qty} × ${i.title}`), ...(teamSetup ? [ADDONS['team-setup'].title] : [])] }}
           sub="One-off payment. No subscription."
+          vat
           assurances={[
             ['Fourteen day refund', 'If a licence has not been started, tell us within fourteen days and we refund it in full.'],
             ['Instant access', 'Courses are ready to allocate as soon as payment completes, with a sign-in link by email.'],
@@ -443,6 +460,11 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
               <div className="ckinfo">
                 <Link href="/staff-training/cpd-courses?intent=bundles">{r.b.name}</Link>
                 <div className="meta">{money(r.b.pence)} per learner · {r.b.slugs.length} CPD Certified courses each</div>
+                {SHIP_NOW && (
+                  <div className="sn-each" {...sn('per-learner-total', 'Per learner and total')}>
+                    {r.n} {r.n === 1 ? 'learner' : 'learners'}: <b>{money(r.q.perLearner)}</b> per learner, <b>{money(r.q.total)}</b> total + VAT
+                  </div>
+                )}
                 <ul className="ckreassure">
                   <li><Tick />A licence for every course, for every learner</li><li><Tick />You always get the best price</li>
                 </ul>
@@ -481,6 +503,18 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
                   {deals[i.slug].pct > pct && (
                     <div className="ckfree">{deals[i.slug].offer?.label}: {deals[i.slug].pct}% off every licence</div>
                   )}
+                  {SHIP_NOW && (() => {
+                    // What each learner and the line cost after the team discount or the offer,
+                    // the same sums the order summary and checkout use.
+                    const d = deals[i.slug]
+                    const unit = Math.round(i.unitPence * (1 - Math.max(pct, d.pct) / 100))
+                    const n = i.qty + d.free
+                    return (
+                      <div className="sn-each" {...sn('per-learner-total', 'Per learner and total')}>
+                        {n} {n === 1 ? 'licence' : 'licences'}: <b>{money(Math.floor((unit * i.qty) / n))}</b> per learner, <b>{money(unit * i.qty)}</b> total + VAT
+                      </div>
+                    )
+                  })()}
                   <div className="acts">
                     <button type="button" onClick={() => { savedCourses.add({ slug: i.slug, title: i.title }); cart.remove(i.slug) }}>Save for later</button>
                     <button type="button" onClick={() => cart.remove(i.slug)}>Remove</button>

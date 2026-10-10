@@ -10,6 +10,7 @@ import { FunnelInsightsTracker } from '@/components/marketing/funnel-insights-tr
 import { FunnelInsightsVisitor } from '@/components/marketing/funnel-insights-visitor'
 import { OffersProvider } from '@/lib/offers'
 import { getActiveOffers } from '@/lib/offers-server'
+import { ShipNowRoot } from '@/components/marketing/ship-now'
 
 export default async function MarketingLayout({ children }: { children: React.ReactNode }) {
   const [altMap, offers] = await Promise.all([getSiteAltMap(), getActiveOffers()])
@@ -17,6 +18,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
     <OffersProvider offers={offers}>
     <AltMapProvider map={altMap}>
       <BreadcrumbsJsonLd />
+      <ShipNowRoot />
       <MarketingAgentTools />
       <PopEmbed />
       <div className="flex min-h-screen flex-col">

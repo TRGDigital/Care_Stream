@@ -906,3 +906,44 @@
   .mpage-v2 .mpe-price b{font-size:1.6rem}
   .mpage-v2 .mpe-stock{margin-bottom:8px;font-size:.8rem}
 }
+
+/* Test 1, headline first on mobile (lib/ab-test1.ts). Everything here is scoped to variant B
+   (.t1b) or to its own elements, so the control page is untouched. Desktop shows none of it.
+   Static: no transitions or animation anywhere in the hero. */
+.mpage-v2 .t1-proof, .mpage-v2 .t1-offer, .mpage-v2 .t1bar{display:none}
+@media(max-width:760px){
+  .mpage-v2.t1b .mpe-info > .mpe-eyerow, .mpage-v2.t1b .mpe-info > .mpe-intent-tag{display:none}
+  .mpage-v2.t1b .mpe-info > h1{order:1;margin:2px 0 8px}
+  .mpage-v2.t1b .mpe-info > .mpe-for{order:2;margin:0 0 10px;font-size:.95rem;line-height:1.45}
+  .mpage-v2.t1b .mpe-info > .t1-proof{order:3}
+  .mpage-v2.t1b .mpe-info > .t1-offer{order:4}
+  .mpage-v2.t1b .mpe-info > .mpe-buy{order:5}
+  .mpage-v2.t1b .mpe-info > .paylogos{order:6}
+  /* the offer is stated in the line above, so the buy box keeps only its price and badge */
+  .mpage-v2.t1b .mpe-buy .mpe-offerline{display:none}
+
+  .mpage-v2.t1b .t1-proof{display:flex;flex-wrap:wrap;gap:4px 10px;list-style:none;margin:0 0 10px;padding:0}
+  .mpage-v2.t1b .t1-proof li{display:inline-flex;align-items:center;gap:3px;font-size:.74rem;font-weight:700;color:var(--ink);white-space:nowrap}
+  .mpage-v2.t1b .t1-proof svg{width:13px;height:13px;flex:none;color:#1F8A5B}
+  .mpage-v2.t1b .t1-offer{display:flex;align-items:center;gap:7px;margin:0 0 10px;padding:7px 11px;border-radius:10px;
+    background:#1F1530;color:#F6F1FB;font-size:.8rem;line-height:1.3}
+  .mpage-v2.t1b .t1-offer-tx{min-width:0}
+  .mpage-v2.t1b .t1-offer b{color:#F28C38}
+
+  /* the bar along the bottom replaces the top bar on phones */
+  .mpage-v2.t1b .mbar{display:none}
+  .mpage-v2.t1b .t1bar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:55;align-items:center;gap:12px;
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);
+    box-shadow:0 -8px 24px rgba(23,18,31,.12);visibility:hidden}
+  .mpage-v2.t1b .t1bar.on{visibility:visible}
+  .mpage-v2.t1b .t1bar-price{flex:1;min-width:0;display:flex;align-items:baseline;flex-wrap:wrap;gap:0 6px;line-height:1.2}
+  .mpage-v2.t1b .t1bar-price s{font-size:.85rem;color:var(--muted)}
+  .mpage-v2.t1b .t1bar-price b{font-size:1.25rem;font-weight:800;color:var(--ink)}
+  .mpage-v2.t1b .t1bar-price span{flex-basis:100%;font-size:.75rem;color:var(--ink-2)}
+  .mpage-v2.t1b .t1bar .add{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;padding:12px 20px;
+    border-radius:12px;background:var(--ink);color:#fff;font-size:.95rem;font-weight:750;text-decoration:none;white-space:nowrap}
+  /* the chat button and the basket link sit above the bar while it shows */
+  html.t1-bar-on .cschat:not(.open){bottom:calc(var(--t1-bar-h, 64px) + 10px)}
+  html.t1-bar-on .mpage-v2 .mcart{bottom:calc(var(--t1-bar-h, 64px) + 12px)}
+  .mpage-v2.t1b{padding-bottom:72px}
+}

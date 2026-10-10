@@ -21,6 +21,8 @@ import { CaptureOverlay } from './capture-overlay'
 import { SecondPageOffer } from './second-page-offer'
 import { BuyDrawer } from './buy-drawer'
 import { ProductFaqs, SampleCertificate, trainingFaqs, type FaqModule } from './product-extras'
+import { Test1Assign, Test1OfferLine, Test1StickyBar } from './test1-mobile'
+import type { Test1Assignment } from '@/lib/ab-test1'
 import './module-page-v2.css'
 
 // The rebuilt /staff-training/<slug> template. Renders the SAME module record and the same demo
@@ -220,7 +222,7 @@ function CompareMark({ mark }: { mark: Mark3 }) {
   )
 }
 
-export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, intent: intentKey }: {
+export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, intent: intentKey, test1 }: {
   module: TrainingModule
   demo: TrainingDemoData | null
   related: LibraryTopic[]
@@ -228,6 +230,8 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
   apiUrl: string
   /** ?intent= on the ad group's Final URL: the version of the top of the page for that ad group. */
   intent?: string
+  /** Test 1, headline first on mobile (lib/ab-test1.ts): set only when this visit is in the test. */
+  test1?: Test1Assignment
 }) {
   const cs = careSetting
   const minutes = m.duration_minutes ?? 0
@@ -324,8 +328,13 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
     },
   ]
 
+  const t1b = test1?.variant === 'B'
   return (
-    <div className="mpage-v2">
+    <div className={t1b ? 'mpage-v2 t1b' : 'mpage-v2'}>
+      {/* Test 1 (lib/ab-test1.ts): the assignment, for Funnel Insights. Only when the visit is in it. */}
+      {test1 && <meta name="fi-ab-test" content={test1.test} />}
+      {test1 && <meta name="fi-ab-variant" content={test1.variant} />}
+      {test1 && <Test1Assign test={test1.test} variant={test1.variant} forced={test1.forced} />}
       {/* The bar that follows the reader down the page. Its action is the theme's own: straight
           to this module's purchase page. */}
       {/* The bar slides in once the hero buy panel has scrolled away, as in the theme. */}
@@ -505,6 +514,15 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
             {it && <p className="mpe-intent-tag">{it.tag}</p>}
             <h1>{it ? it.headline.replace('{from}', money(lowestPence)) : `${m.title} training that gets your team CQC-ready`}</h1>
             {(it?.sub ?? cro.whoFor) && <p className="mpe-for">{it?.sub ?? cro.whoFor}</p>}
+            {/* Test 1 B, phones only: three proof points the page already makes, and the offer in one line. */}
+            {t1b && (
+              <ul className="t1-proof">
+                {m.cpd_accredited && <li><Tick />CPD Certified</li>}
+                <li><Tick />60+ languages</li>
+                <li><Tick />Instant certificate</li>
+              </ul>
+            )}
+            {t1b && <Test1OfferLine slug={m.slug} />}
             {cro.benefits && (
               <ul className="mpe-benefits">
                 {cro.benefits.map(b => <li key={b}><Tick />{b}</li>)}
@@ -998,6 +1016,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
       </section>
 
       <TrainingCartLink />
+      {t1b && <Test1StickyBar slug={m.slug} unitPence={unitPence} anchor=".mpage-v2 .mbuy" />}
     </div>
   )
 }

@@ -21,7 +21,7 @@
 // and the same pair is on window.__fiTest = { test, variant } and on <html> as
 // data-fi-ab-test / data-fi-ab-variant. Pages outside the test carry none of them.
 
-export const TEST1_LIVE = false
+export const TEST1_LIVE = true
 
 export const TEST1_ID = 'care-cert-mobile-headline'
 export const TEST1_SLUG = 'care-certificate'

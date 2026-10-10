@@ -112,8 +112,8 @@ export function Test1StickyBar({ slug, unitPence, anchor }: { slug: string; unit
       <div className="t1bar-price">
         {headline < unitPence && <s>{money2(unitPence)}</s>}
         <b>{money2(headline)}</b>
-        <span>per staff member{fromQty ? ` on ${fromQty}+` : ''}</span>
-        {SHIP_NOW && <span className="t1bar-vat" {...sn('vat', 'VAT')}>+ VAT ({money2(withVat(headline).inc)} inc)</span>}
+        {SHIP_NOW && <strong className="sn-plusvat" {...sn('vat', 'VAT')}>+ VAT</strong>}
+        <span>per staff member{fromQty ? ` on ${fromQty}+` : ''}{SHIP_NOW ? `, ${money2(withVat(headline).inc)} inc VAT` : ''}</span>
       </div>
       <BuyNowLink slug={slug} className="add" position="mobile_sticky_bar" price={money2(cost)} />
     </div>

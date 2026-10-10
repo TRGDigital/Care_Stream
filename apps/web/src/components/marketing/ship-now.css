@@ -7,8 +7,8 @@
   letter-spacing:0;text-transform:none;white-space:normal}
 .shipdemo [data-shipnow] [data-shipnow]::before{display:none}
 /* Flex rows: the label sits above them instead of taking a column. */
-.shipdemo .ppc-links,.shipdemo .ppc-flinks,.shipdemo .sn-cpd,.shipdemo .sn-stripe{position:relative;padding-top:16px}
-.shipdemo .ppc-links::before,.shipdemo .ppc-flinks::before,.shipdemo .sn-cpd::before,.shipdemo .sn-stripe::before{position:absolute;top:0;left:0;margin:0;white-space:nowrap}
+.shipdemo .ppc-links,.shipdemo .ppc-flinks,.shipdemo .sn-cpd,.shipdemo .sn-stripe,.shipdemo .sn-buy .mpe-price,.shipdemo .sn-ticks{position:relative;padding-top:16px}
+.shipdemo .ppc-links::before,.shipdemo .ppc-flinks::before,.shipdemo .sn-cpd::before,.shipdemo .sn-stripe::before,.shipdemo .sn-buy .mpe-price::before,.shipdemo .sn-ticks::before{position:absolute;top:0;left:0;margin:0;white-space:nowrap}
 
 /* ── Stripped header and footer for Google Ads visitors (html.ppc-strip). */
 .ppc-only{display:none !important}
@@ -84,3 +84,22 @@ html.ppc-strip .site-foot .fbuilt{display:none !important}
 .tt-note a{color:inherit}
 .tt-sent p{margin:6px 0 16px;font-size:.95rem;line-height:1.5}
 @media (max-width:480px){.tt-row{grid-template-columns:1fr}}
+
+/* ── The decluttered price block (module-buy-panel.tsx, SHIP_NOW). */
+.mpage-v2 .sn-buy .mpe-price{align-items:baseline}
+.sn-plusvat{font-size:1.05rem;font-weight:800;color:var(--ink,#17202a);margin-left:-4px}
+.sn-buy .mpe-price span{flex-basis:100%;margin-top:-2px}
+.sn-offer{margin:4px 0 12px;font-size:.92rem;line-height:1.4;color:var(--ink,#17202a)}
+.sn-offer b{color:#C2410C}
+.sn-offer small{display:block;font-size:.78rem;color:var(--muted,#5b6470);margin-top:1px}
+.mpage-v2 .sn-qty{flex-wrap:wrap;align-items:center;gap:6px 10px}
+.mpage-v2 .sn-qty label{width:auto;font-size:.95rem;font-weight:600}
+.sn-hint{font-size:.85rem;color:var(--muted,#5b6470)}
+.sn-total{margin:0 0 12px}
+.sn-total p{margin:0;font-size:.95rem;color:var(--muted,#5b6470)}
+.sn-total b{font-size:1.1rem;color:var(--ink,#17202a)}
+.sn-total .sn-learner{margin-top:2px;font-size:.84rem}
+.sn-ticks{list-style:none;display:flex;flex-wrap:wrap;gap:4px 14px;margin:2px 0 4px;padding:0;font-size:.82rem;color:var(--ink-2,#3a3245)}
+.sn-ticks li{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.sn-ticks svg{width:13px;height:13px;color:#1F8A5B;flex:0 0 auto}
+.t1bar-price .sn-plusvat{font-size:.85rem}

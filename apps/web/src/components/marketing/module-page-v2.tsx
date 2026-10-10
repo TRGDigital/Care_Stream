@@ -584,9 +584,10 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
             )}
             <ModuleBuyPanel slug={m.slug} title={m.title} unitPence={unitPence}
                             duration={durationText(est)} cpd={!!m.cpd_accredited}
+                            offerLine={!t1b}
                             fresh={m.slug === 'care-certificate' && sections.length === 16
-                              ? 'Updated for the 16 Care Certificate standards (March 2025 update)'
-                              : cro.updated ? `Course content last reviewed ${cro.updated}` : undefined}
+                              ? 'Updated March 2025'
+                              : cro.updated ? `Updated ${cro.updated}` : undefined}
                             sfc={m.slug === 'care-certificate'
                               ? `Covers the knowledge for all ${sections.length || 16} Care Certificate standards set by Skills for Care, Skills for Health and NHS England, in the same order, one standard at a time.`
                               : undefined} />

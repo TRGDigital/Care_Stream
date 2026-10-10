@@ -11,6 +11,7 @@ import { PaymentLogos } from './payment-logos'
 import { AddonOption, InvoiceRequest, ADDONS, useSaveBasket } from './shop-upsells'
 import { DISCOUNT_TIERS, discountPctForQty } from '@/lib/training-commerce'
 import { useOffers, licenceDeal, money2, paidForTotal, offerEmoji } from '@/lib/offers'
+import { SHIP_NOW, sn, withVat } from '@/lib/ship-now'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 const gbp = (pence: number) => `£${(pence / 100).toFixed(2)}`
@@ -105,6 +106,11 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default', init
           {applied && <em className="byapplied">Offer applied</em>}
           {!applied && team && <em className="byapplied">Team price</em>}
         </div>
+        {SHIP_NOW && (
+          <span className="sn-vat" {...sn('vat', 'VAT clarity')}>
+            <b>{gbp(effective)} + VAT</b> ({gbp(withVat(effective).inc)} inc VAT) per staff member
+          </span>
+        )}
 
         <label className="bylabel" htmlFor="byq">{applied && free > 0 ? 'Licences you receive' : 'Number of licences'}</label>
         <div className="byqty">
@@ -119,6 +125,11 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default', init
             {free > 0 ? <><b style={{ color: 'var(--ink)' }}>{qty} paid + {free} free</b></> : <>{gbp(each)} each</>}
           </span>
         </div>
+        {SHIP_NOW && (
+          <p className="sn-each" {...sn('per-learner-total', 'Per learner and total')}>
+            {qty + free} {qty + free === 1 ? 'licence' : 'licences'}: <b>{gbp(effective)}</b> per learner, <b>{gbp(qty * each)}</b> total + VAT
+          </p>
+        )}
         {team && <p className="byteam">Team price: {teamPct}% off every licence when you buy {DISCOUNT_TIERS.find(t => t.pct === teamPct)?.min} or more.</p>}
         {applied && (
           <div className="byfree">
@@ -151,7 +162,19 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default', init
             <b>{(qty + free) * unitPence > qty * each && <s>{gbp((qty + free) * unitPence)}</s>}{gbp(qty * each)}</b></div>
           {teamSetup && <div><span>Team set-up, done for you</span><b>{gbp(ADDONS['team-setup'].pence)}</b></div>}
         </div>
-        <div className="bytotal"><span>Total</span><b>{(qty + free) * unitPence > qty * each && <s className="bywastotal">{gbp((qty + free) * unitPence + (teamSetup ? ADDONS['team-setup'].pence : 0))}</s>}{gbp(total)}</b></div>
+        {SHIP_NOW ? (
+          // Ship now: the total ex VAT, the VAT and the total inc VAT, up front. Stripe works out the
+          // VAT from the billing address at payment; this is the UK 20% it adds.
+          <div {...sn('vat-total', 'Total with VAT')}>
+            <div className="bytotal"><span>Total ex VAT</span><b>{(qty + free) * unitPence > qty * each && <s className="bywastotal">{gbp((qty + free) * unitPence + (teamSetup ? ADDONS['team-setup'].pence : 0))}</s>}{gbp(total)}</b></div>
+            <div className="sn-lines">
+              <div><span>VAT (20%)</span><span>{gbp(withVat(total).vat)}</span></div>
+              <div className="inc"><span>Total inc VAT</span><span>{gbp(withVat(total).inc)}</span></div>
+            </div>
+          </div>
+        ) : (
+          <div className="bytotal"><span>Total</span><b>{(qty + free) * unitPence > qty * each && <s className="bywastotal">{gbp((qty + free) * unitPence + (teamSetup ? ADDONS['team-setup'].pence : 0))}</s>}{gbp(total)}</b></div>
+        )}
         {/* The theme's panel has no error state, because its form does nothing. This one takes
             a payment, so it needs one: the existing `note` styling, in the warning colour. */}
         {error && (
@@ -169,6 +192,12 @@ export function BuyForm({ slug, moduleName, unitPence, variant = 'default', init
         <button className="bybtn offerbtn" type="submit" disabled={busy || !agreed}>
           {busy ? 'Starting secure checkout…' : 'Checkout securely'}
         </button>
+        {SHIP_NOW && (
+          <p className="sn-stripe" {...sn('stripe-line', 'Stripe line')}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+            Secure payment by Stripe. We never see or store your card details.
+          </p>
+        )}
         <PaymentLogos className="bypaylogos" />
         <ul className="byreassure">
           <li>Instant access: your team can start today</li>

@@ -1,5 +1,6 @@
 'use client'
 
+import { PpcHeaderLinks } from './ship-now'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
@@ -195,6 +196,8 @@ export function SiteHeader() {
             <span className="spacer" />
 
             <div className="util">
+              {/* Google Ads visitors only (ship-now.tsx); hidden by CSS for everyone else. */}
+              <PpcHeaderLinks />
               {/* The theme's globe button had nothing behind it; it goes to the languages page. */}
               <Link className="iconbtn" href="/languages" aria-label="Languages" onClick={close}>
                 <svg viewBox="0 0 20 20" fill="none" width="18" height="18" aria-hidden="true"><circle cx="10" cy="10" r="7.6" stroke="currentColor" strokeWidth="1.4" /><path d="M2.5 10h15M10 2.4c2 2.4 2 12.8 0 15.2M10 2.4c-2 2.4-2 12.8 0 15.2" stroke="currentColor" strokeWidth="1.4" /></svg>

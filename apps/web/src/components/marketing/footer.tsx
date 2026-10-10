@@ -1,3 +1,4 @@
+import { PpcFooterLinks } from './ship-now'
 import Link from 'next/link'
 import { CookieSettingsButton } from './cookie-consent'
 import { SETTINGS_LIST } from '@/lib/settings/list'
@@ -249,6 +250,9 @@ export async function MarketingFooter() {
               <svg viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7h8M7.5 3.5 11 7l-3.5 3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </Link>
           </div>
+
+          {/* Google Ads visitors only (ship-now.tsx): contact, terms and privacy in place of the columns. */}
+          <PpcFooterLinks />
 
           <div className="fbase">
             <span>© 2026 TRG Digital Ltd · Company 11731704 · Registered in England</span>

@@ -1,5 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // The "ship now" batch (src/lib/ship-now.ts) shows on its own branch's Vercel preview only.
+  // Production and every other preview see it only once SHIP_NOW_LIVE is set to true.
+  env: {
+    NEXT_PUBLIC_SHIP_NOW_PREVIEW:
+      process.env.NEXT_PUBLIC_SHIP_NOW_PREVIEW === '1' ||
+      (process.env.VERCEL_ENV === 'preview' && process.env.VERCEL_GIT_COMMIT_REF === 'ship-now-demo') ? '1' : '',
+  },
   images: {
     // Serve modern formats (smaller than PNG/JPEG) wherever next/image is used.
     formats: ['image/avif', 'image/webp'],

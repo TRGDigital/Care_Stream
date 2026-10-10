@@ -23,6 +23,7 @@ import { BuyDrawer } from './buy-drawer'
 import { ProductFaqs, SampleCertificate, trainingFaqs, type FaqModule } from './product-extras'
 import { Test1Assign, Test1OfferLine, Test1StickyBar } from './test1-mobile'
 import type { Test1Assignment } from '@/lib/ab-test1'
+import { SHIP_NOW, sn } from '@/lib/ship-now'
 import './module-page-v2.css'
 
 // The rebuilt /staff-training/<slug> template. Renders the SAME module record and the same demo
@@ -222,6 +223,46 @@ function CompareMark({ mark }: { mark: Mark3 }) {
   )
 }
 
+// Ship now (lib/ship-now.ts): what the course covers and what the employer signs off, in plain
+// English, from the module record. The observation checklist is only mentioned where the record
+// says the subject has a practical sign-off (requires_practical), the same rule as the
+// "Assessment and certificate" list above, so it is never promised on a course without one.
+function SignOffBox({ m, lessons }: { m: TrainingModule; lessons: number }) {
+  const cc = m.slug === 'care-certificate'
+  const assess = `${m.question_count ? `a ${m.question_count} question assessment` : 'a final assessment'} (pass mark ${m.pass_mark ?? 80}%)`
+  return (
+    <div className="sn-signoff" {...sn('signoff-box', 'What this covers and what you sign off')}>
+      <h3>What this covers and what you sign off</h3>
+      <dl>
+        <div>
+          <dt>The course covers</dt>
+          <dd>
+            {cc
+              ? `The knowledge for all ${lessons || 16} Care Certificate standards, one lesson for each standard, then ${assess}.`
+              : `The knowledge for ${m.title}${lessons ? ` in ${lessons} lessons` : ''}, then ${assess}.`}
+          </dd>
+        </div>
+        <div>
+          <dt>You sign off</dt>
+          <dd>
+            {cc
+              ? 'Competence at work. The employer, or an assessor they choose, watches the learner during real work, signs off each standard and issues the Care Certificate. Online learning alone cannot complete it.'
+              : m.requires_practical
+                ? 'Competence at work. A manager or assessor watches the learner in practice and signs it off.'
+                : 'Nothing extra. This course checks knowledge, and the learner gets their certificate when they pass.'}
+          </dd>
+        </div>
+        {m.requires_practical && (
+          <div>
+            <dt>Included to help</dt>
+            <dd>A printable observation checklist with a sign off section, for the person doing the observing.</dd>
+          </div>
+        )}
+      </dl>
+    </div>
+  )
+}
+
 export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, intent: intentKey, test1 }: {
   module: TrainingModule
   demo: TrainingDemoData | null
@@ -345,7 +386,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
           <span className="who">
             <b>{m.title}</b>
             <span className="meta">
-              <span className="t"><Clock /> {est < 60 ? `~${est} min` : durationText(est)} to complete</span><i>·</i><span className="t">{price} per staff member</span>
+              <span className="t"><Clock /> {est < 60 ? `~${est} min` : durationText(est)} to complete</span><i>·</i><span className="t">{price}{SHIP_NOW && <span {...sn('vat', 'VAT')}> + VAT</span>} per staff member</span>
             </span>
           </span>
           <OfferBarChip slug={m.slug} />
@@ -541,9 +582,19 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
                 <TrainingDemo demo={demo} buyHref={buyHref} variant="theme" place="module" />
               </TryBeforeYouBuy>
             )}
-            <ModuleBuyPanel slug={m.slug} title={m.title} unitPence={unitPence} />
+            <ModuleBuyPanel slug={m.slug} title={m.title} unitPence={unitPence}
+                            duration={durationText(est)} cpd={!!m.cpd_accredited}
+                            offerLine={!t1b}
+                            fresh={m.slug === 'care-certificate' && sections.length === 16
+                              ? 'Updated March 2025'
+                              : cro.updated ? `Updated ${cro.updated}` : undefined}
+                            sfc={m.slug === 'care-certificate'
+                              ? `Covers the knowledge for all ${sections.length || 16} Care Certificate standards set by Skills for Care, Skills for Health and NHS England, in the same order, one standard at a time.`
+                              : undefined} />
 
             <PaymentLogos />
+
+            {SHIP_NOW && <SignOffBox m={m} lessons={sections.length} />}
 
             {!it?.pricingFirst && teamPricing}
 

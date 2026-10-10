@@ -7,6 +7,7 @@ import { useOffers, licenceOffer, money2 } from '@/lib/offers'
 import { UNIT_PENCE, gbp } from '@/lib/training-commerce'
 import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 import { fi } from '@/lib/funnel-insights'
+import { SHIP_NOW, sn, withVat } from '@/lib/ship-now'
 import { reportMicro } from '@/lib/google-ads'
 import { ExitQuestion } from './shop-questions'
 import { CaptureOverlay } from './capture-overlay'
@@ -184,6 +185,7 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
                     <h3><H>{b.name}</H></h3>
                     <p className="cc-incl"><H>{k === 'complete' ? 'The Care Certificate and all 9 annual refreshers' : 'All 9 annual refreshers, every year'}</H></p>
                     <div className="cc-price"><b>{money2(b.pence)}</b><span>per learner</span><s>{money2(UNIT_PENCE * b.slugs.length)}</s></div>
+                    {SHIP_NOW && <span className="sn-vat" {...sn('vat', 'VAT clarity')}><b>{money2(b.pence)} + VAT</b> ({money2(withVat(b.pence).inc)} inc VAT) per learner</span>}
                     <p className="cc-save">Save {Math.round((1 - b.pence / (UNIT_PENCE * b.slugs.length)) * 100)}% on single courses</p>
                     {n > 0 ? (
                       <>
@@ -193,6 +195,11 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
                             ? <>Best price: <b>{money2(q.pence)}</b>. The {offer?.label ?? 'offer'} beats the bundle for {n} learners, so you pay that.</>
                             : <>You pay <b>{money2(q.pence)}</b> ({money2(Math.round(q.pence / n))} a learner), the best price for {n} {n === 1 ? 'learner' : 'learners'}.</>}
                         </p>
+                        {SHIP_NOW && (
+                          <p className="sn-each" {...sn('per-learner-total', 'Per learner and total')}>
+                            {n} {n === 1 ? 'learner' : 'learners'}: <b>{money2(Math.floor(q.pence / n))}</b> per learner, <b>{money2(q.pence)}</b> total + VAT ({money2(withVat(q.pence).inc)} inc VAT)
+                          </p>
+                        )}
                         <button type="button" className="cc-remove" onClick={() => setBundle(k, 0)}>Remove bundle</button>
                       </>
                     ) : (
@@ -347,7 +354,15 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
               </div>
             ))}
             {items.length > 0 && totalQty >= 10 && <div className="cc-line sub"><div><span>Single courses after team discount</span></div><div className="cc-amt">{gbp(net)}</div></div>}
-            {lineCount > 0 && <div className="cc-total"><span>Total</span><b>{money2(grand)}</b></div>}
+            {lineCount > 0 && (SHIP_NOW ? (
+              <div {...sn('vat-total', 'Total ex VAT, VAT, inc VAT')}>
+                <div className="cc-total"><span>Total ex VAT</span><b>{money2(grand)}</b></div>
+                <div className="sn-lines">
+                  <div><span>VAT (20%)</span><span>{money2(withVat(grand).vat)}</span></div>
+                  <div className="inc"><span>Total inc VAT</span><span>{money2(withVat(grand).inc)}</span></div>
+                </div>
+              </div>
+            ) : <div className="cc-total"><span>Total</span><b>{money2(grand)}</b></div>)}
             {lineCount > 0 && <Link className="cc-checkout" href="/basket">Go to checkout</Link>}
             <p className="cc-quote">Training a large team or several homes? <QuoteRequest className="cc-quotebtn" label="Get a quote or pay by invoice"
               items={[...bundleLines.map(l => `${l.n} × ${BUNDLES[l.k].name}`), ...items.map(i => `${i.qty} × ${titleOf(i.slug, i.title)}`)]} /></p>
@@ -367,7 +382,7 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
 
       {lineCount > 0 && (
         <button type="button" className="cc-mbar" onClick={() => setSheet(true)}>
-          <span>{lineCount} in your training</span><b>{money2(grand)}</b><em>Review</em>
+          <span>{lineCount} in your training</span><b>{money2(grand)}{SHIP_NOW && <span {...sn('vat', 'VAT')} className="sn-mvat">+ VAT</span>}</b><em>Review</em>
         </button>
       )}
     </div>

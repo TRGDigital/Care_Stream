@@ -31,6 +31,7 @@ import { estimatedMinutes, formatDuration, refreshWord } from '@/lib/training-co
 import { careSetting } from '@/lib/care-setting'
 import { isV2 } from '@/lib/v2-rollout'
 import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
+import { test1Assignment } from '@/lib/ab-test1'
 
 export const revalidate = 60
 
@@ -264,6 +265,7 @@ export default async function TrainingModulePage(
           unitPence={unitPence}
           apiUrl={API_URL}
           intent={typeof sp?.intent === 'string' ? sp.intent : undefined}
+          test1={test1Assignment(slug, sp) ?? undefined}
         />
       </>
     )

@@ -91,7 +91,7 @@ export function CookieConsent() {
   return (
     // Phones: a compact strip along the bottom (one short line, Decline and Accept side by side, the
     // same size) so it does not cover the buy panel. From md up: the original card.
-    <div className="fixed inset-x-0 bottom-0 z-[60] bg-white px-3 py-2 shadow-elevated ring-1 ring-black/5 md:inset-x-4 md:bottom-4 md:mx-auto md:max-w-2xl md:rounded-2xl md:p-6">
+    <div data-cookie-banner className="fixed inset-x-0 bottom-0 z-[60] bg-white px-3 py-2 shadow-elevated ring-1 ring-black/5 md:inset-x-4 md:bottom-4 md:mx-auto md:max-w-2xl md:rounded-2xl md:p-6">
       <div className="flex flex-row items-center gap-3 md:gap-4">
         <p className="flex-1 text-xs leading-snug text-neutral-mid md:text-sm md:leading-relaxed">
           <span className="md:hidden">We use cookies to improve our site.</span>

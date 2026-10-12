@@ -43,7 +43,9 @@
   /* the team table, compact */
   .mpage-v2 .mpe-info > .lf-pf.lf-pf{margin:10px 0 12px;padding:16px 12px 10px}
   .mpage-v2 .lf-pf table{font-size:.82rem;margin:0 0 4px;border-spacing:0 3px}
-  .mpage-v2 .lf-pf td{padding:5px 8px}
+  .mpage-v2 .lf-pf td{padding:5px 8px;white-space:nowrap}
+  .mpage-v2 .lf-pf .mpe-team-off{padding:1px 6px;font-size:.68rem}
+  .mpage-v2 .lf-pf td b{font-size:.88rem}
   .mpage-v2 .lf-pf .mpe-team-note{margin:0;font-size:.72rem}
   .mpage-v2 .lf-pf .mpe-team-quote{padding:6px 8px;font-size:.78rem}
 }

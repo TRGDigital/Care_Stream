@@ -17,6 +17,8 @@ function jumpTo(el: HTMLElement) {
   el.classList.add('fq2-flash')
 }
 
+const shown = (el: HTMLElement | null): el is HTMLElement => !!el && el.offsetHeight > 0
+
 export function FaqCtaLink({ cta, qSlug }: { cta: FaqCta; qSlug: string }) {
   const id = cta === 'try' ? 'real-lesson' : 'team-price'
   return (
@@ -24,15 +26,23 @@ export function FaqCtaLink({ cta, qSlug }: { cta: FaqCta; qSlug: string }) {
        data-fi={`faq-cta:${CTA_KEY[cta]}:${qSlug}`}
        onClick={e => {
          if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+         if (cta === 'try') {
+           // Desktop: the hero gallery, switched to its real lesson view. Phones hide the hero
+           // gallery, so there it is the real lesson shown further down the page.
+           const gallery = document.getElementById('real-lesson')
+           const target = shown(gallery) ? gallery : document.getElementById('real-lesson-inline')
+           if (!shown(target)) return
+           e.preventDefault()
+           if (target === gallery) {
+             window.dispatchEvent(new Event('cs-show-lesson'))
+             // after the gallery has switched view, so the jump lands on the lesson's real height
+             setTimeout(() => jumpTo(target), 30)
+           } else jumpTo(target)
+           return
+         }
          const el = document.getElementById(id)
          if (!el) return
          e.preventDefault()
-         if (cta === 'try') {
-           window.dispatchEvent(new Event('cs-show-lesson'))
-           // after the gallery has switched view, so the jump lands on the lesson's real height
-           requestAnimationFrame(() => requestAnimationFrame(() => jumpTo(el)))
-           return
-         }
          jumpTo(el)
        }}>
       {CTA_LABEL[cta]} <span aria-hidden="true">→</span>

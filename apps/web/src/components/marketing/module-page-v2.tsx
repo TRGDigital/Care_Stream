@@ -478,7 +478,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
             ) : null}
 
             {demo && (
-              <div className="mpe-demo">
+              <div className="mpe-demo" id={FAQ_V2 ? 'real-lesson-inline' : undefined}>
                 <p className="mpe-cap">Try it: a real lesson and question from this course</p>
                 <TrainingDemo demo={demo} buyHref={buyHref} variant="theme" place="module" />
               </div>

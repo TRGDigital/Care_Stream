@@ -412,7 +412,9 @@ export function CaptureOverlay({ funnel, product, title, image, quiz, offerName 
         <div className="co-copy">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="co-logo" src="/logo-color.svg" alt="CareStream" />
-          {offer && step !== 3 && !appliedLine && <OfferLine offer={offer} funnel={funnel} className="co-offerline" />}
+          {/* The page's offer box, except on the apply and setting versions: it says "Applied
+              automatically", which would undercut their "apply it" step; their headline states the offer. */}
+          {offer && step !== 3 && !appliedLine && shown.kind !== 'apply' && shown.kind !== 'setting' && <OfferLine offer={offer} funnel={funnel} className="co-offerline" />}
 
           {step === 1 && shown.kind === 'setting' && <>
             {bar(1)}

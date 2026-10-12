@@ -11,7 +11,7 @@ import { CTA_KEY, CTA_LABEL, type FaqCta } from '@/lib/faq-v2'
 // "Try a real lesson" where that view exists; otherwise the answer ends with the team price.
 
 function jumpTo(el: HTMLElement) {
-  window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 90, behavior: 'instant' as ScrollBehavior })
+  window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 140, behavior: 'instant' as ScrollBehavior })
   el.classList.remove('fq2-flash')
   void el.offsetWidth
   el.classList.add('fq2-flash')

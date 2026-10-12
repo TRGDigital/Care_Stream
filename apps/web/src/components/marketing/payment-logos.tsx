@@ -2,6 +2,10 @@ import './payment-logos.css'
 import { SHIP_NOW, sn } from '@/lib/ship-now'
 import { APPLE_PAY_MARK, GOOGLE_PAY_MARK } from '@/lib/wallet-marks'
 
+const ratio = (vb: string) => { const [, , w, h] = vb.split(' ').map(Number); return w / h }
+const APPLE_W = Math.round(26 * ratio(APPLE_PAY_MARK.viewBox) * 100) / 100
+const GOOGLE_W = Math.round(26 * ratio(GOOGLE_PAY_MARK.viewBox) * 100) / 100
+
 // The ways to pay, shown beside the buy buttons: the cards and wallets the Stripe checkout takes.
 // Drawn inline (no image requests), each in its usual colours so it is recognised at a glance.
 export function PaymentLogos({ className = '' }: { className?: string }) {
@@ -20,8 +24,13 @@ export function PaymentLogos({ className = '' }: { className?: string }) {
         // Ship now: the official Apple Pay and Google Pay marks (lib/wallet-marks.ts), unaltered,
         // each on its own with clear space, at the same height as the card marks.
         <span className="paywallets" {...sn('wallet-logos', 'Official wallet marks')}>
-          <svg className="paymark" viewBox={APPLE_PAY_MARK.viewBox} role="img" aria-label="Apple Pay" dangerouslySetInnerHTML={{ __html: APPLE_PAY_MARK.body }} />
-          <svg className="paymark" viewBox={GOOGLE_PAY_MARK.viewBox} role="img" aria-label="Google Pay" dangerouslySetInnerHTML={{ __html: GOOGLE_PAY_MARK.body }} />
+          {/* The same artwork as lib/wallet-marks.ts, saved as files in public/images/pay so the
+              ~8 KB of paths is fetched once and cached instead of sitting in every page's HTML
+              and RSC payload twice. Width and height give the box the mark's own proportions. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="paymark" src="/images/pay/apple-pay-mark.svg" alt="Apple Pay" width={APPLE_W} height={26} loading="lazy" decoding="async" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="paymark" src="/images/pay/google-pay-mark.svg" alt="Google Pay" width={GOOGLE_W} height={26} loading="lazy" decoding="async" />
         </span>
       ) : (
         <>

@@ -22,6 +22,7 @@ import { TrainingVideo } from '@/components/marketing/training-video'
 import { estimatedMinutes, formatDuration } from '@/lib/training-commerce'
 import { FunnelInsightsTracker } from '@/components/marketing/funnel-insights-tracker'
 import { FunnelInsightsVisitor } from '@/components/marketing/funnel-insights-visitor'
+import { AltScope } from '@/components/alt-scope'
 
 // PPC landing pages for the training modules (ad traffic only). Deliberately
 // noindex + no site nav — a single-goal conversion page. The public /staff-training
@@ -171,6 +172,7 @@ export default async function GoLandingPage({
   ]
 
   return (
+    <AltScope data={[m, demo]}>
     <div className="min-h-screen bg-white pb-20 lg:pb-0">
       <FunnelInsightsTracker />
       <FunnelInsightsVisitor />
@@ -515,5 +517,6 @@ export default async function GoLandingPage({
       <GoStickyCta buyHref={buyHref} />
       <GoExitIntent slug={slug} moduleTitle={m.title} questions={quizQuestions} />
     </div>
+    </AltScope>
   )
 }

@@ -947,3 +947,12 @@
   html.t1-bar-on .mpage-v2 .mcart{bottom:calc(var(--t1-bar-h, 64px) + 12px)}
   .mpage-v2.t1b{padding-bottom:72px}
 }
+
+/* Speed: the sections under the hero are skipped by the browser's style, layout and paint work
+   until they come near the screen (content-visibility). They stay in the HTML for search engines
+   and readers, and look exactly the same once scrolled to; the intrinsic size is a placeholder
+   height so the scrollbar does not jump, replaced by the real height once rendered. */
+.mpage-v2 > .msec,
+.mpage-v2 > .cvcompare,
+.mpage-v2 > .xsell,
+.mpage-v2 > .tend{content-visibility:auto; contain-intrinsic-size:auto 900px}

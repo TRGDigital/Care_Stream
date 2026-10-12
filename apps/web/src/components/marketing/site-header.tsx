@@ -134,6 +134,11 @@ export function SiteHeader() {
   const [open, setOpen] = useState<'m1' | 'm2' | null>(null)
   const [stuck, setStuck] = useState(false)
   const [mobile, setMobile] = useState(false)
+  // The menu below 1280px repeats every link in the two mega menus. It is built the first time it
+  // is opened rather than sent in every page's HTML (about 21 KB per page): the mega menus above
+  // still carry the same links in the HTML for crawlers.
+  const [mobileBuilt, setMobileBuilt] = useState(false)
+  useEffect(() => { if (mobile) setMobileBuilt(true) }, [mobile])
   const ref = useRef<HTMLElement>(null)
   const pathname = usePathname()
 
@@ -232,7 +237,7 @@ export function SiteHeader() {
 
         {/* Below 1280px: the theme's nav links are hidden, so the same destinations live here. */}
         <div className="mnav" hidden={!mobile} data-fi="nav-leave">
-          <div className="wrap">
+          {(mobile || mobileBuilt) && <div className="wrap">
             <Link href="/about" onClick={close}>About Care Stream</Link>
             <Link href="/how-it-works" onClick={close}>How It Works</Link>
             <details>
@@ -251,7 +256,7 @@ export function SiteHeader() {
               <Link className="pill pill-ghost" href="/demo" onClick={close}>Book a demo</Link>
               <Link className="pill pill-solid" href="/register" onClick={close}>Start free trial</Link>
             </div>
-          </div>
+          </div>}
         </div>
       </header>
     </div>

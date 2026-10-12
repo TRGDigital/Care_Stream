@@ -14,6 +14,7 @@ import { WHO_ITS_FOR_V2_SLOTS } from '@/lib/page-slots/who-its-for-v2'
 import { WhoItsForV2 } from '@/components/marketing/who-its-for-v2'
 import { TrainingDemo, type TrainingDemoData } from '@/components/marketing/training-demo'
 import { isV2 } from '@/lib/v2-rollout'
+import { AltScope } from '@/components/alt-scope'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
@@ -431,28 +432,30 @@ export default async function WhoItsForPage(
   if (await isV2('one-offs', searchParams)) {
     const { groups, topics } = trainingCatalogue
     return (
-      <WhoItsForV2
-        s={makeSlot(WHO_ITS_FOR_V2_SLOTS, slots)}
-        training={{
-          demo: trainingDemo,
-          demoSlug: FEATURED_DEMO_SLUG,
-          moduleCount: topics.length || 98,
-          categories: Object.keys(groups).length
-            ? Object.entries(groups).map(([key, label]) => ({
-                label,
-                count: topics.filter(t => t.group_key === key).length,
-              }))
-            : FALLBACK_CATEGORIES.map(label => ({ label, count: 0 })),
-          modules: (topics.length ? topics.map(t => t.title).filter(Boolean)
-                                  : FALLBACK_MODULES).slice(0, 12),
-        }}
-      />
+      <AltScope data={[trainingCatalogue, trainingDemo]}>
+        <WhoItsForV2
+          s={makeSlot(WHO_ITS_FOR_V2_SLOTS, slots)}
+          training={{
+            demo: trainingDemo,
+            demoSlug: FEATURED_DEMO_SLUG,
+            moduleCount: topics.length || 98,
+            categories: Object.keys(groups).length
+              ? Object.entries(groups).map(([key, label]) => ({
+                  label,
+                  count: topics.filter(t => t.group_key === key).length,
+                }))
+              : FALLBACK_CATEGORIES.map(label => ({ label, count: 0 })),
+            modules: (topics.length ? topics.map(t => t.title).filter(Boolean)
+                                    : FALLBACK_MODULES).slice(0, 12),
+          }}
+        />
+      </AltScope>
     )
   }
 
   const s = makeSlot(WHO_ITS_FOR_SLOTS, slots)
   return (
-    <>
+    <AltScope data={[trainingCatalogue, trainingDemo]}>
       {/* ── Split hero ───────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-hero-gradient">
         <div className="absolute inset-0 dot-mesh" />
@@ -612,6 +615,6 @@ export default async function WhoItsForPage(
         primary={{ href: '/demo', label: 'Book a Free Demo' }}
         secondary={{ href: '/register', label: 'Start Free Trial' }}
       />
-    </>
+    </AltScope>
   )
 }

@@ -1,11 +1,9 @@
 import { MarketingNav } from '@/components/marketing/nav'
 import { MarketingFooter } from '@/components/marketing/footer'
-import { AltMapProvider } from '@/components/alt-map-provider'
-import { getSiteAltMap } from '@/lib/image-alts'
 import { BreadcrumbsJsonLd } from '@/components/breadcrumbs-json-ld'
 import { MarketingAgentTools } from '@/components/agent/marketing-agent-tools'
 import { PopEmbed } from '@/components/marketing/pop-embed'
-import { WebsiteChat } from '@/components/marketing/website-chat'
+import { LazyWebsiteChat as WebsiteChat } from '@/components/marketing/lazy-client'
 import { FunnelInsightsTracker } from '@/components/marketing/funnel-insights-tracker'
 import { FunnelInsightsVisitor } from '@/components/marketing/funnel-insights-visitor'
 import { OffersProvider } from '@/lib/offers'
@@ -19,10 +17,10 @@ import { SHIP_NOW } from '@/lib/ship-now'
 const PPC_STRIP_EARLY = `(function(){try{var q=new URLSearchParams(location.search),w=window;if(q.get('gclid')||q.get('gbraid')||q.get('wbraid')||((q.get('utm_source')||'').toLowerCase()==='google'&&['cpc','ppc','paid'].indexOf((q.get('utm_medium')||'').toLowerCase())>-1))w.__csPpc=true;if(w.__csPpc&&/^\\/(staff-training\\/(?!team-pricing)[a-z0-9-]+(\\/cart)?|basket)\\/?$/.test(location.pathname))document.documentElement.classList.add('ppc-strip')}catch(e){}})()`
 
 export default async function MarketingLayout({ children }: { children: React.ReactNode }) {
-  const [altMap, offers] = await Promise.all([getSiteAltMap(), getActiveOffers()])
+  // The image alt map is provided once, by the root layout (a second provider here sent it twice).
+  const offers = await getActiveOffers()
   return (
     <OffersProvider offers={offers}>
-    <AltMapProvider map={altMap}>
       <BreadcrumbsJsonLd />
       {SHIP_NOW && <script dangerouslySetInnerHTML={{ __html: PPC_STRIP_EARLY }} />}
       <ShipNowRoot />
@@ -36,7 +34,6 @@ export default async function MarketingLayout({ children }: { children: React.Re
         <MarketingFooter />
       </div>
       <WebsiteChat />
-    </AltMapProvider>
     </OffersProvider>
   )
 }

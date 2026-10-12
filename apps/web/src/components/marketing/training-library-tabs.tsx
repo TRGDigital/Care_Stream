@@ -7,7 +7,7 @@ import { SiteImage } from '@/components/site-image'
 import { useCart } from '@/lib/cart-store'
 import { UNIT_PENCE, gbp, estimatedMinutes, formatDuration, TRAINING_ACCREDITED } from '@/lib/training-commerce'
 import { CartButton } from './cart-button'
-import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
+import { CPD_CERTIFIED_LOGO_WEB as CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 import { SaveCourseButton } from './save-course-button'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'

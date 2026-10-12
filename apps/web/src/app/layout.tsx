@@ -5,7 +5,7 @@ import { CookieConsent } from '@/components/marketing/cookie-consent'
 import { Analytics } from '@/components/marketing/analytics'
 import { DemoDialog } from '@/components/marketing/demo-dialog'
 import { AltMapProvider } from '@/components/alt-map-provider'
-import { getSiteAltMap } from '@/lib/image-alts'
+import { getSiteAltMap, siteAlts } from '@/lib/image-alts'
 import { JsonLd } from '@/components/json-ld'
 import { organizationSchema, webSiteSchema, siteNavigationSchema } from '@/lib/schema'
 import { SpeedInsights } from '@vercel/speed-insights/next'
@@ -79,7 +79,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className={inter.className}>
         <JsonLd data={[organizationSchema(), webSiteSchema(), siteNavigationSchema()]} />
-        <AltMapProvider map={altMap}>
+        <AltMapProvider map={siteAlts(altMap)}>
           {children}
         </AltMapProvider>
         <CookieConsent />

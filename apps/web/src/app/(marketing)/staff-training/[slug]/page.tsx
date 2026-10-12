@@ -23,6 +23,7 @@ import { TrainingLanguageSection } from '@/components/marketing/training-languag
 import { TrainingCpdFeatures } from '@/components/marketing/training-cpd-features'
 import { TrainingFollowUpLoop } from '@/components/marketing/training-follow-up-loop'
 import { JsonLd } from '@/components/json-ld'
+import { AltScope } from '@/components/alt-scope'
 import { courseSchema, faqPageSchema } from '@/lib/schema'
 import { COURSE_LANGUAGE_CODES } from '@/lib/languages'
 import { WhyChooseCareStream } from '@/components/marketing/why-choose-carestream'
@@ -263,7 +264,7 @@ export default async function TrainingModulePage(
       requires_practical: m.requires_practical, cpd_accredited: m.cpd_accredited,
     }
     return (
-      <>
+      <AltScope data={[m, demo, related]}>
         <JsonLd data={courseJson} />
         {/* FAQ v2 (lib/faq-v2.ts): the structured data carries the questions the page shows. */}
         <JsonLd data={faqPageSchema(FAQ_V2
@@ -280,12 +281,12 @@ export default async function TrainingModulePage(
           utmTerm={typeof sp?.utm_term === 'string' ? sp.utm_term : undefined}
           test1={test1Assignment(slug, sp) ?? undefined}
         />
-      </>
+      </AltScope>
     )
   }
 
   return (
-    <>
+    <AltScope data={[m, demo, related]}>
       <JsonLd data={courseJson} />
       {/* ── Hero — care photo bled into the white, interactive demo focal card ── */}
       <section className="relative overflow-hidden bg-white">
@@ -624,6 +625,6 @@ export default async function TrainingModulePage(
         primary={{ label: 'Book a demo', href: '/demo' }}
         secondary={{ label: 'See all training', href: '/staff-training' }}
       />
-    </>
+    </AltScope>
   )
 }

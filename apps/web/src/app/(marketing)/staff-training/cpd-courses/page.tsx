@@ -2,6 +2,7 @@ import { CpdCollection } from '@/components/marketing/cpd-collection'
 import { CPD_COURSE_INFO, CPD_SLUGS, type CpdCourse } from '@/lib/cpd-collection'
 import { apiAssetUrl } from '@/lib/api-client'
 import { REVIEWS } from '@/lib/reviews'
+import { AltScope } from '@/components/alt-scope'
 
 // The CPD courses collection: the landing page for the CPD category Google Ads campaigns, one
 // ?intent= version per ad group (lib/cpd-collection.ts). Layout A chosen by Len 2026-10-08.
@@ -38,5 +39,9 @@ export default async function CpdCoursesPage({ searchParams }: { searchParams: R
   const courses = await getCourses()
   const r = REVIEWS[0]
   const review = r ? { quote: r.short ?? r.excerpt, name: r.name, setting: r.setting } : null
-  return <CpdCollection courses={courses} intentKey={one(searchParams.intent)} focus={one(searchParams.focus)} review={review} hl={one(searchParams.hl)} />
+  return (
+    <AltScope data={courses}>
+      <CpdCollection courses={courses} intentKey={one(searchParams.intent)} focus={one(searchParams.focus)} review={review} hl={one(searchParams.hl)} />
+    </AltScope>
+  )
 }

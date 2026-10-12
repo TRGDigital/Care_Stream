@@ -10,6 +10,7 @@ import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { COLLECTION_V2_SLOTS } from '@/lib/page-slots/collection-v2'
 import { isV2 } from '@/lib/v2-rollout'
 import { THEME_IMAGES } from '@/lib/theme-images'
+import { AltScope } from '@/components/alt-scope'
 
 // An ecommerce-style collection page: copy, the six products it sells, deeper copy, FAQs,
 // sibling links, then the services banner. The order is the order a visitor needs it in.
@@ -158,14 +159,15 @@ export default async function CollectionPage(
   // only the page furniture the theme repeats on every collection is a slot set.
   if (await isV2('collections', searchParams)) {
     const slots = await getContentSlots('/collection')
+    const withImages = await withCardImages(c)
     return (
-      <>
+      <AltScope data={withImages}>
         {listJson.numberOfItems > 0 && <JsonLd data={listJson} />}
         {Array.isArray(c.faqs) && c.faqs.length > 0
           && <JsonLd data={faqPageSchema(c.faqs.filter(f => f.question && f.answer))} />}
-        <CollectionPageV2 c={await withCardImages(c)} s={makeSlot(COLLECTION_V2_SLOTS, slots)}
+        <CollectionPageV2 c={withImages} s={makeSlot(COLLECTION_V2_SLOTS, slots)}
                           siblings={await getSiblings(slug)} />
-      </>
+      </AltScope>
     )
   }
 
@@ -175,7 +177,7 @@ export default async function CollectionPage(
   const isTraining = c.kind === 'training'
 
   return (
-    <>
+    <AltScope data={c}>
       {listJson.numberOfItems > 0 && <JsonLd data={listJson} />}
       {faqs.length > 0 && <JsonLd data={faqPageSchema(faqs)} />}
 
@@ -299,6 +301,6 @@ export default async function CollectionPage(
           </div>
         </div>
       </section>
-    </>
+    </AltScope>
   )
 }

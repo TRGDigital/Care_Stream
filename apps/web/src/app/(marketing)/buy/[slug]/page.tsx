@@ -10,6 +10,7 @@ import { fetchModules, relatedModules } from '@/lib/related-modules'
 import { isV2 } from '@/lib/v2-rollout'
 import { JsonLd } from '@/components/json-ld'
 import { productSchema } from '@/lib/schema'
+import { AltScope } from '@/components/alt-scope'
 
 export const revalidate = 60
 
@@ -109,7 +110,7 @@ export default async function BuyPage(
   const sp = await searchParams
   if (await isV2('buy', sp)) {
     return (
-      <>
+      <AltScope data={[m, related]}>
       <JsonLd data={productJson} />
       <BuyPageV2
         module={{ ...m, slug }}
@@ -118,12 +119,12 @@ export default async function BuyPage(
         related={related.slice(0, 6).map(r => ({ slug: r.slug, title: r.title, group_label: r.group_label }))}
         apiUrl={API_URL}
       />
-      </>
+      </AltScope>
     )
   }
 
   return (
-    <>
+    <AltScope data={[m, related]}>
     <JsonLd data={productJson} />
     <section className="bg-neutral-light py-16 md:py-24">
       <div className="mx-auto max-w-content px-6">
@@ -189,6 +190,6 @@ export default async function BuyPage(
         </div>
       </section>
     )}
-    </>
+    </AltScope>
   )
 }

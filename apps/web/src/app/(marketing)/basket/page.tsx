@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { TrainingCheckout, type ModuleInfo } from '@/components/marketing/checkout-page'
+import { AltScope } from '@/components/alt-scope'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -34,5 +35,10 @@ async function loadModules(): Promise<Record<string, ModuleInfo>> {
 }
 
 export default async function BasketPage() {
-  return <TrainingCheckout modules={await loadModules()} />
+  const modules = await loadModules()
+  return (
+    <AltScope data={modules}>
+      <TrainingCheckout modules={modules} />
+    </AltScope>
+  )
 }

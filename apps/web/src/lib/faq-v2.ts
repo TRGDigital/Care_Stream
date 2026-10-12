@@ -32,7 +32,7 @@
 
 import { DISCOUNT_TIERS, durationText, refreshWord } from './training-commerce'
 
-export const FAQ_V2_LIVE = false
+export const FAQ_V2_LIVE = true
 
 export const FAQ_V2 = FAQ_V2_LIVE || process.env.NEXT_PUBLIC_FAQ_V2_PREVIEW === '1'
 

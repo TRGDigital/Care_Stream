@@ -129,6 +129,7 @@ export function SampleCertificate({ m }: { m: FaqModule }) {
           cpdAccredited={!!m.cpd_accredited}
           cpdHours={m.cpd_accredited ? hours : null}
           tier="cpd"
+          webImages
         />
       </div>
     </figure>

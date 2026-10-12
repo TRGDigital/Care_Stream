@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { BuyForm } from './buy-form'
-import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
+import { CPD_CERTIFIED_LOGO_WEB as CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 import { reportPageView, reportMicro } from '@/lib/google-ads'
 import './buy-page-v2.css'
 import './buy-drawer.css'

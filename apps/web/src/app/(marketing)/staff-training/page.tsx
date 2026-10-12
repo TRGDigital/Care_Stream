@@ -17,6 +17,7 @@ import { STAFF_TRAINING_SLOTS } from '@/lib/page-slots/staff-training'
 import { STAFF_TRAINING_V2_SLOTS } from '@/lib/page-slots/staff-training-v2'
 import { StaffTrainingIndexV2 } from '@/components/marketing/staff-training-index-v2'
 import { isV2 } from '@/lib/v2-rollout'
+import { AltScope } from '@/components/alt-scope'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
@@ -156,8 +157,10 @@ export default async function StaffTrainingPage(
   // 19% of the theme's strings. The library and the lesson demo are the same data either way.
   if (await isV2('indexes', searchParams)) {
     return (
-      <StaffTrainingIndexV2 s={makeSlot(STAFF_TRAINING_V2_SLOTS, slots)}
-                            catalogue={catalogue} demo={heroDemo} />
+      <AltScope data={[catalogue, heroDemo]}>
+        <StaffTrainingIndexV2 s={makeSlot(STAFF_TRAINING_V2_SLOTS, slots)}
+                              catalogue={catalogue} demo={heroDemo} />
+      </AltScope>
     )
   }
 
@@ -208,7 +211,7 @@ export default async function StaffTrainingPage(
   ]
 
   return (
-    <>
+    <AltScope data={[catalogue, heroDemo]}>
       {/* ── Split hero ───────────────────────────────────────────────────── */}
       {/* Hero — copy left, interactive demo focal card right, care photo bled into the white (mirrors /go) */}
       <section className="relative overflow-hidden bg-white">
@@ -862,6 +865,6 @@ export default async function StaffTrainingPage(
         primary={{ label: 'Book a demo', href: '/demo' }}
         secondary={{ label: 'See pricing', href: '/pricing' }}
       />
-    </>
+    </AltScope>
   )
 }

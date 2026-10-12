@@ -3,7 +3,7 @@
 // globals.css can isolate + colour-print just the certificate.
 
 import { Award, ShieldCheck } from 'lucide-react'
-import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
+import { CPD_CERTIFIED_LOGO, CPD_CERTIFIED_LOGO_WEB } from '@/lib/cpd'
 
 function fmt(d?: string | null): string {
   if (!d) return '—'
@@ -33,12 +33,19 @@ export type TrainingCertificateProps = {
   // A tenant's own policy-tailored module. Only these may say "tailored to";
   // platform courses (pre-built and CPD) are the same for every provider.
   tailored?:         boolean
+  // A sample shown on a web page (the course pages): the logos come resized from the image
+  // optimiser and load lazily. The PNG logos are 4336px wide and about 290 KB together, shown at
+  // about 200px. Real certificates (the hub, PDFs and print) leave this off and keep the originals.
+  webImages?:        boolean
 }
+
+const webImg = (src: string, w: number) => `/_next/image?url=${encodeURIComponent(src)}&w=${w}&q=90`
 
 export function TrainingCertificate({
   staffName, moduleName, orgName, orgLogoUrl, score, completedAt, expiresAt, requiresPractical, practicalNote,
-  cpdAccredited, cpdHours, cpdProviderNumber, independentlyReviewed, baseline, tier, tailored,
+  cpdAccredited, cpdHours, cpdProviderNumber, independentlyReviewed, baseline, tier, tailored, webImages,
 }: TrainingCertificateProps) {
+  const lazy = webImages ? { loading: 'lazy' as const, decoding: 'async' as const } : {}
   const gainPct = baseline?.score != null && baseline?.total
     ? Math.round((baseline.score / baseline.total) * 100)
     : null
@@ -47,7 +54,7 @@ export function TrainingCertificate({
       {/* Brand header band */}
       <div className="flex items-center justify-between bg-gradient-to-r from-teal-dark via-teal to-teal-dark px-8 py-5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-white.png" alt="CareStream" className="h-16 w-auto object-contain" />
+        <img src={webImages ? webImg('/logo-white.png', 640) : '/logo-white.png'} alt="CareStream" className="h-16 w-auto object-contain" {...lazy} />
         <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/85">{tier === 'cpd' ? (cpdAccredited ? 'CPD Certified Course' : 'Annual Training') : 'Staff Training'}</span>
       </div>
 
@@ -117,7 +124,7 @@ export function TrainingCertificate({
           // text on it (the wording sits beside it, not on it). See lib/cpd.ts.
           <div className="mx-auto mt-6 flex max-w-md items-center justify-center gap-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified, The CPD Certification Service" className="h-24 w-auto" />
+            <img src={webImages ? CPD_CERTIFIED_LOGO_WEB : CPD_CERTIFIED_LOGO} alt="CPD Certified, The CPD Certification Service" className="h-24 w-auto" {...lazy} />
             <div className="text-left">
               <p className="text-xs font-semibold text-teal-dark">CPD Certified Course{cpdHours != null ? ` · ${cpdHours} CPD hour${cpdHours === 1 ? '' : 's'}` : ''}</p>
               <p className="text-[10px] text-neutral-mid">Certified by The CPD Certification Service{cpdProviderNumber ? `, provider ${cpdProviderNumber}` : ''}</p>
@@ -135,7 +142,7 @@ export function TrainingCertificate({
         <div className="mt-8 flex items-center justify-center gap-2 border-t border-gray-100 pt-5">
           <span className="text-[10px] uppercase tracking-wide text-neutral-mid">Issued &amp; assessed by</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-color.png" alt="CareStream" className="h-10 w-auto object-contain" />
+          <img src={webImages ? webImg('/logo-color.png', 640) : '/logo-color.png'} alt="CareStream" className="h-10 w-auto object-contain" {...lazy} />
         </div>
         <p className="mx-auto mt-3 max-w-lg text-[9.5px] leading-relaxed text-neutral-mid">
           {tailored ? <>Tailored to {orgName ?? 'the home'}&apos;s own policies and assessed by CareStream. </> : null}

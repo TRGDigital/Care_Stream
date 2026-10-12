@@ -71,7 +71,11 @@ gtag('js', new Date());
 gtag('config', '${GA4_ID}');
 gtag('config', '${GOOGLE_ADS_ID}');`}
       </Script>
-      <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`} strategy="afterInteractive" />
+      {/* The library itself (about 340 KB with the Ads config it pulls in) waits for the page to
+          finish loading, like GTM below, so it no longer competes with the page's own files on a
+          phone. The consent defaults and config above still run straight away: gtag() queues every
+          command in dataLayer, and the library replays them, consent first, when it arrives. */}
+      <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`} strategy="lazyOnload" />
     </>
   )
 

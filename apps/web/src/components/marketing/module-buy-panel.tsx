@@ -7,7 +7,7 @@ import { BuyNowLink, TrainingAddTextLink, TrainingSaveButton } from './training-
 import { SHIP_NOW, sn, withVat } from '@/lib/ship-now'
 import { discountPctForQty } from '@/lib/training-commerce'
 import type { Offer } from '@/lib/offer-rules'
-import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
+import { CPD_CERTIFIED_LOGO_WEB as CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 
 // The buying half of a course page laid out like a shop product page: the live offer stated in
 // full beside the price ("applied automatically"), the old price struck through, the number of

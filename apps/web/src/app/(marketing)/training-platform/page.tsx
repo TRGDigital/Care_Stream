@@ -16,6 +16,7 @@ import { TrainingPlatformV2 } from '@/components/marketing/training-platform-v2'
 import { isV2 } from '@/lib/v2-rollout'
 import { JsonLd } from '@/components/json-ld'
 import { serviceSchema } from '@/lib/schema'
+import { AltScope } from '@/components/alt-scope'
 
 export const revalidate = 60
 
@@ -93,7 +94,7 @@ export default async function TrainingPlatformPage(
 
   const heroDemo = await getHeroDemo()
   return (
-    <>
+    <AltScope data={heroDemo}>
       <JsonLd data={serviceJson} />
       {/* ── Hero — copy left, interactive demo focal card right ──────────── */}
       <section className="relative overflow-hidden bg-hero-gradient">
@@ -318,6 +319,6 @@ export default async function TrainingPlatformPage(
         primary={{ label: 'Book a demo', href: '/demo' }}
         secondary={{ label: 'See Annual Training', href: '/staff-training' }}
       />
-    </>
+    </AltScope>
   )
 }

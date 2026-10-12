@@ -67,7 +67,7 @@
   .hg-overlay{padding:0;place-items:stretch}
   .hg-dialog{max-width:none;max-height:none;height:100%;height:100dvh;border-radius:0;padding:12px 12px 20px;box-shadow:none}
   .hg-dialog .mpe-demo{border:0;padding:0}
-  .hg-close{position:fixed;top:8px;right:10px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.94);box-shadow:0 2px 10px rgba(23,18,31,.18)}
+  .hg-dialog .hg-close{position:fixed;top:8px;right:10px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.94);box-shadow:0 2px 10px rgba(23,18,31,.18)}
 }
 .hg-close{position:absolute;top:8px;right:12px;z-index:2;border:0;background:none;font-size:1.8rem;line-height:1;color:#6B6577;cursor:pointer}
 

@@ -26,6 +26,8 @@ import type { Test1Assignment } from '@/lib/ab-test1'
 import { SHIP_NOW, sn } from '@/lib/ship-now'
 import { FAQ_V2, effectiveFrequency, faqV2BottomItems, faqV2Items, firstFaqFor, hasInlineLesson, orderFaqs } from '@/lib/faq-v2'
 import { FaqV2, FaqV2Bottom } from './faq-v2'
+import { LandingFixesRoot } from './landing-fixes'
+import { CHANGED_CC_INTENTS, isCoreIntent, isCpdIntent, lf } from '@/lib/landing-fixes'
 import './module-page-v2.css'
 
 // The rebuilt /staff-training/<slug> template. Renders the SAME module record and the same demo
@@ -323,8 +325,9 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
     ...Object.entries(demo.translations ?? {}).filter(([c]) => LANG_NAMES[c]).map(([c, t]) => ({ code: c, name: LANG_NAMES[c]!, lesson: t.lesson, question: t.question ? { text: t.question.text, options: t.question.options } : null })),
   ] : []
   // Team prices: the same volume tiers the checkout charges (training-commerce.ts).
-  const teamPricing = (
-            <div className="mpe-team" id={FAQ_V2 ? 'team-price' : undefined}>
+  const teamPricing = (first?: boolean) => (
+            <div className={first ? 'mpe-team lf-first lf-pf' : 'mpe-team'} id={FAQ_V2 ? 'team-price' : undefined}
+                 {...(first ? lf('price-table', 'team prices under the headline on phones') : {})}>
               <p className="mpe-promise-eyebrow">Team pricing</p>
               <table>
                 <tbody>
@@ -395,12 +398,16 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
     ? `An annual refresher of all ${sections.length || 16} Care Certificate standards for care workers, healthcare assistants and support workers in care homes, nursing homes and home care. Use it every year, and as part of your induction for new starters.`
     : cro.whoFor
   const t1b = test1?.variant === 'B'
+  // Landing fixes: {from} is the lowest team price, {price} the single licence price.
+  const fill = (t: string) => t.replace('{from}', money(lowestPence)).replace('{price}', price)
+  const lfCopy = !!it && m.slug === 'care-certificate' && !!intentKey && CHANGED_CC_INTENTS.has(intentKey)
   return (
     <div className={t1b ? 'mpage-v2 t1b' : 'mpage-v2'}>
       {/* Test 1 (lib/ab-test1.ts): the assignment, for Funnel Insights. Only when the visit is in it. */}
       {test1 && <meta name="fi-ab-test" content={test1.test} />}
       {test1 && <meta name="fi-ab-variant" content={test1.variant} />}
       {test1 && <Test1Assign test={test1.test} variant={test1.variant} forced={test1.forced} />}
+      <LandingFixesRoot />
       {/* The bar that follows the reader down the page. Its action is the theme's own: straight
           to this module's purchase page. */}
       {/* The bar slides in once the hero buy panel has scrolled away, as in the theme. */}
@@ -455,7 +462,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
                 ? <img className="mpe-cpdbig" src={CPD_CERTIFIED_LOGO} alt="CPD Certified, The CPD Certification Service" />
                 : null}
               <div>
-                <b>{m.cpd_accredited ? 'CPD Certified course' : 'CQC aligned course'}</b>
+                <b>{m.cpd_accredited ? 'CPD Certified course' : 'Course for UK care settings'}</b>
                 <span>
                   {m.cpd_accredited ? 'Certified by The CPD Certification Service. ' : ''}
                   {sections.length ? `${sections.length} sections` : 'The full course'}, about {durationText(est)}, a scored final
@@ -571,7 +578,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
               </p>
             </div>
             <div className="mpe-eyerow">
-              <span className="mpe-eyebrow">CQC aligned{m.cpd_accredited ? ' · CPD Certified' : ''}</span>
+              <span className="mpe-eyebrow" {...lf('eyebrow', 'eyebrow')}>{m.cpd_accredited ? 'CPD Certified' : 'For UK care settings'}</span>
               {m.cpd_accredited && (
                 // The CPD Certified trademark: used unaltered, no border or added text, and
                 // only on courses the CPD Certification Service has certified (cpd_accredited).
@@ -579,9 +586,23 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
                 <img className="cpdmark" src={CPD_CERTIFIED_LOGO} alt="CPD Certified, The CPD Certification Service" />
               )}
             </div>
-            {it && <p className="mpe-intent-tag">{it.tag}</p>}
-            <h1>{it ? it.headline.replace('{from}', money(lowestPence)) : `${m.title} training that gets your team CQC-ready`}</h1>
-            {(it?.sub ?? whoFor) && <p className="mpe-for">{it?.sub ?? whoFor}</p>}
+            {it && <p className="mpe-intent-tag" {...(lfCopy ? lf('tag', 'tag') : {})}>{it.tag}</p>}
+            <h1 {...(lfCopy ? lf('h1', 'headline') : {})}>{it ? fill(it.headline) : `${m.title} training that gets your team CQC-ready`}</h1>
+            {(it?.sub ?? whoFor) && <p className="mpe-for" {...(lfCopy ? lf('sub', 'sub line') : {})}>{it ? fill(it.sub) : whoFor}</p>}
+            {/* Landing fixes (lib/landing-fixes.ts): on the first phone screen in both Test 1 variants. */}
+            {m.slug === 'care-certificate' && isCoreIntent(intentKey) && (
+              <div className="lf-whatis lf-first" {...lf('what-is', 'What is the Care Certificate?')}>
+                <h2>What is the Care Certificate?</h2>
+                <p>The {sections.length || 16} standards care workers in England are expected to meet. Our course is the online knowledge part, done once a year by all staff. You observe them at work and sign it off, then the certificate is issued.</p>
+              </div>
+            )}
+            {m.cpd_accredited && isCpdIntent(intentKey) && (
+              <div className="lf-cpdproof lf-first" {...lf('cpd-proof', 'CPD proof on the first screen')}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified, The CPD Certification Service" />
+                <p>Certified by The CPD Certification Service. CareStream is CPD Provider No. 50224. <Link href="/cpd-certified">Check our listing</Link></p>
+              </div>
+            )}
             {/* Test 1 B, phones only: three proof points the page already makes, and the offer in one line. */}
             {t1b && (
               <ul className="t1-proof">
@@ -603,7 +624,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
               </blockquote>
             )}
 
-            {it?.pricingFirst && teamPricing}
+            {it?.pricingFirst && teamPricing(true)}
             {demo && (
               <TryBeforeYouBuy slug={m.slug} withActivity={!!demo.activity}>
                 <TrainingDemo demo={demo} buyHref={buyHref} variant="theme" place="module" />
@@ -619,6 +640,9 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
                             sfc={m.slug === 'care-certificate'
                               ? `Covers the knowledge for all ${sections.length || 16} Care Certificate standards set by Skills for Care, Skills for Health and NHS England, in the same order, one standard at a time.`
                               : undefined} />
+            {m.slug === 'care-certificate' && (
+              <p className="lf-forself lf-afterbuy" {...lf('for-self', 'who buys it')}>Buying for yourself? Your employer allocates the licence and signs off your observation.</p>
+            )}
 
             <PaymentLogos />
 
@@ -626,10 +650,10 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
 
             {SHIP_NOW && <SignOffBox m={m} lessons={sections.length} />}
 
-            {!it?.pricingFirst && teamPricing}
+            {!it?.pricingFirst && teamPricing()}
 
             <ul className="mpe-trust mpe-trust-list">
-              <li><Tick />{m.slug === 'care-certificate' ? 'CQC-aligned, mapped to the Care Certificate framework' : 'CQC-aligned, written for UK care settings'}</li>
+              <li {...lf('trust-line', 'trust line wording')}><Tick />{m.slug === 'care-certificate' ? 'Mapped to the 16 Care Certificate standards' : 'Written for UK care settings'}</li>
               <li><Tick />Completed in the hub in over 60 languages</li>
               <li><Tick />A certificate for every staff member, for your CQC evidence</li>
               <li><Tick />A wrong answer triggers a follow-up lesson, so gaps are closed</li>

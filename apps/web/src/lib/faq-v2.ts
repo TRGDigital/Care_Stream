@@ -55,6 +55,7 @@ export type FaqId =
   | 'pay' | 'cqc' | 'time' | 'price' | 'languages' | 'try' | 'phone' | 'induction'
   | 'renew' | 'cert' | 'invoice' | 'refund'
   | 'fail' | 'leaver' | 'noemail' | 'translate' | 'funding'
+  | 'mandatory' | 'whatis' | 'howget'
 
 export interface FaqV2Item {
   id: FaqId
@@ -66,6 +67,8 @@ export interface FaqV2Item {
   cta: FaqCta
   /** Show the live offer (if one is running) under this answer. */
   offer?: boolean
+  /** Added by the landing fixes (lib/landing-fixes.ts), for the ?lfdemo=1 review highlight. */
+  added?: boolean
 }
 
 export interface FaqV2Module {
@@ -189,6 +192,32 @@ export function faqV2Items(m: FaqV2Module, opts: { unitPence: number; hasLesson:
     })
   }
 
+  // Landing fixes (12 Oct 2026 audit): the three questions the Care Certificate searches ask most.
+  // Opened first only when the ad group or search term asks them (INTENT_RULES / TERM_RULES).
+  if (cc) {
+    out.push({
+      id: 'mandatory', q: 'Is the Care Certificate mandatory?', cta: 'price', added: true,
+      lead: 'Not by law, but CQC expects it.',
+      body: 'Regulation 18 asks that care staff are suitably trained, and CQC expects care workers to be trained to the Care Certificate standards. '
+        + 'Skills for Care advise new starters complete it within 12 weeks. '
+        + 'Our course is the online knowledge part, done once a year by all staff, and you sign off the observation at work.',
+    })
+    out.push({
+      id: 'whatis', q: 'What is the Care Certificate and who needs it?', cta: tryOr('try'), added: true,
+      lead: `The ${m.lessons || 16} standards care workers in England are expected to meet.`,
+      body: 'It is for care workers, healthcare assistants and support workers in care homes, nursing homes and home care. '
+        + 'Our course is the online knowledge part, done once a year by all staff and usable as part of your induction. '
+        + 'You then observe them at work and sign it off, and the certificate is issued.',
+    })
+    out.push({
+      id: 'howget', q: 'How do I get a Care Certificate?', cta: 'price', added: true,
+      lead: 'Through your employer.',
+      body: 'Your employer buys a licence and allocates it to you. You do the lessons and the assessment online, '
+        + 'then your manager or an assessor observes you at work and signs it off, and the certificate is issued in your name. '
+        + 'Run a care service? Buy a licence for each member of staff on this page.',
+    })
+  }
+
   if (renews) {
     const every = refreshWord(freq)
     out.push(cc ? {
@@ -239,6 +268,10 @@ export function faqV2Items(m: FaqV2Module, opts: { unitPence: number; hasLesson:
  *  words) does not outrank the search term itself: see firstFaqFor. */
 type Rule = [RegExp, FaqId[], boolean?]
 const INTENT_RULES: Rule[] = [
+  // Landing fixes: "is it mandatory?" ad groups and sitelinks (ag-mandatory, cqc-mandatory, cqc-requirement).
+  [/(^|-)(mandatory|mand|requirement|required)(-|$)/, ['mandatory', 'cqc']],
+  // CPD intents: the certificate answer carries the CPD mark and hours, not the CQC one.
+  [/^(cpd|cpd-certified|cpd-hours|cpd-mark|accredited)$/, ['cert', 'cqc']],
   [/(^|-)(languages?|lang|polish|hindi|urdu|romanian|overseas|sponsored|spons|esl|intl|international)(-|$)/, ['languages']],
   [/(^|-)(price|prices|pricing|cost|discount|licences|quote|no-subscription|buy-online)(-|$)/, ['price']],
   [/(^|-)(invoice)(-|$)/, ['invoice', 'price']],
@@ -261,6 +294,12 @@ const ONLINE_CERT = /\b(online|e-?learning)\b.*\bcertificate\b|\bcertificate\b.*
 
 /** The same, for the search term itself (utm_term), in the words people type. */
 const TERM_RULES: Rule[] = [
+  // Landing fixes: individuals asking how to get it, and "is it mandatory / required?".
+  [/\b(how (do|can) i (get|do|apply for)|how to (get|do|apply for)|where (do|can) i get)\b/, ['howget', 'pay']],
+  [/\b(what is|who needs|who has to do|who does|who should do) (the |a )?care certificate\b/, ['whatis', 'pay']],
+  [/\b(mandatory|required|requirement|compulsory)\b/, ['mandatory', 'cqc']],
+  // A bare "care certificate" (or "the care certificate uk"): what it is and who needs it.
+  [/^(the |a )?(national |uk |health )?care(rs?)? certificate( uk| england| certificate)?$/, ['whatis', 'pay']],
   [/\b(language|languages|polish|hindi|urdu|romanian|tagalog|malayalam|nepali|translated|overseas|international|esl)\b/, ['languages']],
   [/\b(price|prices|cost|costs|cheap|cheapest|discount|how much|£|bulk)\b/, ['price']],
   [/\b(invoice|purchase order)\b/, ['invoice', 'price']],
@@ -296,6 +335,13 @@ export function firstFaqFor(items: FaqV2Item[], intent?: string, utmTerm?: strin
   const k = (intent ?? '').toLowerCase().trim()
   const t = (utmTerm ?? '').toLowerCase().replace(/\+/g, ' ').trim()
   const fromIntent = k ? pick(INTENT_RULES, k, have) : null
+  // Landing fixes: "mandatory care certificate" on a CQC version: answer the question asked.
+  if (fromIntent?.id === 'cqc' && have.has('mandatory') && /\b(mandatory|required|requirement|compulsory)\b/.test(t)) return 'mandatory'
+  // Core term ad groups (ag-core-N): what the Care Certificate is, unless the term asks something specific.
+  if (/^ag-core-\d+$/.test(k) && have.has('whatis')) {
+    const ft = t ? pick(TERM_RULES, t, have) : null
+    return ft && !ft.generic ? ft.id : 'whatis'
+  }
   // "care certificate online" on an online ad group: the online part is what they are paying for.
   if (fromIntent?.id === 'phone' && have.has('pay') && ONLINE_CERT.test(t)) return 'pay'
   if (fromIntent && !fromIntent.generic && !GENERIC_INTENT.test(k)) return fromIntent.id

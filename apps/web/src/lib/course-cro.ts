@@ -46,8 +46,8 @@ export const COURSE_CRO: Record<string, CourseCro> = {
     updated: 'September 2026',
     intents: {
       price: {
-        tag: 'Team pricing', headline: 'Care Certificate training for your whole team, with team prices from 10 licences',
-        sub: 'One licence per member of staff, up to 40% off for larger teams, and a quote for several homes. No subscription.',
+        tag: 'Team pricing', headline: 'Care Certificate prices for one person or your team',
+        sub: '{price} + VAT per person, less from 10 licences. Pay per licence, no subscription.',
         pricingFirst: true, slide: 'dashboard',
       },
       staff: {
@@ -62,7 +62,7 @@ export const COURSE_CRO: Record<string, CourseCro> = {
       },
       cqc: {
         tag: 'CQC evidence', headline: 'Care Certificate training with the evidence CQC asks for',
-        sub: 'A named, dated certificate for every learner, and a training record you can show an inspector.',
+        sub: 'Not a legal requirement, but CQC expects staff to be trained to the 16 standards. You get a named, dated certificate for every learner and a training record to show an inspector.',
         moment: 1, slide: 'certificate',
       },
       languages: {

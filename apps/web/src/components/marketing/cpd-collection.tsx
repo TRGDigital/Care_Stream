@@ -17,6 +17,8 @@ import {
   BUNDLES, bundleQuote, intentFor, REFRESHER_SLUGS,
   type BundleKey, type Chip, type CpdCourse,
 } from '@/lib/cpd-collection'
+import { LandingFixesRoot } from './landing-fixes'
+import { CHANGED_CPD_INTENTS, EXPECTED_TOPICS, lf } from '@/lib/landing-fixes'
 import './cpd-collection.css'
 
 // The CPD courses collection page (lib/cpd-collection.ts), layout A (Len, 2026-10-08): hero,
@@ -143,10 +145,39 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
   const titleOf = (slug: string, fallback: string) => courses.find(c => c.slug === slug)?.title ?? fallback
 
   const finder = <Finder offers={offers} onPick={(k, n) => setBundle(k, n)} />
+  // Landing fixes: what follows the H1 for this version, and whether its copy changed (review highlight).
+  const lead = intent.lead ?? 'bundles'
+  const lfCopy = !focus && CHANGED_CPD_INTENTS.has(intentKey)
+  const roleTable = (
+            <div className="cc-table">
+              <table>
+                <thead><tr><th>Role</th><th>Courses</th><th>Best way to buy</th></tr></thead>
+                <tbody>
+                  <tr><td>New carers</td><td>Care Certificate, then all nine annual courses</td><td><a href="#bundles">Complete CPD bundle</a></td></tr>
+                  <tr><td>Carers and support workers</td><td>All nine annual courses, every year</td><td><a href="#bundles">Annual refresher bundle</a></td></tr>
+                  <tr><td>Staff who give medicines</td><td>Medication Administration, with the practical checklist</td><td>In both bundles, or on its own</td></tr>
+                  <tr><td>Kitchen and food handling</td><td>Food Hygiene</td><td>In both bundles, or on its own</td></tr>
+                  <tr><td>Office and admin staff</td><td>GDPR, Health and Safety, Mental Health Awareness</td><td>Single courses</td></tr>
+                </tbody>
+              </table>
+            </div>
+  )
+  const faqs: [string, string][] = [
+    ...(lead === 'list' ? [['Which training does each role need?',
+      'It depends on the role. New carers: the Care Certificate, then the nine annual courses. Carers and support workers: the nine annual courses every year. '
+      + 'Staff who give medicines: Medication Administration, with its practical checklist. Kitchen staff: Food Hygiene. Office staff: GDPR, Health and Safety and Mental Health Awareness. '
+      + 'Fire safety, first aid, basic life support, safeguarding and the Mental Capacity Act are not offered here, so book those separately.'] as [string, string]] : []),
+    ['Are these qualifications?', 'No. They are short CPD Certified courses, about an hour each, for people working in care. They are not diplomas, NVQs or levels.'],
+    ['How do bundles work?', 'A bundle is one price per learner for a set of courses. If a live offer on single courses works out cheaper for your team, you pay the lower price. Offers and team discounts do not stack on a bundle.'],
+    ['Is there a subscription?', 'No. You buy one licence per learner per course, or a bundle per learner. Team discounts of up to 40% apply to single courses automatically.'],
+    ['How do staff take the courses?', 'On any phone, tablet or computer, in over 60 languages. You allocate licences from your dashboard and see who has finished.'],
+    ['Can I pay by invoice?', 'Yes. Ask for an invoice at checkout, or get a quote for a large team or several services.'],
+  ]
 
   return (
     <HlContext.Provider value={hlRe}>
-    <div className="cpdc">
+    <div className={lead === 'bundles' ? 'cpdc' : `cpdc cc-lead-on cc-lead-${lead}`}>
+      <LandingFixesRoot />
       {offer && (
         <div className="cc-offerbar">
           {offerEmoji(offer.label) && <span className="cc-emoji" aria-hidden="true">🎃</span>}
@@ -156,10 +187,10 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
       <div className="cc-wrap">
         <div className="cc-main">
           <section className="cc-hero">
-            <p className="cc-eb"><H>{intent.tag}</H></p>
-            <h1><H>{intent.headline}</H></h1>
+            <p className="cc-eb" {...(lfCopy ? lf('tag', 'tag') : {})}><H>{intent.tag}</H></p>
+            <h1 {...(lfCopy ? lf('h1', 'headline') : {})}><H>{intent.headline}</H></h1>
             <div className="cc-herobody">
-              <p className="cc-lede"><H>{intent.sub}</H></p>
+              <p className="cc-lede" {...(lfCopy ? lf('sub', 'sub line') : {})}><H>{intent.sub}</H></p>
               <ul className="cc-trust">
                 <li><Tick /><H>{'CPD Certified, all 10 courses'}</H></li>
                 <li><Tick /><H>{'Every lesson in 60+ languages'}</H></li>
@@ -168,6 +199,36 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
               </ul>
             </div>
           </section>
+
+          {/* Landing fixes: the list, or the course names, straight after the H1 for this version. */}
+          {lead === 'list' && (
+            <section className="cc-sec cc-lead" id="guide" {...lf('role-list', 'the list first')}>
+              <h2>Which training do my staff need?</h2>
+              {roleTable}
+              <h3 className="cc-topicsh">Topics care workers are usually expected to cover</h3>
+              <ul className="cc-topics">
+                {EXPECTED_TOPICS.map(t => {
+                  const c = t.course ? courses.find(x => x.slug === t.course) : undefined
+                  return c
+                    ? <li key={t.topic} className="yes"><a href={`/staff-training/${c.slug}?from=cpd-courses&intent_from=${encodeURIComponent(intentKey)}`}>{t.topic}</a><span>CareStream CPD course</span></li>
+                    : <li key={t.topic} className="no">{t.topic}<span>Not offered here</span></li>
+                })}
+              </ul>
+              <p className="cc-topicsnote">Also here: End of Life Care, Mental Health Awareness, COSHH and the Care Certificate. What each person needs depends on their role and your service, so check your own training matrix.</p>
+            </section>
+          )}
+          {lead === 'courses' && (
+            <section className="cc-sec cc-lead" {...lf('course-list', 'the courses first')}>
+              <h2>The 10 courses, {gbp(UNIT_PENCE)} + VAT each</h2>
+              <ul className="cc-coursechips">
+                {courses.map(c => (
+                  <li key={c.slug}><a href={`/staff-training/${c.slug}?from=cpd-courses&intent_from=${encodeURIComponent(intentKey)}`}
+                                      onClick={() => fi('collection_click', { product: c.slug, page: 'cpd-courses', intent: intentKey || 'default' })}>{c.title}</a></li>
+                ))}
+              </ul>
+              <p className="cc-leadnote">About an hour each, CPD Certified. <a href="#courses">Buy single courses</a>, or save with a bundle below.</p>
+            </section>
+          )}
 
           <section className="cc-sec cc-bundlesec">
             <h2 className="cc-h2s">Save with a bundle</h2>
@@ -209,6 +270,7 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
                 )
               })}
               <p className="cc-bnote">You always get the best price. If an offer on single courses works out cheaper for your team, that is what you pay.</p>
+              <p className="cc-forself" {...lf('for-self', 'who buys it')}>Buying for yourself? Your employer allocates the licence, and signs off the practical checklist on the courses that have one.</p>
             </div>
           </section>
 
@@ -279,22 +341,13 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
             </div>
           </section>
 
+          {lead !== 'list' && (
           <section className="cc-sec cc-guide" id="guide">
             <h2>Which training do my staff need?</h2>
             <p className="cc-sub">Care workers are expected to refresh their mandatory training every year. Here is how the ten courses fit each role.</p>
-            <div className="cc-table">
-              <table>
-                <thead><tr><th>Role</th><th>Courses</th><th>Best way to buy</th></tr></thead>
-                <tbody>
-                  <tr><td>New carers</td><td>Care Certificate, then all nine annual courses</td><td><a href="#bundles">Complete CPD bundle</a></td></tr>
-                  <tr><td>Carers and support workers</td><td>All nine annual courses, every year</td><td><a href="#bundles">Annual refresher bundle</a></td></tr>
-                  <tr><td>Staff who give medicines</td><td>Medication Administration, with the practical checklist</td><td>In both bundles, or on its own</td></tr>
-                  <tr><td>Kitchen and food handling</td><td>Food Hygiene</td><td>In both bundles, or on its own</td></tr>
-                  <tr><td>Office and admin staff</td><td>GDPR, Health and Safety, Mental Health Awareness</td><td>Single courses</td></tr>
-                </tbody>
-              </table>
-            </div>
+            {roleTable}
           </section>
+          )}
 
           <section className="cc-sec cc-proof">
             <div className="cc-proofgrid">
@@ -323,14 +376,8 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
 
           <section className="cc-sec cc-faq">
             <h2>Questions</h2>
-            {[
-              ['Are these qualifications?', 'No. They are short CPD Certified courses, about an hour each, for people working in care. They are not diplomas, NVQs or levels.'],
-              ['How do bundles work?', 'A bundle is one price per learner for a set of courses. If a live offer on single courses works out cheaper for your team, you pay the lower price. Offers and team discounts do not stack on a bundle.'],
-              ['Is there a subscription?', 'No. You buy one licence per learner per course, or a bundle per learner. Team discounts of up to 40% apply to single courses automatically.'],
-              ['How do staff take the courses?', 'On any phone, tablet or computer, in over 60 languages. You allocate licences from your dashboard and see who has finished.'],
-              ['Can I pay by invoice?', 'Yes. Ask for an invoice at checkout, or get a quote for a large team or several services.'],
-            ].map(([q, a], i) => (
-              <details key={q} open={i === 0}><summary>{q}</summary><p>{a}</p></details>
+            {faqs.map(([q, a], i) => (
+              <details key={q} open={i === 0} {...(q === 'Which training does each role need?' ? lf('faq-roles', 'new question') : {})}><summary>{q}</summary><p>{a}</p></details>
             ))}
           </section>
         </div>

@@ -1,5 +1,6 @@
 import { faqSlug, type FaqV2Item } from '@/lib/faq-v2'
 import { FaqCtaLink, FaqOfferNote } from './faq-v2-client'
+import { lf } from '@/lib/landing-fixes'
 import './faq-v2.css'
 
 // FAQ v2 (lib/faq-v2.ts): one question set under the buy box. The first three answers are open
@@ -12,7 +13,8 @@ export function FaqV2({ items, slug, open = 3 }: { items: FaqV2Item[]; slug: str
   const item = (x: FaqV2Item, isOpen: boolean) => {
     const s = faqSlug(x.q)
     return (
-      <details key={x.id} open={isOpen} className={isOpen ? 'fq2-open' : undefined} data-faq={x.id}>
+      <details key={x.id} open={isOpen} className={isOpen ? 'fq2-open' : undefined} data-faq={x.id}
+               {...(x.added ? lf(`faq-${x.id}`, 'new question') : {})}>
         <summary>{x.q}</summary>
         <div className="fq2-a">
           <p><b>{x.lead}</b> {x.body}</p>

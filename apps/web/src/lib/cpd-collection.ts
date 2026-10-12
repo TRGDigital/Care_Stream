@@ -48,7 +48,10 @@ export function bundleQuote(offers: Offer[], key: BundleKey, learners: number) {
 
 // ─── Page versions (?intent=) ─────────────────────────────────────────────────
 // feature: the course shown first and highlighted. chip: the filter the grid opens on.
-export type CpdIntent = { tag: string; headline: string; sub: string; feature?: string; chip?: Chip; bundle?: BundleKey; topic?: string }
+// lead: what follows the H1 (landing fixes, 12 Oct 2026): 'list' the role table and the topics care
+// workers are usually expected to cover, 'courses' the ten course names and price, default 'bundles'.
+export type Lead = 'list' | 'courses' | 'bundles'
+export type CpdIntent = { tag: string; headline: string; sub: string; feature?: string; chip?: Chip; bundle?: BundleKey; topic?: string; lead?: Lead }
 export type Chip = 'all' | 'refreshers' | 'starters' | 'practical'
 
 const SUB = 'Ten short courses built for care settings, each with a CPD Certified certificate for every learner. Buy one course, or a bundle for the whole team.'
@@ -63,14 +66,14 @@ export const CPD_INTENTS: Record<string, CpdIntent> = {
   'supported-living': { tag: 'For support workers', headline: 'Mandatory training for support workers and supported living teams', sub: 'The same ten CPD Certified courses, written for every care setting, on any phone, in over 60 languages.' },
   providers:          { tag: 'Only care', headline: 'A CPD Certified training provider that only works in care', sub: 'Every course is written for care settings, certified by The CPD Certification Service, and taught in over 60 languages.' },
   cpd:                { tag: 'CPD Certified', headline: 'CPD Certified courses for health and social care staff', sub: 'Certified by The CPD Certification Service, with the CPD mark and CPD hours on every learner’s certificate.' },
-  'care-workers':     { tag: 'For care workers', headline: 'Online training courses for care workers', sub: 'Ten short, scenario based courses, about an hour each, with a CPD Certified certificate when you pass.' },
+  'care-workers':     { tag: 'For care workers', headline: 'Online training courses for care workers', sub: 'Ten short, scenario based courses, about an hour each, with a CPD Certified certificate for each learner.' },
   'moving-handling':  { tag: 'Moving and handling', headline: 'Moving and handling training for carers', sub: 'Safe moving and handling for care staff, with a practical checklist your manager signs off. Add the other nine courses and save with a bundle.', feature: 'moving-and-handling-of-people', bundle: 'refresher' },
   medication:         { tag: 'Medication', headline: 'Medication training for carers, online', sub: 'Safe administration, records and errors, with a practical checklist for observation and a CPD Certified certificate.', feature: 'medication-administration-and-competency', bundle: 'refresher' },
   'health-safety':    { tag: 'Health and safety', headline: 'Health and safety training for care workers', sub: 'Health and safety written for care settings, about an hour on any phone, with a CPD Certified certificate.', feature: 'general-health-and-safety-awareness', bundle: 'refresher' },
   'health-social-care': { tag: 'Short CPD courses', headline: 'Short CPD Certified courses in health and social care', sub: 'For people working in care: about an hour each, on any phone. These are CPD courses, not diplomas or qualifications.' },
   'health-care':      { tag: 'Interactive lessons', headline: 'Interactive online health care training for care staff', sub: 'Real care scenarios, quick checks after every lesson and a CPD Certified certificate at the end.' },
   'care-training':    { tag: 'Online care training', headline: 'Online care training, CPD Certified', sub: SUB },
-  carers:             { tag: 'For carers', headline: 'Online courses for carers, with a certificate for each', sub: 'About an hour each on any phone, in over 60 languages, with a CPD Certified certificate when you pass.' },
+  carers:             { tag: 'For carers', headline: 'Online courses for carers, with a certificate for each', sub: 'About an hour each on any phone, in over 60 languages, with a CPD Certified certificate for each learner.' },
   'new-starters':     { tag: 'New starters', headline: 'Everything a new carer needs: the Care Certificate and 9 more courses', sub: 'The Complete CPD bundle gives a new carer the Care Certificate and all nine mandatory courses, each CPD Certified.', chip: 'starters', bundle: 'complete' },
   requirements:       { tag: 'What staff need', headline: 'The mandatory training care workers need, in one place', sub: 'See which courses each role needs, then buy them one at a time or as a bundle. Every course is CPD Certified.' },
   bundles:            { tag: 'Bundles', headline: 'Two CPD bundles: every course for new starters, or the annual refreshers', sub: 'One price per learner for a whole year of mandatory training. You always get the best price, offer or bundle.' },
@@ -83,7 +86,7 @@ export const CPD_INTENTS: Record<string, CpdIntent> = {
 // One version per Google Ads ad group (?intent=<key>), and its sitelink versions (&focus=<facet>),
 // generated by the keyword tool (cpd-keyword-tool scripts/cpd_category_versions.py), which also
 // builds the Final URLs from these keys. Older keys above still work for any link that uses them.
-type Version = { tag: string; headline: string; sub: string; topic: string; who: string; feature?: string; chip?: Chip; bundle?: BundleKey }
+type Version = { tag: string; headline: string; sub: string; topic: string; who: string; feature?: string; chip?: Chip; bundle?: BundleKey; lead?: Lead }
 type Focus = { tag: string; headline: string; sub: string; chip?: Chip; bundle?: BundleKey }
 const AD_VERSIONS = (versionsFile as unknown as { versions: Record<string, Version>; focus: Record<string, Focus> })
 
@@ -91,7 +94,7 @@ export function intentFor(k?: string | null, focus?: string | null): CpdIntent {
   const v = AD_VERSIONS.versions[k ?? '']
   if (!v) return CPD_INTENTS[k ?? ''] ?? CPD_INTENTS['']
   const f = focus ? AD_VERSIONS.focus[focus] : undefined
-  if (!f) return { tag: v.tag, headline: v.headline, sub: v.sub, feature: v.feature, chip: v.chip, bundle: v.bundle, topic: v.topic }
+  if (!f) return { tag: v.tag, headline: v.headline, sub: v.sub, feature: v.feature, chip: v.chip, bundle: v.bundle, topic: v.topic, lead: v.lead }
   const fill = (t: string) => t.replace('{Topic}', v.topic.charAt(0).toUpperCase() + v.topic.slice(1)).replace('{topic}', v.topic).replace('{who}', v.who)
   return { tag: f.tag, headline: fill(f.headline), sub: fill(f.sub), feature: v.feature, chip: f.chip ?? v.chip, bundle: f.bundle ?? v.bundle, topic: v.topic }
 }

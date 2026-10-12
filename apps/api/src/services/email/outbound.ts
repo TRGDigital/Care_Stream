@@ -1974,6 +1974,8 @@ export async function sendChecklistEmail(opts: {
   pdf: Buffer; filename: string; link: string; unsubscribeUrl: string
   /** From the quiz variant: their three answers, shown as results above the checklist. */
   quiz?: { q: string; a: 'yes' | 'unsure' | 'no' }[]; requiredCount?: number
+  /** The offer held for them (the quiz ends with the offer): shown above the checklist. */
+  held?: { label: string; expiresOn: string; link: string }
 }): Promise<void> {
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) throw new Error('Email is not configured')
@@ -1989,6 +1991,9 @@ export async function sendChecklistEmail(opts: {
       <table style="width:100%;border-collapse:collapse;font-size:13px;margin:0 0 10px">${opts.quiz.map(x => `<tr><td style="padding:7px 0;border-bottom:1px solid #eee;color:#374151">${esc(x.q)}</td><td style="padding:7px 0 7px 10px;border-bottom:1px solid #eee;white-space:nowrap;font-weight:700;color:${mark[x.a][1]}">${mark[x.a][0]}</td></tr>`).join('')}</table>
       <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 14px">${covered === 3 ? 'A good start.' : `Your policy may be missing ${3 - covered} of these.`} An inspector expects ${opts.requiredCount ? `all ${opts.requiredCount} required elements` : 'every required element'} to be covered, not just these three. The checklist attached lists every one.</p>`
     })() : ''}
+    ${opts.held ? `<div style="margin:0 0 16px;padding:14px 16px;border-radius:10px;background:#1F1530;color:#D9CFE6;font-size:14px;line-height:1.6">
+      <strong style="color:#F28C38">Your ${esc(opts.held.label)} is held until ${esc(new Date(`${opts.held.expiresOn}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }))}.</strong>
+      Use <a href="${esc(opts.held.link)}" style="color:#FFFFFF;font-weight:700">your personal link</a> any time before then and it is applied in your basket.</div>` : ''}
     <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 14px">It is attached as a PDF. Use it to check any ${esc(opts.productName)} before you buy it, ${opts.funnel === 'training' ? 'whichever provider it comes from' : 'whether you buy one, write your own or have one written'}, so it stands up when CQC asks to see it.</p>
     <p style="margin:0 0 18px"><a href="${esc(opts.link)}" style="display:inline-block;background:#F28C38;color:#1F1530;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See how ours measures up</a></p>
     <p style="color:#374151;font-size:13px;line-height:1.6;margin:0 0 16px">Questions? Just reply to this email. CareStream is built by people who have worked in care homes.</p>

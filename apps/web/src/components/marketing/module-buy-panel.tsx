@@ -8,6 +8,7 @@ import { SHIP_NOW, sn, withVat } from '@/lib/ship-now'
 import { discountPctForQty } from '@/lib/training-commerce'
 import type { Offer } from '@/lib/offer-rules'
 import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
+import { HoldPrice } from './hold-price'
 
 // The buying half of a course page laid out like a shop product page: the live offer stated in
 // full beside the price ("applied automatically"), the old price struck through, the number of
@@ -85,6 +86,7 @@ export function ModuleBuyPanel({ slug, title, unitPence, duration, cpd = false, 
           <BuyNowLink slug={slug} qty={paid} className="add" label="Add to basket" position="hero_panel" price={money2(pay)} />
           <TrainingSaveButton slug={slug} title={title} />
         </div>
+        {offer && <HoldPrice price={money2(headline)} />}
         <TrainingAddTextLink slug={slug} title={title} unitPence={unitPence} />
         <ul className="sn-ticks" {...sn('duration-certificate', 'Duration, certificate, updated')}>
           {duration && <li><Tick />About {duration}</li>}
@@ -141,6 +143,7 @@ export function ModuleBuyPanel({ slug, title, unitPence, duration, cpd = false, 
         <BuyNowLink slug={slug} qty={paid} className="add" label={`Add to basket · ${money2(cost)}`} position="hero_panel" price={money2(cost)} />
         <TrainingSaveButton slug={slug} title={title} />
       </div>
+      {offer && <HoldPrice price={money2(headline)} />}
       <TrainingAddTextLink slug={slug} title={title} unitPence={unitPence} />
     </div>
   )

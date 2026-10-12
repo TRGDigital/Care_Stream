@@ -186,6 +186,8 @@ shopExtrasRouter.get('/basket-optout', async (req: Request, res: Response) => {
 // capture). Checks the address, then sends the checklist or holds the offer, and adds the
 // sign-up to the Funnel Insights list. An address that will not receive email is turned back
 // with any suggested correction, so the visitor can fix a typo.
+// The care settings the 'which setting' overlay offers (apps/web capture-overlay.tsx SETTINGS).
+const CAPTURE_SETTINGS = ['Residential care home', 'Nursing home', 'Home care', 'Supported living or other']
 const captureLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false,
   keyGenerator: (req) => req.ip ?? 'unknown',
@@ -206,7 +208,9 @@ shopExtrasRouter.post('/capture', captureLimiter, async (req: Request, res: Resp
     }
     const result = await captureSignup({
       email, name: t(b.name, 80), funnel: b.funnel === 'policies' ? 'policies' : 'training', product,
-      kind: b.kind === 'lockin' ? 'lockin' : b.kind === 'quiz' ? 'quiz' : 'checklist', campaign_id: t(b.campaign_id, 40), variant: t(b.variant, 2),
+      kind: ['lockin', 'quiz', 'apply', 'setting'].includes(b.kind) ? b.kind : 'checklist', campaign_id: t(b.campaign_id, 40), variant: t(b.variant, 2),
+      hold: b.hold === true, origin: ['overlay', 'tab', 'hold', 'exit'].includes(b.origin) ? b.origin : 'overlay',
+      setting: CAPTURE_SETTINGS.includes(b.setting) ? b.setting : undefined, picture: b.picture === 2 ? 2 : b.picture === 1 ? 1 : undefined,
       quiz: (Array.isArray(b.quiz) ? b.quiz : []).slice(0, 3).map((x: any) => ({ q: t(x?.q, 400), a: ['yes', 'unsure', 'no'].includes(x?.a) ? x.a : 'unsure' })).filter((x: any) => x.q),
       consent_text: t(b.consent_text, 400), page: t(b.page, 200), attribution: cleanAttribution(b.attribution), emailStatus: check.status,
     })

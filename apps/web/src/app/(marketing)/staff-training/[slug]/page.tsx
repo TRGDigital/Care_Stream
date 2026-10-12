@@ -32,7 +32,7 @@ import { careSetting } from '@/lib/care-setting'
 import { isV2 } from '@/lib/v2-rollout'
 import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 import { test1Assignment } from '@/lib/ab-test1'
-import { FAQ_V2, effectiveFrequency, faqV2Items, faqPlain } from '@/lib/faq-v2'
+import { FAQ_V2, effectiveFrequency, faqV2Items, faqPlain, hasInlineLesson } from '@/lib/faq-v2'
 
 export const revalidate = 60
 
@@ -266,7 +266,7 @@ export default async function TrainingModulePage(
               { slug, title: m.title, estMinutes: estimatedMinutes(m.group_key, m.duration_minutes), duration_minutes: m.duration_minutes,
                 lessons: sections.length, question_count: mq.question_count, pass_mark: mq.pass_mark, frequency: m.frequency,
                 requires_practical: m.requires_practical, cpd_accredited: m.cpd_accredited },
-              { unitPence, hasDemo: !!demo, hasActivity: !!demo?.activity },
+              { unitPence, hasLesson: hasInlineLesson(demo) },
             ).map(i => ({ question: i.q, answer: faqPlain(i) }))
           : faqs)} />
         <ModulePageV2

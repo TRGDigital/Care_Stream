@@ -10,7 +10,8 @@
 //     phone and desktop). The first three answers are open, the rest are an accordion. The old
 //     "About this course" set and the bottom "Frequently asked questions" block are not rendered.
 //   - every answer leads with the answer, stays short, and ends with ONE next step: "Try a real
-//     lesson" (opens the lesson preview) or "See your team price" (scrolls to the team prices).
+//     lesson" (jumps to the real lesson shown on the page, the hero gallery's "In their language"
+//     view, no overlay) or "See your team price" (jumps to the team prices).
 //   - the first answer matches the search that brought the visitor: ?intent= (the ad group or
 //     sitelink), else utm_term. Worked out on the server, so nothing jumps after load.
 //   - the facts Len confirmed on 12 Oct 2026 are applied across the course template:
@@ -90,7 +91,7 @@ export function faqSlug(text: string): string {
 /** The question set for one course page, in the default order: the three objections that stop a
  *  care manager buying first (what am I paying for, will CQC accept it, why this long), then the
  *  rest. Built from the module record only, so every course gets answers true for it. */
-export function faqV2Items(m: FaqV2Module, opts: { unitPence: number; hasDemo: boolean; hasActivity?: boolean }): FaqV2Item[] {
+export function faqV2Items(m: FaqV2Module, opts: { unitPence: number; hasLesson: boolean }): FaqV2Item[] {
   const cc = m.slug === 'care-certificate'
   const practical = !!m.requires_practical
   const cpd = !!m.cpd_accredited
@@ -101,8 +102,8 @@ export function faqV2Items(m: FaqV2Module, opts: { unitPence: number; hasDemo: b
   const renews = freq === 'annual' || freq === 'biennial' || freq === 'triennial'
   const lessonWord = cc ? `all ${m.lessons || 16} lessons, one for each standard` : m.lessons ? `all ${m.lessons} lessons` : 'the full course'
   const test = q ? `the ${q} question assessment` : 'the final assessment'
-  // Without a lesson preview on the page, "Try a real lesson" has nothing to open.
-  const tryOr = (c: FaqCta): FaqCta => (c === 'try' && !opts.hasDemo ? 'price' : c)
+  // Without a real lesson shown on the page, "Try a real lesson" has nothing to jump to.
+  const tryOr = (c: FaqCta): FaqCta => (c === 'try' && !opts.hasLesson ? 'price' : c)
   const cpdHours = cpd ? Math.round(((m.duration_minutes || m.estMinutes) / 60) * 10) / 10 : null
 
   const out: FaqV2Item[] = []
@@ -162,12 +163,12 @@ export function faqV2Items(m: FaqV2Module, opts: { unitPence: number; hasDemo: b
       + 'Your records and certificates stay in English, ready for your evidence. Try the language buttons in the real lesson.',
   })
 
-  if (opts.hasDemo) {
+  if (opts.hasLesson) {
     out.push({
       id: 'try', q: 'Can I try it before I buy?', cta: 'try',
       lead: 'Yes, right here on this page.',
-      body: `Open a real lesson, question${opts.hasActivity ? ' and activity' : ''} from this course, exactly as your staff will see it. `
-        + `It takes about ${opts.hasActivity ? 3 : 2} minutes. Get a question wrong and you will see the follow-up lesson your staff get.`,
+      body: 'See a real lesson and question from this course, exactly as your staff will see them, and switch them into another language with one tap. '
+        + 'There is nothing to sign up for. Staff get the full lesson, the questions and a follow-up lesson on anything they get wrong.',
     })
   }
 
@@ -234,57 +235,72 @@ export function faqV2Items(m: FaqV2Module, opts: { unitPence: number; hasDemo: b
 /** Ad group and sitelink keys (?intent=), most specific first. Each rule lists the answers to try,
  *  in order; the first one this course has wins (a refresher has no induction answer, so a new
  *  starter search on it falls through to the next). Keys come from course-cro.ts,
- *  course-cro-sitelinks.ts and course-cro-cpd.ts. */
-const INTENT_RULES: [RegExp, FaqId[]][] = [
+ *  course-cro-sitelinks.ts and course-cro-cpd.ts. A rule marked generic (plain course or training
+ *  words) does not outrank the search term itself: see firstFaqFor. */
+type Rule = [RegExp, FaqId[], boolean?]
+const INTENT_RULES: Rule[] = [
   [/(^|-)(languages?|lang|polish|hindi|urdu|romanian|overseas|sponsored|spons|esl|intl|international)(-|$)/, ['languages']],
   [/(^|-)(price|prices|pricing|cost|discount|licences|quote|no-subscription|buy-online)(-|$)/, ['price']],
   [/(^|-)(invoice)(-|$)/, ['invoice', 'price']],
   [/(^|-)(new-starters|new-staff|new-workers|induction|ind|onboarding|twelve-weeks|first-week|first-weeks|existing-staff)(-|$)/, ['induction', 'pay']],
   // "Get the Care Certificate online": what the online part is, and what the employer still does.
   [/(online|elearning|onl).*(cert|certificate)|(cert|certificate).*online/, ['pay']],
-  [/(^|-)(compare|provider|reviews|best|equivalent|observation|competencies|assessor-guide|responsibilities)(-|$)/, ['pay']],
+  [/(^|-)(compare|provider|providers|reviews|best|equivalent|observation|competencies|assessor-guide|responsibilities|hca|nvq|level|diploma|qualification)(-|$)/, ['pay']],
   [/(^|-)(refresher|reminders|renew|annual)(-|$)/, ['renew', 'time']],
   [/(^|-)(cqc|evidence|compliance|reg18|mandatory|mand|inspection|recognised|accredited|acc|cpd|certificate|sample-certificate|records?|cert)(-|$)/, ['cqc']],
   [/(^|-)(shifts|between-visits|mod-time|accelerated)(-|$)/, ['time']],
-  [/(^|-)(online|elearning|el|onl|phone|dashboard|course|courses|modules|training)(-|$)/, ['phone']],
+  [/(^|-)(online|elearning|el|onl|phone|mobile|app|dashboard)(-|$)/, ['phone']],
   [/(^|-)(try)(-|$)/, ['try']],
+  [/(^|-)(course|courses|modules|training|standards)(-|$)/, ['pay'], true],
 ]
 
+/** Ad group keys that name no topic of their own (ag-core-3, ag-courses, core-what...). */
+const GENERIC_INTENT = /^(ag-(core|training|course|courses|standards|modules)(-\d+)?|core-what)$/
+
+const ONLINE_CERT = /\b(online|e-?learning)\b.*\bcertificate\b|\bcertificate\b.*\b(online|e-?learning)\b/
+
 /** The same, for the search term itself (utm_term), in the words people type. */
-const TERM_RULES: [RegExp, FaqId[]][] = [
+const TERM_RULES: Rule[] = [
   [/\b(language|languages|polish|hindi|urdu|romanian|tagalog|malayalam|nepali|translated|overseas|international|esl)\b/, ['languages']],
   [/\b(price|prices|cost|costs|cheap|cheapest|discount|how much|£|bulk)\b/, ['price']],
   [/\b(invoice|purchase order)\b/, ['invoice', 'price']],
   [/\b(induction|new starters?|new staff|new carers?)\b/, ['induction', 'pay']],
-  [/\b(vs|versus|compare|comparison|best|review|reviews)\b/, ['pay']],
+  [/\b(vs|versus|compare|comparison|best|review|reviews|provider|providers)\b/, ['pay']],
   [/\b(refresher|renew|renewal|annual|yearly|every year|expire|expires)\b/, ['renew', 'time']],
-  [/\b(cqc|mandatory|evidence|requirement|required|inspection|inspector|accredited|cpd|certified|recognised)\b/, ['cqc']],
-  [/\b(how long|hours|minutes|quick|fast)\b/, ['time']],
-  [/\b(online|e-?learning)\b.*\bcertificate\b|\bcertificate\b.*\b(online|e-?learning)\b/, ['pay']],
+  // Qualification words: it is training an employer buys, not a qualification.
+  [/\b(nvq|level 2|level 3|diploma|qualification|qualifications)\b/, ['pay']],
+  [/\b(cqc|mandatory|evidence|requirement|required|inspection|inspector|accredited|cpd|recognised)\b/, ['cqc']],
+  [ONLINE_CERT, ['pay']],
   [/\b(online|e-?learning|phone|mobile|app)\b/, ['phone']],
+  [/\b(hca|health care assistant|healthcare assistant|care assistant|carer certificate|certificate in|standards)\b/, ['pay']],
+  [/\b(how long|hours|minutes|quick|fast)\b/, ['time']],
   [/\b(free|trial|demo|sample)\b/, ['try']],
+  // Plain "care worker courses", "care certificate uk": what the course is and what you get.
+  [/\b(course|courses|training|certificate|certification|certified)\b/, ['pay'], true],
 ]
 
-function pick(rules: [RegExp, FaqId[]][], text: string, have: Set<FaqId>): FaqId | null {
-  for (const [re, ids] of rules) {
+function pick(rules: Rule[], text: string, have: Set<FaqId>): { id: FaqId; generic: boolean } | null {
+  for (const [re, ids, generic] of rules) {
     if (!re.test(text)) continue
     const id = ids.find(i => have.has(i))
-    if (id) return id
+    if (id) return { id, generic: !!generic }
   }
   return null
 }
 
-/** The answer to open first for this visit, or null for the default order. */
+/** The answer to open first for this visit, or null for the default order. A specific ?intent=
+ *  wins. A generic one (no rule, a plain course or training rule, or an ad group key that names no
+ *  topic) lets the search term decide first, and is used only when the term gives nothing. */
 export function firstFaqFor(items: FaqV2Item[], intent?: string, utmTerm?: string): FaqId | null {
   const have = new Set(items.map(i => i.id))
   const k = (intent ?? '').toLowerCase().trim()
-  if (k) {
-    const hit = pick(INTENT_RULES, k, have)
-    if (hit) return hit
-  }
   const t = (utmTerm ?? '').toLowerCase().replace(/\+/g, ' ').trim()
-  if (t) return pick(TERM_RULES, t, have)
-  return null
+  const fromIntent = k ? pick(INTENT_RULES, k, have) : null
+  // "care certificate online" on an online ad group: the online part is what they are paying for.
+  if (fromIntent?.id === 'phone' && have.has('pay') && ONLINE_CERT.test(t)) return 'pay'
+  if (fromIntent && !fromIntent.generic && !GENERIC_INTENT.test(k)) return fromIntent.id
+  const fromTerm = t ? pick(TERM_RULES, t, have) : null
+  return fromTerm?.id ?? fromIntent?.id ?? null
 }
 
 /** The items with the matched answer first; the rest keep the default order. */
@@ -292,6 +308,12 @@ export function orderFaqs(items: FaqV2Item[], first: FaqId | null): FaqV2Item[] 
   if (!first) return items
   const hit = items.find(i => i.id === first)
   return hit ? [hit, ...items.filter(i => i !== hit)] : items
+}
+
+/** A real lesson is shown on the page (the hero gallery's "In their language" view): the demo
+ *  lesson and at least one saved translation the page shows (Polish, Hindi). */
+export function hasInlineLesson(demo: { lesson?: unknown; translations?: Record<string, unknown> | null } | null | undefined): boolean {
+  return !!demo?.lesson && Object.keys(demo.translations ?? {}).some(c => c === 'pol' || c === 'hin')
 }
 
 /** Plain text of an answer, for the FAQPage structured data. */

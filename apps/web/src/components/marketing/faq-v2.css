@@ -25,10 +25,10 @@
 .fq2-cta-try{border-color:#7B3FBF;color:#5B2C93}
 .fq2-cta-try:hover{background:#7B3FBF;color:#fff}
 
-/* "See your team price": the team prices light up for a moment once scrolled to. */
-.mpe-team.fq2-flash{animation:fq2-flash 1.6s ease-out 1}
+/* "See your team price" and "Try a real lesson": the block lights up for a moment once scrolled to. */
+.mpe-team.fq2-flash,#real-lesson.fq2-flash{animation:fq2-flash 1.6s ease-out 1;border-radius:16px}
 @keyframes fq2-flash{0%{box-shadow:0 0 0 3px #F28C38}100%{box-shadow:0 0 0 0 rgba(242,140,56,0)}}
-@media (prefers-reduced-motion:reduce){ .mpe-team.fq2-flash{animation:none;box-shadow:0 0 0 3px #F28C38} }
+@media (prefers-reduced-motion:reduce){ .mpe-team.fq2-flash,#real-lesson.fq2-flash{animation:none;box-shadow:0 0 0 3px #F28C38} }
 
 /* Phones: directly under the buy box and the payment logos, in both Test 1 variants. */
 @media(max-width:760px){

@@ -4,31 +4,36 @@ import { useOffers, licenceOffer, endsText, offerEmoji } from '@/lib/offers'
 import { CTA_KEY, CTA_LABEL, type FaqCta } from '@/lib/faq-v2'
 
 // The two next steps an FAQ v2 answer ends with (lib/faq-v2.ts). Real links, so they work before
-// the page's JavaScript has loaded: #try-lesson and #team-price. With JavaScript, "Try a real
-// lesson" opens the lesson preview over the page (TryBeforeYouBuy listens for cs-try-demo) and
-// "See your team price" scrolls the team prices into view and highlights them for a moment.
+// the page's JavaScript has loaded: #real-lesson and #team-price. With JavaScript, each JUMPS to
+// its block (no overlay, no smooth scroll: the page sets scroll-behavior:smooth, which some phones
+// drop part way) and highlights it for a moment. "Try a real lesson" first switches the hero
+// gallery to its real lesson view (HeroGallery listens for cs-show-lesson). The server only uses
+// "Try a real lesson" where that view exists; otherwise the answer ends with the team price.
+
+function jumpTo(el: HTMLElement) {
+  window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 90, behavior: 'instant' as ScrollBehavior })
+  el.classList.remove('fq2-flash')
+  void el.offsetWidth
+  el.classList.add('fq2-flash')
+}
 
 export function FaqCtaLink({ cta, qSlug }: { cta: FaqCta; qSlug: string }) {
+  const id = cta === 'try' ? 'real-lesson' : 'team-price'
   return (
-    <a className={`fq2-cta fq2-cta-${cta}`} href={cta === 'try' ? '#try-lesson' : '#team-price'}
+    <a className={`fq2-cta fq2-cta-${cta}`} href={`#${id}`}
        data-fi={`faq-cta:${CTA_KEY[cta]}:${qSlug}`}
        onClick={e => {
          if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
-         if (cta === 'try') {
-           if (!document.querySelector('.hg-try')) return // no preview on this page: follow the link
-           e.preventDefault()
-           window.dispatchEvent(new Event('cs-try-demo'))
-           return
-         }
-         const el = document.getElementById('team-price')
+         const el = document.getElementById(id)
          if (!el) return
          e.preventDefault()
-         // A jump, not a smooth scroll: the page sets scroll-behavior:smooth, which some phones
-         // drop part way when the page is busy. Clear of the sticky header.
-         window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 90, behavior: 'instant' as ScrollBehavior })
-         el.classList.remove('fq2-flash')
-         void el.offsetWidth
-         el.classList.add('fq2-flash')
+         if (cta === 'try') {
+           window.dispatchEvent(new Event('cs-show-lesson'))
+           // after the gallery has switched view, so the jump lands on the lesson's real height
+           requestAnimationFrame(() => requestAnimationFrame(() => jumpTo(el)))
+           return
+         }
+         jumpTo(el)
        }}>
       {CTA_LABEL[cta]} <span aria-hidden="true">→</span>
     </a>

@@ -24,7 +24,7 @@ import { ProductFaqs, SampleCertificate, trainingFaqs, type FaqModule } from './
 import { Test1Assign, Test1OfferLine, Test1StickyBar } from './test1-mobile'
 import type { Test1Assignment } from '@/lib/ab-test1'
 import { SHIP_NOW, sn } from '@/lib/ship-now'
-import { FAQ_V2, effectiveFrequency, faqV2Items, firstFaqFor, orderFaqs } from '@/lib/faq-v2'
+import { FAQ_V2, effectiveFrequency, faqV2Items, firstFaqFor, hasInlineLesson, orderFaqs } from '@/lib/faq-v2'
 import { FaqV2 } from './faq-v2'
 import './module-page-v2.css'
 
@@ -310,7 +310,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
       { slug: m.slug, title: m.title, estMinutes: est, duration_minutes: m.duration_minutes, lessons: sections.length,
         question_count: m.question_count, pass_mark: m.pass_mark, frequency: m.frequency,
         requires_practical: m.requires_practical, cpd_accredited: m.cpd_accredited },
-      { unitPence, hasDemo: !!demo, hasActivity: !!demo?.activity },
+      { unitPence, hasLesson: hasInlineLesson(demo) },
     )
     return orderFaqs(items, firstFaqFor(items, intentKey, utmTerm))
   })() : null

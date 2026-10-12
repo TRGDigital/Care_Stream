@@ -1,6 +1,7 @@
 import { TrainingCertificate } from '@/components/training-certificate'
 import { careSetting } from '@/lib/care-setting'
-import { durationText } from '@/lib/training-commerce'
+import { durationText, refreshWord } from '@/lib/training-commerce'
+import { FAQ_V2 } from '@/lib/faq-v2'
 import './product-extras.css'
 
 // Under the guarantee box in a product page's buy column: questions about what the buyer is
@@ -106,6 +107,13 @@ export function SampleCertificate({ m }: { m: FaqModule }) {
   return (
     <figure className="pxcert">
       <figcaption><b>What your staff receive</b><span>Sample certificate</span></figcaption>
+      {/* FAQ v2: when it is issued, whose it is and when it renews (Len, 12 Oct 2026). */}
+      {FAQ_V2 && (
+        <p className="pxcert-note">
+          {m.requires_practical ? 'Issued once you sign off the observation.' : 'Issued as soon as they pass.'}
+          {' '}In their name, so they keep it.{m.frequency && m.frequency !== 'once' ? ` Renews ${refreshWord(m.frequency)}.` : ''}
+        </p>
+      )}
       <div className="pxcert-frame">
         <TrainingCertificate
           staffName="Sam Taylor"
@@ -115,6 +123,9 @@ export function SampleCertificate({ m }: { m: FaqModule }) {
           completedAt={done.toISOString()}
           expiresAt={m.frequency === 'once' ? null : renews.toISOString()}
           requiresPractical={m.requires_practical}
+          practicalNote={FAQ_V2 && m.requires_practical
+            ? 'Issued once the employer has signed off the observed competency assessment for this topic.'
+            : undefined}
           cpdAccredited={!!m.cpd_accredited}
           cpdHours={m.cpd_accredited ? hours : null}
           tier="cpd"

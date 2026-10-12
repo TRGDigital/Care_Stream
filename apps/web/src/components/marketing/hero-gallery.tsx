@@ -80,8 +80,11 @@ export function TryBeforeYouBuy({ slug, withActivity = false, children }: { slug
   // Add to basket inside the demo opens the cart drawer: close this first so the drawer shows.
   useEffect(() => {
     const closeForCart = () => setOpen(false)
+    // FAQ v2: an answer's "Try a real lesson" link opens this same preview (faq-v2-client.tsx).
+    const openFromFaq = () => setOpen(true)
     window.addEventListener('cs-buy-drawer', closeForCart)
-    return () => window.removeEventListener('cs-buy-drawer', closeForCart)
+    window.addEventListener('cs-try-demo', openFromFaq)
+    return () => { window.removeEventListener('cs-buy-drawer', closeForCart); window.removeEventListener('cs-try-demo', openFromFaq) }
   }, [])
   useEffect(() => {
     if (!open) return
@@ -93,7 +96,7 @@ export function TryBeforeYouBuy({ slug, withActivity = false, children }: { slug
   }, [open])
   return (
     <>
-      <button type="button" className="hg-try" data-fi="try-demo"
+      <button type="button" className="hg-try" id="try-lesson" data-fi="try-demo"
               onClick={() => { setOpen(true); fi('cta', { funnel: 'training', option: slug, label: 'try-before-you-buy' }); reportMicro('try_demo', slug) }}>
         <span aria-hidden="true">▶</span> Try before you buy <small>{withActivity ? 'a real lesson, question and activity, 3 minutes' : 'a real lesson and question, 2 minutes'}</small>
       </button>

@@ -13,7 +13,7 @@ import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 // full beside the price ("applied automatically"), the old price struck through, the number of
 // licences the buyer RECEIVES (2 for 1 shows 2), Buy now and the basket. Prices are worked out
 // with the same rules checkout uses; Buy now carries the paid count to the buy page.
-export function ModuleBuyPanel({ slug, title, unitPence, duration, cpd = false, fresh, sfc, offerLine = true }: {
+export function ModuleBuyPanel({ slug, title, unitPence, duration, cpd = false, fresh, sfc, offerLine = true, certTick = 'Instant certificate' }: {
   slug: string; title: string; unitPence: number
   /** Ship now (lib/ship-now.ts): the course length ("1 hour 30 minutes"), shown beside the price. */
   duration?: string
@@ -25,6 +25,8 @@ export function ModuleBuyPanel({ slug, title, unitPence, duration, cpd = false, 
   sfc?: string
   /** Ship now: the panel's own offer line. Off in Test 1 B, which states the offer higher up. */
   offerLine?: boolean
+  /** FAQ v2 (lib/faq-v2.ts): the certificate tick. Never "instant" on a course with an observation. */
+  certTick?: string
 }) {
   const offers = useOffers()
   const [paid, setPaid] = useState(1)
@@ -86,7 +88,7 @@ export function ModuleBuyPanel({ slug, title, unitPence, duration, cpd = false, 
         <TrainingAddTextLink slug={slug} title={title} unitPence={unitPence} />
         <ul className="sn-ticks" {...sn('duration-certificate', 'Duration, certificate, updated')}>
           {duration && <li><Tick />About {duration}</li>}
-          <li><Tick />Instant certificate</li>
+          <li><Tick />{certTick}</li>
           {fresh && <li><Tick />{fresh}</li>}
         </ul>
         {cpd && (

@@ -16,6 +16,8 @@
 .pxcert figcaption span,.pxdoc figcaption span{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
   padding:3px 9px;border-radius:999px;background:#FFF6EE;color:#B4581A;border:1px solid #F5C9A3}
 /* The real certificate component, shown smaller: it is laid out for a full page. */
+/* FAQ v2: when the certificate is issued, under the caption. */
+.pxcert-note{margin:-2px 0 10px;font-size:.8rem;line-height:1.45;color:var(--ink-2,#3A3245)}
 .pxcert-frame{border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(23,18,31,.10)}
 .pxcert-frame .cert-sheet{zoom:.82}
 .pxcert-frame img{max-width:none}

@@ -1,0 +1,37 @@
+/* FAQ v2 (lib/faq-v2.ts): one question set straight under the buy box. Builds on .pxfaq
+   (product-extras.css). Static: no transitions or animation apart from the brief highlight on
+   the team prices after "See your team price" is tapped. */
+.pxfaq.fq2{margin-top:16px}
+.pxfaq.fq2 h3{margin:0 0 10px}
+
+/* The first three: open, answer first, as blocks. */
+.fq2-top{display:grid;gap:10px}
+.fq2-top details{border:1px solid var(--line,#E9E5EF);border-radius:12px;background:#fff;padding:0 14px}
+.fq2-top details:last-child{border-bottom:1px solid var(--line,#E9E5EF)}
+.fq2-top summary{padding:12px 0 6px;font-size:.95rem}
+
+/* The rest: the accordion. */
+.fq2-more{margin-top:14px}
+.fq2-more-h{margin:0 0 4px;font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted,#6B6577)}
+
+.pxfaq.fq2 .fq2-a{padding:0 2px 12px}
+.pxfaq.fq2 .fq2-a p{margin:0 0 8px;padding:0;font-size:.88rem;line-height:1.6;color:var(--ink-2,#3A3245)}
+.pxfaq.fq2 .fq2-a p b{color:var(--ink,#17121F)}
+.pxfaq.fq2 .fq2-offer{font-size:.82rem;padding:7px 10px;border-radius:9px;background:#FFF4E8;border:1px solid #F5C79A}
+.pxfaq.fq2 .fq2-offer small{color:var(--muted,#6B6577)}
+.fq2-cta{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:8px 14px;border-radius:10px;
+  font-size:.86rem;font-weight:700;text-decoration:none;border:1.5px solid var(--ink,#17121F);color:var(--ink,#17121F);background:#fff}
+.fq2-cta:hover{background:var(--ink,#17121F);color:#fff}
+.fq2-cta-try{border-color:#7B3FBF;color:#5B2C93}
+.fq2-cta-try:hover{background:#7B3FBF;color:#fff}
+
+/* "See your team price": the team prices light up for a moment once scrolled to. */
+.mpe-team.fq2-flash{animation:fq2-flash 1.6s ease-out 1}
+@keyframes fq2-flash{0%{box-shadow:0 0 0 3px #F28C38}100%{box-shadow:0 0 0 0 rgba(242,140,56,0)}}
+@media (prefers-reduced-motion:reduce){ .mpe-team.fq2-flash{animation:none;box-shadow:0 0 0 3px #F28C38} }
+
+/* Phones: directly under the buy box and the payment logos, in both Test 1 variants. */
+@media(max-width:760px){
+  .mpage-v2 .mpe-info > .fq2{order:5}
+  .mpage-v2.t1b .mpe-info > .fq2{order:6}
+}

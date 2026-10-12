@@ -578,7 +578,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
               </p>
             </div>
             <div className="mpe-eyerow">
-              <span className="mpe-eyebrow" {...lf('eyebrow', 'eyebrow, no CQC wording')}>{m.cpd_accredited ? 'CPD Certified' : 'For UK care settings'}</span>
+              <span className="mpe-eyebrow" {...lf('eyebrow', 'eyebrow')}>{m.cpd_accredited ? 'CPD Certified' : 'For UK care settings'}</span>
               {m.cpd_accredited && (
                 // The CPD Certified trademark: used unaltered, no border or added text, and
                 // only on courses the CPD Certification Service has certified (cpd_accredited).
@@ -653,7 +653,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
             {!it?.pricingFirst && teamPricing()}
 
             <ul className="mpe-trust mpe-trust-list">
-              <li {...lf('trust-line', 'no CQC aligned wording')}><Tick />{m.slug === 'care-certificate' ? 'Mapped to the 16 Care Certificate standards' : 'Written for UK care settings'}</li>
+              <li {...lf('trust-line', 'trust line wording')}><Tick />{m.slug === 'care-certificate' ? 'Mapped to the 16 Care Certificate standards' : 'Written for UK care settings'}</li>
               <li><Tick />Completed in the hub in over 60 languages</li>
               <li><Tick />A certificate for every staff member, for your CQC evidence</li>
               <li><Tick />A wrong answer triggers a follow-up lesson, so gaps are closed</li>

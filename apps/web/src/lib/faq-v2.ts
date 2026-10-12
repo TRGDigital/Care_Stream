@@ -55,6 +55,7 @@ export const CTA_KEY: Record<FaqCta, string> = { try: 'try-lesson', price: 'team
 export type FaqId =
   | 'pay' | 'cqc' | 'time' | 'price' | 'languages' | 'try' | 'phone' | 'induction'
   | 'renew' | 'cert' | 'invoice' | 'refund'
+  | 'fail' | 'leaver' | 'noemail' | 'translate' | 'funding'
 
 export interface FaqV2Item {
   id: FaqId
@@ -308,6 +309,48 @@ export function orderFaqs(items: FaqV2Item[], first: FaqId | null): FaqV2Item[] 
   if (!first) return items
   const hit = items.find(i => i.id === first)
   return hit ? [hit, ...items.filter(i => i !== hit)] : items
+}
+
+/** The "More questions" block at the bottom of every course page: the same five questions on
+ *  every course, answered only from what Len confirmed on 12 Oct 2026 (retakes allowed, a licence
+ *  can be moved to another member of staff, the manager can set up staff with no email address,
+ *  translations are a mix of machine and human checking, funding is a question for Skills for
+ *  Care). Nothing more: no retake counts or costs, no funding eligibility. */
+export function faqV2BottomItems(m: FaqV2Module, opts: { hasLesson: boolean }): FaqV2Item[] {
+  const pass = m.pass_mark ?? 80
+  const tryOr = (c: FaqCta): FaqCta => (c === 'try' && !opts.hasLesson ? 'price' : c)
+  return [
+    {
+      id: 'fail', q: 'What if someone fails the assessment?', cta: tryOr('try'),
+      lead: 'They can retake it.',
+      body: 'Along the way, any wrong answer brings a short follow-up lesson on that point and a fresh question, so the gap is closed, not just scored. '
+        + `The pass mark is ${pass}%, and you see every score from your dashboard.`,
+    },
+    {
+      id: 'leaver', q: 'What if someone leaves before finishing?', cta: 'price',
+      lead: 'You can move their licence to another member of staff.',
+      body: 'So a licence is not wasted when someone leaves part way through. '
+        + 'You do it from your dashboard, and the new person takes the course with their own record and their own certificate.',
+    },
+    {
+      id: 'noemail', q: 'What if a member of staff has no email address?', cta: 'price',
+      lead: 'You can set them up yourself.',
+      body: 'As their manager, you add them to CareStream, so carers who do not use email can still take the course on a phone, tablet or computer. '
+        + 'You still see their progress and their certificate in your dashboard.',
+    },
+    {
+      id: 'translate', q: 'Are the translations done by a person or a machine?', cta: tryOr('try'),
+      lead: 'A mix of both.',
+      body: 'Lessons are translated with a mix of machine translation and checks by people. '
+        + `Staff can switch any ${m.slug === 'care-certificate' ? 'standard' : 'lesson'} or question between their language and English with one tap, and your records stay in English.`,
+    },
+    {
+      id: 'funding', q: 'Can we get funding for this training?', cta: 'price',
+      lead: 'Check with Skills for Care.',
+      body: 'They can tell you about the Learning and Development Support Scheme, which can help with some training costs. '
+        + 'Ask them whether this course can be claimed before you buy, because we cannot promise that it can.',
+    },
+  ]
 }
 
 /** A real lesson is shown on the page (the hero gallery's "In their language" view): the demo

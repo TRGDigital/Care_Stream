@@ -35,3 +35,8 @@
   .mpage-v2 .mpe-info > .fq2{order:5}
   .mpage-v2.t1b .mpe-info > .fq2{order:6}
 }
+
+/* The "More questions" block at the bottom (.mfaq keeps the page's own accordion style). */
+.fq2-bottom .ans p{margin:0 0 10px}
+.fq2-bottom .ans p b{color:var(--ink,#17121F)}
+.fq2-bottom .fq2-cta{margin-bottom:4px}

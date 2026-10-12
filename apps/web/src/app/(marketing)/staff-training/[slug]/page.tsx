@@ -32,7 +32,7 @@ import { careSetting } from '@/lib/care-setting'
 import { isV2 } from '@/lib/v2-rollout'
 import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 import { test1Assignment } from '@/lib/ab-test1'
-import { FAQ_V2, effectiveFrequency, faqV2Items, faqPlain, hasInlineLesson } from '@/lib/faq-v2'
+import { FAQ_V2, effectiveFrequency, faqV2BottomItems, faqV2Items, faqPlain, hasInlineLesson } from '@/lib/faq-v2'
 
 export const revalidate = 60
 
@@ -257,17 +257,18 @@ export default async function TrainingModulePage(
   if (await isV2('modules', sp)) {
     // The record carries these for every course; ModuleDetail does not declare them.
     const mq = m as { question_count?: number | null; pass_mark?: number | null }
+    const v2mod = {
+      slug, title: m.title, estMinutes: estimatedMinutes(m.group_key, m.duration_minutes), duration_minutes: m.duration_minutes,
+      lessons: sections.length, question_count: mq.question_count, pass_mark: mq.pass_mark, frequency: m.frequency,
+      requires_practical: m.requires_practical, cpd_accredited: m.cpd_accredited,
+    }
     return (
       <>
         <JsonLd data={courseJson} />
         {/* FAQ v2 (lib/faq-v2.ts): the structured data carries the questions the page shows. */}
         <JsonLd data={faqPageSchema(FAQ_V2
-          ? faqV2Items(
-              { slug, title: m.title, estMinutes: estimatedMinutes(m.group_key, m.duration_minutes), duration_minutes: m.duration_minutes,
-                lessons: sections.length, question_count: mq.question_count, pass_mark: mq.pass_mark, frequency: m.frequency,
-                requires_practical: m.requires_practical, cpd_accredited: m.cpd_accredited },
-              { unitPence, hasLesson: hasInlineLesson(demo) },
-            ).map(i => ({ question: i.q, answer: faqPlain(i) }))
+          ? [...faqV2Items(v2mod, { unitPence, hasLesson: hasInlineLesson(demo) }),
+             ...faqV2BottomItems(v2mod, { hasLesson: hasInlineLesson(demo) })].map(i => ({ question: i.q, answer: faqPlain(i) }))
           : faqs)} />
         <ModulePageV2
           module={{ ...m, slug }}

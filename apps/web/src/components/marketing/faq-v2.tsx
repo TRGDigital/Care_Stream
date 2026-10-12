@@ -28,10 +28,37 @@ export function FaqV2({ items, slug, open = 3 }: { items: FaqV2Item[]; slug: str
       <div className="fq2-top">{top.map(x => item(x, true))}</div>
       {rest.length > 0 && (
         <div className="fq2-more">
-          <p className="fq2-more-h">More questions</p>
+          <p className="fq2-more-h">Other questions</p>
           {rest.map(x => item(x, false))}
         </div>
       )}
     </div>
+  )
+}
+
+const Plus = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
+       strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+)
+
+/** "More questions" at the bottom of every course page (faqV2BottomItems): the page's own .mfaq
+ *  accordion, so the tracker records faq-q:bottom:<question slug>. */
+export function FaqV2Bottom({ items }: { items: FaqV2Item[] }) {
+  return (
+    <section className="msec tint">
+      <div className="mwrap msec-in mnarrow mfaq fq2-bottom">
+        <span className="mlabel">Questions</span>
+        <h2>More questions.</h2>
+        {items.map(x => (
+          <details key={x.id} data-faq={x.id}>
+            <summary>{x.q}<Plus /></summary>
+            <div className="ans">
+              <p><b>{x.lead}</b> {x.body}</p>
+              <FaqCtaLink cta={x.cta} qSlug={faqSlug(x.q)} />
+            </div>
+          </details>
+        ))}
+      </div>
+    </section>
   )
 }

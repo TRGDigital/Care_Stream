@@ -24,8 +24,8 @@ import { ProductFaqs, SampleCertificate, trainingFaqs, type FaqModule } from './
 import { Test1Assign, Test1OfferLine, Test1StickyBar } from './test1-mobile'
 import type { Test1Assignment } from '@/lib/ab-test1'
 import { SHIP_NOW, sn } from '@/lib/ship-now'
-import { FAQ_V2, effectiveFrequency, faqV2Items, firstFaqFor, hasInlineLesson, orderFaqs } from '@/lib/faq-v2'
-import { FaqV2 } from './faq-v2'
+import { FAQ_V2, effectiveFrequency, faqV2BottomItems, faqV2Items, firstFaqFor, hasInlineLesson, orderFaqs } from '@/lib/faq-v2'
+import { FaqV2, FaqV2Bottom } from './faq-v2'
 import './module-page-v2.css'
 
 // The rebuilt /staff-training/<slug> template. Renders the SAME module record and the same demo
@@ -305,13 +305,13 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
   }
   // One question set, under the buy box, opening on the answer the visitor searched for. Worked
   // out here on the server, so the page does not move once it has loaded.
+  const faqV2Mod = {
+    slug: m.slug, title: m.title, estMinutes: est, duration_minutes: m.duration_minutes, lessons: sections.length,
+    question_count: m.question_count, pass_mark: m.pass_mark, frequency: m.frequency,
+    requires_practical: m.requires_practical, cpd_accredited: m.cpd_accredited,
+  }
   const faqV2 = FAQ_V2 ? (() => {
-    const items = faqV2Items(
-      { slug: m.slug, title: m.title, estMinutes: est, duration_minutes: m.duration_minutes, lessons: sections.length,
-        question_count: m.question_count, pass_mark: m.pass_mark, frequency: m.frequency,
-        requires_practical: m.requires_practical, cpd_accredited: m.cpd_accredited },
-      { unitPence, hasLesson: hasInlineLesson(demo) },
-    )
+    const items = faqV2Items(faqV2Mod, { unitPence, hasLesson: hasInlineLesson(demo) })
     return orderFaqs(items, firstFaqFor(items, intentKey, utmTerm))
   })() : null
 
@@ -947,7 +947,9 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
         </div>
       </section>
 
-      {/* FAQ v2 replaces this block with the one set under the buy box. */}
+      {/* FAQ v2: the main set sits under the buy box; this block becomes the same five "More
+          questions" on every course page. */}
+      {FAQ_V2 && <FaqV2Bottom items={faqV2BottomItems(faqV2Mod, { hasLesson: hasInlineLesson(demo) })} />}
       {!FAQ_V2 && <section className="msec tint">
         <div className="mwrap msec-in mnarrow mfaq">
           <span className="mlabel">Questions</span>

@@ -23,7 +23,9 @@ export function FaqCtaLink({ cta, qSlug }: { cta: FaqCta; qSlug: string }) {
          const el = document.getElementById('team-price')
          if (!el) return
          e.preventDefault()
-         el.scrollIntoView({ block: 'center' })
+         // A jump, not a smooth scroll: the page sets scroll-behavior:smooth, which some phones
+         // drop part way when the page is busy. Clear of the sticky header.
+         window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 90, behavior: 'instant' as ScrollBehavior })
          el.classList.remove('fq2-flash')
          void el.offsetWidth
          el.classList.add('fq2-flash')

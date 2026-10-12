@@ -7,6 +7,9 @@
   letter-spacing:0;text-transform:none;white-space:normal}
 .lfdemo [data-lf] [data-lf]::before{display:none}
 .lfdemo details[data-lf] > summary{background:#fff59d}
+/* Flex rows: the label sits above them instead of taking a column. */
+.lfdemo .lf-cpdproof{position:relative;padding-top:24px}
+.lfdemo .lf-cpdproof::before{position:absolute;top:4px;left:10px;margin:0;white-space:nowrap}
 
 /* ── Care Certificate course page: the new first screen blocks. */
 .lf-whatis{margin:4px 0 12px;padding:12px 14px;border-radius:12px;background:#F3ECFA;border:1px solid #DCCBEF}

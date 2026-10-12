@@ -24,6 +24,8 @@ import { ProductFaqs, SampleCertificate, trainingFaqs, type FaqModule } from './
 import { Test1Assign, Test1OfferLine, Test1StickyBar } from './test1-mobile'
 import type { Test1Assignment } from '@/lib/ab-test1'
 import { SHIP_NOW, sn } from '@/lib/ship-now'
+import { FAQ_V2, effectiveFrequency, faqV2BottomItems, faqV2Items, firstFaqFor, hasInlineLesson, orderFaqs } from '@/lib/faq-v2'
+import { FaqV2, FaqV2Bottom } from './faq-v2'
 import './module-page-v2.css'
 
 // The rebuilt /staff-training/<slug> template. Renders the SAME module record and the same demo
@@ -263,7 +265,7 @@ function SignOffBox({ m, lessons }: { m: TrainingModule; lessons: number }) {
   )
 }
 
-export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, intent: intentKey, test1 }: {
+export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, intent: intentKey, utmTerm, test1 }: {
   module: TrainingModule
   demo: TrainingDemoData | null
   related: LibraryTopic[]
@@ -271,6 +273,8 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
   apiUrl: string
   /** ?intent= on the ad group's Final URL: the version of the top of the page for that ad group. */
   intent?: string
+  /** FAQ v2 (lib/faq-v2.ts): the search term, when there is no ?intent= to choose the first answer. */
+  utmTerm?: string
   /** Test 1, headline first on mobile (lib/ab-test1.ts): set only when this visit is in the test. */
   test1?: Test1Assignment
 }) {
@@ -289,11 +293,27 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
   const cro = COURSE_CRO[m.slug] ?? {}
   const it = intentKey ? cro.intents?.[intentKey] : undefined
   const lowestPence = Math.round(unitPence * (1 - Math.max(...DISCOUNT_TIERS.map(t => t.pct)) / 100))
+  // FAQ v2 (lib/faq-v2.ts): the Care Certificate is repeated every year (Len, 12 Oct 2026), and on
+  // a course with an observation the certificate is issued once the manager signs it off.
+  const freq = effectiveFrequency(m.slug, m.frequency)
+  const practical = !!m.requires_practical
+  const v2cert = FAQ_V2 && practical
   const faqModule: FaqModule = {
     title: m.title, duration_minutes: m.duration_minutes, estMinutes: est, sections,
+    question_count: m.question_count, pass_mark: m.pass_mark, frequency: freq,
+    requires_practical: m.requires_practical, cpd_accredited: m.cpd_accredited,
+  }
+  // One question set, under the buy box, opening on the answer the visitor searched for. Worked
+  // out here on the server, so the page does not move once it has loaded.
+  const faqV2Mod = {
+    slug: m.slug, title: m.title, estMinutes: est, duration_minutes: m.duration_minutes, lessons: sections.length,
     question_count: m.question_count, pass_mark: m.pass_mark, frequency: m.frequency,
     requires_practical: m.requires_practical, cpd_accredited: m.cpd_accredited,
   }
+  const faqV2 = FAQ_V2 ? (() => {
+    const items = faqV2Items(faqV2Mod, { unitPence, hasLesson: hasInlineLesson(demo) })
+    return orderFaqs(items, firstFaqFor(items, intentKey, utmTerm))
+  })() : null
 
   // The hero as a product gallery: the picture, then real views of what is being bought. The
   // language view is the demo lesson and its question in English and each saved translation.
@@ -304,7 +324,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
   ] : []
   // Team prices: the same volume tiers the checkout charges (training-commerce.ts).
   const teamPricing = (
-            <div className="mpe-team">
+            <div className="mpe-team" id={FAQ_V2 ? 'team-price' : undefined}>
               <p className="mpe-promise-eyebrow">Team pricing</p>
               <table>
                 <tbody>
@@ -369,6 +389,11 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
     },
   ]
 
+  // FAQ v2: the Care Certificate line says what Len confirmed (an annual refresher for all staff,
+  // usable within induction), not that it is for new starters only.
+  const whoFor = FAQ_V2 && m.slug === 'care-certificate'
+    ? `An annual refresher of all ${sections.length || 16} Care Certificate standards for care workers, healthcare assistants and support workers in care homes, nursing homes and home care. Use it every year, and as part of your induction for new starters.`
+    : cro.whoFor
   const t1b = test1?.variant === 'B'
   return (
     <div className={t1b ? 'mpage-v2 t1b' : 'mpage-v2'}>
@@ -453,7 +478,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
             ) : null}
 
             {demo && (
-              <div className="mpe-demo">
+              <div className="mpe-demo" id={FAQ_V2 ? 'real-lesson-inline' : undefined}>
                 <p className="mpe-cap">Try it: a real lesson and question from this course</p>
                 <TrainingDemo demo={demo} buyHref={buyHref} variant="theme" place="module" />
               </div>
@@ -485,10 +510,12 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
               <ul>
                 <li><b>{m.question_count ? `${m.question_count} question assessment` : 'A final assessment'}</b> with a pass mark of {m.pass_mark ?? 80}%.</li>
                 <li><b>A follow-up lesson</b> on anything a learner gets wrong, so the gaps are closed, not just scored.</li>
-                <li><b>A named, dated certificate</b> the moment they pass{m.cpd_accredited ? ', carrying the CPD Certified mark and CPD hours' : ''}, ready to download as a PDF.</li>
+                <li><b>A named, dated certificate</b> {v2cert ? 'once they pass and you sign off the observation' : 'the moment they pass'}{m.cpd_accredited ? ', carrying the CPD Certified mark and CPD hours' : ''}, ready to download as a PDF.</li>
                 <li><b>Kept on their training record</b> in your dashboard, ready for your CQC evidence.</li>
                 {m.requires_practical && <li><b>An observation checklist</b> for the observed workplace assessment the employer carries out.</li>}
-                {m.slug === 'care-certificate' && <li><b>Portable:</b> the Care Certificate does not expire and moves with the worker between employers. Refresher training is still good practice.</li>}
+                {FAQ_V2
+                  ? <li><b>In their name:</b> they keep their certificate and can show it to future employers. Each employer decides what it accepts.{freq === 'annual' ? ' Staff repeat the course once a year.' : ''}</li>
+                  : m.slug === 'care-certificate' && <li><b>Portable:</b> the Care Certificate does not expire and moves with the worker between employers. Refresher training is still good practice.</li>}
               </ul>
             </div>
 
@@ -508,7 +535,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
               <h2>A certificate for every member of your team</h2>
               <p>
                 Each staff member completes {m.title} in the hub, in their own language, and gets a dated,
-                named certificate for your training file the moment they pass. You see who has finished,
+                named certificate for your training file {v2cert ? 'once they pass and you sign off their observation' : 'the moment they pass'}. You see who has finished,
                 their score and their certificate from your dashboard.
               </p>
               <div className="mpe-banner-facts">
@@ -554,13 +581,13 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
             </div>
             {it && <p className="mpe-intent-tag">{it.tag}</p>}
             <h1>{it ? it.headline.replace('{from}', money(lowestPence)) : `${m.title} training that gets your team CQC-ready`}</h1>
-            {(it?.sub ?? cro.whoFor) && <p className="mpe-for">{it?.sub ?? cro.whoFor}</p>}
+            {(it?.sub ?? whoFor) && <p className="mpe-for">{it?.sub ?? whoFor}</p>}
             {/* Test 1 B, phones only: three proof points the page already makes, and the offer in one line. */}
             {t1b && (
               <ul className="t1-proof">
                 {m.cpd_accredited && <li><Tick />CPD Certified</li>}
                 <li><Tick />60+ languages</li>
-                <li><Tick />Instant certificate</li>
+                <li><Tick />{v2cert ? 'Certificate after your sign off' : 'Instant certificate'}</li>
               </ul>
             )}
             {t1b && <Test1OfferLine slug={m.slug} />}
@@ -585,6 +612,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
             <ModuleBuyPanel slug={m.slug} title={m.title} unitPence={unitPence}
                             duration={durationText(est)} cpd={!!m.cpd_accredited}
                             offerLine={!t1b}
+                            certTick={v2cert ? 'Certificate once you sign off the observation' : undefined}
                             fresh={m.slug === 'care-certificate' && sections.length === 16
                               ? 'Updated March 2025'
                               : cro.updated ? `Updated ${cro.updated}` : undefined}
@@ -593,6 +621,8 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
                               : undefined} />
 
             <PaymentLogos />
+
+            {faqV2 && <FaqV2 items={faqV2} slug={m.slug} />}
 
             {SHIP_NOW && <SignOffBox m={m} lessons={sections.length} />}
 
@@ -638,7 +668,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
               </figcaption>
             </figure>
 
-            <ProductFaqs title="About this course" faqs={trainingFaqs(faqModule)} />
+            {!FAQ_V2 && <ProductFaqs title="About this course" faqs={trainingFaqs(faqModule)} />}
             <SampleCertificate m={faqModule} />
           </aside>
         </div>
@@ -737,8 +767,8 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
               <div className="mnote">
                 <Tick />
                 <span>
-                  {m.title} is {m.frequency === 'once' ? 'completed' : 'refreshed'}{' '}
-                  {refreshWord(m.frequency)}, for the staff in your care setting whose roles require it.
+                  {m.title} is {freq === 'once' ? 'completed' : 'refreshed'}{' '}
+                  {refreshWord(freq)}, for the staff in your care setting whose roles require it.
                   {m.requires_practical ? ' It includes a practical sign-off.' : ''}
                 </span>
               </div>
@@ -903,7 +933,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
                 <li><Tick />Bitesize, engaging lessons your staff actually finish</li>
                 <li><Tick />Mapped to the Care Certificate &amp; CQC standards</li>
                 <li><Tick />Available in 60+ languages</li>
-                <li><Tick />Instant certificate on completion</li>
+                <li><Tick />{v2cert ? 'Certificate issued once you sign off the observation' : 'Instant certificate on completion'}</li>
                 <li><Tick />Flexible learning, anytime, on any device</li>
                 <li><Tick />Content kept up to date with UK care regulations</li>
                 <li><Tick />Time to complete: {est < 60 ? `~${est} min` : durationText(est)}</li>
@@ -917,7 +947,10 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
         </div>
       </section>
 
-      <section className="msec tint">
+      {/* FAQ v2: the main set sits under the buy box; this block becomes the same five "More
+          questions" on every course page. */}
+      {FAQ_V2 && <FaqV2Bottom items={faqV2BottomItems(faqV2Mod, { hasLesson: hasInlineLesson(demo) })} />}
+      {!FAQ_V2 && <section className="msec tint">
         <div className="mwrap msec-in mnarrow mfaq">
           <span className="mlabel">Questions</span>
           <h2>Frequently asked questions.</h2>
@@ -952,7 +985,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
             </div>
           </details>
         </div>
-      </section>
+      </section>}
 
       {related.length > 0 && (
         <section className="msec mlast">

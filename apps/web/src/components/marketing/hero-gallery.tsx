@@ -80,8 +80,11 @@ export function TryBeforeYouBuy({ slug, withActivity = false, children }: { slug
   // Add to basket inside the demo opens the cart drawer: close this first so the drawer shows.
   useEffect(() => {
     const closeForCart = () => setOpen(false)
+    // FAQ v2: an answer's "Try a real lesson" link opens this same preview (faq-v2-client.tsx).
+    const openFromFaq = () => setOpen(true)
     window.addEventListener('cs-buy-drawer', closeForCart)
-    return () => window.removeEventListener('cs-buy-drawer', closeForCart)
+    window.addEventListener('cs-try-demo', openFromFaq)
+    return () => { window.removeEventListener('cs-buy-drawer', closeForCart); window.removeEventListener('cs-try-demo', openFromFaq) }
   }, [])
   useEffect(() => {
     if (!open) return

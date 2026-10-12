@@ -32,6 +32,7 @@ import { careSetting } from '@/lib/care-setting'
 import { isV2 } from '@/lib/v2-rollout'
 import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 import { test1Assignment } from '@/lib/ab-test1'
+import { FAQ_V2, effectiveFrequency, faqV2BottomItems, faqV2Items, faqPlain, hasInlineLesson } from '@/lib/faq-v2'
 
 export const revalidate = 60
 
@@ -204,7 +205,7 @@ export default async function TrainingModulePage(
   const placeholderKeyPoints = [
     `${m.title} is part of the mandatory training expected in CQC-regulated services`,
     'It applies to every member of the team whose role requires it',
-    `Refreshed ${freqWord(m.frequency)}, with renewal reminders handled automatically`,
+    `Refreshed ${freqWord(effectiveFrequency(slug, m.frequency))}, with renewal reminders handled automatically`,
     'Completed in the hub, in any language, with an assessment at the end',
   ]
   const outcomesToShow  = outcomes.length  ? outcomes  : placeholderOutcomes
@@ -216,7 +217,7 @@ export default async function TrainingModulePage(
 
   const faqs = [
     { question: `Is ${m.title} training mandatory in care settings?`, answer: `${m.title} is part of the training that CQC-regulated care settings are expected to provide. CareStream includes it in the standard library so you can assign it to your whole team.` },
-    { question: `How often should staff complete ${m.title} training?`, answer: `Most services refresh ${m.title} training ${freqWord(m.frequency)}. CareStream tracks each person's renewal date and sends automatic reminders at 90, 30 and 7 days.` },
+    { question: `How often should staff complete ${m.title} training?`, answer: `Most services refresh ${m.title} training ${freqWord(effectiveFrequency(slug, m.frequency))}. CareStream tracks each person's renewal date and sends automatic reminders at 90, 30 and 7 days.` },
     { question: `Can CareStream deliver ${m.title} training in other languages?`, answer: `Yes. Staff can complete it in over 60 languages, reading and answering in the language they are most confident in, while your records stay in English.` },
     { question: `Does the training include an assessment?`, answer: `Yes. Each module teaches the topic, applies it to a real care scenario, and finishes with an assessment. If a question is answered incorrectly, CareStream gives a short follow-up lesson and a fresh question to close the gap.` },
   ]
@@ -228,7 +229,7 @@ export default async function TrainingModulePage(
     `${m.title} training for UK care staff, delivered by CareStream. ${summary}`,
     `The module is built as ${sectionsToShow.length} short, practical sections: each teaches part of the topic, applies it to a real care scenario, then checks understanding with an assessment before moving on. If a staff member answers incorrectly they receive a short follow-up lesson and a fresh question, so knowledge gaps are always closed before completion.`,
     `Staff complete it in the CareStream hub on any device, in over 60 languages, reading and answering in the language they are most confident in while your records stay in English. Every completion produces a dated certificate you can use as evidence for CQC inspections.`,
-    `Most services refresh it ${freqWord(m.frequency)}, with renewal reminders handled automatically. Buy one licence per staff member, with no full subscription required.`,
+    `Most services refresh it ${freqWord(effectiveFrequency(slug, m.frequency))}, with renewal reminders handled automatically. Buy one licence per staff member, with no full subscription required.`,
   ].join(' ')
   const courseJson = courseSchema({
     name: `${m.title} Training`,
@@ -254,10 +255,21 @@ export default async function TrainingModulePage(
   // HomeFaq; the rebuilt one shows the same four questions and marks them up here.
   const sp = await searchParams
   if (await isV2('modules', sp)) {
+    // The record carries these for every course; ModuleDetail does not declare them.
+    const mq = m as { question_count?: number | null; pass_mark?: number | null }
+    const v2mod = {
+      slug, title: m.title, estMinutes: estimatedMinutes(m.group_key, m.duration_minutes), duration_minutes: m.duration_minutes,
+      lessons: sections.length, question_count: mq.question_count, pass_mark: mq.pass_mark, frequency: m.frequency,
+      requires_practical: m.requires_practical, cpd_accredited: m.cpd_accredited,
+    }
     return (
       <>
         <JsonLd data={courseJson} />
-        <JsonLd data={faqPageSchema(faqs)} />
+        {/* FAQ v2 (lib/faq-v2.ts): the structured data carries the questions the page shows. */}
+        <JsonLd data={faqPageSchema(FAQ_V2
+          ? [...faqV2Items(v2mod, { unitPence, hasLesson: hasInlineLesson(demo) }),
+             ...faqV2BottomItems(v2mod, { hasLesson: hasInlineLesson(demo) })].map(i => ({ question: i.q, answer: faqPlain(i) }))
+          : faqs)} />
         <ModulePageV2
           module={{ ...m, slug }}
           demo={demo}
@@ -265,6 +277,7 @@ export default async function TrainingModulePage(
           unitPence={unitPence}
           apiUrl={API_URL}
           intent={typeof sp?.intent === 'string' ? sp.intent : undefined}
+          utmTerm={typeof sp?.utm_term === 'string' ? sp.utm_term : undefined}
           test1={test1Assignment(slug, sp) ?? undefined}
         />
       </>
@@ -503,7 +516,7 @@ export default async function TrainingModulePage(
               <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
                 <div className="mb-3 flex items-center gap-2"><Calendar size={18} className="text-teal" /><p className="font-bold text-neutral-dark">Who and how often</p></div>
                 <p className="text-sm leading-relaxed text-neutral-mid">
-                  {m.title} is {m.frequency === 'once' ? 'completed' : 'refreshed'} {freqWord(m.frequency)}, for the staff in your care setting whose roles require it.{m.requires_practical ? ' It includes a practical sign-off.' : ''}
+                  {m.title} is {m.frequency === 'once' ? 'completed' : 'refreshed'} {freqWord(effectiveFrequency(slug, m.frequency))}, for the staff in your care setting whose roles require it.{m.requires_practical ? ' It includes a practical sign-off.' : ''}
                 </p>
               </div>
               <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-card">

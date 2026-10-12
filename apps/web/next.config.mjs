@@ -6,6 +6,10 @@ const nextConfig = {
     NEXT_PUBLIC_SHIP_NOW_PREVIEW:
       process.env.NEXT_PUBLIC_SHIP_NOW_PREVIEW === '1' ||
       (process.env.VERCEL_ENV === 'preview' && process.env.VERCEL_GIT_COMMIT_REF === 'ship-now-demo') ? '1' : '',
+    // FAQ v2 (src/lib/faq-v2.ts), the same way: on for the faq-v2-demo branch's preview only.
+    NEXT_PUBLIC_FAQ_V2_PREVIEW:
+      process.env.NEXT_PUBLIC_FAQ_V2_PREVIEW === '1' ||
+      (process.env.VERCEL_ENV === 'preview' && process.env.VERCEL_GIT_COMMIT_REF === 'faq-v2-demo') ? '1' : '',
   },
   images: {
     // Serve modern formats (smaller than PNG/JPEG) wherever next/image is used.

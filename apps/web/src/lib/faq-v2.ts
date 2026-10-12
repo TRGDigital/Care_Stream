@@ -342,7 +342,7 @@ export function faqV2BottomItems(m: FaqV2Module, opts: { hasLesson: boolean }): 
       id: 'translate', q: 'Are the translations done by a person or a machine?', cta: tryOr('try'),
       lead: 'A mix of both.',
       body: 'Lessons are translated with a mix of machine translation and checks by people. '
-        + `Staff can switch any ${m.slug === 'care-certificate' ? 'standard' : 'lesson'} or question between their language and English with one tap, and your records stay in English.`,
+        + `Staff can switch any ${m.slug === 'care-certificate' ? 'standard' : 'lesson'} or question between their language and English with one tap, so they understand it, not just pass it. Your records stay in English.`,
     },
     {
       id: 'funding', q: 'Can we get funding for this training?', cta: 'price',

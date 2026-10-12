@@ -10,6 +10,10 @@ import { checklistPdf, type ChecklistData } from './checklist-pdf'
 // Email capture from the product page overlays (campaigns run from Funnel Insights › Email capture):
 //   checklist  the free "what to check before you buy" PDF for this course or policy, by email
 //   lockin     the offer running on this product, held for 30 days on a personal link
+//   apply      the same hold, after a first click that applies the offer (version A, Oct 2026)
+//   setting    the same hold, after the visitor picks their care setting (version B); the setting
+//              goes on the sign-up for the fortnightly emails
+//   quiz       the policy quiz results and checklist, plus the offer held when they ask for it
 // The address is checked first (Ideal Postcodes, the same check Hello Hattie uses; it fails open
 // when the key is missing or the service is down), then the sign-up goes to the Funnel Insights
 // list with the consent wording the visitor saw.
@@ -80,15 +84,23 @@ function offerOn(offers: Offer[], funnel: Funnel, slug: string): Offer | null {
   return funnel === 'training' ? licenceOffer(offers, slug) : policyOffer(offers, slug)
 }
 
+export type CaptureKind = 'checklist' | 'lockin' | 'quiz' | 'apply' | 'setting'
+/** The kinds that hold the live offer for 30 days. */
+const HOLDS = new Set<CaptureKind>(['lockin', 'apply', 'setting'])
+
 export type CaptureResult = {
-  kind: 'checklist' | 'lockin' | 'quiz'
+  kind: CaptureKind
   lock?: { token: string; expires_on: string; label: string }
 }
 
 export async function captureSignup(b: {
-  email: string; name: string; funnel: Funnel; product: string; kind: 'checklist' | 'lockin' | 'quiz'
+  email: string; name: string; funnel: Funnel; product: string; kind: CaptureKind
   /** The quiz variant's answers, sent back with the checklist. */
   quiz?: { q: string; a: 'yes' | 'unsure' | 'no' }[]
+  /** The quiz ends with the offer: hold it as well as sending the results. */
+  hold?: boolean
+  /** Where they signed up (overlay, tab, hold, exit), their care setting, which picture they saw. */
+  origin?: string; setting?: string; picture?: number
   campaign_id: string; variant: string; consent_text: string; page: string
   attribution: { session?: string; source?: string; campaign?: string } | null; emailStatus: string
 }): Promise<CaptureResult> {
@@ -98,12 +110,12 @@ export async function captureSignup(b: {
   const path = `${base}/${b.funnel === 'training' ? 'staff-training' : 'care-policies'}/${b.product}`
   const productName = b.funnel === 'training' ? `${data.title} training` : data.title
 
-  // A lock-in needs an offer on this product today; without one the visitor gets the checklist.
+  // A hold needs an offer on this product today; without one the visitor gets the checklist.
   let kind = b.kind
   let lock: CaptureResult['lock']
-  if (kind === 'lockin') {
+  if (HOLDS.has(kind) || (kind === 'quiz' && b.hold)) {
     const offer = offerOn(await getOffers(), b.funnel, b.product)
-    if (!offer) kind = 'checklist'
+    if (!offer) { if (kind !== 'quiz') kind = 'checklist' }
     else {
       const expires = new Date(Date.now() + LOCK_DAYS * 86400000)
       const rows = await (prisma as any).$queryRawUnsafe(
@@ -118,12 +130,13 @@ export async function captureSignup(b: {
     email: b.email, name: b.name, funnel: b.funnel, product: b.product, campaign_id: b.campaign_id,
     variant: b.variant, kind, consent_text: b.consent_text, email_status: b.emailStatus,
     session: b.attribution?.session, source: b.attribution?.source, campaign: b.attribution?.campaign,
+    origin: b.origin, setting: b.setting, picture: b.picture,
   })
   const unsubscribeUrl = unsubscribe
     ? `https://trg-funnel-insights.vercel.app/api/unsubscribe?t=${unsubscribe}`
     : `${base}/contact?about=Unsubscribe`
 
-  if (kind === 'lockin' && lock) {
+  if (HOLDS.has(kind) && lock) {
     const offer = (await lockOffer(lock.token))!
     await sendOfferLockEmail({
       to: b.email, name: b.name, productName, link: `${path}?lock=${lock.token}&utm_source=carestream&utm_medium=email&utm_campaign=capture_lockin`,
@@ -135,6 +148,7 @@ export async function captureSignup(b: {
       to: b.email, name: b.name, productName, funnel: b.funnel, pdf, filename: `${b.product}-checklist.pdf`,
       link: `${path}?utm_source=carestream&utm_medium=email&utm_campaign=capture_${kind === 'quiz' ? 'quiz' : 'checklist'}`, unsubscribeUrl,
       quiz: kind === 'quiz' ? b.quiz : undefined,
+      held: lock ? { label: lock.label, expiresOn: lock.expires_on, link: `${path}?lock=${lock.token}&utm_source=carestream&utm_medium=email&utm_campaign=capture_quiz_hold` } : undefined,
       requiredCount: data.funnel === 'policies' ? data.regulations.reduce((n, r) => n + r.elements.length, 0) : undefined,
     })
   }

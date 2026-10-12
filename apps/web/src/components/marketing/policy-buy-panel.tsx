@@ -3,6 +3,7 @@
 import { OfferLine } from './offer-line'
 import { useOffers, policyOffer, endsText, money2 } from '@/lib/offers'
 import { AddToBasketText, BuyNowPolicy, SavePolicy } from './policy-basket'
+import { HoldPrice } from './hold-price'
 
 const money = (p: number) => `£${(p / 100).toFixed(p % 100 ? 2 : 0)}`
 
@@ -42,6 +43,7 @@ export function PolicyBuyPanel({ item }: { item: { slug: string; title: string; 
         <BuyNowPolicy item={item} position="policy_hero" />
         <SavePolicy slug={item.slug} title={item.title} />
       </div>
+      {o && <HoldPrice price={now < price ? (now % 100 ? money2(now) : money(now)) : undefined} />}
       <AddToBasketText item={item} />
     </div>
   )

@@ -4,43 +4,34 @@ import { useOffers, licenceOffer, endsText, offerEmoji } from '@/lib/offers'
 import { CTA_KEY, CTA_LABEL, type FaqCta } from '@/lib/faq-v2'
 
 // The two next steps an FAQ v2 answer ends with (lib/faq-v2.ts). Real links, so they work before
-// the page's JavaScript has loaded: #real-lesson and #team-price. With JavaScript, each JUMPS to
-// its block (no overlay, no smooth scroll: the page sets scroll-behavior:smooth, which some phones
-// drop part way) and highlights it for a moment. "Try a real lesson" first switches the hero
-// gallery to its real lesson view (HeroGallery listens for cs-show-lesson). The server only uses
-// "Try a real lesson" where that view exists; otherwise the answer ends with the team price.
+// the page's JavaScript has loaded: #real-lesson-inline (the "Try it" lesson on the page) and
+// #team-price. With JavaScript, "Try a real lesson" opens the try before you buy preview over the
+// page (TryBeforeYouBuy listens for cs-try-demo), and "See your team price" JUMPS to the team
+// prices (no smooth scroll: the page sets scroll-behavior:smooth, which some phones drop part way)
+// and highlights them for a moment. The server only uses "Try a real lesson" where the course has
+// a demo lesson; otherwise the answer ends with the team price.
 
 function jumpTo(el: HTMLElement) {
+  // Clear of the sticky header and the course bar.
   window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 140, behavior: 'instant' as ScrollBehavior })
   el.classList.remove('fq2-flash')
   void el.offsetWidth
   el.classList.add('fq2-flash')
 }
 
-const shown = (el: HTMLElement | null): el is HTMLElement => !!el && el.offsetHeight > 0
-
 export function FaqCtaLink({ cta, qSlug }: { cta: FaqCta; qSlug: string }) {
-  const id = cta === 'try' ? 'real-lesson' : 'team-price'
   return (
-    <a className={`fq2-cta fq2-cta-${cta}`} href={`#${id}`}
+    <a className={`fq2-cta fq2-cta-${cta}`} href={cta === 'try' ? '#real-lesson-inline' : '#team-price'}
        data-fi={`faq-cta:${CTA_KEY[cta]}:${qSlug}`}
        onClick={e => {
          if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
          if (cta === 'try') {
-           // Desktop: the hero gallery, switched to its real lesson view. Phones hide the hero
-           // gallery, so there it is the real lesson shown further down the page.
-           const gallery = document.getElementById('real-lesson')
-           const target = shown(gallery) ? gallery : document.getElementById('real-lesson-inline')
-           if (!shown(target)) return
+           if (!document.querySelector('.hg-try')) return // no preview button: follow the link
            e.preventDefault()
-           if (target === gallery) {
-             window.dispatchEvent(new Event('cs-show-lesson'))
-             // after the gallery has switched view, so the jump lands on the lesson's real height
-             setTimeout(() => jumpTo(target), 30)
-           } else jumpTo(target)
+           window.dispatchEvent(new Event('cs-try-demo'))
            return
          }
-         const el = document.getElementById(id)
+         const el = document.getElementById('team-price')
          if (!el) return
          e.preventDefault()
          jumpTo(el)

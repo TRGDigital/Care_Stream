@@ -14,19 +14,10 @@ export interface GallerySlide { key: string; label: string; thumb: ReactNode; bo
 
 export function HeroGallery({ slides, start }: { slides: GallerySlide[]; start?: string }) {
   const [i, setI] = useState(() => Math.max(0, slides.findIndex(s => s.key === start)))
-  // FAQ v2 (lib/faq-v2.ts): "Try a real lesson" in an answer shows the real lesson view here
-  // (faq-v2-client.tsx sends cs-show-lesson, then jumps to #real-lesson).
-  const lessonAt = slides.findIndex(s => s.key === 'language')
-  useEffect(() => {
-    if (lessonAt < 0) return
-    const show = () => setI(lessonAt)
-    window.addEventListener('cs-show-lesson', show)
-    return () => window.removeEventListener('cs-show-lesson', show)
-  }, [lessonAt])
   const slide = slides[i] ?? slides[0]
   if (!slide) return null
   return (
-    <div className="hg" id={lessonAt >= 0 ? 'real-lesson' : undefined}>
+    <div className="hg">
       <div className="hg-main" aria-live="polite">{slide.body}</div>
       {slides.length > 1 && (
         <div className="hg-thumbs" role="tablist" aria-label="Product views">
@@ -89,8 +80,11 @@ export function TryBeforeYouBuy({ slug, withActivity = false, children }: { slug
   // Add to basket inside the demo opens the cart drawer: close this first so the drawer shows.
   useEffect(() => {
     const closeForCart = () => setOpen(false)
+    // FAQ v2: an answer's "Try a real lesson" link opens this same preview (faq-v2-client.tsx).
+    const openFromFaq = () => setOpen(true)
     window.addEventListener('cs-buy-drawer', closeForCart)
-    return () => window.removeEventListener('cs-buy-drawer', closeForCart)
+    window.addEventListener('cs-try-demo', openFromFaq)
+    return () => { window.removeEventListener('cs-buy-drawer', closeForCart); window.removeEventListener('cs-try-demo', openFromFaq) }
   }, [])
   useEffect(() => {
     if (!open) return

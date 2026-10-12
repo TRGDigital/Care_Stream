@@ -10,8 +10,7 @@
 //     phone and desktop). The first three answers are open, the rest are an accordion. The old
 //     "About this course" set and the bottom "Frequently asked questions" block are not rendered.
 //   - every answer leads with the answer, stays short, and ends with ONE next step: "Try a real
-//     lesson" (jumps to the real lesson shown on the page, no overlay: the hero gallery's "In their
-//     language" view on desktop, the inline "Try it" lesson on phones) or "See your team price" (jumps to the team prices).
+//     lesson" (opens the try before you buy preview of a real lesson) or "See your team price" (jumps to the team prices).
 //   - the first answer matches the search that brought the visitor: ?intent= (the ad group or
 //     sitelink), else utm_term. Worked out on the server, so nothing jumps after load.
 //   - the facts Len confirmed on 12 Oct 2026 are applied across the course template:
@@ -168,7 +167,7 @@ export function faqV2Items(m: FaqV2Module, opts: { unitPence: number; hasLesson:
     out.push({
       id: 'try', q: 'Can I try it before I buy?', cta: 'try',
       lead: 'Yes, right here on this page.',
-      body: 'See a real lesson and question from this course, exactly as your staff will see them, and switch them into another language. '
+      body: 'Open a real lesson and question from this course, exactly as your staff will see them, and switch them into another language. '
         + 'There is nothing to sign up for. Staff get the full lesson, the questions and a follow-up lesson on anything they get wrong.',
     })
   }
@@ -353,9 +352,8 @@ export function faqV2BottomItems(m: FaqV2Module, opts: { hasLesson: boolean }): 
   ]
 }
 
-/** A real lesson is shown on the page: the inline "Try it: a real lesson and question" block
- *  (rendered whenever the course has a demo lesson), and on desktop also the hero gallery's
- *  "In their language" view. */
+/** The course has a demo lesson, so the page has the try before you buy preview (and the inline
+ *  "Try it" lesson as the link's fallback without JavaScript). */
 export function hasInlineLesson(demo: { lesson?: unknown } | null | undefined): boolean {
   return !!demo?.lesson
 }

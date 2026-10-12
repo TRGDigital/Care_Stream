@@ -1,0 +1,60 @@
+/* Landing fixes (lib/landing-fixes.ts). Static: no transitions or animation. */
+
+/* ── The review highlight: only with ?lfdemo=1 on a preview (html.lfdemo). */
+.lfdemo [data-lf]{background:#fff59d !important;outline:2px solid #f9a825 !important;outline-offset:1px;color:#1a1a1a !important}
+.lfdemo [data-lf]::before{content:attr(data-lf-label);display:block;width:max-content;max-width:100%;
+  margin:0 0 3px;padding:1px 6px;border-radius:3px;background:#f9a825;color:#000;font:700 10px/1.4 system-ui,sans-serif;
+  letter-spacing:0;text-transform:none;white-space:normal}
+.lfdemo [data-lf] [data-lf]::before{display:none}
+.lfdemo details[data-lf] > summary{background:#fff59d}
+
+/* ── Care Certificate course page: the new first screen blocks. */
+.lf-whatis{margin:4px 0 12px;padding:12px 14px;border-radius:12px;background:#F3ECFA;border:1px solid #DCCBEF}
+.lf-whatis h2{margin:0 0 4px;font-size:.95rem;font-weight:800;color:var(--ink,#17121f)}
+.lf-whatis p{margin:0;font-size:.88rem;line-height:1.5;color:var(--ink-2,#3a3346)}
+.lf-cpdproof{display:flex;align-items:center;gap:12px;margin:4px 0 12px;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid var(--line,#e6e1ec)}
+.lf-cpdproof img{height:44px;width:auto;flex:none}
+.lf-cpdproof p{margin:0;font-size:.84rem;line-height:1.45;color:var(--ink-2,#3a3346)}
+.lf-cpdproof a{font-weight:700}
+.lf-forself{margin:8px 0 4px;font-size:.8rem;line-height:1.45;color:var(--muted,#6b6478)}
+
+/* ── CPD collection: what follows the H1 (list, courses or bundles). */
+.cc-lead{margin:0 0 18px}
+.cc-lead h2{margin:0 0 8px;font-size:1.1rem}
+.cc-coursechips{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0 0 8px;padding:0}
+.cc-coursechips a{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid var(--line,#e6e1ec);background:#fff;font-size:.82rem;font-weight:650;color:inherit;text-decoration:none}
+.cc-leadnote{margin:0;font-size:.86rem;color:var(--ink-2,#3a3346)}
+.cc-topics{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:4px}
+.cc-topics li{display:flex;justify-content:space-between;gap:10px;padding:7px 10px;border-radius:8px;background:#fff;border:1px solid var(--line,#e6e1ec);font-size:.86rem}
+.cc-topics li span{white-space:nowrap;font-size:.78rem;font-weight:700}
+.cc-topics li.yes span{color:#1F8A5B}
+.cc-topics li.no span{color:var(--muted,#6b6478);font-weight:600}
+.cc-topicsnote{margin:6px 0 0;font-size:.8rem;color:var(--muted,#6b6478)}
+.cc-forself{margin:6px 0 0;font-size:.8rem;color:var(--muted,#6b6478)}
+
+/* Phones: the new blocks sit straight under the headline (and its sub line in Test 1 B), above
+   the buy box, and the "Buying for yourself?" line straight under the buy box, in both variants.
+   Doubled class for specificity over module-page-v2.css's .mpe-info > * rule. */
+@media(max-width:760px){
+  .mpage-v2 .mpe-info > .lf-first.lf-first{order:3;margin-top:0}
+  .mpage-v2 .mpe-info > .lf-afterbuy.lf-afterbuy{order:4}
+  .mpage-v2.t1b .mpe-info > .lf-first.lf-first{order:2}
+  .mpage-v2.t1b .mpe-info > .lf-afterbuy.lf-afterbuy{order:5}
+  /* the team table, compact */
+  .mpage-v2 .mpe-info > .lf-pf.lf-pf{margin:10px 0 12px;padding:16px 12px 10px}
+  .mpage-v2 .lf-pf table{font-size:.82rem;margin:0 0 4px;border-spacing:0 3px}
+  .mpage-v2 .lf-pf td{padding:5px 8px}
+  .mpage-v2 .lf-pf .mpe-team-note{margin:0;font-size:.72rem}
+  .mpage-v2 .lf-pf .mpe-team-quote{padding:6px 8px;font-size:.78rem}
+}
+
+/* CPD collection phones: with a lead set, the sub line, then the list or the courses, come
+   straight after the headline, before the bundles. */
+.cc-topicsh{margin:14px 0 0;font-size:1rem}
+@media (max-width: 699px) {
+  .cpdc.cc-lead-on .cc-hero > .cc-herobody { display: contents }
+  .cpdc.cc-lead-on .cc-herobody > .cc-lede { order: 3; margin-top: 8px }
+  .cpdc.cc-lead-on .cc-herobody > .cc-trust { order: 6 }
+  .cpdc.cc-lead-on .cc-main > .cc-lead { order: 3; padding-top: 14px }
+  .cpdc.cc-lead-on .cc-main > .cc-bundlesec { order: 4 }
+}

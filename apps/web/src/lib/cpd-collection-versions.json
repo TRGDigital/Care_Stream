@@ -2,10 +2,11 @@
  "versions": {
   "mandatory-care-workers": {
    "tag": "Mandatory training",
-   "headline": "CPD Certified mandatory training for care workers",
-   "sub": "Every course a care worker needs each year, online and CPD Certified, with a certificate for every learner. Buy one course or a bundle for the team.",
+   "headline": "Mandatory training for care workers, online",
+   "sub": "10 CPD Certified courses, about an hour each. Buy one, or a bundle per learner from £139 + VAT.",
    "topic": "mandatory training for care workers",
-   "who": "care workers"
+   "who": "care workers",
+   "lead": "courses"
   },
   "mandatory-health-social-care": {
    "tag": "Health and social care",
@@ -79,10 +80,11 @@
   },
   "care-worker-training-courses": {
    "tag": "Care worker training",
-   "headline": "Care worker training courses, CPD Certified",
-   "sub": "Ten training courses for care workers, about an hour each, with a CPD Certified certificate when they pass.",
+   "headline": "Training courses for care workers, CPD Certified",
+   "sub": "10 short online courses for care teams, about an hour each. Buy for your staff, one course or a bundle.",
    "topic": "care worker training courses",
-   "who": "care workers"
+   "who": "care workers",
+   "lead": "courses"
   },
   "care-worker-online-courses": {
    "tag": "Online courses for care workers",
@@ -170,7 +172,7 @@
   "online-courses-for-carers": {
    "tag": "Courses for carers",
    "headline": "Online courses for carers, with a certificate for each",
-   "sub": "About an hour each on any phone, in over 60 languages, with a CPD Certified certificate when you pass.",
+   "sub": "About an hour each on any phone, in over 60 languages, with a CPD Certified certificate for each learner.",
    "topic": "online courses for carers",
    "who": "carers"
   },
@@ -199,10 +201,11 @@
   },
   "mandatory-training-list": {
    "tag": "What staff need",
-   "headline": "The mandatory training care workers need, in one place",
-   "sub": "See which courses each role needs, then buy them one at a time or as a bundle. Every course is CPD Certified.",
+   "headline": "Mandatory training for care workers: the full list",
+   "sub": "What each role needs every year, and which of our 10 CPD courses cover it.",
    "topic": "mandatory training for care workers",
-   "who": "care workers"
+   "who": "care workers",
+   "lead": "list"
   }
  },
  "focus": {
@@ -253,7 +256,7 @@
   "phone": {
    "tag": "Any phone",
    "headline": "{Topic} on any phone, about an hour a course",
-   "sub": "Short, scenario based lessons {who} can do between shifts, with a certificate when they pass."
+   "sub": "Short, scenario based lessons {who} can do between shifts, with a CPD Certified certificate for each learner."
   },
   "quote": {
    "tag": "Several services",

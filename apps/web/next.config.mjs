@@ -10,6 +10,8 @@ const nextConfig = {
     NEXT_PUBLIC_FAQ_V2_PREVIEW:
       process.env.NEXT_PUBLIC_FAQ_V2_PREVIEW === '1' ||
       (process.env.VERCEL_ENV === 'preview' && process.env.VERCEL_GIT_COMMIT_REF === 'faq-v2-demo') ? '1' : '',
+    // Landing fixes review highlight (src/lib/landing-fixes.ts, ?lfdemo=1): never on production.
+    NEXT_PUBLIC_LF_DEMO: process.env.VERCEL_ENV === 'production' ? '' : '1',
   },
   images: {
     // Serve modern formats (smaller than PNG/JPEG) wherever next/image is used.

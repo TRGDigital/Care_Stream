@@ -928,9 +928,10 @@ export async function getSubscriptionInfo(tenant: { stripe_customer_id: string |
     const interval = sub.items.data[0]?.price?.recurring?.interval ?? null
     const iso = (n: number | null | undefined) => (n ? new Date(n * 1000).toISOString() : null)
     return {
-      next_billing_date:    iso((sub as any).current_period_end),
-      current_period_start: iso((sub as any).current_period_start),
-      current_period_end:   iso((sub as any).current_period_end),
+      // Newer Stripe API versions (every account created since) carry the billing period on the subscription item.
+      next_billing_date:    iso((sub as any).current_period_end   ?? (sub as any).items?.data?.[0]?.current_period_end),
+      current_period_start: iso((sub as any).current_period_start ?? (sub as any).items?.data?.[0]?.current_period_start),
+      current_period_end:   iso((sub as any).current_period_end   ?? (sub as any).items?.data?.[0]?.current_period_end),
       billing_interval:     interval,
       cancel_at_period_end: !!sub.cancel_at_period_end,
     }

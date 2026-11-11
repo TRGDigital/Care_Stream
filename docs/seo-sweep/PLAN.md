@@ -1,0 +1,16 @@
+# Fix plan (small PRs, each needs Len's approval; CareStream deploys on push to main)
+
+Order is by impact and risk. Each PR touches one concern and can be verified with `python3 docs/seo-sweep/seo-parity-check.py` against the Vercel preview URL before merge.
+
+1. PR 1, home schema (fixes issues 1, 2). `lib/schema.ts` webApplicationSchema offers from `PRICING.plans` (or AggregateOffer 85 to 385); `app/page.tsx` line 1093 drop `faqPageSchema(faqs)` in the v2 branch. Expected: stale plan price and FAQPage not visible go to 0.
+2. PR 2, one price source (issues 3, 9, 10). `lib/agent-tools.ts` PLANS, `app/llms.txt/route.ts` built from `PRICING.plans`; add Enterprise, annual, £25.99 module, CPD and policy shop links; remove em dashes; one language figure. Do this before the Free plan lands, so the Free card appears everywhere at once.
+3. PR 3, breadcrumbs (issue 4). Replace segment titlecasing with a parent map and real leaf names; omit crumbs whose parent has no page. Expected: 76 breadcrumb 404 targets go to 0.
+4. PR 4, sitemap (issues 5, 8). Add /uses/*; real lastmod. Optionally improve /uses titles and descriptions (content, via the page content source).
+5. PR 5, review markup (issue 7). Remove `ratingValue ?? 5` default; emit Review only with a real score, otherwise none.
+6. PR 6, pricing page with Free plan (branch free-tier-design). Checklist: grid columns driven by `PRICING.plans.length`, `colSpan={PRICING.plans.length + 1}`, Free price string must include "£0" so the schema regex emits a valid 0.00 Offer, Product offer descriptions, annual price spec, regenerate `pricing-data.ts` and keep its header comment, update the "10 staff users" and "no card" FAQ answers, re-run parity script (FAQ and price checks).
+7. PR 7, app route robots (issue 14). `robots: { index: false, follow: false }` in layouts or metadata for /gaps, /audits, /policies, /platform/*, /login, /register.
+8. Content only (no PR, via DB/admin): home FAQ copy (issue 6), blog link `england.nhs.uk` (issue 11), /faq and /who-its-for language count, titles over 65 chars, dashes.
+9. Cleanup PR: retire dead FAQ components (`home-faq.tsx` Item, `blog-faqs.tsx`) or convert to `<details>`; optional visible breadcrumbs; optional FAQPage on /pricing.
+
+## Regression test
+`docs/seo-sweep/seo-parity-check.py` (no dependencies, Python 3). It fetches the sitemap (plus /uses links from the home page), and per URL checks: status 200, one H1, title, description, canonical equals URL, valid JSON-LD, FAQPage questions and answers present in the raw text, Course/Product price present in visible text, Review text visible, SoftwareApplication and /pricing plan prices equal 85/230/385, breadcrumb targets return 200, and flags aggregateRating. `--csv` writes the inventory, `--strict` exits 1 on any FAIL. CI idea: after the Vercel preview deploy (via the deployment_status event), run `python3 docs/seo-sweep/seo-parity-check.py "$PREVIEW_URL" --strict`. Today it reports 79 FAIL-level items (53 /features, 14 /uses, 9 /collection breadcrumb targets, 2 stale plan prices, 1 home FAQPage), so merge PR 1 and 3 first or use a baseline allowlist. Known limitation: it checks raw HTML only; hydrated comparison needs a browser (Playwright could reuse the sentence comparison from JS-CONTENT.md).

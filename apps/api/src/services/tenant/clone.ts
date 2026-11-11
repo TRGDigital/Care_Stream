@@ -69,6 +69,7 @@ export async function cloneTenant(opts: CloneOpts) {
   const SRC = opts.sourceTenantId
   const src = await (prisma as any).tenant.findUnique({ where: { id: SRC } })
   if (!src) throw new Error('Source tenant not found')
+  if (src.tier === 'free') throw new Error('Free tenants cannot be cloned')
 
   const emailTaken = await (prisma as any).user.findUnique({ where: { email: opts.newAdmin.email } })
   if (emailTaken) throw new Error(`Admin email already exists (globally unique): ${opts.newAdmin.email}`)

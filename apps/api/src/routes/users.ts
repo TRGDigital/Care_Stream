@@ -10,6 +10,7 @@ import { siteUrl } from '../lib/urls'
 import { sendStaffWelcomeEmail, sendStaffLoginLinkEmail } from '../services/email/outbound'
 import { createLoginLink } from '../lib/login-tokens'
 import { checkUserLimit, PlanLimitError } from '../lib/plan-limits'
+import { freeStaffGuard } from '../lib/free-tier'
 import { agencySpend } from '../services/workforce/agencyAccess'
 import { buildStaffRecord } from '../lib/staff-record'
 import { getMyActions } from '../services/audits/action-plan'
@@ -332,6 +333,7 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
     // employed by the home. Charging for a two week booking would push a home to record them
     // as ordinary staff, which loses the tracking this exists for.
     if (!is_agency) await checkUserLimit(tenantId)
+    await freeStaffGuard(tenantId, 'invite')
   } catch (e) {
     if (e instanceof PlanLimitError) {
       err(res, e.code, e.message, 403)
@@ -642,12 +644,14 @@ usersRouter.post('/:id/login-link', async (req: Request, res: Response) => {
 
   const ttlMs = 14 * 24 * 60 * 60 * 1000
   try {
+    if (sendEmail) await freeStaffGuard(tenantId, 'email')
     const url = await createLoginLink(user.id, tenantId, ttlMs)
     if (sendEmail) {
       await sendStaffLoginLinkEmail({ to: user.email as string, name: user.name as string, link: url, expiresMins: 14 * 24 * 60 }).catch(e => console.error('[login-link] email', e))
     }
     ok(res, { url, expires_at: new Date(Date.now() + ttlMs).toISOString(), emailed: sendEmail })
   } catch (e: any) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 429); return }
     err(res, 'LINK_FAILED', e.message, 500)
   }
 })
@@ -666,6 +670,8 @@ usersRouter.post('/:id/send-credentials', async (req: Request, res: Response) =>
     err(res, 'VALIDATION_ERROR', 'temp_password is required.', 400)
     return
   }
+
+  try { await freeStaffGuard(tenantId, 'email') } catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 429); return } throw e }
 
   const user = await (prisma as any).user.findUnique({
     where:  { id },

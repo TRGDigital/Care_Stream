@@ -19,6 +19,7 @@ import { enqueueIngestion } from '../workers/queue'
 import { writeAuditLog } from '../lib/audit'
 import { ok, err } from '../lib/response'
 import { checkPolicyLimit, remainingPolicySlots, PlanLimitError, trackAiAction } from '../lib/plan-limits'
+import { claimPolicySlot, releasePolicySlot, getPolicyAllowance, FreePolicyLimitError } from '../lib/free-tier'
 import { getEnglishPolicyHtml, getPolicyBaselineHtml, getPolicyVersionHtml } from '../lib/translate'
 import { applyMinorEdit } from '../services/analytics/policy-adoption'
 
@@ -102,6 +103,12 @@ const CheckSchema = z.object({
     name:     z.string().min(1).max(400),
     hash:     z.string().min(8).max(128),
   })).min(1).max(200),
+})
+
+// ─── GET /policies/allowance ──────────────────────────────────────────────────
+// The lifetime policy allowance for the "X of 5 policies used" strip. limited:false for paid tenants.
+policiesRouter.get('/allowance', requireAdmin, async (req: Request, res: Response) => {
+  ok(res, await getPolicyAllowance(req.user!.tenant_id))
 })
 
 policiesRouter.post('/check', requireAdmin, async (req: Request, res: Response) => {
@@ -301,6 +308,8 @@ policiesRouter.post('/', requireAdmin, uploadMiddleware, async (req: Request, re
 
   try {
     await checkPolicyLimit(tenantId, document_category)
+    // Free accounts: count this policy against the lifetime allowance (a no op for paid tenants).
+    await claimPolicySlot(tenantId, { contentHash: sha256(req.file.buffer), name, source: 'upload' })
   } catch (e) {
     if (e instanceof PlanLimitError) {
       err(res, e.code, e.message, 403)
@@ -367,6 +376,8 @@ policiesRouter.post('/', requireAdmin, uploadMiddleware, async (req: Request, re
     })
   } catch (e) {
     console.error('[policies/upload] Error:', e)
+    // The policy never became usable, so give its place back (free accounts only).
+    await releasePolicySlot(tenantId, { id: policyId, status: 'processing', content_hash: sha256(req.file!.buffer) })
     err(res, 'UPLOAD_FAILED', 'Policy upload failed. Check server logs.', 500)
     return
   }
@@ -531,8 +542,12 @@ policiesRouter.post('/bulk', requireAdmin, bulkUploadMiddleware, async (req: Req
     ? (req.body.section.trim().slice(0, 100) || null)
     : null
 
+  // Free accounts accept the first N files that fit in the lifetime allowance and report the rest
+  // (below), instead of refusing the whole batch.
+  const allowance = await getPolicyAllowance(tenantId)
+
   try {
-    const slots = await remainingPolicySlots(tenantId, category)
+    const slots = allowance.limited ? null : await remainingPolicySlots(tenantId, category)
     if (slots !== null && files.length > slots) {
       const label = category === 'staff_handbook' ? 'handbooks' : 'policies'
       err(res, 'POLICY_LIMIT_REACHED',
@@ -570,12 +585,35 @@ policiesRouter.post('/bulk', requireAdmin, bulkUploadMiddleware, async (req: Req
   for (const p of existingActive) if (p.content_hash) existingHashes.set(p.content_hash, p.name)
   const seenInBatch = new Set<string>()
 
+  // Free accounts: claim the lifetime allowance one file at a time, in upload order, BEFORE the
+  // parallel work, so which files fit is deterministic. Files that do not fit are skipped.
+  const blockedForLimit = new Set<number>()
+  if (allowance.limited) {
+    const seen = new Set<string>()
+    for (let i = 0; i < files.length; i++) {
+      const hash = sha256(files[i].buffer)
+      if (existingHashes.has(hash) || seen.has(hash)) continue   // duplicates are skipped below and never claim
+      seen.add(hash)
+      try {
+        await claimPolicySlot(tenantId, { contentHash: hash, name: (nameOverrides[i] ?? '').trim() || deriveNameFromFilename(files[i].originalname), source: 'bulk' })
+      } catch (e) {
+        if (e instanceof FreePolicyLimitError) { blockedForLimit.add(i); continue }
+        throw e
+      }
+    }
+  }
+
   // Re-enter tenant context so all async service calls (Prisma, Pinecone, audit)
   // can access getTenantId() without relying on the multer-broken chain.
   await tenantContext.run({ tenantId }, async () => {
     await Promise.all(files!.map(async (file, i) => {
       const name = (nameOverrides[i] ?? '').trim() || deriveNameFromFilename(file.originalname)
       const hash = sha256(file.buffer)
+
+      if (blockedForLimit.has(i)) {
+        skipped.push({ filename: file.originalname, reason: 'free_policy_limit' })
+        return
+      }
 
       // Skip exact duplicates — of an existing active policy, or earlier in this batch.
       const dupOfExisting = existingHashes.get(hash)
@@ -629,6 +667,7 @@ policiesRouter.post('/bulk', requireAdmin, bulkUploadMiddleware, async (req: Req
         results.push({ filename: file.originalname, policy_id: policyId, name, status: 'processing' })
       } catch (e) {
         errors.push({ filename: file.originalname, error: String(e) })
+        await releasePolicySlot(tenantId, { id: policyId, status: 'processing', content_hash: hash })
       }
     }))
 
@@ -644,7 +683,8 @@ policiesRouter.post('/bulk', requireAdmin, bulkUploadMiddleware, async (req: Req
     }
   })
 
-  ok(res, { results, errors, skipped, total: files.length }, 201)
+  const skippedForLimit = skipped.filter(s => s.reason === 'free_policy_limit').map(s => s.filename)
+  ok(res, { results, errors, skipped, total: files.length, ...(allowance.limited ? { skipped_for_limit: skippedForLimit, allowance: await getPolicyAllowance(tenantId) } : {}) }, 201)
 })
 
 // ─── GET /policies/:id/preview ────────────────────────────────────────────────
@@ -1099,6 +1139,10 @@ policiesRouter.post('/:id/delete', requireAdmin, async (req: Request, res: Respo
     err(res, 'POLICY_ACTIVE', 'Archive the policy before deleting it.', 409)
     return
   }
+
+  // A policy that never became usable (failed or still processing) gives its place back on a
+  // free account. Archived and active policies never refund. No op for paid tenants.
+  await releasePolicySlot(tenantId, { id: policy.id, status: policy.status, content_hash: policy.content_hash })
 
   // Remove DB record
   await (prisma as any).policy.delete({ where: { id: policy.id } })

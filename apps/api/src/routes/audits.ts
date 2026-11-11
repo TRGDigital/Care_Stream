@@ -8,7 +8,7 @@ import { detectEvidenceType } from '../lib/evidence-file'
 import { scanBuffer, scannerConfigured } from '../services/security/malware-scan'
 import { uploadAuditEvidence, downloadFile, deleteFile } from '../services/storage/s3'
 import { callClaude } from '../services/ai/claude'
-import { trackAiAction, checkFeature, PlanLimitError, checkAiCreditLimit, logAiCredit } from '../lib/plan-limits'
+import { trackAiAction, checkFeature, PlanLimitError, checkAiCreditLimit, logAiCredit, hasAuditRecommendations } from '../lib/plan-limits'
 import { notifyAdmin } from '../lib/notify'
 import { sendAuditUpdateEmail } from '../services/email/outbound'
 import { getAuditsDue } from '../services/audits/due'
@@ -1884,7 +1884,8 @@ auditsRouter.get('/runs/:id', requireAuditAccess, async (req: Request, res: Resp
   })
   const approval_required = await auditApprovalRequired(tenantId).catch(() => false)
   const quality_statements = await qualityStatementNames(run.template.sections.flatMap((s: any) => s.questions.map((q: any) => q.quality_statement_id)))
-  ok(res, { run: { ...run, evidence }, approval_required, quality_statements })
+  const ai_recommendations_locked = !(await hasAuditRecommendations(tenantId))
+  ok(res, { run: { ...run, evidence, ai_recommendations_locked }, approval_required, quality_statements })
 })
 
 // ─── PUT /audits/runs/:id ─────────────────────────────────────────────────────
@@ -2081,6 +2082,11 @@ async function buildQualityStatementsBlock(): Promise<string> {
 // Generate the AI recommendations for a completed audit and save them to the run. Extracted so it
 // can run either at completion (no approval) OR once the care manager approves (approval workflow).
 export async function generateAuditRecommendations(tenantId: string, runId: string): Promise<string> {
+  // The AI recommendations (and the readiness scoring made alongside them) are the one part of an
+  // audit the Free plan does not include. This is the single place both are produced, so skipping
+  // here costs nothing in AI and covers every caller. The column stays null; the run can be given
+  // its recommendations later (POST /audits/runs/:id/recommendations) once the plan includes them.
+  if (!(await hasAuditRecommendations(tenantId))) return ''
   const rawRun = await (prisma as any).auditRun.findFirst({
     where: { id: runId, tenant_id: tenantId },
     include: {
@@ -2180,6 +2186,19 @@ export async function generateAuditRecommendations(tenantId: string, runId: stri
   return recommendations
 }
 
+// What the UI shows in place of the AI recommendations on a plan that does not include them: a
+// plain count of the failing answers per section, worked out from the answers alone (no AI).
+async function lockedRecsPayload(tenantId: string, runId: string): Promise<{ recommendations_locked: true; findings_summary: Array<{ section: string; failing: number; total: number }> }> {
+  let findings_summary: Array<{ section: string; failing: number; total: number }> = []
+  try {
+    const report: any = await buildAuditReport(tenantId, runId)
+    findings_summary = (report?.sections ?? []).map((s: any) => ({
+      section: String(s.title), total: s.questions.length, failing: s.questions.filter((q: any) => q.outcome === 'fail').length,
+    }))
+  } catch { /* the summary is a nicety, never block completing an audit */ }
+  return { recommendations_locked: true, findings_summary }
+}
+
 // ─── POST /audits/runs/:id/complete ──────────────────────────────────────────
 
 auditsRouter.post('/runs/:id/complete', requireAuditAccess, async (req: Request, res: Response) => {
@@ -2216,6 +2235,7 @@ auditsRouter.post('/runs/:id/complete', requireAuditAccess, async (req: Request,
   }
 
   const approvalRequired = await auditApprovalRequired(tenantId).catch(() => false)
+  const recsLocked = !(await hasAuditRecommendations(tenantId))
 
   // The AI recommendations are generated as soon as the audit is completed, so findings can be put
   // into an action plan straight away. With manager approval on, the audit is then sent to the care
@@ -2231,7 +2251,7 @@ auditsRouter.post('/runs/:id/complete', requireAuditAccess, async (req: Request,
     completed.submitted_at    = new Date()
     completed.submitted_by    = run.auditor_name ?? null
     completed.ai_recommendations = recommendations
-    ok(res, { run: completed, recommendations, approval_required: true })
+    ok(res, { run: completed, recommendations: recommendations || null, approval_required: true, ...(recsLocked ? await lockedRecsPayload(tenantId, run.id) : {}) })
     return
   }
 
@@ -2246,7 +2266,7 @@ auditsRouter.post('/runs/:id/complete', requireAuditAccess, async (req: Request,
   // completed" email below, which is only sent when the home has turned the report email off.
   const reportResult = await generateAndStoreAuditReport(tenantId, run.id, { email: true }).catch(e => { console.error('[audits/complete] report pdf:', e); return 'none' as const })
 
-  ok(res, { run: completed, recommendations, approval_required: false })
+  ok(res, { run: completed, recommendations: recommendations || null, approval_required: false, ...(recsLocked ? await lockedRecsPayload(tenantId, run.id) : {}) })
 
   if (reportResult === 'emailed') return
   const orgName = run.tenant?.name ?? ''
@@ -2510,6 +2530,8 @@ auditsRouter.post('/action-plan/preview-emails', requireAdmin, async (req: Reque
 
 auditsRouter.post('/runs/:id/action-plan/generate', requireAuditAccess, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
+  // The AI action plan is extracted from the AI recommendations, so it follows the same plan flag.
+  if (!(await hasAuditRecommendations(tenantId))) return err(res, 'FEATURE_NOT_AVAILABLE', 'AI action plans come with the AI recommendations, which are part of the paid plans. You can still add actions yourself.', 402)
   try {
     await generateActionPlanForRun(tenantId, String(req.params.id))
     ok(res, await getActionPlan(tenantId, String(req.params.id)))
@@ -2522,4 +2544,23 @@ auditsRouter.post('/runs/:id/action-plan/approve', requireAuditAccess, async (re
     await approveActionPlan(tenantId, String(req.params.id))
     ok(res, await getActionPlan(tenantId, String(req.params.id)))
   } catch (e: any) { err(res, 'ACTION_APPROVE_FAILED', e.message ?? 'Could not approve the plan.', 500) }
+})
+
+
+// ─── POST /audits/runs/:id/recommendations ───────────────────────────────────
+// Generate the AI recommendations for a completed audit that has none (an audit finished on the
+// Free plan, or before recommendations existed). Admin only; the plan must include them.
+// Idempotent: a run that already has recommendations is returned as it is.
+auditsRouter.post('/runs/:id/recommendations', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  try {
+    if (!(await hasAuditRecommendations(tenantId))) return err(res, 'FEATURE_NOT_AVAILABLE', 'AI recommendations are part of the paid plans.', 402)
+    await checkAiCreditLimit(tenantId)
+  } catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
+  const run = await (prisma as any).auditRun.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId }, select: { id: true, status: true, ai_recommendations: true } })
+  if (!run) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
+  if (run.status !== 'completed') return err(res, 'NOT_COMPLETED', 'Complete the audit first.', 400)
+  if (run.ai_recommendations) return ok(res, { recommendations: run.ai_recommendations, generated: false })
+  const recommendations = await generateAuditRecommendations(tenantId, run.id)
+  ok(res, { recommendations, generated: true })
 })

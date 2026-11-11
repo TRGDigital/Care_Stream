@@ -67,6 +67,7 @@ import { seedTrainingModulesIfEmpty } from './lib/seed-training'
 import { sendRenewalReminders } from './services/training/renewalReminders'
 import { requireAuth } from './middleware/auth'
 import { tenantGuard } from './middleware/tenantGuard'
+import { freeTierGuard } from './middleware/freeTierGuard'
 import { apiLimiter, publicLimiter } from './middleware/rateLimiter'
 
 const app = express()
@@ -214,6 +215,8 @@ app.use('/cron', cronRouter)
 app.use(apiLimiter)
 app.use(requireAuth)
 app.use(tenantGuard)
+// Free tenants are default closed on the API (a no op for every other tier).
+app.use(freeTierGuard)
 
 app.use('/policies', policiesRouter)
 app.use('/query', queryRouter)

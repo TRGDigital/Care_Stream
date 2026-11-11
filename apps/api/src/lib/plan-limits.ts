@@ -33,6 +33,7 @@ interface PlanData {
   has_effectiveness:           boolean
   has_training_impact:         boolean
   has_workforce_compliance:    boolean
+  has_audit_recommendations:   boolean
   monthly_annual_license_limit: number | null
 }
 
@@ -59,6 +60,7 @@ async function loadTenantPlan(tenantId: string): Promise<{
           has_effectiveness:           true,
           has_training_impact:         true,
           has_workforce_compliance:    true,
+          has_audit_recommendations:   true,
           monthly_annual_license_limit: true,
         },
       },
@@ -121,6 +123,9 @@ export async function checkAiCreditLimit(tenantId: string): Promise<void> {
   assertNotCancelled(subscription_status)
   const { checkAiTokenLimit } = await import('./ai-tokens')
   await checkAiTokenLimit(tenantId)
+  // Free tenants also have a lifetime budget and a platform wide daily cap; a no op for everyone else.
+  const { checkFreeAiBudget } = await import('./free-tier')
+  await checkFreeAiBudget(tenantId)
   const { used, limit } = await getAiCreditUsage(tenantId)
   if (limit !== null && used >= limit) {
     throw new PlanLimitError(
@@ -273,7 +278,7 @@ export async function checkManualKnowledgeLimit(tenantId: string): Promise<void>
 export type PlanFeature =
   | 'has_gap_detection' | 'has_cqc_report' | 'has_advanced_analytics'
   | 'has_face_to_face' | 'has_custom_audits' | 'has_effectiveness' | 'has_training_impact'
-  | 'has_workforce_compliance'
+  | 'has_workforce_compliance' | 'has_audit_recommendations'
 
 // Which plan unlocks each feature — used for the upgrade message.
 const FEATURE_TIER: Record<PlanFeature, string> = {
@@ -285,6 +290,7 @@ const FEATURE_TIER: Record<PlanFeature, string> = {
   has_effectiveness:        'Enterprise',
   has_training_impact:      'Enterprise',
   has_workforce_compliance: 'Enterprise',
+  has_audit_recommendations: 'Starter',
 }
 
 // ─── Per-tenant beta flags ────────────────────────────────────────────────────
@@ -332,6 +338,8 @@ export interface PlanFeatures {
   has_effectiveness:       boolean
   has_training_impact:     boolean
   has_workforce_compliance: boolean
+  has_audit_recommendations: boolean
+  tier:                    string
   annual_license:          Usage  // monthly annual-module allocation quota
 }
 
@@ -345,9 +353,10 @@ export async function getPlanFeatures(tenantId: string): Promise<PlanFeatures> {
           name: true, price_monthly_pence: true, price_annual_pence: true,
           has_advanced_analytics: true, has_cqc_report: true, has_gap_detection: true,
           has_face_to_face: true, has_custom_audits: true, has_effectiveness: true, has_training_impact: true,
-          has_workforce_compliance: true,
+          has_workforce_compliance: true, has_audit_recommendations: true,
         },
       },
+      tier: true,
     },
   })
   const p = tenant?.plan ?? null
@@ -363,6 +372,8 @@ export async function getPlanFeatures(tenantId: string): Promise<PlanFeatures> {
     has_effectiveness:      !!p?.has_effectiveness,
     has_training_impact:    !!p?.has_training_impact,
     has_workforce_compliance: !!p?.has_workforce_compliance,
+    has_audit_recommendations: p ? p.has_audit_recommendations !== false : true,
+    tier:                   tenant?.tier ?? 'full',
     annual_license:         await getAnnualLicenseUsage(tenantId),
   }
 }
@@ -394,4 +405,12 @@ export async function checkAnnualLicenseLimit(tenantId: string, additional: numb
       `This assignment needs ${additional}. The pool resets at the start of next month, or you can upgrade your plan.`,
     )
   }
+}
+
+// Does the tenant's plan include the AI recommendations at the end of an audit? True for every
+// plan except Free. A tenant with no plan row is treated as included (it cannot reach audits
+// anyway), so a lookup problem can never silently remove a paid feature.
+export async function hasAuditRecommendations(tenantId: string): Promise<boolean> {
+  const { plan } = await loadTenantPlan(tenantId)
+  return plan ? plan.has_audit_recommendations !== false : true
 }

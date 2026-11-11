@@ -6,10 +6,8 @@ import { createPortalSession, handleWebhook, createCheckoutSession, getSubscript
 import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
 import { getPlanFeatures } from '../lib/plan-limits'
+import { needsBillingFor } from '../lib/tiers'
 
-// Tiers bought outright rather than subscribed to. Neither has a Stripe
-// subscription, so neither goes through the card-up-front billing gate.
-const NO_SUBSCRIPTION_TIERS = new Set(['training_only', 'policies_only'])
 
 export const billingRouter = Router()
 
@@ -67,7 +65,7 @@ billingRouter.post('/sync', requireAdmin, async (req: Request, res: Response) =>
     where: { id: tenantId },
     select: { subscription_status: true, stripe_subscription_id: true, tier: true },
   })
-  const needsBilling = t ? (!NO_SUBSCRIPTION_TIERS.has(t.tier ?? '') && t.subscription_status !== 'active' && !t.stripe_subscription_id) : true
+  const needsBilling = needsBillingFor(t)
   ok(res, { needs_billing: needsBilling, subscription_status: t?.subscription_status ?? null })
 })
 
@@ -89,7 +87,7 @@ billingRouter.post('/close-account', requireAdmin, async (req: Request, res: Res
   const tenantId = req.user!.tenant_id
   try {
     // Best-effort Stripe cancel — don't block closure if Stripe is unreachable.
-    await cancelTenantSubscription(tenantId).catch((e) => console.error('[billing] close-account stripe cancel:', e?.message))
+    await cancelTenantSubscription(tenantId, { downgrade: false }).catch((e) => console.error('[billing] close-account stripe cancel:', e?.message))
 
     await (prisma as any).tenant.update({
       where: { id: tenantId },

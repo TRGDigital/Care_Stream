@@ -10,6 +10,7 @@
 
 import Stripe from 'stripe'
 import { prisma } from '../../db/client'
+import { downgradeToFree, liftFreeLimits } from '../../lib/free-tier'
 import { licenceDeal, policyDeal } from '../offers'
 import { offersWithLock } from '../offers/locks'
 import { BUNDLES, bundleQuote, type BundleKey } from '../offers/bundle-rules'
@@ -101,7 +102,7 @@ async function ensurePlanPrice(plan: any, interval: BillingInterval = 'month'): 
 // Creates a hosted Checkout Session for a tenant to subscribe to a plan.
 export async function createCheckoutSession(tenantId: string, planId: string, interval: BillingInterval = 'month'): Promise<string> {
   const stripe = getStripe()
-  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { stripe_customer_id: true, name: true, enterprise_discount: true } })
+  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { stripe_customer_id: true, name: true, enterprise_discount: true, tier: true } })
   if (!tenant) throw new Error('Tenant not found')
   const plan = await (prisma as any).plan.findUnique({ where: { id: planId } })
   if (!plan || !plan.is_active) throw new Error('Plan not available')
@@ -131,7 +132,9 @@ export async function createCheckoutSession(tenantId: string, planId: string, in
     client_reference_id:   tenantId,
     metadata:              { tenant_id: tenantId, plan_id: planId },
     // 14-day free trial with the card captured up front; Stripe auto-charges at trial end.
-    subscription_data:     { metadata: { tenant_id: tenantId, plan_id: planId }, trial_period_days: TRIAL_DAYS },
+    // A Free account upgrading (or a cancelled account coming back) has had its free period, so it
+    // is charged straight away. A brand new tenant keeps the 14 day card up front trial.
+    subscription_data:     { metadata: { tenant_id: tenantId, plan_id: planId }, ...(tenant.tier === 'free' ? {} : { trial_period_days: TRIAL_DAYS }) },
     payment_method_collection: 'always',
     billing_address_collection: 'required',
     // Stripe forbids `discounts` and `allow_promotion_codes` together: pre-apply our coupon
@@ -834,13 +837,16 @@ export async function retrievePolicyCheckoutSession(sessionId: string): Promise<
 // ─── Cancel ───────────────────────────────────────────────────────────────────
 // Cancel a tenant's Stripe subscription immediately and mark the tenant cancelled.
 // Used for in-app cancellation and for cleaning up test accounts before deletion.
-export async function cancelTenantSubscription(tenantId: string): Promise<boolean> {
+export async function cancelTenantSubscription(tenantId: string, opts: { downgrade?: boolean } = {}): Promise<boolean> {
   const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { stripe_subscription_id: true } })
   if (!tenant?.stripe_subscription_id) return false
   await getStripe().subscriptions.cancel(String(tenant.stripe_subscription_id)).catch((e: any) => {
     // Already cancelled or gone — fine to proceed.
     console.warn('[stripe] cancel subscription:', e?.message)
   })
+  // A cancelled paid tenant falls back to the Free plan (when the free tier is switched on) rather
+  // than being locked out. Account closure passes downgrade:false and closes the account itself.
+  if (opts.downgrade !== false && (await downgradeToFree(tenantId))) return true
   await (prisma as any).tenant.update({ where: { id: tenantId }, data: { subscription_status: 'cancelled' } })
   return true
 }
@@ -890,6 +896,7 @@ export async function reconcileTenantBilling(tenantId: string): Promise<boolean>
       ...(sub.metadata?.plan_id ? { plan_id: sub.metadata.plan_id } : {}),
     },
   })
+  if (['active', 'trialing', 'past_due'].includes(sub.status)) await liftFreeLimits(tenantId)
   console.log(`[stripe] reconciled tenant=${tenantId} customer=${customerId} sub=${sub.id} status=${sub.status}`)
   return true
 }
@@ -1001,6 +1008,7 @@ export async function handleWebhook(payload: Buffer, signature: string): Promise
             ...(session.metadata?.plan_id ? { plan_id: session.metadata.plan_id } : {}),
           },
         })
+        if (sub && ['active', 'trialing', 'past_due'].includes(sub.status)) await liftFreeLimits(tenantId)
         console.log(`[stripe] checkout.session.completed: tenant=${tenantId} status=${sub?.status}`)
       } else if (tenantId) {
         await reconcileTenantBilling(tenantId).catch(() => {})
@@ -1012,7 +1020,9 @@ export async function handleWebhook(payload: Buffer, signature: string): Promise
     case 'customer.subscription.updated': {
       const sub = event.data.object as Stripe.Subscription
       const tenantId = sub.metadata?.tenant_id
-      const where = tenantId ? { id: tenantId } : { stripe_customer_id: String(sub.customer) }
+      const baseWhere = tenantId ? { id: tenantId } : { stripe_customer_id: String(sub.customer) }
+      // A tenant already moved to Free must not be flipped back to 'cancelled' by a late event.
+      const where = mapStatus(sub.status) === 'cancelled' ? { ...baseWhere, tier: { not: 'free' } } : baseWhere
       await (prisma as any).tenant.updateMany({
         where,
         data: {
@@ -1023,16 +1033,25 @@ export async function handleWebhook(payload: Buffer, signature: string): Promise
           ...(sub.metadata?.plan_id ? { plan_id: sub.metadata.plan_id } : {}),
         },
       })
+      if (['active', 'trialing', 'past_due'].includes(sub.status)) {
+        const hit = await (prisma as any).tenant.findMany({ where, select: { id: true } })
+        for (const h of hit) await liftFreeLimits(h.id)
+      }
       console.log(`[stripe] ${event.type}: customer=${sub.customer} status=${sub.status}`)
       break
     }
 
     case 'customer.subscription.deleted': {
       const sub = event.data.object as Stripe.Subscription
-      await (prisma as any).tenant.updateMany({
-        where: { stripe_customer_id: String(sub.customer) },
-        data:  { subscription_status: 'cancelled' },
+      const gone = await (prisma as any).tenant.findMany({
+        where: { stripe_customer_id: String(sub.customer) }, select: { id: true, tier: true, closure_requested_at: true },
       })
+      for (const t of gone as any[]) {
+        if (t.tier === 'free') continue                     // already moved to Free by an in app cancel
+        // Not for a closing account. Otherwise a cancelled subscription means Free (when switched on).
+        if (!t.closure_requested_at && (await downgradeToFree(t.id))) continue
+        await (prisma as any).tenant.update({ where: { id: t.id }, data: { subscription_status: 'cancelled' } })
+      }
       console.log(`[stripe] subscription.deleted: customer=${sub.customer}`)
       break
     }

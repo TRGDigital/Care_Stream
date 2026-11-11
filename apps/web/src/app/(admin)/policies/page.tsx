@@ -8,6 +8,7 @@ import { useSession } from 'next-auth/react'
 import { PolicyOrdersPanel } from '@/components/admin/policy-orders-panel'
 import { PolicyIntakePanel } from '@/components/admin/policy-intake-panel'
 import { PolicyHistoryTab } from '@/components/admin/policy-history-tab'
+import { NewPoliciesTab } from '@/components/admin/policies/new-policies-tab'
 import { createApiClient } from '@/lib/api-client'
 import EditablePolicyBody from '@/components/admin/editable-policy-body'
 import SlowLoadHint from '@/components/admin/slow-load-hint'
@@ -80,7 +81,7 @@ export default function PoliciesPage() {
   const userId = session?.user?.email ?? 'guest'
   const [policies,       setPolicies]       = useState<any[]>([])
   const [loading,        setLoading]        = useState(true)
-  const [tab,            setTab]            = useState<'active' | 'archived' | 'history'>('active')
+  const [tab,            setTab]            = useState<'active' | 'archived' | 'history' | 'new'>('active')
   const [search,         setSearch]         = useState('')
   const [showUpload,     setShowUpload]     = useState(false)
   const [showBulkUpload, setShowBulkUpload] = useState(false)
@@ -365,6 +366,16 @@ export default function PoliciesPage() {
         >
           History
         </button>
+        <button
+          onClick={() => setTab('new')}
+          className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+            tab === 'new'
+              ? 'border-teal text-teal'
+              : 'border-transparent text-neutral-mid hover:text-neutral-dark'
+          }`}
+        >
+          New policies
+        </button>
       </div>
 
       {/* Possible content duplicates — same policy text under a different name */}
@@ -543,7 +554,7 @@ export default function PoliciesPage() {
           panel of outstanding work sitting above it reads as part of the history. */}
       {/* A policies-only buyer has no adopted changes and no reviewer, so neither this
           panel nor its "we couldn't check" fallback means anything to them. */}
-      {tab !== 'history' && !policiesOnly && (() => {
+      {tab !== 'history' && tab !== 'new' && !policiesOnly && (() => {
         const toReview = reviewSummary.filter(d => d.pending > 0)
         if (!toReview.length) {
           // The summary fetch failed (after a retry) and we have nothing cached to show —
@@ -593,7 +604,7 @@ export default function PoliciesPage() {
       })()}
 
       {/* Search */}
-      {tab !== 'history' && !loading && tabPolicies.length > 0 && (
+      {tab !== 'history' && tab !== 'new' && !loading && tabPolicies.length > 0 && (
         <div className="relative mb-4 max-w-md">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-mid" />
           <input
@@ -611,7 +622,11 @@ export default function PoliciesPage() {
       )}
 
       {/* Content */}
-      {tab === 'history' ? (
+      {tab === 'new' ? (
+        session?.accessToken && session.user?.email ? (
+          <NewPoliciesTab token={session.accessToken} email={session.user.email} orgName={(session.user as any).tenantName} name={session.user.name ?? undefined} libraryNames={policies.map((p: any) => p.name)} isFree={freeTier} />
+        ) : null
+      ) : tab === 'history' ? (
         session?.accessToken ? <PolicyHistoryTab token={session.accessToken} /> : null
       ) : loading ? (
         <div className="rounded-card bg-white shadow-card px-6 py-6">

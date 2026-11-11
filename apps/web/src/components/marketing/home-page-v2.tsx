@@ -3,6 +3,7 @@ import { SiteImage } from '@/components/site-image'
 import { TRAINING_ACCREDITED } from '@/lib/training-commerce'
 import { HomeShowcase, type Slide } from './home-showcase'
 import { HomeVideo } from './home-video'
+import { FreeBanner } from './free-banner'
 import { HomeAccordion } from './home-accordion'
 import { HomeLines } from './home-lines'
 import { REVIEWS } from '@/lib/reviews'
@@ -132,7 +133,7 @@ const STEPS: [string, boolean, React.ReactNode][] = [
   ['#3B82C4', false, <I24 key="i"><path d="M4 6h16v11H9l-5 4z" {...st} strokeWidth="1.8" /></I24>],
 ]
 
-export function HomePageV2({ s }: { s: HomeCopy }) {
+export function HomePageV2({ s, showFree = false }: { s: HomeCopy; showFree?: boolean }) {
   const accordion = [1, 2, 3, 4, 5].map(n => ({ title: s(`pi.a${n}.title`), body: s(`pi.a${n}.body`) }))
   const training = [1, 2, 3, 4, 5].map(n => ({ title: s(`training.a${n}.title`), body: s(`training.a${n}.body`) }))
 
@@ -276,6 +277,8 @@ export function HomePageV2({ s }: { s: HomeCopy }) {
             </div>
           </div>
         </section>
+
+        {showFree && <FreeBanner variant="home" />}
 
         <section className="hubsec" style={{ paddingBottom: 72 }}>
           <div className="wrap" style={{ textAlign: 'center' }}>

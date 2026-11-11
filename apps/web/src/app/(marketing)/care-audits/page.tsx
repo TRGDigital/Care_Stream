@@ -12,6 +12,8 @@ import { SiteImage } from '@/components/site-image'
 import { FEATURE_IMAGE_ALT } from '@/lib/feature-images'
 import { ServicePageIfPublished } from '@/components/marketing/service-page-loader'
 import { isV2 } from '@/lib/v2-rollout'
+import { freeLive } from '@/lib/free-rollout'
+import { FreeBanner } from '@/components/marketing/free-banner'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
@@ -96,7 +98,10 @@ export default async function CareAuditsPage(
   // copy stored in service_pages; if nothing is published yet this falls through to
   // the page below, so a page can never go blank waiting for an import.
   if (await isV2('services', searchParams)) {
-    const v2 = await ServicePageIfPublished({ slug: 'care-audits' })
+    const v2 = await ServicePageIfPublished({
+      slug: 'care-audits',
+      afterHero: (await freeLive(searchParams)) ? <FreeBanner variant="audits" /> : undefined,
+    })
     if (v2) return v2
   }
 

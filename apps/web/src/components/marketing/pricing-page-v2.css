@@ -64,7 +64,7 @@
 .ppage-v2 .psave{font-size:.72rem;font-weight:700;color:var(--good);margin-left:6px}
 .ppage-v2 .pplans{padding:0}
 .ppage-v2 .pplans-in{padding-block:clamp(30px,4.5vh,48px) clamp(44px,6vh,72px);
-    display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:start}
+    display:grid;grid-template-columns:repeat(var(--plans,3),minmax(0,1fr));gap:22px;align-items:start}
 .ppage-v2 .pcard{background:var(--ground);border:1px solid var(--line);border-radius:16px;padding:28px;
     box-shadow:var(--shadow);display:flex;flex-direction:column;height:100%}
 .ppage-v2 .pcard.hi{border-color:var(--accent);box-shadow:var(--shadow-lg);position:relative}

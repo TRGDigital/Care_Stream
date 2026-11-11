@@ -32,10 +32,15 @@ export function PolicyOrdersPanel({ token }: { token: string }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const load = () =>
-    createApiClient(token).policyPurchases.list()
+  // Never an endless spinner: the request is given 15 seconds, and a failure shows a message with a retry.
+  const [loadFailed, setLoadFailed] = useState('')
+  const load = () => {
+    setLoadFailed('')
+    const timeout = new Promise<never>((_, rej) => setTimeout(() => rej(new Error('This is taking too long.')), 15_000))
+    return Promise.race([createApiClient(token).policyPurchases.list(), timeout])
       .then(r => setPurchases(r.purchases))
-      .catch((e: Error) => setError(e.message))
+      .catch((e: Error) => setLoadFailed(e.message || 'We could not load your orders.'))
+  }
 
   useEffect(() => { load() }, [token])
 
@@ -57,6 +62,14 @@ export function PolicyOrdersPanel({ token }: { token: string }) {
     finally { setSaving(false) }
   }
 
+  if (purchases === null && loadFailed) {
+    return (
+      <div className="mb-6 flex flex-wrap items-center gap-3 rounded-md border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <span className="min-w-0 flex-1">We could not load your policy orders. {loadFailed}</span>
+        <button onClick={() => load()} className="shrink-0 rounded-md border border-red-200 bg-white px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-100">Try again</button>
+      </div>
+    )
+  }
   if (purchases === null) {
     return <div className="mb-6 flex items-center gap-2 text-sm text-neutral-mid"><Loader2 size={14} className="animate-spin" /> Loading your orders…</div>
   }

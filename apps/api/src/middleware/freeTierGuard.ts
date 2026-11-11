@@ -17,6 +17,7 @@ import { tierOf } from '../lib/tiers'
 const ALLOW: RegExp[] = [
   /^\/audits(\/|$)/,                                   // every platform audit; custom audit routes keep their own plan flag
   /^\/policies(\/|$)/,                                 // upload and manage (the lifetime allowance is enforced inside); intake is denied below
+  /^\/policy-purchases(\/|$)/,                       // orders for policies bought from CareStream (read, intake details, checkout)
   /^\/users(\/|$)/,                                    // unlimited staff logins (emails are rate capped in the route)
   /^\/billing(\/|$)/,
   /^\/settings(\/|$)/,

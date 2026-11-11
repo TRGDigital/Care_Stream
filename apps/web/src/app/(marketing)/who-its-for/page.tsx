@@ -20,7 +20,7 @@ const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:und
 export const metadata = {
   alternates: { canonical: 'https://www.carestreamai.com/who-its-for' },
   title: "Who It's For",
-  description: 'CareStreamAI is built for every care setting — residential, nursing, domiciliary, supported living, hospice, and more. See how it fits your specific service.',
+  description: 'CareStreamAI is built for every care setting: residential, nursing, domiciliary, supported living, hospice, and more. See how it fits your specific service.',
   openGraph: {
     type: 'website',
     title: "Who CareStreamAI Is For",

@@ -16,7 +16,7 @@ export const metadata = {
     type: 'website',
     images: ['/og-image.png'],
     title: 'Contact CareStreamAI',
-    description: 'Get in touch — we respond to every message within one business day.',
+    description: 'Get in touch. We respond to every message within one business day.',
     url: 'https://www.carestreamai.com/contact',
   },
 }

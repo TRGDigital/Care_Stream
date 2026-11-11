@@ -68,7 +68,7 @@ const HOW_TO: Record<Activity['type'], { cue: string; detail: string[] }> = {
     detail: [
       'Every term on the left matches one meaning on the right.',
       'Tap a term to select it, then tap the meaning that goes with it. A correct pair turns green and stays put.',
-      'If you pick the wrong meaning it flashes red and nothing is lost — just try another.',
+      'If you pick the wrong meaning it flashes red and nothing is lost, so just try another.',
     ],
   },
 }
@@ -143,7 +143,7 @@ function OrderActivity({ act, onAttempt }: { act: Activity; onAttempt: () => voi
         onReset={() => { setOrder(seededShuffle(correct.map((_, i) => i), act.id + 'r')); setChecked(false) }}
         result={!checked ? null : allRight
           ? { ok: true,  text: 'All in the right order.' }
-          : { ok: false, text: `${rightCount} of ${correct.length} in the right place — the green rows are correct.` }}
+          : { ok: false, text: `${rightCount} of ${correct.length} in the right place. The green rows are correct.` }}
       />
     </>
   )
@@ -193,7 +193,7 @@ function SortActivity({ act, onAttempt }: { act: Activity; onAttempt: () => void
       <Cue type="sort" />
       <div className="mb-2 flex flex-wrap gap-2">
         {loose.length ? loose.map(i => tile(i, false))
-          : <p className="text-sm text-neutral-mid">Everything placed — check your answers.</p>}
+          : <p className="text-sm text-neutral-mid">Everything placed. Check your answers.</p>}
       </div>
       {/* Points from the items down into the boxes they get sorted into */}
       <div aria-hidden="true" className="mb-2 flex items-center justify-center gap-2 text-amber-brand">
@@ -230,7 +230,7 @@ function SortActivity({ act, onAttempt }: { act: Activity; onAttempt: () => void
         checkDisabled={done === 0}
         result={!checked ? null : rightCount === items.length
           ? { ok: true,  text: 'All in the right place.' }
-          : { ok: false, text: `${rightCount} of ${items.length} correct — tap a red one to move it.` }}
+          : { ok: false, text: `${rightCount} of ${items.length} correct. Tap a red one to move it.` }}
       />
     </>
   )
@@ -356,7 +356,7 @@ function HowToButton({ type }: { type: Activity['type'] }) {
             <span key={i} className="mb-1.5 block text-xs leading-relaxed text-neutral-dark last:mb-0">{d}</span>
           ))}
           <span className="mt-2 block border-t border-gray-100 pt-2 text-[11px] text-neutral-mid">
-            Nothing here is marked — it will not change your score.
+            Nothing here is marked, so it will not change your score.
           </span>
         </span>
       )}
@@ -436,7 +436,7 @@ export function ActivityStep({ token, act, onAttempt }: { token?: string; act: A
         {act.type === 'sort'  && <SortActivity  act={act} onAttempt={attempted} />}
         {act.type === 'match' && <MatchActivity act={act} onAttempt={attempted} />}
         <p className="mt-4 border-t border-gray-100 pt-3 text-xs text-neutral-mid">
-          This exercise is here to help you practise — it is not marked and does not affect your result.
+          This exercise is here to help you practise. It is not marked and does not affect your result.
         </p>
       </div>
     </div>

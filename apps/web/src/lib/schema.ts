@@ -1,3 +1,5 @@
+import { planFacts } from '@/lib/pricing-source'
+
 // Centralised schema.org (JSON-LD) builders. Rendered via <JsonLd>. All entities
 // describe CareStreamAI accurately as a B2B SaaS (Organization + SoftwareApplication),
 // not a care facility.
@@ -94,10 +96,12 @@ export function webApplicationSchema() {
     operatingSystem:      'Web and mobile hub (also accessible by email)',
     description:          'Gives care teams 24/7 access to their organisation’s own policies and training, in 60+ languages, in the hub or by email, grounded in approved documents (RAG), with audits and CQC readiness reporting.',
     provider:             { '@id': ORG_ID },
-    offers: [
-      { '@type': 'Offer', name: 'Starter',      price: '49.00',  priceCurrency: 'GBP', category: 'subscription', url: `${SITE_URL}/pricing` },
-      { '@type': 'Offer', name: 'Professional', price: '129.00', priceCurrency: 'GBP', category: 'subscription', url: `${SITE_URL}/pricing` },
-    ],
+    // Read from the one price source, so the home page can never disagree with /pricing.
+    offers: planFacts().map(f => ({
+      '@type': 'Offer', name: f.name, price: (f.monthlyPence / 100).toFixed(2), priceCurrency: 'GBP',
+      category: 'subscription', url: `${SITE_URL}/pricing`,
+      priceSpecification: { '@type': 'UnitPriceSpecification', price: (f.monthlyPence / 100).toFixed(2), priceCurrency: 'GBP', unitText: 'month', billingIncrement: 1 },
+    })),
   }
 }
 
@@ -347,7 +351,7 @@ export function itemListSchema(opts: {
 // Product with several offers is the shape Google expects for "one thing, several price
 // points", rather than three unrelated Products competing for the same page.
 export function pricingProductSchema(opts: {
-  tiers: Array<{ name: string; pricePence: number; description?: string }>
+  tiers: Array<{ name: string; pricePence: number; annualPence?: number | null; description?: string }>
 }) {
   return {
     '@context':   'https://schema.org',
@@ -366,13 +370,11 @@ export function pricingProductSchema(opts: {
       availability:     'https://schema.org/InStock',
       url:              `${SITE_URL}/pricing`,
       seller:           { '@id': ORG_ID },
-      priceSpecification: {
-        '@type':          'UnitPriceSpecification',
-        price:            (t.pricePence / 100).toFixed(2),
-        priceCurrency:    'GBP',
-        unitText:         'month',
-        billingIncrement: 1,
-      },
+      // Monthly, and the annual figure the page also prints (two months free).
+      priceSpecification: [
+        { '@type': 'UnitPriceSpecification', price: (t.pricePence / 100).toFixed(2), priceCurrency: 'GBP', unitText: 'month', billingIncrement: 1 },
+        ...(t.annualPence ? [{ '@type': 'UnitPriceSpecification', price: (t.annualPence / 100).toFixed(2), priceCurrency: 'GBP', unitText: 'year', billingIncrement: 1 }] : []),
+      ],
     })),
   }
 }

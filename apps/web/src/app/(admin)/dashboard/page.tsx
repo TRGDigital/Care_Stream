@@ -8,6 +8,7 @@ import { AiUsageCards } from '@/components/ai-usage'
 import { SetupChecklist } from '@/components/admin/setup-checklist'
 import { PlanCard } from '@/components/admin/plan-card'
 import { TrainingOnlyDashboard } from '@/components/admin/training-only-dashboard'
+import { FreeDashboard } from '@/components/admin/free-tier'
 import { persistentCache } from '@/lib/page-cache'
 import { BookOpen, ChevronDown, FileText, Info, Lightbulb, Mail, MessageSquare, Mic, Users, CalendarClock, Loader2, RefreshCw, Check } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -240,7 +241,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!session?.accessToken) return
     // Training-only clients see TrainingOnlyDashboard, which loads its own data.
-    if ((session.user as any)?.tier === 'training_only') return
+    if ((session.user as any)?.tier === 'training_only' || (session.user as any)?.tier === 'free') return
     const api = createApiClient(session.accessToken)
 
     Promise.allSettled([
@@ -298,6 +299,11 @@ export default function DashboardPage() {
       if (cached) persistentCache.set(`admin-dashboard-${userId}`, { ...cached, dueReview: n })
       return n
     })
+  }
+
+  // Free accounts get a small dashboard of their own: the analytics calls below are paid features.
+  if ((session?.user as any)?.tier === 'free' && session?.accessToken) {
+    return <FreeDashboard token={session.accessToken} name={session.user?.name} />
   }
 
   // Training-only clients (bought course licences from the shop) get a dashboard about their training.

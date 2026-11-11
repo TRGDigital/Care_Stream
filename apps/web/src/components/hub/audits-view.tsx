@@ -361,6 +361,7 @@ function AuditRunner({ token, runId, isAdmin, onExit }: { token: string; runId: 
   if (!run) return <div className="flex-1 p-6"><button onClick={onExit} className="text-sm text-teal">← Back to audits</button><p className="mt-4 text-sm text-status-error">Audit not found.</p></div>
 
   const isCompleted = run.status === 'completed'
+  const recsLocked  = !!run.ai_recommendations_locked   // free account: recommendations are part of the paid plans
   // Questions hidden by a condition are not asked; findings and free text are optional.
   const visibleIds = visibleQuestionIds(run.template?.sections ?? [], answers)
   const sections: any[] = (run.template?.sections ?? []).map((s: any) => ({ ...s, questions: s.questions.filter((q: any) => visibleIds.has(q.id)) })).filter((s: any) => s.questions.length)
@@ -517,8 +518,8 @@ function AuditRunner({ token, runId, isAdmin, onExit }: { token: string; runId: 
             {completeError && <p className="mt-2 text-xs text-red-600">{completeError}</p>}
             <p className="mt-2 text-xs text-neutral-mid">
               {approvalRequired
-                ? 'Generates the AI recommendations and sends the audit to your care manager to review and sign off.'
-                : 'Completing generates AI recommendations and locks the audit. It will appear in your admin Audit section.'}
+                ? (recsLocked ? 'Sends the audit to your care manager to review and sign off.' : 'Generates the AI recommendations and sends the audit to your care manager to review and sign off.')
+                : recsLocked ? 'Completing locks the audit. It will appear in your admin Audit section.' : 'Completing generates AI recommendations and locks the audit. It will appear in your admin Audit section.'}
             </p>
           </div>
         )}
@@ -527,6 +528,7 @@ function AuditRunner({ token, runId, isAdmin, onExit }: { token: string; runId: 
           <div className="mt-6 rounded-xl border border-green-200 bg-green-50/50 p-4 text-sm text-neutral-dark">
             <p className="mb-1 flex items-center gap-1.5 font-semibold text-green-700"><CheckCircle2 size={15} /> Completed</p>
             {run.approval_status === 'pending_manager' && <p className="mb-2 text-xs text-amber-700">Sent to your care manager to sign off.</p>}
+            {recsLocked && <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">AI recommendations are part of the paid plans. Your findings and report are saved, and recommendations can be added after an upgrade. <a href="/billing" className="font-semibold underline">See plans</a></p>}
             {run.ai_recommendations && <div className="mt-2"><p className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-mid">AI recommendations</p><AuditRecs text={run.ai_recommendations} /></div>}
             <button onClick={() => api.audits.reportPdfBlob(runId).then(b => { const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = 'audit-report.pdf'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 30_000) }).catch(() => {})}
               className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal">Download PDF report</button>

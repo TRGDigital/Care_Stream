@@ -365,9 +365,11 @@ function ChatPageInner() {
   // rest of the hub stays visible but greyed out (locked) so they can see the full
   // product without being able to open sections that don't apply to their package.
   const trainingOnly                                   = (session?.user as any)?.tier === 'training_only'
-  const hubLocked                                      = (v: string) => trainingOnly && v !== 'annual' && v !== 'followup'
+  // Free accounts: the hub is for audits (Staff + Audits members); everything else is a paid plan.
+  const freeTier                                       = (session?.user as any)?.tier === 'free'
+  const hubLocked                                      = (v: string) => (trainingOnly && v !== 'annual' && v !== 'followup') || (freeTier && v !== 'audits' && v !== 'audit-approvals')
   const lockedCls                                      = 'cursor-not-allowed opacity-40'
-  const LOCKED_TITLE                                   = 'Not included in your training package'
+  const LOCKED_TITLE                                   = freeTier ? 'Part of the paid plans' : 'Not included in your training package'
   // Admins + "Staff + Audits" members can see the hub Audits section.
   const canAudit                                       = isAdmin || (session?.user as any)?.auditAccess === true
   // CPD assessor: locked-down hub showing only Annual Training + Follow-up.
@@ -375,6 +377,7 @@ function ChatPageInner() {
   const [category, setCategory]                        = useState<DocumentCategory | null>(null)
   // Reviewers and training-only users land straight on Annual Training.
   useEffect(() => { if (isReviewer || trainingOnly) setView(v => (v === 'chat' ? 'annual' : v)) }, [isReviewer, trainingOnly])
+  useEffect(() => { if (freeTier) setView(v => (v === 'chat' ? 'audits' : v)) }, [freeTier])
   const [sessionId, setSessionId]                      = useState<string>(() => crypto.randomUUID())
   const [sessions, setSessions]                        = useState<StoredSession[]>([])
   const [messages, setMessages]                        = useState<ChatMessage[]>([])

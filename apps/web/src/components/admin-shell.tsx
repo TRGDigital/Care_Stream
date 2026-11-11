@@ -18,6 +18,7 @@ import {
 import { GuidedTour } from '@/components/admin/guided-tour'
 import { SuggestionsButton } from '@/components/admin/suggestions-drawer'
 import { createApiClient } from '@/lib/api-client'
+import { FreeLockOverlay } from '@/components/admin/free-tier'
 import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
 import { pageCache } from '@/lib/page-cache'
 
@@ -86,6 +87,9 @@ const TRAINING_ONLY_NAV = new Set(['/dashboard', '/group', '/staff', '/training'
 // and Billing (the invoice). Everything else opens the tier overlay instead of being
 // merely greyed out: this tier has never seen CareStream, so the lock is the pitch.
 const POLICIES_ONLY_NAV = new Set(['/policies', '/settings', '/billing'])
+// Free accounts: audits, the policy library, gap analysis, staff, settings, billing and help.
+// Everything else opens the paid plans overlay.
+const FREE_NAV = new Set(['/dashboard', '/audits', '/gaps', '/policies', '/staff', '/settings', '/billing', '/guides'])
 
 interface AdminShellProps {
   userName:   string
@@ -99,9 +103,10 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
   const { data: session } = useSession()
   const trainingOnly = session?.user?.tier === 'training_only'
   const policiesOnly = (session?.user as any)?.tier === 'policies_only'
+  const freeTier = (session?.user as any)?.tier === 'free'
   // The guided tour walks the full CareStream console. Neither self-serve tier has
   // most of what it points at, so it is not offered and does not auto-open.
-  const selfServe = trainingOnly || policiesOnly
+  const selfServe = trainingOnly || policiesOnly || freeTier
   const [lockedFeature, setLockedFeature] = useState<string | null>(null)
   const { features } = usePlanFeatures()
   const hasWorkforce = hasFeature(features, 'has_workforce_compliance')
@@ -193,7 +198,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
         'hidden flex-shrink-0 flex-col bg-[#1A0830] transition-[width] duration-200 md:flex print:hidden',
         collapsed ? 'w-16' : 'w-60',
       )}>
-        <SidebarContent pathname={pathname} trainingOnly={trainingOnly} policiesOnly={policiesOnly} selfServe={selfServe} onLocked={setLockedFeature} multiSite={multiSite} hasWorkforce={hasWorkforce} collapsed={collapsed} onTour={() => setTourSignal(s => s + 1)} />
+        <SidebarContent pathname={pathname} trainingOnly={trainingOnly} policiesOnly={policiesOnly} freeTier={freeTier} selfServe={selfServe} onLocked={setLockedFeature} multiSite={multiSite} hasWorkforce={hasWorkforce} collapsed={collapsed} onTour={() => setTourSignal(s => s + 1)} />
       </aside>
 
       {/* Sidebar drawer (mobile < md) */}
@@ -208,7 +213,7 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
             >
               <X size={20} />
             </button>
-            <SidebarContent pathname={pathname} trainingOnly={trainingOnly} policiesOnly={policiesOnly} selfServe={selfServe} onLocked={setLockedFeature} multiSite={multiSite} hasWorkforce={hasWorkforce} onNavigate={() => setMobileNav(false)} onTour={() => { setMobileNav(false); setTourSignal(s => s + 1) }} />
+            <SidebarContent pathname={pathname} trainingOnly={trainingOnly} policiesOnly={policiesOnly} freeTier={freeTier} selfServe={selfServe} onLocked={setLockedFeature} multiSite={multiSite} hasWorkforce={hasWorkforce} onNavigate={() => setMobileNav(false)} onTour={() => { setMobileNav(false); setTourSignal(s => s + 1) }} />
           </aside>
         </div>
       )}
@@ -333,16 +338,16 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
         />
       )}
 
-      {lockedFeature && (
-        <UpgradeOverlay feature={lockedFeature} onClose={() => setLockedFeature(null)} />
-      )}
+      {lockedFeature && (freeTier
+        ? <FreeLockOverlay feature={lockedFeature} token={session?.accessToken} onClose={() => setLockedFeature(null)} />
+        : <UpgradeOverlay feature={lockedFeature} onClose={() => setLockedFeature(null)} />)}
 
     </div>
   )
 }
 
 // Sidebar contents — shared by the desktop sidebar and the mobile drawer.
-function SidebarContent({ pathname, trainingOnly, policiesOnly, selfServe, onLocked, multiSite, hasWorkforce, collapsed, onNavigate, onTour }: { pathname: string; trainingOnly?: boolean; policiesOnly?: boolean; selfServe?: boolean; onLocked?: (label: string) => void; multiSite?: boolean; hasWorkforce?: boolean; collapsed?: boolean; onNavigate?: () => void; onTour?: () => void }) {
+function SidebarContent({ pathname, trainingOnly, policiesOnly, freeTier, selfServe, onLocked, multiSite, hasWorkforce, collapsed, onNavigate, onTour }: { pathname: string; trainingOnly?: boolean; freeTier?: boolean; policiesOnly?: boolean; selfServe?: boolean; onLocked?: (label: string) => void; multiSite?: boolean; hasWorkforce?: boolean; collapsed?: boolean; onNavigate?: () => void; onTour?: () => void }) {
   // Training-only tenants get a Licences item (where they allocate what they bought).
   let sections = trainingOnly
     ? NAV_SECTIONS.map(s => s.heading === 'Admin'
@@ -394,7 +399,7 @@ function SidebarContent({ pathname, trainingOnly, policiesOnly, selfServe, onLoc
               const { href, label, Icon } = item
               const enterpriseItem = (item as { enterprise?: boolean }).enterprise
               // Policies-only buyers get a real button: clicking explains the tiers.
-              if (policiesOnly && !POLICIES_ONLY_NAV.has(href)) {
+              if ((policiesOnly && !POLICIES_ONLY_NAV.has(href)) || (freeTier && !FREE_NAV.has(href))) {
                 return (
                   <button
                     key={href}

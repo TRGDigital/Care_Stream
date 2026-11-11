@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Upload, FolderUp, RefreshCw, X, MoreHorizontal, Archive, RotateCcw, Search, GraduationCap, Trash2, Copy, Loader2, CheckCircle2, Eye, FileText, FilePenLine, CalendarClock, Pencil, Download, Printer, Scale } from 'lucide-react'
 import { buildPrintDoc, openPrintDoc, type OrgCtx } from '@/components/admin/policies/policy-print'
+import { PolicyAllowanceStrip } from '@/components/admin/free-tier'
 import { PolicyChangesModal } from '@/components/admin/policy-changes-modal'
 
 // Upload modals are lazy-loaded — only fetched when a dialog is opened.
@@ -71,6 +72,11 @@ function sectionColour(name: string): string {
 export default function PoliciesPage() {
   const { data: session }           = useSession()
   const policiesOnly                = (session?.user as any)?.tier === 'policies_only'
+  const freeTier                    = (session?.user as any)?.tier === 'free'
+  // Free accounts: how many of the 5 lifetime policies are left (null until known / on paid plans).
+  const [freeLeft,  setFreeLeft]     = useState<number | null>(null)
+  const [allowanceKey, setAllowanceKey] = useState(0)
+  const freeFull = freeTier && freeLeft !== null && freeLeft <= 0
   const userId = session?.user?.email ?? 'guest'
   const [policies,       setPolicies]       = useState<any[]>([])
   const [loading,        setLoading]        = useState(true)
@@ -297,17 +303,21 @@ export default function PoliciesPage() {
         <h1 className="text-2xl font-bold text-neutral-dark">Policies</h1>
         {tab === 'active' && (
           <div className="flex items-center gap-2">
-            <Button variant="secondary" onClick={() => setShowBulkUpload(true)} size="md">
+            <Button variant="secondary" onClick={() => setShowBulkUpload(true)} size="md" disabled={freeFull} title={freeFull ? 'You have used all of your free policies' : undefined}>
               <FolderUp size={15} className="mr-2" />
               Bulk upload
             </Button>
-            <Button onClick={() => setShowUpload(true)} size="md">
+            <Button onClick={() => setShowUpload(true)} size="md" disabled={freeFull} title={freeFull ? 'You have used all of your free policies' : undefined}>
               <Upload size={15} className="mr-2" />
               Upload policy
             </Button>
           </div>
         )}
       </div>
+
+      {freeTier && session?.accessToken && (
+        <PolicyAllowanceStrip token={session.accessToken} refreshKey={allowanceKey} onAllowance={a => setFreeLeft(a.remaining)} />
+      )}
 
       {/* Tabs */}
       <div className="mb-4 flex gap-1 border-b border-gray-200">
@@ -437,7 +447,7 @@ export default function PoliciesPage() {
           sections={sections}
           categories={categoryOptions}
           onClose={() => setShowUpload(false)}
-          onUploaded={() => { setShowUpload(false); setLoading(true); load(); loadDuplicates() }}
+          onUploaded={() => { setShowUpload(false); setLoading(true); load(); loadDuplicates(); setAllowanceKey(k => k + 1) }}
         />
       )}
       {showBulkUpload && (
@@ -446,7 +456,7 @@ export default function PoliciesPage() {
           sections={sections}
           categories={categoryOptions}
           onClose={() => setShowBulkUpload(false)}
-          onUploaded={() => { setShowBulkUpload(false); setLoading(true); load(); loadDuplicates() }}
+          onUploaded={() => { setShowBulkUpload(false); setLoading(true); load(); loadDuplicates(); setAllowanceKey(k => k + 1) }}
         />
       )}
       {versionTarget && (

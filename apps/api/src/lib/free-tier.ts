@@ -21,13 +21,17 @@ export function freeTierEnabled(): boolean {
   return (process.env.FREE_TIER_ENABLED ?? 'false').toLowerCase() === 'true'
 }
 
-/** True when free signups are open, or the request carries the private preview code. */
-export function freeSignupAllowed(previewCode?: string | null): boolean {
-  if (freeTierEnabled()) return true
+/** True when the request carries the private preview code (whether or not signups are open). */
+export function isPreviewCode(previewCode?: string | null): boolean {
   const want = process.env.FREE_TIER_PREVIEW_CODE
   if (!want || !previewCode) return false
   const a = Buffer.from(String(previewCode)), b = Buffer.from(want)
   return a.length === b.length && crypto.timingSafeEqual(a, b)
+}
+
+/** True when free signups are open, or the request carries the private preview code. */
+export function freeSignupAllowed(previewCode?: string | null): boolean {
+  return freeTierEnabled() || isPreviewCode(previewCode)
 }
 
 // ─── Policy allowance (lifetime, per tenant) ──────────────────────────────────
@@ -183,7 +187,7 @@ const hashIp = (ip: string) => crypto.createHash('sha256').update(`${process.env
 export type FreeSignupVerdict = { ok: true } | { ok: false; code: string; message: string }
 
 /** Abuse checks for a Free signup. Records the attempt either way. */
-export async function checkFreeSignup(email: string, ip: string, honeypot?: string | null): Promise<FreeSignupVerdict> {
+export async function checkFreeSignup(email: string, ip: string, honeypot?: string | null, opts: { preview?: boolean } = {}): Promise<FreeSignupVerdict> {
   const domain = emailDomain(email)
   const ipHash = hashIp(ip || 'unknown')
   const record = (outcome: string) => (prisma as any).signupAttempt.create({ data: { ip_hash: ipHash, email_domain: domain, outcome } }).catch(() => {})
@@ -191,6 +195,11 @@ export async function checkFreeSignup(email: string, ip: string, honeypot?: stri
 
   if (honeypot) return deny('SIGNUP_REJECTED', 'We could not create this account.', 'honeypot')
   if (isDisposableDomain(domain)) return deny('DISPOSABLE_EMAIL', 'Please use your work email address. Temporary email services are not accepted.', 'disposable')
+
+  // A signup made with the private preview code is a test (Len, on his own addresses): it may
+  // repeat from the same connection and domain. Disposable addresses are still refused and the
+  // email still has to be verified.
+  if (opts.preview) { await record('preview'); return { ok: true } }
 
   const day = new Date(Date.now() - 24 * 3600_000)
   const fromIp = await (prisma as any).signupAttempt.count({ where: { ip_hash: ipHash, outcome: 'created', created_at: { gte: day } } })
@@ -273,4 +282,32 @@ export async function freeStaffGuard(tenantId: string, kind: 'email' | 'invite')
       kind === 'email' ? 'Free accounts can send up to 50 staff emails a day. Please try again tomorrow, or share the sign in link yourself.'
                        : 'Free accounts can add up to 60 staff an hour. Please try again shortly.')
   }
+}
+
+// ─── Test tenants ─────────────────────────────────────────────────────────────
+
+export const isTestTenantFlags = (flags: unknown): boolean => !!(flags as any)?.is_test
+
+/** Retire a TEST tenant: deactivate every login, mark it closed (same fields as the account
+ *  closure flow) and rename its user emails so those addresses can sign up again. A hard delete is
+ *  not possible: audit_logs is append-only (trigger) and references the tenant. Refuses a tenant
+ *  that is not flagged is_test, so it can never be pointed at a real customer by mistake. */
+export async function retireTestTenant(tenantId: string): Promise<{ users: number }> {
+  const t = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { id: true, name: true, feature_flags: true, stripe_subscription_id: true } })
+  if (!t) throw new Error('Tenant not found')
+  if (!isTestTenantFlags(t.feature_flags)) throw new Error('Not a test tenant: only tenants created with the preview code can be retired here.')
+  if (t.stripe_subscription_id) throw new Error('This test tenant has a Stripe subscription. Cancel it first.')
+  const users: Array<{ id: string; email: string }> = await (prisma as any).user.findMany({ where: { tenant_id: tenantId }, select: { id: true, email: true } })
+  const stamp = Date.now().toString(36)
+  for (const u of users) {
+    const [local, domain] = u.email.split('@')
+    await (prisma as any).user.update({ where: { id: u.id }, data: { is_active: false, email: `${local}+closed${stamp}@${domain}` } })
+  }
+  await (prisma as any).tenant.update({
+    where: { id: tenantId },
+    data: { subscription_status: 'cancelled', closure_requested_at: new Date(), name: t.name.startsWith('CLOSED ') ? t.name : `CLOSED ${t.name}` },
+  })
+  await (prisma as any).onboardingEnrolment.updateMany({ where: { tenant_id: tenantId, status: 'active' }, data: { status: 'cancelled' } })
+  clearTierCache(tenantId)
+  return { users: users.length }
 }

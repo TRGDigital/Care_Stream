@@ -1140,6 +1140,17 @@ adminRouter.post('/tenants/:id/sync-billing', async (req: Request, res: Response
 // signs the operator into the client's own dashboard (separate next-auth cookie
 // session — does not disturb the console's platform token). Reuses the
 // passwordless magic-link infra. Optional ?userId targets a specific staff member.
+// POST /admin/tenants/:id/retire-test — retire a TEST tenant (one created with the free tier preview
+// code): deactivates every login, marks it closed and frees its email addresses for a fresh signup.
+// Refuses any tenant that is not flagged is_test. (A hard delete is impossible: audit_logs is
+// append-only and references the tenant.)
+adminRouter.post('/tenants/:id/retire-test', async (req: Request, res: Response) => {
+  try {
+    const { retireTestTenant } = await import('../lib/free-tier')
+    ok(res, await retireTestTenant(String(req.params.id)))
+  } catch (e: any) { err(res, 'RETIRE_FAILED', e?.message ?? 'Could not retire the tenant.', 400) }
+})
+
 adminRouter.post('/tenants/:id/open-account', async (req: Request, res: Response) => {
   const tenantId   = String(req.params.id)
   const targetUser = (req.body?.user_id as string | undefined) ?? undefined

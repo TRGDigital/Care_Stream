@@ -10,6 +10,8 @@ import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { POLICY_GAP_DETECTION_SLOTS } from '@/lib/page-slots/policy-gap-detection'
 import { ServicePageIfPublished } from '@/components/marketing/service-page-loader'
 import { isV2 } from '@/lib/v2-rollout'
+import { freeLive } from '@/lib/free-rollout'
+import { FreeBanner } from '@/components/marketing/free-banner'
 
 export const metadata = {
   alternates: { canonical: 'https://www.carestreamai.com/policy-gap-detection' },
@@ -19,7 +21,7 @@ export const metadata = {
     type: 'website',
     images: ['/og-image.png'],
     title: 'Policy Gap Detection | CareStreamAI',
-    description: 'Know exactly where your policies fall short of the regulations, and whether they read the way CQC expects — with the legal basis, the wording, and person-centred alternatives.',
+    description: 'Know exactly where your policies fall short of the regulations, and whether they read the way CQC expects, with the legal basis, the wording, and person-centred alternatives.',
     url: 'https://www.carestreamai.com/policy-gap-detection',
   },
 }
@@ -100,7 +102,10 @@ export default async function PolicyGapDetectionPage(
   // copy stored in service_pages; if nothing is published yet this falls through to
   // the page below, so a page can never go blank waiting for an import.
   if (await isV2('services', searchParams)) {
-    const v2 = await ServicePageIfPublished({ slug: 'policy-gap-detection' })
+    const v2 = await ServicePageIfPublished({
+      slug: 'policy-gap-detection',
+      afterHero: (await freeLive(searchParams)) ? <FreeBanner variant="gaps" /> : undefined,
+    })
     if (v2) return v2
   }
 

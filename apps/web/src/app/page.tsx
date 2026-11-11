@@ -31,6 +31,7 @@ import {
   GraduationCap, HelpCircle, FileText, CheckCircle2, Sparkles,
 } from 'lucide-react'
 import { isV2 } from '@/lib/v2-rollout'
+import { freeLive } from '@/lib/free-rollout'
 
 type Slot = (key: string) => string
 
@@ -1093,7 +1094,7 @@ export default async function HomePage(
         {/* No FAQPage here: this design has no visible FAQ, and structured data must match what is on the page. */}
         <JsonLd data={webApplicationSchema()} />
         <MarketingNav />
-        <HomePageV2 s={makeSlot(HOME_V2_SLOTS, slots)} />
+        <HomePageV2 s={makeSlot(HOME_V2_SLOTS, slots)} showFree={await freeLive(searchParams)} />
         <MarketingFooter />
         <WebsiteChat />
       </div>

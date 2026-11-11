@@ -1,0 +1,24 @@
+/* Free band: stands out against the white and lilac page sections. Literal brand colours so it
+   renders the same inside .hpage-v2 and .svpage-v2. */
+.freeband{background:linear-gradient(100deg,#17121F 0%,#3B1F66 55%,#7B3FBF 100%);color:#fff;padding:34px 0}
+.freeband-in{max-width:1180px;margin:0 auto;padding:0 32px;display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap}
+.freeband-copy{flex:1 1 520px;min-width:0}
+.freeband-badge{display:inline-block;background:#FFC857;color:#17121F;font-weight:800;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;padding:5px 12px;border-radius:999px;margin-bottom:12px}
+.freeband-title{margin:0 0 8px;font-size:clamp(1.5rem,2.6vw,2.2rem);line-height:1.15;font-weight:800;color:#fff;text-wrap:balance}
+.freeband-text{margin:0;max-width:62ch;font-size:1.02rem;line-height:1.55;color:rgba(255,255,255,.88)}
+.freeband-actions{display:flex;flex-wrap:wrap;gap:12px;flex:0 0 auto}
+.freeband-btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:12px 24px;border-radius:999px;font-weight:700;font-size:.95rem;text-decoration:none;white-space:nowrap}
+.freeband-btn-solid{background:#fff;color:#17121F}
+.freeband-btn-solid:hover{background:#FFC857}
+.freeband-btn-ghost{border:1px solid rgba(255,255,255,.55);color:#fff}
+.freeband-btn-ghost:hover{background:rgba(255,255,255,.12)}
+.freeband-btn:focus-visible{outline:3px solid #FFC857;outline-offset:2px}
+/* The home page is the biggest stage: a little more air and a larger headline. */
+.freeband-home{padding:44px 0}
+.freeband-home .freeband-title{font-size:clamp(1.7rem,3.2vw,2.6rem)}
+@media (max-width:720px){
+  .freeband{padding:28px 0}
+  .freeband-in{padding:0 20px;gap:20px}
+  .freeband-actions{width:100%}
+  .freeband-btn{flex:1 1 140px}
+}

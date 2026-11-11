@@ -1,0 +1,38 @@
+name: SEO parity check
+
+# Read-only: fetches pages from a deployed URL and checks structured data against visible text.
+# Runs after a Vercel preview deployment succeeds, or by hand with any URL. Informational for now
+# (continue-on-error) because known issues are still being cleared; remove that line to gate on it.
+# Note: deployment_status workflows run from the default branch, so this starts working after merge.
+
+on:
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Site to check (default production)'
+        required: false
+        default: 'https://www.carestreamai.com'
+
+jobs:
+  parity:
+    if: github.event_name == 'workflow_dispatch' || (github.event.deployment_status.state == 'success' && github.event.deployment_status.environment != 'Production' && github.event.deployment_status.target_url != '')
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run parity check
+        env:
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          BASE_URL: ${{ github.event.inputs.base_url || github.event.deployment_status.target_url }}
+        run: |
+          python3 scripts/seo-parity-check.py "$BASE_URL" --strict --csv seo-inventory.csv | tee seo-parity.txt
+          { echo '### SEO parity check'; echo "Base: $BASE_URL"; echo '```'; tail -20 seo-parity.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: seo-inventory
+          path: seo-inventory.csv

@@ -16,8 +16,7 @@ import { sendVerificationEmail, sendPasswordResetEmail, sendStaffLoginLinkEmail,
 import { createLoginLink, consumeLoginToken, mintLoginToken } from '../lib/login-tokens'
 import { needsBillingFor } from '../lib/tiers'
 import { freeEvent } from '../lib/free-events'
-import { isWebmail, emailDomain } from '../lib/free-tier'
-import { freeSignupAllowed, checkFreeSignup, FREE_POLICY_LIMIT } from '../lib/free-tier'
+import { freeSignupAllowed, isPreviewCode, checkFreeSignup, FREE_POLICY_LIMIT, isWebmail, emailDomain } from '../lib/free-tier'
 
 
 const VERIFICATION_EXPIRY_MS = 24 * 60 * 60 * 1000 // 24 hours
@@ -96,11 +95,15 @@ authRouter.post('/register', async (req: Request, res: Response) => {
     return
   }
 
+  // A free signup made with the private preview code is a TEST tenant: its name is prefixed, it is
+  // flagged is_test (kept out of the free email sequence, funnel numbers and metrics), and the
+  // per domain and per IP limits are skipped so it can be repeated.
+  const isTest = tier === 'free' && isPreviewCode(parsed.data.preview_code)
   let freePlanId: string | null = null
   if (tier === 'free') {
     freePlanId = (await (prisma as any).plan.findUnique({ where: { name: 'Free' }, select: { id: true } }))?.id ?? null
     if (!freePlanId) { err(res, 'FREE_UNAVAILABLE', 'The free plan is not available yet.', 503); return }
-    const verdict = await checkFreeSignup(email, req.ip ?? '', parsed.data.company_website)
+    const verdict = await checkFreeSignup(email, req.ip ?? '', parsed.data.company_website, { preview: isTest })
     if (!verdict.ok) { err(res, verdict.code, verdict.message, 429); return }
   }
 
@@ -116,7 +119,7 @@ authRouter.post('/register', async (req: Request, res: Response) => {
   const { tenant, user } = await (prisma as any).$transaction(async (tx: any) => {
     const tenant = await tx.tenant.create({
       data: {
-        name: org_name,
+        name: isTest && !/^TEST /i.test(org_name) ? `TEST ${org_name}` : org_name,
         slug,
         email_domain: slug,
         // A free account is 'active' like the other self serve tiers: there is no trial to start.
@@ -125,6 +128,7 @@ authRouter.post('/register', async (req: Request, res: Response) => {
         tier,
         branding_signoff: 'The CareStream Team',
         ...(tier === 'free' ? { policies_lifetime_limit: FREE_POLICY_LIMIT, free_since: new Date() } : {}),
+        ...(isTest ? { feature_flags: { is_test: true } } : {}),
       },
     })
 
@@ -177,7 +181,16 @@ authRouter.post('/register', async (req: Request, res: Response) => {
 
   // Onboarding drip: enrol the new tenant and send the welcome email immediately.
   // Skipped for training-only accounts (they buy modules à la carte, no plan drip).
-  if (tier === 'free') {
+  if (tier === 'free' && isTest) {
+    // Test tenants stay out of the free email sequence (set FREE_TEST_ENROL=true to include them).
+    if (process.env.FREE_TEST_ENROL === 'true') {
+      try {
+        const { enrolInCampaign, sendDayOneNow } = await import('../services/onboarding/dispatch')
+        await enrolInCampaign(tenant.id, 'free_plan' as any)
+        await sendDayOneNow(tenant.id, email, user.id, 'free_plan')
+      } catch (e) { console.error('[register] test enrol failed:', e) }
+    }
+  } else if (tier === 'free') {
     // The free account has its own campaign (drafts until published on the email marketing page).
     try {
       const { enrolInCampaign, sendDayOneNow } = await import('../services/onboarding/dispatch')

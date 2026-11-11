@@ -19,17 +19,17 @@ const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-int
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.carestreamai.com'),
   title: {
-    default:  'CareStreamAI — AI Policy Access for UK Care Homes',
+    default:  'CareStreamAI: AI Policy Access for UK Care Homes',
     template: '%s | CareStreamAI',
   },
-  description: 'Give every member of your care team instant access to your policies in any language, 24/7. AI-powered policy access via chat, email and voice — built for UK care providers.',
+  description: 'Give every member of your care team instant access to your policies in any language, 24/7. AI-powered policy access via chat, email and voice, built for UK care providers.',
   keywords:    ['care home policies', 'CQC compliance', 'care AI', 'multilingual care', 'UK care training'],
   authors:     [{ name: 'CareStreamAI', url: 'https://www.carestreamai.com' }],
   openGraph: {
     type:      'website',
     siteName:  'CareStreamAI',
     locale:    'en_GB',
-    images:    [{ url: '/og-image.png', width: 1200, height: 630, alt: 'CareStreamAI — AI Policy Access for UK Care Homes' }],
+    images:    [{ url: '/og-image.png', width: 1200, height: 630, alt: 'CareStreamAI: AI Policy Access for UK Care Homes' }],
   },
   twitter: {
     card:    'summary_large_image',

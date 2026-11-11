@@ -108,6 +108,26 @@ const PREDICATES: Record<string, (tenantId: string) => Promise<ConditionResult>>
     return n === 1
   },
 
+  // ─── Free account ───────────────────────────────────────────────────────────
+  // The free plan's lifetime counters live on the tenant (policies_created_lifetime / limit).
+
+  /** True until a first audit has been completed. */
+  free_no_audit_completed: async (tenantId) => (await completedAudits(tenantId)) === 0,
+  /** True once at least one audit has been completed. */
+  free_audit_completed: async (tenantId) => (await completedAudits(tenantId)) > 0,
+  /** True while no policy has been added. */
+  free_no_policy_added: async (tenantId) => (await freeSlots(tenantId)).used === 0,
+  /** One to three of the five policies used. */
+  free_slots_partial: async (tenantId) => { const f = await freeSlots(tenantId); return f.used >= 1 && f.limit !== null && f.used < f.limit - 1 },
+  /** Exactly one place left. */
+  free_slots_one_left: async (tenantId) => { const f = await freeSlots(tenantId); return f.limit !== null && f.used === f.limit - 1 },
+  /** All places used. */
+  free_slots_exhausted: async (tenantId) => { const f = await freeSlots(tenantId); return f.limit !== null && f.used >= f.limit },
+  /** True while only the sign-up admin exists (nobody else has been added). */
+  free_no_staff_invited: async (tenantId) => (await (prisma as any).user.count({ where: { tenant_id: tenantId, is_active: true } })) <= 1,
+  /** True while the tenant is still on the Free tier (suppresses the upgrade nudge after upgrading). */
+  free_not_upgraded: async (tenantId) => (await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { tier: true } }))?.tier === 'free',
+
   // ─── Shared ─────────────────────────────────────────────────────────────────
 
   /** True while the buyer is still on a product-only tenant rather than full
@@ -118,6 +138,14 @@ const PREDICATES: Record<string, (tenantId: string) => Promise<ConditionResult>>
     const t = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { tier: true } })
     return t?.tier === 'training_only' || t?.tier === 'policies_only'
   },
+}
+
+async function completedAudits(tenantId: string): Promise<number> {
+  return (prisma as any).auditRun.count({ where: { tenant_id: tenantId, status: 'completed' } })
+}
+async function freeSlots(tenantId: string): Promise<{ used: number; limit: number | null }> {
+  const t = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { policies_created_lifetime: true, policies_lifetime_limit: true } })
+  return { used: t?.policies_created_lifetime ?? 0, limit: t?.policies_lifetime_limit ?? null }
 }
 
 /** Evaluate a named condition.

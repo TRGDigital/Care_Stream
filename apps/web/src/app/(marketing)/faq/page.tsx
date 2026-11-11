@@ -11,12 +11,12 @@ import { isV2 } from '@/lib/v2-rollout'
 export const metadata = {
   alternates: { canonical: 'https://www.carestreamai.com/faq' },
   title: 'FAQ',
-  description: 'Everything you need to know about CareStreamAI — how the AI works, what it can and cannot do, data security, pricing, and getting started. Answered plainly.',
+  description: 'Everything you need to know about CareStreamAI: how the AI works, what it can and cannot do, data security, pricing, and getting started. Answered plainly.',
   openGraph: {
     type: 'website',
     images: ['/og-image.png'],
     title: 'CareStreamAI FAQ',
-    description: 'Answers to the most common questions about CareStreamAI — plain and direct.',
+    description: 'Answers to the most common questions about CareStreamAI, plain and direct.',
     url: 'https://www.carestreamai.com/faq',
   },
 }

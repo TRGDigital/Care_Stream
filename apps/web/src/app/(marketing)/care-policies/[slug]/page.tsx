@@ -83,6 +83,16 @@ async function catalogueCount(): Promise<number> {
   return slugs === FALLBACK_SLUGS ? 66 : slugs.length
 }
 
+// Google cuts a title off at about 65 characters. Keep the full "Written for your service" form
+// where it fits, then a shorter form of the same idea, then the bare name.
+function policyPageTitle(name: string): string {
+  const brand = ' | CareStreamAI'
+  for (const t of [`${name} | Written for your service${brand}`, `${name} Written for You${brand}`]) {
+    if (t.length <= 65) return t
+  }
+  return `${name}${brand}`
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const data = await getProduct(slug)
@@ -92,7 +102,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // "Duplicate without user-selected canonical") and treats the title as absolute, so it carries
   // the brand suffix exactly once.
   return pageMetadata(`/care-policies/${slug}`, {
-    title: `${data.product.title} | Written for your service | CareStreamAI`,
+    title: policyPageTitle(data.product.title),
     description: `A ${data.product.title} written for your organisation, checked by a person, and kept updated when the law changes. ${price}, delivered within 2 working days of your details.`,
   })
 }

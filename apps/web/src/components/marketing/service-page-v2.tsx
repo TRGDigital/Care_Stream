@@ -1,4 +1,4 @@
-import { Fragment } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
 import { TocSpy } from './toc-spy'
@@ -424,9 +424,11 @@ function ConsoleFaqs({ faqs }: { faqs: { question: string; answer: string }[] })
   )
 }
 
-export function ServicePageV2({ page, faqs = [] }: {
+export function ServicePageV2({ page, faqs = [], afterHero }: {
   page: ServicePage
   faqs?: { question: string; answer: string }[]
+  /** Optional band rendered straight after the hero (the Free plan banner on /care-audits and /policy-gap-detection). */
+  afterHero?: ReactNode
 }) {
   const c = page.content ?? { lede: [], blocks: [] }
   const blocks = c.blocks ?? []
@@ -455,6 +457,8 @@ export function ServicePageV2({ page, faqs = [] }: {
           )}
         </div>
       </section>
+
+      {afterHero}
 
       {!!c.toc?.length && (
         <nav className="htoc" aria-label="On this page">

@@ -7,6 +7,10 @@ export function authMeta(title: string, description: string): Metadata {
   return {
     title,
     description,
+    // Sign in, register and the account pages are not search landing pages: robots.txt disallows
+    // /login and /register, and nobody searches for them. Marketing CTAs link here, but the page
+    // that sells is /pricing, not the form.
+    robots: { index: false, follow: false },
     openGraph: {
       title: `${title} | CareStreamAI`,
       description,

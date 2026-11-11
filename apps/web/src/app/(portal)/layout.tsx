@@ -8,6 +8,12 @@ import { PwaRegister } from '@/components/pwa/pwa-register'
 import { InstallPrompt } from '@/components/pwa/install-prompt'
 import { NotificationsOptIn } from '@/components/pwa/notifications-optin'
 import { HubPrefsApplier } from '@/components/hub/hub-prefs-applier'
+import type { Metadata } from 'next'
+
+// Logged-in app route: never meant for search results. robots.txt already disallows these paths,
+// but a crawler that is blocked can't read this tag, and one that learns the URL elsewhere (a
+// link, a share) still sees a page indexed by the root layout default. This keeps it out.
+export const metadata: Metadata = { robots: { index: false, follow: false } }
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions)

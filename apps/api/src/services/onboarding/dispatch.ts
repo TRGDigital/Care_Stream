@@ -173,8 +173,10 @@ export async function enrolInCampaign(tenantId: string, campaign: 'training_shop
 }
 
 // Send day 1 right away (used on signup). Safe to call repeatedly.
-export async function sendDayOneNow(tenantId: string, recipientEmail: string, recipientUserId?: string | null): Promise<void> {
-  const enrolment = await (prisma as any).onboardingEnrolment.findUnique({ where: { tenant_id: tenantId } })
+export async function sendDayOneNow(tenantId: string, recipientEmail: string, recipientUserId?: string | null, campaign: string = 'plan'): Promise<void> {
+  // The unique key is (tenant_id, campaign), not tenant_id: findUnique on tenant_id alone is
+  // rejected by Prisma, which silently dropped the signup welcome email since 2026-09-17.
+  const enrolment = await (prisma as any).onboardingEnrolment.findUnique({ where: { tenant_id_campaign: { tenant_id: tenantId, campaign } } })
   if (!enrolment || enrolment.status !== 'active') return
   const tmpl = await template(enrolment.plan, 1)
   if (!tmpl) return

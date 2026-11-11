@@ -80,5 +80,24 @@ async function mk(name: string, free: boolean) {
   assert.deepEqual([up.tier, up.policies_lifetime_limit], ['full', null])
   assert.deepEqual(await F.claimPolicySlot(paid.t.id, { contentHash: 'new' }), { counted: false })
   console.log('ok upgrade lifts limits')
+  // 10. signup checks and test tenants
+  const dom = 'orreryx.test'
+  await mk('first', true)                       // creates first@x.test (not on the domain), so make a domain admin:
+  const t0 = await p.tenant.create({ data: { name: 'dom', slug: 'domco', email_domain: 'domco', tier: 'free', subscription_status: 'active', feature_flags: { is_test: true } } })
+  await p.user.create({ data: { tenant_id: t0.id, email: `a@${dom}`, name: 'a', role: 'admin', password_hash: 'x' } })
+  const blocked = await F.checkFreeSignup(`b@${dom}`, '1.1.1.1')
+  assert.equal((blocked as any).code, 'DOMAIN_HAS_FREE_ACCOUNT')
+  assert.equal((await F.checkFreeSignup(`b@${dom}`, '1.1.1.1', null, { preview: true })).ok, true)     // test signup skips the domain rule
+  assert.equal((await F.checkFreeSignup('x@mailinator.com', '1.1.1.1', null, { preview: true }) as any).code, 'DISPOSABLE_EMAIL')   // still blocks disposable
+  assert.equal((await F.checkFreeSignup(`c@${dom}`, '1.1.1.1', 'spam', { preview: true }) as any).code, 'SIGNUP_REJECTED')            // still honeypot
+  for (let i = 0; i < 5; i++) assert.equal((await F.checkFreeSignup(`p${i}@${dom}`, '2.2.2.2', null, { preview: true })).ok, true)      // no IP limit for tests
+  await assert.rejects(() => F.retireTestTenant(paid.t.id), /Not a test tenant/)
+  const r = await F.retireTestTenant(t0.id)
+  assert.equal(r.users, 1)
+  const closed = await p.tenant.findUnique({ where: { id: t0.id } })
+  assert.ok(closed.name.startsWith('CLOSED ') && closed.closure_requested_at && closed.subscription_status === 'cancelled')
+  assert.equal(await p.user.count({ where: { email: `a@${dom}` } }), 0)       // address freed for a new signup
+  assert.equal((await p.user.findFirst({ where: { tenant_id: t0.id } })).is_active, false)
+  console.log('ok test signups repeatable, disposable and honeypot still blocked, retire frees addresses')
   process.exit(0)
 })().catch(e => { console.error('FAIL', e); process.exit(1) })

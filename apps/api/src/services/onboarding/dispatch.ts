@@ -161,7 +161,7 @@ export async function enrolTenant(tenantId: string, planName: string | null, sta
 // buyer who later takes a licence needs both, which is why the enrolment key is
 // (tenant, campaign). `plan` carries the campaign name so the existing lookup by
 // (plan, day_index) resolves the campaign's own emails.
-export async function enrolInCampaign(tenantId: string, campaign: 'training_shop' | 'policy_shop', startStr?: string): Promise<any> {
+export async function enrolInCampaign(tenantId: string, campaign: 'training_shop' | 'policy_shop' | 'free_plan', startStr?: string): Promise<any> {
   const start = startStr ?? new Date().toISOString().slice(0, 10)
   const existing = await (prisma as any).onboardingEnrolment.findUnique({
     where: { tenant_id_campaign: { tenant_id: tenantId, campaign } },

@@ -9,6 +9,8 @@ import { getTenantId } from '../db/tenant-context'
 import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
 import { checkFeature, PlanLimitError, checkAiCreditLimit, logAiCredit } from '../lib/plan-limits'
+import { checkFreeAiBudget } from '../lib/free-tier'
+import { assertFreeRerun, assertFreeDetailAllowed } from '../services/analytics/free-gates'
 import { generateAnnualModuleDraft } from '../services/training/moduleGenerator'
 import { getKnowledgeGapData } from '../lib/knowledge-gaps'
 import { analyseRegulationCoverage, startCoverageAnalysis, analyseCoverageBatch, coverageRunState } from '../services/analytics/regulation-coverage'
@@ -588,10 +590,13 @@ analyticsRouter.post('/gaps/analyse/start', requireAdmin, async (_req: Request, 
     throw e
   }
   try {
+    await assertFreeRerun(tenantId, 'coverage')          // Free: only when a policy changed, plus one a month
+    await checkFreeAiBudget(tenantId)                    // no op unless the tenant is Free
     const { total } = await startCoverageAnalysis(tenantId)
     await stampSectionRun(tenantId, 'coverage')
     ok(res, { total })
   } catch (e: any) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, e.code === 'FREE_NOTHING_CHANGED' ? 409 : 402); return }
     err(res, 'ANALYSIS_FAILED', e.message, 500)
   }
 })
@@ -608,9 +613,11 @@ analyticsRouter.post('/gaps/analyse/batch', requireAdmin, async (_req: Request, 
     throw e
   }
   try {
+    await checkFreeAiBudget(tenantId)                    // no op unless Free. NB paid coverage still has no token check: see PR notes
     const progress = await analyseCoverageBatch(tenantId)
     ok(res, progress)
   } catch (e: any) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
     err(res, 'ANALYSIS_FAILED', e.message, 500)
   }
 })
@@ -627,6 +634,8 @@ analyticsRouter.post('/gaps/analyse', requireAdmin, async (_req: Request, res: R
     throw e
   }
   try {
+    await assertFreeRerun(tenantId, 'coverage')
+    await checkFreeAiBudget(tenantId)
     const rows = await analyseRegulationCoverage(tenantId)
     await stampSectionRun(tenantId, 'coverage')
     ok(res, {
@@ -637,6 +646,7 @@ analyticsRouter.post('/gaps/analyse', requireAdmin, async (_req: Request, res: R
       regulations_gap:     rows.filter(r => r.status === 'gap').length,
     })
   } catch (e: any) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, e.code === 'FREE_NOTHING_CHANGED' ? 409 : 402); return }
     err(res, 'ANALYSIS_FAILED', e.message, 500)
   }
 })
@@ -794,11 +804,13 @@ analyticsRouter.post('/consistency/scan/start', requireAdmin, async (_req: Reque
     throw e
   }
   try {
+    await assertFreeRerun(tenantId, 'consistency')
     const sets = await buildAndCacheSets(tenantId)
     const pending = await pendingClaimPolicies(tenantId)
     await stampSectionRun(tenantId, 'consistency')
     ok(res, { sets: sets.length, duplicate_sets: sets.filter(s => s.type === 'duplicate').length, topic_sets: sets.filter(s => s.type === 'topic').length, to_extract: pending.length })
   } catch (e: any) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, e.code === 'FREE_NOTHING_CHANGED' ? 409 : 402); return }
     err(res, 'CONSISTENCY_START_FAILED', e.message ?? 'Could not build comparison sets.', 500)
   }
 })
@@ -996,6 +1008,10 @@ analyticsRouter.post('/gaps/:reference_key/saf-alignment', requireAdmin, async (
 analyticsRouter.post('/wording-alignment/start', requireAdmin, async (_req: Request, res: Response) => {
   const tenantId = getTenantId()
   try { await checkFeature(tenantId, 'has_gap_detection') } catch (e) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 403); return } throw e }
+  try { await assertFreeRerun(tenantId, 'wording') } catch (e: any) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 409); return }
+    throw e
+  }
   const started = await startPolicyWordingAlignment(tenantId)
   await stampSectionRun(tenantId, 'wording')
   ok(res, started)
@@ -1302,9 +1318,11 @@ analyticsRouter.post('/gaps/:reference_key/detail', requireAdmin, async (req: Re
     throw e
   }
   try {
+    await assertFreeDetailAllowed(tenantId, String(req.params.reference_key), req.query.force === '1')
     const detail = await getGapDetail(tenantId, String(req.params.reference_key), req.query.force === '1')
     ok(res, { ...detail, decisions: await coverageDecisionsFor(tenantId, String(req.params.reference_key)) })
   } catch (e: any) {
+    if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return }
     err(res, 'DETAIL_FAILED', e.message ?? 'Could not build the coverage detail.', 500)
   }
 })

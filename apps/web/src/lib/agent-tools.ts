@@ -8,30 +8,23 @@
 // Keep this curated, like lib/schema.ts: one place, accurate, no dumps.
 
 import { SITE_URL } from '@/lib/schema'
+import { publicPlans, planFacts, MODULE_PRICE, LANGUAGES_CLAIM } from '@/lib/pricing-source'
 import type { AgentToolDef } from '@/lib/webmcp'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
-const PLANS = [
-  {
-    name: 'Starter',
-    priceGBP: 49,
-    billing: 'per home / month',
-    includes: ['Full policy library', '50+ languages', 'Email & chat channels', 'Full audit logging'],
-  },
-  {
-    name: 'Professional',
-    priceGBP: 129,
-    billing: 'per home / month',
-    includes: [
-      'Everything in Starter',
-      'CQC Readiness Reports',
-      'Policy gap detection',
-      'Language analytics',
-      'Individual staff engagement data',
-    ],
-  },
-]
+// Built from the one price source (lib/pricing-source.ts), so this can never drift from /pricing.
+const PLANS = publicPlans().map(p => {
+  const f = planFacts().find(x => x.name === p.name)
+  return {
+    name: p.name,
+    priceGBP: f ? f.monthlyPence / 100 : null,
+    annualPriceGBP: f?.annualPence ? f.annualPence / 100 : null,
+    billing: 'per service per month',
+    summary: p.line,
+    includes: p.features.map(x => x.text),
+  }
+})
 
 interface BlogListPost {
   slug: string
@@ -50,7 +43,7 @@ export const PUBLIC_AGENT_TOOLS: AgentToolDef[] = [
       'Explain what CareStreamAI is, who it is for, and the core capabilities. Use this to answer "what is CareStream / what does it do / who is it for".',
     annotations: { readOnlyHint: true },
     execute: () => ({
-      what: 'CareStreamAI is an AI policy-access and compliance platform for UK care providers. Care teams get instant, accurate answers from their own approved policies — in 50+ languages — via web chat, email and voice.',
+      what: 'CareStreamAI is an AI policy-access and compliance platform for UK care providers. Care teams get instant, accurate answers from their own approved policies, in 60+ languages, via web chat, email and voice.',
       grounding:
         'Answers are grounded only in the customer’s uploaded documents and a curated UK regulatory knowledge base (RAG). It does not invent content.',
       whoFor: 'Care homes, domiciliary care, supported living, and other regulated health & social care settings.',
@@ -68,9 +61,12 @@ export const PUBLIC_AGENT_TOOLS: AgentToolDef[] = [
     execute: () => ({
       currency: 'GBP',
       plans: PLANS,
-      freeTrial: '14-day free trial. A card is required to start, but you are not charged until day 14 — cancel anytime before then.',
-      perUser: 'Priced per home, not per user — the whole team is included.',
-      groupPricing: 'Discounts available for multiple homes — contact sales.',
+      freeTrial: '14 day free trial. A card is required to start, but you are not charged until the trial ends, and you can cancel before then.',
+      perUser: 'Priced per service, not per member of staff. Starter includes up to 10 staff users; Professional and Enterprise include unlimited staff users.',
+      groupPricing: 'Enterprise includes the multi site group console. Talk to sales about group pricing for more than three services.',
+      annual: 'Annual billing saves two months on every plan.',
+      trainingModules: `Accredited training modules can also be bought without a subscription at ${MODULE_PRICE} per staff member per course.`,
+      languages: `Staff can use the hub in ${LANGUAGES_CLAIM} languages.`,
       url: `${SITE_URL}/pricing`,
     }),
   },

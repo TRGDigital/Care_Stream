@@ -10,6 +10,7 @@ import { isV2 } from '@/lib/v2-rollout'
 import { JsonLd } from '@/components/json-ld'
 import { pricingProductSchema } from '@/lib/schema'
 import { PRICING } from '@/lib/pricing-data'
+import { planFacts } from '@/lib/pricing-source'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
@@ -191,13 +192,7 @@ export default async function PricingPage(
   // The plan prices are printed on this page but were invisible to search. Parsed out of the
   // generated pricing data rather than retyped, so they cannot drift from what is displayed; a
   // plan whose price string stops looking like "£85 per month" is skipped rather than guessed at.
-  const tiers = PRICING.plans
-    .map(pl => {
-      const m = /£\s?([\d,]+(?:\.\d{2})?)/.exec(pl.price || '')
-      if (!m) return null
-      return { name: pl.name, pricePence: Math.round(parseFloat(m[1].replace(/,/g, '')) * 100), description: pl.line }
-    })
-    .filter((t): t is { name: string; pricePence: number; description: string } => t !== null)
+  const tiers = planFacts().map(f => ({ name: f.name, pricePence: f.monthlyPence, annualPence: f.annualPence, description: f.line }))
   const pricingJson = tiers.length ? pricingProductSchema({ tiers }) : null
 
   // The rebuilt theme is opt-in with ?v2=1 until it is signed off. The plans and the

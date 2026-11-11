@@ -234,7 +234,7 @@ function CareSettingsMockup() {
         {[
           { value: '11',  label: 'Setting types' },
           { value: '4',   label: 'Role types' },
-          { value: '50+', label: 'Languages' },
+          { value: '60+', label: 'Languages' },
         ].map(({ value, label }) => (
           <div key={label} className="py-3 text-center">
             <p className="text-sm font-extrabold text-teal">{value}</p>
@@ -305,7 +305,7 @@ const FALLBACK_CATEGORIES = [
 const TM_BENEFITS: Array<{ Icon: React.ElementType; title: string; body: string }> = [
   { Icon: GraduationCap, title: 'Ready to assign', body: 'Roll out CQC-aligned annual training in a click, or generate new modules from your own policies.' },
   { Icon: BarChart3,     title: 'Compliance at a glance', body: 'Track completion across your whole team on one dashboard, with automatic renewal reminders.' },
-  { Icon: Globe,         title: 'In 50+ languages', body: 'Staff learn in the language they think in, so training lands with every member of your team.' },
+  { Icon: Globe,         title: 'In 60+ languages', body: 'Staff learn in the language they think in, so training lands with every member of your team.' },
   { Icon: Award,         title: 'Evidence, gathered for you', body: 'Every module ends with a knowledge check and a certificate — your CQC evidence, captured automatically.' },
 ]
 
@@ -354,7 +354,7 @@ function TrainingManagersSection({ catalogue, demo }: { catalogue: TrainingCatal
                 <TrainingDemo demo={demo} buyHref={`/buy/${FEATURED_DEMO_SLUG}`} variant="card" />
                 <p className="mt-3 text-sm leading-relaxed text-neutral-mid">
                   Read the lesson, answer the question, then tap the language button to flip the whole
-                  step into another language — the same flow, in over 50 languages, that your staff use in the hub.
+                  step into another language — the same flow, in over 60 languages, that your staff use in the hub.
                 </p>
               </div>
             )}

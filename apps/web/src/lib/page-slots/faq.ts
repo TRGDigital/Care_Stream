@@ -1,3 +1,4 @@
+import { planSentence, LANGUAGES_CLAIM } from '@/lib/pricing-source'
 import type { SlotDef } from './types'
 
 // Editable copy for /faq. Defaults are the current live copy; editing a slot in
@@ -17,7 +18,7 @@ export const FAQ_SLOTS: SlotDef[] = [
   { key: 'general.q3', group: 'General', label: 'Q3 question', default: 'Does it work for domiciliary care as well as residential care?' },
   { key: 'general.a3', group: 'General', label: 'Q3 answer', rich: true, default: 'Yes. CareStreamAI is document-agnostic, it works with any policy library. Whether you are a residential home, a domiciliary provider, or a supported living service, it will work with your documents.' },
   { key: 'general.q4', group: 'General', label: 'Q4 question', default: 'What languages does it support?' },
-  { key: 'general.a4', group: 'General', label: 'Q4 answer', rich: true, default: 'CareStreamAI supports 50+ languages automatically. Staff type or email their question in any language, Polish, Romanian, Tagalog, Yoruba, Arabic, Hindi, and many more, and receive an answer in the same language. There is no language selection menu and no extra charge per language.' },
+  { key: 'general.a4', group: 'General', label: 'Q4 answer', rich: true, default: 'CareStreamAI supports 60+ languages automatically. Staff type or email their question in any language, Polish, Romanian, Tagalog, Yoruba, Arabic, Hindi, and many more, and receive an answer in the same language. There is no language selection menu and no extra charge per language.' },
   { key: 'general.q5', group: 'General', label: 'Q5 question', default: 'Is CareStreamAI affiliated with or endorsed by CQC?' },
   { key: 'general.a5', group: 'General', label: 'Q5 answer', rich: true, default: 'No. CareStreamAI is an independent software product. It is not affiliated with, endorsed by, or certified by the Care Quality Commission. References to CQC are factual descriptions of how the product supports compliance evidence-building.' },
 
@@ -54,7 +55,7 @@ export const FAQ_SLOTS: SlotDef[] = [
   { key: 'languages.q1', group: 'Languages', label: 'Q1 question', default: 'Does staff need to select their language?' },
   { key: 'languages.a1', group: 'Languages', label: 'Q1 answer', rich: true, default: 'No. CareStreamAI detects the language of the query automatically. Staff simply type or email their question in their language and receive an answer in the same language.' },
   { key: 'languages.q2', group: 'Languages', label: 'Q2 question', default: 'What languages are supported?' },
-  { key: 'languages.a2', group: 'Languages', label: 'Q2 answer', rich: true, default: 'Over 50 languages, including Polish, Romanian, Bulgarian, Hungarian, Tagalog, Hindi, Urdu, Arabic, Yoruba, Igbo, Somali, Portuguese, Spanish, French, and many more.' },
+  { key: 'languages.a2', group: 'Languages', label: 'Q2 answer', rich: true, default: 'Over 60 languages, including Polish, Romanian, Bulgarian, Hungarian, Tagalog, Hindi, Urdu, Arabic, Yoruba, Igbo, Somali, Portuguese, Spanish, French, and many more.' },
   { key: 'languages.q3', group: 'Languages', label: 'Q3 question', default: 'Are answers translated word-for-word?' },
   { key: 'languages.a3', group: 'Languages', label: 'Q3 answer', rich: true, default: "No, CareStreamAI generates a natural-language response in the staff member's language. It does not machine-translate a pre-written English answer." },
   { key: 'languages.q4', group: 'Languages', label: 'Q4 question', default: 'What if the original policy is in English and the query is in Romanian?' },
@@ -63,9 +64,9 @@ export const FAQ_SLOTS: SlotDef[] = [
   // Pricing & Plans
   { key: 'pricing.title', group: 'Pricing & Plans', label: 'Section heading', default: 'Pricing & Plans' },
   { key: 'pricing.q1', group: 'Pricing & Plans', label: 'Q1 question', default: 'What plans are available?' },
-  { key: 'pricing.a1', group: 'Pricing & Plans', label: 'Q1 answer', rich: true, default: 'CareStreamAI is available on two plans: Starter (£85/month) and Professional (£230/month). Both include full policy library, 50+ language support, email and chat channels, and full audit logging. Professional adds CQC Readiness Reports, policy gap detection, language analytics, and individual staff engagement data.' },
+  { key: 'pricing.a1', group: 'Pricing & Plans', label: 'Q1 answer', rich: true, default: `CareStreamAI is available on three plans: ${planSentence()}. All include the policy library, ${LANGUAGES_CLAIM} language support, email and chat channels and full audit logging. Starter includes up to 10 staff users; Professional and Enterprise include unlimited staff users and add policy gap detection, the CQC readiness report and advanced analytics. Enterprise adds build your own audits, the group console and the workforce compliance register.` },
   { key: 'pricing.q2', group: 'Pricing & Plans', label: 'Q2 question', default: 'Is there a free trial?' },
-  { key: 'pricing.a2', group: 'Pricing & Plans', label: 'Q2 answer', rich: true, default: 'Yes. A 14-day free trial is available on either plan. You add your card to start the trial, but you are not charged until day 14 — cancel anytime before then and you pay nothing.' },
+  { key: 'pricing.a2', group: 'Pricing & Plans', label: 'Q2 answer', rich: true, default: 'Yes. A 14 day free trial is available on every plan. You add your card to start the trial, but you are not charged until the trial ends, and if you cancel before then you pay nothing.' },
   { key: 'pricing.q3', group: 'Pricing & Plans', label: 'Q3 question', default: 'Can I switch plans?' },
   { key: 'pricing.a3', group: 'Pricing & Plans', label: 'Q3 answer', rich: true, default: 'Yes. You can upgrade or downgrade at any time. Changes take effect at the next billing cycle.' },
   { key: 'pricing.q4', group: 'Pricing & Plans', label: 'Q4 question', default: 'Do you offer discounts for multiple homes?' },

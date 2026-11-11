@@ -1016,7 +1016,7 @@ const DEFAULT_HOME_FAQS: Faq[] = [
   { question: 'Does CareStream help with CQC inspections?', answer: 'Yes. It records how your team engages with your policies and can produce a CQC Readiness Report, giving you helpful evidence to prepare for inspection.' },
   { question: 'Is our data kept private and secure?', answer: 'Yes. Your information is private to your organisation, is stored within the UK and EEA, and is never used to train AI models. A Data Processing Agreement is available to every subscriber.' },
   { question: 'How long does it take to get started?', answer: 'Most homes are up and running the same day. You upload your first policy, invite your team, and staff can begin asking questions straight away.' },
-  { question: 'How much does CareStream cost?', answer: 'Pricing is per home with unlimited staff users, so there are no per user fees. You can start with a free 14 day trial. We take your card to begin the trial, but you are not charged until day 14 — cancel anytime before then.' },
+  { question: 'How much does CareStream cost?', answer: 'Pricing is per service, not per member of staff, so there are no per user fees. Starter includes up to 10 staff users and Professional and Enterprise include unlimited staff users. You can start with a free 14 day trial: we take your card to begin it, but you are not charged until the trial ends, and you can cancel before then.' },
 ]
 
 async function getHomeFaqs(): Promise<Faq[]> {
@@ -1090,7 +1090,8 @@ export default async function HomePage(
   if (await isV2('home', searchParams)) {
     return (
       <div className="flex min-h-screen flex-col">
-        <JsonLd data={[webApplicationSchema(), faqPageSchema(faqs)]} />
+        {/* No FAQPage here: this design has no visible FAQ, and structured data must match what is on the page. */}
+        <JsonLd data={webApplicationSchema()} />
         <MarketingNav />
         <HomePageV2 s={makeSlot(HOME_V2_SLOTS, slots)} />
         <MarketingFooter />

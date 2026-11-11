@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { JsonLd } from '@/components/json-ld'
+import { PageBreadcrumbJsonLd } from '@/components/page-breadcrumb-json-ld'
 import { PreviewBanner } from '@/components/marketing/preview-banner'
 import { previewParam, isPreview } from '@/lib/preview'
 import { faqPageSchema, SITE_URL } from '@/lib/schema'
@@ -93,6 +94,7 @@ export default async function UserCaseRoute({ params }: { params: Promise<{ slug
   return (
     <>
       {preview && <PreviewBanner path={`/uses/${slug}`} />}
+      <PageBreadcrumbJsonLd trail={[{ name: plain(page.title), path: `/uses/${slug}` }]} />
       {faqs.length > 0 && <JsonLd data={faqPageSchema(faqs)} />}
       <UserCasePageView page={page} readNext={readNext} />
     </>

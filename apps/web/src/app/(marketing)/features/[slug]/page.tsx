@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { JsonLd } from '@/components/json-ld'
+import { PageBreadcrumbJsonLd } from '@/components/page-breadcrumb-json-ld'
 import { faqPageSchema, serviceSchema, SITE_URL } from '@/lib/schema'
 import { DEFAULT_OG_IMAGE, absoluteImage } from '@/lib/page-meta'
 import { heroImageFor } from '@/lib/hero-images'
@@ -117,7 +118,7 @@ async function getRelatedFeatures(currentSlug: string): Promise<Array<{ slug: st
   }
 }
 
-export default async function DbFeaturePage(
+async function DbFeaturePageBody(
   { params, searchParams }: {
     params: Promise<{ slug: string }>
     searchParams: Promise<Record<string, string | string[] | undefined>>
@@ -221,6 +222,19 @@ export default async function DbFeaturePage(
           </div>
         </section>
       )}
+    </>
+  )
+}
+
+// /features has no index page (it is 404), so the trail is Home then the feature itself. The
+// feature's real title is used, not the URL slug.
+export default async function DbFeaturePage(props: Parameters<typeof DbFeaturePageBody>[0]) {
+  const { slug } = await props.params
+  const fp = await getFeaturePage(slug)
+  return (
+    <>
+      {fp && <PageBreadcrumbJsonLd trail={[{ name: fp.title, path: `/features/${slug}` }]} />}
+      {await DbFeaturePageBody(props)}
     </>
   )
 }

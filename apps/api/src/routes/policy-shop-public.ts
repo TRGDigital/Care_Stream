@@ -363,8 +363,10 @@ policyShopPublicRouter.post('/reconcile', async (req: Request, res: Response) =>
     // ── the account ──────────────────────────────────────────────────────────
     // An email that already bought joins the SAME account, so a second purchase next
     // month sits beside the first rather than starting a parallel one.
-    let user = await (prisma as any).user.findUnique({
-      where: { email }, select: { id: true, tenant_id: true, name: true },
+    // Case insensitive: an account whose email was stored with capitals must still be found, or a
+    // signed in buyer would get a second, separate account instead of the policy joining theirs.
+    let user = await (prisma as any).user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } }, select: { id: true, tenant_id: true, name: true },
     })
     let isNewAccount = false
     let tenantId = user?.tenant_id ?? ''

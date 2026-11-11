@@ -58,6 +58,14 @@ t('free signup is closed unless enabled or the preview code matches', () => {
   delete process.env.FREE_TIER_ENABLED; delete process.env.FREE_TIER_PREVIEW_CODE
 })
 
+t('shop delivered policies never use a free place', () => {
+  // Delivery of a bought policy (platform side) must not claim a lifetime place. Guard against a
+  // future change adding the claim to that path.
+  const fs = require('node:fs') as typeof import('node:fs')
+  const src = fs.readFileSync(require('node:path').join(__dirname, '../routes/platform-policy-gaps.ts'), 'utf8')
+  assert.ok(!/claimPolicySlot/.test(src), 'platform-policy-gaps.ts must not call claimPolicySlot')
+})
+
 t('month key', () => assert.equal(monthKey(new Date(Date.UTC(2026, 10, 30))), '2026-11'))
 
 console.log(`\n${n} groups passed`)

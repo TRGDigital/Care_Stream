@@ -132,6 +132,7 @@ export type PolicyIntakeField = { key: string; label: string; help?: string; sha
 export type PolicyPurchase = {
   id: string
   policy_title: string
+  product_slug?: string | null
   reference_keys: string[]
   price_pence: number
   currency: string

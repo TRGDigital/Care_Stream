@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { BlogFaqs } from '@/components/marketing/blog-faqs'
 import { JsonLd } from '@/components/json-ld'
+import { PageBreadcrumbJsonLd } from '@/components/page-breadcrumb-json-ld'
 import { faqPageSchema, itemListSchema, SITE_URL } from '@/lib/schema'
 import { CollectionIntro } from '@/components/marketing/collection-intro'
 import { CollectionPageV2 } from '@/components/marketing/collection-page-v2'
@@ -133,7 +134,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 }
 
-export default async function CollectionPage(
+async function CollectionPageBody(
   { params, searchParams }: {
     params: Promise<{ slug: string }>
     searchParams?: Promise<Record<string, string | string[] | undefined>>
@@ -299,6 +300,24 @@ export default async function CollectionPage(
           </div>
         </div>
       </section>
+    </>
+  )
+}
+
+// /collection has no index page (it is 404); the browsable list is /collections. The trail is
+// Home, Collections, then this collection by its real title.
+export default async function CollectionPage(props: Parameters<typeof CollectionPageBody>[0]) {
+  const { slug } = await props.params
+  const c = await getCollection(slug)
+  return (
+    <>
+      {c && (
+        <PageBreadcrumbJsonLd trail={[
+          { name: 'Collections', path: '/collections' },
+          { name: c.title, path: `/collection/${slug}` },
+        ]} />
+      )}
+      {await CollectionPageBody(props)}
     </>
   )
 }

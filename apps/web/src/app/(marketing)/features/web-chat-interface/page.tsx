@@ -4,6 +4,7 @@ import { FeatureShowcasePage, type FeatureContent } from '@/components/marketing
 import { pageMetadata } from '@/lib/page-meta'
 import { WebChatPageV2 } from '@/components/marketing/web-chat-page-v2'
 import { JsonLd } from '@/components/json-ld'
+import { PageBreadcrumbJsonLd } from '@/components/page-breadcrumb-json-ld'
 import { faqPageSchema, serviceSchema } from '@/lib/schema'
 import type { FeatureV2Content } from '@/components/marketing/feature-page-v2'
 import { isV2 } from '@/lib/v2-rollout'
@@ -138,7 +139,7 @@ const CONTENT: FeatureContent = {
   },
 }
 
-export default async function WebChatInterfacePage(
+async function WebChatInterfacePageBody(
   { searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> },
 ) {
   // Opt-in with ?v2=1 until it is signed off. The rebuilt page reads the feature_pages record,
@@ -170,4 +171,14 @@ export default async function WebChatInterfacePage(
   }
 
   return <FeatureShowcasePage content={CONTENT} />
+}
+
+// /features has no index page (it is 404), so the trail is Home then this page.
+export default async function WebChatInterfacePage(props: Parameters<typeof WebChatInterfacePageBody>[0]) {
+  return (
+    <>
+      <PageBreadcrumbJsonLd trail={[{ name: CONTENT.title, path: '/features/web-chat-interface' }]} />
+      {await WebChatInterfacePageBody(props)}
+    </>
+  )
 }

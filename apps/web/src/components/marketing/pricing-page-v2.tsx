@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { PRICING, type PricingValue } from '@/lib/pricing-data'
+import { type PricingValue } from '@/lib/pricing-data'
+import { type PricingView } from '@/lib/pricing-source'
 import { PRICING_FEATURE_LINKS } from '@/lib/pricing-feature-links'
 import './pricing-page-v2.css'
 import './pricing-page-v2-extra.css'
@@ -39,8 +40,9 @@ function Cell({ value }: { value: PricingValue }) {
   return <td className="val">{value}</td>
 }
 
-export function PricingPageV2({ heading, lede }: { heading: string; lede: string }) {
+export function PricingPageV2({ heading, lede, view }: { heading: string; lede: string; view: PricingView }) {
   const [annual, setAnnual] = useState(false)
+  const PRICING = { plans: view.plans, groups: view.groups, faqs: view.faqs }
 
   return (
     <div className="ppage-v2">
@@ -61,7 +63,7 @@ export function PricingPageV2({ heading, lede }: { heading: string; lede: string
       </section>
 
       <section className="pplans">
-        <div className="pwrap pplans-in">
+        <div className="pwrap pplans-in" style={{ ['--plans' as any]: PRICING.plans.length }}>
           {PRICING.plans.map(p => (
             <div className={`pcard${p.highlight ? ' hi' : ''}`} key={p.name}>
               {p.badge && (
@@ -108,7 +110,7 @@ export function PricingPageV2({ heading, lede }: { heading: string; lede: string
                   <>
                     {g.group && (
                       <tr className="psec" key={g.group}>
-                        <td colSpan={4}>{g.group}</td>
+                        <td colSpan={PRICING.plans.length + 1}>{g.group}</td>
                       </tr>
                     )}
                     {g.rows.map(r => (

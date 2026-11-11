@@ -13,12 +13,14 @@ export const dynamic = 'force-static'
 const u = (path: string) => `${SITE_URL}${path}`
 
 function body(): string {
+  const hasFree = planFacts().some(p => p.monthlyPence === 0)
+  const freeLine = hasFree ? ' There is also a free plan with no card: every audit and gap analysis of your first five policies, with unlimited staff logins.' : ''
   const annual = planFacts().filter(p => p.annualPence).map(p => `${p.name} ${pounds(p.annualPence!)}`).join(', ')
   return `# CareStreamAI
 
 > AI-powered policy access and compliance platform for UK care providers. Care teams get instant, accurate answers from their own approved policies, in ${LANGUAGES_CLAIM} languages, via web chat, email and voice. Answers are grounded only in the customer's documents and a curated UK regulatory knowledge base. CareStreamAI also provides audits, policy gap detection, CQC evidence, accredited staff training and written care policies.
 
-CareStreamAI is a B2B SaaS for care homes, domiciliary care, supported living and other regulated health & social care settings. Each client's data is isolated, processed in the UK/EEA, encrypted at rest and in transit, and never used to train AI models. Plans: ${planSentence()}, each with a 14 day free trial. Annual billing: ${annual}. Pricing is per service, not per member of staff (Starter includes 10 staff users; Professional and Enterprise are unlimited). Accredited training modules and written policies can also be bought one at a time without a subscription: training is ${MODULE_PRICE} per staff member per course. CareStreamAI is an independent product and is not affiliated with or endorsed by the CQC.
+CareStreamAI is a B2B SaaS for care homes, domiciliary care, supported living and other regulated health & social care settings. Each client's data is isolated, processed in the UK/EEA, encrypted at rest and in transit, and never used to train AI models. Plans: ${planSentence()}, each with a 14 day free trial.${freeLine} Annual billing: ${annual}. Pricing is per service, not per member of staff (Starter includes 10 staff users; Professional and Enterprise are unlimited). Accredited training modules and written policies can also be bought one at a time without a subscription: training is ${MODULE_PRICE} per staff member per course. CareStreamAI is an independent product and is not affiliated with or endorsed by the CQC.
 
 ## Product
 

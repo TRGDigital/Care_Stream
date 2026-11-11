@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { ServicePageV2, type ServicePage } from './service-page-v2'
 import { previewParam } from '@/lib/preview'
 
@@ -24,8 +25,8 @@ export async function loadServicePage(slug: string) {
 }
 
 /** The rebuilt page, or null if there is nothing published to render. */
-export async function ServicePageIfPublished({ slug }: { slug: string }) {
+export async function ServicePageIfPublished({ slug, afterHero }: { slug: string; afterHero?: ReactNode }) {
   const page = await loadServicePage(slug)
   if (!page?.content?.blocks?.length) return null
-  return <ServicePageV2 page={page} />
+  return <ServicePageV2 page={page} afterHero={afterHero} />
 }

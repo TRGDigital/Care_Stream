@@ -60,6 +60,7 @@ const PLANS = [
 const CAMPAIGNS = [
   { key: 'training_shop', label: 'Training buyer' },
   { key: 'policy_shop',   label: 'Policy buyer' },
+  { key: 'free_plan',     label: 'Free account' },
 ]
 
 function fmtDate(iso: string | null) {
@@ -351,6 +352,8 @@ export default function EmailMarketingPage() {
             ? 'For someone who bought training licences without a CareStream plan. Emails are gated on what they have actually done: the allocate nudge disappears once they allocate, and the "one carer trained" email waits until somebody finishes.'
             : plan === 'policy_shop'
             ? 'For someone who bought a written policy without a CareStream plan. Follows the order through intake, drafting and approval. The intake chaser is the one that matters: nothing can be written until those answers are in.'
+            : plan === 'free_plan'
+            ? 'For people on the free plan (test accounts made with the preview code are not enrolled). Gated on what they have done: audits completed, how many of the 5 free policies are used, staff added. Every email is a draft until you publish it. Emails 7, 9 and 10 promote the paid plans: clear them for PECR before publishing. Upgrading ends this sequence and starts the plan sequence.'
             : plan === 'starter'
             ? 'The core sequence, shared by all plans (plus the Starter-only finale). Reordering here flows up to Professional and Enterprise.'
             : plan === 'professional'

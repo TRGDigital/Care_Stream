@@ -11,8 +11,9 @@
 // cannot back up.
 
 import type { OnboardingEmail } from './content'
+import { FREE_PLAN_EMAILS } from './free-campaign'
 
-export type CampaignKey = 'training_shop' | 'policy_shop'
+export type CampaignKey = 'training_shop' | 'policy_shop' | 'free_plan'
 
 export interface CampaignEmail extends OnboardingEmail {
   /** Predicate from conditions.ts, checked when this email is due. */
@@ -315,6 +316,12 @@ export const CAMPAIGNS: Record<CampaignKey, Campaign> = {
     blurb: 'For someone who bought a written policy without a CareStream plan. Follows the order from paid through intake, drafting and approval.',
     emails: POLICY,
   },
+  free_plan: {
+    key: 'free_plan',
+    label: 'Free account',
+    blurb: 'For people on the free plan. Gated on what they have done: audits run, how many of the 5 free policies are used, staff added. Upgrading ends it and starts the plan sequence.',
+    emails: FREE_PLAN_EMAILS,
+  },
 }
 
-export const CAMPAIGN_ORDER: CampaignKey[] = ['training_shop', 'policy_shop']
+export const CAMPAIGN_ORDER: CampaignKey[] = ['training_shop', 'policy_shop', 'free_plan']

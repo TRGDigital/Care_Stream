@@ -19,7 +19,7 @@ export const metadata = {
     type: 'website',
     images: ['/og-image.png'],
     title: 'Policy Gap Detection | CareStreamAI',
-    description: 'Know exactly where your policies fall short of the regulations, and whether they read the way CQC expects — with the legal basis, the wording, and person-centred alternatives.',
+    description: 'Know exactly where your policies fall short of the regulations, and whether they read the way CQC expects, with the legal basis, the wording, and person-centred alternatives.',
     url: 'https://www.carestreamai.com/policy-gap-detection',
   },
 }

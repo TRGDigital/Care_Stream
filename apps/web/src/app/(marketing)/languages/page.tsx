@@ -15,7 +15,7 @@ const COUNT = COURSE_LANGUAGES.length
 export async function generateMetadata() {
   return pageMetadata('/languages', {
     title: `Care Training in ${COUNT} Languages | CareStreamAI`,
-    description: `CareStream delivers staff training, policies and CQC tools in over 60 languages — including Polish, Romanian, Portuguese, Tagalog, Urdu and more — so your whole care team can learn in the language they are most confident in, while your records stay in English.`,
+    description: `CareStream delivers staff training, policies and CQC tools in over 60 languages, including Polish, Romanian, Portuguese, Tagalog, Urdu and more, so your whole care team can learn in the language they are most confident in, while your records stay in English.`,
   })
 }
 

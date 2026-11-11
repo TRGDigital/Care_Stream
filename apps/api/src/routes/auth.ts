@@ -15,6 +15,8 @@ import { seedTenantKnowledge } from '../services/knowledge/seeder'
 import { sendVerificationEmail, sendPasswordResetEmail, sendStaffLoginLinkEmail, sendNewTenantNotification } from '../services/email/outbound'
 import { createLoginLink, consumeLoginToken, mintLoginToken } from '../lib/login-tokens'
 import { needsBillingFor } from '../lib/tiers'
+import { freeEvent } from '../lib/free-events'
+import { isWebmail, emailDomain } from '../lib/free-tier'
 import { freeSignupAllowed, checkFreeSignup, FREE_POLICY_LIMIT } from '../lib/free-tier'
 
 
@@ -150,6 +152,8 @@ authRouter.post('/register', async (req: Request, res: Response) => {
     entity_id: tenant.id,
     metadata: { org_name, slug, plan_id: plan_id ?? null, tier },
   })
+
+  if (tier === 'free') void freeEvent(tenant.id, 'free_signup', { domain_class: isWebmail(emailDomain(email)) ? 'webmail' : 'organisation' }, user.id)
 
   // Send verification email — awaited so it completes before the serverless function exits
   const webUrl = siteUrl()

@@ -80,5 +80,15 @@ async function mk(name: string, free: boolean) {
   assert.deepEqual([up.tier, up.policies_lifetime_limit], ['full', null])
   assert.deepEqual(await F.claimPolicySlot(paid.t.id, { contentHash: 'new' }), { counted: false })
   console.log('ok upgrade lifts limits')
+  // 11. funnel events: real free tenants write them, test tenants never do
+  const { freeEvent } = await import('./free-events')
+  const real = await mk('realfree', true)
+  const test = await p.tenant.create({ data: { name: 'TEST x', slug: 'testx', email_domain: 'testx', tier: 'free', subscription_status: 'active', feature_flags: { is_test: true } } })
+  await freeEvent(real.t.id, 'free_signup', { domain_class: 'webmail' }); await freeEvent(test.id, 'free_signup', {})
+  await F.claimPolicySlot(real.t.id, { contentHash: 'ev1' })
+  await new Promise(r => setTimeout(r, 400))
+  assert.equal(await p.auditLog.count({ where: { tenant_id: real.t.id, event_type: { startsWith: 'free_' } } }), 2)   // signup + slot claimed
+  assert.equal(await p.auditLog.count({ where: { tenant_id: test.id } }), 0)
+  console.log('ok free events written for real tenants, never for test tenants')
   process.exit(0)
 })().catch(e => { console.error('FAIL', e); process.exit(1) })

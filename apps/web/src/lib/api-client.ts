@@ -565,6 +565,8 @@ export function createApiClient(token: string) {
     },
 
     billing: {
+      // Free accounts: report an Upgrade click for the funnel (never blocks the checkout).
+      freeEvent: (source: string) => apiFetch<{ recorded: boolean }>('/billing/free-event', token, { method: 'POST', body: JSON.stringify({ source }) }),
       portal: () => apiFetch<{ url: string }>('/billing/portal', token),
       summary: () => apiFetch<{
         plan_name:            string | null

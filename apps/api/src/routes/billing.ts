@@ -7,6 +7,7 @@ import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
 import { getPlanFeatures } from '../lib/plan-limits'
 import { needsBillingFor } from '../lib/tiers'
+import { freeEvent } from '../lib/free-events'
 
 
 export const billingRouter = Router()
@@ -25,6 +26,14 @@ billingRouter.get('/plans', async (_req: Request, res: Response) => {
     },
   })
   ok(res, { plans })
+})
+
+// ─── POST /billing/free-event: the web app reports that a free account clicked Upgrade ─────
+// Body: { source }. Only the upgrade click is accepted; the other funnel events are written by the API.
+billingRouter.post('/free-event', async (req: Request, res: Response) => {
+  const source = String(req.body?.source ?? 'button').slice(0, 40)
+  await freeEvent(req.user!.tenant_id, 'free_upgrade_click', { source }, req.user!.sub)
+  ok(res, { recorded: true })
 })
 
 // ─── POST /billing/checkout — start a hosted Stripe Checkout for a plan ────────

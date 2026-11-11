@@ -8,6 +8,7 @@ import crypto from 'crypto'
 import { prisma } from '../db/client'
 import { PlanLimitError } from './plan-limits'
 import { clearTierCache } from './tiers'
+import { freeEvent } from './free-events'
 
 // ─── Switches ─────────────────────────────────────────────────────────────────
 
@@ -85,6 +86,12 @@ export async function claimPolicySlot(
       throw new FreePolicyLimitError(limit, cur?.policies_created_lifetime ?? limit)
     }
     return { counted: true }
+  }).then(async (r: { counted: boolean }) => {
+    if (r.counted) { const a = await getPolicyAllowance(tenantId); void freeEvent(tenantId, 'free_policy_slot_claimed', { used: a.used, limit: a.limit }) }
+    return r
+  }).catch(async (e: unknown) => {
+    if (e instanceof FreePolicyLimitError) void freeEvent(tenantId, 'free_limit_hit', { kind: 'policy_slots' })
+    throw e
   })
 }
 
@@ -137,6 +144,7 @@ export async function checkFreeAiBudget(tenantId: string): Promise<void> {
   if (t?.tier !== 'free') return
   const { spent, budget } = await freeAiSpendUsd(tenantId)
   if (spent >= budget) {
+    void freeEvent(tenantId, 'free_limit_hit', { kind: 'ai_budget' })
     throw new PlanLimitError('FREE_AI_BUDGET_REACHED',
       'You have used the free analysis allowance for this account. Move to a paid plan to keep running analyses. Your results are kept.')
   }
@@ -243,6 +251,7 @@ export async function downgradeToFree(tenantId: string): Promise<boolean> {
            policies_created_lifetime = GREATEST(policies_created_lifetime, ${held})
      WHERE id = ${tenantId}`
   clearTierCache(tenantId)
+  void freeEvent(tenantId, 'free_downgraded', {})
   return true
 }
 
@@ -256,6 +265,10 @@ export async function liftFreeLimits(tenantId: string): Promise<void> {
   })
   if (!r.count) return
   clearTierCache(tenantId)
+  void (async () => {
+    const t = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { created_at: true, plan: { select: { name: true } } } })
+    await freeEvent(tenantId, 'free_upgraded', { plan: t?.plan?.name ?? null, days_since_signup: t?.created_at ? Math.floor((Date.now() - new Date(t.created_at).getTime()) / 86400000) : null })
+  })()
   try {
     await (prisma as any).onboardingEnrolment.updateMany({ where: { tenant_id: tenantId, campaign: 'free_plan', status: 'active' }, data: { status: 'completed' } })
     const t = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { plan: { select: { name: true } } } })

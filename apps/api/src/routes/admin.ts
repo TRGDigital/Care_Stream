@@ -1140,6 +1140,25 @@ adminRouter.post('/tenants/:id/sync-billing', async (req: Request, res: Response
 // signs the operator into the client's own dashboard (separate next-auth cookie
 // session — does not disturb the console's platform token). Reuses the
 // passwordless magic-link infra. Optional ?userId targets a specific staff member.
+// GET /admin/free-funnel: the Free tier funnel from the free_ events (test tenants never write
+// them): events and distinct tenants per step, policy places used, which limits were hit. ?days=30
+adminRouter.get('/free-funnel', async (req: Request, res: Response) => {
+  const days = Math.max(1, Math.min(365, Number(req.query.days) || 30))
+  const since = new Date(Date.now() - days * 86400000)
+  try {
+    const rows: Array<{ event_type: string; events: number; tenants: number }> = await (prisma as any).$queryRaw`
+      SELECT event_type, count(*)::int AS events, count(DISTINCT tenant_id)::int AS tenants
+        FROM audit_logs WHERE event_type LIKE 'free\\_%' AND created_at >= ${since} GROUP BY event_type ORDER BY events DESC`
+    const places: Array<{ used: number; n: number }> = await (prisma as any).$queryRaw`
+      SELECT policies_created_lifetime AS used, count(*)::int AS n FROM tenants
+       WHERE tier = 'free' AND COALESCE((feature_flags->>'is_test')::boolean, false) = false GROUP BY 1 ORDER BY 1`
+    const kinds: Array<{ kind: string; n: number }> = await (prisma as any).$queryRaw`
+      SELECT metadata->>'kind' AS kind, count(*)::int AS n FROM audit_logs
+       WHERE event_type = 'free_limit_hit' AND created_at >= ${since} GROUP BY 1 ORDER BY 2 DESC`
+    ok(res, { days, events: rows, policy_places_used: places, limits_hit: kinds })
+  } catch (e: any) { err(res, 'FETCH_FAILED', e?.message ?? 'Could not load the funnel.', 500) }
+})
+
 // POST /admin/tenants/:id/retire-test — retire a TEST tenant (one created with the free tier preview
 // code): deactivates every login, marks it closed and frees its email addresses for a fresh signup.
 // Refuses any tenant that is not flagged is_test. (A hard delete is impossible: audit_logs is

@@ -8,6 +8,7 @@ import { detectEvidenceType } from '../lib/evidence-file'
 import { scanBuffer, scannerConfigured } from '../services/security/malware-scan'
 import { uploadAuditEvidence, downloadFile, deleteFile } from '../services/storage/s3'
 import { callClaude } from '../services/ai/claude'
+import { freeEvent } from '../lib/free-events'
 import { trackAiAction, checkFeature, PlanLimitError, checkAiCreditLimit, logAiCredit, hasAuditRecommendations } from '../lib/plan-limits'
 import { notifyAdmin } from '../lib/notify'
 import { sendAuditUpdateEmail } from '../services/email/outbound'
@@ -2236,6 +2237,12 @@ auditsRouter.post('/runs/:id/complete', requireAuditAccess, async (req: Request,
 
   const approvalRequired = await auditApprovalRequired(tenantId).catch(() => false)
   const recsLocked = !(await hasAuditRecommendations(tenantId))
+  if (recsLocked) {
+    void (async () => {
+      const done = await (prisma as any).auditRun.count({ where: { tenant_id: tenantId, status: 'completed' } })
+      await freeEvent(tenantId, 'free_audit_completed', { n: done + 1, recommendations_locked: true }, req.user!.sub)
+    })()
+  }
 
   // The AI recommendations are generated as soon as the audit is completed, so findings can be put
   // into an action plan straight away. With manager approval on, the audit is then sent to the care

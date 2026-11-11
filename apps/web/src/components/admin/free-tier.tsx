@@ -25,14 +25,14 @@ export async function startUpgrade(token: string, planName = 'Starter'): Promise
   window.location.href = url
 }
 
-export function UpgradeButton({ token, label = 'Upgrade to Starter', className = '' }: { token?: string; label?: string; className?: string }) {
+export function UpgradeButton({ token, label = 'Upgrade to Starter', className = '', source = 'button' }: { token?: string; label?: string; className?: string; source?: string }) {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   return (
     <span>
       <button
         type="button" disabled={busy || !token}
-        onClick={async () => { if (!token) return; setBusy(true); setErr(''); try { await startUpgrade(token) } catch (e: any) { setErr(e.message ?? 'Could not start checkout.'); setBusy(false) } }}
+        onClick={async () => { if (!token) return; setBusy(true); setErr(''); try { createApiClient(token).billing.freeEvent(source).catch(() => {}); await startUpgrade(token) } catch (e: any) { setErr(e.message ?? 'Could not start checkout.'); setBusy(false) } }}
         className={`inline-flex items-center gap-2 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-60 ${className}`}
       >
         {busy ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />} {busy ? 'Opening checkout…' : label}

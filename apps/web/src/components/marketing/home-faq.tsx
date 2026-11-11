@@ -1,6 +1,3 @@
-'use client'
-
-import { useState } from 'react'
 import { SectionLabel } from './ui'
 
 export type Faq = { question: string; answer: string }
@@ -51,25 +48,22 @@ export function HomeFaq({ faqs }: { faqs: Faq[] }) {
   )
 }
 
+// A native <details> so the answer is in the page HTML whether or not it is open: crawlers and AI
+// answer engines read it, and the FAQPage markup above describes text that is really on the page.
+// (It used to render the answer only after a click, so the text was missing from the HTML.)
 function Item({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false)
   return (
-    <div className={`overflow-hidden rounded-2xl border transition-colors ${open ? 'border-teal/30 bg-teal-light/30' : 'border-gray-100 bg-white shadow-card'}`}>
-      <button
-        type="button"
-        className="flex w-full items-center justify-between px-6 py-5 text-left"
-        onClick={() => setOpen(!open)}
-      >
+    <details className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-card transition-colors open:border-teal/30 open:bg-teal-light/30 open:shadow-none">
+      <summary className="flex w-full cursor-pointer list-none items-center justify-between px-6 py-5 text-left [&::-webkit-details-marker]:hidden">
         <span className="font-semibold text-neutral-dark">{q}</span>
-        <span className={`ml-4 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-lg font-bold transition-colors ${open ? 'bg-teal text-white' : 'bg-neutral-light text-neutral-mid'}`}>
-          {open ? '−' : '+'}
+        <span className="ml-4 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-neutral-light text-lg font-bold text-neutral-mid transition-colors group-open:bg-teal group-open:text-white">
+          <span className="group-open:hidden">+</span>
+          <span className="hidden group-open:inline">{'\u2212'}</span>
         </span>
-      </button>
-      {open && (
-        <div className="border-t border-teal/15 px-6 pb-6 pt-4">
-          <p className="leading-relaxed text-neutral-mid">{a}</p>
-        </div>
-      )}
-    </div>
+      </summary>
+      <div className="border-t border-teal/15 px-6 pb-6 pt-4">
+        <p className="leading-relaxed text-neutral-mid">{a}</p>
+      </div>
+    </details>
   )
 }

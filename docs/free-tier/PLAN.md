@@ -104,3 +104,15 @@ Still to decide (my default in brackets):
 14. **Platform admin tools**: do you want a button to raise one tenant's policy limit or AI budget? [Yes, simple SQL for now.]
 15. **Name**: "Free" or something warmer (Starter Free, Essentials)? Pricing page card label.
 16. **Staff Q&A WhatsApp/email channels** (inbound email, WhatsApp): leave off for Free [default].
+
+## 8. Decisions log (Len, 2026-11-11) and what changed in the design
+
+- Re-runs: only if a policy changed plus one forced run per section per month (built, PR #360).
+- AI fixes in /gaps: wording suggestions free; drill in paid with a 3 example taster; adopt, publish, approvals paid (built).
+- No hub chat for free tenants (monthly_query_limit 0, API allow list).
+- AI budget: nothing for audits (recommendations and readiness scoring skipped entirely). **$10 lifetime per free tenant for /gaps** (replaces the $6 in DESIGN.md section 6), plus a **$40 per day platform wide safety cap** across all free tenants (`FREE_GLOBAL_DAILY_BUDGET_USD`), both env tunable. The code shows no reason to drop the daily cap: ai_usage_events is written asynchronously, so per tenant overshoot by a batch is possible and the daily cap bounds the total.
+- Shop bought policies do not count toward the 5 (the platform delivery path never claims a place).
+- No trial on upgrade: Free to paid is charged straight away.
+- Cancel after upgrading: the tenant drops back to Free, keeping all data. Exact rule (`downgradeToFree`): tier free, plan Free, status active, Stripe subscription cleared (customer kept), `free_since` = now so the $10 budget starts fresh, `policies_lifetime_limit` = 5, `policies_created_lifetime` = max(counter, non archived policies held). Nothing is deleted. Edge cases: a downgraded tenant with more than 5 policies keeps and analyses all of them (the $10 budget bounds the cost) and cannot add any; staff, training and audit data are kept but training and chat routes are closed by the API allow list; hub staff of that tenant lose chat; account closure still closes rather than downgrades; a cancelled tenant that resubscribes is charged straight away and set back to full.
+- Consent and PECR sign-off later; email drafts stay unsent.
+- Pricing page JSON-LD must match the visible content once the Free card is added (Free Offer price 0 GBP, £85/£230/£385 monthly and annual, FAQ schema equal to the visible FAQ, no stale £49/£129 in agent-tools.ts, schema.ts, llms.txt, home snapshot, faq). To do in the pricing PR.

@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
-import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info, Wrench, Trash2, GraduationCap, X, ClipboardList, Mail, Loader2, Pencil, Copy, EyeOff, Eye, History, Upload } from 'lucide-react'
+import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info, Wrench, Trash2, GraduationCap, X, ClipboardList, Mail, Loader2, Pencil, Copy, EyeOff, Eye, History, Upload, Play } from 'lucide-react'
 import { clsx } from 'clsx'
 import { AuditBuilder } from '@/components/admin/audit-builder'
 import { AuditVersionsModal } from '@/components/admin/audit-versions-modal'
@@ -14,7 +14,9 @@ import { AuditInsightsPanel } from '@/components/admin/audit-insights'
 import { LinkTrainingModal } from '@/components/admin/link-training-modal'
 import { AuditActionPlan } from '@/components/admin/audit-action-plan'
 import { usePlanFeatures } from '@/lib/use-plan-features'
+import Link from 'next/link'
 import { LockChip } from '@/components/admin/upgrade-gate'
+import { useIsFree } from '@/components/admin/free-tier'
 import { CqcReadinessCard } from '@/components/admin/cqc-readiness-card'
 
 // The "Preview assignment emails" button is a platform-owner tool, not a tenant feature.
@@ -73,6 +75,7 @@ function StatusBadge({ status }: { status: string }) {
 export default function AuditsPage() {
   const { data: session }           = useSession()
   const { features }                = usePlanFeatures()
+  const isFree                      = useIsFree()
   const canCustomAudits = features == null || features.has_custom_audits
   const canLinkTraining = features == null || features.has_training_impact
   const userId = session?.user?.email ?? 'guest'
@@ -82,6 +85,7 @@ export default function AuditsPage() {
   const [runs,      setRuns]        = useState<any[]>([])
   const [loading,   setLoading]     = useState(true)
   const [starting,    setStarting]    = useState(false)
+  const [rowStarting, setRowStarting] = useState<string | null>(null)
   const [showNew,     setShowNew]     = useState(false)
   const [showBuilder, setShowBuilder] = useState(false)
   const [editingId,   setEditingId]   = useState<string | null>(null)
@@ -210,6 +214,25 @@ export default function AuditsPage() {
     }
   }
 
+  // The Start audit button on each row of the Available audits list. An audit that is not about
+  // a particular resident, staff member or room is created and opened straight away (this month, or
+  // today for a daily audit); a scoped one opens the form with the audit chosen, because it needs the subject.
+  async function startFromRow(t: any) {
+    const sc = t.subject_scope ?? (t.room_based ? 'room' : 'none')
+    if (sc !== 'none' || !session?.accessToken) { setSelTemplate(t.id); setShowNew(true); window.scrollTo({ top: 0, behavior: 'smooth' }); return }
+    setRowStarting(t.id); setStartError('')
+    try {
+      const n = new Date()
+      const { run } = await createApiClient(session.accessToken).audits.createRun({
+        template_id: t.id, audit_month: new Date(n.getFullYear(), n.getMonth(), 1).toISOString(),
+      })
+      router.push(`/audits/${run.id}`)
+    } catch (e: any) {
+      setStartError(e?.message ?? 'Could not start the audit. Please try again.')
+      setRowStarting(null)
+    }
+  }
+
   const inProgress = runs.filter(r => r.status === 'in_progress')
   const completed  = runs.filter(r => r.status === 'completed')
 
@@ -221,6 +244,9 @@ export default function AuditsPage() {
         <div>
           <h1 className="text-2xl font-bold text-neutral-dark">Monthly Audits</h1>
           <p className="mt-1 text-sm text-neutral-mid">Complete, store, and review your monthly care audit reports</p>
+          {isFree && (
+            <p className="mt-2 rounded-lg bg-teal-light/30 px-3 py-2 text-xs text-neutral-dark"><strong>Audits are free.</strong> Every template is included. AI recommendations after an audit are part of a paid plan.</p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -607,7 +633,15 @@ export default function AuditsPage() {
             </button>
             {availOpen && (
               <div className="border-t border-gray-100">
-                <p className="px-4 pt-3 text-xs text-neutral-mid">Every audit your team can run. Scoped audits are completed one resident, staff member or room at a time. To change a built-in audit, copy it and edit your copy; hide the ones you don&rsquo;t use.</p>
+                {canCustomAudits ? (
+                  <p className="px-4 pt-3 text-xs text-neutral-mid">Every audit your team can run. Scoped audits are completed one resident, staff member or room at a time. To change a built-in audit, copy it and edit your copy; hide the ones you don&rsquo;t use.</p>
+                ) : (
+                  <p className="px-4 pt-3 text-xs text-neutral-mid">
+                    <strong className="text-neutral-dark">Every audit template is included in your plan.</strong> Scoped audits are completed one resident, staff member or room at a time. Building and editing your own audits is an Enterprise feature.{' '}
+                    <Link href="/billing" className="font-semibold text-teal underline">See plans</Link>
+                  </p>
+                )}
+                {startError && !showNew && <p className="mx-4 mt-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{startError}</p>}
                 <table className="mt-2 w-full text-left text-sm">
                   <tbody className="divide-y divide-gray-50">
                     {templates.map(t => {
@@ -624,18 +658,26 @@ export default function AuditsPage() {
                             {sc !== 'none' && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-neutral-mid">Per {SCOPE_WORD[sc] ?? sc}</span>}
                           </td>
                           <td className="whitespace-nowrap px-4 py-2.5 text-right">
-                            {!t.tenant_id && (
-                              <span className="inline-flex gap-1.5">
-                                <button onClick={() => canCustomAudits ? (setCopying(t), setCopyName(`${t.name} (our version)`), setCopyHide(true), setCopyError('')) : router.push('/billing')}
-                                  title={canCustomAudits ? 'Copy this audit so you can edit it' : 'Copying and editing audits is an Enterprise feature'}
-                                  className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
-                                  <Copy size={12} /> Copy and edit{!canCustomAudits && <LockChip tier="Enterprise" />}
+                            <span className="inline-flex gap-1.5">
+                              {!t.hidden && (
+                                <button onClick={() => startFromRow(t)} disabled={rowStarting === t.id}
+                                  className="inline-flex items-center gap-1 rounded-md bg-teal px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-teal-dark disabled:opacity-60">
+                                  <Play size={11} /> {rowStarting === t.id ? 'Starting…' : 'Start audit'}
                                 </button>
+                              )}
+                              {!t.tenant_id && canCustomAudits && (
+                                <button onClick={() => (setCopying(t), setCopyName(`${t.name} (our version)`), setCopyHide(true), setCopyError(''))}
+                                  title="Copy this audit so you can edit it"
+                                  className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
+                                  <Copy size={12} /> Copy and edit
+                                </button>
+                              )}
+                              {!t.tenant_id && (
                                 <button onClick={() => setHidden(t, !t.hidden)} className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
                                   {t.hidden ? <><Eye size={12} /> Show</> : <><EyeOff size={12} /> Hide</>}
                                 </button>
-                              </span>
-                            )}
+                              )}
+                            </span>
                           </td>
                         </tr>
                       )

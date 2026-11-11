@@ -448,7 +448,8 @@ export function courseSchema(opts: {
 
 /** A care policy as a Product: written to order for the buyer's service, delivered as a digital
  *  document within 2 working days, with the 14 day refund guarantee and what it is checked against.
- *  `review` only when the page shows a customer's words about this specific policy. */
+ *  `review` is emitted only when it carries a real numeric `rating` from the reviewer; a quote
+ *  with no score produces no Review markup (never a default rating). */
 export function policyProductSchema(opts: {
   slug: string
   title: string
@@ -510,11 +511,15 @@ export function policyProductSchema(opts: {
         merchantReturnLink: `${SITE_URL}/refunds`,
       },
     },
-    ...(opts.review ? {
+    // A Review in Product markup needs a reviewRating, and the rating must be the reviewer's own.
+    // The quotes on the site are verbatim words with no score, so none is invented (this used to
+    // default to 5): without a real score there is no Review markup, and the quote stays visible
+    // on the page as ordinary content. aggregateRating is not used anywhere.
+    ...(opts.review && typeof opts.review.rating === 'number' ? {
       review: {
         '@type': 'Review',
         reviewBody: opts.review.body,
-        reviewRating: { '@type': 'Rating', ratingValue: opts.review.rating ?? 5, bestRating: 5 },
+        reviewRating: { '@type': 'Rating', ratingValue: opts.review.rating, bestRating: 5 },
         author: { '@type': 'Person', name: opts.review.author },
       },
     } : {}),

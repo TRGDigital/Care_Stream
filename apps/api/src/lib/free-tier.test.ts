@@ -11,7 +11,7 @@ const t = (name: string, fn: () => void) => { fn(); n++; console.log('ok  ', nam
 
 t('free API allow list: what a free tenant may reach', () => {
   for (const p of ['/audits/templates', '/audits/runs/abc/complete', '/policies', '/policies/allowance', '/policies/bulk',
-    '/analytics/gaps', '/analytics/gaps/analyse/start', '/analytics/gaps/analyse/batch', '/analytics/gaps/pipeline',
+    '/policy-purchases', '/policy-purchases/checkout', '/analytics/gaps', '/analytics/gaps/analyse/start', '/analytics/gaps/analyse/batch', '/analytics/gaps/pipeline',
     '/analytics/gaps/REG-1/detail', '/analytics/policy-lint/scan', '/analytics/consistency/detect',
     '/analytics/wording-alignment/batch', '/users/invite', '/billing/summary', '/billing/checkout', '/me/profile',
     '/me/audit-approvals/xyz/approve', '/settings']) assert.ok(freeRouteAllowed(p), p)

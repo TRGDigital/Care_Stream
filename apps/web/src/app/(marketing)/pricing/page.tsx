@@ -8,9 +8,10 @@ import { PRICING_SLOTS } from '@/lib/page-slots/pricing'
 import { PricingPageV2 } from '@/components/marketing/pricing-page-v2'
 import { isV2 } from '@/lib/v2-rollout'
 import { JsonLd } from '@/components/json-ld'
-import { pricingProductSchema } from '@/lib/schema'
+import { pricingProductSchema, faqPageSchema } from '@/lib/schema'
 import { PRICING } from '@/lib/pricing-data'
-import { planFacts } from '@/lib/pricing-source'
+import { planFacts, pricingView } from '@/lib/pricing-source'
+import { freeLive } from '@/lib/free-rollout'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
@@ -192,7 +193,10 @@ export default async function PricingPage(
   // The plan prices are printed on this page but were invisible to search. Parsed out of the
   // generated pricing data rather than retyped, so they cannot drift from what is displayed; a
   // plan whose price string stops looking like "£85 per month" is skipped rather than guessed at.
-  const tiers = planFacts().map(f => ({ name: f.name, pricePence: f.monthlyPence, annualPence: f.annualPence, description: f.line }))
+  // The Free plan is dark: shown only with ?free=1 until lib/free-rollout.ts is switched on.
+  const free = await freeLive(searchParams)
+  const view = pricingView(free)
+  const tiers = planFacts(free).map(f => ({ name: f.name, pricePence: f.monthlyPence, annualPence: f.annualPence, description: f.line }))
   const pricingJson = tiers.length ? pricingProductSchema({ tiers }) : null
 
   // The rebuilt theme is opt-in with ?v2=1 until it is signed off. The plans and the
@@ -202,7 +206,9 @@ export default async function PricingPage(
     return (
       <>
         {pricingJson && <JsonLd data={pricingJson} />}
-        <PricingPageV2 heading="Simple pricing, no surprises" lede={s('hero.subtitle')} />
+        {/* The FAQ below is visible in full on the page, so its schema matches it. */}
+        <JsonLd data={faqPageSchema(view.faqs.map(f => ({ question: f.q, answer: f.a })))} />
+        <PricingPageV2 heading="Simple pricing, no surprises" lede={s('hero.subtitle')} view={view} />
       </>
     )
   }

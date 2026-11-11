@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { MissingPoliciesAlert, MissingPoliciesBanner } from '@/components/admin/missing-policies-banner'
-import { createApiClient } from '@/lib/api-client'
+import { createApiClient, errorCode, isUpgradeCode } from '@/lib/api-client'
+import { FreeUpgradePanel, useIsFree } from '@/components/admin/free-tier'
 import { persistentCache } from '@/lib/page-cache'
 import { usePlanFeatures } from '@/lib/use-plan-features'
 import { UpgradePanel } from '@/components/admin/upgrade-gate'
@@ -179,6 +180,9 @@ export default function GapsPage() {
   const [data,    setData]    = useState<GapsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState('')
+  // A plan limit or the free re-run rule is not a failure: show it above the results, never instead of them.
+  const [notice,  setNotice]  = useState<{ code?: string; message: string } | null>(null)
+  const isFree = useIsFree()
   const [analysing, setAnalysing] = useState(false)
   const [analyseProgress, setAnalyseProgress] = useState<{ done: number; total: number } | null>(null)
   // Deep-dive modal + client-side verdict corrections (reg keys the drill-in found covered).
@@ -340,7 +344,9 @@ export default function GapsPage() {
       // gaps the tenant never opened. Now the coverage run is the only cost of re-running,
       // and the expensive detail is paid for only when a tenant actually views a gap.
     } catch (e: any) {
-      setError(e.message ?? 'Coverage analysis failed — please try again.')
+      const code = errorCode(e)
+      if (code === 'FREE_NOTHING_CHANGED' || isUpgradeCode(code)) setNotice({ code, message: e.message })
+      else setError(e.message ?? 'Coverage analysis failed — please try again.')
     } finally {
       setAnalysing(false); setAnalyseProgress(null)
       onRunComplete()
@@ -360,7 +366,9 @@ export default function GapsPage() {
       await driveCoverageBatches(api)
       load()
     } catch (e: any) {
-      setError(e.message ?? 'Coverage analysis failed — please try again.')
+      const code = errorCode(e)
+      if (code === 'FREE_NOTHING_CHANGED' || isUpgradeCode(code)) setNotice({ code, message: e.message })
+      else setError(e.message ?? 'Coverage analysis failed — please try again.')
     } finally {
       setAnalysing(false); setAnalyseProgress(null)
       onRunComplete()
@@ -644,6 +652,17 @@ export default function GapsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {isFree && (
+        <div className="mb-4 rounded-card border border-teal/20 bg-teal-light/20 px-4 py-3 text-sm text-neutral-dark">
+          <strong>Free plan:</strong> gap analysis covers the policies you have uploaded (up to 5 in total). Add or update a policy on the <Link href="/policies" className="font-semibold text-teal underline">Policies page</Link> and run the analyses again. You can open 3 gaps to see example wording; the rest is part of the paid plans.
+        </div>
+      )}
+      {notice && (
+        notice.code === 'FREE_NOTHING_CHANGED'
+          ? <div className="mb-4 flex items-start justify-between gap-3 rounded-card border border-gray-200 bg-white px-4 py-3 text-sm text-neutral-dark"><span>{notice.message}</span><button onClick={() => setNotice(null)} className="shrink-0 text-xs font-semibold text-teal">Dismiss</button></div>
+          : <div className="mb-4"><FreeUpgradePanel title="Part of the paid plans" body={notice.message} token={session?.accessToken} /></div>
       )}
 
       <div className="mb-6 flex items-start justify-between gap-4">

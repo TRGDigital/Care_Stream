@@ -211,6 +211,7 @@ export function BulkUploadModal({
   onUploaded: () => void
 }) {
   const [files,    setFiles]    = useState<BulkFile[]>([])
+  const [limitSkipped, setLimitSkipped] = useState(0)
   const [category, setCategory] = useState('internal_policy')
   const [section,  setSection]  = useState('')
   const [uploading, setUploading] = useState(false)
@@ -294,6 +295,7 @@ export function BulkUploadModal({
     const succeeded = new Set<string>()
     const errored   = new Map<string, string>()
     const skipped   = new Set<string>()
+    const limitNames = new Set<string>()   // free accounts: files that did not fit the 5 policy allowance
 
     const toBulk: BulkFile[] = []
     const toReplace: BulkFile[] = []
@@ -352,6 +354,7 @@ export function BulkUploadModal({
         ;(res.results as any[]).forEach(r => succeeded.add(r.filename))
         ;(res.errors ?? []).forEach((e: any) => errored.set(e.filename, e.error))
         ;(res.skipped ?? []).forEach((s: any) => skipped.add(s.filename))  // server-side exact-dup fail-safe
+        ;((res as any).skipped_for_limit ?? []).forEach((n: string) => limitNames.add(n))
       } else {
         // Request lost — reconcile against the server so files that landed aren't
         // falsely marked failed (and we never invite a duplicate re-upload).
@@ -377,6 +380,7 @@ export function BulkUploadModal({
     })
     flush()
 
+    setLimitSkipped(prev => (subset ? prev : 0) + limitNames.size)
     setUploading(false)
     setDone(true)
   }
@@ -608,9 +612,15 @@ export function BulkUploadModal({
               <div className="rounded-md border border-gray-100 bg-gray-50 px-4 py-3 text-sm">
                 <p className="font-medium text-neutral-dark">
                   {doneCount} of {files.length} uploaded successfully.
-                  {skippedCount > 0 && <span className="ml-1 text-neutral-mid">{skippedCount} skipped (duplicates).</span>}
+                  {skippedCount - limitSkipped > 0 && <span className="ml-1 text-neutral-mid">{skippedCount - limitSkipped} skipped (duplicates).</span>}
                   {errorCount > 0 && <span className="ml-1 text-status-error">{errorCount} failed.</span>}
                 </p>
+                {limitSkipped > 0 && (
+                  <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                    {limitSkipped} file{limitSkipped === 1 ? ' was' : 's were'} not added: a free account includes 5 policies in total.{' '}
+                    <a href="/billing" className="font-semibold underline">Move to a paid plan</a> to add more. Everything you have is kept.
+                  </p>
+                )}
 
                 {failedFiles.length > 0 && (
                   <div className="mt-3">

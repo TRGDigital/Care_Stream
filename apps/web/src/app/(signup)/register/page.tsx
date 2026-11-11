@@ -44,6 +44,11 @@ export default function RegisterPage() {
   // Training-only signup (à la carte training modules, no subscription) when the page is reached
   // as /register?tier=training_only. Read client-side to avoid an SSR/hydration mismatch.
   const [trainingOnly, setTrainingOnly] = useState(false)
+  // Free account (dark launch): /register?tier=free&code=<private preview code>. The code is read from
+  // the address and sent to the API; it is never shown on the page.
+  const [freeTier, setFreeTier] = useState(false)
+  const [previewCode, setPreviewCode] = useState('')
+  const [trap, setTrap] = useState('')   // honeypot: real people never fill this in
   const orgRef = useRef<HTMLInputElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
@@ -51,6 +56,7 @@ export default function RegisterPage() {
   useEffect(() => {
     const q = new URLSearchParams(window.location.search)
     if (q.get('tier') === 'training_only') setTrainingOnly(true)
+    if (q.get('tier') === 'free') { setFreeTier(true); setPreviewCode(q.get('code') ?? '') }
     // The home page and /uses heroes ask for a work email and send it here, so the visitor goes
     // straight on to the rest of the details rather than typing it twice.
     const e = q.get('email')?.trim()
@@ -80,11 +86,15 @@ export default function RegisterPage() {
       const res = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(trainingOnly ? { ...form, tier: 'training_only' } : form),
+        body: JSON.stringify(freeTier ? { ...form, tier: 'free', preview_code: previewCode || undefined, company_website: trap || undefined } : trainingOnly ? { ...form, tier: 'training_only' } : form),
       })
       const body = await res.json()
       if (!res.ok || !body.success) {
-        setError(body.error?.message ?? 'Registration failed. Please try again.')
+        // The free plan is dark until it launches: a closed or wrong preview code comes back as a
+        // validation error, which is not a useful thing to show a person.
+        setError(freeTier && body.error?.code === 'VALIDATION_ERROR'
+          ? 'Free accounts are not open yet. If you were given a link, please check you copied all of it, or contact us.'
+          : body.error?.message ?? 'Registration failed. Please try again.')
         setLoading(false)
         return
       }
@@ -107,7 +117,18 @@ export default function RegisterPage() {
       </header>
 
       <main className="rgmain">
-        {trainingOnly ? (
+        {freeTier ? (
+          <>
+            <h1>Create your free account</h1>
+            <p className="rgsub">No card needed. Every audit, and a policy check on your first 5 policies.</p>
+            <ul className="rgfree" style={{ margin: '0 auto 18px', maxWidth: 420, textAlign: 'left', fontSize: 14, lineHeight: 1.6, listStyle: 'none', padding: 0 }}>
+              <li><b>Free:</b> every audit template, with reports and action plans</li>
+              <li><b>Free:</b> gap analysis on up to 5 policies (all four analyses)</li>
+              <li><b>Free:</b> as many staff logins as you need</li>
+              <li><b>Paid plans:</b> AI recommendations at the end of audits, more than 5 policies, staff Q&amp;A and training</li>
+            </ul>
+          </>
+        ) : trainingOnly ? (
           <>
             <h1>Start with training modules</h1>
             <p className="rgsub">No subscription. Buy the courses you need at £25.99 per staff member, per course.</p>
@@ -163,6 +184,11 @@ export default function RegisterPage() {
               <input id="name" type="text" required autoComplete="name"
                      placeholder="Jane Smith" value={name} onChange={e => setName(e.target.value)} />
             </div>
+            {freeTier && (
+              <input type="text" name="company_website" tabIndex={-1} autoComplete="off" aria-hidden="true"
+                     value={trap} onChange={e => setTrap(e.target.value)}
+                     style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }} />
+            )}
             <div className="rgfield">
               <label htmlFor="password">Password</label>
               <PasswordInput id="password" required minLength={8} autoComplete="new-password"
@@ -182,7 +208,7 @@ export default function RegisterPage() {
             {success && <p className="rgok" role="status">Account created. We&apos;ve sent a verification email, check your inbox.</p>}
 
             <button type="submit" className="rgbtn" disabled={loading || success || !agreed}>
-              {loading ? 'Creating account…' : success ? 'Account created' : 'Create account'}
+              {loading ? 'Creating account…' : success ? 'Account created' : freeTier ? 'Create free account' : 'Create account'}
             </button>
             <p className="rgalt">Already have an account? <Link href="/login">Log in</Link></p>
           </form>

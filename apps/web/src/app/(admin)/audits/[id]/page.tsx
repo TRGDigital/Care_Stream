@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
 import { AuthedImage } from '@/components/authed-image'
 import { AuditRecs } from '@/components/audit-recs'
+import { LockedRecommendations } from '@/components/admin/free-tier'
 import { AuditActionPlan } from '@/components/admin/audit-action-plan'
 import { ChevronLeft, ChevronRight, ChevronDown, CheckCircle2, Circle, Printer, Sparkles, Loader2, AlertTriangle, Pause, Camera, CornerDownRight, FileDown } from 'lucide-react'
 import { QuestionInput, EMPTY_ANSWER, answerFromRow, type AuditAnswer } from '@/components/audits/question-input'
@@ -163,6 +164,8 @@ export default function AuditRunPage() {
   const [completing, setCompleting] = useState(false)
   const [approvalRequired, setApprovalRequired] = useState(false)
   const [recsOpen,  setRecsOpen]    = useState(false)
+  // Free accounts: the AI recommendations are part of the paid plans (the server leaves them out).
+  const recsLocked = !!run?.ai_recommendations_locked
   const [report,    setReport]      = useState<any>(null)
   const [evidence,  setEvidence]    = useState<Map<string, any[]>>(new Map())
   const saveTimer                   = useRef<NodeJS.Timeout>()
@@ -690,8 +693,8 @@ export default function AuditRunPage() {
                   <p className="text-sm font-semibold text-neutral-dark">Ready to {approvalRequired ? 'send for approval' : 'complete'}?</p>
                   <p className="text-xs text-neutral-mid">
                     {approvalRequired
-                      ? 'Completing generates the AI recommendations and sends the audit to your care manager in the hub to review and sign off.'
-                      : 'Completing the audit generates AI recommendations and locks the report for printing.'}
+                      ? (recsLocked ? 'Completing sends the audit to your care manager in the hub to review and sign off.' : 'Completing generates the AI recommendations and sends the audit to your care manager in the hub to review and sign off.')
+                      : (recsLocked ? 'Completing the audit locks the report for printing.' : 'Completing the audit generates AI recommendations and locks the report for printing.')}
                   </p>
                 </div>
                 <button
@@ -700,7 +703,7 @@ export default function AuditRunPage() {
                   className="flex items-center gap-2 rounded-btn bg-teal px-5 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50"
                 >
                   {completing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                  {completing ? (approvalRequired ? 'Sending…' : 'Generating…') : (approvalRequired ? 'Send to care manager for approval' : 'Complete & get AI recommendations')}
+                  {completing ? (approvalRequired ? 'Sending…' : 'Generating…') : (approvalRequired ? 'Send to care manager for approval' : recsLocked ? 'Complete audit' : 'Complete & get AI recommendations')}
                 </button>
               </div>
             )}
@@ -732,6 +735,13 @@ export default function AuditRunPage() {
                   </div>
                 )}
               </div>
+            )}
+
+            {recsLocked && isCompleted && (
+              <LockedRecommendations
+                token={session?.accessToken}
+                summary={(report?.sections ?? []).map((sec: any) => ({ section: String(sec.title), total: sec.questions.length, failing: sec.questions.filter((q: any) => q.outcome === 'fail').length }))}
+              />
             )}
 
             {session?.accessToken && <AuditActionPlan token={session.accessToken} runId={id} canGenerate={isCompleted && !!run.ai_recommendations} />}

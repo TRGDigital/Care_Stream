@@ -188,6 +188,8 @@ export interface PlanFeatures {
   has_effectiveness:      boolean
   has_training_impact:    boolean
   has_workforce_compliance: boolean
+  has_audit_recommendations?: boolean
+  tier?: string
   annual_license:         LicenseUsage
 }
 
@@ -302,10 +304,22 @@ async function apiFetch<T>(
     throw new Error('Session expired. Please sign in again.')
   }
   if (!res.ok || !body.success) {
-    throw new Error(body.error?.message ?? `API error ${res.status}`)
+    // Carry the error code and status, so callers can tell a plan limit (FREE_POLICY_LIMIT_REACHED,
+    // UPGRADE_REQUIRED...) from a failure without parsing the message.
+    const e: any = new Error(body.error?.message ?? `API error ${res.status}`)
+    e.code = body.error?.code
+    e.status = res.status
+    throw e
   }
   return body.data as T
 }
+
+/** The API error code carried on an error thrown by apiFetch, if any. */
+export const errorCode = (e: unknown): string | undefined => (e as any)?.code
+
+/** Codes that mean "this needs a paid plan" (or a free allowance is used up). */
+export const isUpgradeCode = (c?: string) =>
+  !!c && ['UPGRADE_REQUIRED', 'FREE_POLICY_LIMIT_REACHED', 'FREE_AI_BUDGET_REACHED', 'FREE_DAILY_PAUSE', 'FREE_DETAIL_LOCKED', 'FEATURE_NOT_AVAILABLE'].includes(c)
 
 export function createApiClient(token: string) {
   return {
@@ -371,6 +385,8 @@ export function createApiClient(token: string) {
     },
 
     policies: {
+      // Lifetime policy allowance for the "X of 5 policies used" strip. limited:false on paid tenants.
+      allowance: () => apiFetch<{ limited: boolean; used: number; limit: number | null; remaining: number | null }>('/policies/allowance', token),
       // The companion document: the legislation this policy was written against. Returns
       // false when there is nothing to show (an uploaded policy has no provenance), so the
       // caller can hide the button rather than offer a download that errors.
@@ -1124,7 +1140,7 @@ export function createApiClient(token: string) {
       updateRun: (id: string, data: any) => apiFetch<{ run: any }>(`/audits/runs/${id}`, token, { method: 'PUT', body: JSON.stringify(data) }),
       saveAnswers: (id: string, answers: Array<{ question_id: string; answer_yn?: boolean | null; answer_na?: boolean; no_compliant?: boolean | null; answer_value?: string | string[] | null; outcome_text?: string | null; actions_text?: string | null }>) =>
         apiFetch<{ saved: number }>(`/audits/runs/${id}/answers`, token, { method: 'POST', body: JSON.stringify({ answers }) }),
-      complete: (id: string) => apiFetch<{ run: any; recommendations: string; approval_required?: boolean }>(`/audits/runs/${id}/complete`, token, { method: 'POST' }),
+      complete: (id: string) => apiFetch<{ run: any; recommendations: string | null; approval_required?: boolean; recommendations_locked?: boolean; findings_summary?: Array<{ section: string; failing: number; total: number }> }>(`/audits/runs/${id}/complete`, token, { method: 'POST' }),
       actionPlan: (id: string) => apiFetch<{ status: string; actions: Array<{ id: string; description: string; priority: string; due_date: string | null; assigned_to: string | null; is_external: boolean; external_name: string | null; status: string; source: string; done_at: string | null }> }>(`/audits/runs/${id}/action-plan`, token),
       addAuditAction: (id: string, description: string, priority: string) => apiFetch<{ status: string; actions: any[] }>(`/audits/runs/${id}/actions`, token, { method: 'POST', body: JSON.stringify({ description, priority }) }),
       updateAuditAction: (actionId: string, patch: { description?: string; priority?: string; due_date?: string | null; assigned_to?: string | null; is_external?: boolean; external_name?: string | null; status?: string }) => apiFetch<{ updated: boolean }>(`/audits/actions/${encodeURIComponent(actionId)}`, token, { method: 'PATCH', body: JSON.stringify(patch) }),

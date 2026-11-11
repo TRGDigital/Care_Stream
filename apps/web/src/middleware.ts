@@ -42,6 +42,10 @@ const POLICIES_ONLY_BLOCKED_SCAN = ['/dashboard', '/chat', '/staff', '/training'
   '/group', '/workforce', '/translation-review', '/analytics', '/queries', '/knowledge',
   '/cqc-questions', '/audits', '/gaps', '/onboarding', '/guides']
 
+// Free accounts (tier 'free') get audits, the policy library and gap analysis, staff, settings and
+// billing. Like the policies-only tier this is an ALLOW list, so a route added later stays closed
+// until someone decides otherwise. The sidebar shows the rest locked; this is the typed URL backstop.
+const FREE_ALLOWED = ['/dashboard', '/audits', '/gaps', '/policies', '/staff', '/settings', '/billing', '/guides', '/account', '/start', '/chat', '/progress']
 const matches = (path: string, list: string[]) => list.some(p => path === p || path.startsWith(p + '/'))
 
 // ── Store app mode. The Android (Trusted Web Activity) and iOS apps open the site with
@@ -135,6 +139,13 @@ export async function middleware(req: NextRequest) {
     }
     // Training-only tenants can't reach the full-CareStream console routes.
     if (token?.tier === 'training_only' && matches(path, TRAINING_ONLY_BLOCKED)) {
+      const url = req.nextUrl.clone()
+      url.pathname = '/dashboard'
+      url.search = ''
+      return NextResponse.redirect(url)
+    }
+    // Free accounts stay inside what the free plan includes.
+    if (token?.tier === 'free' && !matches(path, FREE_ALLOWED)) {
       const url = req.nextUrl.clone()
       url.pathname = '/dashboard'
       url.search = ''

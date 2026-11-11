@@ -25,6 +25,7 @@ publicBlogRouter.get('/posts', async (_req: Request, res: Response) => {
       excerpt:           true,
       category:          true,
       publication_date:  true,
+      updated_at:        true,   // the sitemap's lastmod
       read_time_minutes: true,
       feature_image_url: true,
       is_featured:       true,

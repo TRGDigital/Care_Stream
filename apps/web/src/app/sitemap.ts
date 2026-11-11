@@ -57,6 +57,16 @@ const MARKETING: Entry[] = [
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
+// A real last modified date, or undefined. lastmod is only worth sending when it is true: Google
+// learns to ignore it on a sitemap that stamps every URL with the time of the request. So a URL
+// whose source has no date (the hand-listed marketing pages, settings pages, training and policy
+// pages, which the API does not date) carries no lastmod at all.
+function realDate(v: unknown): Date | undefined {
+  if (typeof v !== 'string' && !(v instanceof Date)) return undefined
+  const d = new Date(v)
+  return Number.isNaN(d.getTime()) ? undefined : d
+}
+
 // The per-module staff-training guide pages are data-driven, so pull their paths
 // from the API rather than hard-coding them. Falls back to none on error.
 async function trainingPages(): Promise<Entry[]> {
@@ -119,9 +129,14 @@ async function blogPages(): Promise<Entry[]> {
     const res = await fetch(`${API_URL}/public/blog/posts`, { next: { revalidate: 900 } })
     if (res.ok) {
       const posts = (await res.json())?.data?.posts ?? []
-      return (posts as Array<{ slug?: string }>)
+      return (posts as Array<{ slug?: string; updated_at?: string; publication_date?: string }>)
         .filter((p) => p.slug)
-        .map((p) => ({ url: `/blog/${p.slug}`, changeFrequency: 'monthly' as const, priority: 0.7 }))
+        .map((p) => ({
+          url: `/blog/${p.slug}`,
+          // updated_at once the API sends it; the publication date is the true floor until then.
+          lastModified: realDate(p.updated_at) ?? realDate(p.publication_date),
+          changeFrequency: 'monthly' as const, priority: 0.7,
+        }))
     }
   } catch {
     // fall through
@@ -136,11 +151,13 @@ async function collectionPages(): Promise<Entry[]> {
     const res = await fetch(`${API_URL}/public/collections`, { next: { revalidate: 900 } })
     if (res.ok) {
       const collections = (await res.json())?.data?.collections ?? []
-      const items = (collections as Array<{ slug?: string }>)
+      const items = (collections as Array<{ slug?: string; updated_at?: string }>)
         .filter((c) => c.slug)
-        .map((c) => ({ url: `/collection/${c.slug}`, changeFrequency: 'monthly' as const, priority: 0.7 }))
-      // Include the index when there is at least one collection.
-      return items.length > 0 ? [{ url: '/collections', changeFrequency: 'weekly', priority: 0.7 }, ...items] : []
+        .map((c) => ({ url: `/collection/${c.slug}`, lastModified: realDate(c.updated_at), changeFrequency: 'monthly' as const, priority: 0.7 }))
+      // Include the index when there is at least one collection. It lists them all, so it changes
+      // when the most recently changed collection does.
+      const newest = items.reduce<Date | undefined>((m, i) => (i.lastModified && (!m || i.lastModified > m) ? i.lastModified : m), undefined)
+      return items.length > 0 ? [{ url: '/collections', lastModified: newest, changeFrequency: 'weekly', priority: 0.7 }, ...items] : []
     }
   } catch {
     // fall through
@@ -155,9 +172,9 @@ async function featurePages(): Promise<Entry[]> {
     const res = await fetch(`${API_URL}/public/feature-pages`, { next: { revalidate: 900 } })
     if (res.ok) {
       const items = (await res.json())?.data?.featurePages ?? []
-      return (items as Array<{ slug?: string }>)
+      return (items as Array<{ slug?: string; updated_at?: string }>)
         .filter((f) => f.slug)
-        .map((f) => ({ url: `/features/${f.slug}`, changeFrequency: 'monthly' as const, priority: 0.7 }))
+        .map((f) => ({ url: `/features/${f.slug}`, lastModified: realDate(f.updated_at), changeFrequency: 'monthly' as const, priority: 0.7 }))
     }
   } catch {
     // fall through
@@ -173,9 +190,27 @@ async function cmsPages(): Promise<Entry[]> {
     const res = await fetch(`${API_URL}/public/site-pages/index`, { next: { revalidate: 900 } })
     if (res.ok) {
       const pages = (await res.json())?.data?.pages ?? []
-      return (pages as Array<{ path?: string }>)
+      return (pages as Array<{ path?: string; updated_at?: string }>)
         .filter((p) => p.path && p.path.startsWith('/'))
-        .map((p) => ({ url: p.path as string, changeFrequency: 'monthly' as const, priority: 0.4 }))
+        .map((p) => ({ url: p.path as string, lastModified: realDate(p.updated_at), changeFrequency: 'monthly' as const, priority: 0.4 }))
+    }
+  } catch {
+    // fall through
+  }
+  return []
+}
+
+// The /uses/<slug> user case pages are DB-driven (published in the platform admin) and linked
+// from the navigation of every page, so they belong here. Same feed the pages render from, so an
+// unpublished page drops out. Falls back to none on error.
+async function usePages(): Promise<Entry[]> {
+  try {
+    const res = await fetch(`${API_URL}/public/user-cases`, { next: { revalidate: 900 } })
+    if (res.ok) {
+      const pages = (await res.json())?.data?.pages ?? []
+      return (pages as Array<{ slug?: string; updated_at?: string }>)
+        .filter((p) => p.slug)
+        .map((p) => ({ url: `/uses/${p.slug}`, lastModified: realDate(p.updated_at), changeFrequency: 'monthly' as const, priority: 0.7 }))
     }
   } catch {
     // fall through
@@ -184,18 +219,17 @@ async function cmsPages(): Promise<Entry[]> {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date()
   // Dedupe by path (some settings also appear in MARKETING), first entry wins.
   const seen = new Set<string>()
-  const [training, policies, blog, collections, features, cms] = await Promise.all([trainingPages(), policyPages(), blogPages(), collectionPages(), featurePages(), cmsPages()])
-  const entries = [...MARKETING, ...SETTINGS, ...training, ...policies, ...blog, ...collections, ...features, ...cms].filter((e) => {
+  const [training, policies, blog, collections, features, uses, cms] = await Promise.all([trainingPages(), policyPages(), blogPages(), collectionPages(), featurePages(), usePages(), cmsPages()])
+  const entries = [...MARKETING, ...SETTINGS, ...training, ...policies, ...blog, ...collections, ...features, ...uses, ...cms].filter((e) => {
     if (seen.has(e.url)) return false
     seen.add(e.url)
     return true
   })
-  return entries.map(({ url, changeFrequency, priority }) => ({
+  return entries.map(({ url, lastModified, changeFrequency, priority }) => ({
     url:             `${BASE}${url}`,
-    lastModified:    now,
+    ...(lastModified ? { lastModified } : {}),
     changeFrequency,
     priority,
   }))

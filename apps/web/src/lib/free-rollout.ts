@@ -5,7 +5,7 @@
 // has FREE_TIER_ENABLED=true, so the Free card never points at a signup that is still closed.
 // Modelled on lib/v2-rollout.ts.
 
-export const FREE_LIVE = false
+export const FREE_LIVE = true
 
 type Params = Record<string, string | string[] | undefined> | undefined
 

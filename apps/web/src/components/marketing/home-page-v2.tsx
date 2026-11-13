@@ -1,3 +1,4 @@
+import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
 import { TRAINING_ACCREDITED } from '@/lib/training-commerce'
@@ -166,6 +167,14 @@ export function HomePageV2({ s, showFree = false }: { s: HomeCopy; showFree?: bo
               <span className="av" key={f}><SiteImage src={`/images/home/${f}`} alt="" /></span>
             ))}
           </div>
+          {/* The CPD Certified mark exactly as supplied (lib/cpd.ts): no border, recolour or text added to the image.
+              It sits on the green line between the people and the training card, so it is a connector node:
+              no breathing animation and no rotation, which keeps the line straight through it. */}
+          <span className="cpdn" id="n-cpd" style={{ left: '64%', top: '38px' } as Css}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified" width={48} height={44} />
+            <span>{s('hero.n.cpd')}</span>
+          </span>
           <div className="nd c-green" id="n-training" style={{ '--d': '2s', left: 'min(91%,calc(100% - 136px))', top: '17%', '--rot': '2deg', '--w': '252px' } as Css}>
             <div className="top">
               <span className="ic"><I20><path d="M10 3 2.5 7 10 11l7.5-4z" {...st} strokeWidth="1.7" /><path d="M5.5 9v4.5c0 1 2 2 4.5 2s4.5-1 4.5-2V9" stroke="currentColor" strokeWidth="1.7" /></I20></span>

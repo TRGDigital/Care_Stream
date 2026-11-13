@@ -11,7 +11,9 @@ import { useEffect } from 'react'
 
 const PAIRS: [string, string, string][] = [
   ['n-policies', 'n-people', '#7B3FBF'],
-  ['n-people', 'n-training', '#1F8A5B'],
+  // The CPD Certified mark sits ON the green line: people to the mark, then the mark to the training card.
+  ['n-people', 'n-cpd', '#1F8A5B'],
+  ['n-cpd', 'n-training', '#1F8A5B'],
   ['n-policies', 'n-library', '#7B3FBF'],
   ['n-library', 'n-hub', '#2F6FD0'],
   ['n-training', 'n-gaps', '#D08A15'],

@@ -97,7 +97,7 @@ export function PagePerformanceModal({ token, kind, slug, onClose }: { token: st
                 <thead><tr className="border-b text-left text-xs text-neutral-mid"><th className="py-1">Day</th><th>Impressions</th><th>Clicks</th><th>Click rate</th><th>Avg position</th><th>Visits</th><th>Sign ups</th><th></th></tr></thead>
                 <tbody>{d.windows.map((w: any) => (
                   <tr key={w.days} className="border-b border-gray-100"><td className="py-1.5 font-semibold">{w.days}</td><td>{n(w.impressions)}</td><td>{n(w.clicks)}</td><td>{pct(w.ctr)}</td><td>{n(w.position)}</td><td>{n(w.sessions)}</td><td>{n(w.signups)}</td>
-                    <td className="text-xs text-neutral-mid">{w.complete ? 'complete' : 'in progress'}</td></tr>
+                    <td className="text-xs text-neutral-mid">{w.no_history ? `before tracking (${d.history_from ?? 'n/a'})` : w.complete ? 'complete' : 'in progress'}</td></tr>
                 ))}</tbody>
               </table></div>
             </div>

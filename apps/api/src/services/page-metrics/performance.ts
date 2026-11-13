@@ -52,10 +52,13 @@ export async function getPagePerformance(kind: string, slug: string) {
   const signupRows = await (prisma as any).signupAttempt.findMany({ where: { source: signupSource, outcome: 'created' }, select: { created_at: true } })
   const signupsIn = (a: Date, b: Date) => signupRows.filter((s: any) => s.created_at >= a && new Date(s.created_at).getTime() <= b.getTime() + DAY).length
 
+  // Search Console keeps 16 months and tracking began on a known day: a checkpoint that ends before the
+  // first stored day has no history, which is different from a page that earned nothing.
+  const historyFrom = rows.length ? rows[0].date : null
   const windows = CHECKPOINTS.map(n => {
     const end = new Date(Math.min(anchor.getTime() + (n - 1) * DAY, today.getTime()))
     const a = agg(rows, anchor, end)
-    return { days: n, complete: today.getTime() >= anchor.getTime() + (n - 1) * DAY, from: day(anchor), to: day(end), ...a, signups: signupsIn(anchor, end) }
+    return { days: n, complete: today.getTime() >= anchor.getTime() + (n - 1) * DAY, from: day(anchor), to: day(end), no_history: !historyFrom || end.getTime() < historyFrom.getTime(), ...a, signups: signupsIn(anchor, end) }
   })
 
   const cur = agg(rows, new Date(today.getTime() - 27 * DAY), today)
@@ -87,6 +90,7 @@ export async function getPagePerformance(kind: string, slug: string) {
   return {
     page: { kind, slug, path: rec.path, title: rec.title, status: rec.status, primary_keyword: rec.primary_keyword, topic_cluster: rec.topic_cluster },
     baseline: { date: day(anchor), label, age_days: ageDays },
+    history_from: historyFrom ? day(historyFrom) : null,
     windows, last28: cur, prev28: prev, cluster_avg_impressions_28d: clusterAvg,
     primary_keyword_position: primary ? { position: Math.round(primary.position * 10) / 10, impressions: primary.impressions } : null,
     series: rows.filter(r => r.date.getTime() >= today.getTime() - 89 * DAY).map(r => ({ date: day(r.date), impressions: r.impressions, clicks: r.clicks, position: r.position })),

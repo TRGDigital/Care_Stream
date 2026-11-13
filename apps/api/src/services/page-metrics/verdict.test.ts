@@ -9,6 +9,7 @@ test('too early before day 14', () => assert.equal(decide({ ...base, ageDays: 5,
 test('not submitted and no impressions flags indexing', () => assert.equal(decide({ ...base, submitted: false, ageDays: 20, cur: w(0), prev: null }).key, 'not_indexed'))
 test('low data is not judged', () => assert.equal(decide({ ...base, ageDays: 40, cur: w(40), prev: null }).key, 'not_enough_data'))
 test('85 days with almost nothing is a prune candidate', () => assert.equal(decide({ ...base, ageDays: 90, cur: w(20), prev: null }).key, 'prune'))
+test('old page with some impressions is only watched', () => assert.equal(decide({ ...base, ageDays: 140, cur: w(75), prev: null }).key, 'not_enough_data'))
 test('position 8 to 20 is striking distance', () => assert.equal(decide({ ...base, ageDays: 60, cur: w(400, 3, 12.4), prev: null }).key, 'striking_distance'))
 test('top 10 with poor click through gets a title test', () => assert.equal(decide({ ...base, ageDays: 60, cur: w(500, 2, 6), prev: null }).key, 'title_test'))
 test('a 30% fall is a refresh', () => assert.equal(decide({ ...base, ageDays: 120, cur: w(200, 4, 5), prev: w(400, 8, 5) }).key, 'declining'))

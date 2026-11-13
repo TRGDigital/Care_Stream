@@ -4,6 +4,7 @@
 // "not enough data" and is never judged, which is a valid outcome.
 
 export const MIN_IMPRESSIONS = 100
+export const PRUNE_BELOW = 25
 export interface Win { impressions: number; clicks: number; position: number | null; sessions: number }
 export interface VerdictInput {
   ageDays: number               // days since the baseline (published, or last refreshed)
@@ -27,7 +28,9 @@ export function decide(i: VerdictInput): Verdict {
   if (!i.submitted && cur.impressions === 0 && i.ageDays >= 14)
     return { key: 'not_indexed', label: 'Check indexing', reason: 'No impressions and no RalfyIndex submission on record. Submit it and inspect the URL in Search Console.', priority: 50 }
   if (cur.impressions < MIN_IMPRESSIONS) {
-    if (i.ageDays >= 85) return { key: 'prune', label: 'Merge or redirect', reason: `Under ${MIN_IMPRESSIONS} impressions in 28 days after ${i.ageDays} days. Merge into a stronger page, redirect, or leave it.`, priority: 10 }
+    // CareStream is young, so 25 to 99 impressions in 28 days is normal and is only watched; a page is a
+    // prune candidate when it is old AND shows almost nothing.
+    if (i.ageDays >= 85 && cur.impressions < PRUNE_BELOW) return { key: 'prune', label: 'Merge or redirect', reason: `Under ${PRUNE_BELOW} impressions in 28 days after ${i.ageDays} days. Merge into a stronger page, redirect, or leave it.`, priority: 10 }
     return { key: 'not_enough_data', label: 'Not enough data', reason: `${cur.impressions} impressions in 28 days (need ${MIN_IMPRESSIONS}). Keep waiting; do not edit.`, priority: 0 }
   }
   if (prev && prev.impressions >= MIN_IMPRESSIONS && cur.impressions <= prev.impressions * 0.7)

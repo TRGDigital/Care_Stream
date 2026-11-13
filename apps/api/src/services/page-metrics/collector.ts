@@ -33,7 +33,8 @@ async function upsertRows(rows: Row[]) {
 
 export async function collectPageMetrics(days = 7): Promise<Record<string, unknown>> {
   if (!googleConfigured()) return { skipped: 'GOOGLE_ANALYTICS_SA_JSON is not set' }
-  const start = daysAgo(Math.min(Math.max(days, 1), 120)); const end = daysAgo(0)
+  // Search Console keeps 16 months, so a backfill can reach back to when the oldest post went up.
+  const start = daysAgo(Math.min(Math.max(days, 1), 480)); const end = daysAgo(0)
   const map = new Map<string, Row>()
   const get = (path: string, date: string) => {
     const k = pageKey(path); if (!k) return null
@@ -44,12 +45,13 @@ export async function collectPageMetrics(days = 7): Promise<Record<string, unkno
   const gsc = await gscQuery(start, end, ['page', 'date'])
   for (const r of gsc) { const row = get(r.keys[0], r.keys[1]); if (row) { row.impressions += r.impressions; row.clicks += r.clicks; row.position = r.position } }
   let ga4Rows = 0
+  let ga4Error = ''
   try {
     for (const r of await ga4Pages(start, end)) {
       const d = `${r.date.slice(0, 4)}-${r.date.slice(4, 6)}-${r.date.slice(6, 8)}`
       const row = get(r.path, d); if (row) { row.sessions += r.sessions; row.engaged_seconds += r.engaged; ga4Rows++ }
     }
-  } catch (e) { console.error('[page-metrics] GA4 failed (Search Console data still saved)', e) }
+  } catch (e: any) { ga4Error = String(e?.message ?? e).slice(0, 300); console.error('[page-metrics] GA4 failed (Search Console data still saved)', e) }
   await upsertRows([...map.values()])
 
   // Queries each page appears for: the last 28 days, top 20 per page, replacing this window.
@@ -69,5 +71,5 @@ export async function collectPageMetrics(days = 7): Promise<Record<string, unkno
     chunk.forEach((r, j) => { const b = j * 6; values.push(`($${b + 1},$${b + 2},$${b + 3}::date,$${b + 4},$${b + 5},$${b + 6})`); args.push(r.url, r.query, end, r.impressions, r.clicks, r.position) })
     await (prisma as any).$executeRawUnsafe(`INSERT INTO page_query_metrics (url, query, window_end, impressions, clicks, position) VALUES ${values.join(',')} ON CONFLICT DO NOTHING`, ...args)
   }
-  return { from: start, to: end, page_days: map.size, ga4_rows: ga4Rows, query_rows: qvals.length }
+  return { from: start, to: end, page_days: map.size, ga4_rows: ga4Rows, ...(ga4Error ? { ga4_error: ga4Error } : {}), query_rows: qvals.length }
 }

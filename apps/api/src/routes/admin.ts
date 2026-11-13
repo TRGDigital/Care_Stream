@@ -3482,7 +3482,20 @@ adminRouter.post('/blog/import', async (req: Request, res: Response) => {
       const old = await (prisma as any).blogPost.findUnique({ where: { slug: prev } })
       if (old && old.status === 'draft') existing = old
     }
-    if (existing && existing.status !== 'draft') { skipped.push({ slug, reason: 'already published, not touched' }); continue }
+    // A published post is only changed when the item carries refresh: true (an approved revamp). Slug, status,
+    // publication date and featured flag are never touched; the change is logged as a 'refreshed' event and
+    // the page is resubmitted for indexing (once per 14 days per URL).
+    if (existing && existing.status !== 'draft') {
+      if (raw?.refresh !== true) { skipped.push({ slug, reason: 'already published, not touched' }); continue }
+      try {
+        const { slug: _s, status: _st, publication_date: _pd, is_featured: _f, use_case_slugs: _u, ...rest } = raw
+        const upd = await (prisma as any).blogPost.update({ where: { id: existing.id }, data: buildPostData(rest) })
+        await logPageEvent(`/blog/${upd.slug}`, 'refreshed', 'approved revamp')
+        await submitUrlsForIndexing([`${siteUrl()}/blog/${upd.slug}`], { source: 'blog', blogPostId: upd.id, refresh: true })
+        updated.push({ id: upd.id, slug: upd.slug, title: upd.title })
+      } catch (e: any) { skipped.push({ slug, reason: String(e?.message ?? e).slice(0, 160) }) }
+      continue
+    }
     try {
       if (existing) {
         const upd = await (prisma as any).blogPost.update({

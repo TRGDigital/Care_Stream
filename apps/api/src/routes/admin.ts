@@ -3698,6 +3698,15 @@ adminRouter.post('/page-metrics/collect', async (req: Request, res: Response) =>
   catch (e: any) { err(res, 'COLLECT_FAILED', String(e?.message ?? e).slice(0, 300), 502) }
 })
 
+// POST /admin/indexing/resubmit  { urls: [...] }  push pages through RalfyIndex again even if they were
+// submitted recently (for pages whose content changed after the last submission). Own domain URLs only.
+adminRouter.post('/indexing/resubmit', async (req: Request, res: Response) => {
+  const urls = (Array.isArray(req.body?.urls) ? req.body.urls : []).map((u: any) => String(u)).filter((u: string) => /^https:\/\/(www\.)?carestreamai\.com\//.test(u)).slice(0, 25)
+  if (!urls.length) { err(res, 'VALIDATION_ERROR', 'urls must be https://www.carestreamai.com pages.'); return }
+  await submitUrlsForIndexing(urls, { source: 'page', force: true })
+  ok(res, { submitted: urls.length })
+})
+
 adminRouter.get('/update-queue', async (_req: Request, res: Response) => {
   ok(res, { pages: await getUpdateQueue() })
 })

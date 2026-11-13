@@ -42,7 +42,7 @@ async function filterNew(urls: string[], refreshDays = 0): Promise<string[]> {
  */
 export async function submitUrlsForIndexing(
   urls: string[],
-  opts: { source?: 'blog' | 'page'; blogPostId?: string | null; refresh?: boolean } = {},
+  opts: { source?: 'blog' | 'page'; blogPostId?: string | null; refresh?: boolean; force?: boolean } = {},
 ): Promise<void> {
   try {
     const clean = urls.map(u => u?.trim()).filter((u): u is string => !!u && /^https?:\/\//.test(u)).map(toCanonicalHost)
@@ -51,7 +51,8 @@ export async function submitUrlsForIndexing(
     const cfg = await getConfig()
     if (!cfg || !cfg.enabled || !cfg.api_key) return
 
-    const fresh = await filterNew(clean, opts.refresh ? 14 : 0)
+    // force: the content changed after the last submission, so resubmit regardless of when that was
+    const fresh = opts.force ? Array.from(new Set(clean)) : await filterNew(clean, opts.refresh ? 14 : 0)
     if (!fresh.length) return
 
     const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '_')

@@ -3638,6 +3638,22 @@ adminRouter.post('/collections/import', async (req: Request, res: Response) => {
     const slug = String(raw?.slug ?? '').trim().replace(/^\/?collection\//, '').replace(/^\//, '')
     const title = String(raw?.title ?? '').trim()
     if (!slug || !title) { skipped.push({ slug: slug || '(none)', reason: 'title and slug are required' }); continue }
+    // An approved revamp of a PUBLISHED collection (refresh: true): copy, meta, FAQs and keywords change; the slug,
+    // status, kind, product cluster, eyebrow, links and images never do. Logged as a refresh and resubmitted for indexing.
+    if (raw?.refresh === true) {
+      try {
+        const cur = await (prisma as any).collection.findUnique({ where: { slug } })
+        if (!cur) { skipped.push({ slug, reason: 'refresh: no collection with this slug' }); continue }
+        const { slug: _s, status: _st, kind: _k, cluster_key: _c, eyebrow: _e, links: _l, images: _i, refresh: _r, ...rest } = raw
+        const c = await (prisma as any).collection.update({ where: { id: cur.id }, data: buildCollectionData(rest) })
+        if (c.status === 'published') {
+          await logPageEvent(`/collection/${c.slug}`, 'refreshed', 'approved revamp')
+          await submitUrlsForIndexing([`${siteUrl()}/collection/${c.slug}`], { source: 'page', refresh: true, force: true })
+        }
+        updated.push({ id: c.id, slug: c.slug, title: c.title })
+      } catch (e: any) { skipped.push({ slug, reason: String(e?.message ?? e).slice(0, 160) }) }
+      continue
+    }
     if (!raw?.cluster_key || !clusterByKey(String(raw.cluster_key))) { skipped.push({ slug, reason: 'a valid cluster_key is required' }); continue }
     try {
       const prev = String(raw?.previous_slug ?? '').trim().replace(/^\/?collection\//, '')

@@ -4,12 +4,15 @@ import Link from 'next/link'
 // in the admin editor; two copy variants per type keep repeated CTAs from reading
 // identically. Rendered inside the prose article, so it carries `not-prose`.
 
-export type BlogCtaType = 'book_demo' | 'buy_training' | 'discuss_training'
-export const BLOG_CTA_TYPES: BlogCtaType[] = ['book_demo', 'buy_training', 'discuss_training']
+export type BlogCtaType = 'book_demo' | 'buy_training' | 'discuss_training' | 'free_cpd_course' | 'free_audits' | 'free_policy_check'
+export const BLOG_CTA_TYPES: BlogCtaType[] = ['book_demo', 'buy_training', 'discuss_training', 'free_cpd_course', 'free_audits', 'free_policy_check']
 export const BLOG_CTA_LABELS: Record<BlogCtaType, string> = {
   book_demo:        'Book a demo',
   buy_training:     'Buy training module',
   discuss_training: 'Discuss training module',
+  free_cpd_course:  'Free CPD course (free account)',
+  free_audits:      'Free audits (free account)',
+  free_policy_check:'Free policy check (free account)',
 }
 
 const CTAS: Record<BlogCtaType, {
@@ -34,6 +37,33 @@ const CTAS: Record<BlogCtaType, {
     variants: [
       { title: 'Roll out training your team will actually finish', sub: 'CareStream turns your policies into role-based training with tracking and certificates. See the plans and get started.' },
       { title: 'Training that keeps you CQC ready', sub: 'Assign, track and evidence staff training in minutes. Explore the plans and roll it out this week.' },
+    ],
+  },
+  free_cpd_course: {
+    eyebrow: 'Free CPD training',
+    button: 'Create a free account',
+    href: '/register?tier=free&source=blog-cta-cpd',
+    variants: [
+      { title: 'Give every member of staff the course free', sub: 'The CPD certified Care Certificate and the annual courses are free on every plan. No card needed, and every staff login is included.' },
+      { title: 'See who has finished, in one place', sub: 'Free courses, an 80% pass mark assessment, certificates and a training matrix. Create a free account and start with the Care Certificate.' },
+    ],
+  },
+  free_audits: {
+    eyebrow: 'Free audits',
+    button: 'Create a free account',
+    href: '/register?tier=free&source=blog-cta-audits',
+    variants: [
+      { title: 'Run your first audit free', sub: 'Every audit in the library is free to run, with scoring, actions and a report. No card needed.' },
+      { title: 'Stop auditing on paper', sub: 'Pick an audit, assign it, score it on a phone and close the actions. Create a free account to start.' },
+    ],
+  },
+  free_policy_check: {
+    eyebrow: 'Free policy check',
+    button: 'Create a free account',
+    href: '/register?tier=free&source=blog-cta-policy-check',
+    variants: [
+      { title: 'Check your first five policies free', sub: 'Have your policies read against the regulations to see what is missing or out of date. No card needed.' },
+      { title: 'Find the gaps before an inspector does', sub: 'The free policy check shows where a policy falls short of the regulations. Create a free account to begin.' },
     ],
   },
   discuss_training: {

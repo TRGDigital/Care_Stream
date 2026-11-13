@@ -13,7 +13,8 @@ import { BlogCta, BLOG_CTA_TYPES } from '@/components/marketing/blog-cta'
 import { BlogPostV2 } from '@/components/marketing/blog-post-v2'
 import { isV2 } from '@/lib/v2-rollout'
 import { KeywordHighlighter } from '@/components/marketing/keyword-highlighter'
-import { RelatedContent } from '@/components/marketing/related-content'
+import { relatedHtml } from '@/lib/related-fetch'
+import { injectBeforeFirstHeading } from '@/lib/related-block'
 
 export const revalidate = 60
 
@@ -139,8 +140,11 @@ export default async function BlogPostPage({ params, searchParams }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }) {
   const { slug } = await params
-  const post = await getPost(slug)
-  if (!post) notFound()
+  const fetched = await getPost(slug)
+  if (!fetched) notFound()
+  // The related-content block sits inside the article, just above the first H2.
+  const block = await relatedHtml(fetched.topic_cluster, fetched.slug)
+  const post: Post = block ? { ...fetched, content: injectBeforeFirstHeading(fetched.content, block) } : fetched
   const related = await getRelated(slug)
 
   // The theme's post template. Same data, same structured data; only the markup changes.
@@ -155,7 +159,6 @@ export default async function BlogPostPage({ params, searchParams }: {
           ...(faqs.length > 0 ? [faqPageSchema(faqs)] : []),
         ]} />
         <BlogPostV2 post={post} related={related} />
-        <RelatedContent cluster={post.topic_cluster} exclude={post.slug} />
         <KeywordHighlighter slug={post.slug} />
       </>
     )
@@ -327,7 +330,6 @@ export default async function BlogPostPage({ params, searchParams }: {
         </div>
       )}
       </ArticleLayout>
-      <RelatedContent cluster={post.topic_cluster} exclude={post.slug} />
       <KeywordHighlighter slug={post.slug} />
     </>
   )

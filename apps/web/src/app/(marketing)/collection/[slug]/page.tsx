@@ -13,7 +13,8 @@ import { COLLECTION_V2_SLOTS } from '@/lib/page-slots/collection-v2'
 import { isV2 } from '@/lib/v2-rollout'
 import { THEME_IMAGES } from '@/lib/theme-images'
 import { KeywordHighlighter } from '@/components/marketing/keyword-highlighter'
-import { RelatedContent } from '@/components/marketing/related-content'
+import { relatedHtml } from '@/lib/related-fetch'
+import { injectBeforeFirstHeading } from '@/lib/related-block'
 
 // An ecommerce-style collection page: copy, the six products it sells, deeper copy, FAQs,
 // sibling links, then the services banner. The order is the order a visitor needs it in.
@@ -160,8 +161,12 @@ async function CollectionPageBody(
   },
 ) {
   const { slug } = await params
-  const c = await getCollection(slug, await previewOf(searchParams))
-  if (!c) notFound()
+  const preview = await previewOf(searchParams)
+  const fetched = await getCollection(slug, preview)
+  if (!fetched) notFound()
+  // The related-content block sits inside the body, just above its first heading.
+  const block = await relatedHtml(fetched.topic_cluster, fetched.slug, preview)
+  const c: Collection = block && fetched.body ? { ...fetched, body: injectBeforeFirstHeading(fetched.body, block) } : fetched
 
   // A collection page IS a list, so say so. Without ItemList these read to a crawler as an
   // unclassified page of links; with it, the courses or policies on the page are enumerated in
@@ -185,7 +190,6 @@ async function CollectionPageBody(
           && <JsonLd data={faqPageSchema(c.faqs.filter(f => f.question && f.answer))} />}
         <CollectionPageV2 c={await withCardImages(c)} s={makeSlot(COLLECTION_V2_SLOTS, slots)}
                           siblings={await getSiblings(slug)} />
-        <RelatedContent cluster={c.topic_cluster} exclude={c.slug} preview={await previewOf(searchParams)} />
       </>
     )
   }
@@ -289,7 +293,6 @@ async function CollectionPageBody(
       )}
 
       {faqs.length > 0 && <BlogFaqs faqs={faqs} />}
-      <RelatedContent cluster={c.topic_cluster} exclude={c.slug} preview={await previewOf(searchParams)} />
 
       {/* ── The services banner: the one place we talk about ourselves ── */}
       <section className="bg-white py-14">

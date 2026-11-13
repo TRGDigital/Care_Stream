@@ -1,0 +1,31 @@
+/* The free account dropdown: a card that opens under the sticky header on every page load. Literal
+   brand colours so it looks the same on every page design. The header is position:sticky, so this
+   absolute wrapper stays pinned to it. */
+.fdrop{position:absolute;left:0;right:0;top:100%;pointer-events:none;z-index:70}
+.fdrop-in{max-width:var(--maxw,1280px);margin:0 auto;padding:0 40px;display:flex;justify-content:flex-end}
+.fdrop-card{pointer-events:auto;box-sizing:border-box;width:min(680px,100%);margin-top:10px;background:#F3EDFA;border:1px solid #E1D3F2;border-radius:18px;box-shadow:0 18px 48px rgba(23,18,31,.18);padding:26px 28px 22px;color:#17121F;position:relative}
+.fdrop[data-open="false"]{display:none}
+.fdrop-x{position:absolute;top:14px;right:14px;width:34px;height:34px;border:0;background:transparent;border-radius:999px;color:#3A3245;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.fdrop-x:hover{background:rgba(123,63,191,.12)}
+.fdrop-x:focus-visible,.fdrop-btn:focus-visible{outline:3px solid #7B3FBF;outline-offset:2px}
+.fdrop-title{margin:0 44px 16px 0;font-size:1.2rem;line-height:1.25;font-weight:800;color:#17121F}
+.fdrop-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px}
+.fdrop-list li{display:flex;gap:12px;align-items:flex-start;font-size:.95rem;line-height:1.4;color:#3A3245}
+.fdrop-list svg{flex:0 0 auto;width:18px;height:18px;margin-top:2px;stroke:#7B3FBF;fill:none;stroke-width:2.4}
+.fdrop-rule{border:0;border-top:1px solid #D9C8EE;margin:20px 0 16px}
+.fdrop-sub{margin:0 0 4px;font-size:1rem;font-weight:800;color:#17121F}
+.fdrop-note{margin:0;font-size:.92rem;line-height:1.5;color:#5A4F6B}
+.fdrop-acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.fdrop-btn{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:10px 20px;border-radius:999px;font-weight:700;font-size:.92rem;text-decoration:none}
+.fdrop-btn.solid{background:#7B3FBF;color:#fff}
+.fdrop-btn.solid:hover{background:#6A33A8}
+.fdrop-btn.ghost{border:1px solid #7B3FBF;color:#5B2A94;background:transparent}
+.fdrop-btn.ghost:hover{background:rgba(123,63,191,.1)}
+@media (prefers-reduced-motion:no-preference){.fdrop[data-open="true"] .fdrop-card{animation:fdrop-in .2s ease-out}}
+@keyframes fdrop-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@media (max-width:720px){
+  .fdrop-in{padding:0 16px}
+  .fdrop-card{padding:22px 20px 18px;max-height:calc(100vh - 110px);overflow-y:auto}
+  .fdrop-list{grid-template-columns:1fr;gap:12px}
+  .fdrop-btn{flex:1 1 150px}
+}

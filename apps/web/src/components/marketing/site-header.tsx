@@ -1,5 +1,6 @@
 'use client'
 
+import { FreeDropdown } from './free-dropdown'
 import { PpcHeaderLinks } from './ship-now'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -253,6 +254,7 @@ export function SiteHeader() {
             </div>
           </div>
         </div>
+        <FreeDropdown />
       </header>
     </div>
   )

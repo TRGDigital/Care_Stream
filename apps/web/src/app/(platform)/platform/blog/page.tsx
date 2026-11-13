@@ -344,6 +344,7 @@ const EMPTY_POST = {
   sources: [] as Array<{ label: string; url: string }>,
   use_case_slugs: [] as string[],
   primary_keyword: '',
+  topic_cluster: '',
   secondary_keywords_text: '',
 }
 
@@ -413,6 +414,7 @@ function PostForm({
     merged.sources = Array.isArray(initial?.sources) ? initial.sources : []
     merged.use_case_slugs = Array.isArray((initial as any)?.use_case_slugs) ? (initial as any).use_case_slugs : []
     merged.primary_keyword = (initial as any)?.primary_keyword ?? ''
+    merged.topic_cluster = (initial as any)?.topic_cluster ?? ''
     merged.secondary_keywords_text = Array.isArray((initial as any)?.secondary_keywords) ? (initial as any).secondary_keywords.join(', ') : ''
     return merged
   })
@@ -709,6 +711,13 @@ function PostForm({
             <p className={`mt-1 text-xs ${form.meta_description.length > 160 ? 'text-red-500' : 'text-neutral-mid'}`}>
               {form.meta_description.length}/160 chars
             </p>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Topic cluster <span className="font-normal">(groups pages in the related-content block, max 10 links)</span></label>
+            <input list="topic-clusters" value={form.topic_cluster ?? ''} onChange={e => set('topic_cluster', e.target.value)}
+              placeholder="e.g. care-certificate, audits, policies"
+              className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
+            <datalist id="topic-clusters"><option value="care-certificate" /><option value="audits" /><option value="policies" /></datalist>
           </div>
           <div>
             <label className="mb-1 block text-xs font-semibold text-neutral-mid">Primary keyword <span className="font-normal">(platform only, never public)</span></label>
@@ -1417,7 +1426,7 @@ function SingleImageField({ value, token, onChange }: {
 const EMPTY_COLLECTION = {
   title: '', slug: '', status: 'draft',
   meta_title: '', meta_description: '', og_image_url: '',
-  kind: 'policies', cluster_key: '', eyebrow: '',
+  kind: 'policies', cluster_key: '', eyebrow: '', topic_cluster: '', primary_keyword: '', secondary_keywords_text: '',
   intro: '', images: [] as Array<{ url: string; alt: string }>,
   body: '', links: [] as Array<{ label: string; url: string }>,
   faqs: [] as Array<{ question: string; answer: string }>,
@@ -1513,6 +1522,7 @@ function CollectionForm({
     for (const k of Object.keys(EMPTY_COLLECTION)) {
       if (typeof (EMPTY_COLLECTION as any)[k] === 'string' && merged[k] == null) merged[k] = ''
     }
+    merged.secondary_keywords_text = Array.isArray((initial as any)?.secondary_keywords) ? (initial as any).secondary_keywords.join(', ') : ''
     merged.images = Array.isArray(initial?.images) ? initial!.images : []
     merged.links  = Array.isArray(initial?.links)  ? initial!.links  : []
     merged.faqs   = Array.isArray(initial?.faqs)   ? initial!.faqs   : []
@@ -1600,6 +1610,21 @@ function CollectionForm({
               placeholder="A one or two sentence summary for search results." className={`${input} resize-none`} />
           </div>
           <div>
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Topic cluster <span className="font-normal">(groups pages in the related-content block, max 10 links)</span></label>
+            <input list="topic-clusters" value={form.topic_cluster ?? ''} onChange={e => set('topic_cluster', e.target.value)}
+              placeholder="e.g. care-certificate, audits, policies"
+              className={input} />
+            <datalist id="topic-clusters"><option value="care-certificate" /><option value="audits" /><option value="policies" /></datalist>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Primary keyword <span className="font-normal">(platform only, never public)</span></label>
+            <input value={form.primary_keyword ?? ''} onChange={e => set('primary_keyword', e.target.value)} className={input} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Secondary keywords <span className="font-normal">(comma separated)</span></label>
+            <input value={form.secondary_keywords_text ?? ''} onChange={e => set('secondary_keywords_text', e.target.value)} className={input} />
+          </div>
+          <div>
             <label className="mb-1 block text-xs font-semibold text-neutral-mid">Social sharing image</label>
             <SingleImageField value={form.og_image_url} token={token} onChange={v => set('og_image_url', v)} />
           </div>
@@ -1609,7 +1634,7 @@ function CollectionForm({
       {saveError && <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{saveError}</p>}
 
       <div className="flex gap-2 pt-1">
-        <Button onClick={() => onSave(form)} disabled={saving || !form.title.trim() || !form.slug.trim()}>
+        <Button onClick={() => onSave({ ...form, secondary_keywords: String(form.secondary_keywords_text ?? '').split(',').map((s: string) => s.trim()).filter(Boolean) })} disabled={saving || !form.title.trim() || !form.slug.trim()}>
           {saving ? <Loader2 size={14} className="mr-1 animate-spin" /> : <Check size={14} className="mr-1" />}
           {saving ? 'Saving…' : 'Save Collection'}
         </Button>

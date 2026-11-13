@@ -93,7 +93,7 @@ publicCollectionsRouter.get('/:slug', async (req: Request, res: Response) => {
     select: {
       slug: true, title: true, meta_title: true, meta_description: true, og_image_url: true,
       intro: true, images: true, body: true, links: true, faqs: true, updated_at: true,
-      kind: true, cluster_key: true, eyebrow: true,
+      kind: true, cluster_key: true, eyebrow: true, topic_cluster: true,
     },
   })
   if (!collection) { err(res, 'NOT_FOUND', 'Collection not found.', 404); return }

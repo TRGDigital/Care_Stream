@@ -13,6 +13,7 @@ import { BlogCta, BLOG_CTA_TYPES } from '@/components/marketing/blog-cta'
 import { BlogPostV2 } from '@/components/marketing/blog-post-v2'
 import { isV2 } from '@/lib/v2-rollout'
 import { KeywordHighlighter } from '@/components/marketing/keyword-highlighter'
+import { RelatedContent } from '@/components/marketing/related-content'
 
 export const revalidate = 60
 
@@ -40,6 +41,7 @@ interface Post {
   cta_url: string | null
   cta_type: string | null
   faqs: Faq[] | null
+  topic_cluster?: string | null
   updated_at: string | null
   sources: Array<{ label: string; url: string }> | null
   author: { name: string; title: string | null; photo_url: string | null; bio: string | null; linkedin_url: string | null } | null
@@ -153,6 +155,7 @@ export default async function BlogPostPage({ params, searchParams }: {
           ...(faqs.length > 0 ? [faqPageSchema(faqs)] : []),
         ]} />
         <BlogPostV2 post={post} related={related} />
+        <RelatedContent cluster={post.topic_cluster} exclude={post.slug} />
         <KeywordHighlighter slug={post.slug} />
       </>
     )
@@ -324,6 +327,7 @@ export default async function BlogPostPage({ params, searchParams }: {
         </div>
       )}
       </ArticleLayout>
+      <RelatedContent cluster={post.topic_cluster} exclude={post.slug} />
       <KeywordHighlighter slug={post.slug} />
     </>
   )

@@ -13,6 +13,7 @@ import { COLLECTION_V2_SLOTS } from '@/lib/page-slots/collection-v2'
 import { isV2 } from '@/lib/v2-rollout'
 import { THEME_IMAGES } from '@/lib/theme-images'
 import { KeywordHighlighter } from '@/components/marketing/keyword-highlighter'
+import { RelatedContent } from '@/components/marketing/related-content'
 
 // An ecommerce-style collection page: copy, the six products it sells, deeper copy, FAQs,
 // sibling links, then the services banner. The order is the order a visitor needs it in.
@@ -56,6 +57,7 @@ interface Collection {
   body: string
   links: CollectionLink[]
   faqs: Faq[]
+  topic_cluster?: string | null
   products: CollectionProduct[]
 }
 
@@ -183,6 +185,7 @@ async function CollectionPageBody(
           && <JsonLd data={faqPageSchema(c.faqs.filter(f => f.question && f.answer))} />}
         <CollectionPageV2 c={await withCardImages(c)} s={makeSlot(COLLECTION_V2_SLOTS, slots)}
                           siblings={await getSiblings(slug)} />
+        <RelatedContent cluster={c.topic_cluster} exclude={c.slug} />
       </>
     )
   }
@@ -286,6 +289,7 @@ async function CollectionPageBody(
       )}
 
       {faqs.length > 0 && <BlogFaqs faqs={faqs} />}
+      <RelatedContent cluster={c.topic_cluster} exclude={c.slug} />
 
       {/* ── The services banner: the one place we talk about ourselves ── */}
       <section className="bg-white py-14">

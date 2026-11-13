@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
 import { downloadFile } from '../services/storage/s3'
 import { ok, err } from '../lib/response'
+import { clusterInfo, CLUSTER_LINK_CAP } from '../lib/topic-clusters'
 import { USE_CASES, USE_CASE_POST_LIMIT, isUseCaseSlug, useCaseLabel } from '../lib/use-cases'
 
 const IMAGE_CONTENT_TYPES: Record<string, string> = {
@@ -37,6 +38,44 @@ publicBlogRouter.get('/posts', async (_req: Request, res: Response) => {
   // could serve a stale listing for up to 24h on a low-traffic blog).
   res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=120')
   ok(res, { posts })
+})
+
+// GET /public/blog/cluster/:cluster?exclude=slug  the related-content block for one topic cluster.
+// Never more than CLUSTER_LINK_CAP links in total: the cluster's collections first, then the newest
+// posts. When there are more pages than fit, the last slot becomes a link to the cluster hub.
+async function clusterItems(cluster: string, exclude: string) {
+  const [collections, posts] = await Promise.all([
+    (prisma as any).collection.findMany({
+      where: { status: 'published', topic_cluster: cluster, slug: { not: exclude } },
+      orderBy: { updated_at: 'desc' }, select: { slug: true, title: true },
+    }),
+    (prisma as any).blogPost.findMany({
+      where: { status: 'published', topic_cluster: cluster, slug: { not: exclude } },
+      orderBy: [{ publication_date: 'desc' }, { created_at: 'desc' }], select: { slug: true, title: true },
+    }),
+  ])
+  return [
+    ...collections.slice(0, 3).map((c: any) => ({ title: c.title, url: `/collection/${c.slug}`, kind: 'collection' })),
+    ...posts.map((p: any) => ({ title: p.title, url: `/blog/${p.slug}`, kind: 'post' })),
+    ...collections.slice(3).map((c: any) => ({ title: c.title, url: `/collection/${c.slug}`, kind: 'collection' })),
+  ]
+}
+
+publicBlogRouter.get('/cluster/:cluster', async (req: Request, res: Response) => {
+  const key = String(req.params.cluster).toLowerCase().replace(/[^a-z0-9-]/g, '')
+  const all = await clusterItems(key, String(req.query.exclude ?? ''))
+  const more = all.length > CLUSTER_LINK_CAP
+  const items = more ? all.slice(0, CLUSTER_LINK_CAP - 1) : all
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=600')
+  ok(res, { cluster: clusterInfo(key), items, total: all.length, hub_url: more ? `/topics/${key}` : null })
+})
+
+// GET /public/blog/cluster/:cluster/all  every published page in the cluster (the hub page).
+publicBlogRouter.get('/cluster/:cluster/all', async (req: Request, res: Response) => {
+  const key = String(req.params.cluster).toLowerCase().replace(/[^a-z0-9-]/g, '')
+  const items = await clusterItems(key, '')
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=600')
+  ok(res, { cluster: clusterInfo(key), items })
 })
 
 // GET /public/blog/posts/:slug — a single published post (full content)

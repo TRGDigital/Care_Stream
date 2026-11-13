@@ -3664,7 +3664,7 @@ function buildCollectionData(body: any) {
   const {
     title, slug, status, meta_title, meta_description, og_image_url,
     intro, images, body: content, links, faqs, kind, cluster_key, eyebrow,
-    primary_keyword, secondary_keywords,
+    primary_keyword, secondary_keywords, topic_cluster,
   } = body ?? {}
   // A cluster belongs to one kind. Saving a training cluster onto a policy collection would
   // give a page whose grid and whose copy disagree, so the pair is resolved together rather
@@ -3684,6 +3684,7 @@ function buildCollectionData(body: any) {
     ...(faqs             !== undefined && { faqs:             normaliseFaqs(faqs)            }),
     ...(kind             !== undefined && { kind:             kind === 'training' ? 'training' : 'policies' }),
     ...(cluster_key      !== undefined && { cluster_key:      cluster ? cluster.key : ''      }),
+    ...(topic_cluster    !== undefined && { topic_cluster:    String(topic_cluster ?? '').trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '') || null }),
     ...(primary_keyword  !== undefined && { primary_keyword:  String(primary_keyword ?? '').trim() || null }),
     ...(secondary_keywords !== undefined && { secondary_keywords: Array.isArray(secondary_keywords) ? secondary_keywords.map((k: any) => String(k).trim()).filter(Boolean).slice(0, 20) : [] }),
     ...(eyebrow          !== undefined && { eyebrow:          eyebrow?.trim() || (cluster?.kind === 'training' ? 'Training collection' : 'Policy collection') }),
@@ -3854,7 +3855,7 @@ function buildPostData(body: any) {
     content, author_id, category, publication_date, status,
     is_featured, read_time_minutes, cta_text, cta_url, cta_type,
     special_message, special_message_color, key_info_title, key_info_content,
-    faqs, sources, use_case_slugs, primary_keyword, secondary_keywords,
+    faqs, sources, use_case_slugs, primary_keyword, secondary_keywords, topic_cluster,
   } = body ?? {}
 
   return {
@@ -3883,6 +3884,7 @@ function buildPostData(body: any) {
     ...(faqs                 !== undefined && { faqs:                  Array.isArray(faqs) ? faqs.filter((f: any) => f.question?.trim() || f.answer?.trim()) : null }),
     ...(sources              !== undefined && { sources:               Array.isArray(sources) ? sources.map((s: any) => ({ label: (s.label ?? '').trim(), url: (s.url ?? '').trim() })).filter((s: any) => s.url) : null }),
     ...(use_case_slugs       !== undefined && { use_case_slugs:        parseUseCaseSlugs(use_case_slugs) }),
+    ...(topic_cluster        !== undefined && { topic_cluster:         String(topic_cluster ?? '').trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '') || null }),
     ...(primary_keyword      !== undefined && { primary_keyword:       String(primary_keyword ?? '').trim() || null }),
     ...(secondary_keywords   !== undefined && { secondary_keywords:    Array.isArray(secondary_keywords) ? secondary_keywords.map((k: any) => String(k ?? '').trim()).filter(Boolean).slice(0, 30) : [] }),
   }

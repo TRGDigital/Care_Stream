@@ -302,6 +302,7 @@ export interface BlogPost {
   sources:               Array<{ label: string; url: string }> | null
   use_case_slugs:        string[]
   primary_keyword:       string | null
+  topic_cluster?:        string | null
   secondary_keywords:    string[]
   created_at:            string
   updated_at:            string
@@ -359,6 +360,7 @@ export interface Collection {
   cluster_key:      string
   eyebrow:          string
   primary_keyword?: string | null
+  topic_cluster?: string | null
   secondary_keywords?: string[]
   created_at:       string
   updated_at:       string

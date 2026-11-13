@@ -8,6 +8,7 @@ export const PRUNE_BELOW = 25
 export interface Win { impressions: number; clicks: number; position: number | null; sessions: number }
 export interface VerdictInput {
   ageDays: number               // days since the baseline (published, or last refreshed)
+  baselineKind?: 'published' | 'refreshed'   // what the baseline is: a refresh gets 28 days left alone to be measured
   submitted: boolean            // pushed to RalfyIndex at least once
   cur: Win                      // last 28 days
   prev: Win | null              // the 28 days before that, when the page is old enough
@@ -24,6 +25,8 @@ export function decide(i: VerdictInput): Verdict {
   const pos = cur.position
   const q = i.topQueries.filter(x => x.impressions >= 10).slice(0, 3).map(x => `"${x.query}"`).join(', ')
 
+  if (i.baselineKind === 'refreshed' && i.ageDays < 28)
+    return { key: 'recently_refreshed', label: 'Refreshed, measuring', reason: `Refreshed ${i.ageDays} day${i.ageDays === 1 ? '' : 's'} ago. Leave it alone until day 28, then compare against the 28 days before the refresh.`, priority: 0 }
   if (i.ageDays < 14) return { key: 'new', label: 'Too early', reason: `Day ${i.ageDays}. Nothing to judge yet; check it is indexed at day 14.`, priority: 0 }
   if (!i.submitted && cur.impressions === 0 && i.ageDays >= 14)
     return { key: 'not_indexed', label: 'Check indexing', reason: 'No impressions and no RalfyIndex submission on record. Submit it and inspect the URL in Search Console.', priority: 50 }

@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
-import { PagePerformanceModal, UpdateQueue } from '@/components/platform/page-performance'
+import { PagePerformanceModal, UpdateQueue, PerfButton, PerfLegend, VERDICT_UI } from '@/components/platform/page-performance'
 import { createPlatformClient, uploadBlogImage, fetchTrainingSeoIndex, type BlogAuthor, type BlogPost, type SitePage, type Collection, type ProductCluster, type FeaturePage, type UseCaseAllocation } from '@/lib/platform-api'
 import { EMPTY_FEATURE_CONTENT, type FeaturePageContent } from '@/lib/feature-content'
 import { slotsForPath, type SlotDef } from '@/lib/page-slots'
@@ -1979,6 +1979,25 @@ export default function BlogPage() {
   const importInputRef = useRef<HTMLInputElement>(null)
   const collImportRef = useRef<HTMLInputElement>(null)
   const [perf, setPerf] = useState<{ kind: 'blog' | 'collection'; slug: string } | null>(null)
+  // Verdict per page (from /admin/update-queue) so the Performance buttons can be colour coded.
+  const [verdicts, setVerdicts] = useState<Record<string, { key: string; reason: string }>>({})
+  const [perfFilter, setPerfFilter] = useState('all')
+  useEffect(() => {
+    if (!token) return
+    createPlatformClient(token).updateQueue().then(r => {
+      const m: Record<string, { key: string; reason: string }> = {}
+      for (const x of r.pages) m[`${x.kind}:${x.slug}`] = x.verdict
+      setVerdicts(m)
+    }).catch(() => {})
+  }, [token])
+  const verdictCounts = Object.values(verdicts).reduce((a: Record<string, number>, v) => { a[v.key] = (a[v.key] ?? 0) + 1; return a }, {})
+  const perfOk = (kind: string, slug: string) => {
+    if (perfFilter === 'all') return true
+    const v = verdicts[`${kind}:${slug}`]
+    if (!v) return false
+    if (perfFilter === 'act') return VERDICT_UI[v.key]?.group === 'act'
+    return v.key === perfFilter
+  }
   const [importing, setImporting] = useState(false)
   const [importMsg, setImportMsg] = useState('')
   const [postError,  setPostError]  = useState('')
@@ -2515,6 +2534,7 @@ export default function BlogPage() {
         {/* ── Posts tab ───────────────────────────────────────────────────── */}
         {tab === 'posts' && (
           <div className="space-y-4">
+            {Object.keys(verdicts).length > 0 && <PerfLegend counts={verdictCounts} active={perfFilter} onPick={setPerfFilter} />}
             <div className="flex items-center justify-between">
               <p className="text-sm text-neutral-mid">
                 {publishedCount} published · {featuredCount} featured
@@ -2555,7 +2575,7 @@ export default function BlogPage() {
                 <p className="py-10 text-center text-sm text-neutral-mid">No posts yet. Click "New Post" to create one.</p>
               ) : (
                 <div className="divide-y divide-gray-100">
-                  {posts.map(post => (
+                  {posts.filter(p => perfOk('blog', p.slug)).map(post => (
                     <div key={post.id}>
                       {editPost?.id === post.id ? (
                         <div className="p-4">
@@ -2596,8 +2616,7 @@ export default function BlogPage() {
                                className="rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark">Preview</a>
                             <a href={`/platform/blog/preview/${post.slug}?yellowkws`} target="_blank" rel="noopener noreferrer"
                                className="rounded-md border border-yellow-300 bg-yellow-100 px-2 py-1 text-xs font-semibold text-yellow-900 hover:bg-yellow-200">Keywords</a>
-                            <button type="button" onClick={() => setPerf({ kind: 'blog', slug: post.slug })}
-                               className="rounded-md border border-teal/40 bg-teal-light/50 px-2 py-1 text-xs font-semibold text-teal hover:bg-teal-light">Performance</button>
+                            <PerfButton verdict={verdicts[`blog:${post.slug}`]} onClick={() => setPerf({ kind: 'blog', slug: post.slug })} />
                             <button
                               onClick={() => { setEditPost(post); setShowPost(false) }}
                               className="rounded-md border border-gray-200 p-1.5 text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark"
@@ -2946,6 +2965,7 @@ export default function BlogPage() {
 
         {tab === 'collections' && (
           <div className="space-y-4">
+            {Object.keys(verdicts).length > 0 && <PerfLegend counts={verdictCounts} active={perfFilter} onPick={setPerfFilter} />}
             <div className="flex items-center justify-between">
               <p className="text-sm text-neutral-mid">
                 Ecommerce-style SEO landing pages at <code className="rounded bg-neutral-light px-1 py-0.5 text-xs">/collection/&hellip;</code> — intro, a themed six to buy, content, links and FAQs.
@@ -2980,7 +3000,7 @@ export default function BlogPage() {
               </div>
             ) : (
               <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-                {collections.map(c => (
+                {collections.filter(c => perfOk('collection', c.slug)).map(c => (
                   <div key={c.id}>
                     <div className="flex items-center justify-between gap-4 border-b border-gray-100 px-5 py-3 last:border-0">
                       <div className="min-w-0">
@@ -3015,8 +3035,7 @@ export default function BlogPage() {
                           className="rounded-md border border-gray-200 px-2 py-1 text-xs font-semibold text-neutral-dark hover:bg-neutral-light">Preview</button>
                         <button type="button" onClick={() => openCollectionPreview(c, true)}
                           className="rounded-md border border-yellow-300 bg-yellow-100 px-2 py-1 text-xs font-semibold text-yellow-900 hover:bg-yellow-200">Keywords</button>
-                        <button type="button" onClick={() => setPerf({ kind: 'collection', slug: c.slug })}
-                          className="rounded-md border border-teal/40 bg-teal-light/50 px-2 py-1 text-xs font-semibold text-teal hover:bg-teal-light">Performance</button>
+                        <PerfButton verdict={verdicts[`collection:${c.slug}`]} onClick={() => setPerf({ kind: 'collection', slug: c.slug })} />
                         <button onClick={() => { setEditCollection(c); setShowCollection(false) }} className="rounded-md p-1.5 text-neutral-mid hover:bg-neutral-light hover:text-teal" title="Edit"><Pencil size={15} /></button>
                         <button onClick={() => deleteCollection(c.id, c.title)} className="rounded-md p-1.5 text-neutral-mid hover:bg-red-50 hover:text-red-600" title="Delete"><Trash2 size={15} /></button>
                       </div>

@@ -78,7 +78,7 @@ export async function getPagePerformance(kind: string, slug: string) {
   }
 
   const verdict: Verdict = decide({
-    ageDays, submitted: submitted.some((s: any) => s.status === 'submitted'), cur, prev,
+    ageDays, baselineKind: label, submitted: submitted.some((s: any) => s.status === 'submitted'), cur, prev,
     signups: signupsIn(new Date(today.getTime() - 27 * DAY), today),
     topQueries: queries.map((q: any) => ({ query: q.query, impressions: q.impressions, position: q.position })),
   })
@@ -110,7 +110,7 @@ export async function getUpdateQueue() {
   const rows: Array<M & { url: string }> = await (prisma as any).pageMetric.findMany({ where: { date: { gte: new Date(today.getTime() - 60 * DAY) } } })
   const byUrl = new Map<string, M[]>(); for (const r of rows) { const l = byUrl.get(r.url) ?? []; l.push(r); byUrl.set(r.url, l) }
   const events: any[] = await (prisma as any).pageEvent.findMany({ where: { kind: { in: ['published', 'refreshed'] } }, orderBy: { created_at: 'desc' } })
-  const lastEvent = new Map<string, Date>(); for (const e of events) if (!lastEvent.has(e.url)) lastEvent.set(e.url, e.created_at)
+  const lastEvent = new Map<string, { at: Date; kind: string }>(); for (const e of events) if (!lastEvent.has(e.url)) lastEvent.set(e.url, { at: e.created_at, kind: e.kind })
   const subs: any[] = await (prisma as any).ralfyIndexSubmission.findMany({ where: { status: 'submitted' }, select: { url: true } })
   const submitted = new Set(subs.map(s => s.url))
   const sup: any[] = await (prisma as any).signupAttempt.findMany({ where: { source: { startsWith: 'blog-' }, outcome: 'created', created_at: { gte: new Date(today.getTime() - 28 * DAY) } }, select: { source: true } })
@@ -121,12 +121,14 @@ export async function getUpdateQueue() {
   const out = pages.map(p => {
     const m = byUrl.get(p.path) ?? []
     const basePub = new Date(p.published); const ev = lastEvent.get(p.path)
-    const anchor = startOfDay(ev && ev > basePub ? ev : basePub)
+    const useEv = !!ev && ev.at > basePub
+    const anchor = startOfDay(useEv ? ev!.at : basePub)
+    const baselineKind: 'published' | 'refreshed' = useEv && ev!.kind === 'refreshed' ? 'refreshed' : 'published'
     const ageDays = Math.max(0, Math.floor((today.getTime() - anchor.getTime()) / DAY))
     const cur = agg(m, new Date(today.getTime() - 27 * DAY), today)
     const prev = ageDays >= 56 ? agg(m, new Date(today.getTime() - 55 * DAY), new Date(today.getTime() - 28 * DAY)) : null
-    const v = decide({ ageDays, submitted: submitted.has(`${SITE}${p.path}`), cur, prev, signups: signups.get(`blog-${p.slug}`) ?? 0, topQueries: (qBy.get(p.path) ?? []).map(q => ({ query: q.query, impressions: q.impressions, position: q.position })) })
-    return { kind: p.kind, slug: p.slug, title: p.title, primary_keyword: p.pk, topic_cluster: p.cluster, age_days: ageDays, impressions_28d: cur.impressions, clicks_28d: cur.clicks, position_28d: cur.position, sessions_28d: cur.sessions, signups_28d: signups.get(`blog-${p.slug}`) ?? 0, verdict: v }
+    const v = decide({ ageDays, baselineKind, submitted: submitted.has(`${SITE}${p.path}`), cur, prev, signups: signups.get(`blog-${p.slug}`) ?? 0, topQueries: (qBy.get(p.path) ?? []).map(q => ({ query: q.query, impressions: q.impressions, position: q.position })) })
+    return { kind: p.kind, slug: p.slug, title: p.title, primary_keyword: p.pk, topic_cluster: p.cluster, age_days: ageDays, baseline: baselineKind, impressions_28d: cur.impressions, clicks_28d: cur.clicks, position_28d: cur.position, sessions_28d: cur.sessions, signups_28d: signups.get(`blog-${p.slug}`) ?? 0, verdict: v }
   })
   return out.sort((a, b) => b.verdict.priority - a.verdict.priority || b.impressions_28d - a.impressions_28d)
 }

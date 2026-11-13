@@ -15,3 +15,5 @@ test('top 10 with poor click through gets a title test', () => assert.equal(deci
 test('a 30% fall is a refresh', () => assert.equal(decide({ ...base, ageDays: 120, cur: w(200, 4, 5), prev: w(400, 8, 5) }).key, 'declining'))
 test('strong page is left alone', () => assert.equal(decide({ ...base, ageDays: 120, cur: w(300, 30, 3), prev: w(280, 25, 3) }).key, 'winning'))
 test('traffic without sign ups points at the CTA', () => assert.equal(decide({ ...base, ageDays: 60, cur: w(300, 5, 5, 80), prev: null }).key, 'cta'))
+test('a page refreshed within 28 days is left alone', () => assert.equal(decide({ ...base, ageDays: 10, baselineKind: 'refreshed', cur: w(400, 3, 12), prev: null }).key, 'recently_refreshed'))
+test('a refresh older than 28 days is judged again', () => assert.notEqual(decide({ ...base, ageDays: 40, baselineKind: 'refreshed', cur: w(400, 3, 12), prev: null }).key, 'recently_refreshed'))

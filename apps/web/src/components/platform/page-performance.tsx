@@ -7,16 +7,53 @@ import { createPlatformClient } from '@/lib/platform-api'
 // /admin/page-performance and /admin/update-queue (Search Console and GA4 daily pull, our own sign ups,
 // RalfyIndex submissions). Verdicts are the rules in services/page-metrics/verdict.ts.
 
-const VERDICT_STYLE: Record<string, string> = {
-  striking_distance: 'bg-amber-100 text-amber-900 border-amber-300',
-  title_test: 'bg-amber-100 text-amber-900 border-amber-300',
-  declining: 'bg-red-100 text-red-800 border-red-300',
-  cta: 'bg-blue-100 text-blue-900 border-blue-300',
-  not_indexed: 'bg-red-100 text-red-800 border-red-300',
-  winning: 'bg-green-100 text-green-800 border-green-300',
-  prune: 'bg-gray-200 text-gray-800 border-gray-300',
+// One colour per verdict, with a short word so colour is never the only signal. Used by the Performance
+// buttons in the post and collection lists, the legend, the panel badge and the Update queue.
+export const VERDICT_UI: Record<string, { short: string; meaning: string; cls: string; group: 'act' | 'hold' | 'good' | 'wait' }> = {
+  striking_distance: { short: 'Refresh now', meaning: 'Position 8 to 20 with real impressions. Best return: add the queries it already ranks for and tighten the title.', cls: 'bg-orange-100 text-orange-900 border-orange-400', group: 'act' },
+  declining:         { short: 'Declining', meaning: 'Impressions down 30% or more on the previous 28 days. Refresh at the next review.', cls: 'bg-red-100 text-red-800 border-red-400', group: 'act' },
+  not_indexed:       { short: 'Not indexed', meaning: 'No impressions and no RalfyIndex submission. Submit it and inspect the URL.', cls: 'bg-red-200 text-red-900 border-red-500', group: 'act' },
+  title_test:        { short: 'Test title', meaning: 'Top 10 position but few clicks. The title and description are not winning the click.', cls: 'bg-yellow-100 text-yellow-900 border-yellow-400', group: 'act' },
+  cta:               { short: 'Fix CTA', meaning: 'Visits but no free sign ups. Strengthen the Benefits section and call to action.', cls: 'bg-blue-100 text-blue-900 border-blue-400', group: 'act' },
+  recently_refreshed:{ short: 'Refreshed', meaning: 'Edited within the last 28 days. Hands off: it is being measured against the 28 days before.', cls: 'bg-purple-100 text-purple-900 border-purple-400', group: 'hold' },
+  winning:           { short: 'Winning', meaning: 'Ranking well with a good click rate. Do not edit; link to it from newer pages.', cls: 'bg-green-100 text-green-800 border-green-400', group: 'good' },
+  new:               { short: 'New', meaning: 'Under 14 days old. Too early to judge; check indexing at day 14.', cls: 'bg-sky-100 text-sky-800 border-sky-300', group: 'wait' },
+  not_enough_data:   { short: 'Too early', meaning: 'Under 100 impressions in 28 days. Not enough data, so it is not judged.', cls: 'bg-gray-100 text-gray-600 border-gray-300', group: 'wait' },
+  monitor:           { short: 'Monitor', meaning: 'Some traction, no action needed yet.', cls: 'bg-slate-100 text-slate-700 border-slate-300', group: 'wait' },
+  prune:             { short: 'Merge?', meaning: 'Old and almost no impressions. Merge into a stronger page, redirect, or leave.', cls: 'bg-stone-300 text-stone-900 border-stone-500', group: 'hold' },
 }
-const badge = (key: string) => `inline-block rounded-full border px-2 py-0.5 text-xs font-semibold ${VERDICT_STYLE[key] ?? 'bg-gray-100 text-gray-700 border-gray-200'}`
+const badge = (key: string) => `inline-block rounded-full border px-2 py-0.5 text-xs font-semibold ${VERDICT_UI[key]?.cls ?? 'bg-gray-100 text-gray-700 border-gray-200'}`
+
+/** The coloured Performance button: colour and a short word say what to do, so nobody has to click through. */
+export function PerfButton({ verdict, onClick }: { verdict?: { key: string; reason: string } | null; onClick: () => void }) {
+  const ui = verdict ? VERDICT_UI[verdict.key] : null
+  return (
+    <button type="button" onClick={onClick} title={verdict ? `${ui?.short}: ${verdict.reason}` : 'Performance'}
+      className={`rounded-md border px-2 py-1 text-xs font-semibold hover:brightness-95 ${ui ? ui.cls : 'border-gray-200 bg-white text-neutral-mid'}`}>
+      Performance{ui ? ` · ${ui.short}` : ''}
+    </button>
+  )
+}
+
+/** Legend for the colours, with a count per verdict and click-to-filter. */
+export function PerfLegend({ counts, active, onPick }: { counts: Record<string, number>; active: string; onPick: (k: string) => void }) {
+  const order = ['striking_distance', 'declining', 'not_indexed', 'title_test', 'cta', 'recently_refreshed', 'winning', 'prune', 'new', 'not_enough_data', 'monitor']
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-3">
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        <span className="font-semibold text-neutral-dark">Performance key:</span>
+        <button onClick={() => onPick('all')} className={`rounded-full border px-2 py-0.5 ${active === 'all' ? 'border-teal bg-teal-light text-teal' : 'border-gray-200 text-neutral-mid'}`}>All</button>
+        <button onClick={() => onPick('act')} className={`rounded-full border px-2 py-0.5 font-semibold ${active === 'act' ? 'border-teal bg-teal-light text-teal' : 'border-gray-300 text-neutral-dark'}`}>Needs action ({['striking_distance', 'declining', 'not_indexed', 'title_test', 'cta'].reduce((a, k) => a + (counts[k] ?? 0), 0)})</button>
+        {order.map(k => (
+          <button key={k} onClick={() => onPick(k)} title={VERDICT_UI[k].meaning}
+            className={`rounded-full border px-2 py-0.5 font-semibold ${VERDICT_UI[k].cls} ${active === k ? 'ring-2 ring-teal' : ''}`}>{VERDICT_UI[k].short} ({counts[k] ?? 0})</button>
+        ))}
+      </div>
+      <p className="mt-2 text-[11px] text-neutral-mid">Orange, red, yellow and blue need a decision. Purple means refreshed in the last 28 days: leave it alone while it is measured. Green is winning. Hover a button for the reason. Pages under 100 impressions in 28 days are never judged.</p>
+    </div>
+  )
+}
+
 const n = (v: number | null | undefined) => (v === null || v === undefined ? '-' : v.toLocaleString('en-GB'))
 const pct = (v: number) => `${(v * 100).toFixed(1)}%`
 

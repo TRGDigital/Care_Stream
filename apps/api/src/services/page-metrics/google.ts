@@ -84,7 +84,8 @@ export async function ga4Pages(startDate: string, endDate: string): Promise<Arra
     let j: any = null
     for (let attempt = 0; attempt < 3 && !j; attempt++) {
       try { j = await post(`https://analyticsdata.googleapis.com/v1beta/properties/${GA4_PROPERTY}:runReport`, body) }
-      catch (e: any) { if (attempt === 2 || !/Google API 5/.test(String(e?.message))) throw e  // 5xx and timeouts retry; await new Promise(r => setTimeout(r, 1500 * (attempt + 1))) }
+      // 5xx errors and timeouts are retried; anything else (403, 400) is a real error
+      catch (e: any) { if (attempt === 2 || !/Google API 5/.test(String(e?.message))) throw e; await new Promise(r => setTimeout(r, 1500 * (attempt + 1))) }
     }
     for (const r of j?.rows ?? []) out.push({ path: r.dimensionValues[0].value, date: r.dimensionValues[1].value, sessions: Number(r.metricValues[0].value), engaged: Math.round(Number(r.metricValues[1].value)) })
   }

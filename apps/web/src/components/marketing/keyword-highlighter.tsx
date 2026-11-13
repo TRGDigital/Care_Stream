@@ -82,7 +82,12 @@ export function KeywordHighlighter({ slug, kind = 'post', keywords }: { slug: st
           return m
         })
         if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)))
-        node.parentNode?.replaceChild(frag, node)
+        // In a flex or grid parent (FAQ questions, chips) each <mark> would become its own flex item
+        // and break the line. Wrap the whole replacement in one inline span so it stays one item.
+        const par = node.parentElement
+        const disp = par ? getComputedStyle(par).display : ''
+        if (/flex|grid/.test(disp)) { const w = document.createElement('span'); w.appendChild(frag); node.parentNode?.replaceChild(w, node) }
+        else node.parentNode?.replaceChild(frag, node)
       }
       const body = (document.querySelector('article') ?? root) as HTMLElement
       const bodyText = (body.innerText || '').replace(/\s+/g, ' ').trim()

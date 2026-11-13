@@ -46,8 +46,10 @@ publicBlogRouter.get('/posts/:slug', async (req: Request, res: Response) => {
     include: { author: { select: { name: true, title: true, photo_url: true, bio: true, linkedin_url: true } } },
   })
   if (!post) { err(res, 'NOT_FOUND', 'Post not found.', 404); return }
+  // The target keywords are our SEO working notes: platform only, never in the public API.
+  const { primary_keyword: _pk, secondary_keywords: _sk, ...publicPost } = post
   res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=120')
-  ok(res, { post })
+  ok(res, { post: publicPost })
 })
 
 // GET /public/blog/posts/:slug/related — up to 3 published posts in the same

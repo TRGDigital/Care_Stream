@@ -12,6 +12,7 @@ import { splitHtmlForCtas } from '@/lib/blog-cta'
 import { BlogCta, BLOG_CTA_TYPES } from '@/components/marketing/blog-cta'
 import { BlogPostV2 } from '@/components/marketing/blog-post-v2'
 import { isV2 } from '@/lib/v2-rollout'
+import { KeywordHighlighter } from '@/components/marketing/keyword-highlighter'
 
 export const revalidate = 60
 
@@ -152,6 +153,7 @@ export default async function BlogPostPage({ params, searchParams }: {
           ...(faqs.length > 0 ? [faqPageSchema(faqs)] : []),
         ]} />
         <BlogPostV2 post={post} related={related} />
+        <KeywordHighlighter slug={post.slug} />
       </>
     )
   }
@@ -322,6 +324,7 @@ export default async function BlogPostPage({ params, searchParams }: {
         </div>
       )}
       </ArticleLayout>
+      <KeywordHighlighter slug={post.slug} />
     </>
   )
 }

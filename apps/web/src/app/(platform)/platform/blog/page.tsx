@@ -343,6 +343,8 @@ const EMPTY_POST = {
   faqs: EMPTY_FAQS,
   sources: [] as Array<{ label: string; url: string }>,
   use_case_slugs: [] as string[],
+  primary_keyword: '',
+  secondary_keywords_text: '',
 }
 
 // Resize/compress an image in the browser before upload so it stays well under
@@ -410,6 +412,8 @@ function PostForm({
       : EMPTY_FAQS
     merged.sources = Array.isArray(initial?.sources) ? initial.sources : []
     merged.use_case_slugs = Array.isArray((initial as any)?.use_case_slugs) ? (initial as any).use_case_slugs : []
+    merged.primary_keyword = (initial as any)?.primary_keyword ?? ''
+    merged.secondary_keywords_text = Array.isArray((initial as any)?.secondary_keywords) ? (initial as any).secondary_keywords.join(', ') : ''
     return merged
   })
 
@@ -706,6 +710,19 @@ function PostForm({
               {form.meta_description.length}/160 chars
             </p>
           </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Primary keyword <span className="font-normal">(platform only, never public)</span></label>
+            <input value={form.primary_keyword} onChange={e => set('primary_keyword', e.target.value)}
+              placeholder="e.g. care certificate standards"
+              className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-neutral-mid">Secondary keywords <span className="font-normal">(comma separated)</span></label>
+            <input value={form.secondary_keywords_text} onChange={e => set('secondary_keywords_text', e.target.value)}
+              placeholder="e.g. care certificate 16 standards, what are the 16 care certificate standards"
+              className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal" />
+            <p className="mt-1 text-xs text-neutral-mid">Add <code>?yellowkws</code> to the post address to see these highlighted.</p>
+          </div>
         </div>
       </AccordionSection>
 
@@ -879,7 +896,7 @@ function PostForm({
       )}
 
       <div className="flex gap-2 pt-1">
-        <Button onClick={() => onSave(form)} disabled={saving || !form.title.trim() || !form.slug.trim()}>
+        <Button onClick={() => onSave({ ...form, secondary_keywords: String(form.secondary_keywords_text ?? '').split(',').map((s: string) => s.trim()).filter(Boolean) })} disabled={saving || !form.title.trim() || !form.slug.trim()}>
           {saving ? <Loader2 size={14} className="mr-1 animate-spin" /> : <Check size={14} className="mr-1" />}
           {saving ? 'Saving…' : 'Save Post'}
         </Button>
@@ -1933,6 +1950,9 @@ export default function BlogPage() {
   const [showPost,  setShowPost]  = useState(false)
   const [editPost,  setEditPost]  = useState<BlogPost | null>(null)
   const [savingPost, setSavingPost] = useState(false)
+  const importInputRef = useRef<HTMLInputElement>(null)
+  const [importing, setImporting] = useState(false)
+  const [importMsg, setImportMsg] = useState('')
   const [postError,  setPostError]  = useState('')
 
   // Authors state
@@ -2017,6 +2037,26 @@ export default function BlogPage() {
     } finally {
       setSavingPost(false)
     }
+  }
+
+  // Import DRAFT posts from the content pipeline (a JSON file of posts). Never publishes.
+  async function importDrafts(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setImporting(true); setImportMsg('')
+    try {
+      if (!token) throw new Error('Not signed in.')
+      const data = JSON.parse(await file.text())
+      const list = Array.isArray(data) ? data : Array.isArray(data?.posts) ? data.posts : []
+      if (!list.length) throw new Error('The file has no posts.')
+      const r = await createPlatformClient(token).blog.importPosts(list)
+      setImportMsg(`Imported ${r.created.length} draft${r.created.length === 1 ? '' : 's'}${r.skipped.length ? `; skipped ${r.skipped.length} (${r.skipped.map(s => `${s.slug}: ${s.reason}`).join('; ')})` : ''}. They are drafts and are not public.`)
+      const fresh = await createPlatformClient(token).blog.posts()
+      setPosts(fresh.posts)
+    } catch (err: any) {
+      setImportMsg(`Import failed: ${err?.message ?? 'unknown error'}`)
+    } finally { setImporting(false) }
   }
 
   async function deletePost(id: string) {
@@ -2418,10 +2458,19 @@ export default function BlogPage() {
                 {publishedCount} published · {featuredCount} featured
               </p>
               {!showPost && !editPost && (
-                <Button onClick={() => setShowPost(true)}>
-                  <Plus size={14} className="mr-1" /> New Post
-                </Button>
+                <div className="flex items-center gap-2">
+                  <input ref={importInputRef} type="file" accept="application/json,.json" className="hidden" onChange={importDrafts} />
+                  <Button variant="secondary" onClick={() => importInputRef.current?.click()} disabled={importing}>
+                    {importing ? <Loader2 size={14} className="mr-1 animate-spin" /> : <Upload size={14} className="mr-1" />} Import drafts
+                  </Button>
+                  <Button onClick={() => setShowPost(true)}>
+                    <Plus size={14} className="mr-1" /> New Post
+                  </Button>
+                </div>
               )}
+            </div>
+            {importMsg && <p className="rounded-md bg-teal-light/40 px-3 py-2 text-sm text-neutral-dark">{importMsg}</p>}
+            <div>
             </div>
 
             {showPost && (
@@ -2481,6 +2530,10 @@ export default function BlogPage() {
                             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLOURS[post.status] ?? 'bg-gray-100 text-gray-600'}`}>
                               {post.status}
                             </span>
+                            <a href={`/platform/blog/preview/${post.slug}`} target="_blank" rel="noopener noreferrer"
+                               className="rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark">Preview</a>
+                            <a href={`/platform/blog/preview/${post.slug}?yellowkws`} target="_blank" rel="noopener noreferrer"
+                               className="rounded-md border border-yellow-300 bg-yellow-100 px-2 py-1 text-xs font-semibold text-yellow-900 hover:bg-yellow-200">Keywords</a>
                             <button
                               onClick={() => { setEditPost(post); setShowPost(false) }}
                               className="rounded-md border border-gray-200 p-1.5 text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark"

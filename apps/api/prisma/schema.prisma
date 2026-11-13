@@ -1384,6 +1384,8 @@ model BlogPost {
   key_info_content      String?
   faqs                  Json?
   sources               Json?                             // [{ label, url }] authoritative citations rendered + emitted as schema.org citation
+  primary_keyword       String?                           // the one search term this post targets (platform only; never sent to the public API)
+  secondary_keywords    String[]    @default([])           // supporting terms, each used naturally once
   use_case_slugs        String[]    @default([])          // /uses/* pages this post is allocated to; each user case shows at most USE_CASE_POST_LIMIT posts
   created_at            DateTime    @default(now())
   updated_at            DateTime    @updatedAt

@@ -301,6 +301,8 @@ export interface BlogPost {
   faqs:                  Array<{ question: string; answer: string }> | null
   sources:               Array<{ label: string; url: string }> | null
   use_case_slugs:        string[]
+  primary_keyword:       string | null
+  secondary_keywords:    string[]
   created_at:            string
   updated_at:            string
   author:                { id: string; name: string; photo_url: string | null } | null
@@ -1139,6 +1141,9 @@ export function createPlatformClient(token: string) {
         adminFetch<{ post: BlogPost }>(`/blog/posts/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       deletePost: (id: string) =>
         adminFetch<{ deleted: boolean }>(`/blog/posts/${id}`, token, { method: 'DELETE' }),
+      // Create DRAFT posts from the content pipeline (never publishes). Skips slugs that exist.
+      importPosts: (posts: Array<Partial<BlogPost>>) =>
+        adminFetch<{ created: Array<{ id: string; slug: string; title: string }>; skipped: Array<{ slug: string; reason: string }> }>('/blog/import', token, { method: 'POST', body: JSON.stringify({ posts }) }),
 
       authors: () =>
         adminFetch<{ authors: BlogAuthor[]; total: number }>('/blog/authors', token),

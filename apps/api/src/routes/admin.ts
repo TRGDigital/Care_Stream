@@ -3448,6 +3448,30 @@ adminRouter.delete('/blog/posts/:id', async (req: Request, res: Response) => {
   ok(res, { deleted: true })
 })
 
+// POST /admin/blog/import  { posts: [...] }  creates DRAFT posts from the content pipeline.
+// Always status 'draft' (never published from here), skips slugs that already exist, and returns
+// what was created and skipped. Same field names as POST /admin/blog/posts.
+adminRouter.post('/blog/import', async (req: Request, res: Response) => {
+  const list = Array.isArray(req.body?.posts) ? req.body.posts.slice(0, 50) : []
+  if (!list.length) { err(res, 'VALIDATION_ERROR', 'posts must be a non empty array.'); return }
+  const created: Array<{ id: string; slug: string; title: string }> = []
+  const skipped: Array<{ slug: string; reason: string }> = []
+  for (const raw of list) {
+    const slug = String(raw?.slug ?? '').trim().replace(/^\/?blog\//, '').replace(/^\//, '')
+    const title = String(raw?.title ?? '').trim()
+    if (!slug || !title) { skipped.push({ slug: slug || '(none)', reason: 'title and slug are required' }); continue }
+    const existing = await (prisma as any).blogPost.findUnique({ where: { slug } })
+    if (existing) { skipped.push({ slug, reason: 'a post with this slug already exists' }); continue }
+    try {
+      const post = await (prisma as any).blogPost.create({
+        data: { ...buildPostData({ ...raw, slug, status: 'draft', publication_date: null, is_featured: false, use_case_slugs: [] }) },
+      })
+      created.push({ id: post.id, slug: post.slug, title: post.title })
+    } catch (e: any) { skipped.push({ slug, reason: String(e?.message ?? e).slice(0, 160) }) }
+  }
+  ok(res, { created, skipped })
+})
+
 adminRouter.post('/blog/upload-image', imageUploadMiddleware, async (req: any, res: Response) => {
   if (!req.file) { err(res, 'NO_FILE', 'No image file provided.', 400); return }
   try {
@@ -3769,7 +3793,7 @@ function buildPostData(body: any) {
     content, author_id, category, publication_date, status,
     is_featured, read_time_minutes, cta_text, cta_url, cta_type,
     special_message, special_message_color, key_info_title, key_info_content,
-    faqs, sources, use_case_slugs,
+    faqs, sources, use_case_slugs, primary_keyword, secondary_keywords,
   } = body ?? {}
 
   return {
@@ -3798,6 +3822,8 @@ function buildPostData(body: any) {
     ...(faqs                 !== undefined && { faqs:                  Array.isArray(faqs) ? faqs.filter((f: any) => f.question?.trim() || f.answer?.trim()) : null }),
     ...(sources              !== undefined && { sources:               Array.isArray(sources) ? sources.map((s: any) => ({ label: (s.label ?? '').trim(), url: (s.url ?? '').trim() })).filter((s: any) => s.url) : null }),
     ...(use_case_slugs       !== undefined && { use_case_slugs:        parseUseCaseSlugs(use_case_slugs) }),
+    ...(primary_keyword      !== undefined && { primary_keyword:       String(primary_keyword ?? '').trim() || null }),
+    ...(secondary_keywords   !== undefined && { secondary_keywords:    Array.isArray(secondary_keywords) ? secondary_keywords.map((k: any) => String(k ?? '').trim()).filter(Boolean).slice(0, 30) : [] }),
   }
 }
 

@@ -31,7 +31,7 @@ async function upsertRows(rows: Row[]) {
   }
 }
 
-export async function collectPageMetrics(days = 7): Promise<Record<string, unknown>> {
+export async function collectPageMetrics(days = 7, opts: { ga4Only?: boolean } = {}): Promise<Record<string, unknown>> {
   if (!googleConfigured()) return { skipped: 'GOOGLE_ANALYTICS_SA_JSON is not set' }
   // Search Console keeps 16 months, so a backfill can reach back to when the oldest post went up.
   const start = daysAgo(Math.min(Math.max(days, 1), 480)); const end = daysAgo(0)
@@ -42,7 +42,7 @@ export async function collectPageMetrics(days = 7): Promise<Record<string, unkno
     if (!map.has(key)) map.set(key, { url: k.path, date, kind: k.kind, slug: k.slug, impressions: 0, clicks: 0, position: null, sessions: 0, engaged_seconds: 0 })
     return map.get(key)!
   }
-  const gsc = await gscQuery(start, end, ['page', 'date'])
+  const gsc = opts.ga4Only ? [] : await gscQuery(start, end, ['page', 'date'])
   for (const r of gsc) { const row = get(r.keys[0], r.keys[1]); if (row) { row.impressions += r.impressions; row.clicks += r.clicks; row.position = r.position } }
   let ga4Rows = 0
   let ga4Error = ''
@@ -52,6 +52,11 @@ export async function collectPageMetrics(days = 7): Promise<Record<string, unkno
       const row = get(r.path, d); if (row) { row.sessions += r.sessions; row.engaged_seconds += r.engaged; ga4Rows++ }
     }
   } catch (e: any) { ga4Error = String(e?.message ?? e).slice(0, 300); console.error('[page-metrics] GA4 failed (Search Console data still saved)', e) }
+  if (opts.ga4Only) {
+    // Fill sessions and engagement only; never overwrite the Search Console columns.
+    for (const r of map.values()) await (prisma as any).$executeRawUnsafe(`INSERT INTO page_metrics (url, date, kind, slug, sessions, engaged_seconds) VALUES ($1,$2::date,$3,$4,$5,$6) ON CONFLICT (url, date) DO UPDATE SET sessions = EXCLUDED.sessions, engaged_seconds = EXCLUDED.engaged_seconds`, r.url, r.date, r.kind, r.slug, r.sessions, r.engaged_seconds)
+    return { mode: 'ga4_only', from: start, to: end, ga4_rows: ga4Rows, ...(ga4Error ? { ga4_error: ga4Error } : {}) }
+  }
   await upsertRows([...map.values()])
 
   // Queries each page appears for: the last 28 days, top 20 per page, replacing this window.

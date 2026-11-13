@@ -46,6 +46,10 @@ const nextConfig = {
     return [
       { source: '/trust-security', destination: '/trust', permanent: true },
 
+      // The two medicines collections were duplicates (same search, same products). One page keeps the
+      // search: medicines-policies. 308 permanent, so the old URL passes its links to the page that stays.
+      { source: '/collection/medicine-policies', destination: '/collection/medicines-policies', permanent: true },
+
       // ── Content theme switchover: NO redirects are needed ─────────────────
       // This note used to say thirteen redirects were still to come "with the
       // port". They are not coming, and adding them would be a mistake.

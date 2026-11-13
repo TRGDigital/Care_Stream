@@ -3710,7 +3710,7 @@ adminRouter.get('/page-performance/:kind/:slug', async (req: Request, res: Respo
 
 // POST /admin/page-metrics/collect?days=90  run the daily Search Console and GA4 pull now (first backfill).
 adminRouter.post('/page-metrics/collect', async (req: Request, res: Response) => {
-  try { ok(res, await collectPageMetrics(Number(req.query.days) || 7)) }
+  try { ok(res, await collectPageMetrics(Number(req.query.days) || 7, { ga4Only: req.query.ga4 === 'only' })) }
   catch (e: any) { err(res, 'COLLECT_FAILED', String(e?.message ?? e).slice(0, 300), 502) }
 })
 

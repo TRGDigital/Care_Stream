@@ -37,3 +37,11 @@ export const FREE_CPD_COPY = {
   /** Translation has a real cost, so it starts on the Starter plan. */
   languages: 'Free in English. Available in 60+ languages from the Starter plan.',
 } as const
+
+/** The ten CPD certified courses (training topic slugs). A training offer that only covers these has nothing to
+ *  sell while they are free, so the offers page hides it. */
+export const CPD_TOPIC_SLUGS = [
+  'care-certificate', 'coshh-control-of-substances-hazardous-to-health', 'end-of-life-palliative-care', 'food-hygiene',
+  'gdpr-data-protection', 'general-health-and-safety-awareness', 'infection-prevention-and-control',
+  'medication-administration-and-competency', 'mental-health-awareness', 'moving-and-handling-of-people',
+] as const

@@ -29,6 +29,15 @@ const signedIn = () => /(?:^|;\s*)(?:__Secure-)?next-auth\.session-token(?:\.\d+
 
 export function FreeDropdown() {
   const [open, setOpen] = useState(false)
+  // A mega menu open on top of the page: the dropdown steps aside (without being dismissed) and returns after.
+  const [menu, setMenu] = useState(false)
+
+  useEffect(() => {
+    setMenu(!!(window as any).__csMegaOpen)
+    const on = (e: Event) => setMenu(!!(e as CustomEvent).detail?.open)
+    window.addEventListener('cs:mega', on)
+    return () => window.removeEventListener('cs:mega', on)
+  }, [])
 
   useEffect(() => {
     if (!FREE_LIVE) return
@@ -48,7 +57,7 @@ export function FreeDropdown() {
   }, [open])
 
   return (
-    <div className="fdrop" data-open={open ? 'true' : 'false'}>
+    <div className="fdrop" data-open={open && !menu ? 'true' : 'false'}>
       <div className="fdrop-in">
         <section className="fdrop-card" aria-label="What you get with a free CareStream account">
           <button type="button" className="fdrop-x" aria-label="Close" onClick={() => setOpen(false)}>

@@ -35,11 +35,20 @@ export async function googleToken(): Promise<string> {
   return cached.token
 }
 
-async function post(url: string, body: unknown): Promise<any> {
-  const res = await fetch(url, { method: 'POST', headers: { Authorization: `Bearer ${await googleToken()}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-  const j: any = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(`Google API ${res.status}: ${JSON.stringify(j?.error?.message ?? j).slice(0, 200)}`)
-  return j
+// Every Google call has a hard timeout: the GA4 Data API has been seen to hang for minutes, and one hung call
+// must not hold the whole daily job (or the Search Console half of it) hostage.
+async function post(url: string, body: unknown, timeoutMs = 25_000): Promise<any> {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs)
+  try {
+    const res = await fetch(url, { method: 'POST', headers: { Authorization: `Bearer ${await googleToken()}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ctrl.signal })
+    const j: any = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(`Google API ${res.status}: ${JSON.stringify(j?.error?.message ?? j).slice(0, 200)}`)
+    return j
+  } catch (e: any) {
+    if (e?.name === 'AbortError') throw new Error(`Google API 504: no answer within ${Math.round(timeoutMs / 1000)}s`)
+    throw e
+  } finally { clearTimeout(timer) }
 }
 
 /** Search Console rows for blog and collection pages. dimensions: ['page','date'] or ['page','query']. */
@@ -63,8 +72,8 @@ export async function ga4Pages(startDate: string, endDate: string): Promise<Arra
   const out: Array<{ path: string; date: string; sessions: number; engaged: number }> = []
   const DAY = 86_400_000
   const end = new Date(endDate + 'T00:00:00Z').getTime()
-  for (let from = new Date(startDate + 'T00:00:00Z').getTime(); from <= end; from += 30 * DAY) {
-    const to = Math.min(from + 29 * DAY, end)
+  for (let from = new Date(startDate + 'T00:00:00Z').getTime(); from <= end; from += 14 * DAY) {
+    const to = Math.min(from + 13 * DAY, end)
     const body = {
       dateRanges: [{ startDate: new Date(from).toISOString().slice(0, 10), endDate: new Date(to).toISOString().slice(0, 10) }],
       dimensions: [{ name: 'pagePath' }, { name: 'date' }],
@@ -75,7 +84,7 @@ export async function ga4Pages(startDate: string, endDate: string): Promise<Arra
     let j: any = null
     for (let attempt = 0; attempt < 3 && !j; attempt++) {
       try { j = await post(`https://analyticsdata.googleapis.com/v1beta/properties/${GA4_PROPERTY}:runReport`, body) }
-      catch (e: any) { if (attempt === 2 || !/Google API 5/.test(String(e?.message))) throw e; await new Promise(r => setTimeout(r, 1500 * (attempt + 1))) }
+      catch (e: any) { if (attempt === 2 || !/Google API 5/.test(String(e?.message))) throw e  // 5xx and timeouts retry; await new Promise(r => setTimeout(r, 1500 * (attempt + 1))) }
     }
     for (const r of j?.rows ?? []) out.push({ path: r.dimensionValues[0].value, date: r.dimensionValues[1].value, sessions: Number(r.metricValues[0].value), engaged: Math.round(Number(r.metricValues[1].value)) })
   }

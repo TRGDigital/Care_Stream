@@ -157,6 +157,14 @@ export function SiteHeader() {
     }
   }, [])
 
+  // Tell the free account dropdown when a mega menu (or the mobile menu) is open, so the two never overlap:
+  // it hides while the menu is open and comes back when the menu closes.
+  const menuOpen = open !== null || mobile
+  useEffect(() => {
+    ;(window as any).__csMegaOpen = menuOpen
+    window.dispatchEvent(new CustomEvent('cs:mega', { detail: { open: menuOpen } }))
+  }, [menuOpen])
+
   const close = () => { setOpen(null); setMobile(false) }
   const toggle = (id: 'm1' | 'm2') => setOpen(o => (o === id ? null : id))
   const hover = (id: 'm1' | 'm2') => setOpen(o => (o ? id : o))

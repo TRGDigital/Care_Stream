@@ -1447,6 +1447,9 @@ model Collection {
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 
+  primary_keyword    String?                          // platform only, never sent to the public API
+  secondary_keywords String[] @default([])
+
   @@index([status])
   @@map("collections")
 }

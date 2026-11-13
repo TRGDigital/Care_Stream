@@ -358,6 +358,8 @@ export interface Collection {
   kind:             'policies' | 'training'
   cluster_key:      string
   eyebrow:          string
+  primary_keyword?: string | null
+  secondary_keywords?: string[]
   created_at:       string
   updated_at:       string
 }
@@ -1182,6 +1184,9 @@ export function createPlatformClient(token: string) {
         adminFetch<{ collection: Collection }>('/collections', token, { method: 'POST', body: JSON.stringify(data) }),
       update: (id: string, data: Partial<Collection>) =>
         adminFetch<{ collection: Collection }>(`/collections/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
+      // Create or update DRAFT collections from the content pipeline (never publishes).
+      importCollections: (collections: Array<Partial<Collection>>) =>
+        adminFetch<{ created: Array<{ id: string; slug: string; title: string }>; updated: Array<{ id: string; slug: string; title: string }>; skipped: Array<{ slug: string; reason: string }> }>('/collections/import', token, { method: 'POST', body: JSON.stringify({ collections }) }),
       delete: (id: string) =>
         adminFetch<{ deleted: boolean }>(`/collections/${id}`, token, { method: 'DELETE' }),
     },

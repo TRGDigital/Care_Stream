@@ -1951,6 +1951,7 @@ export default function BlogPage() {
   const [editPost,  setEditPost]  = useState<BlogPost | null>(null)
   const [savingPost, setSavingPost] = useState(false)
   const importInputRef = useRef<HTMLInputElement>(null)
+  const collImportRef = useRef<HTMLInputElement>(null)
   const [importing, setImporting] = useState(false)
   const [importMsg, setImportMsg] = useState('')
   const [postError,  setPostError]  = useState('')
@@ -2054,6 +2055,25 @@ export default function BlogPage() {
       setImportMsg(`Imported ${r.created.length} new, updated ${(r.updated ?? []).length} existing draft${(r.updated ?? []).length === 1 ? '' : 's'}${r.skipped.length ? `; skipped ${r.skipped.length} (${r.skipped.map(s => `${s.slug}: ${s.reason}`).join('; ')})` : ''}. They are drafts and are not public.`)
       const fresh = await createPlatformClient(token).blog.posts()
       setPosts(fresh.posts)
+    } catch (err: any) {
+      setImportMsg(`Import failed: ${err?.message ?? 'unknown error'}`)
+    } finally { setImporting(false) }
+  }
+
+  async function importCollectionDrafts(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setImporting(true); setImportMsg('')
+    try {
+      if (!token) throw new Error('Not signed in.')
+      const data = JSON.parse(await file.text())
+      const list = Array.isArray(data) ? data : Array.isArray(data?.collections) ? data.collections : []
+      if (!list.length) throw new Error('The file has no collections.')
+      const r = await createPlatformClient(token).collections.importCollections(list)
+      setImportMsg(`Imported ${r.created.length} new, updated ${r.updated.length} existing collection draft${r.updated.length === 1 ? '' : 's'}${r.skipped.length ? `; skipped ${r.skipped.length} (${r.skipped.map(s => `${s.slug}: ${s.reason}`).join('; ')})` : ''}. They are drafts and are not public.`)
+      const fresh = await createPlatformClient(token).collections.list()
+      setCollections(fresh.collections)
     } catch (err: any) {
       setImportMsg(`Import failed: ${err?.message ?? 'unknown error'}`)
     } finally { setImporting(false) }
@@ -2885,11 +2905,18 @@ export default function BlogPage() {
                 Ecommerce-style SEO landing pages at <code className="rounded bg-neutral-light px-1 py-0.5 text-xs">/collection/&hellip;</code> — intro, a themed six to buy, content, links and FAQs.
               </p>
               {!showCollection && !editCollection && (
-                <Button onClick={() => setShowCollection(true)}>
-                  <Plus size={14} className="mr-1" /> New Collection
-                </Button>
+                <div className="flex items-center gap-2">
+                  <input ref={collImportRef} type="file" accept="application/json,.json" className="hidden" onChange={importCollectionDrafts} />
+                  <Button variant="secondary" onClick={() => collImportRef.current?.click()} disabled={importing}>
+                    {importing ? <Loader2 size={14} className="mr-1 animate-spin" /> : <Upload size={14} className="mr-1" />} Import drafts
+                  </Button>
+                  <Button onClick={() => setShowCollection(true)}>
+                    <Plus size={14} className="mr-1" /> New Collection
+                  </Button>
+                </div>
               )}
             </div>
+            {importMsg && <p className="rounded-md bg-teal-light/40 px-3 py-2 text-sm text-neutral-dark">{importMsg}</p>}
 
             {showCollection && (
               <CollectionForm

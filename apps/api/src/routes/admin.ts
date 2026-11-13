@@ -3590,6 +3590,36 @@ adminRouter.post('/collections', async (req: Request, res: Response) => {
   ok(res, { collection })
 })
 
+// POST /admin/collections/import  { collections: [...] }  creates DRAFT collections from the content
+// pipeline. Always draft; an existing slug is updated only while it is still a draft, never when
+// published. Each item needs a valid cluster_key (the grid is the page).
+adminRouter.post('/collections/import', async (req: Request, res: Response) => {
+  const list = Array.isArray(req.body?.collections) ? req.body.collections.slice(0, 50) : []
+  if (!list.length) { err(res, 'VALIDATION_ERROR', 'collections must be a non empty array.'); return }
+  const created: Array<{ id: string; slug: string; title: string }> = []
+  const updated: Array<{ id: string; slug: string; title: string }> = []
+  const skipped: Array<{ slug: string; reason: string }> = []
+  for (const raw of list) {
+    const slug = String(raw?.slug ?? '').trim().replace(/^\/?collection\//, '').replace(/^\//, '')
+    const title = String(raw?.title ?? '').trim()
+    if (!slug || !title) { skipped.push({ slug: slug || '(none)', reason: 'title and slug are required' }); continue }
+    if (!raw?.cluster_key || !clusterByKey(String(raw.cluster_key))) { skipped.push({ slug, reason: 'a valid cluster_key is required' }); continue }
+    try {
+      const existing = await (prisma as any).collection.findUnique({ where: { slug } })
+      if (existing && existing.status !== 'draft') { skipped.push({ slug, reason: 'already published, not touched' }); continue }
+      const data = buildCollectionData({ ...raw, slug, status: 'draft' })
+      if (existing) {
+        const c = await (prisma as any).collection.update({ where: { id: existing.id }, data })
+        updated.push({ id: c.id, slug: c.slug, title: c.title })
+      } else {
+        const c = await (prisma as any).collection.create({ data })
+        created.push({ id: c.id, slug: c.slug, title: c.title })
+      }
+    } catch (e: any) { skipped.push({ slug, reason: String(e?.message ?? e).slice(0, 160) }) }
+  }
+  ok(res, { created, updated, skipped })
+})
+
 adminRouter.patch('/collections/:id', async (req: Request, res: Response) => {
   const { slug } = req.body ?? {}
   if (slug) {
@@ -3615,6 +3645,7 @@ function buildCollectionData(body: any) {
   const {
     title, slug, status, meta_title, meta_description, og_image_url,
     intro, images, body: content, links, faqs, kind, cluster_key, eyebrow,
+    primary_keyword, secondary_keywords,
   } = body ?? {}
   // A cluster belongs to one kind. Saving a training cluster onto a policy collection would
   // give a page whose grid and whose copy disagree, so the pair is resolved together rather
@@ -3634,6 +3665,8 @@ function buildCollectionData(body: any) {
     ...(faqs             !== undefined && { faqs:             normaliseFaqs(faqs)            }),
     ...(kind             !== undefined && { kind:             kind === 'training' ? 'training' : 'policies' }),
     ...(cluster_key      !== undefined && { cluster_key:      cluster ? cluster.key : ''      }),
+    ...(primary_keyword  !== undefined && { primary_keyword:  String(primary_keyword ?? '').trim() || null }),
+    ...(secondary_keywords !== undefined && { secondary_keywords: Array.isArray(secondary_keywords) ? secondary_keywords.map((k: any) => String(k).trim()).filter(Boolean).slice(0, 20) : [] }),
     ...(eyebrow          !== undefined && { eyebrow:          eyebrow?.trim() || (cluster?.kind === 'training' ? 'Training collection' : 'Policy collection') }),
   }
 }

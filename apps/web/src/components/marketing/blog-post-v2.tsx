@@ -3,6 +3,7 @@ import { Fragment } from 'react'
 import { buildBlogToc } from '@/lib/blog-toc'
 import { splitHtmlForCtas } from '@/lib/blog-cta'
 import { BlogCta, BLOG_CTA_TYPES, CtaArrow } from './blog-cta'
+import { RelatedScroller } from './related-scroller'
 import { BlogTocRail } from './blog-toc-rail'
 import './blog-post-v2.css'
 
@@ -221,7 +222,7 @@ export function BlogPostV2({ post, related }: { post: BlogPostV2Data; related: B
         <section className="brelated">
           <div className="bwrap brelated-in">
             <p className="btail-h brelated-h">Related articles</p>
-            <div className="brel-grid">
+            <RelatedScroller>
               {related.map((r, i) => (
                 <Link className="brel" href={`/blog/${r.slug}`} key={r.slug}>
                   <span className="band" style={{ background: BANDS[i % BANDS.length] }}>
@@ -234,7 +235,7 @@ export function BlogPostV2({ post, related }: { post: BlogPostV2Data; related: B
                   </span>
                 </Link>
               ))}
-            </div>
+            </RelatedScroller>
           </div>
         </section>
       )}

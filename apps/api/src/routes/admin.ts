@@ -3415,6 +3415,7 @@ adminRouter.post('/blog/posts', async (req: Request, res: Response) => {
   if (post.slug) await queueWebsiteReindex(`/blog/${post.slug}`)
   if (post.status === 'published' && post.slug) {
     await submitUrlsForIndexing([`${siteUrl()}/blog/${post.slug}`], { source: 'blog', blogPostId: post.id })
+    if (post.topic_cluster) await submitUrlsForIndexing([`${siteUrl()}/topics/${post.topic_cluster}`], { source: 'page', refresh: true })
   }
   ok(res, { post })
 })
@@ -3438,7 +3439,8 @@ adminRouter.patch('/blog/posts/:id', async (req: Request, res: Response) => {
   })
   if (post.slug) await queueWebsiteReindex(`/blog/${post.slug}`)
   if (post.status === 'published' && post.slug) {
-    await submitUrlsForIndexing([`${siteUrl()}/blog/${post.slug}`], { source: 'blog', blogPostId: post.id })
+    await submitUrlsForIndexing([`${siteUrl()}/blog/${post.slug}`], { source: 'blog', blogPostId: post.id, refresh: req.body?.content !== undefined })
+    if (post.topic_cluster) await submitUrlsForIndexing([`${siteUrl()}/topics/${post.topic_cluster}`], { source: 'page', refresh: true })
   }
   ok(res, { post })
 })
@@ -3593,6 +3595,7 @@ adminRouter.post('/collections', async (req: Request, res: Response) => {
   const collection = await (prisma as any).collection.create({ data: buildCollectionData(req.body) })
   if (collection.status === 'published' && collection.slug) {
     await submitUrlsForIndexing([`${siteUrl()}/collection/${collection.slug}`], { source: 'page' })
+    if (collection.topic_cluster) await submitUrlsForIndexing([`${siteUrl()}/topics/${collection.topic_cluster}`], { source: 'page', refresh: true })
   }
   ok(res, { collection })
 })
@@ -3643,7 +3646,8 @@ adminRouter.patch('/collections/:id', async (req: Request, res: Response) => {
     data:  buildCollectionData(req.body),
   })
   if (collection.status === 'published' && collection.slug) {
-    await submitUrlsForIndexing([`${siteUrl()}/collection/${collection.slug}`], { source: 'page' })
+    await submitUrlsForIndexing([`${siteUrl()}/collection/${collection.slug}`], { source: 'page', refresh: req.body?.body !== undefined || req.body?.intro !== undefined })
+    if (collection.topic_cluster) await submitUrlsForIndexing([`${siteUrl()}/topics/${collection.topic_cluster}`], { source: 'page', refresh: true })
   }
   ok(res, { collection })
 })

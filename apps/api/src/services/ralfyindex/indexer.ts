@@ -24,12 +24,13 @@ function toCanonicalHost(url: string): string {
   return url.replace(/^https?:\/\/(www\.)?carestreamai\.com(?=[\/?#]|$)/i, 'https://www.carestreamai.com')
 }
 
-// Drop URLs we've already successfully submitted (avoids wasting credits on re-saves).
-async function filterNew(urls: string[]): Promise<string[]> {
-  const existing = await (prisma as any).ralfyIndexSubmission.findMany({
-    where: { url: { in: urls }, status: 'submitted' },
-    select: { url: true },
-  })
+// Drop URLs we've already successfully submitted (avoids wasting credits on re-saves). With refreshDays,
+// a URL is submitted again once its last successful submission is older than that: used when a page's
+// content has materially changed (a refresh), so updated pages are re-crawled without paying on every save.
+async function filterNew(urls: string[], refreshDays = 0): Promise<string[]> {
+  const where: any = { url: { in: urls }, status: 'submitted' }
+  if (refreshDays > 0) where.created_at = { gte: new Date(Date.now() - refreshDays * 86_400_000) }
+  const existing = await (prisma as any).ralfyIndexSubmission.findMany({ where, select: { url: true } })
   const seen = new Set(existing.map((r: { url: string }) => r.url))
   return Array.from(new Set(urls.filter(u => !seen.has(u))))
 }
@@ -41,7 +42,7 @@ async function filterNew(urls: string[]): Promise<string[]> {
  */
 export async function submitUrlsForIndexing(
   urls: string[],
-  opts: { source?: 'blog' | 'page'; blogPostId?: string | null } = {},
+  opts: { source?: 'blog' | 'page'; blogPostId?: string | null; refresh?: boolean } = {},
 ): Promise<void> {
   try {
     const clean = urls.map(u => u?.trim()).filter((u): u is string => !!u && /^https?:\/\//.test(u)).map(toCanonicalHost)
@@ -50,7 +51,7 @@ export async function submitUrlsForIndexing(
     const cfg = await getConfig()
     if (!cfg || !cfg.enabled || !cfg.api_key) return
 
-    const fresh = await filterNew(clean)
+    const fresh = await filterNew(clean, opts.refresh ? 14 : 0)
     if (!fresh.length) return
 
     const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '_')

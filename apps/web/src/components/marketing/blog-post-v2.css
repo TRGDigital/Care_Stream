@@ -170,6 +170,21 @@
 .bpost-v2 .brelated{padding:0;border-top:1px solid var(--line);background:var(--ground-2)}
 .bpost-v2 .brelated-in{padding-block:clamp(40px,6vh,64px)}
 .bpost-v2 .brelated-h{margin-bottom:18px}
+/* Related articles: three in view, arrows either side, snap scrolling through the rest. */
+.bpost-v2 .brel-wrap{position:relative}
+.bpost-v2 .brel-track{display:flex;gap:26px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:2px}
+.bpost-v2 .brel-track::-webkit-scrollbar{display:none}
+.bpost-v2 .brel-track > .brel{flex:0 0 calc((100% - 52px)/3);scroll-snap-align:start;min-width:0}
+.bpost-v2 .brel-arrow{position:absolute;top:30%;transform:translateY(-50%);z-index:2;width:40px;height:40px;border-radius:999px;
+  border:1px solid var(--line);background:var(--ground);color:inherit;display:grid;place-items:center;cursor:pointer;
+  box-shadow:0 4px 14px rgba(20,16,36,.14)}
+.bpost-v2 .brel-arrow.prev{left:-20px}
+.bpost-v2 .brel-arrow.next{right:-20px}
+.bpost-v2 .brel-arrow:hover:not([disabled]){border-color:#DCD5E8}
+.bpost-v2 .brel-arrow[disabled]{opacity:.35;cursor:default}
+@media (max-width:1100px){ .bpost-v2 .brel-track > .brel{flex-basis:calc((100% - 26px)/2)} }
+@media (max-width:900px){ .bpost-v2 .brel-track > .brel{flex-basis:84%} .bpost-v2 .brel-arrow.prev{left:6px} .bpost-v2 .brel-arrow.next{right:6px} }
+@media (prefers-reduced-motion:no-preference){ .bpost-v2 .brel-track{scroll-behavior:smooth} }
 .bpost-v2 .brel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
 /* Addition: two across on a mid-width screen, so the cards (and their images) stay large. */
 @media (max-width:1100px){ .bpost-v2 .brel-grid{grid-template-columns:repeat(2,1fr)} }

@@ -13,8 +13,8 @@ import { COLLECTION_V2_SLOTS } from '@/lib/page-slots/collection-v2'
 import { isV2 } from '@/lib/v2-rollout'
 import { THEME_IMAGES } from '@/lib/theme-images'
 import { KeywordHighlighter } from '@/components/marketing/keyword-highlighter'
-import { relatedHtml } from '@/lib/related-fetch'
-import { injectBeforeFirstHeading } from '@/lib/related-block'
+import { relatedData } from '@/lib/related-fetch'
+import { relatedBlockHtml } from '@/lib/related-block'
 
 // An ecommerce-style collection page: copy, the six products it sells, deeper copy, FAQs,
 // sibling links, then the services banner. The order is the order a visitor needs it in.
@@ -162,11 +162,11 @@ async function CollectionPageBody(
 ) {
   const { slug } = await params
   const preview = await previewOf(searchParams)
-  const fetched = await getCollection(slug, preview)
-  if (!fetched) notFound()
-  // The related-content block sits inside the body, just above its first heading.
-  const block = await relatedHtml(fetched.topic_cluster, fetched.slug, preview)
-  const c: Collection = block && fetched.body ? { ...fetched, body: injectBeforeFirstHeading(fetched.body, block) } : fetched
+  const c = await getCollection(slug, preview)
+  if (!c) notFound()
+  // Related guides sit in the lower half, merged with the "Browse the rest of the library" strip: at most
+  // 6 links (the cluster's collections and guides first, then See all), so the buy buttons keep the page.
+  const related = await relatedData(c.topic_cluster, c.slug, preview, 6)
 
   // A collection page IS a list, so say so. Without ItemList these read to a crawler as an
   // unclassified page of links; with it, the courses or policies on the page are enumerated in
@@ -189,7 +189,7 @@ async function CollectionPageBody(
         {Array.isArray(c.faqs) && c.faqs.length > 0
           && <JsonLd data={faqPageSchema(c.faqs.filter(f => f.question && f.answer))} />}
         <CollectionPageV2 c={await withCardImages(c)} s={makeSlot(COLLECTION_V2_SLOTS, slots)}
-                          siblings={await getSiblings(slug)} />
+                          siblings={await getSiblings(slug)} related={related} />
       </>
     )
   }
@@ -293,6 +293,7 @@ async function CollectionPageBody(
       )}
 
       {faqs.length > 0 && <BlogFaqs faqs={faqs} />}
+      {related && <div className="mx-auto max-w-content px-6" dangerouslySetInnerHTML={{ __html: relatedBlockHtml(related) }} />}
 
       {/* ── The services banner: the one place we talk about ourselves ── */}
       <section className="bg-white py-14">

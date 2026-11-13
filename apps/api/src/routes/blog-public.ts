@@ -68,8 +68,10 @@ publicBlogRouter.get('/cluster/:cluster', async (req: Request, res: Response) =>
   const exclude = String(req.query.exclude ?? '')
   // A valid signed preview link for the page being viewed also lists the cluster's drafts.
   const all = await clusterItems(key, exclude, verifyCollectionPreview(req.query.preview, exclude))
-  const more = all.length > CLUSTER_LINK_CAP
-  const items = more ? all.slice(0, CLUSTER_LINK_CAP - 1) : all
+  // ?limit=6 for collection pages (fewer exits next to the buy buttons); never above the 10 link cap.
+  const limit = Math.min(CLUSTER_LINK_CAP, Math.max(2, Number(req.query.limit) || CLUSTER_LINK_CAP))
+  const more = all.length > limit
+  const items = more ? all.slice(0, limit - 1) : all
   res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=600')
   ok(res, { cluster: clusterInfo(key), items, total: all.length, hub_url: more ? `/topics/${key}` : null })
 })

@@ -55,9 +55,11 @@ const Mark = () => (
   </svg>
 )
 
-export function CollectionPageV2({ c, s, siblings = [] }: {
+export function CollectionPageV2({ c, s, siblings = [], related = null }: {
   c: CollectionV2
   s: Copy
+  /** The cluster's guides (max 6 links incl. See all), merged into the browse strip. */
+  related?: { label: string; items: { title: string; url: string; draft?: boolean }[]; total: number; hub_url: string | null } | null
   /** The other collections, for the "Browse the rest of the library" chips. */
   siblings?: { label: string; url: string }[]
 }) {
@@ -79,8 +81,16 @@ export function CollectionPageV2({ c, s, siblings = [] }: {
   // "Browse the rest of the library": the other collections, then both whole libraries, as the
   // theme has it. It had been built from the console links, which no collection sets, so the
   // section never appeared.
+  // One related section, not two: this topic's guides first (from the cluster), then the other
+  // collections that are not already listed, then both whole libraries. Duplicates are dropped.
+  const topic = related ? [
+    ...related.items.map(i => ({ label: i.title, url: i.url })),
+    ...(related.hub_url ? [{ label: `See all ${related.total} ${related.label} guides`, url: related.hub_url }] : []),
+  ] : []
+  const seen = new Set(topic.map(t => t.url))
   const chips = [
-    ...siblings,
+    ...topic,
+    ...siblings.filter(x => !seen.has(x.url)).slice(0, related ? 3 : siblings.length),
     { label: 'All care policies', url: '/care-policies' },
     { label: 'All training modules', url: '/staff-training' },
   ]
@@ -175,8 +185,8 @@ export function CollectionPageV2({ c, s, siblings = [] }: {
       {chips.length > 0 && (
         <section className="clsec cllinks">
           <div className="clwrap">
-            <h2>{s('links.h2')}</h2>
-            <p className="sub">{s('links.sub')}</p>
+            <h2>{related ? `More on ${related.label}` : s('links.h2')}</h2>
+            <p className="sub">{related ? 'Guides and collections that go with this page, and the full libraries.' : s('links.sub')}</p>
             <div className="clchips">
               {chips.map(l => (
                 <Link className="clchip" href={l.url} key={l.url}>{l.label}</Link>

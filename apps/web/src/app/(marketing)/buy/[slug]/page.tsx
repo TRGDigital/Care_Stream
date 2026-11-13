@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { ArrowLeft, ArrowRight, GraduationCap, Globe, RefreshCw, CheckCircle2 } from 'lucide-react'
 import { BuyForm } from '@/components/marketing/buy-form'
 import { BuyPageV2 } from '@/components/marketing/buy-page-v2'
@@ -10,6 +10,7 @@ import { fetchModules, relatedModules } from '@/lib/related-modules'
 import { isV2 } from '@/lib/v2-rollout'
 import { JsonLd } from '@/components/json-ld'
 import { productSchema } from '@/lib/schema'
+import { isFreeCpd, freeCpdHref } from '@/lib/free-cpd'
 
 export const revalidate = 60
 
@@ -86,6 +87,9 @@ export default async function BuyPage(
   const { slug } = await params
   const [m, unitPence, allModules] = await Promise.all([getModule(slug), getUnitPence(), fetchModules()])
   if (!m) notFound()
+  // Free CPD training (lib/free-cpd.ts): nothing to buy, so every old buy link lands on the free sign up.
+  // (This is also why no Product price of 0 is built below: a free course never renders this page.)
+  if (isFreeCpd(m)) redirect(freeCpdHref(slug))
 
   // Cross-links to other buy pages so every module's purchase page has several
   // dofollow internal links, not just the single one from its training page.

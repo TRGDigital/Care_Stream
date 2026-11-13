@@ -6,6 +6,7 @@ import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { requireAdmin } from '../middleware/auth'
+import { tierOf } from '../lib/tiers'
 import { buildTrainingMatrix, ALL_STAFF_ROLE } from '../lib/training-matrix'
 
 export const trainingMatrixRouter = Router()
@@ -14,10 +15,10 @@ trainingMatrixRouter.use(requireAdmin)
 const tid = (req: Request) => (req as any).user.tenant_id as string
 
 // Modules a requirement can point at: the same set an admin can enrol staff in.
-const assignableModules = (tenantId: string) => ({
-  is_active: true,
-  OR: [{ tenant_id: tenantId }, { tenant_id: null, source: 'ai_generated', approved: true }],
-})
+// A Free tenant can only pick the free CPD courses.
+const assignableModules = async (tenantId: string) => (await tierOf(tenantId)) === 'free'
+  ? { is_active: true, tenant_id: null, source: 'ai_generated', approved: true, tier: 'cpd' }
+  : { is_active: true, OR: [{ tenant_id: tenantId }, { tenant_id: null, source: 'ai_generated', approved: true }] }
 
 // GET /training-matrix
 trainingMatrixRouter.get('/', async (req: Request, res: Response) => {
@@ -34,7 +35,7 @@ trainingMatrixRouter.get('/requirements', async (req: Request, res: Response) =>
       (prisma as any).faceToFaceMandatory.findMany({ where: { tenant_id: tenantId }, orderBy: [{ job_role: 'asc' }, { module_name: 'asc' }] }),
       (prisma as any).user.findMany({ where: { tenant_id: tenantId, is_active: true, is_reviewer: false }, select: { job_role: true } }),
       (prisma as any).trainingModule.findMany({
-        where:   assignableModules(tenantId),
+        where:   await assignableModules(tenantId),
         select:  { id: true, name: true, tenant_id: true, source: true, tier: true, category: true },
         orderBy: { name: 'asc' },
       }),
@@ -65,7 +66,7 @@ trainingMatrixRouter.put('/requirements', async (req: Request, res: Response) =>
   try {
     const moduleIds = [...new Set(raw.map((r: any) => String(r?.module_id ?? '')).filter(Boolean))]
     const modules = moduleIds.length
-      ? await (prisma as any).trainingModule.findMany({ where: { id: { in: moduleIds }, ...assignableModules(tenantId) }, select: { id: true, name: true } })
+      ? await (prisma as any).trainingModule.findMany({ where: { id: { in: moduleIds }, ...(await assignableModules(tenantId)) }, select: { id: true, name: true } })
       : []
     const nameById = new Map((modules as any[]).map(m => [m.id, m.name]))
     const seen = new Set<string>()

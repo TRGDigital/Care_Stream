@@ -8,6 +8,11 @@ import { recordUsage, withAiFeature } from './token-usage'
 import { languageNameForCode } from '../data/languages'
 import { prisma } from '../db/client'
 import { approvedOverrideMap, overrideHash, applyOverrides } from './overrides'
+import { tierOf } from './tiers'
+
+// Translation is a paid feature: a Free tenant is English only, so a translation call made on its
+// behalf is answered with the English text and costs nothing. Starts on the Starter plan.
+const translationBlocked = async (tenantId?: string): Promise<boolean> => !!tenantId && (await tierOf(tenantId)) === 'free'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -115,7 +120,7 @@ export async function translateTrainingQuestion(
   glossary?: GlossaryTerm[],
   tenantId?: string,         // enables human-verified override lookup
 ): Promise<{ text: string; options: string[] }> {
-  if (!targetLang || targetLang === 'eng') return question
+  if (!targetLang || targetLang === 'eng' || await translationBlocked(tenantId)) return question
 
   const name = targetLangName ?? langName(targetLang)
   const opts  = question.options ?? []
@@ -232,7 +237,7 @@ export async function translateQuestionsBatch(
   glossary?: GlossaryTerm[],
   tenantId?: string,
 ): Promise<Array<{ text: string; options: string[] }>> {
-  if (!langCode || langCode === 'eng') return questions.map(q => ({ text: q.text, options: q.options ?? [] }))
+  if (!langCode || langCode === 'eng' || await translationBlocked(tenantId)) return questions.map(q => ({ text: q.text, options: q.options ?? [] }))
 
   // Partition the cache per glossary version so a glossary change never serves a
   // previously-cached translation (real language is still passed to Haiku).
@@ -302,7 +307,7 @@ async function overlayQuestions(
 
 // Batch-translate short strings (step titles, module names) into langCode.
 export async function translateTextsBatch(texts: string[], langCode: string, langName?: string, glossary?: GlossaryTerm[], tenantId?: string): Promise<string[]> {
-  if (!langCode || langCode === 'eng') return texts
+  if (!langCode || langCode === 'eng' || await translationBlocked(tenantId)) return texts
   const name = langName ?? langName_internal(langCode)
   const gloss = buildGlossary(await effectiveGlossary(glossary))
   const cacheLang = gloss ? `${langCode}#${gloss.sig}` : langCode

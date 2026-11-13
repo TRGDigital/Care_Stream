@@ -13,7 +13,7 @@ import { UpgradeOverlay } from './upgrade-overlay'
 import {
   LayoutDashboard, FileText, Users, BarChart2, TrendingUp, ClipboardCheck, CreditCard, MessageSquare, Settings, BookOpen, ShieldAlert, GraduationCap, ShieldCheck,
   Building2, ChevronDown, Check, Loader2, HelpCircle, ClipboardList, Menu, X, Lock, KeyRound, BadgeCheck,
-  PanelLeftClose, PanelLeftOpen, Languages, Compass,
+  PanelLeftClose, PanelLeftOpen, Languages, Compass, Award,
 } from 'lucide-react'
 import { GuidedTour } from '@/components/admin/guided-tour'
 import { SuggestionsButton } from '@/components/admin/suggestions-drawer'
@@ -62,6 +62,7 @@ const NAV_SECTIONS = [
     iconColor: 'text-green-400',
     items: [
       { href: '/training',      label: 'Training',         Icon: ShieldCheck    },
+      { href: '/training/annual', label: 'CPD training',   Icon: Award, sub: true },
       { href: '/cqc-questions', label: 'CQC Staff Prep',   Icon: ClipboardList  },
       { href: '/audits',        label: 'Monthly Audits',   Icon: ClipboardCheck },
       { href: '/onboarding',    label: 'Staff Onboarding', Icon: GraduationCap  },
@@ -89,7 +90,9 @@ const TRAINING_ONLY_NAV = new Set(['/dashboard', '/group', '/staff', '/training'
 const POLICIES_ONLY_NAV = new Set(['/policies', '/settings', '/billing'])
 // Free accounts: audits, the policy library, gap analysis, staff, settings, billing and help.
 // Everything else opens the paid plans overlay.
-const FREE_NAV = new Set(['/dashboard', '/audits', '/gaps', '/policies', '/staff', '/settings', '/billing', '/guides'])
+const FREE_NAV = new Set(['/dashboard', '/audits', '/gaps', '/policies', '/staff', '/training', '/training/annual', '/settings', '/billing', '/guides'])
+// Items that exist only for full (subscribed) and free accounts; the two shop tiers never see them.
+const NOT_FOR_SHOP_TIERS = new Set(['/training/annual'])
 
 interface AdminShellProps {
   userName:   string
@@ -360,6 +363,10 @@ function SidebarContent({ pathname, trainingOnly, policiesOnly, freeTier, selfSe
       ? { ...s, items: [{ href: '/group', label: 'Benchmarking', Icon: Building2 }, ...s.items] }
       : s)
   }
+  // The CPD training sub-item is for full and free accounts only (shop tiers buy licences instead).
+  if (trainingOnly || policiesOnly) {
+    sections = sections.map(s => ({ ...s, items: s.items.filter(i => !NOT_FOR_SHOP_TIERS.has(i.href)) }))
+  }
   const allHrefs = sections.flatMap(s => s.items.map(i => i.href))
   const hasExactMatch = allHrefs.some(href => href === pathname)
 
@@ -451,7 +458,7 @@ function SidebarContent({ pathname, trainingOnly, policiesOnly, freeTier, selfSe
                   {...tipProps(label)}
                   className={clsx(
                     'mb-0.5 flex items-center rounded-md py-2 text-sm font-medium transition-colors',
-                    collapsed ? 'justify-center px-0' : 'gap-3 px-3',
+                    collapsed ? 'justify-center px-0' : clsx('gap-3', (item as { sub?: boolean }).sub ? 'pl-8 pr-3' : 'px-3'),
                     active
                       ? clsx('bg-white/10 text-white', !collapsed && 'border-l-2 border-teal-light')
                       : 'text-white/70 hover:bg-white/10 hover:text-white',

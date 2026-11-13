@@ -3,6 +3,7 @@ import { pageMetadata } from '@/lib/page-meta'
 import { DISCOUNT_TIERS, gbp } from '@/lib/training-commerce'
 import { ShopInfoPage, getUnitPence } from '@/components/marketing/shop-info'
 import { BUNDLES } from '@/lib/bundle-rules'
+import { FREE_CPD_LIVE, FREE_CPD_COPY, STANDARD_COURSE_PRICE, FREE_COURSE_PRICE } from '@/lib/free-cpd'
 
 // Training team prices: the same volume tiers the basket and Stripe charge (training-commerce.ts),
 // with the licence price read from the API, so the table is always the price paid.
@@ -11,7 +12,9 @@ export const revalidate = 300
 
 export const generateMetadata = () => pageMetadata('/staff-training/team-pricing', {
   title: 'Team Pricing for Care Staff Training | CareStreamAI',
-  description: 'Care staff training from £25.99 per licence, up to 40% off for larger teams, or CPD course bundles from £139 per learner. See every price, get a quote or pay by invoice.',
+  description: FREE_CPD_LIVE
+    ? 'CPD Certified care training is free for every member of staff. Other care staff training from £25.99 per licence, up to 40% off for larger teams. Get a quote or pay by invoice.'
+    : 'Care staff training from £25.99 per licence, up to 40% off for larger teams, or CPD course bundles from £139 per learner. See every price, get a quote or pay by invoice.',
 })
 
 export default async function TeamPricingPage() {
@@ -29,6 +32,15 @@ export default async function TeamPricingPage() {
       title="Team pricing for care staff training"
       lead={<>One licence per member of staff, {gbp(unit)} each, and the more you buy the less each one costs. No subscription and no minimum order.</>}
     >
+      {FREE_CPD_LIVE && (
+        <div className="si-card hl">
+          <p style={{ margin: '0 0 8px' }}><b>CPD Certified courses are now free.</b> The Care Certificate and every annual refresher were <s>{STANDARD_COURSE_PRICE}</s> and are now {FREE_COURSE_PRICE} for every member of staff with a free CareStream account. {FREE_CPD_COPY.teamNote}</p>
+          <p style={{ margin: 0 }}>The prices below are for our other courses, which are not CPD Certified.</p>
+          <div className="si-actions">
+            <Link className="si-btn" href="/staff-training/cpd-courses">See the free CPD courses</Link>
+          </div>
+        </div>
+      )}
       <div className="si-card">
         <table>
           <thead><tr><th>Licences in your order</th><th>Discount</th><th className="r">Price per licence</th></tr></thead>
@@ -58,6 +70,7 @@ export default async function TeamPricingPage() {
         ))}
       </div>
 
+      {!FREE_CPD_LIVE && <>
       <h2>CPD course bundles</h2>
       <p>For a whole year of mandatory training, a bundle is one price per learner for a set of CPD Certified courses.</p>
       <div className="si-grid">
@@ -72,13 +85,14 @@ export default async function TeamPricingPage() {
         ))}
       </div>
       <p className="si-note">You always get the best price. If an offer or the team discount on single courses works out cheaper for your team than a bundle, that is what you pay. <Link href="/staff-training/cpd-courses?intent=bundles">See the bundles and the ten CPD courses</Link>.</p>
+      </>}
 
       <h2>Which works out cheaper?</h2>
       <ul className="si-ticks">
         <li><b>One or two courses for a few people:</b> single licences at {gbp(unit)} each.</li>
         <li><b>The same course for a large team:</b> single licences, with the team discount on 10 or more.</li>
-        <li><b>Every annual refresher for each member of staff:</b> the Annual refresher bundle, {gbp(BUNDLES.refresher.pence)} per learner.</li>
-        <li><b>New starters:</b> the Complete CPD bundle, {gbp(BUNDLES.complete.pence)} per learner, which includes the Care Certificate.</li>
+        {!FREE_CPD_LIVE && <li><b>Every annual refresher for each member of staff:</b> the Annual refresher bundle, {gbp(BUNDLES.refresher.pence)} per learner.</li>}
+        {!FREE_CPD_LIVE && <li><b>New starters:</b> the Complete CPD bundle, {gbp(BUNDLES.complete.pence)} per learner, which includes the Care Certificate.</li>}
       </ul>
 
       <h2>How team pricing works</h2>
@@ -91,7 +105,7 @@ export default async function TeamPricingPage() {
 
       <h2>Questions about pricing</h2>
       {[
-        ['Is there a subscription?', `No. You pay once for each licence, ${gbp(unit)} each before any discount, or once per learner for a bundle. Nothing renews automatically.`],
+        ['Is there a subscription?', `No. You pay once for each licence, ${gbp(unit)} each before any discount, or once per learner for a bundle. ${FREE_CPD_LIVE ? 'CPD Certified courses are free. ' : ''}Nothing renews automatically.`],
         ['How long does a licence last?', 'Twelve months from purchase. Most care training is refreshed every year, and we email you before your licences are due for renewal.'],
         ['Can I buy training just for myself?', 'Yes. Leave the organisation name blank at checkout, then allocate the licence to yourself from your dashboard.'],
         ['Do the team discount and an offer add together?', 'No. You get whichever saving is bigger, plus any free licences an offer gives. Bundles are a fixed price and do not take further discounts, but if single courses would cost less, you pay the lower price.'],

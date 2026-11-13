@@ -45,7 +45,7 @@ const POLICIES_ONLY_BLOCKED_SCAN = ['/dashboard', '/chat', '/staff', '/training'
 // Free accounts (tier 'free') get audits, the policy library and gap analysis, staff, settings and
 // billing. Like the policies-only tier this is an ALLOW list, so a route added later stays closed
 // until someone decides otherwise. The sidebar shows the rest locked; this is the typed URL backstop.
-const FREE_ALLOWED = ['/dashboard', '/audits', '/gaps', '/policies', '/staff', '/settings', '/billing', '/guides', '/account', '/start', '/chat', '/progress']
+const FREE_ALLOWED = ['/dashboard', '/audits', '/gaps', '/policies', '/staff', '/training', '/settings', '/billing', '/guides', '/account', '/start', '/chat', '/progress']
 const matches = (path: string, list: string[]) => list.some(p => path === p || path.startsWith(p + '/'))
 
 // ── Store app mode. The Android (Trusted Web Activity) and iOS apps open the site with

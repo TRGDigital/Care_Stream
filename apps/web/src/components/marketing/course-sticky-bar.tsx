@@ -26,7 +26,7 @@ export function CourseStickyBar({
   title: string
   href: string
   durationLabel: string
-  priceLabel?: string
+  priceLabel?: React.ReactNode
   imageUrl?: string | null
   ctaLabel?: string
   topClassName?: string

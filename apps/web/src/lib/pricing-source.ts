@@ -44,11 +44,13 @@ export const FREE_PLAN: PricingPlan = {
   // "£0" has to be in the string: the price is read from it, and the schema Offer is 0.00 GBP.
   price: '£0 per month',
   annual: 'Free for ever, no card needed',
-  line: 'Run every audit and check your first five policies, with no card.',
+  line: 'Run every audit, check your first five policies and train your whole team with CPD courses, with no card.',
   badge: 'No card needed',
   badgeQuiet: true,
   features: [
     { text: 'Every audit template, with reports and action tracking', more: false },
+    { text: 'CPD training is free: the Care Certificate and every annual refresher, for every member of staff, in English', more: false },
+    { text: 'Training matrix for your CPD courses', more: false },
     { text: 'Gap analysis on your first 5 policies', more: false },
     { text: 'As many staff logins as you need', more: false },
     { text: 'Upgrade any time and keep everything', more: false },
@@ -61,6 +63,9 @@ export const FREE_PLAN: PricingPlan = {
 /** What the Free column shows for each comparison row, by label. A row not listed is not included. */
 const FREE_VALUES: Record<string, PricingValue> = {
   'Policies stored': '5 in total',
+  'Annual training allocations': 'CPD courses free, no limit',
+  'Languages in the staff hub': 'English only',
+  'Training matrix with renewals and gaps': 'CPD courses',
   'Staff users': 'Unlimited',
   'AI tokens': 'Free allowance',
   'Document version history': true,
@@ -77,6 +82,7 @@ const FREE_VALUES: Record<string, PricingValue> = {
 
 /** Rows that only exist to tell the Free story: [Free, Starter, Professional, Enterprise]. */
 const EXTRA_ROWS: Record<string, Array<{ label: string; values: PricingValue[] }>> = {
+  'Training': [{ label: 'CPD certified training: Care Certificate and annual refreshers', values: ['Free, unlimited', 'Free, unlimited', 'Free, unlimited', 'Free, unlimited'] }],
   'Plans and limits': [{ label: 'Card needed to start', values: ['No', 'Yes, 14 day trial', 'Yes, 14 day trial', 'Yes, 14 day trial'] }],
   'Audits': [
     { label: 'Every platform audit template', values: [true, true, true, true] },
@@ -103,8 +109,9 @@ export function pricingView(free: boolean = FREE_LIVE): PricingView {
     return { ...g, rows }
   })
   const faqs = [
-    { q: 'Is there really a free plan?', a: 'Yes. A free account includes every audit template, with reports and action tracking, and gap analysis on your first five policies. You can add as many staff logins as you need and you do not need a card. The five policies are a total for the life of the account, so deleting one does not free a place. AI recommendations at the end of an audit, more than five policies and example wording for every gap are part of the paid plans.' },
-    ...PRICING.faqs.map(f => f.q === 'Is there a setup fee?' ? { ...f, a: 'No. Every paid plan includes a fourteen day free trial and you are not charged until day fifteen. A free account needs no card at all.' } : f),
+    { q: 'Is the free CPD training available in other languages?', a: 'The free plan is in English. Every translation has a real cost to produce, so training, questions and messages in 60+ languages start on the Starter plan. CPD courses stay free on every plan: upgrading adds the languages, not a charge for the courses.' },
+    { q: 'Is there really a free plan?', a: 'Yes. A free account includes every audit template, with reports and action tracking, gap analysis on your first five policies, and our CPD certified training free for every member of staff. You can add as many staff logins as you need and you do not need a card. The five policies are a total for the life of the account, so deleting one does not free a place. AI recommendations at the end of an audit, more than five policies and example wording for every gap are part of the paid plans.' },
+    ...PRICING.faqs.map(f => f.q === 'What counts as an annual training allocation?' ? { ...f, a: f.a + ' CPD certified courses are free on every plan and never use an allocation.' } : f.q === 'Is there a setup fee?' ? { ...f, a: 'No. Every paid plan includes a fourteen day free trial and you are not charged until day fifteen. A free account needs no card at all.' } : f),
   ]
   return { plans: [FREE_PLAN, ...PRICING.plans], groups, faqs, free: true }
 }

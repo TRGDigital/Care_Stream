@@ -18,6 +18,7 @@ import {
   type BundleKey, type Chip, type CpdCourse,
 } from '@/lib/cpd-collection'
 import { LandingFixesRoot } from './landing-fixes'
+import { isFreeCpd, freeCpdHref, FREE_CPD_COPY, FREE_COURSE_PRICE, STANDARD_COURSE_PRICE } from '@/lib/free-cpd'
 import { CHANGED_CPD_INTENTS, EXPECTED_TOPICS, lf } from '@/lib/landing-fixes'
 import './cpd-collection.css'
 
@@ -96,7 +97,18 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
   courses: CpdCourse[]; intentKey: string; focus?: string; review: Review | null; hl?: string
 }) {
   const hlRe = useMemo(() => (hl && hl !== '1' ? hlPattern(hl) : null), [hl])
-  const intent = intentFor(intentKey, focus)
+  const baseIntent = intentFor(intentKey, focus)
+  // Free CPD training (lib/free-cpd.ts): every course on this page is CPD Certified, so every one
+  // is free. The ad group's headline and sub line stay unless they talk about buying or bundles.
+  const free = isFreeCpd({ cpd_accredited: true })
+  const SELLS = /\b(buy|bundles?|price|prices|save|per learner)\b|£|team prices/i
+  const intent = free ? {
+    ...baseIntent,
+    headline: SELLS.test(baseIntent.headline) ? 'Free CPD Certified mandatory training for care staff' : baseIntent.headline,
+    sub: SELLS.test(baseIntent.sub)
+      ? 'Ten short courses built for care settings, each with a CPD Certified certificate for every learner. Free for every member of staff with a free CareStream account. No card needed.'
+      : baseIntent.sub,
+  } : baseIntent
   const offers = useOffers()
   const offer = licenceOffer(offers, 'food-hygiene')
   const { items, bundles, totalQty, net } = useCart()
@@ -151,13 +163,13 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
   const roleTable = (
             <div className="cc-table">
               <table>
-                <thead><tr><th>Role</th><th>Courses</th><th>Best way to buy</th></tr></thead>
+                <thead><tr><th>Role</th><th>Courses</th><th>{free ? 'Cost' : 'Best way to buy'}</th></tr></thead>
                 <tbody>
-                  <tr><td>New carers</td><td>Care Certificate, then all nine annual courses</td><td><a href="#bundles">Complete CPD bundle</a></td></tr>
-                  <tr><td>Carers and support workers</td><td>All nine annual courses, every year</td><td><a href="#bundles">Annual refresher bundle</a></td></tr>
-                  <tr><td>Staff who give medicines</td><td>Medication Administration, with the practical checklist</td><td>In both bundles, or on its own</td></tr>
-                  <tr><td>Kitchen and food handling</td><td>Food Hygiene</td><td>In both bundles, or on its own</td></tr>
-                  <tr><td>Office and admin staff</td><td>GDPR, Health and Safety, Mental Health Awareness</td><td>Single courses</td></tr>
+                  <tr><td>New carers</td><td>Care Certificate, then all nine annual courses</td><td>{free ? 'Free' : <a href="#bundles">Complete CPD bundle</a>}</td></tr>
+                  <tr><td>Carers and support workers</td><td>All nine annual courses, every year</td><td>{free ? 'Free' : <a href="#bundles">Annual refresher bundle</a>}</td></tr>
+                  <tr><td>Staff who give medicines</td><td>Medication Administration, with the practical checklist</td><td>{free ? 'Free' : 'In both bundles, or on its own'}</td></tr>
+                  <tr><td>Kitchen and food handling</td><td>Food Hygiene</td><td>{free ? 'Free' : 'In both bundles, or on its own'}</td></tr>
+                  <tr><td>Office and admin staff</td><td>GDPR, Health and Safety, Mental Health Awareness</td><td>{free ? 'Free' : 'Single courses'}</td></tr>
                 </tbody>
               </table>
             </div>
@@ -168,23 +180,25 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
       + 'Staff who give medicines: Medication Administration, with its practical checklist. Kitchen staff: Food Hygiene. Office staff: GDPR, Health and Safety and Mental Health Awareness. '
       + 'Fire safety, first aid, basic life support, safeguarding and the Mental Capacity Act are not offered here, so book those separately.'] as [string, string]] : []),
     ['Are these qualifications?', 'No. They are short CPD Certified courses, about an hour each, for people working in care. They are not diplomas, NVQs or levels.'],
-    ['How do bundles work?', 'A bundle is one price per learner for a set of courses. If a live offer on single courses works out cheaper for your team, you pay the lower price. Offers and team discounts do not stack on a bundle.'],
-    ['Is there a subscription?', 'No. You buy one licence per learner per course, or a bundle per learner. Team discounts of up to 40% apply to single courses automatically.'],
-    ['How do staff take the courses?', 'On any phone, tablet or computer, in over 60 languages. You allocate licences from your dashboard and see who has finished.'],
-    ['Can I pay by invoice?', 'Yes. Ask for an invoice at checkout, or get a quote for a large team or several services.'],
+    ...(free ? [] : [['How do bundles work?', 'A bundle is one price per learner for a set of courses. If a live offer on single courses works out cheaper for your team, you pay the lower price. Offers and team discounts do not stack on a bundle.'] as [string, string]]),
+    ...(free ? [['Is it really free?', 'Yes. Every CPD Certified course here is free for every member of staff with a free CareStream account. No card needed.'] as [string, string]] : [['Is there a subscription?', 'No. You buy one licence per learner per course, or a bundle per learner. Team discounts of up to 40% apply to single courses automatically.'] as [string, string]]),
+    ['How do staff take the courses?', free
+      ? 'On any phone, tablet or computer, in English on the free plan, or in 60+ languages from the Starter plan. You allocate the courses from your dashboard and see who has finished.'
+      : 'On any phone, tablet or computer, in over 60 languages. You allocate licences from your dashboard and see who has finished.'],
+    ...(free ? [] : [['Can I pay by invoice?', 'Yes. Ask for an invoice at checkout, or get a quote for a large team or several services.'] as [string, string]]),
   ]
 
   return (
     <HlContext.Provider value={hlRe}>
     <div className={lead === 'bundles' ? 'cpdc' : `cpdc cc-lead-on cc-lead-${lead}`}>
       <LandingFixesRoot />
-      {offer && (
+      {offer && !free && (
         <div className="cc-offerbar">
           {offerEmoji(offer.label) && <span className="cc-emoji" aria-hidden="true">🎃</span>}
           <b>{offer.label}:</b> {offer.headline} <span>Ends {fmtDate(offer.ends_on)}</span>
         </div>
       )}
-      <div className="cc-wrap">
+      <div className="cc-wrap" style={free ? { gridTemplateColumns: 'minmax(0,1fr)' } : undefined}>
         <div className="cc-main">
           <section className="cc-hero">
             <p className="cc-eb" {...(lfCopy ? lf('tag', 'tag') : {})}><H>{intent.tag}</H></p>
@@ -193,7 +207,7 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
               <p className="cc-lede" {...(lfCopy ? lf('sub', 'sub line') : {})}><H>{intent.sub}</H></p>
               <ul className="cc-trust">
                 <li><Tick /><H>{'CPD Certified, all 10 courses'}</H></li>
-                <li><Tick /><H>{'Every lesson in 60+ languages'}</H></li>
+                <li><Tick /><H>{free ? 'Free in English, 60+ languages on Starter' : 'Every lesson in 60+ languages'}</H></li>
                 <li><Tick /><H>{'A certificate for every learner'}</H></li>
                 <li><Tick /><H>{'Manager dashboard included'}</H></li>
               </ul>
@@ -219,18 +233,25 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
           )}
           {lead === 'courses' && (
             <section className="cc-sec cc-lead" {...lf('course-list', 'the courses first')}>
-              <h2>The 10 courses, {gbp(UNIT_PENCE)} + VAT each</h2>
+              <h2>{free ? <>The 10 courses, <s>{STANDARD_COURSE_PRICE}</s> {FREE_COURSE_PRICE} each</> : <>The 10 courses, {gbp(UNIT_PENCE)} + VAT each</>}</h2>
               <ul className="cc-coursechips">
                 {courses.map(c => (
                   <li key={c.slug}><a href={`/staff-training/${c.slug}?from=cpd-courses&intent_from=${encodeURIComponent(intentKey)}`}
                                       onClick={() => fi('collection_click', { product: c.slug, page: 'cpd-courses', intent: intentKey || 'default' })}>{c.title}</a></li>
                 ))}
               </ul>
-              <p className="cc-leadnote">About an hour each, CPD Certified. <a href="#courses">Buy single courses</a>, or save with a bundle below.</p>
+              <p className="cc-leadnote">About an hour each, CPD Certified. {free ? <><a href="#courses">Get any course free</a>. {FREE_CPD_COPY.note}</> : <><a href="#courses">Buy single courses</a>, or save with a bundle below.</>}</p>
             </section>
           )}
 
-          <section className="cc-sec cc-bundlesec">
+          {free && (
+            <section className="cc-sec cc-bundlesec">
+              <h2 className="cc-h2s">Every course is free</h2>
+              <p className="cc-bnote">All 10 CPD Certified courses are free for every member of staff with a free CareStream account. {FREE_CPD_COPY.note}</p>
+              <Link className="cc-add" style={{ maxWidth: 360 }} href={freeCpdHref(captureCourse.slug)}>{FREE_CPD_COPY.cta}</Link>
+            </section>
+          )}
+          {!free && <section className="cc-sec cc-bundlesec">
             <h2 className="cc-h2s">Save with a bundle</h2>
             <div className="cc-bundles" id="bundles">
               {(['complete', 'refresher'] as BundleKey[]).map(k => {
@@ -272,7 +293,7 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
               <p className="cc-bnote">You always get the best price. If an offer on single courses works out cheaper for your team, that is what you pay.</p>
               <p className="cc-forself" {...lf('for-self', 'who buys it')}>Buying for yourself? Your employer allocates the licence, and signs off the practical checklist on the courses that have one.</p>
             </div>
-          </section>
+          </section>}
 
           {/* Below the bundles so the bundle prices are on the first screen of a laptop. */}
           <div className="cc-cpdwrap">
@@ -284,18 +305,18 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
           </div>
 
           {/* On phones the finder sits here; on desktop it is in the Your training column. */}
-          <section className="cc-sec cc-finder-mobile">{finder}</section>
+          {!free && <section className="cc-sec cc-finder-mobile">{finder}</section>}
 
           <section className="cc-sec" id="courses">
             <div className="cc-sechead">
-              <h2>Or choose single courses</h2>
+              <h2>{free ? 'Choose your courses' : 'Or choose single courses'}</h2>
               <div className="cc-chips">
                 {([['all', 'All 10 courses'], ['refreshers', 'Annual refreshers'], ['starters', 'New starters'], ['practical', 'With a practical checklist']] as [Chip, string][]).map(([k, l]) => (
                   <button type="button" key={k} className={chip === k ? 'on' : ''} onClick={() => setChip(k)}>{l}</button>
                 ))}
               </div>
             </div>
-            {chip === 'starters' && <p className="cc-chipnote">New carers need the Care Certificate and the nine annual courses: the <a href="#bundles">Complete CPD bundle</a> covers all ten.</p>}
+            {chip === 'starters' && <p className="cc-chipnote">{free ? 'New carers need the Care Certificate and the nine annual courses. All ten are free.' : <>New carers need the Care Certificate and the nine annual courses: the <a href="#bundles">Complete CPD bundle</a> covers all ten.</>}</p>}
             <div className="cc-grid">
               {shown.map(c => {
                 const o = licenceOffer(offers, c.slug)
@@ -319,10 +340,12 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
                         {c.practical && <span>Practical checklist</span>}
                       </div>
                       <div className="cc-foot">
-                        <b>{gbp(UNIT_PENCE)}</b>
-                        {o && <span className="cc-offer">{offerEmoji(o.label)}{o.label}</span>}
+                        {free ? <b><s style={{ fontWeight: 400, opacity: 0.6, fontSize: '.85em' }}>{STANDARD_COURSE_PRICE}</s> {FREE_COURSE_PRICE}</b> : <b>{gbp(UNIT_PENCE)}</b>}
+                        {o && !free && <span className="cc-offer">{offerEmoji(o.label)}{o.label}</span>}
                       </div>
-                      {inCart ? (
+                      {free ? (
+                        <Link href={freeCpdHref(c.slug)} className="cc-add">{FREE_CPD_COPY.cta}</Link>
+                      ) : inCart ? (
                         <div className="cc-incart">
                           <Stepper label="Licences" value={inCart.qty} name={c.title}
                                    onChange={v => (v < 1 ? cart.remove(c.slug) : cart.setQty(c.slug, v))} />
@@ -360,7 +383,7 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
                 </div>
               </div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <figure><img src="/cpd-training-hub.jpg" alt="The training hub your staff learn in" loading="lazy" /><figcaption>Staff learn on any phone, in their own language</figcaption></figure>
+              <figure><img src="/cpd-training-hub.jpg" alt="The training hub your staff learn in" loading="lazy" /><figcaption>Staff learn on any phone{free ? ', in English or, from the Starter plan, their own language' : ', in their own language'}</figcaption></figure>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <figure><img src="/reporting-training-matrix.jpg" alt="The training matrix managers see" loading="lazy" /><figcaption>You see who has finished, by person and course</figcaption></figure>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -382,7 +405,7 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
           </section>
         </div>
 
-        <aside ref={asideRef} className={`cc-aside${sheet ? ' open' : ''}`} id="summary" aria-label="Your training">
+        {!free && <aside ref={asideRef} className={`cc-aside${sheet ? ' open' : ''}`} id="summary" aria-label="Your training">
           <div className="cc-sum">
             <div className="cc-sumhead"><h2>Your training</h2><button type="button" className="cc-x" onClick={() => setSheet(false)} aria-label="Close">×</button></div>
             {lineCount === 0 && <p className="cc-empty">Add a bundle or a course to see your price.</p>}
@@ -414,11 +437,11 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
             <p className="cc-quote">Training a large team or several homes? <QuoteRequest className="cc-quotebtn" label="Get a quote or pay by invoice"
               items={[...bundleLines.map(l => `${l.n} × ${BUNDLES[l.k].name}`), ...items.map(i => `${i.qty} × ${titleOf(i.slug, i.title)}`)]} /></p>
             <ul className="cc-sumticks">
-              {BENEFITS.map(b => <li key={b}><Tick />{b}</li>)}
+              {BENEFITS.map(b => <li key={b}><Tick />{free && b === 'Staff learn in 60+ languages' ? 'Free in English, 60+ languages from Starter' : b}</li>)}
             </ul>
           </div>
           <div className="cc-finder-desk">{finder}</div>
-        </aside>
+        </aside>}
       </div>
 
       {/* The same exit question and email capture as the course pages. The capture needs a real
@@ -427,7 +450,7 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
       <CaptureOverlay funnel="training" product={captureCourse.slug} title={captureCourse.title} image={captureCourse.image} offerName={intent.topic ?? 'CPD Certified mandatory training'} />
       <SecondPageOffer funnel="training" product={captureCourse.slug} title={captureCourse.title} />
 
-      {lineCount > 0 && (
+      {lineCount > 0 && !free && (
         <button type="button" className="cc-mbar" onClick={() => setSheet(true)}>
           <span>{lineCount} in your training</span><b>{money2(grand)}{SHIP_NOW && <span {...sn('vat', 'VAT')} className="sn-mvat">+ VAT</span>}</b><em>Review</em>
         </button>

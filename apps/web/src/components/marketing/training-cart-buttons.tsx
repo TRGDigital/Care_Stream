@@ -9,6 +9,7 @@ import { gbp } from '@/lib/training-commerce'
 import { fi } from '@/lib/funnel-insights'
 import { SaveCourseButton } from './save-course-button'
 import { useCtaTest } from '@/lib/cta-tests'
+import { freeCpdHref, FREE_CPD_COPY } from '@/lib/free-cpd'
 
 // The TRAINING cart's controls, in the rebuilt theme's markup, for pages outside the training
 // library itself: the training collection pages.
@@ -75,8 +76,10 @@ export function TrainingCartLink() {
 
 /** The page's main action: straight to this course's purchase page with one licence set.
  *  Logged as its own event so PPC traffic that buys directly can be told apart from the basket. */
-export function BuyNowLink({ slug, className = '', label = 'Add to basket', qty = 1, position, price }: {
+export function BuyNowLink({ slug, className = '', label = 'Add to basket', qty = 1, position, price, free = false }: {
   slug: string; className?: string; label?: string; qty?: number
+  /** A free CPD course (lib/free-cpd.ts): the button is "Get this course free", to the free sign up, with no basket. */
+  free?: boolean
   /** Which button this is on the page (hero_panel, sticky_bar, closing_section...), sent with the
    *  click and used by Funnel Insights button tests. */
   position?: string
@@ -87,6 +90,14 @@ export function BuyNowLink({ slug, className = '', label = 'Add to basket', qty 
   const offers = useOffers()
   const cls = licenceOffer(offers, slug) ? `${className} offerbtn`.trim() : className
   const test = useCtaTest('training', position || '', price)
+  if (free) {
+    return (
+      <Link className={className} href={freeCpdHref(slug)}
+            onClick={() => fi('free_cpd_click', { funnel: 'training', option: slug, position })}>
+        {FREE_CPD_COPY.cta}
+      </Link>
+    )
+  }
   return (
     <Link className={cls} href={`/buy/${slug}?qty=${qty}`} style={test?.style}
           onClick={e => {

@@ -19,6 +19,7 @@ import { recordLessonProvenance } from '../services/training/lessonAttribution'
 import { generateModuleIllustration, generateSectionImage, illustrationUrl } from '../services/training/moduleImage'
 import { pickImageSource, imagedSourceModules, fillModuleCovers } from '../services/training/coverMatch'
 import { TRAINING_TOPICS, renewalMonthsFor, TOPIC_GROUP_LABELS } from '../data/training-topics'
+import { tierOf } from '../lib/tiers'
 import { checkAiCreditLimit, logAiCredit, getAiCreditUsage, getQueryUsage, checkAnnualLicenseLimit, PlanLimitError } from '../lib/plan-limits'
 
 export const trainingRouter = Router()
@@ -81,7 +82,8 @@ trainingRouter.get('/catalogue', requireAdmin, async (req: Request, res: Respons
     // Which shelf of the platform library this catalogue shows. Default 'prebuilt'
     // (the free standard library); the CPD Approved Courses page passes tier=cpd.
     // A topic can carry one module of each tier, and the two never mix in one list.
-    const wantTier = req.query.tier === 'cpd' ? 'cpd' : 'prebuilt'
+    // A Free tenant only has the CPD shelf (free CPD training), whatever the query says.
+    const wantTier = (req.query.tier === 'cpd' || (await tierOf(tenantId)) === 'free') ? 'cpd' : 'prebuilt'
     const sel = { id: true, name: true, topic_id: true, approved: true, frequency: true, requires_practical: true, pass_mark: true, group_key: true, image_key: true, illustration_key: true, cpd_accredited: true, questions: true, created_at: true, tier: true }
     const [topics, modules, standard, hidden] = await Promise.all([
       (prisma as any).trainingTopic.findMany({ where: { is_active: true, OR: [{ tenant_id: tenantId }, { AND: [{ tenant_id: null }, { OR: settingOr }] }] }, orderBy: { sort_order: 'asc' } }),
@@ -644,6 +646,7 @@ trainingRouter.post('/enroll', requireAdmin, async (req: Request, res: Response)
   if (enrollTenant?.tier === 'training_only') {
     err(res, 'TRAINING_ONLY', 'Assign training by allocating a licence on the Licences page.', 403); return
   }
+  const isFree = enrollTenant?.tier === 'free'
 
   try {
     // Restrict to user_ids that actually belong to this tenant, and module_ids that
@@ -654,7 +657,10 @@ trainingRouter.post('/enroll', requireAdmin, async (req: Request, res: Response)
       (prisma as any).user.findMany({ where: { id: { in: user_ids }, tenant_id: tenantId }, select: { id: true } }),
       // Only this tenant's own module copies are valid enrollment targets.
       // Valid targets: the tenant's own modules, OR a published platform standard module (tenant_id null).
-      (prisma as any).trainingModule.findMany({ where: { id: { in: module_ids }, is_active: true, OR: [{ tenant_id: tenantId }, { tenant_id: null, source: 'ai_generated', approved: true }] }, select: { id: true, source: true } }),
+      // A Free tenant can assign only the published CPD standard courses (free CPD training).
+      (prisma as any).trainingModule.findMany({ where: { id: { in: module_ids }, is_active: true, ...(isFree
+        ? { tenant_id: null, source: 'ai_generated', approved: true, tier: 'cpd' }
+        : { OR: [{ tenant_id: tenantId }, { tenant_id: null, source: 'ai_generated', approved: true }] }) }, select: { id: true, source: true, tier: true } }),
     ])
     const validUserIds:   string[] = members.map((m: any) => m.id)
     const validModuleIds: string[] = modules.map((m: any) => m.id)
@@ -686,7 +692,9 @@ trainingRouter.post('/enroll', requireAdmin, async (req: Request, res: Response)
     // Enforce the monthly annual-training-module allocation quota. Each new
     // (staff × annual module) pairing consumes one allocation from the pool.
     const annualSet = new Set((modules as any[]).filter(m => m.source === 'ai_generated').map(m => m.id))
-    const newAnnualAllocations = toCreate.filter(t => annualSet.has(t.module_id)).length
+    // CPD courses are free and unlimited on every plan: they do not use a monthly allocation.
+    const cpdSet = new Set((modules as any[]).filter(m => m.tier === 'cpd').map(m => m.id))
+    const newAnnualAllocations = toCreate.filter(t => annualSet.has(t.module_id) && !cpdSet.has(t.module_id)).length
     if (newAnnualAllocations > 0) {
       try { await checkAnnualLicenseLimit(tenantId, newAnnualAllocations) }
       catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }

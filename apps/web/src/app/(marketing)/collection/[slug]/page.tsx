@@ -1,3 +1,4 @@
+import { isFreeCpd, STANDARD_COURSE_PRICE, FREE_COURSE_PRICE } from '@/lib/free-cpd'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
@@ -39,6 +40,8 @@ interface CollectionProduct {
   meta: string
   href: string
   image_url: string | null
+  /** Set from the module record for training courses (free CPD training, lib/free-cpd.ts). */
+  cpd_accredited?: boolean
 }
 interface Collection {
   slug: string
@@ -66,14 +69,17 @@ const POLICY_IMAGE_SLUGS = new Set(THEME_IMAGES
   .map(i => /^\/images\/care-policies\/([^/]+)\/1\.webp$/.exec(i.src)?.[1])
   .filter((x): x is string => !!x))
 
-async function getCourseIllustrations(): Promise<Map<string, string>> {
+async function getCourseIllustrations(): Promise<{ images: Map<string, string>; cpd: Set<string> }> {
   try {
     const res = await fetch(`${API_URL}/public/training/standard-modules`, { next: { revalidate: 3600 } })
-    if (!res.ok) return new Map()
-    const topics = ((await res.json())?.data?.topics ?? []) as { slug: string; illustration_url: string | null }[]
-    return new Map(topics.filter(t => t.illustration_url).map(t => [t.slug, `${API_URL}${t.illustration_url}`]))
+    if (!res.ok) return { images: new Map(), cpd: new Set() }
+    const topics = ((await res.json())?.data?.topics ?? []) as { slug: string; illustration_url: string | null; cpd_accredited?: boolean }[]
+    return {
+      images: new Map(topics.filter(t => t.illustration_url).map(t => [t.slug, `${API_URL}${t.illustration_url}`])),
+      cpd: new Set(topics.filter(t => isFreeCpd(t)).map(t => t.slug)),
+    }
   } catch {
-    return new Map()
+    return { images: new Map(), cpd: new Set() }
   }
 }
 
@@ -85,9 +91,9 @@ async function withCardImages(c: Collection): Promise<Collection> {
     products: (c.products ?? []).map(p => {
       const bare = p.slug.replace(/^std-/, '')
       const own = courses
-        ? courses.get(bare) ?? null
+        ? courses.images.get(bare) ?? null
         : POLICY_IMAGE_SLUGS.has(p.slug) ? `/images/care-policies/${p.slug}/1.webp` : null
-      return { ...p, image_url: own ?? apiImage(p.image_url) }
+      return { ...p, image_url: own ?? apiImage(p.image_url), ...(courses?.cpd.has(bare) ? { cpd_accredited: true } : {}) }
     }),
   }
 }
@@ -235,7 +241,9 @@ async function CollectionPageBody(
                         paragraph, and an uneven grid reads as a broken one. */}
                     <p className="mt-2 line-clamp-3 flex-1 text-sm leading-relaxed text-neutral-mid">{p.description}</p>
                     <div className="mt-4 flex items-baseline justify-between">
-                      <span className="text-xl font-extrabold tracking-tight text-neutral-dark">{money(p.price_pence)}</span>
+                      {isTraining && p.cpd_accredited
+                        ? <span className="text-xl font-extrabold tracking-tight text-neutral-dark"><s className="mr-1.5 text-sm font-medium text-neutral-mid">{STANDARD_COURSE_PRICE}</s>{FREE_COURSE_PRICE}</span>
+                        : <span className="text-xl font-extrabold tracking-tight text-neutral-dark">{money(p.price_pence)}</span>}
                       <span className="text-xs text-neutral-mid">{p.meta}</span>
                     </div>
                     <Link href={p.href}

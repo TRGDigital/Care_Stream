@@ -24,6 +24,7 @@ import { ProductFaqs, SampleCertificate, trainingFaqs, type FaqModule } from './
 import { Test1Assign, Test1OfferLine, Test1StickyBar } from './test1-mobile'
 import type { Test1Assignment } from '@/lib/ab-test1'
 import { SHIP_NOW, sn } from '@/lib/ship-now'
+import { isFreeCpd, freeCpdHref, FREE_CPD_COPY, FREE_COURSE_PRICE, STANDARD_COURSE_PRICE } from '@/lib/free-cpd'
 import { FAQ_V2, effectiveFrequency, faqV2BottomItems, faqV2Items, firstFaqFor, hasInlineLesson, orderFaqs } from '@/lib/faq-v2'
 import { FaqV2, FaqV2Bottom } from './faq-v2'
 import { LandingFixesRoot } from './landing-fixes'
@@ -283,7 +284,8 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
   const cs = careSetting
   const minutes = m.duration_minutes ?? 0
   const price = money(unitPence)
-  const buyHref = `/buy/${m.slug}`
+  const free = isFreeCpd(m)
+  const buyHref = free ? freeCpdHref(m.slug) : `/buy/${m.slug}`
   const img = (u?: string | null) => (u ? `${apiUrl}${u}` : null)
   const hero = img(m.illustration_url)
   const lower = m.title.toLowerCase()
@@ -329,6 +331,9 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
             <div className={first ? 'mpe-team lf-first lf-pf' : 'mpe-team'} id={FAQ_V2 ? 'team-price' : undefined}
                  {...(first ? lf('price-table', 'team prices under the headline on phones') : {})}>
               <p className="mpe-promise-eyebrow">Team pricing</p>
+              {free ? (
+                <p className="mpe-team-note"><s>{STANDARD_COURSE_PRICE}</s> <b>{FREE_COURSE_PRICE}</b> per staff member. It is free for every member of staff with a free CareStream account. No card needed.</p>
+              ) : <>
               <table>
                 <tbody>
                   {[{ min: 1, pct: 0 }, ...[...DISCOUNT_TIERS].reverse()].map((t, i, all) => {
@@ -344,7 +349,8 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
                 </tbody>
               </table>
               <p className="mpe-team-note">Applied automatically in your basket. With an offer on, you get whichever saving is bigger, plus any free licences it gives.</p>
-              <p className="mpe-team-quote">Training a large team or several homes? <Link href={`/contact?about=${encodeURIComponent(`${m.title} quote for a team`)}`}>Get a quote or pay by invoice</Link></p>
+              </>}
+              {!free && <p className="mpe-team-quote">Training a large team or several homes? <Link href={`/contact?about=${encodeURIComponent(`${m.title} quote for a team`)}`}>Get a quote or pay by invoice</Link></p>}
             </div>
   )
 
@@ -378,7 +384,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
           <div className="mpe-shot"><SiteImage src={hero} alt={`${m.title} training for care staff`} priority /></div>
           <div className="hg-badges">
             {m.cpd_accredited && <span><b>✓</b> CPD Certified</span>}
-            <span><b>60+</b> languages</span>
+            {free ? <span><b>Free</b> in English</span> : <span><b>60+</b> languages</span>}
             <span><b>✓</b> Certificate for every learner</span>
           </div>
         </>
@@ -418,12 +424,12 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
           <span className="who">
             <b>{m.title}</b>
             <span className="meta">
-              <span className="t"><Clock /> {est < 60 ? `~${est} min` : durationText(est)} to complete</span><i>·</i><span className="t">{price}{SHIP_NOW && <span {...sn('vat', 'VAT')}> + VAT</span>} per staff member</span>
+              <span className="t"><Clock /> {est < 60 ? `~${est} min` : durationText(est)} to complete</span><i>·</i><span className="t">{free ? <><s>{STANDARD_COURSE_PRICE}</s> {FREE_COURSE_PRICE}</> : <>{price}{SHIP_NOW && <span {...sn('vat', 'VAT')}> + VAT</span>}</>} per staff member</span>
             </span>
           </span>
-          <OfferBarChip slug={m.slug} />
+          {!free && <OfferBarChip slug={m.slug} />}
           <TrainingSaveButton slug={m.slug} title={m.title} />
-          <BuyNowLink slug={m.slug} className="add" position="sticky_bar" price={price} />
+          <BuyNowLink slug={m.slug} free={free} className="add" position="sticky_bar" price={price} />
         </div>
       </div>
 
@@ -436,8 +442,8 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
       <ExitQuestion funnel="training" product={m.slug} />
       <CaptureOverlay funnel="training" product={m.slug} title={m.title} image={hero} />
       <SecondPageOffer funnel="training" product={m.slug} title={m.title} />
-      <BuyDrawer slug={m.slug} moduleName={m.title} unitPence={unitPence}
-                 cpd={m.cpd_accredited ? { sections: sections.length, duration: durationText(est) } : null} />
+      {!free && <BuyDrawer slug={m.slug} moduleName={m.title} unitPence={unitPence}
+                 cpd={m.cpd_accredited ? { sections: sections.length, duration: durationText(est) } : null} />}
       <section className="mhero mpe">
         <div className="mwrap mpe-in">
           {/* The picture and the gallery move as one column (scroll-sequence.tsx). */}
@@ -541,12 +547,12 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
             <div className="mpe-banner">
               <h2>A certificate for every member of your team</h2>
               <p>
-                Each staff member completes {m.title} in the hub, in their own language, and gets a dated,
+                Each staff member completes {m.title} in the hub, {free ? 'in English on the free plan or in their own language from the Starter plan,' : 'in their own language,'} and gets a dated,
                 named certificate for your training file {v2cert ? 'once they pass and you sign off their observation' : 'the moment they pass'}. You see who has finished,
                 their score and their certificate from your dashboard.
               </p>
               <div className="mpe-banner-facts">
-                <span><b>60+</b> languages</span>
+                {free ? <span><b>Free</b> in English</span> : <span><b>60+</b> languages</span>}
                 <span><b>{durationText(est)}</b> to complete</span>
                 <span><b>1</b> certificate per person</span>
               </div>
@@ -560,7 +566,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
               <p className="note">
                 The same technology behind the world&apos;s best products powers
                 CareStream, so your team&apos;s {lower} training stays accurate, always up to date
-                with the latest guidance, and is delivered in over 60 languages.
+                with the latest guidance, and is delivered {free ? 'in English, with 60+ languages from the Starter plan.' : 'in over 60 languages.'}
               </p>
             </div>
           </div>
@@ -607,11 +613,11 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
             {t1b && (
               <ul className="t1-proof">
                 {m.cpd_accredited && <li><Tick />CPD Certified</li>}
-                <li><Tick />60+ languages</li>
+                <li><Tick />{free ? 'Free in English' : '60+ languages'}</li>
                 <li><Tick />{v2cert ? 'Certificate after your sign off' : 'Instant certificate'}</li>
               </ul>
             )}
-            {t1b && <Test1OfferLine slug={m.slug} />}
+            {t1b && !free && <Test1OfferLine slug={m.slug} />}
             {cro.benefits && (
               <ul className="mpe-benefits">
                 {cro.benefits.map(b => <li key={b}><Tick />{b}</li>)}
@@ -632,7 +638,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
             )}
             <ModuleBuyPanel slug={m.slug} title={m.title} unitPence={unitPence}
                             duration={durationText(est)} cpd={!!m.cpd_accredited}
-                            offerLine={!t1b}
+                            offerLine={!t1b} free={free}
                             certTick={v2cert ? 'Certificate once you sign off the observation' : undefined}
                             fresh={m.slug === 'care-certificate' && sections.length === 16
                               ? 'Updated March 2025'
@@ -641,7 +647,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
                               ? `Covers the knowledge for all ${sections.length || 16} Care Certificate standards set by Skills for Care, Skills for Health and NHS England, in the same order, one standard at a time.`
                               : undefined} />
             {m.slug === 'care-certificate' && (
-              <p className="lf-forself lf-afterbuy" {...lf('for-self', 'who buys it')}>Buying for yourself? Your employer allocates the licence and signs off your observation.</p>
+              <p className="lf-forself lf-afterbuy" {...lf('for-self', 'who buys it')}>{free ? 'Doing it for yourself? Your employer allocates the course and signs off your observation.' : 'Buying for yourself? Your employer allocates the licence and signs off your observation.'}</p>
             )}
 
             <PaymentLogos />
@@ -654,7 +660,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
 
             <ul className="mpe-trust mpe-trust-list">
               <li {...lf('trust-line', 'trust line wording')}><Tick />{m.slug === 'care-certificate' ? 'Mapped to the 16 Care Certificate standards' : 'Written for UK care settings'}</li>
-              <li><Tick />Completed in the hub in over 60 languages</li>
+              <li><Tick />{free ? 'Free in English, and in 60+ languages on the Starter plan' : 'Completed in the hub in over 60 languages'}</li>
               <li><Tick />A certificate for every staff member, for your CQC evidence</li>
               <li><Tick />A wrong answer triggers a follow-up lesson, so gaps are closed</li>
               {m.cpd_accredited && <li><Tick />CPD Certified Course</li>}
@@ -669,12 +675,24 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
               </span>
               <div>
                 <p className="mpe-promise-eyebrow">Our guarantee</p>
-                <h3>Full refund within 14 days</h3>
-                <p>
-                  If a licence has not been started, tell us within fourteen days and we refund it in full.
-                  {m.cpd_accredited ? ' CPD Certified, and kept' : ' Kept'} up to date whenever the standards or CQC
-                  guidance change. Licences last 12 months: no subscription, no minimum order.
-                </p>
+                {free ? (
+                  <>
+                    <h3>Free for every member of staff</h3>
+                    <p>
+                      {FREE_CPD_COPY.note} CPD Certified, and kept up to date whenever the standards or CQC
+                      guidance change.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h3>Full refund within 14 days</h3>
+                    <p>
+                      If a licence has not been started, tell us within fourteen days and we refund it in full.
+                      {m.cpd_accredited ? ' CPD Certified, and kept' : ' Kept'} up to date whenever the standards or CQC
+                      guidance change. Licences last 12 months: no subscription, no minimum order.
+                    </p>
+                  </>
+                )}
               </div>
             </div>
 
@@ -712,7 +730,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
             <p className="val">For every staff member</p>
           </div>
           <div className="mstat lang">
-            <p className="cap"><Tick /> Available Languages (60+)</p>
+            <p className="cap"><Tick /> {free ? 'Free in English, 60+ from Starter' : 'Available Languages (60+)'}</p>
             <LanguageCheck />
           </div>
           {m.cpd_accredited ? (
@@ -834,7 +852,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
           </p>
           <div className="mgrid4">
             {DELIVERY.map(([t, b]) => (
-              <div key={t}><Mark /><b>{t}</b><p>{b}</p></div>
+              <div key={t}><Mark /><b>{free && t === 'In any language' ? 'Free in English' : t}</b><p>{free && t === 'In any language' ? 'In English on the free plan. 60+ languages from the Starter plan, with your records kept in English.' : b}</p></div>
             ))}
           </div>
         </div>
@@ -846,18 +864,18 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
           <h2>From your dashboard to your team, in the CareStream hub.</h2>
           <p>
             Training is delivered in the hub each staff member logs into. You allocate the
-            modules, they complete them in their own language, and you get the completion records
+            modules, they complete them {free ? 'in English, or in their own language from the Starter plan' : 'in their own language'}, and you get the completion records
             and certificates for your CQC evidence, with any gaps closed by automatic follow up
             training.
           </p>
           <div className="mgrid4" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
             <div>
-              <Mark /><b>Buy and allocate</b>
+              <Mark /><b>{free ? 'Get it and allocate' : 'Buy and allocate'}</b>
               <p>Assign {m.title} to each staff member in seconds. No course builder and no setup for each person.</p>
             </div>
             <div>
               <Mark /><b>They complete it in the hub</b>
-              <p>Staff work through the module on any device, in over 60 languages, teaching then checking understanding. A wrong answer sends a short follow up lesson.</p>
+              <p>Staff work through the module on any device, {free ? 'in English (60+ languages from the Starter plan)' : 'in over 60 languages'}, teaching then checking understanding. A wrong answer sends a short follow up lesson.</p>
             </div>
             <div>
               <Mark /><b>You track it</b>
@@ -877,7 +895,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
             language they think in. They understand it properly, and your records stay in English.
           </p>
           <ul className="mout" style={{ gridTemplateColumns: '1fr' }}>
-            {LANGUAGE_POINTS.map(p => <li key={p}><Tick />{p}</li>)}
+            {LANGUAGE_POINTS.map(p => <li key={p}><Tick />{free && p.startsWith('Over 60') ? 'Free in English. 60+ languages from the Starter plan, with no setup and no separate versions to manage.' : p}</li>)}
           </ul>
           <p style={{ marginTop: 18, fontSize: '.9rem', color: 'var(--muted)' }}>
             Try the language buttons in the preview above.
@@ -956,7 +974,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
                 <li><Tick />90+ care-specific training courses</li>
                 <li><Tick />Bitesize, engaging lessons your staff actually finish</li>
                 <li><Tick />Mapped to the Care Certificate &amp; CQC standards</li>
-                <li><Tick />Available in 60+ languages</li>
+                <li><Tick />{free ? 'Free in English, 60+ languages from the Starter plan' : 'Available in 60+ languages'}</li>
                 <li><Tick />{v2cert ? 'Certificate issued once you sign off the observation' : 'Instant certificate on completion'}</li>
                 <li><Tick />Flexible learning, anytime, on any device</li>
                 <li><Tick />Content kept up to date with UK care regulations</li>
@@ -996,8 +1014,9 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
           <details>
             <summary>Can CareStream deliver {m.title} training in other languages?<Plus /></summary>
             <div className="ans">
-              Yes. Staff can complete it in over 60 languages, reading and answering in the
-              language they are most confident in, while your records stay in English.
+              {free
+                ? 'On the free plan it is in English. 60+ languages come with the Starter plan and above, where staff read and answer in the language they are most confident in, while your records stay in English.'
+                : 'Yes. Staff can complete it in over 60 languages, reading and answering in the language they are most confident in, while your records stay in English.'}
             </div>
           </details>
           <details>
@@ -1020,7 +1039,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
                 <h2>More CPD Certified training your team may need</h2>
                 <p>
                   Every course below is certified by The CPD Certification Service, delivered in the
-                  hub, in any language. Add any of these to your basket.
+                  hub. {isFreeCpd({ cpd_accredited: true }) ? 'Every one is free in English with a CareStream account, with 60+ languages from the Starter plan.' : 'In any language. Add any of these to your basket.'}
                 </p>
               </>
             ) : (
@@ -1049,12 +1068,12 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
       <section className="tend">
         <div className="mwrap tend-in">
           <h2>Give your team {lower} training that actually sticks.</h2>
-          <p>Buy your licences, allocate them in seconds, and let the evidence build itself.</p>
+          <p>{free ? 'Get it free, allocate it in seconds, and let the evidence build itself.' : 'Buy your licences, allocate them in seconds, and let the evidence build itself.'}</p>
           <div className="row">
-            <BuyNowLink slug={m.slug} className="tbtn solid" label={`Add to basket · ${price}`} position="closing_section" price={price} />
+            <BuyNowLink slug={m.slug} free={free} className="tbtn solid" label={`Add to basket · ${price}`} position="closing_section" price={price} />
             <Link className="tbtn ghost" href="/demo">Book a demo</Link>
           </div>
-          <TrainingAddTextLink {...addLabel} className="center" />
+          {!free && <TrainingAddTextLink {...addLabel} className="center" />}
         </div>
       </section>
 
@@ -1082,7 +1101,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
               <tbody>
                 {COMPARE.map(([label, a, b, c]) => (
                   <tr key={label}>
-                    <td className="f">{label}</td>
+                    <td className="f">{free && label === 'Taken in any of sixty plus languages' ? 'Taken in sixty plus languages, from the Starter plan' : label}</td>
                     <td className="us"><CompareMark mark={a} /></td>
                     <td><CompareMark mark={b} /></td>
                     <td><CompareMark mark={c} /></td>
@@ -1124,7 +1143,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
       </section>
 
       <TrainingCartLink />
-      {t1b && <Test1StickyBar slug={m.slug} unitPence={unitPence} anchor=".mpage-v2 .mbuy" />}
+      {t1b && <Test1StickyBar slug={m.slug} unitPence={unitPence} free={free} anchor=".mpage-v2 .mbuy" />}
     </div>
   )
 }

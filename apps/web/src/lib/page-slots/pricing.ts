@@ -51,11 +51,11 @@ export const PRICING_SLOTS: SlotDef[] = [
   { key: 'plans.enterprise.feat9', group: 'Plans · Enterprise', label: 'Feature 9', default: 'Priority support and a dedicated manager' },
 
   // Training-only card
-  { key: 'training.badge', group: 'Training only', label: 'Badge', default: 'Training only' },
-  { key: 'training.heading', group: 'Training only', label: 'Heading', default: 'Just need training? Buy modules individually.' },
-  { key: 'training.body', group: 'Training only', label: 'Body', multiline: true, default: 'No subscription required. Pay per module, per staff member. Each module includes the interactive lesson, the assessment, and a certificate on completion. Annual modules renew yearly. Upgrade to a full plan any time.' },
-  { key: 'training.priceCaption', group: 'Training only', label: 'Price caption', default: 'per staff member, per module' },
-  { key: 'training.cta', group: 'Training only', label: 'CTA label', default: 'Start with training modules' },
+  { key: 'training.badge', group: 'Training only', label: 'Badge', default: 'Free CPD training' },
+  { key: 'training.heading', group: 'Training only', label: 'Heading', default: 'Just need training? It is free.' },
+  { key: 'training.body', group: 'Training only', label: 'Body', multiline: true, default: 'Create a free account and give every member of staff our CPD certified courses, including the Care Certificate and the annual refreshers, at no cost. Each course includes the interactive lesson, the assessment and a certificate on completion. No card needed. Upgrade to a full plan any time.' },
+  { key: 'training.priceCaption', group: 'Training only', label: 'Price caption', default: 'per staff member, per CPD course' },
+  { key: 'training.cta', group: 'Training only', label: 'CTA label', default: 'Get free CPD training' },
 
   // Comparison section headings (above the matrix)
   { key: 'compare.label', group: 'Compare plans', label: 'Eyebrow', default: 'Compare plans' },

@@ -237,7 +237,7 @@ export default function BillingPage() {
   }
 
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-6xl">
       <h1 className="mb-6 text-2xl font-bold text-neutral-dark">Billing</h1>
 
       {error && (
@@ -357,7 +357,7 @@ export default function BillingPage() {
               {checkoutError && (
                 <p className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{checkoutError}</p>
               )}
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {upgrades.map((p: any) => (
                   <div key={p.id} className="rounded-lg border border-gray-200 p-5">
                     <div className="mb-1 flex items-center justify-between">
@@ -408,7 +408,7 @@ export default function BillingPage() {
             {checkoutError && (
               <p className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{checkoutError}</p>
             )}
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {plans.map((p: any) => {
                 const isCurrent = summary.plan_name === p.name
                 const feats: string[] = planFeats(p)

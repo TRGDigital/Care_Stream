@@ -47,6 +47,7 @@ export default function RegisterPage() {
   // Free account (dark launch): /register?tier=free&code=<private preview code>. The code is read from
   // the address and sent to the API; it is never shown on the page.
   const [freeTier, setFreeTier] = useState(false)
+  const [courseSlug, setCourseSlug] = useState('')
   const [previewCode, setPreviewCode] = useState('')
   const [trap, setTrap] = useState('')   // honeypot: real people never fill this in
   const orgRef = useRef<HTMLInputElement>(null)
@@ -56,7 +57,7 @@ export default function RegisterPage() {
   useEffect(() => {
     const q = new URLSearchParams(window.location.search)
     if (q.get('tier') === 'training_only') setTrainingOnly(true)
-    if (q.get('tier') === 'free') { setFreeTier(true); setPreviewCode(q.get('code') ?? '') }
+    if (q.get('tier') === 'free') { setFreeTier(true); setPreviewCode(q.get('code') ?? ''); setCourseSlug((q.get('course') ?? '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 80)) }
     // The home page and /uses heroes ask for a work email and send it here, so the visitor goes
     // straight on to the rest of the details rather than typing it twice.
     const e = q.get('email')?.trim()
@@ -86,7 +87,7 @@ export default function RegisterPage() {
       const res = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(freeTier ? { ...form, tier: 'free', preview_code: previewCode || undefined, company_website: trap || undefined } : trainingOnly ? { ...form, tier: 'training_only' } : form),
+        body: JSON.stringify(freeTier ? { ...form, tier: 'free', preview_code: previewCode || undefined, company_website: trap || undefined, course: courseSlug || undefined } : trainingOnly ? { ...form, tier: 'training_only' } : form),
       })
       const body = await res.json()
       if (!res.ok || !body.success) {
@@ -120,12 +121,13 @@ export default function RegisterPage() {
         {freeTier ? (
           <>
             <h1>Create your free account</h1>
-            <p className="rgsub">No card needed. Every audit, and a policy check on your first 5 policies.</p>
+            <p className="rgsub">No card needed. CPD certified training for your whole team, every audit, and a policy check on your first 5 policies.</p>
             <ul className="rgfree" style={{ margin: '0 auto 18px', maxWidth: 420, textAlign: 'left', fontSize: 14, lineHeight: 1.6, listStyle: 'none', padding: 0 }}>
+              <li><b>Free:</b> CPD certified training for every member of staff: the Care Certificate and the annual refreshers, with certificates and a training matrix</li>
               <li><b>Free:</b> every audit template, with reports and action plans</li>
               <li><b>Free:</b> gap analysis on up to 5 policies (all four analyses)</li>
               <li><b>Free:</b> as many staff logins as you need</li>
-              <li><b>Paid plans:</b> AI recommendations at the end of audits, more than 5 policies, staff Q&amp;A and training</li>
+              <li><b>Paid plans:</b> AI recommendations at the end of audits, more than 5 policies, staff Q&amp;A, face-to-face training and the CQC evidence pack</li>
             </ul>
           </>
         ) : trainingOnly ? (

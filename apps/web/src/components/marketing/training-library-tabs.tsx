@@ -9,6 +9,7 @@ import { UNIT_PENCE, gbp, estimatedMinutes, formatDuration, TRAINING_ACCREDITED 
 import { CartButton } from './cart-button'
 import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 import { SaveCourseButton } from './save-course-button'
+import { isFreeCpd, freeCpdHref, FREE_CPD_COPY, FREE_COURSE_PRICE, STANDARD_COURSE_PRICE } from '@/lib/free-cpd'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -112,7 +113,13 @@ export function ModuleCard({ t, accent, settingLabel }: { t: LibraryTopic; accen
 
         {/* Meta row: price + duration */}
         <div className="mb-4 flex items-center gap-4 border-t border-gray-100 pt-4 text-sm">
-          <span className="text-xl font-extrabold text-neutral-dark">{gbp(UNIT_PENCE)}</span>
+          {isFreeCpd(t) ? (
+            <span className="text-xl font-extrabold text-neutral-dark">
+              <s className="mr-1.5 text-sm font-medium text-neutral-mid">{STANDARD_COURSE_PRICE}</s>{FREE_COURSE_PRICE}
+            </span>
+          ) : (
+            <span className="text-xl font-extrabold text-neutral-dark">{gbp(UNIT_PENCE)}</span>
+          )}
           <span className="inline-flex items-center gap-1 text-neutral-mid"><Clock size={14} /> {duration}</span>
           <Link href={`/staff-training/${t.slug}`} className={`ml-auto inline-flex items-center gap-1 text-xs font-semibold ${brand}`}>
             Details <ArrowRight size={12} className="transition group-hover:translate-x-0.5" />
@@ -122,7 +129,14 @@ export function ModuleCard({ t, accent, settingLabel }: { t: LibraryTopic; accen
         {/* Add to basket / quantity stepper, with Save alongside */}
         <div className="flex items-stretch gap-2">
           <div className="min-w-0 flex-1">
-            {inCart ? (
+            {isFreeCpd(t) ? (
+              <Link
+                href={freeCpdHref(t.slug)}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition-colors hover:bg-blue-700"
+              >
+                {FREE_CPD_COPY.cta}
+              </Link>
+            ) : inCart ? (
               <div className="flex h-full items-center justify-between rounded-xl border border-teal/40 bg-teal-light/50 p-1.5">
                 <div className="flex items-center">
                   <button type="button" onClick={() => cart.setQty(t.slug, inCart.qty - 1)} className="flex h-9 w-9 items-center justify-center rounded-lg text-teal hover:bg-white" aria-label="Fewer"><Minus size={15} /></button>
@@ -145,7 +159,7 @@ export function ModuleCard({ t, accent, settingLabel }: { t: LibraryTopic; accen
         </div>
         {t.cpd_accredited ? (
           <div className="mt-2 flex items-center justify-between gap-3">
-            <p className="text-[11px] text-neutral-mid">Bulk discounts from 10+ licences</p>
+            <p className="text-[11px] text-neutral-mid">{isFreeCpd(t) ? FREE_CPD_COPY.teamNote : 'Bulk discounts from 10+ licences'}</p>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified" style={{ height: 44, width: 'auto' }} />
           </div>
@@ -220,12 +234,18 @@ export function ThemeModuleCard({ t, settingLabel, bulk, hidden, position = 'lib
           {t.description ?? GROUP_BLURB[t.group_key] ?? 'A mandatory training subject, ready to assign.'}
         </p>
         <div className="tmeta">
-          <span className="tprice">{gbp(UNIT_PENCE)}</span>
+          <span className="tprice">
+            {isFreeCpd(t)
+              ? <><s style={{ marginRight: 6, fontSize: '.8em', fontWeight: 400, opacity: 0.6 }}>{STANDARD_COURSE_PRICE}</s>{FREE_COURSE_PRICE}</>
+              : gbp(UNIT_PENCE)}
+          </span>
           <span className="tdur"><Clk /> {duration}</span>
           <Link className="tdetails" href={`/staff-training/${t.slug}`}>Details <Arr /></Link>
         </div>
         <div className="tbuy">
-          {inCart ? (
+          {isFreeCpd(t) ? (
+            <Link className="add" href={freeCpdHref(t.slug)}>{FREE_CPD_COPY.cta}</Link>
+          ) : inCart ? (
             <span className="add">
               <button type="button" aria-label="Fewer"
                       onClick={() => cart.setQty(t.slug, inCart.qty - 1)}>&minus;</button>
@@ -245,7 +265,7 @@ export function ThemeModuleCard({ t, settingLabel, bulk, hidden, position = 'lib
           // Bulk note left, CPD Certified mark bottom right under the save button. The
           // trademark is shown exactly as supplied: no border or added text (see lib/cpd.ts).
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 10 }}>
-            <p className="tbulk" style={{ margin: 0, textAlign: 'left' }}>{bulk}</p>
+            <p className="tbulk" style={{ margin: 0, textAlign: 'left' }}>{isFreeCpd(t) ? FREE_CPD_COPY.teamNote : bulk}</p>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified" style={{ display: 'block', flex: '0 0 auto', height: 44, width: 'auto', aspectRatio: 'auto', objectFit: 'contain' }} />
           </div>

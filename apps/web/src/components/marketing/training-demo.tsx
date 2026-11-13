@@ -3,6 +3,7 @@
 import { Fragment, useRef, useState } from 'react'
 import Link from 'next/link'
 import { openBuyDrawer } from './training-cart-buttons'
+import { FREE_CPD_COPY } from '@/lib/free-cpd'
 import { CheckCircle2, XCircle, Sparkles, ArrowRight, ArrowLeft, RotateCcw, Send, Info, Globe } from 'lucide-react'
 import { ActivityStep, type Activity } from '@/components/hub/activity-step'
 import { SiteImage } from '@/components/site-image'
@@ -63,6 +64,8 @@ export function TrainingDemo({
    *  lesson and question", "full module", no chip). */
   place?: 'index' | 'module'
 }) {
+  // A free CPD course sends its buttons to the free sign up (lib/free-cpd.ts), so they say so.
+  const free = buyHref.startsWith('/register')
   const [step, setStep] = useState<Step>('lesson')
   const [selected, setSelected] = useState<number | null>(null)
   const [showInfo, setShowInfo] = useState(false)
@@ -275,7 +278,7 @@ export function TrainingDemo({
               onClick={e => openBuyDrawer(e, buyHref, 'demo_end')}
               className="flex-1 rounded-btn bg-blue-600 px-6 py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700"
             >
-              Add to basket
+              {free ? FREE_CPD_COPY.cta : 'Add to basket'}
             </Link>
             {onTakeQuiz && (
               <button
@@ -338,7 +341,7 @@ export function TrainingDemo({
                 That is how the training works. Give your whole team the full {demo.title} module.
               </p>
               <div className="row">
-                <Link className="tbtn solid" href={buyHref} onClick={e => openBuyDrawer(e, buyHref, 'demo_end')}>Add to basket</Link>
+                <Link className="tbtn solid" href={buyHref} onClick={e => openBuyDrawer(e, buyHref, 'demo_end')}>{free ? FREE_CPD_COPY.cta : 'Add to basket'}</Link>
                 {/* On a course page there is nothing to browse to: one clear next step. */}
                 {place !== 'module' && <a className="tbtn ghost" href="#courses">Browse the courses</a>}
               </div>
@@ -493,7 +496,7 @@ export function TrainingDemo({
             </h2>
             <p className="mb-8 text-lg leading-relaxed text-neutral-mid">
               Read a real lesson from the module, then answer a real question, just like your team does in
-              the hub. It is available in over 60 languages, and the full module has {demo.total_sections} lessons
+              the hub. {free ? 'It is free in English, and in 60+ languages from the Starter plan.' : 'It is available in over 60 languages.'} The full module has {demo.total_sections} lessons
               and an assessment of {demo.total_questions} questions, with a certificate for your CQC evidence.
             </p>
             <p className="mb-4 font-semibold text-neutral-dark">
@@ -501,7 +504,7 @@ export function TrainingDemo({
             </p>
             <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
               <Link href={buyHref} className="rounded-btn bg-blue-600 px-7 py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700">
-                Buy for your team
+                {free ? FREE_CPD_COPY.cta : 'Buy for your team'}
               </Link>
               <Link href="/register" className="rounded-btn border-2 border-gray-200 px-7 py-3.5 text-center text-sm font-semibold text-neutral-dark transition-colors hover:border-teal hover:text-teal">
                 Start free trial

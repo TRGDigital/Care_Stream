@@ -36,6 +36,17 @@ const ALLOW: RegExp[] = [
   /^\/analytics\/consistency(\/.*)?$/,
   /^\/analytics\/wording-alignment(\/.*)?$/,
   /^\/analytics\/readiness$/,
+  // Free CPD training: browse the CPD catalogue, assign courses to staff, staff complete them,
+  // and the Training Matrix. The routes themselves restrict a free tenant to the CPD courses
+  // (training.ts: catalogue, enroll; training-matrix.ts: requirements) and lift the monthly cap.
+  /^\/training\/(catalogue|modules|compliance|my-enrollments)$/,
+  /^\/training\/(standard-)?modules\/[^/]+\/(full|preview)$/,
+  /^\/training\/enroll$/,
+  /^\/training\/enrollments\/[^/]+(\/(answer|complete|reset|upload-certificate))?$/,
+  /^\/training-matrix(\/requirements)?$/,
+  // The staff hub's CPD courses: the list, one course, answers, time, evaluation and the certificate.
+  /^\/me\/(annual-training|training-rating)$/,
+  /^\/me\/annual-training\/[^/]+(\/(submit|learn-time|evaluate|baseline|reflection|certificate))?$/,
 ]
 
 // Denied even though the prefix above matches.

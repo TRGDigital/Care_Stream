@@ -6,6 +6,7 @@ import { useOffers, licenceOffer, licenceDeal, licenceEffectivePence, money2, of
 import { BuyNowLink } from './training-cart-buttons'
 import type { Test1Variant } from '@/lib/ab-test1'
 import { SHIP_NOW, sn, withVat } from '@/lib/ship-now'
+import { FREE_COURSE_PRICE, STANDARD_COURSE_PRICE } from '@/lib/free-cpd'
 
 // Test 1, headline first on mobile (lib/ab-test1.ts). Only variant B renders the offer line and the
 // bottom bar; Test1Assign renders for both variants whenever the visit is in the test.
@@ -61,7 +62,7 @@ export function Test1OfferLine({ slug }: { slug: string }) {
 /** The bar along the bottom of a phone screen: price and Add to basket, shown only while the buy
  *  box is out of view. Same BuyNowLink as every other button, so the same buy_now_click event,
  *  value_pence and buy drawer (which sends Google Ads add_to_basket), at its own position. */
-export function Test1StickyBar({ slug, unitPence, anchor }: { slug: string; unitPence: number; anchor: string }) {
+export function Test1StickyBar({ slug, unitPence, anchor, free = false }: { slug: string; unitPence: number; anchor: string; free?: boolean }) {
   const offers = useOffers()
   const [on, setOn] = useState(false)
   const [lift, setLift] = useState(0)
@@ -110,12 +111,14 @@ export function Test1StickyBar({ slug, unitPence, anchor }: { slug: string; unit
   return (
     <div ref={ref} className={`t1bar${on ? ' on' : ''}`} style={lift ? { bottom: lift } : undefined} aria-hidden={!on}>
       <div className="t1bar-price">
+        {free ? <><s>{STANDARD_COURSE_PRICE}</s><b>{FREE_COURSE_PRICE}</b><span>per staff member</span></> : <>
         {headline < unitPence && <s>{money2(unitPence)}</s>}
         <b>{money2(headline)}</b>
         {SHIP_NOW && <strong className="sn-plusvat" {...sn('vat', 'VAT')}>+ VAT</strong>}
         <span>per staff member{fromQty ? ` on ${fromQty}+` : ''}{SHIP_NOW ? `, ${money2(withVat(headline).inc)} inc VAT` : ''}</span>
+        </>}
       </div>
-      <BuyNowLink slug={slug} className="add" position="mobile_sticky_bar" price={money2(cost)} />
+      <BuyNowLink slug={slug} free={free} className="add" position="mobile_sticky_bar" price={money2(cost)} />
     </div>
   )
 }

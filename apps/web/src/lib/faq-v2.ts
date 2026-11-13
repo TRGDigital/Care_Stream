@@ -31,6 +31,7 @@
 // no urgency beyond a live offer's real end date.
 
 import { DISCOUNT_TIERS, durationText, refreshWord } from './training-commerce'
+import { isFreeCpd, FREE_CPD_COPY } from './free-cpd'
 
 export const FAQ_V2_LIVE = true
 
@@ -224,11 +225,11 @@ export function faqV2Items(m: FaqV2Module, opts: { unitPence: number; hasLesson:
       id: 'renew', q: 'Do staff need to do it every year?', cta: 'price',
       lead: 'Yes, once a year.',
       body: 'All staff in care homes, nursing homes and home care should complete it every year. '
-        + 'Each licence lasts 12 months, the certificate shows when it renews, and we remind you and them 90, 30 and 7 days before it is due.',
+        + `${isFreeCpd(m) ? 'Your access never expires' : 'Each licence lasts 12 months'}, the certificate shows when it renews, and we remind you and them 90, 30 and 7 days before it is due.`,
     } : {
       id: 'renew', q: 'How often do staff need to redo it?', cta: 'price',
       lead: `${every.charAt(0).toUpperCase()}${every.slice(1)}.`,
-      body: `Most services refresh ${m.title} training ${every}. Each licence lasts 12 months, the certificate shows when it renews, `
+      body: `Most services refresh ${m.title} training ${every}. ${isFreeCpd(m) ? 'Your access never expires' : 'Each licence lasts 12 months'}, the certificate shows when it renews, `
         + 'and we remind you and them 90, 30 and 7 days before it is due. Your dashboard shows who is up to date.',
     })
   }
@@ -255,6 +256,35 @@ export function faqV2Items(m: FaqV2Module, opts: { unitPence: number; hasLesson:
     body: 'Any licence that has not been started can be refunded in full within 14 days. '
       + 'Email us from the address you ordered with; you do not need to give a reason. The refund goes back to the card you paid with.',
   })
+
+  // Free CPD training (lib/free-cpd.ts): nothing to buy, so the price, invoice and refund answers
+  // say it is free, and the licence wording becomes account wording.
+  if (isFreeCpd(m)) {
+    return out
+      .filter(i => i.id !== 'invoice' && i.id !== 'refund')
+      .map(i => {
+        if (i.id === 'price') {
+          return { ...i, offer: false, lead: 'It is free.', body: `Every member of staff gets it free with a free CareStream account. ${FREE_CPD_COPY.teamNote}` }
+        }
+        if (i.id === 'languages') {
+          return {
+            ...i,
+            lead: 'Free in English, and in 60+ languages on the Starter plan.',
+            body: `On the free plan the course is in English. From the Starter plan, one tap turns any ${cc ? 'standard' : 'lesson'} or question into their language, so they understand it, not just pass it. `
+              + 'Your records and certificates stay in English, ready for your evidence. Try the language buttons in the real lesson.',
+          }
+        }
+        return {
+          ...i,
+          q: i.id === 'pay' ? 'What exactly do I get?' : i.q,
+          body: i.body
+            .replace('Each licence gives one member of staff', 'A free CareStream account gives each member of staff')
+            .replace('Licences last 12 months, with no subscription.', 'It is free, with no card needed.')
+            .replace('Your employer buys a licence and allocates it to you.', 'Your employer sets you up with a free CareStream account and allocates it to you.')
+            .replace('Run a care service? Buy a licence for each member of staff on this page.', 'Run a care service? Get it free for every member of staff on this page.'),
+        }
+      })
+  }
 
   return out
 }
@@ -364,6 +394,7 @@ export function orderFaqs(items: FaqV2Item[], first: FaqId | null): FaqV2Item[] 
 export function faqV2BottomItems(m: FaqV2Module, opts: { hasLesson: boolean }): FaqV2Item[] {
   const pass = m.pass_mark ?? 80
   const tryOr = (c: FaqCta): FaqCta => (c === 'try' && !opts.hasLesson ? 'price' : c)
+  const free = isFreeCpd(m)
   return [
     {
       id: 'fail', q: 'What if someone fails the assessment?', cta: tryOr('try'),
@@ -393,7 +424,7 @@ export function faqV2BottomItems(m: FaqV2Module, opts: { hasLesson: boolean }): 
       id: 'funding', q: 'Can we get funding for this training?', cta: 'price',
       lead: 'Check with Skills for Care.',
       body: 'They can tell you about the Learning and Development Support Scheme, which can help with some training costs. '
-        + 'Ask them whether this course can be claimed before you buy, because we cannot promise that it can.',
+        + 'Ask them whether this course can be claimed before you buy, because we cannot promise that it can.'.replace('before you buy', free ? 'before you start' : 'before you buy'),
     },
   ]
 }

@@ -57,6 +57,19 @@ export default function AnnualTrainingPage() {
   }
   useEffect(() => { load() }, [session?.accessToken]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Arriving from a free course page (/training/annual?course=<slug>): open that course's assign
+  // screen once, so a new free account lands on the course it came for.
+  const [landed, setLanded] = useState(false)
+  useEffect(() => {
+    if (landed || loading || topics.length === 0) return
+    setLanded(true)
+    const want = new URLSearchParams(window.location.search).get('course')
+    if (!want) return
+    const slugOf = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+    const hit = topics.find(x => x.standard_module && (slugOf(x.title) === want || slugOf(x.standard_module.name) === want))
+    if (hit?.standard_module) setView({ mode: 'assign', id: hit.standard_module.id, name: hit.standard_module.name })
+  }, [loading, topics, landed])
+
   if (view.mode === 'review' && api) return <ReviewModule api={api} id={view.id} onBack={() => { load(); setView({ mode: 'list' }) }} onAssign={(id, name) => setView({ mode: 'assign', id, name })} />
   if (view.mode === 'assign' && api) return <AssignModule api={api} moduleId={view.id} moduleName={view.name} onBack={() => setView({ mode: 'list' })} />
   if (view.mode === 'view'   && api) return <ViewStandardModule api={api} id={view.id} name={view.name} onBack={() => setView({ mode: 'list' })} />

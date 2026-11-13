@@ -14,15 +14,21 @@ t('free API allow list: what a free tenant may reach', () => {
     '/policy-purchases', '/policy-purchases/checkout', '/analytics/gaps', '/analytics/gaps/analyse/start', '/analytics/gaps/analyse/batch', '/analytics/gaps/pipeline',
     '/analytics/gaps/REG-1/detail', '/analytics/policy-lint/scan', '/analytics/consistency/detect',
     '/analytics/wording-alignment/batch', '/users/invite', '/billing/summary', '/billing/checkout', '/me/profile',
-    '/me/audit-approvals/xyz/approve', '/settings']) assert.ok(freeRouteAllowed(p), p)
+    '/me/audit-approvals/xyz/approve', '/settings',
+    // free CPD training
+    '/training/catalogue', '/training/modules', '/training/compliance', '/training/my-enrollments', '/training/enroll',
+    '/training/standard-modules/m1/full', '/training/enrollments/e1', '/training/enrollments/e1/answer', '/training/enrollments/e1/complete',
+    '/training-matrix', '/training-matrix/requirements',
+    '/me/annual-training', '/me/annual-training/e1', '/me/annual-training/e1/submit', '/me/annual-training/e1/certificate']) assert.ok(freeRouteAllowed(p), p)
 })
 
 t('free API allow list: paid features are closed', () => {
-  for (const p of ['/query', '/training/modules', '/knowledge', '/onboarding/flows', '/face-to-face', '/workforce/register',
+  for (const p of ['/query', '/training/delivery-rules', '/training/modules/m1/generate-lesson', '/training/ai-usage', '/training/checkout-basket',
+    '/training/licences', '/training/catalogue/generate', '/training/manual-send', '/knowledge', '/onboarding/flows', '/face-to-face', '/workforce/register',
     '/cqc-questions', '/analytics', '/analytics/cqc-report', '/analytics/gaps/adopt', '/analytics/gaps/pregenerate',
     '/analytics/gaps/policy-document/p1/publish', '/analytics/gaps/policy-change/c1', '/analytics/gaps/REG-1/training-module',
     '/analytics/gaps/REG-1/onboarding', '/analytics/gaps/REG-1/saf-alignment', '/analytics/gaps/matrix',
-    '/policies/intake', '/policies/p1/minor-edit', '/audits/templates/import', '/me/annual-training', '/me/tts',
+    '/policies/intake', '/policies/p1/minor-edit', '/audits/templates/import', '/me/tts',
     '/agent-actions', '/suggestions']) assert.ok(!freeRouteAllowed(p), p)
 })
 

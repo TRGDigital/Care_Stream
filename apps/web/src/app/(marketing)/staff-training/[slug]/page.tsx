@@ -30,6 +30,7 @@ import { TrainingVideo } from '@/components/marketing/training-video'
 import { estimatedMinutes, formatDuration, refreshWord } from '@/lib/training-commerce'
 import { careSetting } from '@/lib/care-setting'
 import { isV2 } from '@/lib/v2-rollout'
+import { isFreeCpd, freeCpdHref, FREE_CPD_COPY, FREE_COURSE_PRICE, STANDARD_COURSE_PRICE } from '@/lib/free-cpd'
 import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 import { test1Assignment } from '@/lib/ab-test1'
 import { FAQ_V2, effectiveFrequency, faqV2BottomItems, faqV2Items, faqPlain, hasInlineLesson } from '@/lib/faq-v2'
@@ -147,7 +148,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!m) return { title: 'Staff Training | CareStreamAI' }
   // Module-derived fallback; overridden by the Pages tab (site_pages) when set.
   const title = `${m.title} Training for Care Staff | CareStreamAI`
-  const description = careSetting(m.summary ?? m.description) || `${m.title} training for UK care staff: what it covers, who needs it, how often, and how CareStream delivers it in any language.`
+  const description = careSetting(m.summary ?? m.description) || `${m.title} training for UK care staff: what it covers, who needs it, how often, and how CareStream delivers it${isFreeCpd(m) ? ', free in English' : ' in any language'}.`
   // Reuse the page's hero illustration as the social sharing image.
   const image = m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined
   return pageMetadata(`/staff-training/${slug}`, { title, description, image })
@@ -168,7 +169,7 @@ export default async function TrainingModulePage(
   const heroBullets = [
     // Only the Care Certificate is mapped to the Care Certificate framework.
     m.slug === 'care-certificate' ? 'CQC-aligned, mapped to the Care Certificate framework' : 'CQC-aligned, written for UK care settings',
-    'Completed in the hub in over 60 languages',
+    isFreeCpd(m) ? 'Free in English, and in 60+ languages on the Starter plan' : 'Completed in the hub in over 60 languages',
     'A certificate for every staff member, for your CQC evidence',
     'A wrong answer triggers a follow-up lesson, so gaps are closed',
     ...(m.cpd_accredited ? ['CPD Certified Course'] : []),
@@ -181,7 +182,7 @@ export default async function TrainingModulePage(
     { name: 'AWS', Icon: Aws },
   ]
 
-  const summary = careSetting(m.summary ?? m.description) || `What ${m.title.toLowerCase()} training covers, who needs it and how often, and how CareStream delivers it to your whole team in any language.`
+  const summary = careSetting(m.summary ?? m.description) || `What ${m.title.toLowerCase()} training covers, who needs it and how often, and how CareStream delivers it to your whole team${isFreeCpd(m) ? ', free in English' : ' in any language'}.`
   const outcomes = m.outcomes.map(careSetting)
   const keyPoints = m.key_points.map(careSetting)
   const sections = m.sections.map((s) => ({ heading: careSetting(s.heading), body: careSetting(s.body), image_url: s.image_url })).filter((s) => s.body)
@@ -206,19 +207,20 @@ export default async function TrainingModulePage(
     `${m.title} is part of the mandatory training expected in CQC-regulated services`,
     'It applies to every member of the team whose role requires it',
     `Refreshed ${freqWord(effectiveFrequency(slug, m.frequency))}, with renewal reminders handled automatically`,
-    'Completed in the hub, in any language, with an assessment at the end',
+    isFreeCpd(m) ? 'Completed in the hub, free in English, with an assessment at the end' : 'Completed in the hub, in any language, with an assessment at the end',
   ]
   const outcomesToShow  = outcomes.length  ? outcomes  : placeholderOutcomes
   const sectionsToShow  = sections.length  ? sections  : placeholderSections
   const keyPointsToShow = keyPoints.length ? keyPoints : placeholderKeyPoints
   const showSectionImages = hasSectionImages || !m.built // image-slot layout for placeholders too
 
-  const buyHref = `/buy/${encodeURIComponent(m.slug)}`
+  const free = isFreeCpd(m)
+  const buyHref = free ? freeCpdHref(m.slug) : `/buy/${encodeURIComponent(m.slug)}`
 
   const faqs = [
     { question: `Is ${m.title} training mandatory in care settings?`, answer: `${m.title} is part of the training that CQC-regulated care settings are expected to provide. CareStream includes it in the standard library so you can assign it to your whole team.` },
     { question: `How often should staff complete ${m.title} training?`, answer: `Most services refresh ${m.title} training ${freqWord(effectiveFrequency(slug, m.frequency))}. CareStream tracks each person's renewal date and sends automatic reminders at 90, 30 and 7 days.` },
-    { question: `Can CareStream deliver ${m.title} training in other languages?`, answer: `Yes. Staff can complete it in over 60 languages, reading and answering in the language they are most confident in, while your records stay in English.` },
+    { question: `Can CareStream deliver ${m.title} training in other languages?`, answer: free ? `On the free plan it is in English. 60+ languages come with the Starter plan and above, where staff read and answer in the language they are most confident in, while your records stay in English.` : `Yes. Staff can complete it in over 60 languages, reading and answering in the language they are most confident in, while your records stay in English.` },
     { question: `Does the training include an assessment?`, answer: `Yes. Each module teaches the topic, applies it to a real care scenario, and finishes with an assessment. If a question is answered incorrectly, CareStream gives a short follow-up lesson and a fresh question to close the gap.` },
   ]
 
@@ -228,8 +230,8 @@ export default async function TrainingModulePage(
   const courseDescription = [
     `${m.title} training for UK care staff, delivered by CareStream. ${summary}`,
     `The module is built as ${sectionsToShow.length} short, practical sections: each teaches part of the topic, applies it to a real care scenario, then checks understanding with an assessment before moving on. If a staff member answers incorrectly they receive a short follow-up lesson and a fresh question, so knowledge gaps are always closed before completion.`,
-    `Staff complete it in the CareStream hub on any device, in over 60 languages, reading and answering in the language they are most confident in while your records stay in English. Every completion produces a dated certificate you can use as evidence for CQC inspections.`,
-    `Most services refresh it ${freqWord(effectiveFrequency(slug, m.frequency))}, with renewal reminders handled automatically. Buy one licence per staff member, with no full subscription required.`,
+    `${free ? 'Staff complete it in the CareStream hub on any device, in English on the free plan, or in 60+ languages from the Starter plan, with your records kept in English.' : 'Staff complete it in the CareStream hub on any device, in over 60 languages, reading and answering in the language they are most confident in while your records stay in English.'} Every completion produces a dated certificate you can use as evidence for CQC inspections.`,
+    `Most services refresh it ${freqWord(effectiveFrequency(slug, m.frequency))}, with renewal reminders handled automatically. ${free ? 'Free for every member of staff with a free CareStream account. No card needed.' : 'Buy one licence per staff member, with no full subscription required.'}`,
   ].join(' ')
   const courseJson = courseSchema({
     name: `${m.title} Training`,
@@ -237,8 +239,8 @@ export default async function TrainingModulePage(
     path: `/staff-training/${m.slug}`,
     buyPath: buyHref,
     teaches: courseTeaches,
-    languages: COURSE_LANGUAGE_CODES,
-    pricePence: unitPence,
+    languages: free ? ['en'] : COURSE_LANGUAGE_CODES,
+    pricePence: free ? 0 : unitPence,
     // The certified courses have a set length (60 or 90 minutes); others are estimated from sections.
     workloadMinutes: m.cpd_accredited && m.duration_minutes ? m.duration_minutes : Math.min(120, Math.max(30, sectionsToShow.length * 10)),
     ...(m.cpd_accredited ? {
@@ -326,14 +328,21 @@ export default async function TrainingModulePage(
               </ul>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link href={buyHref} className="rounded-btn bg-blue-600 px-8 py-4 text-center text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700">
-                  Buy now for your team
+                  {free ? FREE_CPD_COPY.cta : 'Buy now for your team'}
                 </Link>
                 <Link href="/demo" className="rounded-btn border-2 border-gray-200 px-8 py-4 text-center text-sm font-semibold text-neutral-dark transition-colors hover:border-teal hover:text-teal">
                   Book a demo
                 </Link>
               </div>
               <p className="mt-3 text-sm text-neutral-mid">
-                From <span className="font-bold text-neutral-dark">£{unitPrice}</span> per staff member, one-off. No subscription needed.
+                {free ? (
+                  <>
+                    <s className="text-neutral-mid/80">{STANDARD_COURSE_PRICE}</s>{' '}
+                    <span className="font-bold text-neutral-dark">{FREE_COURSE_PRICE}</span> for every member of staff with a free CareStream account. No card needed.
+                  </>
+                ) : (
+                  <>From <span className="font-bold text-neutral-dark">£{unitPrice}</span> per staff member, one-off. No subscription needed.</>
+                )}
               </p>
               {/* Directional cue to the live demo (desktop) */}
               <div className="mt-5 hidden items-center gap-3 lg:flex">
@@ -371,8 +380,8 @@ export default async function TrainingModulePage(
                 <p className="mt-3 max-w-xl text-xs leading-relaxed text-neutral-mid">
                   The same technology behind the world&apos;s best products powers CareStream, so your
                   team&apos;s {m.title.toLowerCase()} training stays accurate, always up to date with the latest
-                  guidance, and is delivered in{' '}
-                  <Link href="/languages" className="font-semibold text-teal hover:text-teal-dark">over 60 languages</Link>.
+                  guidance, and is delivered {free ? 'in English, with ' : 'in '}
+                  <Link href="/languages" className="font-semibold text-teal hover:text-teal-dark">{free ? '60+ languages from the Starter plan' : 'over 60 languages'}</Link>.
                 </p>
               </div>
             </div>
@@ -404,7 +413,8 @@ export default async function TrainingModulePage(
         title={m.title}
         href={buyHref}
         durationLabel={formatDuration(estimatedMinutes(m.group_key, m.duration_minutes))}
-        priceLabel={`£${unitPrice} per staff member`}
+        priceLabel={free ? <><s className="opacity-70">{STANDARD_COURSE_PRICE}</s> {FREE_COURSE_PRICE}</> : `£${unitPrice} per staff member`}
+        ctaLabel={free ? FREE_CPD_COPY.cta : undefined}
         imageUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : null}
       />
 
@@ -558,7 +568,7 @@ export default async function TrainingModulePage(
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {[
               { Icon: GraduationCap, title: 'Teach, then assess', body: 'Short teaching sections and a real care scenario, then an assessment that checks understanding.' },
-              { Icon: Globe,         title: 'In any language', body: 'Staff complete it in over 60 languages, while your records stay in English.' },
+              { Icon: Globe,         title: free ? 'Free in English' : 'In any language', body: free ? 'In English on the free plan. 60+ languages from the Starter plan, with your records kept in English.' : 'Staff complete it in over 60 languages, while your records stay in English.' },
               { Icon: RefreshCw,     title: 'Learn and retry', body: 'A wrong answer triggers a short follow-up lesson and a fresh question, so the gap is closed.' },
               { Icon: Calendar,      title: 'Renewals handled', body: 'Automatic reminders at 90, 30 and 7 days, with a live compliance dashboard.' },
             ].map(({ Icon, title, body }) => (
@@ -584,7 +594,7 @@ export default async function TrainingModulePage(
       <TrainingHubPreview moduleTitle={m.title} illustrationUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined} />
 
       {/* In every language — the language-toggle USP */}
-      <TrainingLanguageSection moduleTitle={m.title} illustrationUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined} lessonSnippet={summary} />
+      <TrainingLanguageSection moduleTitle={m.title} illustrationUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined} lessonSnippet={summary} free={isFreeCpd(m)} />
 
       {/* Master explainer video (appears once a video URL is configured) */}
       <TrainingVideo />

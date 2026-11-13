@@ -12,9 +12,9 @@ export type FreeBannerVariant = 'home' | 'audits' | 'gaps'
 const COPY: Record<FreeBannerVariant, { badge: string; title: string; text: string; cta: string }> = {
   home: {
     badge: 'Free to start',
-    title: 'Audits are free. Your first 5 policies are free.',
+    title: 'CPD training, audits and your first 5 policies are free.',
     text:
-      'Create a free CareStream account and run every audit template with your team. Upload your first 5 policies and screen them for regulation coverage, out of date content, consistency and CQC wording. No card needed.',
+      'Create a free CareStream account and give every member of staff our CPD certified training, including the Care Certificate and the annual refreshers. Run every audit template with your team. Upload your first 5 policies and screen them for regulation coverage, out of date content, consistency and CQC wording. No card needed.',
     cta: 'Start free',
   },
   audits: {

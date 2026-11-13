@@ -11,6 +11,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 function VerifyEmailContent() {
   const searchParams = useSearchParams()
   const token = searchParams.get('token') ?? ''
+  const course = (searchParams.get('course') ?? '').replace(/[^a-zA-Z0-9-]/g, '').slice(0, 80)
 
   const [status, setStatus] = useState<'loading' | 'success' | 'already' | 'expired' | 'error'>('loading')
   const ranRef = useRef(false)
@@ -34,7 +35,8 @@ function VerifyEmailContent() {
         }
         if (body.data?.login_token) {
           const r = await signIn('credentials', { mode: 'magic', token: body.data.login_token, redirect: false })
-          if (r?.ok) { window.location.href = '/start'; return }
+          // A free CPD sign up lands on the course they came from; everyone else goes to /start.
+          if (r?.ok) { window.location.href = course ? `/training/annual?course=${encodeURIComponent(course)}` : '/start'; return }
         }
         // Verified, but auto-login unavailable (e.g. link re-used): fall back to manual.
         setStatus(body.data?.already_verified ? 'already' : 'success')
@@ -42,7 +44,7 @@ function VerifyEmailContent() {
         setStatus('error')
       }
     })()
-  }, [token])
+  }, [token, course])
 
   if (status === 'loading') {
     return (

@@ -68,6 +68,8 @@ const RegisterSchema = z.object({
   // Free tier (dark launch): the private preview code, and a honeypot bots fill in.
   preview_code:    z.string().max(100).optional(),
   company_website: z.string().max(200).optional(),
+  // Free CPD sign up: the course page they came from, so the verify link can land on it.
+  course:          z.string().regex(/^[a-z0-9-]{1,80}$/).optional(),
 })
 
 authRouter.post('/register', async (req: Request, res: Response) => {
@@ -161,7 +163,7 @@ authRouter.post('/register', async (req: Request, res: Response) => {
 
   // Send verification email — awaited so it completes before the serverless function exits
   const webUrl = siteUrl()
-  const verificationUrl = `${webUrl}/verify-email?token=${verificationToken}`
+  const verificationUrl = `${webUrl}/verify-email?token=${verificationToken}${tier === 'free' && parsed.data.course ? `&course=${parsed.data.course}` : ''}`
   try {
     await sendVerificationEmail(email, name, verificationUrl)
   } catch (e) {

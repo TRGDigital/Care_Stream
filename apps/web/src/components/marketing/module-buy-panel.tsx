@@ -9,12 +9,13 @@ import { discountPctForQty } from '@/lib/training-commerce'
 import type { Offer } from '@/lib/offer-rules'
 import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 import { HoldPrice } from './hold-price'
+import { FREE_CPD_COPY, FREE_COURSE_PRICE, STANDARD_COURSE_PRICE } from '@/lib/free-cpd'
 
 // The buying half of a course page laid out like a shop product page: the live offer stated in
 // full beside the price ("applied automatically"), the old price struck through, the number of
 // licences the buyer RECEIVES (2 for 1 shows 2), Buy now and the basket. Prices are worked out
 // with the same rules checkout uses; Buy now carries the paid count to the buy page.
-export function ModuleBuyPanel({ slug, title, unitPence, duration, cpd = false, fresh, sfc, offerLine = true, certTick = 'Instant certificate' }: {
+export function ModuleBuyPanel({ slug, title, unitPence, duration, cpd = false, fresh, sfc, offerLine = true, certTick = 'Instant certificate', free = false }: {
   slug: string; title: string; unitPence: number
   /** Ship now (lib/ship-now.ts): the course length ("1 hour 30 minutes"), shown beside the price. */
   duration?: string
@@ -28,6 +29,8 @@ export function ModuleBuyPanel({ slug, title, unitPence, duration, cpd = false, 
   offerLine?: boolean
   /** FAQ v2 (lib/faq-v2.ts): the certificate tick. Never "instant" on a course with an observation. */
   certTick?: string
+  /** A free CPD course (lib/free-cpd.ts): old price struck through, £0.00, and "Get this course free" instead of the basket. */
+  free?: boolean
 }) {
   const offers = useOffers()
   const [paid, setPaid] = useState(1)
@@ -42,6 +45,37 @@ export function ModuleBuyPanel({ slug, title, unitPence, duration, cpd = false, 
   // figure the offer card shows (2 for 1: half; 3 for 2: two thirds; % off: the reduced price).
   const headline = offer ? licenceEffectivePence(offer, unitPence) : unitPence
   const fromQty = offer?.kind === 'percent_off' && Number(offer.params.minQty) > 1 ? Number(offer.params.minQty) : 0
+
+  if (free) {
+    const Tick = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7" /></svg>
+    return (
+      <div className="mpe-buy mbuy sn-buy">
+        <div className="mpe-price">
+          <s>{STANDARD_COURSE_PRICE}</s>
+          <b>{FREE_COURSE_PRICE}</b>
+          <span>per staff member, with a free CareStream account</span>
+        </div>
+        <div className="mrow">
+          <BuyNowLink slug={slug} free className="add" position="hero_panel" />
+          <TrainingSaveButton slug={slug} title={title} />
+        </div>
+        <p className="sn-hint">{FREE_CPD_COPY.teamNote}</p>
+        <ul className="sn-ticks">
+          {duration && <li><Tick />About {duration}</li>}
+          <li><Tick />{certTick}</li>
+          {fresh && <li><Tick />{fresh}</li>}
+        </ul>
+        {cpd && (
+          <div className="sn-cpd">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified, The CPD Certification Service" />
+            <span><b>CPD Certified course</b>Certified by The CPD Certification Service</span>
+          </div>
+        )}
+        {sfc && <p className="sn-sfc">{sfc}</p>}
+      </div>
+    )
+  }
 
   if (SHIP_NOW) {
     // The decluttered price block (Len, 10 Oct 2026), each fact once: the price + VAT, one offer

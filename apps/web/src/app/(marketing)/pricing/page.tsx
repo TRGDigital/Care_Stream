@@ -291,10 +291,11 @@ export default async function PricingPage(
             </div>
             <div className="shrink-0 text-center">
               <p className="mb-3">
-                <span className="text-3xl font-extrabold text-neutral-dark">£25.99</span>
+                <span className="text-lg font-semibold text-neutral-mid line-through">£25.99</span>{' '}
+                <span className="text-3xl font-extrabold text-neutral-dark">£0.00</span>
                 <span className="block text-xs text-neutral-mid">{s('training.priceCaption')}</span>
               </p>
-              <Link href="/register?tier=training_only" className="inline-block rounded-btn bg-teal px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-teal-dark">
+              <Link href="/register?tier=free" className="inline-block rounded-btn bg-teal px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-teal-dark">
                 {s('training.cta')}
               </Link>
             </div>

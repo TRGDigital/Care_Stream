@@ -15,10 +15,13 @@ export function TrainingLanguageSection({
   moduleTitle,
   illustrationUrl,
   lessonSnippet,
+  free = false,
 }: {
   moduleTitle: string
   illustrationUrl?: string
   lessonSnippet?: string
+  /** A free CPD course: translation starts on the Starter plan, so say so. */
+  free?: boolean
 }) {
   const [i, setI] = useState(0)
   const lang = DEMO_LANGS[i]
@@ -44,7 +47,7 @@ export function TrainingLanguageSection({
             <ul className="mb-8 space-y-3">
               {[
                 'One tap flips any lesson or question into their language, instantly.',
-                'Over 60 languages, with no setup and no separate versions to manage.',
+                free ? 'Free in English. Over 60 languages from the Starter plan, with no setup and no separate versions to manage.' : 'Over 60 languages, with no setup and no separate versions to manage.',
                 'Completions and certificates stay in English for your CQC evidence.',
               ].map((b) => (
                 <li key={b} className="flex items-start gap-3 text-neutral-dark">

@@ -1,3 +1,4 @@
+import { isFreeCpd, freeCpdHref, FREE_CPD_COPY, FREE_COURSE_PRICE, STANDARD_COURSE_PRICE } from '@/lib/free-cpd'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -74,18 +75,20 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const m = await getModule(slug)
   const title = m ? `${m.title} Training for Your Care Team | CareStream` : 'Training | CareStream'
   const description = m
-    ? `Get your team CQC-ready with CareStream ${m.title} training. One licence per staff member, completed in the hub in over 60 languages, with a certificate for your CQC evidence.`
+    ? isFreeCpd(m)
+      ? `Get your team CQC-ready with CareStream ${m.title} training. Free in English with a CareStream account, and in 60+ languages on the Starter plan, with a certificate for your CQC evidence.`
+      : `Get your team CQC-ready with CareStream ${m.title} training. One licence per staff member, completed in the hub in over 60 languages, with a certificate for your CQC evidence.`
     : 'CareStream training for UK care teams.'
   // Ad-only page — keep it out of the index so it doesn't compete with the SEO page.
   return { title, description, robots: { index: false, follow: false } }
 }
 
 // Repeated conversion CTA row: buy now (primary) + get pricing form (secondary).
-function CtaRow({ buyHref, className = '', showSecondary = true }: { buyHref: string; className?: string; showSecondary?: boolean }) {
+function CtaRow({ buyHref, className = '', showSecondary = true, free = false }: { buyHref: string; className?: string; showSecondary?: boolean; free?: boolean }) {
   return (
     <div className={`flex flex-col gap-3 sm:flex-row ${className}`}>
       <Link href={buyHref} data-fi="buy-now" className="rounded-btn bg-blue-600 px-8 py-4 text-center text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700">
-        Buy now for your team
+        {free ? FREE_CPD_COPY.cta : 'Buy now for your team'}
       </Link>
       {showSecondary && (
         <a href="#enquire" data-fi="team-pricing" className="rounded-btn border-2 border-gray-200 px-8 py-4 text-center text-sm font-semibold text-neutral-dark transition-colors hover:border-teal hover:text-teal">
@@ -108,7 +111,8 @@ export default async function GoLandingPage({
   const [m, demo, unitPence] = await Promise.all([getModule(slug), getModuleDemo(slug), getUnitPence()])
   if (!m) notFound()
 
-  const buyHref = `/buy/${encodeURIComponent(slug)}`
+  const free = isFreeCpd(m)
+  const buyHref = free ? freeCpdHref(slug) : `/buy/${encodeURIComponent(slug)}`
   const unitPrice = (unitPence / 100).toFixed(2)
   const tLc = m.title.toLowerCase()
 
@@ -136,12 +140,12 @@ export default async function GoLandingPage({
   const bullets = [
     slug === 'care-certificate' ? 'CQC-aligned, mapped to the Care Certificate framework' : 'CQC-aligned, written for UK care settings',
     'Ready made courses built for real learning, not box ticking',
-    'Completed in the hub in over 60 languages',
+    free ? 'Free in English, and in 60+ languages on the Starter plan' : 'Completed in the hub in over 60 languages',
     'A certificate for every staff member, for your CQC evidence',
   ]
 
   const stats = [
-    { value: '60+', label: 'Languages your staff can learn in' },
+    free ? { value: '60+', label: 'Languages from the Starter plan, free in English' } : { value: '60+', label: 'Languages your staff can learn in' },
     { value: '90+', label: 'CQC-aligned training modules' },
     { value: '100%', label: 'Mapped to the Care Certificate' },
     { value: '24/7', label: 'Access in the hub, any device' },
@@ -165,9 +169,9 @@ export default async function GoLandingPage({
 
   const faqs = [
     { question: `Does ${m.title} training count for CQC?`, answer: `Yes. CareStream ${m.title} training is aligned to CQC expectations and the Care Certificate framework, and every completion produces a certificate you can use as evidence.` },
-    { question: 'Can staff complete it on their phones, in their own language?', answer: 'Yes. The whole module runs in the hub on any device, in over 60 languages. Staff read and answer in the language they are most confident in, while your records stay in English.' },
-    { question: 'Do I need a full CareStream subscription?', answer: `No. You can buy ${m.title} training licences for just your team — one licence per staff member — without a full subscription. It is a simple one-off cost per staff member.` },
-    { question: 'How quickly can I roll it out?', answer: 'Straight away. Buy licences, invite your team, and they can start the module immediately. Renewal reminders are then handled automatically.' },
+    { question: 'Can staff complete it on their phones, in their own language?', answer: free ? 'The whole module runs in the hub on any device. On the free plan it is in English. 60+ languages come with the Starter plan and above, where staff read and answer in the language they are most confident in, while your records stay in English.' : 'Yes. The whole module runs in the hub on any device, in over 60 languages. Staff read and answer in the language they are most confident in, while your records stay in English.' },
+    { question: 'Do I need a full CareStream subscription?', answer: free ? `No. ${m.title} training is free for every member of staff with a free CareStream account. No card needed.` : `No. You can buy ${m.title} training licences for just your team — one licence per staff member — without a full subscription. It is a simple one-off cost per staff member.` },
+    { question: 'How quickly can I roll it out?', answer: free ? 'Straight away. Get the course free, invite your team, and they can start the module immediately. Renewal reminders are then handled automatically.' : 'Straight away. Buy licences, invite your team, and they can start the module immediately. Renewal reminders are then handled automatically.' },
   ]
 
   return (
@@ -221,7 +225,16 @@ export default async function GoLandingPage({
                   </li>
                 ))}
               </ul>
-              <CtaRow buyHref={buyHref} showSecondary={false} />
+              <CtaRow buyHref={buyHref} showSecondary={false} free={free} />
+              {free ? (
+                <div className="mt-4">
+                  <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+                    <span className="text-base text-neutral-mid line-through [font-variant-numeric:tabular-nums]">{STANDARD_COURSE_PRICE}</span>
+                    <span className="text-2xl font-extrabold text-neutral-dark [font-variant-numeric:tabular-nums]">{FREE_COURSE_PRICE}</span>
+                    <span className="text-sm text-neutral-mid">per staff member. {FREE_CPD_COPY.note}</span>
+                  </div>
+                </div>
+              ) : (
               <div className="mt-4">
                 <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
                   {promoActive && <span className="text-base text-neutral-mid line-through [font-variant-numeric:tabular-nums]">£{standardPrice}</span>}
@@ -235,6 +248,7 @@ export default async function GoLandingPage({
                   </div>
                 )}
               </div>
+              )}
               {/* Directional cue pointing across to the live demo (desktop) */}
               <div className="mt-5 hidden items-center gap-3 lg:flex">
                 <span className="text-lg font-extrabold text-teal">Try it — a real lesson &amp; question</span>
@@ -273,8 +287,8 @@ export default async function GoLandingPage({
                 <p className="mt-3 max-w-xl text-xs leading-relaxed text-neutral-mid">
                   The same technology behind the world&apos;s best products powers CareStream, so your
                   team&apos;s {tLc} training stays accurate, always up to date with the latest guidance, and is
-                  delivered in{' '}
-                  <Link href="/languages" className="font-semibold text-teal hover:text-teal-dark">over 60 languages</Link>.
+                  delivered {free ? 'in English, with ' : 'in '}
+                  <Link href="/languages" className="font-semibold text-teal hover:text-teal-dark">{free ? '60+ languages from the Starter plan' : 'over 60 languages'}</Link>.
                 </p>
               </div>
             </div>
@@ -310,7 +324,8 @@ export default async function GoLandingPage({
         title={m.title}
         href={buyHref}
         durationLabel={formatDuration(estimatedMinutes(m.group_key, m.duration_minutes))}
-        priceLabel={`£${unitPrice} per staff member`}
+        priceLabel={free ? <><s className="opacity-70">{STANDARD_COURSE_PRICE}</s> {FREE_COURSE_PRICE}</> : `£${unitPrice} per staff member`}
+        ctaLabel={free ? FREE_CPD_COPY.cta : undefined}
         imageUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : null}
         topClassName="top-0"
         className="max-lg:hidden"
@@ -371,7 +386,7 @@ export default async function GoLandingPage({
             </div>
             <div className="mt-14 flex flex-col items-center gap-5 rounded-2xl bg-hero-gradient p-8 text-center sm:flex-row sm:justify-between sm:text-left">
               <p className="text-lg font-semibold text-white">Give your whole team the full {m.title} module.</p>
-              <CtaRow buyHref={buyHref} className="flex-shrink-0 [&_a:last-child]:border-white/30 [&_a:last-child]:text-white" />
+              <CtaRow buyHref={buyHref} free={free} className="flex-shrink-0 [&_a:last-child]:border-white/30 [&_a:last-child]:text-white" />
             </div>
           </div>
         </section>
@@ -395,7 +410,7 @@ export default async function GoLandingPage({
             </div>
             <div className="mt-12 text-center">
               <Link href={buyHref} className="inline-flex items-center gap-2 rounded-btn bg-blue-600 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700">
-                Buy {m.title} training for your team
+                {free ? FREE_CPD_COPY.cta : <>Buy {m.title} training for your team</>}
               </Link>
             </div>
           </div>
@@ -421,7 +436,7 @@ export default async function GoLandingPage({
           </div>
           <div className="mt-12 text-center">
             <Link href={buyHref} className="inline-flex items-center gap-2 rounded-btn bg-blue-600 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700">
-              Buy {m.title} training for your team
+              {free ? FREE_CPD_COPY.cta : <>Buy {m.title} training for your team</>}
             </Link>
           </div>
         </div>
@@ -431,7 +446,7 @@ export default async function GoLandingPage({
       <TrainingHubPreview moduleTitle={m.title} illustrationUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined} />
 
       {/* In every language — the language-toggle USP */}
-      <TrainingLanguageSection moduleTitle={m.title} illustrationUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined} lessonSnippet={m.summary ?? undefined} />
+      <TrainingLanguageSection moduleTitle={m.title} illustrationUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined} lessonSnippet={m.summary ?? undefined} free={isFreeCpd(m)} />
 
       {/* Master explainer video (appears once a video URL is configured) */}
       <TrainingVideo />
@@ -459,7 +474,7 @@ export default async function GoLandingPage({
               </h2>
               <p className="mb-6 text-lg leading-relaxed text-neutral-mid">
                 Answer a few quick questions and we&apos;ll send a personalised plan for your team&apos;s {m.title}
-                {' '}training, within one working day. Or buy licences for your team now.
+                {' '}training, within one working day. {free ? 'Or get the course free now.' : 'Or buy licences for your team now.'}
               </p>
               <ul className="space-y-3">
                 {[
@@ -475,7 +490,7 @@ export default async function GoLandingPage({
               </ul>
               <div className="mt-8">
                 <Link href={buyHref} className="inline-flex items-center gap-2 rounded-btn bg-blue-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-700">
-                  Or buy now for your team
+                  {free ? FREE_CPD_COPY.cta : 'Or buy now for your team'}
                 </Link>
               </div>
             </div>
@@ -512,7 +527,7 @@ export default async function GoLandingPage({
         </div>
       </footer>
 
-      <GoStickyCta buyHref={buyHref} />
+      <GoStickyCta buyHref={buyHref} free={free} />
       <GoExitIntent slug={slug} moduleTitle={m.title} questions={quizQuestions} />
     </div>
   )

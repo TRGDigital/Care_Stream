@@ -11,6 +11,7 @@ import { sendStaffWelcomeEmail, sendStaffLoginLinkEmail } from '../services/emai
 import { createLoginLink } from '../lib/login-tokens'
 import { checkUserLimit, PlanLimitError } from '../lib/plan-limits'
 import { freeStaffGuard } from '../lib/free-tier'
+import { tierOf } from '../lib/tiers'
 import { agencySpend } from '../services/workforce/agencyAccess'
 import { buildStaffRecord } from '../lib/staff-record'
 import { getMyActions } from '../services/audits/action-plan'
@@ -326,6 +327,7 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
 
   const { name, email, role, job_role, specialisms, phone_number, shift_type, training_hourly_rate, first_language, second_language, comms_always_first_language, allow_language_switching, new_starter, is_agency, agency_name, agency_start, agency_end, agency_day_rate_pence } = parsed.data
   const tenantId = req.user!.tenant_id
+  const freeEnglishOnly = (await tierOf(tenantId)) === 'free'
   const auditTemplateIds = await resolveAuditTemplateIds(tenantId, role, parsed.data.audit_template_ids)
 
   try {
@@ -374,10 +376,11 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
       phone_number:    phone_number ?? null,
       shift_type:      shift_type ?? 'any',
       training_hourly_rate: training_hourly_rate ?? null,
-      first_language:  first_language ?? 'eng',
-      second_language: second_language ?? null,
+      // Translation starts on the Starter plan: a Free account's staff are English only.
+      first_language:  freeEnglishOnly ? 'eng' : (first_language ?? 'eng'),
+      second_language: freeEnglishOnly ? null : (second_language ?? null),
       comms_always_first_language: comms_always_first_language ?? true,
-      allow_language_switching: allow_language_switching ?? false,
+      allow_language_switching: freeEnglishOnly ? false : (allow_language_switching ?? false),
       is_agency:       !!is_agency,
       agency_name:     is_agency ? (agency_name ?? null) : null,
       agency_start:    is_agency && agency_start ? new Date(agency_start) : null,
@@ -555,6 +558,12 @@ usersRouter.patch('/:id', async (req: Request, res: Response) => {
   if (parsed.data.comms_always_first_language !== undefined) updateData.comms_always_first_language = parsed.data.comms_always_first_language
   if (parsed.data.allow_language_switching !== undefined) updateData.allow_language_switching = parsed.data.allow_language_switching
   if (parsed.data.can_suggest_translations !== undefined) updateData.can_suggest_translations = parsed.data.can_suggest_translations
+  // Translation starts on the Starter plan: a Free account's staff stay English only.
+  if ((await tierOf(req.user!.tenant_id)) === 'free') {
+    if (updateData.first_language !== undefined) updateData.first_language = 'eng'
+    if (updateData.second_language !== undefined) updateData.second_language = null
+    if (updateData.allow_language_switching !== undefined) updateData.allow_language_switching = false
+  }
 
   // Audit allocation: admins implicitly have all (store empty); for staff, persist the
   // validated allocation when provided (sent as [] to downgrade to plain staff).

@@ -17,6 +17,7 @@ import { STAFF_TRAINING_SLOTS } from '@/lib/page-slots/staff-training'
 import { STAFF_TRAINING_V2_SLOTS } from '@/lib/page-slots/staff-training-v2'
 import { StaffTrainingIndexV2 } from '@/components/marketing/staff-training-index-v2'
 import { isV2 } from '@/lib/v2-rollout'
+import { isFreeCpd, freeCpdHref } from '@/lib/free-cpd'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
@@ -296,7 +297,7 @@ export default async function StaffTrainingPage(
 
             {/* Interactive demo as the hero focal element */}
             {heroDemo
-              ? <TrainingDemo demo={heroDemo} buyHref="/buy/care-certificate" variant="card" />
+              ? <TrainingDemo demo={heroDemo} buyHref={isFreeCpd(catalogue.topics.find((t) => t.slug === 'care-certificate')) ? freeCpdHref('care-certificate') : '/buy/care-certificate'} variant="card" />
               : <div className="flex justify-center lg:justify-end"><TrainingDashboardMockup /></div>}
           </div>
         </div>

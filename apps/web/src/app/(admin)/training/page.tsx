@@ -25,6 +25,7 @@ import { FaceToFaceManager } from '@/components/admin/face-to-face/face-to-face-
 const SHOW_DIPLOMAS = false
 import { usePlanFeatures } from '@/lib/use-plan-features'
 import { UpgradePanel, LockChip } from '@/components/admin/upgrade-gate'
+import { FreeFeaturePanel, useIsFree } from '@/components/admin/free-tier'
 import {
   emptyQuestion, isComplete, McqQuestionEditor,
   DAY_NAMES, type Module, type Staff, type Enrollment, type Question,
@@ -2148,15 +2149,49 @@ function StaffProgressTab({ staff, enrollments, onRemind }: {
   )
 }
 
+// Free accounts get CPD training (the CPD training page), the Training Matrix and Staff Progress.
+// The other tabs open a panel that explains what they add on a paid plan.
+type TrainingTab = 'compliance' | 'modules' | 'history' | 'delivery' | 'face_to_face' | 'progress' | 'matrix'
+const FREE_LOCKED_TABS: TrainingTab[] = ['compliance', 'modules', 'history', 'delivery', 'face_to_face']
+const FREE_TAB_INFO: Record<string, { title: string; summary: string; benefits: string[]; plan?: string }> = {
+  compliance: {
+    title: 'Compliance grid',
+    summary: 'One live grid of every member of staff against every training module you have assigned, so you can see at a glance who is up to date, who is due and who has lapsed.',
+    benefits: ['Statutory and specialist training status for each person, with renewal dates and expiry warnings', 'Assign training to individuals, roles or the whole team in a few clicks', 'Pre-built and CPD course grids side by side, with the onboarding and face-to-face matrices underneath', 'Evidence ready for a CQC inspection without a spreadsheet'],
+  },
+  modules: {
+    title: 'Adhoc training modules and questions',
+    summary: 'Build your own training from your own policies. The AI writes a scenario-based lesson and a fresh set of assessment questions that staff complete in their first language.',
+    benefits: ['Lessons and questions grounded in your policies, not generic content', 'Staff learn and are tested in 60+ languages', 'Edit, lock and preview every module before it goes to staff', 'Archive and restore modules as your policies change'],
+  },
+  history: {
+    title: 'Question history',
+    summary: 'A permanent, time-stamped record of every version of every question set staff were tested on.',
+    benefits: ['Show an inspector exactly which questions were used in any period', 'Update questions with confidence, because old versions are never lost', 'Filter by module and date range'],
+  },
+  delivery: {
+    title: 'Scheduled question delivery',
+    summary: 'Keep learning going between courses: questions are sent to staff on a schedule, or triggered by events such as an incident or a return to work.',
+    benefits: ['Automatic delivery by schedule, with no chasing', 'Post-incident and return-to-work questions sent when they matter', 'Manual send for a quick team refresher'],
+  },
+  face_to_face: {
+    title: 'Face-to-face training',
+    summary: 'Record in-person sessions, mark attendance and see classroom and online training in one place.',
+    benefits: ['Attendance and renewal dates for every session', 'A combined matrix across digital and face-to-face learning', 'Training payroll report and CQC evidence pack with sign-in sheets and certificates'],
+    plan: 'Professional',
+  },
+}
+
 export default function TrainingPage() {
   const { data: session } = useSession()
   const { features } = usePlanFeatures()
   const f2fLocked = features != null && !features.has_face_to_face
+  const isFree = useIsFree()
   const trainingOnly = session?.user?.tier === 'training_only'
   const userId = session?.user?.email ?? 'guest'
   // Deep-linkable: /training?tab=modules|history|delivery|face_to_face opens
   // straight on that tab (used by CareStream Suggestions and other links).
-  const [tab,         setTab]         = useState<'compliance' | 'modules' | 'history' | 'delivery' | 'face_to_face' | 'progress' | 'matrix'>(() => {
+  const [tab,         setTab]         = useState<TrainingTab>(() => {
     if (typeof window === 'undefined') return 'compliance'
     const t = new URLSearchParams(window.location.search).get('tab')
     return (['compliance', 'modules', 'history', 'delivery', 'face_to_face', 'progress', 'matrix'] as const).find(k => k === t) ?? 'compliance'
@@ -2170,6 +2205,12 @@ export default function TrainingPage() {
   const [selectedEnrollmentId, setSelectedEnrollmentId] = useState<string | null>(null)
 
   const api = session?.accessToken ? createApiClient(session.accessToken) : null
+
+  // A free account lands on the Training Matrix (unless a link names a tab).
+  useEffect(() => {
+    if (isFree && !new URLSearchParams(window.location.search).get('tab')) setTab('matrix')
+  }, [isFree])
+  const lockedForFree = isFree && FREE_LOCKED_TABS.includes(tab)
 
   async function load() {
     if (!api) return
@@ -2278,15 +2319,12 @@ export default function TrainingPage() {
           <p className="mt-1 text-sm text-neutral-mid">Track statutory and specialist training across your team.</p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/training/annual" className="flex items-center gap-2 rounded-lg border border-teal/40 bg-teal-light/30 px-4 py-2 text-sm font-medium text-teal hover:bg-teal-light/50">
-            Annual training
-          </Link>
           {SHOW_DIPLOMAS && (
             <Link href="/training/diplomas" className="flex items-center gap-2 rounded-lg border border-teal/40 bg-teal-light/30 px-4 py-2 text-sm font-medium text-teal hover:bg-teal-light/50">
               Diplomas &amp; pathways
             </Link>
           )}
-          {tab === 'compliance' && !trainingOnly && (
+          {tab === 'compliance' && !trainingOnly && !isFree && (
             <button
               onClick={() => setShowAssign(true)}
               className="flex items-center gap-2 rounded-lg bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal/90"
@@ -2297,7 +2335,7 @@ export default function TrainingPage() {
         </div>
       </div>
 
-      {session?.accessToken && tab === 'modules' && <AiCreditsBar token={session.accessToken} />}
+      {session?.accessToken && !lockedForFree && tab === 'modules' && <AiCreditsBar token={session.accessToken} />}
 
       {/* Tab switcher */}
       <div className="mb-6 flex gap-1 rounded-lg border border-gray-100 bg-gray-50 p-1 w-fit">
@@ -2321,7 +2359,7 @@ export default function TrainingPage() {
                   : (isFtf ? 'text-teal hover:text-teal/80' : 'text-neutral-mid hover:text-neutral-dark')
               }`}
             >
-              {t.label}{isFtf && f2fLocked && <LockChip tier="Professional" />}
+              {t.label}{isFtf && f2fLocked && !isFree && <LockChip tier="Professional" />}{isFree && FREE_LOCKED_TABS.includes(t.key) && <LockChip tier="Paid" />}
             </button>
           )
         })}
@@ -2331,9 +2369,11 @@ export default function TrainingPage() {
         <div className="mb-4 rounded-card border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
 
-      {tab === 'modules'  && api && <ModulesTab api={api} modules={modules} staff={staff} enrollments={enrollments} onAssigned={load} />}
-      {tab === 'history'  && api && <HistoryTab api={api} modules={modules} />}
-      {tab === 'delivery' && api && <DeliveryTab api={api} modules={modules} staff={staff} onOpenModules={() => setTab('modules')} />}
+      {lockedForFree && FREE_TAB_INFO[tab] && <FreeFeaturePanel {...FREE_TAB_INFO[tab]} token={session?.accessToken} />}
+
+      {!lockedForFree && tab === 'modules'  && api && <ModulesTab api={api} modules={modules} staff={staff} enrollments={enrollments} onAssigned={load} />}
+      {!lockedForFree && tab === 'history'  && api && <HistoryTab api={api} modules={modules} />}
+      {!lockedForFree && tab === 'delivery' && api && <DeliveryTab api={api} modules={modules} staff={staff} onOpenModules={() => setTab('modules')} />}
       {tab === 'progress' && (
         <StaffProgressTab staff={staff} enrollments={enrollments} onRemind={async id => {
           if (!api) throw new Error('Not signed in')
@@ -2341,7 +2381,7 @@ export default function TrainingPage() {
           setEnrollments(prev => prev.map(e => (e.id === id ? { ...e, ...r } : e)))
         }} />
       )}
-      {tab === 'face_to_face' && (f2fLocked ? (
+      {!lockedForFree && tab === 'face_to_face' && (f2fLocked ? (
         <UpgradePanel
           title="Face-to-face Training"
           description="Record in-person training sessions, mark attendance, and see a combined training matrix across digital and face-to-face learning. Available on the Professional and Enterprise plans."
@@ -2355,7 +2395,7 @@ export default function TrainingPage() {
         <TrainingMatrixTab token={session.accessToken} onOpenFaceToFace={() => setTab('face_to_face')} />
       )}
 
-      {tab === 'compliance' && <>
+      {!lockedForFree && tab === 'compliance' && <>
 
       <HelpAccordion title="How Compliance Tracking works">
         <p><strong className="text-neutral-dark">What this tab does</strong> — the compliance grid gives you a live, at-a-glance view of every staff member's training status across every assigned module. Each cell shows the status for that person and module combination.</p>

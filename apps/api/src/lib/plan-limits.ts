@@ -379,7 +379,7 @@ export async function getPlanFeatures(tenantId: string): Promise<PlanFeatures> {
 }
 
 // ─── Annual-training-module allocations (monthly quota) ───────────────────────
-// One allocation = one annual (ai_generated) module assigned to one staff member.
+// One allocation = one annual (ai_generated, non-CPD) module assigned to one staff member.
 // The quota is a monthly pool: Starter 10, Professional 30, Enterprise unlimited.
 
 export async function getAnnualLicenseUsage(tenantId: string): Promise<Usage> {
@@ -387,7 +387,8 @@ export async function getAnnualLicenseUsage(tenantId: string): Promise<Usage> {
   const limit = (tenant?.plan?.monthly_annual_license_limit ?? null) as number | null
   const { start, next } = monthWindow()
   const used = await (prisma as any).trainingEnrollment.count({
-    where: { tenant_id: tenantId, created_at: { gte: start }, module: { source: 'ai_generated' } },
+    // CPD courses are free and unlimited on every plan, so they never use an allocation.
+    where: { tenant_id: tenantId, created_at: { gte: start }, module: { source: 'ai_generated', tier: { not: 'cpd' } } },
   })
   return { used, limit, remaining: limit === null ? null : Math.max(0, limit - used), resets_at: next.toISOString() }
 }

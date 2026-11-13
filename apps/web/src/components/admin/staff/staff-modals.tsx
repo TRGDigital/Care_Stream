@@ -9,6 +9,7 @@ import { useSession } from 'next-auth/react'
 import { createApiClient, type StaffContact } from '@/lib/api-client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { FreeLanguageLock, useIsFree } from '@/components/admin/free-tier'
 import { Globe, GraduationCap, ListChecks, Loader2, Mail, Pencil, Plus, X } from 'lucide-react'
 import {
   CommsLanguageToggle,
@@ -500,6 +501,7 @@ export function InviteModal({
   }
   const [allowSwitch, setAllowSwitch] = useState(false)
   const [error,     setError]     = useState('')
+  const isFree = useIsFree()
   const [loading,   setLoading]   = useState(false)
   const [onboardingNote, setOnboardingNote] = useState('')
 
@@ -729,6 +731,7 @@ export function InviteModal({
               )}
             </div>
 
+            {isFree ? <FreeLanguageLock token={token} /> : (
             <div className="rounded-lg border border-teal/20 bg-teal-light/30 p-4 space-y-3">
               <p className="text-xs font-semibold text-teal-dark">Language preferences</p>
               <p className="text-xs text-neutral-mid">Training questions and automated messages will be sent in the staff member's first language.</p>
@@ -765,6 +768,7 @@ export function InviteModal({
               <CommsLanguageToggle on={commsFirstLang} onChange={setCommsFirstLang} langName={langNameOf(form.first_language, languages)} />
               <LanguageSwitchToggle on={allowSwitch} onChange={setAllowSwitch} secondLangName={form.second_language ? langNameOf(form.second_language, languages) : null} />
             </div>
+            )}
 
             {error && <p className="text-sm text-red-600">{error}</p>}
 
@@ -852,6 +856,7 @@ export function EditModal({
   const [addingSpecialist, setAddingSpecialist] = useState(false)
   const [savingRole, setSavingRole]       = useState(false)
   const [error,   setError]   = useState('')
+  const isFree = useIsFree()
   const [loading, setLoading] = useState(false)
 
   // Persist a new position to Settings (staff_roles) and select it here.
@@ -1009,6 +1014,7 @@ export function EditModal({
           </div>
           </div>
 
+          {isFree ? <FreeLanguageLock token={token} /> : (
           <div className="rounded-lg border border-teal/20 bg-teal-light/30 p-4 space-y-3">
             <p className="text-xs font-semibold text-teal-dark">Language preferences</p>
             <p className="text-xs text-neutral-mid">Training questions and automated messages will be sent in the staff member's first language.</p>
@@ -1046,6 +1052,7 @@ export function EditModal({
             <LanguageSwitchToggle on={allowSwitch} onChange={setAllowSwitch} secondLangName={form.second_language ? langNameOf(form.second_language, languages) : null} />
             <SuggestTranslationsToggle on={canSuggest} onChange={setCanSuggest} />
           </div>
+          )}
 
           {error && <p className="text-sm text-red-600">{error}</p>}
 

@@ -3,6 +3,7 @@ import { SiteImage } from '@/components/site-image'
 import { claimSafe } from '@/lib/training-commerce'
 import { TrainingDemo, type TrainingDemoData } from './training-demo'
 import { TrainingLibraryTabs, type LibraryTopic } from './training-library-tabs'
+import { isFreeCpd, freeCpdHref } from '@/lib/free-cpd'
 import './staff-training-index-v2.css'
 import './staff-training-index-v2-extra.css'
 
@@ -136,7 +137,7 @@ export function StaffTrainingIndexV2({ s, catalogue, demo }: {
               <Link className="tbtn ghost" href="/demo"><Play /> Book a demo</Link>
             </div>
           </div>
-          {demo && <TrainingDemo demo={demo} buyHref="/buy/care-certificate" variant="theme" />}
+          {demo && <TrainingDemo demo={demo} buyHref={isFreeCpd(catalogue.topics.find(t => t.slug === 'care-certificate')) ? freeCpdHref('care-certificate') : '/buy/care-certificate'} variant="theme" />}
         </div>
       </section>
 

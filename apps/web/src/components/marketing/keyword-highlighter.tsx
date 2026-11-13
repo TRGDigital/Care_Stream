@@ -17,7 +17,7 @@ const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 type Kw = { term: string; primary: boolean; count: number }
 
-export function KeywordHighlighter({ slug, keywords }: { slug: string; keywords?: { primary: string | null; secondary: string[] } }) {
+export function KeywordHighlighter({ slug, kind = 'post', keywords }: { slug: string; kind?: 'post' | 'collection'; keywords?: { primary: string | null; secondary: string[] } }) {
   const [panel, setPanel] = useState<{ kws: Kw[]; words: number; inFirst100: boolean | null; none: boolean } | null>(null)
   const [open, setOpen] = useState(true)
 
@@ -32,9 +32,9 @@ export function KeywordHighlighter({ slug, keywords }: { slug: string; keywords?
       let secondary: string[] = keywords?.secondary ?? []
       if (!keywords) {
         try {
-          const r = await fetch(`${API_URL}/admin/blog/posts`, { headers: { Authorization: `Bearer ${token}` } })
+          const r = await fetch(`${API_URL}/admin/${kind === 'collection' ? 'collections' : 'blog/posts'}`, { headers: { Authorization: `Bearer ${token}` } })
           const j = await r.json()
-          const p = (j?.data?.posts ?? []).find((x: any) => x.slug === slug)
+          const p = (j?.data?.[kind === 'collection' ? 'collections' : 'posts'] ?? []).find((x: any) => x.slug === slug)
           primary = p?.primary_keyword ?? null
           secondary = p?.secondary_keywords ?? []
         } catch { /* leave empty */ }

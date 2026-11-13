@@ -12,6 +12,7 @@ import { getContentSlots, makeSlot } from '@/lib/page-slots'
 import { COLLECTION_V2_SLOTS } from '@/lib/page-slots/collection-v2'
 import { isV2 } from '@/lib/v2-rollout'
 import { THEME_IMAGES } from '@/lib/theme-images'
+import { KeywordHighlighter } from '@/components/marketing/keyword-highlighter'
 
 // An ecommerce-style collection page: copy, the six products it sells, deeper copy, FAQs,
 // sibling links, then the services banner. The order is the order a visitor needs it in.
@@ -110,9 +111,12 @@ async function getSiblings(slug: string): Promise<{ label: string; url: string }
   }
 }
 
-async function getCollection(slug: string): Promise<Collection | null> {
+async function getCollection(slug: string, preview?: string): Promise<Collection | null> {
   try {
-    const res = await fetch(`${API_URL}/public/collections/${slug}`, { next: { revalidate: 60 } })
+    // A signed preview link (from the platform console) reads a draft and is never cached.
+    const res = preview
+      ? await fetch(`${API_URL}/public/collections/${slug}?preview=${encodeURIComponent(preview)}`, { cache: 'no-store' })
+      : await fetch(`${API_URL}/public/collections/${slug}`, { next: { revalidate: 60 } })
     if (!res.ok) return null
     return ((await res.json())?.data?.collection ?? null) as Collection | null
   } catch {
@@ -120,10 +124,17 @@ async function getCollection(slug: string): Promise<Collection | null> {
   }
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+const previewOf = async (sp?: Promise<Record<string, string | string[] | undefined>>) => {
+  const v = (await sp)?.preview
+  return typeof v === 'string' && v ? v : undefined
+}
+
+export async function generateMetadata({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams?: Promise<Record<string, string | string[] | undefined>> }): Promise<Metadata> {
   const { slug } = await params
-  const c = await getCollection(slug)
+  const preview = await previewOf(searchParams)
+  const c = await getCollection(slug, preview)
   if (!c) return { title: 'Collection not found' }
+  if (preview) return { title: { absolute: `Preview: ${c.meta_title || c.title}` }, robots: { index: false, follow: false } }
   const title = c.meta_title || c.title
   const description = c.meta_description || ''
   const image = c.og_image_url || (await withCardImages(c)).products?.[0]?.image_url || undefined
@@ -147,7 +158,7 @@ async function CollectionPageBody(
   },
 ) {
   const { slug } = await params
-  const c = await getCollection(slug)
+  const c = await getCollection(slug, await previewOf(searchParams))
   if (!c) notFound()
 
   // A collection page IS a list, so say so. Without ItemList these read to a crawler as an
@@ -316,9 +327,16 @@ async function CollectionPageBody(
 // Home, Collections, then this collection by its real title.
 export default async function CollectionPage(props: Parameters<typeof CollectionPageBody>[0]) {
   const { slug } = await props.params
-  const c = await getCollection(slug)
+  const preview = await previewOf(props.searchParams)
+  const c = await getCollection(slug, preview)
   return (
     <>
+      {preview && (
+        <div style={{ background: '#FFE600', color: '#000', padding: '8px 16px', fontSize: 13, fontWeight: 600 }}>
+          Draft preview: only people with the link can see this, for 30 minutes. Add &amp;yellowkws to the address to highlight the keywords.
+        </div>
+      )}
+      <KeywordHighlighter slug={slug} kind="collection" />
       {c && (
         <PageBreadcrumbJsonLd trail={[
           { name: 'Collections', path: '/collections' },

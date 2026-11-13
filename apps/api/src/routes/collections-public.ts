@@ -3,6 +3,7 @@ import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { clusterByKey } from '../data/collection-clusters'
 import { shopImageUrl } from '../services/policy-shop/shopImage'
+import { verifyCollectionPreview } from '../lib/collection-preview'
 
 // Public, unauthenticated collection landing pages (ecommerce-style SEO pages).
 // Only ever returns status='published' collections. Mounted before requireAuth in
@@ -83,8 +84,12 @@ async function productsFor(kind: string, clusterKey: string) {
 
 // GET /public/collections/:slug — a single published collection, in full
 publicCollectionsRouter.get('/:slug', async (req: Request, res: Response) => {
+  // A valid signed preview link (from the platform console) may read a draft. Anything else is
+  // published only, exactly as before.
+  const slugParam = String(req.params.slug)
+  const preview = verifyCollectionPreview(req.query.preview, slugParam)
   const collection = await (prisma as any).collection.findFirst({
-    where:  { slug: String(req.params.slug), status: 'published' },
+    where:  preview ? { slug: slugParam } : { slug: slugParam, status: 'published' },
     select: {
       slug: true, title: true, meta_title: true, meta_description: true, og_image_url: true,
       intro: true, images: true, body: true, links: true, faqs: true, updated_at: true,
@@ -93,6 +98,6 @@ publicCollectionsRouter.get('/:slug', async (req: Request, res: Response) => {
   })
   if (!collection) { err(res, 'NOT_FOUND', 'Collection not found.', 404); return }
   const products = await productsFor(collection.kind, collection.cluster_key)
-  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400')
+  res.setHeader('Cache-Control', preview ? 'no-store' : 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400')
   ok(res, { collection: { ...collection, products } })
 })

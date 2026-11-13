@@ -1187,6 +1187,8 @@ export function createPlatformClient(token: string) {
       // Create or update DRAFT collections from the content pipeline (never publishes).
       importCollections: (collections: Array<Partial<Collection>>) =>
         adminFetch<{ created: Array<{ id: string; slug: string; title: string }>; updated: Array<{ id: string; slug: string; title: string }>; skipped: Array<{ slug: string; reason: string }> }>('/collections/import', token, { method: 'POST', body: JSON.stringify({ collections }) }),
+      previewLink: (id: string) =>
+        adminFetch<{ slug: string; preview: string }>(`/collections/${id}/preview-link`, token, { method: 'POST' }),
       delete: (id: string) =>
         adminFetch<{ deleted: boolean }>(`/collections/${id}`, token, { method: 'DELETE' }),
     },

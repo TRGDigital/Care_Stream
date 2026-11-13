@@ -1,3 +1,4 @@
+import { signCollectionPreview } from '../lib/collection-preview'
 import { Router, Request, Response } from 'express'
 import fs from 'fs'
 import path from 'path'
@@ -3634,6 +3635,13 @@ adminRouter.patch('/collections/:id', async (req: Request, res: Response) => {
     await submitUrlsForIndexing([`${siteUrl()}/collection/${collection.slug}`], { source: 'page' })
   }
   ok(res, { collection })
+})
+
+// POST /admin/collections/:id/preview-link  returns a 30 minute signed link for viewing a draft.
+adminRouter.post('/collections/:id/preview-link', async (req: Request, res: Response) => {
+  const c = await (prisma as any).collection.findUnique({ where: { id: req.params.id }, select: { slug: true } })
+  if (!c) { err(res, 'NOT_FOUND', 'Collection not found.', 404); return }
+  ok(res, { slug: c.slug, preview: signCollectionPreview(c.slug) })
 })
 
 adminRouter.delete('/collections/:id', async (req: Request, res: Response) => {

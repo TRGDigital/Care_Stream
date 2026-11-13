@@ -2079,6 +2079,21 @@ export default function BlogPage() {
     } finally { setImporting(false) }
   }
 
+  // Opens a draft (or published) collection through a 30 minute signed link, in a new tab. The tab is
+  // opened first, inside the click, so the browser's popup blocker does not stop it.
+  async function openCollectionPreview(c: { id: string; slug: string }, keywords: boolean) {
+    const tab = window.open('about:blank', '_blank')
+    try {
+      if (!token) throw new Error('Not signed in.')
+      const r = await createPlatformClient(token).collections.previewLink(c.id)
+      const url = `/collection/${encodeURIComponent(r.slug)}?preview=${encodeURIComponent(r.preview)}${keywords ? '&yellowkws' : ''}`
+      if (tab) tab.location.href = url; else window.location.href = url
+    } catch (err: any) {
+      tab?.close()
+      setImportMsg(`Preview failed: ${err?.message ?? 'unknown error'}`)
+    }
+  }
+
   async function deletePost(id: string) {
     if (!token || !confirm('Delete this post?')) return
     try {
@@ -2965,6 +2980,10 @@ export default function BlogPage() {
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-1">
+                        <button type="button" onClick={() => openCollectionPreview(c, false)}
+                          className="rounded-md border border-gray-200 px-2 py-1 text-xs font-semibold text-neutral-dark hover:bg-neutral-light">Preview</button>
+                        <button type="button" onClick={() => openCollectionPreview(c, true)}
+                          className="rounded-md border border-yellow-300 bg-yellow-100 px-2 py-1 text-xs font-semibold text-yellow-900 hover:bg-yellow-200">Keywords</button>
                         <button onClick={() => { setEditCollection(c); setShowCollection(false) }} className="rounded-md p-1.5 text-neutral-mid hover:bg-neutral-light hover:text-teal" title="Edit"><Pencil size={15} /></button>
                         <button onClick={() => deleteCollection(c.id, c.title)} className="rounded-md p-1.5 text-neutral-mid hover:bg-red-50 hover:text-red-600" title="Delete"><Trash2 size={15} /></button>
                       </div>

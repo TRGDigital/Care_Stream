@@ -104,7 +104,7 @@ export const TRAINING_CLUSTERS: ProductCluster[] = [
   { key: 'free-cpd-courses', label: 'Free CPD certified courses', kind: 'training',
     note: 'Six of the ten CPD certified courses, free for every member of staff. The Care Certificate leads.',
     items: ['std-care-certificate', 'std-infection-prevention-and-control', 'std-moving-and-handling-of-people',
-            'std-food-hygiene', 'std-medication-administration-and-competency', 'std-general-health-and-safety-awareness'] },
+            'std-food-hygiene', 'std-medication-administration-and-competency', 'std-coshh-control-of-substances-hazardous-to-health'] },
   { key: 'core-mandatory', label: 'Core mandatory training', kind: 'training',
     note: 'What every care worker is expected to hold before they start.',
     items: ['std-safeguarding-adults-and-children', 'std-moving-and-handling-of-people',

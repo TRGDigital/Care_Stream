@@ -1141,9 +1141,9 @@ export function createPlatformClient(token: string) {
         adminFetch<{ post: BlogPost }>(`/blog/posts/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       deletePost: (id: string) =>
         adminFetch<{ deleted: boolean }>(`/blog/posts/${id}`, token, { method: 'DELETE' }),
-      // Create DRAFT posts from the content pipeline (never publishes). Skips slugs that exist.
+      // Create DRAFT posts from the content pipeline (never publishes). Updates existing drafts, skips published.
       importPosts: (posts: Array<Partial<BlogPost>>) =>
-        adminFetch<{ created: Array<{ id: string; slug: string; title: string }>; skipped: Array<{ slug: string; reason: string }> }>('/blog/import', token, { method: 'POST', body: JSON.stringify({ posts }) }),
+        adminFetch<{ created: Array<{ id: string; slug: string; title: string }>; updated: Array<{ id: string; slug: string; title: string }>; skipped: Array<{ slug: string; reason: string }> }>('/blog/import', token, { method: 'POST', body: JSON.stringify({ posts }) }),
 
       authors: () =>
         adminFetch<{ authors: BlogAuthor[]; total: number }>('/blog/authors', token),

@@ -3449,27 +3449,36 @@ adminRouter.delete('/blog/posts/:id', async (req: Request, res: Response) => {
 })
 
 // POST /admin/blog/import  { posts: [...] }  creates DRAFT posts from the content pipeline.
-// Always status 'draft' (never published from here), skips slugs that already exist, and returns
-// what was created and skipped. Same field names as POST /admin/blog/posts.
+// Always status 'draft' (never published from here). A slug that already exists is UPDATED when that
+// post is still a draft, and skipped when it is published. Returns created, updated and skipped. Same field names as POST /admin/blog/posts.
 adminRouter.post('/blog/import', async (req: Request, res: Response) => {
   const list = Array.isArray(req.body?.posts) ? req.body.posts.slice(0, 50) : []
   if (!list.length) { err(res, 'VALIDATION_ERROR', 'posts must be a non empty array.'); return }
   const created: Array<{ id: string; slug: string; title: string }> = []
+  const updated: Array<{ id: string; slug: string; title: string }> = []
   const skipped: Array<{ slug: string; reason: string }> = []
   for (const raw of list) {
     const slug = String(raw?.slug ?? '').trim().replace(/^\/?blog\//, '').replace(/^\//, '')
     const title = String(raw?.title ?? '').trim()
     if (!slug || !title) { skipped.push({ slug: slug || '(none)', reason: 'title and slug are required' }); continue }
     const existing = await (prisma as any).blogPost.findUnique({ where: { slug } })
-    if (existing) { skipped.push({ slug, reason: 'a post with this slug already exists' }); continue }
+    if (existing && existing.status !== 'draft') { skipped.push({ slug, reason: 'already published, not touched' }); continue }
     try {
+      if (existing) {
+        const upd = await (prisma as any).blogPost.update({
+          where: { id: existing.id },
+          data: { ...buildPostData({ ...raw, slug, status: 'draft', publication_date: null, is_featured: false, use_case_slugs: existing.use_case_slugs ?? [] }) },
+        })
+        updated.push({ id: upd.id, slug: upd.slug, title: upd.title })
+        continue
+      }
       const post = await (prisma as any).blogPost.create({
         data: { ...buildPostData({ ...raw, slug, status: 'draft', publication_date: null, is_featured: false, use_case_slugs: [] }) },
       })
       created.push({ id: post.id, slug: post.slug, title: post.title })
     } catch (e: any) { skipped.push({ slug, reason: String(e?.message ?? e).slice(0, 160) }) }
   }
-  ok(res, { created, skipped })
+  ok(res, { created, updated, skipped })
 })
 
 adminRouter.post('/blog/upload-image', imageUploadMiddleware, async (req: any, res: Response) => {

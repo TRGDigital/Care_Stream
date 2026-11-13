@@ -2051,7 +2051,7 @@ export default function BlogPage() {
       const list = Array.isArray(data) ? data : Array.isArray(data?.posts) ? data.posts : []
       if (!list.length) throw new Error('The file has no posts.')
       const r = await createPlatformClient(token).blog.importPosts(list)
-      setImportMsg(`Imported ${r.created.length} draft${r.created.length === 1 ? '' : 's'}${r.skipped.length ? `; skipped ${r.skipped.length} (${r.skipped.map(s => `${s.slug}: ${s.reason}`).join('; ')})` : ''}. They are drafts and are not public.`)
+      setImportMsg(`Imported ${r.created.length} new, updated ${(r.updated ?? []).length} existing draft${(r.updated ?? []).length === 1 ? '' : 's'}${r.skipped.length ? `; skipped ${r.skipped.length} (${r.skipped.map(s => `${s.slug}: ${s.reason}`).join('; ')})` : ''}. They are drafts and are not public.`)
       const fresh = await createPlatformClient(token).blog.posts()
       setPosts(fresh.posts)
     } catch (err: any) {

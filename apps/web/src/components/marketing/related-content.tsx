@@ -7,14 +7,14 @@ import Link from 'next/link'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
-interface Item { title: string; url: string; kind: 'post' | 'collection' }
+interface Item { title: string; url: string; kind: 'post' | 'collection'; draft?: boolean }
 interface Data { cluster: { key: string; label: string; intro: string }; items: Item[]; total: number; hub_url: string | null }
 
-export async function RelatedContent({ cluster, exclude }: { cluster?: string | null; exclude: string }) {
+export async function RelatedContent({ cluster, exclude, preview }: { cluster?: string | null; exclude: string; preview?: string }) {
   if (!cluster) return null
   let data: Data | null = null
   try {
-    const res = await fetch(`${API_URL}/public/blog/cluster/${encodeURIComponent(cluster)}?exclude=${encodeURIComponent(exclude)}`, { next: { revalidate: 300 } })
+    const res = await fetch(`${API_URL}/public/blog/cluster/${encodeURIComponent(cluster)}?exclude=${encodeURIComponent(exclude)}${preview ? `&preview=${encodeURIComponent(preview)}` : ''}`, preview ? { cache: 'no-store' } : { next: { revalidate: 300 } })
     if (res.ok) data = (await res.json())?.data ?? null
   } catch { /* the block is optional */ }
   if (!data || data.items.length === 0) return null
@@ -28,7 +28,7 @@ export async function RelatedContent({ cluster, exclude }: { cluster?: string | 
           <ul className="mt-4 grid gap-x-6 gap-y-2 sm:grid-cols-2">
             {data.items.map(i => (
               <li key={i.url} className="text-sm">
-                <Link href={i.url} className="text-teal hover:underline">{i.title}</Link>
+                <Link href={i.url} className="text-teal hover:underline">{i.title}</Link>{i.draft && <span className="ml-2 rounded bg-yellow-100 px-1.5 py-0.5 text-[10px] font-semibold text-yellow-900">draft</span>}
               </li>
             ))}
             {data.hub_url && (

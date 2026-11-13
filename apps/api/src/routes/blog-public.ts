@@ -3,6 +3,7 @@ import { prisma } from '../db/client'
 import { downloadFile } from '../services/storage/s3'
 import { ok, err } from '../lib/response'
 import { clusterInfo, CLUSTER_LINK_CAP } from '../lib/topic-clusters'
+import { verifyCollectionPreview } from '../lib/collection-preview'
 import { USE_CASES, USE_CASE_POST_LIMIT, isUseCaseSlug, useCaseLabel } from '../lib/use-cases'
 
 const IMAGE_CONTENT_TYPES: Record<string, string> = {
@@ -43,27 +44,30 @@ publicBlogRouter.get('/posts', async (_req: Request, res: Response) => {
 // GET /public/blog/cluster/:cluster?exclude=slug  the related-content block for one topic cluster.
 // Never more than CLUSTER_LINK_CAP links in total: the cluster's collections first, then the newest
 // posts. When there are more pages than fit, the last slot becomes a link to the cluster hub.
-async function clusterItems(cluster: string, exclude: string) {
+async function clusterItems(cluster: string, exclude: string, includeDrafts = false) {
+  const status = includeDrafts ? { in: ['published', 'draft'] } : 'published'
   const [collections, posts] = await Promise.all([
     (prisma as any).collection.findMany({
-      where: { status: 'published', topic_cluster: cluster, slug: { not: exclude } },
-      orderBy: { updated_at: 'desc' }, select: { slug: true, title: true },
+      where: { status, topic_cluster: cluster, slug: { not: exclude } },
+      orderBy: { updated_at: 'desc' }, select: { slug: true, title: true, status: true },
     }),
     (prisma as any).blogPost.findMany({
-      where: { status: 'published', topic_cluster: cluster, slug: { not: exclude } },
-      orderBy: [{ publication_date: 'desc' }, { created_at: 'desc' }], select: { slug: true, title: true },
+      where: { status, topic_cluster: cluster, slug: { not: exclude } },
+      orderBy: [{ publication_date: 'desc' }, { created_at: 'desc' }], select: { slug: true, title: true, status: true },
     }),
   ])
   return [
-    ...collections.slice(0, 3).map((c: any) => ({ title: c.title, url: `/collection/${c.slug}`, kind: 'collection' })),
-    ...posts.map((p: any) => ({ title: p.title, url: `/blog/${p.slug}`, kind: 'post' })),
-    ...collections.slice(3).map((c: any) => ({ title: c.title, url: `/collection/${c.slug}`, kind: 'collection' })),
+    ...collections.slice(0, 3).map((c: any) => ({ title: c.title, url: `/collection/${c.slug}`, kind: 'collection', draft: c.status !== 'published' })),
+    ...posts.map((p: any) => ({ title: p.title, url: `/blog/${p.slug}`, kind: 'post', draft: p.status !== 'published' })),
+    ...collections.slice(3).map((c: any) => ({ title: c.title, url: `/collection/${c.slug}`, kind: 'collection', draft: c.status !== 'published' })),
   ]
 }
 
 publicBlogRouter.get('/cluster/:cluster', async (req: Request, res: Response) => {
   const key = String(req.params.cluster).toLowerCase().replace(/[^a-z0-9-]/g, '')
-  const all = await clusterItems(key, String(req.query.exclude ?? ''))
+  const exclude = String(req.query.exclude ?? '')
+  // A valid signed preview link for the page being viewed also lists the cluster's drafts.
+  const all = await clusterItems(key, exclude, verifyCollectionPreview(req.query.preview, exclude))
   const more = all.length > CLUSTER_LINK_CAP
   const items = more ? all.slice(0, CLUSTER_LINK_CAP - 1) : all
   res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=600')

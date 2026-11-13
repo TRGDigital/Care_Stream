@@ -185,7 +185,7 @@ async function CollectionPageBody(
           && <JsonLd data={faqPageSchema(c.faqs.filter(f => f.question && f.answer))} />}
         <CollectionPageV2 c={await withCardImages(c)} s={makeSlot(COLLECTION_V2_SLOTS, slots)}
                           siblings={await getSiblings(slug)} />
-        <RelatedContent cluster={c.topic_cluster} exclude={c.slug} />
+        <RelatedContent cluster={c.topic_cluster} exclude={c.slug} preview={await previewOf(searchParams)} />
       </>
     )
   }
@@ -289,7 +289,7 @@ async function CollectionPageBody(
       )}
 
       {faqs.length > 0 && <BlogFaqs faqs={faqs} />}
-      <RelatedContent cluster={c.topic_cluster} exclude={c.slug} />
+      <RelatedContent cluster={c.topic_cluster} exclude={c.slug} preview={await previewOf(searchParams)} />
 
       {/* ── The services banner: the one place we talk about ourselves ── */}
       <section className="bg-white py-14">

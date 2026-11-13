@@ -7,6 +7,7 @@ import { getPlatformToken, createPlatformClient, type BlogPost } from '@/lib/pla
 import { BlogPostV2 } from '@/components/marketing/blog-post-v2'
 import { KeywordHighlighter } from '@/components/marketing/keyword-highlighter'
 import { buildBlogToc } from '@/lib/blog-toc'
+import { RelatedContentPreview } from '@/components/marketing/related-content-preview'
 
 // Draft preview for the platform blog. Draft posts are not served by the public site, so this
 // page loads the post from the admin API with the platform token and shows it in the live post
@@ -40,6 +41,7 @@ export default function BlogDraftPreview() {
         <span><Link href="/platform/blog" style={{ textDecoration: 'underline' }}>Back to the platform blog</Link></span>
       </div>
       <BlogPostV2 post={post as any} related={[]} />
+      <RelatedContentPreview cluster={post.topic_cluster} exclude={post.slug} />
       <KeywordHighlighter slug={post.slug} keywords={{ primary: post.primary_keyword, secondary: post.secondary_keywords ?? [] }} />
     </div>
   )

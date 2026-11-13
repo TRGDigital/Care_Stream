@@ -50,7 +50,11 @@ export function KeywordHighlighter({ slug, kind = 'post', keywords }: { slug: st
       const root = (document.querySelector('main') ?? document.body) as HTMLElement
       const sorted = [...terms].sort((a, b) => b.term.length - a.term.length)
       const re = new RegExp('(?<![A-Za-z0-9])(' + sorted.map(t => esc(t.term)).join('|') + ')(?![A-Za-z0-9])', 'gi')
-      const counts = new Map<string, number>(terms.map(t => [t.term.toLowerCase(), 0]))
+      // Counts are taken per phrase from the page text, so overlapping phrases ("the care certificate"
+      // inside "the care certificate online") each get their own true count. The yellow marks below use
+      // the combined pattern and may show the longer match only.
+      const pageText = (root.innerText || '').replace(/\s+/g, ' ')
+      const counts = new Map<string, number>(terms.map(t => [t.term.toLowerCase(), (pageText.match(new RegExp('(?<![A-Za-z0-9])' + esc(t.term) + '(?![A-Za-z0-9])', 'gi')) ?? []).length]))
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
         acceptNode: (n) => {
           const el = n.parentElement
@@ -74,7 +78,6 @@ export function KeywordHighlighter({ slug, kind = 'post', keywords }: { slug: st
           const isPrimary = !!primary && m.toLowerCase() === primary.toLowerCase()
           mk.setAttribute('style', `background:#FFE600;color:#000;padding:0 2px;border-radius:2px;${isPrimary ? 'outline:2px solid #F59E0B;' : ''}`)
           frag.appendChild(mk)
-          counts.set(m.toLowerCase(), (counts.get(m.toLowerCase()) ?? 0) + 1)
           last = off + m.length
           return m
         })

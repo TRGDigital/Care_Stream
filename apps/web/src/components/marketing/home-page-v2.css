@@ -237,9 +237,8 @@
     padding:8px 15px 8px 9px; font-size:.87rem; font-weight:600; letter-spacing:-.01em;}
 .hpage-v2 .np .dot{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;flex:0 0 auto}
 .hpage-v2 .np .dot svg{width:13px;height:13px;color:#fff}
-.hpage-v2 .cpdn{position:absolute; z-index:2; transform:translate(-50%,-50%); display:inline-flex; align-items:center; gap:10px;
-    background:var(--ground); padding:3px 16px 3px 8px; white-space:nowrap; font-size:.87rem; font-weight:600; letter-spacing:-.01em}
-.hpage-v2 .cpdn img{height:44px; width:auto; display:block}
+.hpage-v2 .np.cpdp{padding:5px 15px 5px 9px}
+.hpage-v2 .np.cpdp img{height:34px; width:auto; display:block; flex:0 0 auto}
 .hpage-v2 .navs{position:absolute; z-index:2; transform:translateX(-50%);
     display:flex; align-items:center;}
 .hpage-v2 .navs .av{width:44px;height:44px;border-radius:50%;border:3px solid var(--ground);
@@ -365,13 +364,13 @@
   .hpage-v2 .cards{grid-template-columns:1fr}
 }
 @media (max-width:1499px){
-  .hpage-v2 .nd, .hpage-v2 .np, .hpage-v2 .navs, .hpage-v2 .cpdn, .hpage-v2 .hero-lines{display:none}
+  .hpage-v2 .nd, .hpage-v2 .np, .hpage-v2 .navs, .hpage-v2 .hero-lines{display:none}
 }
 @media (max-height:880px){
   .hpage-v2 .hero h1{font-size:clamp(2.1rem,4.2vw,3.3rem)}
   .hpage-v2 .hero{padding-top:84px}
   .hpage-v2 .navs .av{width:38px;height:38px;margin-left:-10px}
-  .hpage-v2 .cpdn{top:35px!important}
+  .hpage-v2 .np.cpdp{top:35px!important}
 }
 @media (prefers-reduced-motion:reduce){
   .hpage-v2 .ln, .hpage-v2 .jd{animation:none;opacity:.9}

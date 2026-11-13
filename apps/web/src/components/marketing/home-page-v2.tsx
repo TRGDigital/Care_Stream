@@ -167,13 +167,13 @@ export function HomePageV2({ s, showFree = false }: { s: HomeCopy; showFree?: bo
               <span className="av" key={f}><SiteImage src={`/images/home/${f}`} alt="" /></span>
             ))}
           </div>
-          {/* The CPD Certified mark exactly as supplied (lib/cpd.ts): no border, recolour or text added to the image.
-              It sits on the green line between the people and the training card, so it is a connector node:
-              no breathing animation and no rotation, which keeps the line straight through it. */}
-          <span className="cpdn" id="n-cpd" style={{ left: '64%', top: '38px' } as Css}>
+          {/* The CPD Certified mark exactly as supplied (lib/cpd.ts): the image itself is never bordered, recoloured
+              or given text. It sits in the same pill as the other nodes, ON the green line between the people and
+              the training card, so the line runs straight through it. */}
+          <span className="np cpdp" id="n-cpd" style={{ '--d': '1.8s', left: '64%', top: '38px', '--rot': '-1deg' } as Css}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified" width={48} height={44} />
-            <span>{s('hero.n.cpd')}</span>
+            <img src={CPD_CERTIFIED_LOGO} alt="CPD Certified" width={37} height={34} />
+            {s('hero.n.cpd')}
           </span>
           <div className="nd c-green" id="n-training" style={{ '--d': '2s', left: 'min(91%,calc(100% - 136px))', top: '17%', '--rot': '2deg', '--w': '252px' } as Css}>
             <div className="top">

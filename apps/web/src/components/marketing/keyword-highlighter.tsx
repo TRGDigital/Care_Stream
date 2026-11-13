@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getPlatformToken } from '@/lib/platform-api'
+import kwVolumes from '@/lib/keyword-volumes.json'
 
 // ?yellowkws on a blog post: highlights the post's target keywords in yellow and shows a small
 // panel of how many times each is used. For platform admins only:
@@ -105,10 +106,18 @@ export function KeywordHighlighter({ slug, keywords }: { slug: string; keywords?
           {panel.none ? <p style={{ margin: 0 }}>No keywords saved for this post. Add them in the post editor in the platform blog.</p> : (
             <>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ color: '#6B7280', fontSize: 11, textAlign: 'right' }}>
+                    <th style={{ textAlign: 'left', fontWeight: 600, paddingBottom: 4 }}>Keyword</th>
+                    <th style={{ fontWeight: 600, paddingBottom: 4 }} title="UK searches a month (Google Keyword Planner)">Searches/mo</th>
+                    <th style={{ fontWeight: 600, paddingBottom: 4 }}>Used</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {panel.kws.map(k => (
                     <tr key={k.term} style={{ borderBottom: '1px solid #F3F4F6' }}>
                       <td style={{ padding: '4px 0' }}><mark style={{ background: '#FFE600', padding: '0 3px', borderRadius: 2, outline: k.primary ? '2px solid #F59E0B' : 'none' }}>{k.term}</mark>{k.primary && <span style={{ marginLeft: 6, color: '#B45309', fontWeight: 700 }}>primary</span>}</td>
+                      <td style={{ padding: '4px 8px', textAlign: 'right', color: '#374151' }} title="UK searches a month, Google Keyword Planner. A dash means under 10 or no data.">{(kwVolumes.volumes as Record<string, number>)[k.term.toLowerCase()]?.toLocaleString('en-GB') ?? '\u2013'}</td>
                       <td style={{ padding: '4px 0', textAlign: 'right', fontWeight: 700, color: k.count === 0 ? '#DC2626' : '#047857' }}>{k.count}x</td>
                     </tr>
                   ))}

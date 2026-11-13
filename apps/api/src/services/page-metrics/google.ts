@@ -57,17 +57,27 @@ export async function gscQuery(startDate: string, endDate: string, dimensions: s
   return out
 }
 
-/** GA4 sessions and engagement by page path and day. */
+/** GA4 sessions and engagement by page path and day. Read in 30 day chunks with a retry on 5xx: one large
+ *  request returned a bare 502 from the Data API. */
 export async function ga4Pages(startDate: string, endDate: string): Promise<Array<{ path: string; date: string; sessions: number; engaged: number }>> {
-  const j = await post(`https://analyticsdata.googleapis.com/v1beta/properties/${GA4_PROPERTY}:runReport`, {
-    dateRanges: [{ startDate, endDate }],
-    dimensions: [{ name: 'pagePath' }, { name: 'date' }],
-    metrics: [{ name: 'sessions' }, { name: 'userEngagementDuration' }],
-    dimensionFilter: { filter: { fieldName: 'pagePath', stringFilter: { matchType: 'PARTIAL_REGEXP', value: '^/(blog|collection)/[^/?#]+/?$' } } },
-    limit: 100000,
-  })
-  return (j.rows ?? []).map((r: any) => ({
-    path: r.dimensionValues[0].value, date: r.dimensionValues[1].value,
-    sessions: Number(r.metricValues[0].value), engaged: Math.round(Number(r.metricValues[1].value)),
-  }))
+  const out: Array<{ path: string; date: string; sessions: number; engaged: number }> = []
+  const DAY = 86_400_000
+  const end = new Date(endDate + 'T00:00:00Z').getTime()
+  for (let from = new Date(startDate + 'T00:00:00Z').getTime(); from <= end; from += 30 * DAY) {
+    const to = Math.min(from + 29 * DAY, end)
+    const body = {
+      dateRanges: [{ startDate: new Date(from).toISOString().slice(0, 10), endDate: new Date(to).toISOString().slice(0, 10) }],
+      dimensions: [{ name: 'pagePath' }, { name: 'date' }],
+      metrics: [{ name: 'sessions' }, { name: 'userEngagementDuration' }],
+      dimensionFilter: { filter: { fieldName: 'pagePath', stringFilter: { matchType: 'PARTIAL_REGEXP', value: '^/(blog|collection)/[^/?#]+/?$' } } },
+      limit: 20000,
+    }
+    let j: any = null
+    for (let attempt = 0; attempt < 3 && !j; attempt++) {
+      try { j = await post(`https://analyticsdata.googleapis.com/v1beta/properties/${GA4_PROPERTY}:runReport`, body) }
+      catch (e: any) { if (attempt === 2 || !/Google API 5/.test(String(e?.message))) throw e; await new Promise(r => setTimeout(r, 1500 * (attempt + 1))) }
+    }
+    for (const r of j?.rows ?? []) out.push({ path: r.dimensionValues[0].value, date: r.dimensionValues[1].value, sessions: Number(r.metricValues[0].value), engaged: Math.round(Number(r.metricValues[1].value)) })
+  }
+  return out
 }

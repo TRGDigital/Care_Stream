@@ -101,9 +101,10 @@ export function CpdCollection({ courses, intentKey, focus = '', review, hl = '' 
   // Free CPD training (lib/free-cpd.ts): every course on this page is CPD Certified, so every one
   // is free. The ad group's headline and sub line stay unless they talk about buying or bundles.
   const free = isFreeCpd({ cpd_accredited: true })
-  const SELLS = /\b(buy|bundles?|price|prices|save|per learner)\b|£|team prices/i
+  const SELLS = /\b(buy|bundles?|price|prices|save|per learner|invoice|pay|quote|cost|60|sixty|languages?)\b|£|team prices/i
   const intent = free ? {
     ...baseIntent,
+    tag: SELLS.test(baseIntent.tag) ? 'CPD Certified' : baseIntent.tag,
     headline: SELLS.test(baseIntent.headline) ? 'Free CPD Certified mandatory training for care staff' : baseIntent.headline,
     sub: SELLS.test(baseIntent.sub)
       ? 'Ten short courses built for care settings, each with a CPD Certified certificate for every learner. Free for every member of staff with a free CareStream account. No card needed.'

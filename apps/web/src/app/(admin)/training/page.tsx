@@ -685,7 +685,7 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
     <div>
       <HelpAccordion title="How Adhoc Training Modules &amp; Questions work">
         <p><strong className="text-neutral-dark">What this tab does</strong> — build each training module your staff complete in the hub. A module can be a full scenario-based lesson (a short lesson taught through real care-home scenarios, then an assessment) or just an assessment question set. Staff take it in their first language.</p>
-        <p><strong className="text-neutral-dark">The best way to build a module</strong> — click <strong className="text-blue-700">Generate lesson &amp; questions</strong>. The AI writes a full lesson (each section teaches a point, then applies it through a real scenario and a quick check) plus a fresh assessment bank, grounded in your own policies, and reuses the matching standard module&apos;s images. Staff then play it step by step in <strong className="text-neutral-dark">My Training</strong>, exactly like Annual training. Click <strong className="text-neutral-dark">Preview</strong> to step through it yourself first.</p>
+        <p><strong className="text-neutral-dark">The best way to build a module</strong> — click <strong className="text-blue-700">Generate lesson &amp; questions</strong>. The AI writes a full lesson (each section teaches a point, then applies it through a real scenario and a quick check) plus a fresh assessment bank, grounded in your own policies, and reuses the matching standard module&apos;s images. Staff then play it step by step in <strong className="text-neutral-dark">My Training</strong>, exactly like CPD training. Click <strong className="text-neutral-dark">Preview</strong> to step through it yourself first.</p>
         <p><strong className="text-neutral-dark">Questions-only modules</strong> — if you just want an assessment with no lesson, use <strong className="text-purple-700">Questions only</strong> (or write your own question texts and use <strong className="text-purple-700">Generate answer options</strong> to fill in the A/B/C/D choices). These appear in My Training as a simple question list.</p>
         <p><strong className="text-neutral-dark">Question format</strong> — every question has four options (A, B, C, D). Click the letter circle next to an option to mark it correct (it highlights teal). A question is complete when it has a text and all four options. Incomplete questions are flagged in amber.</p>
         <p><strong className="text-neutral-dark">Saving, versions &amp; locking</strong> — click <strong className="text-neutral-dark">Save changes</strong> to save (each save is a new version in Question History). After saving a complete set, <strong className="text-neutral-dark">Lock questions</strong> records a date-stamped audit trail for CQC evidence; <strong className="text-neutral-dark">Unlock to edit</strong> reopens it.</p>
@@ -2273,7 +2273,7 @@ export default function TrainingPage() {
   }
   const aiGrids = [
     { key: 'prebuilt', title: 'Pre-built training',    ...aiGridFor(false) },
-    { key: 'cpd',      title: 'Annual training',  ...aiGridFor(true) },
+    { key: 'cpd',      title: 'CPD training',  ...aiGridFor(true) },
   ]
 
   // Summary stats

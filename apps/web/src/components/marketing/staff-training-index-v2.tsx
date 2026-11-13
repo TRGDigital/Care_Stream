@@ -117,10 +117,12 @@ function ShotCards({ s, k, from }: { s: Copy; k: string; from: number }) {
   )
 }
 
-export function StaffTrainingIndexV2({ s, catalogue, demo }: {
+export function StaffTrainingIndexV2({ s, catalogue, demo, banner }: {
   s: Copy
   catalogue: Catalogue
   demo: TrainingDemoData | null
+  /** The free to use band, shown between the hero and the problem section. */
+  banner?: React.ReactNode
 }) {
   return (
     <div className="stpage-v2">
@@ -140,6 +142,8 @@ export function StaffTrainingIndexV2({ s, catalogue, demo }: {
           {demo && <TrainingDemo demo={demo} buyHref={isFreeCpd(catalogue.topics.find(t => t.slug === 'care-certificate')) ? freeCpdHref('care-certificate') : '/buy/care-certificate'} variant="theme" />}
         </div>
       </section>
+
+      {banner}
 
       <section className="tsec">
         <div className="twrap tsec-in tnarrow">

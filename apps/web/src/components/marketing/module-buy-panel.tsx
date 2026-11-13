@@ -53,7 +53,7 @@ export function ModuleBuyPanel({ slug, title, unitPence, duration, cpd = false, 
         <div className="mpe-price">
           <s>{STANDARD_COURSE_PRICE}</s>
           <b>{FREE_COURSE_PRICE}</b>
-          <span>per staff member, with a free CareStream account</span>
+          <span>for every staff member, with a free CareStream account</span>
         </div>
         <div className="mrow">
           <BuyNowLink slug={slug} free className="add" position="hero_panel" />

@@ -19,6 +19,7 @@ import { licenceLinePence, shareTotal } from '@/lib/basket-value'
 import { reportMicro } from '@/lib/google-ads'
 import { useRemembered } from '@/lib/remembered'
 import { SHIP_NOW, sn, withVat } from '@/lib/ship-now'
+import { FREE_CPD_LIVE, FREE_CPD_COPY, STANDARD_COURSE_PRICE, FREE_COURSE_PRICE, freeCpdHref } from '@/lib/free-cpd'
 
 // The checkout design approved in the content theme, for both shops: /basket (training
 // licences) and /care-policies/checkout (written policies). They are separate pages because they
@@ -272,7 +273,7 @@ function detailsError(org: string, name: string, email: string, emailOnly = fals
 
 // ── Training ──────────────────────────────────────────────────────────────────
 
-export interface ModuleInfo { image: string | null; minutes: number | null; title?: string }
+export interface ModuleInfo { image: string | null; minutes: number | null; title?: string; /** A CPD certified course: free, so it never sits in the paid basket. */ free?: boolean }
 
 export function TrainingCheckout({ modules }: { modules: Record<string, ModuleInfo> }) {
   const { items, bundles, totalQty, gross, discount, pct, net, cart } = useCart()
@@ -285,6 +286,8 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
   const [error, setError] = useState('')
   const [mounted, setMounted] = useState(false)
   const [teamSetup, setTeamSetup] = useState(false)
+  // CPD certified courses are free now, so they are taken out of the paid basket and listed apart.
+  const [movedFree, setMovedFree] = useState<{ slug: string; title: string }[]>([])
   // Reaching checkout counts against each course in the basket, not the checkout page.
   useEffect(() => {
     setMounted(true)
@@ -297,6 +300,14 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
         cart.add({ slug, title: modules[slug]?.title ?? slug.replace(/-/g, ' ').replace(/^./, c => c.toUpperCase()), unitPence: UNIT_PENCE, qty: Math.max(1, Math.min(500, parseInt(q || '1', 10) || 1)) })
       }
       window.history.replaceState(null, '', window.location.pathname)
+    }
+    // Move free CPD courses (and the CPD bundles, which are made of them) out of the paid basket.
+    if (FREE_CPD_LIVE) {
+      const free = cart.snapshot().filter(i => i.slug.startsWith('bundle:') || modules[i.slug]?.free)
+      if (free.length) {
+        setMovedFree(free.filter(i => !i.slug.startsWith('bundle:')).map(i => ({ slug: i.slug, title: modules[i.slug]?.title ?? i.title })))
+        free.forEach(i => cart.remove(i.slug))
+      }
     }
     const lines = cart.snapshot()
     const singles = lines.filter(i => !i.slug.startsWith('bundle:')).reduce((n, i) => n + i.qty, 0)
@@ -365,11 +376,29 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
 
   // Courses saved while browsing sit below the basket: moving one more across is often what
   // tips an order into the next discount tier.
-  const savedPanel = saved.length > 0 && (
-    <div className="ckpanel cksaved">
-      <div className="ckpanel-hd"><h2>Saved for later</h2><span>{saved.length} {saved.length === 1 ? 'course' : 'courses'}</span></div>
+  const savedPaid = saved.filter(s => !modules[s.slug]?.free)
+  const freePanel = FREE_CPD_LIVE && movedFree.length > 0 && (
+    <div className="ckpanel">
+      <div className="ckpanel-hd"><h2>These courses are free</h2><span>{movedFree.length} {movedFree.length === 1 ? 'course' : 'courses'}</span></div>
+      <p style={{ margin: '0 0 12px', fontSize: 14, lineHeight: 1.5 }}>
+        CPD certified training is free for every member of staff, so there is nothing to pay for these. {FREE_CPD_COPY.teamNote}
+      </p>
       <ul className="ckitems">
-        {saved.map(s => {
+        {movedFree.map(c => (
+          <li className="ckitem" key={c.slug}>
+            <div className="ckinfo"><Link href={`/staff-training/${c.slug}`}>{c.title}</Link></div>
+            <div className="ckright"><span className="ckprice"><s className="ckwas">{STANDARD_COURSE_PRICE}</s> {FREE_COURSE_PRICE}</span></div>
+          </li>
+        ))}
+      </ul>
+      <p style={{ margin: '14px 0 0' }}><Link href={freeCpdHref(movedFree[0].slug)} className="ckfreebtn" style={{ display: 'inline-block', padding: '10px 18px', borderRadius: 8, background: 'var(--teal, #0f766e)', color: '#fff', fontWeight: 700, textDecoration: 'none' }}>Get these courses free</Link></p>
+    </div>
+  )
+  const savedPanel = savedPaid.length > 0 && (
+    <div className="ckpanel cksaved">
+      <div className="ckpanel-hd"><h2>Saved for later</h2><span>{savedPaid.length} {savedPaid.length === 1 ? 'course' : 'courses'}</span></div>
+      <ul className="ckitems">
+        {savedPaid.map(s => {
           const inBasket = items.some(i => i.slug === s.slug)
           const img = modules[s.slug]?.image
           return (
@@ -397,8 +426,8 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
   if (!mounted) return <main className="ckpage" aria-busy="true" />
 
   const empty = !any
-    ? <Empty title="Your basket is empty" text="Browse the training library and add the courses your team needs."
-             href="/staff-training" cta="Browse training" extra={savedPanel} />
+    ? <Empty title={movedFree.length ? 'Nothing to pay for' : 'Your basket is empty'} text={movedFree.length ? 'Your free CPD courses are listed below.' : 'Browse the training library and add the courses your team needs.'}
+             href="/staff-training" cta="Browse training" extra={<>{freePanel}{savedPanel}</>} />
     : null
 
   return (
@@ -569,6 +598,7 @@ export function TrainingCheckout({ modules }: { modules: Record<string, ModuleIn
                emailNote="We send the receipt and your sign-in link here."
                org={org} setOrg={setOrg} name={name} setName={setName} email={email} setEmail={setEmail} />
 
+      {freePanel}
       {savedPanel}
     </Shell>
     </>

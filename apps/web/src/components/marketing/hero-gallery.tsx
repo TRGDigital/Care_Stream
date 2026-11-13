@@ -44,7 +44,7 @@ type Question = { text: string; options: string[] } | null
 
 /** The demo lesson in English and each saved translation, switchable, as the learner sees it. */
 /** `still`: no buttons (for the thumbnail, which is itself a button). */
-export function LanguageSlide({ langs, still = false, start }: { langs: { code: string; name: string; lesson: Lesson; question: Question }[]; still?: boolean; start?: string }) {
+export function LanguageSlide({ langs, still = false, start, free = false }: { langs: { code: string; name: string; lesson: Lesson; question: Question }[]; still?: boolean; start?: string; free?: boolean }) {
   const [code, setCode] = useState((langs.find(l => l.code === start) ?? langs.find(l => l.code === 'pol') ?? langs.find(l => l.code !== 'eng') ?? langs[0])?.code)
   const cur = langs.find(l => l.code === code) ?? langs[0]
   if (!cur) return null
@@ -69,13 +69,13 @@ export function LanguageSlide({ langs, still = false, start }: { langs: { code: 
           </div>
         )}
       </div>
-      <p className="hg-foot">A real lesson from this course. Over 60 languages are available in the hub.</p>
+      <p className="hg-foot">A real lesson from this course. {free ? '60+ languages are available in the hub from the Starter plan.' : 'Over 60 languages are available in the hub.'}</p>
     </div>
   )
 }
 
 /** "Try before you buy": opens the same live lesson and question as the page's demo, in an overlay. */
-export function TryBeforeYouBuy({ slug, withActivity = false, children }: { slug: string; withActivity?: boolean; children: ReactNode }) {
+export function TryBeforeYouBuy({ slug, withActivity = false, free = false, children }: { slug: string; withActivity?: boolean; free?: boolean; children: ReactNode }) {
   const [open, setOpen] = useState(false)
   // Add to basket inside the demo opens the cart drawer: close this first so the drawer shows.
   useEffect(() => {
@@ -98,7 +98,7 @@ export function TryBeforeYouBuy({ slug, withActivity = false, children }: { slug
     <>
       <button type="button" className="hg-try" data-fi="try-demo"
               onClick={() => { setOpen(true); fi('cta', { funnel: 'training', option: slug, label: 'try-before-you-buy' }); reportMicro('try_demo', slug) }}>
-        <span aria-hidden="true">▶</span> Try before you buy <small>{withActivity ? 'a real lesson, question and activity, 3 minutes' : 'a real lesson and question, 2 minutes'}</small>
+        <span aria-hidden="true">▶</span> {free ? 'Try a lesson first' : 'Try before you buy'} <small>{withActivity ? 'a real lesson, question and activity, 3 minutes' : 'a real lesson and question, 2 minutes'}</small>
       </button>
       {open && createPortal(
         <div className="hg-overlay" onClick={e => { if (e.target === e.currentTarget) setOpen(false) }}>

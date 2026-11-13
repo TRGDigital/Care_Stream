@@ -7,9 +7,9 @@ import './free-banner.css'
 // ?free=1 for review), so it can never point at a signup that is still closed.
 // House style: no dashes in copy.
 
-export type FreeBannerVariant = 'home' | 'audits' | 'gaps'
+export type FreeBannerVariant = 'home' | 'audits' | 'gaps' | 'training'
 
-const COPY: Record<FreeBannerVariant, { badge: string; title: string; text: string; cta: string }> = {
+const COPY: Record<FreeBannerVariant, { badge: string; title: string; text: string; cta: string; href?: string }> = {
   home: {
     badge: 'Free to start',
     title: 'CPD training, audits and your first 5 policies are free.',
@@ -23,6 +23,14 @@ const COPY: Record<FreeBannerVariant, { badge: string; title: string; text: stri
     text:
       'Sign up free and run every audit template with your team. Score each section and record your findings and actions at no cost. The AI recommendations that follow an audit are part of a paid plan.',
     cta: 'Start free audits',
+  },
+  training: {
+    badge: 'Free to use',
+    title: 'CPD certified training is free for every member of staff.',
+    text:
+      'Give your whole team the Care Certificate and the annual refreshers at no cost. Create a free CareStream account, assign the courses, and track who has finished in your training matrix. Certificates are included and your access does not expire. No card needed.',
+    cta: 'Get free training',
+    href: '/register?tier=free&source=cpd',
   },
   gaps: {
     badge: 'First 5 policies free',
@@ -44,7 +52,7 @@ export function FreeBanner({ variant }: { variant: FreeBannerVariant }) {
           <p className="freeband-text">{c.text}</p>
         </div>
         <div className="freeband-actions">
-          <Link className="freeband-btn freeband-btn-solid" href="/register?tier=free">{c.cta}</Link>
+          <Link className="freeband-btn freeband-btn-solid" href={c.href ?? '/register?tier=free'}>{c.cta}</Link>
           <Link className="freeband-btn freeband-btn-ghost" href="/pricing">See pricing</Link>
         </div>
       </div>

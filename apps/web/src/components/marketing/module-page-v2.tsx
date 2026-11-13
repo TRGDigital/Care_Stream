@@ -295,7 +295,16 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
   const est = estimatedMinutes(m.group_key, m.duration_minutes)
   const addLabel = { slug: m.slug, title: m.title, unitPence }
   const cro = COURSE_CRO[m.slug] ?? {}
-  const it = intentKey ? cro.intents?.[intentKey] : undefined
+  const itRaw = intentKey ? cro.intents?.[intentKey] : undefined
+  // A free CPD course (lib/free-cpd.ts): an ad group version that talks about buying, prices, licences,
+  // invoices or quotes says it is free instead. Versions about languages or settings are left as written.
+  const PURCHASE = /\b(buy|buying|bought|price|prices|pricing|cost|costs|invoice|quote|licen[cs]es?|pay|paying|discount|discounts|subscription|save|bundles?|vat|per learner|per person|per member of staff)\b|£|\{from\}|\{price\}/i
+  const it = free && itRaw ? {
+    ...itRaw,
+    tag: PURCHASE.test(itRaw.tag) ? 'CPD Certified' : itRaw.tag,
+    headline: PURCHASE.test(itRaw.headline) ? `${m.title} training for care staff, free` : itRaw.headline,
+    sub: PURCHASE.test(itRaw.sub) ? FREE_CPD_COPY.teamNote : itRaw.sub,
+  } : itRaw
   const lowestPence = Math.round(unitPence * (1 - Math.max(...DISCOUNT_TIERS.map(t => t.pct)) / 100))
   // FAQ v2 (lib/faq-v2.ts): the Care Certificate is repeated every year (Len, 12 Oct 2026), and on
   // a course with an observation the certificate is issued once the manager signs it off.
@@ -330,9 +339,9 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
   const teamPricing = (first?: boolean) => (
             <div className={first ? 'mpe-team lf-first lf-pf' : 'mpe-team'} id={FAQ_V2 ? 'team-price' : undefined}
                  {...(first ? lf('price-table', 'team prices under the headline on phones') : {})}>
-              <p className="mpe-promise-eyebrow">Team pricing</p>
+              <p className="mpe-promise-eyebrow">{free ? 'For your team' : 'Team pricing'}</p>
               {free ? (
-                <p className="mpe-team-note"><s>{STANDARD_COURSE_PRICE}</s> <b>{FREE_COURSE_PRICE}</b> per staff member. It is free for every member of staff with a free CareStream account. No card needed.</p>
+                <p className="mpe-team-note"><s>{STANDARD_COURSE_PRICE}</s> <b>{FREE_COURSE_PRICE}</b> for every member of staff. It is free with a CareStream account, in English, and no card is needed. 60+ languages start on the Starter plan.</p>
               ) : <>
               <table>
                 <tbody>
@@ -390,7 +399,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
         </>
       ),
     }] : []),
-    ...(langs.length > 1 ? [{ key: 'language', label: 'In their language', thumb: <Mini><LanguageSlide langs={langs} still /></Mini>, body: <LanguageSlide langs={langs} start={it?.lang} /> }] : []),
+    ...(langs.length > 1 ? [{ key: 'language', label: 'In their language', thumb: <Mini><LanguageSlide langs={langs} still /></Mini>, body: <LanguageSlide langs={langs} start={it?.lang} free={free} /> }] : []),
     { key: 'certificate', label: 'The certificate', thumb: <Mini><div className="hg-cert"><SampleCertificate m={faqModule} /></div></Mini>, body: <div className="hg-cert"><SampleCertificate m={faqModule} /></div> },
     {
       key: 'dashboard', label: 'Your dashboard', thumb: <Mini>{dashboard}</Mini>,
@@ -424,7 +433,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
           <span className="who">
             <b>{m.title}</b>
             <span className="meta">
-              <span className="t"><Clock /> {est < 60 ? `~${est} min` : durationText(est)} to complete</span><i>·</i><span className="t">{free ? <><s>{STANDARD_COURSE_PRICE}</s> {FREE_COURSE_PRICE}</> : <>{price}{SHIP_NOW && <span {...sn('vat', 'VAT')}> + VAT</span>}</>} per staff member</span>
+              <span className="t"><Clock /> {est < 60 ? `~${est} min` : durationText(est)} to complete</span><i>·</i><span className="t">{free ? <><s>{STANDARD_COURSE_PRICE}</s> {FREE_COURSE_PRICE}</> : <>{price}{SHIP_NOW && <span {...sn('vat', 'VAT')}> + VAT</span>}</>}{free ? ' for every staff member' : ' per staff member'}</span>
             </span>
           </span>
           {!free && <OfferBarChip slug={m.slug} />}
@@ -439,9 +448,10 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
       {/* Funnel Insights reports each ad group's version of the page as a variant. */}
       {it && <meta name="fi-variant" content={intentKey} />}
       <ScrollSequence root=".mpage-v2 .mpe-in" />
-      <ExitQuestion funnel="training" product={m.slug} />
-      <CaptureOverlay funnel="training" product={m.slug} title={m.title} image={hero} />
-      <SecondPageOffer funnel="training" product={m.slug} title={m.title} />
+      {/* Free CPD course: no buying to ask about and no offer to apply, so the buyer questions and offer overlays stay off. */}
+      {!free && <ExitQuestion funnel="training" product={m.slug} />}
+      {!free && <CaptureOverlay funnel="training" product={m.slug} title={m.title} image={hero} />}
+      {!free && <SecondPageOffer funnel="training" product={m.slug} title={m.title} />}
       {!free && <BuyDrawer slug={m.slug} moduleName={m.title} unitPence={unitPence}
                  cpd={m.cpd_accredited ? { sections: sections.length, duration: durationText(est) } : null} />}
       <section className="mhero mpe">
@@ -620,7 +630,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
             {t1b && !free && <Test1OfferLine slug={m.slug} />}
             {cro.benefits && (
               <ul className="mpe-benefits">
-                {cro.benefits.map(b => <li key={b}><Tick />{b}</li>)}
+                {cro.benefits.map(b => <li key={b}><Tick />{free && b.startsWith('Taken in your staff’s own language') ? 'Free in English, 60+ languages from the Starter plan' : b}</li>)}
               </ul>
             )}
             {(REVIEWS[0]?.courses?.[m.slug] ?? REVIEWS[0]?.short) && (
@@ -632,7 +642,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
 
             {it?.pricingFirst && teamPricing(true)}
             {demo && (
-              <TryBeforeYouBuy slug={m.slug} withActivity={!!demo.activity}>
+              <TryBeforeYouBuy slug={m.slug} withActivity={!!demo.activity} free={free}>
                 <TrainingDemo demo={demo} buyHref={buyHref} variant="theme" place="module" />
               </TryBeforeYouBuy>
             )}
@@ -647,10 +657,10 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
                               ? `Covers the knowledge for all ${sections.length || 16} Care Certificate standards set by Skills for Care, Skills for Health and NHS England, in the same order, one standard at a time.`
                               : undefined} />
             {m.slug === 'care-certificate' && (
-              <p className="lf-forself lf-afterbuy" {...lf('for-self', 'who buys it')}>{free ? 'Doing it for yourself? Your employer allocates the course and signs off your observation.' : 'Buying for yourself? Your employer allocates the licence and signs off your observation.'}</p>
+              <p className="lf-forself lf-afterbuy" {...lf('for-self', 'who buys it')}>{free ? 'Doing it for yourself? Your employer assigns the course to you and signs off your observation.' : 'Buying for yourself? Your employer allocates the licence and signs off your observation.'}</p>
             )}
 
-            <PaymentLogos />
+            {!free && <PaymentLogos />}
 
             {faqV2 && <FaqV2 items={faqV2} slug={m.slug} />}
 
@@ -870,7 +880,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
           </p>
           <div className="mgrid4" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
             <div>
-              <Mark /><b>{free ? 'Get it and allocate' : 'Buy and allocate'}</b>
+              <Mark /><b>{free ? 'Get it and assign it' : 'Buy and allocate'}</b>
               <p>Assign {m.title} to each staff member in seconds. No course builder and no setup for each person.</p>
             </div>
             <div>
@@ -1068,7 +1078,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
       <section className="tend">
         <div className="mwrap tend-in">
           <h2>Give your team {lower} training that actually sticks.</h2>
-          <p>{free ? 'Get it free, allocate it in seconds, and let the evidence build itself.' : 'Buy your licences, allocate them in seconds, and let the evidence build itself.'}</p>
+          <p>{free ? 'Get it free, assign it to your team in seconds, and let the evidence build itself.' : 'Buy your licences, allocate them in seconds, and let the evidence build itself.'}</p>
           <div className="row">
             <BuyNowLink slug={m.slug} free={free} className="tbtn solid" label={`Add to basket · ${price}`} position="closing_section" price={price} />
             <Link className="tbtn ghost" href="/demo">Book a demo</Link>
@@ -1101,7 +1111,7 @@ export function ModulePageV2({ module: m, demo, related, unitPence, apiUrl, inte
               <tbody>
                 {COMPARE.map(([label, a, b, c]) => (
                   <tr key={label}>
-                    <td className="f">{free && label === 'Taken in any of sixty plus languages' ? 'Taken in sixty plus languages, from the Starter plan' : label}</td>
+                    <td className="f">{free ? (label === 'Taken in any of sixty plus languages' ? 'Taken in sixty plus languages, from the Starter plan' : label.startsWith('Try a real lesson') ? 'Try a real lesson and a real question first' : label.startsWith('Bought one module') ? 'Taken one module at a time, with no annual contract' : label) : label}</td>
                     <td className="us"><CompareMark mark={a} /></td>
                     <td><CompareMark mark={b} /></td>
                     <td><CompareMark mark={c} /></td>

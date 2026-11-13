@@ -111,7 +111,7 @@ export function Test1StickyBar({ slug, unitPence, anchor, free = false }: { slug
   return (
     <div ref={ref} className={`t1bar${on ? ' on' : ''}`} style={lift ? { bottom: lift } : undefined} aria-hidden={!on}>
       <div className="t1bar-price">
-        {free ? <><s>{STANDARD_COURSE_PRICE}</s><b>{FREE_COURSE_PRICE}</b><span>per staff member</span></> : <>
+        {free ? <><s>{STANDARD_COURSE_PRICE}</s><b>{FREE_COURSE_PRICE}</b><span>for every staff member</span></> : <>
         {headline < unitPence && <s>{money2(unitPence)}</s>}
         <b>{money2(headline)}</b>
         {SHIP_NOW && <strong className="sn-plusvat" {...sn('vat', 'VAT')}>+ VAT</strong>}

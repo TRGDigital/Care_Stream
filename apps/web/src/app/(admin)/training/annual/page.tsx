@@ -27,7 +27,7 @@ export default function AnnualTrainingPage() {
   const [error,   setError]   = useState('')
   const [helpOpen, setHelpOpen] = useState(false)
   const [view,    setView]    = useState<{ mode: 'list' } | { mode: 'review'; id: string } | { mode: 'assign'; id: string; name: string } | { mode: 'view'; id: string; name: string }>({ mode: 'list' })
-  const [topicView,     setTopicView]     = useState<'live' | 'archived'>('live')
+  const [topicView,     setTopicView]     = useState<'live' | 'soon' | 'archived'>('live')
   const [archivingTopic, setArchivingTopic] = useState<string | null>(null)
   const [sheet, setSheet] = useState<null | { kind: 'summary' | 'practical'; module: any }>(null)
   const [sheetLoading, setSheetLoading] = useState<string | null>(null)
@@ -74,25 +74,34 @@ export default function AnnualTrainingPage() {
   if (view.mode === 'assign' && api) return <AssignModule api={api} moduleId={view.id} moduleName={view.name} onBack={() => setView({ mode: 'list' })} />
   if (view.mode === 'view'   && api) return <ViewStandardModule api={api} id={view.id} name={view.name} onBack={() => setView({ mode: 'list' })} />
 
-  const liveCount     = topics.filter(t => !t.archived).length
+  // Live = a course you can assign today (published CPD course, or your own copy). Coming soon =
+  // topics whose course is not published yet. Archived = hidden by you.
+  const isLive        = (t: any) => !!(t.standard_module || t.module)
+  const liveCount     = topics.filter(t => !t.archived &&  isLive(t)).length
+  const soonCount     = topics.filter(t => !t.archived && !isLive(t)).length
   const archivedCount = topics.filter(t =>  t.archived).length
-  const inView = (t: any) => topicView === 'archived' ? !!t.archived : !t.archived
-  const byGroup = Object.keys(groups).map(g => ({ key: g, label: groups[g], items: topics.filter(t => t.group_key === g && inView(t)) })).filter(g => g.items.length)
+  const inView = (t: any) => topicView === 'archived' ? !!t.archived : topicView === 'soon' ? (!t.archived && !isLive(t)) : (!t.archived && isLive(t))
+  // Live: every available CPD course together in one list, CPD Certified first. The other two tabs keep the subject groups.
+  const liveItems = topics.filter(inView).sort((a, b) => Number(!!b.standard_module?.cpd_accredited) - Number(!!a.standard_module?.cpd_accredited) || String(a.title).localeCompare(String(b.title)))
+  const byGroup = topicView === 'live'
+    ? (liveItems.length ? [{ key: 'cpd_all', label: 'All CPD courses', items: liveItems }] : [])
+    : Object.keys(groups).map(g => ({ key: g, label: groups[g], items: topics.filter(t => t.group_key === g && inView(t)) })).filter(g => g.items.length)
   const byGroupEmpty = byGroup.length === 0
 
   return (
     <div>
       <Link href="/training" className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ArrowLeft size={14} /> Training</Link>
-      <h1 className="text-2xl font-bold text-neutral-dark">Annual training</h1>
-      <p className="mb-4 mt-1 max-w-3xl text-sm text-neutral-mid">
-        Deepened courses your staff complete in the hub, in their first language — richer lessons, interactive elements and a fuller assessment than the pre-built library, built for CPD accreditation. Each shows its certification status; the <strong>CPD Certified</strong> badge appears on a course (and its certificate) once the CPD Certification Service has certified it.
+      <h1 className="text-2xl font-bold text-neutral-dark">CPD training</h1>
+      <p className="mb-2 mt-1 inline-flex items-center gap-1.5 rounded-full bg-teal/10 px-2.5 py-0.5 text-xs font-semibold text-teal">Free for every member of your team, on every plan</p>
+      <p className="mb-4 max-w-3xl text-sm text-neutral-mid">
+        Deepened courses your staff complete in the hub (in their first language on paid plans) — richer lessons, interactive elements and a fuller assessment than the pre-built library, built for CPD accreditation. Each shows its certification status; the <strong>CPD Certified</strong> badge appears on a course (and its certificate) once the CPD Certification Service has certified it.
       </p>
 
       {/* How this works — explainer accordion */}
       <div className="mb-6 overflow-hidden rounded-card border border-teal/30 bg-teal-light/10">
         <button onClick={() => setHelpOpen(o => !o)} className="flex w-full items-center gap-2.5 px-4 py-3 text-left hover:bg-teal-light/20">
           <Info size={16} className="shrink-0 text-teal" />
-          <span className="flex-1 text-sm font-semibold text-neutral-dark">How annual training works</span>
+          <span className="flex-1 text-sm font-semibold text-neutral-dark">How CPD training works</span>
           {helpOpen ? <ChevronUp size={16} className="text-teal" /> : <ChevronDown size={16} className="text-teal" />}
         </button>
         {helpOpen && (
@@ -105,7 +114,7 @@ export default function AnnualTrainingPage() {
               </ul>
             </div>
             <p>A topic shows <span className="rounded-full bg-teal/10 px-1.5 py-0.5 text-xs font-medium text-teal">Standard available — free</span> when its ready-made module has been published. Modules marked <span className="rounded-full bg-violet-50 px-1.5 py-0.5 text-xs font-semibold text-violet-700">CPD Certified</span> have been certified by The CPD Certification Service — their content is fixed, and completing them earns CPD hours on the certificate.</p>
-            <p><strong className="text-neutral-dark">Live &amp; Archived</strong> — the <strong className="text-neutral-dark">Live / Archived</strong> toggle lets you keep only the topics relevant to your service in view. Click the <span className="inline-flex items-center gap-1 align-middle"><Archive size={13} /></span> archive icon on any topic to tuck it away. Archiving is per service, it only affects your list, never the shared catalogue or other services, and any modules you&apos;ve already generated or assigned are untouched. Switch to <strong className="text-neutral-dark">Archived</strong> and click <span className="inline-flex items-center gap-1 align-middle"><RotateCcw size={13} /> Restore</span> to bring a topic back into Live whenever you need it.</p>
+            <p><strong className="text-neutral-dark">Live, Coming soon &amp; Archived</strong> — the <strong className="text-neutral-dark">Live / Coming soon / Archived</strong> toggle lets you keep only the topics relevant to your service in view. Click the <span className="inline-flex items-center gap-1 align-middle"><Archive size={13} /></span> archive icon on any topic to tuck it away. Archiving is per service, it only affects your list, never the shared catalogue or other services, and any modules you&apos;ve already generated or assigned are untouched. Switch to <strong className="text-neutral-dark">Archived</strong> and click <span className="inline-flex items-center gap-1 align-middle"><RotateCcw size={13} /> Restore</span> to bring a topic back into Live whenever you need it.</p>
             <p className="flex items-start gap-2 text-xs"><ShieldAlert size={14} className="mt-0.5 shrink-0 text-amber-500" /><span>Topics marked <strong>&ldquo;practical also required&rdquo;</strong> (e.g. Moving &amp; Handling, Medication) — the module is the knowledge part only; record the observed/practical assessment on the staff record.</span></p>
           </div>
         )}
@@ -114,7 +123,7 @@ export default function AnnualTrainingPage() {
       {/* Live / Archived — keep only the topics relevant to this service live, archive the rest. */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5 text-sm font-medium">
-          {([['live', 'Live', liveCount], ['archived', 'Archived', archivedCount]] as const).map(([key, label, count]) => (
+          {([['live', 'Live', liveCount], ['soon', 'Coming soon', soonCount], ['archived', 'Archived', archivedCount]] as const).map(([key, label, count]) => (
             <button
               key={key}
               onClick={() => setTopicView(key)}
@@ -129,8 +138,10 @@ export default function AnnualTrainingPage() {
         </div>
         <p className="text-xs text-neutral-mid">
           {topicView === 'live'
-            ? 'Archive topics your service doesn’t need to keep this list focused. Archived topics stay out of the way and can be restored anytime.'
-            : 'These topics are hidden from your Annual list. Restore any to move it back into Live.'}
+            ? 'Every CPD course you can assign today, in one list. Archive any your service doesn’t need; archived courses can be restored anytime.'
+            : topicView === 'soon'
+              ? 'Courses we are still building. They move to Live as soon as they are published.'
+              : 'These topics are hidden from your CPD list. Restore any to move it back.'}
         </p>
       </div>
 
@@ -145,6 +156,7 @@ export default function AnnualTrainingPage() {
         <div className="rounded-card border border-dashed border-gray-200 bg-white p-10 text-center text-sm text-neutral-mid">
           {topicView === 'archived'
             ? 'No archived topics. Archive a topic from the Live tab to hide it from this list without losing it.'
+            : topicView === 'soon' ? 'Nothing coming soon: every topic has a live course.'
             : archivedCount > 0 ? 'All topics are archived. Switch to Archived to restore any.' : 'No training topics found.'}
         </div>
       )}
@@ -316,7 +328,7 @@ function ReviewModule({ api, id, onBack, onAssign }: { api: ReturnType<typeof cr
 
   return (
     <div className="mx-auto max-w-3xl pb-16">
-      <button onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> Annual training</button>
+      <button onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> CPD training</button>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${m.approved ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}`}>{m.approved ? 'Published' : 'Draft'}</span>
@@ -500,7 +512,7 @@ function AssignModule({ api, moduleId, moduleName, onBack }: { api: ReturnType<t
 
   return (
     <div className="mx-auto max-w-2xl pb-16">
-      <button onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> Annual training</button>
+      <button onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> CPD training</button>
       <h1 className="text-xl font-bold text-neutral-dark">Assign: {moduleName}</h1>
       <p className="mb-4 mt-1 text-sm text-neutral-mid">Pick staff individually, or tap a role to select everyone in it.</p>
 
@@ -546,7 +558,7 @@ function ViewStandardModule({ api, id, name, onBack }: { api: ReturnType<typeof 
   if (loading) {
     return (
       <div className="mx-auto max-w-3xl">
-        <button onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> Annual training</button>
+        <button onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> CPD training</button>
         <div className="space-y-4">{[1, 2].map(i => <div key={i} className="h-24 animate-pulse rounded-card bg-gray-100" />)}</div>
       </div>
     )
@@ -554,7 +566,7 @@ function ViewStandardModule({ api, id, name, onBack }: { api: ReturnType<typeof 
   if (error || !m) {
     return (
       <div className="mx-auto max-w-3xl">
-        <button onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> Annual training</button>
+        <button onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ChevronLeft size={14} /> CPD training</button>
         <div className="rounded-card border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error || 'Module not found'}</div>
       </div>
     )

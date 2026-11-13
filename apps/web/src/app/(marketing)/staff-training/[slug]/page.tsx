@@ -147,7 +147,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const m = await getModule(slug)
   if (!m) return { title: 'Staff Training | CareStreamAI' }
   // Module-derived fallback; overridden by the Pages tab (site_pages) when set.
-  const title = `${m.title} Training for Care Staff | CareStreamAI`
+  const title = isFreeCpd(m) ? `${m.title} Training for Care Staff, Free | CareStreamAI` : `${m.title} Training for Care Staff | CareStreamAI`
   const description = careSetting(m.summary ?? m.description) || `${m.title} training for UK care staff: what it covers, who needs it, how often, and how CareStream delivers it${isFreeCpd(m) ? ', free in English' : ' in any language'}.`
   // Reuse the page's hero illustration as the social sharing image.
   const image = m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined
@@ -591,7 +591,7 @@ export default async function TrainingModulePage(
       </section>
 
       {/* How your team gets trained — hub delivery preview */}
-      <TrainingHubPreview moduleTitle={m.title} illustrationUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined} />
+      <TrainingHubPreview moduleTitle={m.title} illustrationUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined} free={free} />
 
       {/* In every language — the language-toggle USP */}
       <TrainingLanguageSection moduleTitle={m.title} illustrationUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined} lessonSnippet={summary} free={isFreeCpd(m)} />
@@ -615,7 +615,7 @@ export default async function TrainingModulePage(
         <section className="bg-neutral-light py-16">
           <div className="mx-auto max-w-content px-6">
             <h2 className="mb-2 text-2xl font-extrabold text-neutral-dark md:text-3xl">Related training modules</h2>
-            <p className="mb-8 max-w-2xl text-neutral-mid">More mandatory and role-specific training CareStream delivers to your team, in the hub, in any language. Add any of these to your basket.</p>
+            <p className="mb-8 max-w-2xl text-neutral-mid">More mandatory and role-specific training CareStream delivers to your team, in the hub, {free ? 'free in English for the CPD Certified courses. Add any others to your basket.' : 'in any language. Add any of these to your basket.'}</p>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {related.map((r) => <ModuleCard key={r.slug} t={r} />)}
             </div>
@@ -630,7 +630,7 @@ export default async function TrainingModulePage(
 
       <PageCta
         heading={`Give your team ${m.title.toLowerCase()} training that actually sticks.`}
-        sub="See how CareStream delivers your mandatory training in the hub, in any language."
+        sub={free ? 'See how CareStream delivers your mandatory training in the hub, in English, with 60+ languages from the Starter plan.' : 'See how CareStream delivers your mandatory training in the hub, in any language.'}
         primary={{ label: 'Book a demo', href: '/demo' }}
         secondary={{ label: 'See all training', href: '/staff-training' }}
       />

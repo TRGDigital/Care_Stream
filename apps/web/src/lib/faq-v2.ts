@@ -70,6 +70,8 @@ export interface FaqV2Item {
   offer?: boolean
   /** Added by the landing fixes (lib/landing-fixes.ts), for the ?lfdemo=1 review highlight. */
   added?: boolean
+  /** A free CPD course (lib/free-cpd.ts): the buy wording around the answer is free wording. */
+  free?: boolean
 }
 
 export interface FaqV2Module {
@@ -264,11 +266,12 @@ export function faqV2Items(m: FaqV2Module, opts: { unitPence: number; hasLesson:
       .filter(i => i.id !== 'invoice' && i.id !== 'refund')
       .map(i => {
         if (i.id === 'price') {
-          return { ...i, offer: false, lead: 'It is free.', body: `Every member of staff gets it free with a free CareStream account. ${FREE_CPD_COPY.teamNote}` }
+          return { ...i, free: true, offer: false, lead: 'It is free.', body: `Every member of staff gets it free with a free CareStream account. ${FREE_CPD_COPY.teamNote}` }
         }
         if (i.id === 'languages') {
           return {
             ...i,
+            free: true,
             lead: 'Free in English, and in 60+ languages on the Starter plan.',
             body: `On the free plan the course is in English. From the Starter plan, one tap turns any ${cc ? 'standard' : 'lesson'} or question into their language, so they understand it, not just pass it. `
               + 'Your records and certificates stay in English, ready for your evidence. Try the language buttons in the real lesson.',
@@ -276,8 +279,10 @@ export function faqV2Items(m: FaqV2Module, opts: { unitPence: number; hasLesson:
         }
         return {
           ...i,
-          q: i.id === 'pay' ? 'What exactly do I get?' : i.q,
+          free: true,
+          q: i.id === 'pay' ? 'What exactly do I get?' : i.id === 'try' ? 'Can I try it before I start?' : i.q,
           body: i.body
+            .replace('Straight after payment, add your staff', 'Straight after you sign up, add your staff')
             .replace('Each licence gives one member of staff', 'A free CareStream account gives each member of staff')
             .replace('Licences last 12 months, with no subscription.', 'It is free, with no card needed.')
             .replace('Your employer buys a licence and allocates it to you.', 'Your employer sets you up with a free CareStream account and allocates it to you.')
@@ -395,7 +400,7 @@ export function faqV2BottomItems(m: FaqV2Module, opts: { hasLesson: boolean }): 
   const pass = m.pass_mark ?? 80
   const tryOr = (c: FaqCta): FaqCta => (c === 'try' && !opts.hasLesson ? 'price' : c)
   const free = isFreeCpd(m)
-  return [
+  const items: FaqV2Item[] = [
     {
       id: 'fail', q: 'What if someone fails the assessment?', cta: tryOr('try'),
       lead: 'They can retake it.',
@@ -404,8 +409,10 @@ export function faqV2BottomItems(m: FaqV2Module, opts: { hasLesson: boolean }): 
     },
     {
       id: 'leaver', q: 'What if someone leaves before finishing?', cta: 'price',
-      lead: 'You can move their licence to another member of staff.',
-      body: 'So a licence is not wasted when someone leaves part way through. '
+      lead: free ? 'You can move their access to another member of staff.' : 'You can move their licence to another member of staff.',
+      body: free ? 'So nothing is lost when someone leaves part way through. '
+        + 'You do it from your dashboard, and the new person takes the course with their own record and their own certificate.'
+        : 'So a licence is not wasted when someone leaves part way through. '
         + 'You do it from your dashboard, and the new person takes the course with their own record and their own certificate.',
     },
     {
@@ -427,6 +434,7 @@ export function faqV2BottomItems(m: FaqV2Module, opts: { hasLesson: boolean }): 
         + 'Ask them whether this course can be claimed before you buy, because we cannot promise that it can.'.replace('before you buy', free ? 'before you start' : 'before you buy'),
     },
   ]
+  return free ? items.map(i => ({ ...i, free: true })) : items
 }
 
 /** The course has a demo lesson, so the page has the try before you buy preview (and the inline

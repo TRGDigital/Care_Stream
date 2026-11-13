@@ -6,10 +6,10 @@ import { SiteImage } from '@/components/site-image'
 // recreation of the CareStream hub "My Training" view (modules allocated to a staff
 // member, their status, Start/Review/Certificate, and the Follow-up tab). The
 // current module is featured as a row so it ties to the page.
-export function TrainingHubPreview({ moduleTitle, illustrationUrl }: { moduleTitle: string; illustrationUrl?: string }) {
+export function TrainingHubPreview({ moduleTitle, illustrationUrl, free = false }: { moduleTitle: string; illustrationUrl?: string; free?: boolean }) {
   const steps = [
-    { n: '01', title: 'Buy and allocate', body: `Assign ${moduleTitle} to each staff member in seconds. No course builder and no setup for each person.` },
-    { n: '02', title: 'They complete it in the hub', body: 'Staff work through the module on any device, in over 60 languages, teaching then checking understanding. A wrong answer sends a short follow up lesson.' },
+    { n: '01', title: free ? 'Get it and assign it' : 'Buy and allocate', body: `Assign ${moduleTitle} to each staff member in seconds. No course builder and no setup for each person.` },
+    { n: '02', title: 'They complete it in the hub', body: `Staff work through the module on any device, ${free ? 'in English (60+ languages from the Starter plan)' : 'in over 60 languages'}, teaching then checking understanding. A wrong answer sends a short follow up lesson.` },
     { n: '03', title: 'You track it', body: 'See live completion status and a certificate for every person, ready as evidence for CQC.' },
   ]
 
@@ -37,7 +37,7 @@ export function TrainingHubPreview({ moduleTitle, illustrationUrl }: { moduleTit
           </h2>
           <p className="text-lg leading-relaxed text-neutral-mid">
             Training is delivered in the hub each staff member logs into. You allocate the modules, they
-            complete them in their own language, and you get the completion records and certificates for
+            complete them {free ? 'in English, or in their own language from the Starter plan' : 'in their own language'}, and you get the completion records and certificates for
             your CQC evidence, with any gaps closed by automatic follow up training.
           </p>
         </div>

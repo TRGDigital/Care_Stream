@@ -92,7 +92,7 @@ function CtaRow({ buyHref, className = '', showSecondary = true, free = false }:
       </Link>
       {showSecondary && (
         <a href="#enquire" data-fi="team-pricing" className="rounded-btn border-2 border-gray-200 px-8 py-4 text-center text-sm font-semibold text-neutral-dark transition-colors hover:border-teal hover:text-teal">
-          Get team pricing
+          {free ? 'Set up your team' : 'Get team pricing'}
         </a>
       )}
     </div>
@@ -231,7 +231,7 @@ export default async function GoLandingPage({
                   <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
                     <span className="text-base text-neutral-mid line-through [font-variant-numeric:tabular-nums]">{STANDARD_COURSE_PRICE}</span>
                     <span className="text-2xl font-extrabold text-neutral-dark [font-variant-numeric:tabular-nums]">{FREE_COURSE_PRICE}</span>
-                    <span className="text-sm text-neutral-mid">per staff member. {FREE_CPD_COPY.note}</span>
+                    <span className="text-sm text-neutral-mid">for every staff member. {FREE_CPD_COPY.note}</span>
                   </div>
                 </div>
               ) : (
@@ -443,7 +443,7 @@ export default async function GoLandingPage({
       </section>
 
       {/* How your team gets trained — hub delivery preview */}
-      <TrainingHubPreview moduleTitle={m.title} illustrationUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined} />
+      <TrainingHubPreview moduleTitle={m.title} illustrationUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined} free={free} />
 
       {/* In every language — the language-toggle USP */}
       <TrainingLanguageSection moduleTitle={m.title} illustrationUrl={m.illustration_url ? `${API_URL}${m.illustration_url}` : undefined} lessonSnippet={m.summary ?? undefined} free={isFreeCpd(m)} />
@@ -468,7 +468,7 @@ export default async function GoLandingPage({
         <div className="mx-auto max-w-content px-6">
           <div className="grid items-start gap-12 lg:grid-cols-2 lg:gap-16">
             <div>
-              <p className="mb-3 text-xs font-bold uppercase tracking-widest text-teal">Not ready to buy yet?</p>
+              <p className="mb-3 text-xs font-bold uppercase tracking-widest text-teal">{free ? 'Not ready to start yet?' : 'Not ready to buy yet?'}</p>
               <h2 className="mb-4 text-3xl font-extrabold leading-tight text-neutral-dark md:text-4xl">
                 Get a free {m.title} training gap check.
               </h2>
@@ -478,7 +478,7 @@ export default async function GoLandingPage({
               </p>
               <ul className="space-y-3">
                 {[
-                  { Icon: Users, text: 'Pricing for your exact team size' },
+                  { Icon: Users, text: free ? 'A plan for your exact team size' : 'Pricing for your exact team size' },
                   { Icon: RefreshCw, text: 'A simple rollout plan for your service' },
                   { Icon: Award, text: 'CQC-ready certificates and records' },
                 ].map(({ Icon, text }) => (

@@ -19,7 +19,7 @@ function jumpTo(el: HTMLElement) {
   el.classList.add('fq2-flash')
 }
 
-export function FaqCtaLink({ cta, qSlug }: { cta: FaqCta; qSlug: string }) {
+export function FaqCtaLink({ cta, qSlug, free = false }: { cta: FaqCta; qSlug: string; free?: boolean }) {
   return (
     <a className={`fq2-cta fq2-cta-${cta}`} href={cta === 'try' ? '#real-lesson-inline' : '#team-price'}
        data-fi={`faq-cta:${CTA_KEY[cta]}:${qSlug}`}
@@ -36,7 +36,7 @@ export function FaqCtaLink({ cta, qSlug }: { cta: FaqCta; qSlug: string }) {
          e.preventDefault()
          jumpTo(el)
        }}>
-      {CTA_LABEL[cta]} <span aria-hidden="true">→</span>
+      {free && cta === 'price' ? 'See what your team gets' : CTA_LABEL[cta]} <span aria-hidden="true">→</span>
     </a>
   )
 }

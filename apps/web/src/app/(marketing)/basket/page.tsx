@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { TrainingCheckout, type ModuleInfo } from '@/components/marketing/checkout-page'
+import { isFreeCpd } from '@/lib/free-cpd'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
@@ -9,7 +10,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
 
 export const metadata: Metadata = {
   title: 'Your basket | CareStreamAI',
-  description: 'Review your training licences, apply your team volume discount and continue to secure payment.',
+  description: 'Review the training in your basket and continue. CPD certified courses are free for every member of staff.',
   alternates: { canonical: 'https://www.carestreamai.com/basket' },
   robots: { index: false, follow: true },
 }
@@ -20,12 +21,13 @@ async function loadModules(): Promise<Record<string, ModuleInfo>> {
     if (!res.ok) return {}
     const body = await res.json()
     const topics = (body?.data?.topics ?? []) as {
-      slug: string; title?: string; illustration_url: string | null; duration_minutes: number | null
+      slug: string; title?: string; illustration_url: string | null; duration_minutes: number | null; cpd_accredited?: boolean
     }[]
     return Object.fromEntries(topics.map(t => [t.slug, {
       image: t.illustration_url ? `${API_URL}${t.illustration_url}` : null,
       minutes: t.duration_minutes,
       title: t.title,
+      free: isFreeCpd(t),
     }]))
   } catch {
     // The basket still works without images: they are decoration, not the order.

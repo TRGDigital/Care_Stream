@@ -62,7 +62,7 @@ const NAV_SECTIONS = [
     iconColor: 'text-green-400',
     items: [
       { href: '/training',      label: 'Training',         Icon: ShieldCheck    },
-      { href: '/training/annual', label: 'CPD training',   Icon: Award, sub: true },
+      { href: '/training/annual', label: 'CPD training',   Icon: Award },
       { href: '/cqc-questions', label: 'CQC Staff Prep',   Icon: ClipboardList  },
       { href: '/audits',        label: 'Monthly Audits',   Icon: ClipboardCheck },
       { href: '/onboarding',    label: 'Staff Onboarding', Icon: GraduationCap  },
@@ -458,7 +458,7 @@ function SidebarContent({ pathname, trainingOnly, policiesOnly, freeTier, selfSe
                   {...tipProps(label)}
                   className={clsx(
                     'mb-0.5 flex items-center rounded-md py-2 text-sm font-medium transition-colors',
-                    collapsed ? 'justify-center px-0' : clsx('gap-3', (item as { sub?: boolean }).sub ? 'pl-8 pr-3' : 'px-3'),
+                    collapsed ? 'justify-center px-0' : 'gap-3 px-3',
                     active
                       ? clsx('bg-white/10 text-white', !collapsed && 'border-l-2 border-teal-light')
                       : 'text-white/70 hover:bg-white/10 hover:text-white',

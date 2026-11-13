@@ -19,14 +19,14 @@ export function FaqV2({ items, slug, open = 3 }: { items: FaqV2Item[]; slug: str
         <div className="fq2-a">
           <p><b>{x.lead}</b> {x.body}</p>
           {x.offer && <FaqOfferNote slug={slug} />}
-          <FaqCtaLink cta={x.cta} qSlug={s} />
+          <FaqCtaLink cta={x.cta} qSlug={s} free={x.free} />
         </div>
       </details>
     )
   }
   return (
     <div className="pxfaq fq2" id="faq">
-      <h3>Questions before you buy</h3>
+      <h3>{items.some(x => x.free) ? 'Questions before you start' : 'Questions before you buy'}</h3>
       <div className="fq2-top">{top.map(x => item(x, true))}</div>
       {rest.length > 0 && (
         <div className="fq2-more">
@@ -56,7 +56,7 @@ export function FaqV2Bottom({ items }: { items: FaqV2Item[] }) {
             <summary>{x.q}<Plus /></summary>
             <div className="ans">
               <p><b>{x.lead}</b> {x.body}</p>
-              <FaqCtaLink cta={x.cta} qSlug={faqSlug(x.q)} />
+              <FaqCtaLink cta={x.cta} qSlug={faqSlug(x.q)} free={x.free} />
             </div>
           </details>
         ))}

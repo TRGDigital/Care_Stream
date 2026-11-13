@@ -2,6 +2,7 @@ import { CpdCollection } from '@/components/marketing/cpd-collection'
 import { CPD_COURSE_INFO, CPD_SLUGS, type CpdCourse } from '@/lib/cpd-collection'
 import { apiAssetUrl } from '@/lib/api-client'
 import { REVIEWS } from '@/lib/reviews'
+import { FREE_CPD_LIVE } from '@/lib/free-cpd'
 
 // The CPD courses collection: the landing page for the CPD category Google Ads campaigns, one
 // ?intent= version per ad group (lib/cpd-collection.ts). Layout A chosen by Len 2026-10-08.
@@ -12,7 +13,9 @@ export const revalidate = 300
 
 export const metadata = {
   title: 'CPD Certified Mandatory Training for Care Staff',
-  description: 'Ten CPD Certified courses for care staff, built for care settings and taught in over 60 languages. Buy single courses or a bundle for your team.',
+  description: FREE_CPD_LIVE
+    ? 'Ten CPD Certified courses for care staff, built for care settings and free for every member of staff with a CareStream account. In English, with 60+ languages from the Starter plan.'
+    : 'Ten CPD Certified courses for care staff, built for care settings and taught in over 60 languages. Buy single courses or a bundle for your team.',
   robots: { index: false, follow: false },
 }
 

@@ -18,6 +18,8 @@ import { STAFF_TRAINING_V2_SLOTS } from '@/lib/page-slots/staff-training-v2'
 import { StaffTrainingIndexV2 } from '@/components/marketing/staff-training-index-v2'
 import { isV2 } from '@/lib/v2-rollout'
 import { isFreeCpd, freeCpdHref } from '@/lib/free-cpd'
+import { FreeBanner } from '@/components/marketing/free-banner'
+import { freeLive } from '@/lib/free-rollout'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
@@ -158,7 +160,8 @@ export default async function StaffTrainingPage(
   if (await isV2('indexes', searchParams)) {
     return (
       <StaffTrainingIndexV2 s={makeSlot(STAFF_TRAINING_V2_SLOTS, slots)}
-                            catalogue={catalogue} demo={heroDemo} />
+                            catalogue={catalogue} demo={heroDemo}
+                            banner={(await freeLive(searchParams)) ? <FreeBanner variant="training" /> : undefined} />
     )
   }
 
@@ -232,8 +235,8 @@ export default async function StaffTrainingPage(
               <ul className="mb-8 space-y-3">
                 {[
                   'Ready made courses for every mandatory subject, built for real learning',
-                  'One licence per staff member, allocated in one click',
-                  'Completed in the hub in over 60 languages',
+                  'Assign courses to every staff member in one click',
+                  'Completed in the hub, in English or in over 60 languages',
                   'Certificates and CQC ready evidence handled for you',
                 ].map((b) => (
                   <li key={b} className="flex items-start gap-3 text-neutral-dark">
@@ -303,6 +306,8 @@ export default async function StaffTrainingPage(
         </div>
       </section>
 
+      {(await freeLive(searchParams)) && <FreeBanner variant="training" />}
+
       {/* ── The problem ───────────────────────────────────────────────────── */}
       <section className="bg-white py-24">
         <div className="mx-auto max-w-content px-6">
@@ -350,7 +355,7 @@ export default async function StaffTrainingPage(
         <div className="mx-auto max-w-content px-6">
           <SectionLabel>How it works</SectionLabel>
           <h2 className="mb-4 text-4xl font-extrabold leading-tight text-neutral-dark">
-            Buy a course, allocate it, and track every answer
+            Get a course, assign it, and track every answer
           </h2>
           <p className="mb-14 text-lg leading-relaxed text-neutral-mid">
             From choosing a course to a certificate on the staff record, the whole journey takes
@@ -359,8 +364,8 @@ export default async function StaffTrainingPage(
 
           <div className="grid gap-6 md:grid-cols-3">
             {[
-              { step: '01', Icon: GraduationCap, title: 'Choose your courses', body: 'Pick from the library of ready made annual training courses below and buy a licence for each staff member who needs one. Volume discounts apply automatically.' },
-              { step: '02', Icon: Users, title: 'Allocate in one click', body: 'Assign the course from your console. Your staff member is emailed straight away and the course appears in their own hub, in their first language.' },
+              { step: '01', Icon: GraduationCap, title: 'Choose your courses', body: 'Pick from the library of ready made annual training courses below and assign it to each staff member who needs it. The CPD Certified courses are free with a CareStream account; volume discounts apply automatically to the others.' },
+              { step: '02', Icon: Users, title: 'Assign in one click', body: 'Assign the course from your console. Your staff member is emailed straight away and the course appears in their own hub, in their first language.' },
               { step: '03', Icon: BarChart2, title: 'Track completion and evidence', body: 'Watch completion, scores and learning gain as they happen. Certificates land on the staff record automatically and you are emailed the moment each course is passed.' },
             ].map(({ step, Icon, title, body }) => (
               <div key={step} className="card-lift rounded-2xl border border-gray-100 bg-white p-7 shadow-card">

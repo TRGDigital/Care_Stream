@@ -3462,7 +3462,13 @@ adminRouter.post('/blog/import', async (req: Request, res: Response) => {
     const slug = String(raw?.slug ?? '').trim().replace(/^\/?blog\//, '').replace(/^\//, '')
     const title = String(raw?.title ?? '').trim()
     if (!slug || !title) { skipped.push({ slug: slug || '(none)', reason: 'title and slug are required' }); continue }
-    const existing = await (prisma as any).blogPost.findUnique({ where: { slug } })
+    const prev = String(raw?.previous_slug ?? '').trim().replace(/^\/?blog\//, '')
+    let existing = await (prisma as any).blogPost.findUnique({ where: { slug } })
+    // A draft renamed in the pipeline: update the old record in place (new slug) instead of creating a second one.
+    if (!existing && prev && prev !== slug) {
+      const old = await (prisma as any).blogPost.findUnique({ where: { slug: prev } })
+      if (old && old.status === 'draft') existing = old
+    }
     if (existing && existing.status !== 'draft') { skipped.push({ slug, reason: 'already published, not touched' }); continue }
     try {
       if (existing) {
@@ -3606,7 +3612,12 @@ adminRouter.post('/collections/import', async (req: Request, res: Response) => {
     if (!slug || !title) { skipped.push({ slug: slug || '(none)', reason: 'title and slug are required' }); continue }
     if (!raw?.cluster_key || !clusterByKey(String(raw.cluster_key))) { skipped.push({ slug, reason: 'a valid cluster_key is required' }); continue }
     try {
-      const existing = await (prisma as any).collection.findUnique({ where: { slug } })
+      const prev = String(raw?.previous_slug ?? '').trim().replace(/^\/?collection\//, '')
+      let existing = await (prisma as any).collection.findUnique({ where: { slug } })
+      if (!existing && prev && prev !== slug) {
+        const old = await (prisma as any).collection.findUnique({ where: { slug: prev } })
+        if (old && old.status === 'draft') existing = old
+      }
       if (existing && existing.status !== 'draft') { skipped.push({ slug, reason: 'already published, not touched' }); continue }
       const data = buildCollectionData({ ...raw, slug, status: 'draft' })
       if (existing) {

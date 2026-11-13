@@ -83,9 +83,11 @@ export const CtaArrow = () => (
   </svg>
 )
 
-export function BlogCta({ type, variant = 0, theme = false }: { type: string; variant?: number; theme?: boolean }) {
+export function BlogCta({ type, variant = 0, theme = false, slug }: { type: string; variant?: number; theme?: boolean; slug?: string }) {
   const cfg = CTAS[type as BlogCtaType]
   if (!cfg) return null
+  // Per page sign up counts: the free sign up links carry source=blog-<slug>.
+  const href = slug && cfg.href.includes('source=') ? cfg.href.replace(/source=[^&]+/, `source=blog-${slug}`) : cfg.href
   const v = cfg.variants[variant % cfg.variants.length] ?? cfg.variants[0]!
   // The rebuilt post template (blog-post-v2.tsx): the theme's .bcta block.
   if (theme) {
@@ -94,7 +96,7 @@ export function BlogCta({ type, variant = 0, theme = false }: { type: string; va
         <span className="eyebrow">{cfg.eyebrow}</span>
         <b>{v.title}</b>
         <p>{v.sub}</p>
-        <Link className="bbtn" href={cfg.href}>{cfg.button} <CtaArrow /></Link>
+        <Link className="bbtn" href={href}>{cfg.button} <CtaArrow /></Link>
       </div>
     )
   }
@@ -104,7 +106,7 @@ export function BlogCta({ type, variant = 0, theme = false }: { type: string; va
       <p className="mb-1.5 text-lg font-extrabold text-neutral-dark sm:text-xl">{v.title}</p>
       <p className="mx-auto mb-5 max-w-md text-sm leading-relaxed text-neutral-mid">{v.sub}</p>
       <Link
-        href={cfg.href}
+        href={href}
         className="btn-amber inline-flex items-center justify-center gap-2 rounded-btn px-6 py-2.5 text-sm"
       >
         {cfg.button} →

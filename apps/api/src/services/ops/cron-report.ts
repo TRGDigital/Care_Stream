@@ -38,6 +38,7 @@ export const SCHEDULED_JOBS: ScheduledJob[] = [
   { job: 'licence-renewals',          cadence: 'daily',  graceHours: 26, matters: 'Training licence holders are warned before renewal' },
   { job: 'basket-recovery',           cadence: 'daily',  graceHours: 2,  matters: 'Buyers who leave a basket get the 1 hour and next day reminder emails (and the 72 hour one, once switched on)' },
   { job: 'indexing-report',           cadence: 'weekly', graceHours: 8 * 24, matters: 'The Monday email of pages pushed to RalfyIndex by both sites, and the credit balance' },
+  { job: 'page-metrics',              cadence: 'daily',  graceHours: 30,     matters: 'The daily Search Console and GA4 pull behind the page Performance panel and the Update queue.' },
   { job: 'regulation-source-monitor', cadence: 'weekly', graceHours: 8 * 24, matters: 'Legislation and guidance pages are fingerprinted so changes get noticed' },
   { job: 'agency-access',             cadence: 'daily',  graceHours: 26, matters: 'Agency bookings are warned before they end, and access is withdrawn after' },
   { job: 'training-delivery',         cadence: 'daily',  graceHours: 26, matters: 'Scheduled training-question rules actually fire at their set times' },

@@ -1175,6 +1175,12 @@ export function createPlatformClient(token: string) {
         adminFetch<{ deleted: boolean }>(`/site-pages/${id}`, token, { method: 'DELETE' }),
     },
 
+    // Per page performance (Search Console, GA4, sign ups, indexing) and the ranked update queue.
+    pagePerformance: (kind: 'blog' | 'collection', slug: string) =>
+      adminFetch<any>(`/page-performance/${kind}/${encodeURIComponent(slug)}`, token),
+    updateQueue: () =>
+      adminFetch<{ pages: any[] }>('/update-queue', token),
+
     collections: {
       // The themed sixes a collection can be built from. Curated in code, so this is a
       // read: there is nothing to create here.

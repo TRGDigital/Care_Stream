@@ -1,4 +1,5 @@
 import { signCollectionPreview } from '../lib/collection-preview'
+import { getPagePerformance, getUpdateQueue, logPageEvent } from '../services/page-metrics/performance'
 import { Router, Request, Response } from 'express'
 import fs from 'fs'
 import path from 'path'
@@ -3413,6 +3414,7 @@ adminRouter.post('/blog/posts', async (req: Request, res: Response) => {
 
   const post = await (prisma as any).blogPost.create({ data: buildPostData(req.body) })
   if (post.slug) await queueWebsiteReindex(`/blog/${post.slug}`)
+  if (post.status === 'published' && post.slug) await logPageEvent(`/blog/${post.slug}`, 'published')
   if (post.status === 'published' && post.slug) {
     await submitUrlsForIndexing([`${siteUrl()}/blog/${post.slug}`], { source: 'blog', blogPostId: post.id })
     if (post.topic_cluster) await submitUrlsForIndexing([`${siteUrl()}/topics/${post.topic_cluster}`], { source: 'page', refresh: true })
@@ -3433,10 +3435,18 @@ adminRouter.patch('/blog/posts/:id', async (req: Request, res: Response) => {
       return
     }
   }
+  const before = await (prisma as any).blogPost.findUnique({ where: { id: req.params.id }, select: { status: true, publication_date: true } })
+  const data = buildPostData(req.body)
+  // Publishing a draft through the platform stamps the publication date when none is set.
+  if (data.status === 'published' && before?.status !== 'published' && !data.publication_date && !before?.publication_date) data.publication_date = new Date()
   const post = await (prisma as any).blogPost.update({
     where: { id: req.params.id },
-    data:  buildPostData(req.body),
+    data,
   })
+  if (post.slug && post.status === 'published') {
+    if (before?.status !== 'published') await logPageEvent(`/blog/${post.slug}`, 'published')
+    else if (req.body?.content !== undefined) await logPageEvent(`/blog/${post.slug}`, 'refreshed')
+  }
   if (post.slug) await queueWebsiteReindex(`/blog/${post.slug}`)
   if (post.status === 'published' && post.slug) {
     await submitUrlsForIndexing([`${siteUrl()}/blog/${post.slug}`], { source: 'blog', blogPostId: post.id, refresh: req.body?.content !== undefined })
@@ -3593,6 +3603,7 @@ adminRouter.post('/collections', async (req: Request, res: Response) => {
   if (existing) { err(res, 'CONFLICT', `A collection with slug "${slug}" already exists.`, 409); return }
 
   const collection = await (prisma as any).collection.create({ data: buildCollectionData(req.body) })
+  if (collection.status === 'published' && collection.slug) await logPageEvent(`/collection/${collection.slug}`, 'published')
   if (collection.status === 'published' && collection.slug) {
     await submitUrlsForIndexing([`${siteUrl()}/collection/${collection.slug}`], { source: 'page' })
     if (collection.topic_cluster) await submitUrlsForIndexing([`${siteUrl()}/topics/${collection.topic_cluster}`], { source: 'page', refresh: true })
@@ -3641,15 +3652,34 @@ adminRouter.patch('/collections/:id', async (req: Request, res: Response) => {
     const clash = await (prisma as any).collection.findFirst({ where: { slug: slug.trim(), NOT: { id: req.params.id } } })
     if (clash) { err(res, 'CONFLICT', `Slug "${slug}" is already in use.`, 409); return }
   }
+  const beforeC = await (prisma as any).collection.findUnique({ where: { id: req.params.id }, select: { status: true } })
   const collection = await (prisma as any).collection.update({
     where: { id: req.params.id },
     data:  buildCollectionData(req.body),
   })
+  if (collection.slug && collection.status === 'published') {
+    if (beforeC?.status !== 'published') await logPageEvent(`/collection/${collection.slug}`, 'published')
+    else if (req.body?.body !== undefined || req.body?.intro !== undefined) await logPageEvent(`/collection/${collection.slug}`, 'refreshed')
+  }
   if (collection.status === 'published' && collection.slug) {
     await submitUrlsForIndexing([`${siteUrl()}/collection/${collection.slug}`], { source: 'page', refresh: req.body?.body !== undefined || req.body?.intro !== undefined })
     if (collection.topic_cluster) await submitUrlsForIndexing([`${siteUrl()}/topics/${collection.topic_cluster}`], { source: 'page', refresh: true })
   }
   ok(res, { collection })
+})
+
+// GET /admin/page-performance/:kind/:slug  the Performance panel for one blog post or collection:
+// day 14/30/45/85 checkpoints from publication (or the last refresh), last 28 days, queries,
+// sign ups, indexing and a verdict. GET /admin/update-queue ranks every published page by what to do next.
+adminRouter.get('/page-performance/:kind/:slug', async (req: Request, res: Response) => {
+  const kind = req.params.kind === 'collection' ? 'collection' : 'blog'
+  const data = await getPagePerformance(kind, String(req.params.slug))
+  if (!data) { err(res, 'NOT_FOUND', 'Page not found.', 404); return }
+  ok(res, data)
+})
+
+adminRouter.get('/update-queue', async (_req: Request, res: Response) => {
+  ok(res, { pages: await getUpdateQueue() })
 })
 
 // POST /admin/collections/:id/preview-link  returns a 30 minute signed link for viewing a draft.

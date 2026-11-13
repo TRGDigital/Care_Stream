@@ -226,7 +226,7 @@ export default async function BlogPostPage({ params, searchParams }: {
         splitHtmlForCtas(bodyHtml, 2).map((part, idx, parts) => (
           <Fragment key={idx}>
             <div dangerouslySetInnerHTML={{ __html: part }} />
-            {idx < parts.length - 1 ? <BlogCta type={post.cta_type!} variant={idx} /> : null}
+            {idx < parts.length - 1 ? <BlogCta type={post.cta_type!} variant={idx} slug={post.slug} /> : null}
           </Fragment>
         ))
       ) : (

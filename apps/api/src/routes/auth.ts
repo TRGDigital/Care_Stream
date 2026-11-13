@@ -70,6 +70,8 @@ const RegisterSchema = z.object({
   company_website: z.string().max(200).optional(),
   // Free CPD sign up: the course page they came from, so the verify link can land on it.
   course:          z.string().regex(/^[a-z0-9-]{1,80}$/).optional(),
+  // The page the sign up link was on (blog-<slug>, cpd, ...): counted per page in the Performance panel.
+  source:          z.string().regex(/^[a-z0-9-]{1,100}$/).optional(),
 })
 
 authRouter.post('/register', async (req: Request, res: Response) => {
@@ -105,7 +107,7 @@ authRouter.post('/register', async (req: Request, res: Response) => {
   if (tier === 'free') {
     freePlanId = (await (prisma as any).plan.findUnique({ where: { name: 'Free' }, select: { id: true } }))?.id ?? null
     if (!freePlanId) { err(res, 'FREE_UNAVAILABLE', 'The free plan is not available yet.', 503); return }
-    const verdict = await checkFreeSignup(email, req.ip ?? '', parsed.data.company_website, { preview: isTest })
+    const verdict = await checkFreeSignup(email, req.ip ?? '', parsed.data.company_website, { preview: isTest, source: parsed.data.source })
     if (!verdict.ok) { err(res, verdict.code, verdict.message, 429); return }
   }
 

@@ -195,10 +195,13 @@ const hashIp = (ip: string) => crypto.createHash('sha256').update(`${process.env
 export type FreeSignupVerdict = { ok: true } | { ok: false; code: string; message: string }
 
 /** Abuse checks for a Free signup. Records the attempt either way. */
-export async function checkFreeSignup(email: string, ip: string, honeypot?: string | null, opts: { preview?: boolean } = {}): Promise<FreeSignupVerdict> {
+export async function checkFreeSignup(email: string, ip: string, honeypot?: string | null, opts: { preview?: boolean; source?: string } = {}): Promise<FreeSignupVerdict> {
   const domain = emailDomain(email)
   const ipHash = hashIp(ip || 'unknown')
-  const record = (outcome: string) => (prisma as any).signupAttempt.create({ data: { ip_hash: ipHash, email_domain: domain, outcome } }).catch(() => {})
+  // The source column arrives with the page performance SQL; until it exists, fall back to the plain row so
+  // the abuse limits (which count 'created' rows) keep working.
+  const record = (outcome: string) => (prisma as any).signupAttempt.create({ data: { ip_hash: ipHash, email_domain: domain, outcome, source: opts.source ?? null }, select: { id: true } })
+    .catch(() => (prisma as any).signupAttempt.create({ data: { ip_hash: ipHash, email_domain: domain, outcome }, select: { id: true } }).catch(() => {}))
   const deny = async (code: string, message: string, outcome: string): Promise<FreeSignupVerdict> => { await record(outcome); return { ok: false, code, message } }
 
   if (honeypot) return deny('SIGNUP_REJECTED', 'We could not create this account.', 'honeypot')

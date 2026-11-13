@@ -3137,9 +3137,55 @@ model SignupAttempt {
   ip_hash      String?
   email_domain String?
   outcome      String
+  source       String?  // the page the visitor came from (blog-<slug>, cpd, ...) for per page sign up counts
   created_at   DateTime @default(now())
 
   @@index([ip_hash, created_at])
   @@index([email_domain, created_at])
   @@map("signup_attempts")
+}
+
+
+// ─── Page performance (blog posts and collections) ───────────────────────────
+// One row per page per day from Search Console and GA4 (daily job /cron/page-metrics), the
+// queries each page appears for (28 day windows), and the lifecycle events that reset a page's
+// baseline (published, refreshed). Read by /admin/page-performance and /admin/update-queue.
+model PageMetric {
+  url             String
+  date            DateTime @db.Date
+  kind            String   @default("blog")
+  slug            String
+  impressions     Int      @default(0)
+  clicks          Int      @default(0)
+  position        Float?
+  sessions        Int      @default(0)
+  engaged_seconds Int      @default(0)
+
+  @@id([url, date])
+  @@index([slug, date])
+  @@map("page_metrics")
+}
+
+model PageQueryMetric {
+  url         String
+  query       String
+  window_end  DateTime @db.Date
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  position    Float?
+
+  @@id([url, query, window_end])
+  @@index([url, window_end])
+  @@map("page_query_metrics")
+}
+
+model PageEvent {
+  id         String   @id @default(uuid())
+  url        String
+  kind       String   // published | refreshed
+  note       String?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([url, created_at])
+  @@map("page_events")
 }

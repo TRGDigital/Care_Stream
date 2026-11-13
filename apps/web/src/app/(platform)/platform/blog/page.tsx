@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
+import { PagePerformanceModal, UpdateQueue } from '@/components/platform/page-performance'
 import { createPlatformClient, uploadBlogImage, fetchTrainingSeoIndex, type BlogAuthor, type BlogPost, type SitePage, type Collection, type ProductCluster, type FeaturePage, type UseCaseAllocation } from '@/lib/platform-api'
 import { EMPTY_FEATURE_CONTENT, type FeaturePageContent } from '@/lib/feature-content'
 import { slotsForPath, type SlotDef } from '@/lib/page-slots'
@@ -1968,7 +1969,7 @@ function SlotEditor({ page, defs, token, onSaved }: {
 
 export default function BlogPage() {
   const token = usePlatformAuth()
-  const [tab,  setTab]  = useState<'posts' | 'authors' | 'pages' | 'mainsite' | 'training' | 'features' | 'collections' | 'altTags' | 'userCases' | 'careSettings' | 'services'>('posts')
+  const [tab,  setTab]  = useState<'posts' | 'authors' | 'pages' | 'mainsite' | 'training' | 'features' | 'collections' | 'queue' | 'altTags' | 'userCases' | 'careSettings' | 'services'>('posts')
 
   // Posts state
   const [posts,     setPosts]     = useState<BlogPost[]>([])
@@ -1977,6 +1978,7 @@ export default function BlogPage() {
   const [savingPost, setSavingPost] = useState(false)
   const importInputRef = useRef<HTMLInputElement>(null)
   const collImportRef = useRef<HTMLInputElement>(null)
+  const [perf, setPerf] = useState<{ kind: 'blog' | 'collection'; slug: string } | null>(null)
   const [importing, setImporting] = useState(false)
   const [importMsg, setImportMsg] = useState('')
   const [postError,  setPostError]  = useState('')
@@ -2494,7 +2496,7 @@ export default function BlogPage() {
         {/* Tabs */}
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex gap-6 overflow-x-auto">
-            {(['posts', 'authors', 'pages', 'mainsite', 'training', 'features', 'collections', 'userCases', 'careSettings', 'services', 'altTags'] as const).map(t => (
+            {(['posts', 'authors', 'pages', 'mainsite', 'training', 'features', 'collections', 'queue', 'userCases', 'careSettings', 'services', 'altTags'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -2504,7 +2506,7 @@ export default function BlogPage() {
                     : 'text-neutral-mid hover:text-neutral-dark'
                 }`}
               >
-                {t === 'posts' ? `Posts (${posts.length})` : t === 'authors' ? `Authors (${authors.length})` : t === 'pages' ? `Pages (${allPages.length})` : t === 'mainsite' ? `Main site pages (${mainSitePagesList.length})` : t === 'training' ? `Training pages (${trainingPagesList.length})` : t === 'features' ? `Features pages (${featurePages.length})` : t === 'collections' ? `Collections (${collections.length})` : t === 'userCases' ? 'User cases' : t === 'careSettings' ? 'Care settings' : t === 'services' ? 'Our Services' : 'Alt Tags'}
+                {t === 'posts' ? `Posts (${posts.length})` : t === 'authors' ? `Authors (${authors.length})` : t === 'pages' ? `Pages (${allPages.length})` : t === 'mainsite' ? `Main site pages (${mainSitePagesList.length})` : t === 'training' ? `Training pages (${trainingPagesList.length})` : t === 'features' ? `Features pages (${featurePages.length})` : t === 'collections' ? `Collections (${collections.length})` : t === 'queue' ? 'Update queue' : t === 'userCases' ? 'User cases' : t === 'careSettings' ? 'Care settings' : t === 'services' ? 'Our Services' : 'Alt Tags'}
               </button>
             ))}
           </nav>
@@ -2594,6 +2596,8 @@ export default function BlogPage() {
                                className="rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark">Preview</a>
                             <a href={`/platform/blog/preview/${post.slug}?yellowkws`} target="_blank" rel="noopener noreferrer"
                                className="rounded-md border border-yellow-300 bg-yellow-100 px-2 py-1 text-xs font-semibold text-yellow-900 hover:bg-yellow-200">Keywords</a>
+                            <button type="button" onClick={() => setPerf({ kind: 'blog', slug: post.slug })}
+                               className="rounded-md border border-teal/40 bg-teal-light/50 px-2 py-1 text-xs font-semibold text-teal hover:bg-teal-light">Performance</button>
                             <button
                               onClick={() => { setEditPost(post); setShowPost(false) }}
                               className="rounded-md border border-gray-200 p-1.5 text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark"
@@ -2938,6 +2942,8 @@ export default function BlogPage() {
         )}
 
         {/* ── Collections tab ─────────────────────────────────────────────── */}
+        {tab === 'queue' && token && <UpdateQueue token={token} />}
+
         {tab === 'collections' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -3009,6 +3015,8 @@ export default function BlogPage() {
                           className="rounded-md border border-gray-200 px-2 py-1 text-xs font-semibold text-neutral-dark hover:bg-neutral-light">Preview</button>
                         <button type="button" onClick={() => openCollectionPreview(c, true)}
                           className="rounded-md border border-yellow-300 bg-yellow-100 px-2 py-1 text-xs font-semibold text-yellow-900 hover:bg-yellow-200">Keywords</button>
+                        <button type="button" onClick={() => setPerf({ kind: 'collection', slug: c.slug })}
+                          className="rounded-md border border-teal/40 bg-teal-light/50 px-2 py-1 text-xs font-semibold text-teal hover:bg-teal-light">Performance</button>
                         <button onClick={() => { setEditCollection(c); setShowCollection(false) }} className="rounded-md p-1.5 text-neutral-mid hover:bg-neutral-light hover:text-teal" title="Edit"><Pencil size={15} /></button>
                         <button onClick={() => deleteCollection(c.id, c.title)} className="rounded-md p-1.5 text-neutral-mid hover:bg-red-50 hover:text-red-600" title="Delete"><Trash2 size={15} /></button>
                       </div>
@@ -3038,6 +3046,7 @@ export default function BlogPage() {
         {tab === 'services' && token && <ServicesPanel token={token} />}
 
       </div>
+          {perf && token && <PagePerformanceModal token={token} kind={perf.kind} slug={perf.slug} onClose={() => setPerf(null)} />}
     </PlatformShell>
   )
 }

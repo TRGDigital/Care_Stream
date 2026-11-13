@@ -48,6 +48,7 @@ export default function RegisterPage() {
   // the address and sent to the API; it is never shown on the page.
   const [freeTier, setFreeTier] = useState(false)
   const [courseSlug, setCourseSlug] = useState('')
+  const [signupSource, setSignupSource] = useState('')
   const [previewCode, setPreviewCode] = useState('')
   const [trap, setTrap] = useState('')   // honeypot: real people never fill this in
   const orgRef = useRef<HTMLInputElement>(null)
@@ -56,6 +57,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     const q = new URLSearchParams(window.location.search)
+    setSignupSource((q.get('source') ?? '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 100))
     if (q.get('tier') === 'training_only') setTrainingOnly(true)
     if (q.get('tier') === 'free') { setFreeTier(true); setPreviewCode(q.get('code') ?? ''); setCourseSlug((q.get('course') ?? '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 80)) }
     // The home page and /uses heroes ask for a work email and send it here, so the visitor goes
@@ -87,7 +89,7 @@ export default function RegisterPage() {
       const res = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(freeTier ? { ...form, tier: 'free', preview_code: previewCode || undefined, company_website: trap || undefined, course: courseSlug || undefined } : trainingOnly ? { ...form, tier: 'training_only' } : form),
+        body: JSON.stringify(freeTier ? { ...form, tier: 'free', preview_code: previewCode || undefined, company_website: trap || undefined, course: courseSlug || undefined, source: signupSource || undefined } : trainingOnly ? { ...form, tier: 'training_only' } : form),
       })
       const body = await res.json()
       if (!res.ok || !body.success) {

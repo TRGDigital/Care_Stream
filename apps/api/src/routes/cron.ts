@@ -28,6 +28,7 @@ import { sendLicenceRenewalReminders } from '../services/training/licence-renewa
 import { runOfferChanges } from '../services/offers'
 import { runSearchTermsDigest } from '../services/ads/search-terms-digest'
 import { runConversionMilestones } from '../services/ads/conversion-milestones'
+import { collectPageMetrics } from '../services/page-metrics/collector'
 import { runReminders } from '../services/ads/reminders'
 import { runBasketRecovery, sendBasketRecoveryPreview } from '../services/shop/basket-recovery'
 import { runReviewRequests, sendReviewRequestPreview } from '../services/shop/review-requests'
@@ -249,3 +250,8 @@ cronRouter.get('/daily-report', (req, res) =>
     await sendCronReport(report)
     return report
   }))
+
+// Daily 05:45 UTC: Search Console and GA4 into page_metrics for every blog and collection page.
+// ?days=90 backfills the first run. pg_cron job cs-page-metrics.
+cronRouter.get('/page-metrics', (req, res) =>
+  job('page-metrics', req, res, () => collectPageMetrics(Number(req.query.days) || 7)))

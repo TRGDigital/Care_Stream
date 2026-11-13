@@ -143,7 +143,7 @@ export function BlogPostV2({ post, related }: { post: BlogPostV2Data; related: B
               splitHtmlForCtas(body, 2).map((part, idx, parts) => (
                 <Fragment key={idx}>
                   <div className="bcontent" dangerouslySetInnerHTML={{ __html: part }} />
-                  {idx < parts.length - 1 ? <BlogCta type={post.cta_type!} variant={idx} theme /> : null}
+                  {idx < parts.length - 1 ? <BlogCta type={post.cta_type!} variant={idx} theme slug={post.slug} /> : null}
                 </Fragment>
               ))
             ) : (

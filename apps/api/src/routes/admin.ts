@@ -1,5 +1,6 @@
 import { signCollectionPreview } from '../lib/collection-preview'
 import { getPagePerformance, getUpdateQueue, logPageEvent } from '../services/page-metrics/performance'
+import { collectPageMetrics } from '../services/page-metrics/collector'
 import { Router, Request, Response } from 'express'
 import fs from 'fs'
 import path from 'path'
@@ -3676,6 +3677,12 @@ adminRouter.get('/page-performance/:kind/:slug', async (req: Request, res: Respo
   const data = await getPagePerformance(kind, String(req.params.slug))
   if (!data) { err(res, 'NOT_FOUND', 'Page not found.', 404); return }
   ok(res, data)
+})
+
+// POST /admin/page-metrics/collect?days=90  run the daily Search Console and GA4 pull now (first backfill).
+adminRouter.post('/page-metrics/collect', async (req: Request, res: Response) => {
+  try { ok(res, await collectPageMetrics(Number(req.query.days) || 7)) }
+  catch (e: any) { err(res, 'COLLECT_FAILED', String(e?.message ?? e).slice(0, 300), 502) }
 })
 
 adminRouter.get('/update-queue', async (_req: Request, res: Response) => {

@@ -3,7 +3,7 @@
    absolute wrapper stays pinned to it. */
 .fdrop{position:absolute;left:0;right:0;top:100%;pointer-events:none;z-index:70}
 .fdrop-in{max-width:var(--maxw,1280px);margin:0 auto;padding:0 40px;display:flex;justify-content:flex-end}
-.fdrop-card{pointer-events:auto;box-sizing:border-box;width:min(680px,100%);margin-top:10px;background:#F3EDFA;border:1px solid #E1D3F2;border-radius:18px;box-shadow:0 18px 48px rgba(23,18,31,.18);padding:26px 28px 22px;color:#17121F;position:relative}
+.fdrop-card{pointer-events:auto;box-sizing:border-box;width:min(680px,100%);margin-top:14px;background:#F3EDFA;border:1px solid #E1D3F2;border-radius:18px;box-shadow:0 18px 48px rgba(23,18,31,.18);padding:26px 28px 22px;color:#17121F;position:relative}
 .fdrop[data-open="false"]{display:none}
 .fdrop-x{position:absolute;top:14px;right:14px;width:34px;height:34px;border:0;background:transparent;border-radius:999px;color:#3A3245;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .fdrop-x:hover{background:rgba(123,63,191,.12)}
@@ -28,4 +28,15 @@
   .fdrop-card{padding:22px 20px 18px;max-height:calc(100vh - 110px);overflow-y:auto}
   .fdrop-list{grid-template-columns:1fr;gap:12px}
   .fdrop-btn{flex:1 1 150px}
+}
+
+/* The small pointer from the header button down to the card. */
+.fdrop-card::before{content:'';position:absolute;top:-9px;right:60px;width:16px;height:16px;background:#F3EDFA;border-left:1px solid #E1D3F2;border-top:1px solid #E1D3F2;border-top-left-radius:4px;transform:rotate(45deg)}
+.fdrop-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
+.fdrop-foot-copy{flex:1 1 auto;min-width:0}
+.fdrop-cpd{flex:0 0 auto;display:block;height:64px;width:auto;object-fit:contain;aspect-ratio:auto}
+@media (max-width:720px){
+  .fdrop-card::before{right:22px}
+  .fdrop-foot{flex-direction:column;align-items:stretch}
+  .fdrop-cpd{align-self:flex-end;height:56px}
 }

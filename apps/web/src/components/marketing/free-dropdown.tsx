@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { FREE_LIVE } from '@/lib/free-rollout'
 import { fi } from '@/lib/funnel-insights'
+import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 import './free-dropdown.css'
 
 // What a free CareStream account gives you, as a card that drops down under the header on every
@@ -58,11 +59,18 @@ export function FreeDropdown() {
             {ITEMS.map(t => <li key={t}><Tick /><span>{t}</span></li>)}
           </ul>
           <hr className="fdrop-rule" />
-          <p className="fdrop-sub">CPD training, audits and policy checks in one place</p>
-          <p className="fdrop-note">Free for ever · No card needed · Upgrade any time and keep everything</p>
-          <div className="fdrop-acts">
-            <Link className="fdrop-btn solid" href="/register?tier=free&source=dropdown" data-fi="free-dropdown-register" onClick={() => setOpen(false)}>Create free account</Link>
-            <Link className="fdrop-btn ghost" href="/pricing" data-fi="free-dropdown-pricing" onClick={() => setOpen(false)}>See what is included</Link>
+          <div className="fdrop-foot">
+            <div className="fdrop-foot-copy">
+              <p className="fdrop-sub">CPD training, audits and policy checks in one place</p>
+              <p className="fdrop-note">Free for ever · No card needed · Upgrade any time and keep everything</p>
+              <div className="fdrop-acts">
+                <Link className="fdrop-btn solid" href="/register?tier=free&source=dropdown" data-fi="free-dropdown-register" onClick={() => setOpen(false)}>Create free account</Link>
+                <Link className="fdrop-btn ghost" href="/pricing" data-fi="free-dropdown-pricing" onClick={() => setOpen(false)}>See what is included</Link>
+              </div>
+            </div>
+            {/* The CPD Certified mark exactly as supplied: no border, recolour or added text (lib/cpd.ts). */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="fdrop-cpd" src={CPD_CERTIFIED_LOGO} alt="CPD Certified" />
           </div>
         </section>
       </div>

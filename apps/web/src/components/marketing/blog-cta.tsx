@@ -87,7 +87,10 @@ export function BlogCta({ type, variant = 0, theme = false, slug }: { type: stri
   const cfg = CTAS[type as BlogCtaType]
   if (!cfg) return null
   // Per page sign up counts: the free sign up links carry source=blog-<slug>.
-  const href = slug && cfg.href.includes('source=') ? cfg.href.replace(/source=[^&]+/, `source=blog-${slug}`) : cfg.href
+  let href = slug && cfg.href.includes('source=') ? cfg.href.replace(/source=[^&]+/, `source=blog-${slug}`) : cfg.href
+  // The sign up page reads the topic (and looks up the post title) to say what this guide leads to.
+  const topic = type === 'free_audits' ? 'audits' : type === 'free_cpd_course' ? 'cpd' : type === 'free_policy_check' ? 'policy' : ''
+  if (topic && slug) href += `&topic=${topic}`
   const v = cfg.variants[variant % cfg.variants.length] ?? cfg.variants[0]!
   // The rebuilt post template (blog-post-v2.tsx): the theme's .bcta block.
   if (theme) {

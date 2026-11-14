@@ -11123,5 +11123,10337 @@ export const AUDIT_LIBRARY_WAVES: LibraryTemplate[] = [
     ]
    }
   ]
+ },
+ {
+  "name": "Antimicrobial Prescribing Audit",
+  "description": "A sampled check of antimicrobial prescribing records covering reason, allergy check, dose, duration and follow up, repeated twice a year.",
+  "frequency": "periodic",
+  "subject_scope": "resident",
+  "sections": [
+   {
+    "title": "Audit set up and sample",
+    "questions": [
+     {
+      "text": "Date the audit period starts",
+      "type": "date",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Date the audit period ends",
+      "type": "date",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Which audit cycle is this?",
+      "type": "choice",
+      "qs": "wellled-governance-management-sustainability",
+      "settings": {
+       "options": [
+        {
+         "label": "First cycle"
+        },
+        {
+         "label": "Re-audit after changes"
+        },
+        {
+         "label": "Third or later cycle"
+        }
+       ]
+      },
+      "key": "cycle"
+     },
+     {
+      "text": "The standards used in this audit (for example the percentage of prescriptions that should meet each check) were agreed and written down before data collection.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Number of antimicrobial prescriptions in the sample",
+      "type": "number",
+      "settings": {
+       "unit": "prescriptions",
+       "min": 0,
+       "max": 500,
+       "pass_min": 10
+      },
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "The sample was picked in a way that cannot favour good records (for example the next prescriptions in date order, or a random draw), and the method is written down.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "The sample covers every prescriber who issued antimicrobials in the period.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   },
+   {
+    "title": "Reason for prescribing recorded",
+    "questions": [
+     {
+      "text": "Number of sampled prescriptions with the reason for the antimicrobial written in the record",
+      "type": "number",
+      "settings": {
+       "unit": "prescriptions",
+       "min": 0,
+       "max": 500
+      },
+      "qs": "effective-evidence-based-care"
+     },
+     {
+      "text": "Each sampled prescription has the date it was issued and the name of the prescriber recorded.",
+      "type": "yes_no",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "The record shows the problem found (for example symptoms or examination findings) that led to the prescription.",
+      "type": "yes_no",
+      "qs": "effective-evidence-based-care"
+     },
+     {
+      "text": "The record shows the person was told why an antimicrobial was or was not needed.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Where an antimicrobial was not prescribed, the record shows the reason and the advice given.",
+      "type": "yes_no_na",
+      "qs": "effective-evidence-based-care"
+     },
+     {
+      "text": "Any known allergy or past reaction was checked and the check is recorded for each sampled prescription.",
+      "type": "yes_no",
+      "qs": "safe-medicines-optimisation",
+      "key": "allergy"
+     },
+     {
+      "text": "Where an allergy or reaction was found, the record shows how the choice of medicine took it into account.",
+      "type": "yes_no",
+      "qs": "safe-medicines-optimisation",
+      "show_if": {
+       "key": "allergy",
+       "equals": [
+        "no"
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Medicine, dose and duration against the local standard",
+    "questions": [
+     {
+      "text": "The service has a current written local standard or guideline for antimicrobial prescribing, with a review date.",
+      "type": "yes_no",
+      "qs": "effective-evidence-based-care",
+      "key": "guideline"
+     },
+     {
+      "text": "Name and version or date of the guideline used as the standard for this audit",
+      "type": "free_text",
+      "qs": "effective-evidence-based-care",
+      "show_if": {
+       "key": "guideline",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "The medicine named in each sampled record matches a choice listed in the standard.",
+      "type": "yes_no",
+      "qs": "effective-evidence-based-care"
+     },
+     {
+      "text": "The dose and the number of days are written for each sampled prescription.",
+      "type": "yes_no",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Number of sampled prescriptions where the recorded course length is within the standard",
+      "type": "number",
+      "settings": {
+       "unit": "prescriptions",
+       "min": 0,
+       "max": 500
+      },
+      "qs": "effective-evidence-based-care"
+     },
+     {
+      "text": "Where a course was longer than the standard, was a reason recorded?",
+      "type": "choice",
+      "qs": "effective-evidence-based-care",
+      "settings": {
+       "options": [
+        {
+         "label": "Not applicable, none were longer"
+        },
+        {
+         "label": "Yes, in every case"
+        },
+        {
+         "label": "In some cases only",
+         "fail": true
+        },
+        {
+         "label": "No",
+         "fail": true
+        }
+       ]
+      },
+      "key": "long"
+     },
+     {
+      "text": "List each prescription outside the standard (reference number, what differed, reason if recorded)",
+      "type": "findings",
+      "qs": "effective-evidence-based-care",
+      "show_if": {
+       "key": "long",
+       "equals": [
+        "In some cases only",
+        "No"
+       ]
+      }
+     },
+     {
+      "text": "Prescriptions made by phone or remote consultation are recorded to the same standard as face to face ones.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     }
+    ]
+   },
+   {
+    "title": "Advice, safety netting and follow up",
+    "questions": [
+     {
+      "text": "The record shows the person was told how to take the medicine, for how long and what to do if they get worse.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The record shows the person was given a way to contact the service if symptoms did not settle.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "A review or follow up was planned or offered, and the plan is recorded.",
+      "type": "yes_no",
+      "qs": "effective-evidence-based-care"
+     },
+     {
+      "text": "Was a follow up recorded for sampled prescriptions that needed one?",
+      "type": "choice",
+      "qs": "effective-evidence-based-care",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes, for all"
+        },
+        {
+         "label": "For some",
+         "fail": true
+        },
+        {
+         "label": "None",
+         "fail": true
+        },
+        {
+         "label": "Not applicable"
+        }
+       ]
+      },
+      "key": "fu"
+     },
+     {
+      "text": "Where a prescription was changed after review (for example a stop, switch or extension), the reason is recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Where the person was referred on to another service, the referral date and reason are recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "Where a sample or test result was used to choose the medicine, the record shows the result was seen before or after prescribing as planned.",
+      "type": "yes_no_na",
+      "qs": "effective-evidence-based-care"
+     }
+    ]
+   },
+   {
+    "title": "Stewardship systems and staff",
+    "questions": [
+     {
+      "text": "A named lead for antimicrobial prescribing (or infection prevention) is recorded.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Each prescriber has seen the local standard and the date is on file.",
+      "type": "yes_no",
+      "qs": "effective-evidence-based-care"
+     },
+     {
+      "text": "Prescribers have had antimicrobial or infection related training in the last 12 months and the dates are on file.",
+      "type": "yes_no_na",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "The service keeps a record of prescribing totals (for example number of antimicrobial prescriptions per month) so a change can be seen.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Prescribing results are shared with the whole prescribing team at a meeting and the minute is kept.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Information for people on when antimicrobials are and are not needed is available in the waiting area or on the website.",
+      "type": "yes_no",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Prescribing that did not match the standard is raised with the prescriber in a recorded, non-blaming conversation.",
+      "type": "yes_no",
+      "qs": "safe-learning-culture"
+     }
+    ]
+   },
+   {
+    "title": "Results, actions and re-audit",
+    "questions": [
+     {
+      "text": "Percentage of sampled prescriptions that met every check in this audit",
+      "type": "number",
+      "settings": {
+       "unit": "percent",
+       "min": 0,
+       "max": 100,
+       "pass_min": 90
+      },
+      "qs": "effective-evidence-based-care"
+     },
+     {
+      "text": "Did the result meet the standard agreed before data collection?",
+      "type": "choice",
+      "qs": "wellled-governance-management-sustainability",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes"
+        },
+        {
+         "label": "Partly",
+         "fail": true
+        },
+        {
+         "label": "No",
+         "fail": true
+        }
+       ]
+      },
+      "key": "met"
+     },
+     {
+      "text": "List each check that was not met, with the number of prescriptions affected and the cause found",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability",
+      "show_if": {
+       "key": "met",
+       "equals": [
+        "Partly",
+        "No"
+       ]
+      }
+     },
+     {
+      "text": "An action plan with an owner and a due date was written for each check not met.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability",
+      "show_if": {
+       "key": "met",
+       "equals": [
+        "Partly",
+        "No"
+       ]
+      }
+     },
+     {
+      "text": "A date for the re-audit is booked, with at least one to two months allowed for changes to take effect.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "How confident is the auditor that the records show the real reasons for prescribing?",
+      "type": "rating",
+      "settings": {
+       "max_rating": 5,
+       "pass_min": 3
+      },
+      "qs": "effective-evidence-based-care"
+     },
+     {
+      "text": "The signed audit is stored with the previous cycle so results can be compared over time.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Business Continuity and Emergency Cover Audit",
+  "description": "Check that your business continuity plan is current, contacts work, staff cover and priority lists are ready, and the plan has been tested.",
+  "frequency": "periodic",
+  "subject_scope": "none",
+  "sections": [
+   {
+    "title": "Plan and ownership",
+    "questions": [
+     {
+      "text": "The service has a written business continuity plan that covers loss of staff, premises or office, IT and telephones, and utilities.",
+      "type": "yes_no",
+      "key": "plan",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Date the plan was last reviewed.",
+      "type": "date",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Months since the plan was last reviewed.",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 36,
+       "pass_max": 12
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "The plan names the person responsible for it and a named deputy.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "The plan sets out who can declare an emergency and who takes charge when the registered manager is away.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "The plan was reviewed after any change of premises, systems, service size or management.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Staff know where to find the plan, and a copy can be reached outside the office and without the main IT system.",
+      "type": "yes_no",
+      "key": "access",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Record how the copy is kept and who holds it.",
+      "type": "findings",
+      "show_if": {
+       "key": "access",
+       "equals": [
+        "no"
+       ]
+      },
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   },
+   {
+    "title": "Emergency contacts",
+    "questions": [
+     {
+      "text": "An emergency contact list is in the plan and covers senior managers, on call staff, the provider or owner and key suppliers.",
+      "type": "yes_no",
+      "key": "contacts",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Number of contact numbers sampled and tried.",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 50
+      },
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Number of sampled contact numbers that were wrong or unanswered.",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 50,
+       "pass_max": 0
+      },
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Contact details for the local authority commissioners, the CQC and the local health partners are included.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Each person using the service has an emergency contact recorded, and the details are held where on call staff can see them.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The out of hours route to reach a manager is written down and was checked within the last three months.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     }
+    ]
+   },
+   {
+    "title": "Staffing cover",
+    "questions": [
+     {
+      "text": "The plan sets out what to do if many staff are absent at once, for example through illness, severe weather or transport disruption.",
+      "type": "yes_no",
+      "key": "staffcover",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "A list of staff or agencies able to give extra cover is held and was checked within the last six months.",
+      "type": "yes_no_na",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Cover arrangements say who may be called in and confirm they hold the checks and training the role needs.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Staff who live close to people with high priority needs are identified, where this helps to keep visits going.",
+      "type": "yes_no_na",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Managers can show how they would cover the most urgent visits or shifts for one full day with half of the usual staff.",
+      "type": "yes_no",
+      "key": "halfstaff",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Record the shortfall in cover found and the action agreed.",
+      "type": "findings",
+      "show_if": {
+       "key": "halfstaff",
+       "equals": [
+        "no"
+       ]
+      },
+      "qs": "safe-effective-staffing"
+     }
+    ]
+   },
+   {
+    "title": "People who use the service and priorities",
+    "questions": [
+     {
+      "text": "Every person has a priority rating of red, amber or green that shows how urgent their care is in an emergency.",
+      "type": "yes_no",
+      "key": "rag",
+      "qs": "safe-involving-people-manage-risks"
+     },
+     {
+      "text": "Number of people on the current list.",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 2000
+      },
+      "qs": "safe-involving-people-manage-risks"
+     },
+     {
+      "text": "Number of people in the sample whose priority rating is missing or out of date.",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 100,
+       "pass_max": 0
+      },
+      "qs": "safe-involving-people-manage-risks"
+     },
+     {
+      "text": "The rating is based on a recorded reason, for example medicines, personal care needs, living alone or no other support.",
+      "type": "yes_no",
+      "qs": "safe-involving-people-manage-risks"
+     },
+     {
+      "text": "The priority list is reviewed when a person's needs change and at least every six months.",
+      "type": "yes_no",
+      "qs": "safe-involving-people-manage-risks"
+     },
+     {
+      "text": "The list can be reached quickly outside the office and is protected against unauthorised access.",
+      "type": "yes_no",
+      "qs": "safe-involving-people-manage-risks"
+     },
+     {
+      "text": "For red rated people, a written fallback is in place, such as who else can visit or who to contact.",
+      "type": "yes_no_na",
+      "qs": "responsive-provision-integration-continuity"
+     },
+     {
+      "text": "Families, carers and other agencies are told in advance how the service will contact them in an emergency.",
+      "type": "yes_no",
+      "qs": "responsive-provision-integration-continuity"
+     }
+    ]
+   },
+   {
+    "title": "Systems, premises and supplies",
+    "questions": [
+     {
+      "text": "Instructions are written for loss of electricity, phone lines, internet or the care records and rota system.",
+      "type": "yes_no",
+      "key": "itfail",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Care records and rotas are backed up, and the last successful backup date is recorded.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Days since the last successful backup.",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 365,
+       "pass_max": 7
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "A plan is in place if the office or building cannot be used, including where staff can work from.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Stocks of essential items such as PPE, medicines supplies, torches and fuel are checked and the check is recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Arrangements for severe weather, such as vehicle access and lone worker contact, are written down.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     }
+    ]
+   },
+   {
+    "title": "Testing, lessons and sign off",
+    "questions": [
+     {
+      "text": "The plan was tested in the last 12 months by a desktop exercise, a drill or a real event.",
+      "type": "choice",
+      "key": "tested",
+      "settings": {
+       "options": [
+        {
+         "label": "Tested by exercise"
+        },
+        {
+         "label": "Tested by real event"
+        },
+        {
+         "label": "Not tested",
+         "fail": true
+        }
+       ]
+      },
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "Date of the most recent test.",
+      "type": "date",
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "A written record of the test says what happened, what went wrong and what was changed.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "tested",
+       "equals": [
+        "Tested by exercise",
+        "Tested by real event"
+       ]
+      },
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "Staff on duty were told about the outcome and any change to the plan.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "tested",
+       "equals": [
+        "Tested by exercise",
+        "Tested by real event"
+       ]
+      },
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "Actions from the last test or real event have an owner and a date, and the number overdue is shown.",
+      "type": "yes_no_na",
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "Number of actions from tests or events that are overdue.",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 50,
+       "pass_max": 0
+      },
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "New starters and agency staff are shown the plan at induction.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Overall confidence that the service could keep people safe through a major disruption.",
+      "type": "rating",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Record the main concerns and who will act on them.",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Clinical Equipment, Servicing and Validation Audit",
+  "description": "Quarterly check of the equipment register, servicing, calibration, validation, PAT, fault reporting and staff training for clinical equipment.",
+  "frequency": "quarterly",
+  "subject_scope": "none",
+  "sections": [
+   {
+    "title": "Equipment register",
+    "questions": [
+     {
+      "text": "A written register lists every item of clinical equipment used for care or treatment.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability",
+      "key": "reg"
+     },
+     {
+      "text": "List the equipment found in use that is missing from the register.",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability",
+      "show_if": {
+       "key": "reg",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "Each register entry shows make, model, serial or asset number and location.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Each register entry names the person responsible for servicing or checking it.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Items that have been retired or disposed of are marked as removed from the register with a date.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "key": "n_chk",
+      "text": "Number of items spot checked from the floor against the register",
+      "type": "number",
+      "qs": "wellled-governance-management-sustainability",
+      "settings": {
+       "min": 0,
+       "max": 200
+      }
+     },
+     {
+      "key": "n_match",
+      "text": "Number of those items that matched the register entry",
+      "type": "number",
+      "qs": "wellled-governance-management-sustainability",
+      "settings": {
+       "min": 0,
+       "max": 200
+      }
+     }
+    ]
+   },
+   {
+    "title": "Servicing and planned maintenance",
+    "questions": [
+     {
+      "text": "A planned servicing schedule covers every item that needs servicing, with due dates.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment",
+      "key": "sched"
+     },
+     {
+      "text": "List the items with no servicing schedule entry.",
+      "type": "findings",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "sched",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "key": "n_over",
+      "text": "Number of items on the register with a service due date that has passed",
+      "type": "number",
+      "qs": "safe-care-treatment",
+      "settings": {
+       "min": 0,
+       "max": 200,
+       "pass_max": 0
+      }
+     },
+     {
+      "text": "Servicing was done by the manufacturer or by a person or company the manufacturer or provider has judged competent.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Each service record shows the date, who did the work, what was done and the next due date.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Service reports with advice or faults found have a recorded response from a named person.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "key": "contract",
+      "text": "Where a service contract is in place, how current is it?",
+      "type": "choice",
+      "qs": "wellled-governance-management-sustainability",
+      "settings": {
+       "options": [
+        {
+         "label": "In date for all items"
+        },
+        {
+         "label": "Expired for some items",
+         "fail": true
+        },
+        {
+         "label": "No contract and none needed"
+        },
+        {
+         "label": "No contract but one is needed",
+         "fail": true
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Calibration, testing and validation",
+    "questions": [
+     {
+      "text": "Equipment that needs calibration (for example scales, blood pressure monitors, thermometers, gauges) is listed with calibration due dates.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment",
+      "key": "calreq"
+     },
+     {
+      "key": "n_cal",
+      "text": "Number of calibrated items found past their calibration due date",
+      "type": "number",
+      "qs": "safe-care-treatment",
+      "settings": {
+       "min": 0,
+       "max": 100,
+       "pass_max": 0
+      }
+     },
+     {
+      "text": "Calibration certificates or labels are kept and show the date and the standard used.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Does the service use sterilisers, washer disinfectors or similar decontamination equipment?",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control",
+      "key": "decon"
+     },
+     {
+      "text": "Validation and periodic test records are in date for each steriliser and washer disinfector.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control",
+      "show_if": {
+       "key": "decon",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "Daily or weekly test results for that equipment are logged, signed and reviewed by a named person.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control",
+      "show_if": {
+       "key": "decon",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "Portable appliance testing (PAT) records show every electrical item tested within the interval set by the practice risk assessment.",
+      "type": "yes_no_na",
+      "qs": "safe-environments",
+      "key": "pat"
+     },
+     {
+      "text": "List the electrical items with no test label or an overdue test.",
+      "type": "findings",
+      "qs": "safe-environments",
+      "show_if": {
+       "key": "pat",
+       "equals": [
+        "no"
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Faults, repairs and removal from use",
+    "questions": [
+     {
+      "text": "A fault reporting route exists and staff can say how to use it.",
+      "type": "yes_no_na",
+      "qs": "safe-learning-culture"
+     },
+     {
+      "key": "n_faults",
+      "text": "Number of faults reported in the last 3 months",
+      "type": "number",
+      "qs": "safe-learning-culture",
+      "settings": {
+       "min": 0,
+       "max": 200
+      }
+     },
+     {
+      "text": "Each reported fault has a recorded action and a date it was closed.",
+      "type": "yes_no_na",
+      "qs": "safe-learning-culture",
+      "key": "faultclosed"
+     },
+     {
+      "text": "Faulty equipment is taken out of use, labelled and kept apart from working stock.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment",
+      "key": "quar"
+     },
+     {
+      "text": "Describe the faulty items found still available for use.",
+      "type": "findings",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "quar",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "Repaired equipment is checked and recorded as safe before it goes back into use.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Safety alerts and recalls from manufacturers or the regulator were checked and the response recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-learning-culture"
+     }
+    ]
+   },
+   {
+    "title": "Training and safe use",
+    "questions": [
+     {
+      "text": "Staff who use each higher risk item have a recorded induction on that item.",
+      "type": "yes_no_na",
+      "qs": "safe-effective-staffing",
+      "key": "induct"
+     },
+     {
+      "key": "n_staff",
+      "text": "Number of staff records checked for equipment training",
+      "type": "number",
+      "qs": "safe-effective-staffing",
+      "settings": {
+       "min": 0,
+       "max": 100
+      }
+     },
+     {
+      "key": "n_trained",
+      "text": "Number of those staff with equipment training recorded as in date",
+      "type": "number",
+      "qs": "safe-effective-staffing",
+      "settings": {
+       "min": 0,
+       "max": 100
+      }
+     },
+     {
+      "text": "Manufacturer instructions are available to staff next to or near the equipment.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Single use items are not being reused and the reprocessing rules for reusable items are followed.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     }
+    ]
+   },
+   {
+    "title": "Cleaning, storage and environment",
+    "questions": [
+     {
+      "text": "Each item of equipment has a cleaning routine and records show it is followed.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Rate the general condition and cleanliness of the equipment seen (1 poor, 5 very good).",
+      "type": "rating",
+      "qs": "safe-infection-prevention-control",
+      "settings": {
+       "max_rating": 5,
+       "pass_min": 3
+      }
+     },
+     {
+      "text": "Equipment is stored where it is protected from damage, dust and misuse.",
+      "type": "yes_no_na",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Emergency equipment (for example oxygen and a defibrillator) is checked on the schedule set and the checks are recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     }
+    ]
+   },
+   {
+    "title": "Review and actions",
+    "questions": [
+     {
+      "text": "The equipment register was reviewed by a named person within the last 3 months.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Findings from the last equipment audit were acted on and the actions are signed off.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "The provider has a written equipment risk assessment or policy that was reviewed within the last year.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "key": "overall",
+      "text": "Overall assessment of equipment safety at this visit",
+      "type": "choice",
+      "qs": "wellled-governance-management-sustainability",
+      "settings": {
+       "options": [
+        {
+         "label": "Safe and well maintained"
+        },
+        {
+         "label": "Minor gaps, actions set"
+        },
+        {
+         "label": "Significant gaps, urgent action",
+         "fail": true
+        }
+       ]
+      }
+     },
+     {
+      "text": "Record the main actions, who owns each and the due date.",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Clinical Record Keeping Audit",
+  "description": "Quarterly check of sampled patient records for legibility, dating, signing, history, consent, plan, outcomes and safeguarding notes.",
+  "frequency": "quarterly",
+  "subject_scope": "resident",
+  "sections": [
+   {
+    "title": "Record sample and identification",
+    "questions": [
+     {
+      "text": "Date of the record review.",
+      "type": "date"
+     },
+     {
+      "text": "Role of the clinician who made the entries being reviewed.",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Dentist"
+        },
+        {
+         "label": "Doctor"
+        },
+        {
+         "label": "Nurse or other registered clinician"
+        },
+        {
+         "label": "Other clinician"
+        }
+       ]
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "The record is held under the right patient and the name, date of birth and contact details match the registration form.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The record is held securely, with access limited to authorised staff.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Every entry in the sample shows the date it was made.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Every entry in the sample shows who made it, by name or unique initials, and their role.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Entries can be read by someone other than the author, whether handwritten or typed.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   },
+   {
+    "title": "History and assessment",
+    "questions": [
+     {
+      "text": "A medical history is recorded and was checked or updated at the most recent visit.",
+      "type": "yes_no_na",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "Allergies and sensitivities are recorded, or the record states that none are known.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Current medicines are recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "The reason for the visit or presenting problem is recorded in the person's own terms.",
+      "type": "yes_no_na",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "Examination findings are recorded for the problem presented.",
+      "type": "yes_no_na",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "key": "risk_found",
+      "text": "Where a risk was identified, an assessment of it is recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-involving-people-manage-risks"
+     },
+     {
+      "text": "The risk assessment is dated and states what was done to reduce the risk.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "risk_found",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-involving-people-manage-risks"
+     }
+    ]
+   },
+   {
+    "title": "Consent and communication",
+    "questions": [
+     {
+      "text": "The options discussed with the person are recorded.",
+      "type": "yes_no_na",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "key": "consent",
+      "text": "The record shows the person agreed to the care or treatment given.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Where consent was written, the form is signed, dated and filed in the record.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "consent",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Where the person may have lacked capacity or was under 18, the record shows who was involved in the decision.",
+      "type": "yes_no_na",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "Information given to the person, such as aftercare advice or leaflets, is recorded.",
+      "type": "yes_no_na",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "The person's communication needs, such as language or interpreter use, are recorded where relevant.",
+      "type": "yes_no_na",
+      "qs": "responsive-person-centred-care"
+     }
+    ]
+   },
+   {
+    "title": "Plan, treatment and outcomes",
+    "questions": [
+     {
+      "text": "A diagnosis or working assessment is recorded.",
+      "type": "yes_no_na",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "A written plan states what care or treatment is intended.",
+      "type": "yes_no_na",
+      "qs": "effective-evidence-based-care"
+     },
+     {
+      "text": "Treatment given is recorded with date, what was done and by whom.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Where medicines were prescribed or supplied, the name, dose, route and quantity are recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Where tests or images were taken, the result is in the record and shows who reviewed it.",
+      "type": "yes_no_na",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Outcome or response to treatment is recorded at follow up.",
+      "type": "yes_no_na",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "key": "comp",
+      "text": "Were any complications or unexpected outcomes recorded?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes"
+        },
+        {
+         "label": "No"
+        }
+       ]
+      },
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "Where one was recorded, the record shows it was explained to the person and what action followed.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "comp",
+       "equals": [
+        "Yes"
+       ]
+      },
+      "qs": "safe-learning-culture"
+     }
+    ]
+   },
+   {
+    "title": "Safeguarding, referrals and follow up",
+    "questions": [
+     {
+      "key": "sg",
+      "text": "Safeguarding concerns, or a note that none were identified, are recorded where the person is a child or an adult at risk.",
+      "type": "yes_no_na",
+      "qs": "safe-safeguarding"
+     },
+     {
+      "text": "Where a concern was recorded, the record shows who it was passed to and when.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "sg",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-safeguarding"
+     },
+     {
+      "text": "Referrals made are recorded with date, destination and reason.",
+      "type": "yes_no_na",
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "Where the person's own GP or another provider needed to be told, the record shows this was done or that the person declined.",
+      "type": "yes_no_na",
+      "qs": "effective-staff-teams-work-together"
+     },
+     {
+      "text": "The next appointment, recall or review date is recorded.",
+      "type": "yes_no_na",
+      "qs": "responsive-provision-integration-continuity"
+     },
+     {
+      "text": "Missed appointments are recorded with the follow up action taken.",
+      "type": "yes_no_na",
+      "qs": "responsive-provision-integration-continuity"
+     }
+    ]
+   },
+   {
+    "title": "Corrections, scoring and actions",
+    "questions": [
+     {
+      "text": "Where an entry was corrected, the original is still readable and the correction is dated and signed.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Late entries are marked as late and show the date they were actually written.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Number of records sampled this quarter.",
+      "type": "number",
+      "settings": {
+       "min": 0
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Number of sampled records that were complete on all points above.",
+      "type": "number",
+      "settings": {
+       "min": 0
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Percentage of sampled records complete (the practice target is 90 or more).",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 100,
+       "pass_min": 90
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Overall quality of record keeping seen in the sample.",
+      "type": "rating",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Describe each gap found, the record reference (not the patient name) and what will be done.",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Has the clinician concerned been given feedback on gaps found?",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Consent and Information Sharing Audit",
+  "description": "Sample patient records each quarter to check consent, information given, capacity and recorded information sharing.",
+  "frequency": "quarterly",
+  "subject_scope": "resident",
+  "sections": [
+   {
+    "title": "The record sampled",
+    "questions": [
+     {
+      "text": "Patient or record reference (do not enter the person's name).",
+      "type": "free_text",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Type of care or treatment being checked.",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Dental treatment"
+        },
+        {
+         "label": "Minor procedure or surgery"
+        },
+        {
+         "label": "Consultation or investigation"
+        },
+        {
+         "label": "Imaging or diagnostic test"
+        },
+        {
+         "label": "Other"
+        }
+       ]
+      },
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "key": "age",
+      "text": "Age group of the person at the time of consent.",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Adult (18 or over)"
+        },
+        {
+         "label": "Aged 16 or 17"
+        },
+        {
+         "label": "Under 16"
+        }
+       ]
+      },
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "The record is complete enough to answer the questions below.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   },
+   {
+    "title": "Capacity and who gave consent",
+    "questions": [
+     {
+      "text": "The record shows who gave consent, their name and their role (for example the patient or a person with legal authority).",
+      "type": "yes_no",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "key": "doubt",
+      "text": "Was there any reason to doubt the person's capacity to decide?",
+      "type": "yes_no",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "A capacity assessment for this specific decision is recorded.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "doubt",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "Where the person lacked capacity, the record shows the legal route followed (for example best interests or a person with legal authority).",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "doubt",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "Support given to help the person decide (for example time, an interpreter, easy read) is recorded where it was needed.",
+      "type": "yes_no_na",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "For a person aged under 16, the record shows how the young person's own understanding was considered and who with parental responsibility agreed.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "age",
+       "equals": [
+        "Under 16"
+       ]
+      },
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "The consent was given before the care or treatment started.",
+      "type": "yes_no",
+      "qs": "effective-assessing-needs"
+     }
+    ]
+   },
+   {
+    "title": "Information given before consent",
+    "questions": [
+     {
+      "text": "The record shows the person was told what the care or treatment involves.",
+      "type": "yes_no",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "The record shows the benefits and the material risks were explained.",
+      "type": "yes_no",
+      "qs": "safe-involving-people-manage-risks"
+     },
+     {
+      "text": "The record shows reasonable alternatives, including doing nothing, were discussed.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "The record shows the likely cost was given before agreement, where the person pays.",
+      "type": "yes_no_na",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Written information was given in a format the person could use, and this is recorded.",
+      "type": "yes_no_na",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "The record shows the person had the chance to ask questions or take time before deciding.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "key": "how",
+      "text": "How was consent recorded?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Signed form"
+        },
+        {
+         "label": "Verbal consent noted in record"
+        },
+        {
+         "label": "Implied by actions and noted"
+        },
+        {
+         "label": "Not recorded",
+         "fail": true
+        }
+       ]
+      },
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "The signed consent form is dated, names the care or treatment, and matches what was done.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "how",
+       "equals": [
+        "Signed form"
+       ]
+      },
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "Where a procedure was carried out, consent was confirmed again on the day and this is recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The person's right to change their mind is recorded as explained.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     }
+    ]
+   },
+   {
+    "title": "Information sharing and records",
+    "questions": [
+     {
+      "key": "shared",
+      "text": "Information about this person was shared with anyone outside the service (for example the NHS GP, another provider, family).",
+      "type": "yes_no",
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "The person's agreement to the sharing is recorded, or the lawful reason for sharing without agreement is recorded.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "shared",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "The record states what was shared, with whom and on what date.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "shared",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "key": "gp",
+      "text": "Was the person's NHS GP told about the care or treatment where this was agreed?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes, and sent"
+        },
+        {
+         "label": "Person declined, recorded"
+        },
+        {
+         "label": "Not applicable"
+        },
+        {
+         "label": "No, and no reason recorded",
+         "fail": true
+        }
+       ]
+      },
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "The date the information was sent to the GP is recorded.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "gp",
+       "equals": [
+        "Yes, and sent"
+       ]
+      },
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "Where the person declined sharing, the record shows they were told what this may mean for their care.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "gp",
+       "equals": [
+        "Person declined, recorded"
+       ]
+      },
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "The entries are legible or typed, dated and attributable to a named member of staff.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "The record is held securely, and only staff who need it can see it.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   },
+   {
+    "title": "Service-level checks",
+    "questions": [
+     {
+      "text": "Number of records sampled in this audit.",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 200
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Percentage of sampled records with valid consent recorded before treatment.",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 100,
+       "pass_min": 100
+      },
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "A current consent policy is in place with a review date, and staff can find it.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Staff who take consent have had training and this is recorded for each of them.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Patients can see how to ask for their record or raise a concern about consent, and the information is displayed or given out.",
+      "type": "yes_no",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Rate how well the sampled records would stand up to an inspector's questions on consent.",
+      "type": "rating",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   },
+   {
+    "title": "Findings and actions",
+    "questions": [
+     {
+      "text": "Record any gaps found, with the record reference, the gap and who will fix it.",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "key": "pattern",
+      "text": "Do the gaps found suggest a pattern (for example one clinician or one form)?",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Describe the pattern and the learning shared with staff.",
+      "type": "free_text",
+      "show_if": {
+       "key": "pattern",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "Date this audit will be repeated.",
+      "type": "date",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Controlled Drugs Audit",
+  "description": "A monthly check of controlled drug storage, register entries, balances, ordering, witnessing, destruction and discrepancy follow up.",
+  "frequency": "monthly",
+  "subject_scope": "none",
+  "sections": [
+   {
+    "title": "Storage and keys",
+    "questions": [
+     {
+      "text": "Controlled drugs are kept in a locked cabinet or room that is fixed in place and used for nothing else.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "The keys to the controlled drugs cupboard are held only by named, authorised staff.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation",
+      "key": "keys"
+     },
+     {
+      "text": "Record which keys are held by whom, and any key held by someone not on the authorised list.",
+      "type": "findings",
+      "qs": "safe-medicines-optimisation",
+      "show_if": {
+       "key": "keys",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "A signed handover record shows who held the keys at each change of shift in the audit period.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Controlled drugs awaiting return or destruction are stored apart from stock in use and are clearly labelled.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Fridge controlled drugs, where held, are kept in a locked box or locked fridge and the temperature is logged.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "The cupboard was found locked and secure when the auditor arrived.",
+      "type": "yes_no",
+      "qs": "safe-medicines-optimisation"
+     }
+    ]
+   },
+   {
+    "title": "Register entries and balances",
+    "questions": [
+     {
+      "text": "Each controlled drug has its own register page, headed with the drug name, strength and form.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "The register is bound or electronic with attributable entries, and no pages are loose or missing.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Every entry made in the audit period was dated, timed and signed.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Entries were made on the day the drug was received or given, or the next day where that was not practical.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "No entry has been crossed out, covered over or altered. Corrections are by dated marginal note or footnote.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "The running balance on each sampled page is correct when worked out from the entries.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation",
+      "key": "runbal"
+     },
+     {
+      "text": "Number of register pages sampled for this audit",
+      "type": "number",
+      "qs": "safe-medicines-optimisation",
+      "settings": {
+       "unit": "pages",
+       "min": 0,
+       "max": 100
+      }
+     },
+     {
+      "text": "Number of sampled pages with an arithmetic or transcription error",
+      "type": "number",
+      "qs": "safe-learning-culture",
+      "settings": {
+       "unit": "pages",
+       "min": 0,
+       "max": 100,
+       "pass_min": 0,
+       "pass_max": 0
+      }
+     },
+     {
+      "text": "The register is used only for controlled drug records and nothing else.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     }
+    ]
+   },
+   {
+    "title": "Stock checks and discrepancies",
+    "questions": [
+     {
+      "text": "How often were stock balance checks done in the audit period?",
+      "type": "choice",
+      "qs": "safe-medicines-optimisation",
+      "settings": {
+       "options": [
+        {
+         "label": "At least weekly"
+        },
+        {
+         "label": "Fortnightly",
+         "fail": true
+        },
+        {
+         "label": "Monthly",
+         "fail": true
+        },
+        {
+         "label": "No regular checks",
+         "fail": true
+        }
+       ]
+      },
+      "key": "freq"
+     },
+     {
+      "text": "Each stock check was signed by two staff, and one of them is a senior or registered member of staff.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Number of controlled drugs counted by the auditor during this visit",
+      "type": "number",
+      "qs": "safe-medicines-optimisation",
+      "settings": {
+       "unit": "drugs",
+       "min": 0,
+       "max": 100
+      }
+     },
+     {
+      "text": "Number of counted drugs where the physical stock did not match the register",
+      "type": "number",
+      "qs": "safe-care-treatment",
+      "settings": {
+       "unit": "drugs",
+       "min": 0,
+       "max": 100,
+       "pass_min": 0,
+       "pass_max": 0
+      }
+     },
+     {
+      "text": "Was any discrepancy found in the audit period?",
+      "type": "choice",
+      "qs": "safe-care-treatment",
+      "settings": {
+       "options": [
+        {
+         "label": "No"
+        },
+        {
+         "label": "Yes, and resolved"
+        },
+        {
+         "label": "Yes, and unresolved",
+         "fail": true
+        }
+       ]
+      },
+      "key": "disc"
+     },
+     {
+      "text": "Each discrepancy was reported to the manager and logged as an incident on the day it was found.",
+      "type": "yes_no_na",
+      "qs": "safe-learning-culture",
+      "show_if": {
+       "key": "disc",
+       "equals": [
+        "Yes, and resolved",
+        "Yes, and unresolved"
+       ]
+      }
+     },
+     {
+      "text": "The accountable officer or the local lead was told where the discrepancy could not be explained.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability",
+      "show_if": {
+       "key": "disc",
+       "equals": [
+        "Yes, and resolved",
+        "Yes, and unresolved"
+       ]
+      }
+     },
+     {
+      "text": "Record each discrepancy, how it was found, who was told and what changed afterwards.",
+      "type": "findings",
+      "qs": "safe-learning-culture",
+      "show_if": {
+       "key": "disc",
+       "equals": [
+        "Yes, and resolved",
+        "Yes, and unresolved"
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Ordering, receipt and supply",
+    "questions": [
+     {
+      "text": "Controlled drugs were ordered only on a valid prescription or requisition signed by an authorised person.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Each delivery was checked against the order and signed for by two staff.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Each received item was entered in the register on the day of receipt, with the supplier and quantity.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Stock held matches the amounts that are needed, with no large surplus kept without reason.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Any drug supplied to a person leaving the service was recorded, with a signature from the person or their representative.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Patient own drugs, where held, are recorded in the register separately from service stock.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     }
+    ]
+   },
+   {
+    "title": "Administration and witnessing",
+    "questions": [
+     {
+      "text": "Each dose recorded in the register matches the dose on the medicines administration record.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Each administration shows the signature of the person who gave the dose and a second trained witness.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation",
+      "key": "wit"
+     },
+     {
+      "text": "Record any administration with no witness and the reason given.",
+      "type": "findings",
+      "qs": "safe-medicines-optimisation",
+      "show_if": {
+       "key": "wit",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "Waste or part doses were recorded in the register and witnessed.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Staff who handle controlled drugs have a current competency check on file.",
+      "type": "yes_no_na",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "A staff signature list is kept so every register signature can be matched to a person.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Controlled drugs given as required or by pump are recorded with the reason, effect and any follow up.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     }
+    ]
+   },
+   {
+    "title": "Destruction, returns and governance",
+    "questions": [
+     {
+      "text": "Out of date, unwanted or returned controlled drugs were destroyed in the presence of an authorised person.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation",
+      "key": "dest"
+     },
+     {
+      "text": "Each destruction is recorded in the register with the date, quantity and signature of the authorised person.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation",
+      "show_if": {
+       "key": "dest",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "The accountable officer was not the person authorised to witness destruction.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability",
+      "show_if": {
+       "key": "dest",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "A written controlled drugs procedure is in date and staff can say where it is kept.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "A named person is responsible for controlled drugs in the service, and staff know who this is.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Controlled drugs incidents and near misses are reviewed at a meeting, with actions and dates recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "The last periodic controlled drugs declaration or self assessment, where one was requested, was completed on time.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "List any actions from this audit, with an owner and a due date for each.",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Dental Decontamination (HTM 01-05) Audit",
+  "description": "A quarterly practice-wide check of decontamination flow, cleaning, sterilisation, validation, storage, traceability and water quality.",
+  "frequency": "quarterly",
+  "subject_scope": "none",
+  "sections": [
+   {
+    "title": "Decontamination area layout and flow",
+    "questions": [
+     {
+      "text": "Instruments are decontaminated in a dedicated room or a clearly separated area, not in a clinical treatment space while patients are present.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "The layout lets used instruments move one way, from dirty to clean, without crossing back.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "key": "flow",
+      "text": "Dirty and clean zones are clearly marked and the sink, washer-disinfector and steriliser are placed to support that flow.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Describe what you saw that breaks the dirty to clean flow and what has been agreed to fix it.",
+      "type": "free_text",
+      "show_if": {
+       "key": "flow",
+       "equals": [
+        "no"
+       ]
+      },
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Floors, work surfaces, sinks and cabinets in the area are intact, smooth and visibly clean.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Hand wash basins, soap, paper towels and a pedal bin are available in or next to the area.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Only trained staff were using the decontamination area during the visit.",
+      "type": "yes_no_na",
+      "qs": "safe-effective-staffing"
+     }
+    ]
+   },
+   {
+    "title": "Cleaning and inspection of instruments",
+    "questions": [
+     {
+      "key": "method",
+      "text": "How are used instruments cleaned?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Washer-disinfector"
+        },
+        {
+         "label": "Manual cleaning only",
+         "fail": true
+        },
+        {
+         "label": "Ultrasonic bath then rinse"
+        },
+        {
+         "label": "Mix of methods"
+        }
+       ]
+      },
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "key": "manual_doc",
+      "text": "Where manual cleaning is used, the written method names the water temperature, detergent and brush and is displayed.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Used instruments are kept moist or in a covered container between treatment and cleaning, and not left in the treatment room unprotected.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Instruments are inspected under a light and magnifier after cleaning, and any with residue or damage are removed or recleaned.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Staff wear the protective clothing, gloves and eye protection set out in the practice procedure when handling used instruments.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Single use items are discarded and not put through the decontamination cycle.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Number of instrument sets or trays checked on the day that showed visible residue or damage.",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 50,
+       "pass_min": 0,
+       "pass_max": 0
+      },
+      "qs": "safe-infection-prevention-control"
+     }
+    ]
+   },
+   {
+    "title": "Washer-disinfectors and sterilisers",
+    "questions": [
+     {
+      "key": "valid",
+      "text": "Every steriliser and washer-disinfector has a record of installation and validation, and the last validation is in date.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Give the reason validation is missing or out of date and the date it will be done.",
+      "type": "free_text",
+      "show_if": {
+       "key": "valid",
+       "equals": [
+        "no"
+       ]
+      },
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Date of the most recent annual validation of the steriliser or sterilisers.",
+      "type": "date",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Periodic tests (for example daily, weekly) set out in the practice procedure were done and logged on every working day checked.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Each steriliser cycle has a printout or electronic record showing it reached the required temperature, pressure and time.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The decontamination equipment is serviced as planned and faults are logged with action taken.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Written action is recorded when a test failed or a cycle was out of range, including removing the load from use.",
+      "type": "yes_no_na",
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "Water used in the steriliser and washer-disinfector is of the type the manufacturer specifies and the supply is logged.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     }
+    ]
+   },
+   {
+    "title": "Packaging, storage and traceability",
+    "questions": [
+     {
+      "text": "Sterilised instruments are packaged or stored in line with the practice procedure, and pouches are intact and dry.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Each pouch or tray is labelled with a sterilisation date or batch and a use by date.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Number of out of date or damp pouches found in drawers or storage during the check.",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 50,
+       "pass_min": 0,
+       "pass_max": 0
+      },
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Clean instruments are stored in closed, clean, dry cupboards or drawers away from sinks and dirty areas.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "key": "trace",
+      "text": "A record links each steriliser load to the patients treated with those instruments.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Pick one patient from last week and trace the instruments used back to the load record.",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Traced fully"
+        },
+        {
+         "label": "Traced in part",
+         "fail": true
+        },
+        {
+         "label": "Could not trace",
+         "fail": true
+        }
+       ]
+      },
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Explain what stopped the trace and who will fix the record process.",
+      "type": "free_text",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "trace",
+       "equals": [
+        "no"
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Water quality and waste",
+    "questions": [
+     {
+      "key": "legio",
+      "text": "A current water safety or Legionella risk assessment covers the dental unit water lines and is in date.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Dental unit water lines are flushed and disinfected as the written procedure says, and records are kept.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Sharps and clinical waste from the decontamination area go into the right containers, which are not overfilled.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Date of the last water test result reviewed by the practice.",
+      "type": "date",
+      "qs": "safe-environments"
+     }
+    ]
+   },
+   {
+    "title": "Training, governance and actions",
+    "questions": [
+     {
+      "key": "train",
+      "text": "Everyone who decontaminates instruments has recorded training and a competence check for the task.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Give names of staff missing a competence check and the date each will be done.",
+      "type": "free_text",
+      "show_if": {
+       "key": "train",
+       "equals": [
+        "no"
+       ]
+      },
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Staff immunisation status is recorded for those handling used instruments.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "A named decontamination lead is recorded and staff can say who it is.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "A written decontamination policy and procedures are in date and match what staff actually do.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "key": "prev",
+      "text": "The findings of the previous audit were acted on and closed by the agreed dates.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Overall rating of how well decontamination is managed.",
+      "type": "rating",
+      "settings": {
+       "max": 5,
+       "pass_min": 4
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "List the gaps found, who owns each action and the date it is due.",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Dental Radiography Quality and Justification Audit",
+  "description": "Sample radiographs each quarter to check each exposure was justified, graded, evaluated, dose checked and the equipment tested.",
+  "frequency": "quarterly",
+  "subject_scope": "resident",
+  "sections": [
+   {
+    "title": "Justification and authorisation",
+    "questions": [
+     {
+      "text": "Type of radiograph sampled",
+      "type": "choice",
+      "qs": "effective-evidence-based-care",
+      "settings": {
+       "options": [
+        {
+         "label": "Intraoral"
+        },
+        {
+         "label": "Panoramic"
+        },
+        {
+         "label": "Cephalometric"
+        },
+        {
+         "label": "Cone beam CT"
+        },
+        {
+         "label": "Other"
+        }
+       ]
+      }
+     },
+     {
+      "text": "The request or referral for this exposure is on the patient record.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The reason for the exposure and the clinical question it answers are written on the record.",
+      "type": "yes_no",
+      "qs": "effective-evidence-based-care",
+      "key": "reason"
+     },
+     {
+      "text": "The person who justified the exposure is named and is on the practice's list of entitled practitioners.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The record shows the patient's earlier images were considered before this exposure was taken.",
+      "type": "yes_no_na",
+      "qs": "effective-evidence-based-care"
+     },
+     {
+      "text": "The exposure was taken in line with the practice's written referral or selection criteria.",
+      "type": "yes_no",
+      "qs": "effective-evidence-based-care"
+     },
+     {
+      "text": "The patient was asked about pregnancy where this applied, and the answer is recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Was the exposure repeated?",
+      "type": "choice",
+      "qs": "safe-care-treatment",
+      "settings": {
+       "options": [
+        {
+         "label": "No"
+        },
+        {
+         "label": "Yes"
+        }
+       ]
+      },
+      "key": "repeat"
+     },
+     {
+      "text": "The reason for the repeat is recorded.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "repeat",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "Record any exposure that has no recorded justification.",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   },
+   {
+    "title": "Image quality grading",
+    "questions": [
+     {
+      "text": "Quality grade given to this image by the practice's grading scheme",
+      "type": "choice",
+      "qs": "effective-evidence-based-care",
+      "settings": {
+       "options": [
+        {
+         "label": "Excellent"
+        },
+        {
+         "label": "Diagnostically acceptable"
+        },
+        {
+         "label": "Unacceptable",
+         "fail": true
+        }
+       ]
+      },
+      "key": "grade"
+     },
+     {
+      "text": "The grade is recorded on or with the image record, with the date and the grader's name.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "A reason for the grade is recorded where the image was graded unacceptable.",
+      "type": "yes_no",
+      "qs": "effective-evidence-based-care",
+      "show_if": {
+       "key": "grade",
+       "equals": [
+        "Unacceptable"
+       ]
+      }
+     },
+     {
+      "text": "Positioning, coverage and exposure setting suit the clinical question for this image.",
+      "type": "yes_no",
+      "qs": "effective-evidence-based-care"
+     },
+     {
+      "text": "Percentage of sampled images graded excellent or diagnostically acceptable",
+      "type": "number",
+      "qs": "wellled-governance-management-sustainability",
+      "settings": {
+       "min": 90,
+       "max": 100
+      }
+     },
+     {
+      "text": "Grading results are totalled for each operator, not only for the practice.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Describe repeated image faults and what was done about them.",
+      "type": "findings",
+      "qs": "effective-evidence-based-care"
+     }
+    ]
+   },
+   {
+    "title": "Reporting and clinical evaluation",
+    "questions": [
+     {
+      "text": "A clinical evaluation of the image is written on the patient record.",
+      "type": "yes_no",
+      "qs": "effective-evidence-based-care"
+     },
+     {
+      "text": "The evaluation is dated and names the person who wrote it.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "The evaluation was made soon after the exposure, within the time the practice's procedure sets.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Findings that affect treatment were passed on to the patient or the referrer, and this is recorded.",
+      "type": "yes_no_na",
+      "qs": "effective-evidence-based-care"
+     }
+    ]
+   },
+   {
+    "title": "Dose and equipment quality assurance",
+    "questions": [
+     {
+      "text": "The exposure factors or dose indicator for this image are recorded.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Has the practice compared its typical doses with the national diagnostic reference levels in the last 12 months?",
+      "type": "choice",
+      "qs": "safe-care-treatment",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes"
+        },
+        {
+         "label": "No",
+         "fail": true
+        }
+       ]
+      },
+      "key": "drl"
+     },
+     {
+      "text": "Any result above the reference level was looked into and the outcome recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "drl",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "A current inventory lists every X-ray set and imaging device on site.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Each X-ray set has a current routine test and servicing record.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Months since the last full equipment performance test of the X-ray set used",
+      "type": "number",
+      "qs": "safe-environments",
+      "settings": {
+       "min": 0,
+       "max": 12
+      }
+     },
+     {
+      "text": "Faults found in tests were fixed and rechecked, with dates recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Rectangular collimation, protective equipment and warning signs are in place and in use.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "List equipment tests or services that are overdue.",
+      "type": "findings",
+      "qs": "safe-environments"
+     }
+    ]
+   },
+   {
+    "title": "Staff, roles and procedures",
+    "questions": [
+     {
+      "text": "A named person is recorded for each role: referrer, practitioner and operator.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Every staff member who took or justified a sampled exposure has a record of training for that role.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing",
+      "key": "train"
+     },
+     {
+      "text": "Refresher training in radiation protection is within the period the practice has set for each person sampled.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Written procedures for exposures are in date and every operator has signed to say they have read them.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Has an exposure incident or near miss been logged in the last 12 months?",
+      "type": "choice",
+      "qs": "safe-care-treatment",
+      "settings": {
+       "options": [
+        {
+         "label": "No"
+        },
+        {
+         "label": "Yes"
+        }
+       ]
+      },
+      "key": "inc"
+     },
+     {
+      "text": "Each logged exposure incident was reviewed and any required notification was made.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "inc",
+       "equals": [
+        "Yes"
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Audit programme and actions",
+    "questions": [
+     {
+      "text": "The previous radiography audit result and its action list are available.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Every action from the last audit is marked done, with a date and an owner.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "The audit sample was chosen by a stated method and covers every operator.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Overall result against the practice's own audit standard",
+      "type": "choice",
+      "qs": "wellled-governance-management-sustainability",
+      "settings": {
+       "options": [
+        {
+         "label": "Standard met"
+        },
+        {
+         "label": "Standard not met",
+         "fail": true
+        }
+       ]
+      },
+      "key": "overall"
+     },
+     {
+      "text": "An action plan with owners and dates has been written for each gap found.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability",
+      "show_if": {
+       "key": "overall",
+       "equals": [
+        "Standard not met"
+       ]
+      }
+     },
+     {
+      "text": "Record the date of the next audit and the people who will see these results.",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Dental Unit Waterline and Legionella Audit",
+  "description": "Monthly room check of dental unit waterline treatment, flushing, testing, records and the Legionella risk assessment.",
+  "frequency": "monthly",
+  "subject_scope": "room",
+  "sections": [
+   {
+    "title": "Dental unit and water supply",
+    "questions": [
+     {
+      "text": "Dental unit or room name and number",
+      "type": "free_text",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "How is the water supplied to the dental unit handpieces and three-in-one syringe?",
+      "type": "choice",
+      "qs": "safe-environments",
+      "settings": {
+       "options": [
+        {
+         "label": "Mains water direct"
+        },
+        {
+         "label": "Independent bottle system"
+        },
+        {
+         "label": "Separate water treatment unit"
+        },
+        {
+         "label": "Not sure",
+         "fail": true
+        }
+       ]
+      },
+      "key": "supply"
+     },
+     {
+      "text": "A written record shows the make and model of the unit and the waterline treatment fitted to it.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The unit is on the practice's asset list with its service and maintenance dates.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Anti-retraction valves or equivalent are fitted and the record shows they were checked.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "There are no dead legs, unused outlets or disconnected hoses visible on the unit or its supply pipework.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Independent water bottles are labelled, cleaned and refilled as the practice's procedure says.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control",
+      "key": "bottle"
+     },
+     {
+      "text": "The bottle contents on the day were the product and dilution the procedure names.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control",
+      "show_if": {
+       "key": "bottle",
+       "equals": [
+        "yes"
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Treatment and disinfection of waterlines",
+    "questions": [
+     {
+      "text": "A written procedure names the waterline treatment product, strength and how often it is used.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Which type of waterline treatment is used?",
+      "type": "choice",
+      "qs": "safe-infection-prevention-control",
+      "settings": {
+       "options": [
+        {
+         "label": "Continuous treatment"
+        },
+        {
+         "label": "Periodic shock disinfection"
+        },
+        {
+         "label": "Both"
+        },
+        {
+         "label": "None",
+         "fail": true
+        },
+        {
+         "label": "Not sure",
+         "fail": true
+        }
+       ]
+      },
+      "key": "treat"
+     },
+     {
+      "text": "The product label or data sheet confirms it is intended for dental unit waterlines.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "The last periodic shock disinfection is signed and dated and was within the interval the procedure sets.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control",
+      "show_if": {
+       "key": "treat",
+       "equals": [
+        "Periodic shock disinfection",
+        "Both"
+       ]
+      }
+     },
+     {
+      "text": "Staff who carry out the treatment can show how they do it and where the product is stored.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "The product is within its expiry date and stored as its label states.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Days since the waterlines were last treated",
+      "type": "number",
+      "qs": "safe-infection-prevention-control",
+      "settings": {
+       "min": 0,
+       "max": 365
+      }
+     }
+    ]
+   },
+   {
+    "title": "Flushing routines",
+    "questions": [
+     {
+      "text": "A written flushing routine covers start of day, between patients and end of day.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control",
+      "key": "flush"
+     },
+     {
+      "text": "The flushing log for this unit is complete for the last month.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Number of days in the last 30 working days with a missing flushing entry",
+      "type": "number",
+      "qs": "safe-infection-prevention-control",
+      "settings": {
+       "min": 0,
+       "max": 30
+      }
+     },
+     {
+      "text": "Staff on the day can describe how long they run each outlet and when.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "After a long closure such as a holiday, the record shows extra flushing was done before use.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Flushing is done for any infrequently used taps and showers in the same room.",
+      "type": "yes_no_na",
+      "qs": "safe-environments"
+     }
+    ]
+   },
+   {
+    "title": "Testing and results",
+    "questions": [
+     {
+      "text": "Water from this unit was tested for microbial contamination in the last 12 months.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control",
+      "key": "tested"
+     },
+     {
+      "text": "The test report names the unit, the sample point and the date.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control",
+      "show_if": {
+       "key": "tested",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "The result was compared with the limit the practice's own procedure or its water contractor sets.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control",
+      "show_if": {
+       "key": "tested",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "The result was within that limit.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control",
+      "key": "passed",
+      "show_if": {
+       "key": "tested",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "A recheck after any failed result is recorded and shows the outcome.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Hot and cold water temperatures at the nearest outlets were checked and recorded this month.",
+      "type": "yes_no_na",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "List any test results or temperatures outside the practice's limits",
+      "type": "findings",
+      "qs": "safe-environments"
+     }
+    ]
+   },
+   {
+    "title": "Risk assessment and responsibilities",
+    "questions": [
+     {
+      "text": "A written Legionella risk assessment covering the premises is on file.",
+      "type": "yes_no",
+      "qs": "safe-environments",
+      "key": "ra"
+     },
+     {
+      "text": "The risk assessment names the dental unit waterlines as part of the water system.",
+      "type": "yes_no",
+      "qs": "safe-environments",
+      "show_if": {
+       "key": "ra",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "The risk assessment was reviewed in the last 2 years or after any change to the water system.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability",
+      "show_if": {
+       "key": "ra",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "A named person is responsible for water safety and the name is in the procedure.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "The named person and the people who flush and treat have a training record for this task.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Actions from the last risk assessment have an owner and a date, and completed ones are signed off.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Water safety checks are reported to the practice meeting or manager and the notes are kept.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   },
+   {
+    "title": "Incidents, actions and overall view",
+    "questions": [
+     {
+      "text": "The practice has a written step to follow if a test fails or Legionella is suspected.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Any water safety incident in the last 12 months was recorded with what was done.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment",
+      "key": "inc"
+     },
+     {
+      "text": "The record shows the actions were reviewed and closed.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability",
+      "show_if": {
+       "key": "inc",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "Overall confidence that waterline records are complete and up to date",
+      "type": "rating",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Actions needed, with owner and date",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Name of the person completing the audit and the date",
+      "type": "free_text",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Detox and Withdrawal Monitoring Audit",
+  "description": "Checks each person's detox record for assessment, prescribing, withdrawal scale checks, escalation, physical health and discharge planning.",
+  "frequency": "monthly",
+  "subject_scope": "resident",
+  "sections": [
+   {
+    "title": "Admission assessment and risk",
+    "questions": [
+     {
+      "text": "Is a written assessment of this person's substance use, completed before or on admission, on file?",
+      "type": "yes_no_na",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "Does the assessment record the substances used, amounts, how long and the date and time of last use?",
+      "type": "yes_no_na",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "Is the person's previous experience of withdrawal, including seizures or confusion, recorded?",
+      "type": "yes_no_na",
+      "qs": "safe-involving-people-manage-risks"
+     },
+     {
+      "text": "Are other health conditions, allergies and current medicines recorded in the assessment?",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "key": "risk",
+      "text": "Is there a written risk assessment for withdrawal that has been signed and dated by a named clinician?",
+      "type": "yes_no_na",
+      "qs": "safe-involving-people-manage-risks"
+     },
+     {
+      "text": "Was the risk assessment reviewed after any change in the person's condition?",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "risk",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-involving-people-manage-risks"
+     },
+     {
+      "text": "Is the person's consent to detox treatment recorded?",
+      "type": "yes_no_na",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "key": "type",
+      "text": "Type of detox recorded for this person",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Alcohol"
+        },
+        {
+         "label": "Opioid"
+        },
+        {
+         "label": "Benzodiazepine"
+        },
+        {
+         "label": "Other or mixed"
+        },
+        {
+         "label": "Not recorded",
+         "fail": true
+        }
+       ]
+      },
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Does the person's file show a plan for what happens if a medical review is needed out of hours?",
+      "type": "yes_no_na",
+      "qs": "safe-systems-pathways-transitions"
+     }
+    ]
+   },
+   {
+    "title": "Prescribing and medicines records",
+    "questions": [
+     {
+      "key": "rx",
+      "text": "Is there a written prescription or treatment instruction from a prescriber for every detox medicine?",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Does the prescription state the medicine, dose, route, times and any reducing schedule?",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "rx",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Is every dose given recorded on the medicines administration record at the time?",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Are any missed, refused or withheld doses recorded with the reason?",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Were any controlled drugs entered in the register and counted in line with the service's procedure?",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Were changes to the dose made only on a written instruction from a prescriber?",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "key": "errs",
+      "text": "Number of medicines errors or near misses recorded for this person this month",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 50,
+       "pass_max": 0
+      },
+      "qs": "safe-learning-culture"
+     }
+    ]
+   },
+   {
+    "title": "Withdrawal scales and observations",
+    "questions": [
+     {
+      "key": "scale",
+      "text": "Which withdrawal scale is recorded for this person?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "CIWA-Ar"
+        },
+        {
+         "label": "COWS"
+        },
+        {
+         "label": "Service's own approved scale"
+        },
+        {
+         "label": "No scale used",
+         "fail": true
+        }
+       ]
+      },
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Is the scale filled in fully, with a total score, for each check?",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "scale",
+       "equals": [
+        "CIWA-Ar",
+        "COWS",
+        "Service's own approved scale"
+       ]
+      },
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Do the scale checks follow the frequency set by the prescriber or service procedure?",
+      "type": "yes_no_na",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Percentage of planned checks in the last seven days that were recorded",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 100,
+       "pass_min": 95
+      },
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Are physical observations (pulse, blood pressure, temperature, breathing) recorded alongside the scale?",
+      "type": "yes_no_na",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Is each entry signed, timed and legible with the staff member's name?",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Is there a record of the person's fluids and food over the withdrawal period?",
+      "type": "yes_no_na",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Are night time checks recorded as well as day time checks?",
+      "type": "yes_no_na",
+      "qs": "safe-effective-staffing"
+     }
+    ]
+   },
+   {
+    "title": "Escalation and medical review",
+    "questions": [
+     {
+      "text": "Does the service have a written list of warning signs that staff must report to a clinician?",
+      "type": "yes_no_na",
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "Is there a record of a clinician review at the frequency the service sets?",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "key": "trigger",
+      "text": "Did any check show a score or sign that needed to be reported?",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Is the time of the report, who was told and what was decided recorded?",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "trigger",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Was the report made within the time set by the service's procedure?",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "trigger",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-care-treatment"
+     },
+     {
+      "key": "transfer",
+      "text": "Was the person transferred to hospital during this period?",
+      "type": "yes_no",
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "Is the transfer recorded with the reason, time and a handover sent with the person?",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "transfer",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "Findings from the escalation records that need action",
+      "type": "findings",
+      "qs": "safe-learning-culture"
+     }
+    ]
+   },
+   {
+    "title": "Physical health and nutrition",
+    "questions": [
+     {
+      "text": "Is a physical health check recorded for this person within the time set by the service?",
+      "type": "yes_no_na",
+      "qs": "effective-healthier-lives"
+     },
+     {
+      "text": "Is it recorded whether vitamin supplements were offered or prescribed, as the prescriber decided?",
+      "type": "yes_no_na",
+      "qs": "effective-healthier-lives"
+     },
+     {
+      "text": "Are tests ordered by the prescriber, for example bloods, recorded with the result and who saw it?",
+      "type": "yes_no_na",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Is mental wellbeing and risk of self harm checked and recorded during withdrawal?",
+      "type": "yes_no_na",
+      "qs": "safe-involving-people-manage-risks"
+     },
+     {
+      "text": "Is the person's room checked and recorded as safe for someone who may be unwell?",
+      "type": "yes_no_na",
+      "qs": "safe-environments"
+     }
+    ]
+   },
+   {
+    "title": "Discharge, harm reduction and review",
+    "questions": [
+     {
+      "key": "dc",
+      "text": "Is a discharge or onward care plan on file before the person leaves?",
+      "type": "yes_no_na",
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "Does the plan record follow up appointments and who will support the person in the community?",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "dc",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "responsive-provision-integration-continuity"
+     },
+     {
+      "text": "Is advice about lower tolerance and overdose risk after detox recorded as given?",
+      "type": "yes_no_na",
+      "qs": "effective-healthier-lives"
+     },
+     {
+      "text": "Is the supply of naloxone, where the person is at risk of opioid overdose, recorded as offered or supplied?",
+      "type": "yes_no_na",
+      "qs": "effective-healthier-lives"
+     },
+     {
+      "text": "Was the person's GP or keyworker told in writing about the detox and medicines given?",
+      "type": "yes_no_na",
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "Was the person asked for feedback on their detox and is it recorded?",
+      "type": "yes_no_na",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Overall rating of how complete this person's detox record is",
+      "type": "rating",
+      "settings": {
+       "min": 1,
+       "max": 5,
+       "pass_min": 4
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Actions agreed, with owner and due date",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "End of Life Care Pathway Audit",
+  "description": "Check one person's end of life care from recognition to after death care, so wishes, symptom care and family contact are recorded.",
+  "frequency": "quarterly",
+  "subject_scope": "resident",
+  "sections": [
+   {
+    "title": "Recognition and identification",
+    "questions": [
+     {
+      "text": "Person's name or reference, and date of this review",
+      "type": "free_text"
+     },
+     {
+      "text": "The person was identified as possibly entering the last year of life, and the date and who made that judgement are recorded.",
+      "type": "yes_no_na",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "key": "lastdays",
+      "text": "Is the person now thought to be in the last days of life?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes"
+        },
+        {
+         "label": "No"
+        }
+       ]
+      },
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "A senior clinician or the person's GP reviewed and recorded the change in condition.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "lastdays",
+       "equals": [
+        "Yes"
+       ]
+      },
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "The person's condition was reviewed again after the change was recorded, with the date of each review noted.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "lastdays",
+       "equals": [
+        "Yes"
+       ]
+      },
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Days between the first recorded recognition and this review",
+      "type": "number",
+      "settings": {
+       "unit": "days",
+       "min": 0,
+       "max": 3650
+      }
+     },
+     {
+      "text": "The person's GP, district nurse or palliative care team were told about the recognition and the date is recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-systems-pathways-transitions"
+     }
+    ]
+   },
+   {
+    "title": "Conversations and preferences",
+    "questions": [
+     {
+      "text": "A conversation about the person's wishes for the end of their life took place and is dated in the record.",
+      "type": "yes_no_na",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "The record shows who took part (the person, family, advocate or others) and whom the person chose to include.",
+      "type": "yes_no_na",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Where the person could not take part, the record shows how their capacity was considered and who spoke for them.",
+      "type": "yes_no_na",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "The person's preferred place of care and place of death are recorded.",
+      "type": "yes_no_na",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Spiritual, cultural or religious wishes are recorded and acted on.",
+      "type": "yes_no_na",
+      "qs": "caring-treating-individuals"
+     },
+     {
+      "text": "Wishes about who should be present, music, rooms, comfort items and routines are recorded.",
+      "type": "yes_no_na",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "The person's decisions about resuscitation are recorded, in date, and match the form kept with them.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Date the preferences were last reviewed",
+      "type": "date"
+     },
+     {
+      "text": "Preferences were reviewed with the person or their representative after any change in condition.",
+      "type": "yes_no_na",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "The person's wishes are visible to night and agency staff (for example in the handover sheet or care plan summary).",
+      "type": "yes_no_na",
+      "qs": "effective-staff-teams-work-together"
+     }
+    ]
+   },
+   {
+    "title": "Care plan and symptom care",
+    "questions": [
+     {
+      "text": "An individual end of life care plan is in place and dated.",
+      "type": "yes_no_na",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "The plan sets out pain and other symptom needs and who to call for advice at any hour.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Anticipatory (as needed) medicines are prescribed and available where the person's plan says they may be needed.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Stock of those medicines was checked and counted against the record this review.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Pain and symptom scores are recorded using the tool named in the plan, and action is noted when a score is high.",
+      "type": "yes_no_na",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Mouth care, skin care, and repositioning are recorded at the frequency set in the plan.",
+      "type": "yes_no_na",
+      "qs": "caring-kindness-compassion-dignity"
+     },
+     {
+      "text": "Eating and drinking wishes are recorded, and the record shows what was offered and taken.",
+      "type": "yes_no_na",
+      "qs": "caring-immediate-needs"
+     },
+     {
+      "text": "Equipment the plan calls for (for example a pressure relieving mattress or syringe driver) was in place and in date for service.",
+      "type": "yes_no_na",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "How well was the person's comfort and dignity recorded in the last 7 days?",
+      "type": "rating",
+      "settings": {
+       "max_rating": 5,
+       "pass_min": 3
+      },
+      "qs": "caring-kindness-compassion-dignity"
+     },
+     {
+      "text": "Staff caring for the person have completed end of life training within the period set in the service's policy.",
+      "type": "yes_no_na",
+      "qs": "safe-effective-staffing"
+     }
+    ]
+   },
+   {
+    "title": "Family and those who matter",
+    "questions": [
+     {
+      "text": "The family or chosen contacts were told of the person's condition, with date and who told them.",
+      "type": "yes_no_na",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Family were offered somewhere to rest, refreshments and flexible visiting.",
+      "type": "yes_no_na",
+      "qs": "caring-kindness-compassion-dignity"
+     },
+     {
+      "key": "concern",
+      "text": "Did the family raise any concern or complaint about the person's care?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "No"
+        },
+        {
+         "label": "Yes",
+         "fail": true
+        }
+       ]
+      },
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "What was the concern, who dealt with it and what changed?",
+      "type": "findings",
+      "show_if": {
+       "key": "concern",
+       "equals": [
+        "Yes"
+       ]
+      },
+      "qs": "responsive-listening-involving"
+     }
+    ]
+   },
+   {
+    "title": "Care after death",
+    "questions": [
+     {
+      "key": "died",
+      "text": "Has the person died since the last review?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes"
+        },
+        {
+         "label": "No"
+        }
+       ]
+      }
+     },
+     {
+      "text": "The time of death, who was present and who confirmed the death are recorded.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "died",
+       "equals": [
+        "Yes"
+       ]
+      },
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Family and the GP were told promptly and the times are recorded.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "died",
+       "equals": [
+        "Yes"
+       ]
+      },
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "The person was cared for after death in line with their recorded cultural and religious wishes.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "died",
+       "equals": [
+        "Yes"
+       ]
+      },
+      "qs": "caring-kindness-compassion-dignity"
+     },
+     {
+      "text": "Personal belongings were listed, checked and handed over with a signature.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "died",
+       "equals": [
+        "Yes"
+       ]
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "key": "unexp",
+      "text": "Was the death unexpected or did anything about it need reporting?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "No"
+        },
+        {
+         "label": "Yes",
+         "fail": true
+        }
+       ]
+      },
+      "show_if": {
+       "key": "died",
+       "equals": [
+        "Yes"
+       ]
+      },
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "The report to CQC, coroner or other body was made and the date and reference are recorded.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "unexp",
+       "equals": [
+        "Yes"
+       ]
+      },
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   },
+   {
+    "title": "Review and learning",
+    "questions": [
+     {
+      "text": "A review of the person's care after death was held or recorded, including what went well and what did not.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "died",
+       "equals": [
+        "Yes"
+       ]
+      },
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "Family were offered a chance to give feedback or a follow up contact after the death.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "died",
+       "equals": [
+        "Yes"
+       ]
+      },
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Staff were offered support or a debrief after the person died.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "died",
+       "equals": [
+        "Yes"
+       ]
+      },
+      "qs": "caring-workforce-wellbeing"
+     },
+     {
+      "text": "Overall, how well did the care follow the person's wishes?",
+      "type": "rating",
+      "settings": {
+       "max_rating": 5,
+       "pass_min": 3
+      },
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Actions from this audit",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Records, people and areas checked during this audit",
+      "type": "free_text"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Extra Care Scheme Quality Audit",
+  "description": "Quarterly whole scheme check of care and housing separation, communal areas, call system, tenant independence and fire evacuation.",
+  "frequency": "quarterly",
+  "subject_scope": "none",
+  "sections": [
+   {
+    "title": "Care and housing separation",
+    "questions": [
+     {
+      "text": "Date of this scheme review.",
+      "type": "date",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "The written agreement between the housing provider and the care provider is in place and is dated within the last three years.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Each tenant has a tenancy or lease that is separate from their care and support agreement.",
+      "type": "yes_no",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Tenants were told in writing that they can change care provider without losing their home.",
+      "type": "yes_no_na",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "Care records list the care actually agreed with the tenant and are kept apart from tenancy and housing files.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "key": "care_model",
+      "text": "Who delivers the care at this scheme?",
+      "type": "choice",
+      "qs": "wellled-governance-management-sustainability",
+      "settings": {
+       "options": [
+        {
+         "label": "Registered provider on site"
+        },
+        {
+         "label": "Registered provider off site"
+        },
+        {
+         "label": "Mixed with an unregistered provider",
+         "fail": true
+        }
+       ]
+      }
+     },
+     {
+      "text": "You have seen written evidence of how the registered provider oversees the work of the unregistered provider.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability",
+      "show_if": {
+       "key": "care_model",
+       "equals": [
+        "Mixed with an unregistered provider"
+       ]
+      }
+     },
+     {
+      "text": "The scheme manager has written details of which tasks belong to housing staff and which to care staff.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   },
+   {
+    "title": "Communal areas and premises",
+    "questions": [
+     {
+      "key": "comm_state",
+      "text": "Overall state of the communal lounge, corridors and entrance.",
+      "type": "choice",
+      "qs": "safe-environments",
+      "settings": {
+       "options": [
+        {
+         "label": "Clean and in good order"
+        },
+        {
+         "label": "Minor faults"
+        },
+        {
+         "label": "Needs urgent attention",
+         "fail": true
+        }
+       ]
+      }
+     },
+     {
+      "text": "List any damaged, dirty or hazardous items found during the walk round.",
+      "type": "findings",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Corridors, stairs and lift lobbies are clear of trip hazards and stored items.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Lifts have an in-date inspection certificate and were working on the day.",
+      "type": "yes_no_na",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Entrance doors, door entry system and CCTV (if fitted) work and tenants were told how visitors are controlled.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "key": "maint",
+      "text": "Planned maintenance for communal premises and equipment is logged and up to date.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Overdue repairs have a named person and a target date.",
+      "type": "yes_no",
+      "qs": "safe-environments",
+      "show_if": {
+       "key": "maint",
+       "equals": [
+        "no"
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Call system and response",
+    "questions": [
+     {
+      "text": "The tenant call system has been tested and serviced within the last 12 months, with a certificate or record.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "key": "calltest",
+      "text": "A test call from at least three flats and one communal area reached staff on the day.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Which locations failed the test call, and what has been done?",
+      "type": "findings",
+      "qs": "safe-environments",
+      "show_if": {
+       "key": "calltest",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "Longest response time in minutes for the test calls.",
+      "type": "number",
+      "qs": "safe-care-treatment",
+      "settings": {
+       "min": 0,
+       "max": 60,
+       "pass_max": 10
+      }
+     },
+     {
+      "text": "Staff cover for the call system is recorded for every night and weekend shift in the last month.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "The provider reviews a sample of call response times at least monthly and records what it found.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Tenants have a way to call for help in bathrooms and bedrooms, and pendants are in reach.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     }
+    ]
+   },
+   {
+    "title": "Tenant independence, voice and activities",
+    "questions": [
+     {
+      "text": "Care plans record what each tenant can do for themselves and what support they want.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "A sample of three tenants confirmed they decide when they get up, eat and go out.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "key": "meeting",
+      "text": "A residents' meeting was held in the last quarter and minutes with actions are available.",
+      "type": "yes_no",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Actions from the last meeting were completed or an update given to tenants.",
+      "type": "yes_no",
+      "qs": "responsive-listening-involving",
+      "show_if": {
+       "key": "meeting",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "Number of social activities or events held in the last month.",
+      "type": "number",
+      "qs": "responsive-person-centred-care",
+      "settings": {
+       "min": 0,
+       "max": 100,
+       "pass_min": 4
+      }
+     },
+     {
+      "text": "Complaints and concerns received in the last quarter were logged, answered and learned from.",
+      "type": "yes_no",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Rate how independent and in control the tenants you spoke to appeared (1 very poor, 5 very good).",
+      "type": "rating",
+      "qs": "caring-independence-choice-control",
+      "settings": {
+       "min": 1,
+       "max": 5,
+       "pass_min": 4
+      }
+     }
+    ]
+   },
+   {
+    "title": "Fire safety and emergency evacuation",
+    "questions": [
+     {
+      "text": "A current fire risk assessment covers the whole scheme and is dated within the last 12 months.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "key": "peep",
+      "text": "Every tenant has a personal emergency evacuation plan that matches their current mobility and needs.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Number of tenants with no up to date evacuation plan.",
+      "type": "number",
+      "qs": "safe-care-treatment",
+      "settings": {
+       "min": 0,
+       "max": 200,
+       "pass_max": 0
+      }
+     },
+     {
+      "text": "Fire alarm tests are logged weekly and the last full service certificate is in date.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Escape routes, fire doors and exits were clear and fire doors close fully.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Care and housing staff have taken part in a fire drill in the last 6 months, and it is recorded.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "The evacuation plan states what happens when lifts cannot be used and who helps each tenant.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     }
+    ]
+   },
+   {
+    "title": "Staffing, records and governance",
+    "questions": [
+     {
+      "text": "The rota shows enough care staff on every shift in the last 4 weeks to meet the planned care hours.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Care staff training, including fire, first aid and safeguarding, is in date for every worker on the matrix.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Care plan reviews were done within the planned dates for a sample of five tenants.",
+      "type": "yes_no",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Incidents, accidents and safeguarding concerns in the last quarter were recorded and reviewed.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "key": "actions",
+      "text": "The provider holds a record of this audit, and an action plan with owners and dates for every item failed.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "List each failed item that still has no action, owner or target date.",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability",
+      "show_if": {
+       "key": "actions",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "Overall rating of how well the scheme balances housing independence with safe care (1 poor, 5 excellent).",
+      "type": "rating",
+      "qs": "wellled-governance-management-sustainability",
+      "settings": {
+       "min": 1,
+       "max": 5,
+       "pass_min": 4
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Finance and Money Handling Audit",
+  "description": "A monthly per person check of money held, receipts, balance counts, appointeeship, benefits and two signatures to guard against financial abuse.",
+  "frequency": "monthly",
+  "subject_scope": "resident",
+  "sections": [
+   {
+    "title": "Person and arrangements",
+    "questions": [
+     {
+      "text": "Person's name or reference, and the date of this check.",
+      "type": "free_text",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Who manages this person's money?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "The person manages it themselves"
+        },
+        {
+         "label": "The person, with staff support"
+        },
+        {
+         "label": "An appointee or deputy outside the service"
+        },
+        {
+         "label": "The service holds money for the person"
+        },
+        {
+         "label": "No clear arrangement recorded",
+         "fail": true
+        }
+       ]
+      },
+      "qs": "safe-safeguarding",
+      "key": "arr"
+     },
+     {
+      "text": "The arrangement is written in the person's support plan and was agreed with them or their representative.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "A mental capacity assessment for money decisions is on file and dated.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Where the person lacks capacity, a best interests decision about their money is recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The date the money arrangement was last reviewed is recorded, and it is within the last 12 months.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   },
+   {
+    "title": "Money held and balance checks",
+    "questions": [
+     {
+      "text": "The service holds cash or a bank card for this person.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment",
+      "key": "held"
+     },
+     {
+      "text": "The cash is kept in a locked place that only named staff can open.",
+      "type": "yes_no",
+      "qs": "safe-safeguarding",
+      "show_if": {
+       "key": "held",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "The person has a separate ledger, and their money is not mixed with other people's or the service's money.",
+      "type": "yes_no",
+      "qs": "safe-safeguarding",
+      "show_if": {
+       "key": "held",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "Balance counted in front of two people on the day of this check",
+      "type": "number",
+      "settings": {
+       "unit": "£",
+       "min": 0,
+       "max": 100000
+      },
+      "qs": "safe-safeguarding"
+     },
+     {
+      "text": "Balance shown in the ledger on the day of this check",
+      "type": "number",
+      "settings": {
+       "unit": "£",
+       "min": 0,
+       "max": 100000
+      },
+      "qs": "safe-safeguarding"
+     },
+     {
+      "text": "Difference between counted cash and ledger balance",
+      "type": "number",
+      "settings": {
+       "unit": "£",
+       "min": 0,
+       "max": 1000,
+       "pass_max": 0
+      },
+      "qs": "safe-safeguarding"
+     },
+     {
+      "text": "Balance checks are done and signed by two staff at least once a week.",
+      "type": "yes_no",
+      "qs": "safe-safeguarding",
+      "show_if": {
+       "key": "held",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "Record any difference, with the date it was found and what was done about it.",
+      "type": "findings",
+      "qs": "safe-safeguarding"
+     },
+     {
+      "text": "Days since the last balance check was signed by two people",
+      "type": "number",
+      "settings": {
+       "unit": "days",
+       "min": 0,
+       "max": 365,
+       "pass_max": 7
+      },
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   },
+   {
+    "title": "Receipts, spending and records",
+    "questions": [
+     {
+      "text": "Every ledger entry for the last month has a receipt, or a recorded reason why there is none.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Each entry shows date, amount, what it was for and the staff member's signature.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Spending matches what the person asked for or what their support plan allows.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "Two entries picked at random were traced from ledger to receipt and the amounts agree.",
+      "type": "yes_no",
+      "qs": "safe-safeguarding"
+     },
+     {
+      "text": "Number of entries without a receipt or reason this month",
+      "type": "number",
+      "settings": {
+       "unit": "entries",
+       "min": 0,
+       "max": 100,
+       "pass_max": 0
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Staff do not borrow, lend or take money from the person for any purpose, and none is recorded.",
+      "type": "yes_no",
+      "qs": "safe-safeguarding",
+      "key": "loan"
+     },
+     {
+      "text": "Describe any loan, borrowing or unexplained withdrawal found.",
+      "type": "findings",
+      "qs": "safe-safeguarding",
+      "show_if": {
+       "key": "loan",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "Staff do not take payment, gifts or favours from the person, and the gifts policy is followed.",
+      "type": "yes_no_na",
+      "qs": "safe-safeguarding"
+     }
+    ]
+   },
+   {
+    "title": "Benefits, appointeeship and accounts",
+    "questions": [
+     {
+      "text": "The person's benefits are paid to the right account and the person or their appointee knows what they receive.",
+      "type": "yes_no_na",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Who is the appointee or deputy for the person's benefits or finances?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "The person has none"
+        },
+        {
+         "label": "A family member"
+        },
+        {
+         "label": "The local authority"
+        },
+        {
+         "label": "The provider or a staff member"
+        },
+        {
+         "label": "Someone else"
+        },
+        {
+         "label": "Needed but not arranged",
+         "fail": true
+        }
+       ]
+      },
+      "qs": "safe-safeguarding",
+      "key": "app"
+     },
+     {
+      "text": "A copy of the appointment letter or court order is on file and in date.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "The provider's appointee role, if any, has been agreed with the commissioner or the person's family and is recorded.",
+      "type": "yes_no",
+      "qs": "safe-safeguarding",
+      "show_if": {
+       "key": "app",
+       "equals": [
+        "The provider or a staff member"
+       ]
+      }
+     },
+     {
+      "text": "Bank statements for the person are checked monthly by someone who does not handle their cash.",
+      "type": "yes_no_na",
+      "qs": "safe-safeguarding"
+     },
+     {
+      "text": "Any benefit review, reassessment or letter due this month has been actioned and recorded.",
+      "type": "yes_no_na",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Any savings or large sums are held in the person's own name and not in a service account.",
+      "type": "yes_no_na",
+      "qs": "safe-safeguarding"
+     }
+    ]
+   },
+   {
+    "title": "Shared costs and agreed payments",
+    "questions": [
+     {
+      "text": "Rent, service charge, utilities and other agreed costs are set out in writing and the person or representative has a copy.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "The person is charged only what the agreement says, and no unexplained deductions appear.",
+      "type": "yes_no_na",
+      "qs": "safe-safeguarding"
+     },
+     {
+      "text": "Shared household or activity costs are split by a written method and each person's share is recorded.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Any large purchase or gift from the person's money was agreed with them or in a recorded decision.",
+      "type": "yes_no_na",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "Staff costs such as meals or tickets taken on outings are not charged to the person unless agreed in writing.",
+      "type": "yes_no_na",
+      "qs": "safe-safeguarding"
+     }
+    ]
+   },
+   {
+    "title": "Oversight, safeguarding and actions",
+    "questions": [
+     {
+      "text": "A named manager reviewed this person's money records this month and signed them.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Staff know how to raise a concern about money and can say who they would tell.",
+      "type": "yes_no",
+      "qs": "safe-safeguarding"
+     },
+     {
+      "text": "Any concern about missing money or financial abuse this month was reported to the manager and recorded.",
+      "type": "yes_no",
+      "qs": "safe-safeguarding",
+      "key": "conc"
+     },
+     {
+      "text": "The concern was referred to the local authority safeguarding team, and the date and outcome are recorded.",
+      "type": "yes_no",
+      "qs": "safe-safeguarding",
+      "show_if": {
+       "key": "conc",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "Any shortfall was reported to the person or their representative.",
+      "type": "yes_no",
+      "qs": "caring-kindness-compassion-dignity",
+      "show_if": {
+       "key": "conc",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "How confident is the auditor that this person's money is safe and the records can be relied on?",
+      "type": "rating",
+      "settings": {
+       "max_rating": 5,
+       "pass_min": 4
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "List each action needed, who owns it and the date it is due.",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Health Action Plan and Health Access Audit",
+  "description": "A quarterly check of one person's annual health check, health action plan, screening, dental care and hospital passport.",
+  "frequency": "quarterly",
+  "subject_scope": "resident",
+  "sections": [
+   {
+    "title": "Person and health record",
+    "questions": [
+     {
+      "text": "The person has a health record or health file that is kept up to date and held where staff can find it.",
+      "type": "yes_no",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "The person's GP practice and the practice's contact details are recorded.",
+      "type": "yes_no",
+      "qs": "effective-staff-teams-work-together"
+     },
+     {
+      "key": "gpreg",
+      "text": "The person's learning disability or autism is recorded on the GP practice register.",
+      "type": "yes_no_na",
+      "qs": "effective-healthier-lives"
+     },
+     {
+      "text": "Who the person wants involved in their health decisions (family, advocate, supporter) is recorded.",
+      "type": "yes_no",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Health information is available in a format the person can understand, such as easy read, pictures or symbols.",
+      "type": "yes_no_na",
+      "qs": "caring-treating-individuals"
+     },
+     {
+      "text": "Number of health appointments in the last quarter (all types).",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 50
+      },
+      "qs": "effective-healthier-lives"
+     }
+    ]
+   },
+   {
+    "title": "Annual health check",
+    "questions": [
+     {
+      "key": "elig",
+      "text": "The person is eligible for an annual health check with their GP.",
+      "type": "yes_no_na",
+      "qs": "effective-healthier-lives"
+     },
+     {
+      "key": "ahc",
+      "text": "An annual health check took place in the last 12 months.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "elig",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "effective-healthier-lives"
+     },
+     {
+      "text": "Date of the most recent annual health check.",
+      "type": "date",
+      "qs": "effective-healthier-lives"
+     },
+     {
+      "text": "Months since the last annual health check.",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 12,
+       "pass_min": 0
+      },
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "The person or their supporter was helped to prepare for the check, for example by listing worries or changes.",
+      "type": "yes_no_na",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "A written record of the check outcome is on the person's file.",
+      "type": "yes_no_na",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Reason the check was not done or is overdue, and the date it is now booked.",
+      "type": "free_text",
+      "show_if": {
+       "key": "ahc",
+       "equals": [
+        "no"
+       ]
+      },
+      "qs": "responsive-listening-involving"
+     }
+    ]
+   },
+   {
+    "title": "Health action plan",
+    "questions": [
+     {
+      "key": "hap",
+      "text": "The person has a written health action plan.",
+      "type": "yes_no",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "The plan is written or presented in a way the person can understand.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "hap",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "caring-treating-individuals"
+     },
+     {
+      "text": "The plan was written with the person and shows their views and wishes.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "hap",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "The plan names the actions, who is responsible and a date for each.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "hap",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "effective-evidence-based-care"
+     },
+     {
+      "text": "The plan was reviewed after the last health check or hospital visit.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "hap",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Date the plan was last reviewed.",
+      "type": "date",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Number of plan actions open and past their due date.",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 50,
+       "pass_min": 0,
+       "pass_max": 0
+      },
+      "qs": "effective-monitoring-outcomes"
+     }
+    ]
+   },
+   {
+    "title": "Screening, dental and routine care",
+    "questions": [
+     {
+      "text": "Eligibility for national screening programmes (for example cervical, breast, bowel) has been checked for this person.",
+      "type": "yes_no_na",
+      "qs": "effective-healthier-lives"
+     },
+     {
+      "text": "Where eligible, screening invitations are recorded as taken up, declined with a recorded reason, or booked.",
+      "type": "yes_no_na",
+      "qs": "effective-healthier-lives"
+     },
+     {
+      "text": "Seasonal vaccinations offered to the person are recorded as given or declined.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Date of the last dental check.",
+      "type": "date",
+      "qs": "effective-healthier-lives"
+     },
+     {
+      "text": "Dental check frequency set by the dentist is recorded and the next visit is booked.",
+      "type": "yes_no_na",
+      "qs": "effective-healthier-lives"
+     },
+     {
+      "text": "Eye, hearing and foot care checks are recorded with dates.",
+      "type": "yes_no_na",
+      "qs": "effective-healthier-lives"
+     },
+     {
+      "text": "Decisions about screening or treatment that the person may lack capacity for follow a recorded capacity assessment.",
+      "type": "yes_no_na",
+      "qs": "safe-involving-people-manage-risks"
+     }
+    ]
+   },
+   {
+    "title": "Hospital passport and emergency information",
+    "questions": [
+     {
+      "key": "hp",
+      "text": "The person has a hospital passport or equivalent summary of needs.",
+      "type": "yes_no",
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "It records communication needs, how the person shows pain and what calms them.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "hp",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "caring-treating-individuals"
+     },
+     {
+      "text": "It lists current medicines, allergies and key health conditions.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "hp",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "It names who to contact and who can support the person in hospital.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "hp",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "Date the passport was last checked.",
+      "type": "date",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "The passport is kept where staff can grab it quickly in an emergency.",
+      "type": "yes_no",
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "Where the person has had a hospital stay or emergency visit in the quarter, the passport went with them.",
+      "type": "yes_no_na",
+      "qs": "safe-systems-pathways-transitions"
+     }
+    ]
+   },
+   {
+    "title": "Follow up, outcomes and actions",
+    "questions": [
+     {
+      "text": "Follow up actions from appointments are recorded and given to a named person.",
+      "type": "yes_no",
+      "qs": "effective-staff-teams-work-together"
+     },
+     {
+      "text": "Changes in health seen by support staff are passed to the GP or health team and the contact is recorded.",
+      "type": "yes_no",
+      "qs": "effective-staff-teams-work-together"
+     },
+     {
+      "text": "The person's weight, mood or other agreed health measures are recorded as the plan states.",
+      "type": "yes_no_na",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Overall rating of how well this person's health access is evidenced.",
+      "type": "rating",
+      "settings": {
+       "max": 5
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Health access gaps found at this audit.",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "A named person and due date are set for each gap, and the next audit is scheduled.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Learning from this person's health outcomes was shared at the last team or governance meeting.",
+      "type": "yes_no_na",
+      "qs": "safe-learning-culture"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Home Care Infection Prevention and PPE Audit",
+  "description": "Monthly check of each care worker's PPE use, hand hygiene, waste, laundry, spillages, uniform and training in people's own homes.",
+  "frequency": "monthly",
+  "subject_scope": "staff",
+  "sections": [
+   {
+    "title": "Visit details and PPE supply",
+    "questions": [
+     {
+      "text": "Date of the visit observed or checked",
+      "type": "date",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "How was this care worker assessed?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Observed during a live visit"
+        },
+        {
+         "label": "Observed during a shadow or spot check visit"
+        },
+        {
+         "label": "Records and kit check only, no visit observed",
+         "fail": true
+        }
+       ]
+      },
+      "qs": "safe-infection-prevention-control",
+      "key": "mode"
+     },
+     {
+      "text": "The care worker carries enough PPE for the visits on today's rota, including gloves, aprons and a spare set for a spillage.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control",
+      "key": "stock"
+     },
+     {
+      "text": "Record what was short and what the care worker did about it.",
+      "type": "findings",
+      "show_if": {
+       "key": "stock",
+       "equals": [
+        "no"
+       ]
+      },
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "The care worker knows how and where to get more PPE, and says it has been supplied when asked for.",
+      "type": "yes_no_na",
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "Gloves, aprons and masks carried are in date, in sealed or clean packaging, and stored in a clean bag or box, not loose in the car.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "The type of PPE used matches the task and the person's care plan, including any isolation or outbreak instructions.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control",
+      "key": "match"
+     },
+     {
+      "text": "Note where PPE did not match the task or the plan.",
+      "type": "findings",
+      "show_if": {
+       "key": "match",
+       "equals": [
+        "no"
+       ]
+      },
+      "qs": "safe-infection-prevention-control"
+     }
+    ]
+   },
+   {
+    "title": "Hand hygiene and uniform",
+    "questions": [
+     {
+      "text": "The care worker cleans their hands at the start of the visit, before putting on gloves.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "The care worker cleans their hands before and after each care task that needs it, and after taking gloves off.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Handwashing or alcohol rub follows the steps the provider has set out, and covers all surfaces of the hands.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control",
+      "key": "steps"
+     },
+     {
+      "text": "Note which steps were missed.",
+      "type": "findings",
+      "show_if": {
+       "key": "steps",
+       "equals": [
+        "no"
+       ]
+      },
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "The care worker is bare below the elbow for care tasks, with short clean nails, no wrist or hand jewellery apart from a plain band, and no nail varnish or false nails.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "The care worker's uniform is clean, in good repair and was put on clean at the start of the shift.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "The care worker changes out of the uniform at the end of the shift or on arrival home, and has a way to wash it at 60 degrees or the temperature on the care label for the washing machine.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     }
+    ]
+   },
+   {
+    "title": "Gloves, aprons and masks in use",
+    "questions": [
+     {
+      "text": "Gloves are put on only when needed, and a fresh pair is used for each person and each task.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Gloves are changed between dirty and clean tasks on the same person, for example after personal care before handling food.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control",
+      "key": "chg"
+     },
+     {
+      "text": "Describe what was observed.",
+      "type": "findings",
+      "show_if": {
+       "key": "chg",
+       "equals": [
+        "no"
+       ]
+      },
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Aprons are worn for tasks with a risk of contact with body fluids or soiling, and are disposed of after each task.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "PPE is put on and taken off in the order the provider's training sets out, with hands cleaned after removal.",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes, every time"
+        },
+        {
+         "label": "Mostly, with minor slips"
+        },
+        {
+         "label": "No",
+         "fail": true
+        }
+       ]
+      },
+      "qs": "safe-infection-prevention-control",
+      "key": "order"
+     },
+     {
+      "text": "Where masks or eye protection are required by the care plan or current guidance, the care worker uses them and knows when to change them.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control",
+      "key": "mask"
+     },
+     {
+      "text": "Used PPE is taken off at the point of use and never worn to the next room, the next visit or the car.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Overall, how confident and consistent was the care worker with PPE? (1 poor, 5 very good)",
+      "type": "rating",
+      "settings": {
+       "max_rating": 5,
+       "pass_min": 3
+      },
+      "qs": "safe-infection-prevention-control"
+     }
+    ]
+   },
+   {
+    "title": "Waste, laundry and spillages in the home",
+    "questions": [
+     {
+      "text": "Used PPE and soiled continence products are put in a bag, tied and placed in the household or clinical waste route the provider has agreed for that home.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Offensive or infectious waste is bagged and disposed of in line with the provider's waste instructions, and not left in open bins.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "The care worker handles soiled linen and clothing as the care plan sets out, using a laundry bag and keeping it away from clean items.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Soiled laundry is washed at the temperature the provider's policy sets, or the care plan says who does the washing.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "The care worker knows what to do for a spillage of blood, urine, vomit or faeces, and has the right cleaning products and a spillage kit available.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control",
+      "key": "spill"
+     },
+     {
+      "text": "Record what is missing or what the care worker could not explain.",
+      "type": "findings",
+      "show_if": {
+       "key": "spill",
+       "equals": [
+        "no"
+       ]
+      },
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Equipment used for care in the home, such as commodes, wash bowls and hoist slings, is cleaned and dried between uses in line with the cleaning schedule.",
+      "type": "yes_no_na",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Cleaning products used carry labels and are the ones named in the provider's instructions, and the care worker does not mix them.",
+      "type": "yes_no_na",
+      "qs": "safe-environments"
+     }
+    ]
+   },
+   {
+    "title": "Training, competence and illness",
+    "questions": [
+     {
+      "text": "The care worker has completed infection prevention and control training, including PPE and hand hygiene, and the certificate is on file.",
+      "type": "yes_no_na",
+      "qs": "safe-effective-staffing",
+      "key": "trn"
+     },
+     {
+      "text": "The training is within the renewal period the provider sets.",
+      "type": "yes_no_na",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Number of months since the care worker's last observed hand hygiene and PPE check before this one",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 36,
+       "pass_max": 12
+      },
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "The care worker's infection prevention and control competence has been signed off by a named assessor.",
+      "type": "yes_no_na",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "The care worker has been given instructions on what to do if they have sickness, diarrhoea, a rash or flu-like symptoms, and who to tell.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control",
+      "key": "ill"
+     },
+     {
+      "text": "Any recent staff illness reports were recorded, and the care worker was kept off visits for the period the provider's policy sets.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     }
+    ]
+   },
+   {
+    "title": "Records, follow up and action",
+    "questions": [
+     {
+      "text": "Any infection concern seen during the visit, such as a rash, vomiting or fever in the person, was recorded and passed to the office the same day.",
+      "type": "yes_no_na",
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "Any outbreak or suspected outbreak instructions in force were followed by this care worker.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "The care worker has been told of the result of this check and the actions agreed.",
+      "type": "yes_no_na",
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "Actions from the last check of this care worker were completed by their due dates.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability",
+      "key": "prev"
+     },
+     {
+      "text": "List the actions that remain open.",
+      "type": "findings",
+      "show_if": {
+       "key": "prev",
+       "equals": [
+        "no"
+       ]
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Result for this care worker",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Meets the standard"
+        },
+        {
+         "label": "Meets the standard with actions"
+        },
+        {
+         "label": "Does not meet the standard, re-check booked",
+         "fail": true
+        }
+       ]
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Record actions, who owns each one and the due date, plus the date of the re-check.",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Hospice Quality Standards Self-Assessment",
+  "description": "A whole-service self-check of a hospice against the CQC key questions and end of life care, with actions for every gap.",
+  "frequency": "periodic",
+  "subject_scope": "none",
+  "sections": [
+   {
+    "title": "Safe: care, medicines and infection control",
+    "questions": [
+     {
+      "text": "Each inpatient has a current written risk assessment covering falls, pressure areas, nutrition and swallowing.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Controlled drugs are stored, recorded and checked against stock in line with the hospice's own procedure.",
+      "type": "yes_no",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Last full controlled drugs stock check",
+      "type": "choice",
+      "qs": "safe-medicines-optimisation",
+      "settings": {
+       "options": [
+        {
+         "label": "Within the last month"
+        },
+        {
+         "label": "One to three months ago"
+        },
+        {
+         "label": "More than three months ago",
+         "fail": true
+        }
+       ]
+      }
+     },
+     {
+      "text": "The accountable officer or named lead has reviewed controlled drugs incidents or concerns in the past year, and the review is recorded.",
+      "type": "yes_no",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Anticipatory medicines are prescribed, available and recorded for people thought to be in the last days of life.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Percentage of medicines records checked this audit with no gaps",
+      "type": "number",
+      "qs": "safe-medicines-optimisation",
+      "settings": {
+       "min": 0,
+       "max": 100,
+       "unit": "%"
+      }
+     },
+     {
+      "text": "Medical gases (such as oxygen) are stored securely, signed and checked on a schedule.",
+      "type": "yes_no_na",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Hand hygiene and other standard infection precautions are audited at least once a year and the result is recorded.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "List any medicines, equipment or infection control gaps found on the walk-round",
+      "type": "findings",
+      "qs": "safe-care-treatment"
+     }
+    ]
+   },
+   {
+    "title": "Safe: staffing, safeguarding and learning",
+    "questions": [
+     {
+      "text": "A staffing plan shows clinical cover for every shift in the last four weeks, with gaps and the action taken recorded.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Every clinical staff member has a recorded competency check for the tasks they carry out, such as syringe driver use.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Percentage of staff with in-date safeguarding training",
+      "type": "number",
+      "qs": "safe-safeguarding",
+      "settings": {
+       "min": 0,
+       "max": 100,
+       "unit": "%"
+      }
+     },
+     {
+      "text": "Safeguarding concerns from the last year were reported and recorded, with the outcome noted.",
+      "type": "yes_no_na",
+      "qs": "safe-safeguarding"
+     },
+     {
+      "text": "Incidents are logged, reviewed by a named person and shared with staff, with themes recorded.",
+      "type": "yes_no",
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "Was there a notifiable safety incident in the last year?",
+      "type": "choice",
+      "qs": "safe-learning-culture",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes"
+        },
+        {
+         "label": "No"
+        }
+       ]
+      },
+      "key": "notifiable"
+     },
+     {
+      "text": "The duty of candour conversation and written follow up are recorded for each such incident.",
+      "type": "yes_no",
+      "qs": "safe-learning-culture",
+      "show_if": {
+       "key": "notifiable",
+       "equals": [
+        "Yes"
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Effective: assessment and end of life care",
+    "questions": [
+     {
+      "text": "A sample of records shows a full assessment of physical, emotional, spiritual and practical needs on admission or referral.",
+      "type": "yes_no",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "Care plans are reviewed and updated when the person's condition changes, with the date noted.",
+      "type": "yes_no",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Symptom assessment and review (such as pain and breathlessness) is recorded for each person in the sample.",
+      "type": "yes_no",
+      "qs": "effective-evidence-based-care"
+     },
+     {
+      "text": "Do not attempt resuscitation decisions and advance care plans are recorded, dated and visible in the record.",
+      "type": "yes_no_na",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "The hospice has a procedure for recognising the last days of life, and staff can show where it is kept.",
+      "type": "yes_no",
+      "qs": "effective-evidence-based-care"
+     },
+     {
+      "text": "Clinical audit results from the last year are recorded, with actions and re-audit dates.",
+      "type": "yes_no",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Records show joint working with GPs, community nurses or other teams when people move between services.",
+      "type": "yes_no_na",
+      "qs": "effective-staff-teams-work-together"
+     }
+    ]
+   },
+   {
+    "title": "Caring: dignity and family support",
+    "questions": [
+     {
+      "text": "Observation of care shows staff knocking, using preferred names and keeping people covered during personal care.",
+      "type": "yes_no",
+      "qs": "caring-kindness-compassion-dignity"
+     },
+     {
+      "text": "Records show people and those close to them were asked about their choices and these were followed.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "Spiritual, cultural and religious wishes are recorded and acted on.",
+      "type": "yes_no_na",
+      "qs": "caring-treating-individuals"
+     },
+     {
+      "text": "Families are offered a named contact and a recorded conversation about what to expect.",
+      "type": "yes_no_na",
+      "qs": "caring-immediate-needs"
+     },
+     {
+      "text": "Bereavement support is offered and the offer is recorded.",
+      "type": "yes_no_na",
+      "qs": "caring-immediate-needs"
+     },
+     {
+      "text": "Staff have access to a recorded wellbeing offer, such as debriefs or supervision after a death.",
+      "type": "yes_no",
+      "qs": "caring-workforce-wellbeing"
+     }
+    ]
+   },
+   {
+    "title": "Responsive: person-centred care and complaints",
+    "questions": [
+     {
+      "text": "Preferred place of care and place of death are recorded for each person in the sample.",
+      "type": "yes_no_na",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "The hospice gathers feedback from patients and families and shows what it changed as a result.",
+      "type": "yes_no",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Days taken to acknowledge the most recent complaint",
+      "type": "number",
+      "qs": "responsive-listening-involving",
+      "settings": {
+       "min": 0,
+       "max": 60,
+       "unit": "days"
+      }
+     },
+     {
+      "text": "Referral to first contact times are recorded and reviewed.",
+      "type": "yes_no",
+      "qs": "responsive-provision-integration-continuity"
+     },
+     {
+      "text": "Overall confidence that care is built around each person's wishes",
+      "type": "rating",
+      "qs": "responsive-person-centred-care"
+     }
+    ]
+   },
+   {
+    "title": "Well-led: governance and records",
+    "questions": [
+     {
+      "text": "A named registered manager and a board or trustee lead for quality are in post and recorded.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Quality and safety reports go to the board or trustees at least quarterly and minutes show challenge.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "A risk register is held, reviewed and shows owners and dates.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Staff records, including recruitment checks, are complete for the sample checked.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Last internal quality self-assessment of this kind",
+      "type": "choice",
+      "qs": "wellled-governance-management-sustainability",
+      "settings": {
+       "options": [
+        {
+         "label": "Within the last year"
+        },
+        {
+         "label": "One to two years ago"
+        },
+        {
+         "label": "Never or over two years ago",
+         "fail": true
+        }
+       ]
+      }
+     },
+     {
+      "text": "List actions agreed, with owner and due date",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Live-in Care Placement Review",
+  "description": "Monthly review of each live-in placement: carer welfare, rest breaks, handover, accommodation, contact and how the person feels about the arrangement.",
+  "frequency": "monthly",
+  "subject_scope": "resident",
+  "sections": [
+   {
+    "title": "Placement and rota",
+    "questions": [
+     {
+      "text": "Name of the person receiving care and the live-in carer on placement this month",
+      "type": "free_text",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Date the current carer started this placement",
+      "type": "date",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "A written rota or placement calendar shows who is on placement, start and end dates and planned changeover.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Number of days the carer has been on placement since the last changeover",
+      "type": "number",
+      "settings": {
+       "unit": "days",
+       "min": 0,
+       "max": 60,
+       "pass_min": 0,
+       "pass_max": 28
+      },
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "The carer has at least one named person at the agency they can reach on any day, with a contact number they hold.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "The planned changeover date is confirmed and the incoming carer has been briefed.",
+      "type": "yes_no_na",
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "Was there any gap in cover this month when no carer was in the home?",
+      "type": "choice",
+      "qs": "safe-effective-staffing",
+      "settings": {
+       "options": [
+        {
+         "label": "No gaps"
+        },
+        {
+         "label": "Gap that was planned and agreed with the person"
+        },
+        {
+         "label": "Gap that was not planned",
+         "fail": true
+        }
+       ]
+      },
+      "key": "gap"
+     },
+     {
+      "text": "Describe each gap in cover, how long it lasted and what was done to keep the person safe",
+      "type": "findings",
+      "qs": "safe-effective-staffing",
+      "show_if": {
+       "key": "gap",
+       "equals": [
+        "Gap that was not planned"
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Carer welfare, rest breaks and rotation",
+    "questions": [
+     {
+      "text": "The agreed daily break arrangements are written down and the carer has a copy.",
+      "type": "yes_no",
+      "qs": "caring-workforce-wellbeing"
+     },
+     {
+      "text": "Did the carer take their agreed breaks this month, according to the carer and the break record?",
+      "type": "choice",
+      "qs": "caring-workforce-wellbeing",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes, on all days"
+        },
+        {
+         "label": "Missed on some days",
+         "fail": true
+        },
+        {
+         "label": "Missed on most days",
+         "fail": true
+        },
+        {
+         "label": "No break record kept",
+         "fail": true
+        }
+       ]
+      },
+      "key": "breaks"
+     },
+     {
+      "text": "Record the dates breaks were missed, why, and what cover or change was agreed",
+      "type": "findings",
+      "qs": "caring-workforce-wellbeing",
+      "show_if": {
+       "key": "breaks",
+       "equals": [
+        "Missed on some days",
+        "Missed on most days"
+       ]
+      }
+     },
+     {
+      "text": "The carer has a separate period of uninterrupted rest each night, and the record shows how often it was broken.",
+      "type": "yes_no",
+      "qs": "caring-workforce-wellbeing"
+     },
+     {
+      "text": "Number of nights this month when the carer's rest was broken by a call for help",
+      "type": "number",
+      "settings": {
+       "unit": "nights",
+       "min": 0,
+       "max": 31,
+       "pass_min": 0,
+       "pass_max": 10
+      },
+      "qs": "caring-workforce-wellbeing"
+     },
+     {
+      "text": "Where rest is regularly broken, the agency has reviewed whether a second carer or a waking night carer is needed.",
+      "type": "yes_no_na",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "The agency has checked the carer's hours against the Working Time Regulations daily rest rule and recorded the result.",
+      "type": "yes_no",
+      "qs": "caring-workforce-wellbeing"
+     },
+     {
+      "text": "The carer has been asked in private how they are coping, and the conversation is recorded.",
+      "type": "yes_no",
+      "qs": "caring-workforce-wellbeing",
+      "key": "welf"
+     },
+     {
+      "text": "Record any concern the carer raised and the action agreed with a date",
+      "type": "findings",
+      "qs": "caring-workforce-wellbeing",
+      "show_if": {
+       "key": "welf",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "How well does the carer's own account match the rota and break record?",
+      "type": "rating",
+      "settings": {
+       "max_rating": 5,
+       "pass_min": 3
+      },
+      "qs": "caring-workforce-wellbeing"
+     }
+    ]
+   },
+   {
+    "title": "Handover and continuity",
+    "questions": [
+     {
+      "text": "A written handover was completed at the last changeover.",
+      "type": "yes_no",
+      "qs": "safe-systems-pathways-transitions",
+      "key": "hand"
+     },
+     {
+      "text": "The handover covers current health changes, medicines, risks, routines and the person's preferences.",
+      "type": "yes_no",
+      "qs": "safe-systems-pathways-transitions",
+      "show_if": {
+       "key": "hand",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "Both carers signed or initialled the handover, or the outgoing carer's contact was available to the incoming carer for questions.",
+      "type": "yes_no",
+      "qs": "safe-systems-pathways-transitions",
+      "show_if": {
+       "key": "hand",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "The care plan was read and signed by the incoming carer before or on the first day.",
+      "type": "yes_no",
+      "qs": "responsive-provision-integration-continuity"
+     },
+     {
+      "text": "A named carer or small pool of carers is used, so the person sees familiar faces.",
+      "type": "yes_no",
+      "qs": "responsive-provision-integration-continuity"
+     },
+     {
+      "text": "Number of different carers who covered the placement this month",
+      "type": "number",
+      "settings": {
+       "unit": "carers",
+       "min": 0,
+       "max": 20,
+       "pass_min": 1,
+       "pass_max": 3
+      },
+      "qs": "responsive-provision-integration-continuity"
+     }
+    ]
+   },
+   {
+    "title": "Accommodation and the home",
+    "questions": [
+     {
+      "text": "The carer has a private bedroom with a bed, storage and a door that closes, as agreed before the placement.",
+      "type": "yes_no",
+      "qs": "caring-workforce-wellbeing"
+     },
+     {
+      "text": "The carer has somewhere to prepare food and wash, agreed with the person.",
+      "type": "yes_no",
+      "qs": "caring-workforce-wellbeing"
+     },
+     {
+      "text": "A call system, phone or other way for the person to summon the carer at night is in place and was tested this month.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Smoke alarms are fitted and the carer knows the escape route from their room.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "The home risk assessment was reviewed in the last six months.",
+      "type": "yes_no",
+      "qs": "safe-involving-people-manage-risks"
+     },
+     {
+      "text": "Any equipment in the home has a service record in date.",
+      "type": "yes_no_na",
+      "qs": "safe-environments"
+     }
+    ]
+   },
+   {
+    "title": "Care, medicines and records",
+    "questions": [
+     {
+      "text": "The care plan was reviewed in the last three months and matches what the carer describes.",
+      "type": "yes_no",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Medicines administration records for the month are complete with no unexplained gaps.",
+      "type": "yes_no",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Daily notes are written for every day of the month in the person's own terms.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Health changes this month were reported to the agency and a health professional where needed.",
+      "type": "yes_no",
+      "qs": "effective-monitoring-outcomes",
+      "key": "hc"
+     },
+     {
+      "text": "Record each health change, who was told and when",
+      "type": "findings",
+      "qs": "effective-monitoring-outcomes",
+      "show_if": {
+       "key": "hc",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "Incidents, falls and near misses this month were logged and reviewed by the agency.",
+      "type": "yes_no_na",
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "Safeguarding concerns were recorded, or the carer can say who to tell and how.",
+      "type": "yes_no",
+      "qs": "safe-safeguarding"
+     }
+    ]
+   },
+   {
+    "title": "Contact, satisfaction and escalation",
+    "questions": [
+     {
+      "text": "A manager or supervisor spoke to the person, or their representative, during the month.",
+      "type": "yes_no",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "The person's view of the placement",
+      "type": "choice",
+      "qs": "caring-kindness-compassion-dignity",
+      "settings": {
+       "options": [
+        {
+         "label": "Happy with the carer and the arrangement"
+        },
+        {
+         "label": "Some concerns raised",
+         "fail": true
+        },
+        {
+         "label": "Wishes to change the carer or the arrangement",
+         "fail": true
+        },
+        {
+         "label": "Unable to say, view sought from a representative"
+        }
+       ]
+      },
+      "key": "view"
+     },
+     {
+      "text": "Record what the person or representative said and the action agreed",
+      "type": "findings",
+      "qs": "responsive-listening-involving",
+      "show_if": {
+       "key": "view",
+       "equals": [
+        "Some concerns raised",
+        "Wishes to change the carer or the arrangement"
+       ]
+      }
+     },
+     {
+      "text": "The person has been supported to keep up their usual activities, visits and contact with family or friends.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "Family or the representative know how to contact the agency out of hours.",
+      "type": "yes_no",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Any complaint or concern this month was logged and answered within the agency's timescale.",
+      "type": "yes_no_na",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Overall, how confident is the reviewer that this placement is safe and sustainable for both people?",
+      "type": "rating",
+      "settings": {
+       "max_rating": 5,
+       "pass_min": 3
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Actions from this review, each with an owner and a due date",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Medical Emergencies and Resuscitation Readiness Check",
+  "description": "A monthly check that emergency drugs, oxygen, defibrillator, staff training and drills are in place, in date and recorded.",
+  "frequency": "monthly",
+  "subject_scope": "none",
+  "sections": [
+   {
+    "title": "Emergency drugs and expiry",
+    "questions": [
+     {
+      "text": "The emergency drugs kit or box is in its agreed place and is sealed or tamper-evident.",
+      "type": "yes_no",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "A current list of the drugs the service has decided to hold is kept with the kit.",
+      "type": "yes_no",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Every drug on the list is present in the quantity the service has set.",
+      "type": "yes_no",
+      "qs": "safe-medicines-optimisation",
+      "key": "drugs_ok"
+     },
+     {
+      "text": "Which drugs are missing or short, and what was done to replace them?",
+      "type": "findings",
+      "qs": "safe-medicines-optimisation",
+      "show_if": {
+       "key": "drugs_ok",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "No drug in the kit is past its expiry date.",
+      "type": "yes_no",
+      "qs": "safe-medicines-optimisation",
+      "key": "expiry_ok"
+     },
+     {
+      "text": "Number of days until the first item in the kit expires.",
+      "type": "number",
+      "qs": "safe-medicines-optimisation",
+      "settings": {
+       "min": 30,
+       "pass_min": 30
+      }
+     },
+     {
+      "text": "The date of the last kit check and the name of the person who did it are recorded.",
+      "type": "yes_no",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Used or expired items were replaced and the replacement recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation",
+      "show_if": {
+       "key": "expiry_ok",
+       "equals": [
+        "no"
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Oxygen and airway equipment",
+    "questions": [
+     {
+      "text": "An oxygen cylinder is available and is stored securely and upright.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Oxygen cylinder contents as shown on the gauge (percent full).",
+      "type": "number",
+      "qs": "safe-environments",
+      "settings": {
+       "min": 0,
+       "max": 100,
+       "pass_min": 75
+      }
+     },
+     {
+      "text": "The cylinder is within its test date and the date is recorded.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Masks, tubing and airway items of the sizes the service has chosen are present and sealed.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Suction is available and a staff member showed it working at this check.",
+      "type": "yes_no_na",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Oxygen warning signs are displayed where it is stored.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Single-use items are in date and packaging is undamaged.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     }
+    ]
+   },
+   {
+    "title": "Defibrillator",
+    "questions": [
+     {
+      "key": "aed",
+      "text": "Does the service have a defibrillator (AED) on site?",
+      "type": "choice",
+      "qs": "safe-care-treatment",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes"
+        },
+        {
+         "label": "No, relies on a nearby shared unit"
+        },
+        {
+         "label": "No",
+         "fail": true
+        }
+       ]
+      }
+     },
+     {
+      "text": "The defibrillator status indicator shows it is ready for use.",
+      "type": "yes_no",
+      "qs": "safe-environments",
+      "show_if": {
+       "key": "aed",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "Pads are in date, sealed and a spare set is stored with the unit.",
+      "type": "yes_no",
+      "qs": "safe-environments",
+      "show_if": {
+       "key": "aed",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "Battery is in date and the date is recorded.",
+      "type": "yes_no",
+      "qs": "safe-environments",
+      "show_if": {
+       "key": "aed",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "The unit is stored where staff can reach it within the time the service has set.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Defibrillator checks are recorded in a log with date and initials.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability",
+      "show_if": {
+       "key": "aed",
+       "equals": [
+        "Yes"
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Staff training and practice",
+    "questions": [
+     {
+      "text": "A list shows every clinical and front-of-house staff member and their resuscitation training date.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing",
+      "key": "train_list"
+     },
+     {
+      "text": "Number of staff whose resuscitation training is out of date.",
+      "type": "number",
+      "qs": "safe-effective-staffing",
+      "settings": {
+       "min": 0,
+       "max": 0
+      },
+      "show_if": {
+       "key": "train_list",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "Training covered the equipment this service actually holds.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "At least one trained person is on duty whenever the service is open.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "A practice drill or scenario has taken place in the last 12 months and was recorded.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing",
+      "key": "drill"
+     },
+     {
+      "key": "drill_when",
+      "text": "When did the last emergency drill take place?",
+      "type": "choice",
+      "qs": "safe-effective-staffing",
+      "settings": {
+       "options": [
+        {
+         "label": "Within 6 months"
+        },
+        {
+         "label": "6 to 12 months ago"
+        },
+        {
+         "label": "Over 12 months ago or never",
+         "fail": true
+        }
+       ]
+      },
+      "show_if": {
+       "key": "drill",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "What did the last drill show needed to change, and was it done?",
+      "type": "findings",
+      "qs": "safe-learning-culture"
+     }
+    ]
+   },
+   {
+    "title": "Access, signage and readiness",
+    "questions": [
+     {
+      "text": "Staff can name where the emergency kit, oxygen and defibrillator are kept.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "A written emergency procedure is displayed or easily found by staff.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "The emergency number to call and the address to give are clearly visible near phones.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Doors, corridors and lifts allow a stretcher or trolley to reach every treatment or waiting area.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Emergency equipment is not locked away in a way that delays access.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "How ready did the emergency arrangements look overall today? (1 low, 5 high)",
+      "type": "rating",
+      "qs": "safe-care-treatment",
+      "settings": {
+       "max": 5
+      }
+     }
+    ]
+   },
+   {
+    "title": "Incidents and governance",
+    "questions": [
+     {
+      "key": "event",
+      "text": "Has anyone needed emergency treatment since the last check?",
+      "type": "choice",
+      "qs": "safe-learning-culture",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes"
+        },
+        {
+         "label": "No"
+        }
+       ]
+      }
+     },
+     {
+      "text": "The event was recorded and reviewed, with learning shared with staff.",
+      "type": "yes_no",
+      "qs": "safe-learning-culture",
+      "show_if": {
+       "key": "event",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "The registered manager has seen the results of the last kit check.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Missed or late checks since the last audit have been explained and recorded.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Actions needed before the next check, with who will do them and by when.",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Mental Health Act Legal Compliance Audit",
+  "description": "A monthly per patient check of detention papers, rights explained, consent to treatment, section 17 leave and review dates.",
+  "frequency": "monthly",
+  "subject_scope": "resident",
+  "sections": [
+   {
+    "title": "Patient and detention details",
+    "questions": [
+     {
+      "text": "Patient name or reference, and the date you checked their file.",
+      "type": "free_text",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "key": "sect",
+      "text": "Which section is the patient currently detained under?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Section 2"
+        },
+        {
+         "label": "Section 3"
+        },
+        {
+         "label": "Section 37 or other court order"
+        },
+        {
+         "label": "Section 47 or 48 transfer"
+        },
+        {
+         "label": "Informal or other (not detained)",
+         "fail": true
+        }
+       ]
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Date the current detention started.",
+      "type": "date",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "The legal authority for the current detention is held on the file and matches the section recorded on the patient record.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "The date the current detention period ends is recorded and diarised for renewal.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "The responsible clinician is named on the file and the patient and ward staff know who it is.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   },
+   {
+    "title": "Detention papers and authority",
+    "questions": [
+     {
+      "text": "The original detention papers, or certified copies, can be found in the Mental Health Act office or the legal file within 10 minutes.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "key": "paperchk",
+      "text": "The papers were checked for completeness (signatures, dates, names) by a trained member of the Mental Health Act administration team and the check is signed.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Any error or gap found on the papers was reported to the Mental Health Act lead and corrected or escalated, with the date and the person recorded.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "paperchk",
+       "equals": [
+        "no"
+       ]
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Any renewal or transfer paperwork is on file and was received before the previous authority ended.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Days between the end date of the last detention period and the date the renewal paperwork was received (enter 0 if on time or not yet due).",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 365,
+       "pass_min": 0,
+       "pass_max": 0
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Hospital manager review dates and decisions to renew or discharge are recorded on file.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   },
+   {
+    "title": "Rights and information",
+    "questions": [
+     {
+      "text": "The patient was told which section they are detained under and what it means, in words they can understand.",
+      "type": "yes_no",
+      "qs": "caring-immediate-needs"
+     },
+     {
+      "text": "The patient was told about their right to apply to a tribunal, orally and in writing.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "The date and time the rights were first explained, and who explained them, are recorded.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "Days between the start of detention and the first recorded rights explanation.",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 60,
+       "pass_min": 0,
+       "pass_max": 1
+      },
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "Rights were repeated at the intervals set in the provider's policy, and the patient's understanding is recorded each time.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "key": "supp",
+      "text": "Does the patient need support to understand their rights (for example language, communication or learning needs)?",
+      "type": "yes_no",
+      "qs": "caring-treating-individuals"
+     },
+     {
+      "text": "The support needed (interpreter, easy read, advocate) was provided and recorded.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "supp",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "caring-treating-individuals"
+     },
+     {
+      "text": "The patient's nearest relative, or the reason none was told, is recorded, and the written information was offered to them unless the patient asked otherwise.",
+      "type": "yes_no_na",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "The patient was told how to contact an independent mental health advocate and a referral or offer is recorded.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     }
+    ]
+   },
+   {
+    "title": "Consent to treatment",
+    "questions": [
+     {
+      "text": "The date the patient first received medicine for their mental disorder during this detention is recorded.",
+      "type": "date",
+      "qs": "effective-evidence-based-care"
+     },
+     {
+      "key": "m3",
+      "text": "Is the patient currently on medication for mental disorder after more than three months of detention?",
+      "type": "yes_no",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "A valid consent or second opinion certificate (T2 or T3) is on file with the medicines chart.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "m3",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Every medicine on the current medicines chart is covered by the certificate, with no medicine given that is missing from it.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "m3",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "key": "cert",
+      "text": "Which type of certificate is on file?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "T2 (patient consents)"
+        },
+        {
+         "label": "T3 (second opinion doctor)"
+        },
+        {
+         "label": "None on file",
+         "fail": true
+        },
+        {
+         "label": "Not applicable"
+        }
+       ]
+      },
+      "show_if": {
+       "key": "m3",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "For a T3, the second opinion doctor's name and date are recorded, and the certificate matches the treatment.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "cert",
+       "equals": [
+        "T3 (second opinion doctor)"
+       ]
+      },
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "The patient's views on their treatment, and any capacity or consent discussion, are recorded in the notes.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "Capacity to consent to treatment was reviewed and recorded within the period set in the provider's policy.",
+      "type": "yes_no",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "Any treatment that needs a separate legal route (such as electroconvulsive therapy) has the correct documents on file.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     }
+    ]
+   },
+   {
+    "title": "Section 17 leave",
+    "questions": [
+     {
+      "key": "leave",
+      "text": "Does the patient have any section 17 leave authorised?",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "A section 17 leave form signed by the responsible clinician is on file and the version on the ward matches the one in the legal file.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "leave",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The form states the type of leave, the dates or period, any conditions, and any escort level.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "leave",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The leave on the form has not expired, and any extension is recorded and signed.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "leave",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Recorded leave taken matches what the form allows (type, length and escort), checked against the last 5 leave entries.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "leave",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "A risk assessment was reviewed before leave and the outcome and return time are recorded each time.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "leave",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-involving-people-manage-risks"
+     },
+     {
+      "text": "Any recall of leave was made in writing and recorded with the date and the reason.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     }
+    ]
+   },
+   {
+    "title": "Reviews, tribunal and actions",
+    "questions": [
+     {
+      "text": "The date of the next tribunal or hospital manager hearing, or the patient's application, is recorded.",
+      "type": "yes_no_na",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Reports for the tribunal or hearing are on track to be filed by the date set.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Regular reviews of the patient's detention and care plan by the responsible clinician are recorded in line with the provider's policy.",
+      "type": "yes_no",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Overall, how would you rate the quality of the Mental Health Act records for this patient?",
+      "type": "rating",
+      "settings": {
+       "min": 1,
+       "max": 5,
+       "pass_min": 4
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "List any legal paperwork gaps or dates that are overdue.",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Every gap above has an action, a named owner and a due date, and the Mental Health Act lead has been told.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Moving and Handling in the Home Audit",
+  "description": "Quarterly check of one client's moving and handling assessment, equipment, observed worker practice, two-person tasks and changes in mobility.",
+  "frequency": "quarterly",
+  "subject_scope": "resident",
+  "sections": [
+   {
+    "title": "Moving and handling assessment",
+    "questions": [
+     {
+      "text": "A written moving and handling assessment is held in the person's home file for this client.",
+      "type": "yes_no",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "The assessment records the person's weight bearing ability, balance, mobility aids and any pain or skin concerns that affect how they are moved.",
+      "type": "yes_no",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "The assessment is dated and signed by a named assessor, with their role recorded.",
+      "type": "yes_no",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "The assessment sets out each moving task, including bed, chair, toilet, bath and floor recovery, and the method agreed for each.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Number of weeks since the assessment was last reviewed.",
+      "type": "number",
+      "qs": "safe-care-treatment",
+      "settings": {
+       "min": 0,
+       "max": 104,
+       "pass_min": 13
+      }
+     },
+     {
+      "text": "The assessment was reviewed after the last change in the person's mobility, health, equipment or home layout.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The person, or someone speaking for them, was involved in the assessment and their preferences are recorded.",
+      "type": "yes_no_na",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "The home environment was considered, including space, flooring, furniture height and access to the bed or bathroom.",
+      "type": "yes_no",
+      "qs": "safe-involving-people-manage-risks"
+     }
+    ]
+   },
+   {
+    "title": "Equipment in the home",
+    "questions": [
+     {
+      "text": "A list of the moving and handling equipment in this home (for example hoist, slings, slide sheets, bed, bed rails, stand aid) is held.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment",
+      "key": "equip"
+     },
+     {
+      "text": "Each item on the list is of the type and size set out in the assessment.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "equip",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "Hoists and slings have a thorough examination record showing the last check was within 6 months, or within the interval in a written examination scheme.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment",
+      "key": "hoist"
+     },
+     {
+      "text": "Number of slings or accessories seen without a legible label or identification.",
+      "type": "number",
+      "qs": "safe-care-treatment",
+      "settings": {
+       "min": 0,
+       "max": 20,
+       "pass_min": 0
+      }
+     },
+     {
+      "text": "Slings are allocated to this person only, or are cleaned between users according to the service's written procedure.",
+      "type": "yes_no_na",
+      "qs": "effective-evidence-based-care",
+      "show_if": {
+       "key": "hoist",
+       "equals": [
+        "yes",
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "Equipment seen was clean, undamaged and working, with no frayed sling edges, loose fittings or flat batteries.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment",
+      "key": "damage"
+     },
+     {
+      "text": "Describe the defect found, the item and what was done about it.",
+      "type": "findings",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "damage",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "A faulty item was taken out of use, labelled and reported to the person responsible the same day.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "damage",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "The person and the care worker both know who to call if equipment breaks or a repair is needed.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     }
+    ]
+   },
+   {
+    "title": "Observed worker practice",
+    "questions": [
+     {
+      "text": "Was a moving and handling task observed for this client during this audit?",
+      "type": "choice",
+      "qs": "safe-care-treatment",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes"
+        },
+        {
+         "label": "No, record review only"
+        }
+       ]
+      },
+      "key": "obs"
+     },
+     {
+      "text": "The worker checked the equipment and the area before starting the task.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "obs",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "The worker followed the method in the assessment for this task.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "obs",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "The worker explained what they were about to do and gained the person's agreement.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control",
+      "show_if": {
+       "key": "obs",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "The person's privacy, dignity and comfort were kept throughout the task.",
+      "type": "yes_no",
+      "qs": "caring-kindness-compassion-dignity",
+      "show_if": {
+       "key": "obs",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "Overall rating of the worker's confidence and technique during the observed task (1 poor, 5 very good).",
+      "type": "rating",
+      "qs": "safe-effective-staffing",
+      "settings": {
+       "min": 1,
+       "max": 5,
+       "pass_min": 3
+      }
+     },
+     {
+      "text": "Does the worker's training record show moving and handling training for the equipment used here?",
+      "type": "choice",
+      "qs": "safe-effective-staffing",
+      "settings": {
+       "options": [
+        {
+         "label": "In date"
+        },
+        {
+         "label": "Due within 3 months"
+        },
+        {
+         "label": "Overdue or missing",
+         "fail": true
+        }
+       ]
+      },
+      "key": "train"
+     },
+     {
+      "text": "The worker has been observed using this person's equipment in practice, with the date and observer recorded.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing",
+      "show_if": {
+       "key": "train",
+       "equals": [
+        "In date",
+        "Due within 3 months"
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Two-person tasks and staffing",
+    "questions": [
+     {
+      "text": "The assessment states clearly which tasks need one worker and which need two.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment",
+      "key": "two"
+     },
+     {
+      "text": "The visit schedule gives enough workers at the right times for every two-person task.",
+      "type": "yes_no_na",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "In the last 4 weeks, did any two-person task go ahead with only one worker?",
+      "type": "choice",
+      "qs": "safe-care-treatment",
+      "settings": {
+       "options": [
+        {
+         "label": "None"
+        },
+        {
+         "label": "One or more",
+         "fail": true
+        }
+       ]
+      },
+      "key": "solo"
+     },
+     {
+      "text": "Describe what happened, the date and the actions taken.",
+      "type": "findings",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "solo",
+       "equals": [
+        "One or more"
+       ]
+      }
+     },
+     {
+      "text": "The office was told of the gap, the person was kept safe and the incident is recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-learning-culture",
+      "show_if": {
+       "key": "solo",
+       "equals": [
+        "One or more"
+       ]
+      }
+     },
+     {
+      "text": "Family carers or others who help with moving are named in the plan and have been shown the agreed method.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     }
+    ]
+   },
+   {
+    "title": "Changes in mobility, falls and records",
+    "questions": [
+     {
+      "text": "Has the person's mobility changed since the last audit?",
+      "type": "choice",
+      "qs": "effective-assessing-needs",
+      "settings": {
+       "options": [
+        {
+         "label": "No change"
+        },
+        {
+         "label": "Improved"
+        },
+        {
+         "label": "Declined"
+        }
+       ]
+      },
+      "key": "chg"
+     },
+     {
+      "text": "A change in mobility was reported to the office and the assessment was reviewed within the time set in the service's policy.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "chg",
+       "equals": [
+        "Improved",
+        "Declined"
+       ]
+      }
+     },
+     {
+      "text": "The care plan and the worker's visit notes were updated to match the changed assessment.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "chg",
+       "equals": [
+        "Improved",
+        "Declined"
+       ]
+      }
+     },
+     {
+      "text": "Number of falls, near misses or moving and handling incidents recorded for this client in the last 3 months.",
+      "type": "number",
+      "qs": "safe-care-treatment",
+      "settings": {
+       "min": 0,
+       "max": 20
+      }
+     },
+     {
+      "text": "Each incident or near miss was recorded, reviewed and led to an action or a documented decision to make none.",
+      "type": "yes_no_na",
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "Care notes from the last 5 visits record the equipment and the number of workers used for moving tasks.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Any pain, skin damage or distress linked to moving was recorded and passed to the right person.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     }
+    ]
+   },
+   {
+    "title": "Client views, learning and actions",
+    "questions": [
+     {
+      "text": "How safe and comfortable the person says they feel when they are moved (1 not at all, 5 very).",
+      "type": "rating",
+      "qs": "caring-kindness-compassion-dignity",
+      "settings": {
+       "min": 1,
+       "max": 5,
+       "pass_min": 3
+      }
+     },
+     {
+      "text": "The person was asked if they want anything changed in how they are moved, and the answer is recorded.",
+      "type": "yes_no",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Actions from the last audit for this client were completed by their due dates.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Record each action needed, who owns it and the due date.",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Learning from this audit has been passed to the care worker team, with the date recorded.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Person-Centred Outcomes and Community Participation Review",
+  "description": "A quarterly per person check that goals, choices, activities, relationships and independence are real, recorded and moving forward.",
+  "frequency": "quarterly",
+  "subject_scope": "resident",
+  "sections": [
+   {
+    "title": "Person and record checked",
+    "questions": [
+     {
+      "text": "Person or record reference (do not enter the person's name).",
+      "type": "free_text",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Date of the person's most recent outcomes review.",
+      "type": "date",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Number of days since that review.",
+      "type": "number",
+      "settings": {
+       "unit": "days",
+       "min": 0,
+       "max": 100,
+       "pass_min": 0
+      },
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "The person was present for, or contributed to, the review in the way they prefer.",
+      "type": "yes_no_na",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Where the person could not take part, someone who knows them well contributed and this is recorded.",
+      "type": "yes_no_na",
+      "qs": "responsive-listening-involving"
+     }
+    ]
+   },
+   {
+    "title": "Goals and aspirations",
+    "questions": [
+     {
+      "text": "The person's own goals are written in their words or in a format they use, such as pictures or easy read.",
+      "type": "yes_no",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Each goal has a named person responsible and a target date.",
+      "type": "yes_no",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Number of active goals recorded for this person.",
+      "type": "number",
+      "settings": {
+       "unit": "goals",
+       "min": 1,
+       "max": 20
+      },
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "At least one goal has progress recorded since the last review.",
+      "type": "yes_no",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Goals the person has dropped or changed are recorded with the reason.",
+      "type": "yes_no_na",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Support staff can describe the person's main goals without looking them up.",
+      "type": "yes_no",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "key": "stalled",
+      "text": "Has a goal stalled for more than three months?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes",
+         "fail": true
+        },
+        {
+         "label": "No"
+        }
+       ]
+      },
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "The reason it has stalled and the new plan to move it forward are recorded.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "stalled",
+       "equals": [
+        "Yes"
+       ]
+      },
+      "qs": "effective-monitoring-outcomes"
+     }
+    ]
+   },
+   {
+    "title": "Choice and control",
+    "questions": [
+     {
+      "text": "The person's daily routine reflects their own preferences for getting up, meals and bedtime.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "Records show the person made at least one everyday choice in the last week, such as food, clothes or how to spend time.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "Where the person cannot easily tell staff what they want, there is a recorded way their preferences are found out.",
+      "type": "yes_no_na",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "key": "limits",
+      "text": "Any limit on the person's choices is written down with the reason and a review date.",
+      "type": "yes_no_na",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "The person or their representative agreed to those limits, or the decision route is recorded.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "limits",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "The person has been offered an advocate where they have difficulty speaking up for themselves.",
+      "type": "yes_no_na",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Staff supported the person to make a choice during this visit and followed it.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     }
+    ]
+   },
+   {
+    "title": "Activities and community participation",
+    "questions": [
+     {
+      "text": "The person has a weekly activity plan that they chose.",
+      "type": "yes_no",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Number of community activities the person took part in over the last four weeks.",
+      "type": "number",
+      "settings": {
+       "unit": "activities",
+       "min": 0,
+       "max": 60,
+       "pass_min": 4
+      },
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Activities include places outside the home that the person has chosen, not only group outings.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "key": "missed",
+      "text": "Missed or cancelled activities in the last month are recorded with the reason.",
+      "type": "yes_no_na",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Activities missed because of staffing were followed up and rearranged.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "missed",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Transport or support needed to take part is arranged and recorded.",
+      "type": "yes_no_na",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "The person has a say in whether to try new activities, with a record of what they tried and thought of it.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "key": "work",
+      "text": "Is the person involved in paid work, volunteering, education or a regular local group?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes"
+        },
+        {
+         "label": "Not yet but wanted and planned"
+        },
+        {
+         "label": "Not wanted by the person"
+        },
+        {
+         "label": "No and not discussed",
+         "fail": true
+        }
+       ]
+      },
+      "qs": "responsive-person-centred-care"
+     }
+    ]
+   },
+   {
+    "title": "Relationships and independence",
+    "questions": [
+     {
+      "text": "The person's important relationships, such as family, friends and partners, are recorded.",
+      "type": "yes_no",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Staff support contact with the people the person wants to see, and contact in the last month is recorded.",
+      "type": "yes_no_na",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "The person has private space and time with visitors in the way they choose.",
+      "type": "yes_no_na",
+      "qs": "caring-kindness-compassion-dignity"
+     },
+     {
+      "text": "The person has an up to date list of everyday skills they are learning or want to learn.",
+      "type": "yes_no",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Staff are recorded as supporting the person to do tasks themselves rather than doing them for the person.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "A recent record shows the person doing something new or doing more for themselves than before.",
+      "type": "yes_no",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Technology or equipment that could increase independence has been considered and the decision is recorded.",
+      "type": "yes_no_na",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "Number of days since the person's independence skills were last reviewed.",
+      "type": "number",
+      "settings": {
+       "unit": "days",
+       "min": 0,
+       "max": 120,
+       "pass_min": 0
+      },
+      "qs": "effective-monitoring-outcomes"
+     }
+    ]
+   },
+   {
+    "title": "Person's views and overall check",
+    "questions": [
+     {
+      "text": "The person's own view of how things are going is recorded in this review period.",
+      "type": "yes_no",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "How the person feels about their goals and activities (1 = very unhappy, 5 = very happy).",
+      "type": "rating",
+      "settings": {
+       "max_rating": 5,
+       "pass_min": 3
+      },
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Overall rating of how well the records show real progress for this person (1 = none, 5 = clear and evidenced).",
+      "type": "rating",
+      "settings": {
+       "max_rating": 5,
+       "pass_min": 3
+      },
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "key": "limited",
+      "text": "Does any evidence suggest the person's outcomes are being limited by the service rather than by the person's wishes?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes",
+         "fail": true
+        },
+        {
+         "label": "No"
+        }
+       ]
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Describe what was found and what is needed.",
+      "type": "findings",
+      "show_if": {
+       "key": "limited",
+       "equals": [
+        "Yes"
+       ]
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Actions from the last review of this audit for this person were completed on time.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Findings were shared with the person or their representative in a way they can follow.",
+      "type": "yes_no",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Findings from this review feed into the service's wider quality improvement plan.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Physical Health and Metabolic Monitoring Audit",
+  "description": "Check one person's baseline and ongoing physical health checks, antipsychotic monitoring and follow up actions every quarter.",
+  "frequency": "quarterly",
+  "subject_scope": "resident",
+  "sections": [
+   {
+    "title": "Baseline physical health checks",
+    "questions": [
+     {
+      "text": "Name or reference of the person reviewed, and the date of this review.",
+      "type": "free_text",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "key": "base",
+      "text": "A physical health assessment was completed within the period set in the service's own policy after the person was admitted or started with the service.",
+      "type": "yes_no",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "Number of days between admission or start and the baseline assessment.",
+      "type": "number",
+      "settings": {
+       "unit": "days",
+       "min": 0,
+       "max": 365,
+       "pass_max": 28
+      },
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "The baseline record includes weight, height or BMI, blood pressure and pulse.",
+      "type": "yes_no",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "The baseline record includes smoking status, alcohol and substance use, and activity or diet.",
+      "type": "yes_no",
+      "qs": "effective-healthier-lives"
+     },
+     {
+      "text": "The baseline record lists the person's long-term physical conditions and who treats them.",
+      "type": "yes_no",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "The person's GP details are recorded and the GP was told about the admission or start.",
+      "type": "yes_no",
+      "qs": "effective-staff-teams-work-together"
+     }
+    ]
+   },
+   {
+    "title": "Ongoing monitoring and recording",
+    "questions": [
+     {
+      "key": "plan",
+      "text": "A physical health monitoring plan for this person says what is checked and how often.",
+      "type": "yes_no",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Number of days since the last recorded set of physical observations.",
+      "type": "number",
+      "settings": {
+       "unit": "days",
+       "min": 0,
+       "max": 365,
+       "pass_max": 92
+      },
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Weight or BMI has been recorded within the period set in the plan.",
+      "type": "yes_no_na",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Blood pressure and pulse have been recorded within the period set in the plan.",
+      "type": "yes_no_na",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Results are kept in one place so that changes over time can be seen.",
+      "type": "yes_no",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Where a check was due and not done, the reason is recorded and a new date set.",
+      "type": "yes_no_na",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "The person was told what was checked and why, in a way they can understand, and their views are recorded.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     }
+    ]
+   },
+   {
+    "title": "Antipsychotic and metabolic monitoring",
+    "questions": [
+     {
+      "key": "aps",
+      "text": "Is the person prescribed an antipsychotic medicine?",
+      "type": "yes_no",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "The service's monitoring schedule for this medicine (for example blood tests, weight, blood pressure) is written in the person's record.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "aps",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "key": "bloods",
+      "text": "Blood test results such as glucose or HbA1c, and lipids, are filed and dated within the period the schedule requires.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "aps",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Weight or waist measurement is recorded at the intervals the schedule requires.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "aps",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "An ECG or other check required by the prescriber is recorded as done or as not needed.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "aps",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "key": "abn",
+      "text": "Abnormal results were passed to the prescriber or GP, with the date and name of the person told.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "aps",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Record the results that were out of range and what happened next.",
+      "type": "findings",
+      "show_if": {
+       "key": "abn",
+       "equals": [
+        "no"
+       ]
+      },
+      "qs": "effective-monitoring-outcomes"
+     }
+    ]
+   },
+   {
+    "title": "Smoking, diet and lifestyle",
+    "questions": [
+     {
+      "key": "smoke",
+      "text": "Does the person smoke or use nicotine?",
+      "type": "yes_no",
+      "qs": "effective-healthier-lives"
+     },
+     {
+      "text": "An offer of stop smoking support is recorded, with the person's answer.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "smoke",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "effective-healthier-lives"
+     },
+     {
+      "text": "Where nicotine replacement or stop smoking medicines are used, the service has checked with the prescriber whether any other medicine doses need review.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "smoke",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "The person's care plan covers food choices, activity and weight, and was agreed with them.",
+      "type": "yes_no",
+      "qs": "effective-healthier-lives"
+     },
+     {
+      "text": "Dental, eye and foot checks are recorded as done or offered.",
+      "type": "yes_no_na",
+      "qs": "effective-healthier-lives"
+     }
+    ]
+   },
+   {
+    "title": "Referrals and follow up",
+    "questions": [
+     {
+      "key": "needact",
+      "text": "Did any physical health check this quarter need action?",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Each action has a named owner and a due date.",
+      "type": "yes_no",
+      "show_if": {
+       "key": "needact",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Number of actions overdue at the time of this audit.",
+      "type": "number",
+      "settings": {
+       "unit": "actions",
+       "min": 0,
+       "max": 50,
+       "pass_max": 0
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Referrals to the GP, specialist or screening service are recorded with the date sent and the outcome.",
+      "type": "yes_no_na",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Where the person declined a check or referral, their decision, the reason and any capacity assessment are recorded.",
+      "type": "yes_no_na",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "What happened to the person's most recent concern about their physical health?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "No concern raised"
+        },
+        {
+         "label": "Acted on and recorded"
+        },
+        {
+         "label": "Acted on but not recorded",
+         "fail": true
+        },
+        {
+         "label": "Not acted on",
+         "fail": true
+        }
+       ]
+      },
+      "qs": "safe-care-treatment"
+     }
+    ]
+   },
+   {
+    "title": "Review and governance",
+    "questions": [
+     {
+      "text": "The physical health plan was reviewed with the person, and where they wish it, their family or advocate, within the last quarter.",
+      "type": "yes_no",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Staff who take measurements have been shown how, and their training or competence is recorded.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Equipment such as scales, blood pressure monitors and thermometers is clean and has a date showing it was checked or calibrated.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Physical health is on the agenda of a team or ward round at least quarterly, with a dated note.",
+      "type": "yes_no",
+      "qs": "effective-staff-teams-work-together"
+     },
+     {
+      "text": "How confident is the auditor that a missed check for this person would be noticed?",
+      "type": "rating",
+      "settings": {
+       "max_rating": 5,
+       "pass_min": 3
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Manager comments and the date the next audit for this person is due.",
+      "type": "free_text",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Restraint and Seclusion Incident Review",
+  "description": "Monthly incident by incident review of restraint and seclusion for one person, from authorisation and proportionality to debrief, reporting and learning.",
+  "frequency": "monthly",
+  "subject_scope": "resident",
+  "sections": [
+   {
+    "title": "Incident record and reason",
+    "questions": [
+     {
+      "text": "Number of restraint or seclusion incidents for this person in the review month",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 100
+      },
+      "qs": "safe-care-treatment"
+     },
+     {
+      "key": "type",
+      "text": "Type of intervention reviewed",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Physical restraint"
+        },
+        {
+         "label": "Mechanical restraint"
+        },
+        {
+         "label": "Chemical or medicinal restraint"
+        },
+        {
+         "label": "Seclusion"
+        },
+        {
+         "label": "Long term segregation"
+        }
+       ]
+      },
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Each incident has a dated, timed record naming the staff involved and any witnesses.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The record states the behaviour or risk that led to the intervention, in factual terms.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The record shows what was tried first to calm or redirect the person, and that it was not enough.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The intervention was used only to prevent harm and not as punishment or for staff convenience.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Staff involved held in date training in the approved restraint technique used.",
+      "type": "yes_no_na",
+      "qs": "safe-effective-staffing"
+     }
+    ]
+   },
+   {
+    "title": "Authorisation and legal basis",
+    "questions": [
+     {
+      "key": "inplan",
+      "text": "The intervention used was one set out in the person's care plan or positive behaviour support plan.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Where it was not in the plan, the record explains why it was used in an emergency and the plan was updated afterwards.",
+      "type": "yes_no_na",
+      "show_if": {
+       "key": "inplan",
+       "equals": [
+        "no"
+       ]
+      },
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "A senior person authorised or was told about the intervention at the time, and this is recorded.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "The legal basis for the intervention is recorded (for example the person's detention status, a best interests decision or emergency need).",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "key": "seclauth",
+      "text": "Seclusion was authorised by the person's responsible clinician or a named senior, with the time recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Where restraint or seclusion of a person lacking capacity was used, a capacity assessment and best interests decision are on file.",
+      "type": "yes_no_na",
+      "qs": "effective-assessing-needs"
+     }
+    ]
+   },
+   {
+    "title": "Proportionality and least restrictive approach",
+    "questions": [
+     {
+      "text": "The restraint used was the least restrictive hold or method that would manage the risk.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The intervention stopped as soon as the risk had passed, and the duration is recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Length of the longest single intervention in this review (minutes)",
+      "type": "number",
+      "settings": {
+       "unit": "minutes",
+       "min": 0,
+       "max": 600,
+       "pass_max": 10
+      },
+      "qs": "safe-care-treatment"
+     },
+     {
+      "key": "prone",
+      "text": "Prone (face down) restraint was not used, or if used the reason and the safeguards are recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Describe any prone restraint, its length and the actions taken afterwards.",
+      "type": "findings",
+      "show_if": {
+       "key": "prone",
+       "equals": [
+        "no"
+       ]
+      },
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The person's known triggers, preferences and any physical health risks were considered and recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-involving-people-manage-risks"
+     }
+    ]
+   },
+   {
+    "title": "Monitoring during and after",
+    "questions": [
+     {
+      "text": "A named member of staff watched the person's breathing, colour and wellbeing throughout the intervention.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "key": "obs",
+      "text": "Observations were recorded at the intervals set by the service policy while the person was in seclusion or recovering.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Regular reviews of seclusion by a clinician and a team member are recorded with dates and times.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "key": "injury",
+      "text": "Any injury to the person or staff was checked, treated and recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The person was offered a physical health check after the intervention and the outcome recorded.",
+      "type": "yes_no_na",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "Where medicines were given as part of the intervention, this is recorded and was reviewed by the prescriber.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     }
+    ]
+   },
+   {
+    "title": "Debrief, patient view and family",
+    "questions": [
+     {
+      "key": "debrief",
+      "text": "The person was offered a debrief within the time set in the service policy.",
+      "type": "yes_no_na",
+      "qs": "caring-kindness-compassion-dignity"
+     },
+     {
+      "text": "Roughly how many hours after the incident did the person's debrief take place?",
+      "type": "number",
+      "settings": {
+       "unit": "hours",
+       "min": 0,
+       "max": 240,
+       "pass_max": 72
+      },
+      "qs": "caring-kindness-compassion-dignity"
+     },
+     {
+      "text": "The person's own account of what happened is written down in their words.",
+      "type": "yes_no_na",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Staff involved had a separate debrief and were offered support.",
+      "type": "yes_no_na",
+      "qs": "caring-workforce-wellbeing"
+     },
+     {
+      "text": "The person was told how to complain and offered an advocate where entitled or needed.",
+      "type": "yes_no_na",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Family, carers or the named representative were told, unless the person asked otherwise or it was unsafe.",
+      "type": "yes_no_na",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Person's rating of how well they were treated after the incident",
+      "type": "rating",
+      "settings": {
+       "max_rating": 5,
+       "pass_min": 3
+      },
+      "qs": "caring-kindness-compassion-dignity"
+     }
+    ]
+   },
+   {
+    "title": "Reporting, learning and oversight",
+    "questions": [
+     {
+      "text": "The incident was reported on the internal incident system within the time set by the policy.",
+      "type": "yes_no_na",
+      "qs": "safe-learning-culture"
+     },
+     {
+      "key": "notif",
+      "text": "External notifications were made where needed (for example CQC, the local authority or commissioner, or the police).",
+      "type": "yes_no_na",
+      "qs": "safe-safeguarding"
+     },
+     {
+      "text": "Where a notification was due, list the notification, date sent and reference.",
+      "type": "findings",
+      "show_if": {
+       "key": "notif",
+       "equals": [
+        "yes"
+       ]
+      },
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "A manager reviewed each incident and recorded whether the response was appropriate.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "The person's care plan or risk assessment was updated after the incident.",
+      "type": "yes_no_na",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Incident data is looked at for patterns by person, time, place and staff, and shared with the governance meeting.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "key": "actions",
+      "text": "Lessons or changes from this incident have a named owner and date.",
+      "type": "yes_no_na",
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "Record the actions agreed from this review, with owner and due date.",
+      "type": "findings",
+      "show_if": {
+       "key": "actions",
+       "equals": [
+        "no"
+       ]
+      },
+      "qs": "safe-learning-culture"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Risk Assessment and Safety Planning Audit",
+  "description": "Check each person has a current risk assessment and safety plan, that they took part, and that staff know them and review them after incidents.",
+  "frequency": "monthly",
+  "subject_scope": "resident",
+  "sections": [
+   {
+    "title": "Risk assessment in place",
+    "questions": [
+     {
+      "text": "Date of the person's current written risk assessment.",
+      "type": "date",
+      "qs": "safe-involving-people-manage-risks"
+     },
+     {
+      "text": "Days since the risk assessment was completed or last reviewed.",
+      "type": "number",
+      "qs": "safe-involving-people-manage-risks",
+      "settings": {
+       "min": 0,
+       "max": 365
+      }
+     },
+     {
+      "key": "ra_exists",
+      "text": "A written risk assessment is in the person's record.",
+      "type": "yes_no",
+      "qs": "safe-involving-people-manage-risks"
+     },
+     {
+      "text": "The risk assessment is dated, signed and names the person who completed it.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "It covers risk to self, risk from others and risk to others, as relevant to this person.",
+      "type": "yes_no",
+      "qs": "safe-involving-people-manage-risks"
+     },
+     {
+      "text": "It records the person's known triggers, early warning signs and protective factors.",
+      "type": "yes_no",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "It records any physical health, substance use or medicine related risks that affect safety.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "key": "ra_date",
+      "text": "Is the risk assessment within the review period set by the service?",
+      "type": "choice",
+      "qs": "safe-involving-people-manage-risks",
+      "settings": {
+       "options": [
+        {
+         "label": "Within date"
+        },
+        {
+         "label": "Overdue",
+         "fail": true
+        }
+       ]
+      }
+     },
+     {
+      "text": "If overdue, how many days overdue and the reason given.",
+      "type": "free_text",
+      "qs": "wellled-governance-management-sustainability",
+      "show_if": {
+       "key": "ra_date",
+       "equals": [
+        "Overdue"
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Safety plan",
+    "questions": [
+     {
+      "key": "sp_exists",
+      "text": "The person has a written safety plan or crisis plan.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The plan lists warning signs in the person's own words.",
+      "type": "yes_no_na",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "The plan lists what the person and staff will do at each stage, with named people to contact.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Out of hours contact details are on the plan and were checked as working.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Steps to make the person's environment safer are recorded where they apply.",
+      "type": "yes_no_na",
+      "qs": "safe-involving-people-manage-risks"
+     },
+     {
+      "text": "The plan is easy to find in the record and staff on shift can open it.",
+      "type": "yes_no_na",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Does the plan say what to do if the person leaves without agreement or cannot be found?",
+      "type": "choice",
+      "qs": "safe-care-treatment",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes, recorded"
+        },
+        {
+         "label": "Not applicable"
+        },
+        {
+         "label": "No, not recorded",
+         "fail": true
+        }
+       ]
+      }
+     },
+     {
+      "text": "List gaps found in the safety plan.",
+      "type": "findings",
+      "qs": "safe-care-treatment"
+     }
+    ]
+   },
+   {
+    "title": "The person is involved",
+    "questions": [
+     {
+      "key": "inv",
+      "text": "The person took part in writing or updating the risk assessment and safety plan.",
+      "type": "yes_no",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "The record says how the person's views were gathered, or why they could not give them.",
+      "type": "yes_no",
+      "qs": "responsive-person-centred-care",
+      "show_if": {
+       "key": "inv",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "The person has been offered a copy in a format they can use.",
+      "type": "yes_no_na",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "Any agreed involvement of family, carers or an advocate is recorded with the person's consent.",
+      "type": "yes_no_na",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Choices the person made about their own risks are recorded, including any they declined.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "Any capacity or consent decision linked to the plan is recorded.",
+      "type": "yes_no_na",
+      "qs": "responsive-person-centred-care"
+     }
+    ]
+   },
+   {
+    "title": "Review after change or incident",
+    "questions": [
+     {
+      "key": "incident",
+      "text": "Has there been an incident, near miss or change in presentation for this person since the last audit?",
+      "type": "choice",
+      "qs": "safe-learning-culture",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes"
+        },
+        {
+         "label": "No"
+        }
+       ]
+      }
+     },
+     {
+      "text": "The risk assessment was reviewed after each incident or change.",
+      "type": "yes_no",
+      "qs": "safe-learning-culture",
+      "show_if": {
+       "key": "incident",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "The safety plan was updated after each incident or change.",
+      "type": "yes_no_na",
+      "qs": "safe-learning-culture",
+      "show_if": {
+       "key": "incident",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "Days between the latest incident or change and the review.",
+      "type": "number",
+      "qs": "safe-learning-culture",
+      "settings": {
+       "min": 0,
+       "max": 60
+      },
+      "show_if": {
+       "key": "incident",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "What was learned from the incident is recorded and shared with the team.",
+      "type": "yes_no_na",
+      "qs": "safe-learning-culture",
+      "show_if": {
+       "key": "incident",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "The review took place before discharge, transfer, leave or a change of placement where one happened.",
+      "type": "yes_no_na",
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "List any review that was late or missing.",
+      "type": "findings",
+      "qs": "safe-learning-culture"
+     }
+    ]
+   },
+   {
+    "title": "Staff awareness",
+    "questions": [
+     {
+      "key": "aware",
+      "text": "Staff on shift can say where the person's risk assessment and safety plan are kept.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Number of staff asked.",
+      "type": "number",
+      "qs": "safe-effective-staffing",
+      "settings": {
+       "min": 0,
+       "max": 20
+      }
+     },
+     {
+      "text": "Number of staff asked who could describe the person's main risks and the plan.",
+      "type": "number",
+      "qs": "safe-effective-staffing",
+      "settings": {
+       "min": 0,
+       "max": 20
+      }
+     },
+     {
+      "text": "The risks and plan are covered at handover.",
+      "type": "yes_no",
+      "qs": "effective-staff-teams-work-together"
+     },
+     {
+      "text": "Agency and new staff read the plan before working with the person.",
+      "type": "yes_no_na",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Staff who support this person have training in the risks recorded for them.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Overall, how well did staff explain the plan in their own words?",
+      "type": "rating",
+      "qs": "safe-effective-staffing"
+     }
+    ]
+   },
+   {
+    "title": "Governance and actions",
+    "questions": [
+     {
+      "text": "Changes to the risk assessment are version controlled and the old version is kept.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Risk assessment content matches the person's care plan.",
+      "type": "yes_no",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "The registered manager or clinical lead has signed off the latest review.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Every gap found at the last audit was closed by its due date.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Actions required, with owner and due date.",
+      "type": "free_text",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Overall rating of risk assessment and safety planning for this person.",
+      "type": "rating",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Right Support, Right Care, Right Culture Self-Assessment",
+  "description": "A whole-service self-check of choice, dignity, rights and staff culture against CQC right support, right care, right culture guidance.",
+  "frequency": "periodic",
+  "subject_scope": "none",
+  "sections": [
+   {
+    "title": "Service and setting",
+    "questions": [
+     {
+      "text": "Name of the service or scheme, and the date of this self-assessment.",
+      "type": "free_text",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Number of people who live at, or are supported in, this service.",
+      "type": "number",
+      "qs": "wellled-governance-management-sustainability",
+      "settings": {
+       "unit": "people",
+       "min": 0,
+       "max": 200
+      }
+     },
+     {
+      "text": "What best describes the setting?",
+      "type": "choice",
+      "qs": "safe-environments",
+      "settings": {
+       "options": [
+        {
+         "label": "Single home or flat"
+        },
+        {
+         "label": "Shared house of up to 6 people"
+        },
+        {
+         "label": "Shared house of 7 or more people",
+         "fail": true
+        },
+        {
+         "label": "Several units on one site or campus",
+         "fail": true
+        }
+       ]
+      },
+      "key": "setting"
+     },
+     {
+      "text": "What are the reasons for the size and layout of the setting, and what plans are in place to keep it small and homely?",
+      "type": "findings",
+      "qs": "safe-environments",
+      "show_if": {
+       "key": "setting",
+       "equals": [
+        "Shared house of 7 or more people",
+        "Several units on one site or campus"
+       ]
+      }
+     },
+     {
+      "text": "The service looks like an ordinary home from outside, with no signs, uniforms or institutional features that single people out.",
+      "type": "yes_no",
+      "qs": "caring-kindness-compassion-dignity"
+     },
+     {
+      "text": "Each person has a private bedroom or flat with a lock, and their own key or access method.",
+      "type": "yes_no",
+      "qs": "caring-kindness-compassion-dignity"
+     },
+     {
+      "text": "People chose who they live with, or were involved in that decision, and the record shows it.",
+      "type": "yes_no",
+      "qs": "responsive-person-centred-care"
+     }
+    ]
+   },
+   {
+    "title": "Right support: choice, control and independence",
+    "questions": [
+     {
+      "text": "Each person has a support plan that records their own goals, written with them and in a format they can understand.",
+      "type": "yes_no",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "Easy read, pictures, objects or another accessible format is used for plans, rotas and key information.",
+      "type": "yes_no",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "People decide their own daily routine, including when they get up, eat and go to bed, and the records show this.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "People choose, shop for and help prepare their own food and drink where they are able.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "Each person has a way to take part in decisions about the service, such as house meetings or one-to-one conversations, and the last record is under 3 months old.",
+      "type": "yes_no",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Number of people in the last month who took part in an activity of their own choosing outside the home, as a percentage of everyone supported.",
+      "type": "number",
+      "qs": "responsive-person-centred-care",
+      "settings": {
+       "unit": "percent",
+       "min": 0,
+       "max": 100,
+       "pass_min": 80
+      }
+     },
+     {
+      "text": "Each person has a plan for building independent skills, with named steps and a review date.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "How are people supported to keep in contact with family and friends?",
+      "type": "choice",
+      "qs": "caring-treating-individuals",
+      "settings": {
+       "options": [
+        {
+         "label": "Visits and contact are open and as the person wishes"
+        },
+        {
+         "label": "Contact is set by the service",
+         "fail": true
+        },
+        {
+         "label": "Not recorded",
+         "fail": true
+        }
+       ]
+      }
+     },
+     {
+      "text": "Moves into the service followed a documented assessment that checked the service could meet the person's needs.",
+      "type": "yes_no",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "Tenancy or licence agreements are in place, understood by the person or their representative, and separate from care arrangements.",
+      "type": "yes_no",
+      "qs": "responsive-person-centred-care"
+     }
+    ]
+   },
+   {
+    "title": "Right care: dignity, privacy and rights",
+    "questions": [
+     {
+      "text": "Staff knock and wait before entering a person's room or flat, and observed practice confirms it.",
+      "type": "yes_no",
+      "qs": "caring-kindness-compassion-dignity"
+     },
+     {
+      "text": "Each person's capacity to make specific decisions is assessed when in doubt, and best interests decisions are recorded.",
+      "type": "yes_no",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "Where a person is deprived of liberty, the authorisation is in place, in date and any conditions are met.",
+      "type": "yes_no_na",
+      "qs": "effective-assessing-needs"
+     },
+     {
+      "text": "Each person has an up to date health action plan or equivalent, and an annual health check has been offered.",
+      "type": "yes_no",
+      "qs": "effective-healthier-lives"
+     },
+     {
+      "text": "Positive behaviour support plans exist for people who need them, drawn up with the person, their family and a specialist where relevant, and reviewed in the last 6 months.",
+      "type": "yes_no",
+      "qs": "effective-evidence-based-care"
+     },
+     {
+      "text": "A register of restrictive practices is kept, with each restriction justified, time limited and reviewed.",
+      "type": "yes_no",
+      "qs": "safe-involving-people-manage-risks"
+     },
+     {
+      "text": "Over the last 6 months, has the use of restrictive practice gone up, down or stayed the same?",
+      "type": "choice",
+      "qs": "safe-involving-people-manage-risks",
+      "settings": {
+       "options": [
+        {
+         "label": "Reduced"
+        },
+        {
+         "label": "Stayed the same"
+        },
+        {
+         "label": "Increased",
+         "fail": true
+        },
+        {
+         "label": "Not measured",
+         "fail": true
+        }
+       ]
+      },
+      "key": "rp"
+     },
+     {
+      "text": "What is the reason for the increase or lack of measurement, and what is being done about it?",
+      "type": "findings",
+      "qs": "safe-involving-people-manage-risks",
+      "show_if": {
+       "key": "rp",
+       "equals": [
+        "Increased",
+        "Not measured"
+       ]
+      }
+     },
+     {
+      "text": "Every use of physical intervention is followed by a debrief with the person and staff, recorded within 72 hours.",
+      "type": "yes_no_na",
+      "qs": "safe-involving-people-manage-risks"
+     },
+     {
+      "text": "A review of each person's medicines that affect mood or behaviour has taken place in the last 12 months, with the prescriber, and is recorded.",
+      "type": "yes_no",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "People's money is held separately, each spend has a receipt and balances are checked and signed.",
+      "type": "yes_no",
+      "qs": "safe-safeguarding"
+     }
+    ]
+   },
+   {
+    "title": "Right culture: leaders and staff",
+    "questions": [
+     {
+      "text": "The service's values are written down in plain language and staff can describe them when asked.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Rate how well the manager can show, with examples, that they spend time with people and staff on shift (1 is not at all, 5 is fully shown).",
+      "type": "rating",
+      "qs": "wellled-governance-management-sustainability",
+      "settings": {
+       "max_rating": 5,
+       "pass_min": 3
+      }
+     },
+     {
+      "text": "Number of staff observed or spoken to who described people's goals without reading the plan.",
+      "type": "number",
+      "qs": "effective-staff-teams-work-together",
+      "settings": {
+       "unit": "staff",
+       "min": 0,
+       "max": 50,
+       "pass_min": 3
+      }
+     },
+     {
+      "text": "Learning disability and autism training, including the Oliver McGowan training where required, is recorded for every worker.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Percentage of staff with supervision within the last 8 weeks.",
+      "type": "number",
+      "qs": "safe-effective-staffing",
+      "settings": {
+       "unit": "percent",
+       "min": 0,
+       "max": 100,
+       "pass_min": 90
+      }
+     },
+     {
+      "text": "Staff competence in positive behaviour support is observed and signed off, not just trained.",
+      "type": "yes_no",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Staff say they can raise concerns and the last whistleblowing or concern raised was acted on and recorded.",
+      "type": "yes_no",
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "Staff wellbeing is supported, with a recorded check of workload, sickness and turnover in the last quarter.",
+      "type": "yes_no",
+      "qs": "caring-workforce-wellbeing"
+     }
+    ]
+   },
+   {
+    "title": "Governance and evidence",
+    "questions": [
+     {
+      "text": "A quality audit programme covers the care and support people receive, with dates and named leads.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Complaints, incidents and safeguarding concerns from the last 6 months were reviewed together for patterns.",
+      "type": "yes_no",
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "People, families and advocates were asked for feedback in the last 6 months and the service wrote down what it changed.",
+      "type": "yes_no",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "People who are unable to speak up for themselves have access to an independent advocate when needed.",
+      "type": "yes_no_na",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "The service has worked with local health and social care professionals, such as community learning disability teams, in the last 6 months.",
+      "type": "yes_no",
+      "qs": "effective-staff-teams-work-together"
+     },
+     {
+      "text": "The provider has a plan, dated within the last 12 months, for how the service will keep meeting the guidance.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "List each gap found in this assessment, with an owner and a due date.",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Overall rating of how well the service lives up to right support, right care and right culture (1 is poor, 5 is strong).",
+      "type": "rating",
+      "qs": "wellled-governance-management-sustainability",
+      "settings": {
+       "max_rating": 5,
+       "pass_min": 3
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Sharps, Inoculation Injury and Clinical Waste Audit",
+  "description": "Quarterly check of sharps handling, safer devices, injury response, waste segregation and carrier records for dental, clinic and hospital services.",
+  "frequency": "quarterly",
+  "subject_scope": "none",
+  "sections": [
+   {
+    "title": "Sharps risk assessment and safer devices",
+    "questions": [
+     {
+      "text": "A written risk assessment covers the use of sharps in every area where they are used.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The risk assessment shows where a sharp has been removed or replaced by a non-sharp option.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Where a procedure needs a sharp, a safer device with a built-in protection feature is in use.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment",
+      "key": "safer"
+     },
+     {
+      "text": "Note any procedures where a safer device is not used and the reason recorded.",
+      "type": "findings",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "safer",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "Needles are not re-sheathed or recapped after use, unless a recorded risk assessment requires it with a suitable device.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The sharps policy and risk assessment have a review date and were reviewed on or before it.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   },
+   {
+    "title": "Handling and disposal containers",
+    "questions": [
+     {
+      "text": "A sharps container is within arm's reach of where each sharp is used.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Number of sharps containers checked during this audit",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 100
+      },
+      "qs": "safe-infection-prevention-control",
+      "key": "n_cont"
+     },
+     {
+      "text": "Number of those containers filled above the fill line",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 100,
+       "pass_max": 0
+      },
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Every container checked is assembled correctly and the temporary closure is used when it is not in use.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Every container checked is labelled with the date, the location and the name or initials of the person who assembled it.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "No sharps container is stored on the floor or within reach of children or visitors.",
+      "type": "yes_no_na",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Sharps are disposed of by the person who used them, with no sharps carried loose, and none seen in general waste bins.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Written instructions on safe sharps disposal are available to staff at the point of use.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Record any container that was overfilled, unlabelled, damaged or badly placed, with its location.",
+      "type": "findings",
+      "qs": "safe-infection-prevention-control"
+     }
+    ]
+   },
+   {
+    "title": "Inoculation injury process",
+    "questions": [
+     {
+      "text": "A written procedure sets out what a person does immediately after a sharps injury or a splash of blood or body fluid.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control",
+      "key": "proc"
+     },
+     {
+      "text": "Staff can say where the procedure is displayed and who they report an injury to (ask three staff).",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control",
+      "show_if": {
+       "key": "proc",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "Details of the occupational health or other post exposure contact, including out of hours, are displayed where staff can see them.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Every sharps injury is recorded in an incident or accident record with the date, device, task and action taken.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control",
+      "key": "rec"
+     },
+     {
+      "text": "Number of sharps injuries or exposures recorded in the last 3 months",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 100
+      },
+      "qs": "safe-infection-prevention-control",
+      "key": "n_inj"
+     },
+     {
+      "text": "Each recorded injury was followed by a review of cause and a recorded learning or action point.",
+      "type": "yes_no_na",
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "Where an injury was reportable under RIDDOR, the report was made and a copy kept.",
+      "type": "yes_no_na",
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "Staff who have had an injury were offered support and follow up, and this is recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Hepatitis B immunisation status is held for staff who handle sharps.",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Held for all"
+        },
+        {
+         "label": "Held for some",
+         "fail": true
+        },
+        {
+         "label": "Not held",
+         "fail": true
+        }
+       ]
+      },
+      "qs": "safe-infection-prevention-control",
+      "key": "hepb"
+     },
+     {
+      "text": "List staff or roles where hepatitis B status is missing (use initials or role only).",
+      "type": "findings",
+      "qs": "safe-infection-prevention-control",
+      "show_if": {
+       "key": "hepb",
+       "equals": [
+        "Held for some",
+        "Not held"
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Waste segregation and storage",
+    "questions": [
+     {
+      "text": "Waste streams (for example infectious, offensive, medicinal and general) are separated at the point of use using the service's colour coding.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Bins in clinical areas are foot operated, lined and not overfilled.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Waste bags are tied or sealed, labelled with the source when required, and not filled beyond the fill line.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "A secure, lockable waste store is used for clinical waste, away from public access.",
+      "type": "yes_no_na",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "The waste store is clean, free of pests and has no leaking or split bags.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Waste is not held in the store for longer than the period set in the service's own policy.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     },
+     {
+      "text": "Rate the overall order and cleanliness of the waste store (1 poor, 5 very good).",
+      "type": "rating",
+      "settings": {
+       "max_rating": 5,
+       "pass_min": 3
+      },
+      "qs": "safe-infection-prevention-control"
+     }
+    ]
+   },
+   {
+    "title": "Carrier, records and training",
+    "questions": [
+     {
+      "text": "A written contract or agreement is in place with a registered waste carrier for clinical waste and sharps containers.",
+      "type": "yes_no_na",
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "The carrier's registration is recorded and has been checked within the last 12 months.",
+      "type": "yes_no_na",
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "Consignment or transfer notes are signed and kept for each collection.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control",
+      "key": "notes"
+     },
+     {
+      "text": "Number of collections checked against paperwork in the last quarter",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 20,
+       "pass_min": 1
+      },
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "Waste records match the number and type of collections expected.",
+      "type": "yes_no_na",
+      "qs": "safe-systems-pathways-transitions"
+     },
+     {
+      "text": "Staff who handle sharps and waste have training recorded that is in date.",
+      "type": "yes_no_na",
+      "qs": "safe-effective-staffing",
+      "key": "train"
+     },
+     {
+      "text": "Percentage of relevant staff with in date training",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 100,
+       "pass_min": 100
+      },
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "List the roles or names whose training is overdue and the date booked.",
+      "type": "findings",
+      "qs": "safe-effective-staffing",
+      "show_if": {
+       "key": "train",
+       "equals": [
+        "no"
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Governance and follow up",
+    "questions": [
+     {
+      "text": "Sharps and waste checks are done at set intervals and the results are recorded.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Actions from the last audit were completed by their due dates.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability",
+      "key": "prev"
+     },
+     {
+      "text": "Note actions from the last audit that are still open and who owns them.",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability",
+      "show_if": {
+       "key": "prev",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "Findings from this audit are shared with staff at a meeting or in writing.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Supported Living Property and Tenancy Environment Audit",
+  "description": "Check one supported living property each quarter: safety, certificates, repairs, tenancy rights and privacy, with the landlord and provider split recorded.",
+  "frequency": "quarterly",
+  "subject_scope": "room",
+  "sections": [
+   {
+    "title": "Visit and responsibilities",
+    "questions": [
+     {
+      "text": "Date of visit and the address, flat or room checked",
+      "type": "date"
+     },
+     {
+      "text": "Who owns or leases the property?",
+      "type": "choice",
+      "qs": "wellled-governance-management-sustainability",
+      "settings": {
+       "options": [
+        {
+         "label": "Provider owns it"
+        },
+        {
+         "label": "Landlord leases it to the provider"
+        },
+        {
+         "label": "Landlord lets directly to the tenant"
+        },
+        {
+         "label": "Not known or not recorded",
+         "fail": true
+        }
+       ]
+      }
+     },
+     {
+      "text": "A written record shows which repairs and checks the landlord does and which the provider or tenant does.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability",
+      "key": "split"
+     },
+     {
+      "text": "Record which responsibilities are unclear or not written down, and who will agree them.",
+      "type": "findings",
+      "show_if": {
+       "key": "split",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "The tenant has a current tenancy or licence agreement on file, kept separate from their care and support agreement.",
+      "type": "yes_no",
+      "qs": "responsive-person-centred-care",
+      "key": "tenancy"
+     },
+     {
+      "text": "Record what is missing or out of date and the date it will be put right.",
+      "type": "findings",
+      "show_if": {
+       "key": "tenancy",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "The tenant (or someone they have chosen) took part in this visit or was told it was happening.",
+      "type": "yes_no_na",
+      "qs": "caring-independence-choice-control"
+     }
+    ]
+   },
+   {
+    "title": "Safety of the building",
+    "questions": [
+     {
+      "text": "Entry doors lock securely and the tenant has their own key or fob.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Hallways, stairs and communal areas are clear, lit and free from trip hazards.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Floors, stairs, handrails and any steps or ramps are in good repair.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Windows above ground floor have restrictors where the risk assessment says they are needed, and these work.",
+      "type": "yes_no_na",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Hot water outlets that the tenant can reach are controlled or tested to the temperature set in the risk assessment.",
+      "type": "yes_no_na",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Number of hazards found during this walk round that are not already logged",
+      "type": "number",
+      "qs": "safe-involving-people-manage-risks",
+      "settings": {
+       "min": 0,
+       "max": 50,
+       "pass_max": 0
+      }
+     },
+     {
+      "text": "Each hazard found has been logged with an owner and a due date.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   },
+   {
+    "title": "Fire, gas, electrical and water certificates",
+    "questions": [
+     {
+      "text": "A fire risk assessment for the property is in place and was reviewed within the date set in it.",
+      "type": "yes_no",
+      "qs": "safe-environments",
+      "key": "fra"
+     },
+     {
+      "text": "Days since the fire risk assessment was last reviewed",
+      "type": "number",
+      "qs": "safe-environments",
+      "settings": {
+       "min": 0,
+       "max": 1500,
+       "pass_max": 365
+      }
+     },
+     {
+      "text": "Smoke or heat alarms are fitted in the places the fire risk assessment requires, and each one was tested this quarter.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Fire doors close fully and are not wedged open.",
+      "type": "yes_no_na",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Escape routes are clear and each tenant has a personal emergency evacuation plan that is up to date.",
+      "type": "yes_no",
+      "qs": "safe-involving-people-manage-risks"
+     },
+     {
+      "text": "Gas safety record",
+      "type": "choice",
+      "qs": "safe-environments",
+      "settings": {
+       "options": [
+        {
+         "label": "In date"
+        },
+        {
+         "label": "Out of date",
+         "fail": true
+        },
+        {
+         "label": "No gas supply"
+        },
+        {
+         "label": "Not seen",
+         "fail": true
+        }
+       ]
+      },
+      "key": "gas"
+     },
+     {
+      "text": "Any gas defect noted on the record has a recorded action and completion date.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "gas",
+       "equals": [
+        "In date",
+        "Out of date"
+       ]
+      }
+     },
+     {
+      "text": "Electrical installation condition report",
+      "type": "choice",
+      "qs": "safe-environments",
+      "settings": {
+       "options": [
+        {
+         "label": "In date"
+        },
+        {
+         "label": "Out of date",
+         "fail": true
+        },
+        {
+         "label": "Not seen",
+         "fail": true
+        }
+       ]
+      }
+     },
+     {
+      "text": "Portable electrical items the provider supplies have been tested within the interval set by the provider.",
+      "type": "yes_no_na",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "Legionella risk assessment and water temperature checks are recorded for the property.",
+      "type": "yes_no_na",
+      "qs": "safe-infection-prevention-control"
+     }
+    ]
+   },
+   {
+    "title": "Repairs and maintenance",
+    "questions": [
+     {
+      "text": "Number of open repair requests older than 28 days",
+      "type": "number",
+      "qs": "safe-environments",
+      "settings": {
+       "min": 0,
+       "max": 100,
+       "pass_max": 0
+      }
+     },
+     {
+      "text": "Repairs are logged with the date reported, who was told and the date fixed.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability",
+      "key": "repairs"
+     },
+     {
+      "text": "List repairs with no record of who was told or when they were fixed.",
+      "type": "findings",
+      "show_if": {
+       "key": "repairs",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "Heating and hot water work and the tenant says they have never been left without them this quarter.",
+      "type": "yes_no",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "There is no visible damp, mould or pest activity.",
+      "type": "yes_no",
+      "qs": "safe-infection-prevention-control",
+      "key": "damp"
+     },
+     {
+      "text": "Describe where damp, mould or pests were seen and the action and date agreed.",
+      "type": "findings",
+      "show_if": {
+       "key": "damp",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "Equipment in the property (for example hoists, bath lifts, alarms) has a record of servicing in date.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     }
+    ]
+   },
+   {
+    "title": "Tenancy rights and privacy",
+    "questions": [
+     {
+      "text": "The tenant's bedroom and front door are treated as their own: staff knock and wait before entering.",
+      "type": "yes_no",
+      "qs": "caring-kindness-compassion-dignity"
+     },
+     {
+      "text": "The tenant has chosen or can change their furnishings, decoration and personal items.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "Staff do not hold keys to the tenant's room except as agreed in writing with the tenant or under a recorded best interest decision.",
+      "type": "yes_no_na",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "Care and support records and post are kept in a place the tenant agrees to.",
+      "type": "yes_no",
+      "qs": "caring-treating-individuals"
+     },
+     {
+      "text": "Visitors can come and go, and any limit on visiting is agreed with the tenant and written down.",
+      "type": "yes_no",
+      "qs": "caring-independence-choice-control"
+     },
+     {
+      "text": "Tenants are told in writing who to contact about repairs and about the landlord.",
+      "type": "yes_no",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Does the tenant pay rent or service charges?",
+      "type": "choice",
+      "qs": "wellled-governance-management-sustainability",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes"
+        },
+        {
+         "label": "No"
+        }
+       ]
+      },
+      "key": "rent"
+     },
+     {
+      "text": "The tenant has had a written breakdown of rent and charges in the last 12 months.",
+      "type": "yes_no",
+      "qs": "responsive-person-centred-care",
+      "show_if": {
+       "key": "rent",
+       "equals": [
+        "Yes"
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Review and actions",
+    "questions": [
+     {
+      "text": "Overall rating of the property for safety and upkeep",
+      "type": "choice",
+      "qs": "safe-environments",
+      "settings": {
+       "options": [
+        {
+         "label": "Good"
+        },
+        {
+         "label": "Needs minor work"
+        },
+        {
+         "label": "Needs urgent work",
+         "fail": true
+        }
+       ]
+      },
+      "key": "overall"
+     },
+     {
+      "text": "Record the urgent work needed, who will do it and the date it must be finished.",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability",
+      "show_if": {
+       "key": "overall",
+       "equals": [
+        "Needs urgent work"
+       ]
+      }
+     },
+     {
+      "text": "Tenant view of how the property feels to live in (1 lowest, 5 highest)",
+      "type": "rating",
+      "qs": "responsive-listening-involving",
+      "settings": {
+       "min": 1,
+       "max": 5,
+       "pass_min": 3
+      }
+     },
+     {
+      "text": "Findings from the last visit were checked and the actions are closed or still on a tracked plan.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Record anything else to pass to the landlord, the commissioner or the registered manager.",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "Syringe Driver and Anticipatory Medicines Audit",
+  "description": "Monthly per person check that anticipatory medicines and syringe drivers are prescribed, available, checked, recorded and reviewed by competent staff.",
+  "frequency": "monthly",
+  "subject_scope": "resident",
+  "sections": [
+   {
+    "title": "Audit details and anticipatory prescribing",
+    "questions": [
+     {
+      "text": "Date of the audit.",
+      "type": "date"
+     },
+     {
+      "text": "Does this person currently have anticipatory (just in case) medicines prescribed?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes"
+        },
+        {
+         "label": "No"
+        }
+       ]
+      },
+      "qs": "safe-care-treatment",
+      "key": "antic"
+     },
+     {
+      "text": "The prescription chart lists anticipatory medicines for the common symptoms (for example pain, nausea, agitation, breathlessness and noisy breathing).",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation",
+      "show_if": {
+       "key": "antic",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "Each anticipatory medicine has the dose range, route, maximum in 24 hours and the reason for use written on the prescription.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation",
+      "show_if": {
+       "key": "antic",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "The prescription is signed and dated by a prescriber and was reviewed after the person's condition or needs last changed.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation",
+      "show_if": {
+       "key": "antic",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "The person's allergies and any kidney or liver concerns are recorded on the chart and were considered when the medicines were prescribed.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "A record shows the person, or the people who speak for them, were told what the medicines are for.",
+      "type": "yes_no_na",
+      "qs": "caring-independence-choice-control",
+      "show_if": {
+       "key": "antic",
+       "equals": [
+        "Yes"
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Availability and storage",
+    "questions": [
+     {
+      "text": "All prescribed anticipatory medicines are physically in the home or service now, in the person's name.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation",
+      "show_if": {
+       "key": "antic",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "Number of anticipatory medicines prescribed that are missing or out of stock.",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 0,
+       "pass_min": 0,
+       "pass_max": 0
+      },
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Medicines are stored securely at the right temperature and a storage check is recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "Controlled drugs are in a locked controlled drugs cupboard and the register balance matches the stock.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation",
+      "key": "cd"
+     },
+     {
+      "text": "Controlled drugs entries are signed by two staff and every entry is complete.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation",
+      "show_if": {
+       "key": "cd",
+       "equals": [
+        "yes",
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "No medicine in the person's supply is past its expiry date.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     },
+     {
+      "text": "There is a named route to get more of a medicine out of hours, and staff can say what it is.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation"
+     }
+    ]
+   },
+   {
+    "title": "Syringe driver in use",
+    "questions": [
+     {
+      "text": "Is a syringe driver in use for this person today?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes"
+        },
+        {
+         "label": "No"
+        }
+       ]
+      },
+      "qs": "safe-care-treatment",
+      "key": "driver"
+     },
+     {
+      "text": "The reason for starting the syringe driver and the prescriber's instruction are recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "driver",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "The prescription for the syringe driver names each medicine, the dose over 24 hours, the diluent and the infusion rate.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation",
+      "show_if": {
+       "key": "driver",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "The syringe label matches the prescription and shows the person's name, medicines, doses, date and time and who prepared it.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation",
+      "show_if": {
+       "key": "driver",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "Two staff checked the medicines, doses and the pump settings and both signed.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation",
+      "show_if": {
+       "key": "driver",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "The pump settings agree with the prescription and the rate on the record.",
+      "type": "yes_no_na",
+      "qs": "safe-environments",
+      "show_if": {
+       "key": "driver",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "The pump is in a lockable box or cover, or another way is used to prevent tampering, and the person or family know who to call if the alarm sounds.",
+      "type": "yes_no_na",
+      "qs": "safe-environments",
+      "show_if": {
+       "key": "driver",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "How often is the syringe driver checked and recorded?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "At least every 4 hours and at each visit"
+        },
+        {
+         "label": "Every 5 to 8 hours"
+        },
+        {
+         "label": "Not checked or not recorded"
+        }
+       ]
+      },
+      "qs": "safe-care-treatment",
+      "key": "freq",
+      "show_if": {
+       "key": "driver",
+       "equals": [
+        "Yes"
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Monitoring and records",
+    "questions": [
+     {
+      "text": "The infusion site is checked for redness, swelling, leakage or pain at each check and the finding is recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "driver",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "The volume left in the syringe, the battery and the pump running light are recorded at each check.",
+      "type": "yes_no_na",
+      "qs": "safe-environments",
+      "show_if": {
+       "key": "driver",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "The date the site was last changed and the next change date are recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "driver",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "The person's symptoms are recorded at least daily and the record shows whether the medicines helped.",
+      "type": "yes_no_na",
+      "qs": "effective-monitoring-outcomes"
+     },
+     {
+      "text": "Extra doses given from the anticipatory medicines are recorded with the time, reason, dose and the effect.",
+      "type": "yes_no_na",
+      "qs": "safe-medicines-optimisation",
+      "key": "extra"
+     },
+     {
+      "text": "When two or more extra doses were needed in 24 hours, the record shows a prescriber or nurse was contacted.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "extra",
+       "equals": [
+        "yes"
+       ]
+      }
+     },
+     {
+      "text": "Describe any gaps in the records you found (missing checks, unsigned entries, unclear times).",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   },
+   {
+    "title": "Staff competence",
+    "questions": [
+     {
+      "text": "Staff who set up or check the syringe driver have a signed competency assessment on file.",
+      "type": "yes_no_na",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "The competency assessment is in date, within the period set by the service's policy.",
+      "type": "yes_no_na",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "The rota shows a staff member with syringe driver competence on every shift, or a clear arrangement with a visiting nurse.",
+      "type": "yes_no_na",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Staff have had training on anticipatory medicines and this is recorded on the training record.",
+      "type": "yes_no_na",
+      "qs": "safe-effective-staffing"
+     },
+     {
+      "text": "Rate how clearly the written procedure for syringe drivers and anticipatory medicines is understood by the staff you spoke to.",
+      "type": "rating",
+      "settings": {
+       "min": 1,
+       "max": 5
+      },
+      "qs": "safe-effective-staffing"
+     }
+    ]
+   },
+   {
+    "title": "Review, incidents and learning",
+    "questions": [
+     {
+      "text": "The anticipatory medicines and any syringe driver prescription were reviewed by a prescriber or clinician within the last 7 days, or sooner if needs changed.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The care plan states the person's wishes and the plan for symptom control, and it matches the current prescriptions.",
+      "type": "yes_no_na",
+      "qs": "responsive-person-centred-care"
+     },
+     {
+      "text": "The family or carers have been given the contact details for out of hours advice.",
+      "type": "yes_no_na",
+      "qs": "responsive-listening-involving"
+     },
+     {
+      "text": "Has there been a medicines incident, pump fault or near miss for this person in the last month?",
+      "type": "choice",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes"
+        },
+        {
+         "label": "No"
+        }
+       ]
+      },
+      "qs": "safe-learning-culture",
+      "key": "inc"
+     },
+     {
+      "text": "Each incident or near miss is logged, reported to the right people and has a recorded action.",
+      "type": "yes_no_na",
+      "qs": "safe-learning-culture",
+      "show_if": {
+       "key": "inc",
+       "equals": [
+        "Yes"
+       ]
+      }
+     },
+     {
+      "text": "Number of syringe driver checks found missing in the last 7 days.",
+      "type": "number",
+      "settings": {
+       "min": 0,
+       "max": 50,
+       "pass_min": 0,
+       "pass_max": 0
+      },
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "List actions needed, with an owner and a date.",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "WHO Surgical Safety Checklist Observation Audit",
+  "description": "Observe one procedure and check the sign in, time out and sign out were done aloud by the whole team, recorded and followed up.",
+  "frequency": "monthly",
+  "subject_scope": "resident",
+  "sections": [
+   {
+    "title": "Procedure and observer details",
+    "questions": [
+     {
+      "text": "Type of procedure observed",
+      "type": "choice",
+      "qs": "safe-care-treatment",
+      "settings": {
+       "options": [
+        {
+         "label": "Operating theatre procedure"
+        },
+        {
+         "label": "Minor procedure room"
+        },
+        {
+         "label": "Endoscopy or interventional suite"
+        },
+        {
+         "label": "Other invasive procedure"
+        }
+       ]
+      }
+     },
+     {
+      "text": "Date and time the observation started",
+      "type": "date",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Was the observer present from before the patient entered the room until the patient left?",
+      "type": "choice",
+      "qs": "wellled-governance-management-sustainability",
+      "settings": {
+       "options": [
+        {
+         "label": "Yes, whole procedure"
+        },
+        {
+         "label": "Partly",
+         "fail": true
+        },
+        {
+         "label": "No",
+         "fail": true
+        }
+       ]
+      }
+     },
+     {
+      "text": "Was the observer independent of the team being observed?",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "key": "checklist_in_use",
+      "text": "Was a written surgical safety checklist in use for this procedure?",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Describe what was used instead and who authorised it.",
+      "type": "findings",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "checklist_in_use",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "The checklist in use is the version approved by the organisation and is dated and version controlled.",
+      "type": "yes_no_na",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   },
+   {
+    "title": "Sign in (before anaesthesia or the procedure starts)",
+    "questions": [
+     {
+      "text": "The sign in took place before anaesthesia or sedation was started.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The patient's identity was confirmed against the wristband and records, with the patient where able.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment",
+      "key": "id_checked"
+     },
+     {
+      "text": "The planned procedure and the site or side were confirmed aloud and matched the consent form.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The site was marked by the operating clinician where marking applies.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The signed consent form was present and checked at sign in.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Allergies and known reactions were asked about and confirmed aloud.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment",
+      "key": "allergy"
+     },
+     {
+      "text": "The anaesthetic or sedation safety check and the airway and aspiration risk review were confirmed.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Expected blood loss risk and availability of blood or fluids were discussed where relevant.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Number of team members who took part in the sign in",
+      "type": "number",
+      "qs": "effective-staff-teams-work-together",
+      "settings": {
+       "min": 1,
+       "max": 20
+      }
+     }
+    ]
+   },
+   {
+    "title": "Time out (before the first incision or start)",
+    "questions": [
+     {
+      "text": "Work stopped and the whole team paused for the time out before the procedure began.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment",
+      "key": "timeout_done"
+     },
+     {
+      "text": "Record what happened instead and whether the procedure started without a time out.",
+      "type": "findings",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "timeout_done",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "Every team member introduced themselves by name and role.",
+      "type": "yes_no",
+      "qs": "effective-staff-teams-work-together"
+     },
+     {
+      "text": "The patient, procedure and site or side were confirmed aloud again by the team.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The surgeon, anaesthetist and nursing lead each stated any critical or unexpected steps and concerns.",
+      "type": "yes_no",
+      "qs": "effective-staff-teams-work-together"
+     },
+     {
+      "text": "Antibiotic prophylaxis was confirmed as given within the time set by local policy, or not needed.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Essential imaging was displayed and matched the patient, where needed.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Sterility indicator results and equipment or implant availability were confirmed.",
+      "type": "yes_no_na",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "How would you rate the engagement of the team during the time out?",
+      "type": "rating",
+      "qs": "effective-staff-teams-work-together",
+      "settings": {
+       "max": 5,
+       "pass_min": 4
+      }
+     }
+    ]
+   },
+   {
+    "title": "Sign out (before the patient leaves the room)",
+    "questions": [
+     {
+      "text": "The sign out was completed before the patient left the procedure room.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment",
+      "key": "signout_done"
+     },
+     {
+      "text": "The procedure actually performed was recorded and confirmed aloud.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The final instrument, swab and sharps counts were stated as complete, or a discrepancy was escalated.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Specimens were labelled aloud with the patient name, source and any tests needed.",
+      "type": "yes_no_na",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "Equipment problems found during the procedure were reported and recorded.",
+      "type": "yes_no_na",
+      "qs": "safe-environments"
+     },
+     {
+      "text": "The recovery plan and key concerns for the patient were handed over by name to the recovery team.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     }
+    ]
+   },
+   {
+    "title": "Team behaviour and culture",
+    "questions": [
+     {
+      "text": "Checklist items were read aloud and confirmed by the team, not ticked from memory.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment"
+     },
+     {
+      "text": "The lead clinician gave their full attention to the time out.",
+      "type": "yes_no",
+      "qs": "effective-staff-teams-work-together",
+      "key": "lead_attention"
+     },
+     {
+      "text": "Any team member was able to speak up without being talked over.",
+      "type": "yes_no",
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "Were any interruptions during the checks?",
+      "type": "choice",
+      "qs": "safe-care-treatment",
+      "settings": {
+       "options": [
+        {
+         "label": "None"
+        },
+        {
+         "label": "Minor, checks continued"
+        },
+        {
+         "label": "Checks had to restart",
+         "fail": true
+        },
+        {
+         "label": "Checks skipped",
+         "fail": true
+        }
+       ]
+      }
+     },
+     {
+      "text": "The patient was treated with dignity during the checks, including when awake.",
+      "type": "yes_no_na",
+      "qs": "caring-kindness-compassion-dignity"
+     }
+    ]
+   },
+   {
+    "title": "Records and actions",
+    "questions": [
+     {
+      "text": "The completed checklist for this procedure is in the patient record and signed by the team lead.",
+      "type": "yes_no",
+      "qs": "safe-care-treatment",
+      "key": "record_done"
+     },
+     {
+      "text": "Record which parts of the checklist were left blank or filled in later.",
+      "type": "findings",
+      "qs": "safe-care-treatment",
+      "show_if": {
+       "key": "record_done",
+       "equals": [
+        "no"
+       ]
+      }
+     },
+     {
+      "text": "The times recorded on the checklist match the observed sequence of events.",
+      "type": "yes_no",
+      "qs": "wellled-governance-management-sustainability"
+     },
+     {
+      "text": "Any missed or incomplete step was reported through the incident system.",
+      "type": "yes_no_na",
+      "qs": "safe-learning-culture",
+      "key": "incident"
+     },
+     {
+      "text": "The observer gave feedback to the team on the day.",
+      "type": "yes_no",
+      "qs": "safe-learning-culture"
+     },
+     {
+      "text": "Findings from this observation for the monthly governance report",
+      "type": "findings",
+      "qs": "wellled-governance-management-sustainability"
+     }
+    ]
+   }
+  ]
  }
 ]

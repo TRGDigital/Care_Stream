@@ -42,6 +42,19 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "wave": 0
  },
  {
+  "name": "Antimicrobial Prescribing Audit",
+  "slug": "antimicrobial-prescribing-audit",
+  "description": "Check a sample of antimicrobial prescriptions for the reason recorded, allergy check, dose, course length and follow up. Run it twice a year, set your own standard and re-audit after changes.",
+  "frequency": "periodic",
+  "scope": "resident",
+  "services": [
+   "dentistry",
+   "clinics",
+   "private_hospitals"
+  ],
+  "wave": 3
+ },
+ {
   "name": "Bed Rails and Mattress Safety Audit",
   "slug": "bed-rails-and-mattress-safety-audit",
   "description": "Check each person's bed rails and mattress once a month, from the risk assessment to the gaps, the mattress setting and the servicing record. Every failed check becomes an action with an owner and a date.",
@@ -55,6 +68,21 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "hospices"
   ],
   "wave": 2
+ },
+ {
+  "name": "Business Continuity and Emergency Cover Audit",
+  "slug": "business-continuity-and-emergency-cover-audit",
+  "description": "Check that your business continuity plan is current, that emergency contacts work and that you can cover urgent visits or shifts when staff are short. Record the red, amber and green priority list, the last test and every lesson, with an owner and date for each action.",
+  "frequency": "periodic",
+  "scope": "none",
+  "services": [
+   "home_care",
+   "live_in",
+   "care_homes",
+   "nursing",
+   "supported_living"
+  ],
+  "wave": 3
  },
  {
   "name": "COSHH Compliance Audit",
@@ -151,6 +179,32 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "wave": 1
  },
  {
+  "name": "Clinical Equipment, Servicing and Validation Audit",
+  "slug": "clinical-equipment-servicing-and-validation-audit",
+  "description": "Check that every item of clinical equipment is on a register, serviced, calibrated, tested and used by trained staff. Faults are tracked to closure and every No becomes an action with an owner and a date.",
+  "frequency": "quarterly",
+  "scope": "none",
+  "services": [
+   "dentistry",
+   "private_hospitals",
+   "clinics"
+  ],
+  "wave": 3
+ },
+ {
+  "name": "Clinical Record Keeping Audit",
+  "slug": "clinical-record-keeping-audit",
+  "description": "Check a sample of patient records each quarter for dates, signatures, history, consent, plan, outcomes and safeguarding notes. Every gap becomes an action with an owner and a date.",
+  "frequency": "quarterly",
+  "scope": "resident",
+  "services": [
+   "dentistry",
+   "private_hospitals",
+   "clinics"
+  ],
+  "wave": 3
+ },
+ {
   "name": "Complaints and Concerns Audit",
   "slug": "complaints-and-concerns-audit",
   "description": "Check your complaints log each quarter to see that every complaint was recorded, acknowledged, investigated and answered in time, with learning shared. Free to use, with an action for every gap and a record you can show an inspector.",
@@ -174,6 +228,35 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "hospices"
   ],
   "wave": 2
+ },
+ {
+  "name": "Consent and Information Sharing Audit",
+  "slug": "consent-and-information-sharing-audit",
+  "description": "Pick a sample of patient records and check that consent was valid, the right information was given and any sharing with the GP or others was recorded. Use it each quarter and keep the findings and actions for inspection.",
+  "frequency": "quarterly",
+  "scope": "resident",
+  "services": [
+   "dentistry",
+   "private_hospitals",
+   "clinics"
+  ],
+  "wave": 3
+ },
+ {
+  "name": "Controlled Drugs Audit",
+  "slug": "controlled-drugs-audit",
+  "description": "Check that controlled drugs are locked away, that every register entry is signed and the balance is right, and that witnessing and destruction are recorded. Run it monthly, record any discrepancy and give each action an owner and a date.",
+  "frequency": "monthly",
+  "scope": "none",
+  "services": [
+   "hospices",
+   "mental_health",
+   "substance_misuse",
+   "care_homes",
+   "nursing",
+   "private_hospitals"
+  ],
+  "wave": 3
  },
  {
   "name": "DNACPR and Advance Care Planning Audit",
@@ -237,6 +320,52 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "wave": 0
  },
  {
+  "name": "Dental Decontamination (HTM 01-05) Audit",
+  "slug": "dental-decontamination-htm-01-05-audit",
+  "description": "Check how your practice cleans, sterilises, stores and traces instruments in one quarterly visit. Each answer is scored and every gap becomes an action with an owner and a date.",
+  "frequency": "quarterly",
+  "scope": "none",
+  "services": [
+   "dentistry"
+  ],
+  "wave": 3
+ },
+ {
+  "name": "Dental Radiography Quality and Justification Audit",
+  "slug": "dental-radiography-quality-and-justification-audit",
+  "description": "Sample your radiographs each quarter and check that every exposure was justified, graded, written up and within dose and equipment checks. Each gap becomes an action with an owner and a date.",
+  "frequency": "quarterly",
+  "scope": "resident",
+  "services": [
+   "dentistry",
+   "clinics",
+   "private_hospitals"
+  ],
+  "wave": 3
+ },
+ {
+  "name": "Dental Unit Waterline and Legionella Audit",
+  "slug": "dental-unit-waterline-and-legionella-audit",
+  "description": "Check each dental unit every month for waterline treatment, flushing logs, test results and the Legionella risk assessment. Gaps become actions with an owner and a date.",
+  "frequency": "monthly",
+  "scope": "room",
+  "services": [
+   "dentistry"
+  ],
+  "wave": 3
+ },
+ {
+  "name": "Detox and Withdrawal Monitoring Audit",
+  "slug": "detox-and-withdrawal-monitoring-audit",
+  "description": "Check each person's detox record once a month, from the admission assessment to the withdrawal scale checks, escalation and discharge plan. Every failed check becomes an action with an owner and a date.",
+  "frequency": "monthly",
+  "scope": "resident",
+  "services": [
+   "substance_misuse"
+  ],
+  "wave": 3
+ },
+ {
   "name": "Dignity and Respect Observation Audit",
   "slug": "dignity-and-respect-observation-audit",
   "description": "Walk the service and record how staff treat people: privacy, choice, language, personal care and mealtimes. Every concern becomes an action with an owner and a date.",
@@ -279,6 +408,32 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "wave": 2
  },
  {
+  "name": "End of Life Care Pathway Audit",
+  "slug": "end-of-life-care-pathway-audit",
+  "description": "Follow one person's end of life care from recognising the change to care after death. Each check points to a record, so you can see wishes, symptom care and family contact are in place.",
+  "frequency": "quarterly",
+  "scope": "resident",
+  "services": [
+   "hospices",
+   "nursing",
+   "care_homes",
+   "dementia",
+   "home_care"
+  ],
+  "wave": 3
+ },
+ {
+  "name": "Extra Care Scheme Quality Audit",
+  "slug": "extra-care-scheme-quality-audit",
+  "description": "Check your extra care scheme once a quarter, from the split between housing and care to the call system, communal areas and fire evacuation plans. Every failed check becomes an action with an owner and a date.",
+  "frequency": "quarterly",
+  "scope": "none",
+  "services": [
+   "extra_care"
+  ],
+  "wave": 3
+ },
+ {
   "name": "Falls Prevention & Post-Fall Review",
   "slug": "falls-prevention-and-post-fall-review",
   "description": "Reviews falls this month, post-fall care and prevention measures.",
@@ -292,6 +447,20 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "hospices"
   ],
   "wave": 0
+ },
+ {
+  "name": "Finance and Money Handling Audit",
+  "slug": "finance-and-money-handling-audit",
+  "description": "Check each person's money once a month: cash counted by two people against the ledger, receipts for every spend, and appointee and benefit papers on file. Any gap becomes an action with an owner and a date.",
+  "frequency": "monthly",
+  "scope": "resident",
+  "services": [
+   "supported_living",
+   "ld_autism",
+   "care_homes",
+   "extra_care"
+  ],
+  "wave": 3
  },
  {
   "name": "Fire Drill Record Audit",
@@ -455,6 +624,19 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "wave": 0
  },
  {
+  "name": "Health Action Plan and Health Access Audit",
+  "slug": "health-action-plan-and-health-access-audit",
+  "description": "Check that each person you support has a current annual health check, health action plan and hospital passport. Record gaps, set owners and dates, and repeat each quarter.",
+  "frequency": "quarterly",
+  "scope": "resident",
+  "services": [
+   "supported_living",
+   "ld_autism",
+   "extra_care"
+  ],
+  "wave": 3
+ },
+ {
   "name": "Hoist, Sling and Lifting Equipment (LOLER) Audit",
   "slug": "hoist-sling-and-lifting-equipment-loler-audit",
   "description": "Check every hoist and sling against its examination record, label and allocation each month. Defects, training gaps and actions are logged in one place for your next inspection.",
@@ -471,6 +653,18 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "wave": 2
  },
  {
+  "name": "Home Care Infection Prevention and PPE Audit",
+  "slug": "home-care-infection-prevention-and-ppe-audit",
+  "description": "Check each care worker once a month on PPE use, hand hygiene, waste, laundry, spillages, uniform and training. Every failed check becomes an action with an owner and a date.",
+  "frequency": "monthly",
+  "scope": "staff",
+  "services": [
+   "home_care",
+   "live_in"
+  ],
+  "wave": 3
+ },
+ {
   "name": "Home Environment and Client Risk Assessment Audit",
   "slug": "home-environment-and-client-risk-assessment-audit",
   "description": "Assess each person's home once on starting care and again at every review, covering access, fire, trips, equipment, pets, smoking and oxygen. Every risk found becomes an action with an owner, a date and a review.",
@@ -482,6 +676,17 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "supported_living"
   ],
   "wave": 2
+ },
+ {
+  "name": "Hospice Quality Standards Self-Assessment",
+  "slug": "hospice-quality-standards-self-assessment",
+  "description": "Check your whole hospice against the five CQC key questions and end of life care in one self-assessment. Every gap becomes an action with an owner and a date.",
+  "frequency": "periodic",
+  "scope": "none",
+  "services": [
+   "hospices"
+  ],
+  "wave": 3
  },
  {
   "name": "Infection Control",
@@ -596,6 +801,17 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "wave": 2
  },
  {
+  "name": "Live-in Care Placement Review",
+  "slug": "live-in-care-placement-review",
+  "description": "Review each live-in placement once a month, from the carer's breaks and rest to handover, the accommodation and what the person thinks. Every failed check becomes an action with an owner and a date.",
+  "frequency": "monthly",
+  "scope": "resident",
+  "services": [
+   "live_in"
+  ],
+  "wave": 3
+ },
+ {
   "name": "Lone Working and Care Worker Safety Audit",
   "slug": "lone-working-and-care-worker-safety-audit",
   "description": "Check that one care worker has a current lone working risk assessment, a working check-in and escalation route, and support after any incident. Complete it quarterly for each staff member and keep the actions in one place.",
@@ -636,6 +852,19 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "hospices"
   ],
   "wave": 0
+ },
+ {
+  "name": "Medical Emergencies and Resuscitation Readiness Check",
+  "slug": "medical-emergencies-and-resuscitation-readiness-check",
+  "description": "Check each month that your emergency drugs, oxygen and defibrillator are present and in date, and that staff training and drills are recorded. Built for dental practices, clinics and private hospitals, and ready to use on your phone or tablet.",
+  "frequency": "monthly",
+  "scope": "none",
+  "services": [
+   "dentistry",
+   "private_hospitals",
+   "clinics"
+  ],
+  "wave": 3
  },
  {
   "name": "Medication Competency Assessment",
@@ -695,6 +924,18 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "wave": 1
  },
  {
+  "name": "Mental Health Act Legal Compliance Audit",
+  "slug": "mental-health-act-legal-compliance-audit",
+  "description": "Check each detained patient once a month: that the detention papers are on file, rights were explained, consent to treatment is certified and section 17 leave matches the form. Every gap becomes an action with an owner and a date.",
+  "frequency": "monthly",
+  "scope": "resident",
+  "services": [
+   "mental_health",
+   "private_hospitals"
+  ],
+  "wave": 3
+ },
+ {
   "name": "Missing From Care Review Audit",
   "slug": "missing-from-care-review-audit",
   "description": "Review each child's missing episodes once a month in one place, from police contact to the return home interview and the updated risk assessment. Spot patterns across episodes and give every problem an owner and a date.",
@@ -731,6 +972,18 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "wave": 0
  },
  {
+  "name": "Moving and Handling in the Home Audit",
+  "slug": "moving-and-handling-in-the-home-audit",
+  "description": "Check each client's moving and handling assessment, equipment and observed practice every quarter. Gaps, two-person task cover and mobility changes are logged with an owner and a due date.",
+  "frequency": "quarterly",
+  "scope": "resident",
+  "services": [
+   "home_care",
+   "live_in"
+  ],
+  "wave": 3
+ },
+ {
   "name": "Night Shift Walkround",
   "slug": "night-shift-walkround",
   "description": "An unannounced check of care, safety and staffing during the night.",
@@ -746,6 +999,32 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "hospices"
   ],
   "wave": 0
+ },
+ {
+  "name": "Person-Centred Outcomes and Community Participation Review",
+  "slug": "person-centred-outcomes-and-community-participation-review",
+  "description": "Check each person's goals, choices, activities, relationships and independence once a quarter, and see what is recorded against what is real. Every gap becomes an action with an owner and a date, ready to show an inspector.",
+  "frequency": "quarterly",
+  "scope": "resident",
+  "services": [
+   "supported_living",
+   "ld_autism",
+   "extra_care"
+  ],
+  "wave": 3
+ },
+ {
+  "name": "Physical Health and Metabolic Monitoring Audit",
+  "slug": "physical-health-and-metabolic-monitoring-audit",
+  "description": "Use this audit to check that each person's physical health checks are recorded, repeated on time and acted on. It covers baseline checks, antipsychotic monitoring, referrals and follow up for mental health, independent hospital and learning disability services.",
+  "frequency": "quarterly",
+  "scope": "resident",
+  "services": [
+   "mental_health",
+   "private_hospitals",
+   "ld_autism"
+  ],
+  "wave": 3
  },
  {
   "name": "Physical Restraint and Sanctions Review",
@@ -946,6 +1225,46 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "wave": 2
  },
  {
+  "name": "Restraint and Seclusion Incident Review",
+  "slug": "restraint-and-seclusion-incident-review",
+  "description": "Review every restraint or seclusion incident for one person each month. Check who authorised it, whether it was proportionate and monitored, whether the person was debriefed and what the service learned.",
+  "frequency": "monthly",
+  "scope": "resident",
+  "services": [
+   "mental_health",
+   "private_hospitals",
+   "ld_autism",
+   "substance_misuse"
+  ],
+  "wave": 3
+ },
+ {
+  "name": "Right Support, Right Care, Right Culture Self-Assessment",
+  "slug": "right-support-right-care-right-culture-self-assessment",
+  "description": "Check your whole service against the three CQC themes of right support, right care and right culture in one visit. Each gap becomes an action with an owner and a date.",
+  "frequency": "periodic",
+  "scope": "none",
+  "services": [
+   "ld_autism",
+   "supported_living"
+  ],
+  "wave": 3
+ },
+ {
+  "name": "Risk Assessment and Safety Planning Audit",
+  "slug": "risk-assessment-and-safety-planning-audit",
+  "description": "Check that each person has a current risk assessment and a safety plan they helped write. See at a glance whether staff know the plan and whether it was reviewed after incidents.",
+  "frequency": "monthly",
+  "scope": "resident",
+  "services": [
+   "mental_health",
+   "substance_misuse",
+   "private_hospitals",
+   "ld_autism"
+  ],
+  "wave": 3
+ },
+ {
   "name": "Safeguarding Log Review",
   "slug": "safeguarding-log-review",
   "description": "Reviews safeguarding concerns raised, referrals, notifications and follow-up.",
@@ -969,6 +1288,19 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "hospices"
   ],
   "wave": 0
+ },
+ {
+  "name": "Sharps, Inoculation Injury and Clinical Waste Audit",
+  "slug": "sharps-inoculation-injury-and-clinical-waste-audit",
+  "description": "Check that sharps are avoided or made safer, containers are used and labelled correctly, and injuries are recorded and reviewed. Also covers waste segregation, storage and carrier paperwork, with an action for every No.",
+  "frequency": "quarterly",
+  "scope": "none",
+  "services": [
+   "dentistry",
+   "private_hospitals",
+   "clinics"
+  ],
+  "wave": 3
  },
  {
   "name": "Single Assessment Framework Review",
@@ -1077,6 +1409,32 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "wave": 2
  },
  {
+  "name": "Supported Living Property and Tenancy Environment Audit",
+  "slug": "supported-living-property-and-tenancy-environment-audit",
+  "description": "Walk through one supported living property each quarter and record safety, certificates, repairs and the tenant's rights in one place. Each failed check becomes an action with an owner and a date.",
+  "frequency": "quarterly",
+  "scope": "room",
+  "services": [
+   "supported_living",
+   "extra_care",
+   "ld_autism"
+  ],
+  "wave": 3
+ },
+ {
+  "name": "Syringe Driver and Anticipatory Medicines Audit",
+  "slug": "syringe-driver-and-anticipatory-medicines-audit",
+  "description": "Check each month, for each person, that anticipatory medicines are prescribed and in stock and that syringe driver checks, records and staff competence are in place. Every gap becomes an action with an owner and a date.",
+  "frequency": "monthly",
+  "scope": "resident",
+  "services": [
+   "hospices",
+   "nursing",
+   "care_homes"
+  ],
+  "wave": 3
+ },
+ {
   "name": "Training Matrix Compliance Audit",
   "slug": "training-matrix-compliance-audit",
   "description": "Check every member of staff against the training their role needs, with due dates, induction and refreshers in one monthly review. Record what is overdue, who is acting on it and where the evidence is kept.",
@@ -1100,6 +1458,18 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "hospices"
   ],
   "wave": 1
+ },
+ {
+  "name": "WHO Surgical Safety Checklist Observation Audit",
+  "slug": "who-surgical-safety-checklist-observation-audit",
+  "description": "Watch one procedure and record whether the team completed the sign in, time out and sign out aloud, and whether the checklist was filed. Each miss gets an action, so you can show how checks are monitored each month.",
+  "frequency": "monthly",
+  "scope": "resident",
+  "services": [
+   "private_hospitals",
+   "clinics"
+  ],
+  "wave": 3
  },
  {
   "name": "Water Safety & Legionella",

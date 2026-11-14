@@ -2,6 +2,7 @@ import { JsonLd } from '@/components/json-ld'
 import { ServicePageV2, type ServiceBlock, type ServiceItem, type ServicePage, type ServicePart } from '@/components/marketing/service-page-v2'
 import { faqPageSchema, howToSchema, breadcrumbSchema } from '@/lib/schema'
 import { getSitePageContent } from '@/lib/site-page-content'
+import { KeywordHighlighter } from '@/components/marketing/keyword-highlighter'
 import { SERVICE_LABEL } from '@/lib/audit-catalogue'
 import type { AuditPageData } from '@/lib/audit-pages/types'
 
@@ -83,6 +84,8 @@ export async function AuditProductPage({ page: p }: { page: AuditPageData }) {
       <JsonLd data={howToSchema({ name: `How to run the ${p.name}`, description: p.description, path, steps: p.steps })} />
       <JsonLd data={faqPageSchema(faqs)} />
       <ServicePageV2 page={record} faqs={faqs} />
+      {/* ?yellowkws: platform admins only, highlights these terms and shows how often each is used */}
+      <KeywordHighlighter slug={p.slug} keywords={p.highlight_keywords ? { primary: p.highlight_keywords.primary, secondary: p.highlight_keywords.secondary } : { primary: p.keywords.primary.keyword, secondary: p.keywords.secondary.map(k => k.keyword) }} />
     </>
   )
 }

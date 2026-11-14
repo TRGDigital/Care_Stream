@@ -22,4 +22,6 @@ export interface AuditPageData {
   steps: Array<{ name: string; text: string }>
   faqs: Array<{ question: string; answer: string }>
   related: string[]
+  /** Terms the ?yellowkws view highlights (platform admins only). */
+  highlight_keywords?: { primary: string; secondary: string[] }
 }

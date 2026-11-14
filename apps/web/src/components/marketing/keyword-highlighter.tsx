@@ -23,7 +23,7 @@ export function KeywordHighlighter({ slug, kind = 'post', keywords }: { slug: st
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    if (!new URLSearchParams(window.location.search).has('yellowkws')) return
+    if (![...new URLSearchParams(window.location.search).keys()].some(k => k.toLowerCase() === 'yellowkws')) return
     const token = getPlatformToken()
     if (!token) return
     let cancelled = false

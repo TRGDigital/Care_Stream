@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Search } from 'lucide-react'
+import './audit-library.css'
 import { AUDIT_CATALOGUE, SERVICE_LABEL } from '@/lib/audit-catalogue'
 import { AUDIT_PAGE_SLUGS } from '@/lib/audit-pages'
 
@@ -23,7 +23,7 @@ export function AuditLibrary() {
     (service === 'all' || a.services.includes(service)) &&
     words.every(w => (a.name + ' ' + a.description).toLowerCase().includes(w)))
   return (
-    <section className="bg-white py-20" id="audit-library" aria-labelledby="audit-library-h">
+    <section className="audlib bg-white py-20" id="audit-library" aria-labelledby="audit-library-h">
       <div className="mx-auto max-w-6xl px-6">
         <p className="text-xs font-bold uppercase tracking-[0.13em] text-teal">Free audit library</p>
         <h2 id="audit-library-h" className="mt-2 text-3xl font-extrabold tracking-tight text-neutral-dark md:text-4xl">
@@ -33,15 +33,11 @@ export function AuditLibrary() {
           Every audit here is free to run on a free CareStream account: scored sections, recorded findings, actions and a report. No card needed.
           Pick your service to see the audits that suit it.
         </p>
-        <div className="mt-6 max-w-xl">
-          <label htmlFor="audit-search" className="sr-only">Search the free audits by name</label>
-          <div className="relative">
-            <Search size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-mid" aria-hidden="true" />
-            <input id="audit-search" type="search" value={query} onChange={e => setQuery(e.target.value)}
-              placeholder={`Search ${AUDIT_CATALOGUE.length} audits, for example MAR chart, fire, medication`}
-              className="w-full rounded-lg border border-gray-300 bg-white py-3 pl-10 pr-4 text-base text-neutral-dark placeholder:text-neutral-mid/70 focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20" />
-          </div>
-        </div>
+        <label className="tsearch">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4 4" /></svg>
+          <input type="search" value={query} onChange={e => setQuery(e.target.value)}
+                 placeholder={`Search ${AUDIT_CATALOGUE.length} audits, e.g. MAR chart`} aria-label="Search the free audits by name" />
+        </label>
         <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Filter audits by care service">
           <button type="button" onClick={() => setService('all')} aria-pressed={service === 'all'}
             className={`rounded-full border px-3 py-1.5 text-sm font-medium ${service === 'all' ? 'border-teal bg-teal text-white' : 'border-gray-200 text-neutral-dark hover:border-teal'}`}>

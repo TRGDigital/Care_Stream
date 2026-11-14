@@ -55,6 +55,21 @@
   "kitchen audit": 20,
   "kitchen audit checklist": 10,
   "care home audit checklist": 10,
-  "cqc audit": 140
+  "cqc audit": 140,
+  "mar chart": 1900,
+  "mar sheet": 720,
+  "mar medication sheet": 720,
+  "medication administration record": 18100,
+  "mar chart template": 170,
+  "mar chart example": 260,
+  "medication audit checklist": 40,
+  "medication audit template": 30,
+  "mar chart audit template": 10,
+  "mar audit": 10,
+  "blank mar chart": 70,
+  "mar charts in care homes": 30,
+  "mar chart care home": 10,
+  "mar charts in domiciliary care": 10,
+  "cqc mar charts": 10
  }
 }

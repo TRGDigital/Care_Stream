@@ -1,0 +1,7 @@
+/* The search box on the free audit library: the same pill search as /staff-training (.tsearch),
+   restated here because that rule is scoped to .stpage-v2. */
+.audlib .tsearch{position:relative;display:block;margin:22px 0 14px;max-width:320px}
+.audlib .tsearch input{font:inherit;font-size:.85rem;border:1px solid var(--line,#E9E5EF);border-radius:999px;
+    padding:9px 14px 9px 34px;background:var(--ground,#fff);color:var(--ink,#17121F);width:100%}
+.audlib .tsearch input:focus{outline:2px solid var(--accent,#7B3FBF);outline-offset:1px;border-color:transparent}
+.audlib .tsearch svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--muted,#6B6478)}

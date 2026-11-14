@@ -141,7 +141,7 @@ export const page: AuditPageData = {
   "Free to run on a free CareStream account, with no card needed"
  ],
  "what_it_is_title": "What the MAR chart audit checks",
- "what_it_is": "You audit one person at a time, using their MAR chart and daily notes. The questions follow the chart from the top of the page to the care plan, so you can work through it in one sitting. This is a check on a completed chart. It is not a blank MAR chart template, because your pharmacy or care software provides the chart itself.",
+ "what_it_is": "You audit one person at a time, using their MAR chart and daily notes. MAR charts in domiciliary care are filled in by carers in a person's own home, so a regular check helps you spot gaps early. The questions follow the chart from the top of the page to the care plan, so you can work through it in one sitting. This is a check on a completed chart. It is not a blank MAR chart or a MAR chart example, because your pharmacy or care software provides the chart itself.",
  "steps": [
   {
    "name": "Create a free account",
@@ -182,8 +182,8 @@ export const page: AuditPageData = {
    "answer": "Usually the registered manager or a care coordinator. Whoever runs it should be able to read the MAR chart alongside the care plan and daily notes."
   },
   {
-   "question": "Is this a MAR chart template or example?",
-   "answer": "No. It is the audit you run on a MAR chart that has already been filled in. Your MAR chart comes from your pharmacy or your care software, and this audit shows you where its entries are complete and where they are not."
+   "question": "Is this a MAR chart template or a medication audit checklist?",
+   "answer": "It is a medication audit checklist for a MAR chart that has already been filled in, not a blank MAR chart template. Your MAR chart comes from your pharmacy or your care software, and this audit shows you where its entries are complete and where they are not."
   },
   {
    "question": "Which regulations does it support?",
@@ -198,5 +198,22 @@ export const page: AuditPageData = {
   "Medication Competency Assessment",
   "Care Worker Spot Check (Observed Visit)",
   "Daily Care Notes and Visit Record Audit"
- ]
+ ],
+ "highlight_keywords": {
+  "primary": "mar chart audit",
+  "secondary": [
+   "mar chart",
+   "mar sheet",
+   "medication administration record",
+   "mar chart template",
+   "mar chart example",
+   "mar charts in domiciliary care",
+   "mar charts in care homes",
+   "medication audit checklist",
+   "medication audit template",
+   "mar chart audit template",
+   "mar audit",
+   "blank mar chart"
+  ]
+ }
 }

@@ -41,6 +41,7 @@ const ALLOW: RegExp[] = [
   // (training.ts: catalogue, enroll; training-matrix.ts: requirements) and lift the monthly cap.
   /^\/training\/(catalogue|modules|compliance|my-enrollments)$/,
   /^\/training\/(standard-)?modules\/[^/]+\/(full|preview)$/,
+  /^\/training\/settings$/,                          // the training reminder preferences shown on the Settings page (load and save)
   /^\/training\/enroll$/,
   /^\/training\/enrollments\/[^/]+(\/(answer|complete|reset|upload-certificate))?$/,
   /^\/training-matrix(\/requirements)?$/,

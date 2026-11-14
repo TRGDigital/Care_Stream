@@ -16,7 +16,7 @@ t('free API allow list: what a free tenant may reach', () => {
     '/analytics/wording-alignment/batch', '/users/invite', '/billing/summary', '/billing/checkout', '/me/profile',
     '/me/audit-approvals/xyz/approve', '/settings',
     // free CPD training
-    '/training/catalogue', '/training/modules', '/training/compliance', '/training/my-enrollments', '/training/enroll',
+    '/training/catalogue', '/training/modules', '/training/compliance', '/training/my-enrollments', '/training/enroll', '/training/settings',
     '/training/standard-modules/m1/full', '/training/enrollments/e1', '/training/enrollments/e1/answer', '/training/enrollments/e1/complete',
     '/training-matrix', '/training-matrix/requirements',
     '/me/annual-training', '/me/annual-training/e1', '/me/annual-training/e1/submit', '/me/annual-training/e1/certificate']) assert.ok(freeRouteAllowed(p), p)

@@ -424,8 +424,10 @@ function ConsoleFaqs({ faqs }: { faqs: { question: string; answer: string }[] })
   )
 }
 
-export function ServicePageV2({ page, faqs = [], afterHero, beforeEnd }: {
+export function ServicePageV2({ page, faqs = [], afterHero, beforeEnd, heroVisual }: {
   page: ServicePage
+  /** Optional replacement for the hero image: drawn content shown in the same right-hand slot. */
+  heroVisual?: ReactNode
   faqs?: { question: string; answer: string }[]
   /** Optional band rendered straight after the hero (the Free plan banner on /care-audits and /policy-gap-detection). */
   afterHero?: ReactNode
@@ -446,7 +448,8 @@ export function ServicePageV2({ page, faqs = [], afterHero, beforeEnd }: {
             <Paras lines={c.lede} />
             <Buttons actions={c.actions} fallback={HERO_DEFAULT} className="svactions" />
           </div>
-          {page.hero_image_url && (
+          {heroVisual && <div className="svshotwrap">{heroVisual}</div>}
+          {!heroVisual && page.hero_image_url && (
             <div className="svshotwrap">
               <div className="svshot app">
                 {/* priority: the hero is the largest above-the-fold image, and SiteImage is

@@ -22,6 +22,8 @@ export interface AuditPageData {
   steps: Array<{ name: string; text: string }>
   faqs: Array<{ question: string; answer: string }>
   related: string[]
+  /** The first questions of the first section, for the hero mock-up. */
+  mock: { section: string; section_no: number; sections: number; questions: Array<{ text: string; type: string }> }
   /** Terms the ?yellowkws view highlights (platform admins only). */
   highlight_keywords?: { primary: string; secondary: string[] }
 }

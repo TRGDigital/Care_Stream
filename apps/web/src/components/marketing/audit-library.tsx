@@ -36,7 +36,7 @@ export function AuditLibrary() {
         <label className="tsearch">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4 4" /></svg>
           <input type="search" value={query} onChange={e => setQuery(e.target.value)}
-                 placeholder={`Search ${AUDIT_CATALOGUE.length} audits, e.g. MAR chart`} aria-label="Search the free audits by name" />
+                 placeholder={`Search ${AUDIT_CATALOGUE.length} audits, e.g. MAR chart, fire safety, medication...`} aria-label="Search the free audits by name" />
         </label>
         <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Filter audits by care service">
           <button type="button" onClick={() => setService('all')} aria-pressed={service === 'all'}

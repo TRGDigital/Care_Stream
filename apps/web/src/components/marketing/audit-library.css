@@ -1,7 +1,11 @@
-/* The search box on the free audit library: the same pill search as /staff-training (.tsearch),
-   restated here because that rule is scoped to .stpage-v2. */
-.audlib .tsearch{position:relative;display:block;margin:22px 0 14px;max-width:320px}
-.audlib .tsearch input{font:inherit;font-size:.85rem;border:1px solid var(--line,#E9E5EF);border-radius:999px;
-    padding:9px 14px 9px 34px;background:var(--ground,#fff);color:var(--ink,#17121F);width:100%}
-.audlib .tsearch input:focus{outline:2px solid var(--accent,#7B3FBF);outline-offset:1px;border-color:transparent}
-.audlib .tsearch svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--muted,#6B6478)}
+/* The search box on the free audit library: the same field as /staff-training (.tsearch in
+   staff-training-index-v2*.css), full width of the content, restated here because those rules are
+   scoped to .stpage-v2. */
+.audlib .tsearch{position:relative;display:block;width:100%;margin:26px 0 18px}
+.audlib .tsearch input{font:inherit;font-size:1rem;width:100%;padding:15px 20px 15px 50px;
+  border:1.5px solid #D5CCE2;border-radius:999px;background:var(--ground,#fff);color:var(--ink,#17121F);
+  box-shadow:0 1px 2px rgba(23,18,31,.05),0 8px 24px rgba(23,18,31,.07);transition:border-color .15s,box-shadow .15s}
+.audlib .tsearch input::placeholder{color:var(--muted,#6B6478)}
+.audlib .tsearch input:hover{border-color:#BFB2D3}
+.audlib .tsearch input:focus{outline:none;border-color:var(--accent,#7B3FBF);box-shadow:0 0 0 4px var(--accent-soft,#F3EDFA),0 8px 24px rgba(23,18,31,.07)}
+.audlib .tsearch svg{position:absolute;left:19px;top:50%;transform:translateY(-50%);width:19px;height:19px;color:var(--accent,#7B3FBF)}

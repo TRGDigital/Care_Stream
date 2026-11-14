@@ -130,6 +130,33 @@ export const page: AuditPageData = {
    ]
   }
  ],
+ "mock": {
+  "section": "Person and MAR details",
+  "section_no": 1,
+  "sections": 7,
+  "questions": [
+   {
+    "text": "The MAR chart shows the person's full name, date of birth and address, and matches the care plan.",
+    "type": "yes_no_na"
+   },
+   {
+    "text": "A recent photograph or other identifier is on the MAR chart or attached to it.",
+    "type": "yes_no_na"
+   },
+   {
+    "text": "The MAR chart covers the correct dates, and the previous cycle's chart has been returned and filed.",
+    "type": "yes_no_na"
+   },
+   {
+    "text": "What level of medicines support does the care plan record?",
+    "type": "choice"
+   },
+   {
+    "text": "The support level recorded on the MAR chart matches the support level in the care plan.",
+    "type": "yes_no_na"
+   }
+  ]
+ },
  "seo_title": "MAR Chart Audit: Free Home Care Template",
  "meta_description": "Free MAR chart audit for home care. Check one person's medication administration record each month: signatures, codes, PRN and allergies. Run it free.",
  "h1": "MAR chart audit for home care",
@@ -171,7 +198,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "What is a MAR chart audit?",
-   "answer": "It is a check of one person's completed MAR chart. You look for complete entries, correct codes, recorded allergies and prescriber changes, PRN and topical records, and whether the chart matches the care plan and daily notes."
+   "answer": "A MAR audit, also called a MAR chart audit, is a check of one person's completed MAR chart. You look for complete entries, correct codes, recorded allergies and prescriber changes, PRN and topical records, and whether the chart matches the care plan and daily notes."
   },
   {
    "question": "How often should a MAR chart audit be done?",
@@ -183,7 +210,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "Is this a MAR chart template or a medication audit checklist?",
-   "answer": "It is a medication audit checklist for a MAR chart that has already been filled in, not a blank MAR chart template. Your MAR chart comes from your pharmacy or your care software, and this audit shows you where its entries are complete and where they are not."
+   "answer": "It is a medication audit checklist for a MAR chart that has already been filled in, not a blank MAR chart template. Think of it as a MAR chart audit template and medication audit template in one: your MAR chart comes from your pharmacy or your care software, and this audit shows you where its entries are complete and where they are not."
   },
   {
    "question": "Which regulations does it support?",
@@ -208,7 +235,6 @@ export const page: AuditPageData = {
    "mar chart template",
    "mar chart example",
    "mar charts in domiciliary care",
-   "mar charts in care homes",
    "medication audit checklist",
    "medication audit template",
    "mar chart audit template",

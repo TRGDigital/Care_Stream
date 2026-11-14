@@ -2,6 +2,7 @@ import { JsonLd } from '@/components/json-ld'
 import { ServicePageV2, type ServiceBlock, type ServiceItem, type ServicePage, type ServicePart } from '@/components/marketing/service-page-v2'
 import { faqPageSchema, howToSchema, breadcrumbSchema } from '@/lib/schema'
 import { getSitePageContent } from '@/lib/site-page-content'
+import { AuditMockup } from '@/components/marketing/audit-mockup'
 import { KeywordHighlighter } from '@/components/marketing/keyword-highlighter'
 import { SERVICE_LABEL } from '@/lib/audit-catalogue'
 import type { AuditPageData } from '@/lib/audit-pages/types'
@@ -62,11 +63,11 @@ export async function AuditProductPage({ page: p }: { page: AuditPageData }) {
           { kind: 'faq', id: 'questions', tint: true, narrow: true, intro: ['You can read every check before you sign up. Inside CareStream each one is scored, can carry a finding and can raise an action.'] }),
 
         block('Who it is for', 'Care services this audit suits.', [
-          part('cards', { items: [
-            item('Care services', [p.evidence_note], { bullets: p.services.map(s => SERVICE_LABEL[s] ?? s) }),
-            item('Regulations it supports', ['This audit checks that things are in place, recorded and reviewed. It does not give clinical or legal advice.'], { bullets: p.regulations.map(r => `${r.ref}: ${r.title}`) }),
-          ] }),
-          part('links', { sub: 'Read the regulation', items: p.regulations.map(r => item(r.ref, [], { href: r.url })) }),
+          part('ticks', { sub: 'Care services', bullets: p.services.map(x => SERVICE_LABEL[x] ?? x) }),
+          part('note', { title: 'What it evidences', paras: [p.evidence_note] }),
+          part('ticks', { sub: 'Regulations it supports', bullets: p.regulations.map(r => `${r.ref}: ${r.title}`) }),
+          part('links', { items: p.regulations.map(r => item(`Read ${r.ref}`, [], { href: r.url })) }),
+          part('note', { paras: ['This audit checks that things are in place, recorded and reviewed. It does not give clinical or legal advice.'] }),
         ], { id: 'who-for' }),
 
         { kind: 'end', tint: false, label: '', heading: `Run the ${short} <em>free.</em>`, intro: ['Create a free account and run it today. No card needed.', `More free audits: ${p.related.join(', ')}.`], image: null,
@@ -83,7 +84,7 @@ export async function AuditProductPage({ page: p }: { page: AuditPageData }) {
       <JsonLd data={breadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'Care audits', path: '/care-audits' }, { name: p.name, path }])} />
       <JsonLd data={howToSchema({ name: `How to run the ${p.name}`, description: p.description, path, steps: p.steps })} />
       <JsonLd data={faqPageSchema(faqs)} />
-      <ServicePageV2 page={record} faqs={faqs} />
+      <ServicePageV2 page={record} faqs={faqs} heroVisual={<AuditMockup page={p} />} />
       {/* ?yellowkws: platform admins only, highlights these terms and shows how often each is used */}
       <KeywordHighlighter slug={p.slug} keywords={p.highlight_keywords ? { primary: p.highlight_keywords.primary, secondary: p.highlight_keywords.secondary } : { primary: p.keywords.primary.keyword, secondary: p.keywords.secondary.map(k => k.keyword) }} />
     </>

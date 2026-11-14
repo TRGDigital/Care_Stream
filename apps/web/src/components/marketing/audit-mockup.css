@@ -1,0 +1,22 @@
+/* Hero mock-up of an audit's first questions, drawn in the V2 theme tokens. */
+.svpage-v2 .amock{background:var(--ground,#fff);border:1px solid var(--line,#E9E5EF);border-radius:16px;box-shadow:var(--shadow,0 18px 40px -22px rgba(23,18,31,.35));overflow:hidden;text-align:left}
+.svpage-v2 .amock-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--accent,#7B3FBF);color:#fff}
+.svpage-v2 .amock-top small{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.6rem;letter-spacing:.11em;text-transform:uppercase;opacity:.75}
+.svpage-v2 .amock-top b{display:block;font-size:.95rem;line-height:1.3;margin-top:2px}
+.svpage-v2 .amock-pill{flex:0 0 auto;background:rgba(255,255,255,.2);border-radius:999px;padding:4px 10px;font-size:.7rem;font-weight:700}
+.svpage-v2 .amock-prog{height:4px;background:var(--accent-soft,#F3EDFA)}
+.svpage-v2 .amock-prog i{display:block;height:100%;width:14%;background:var(--accent,#7B3FBF)}
+.svpage-v2 .amock-sec{padding:11px 18px 3px;font-size:.7rem;font-weight:750;letter-spacing:.11em;text-transform:uppercase;color:var(--muted,#6B6478)}
+.svpage-v2 .amock-q{padding:10px 18px;border-top:1px solid var(--line,#E9E5EF)}
+.svpage-v2 .amock-q:first-of-type{border-top:0}
+.svpage-v2 .amock-q p{margin:0 0 7px;font-size:.8rem;line-height:1.45;color:var(--ink,#17121F)}
+.svpage-v2 .amock-q p span{color:var(--muted,#6B6478);margin-right:6px;font-weight:700}
+.svpage-v2 .amock-opts{display:flex;flex-wrap:wrap;gap:6px}
+.svpage-v2 .amock-opt{border:1px solid var(--line,#E9E5EF);border-radius:999px;padding:3px 12px;font-size:.72rem;font-weight:600;color:var(--ink-2,#3A3245);background:var(--ground,#fff)}
+.svpage-v2 .amock-opt.yes{background:#E6F4EA;border-color:#9ED3AB;color:#1E6B34}
+.svpage-v2 .amock-opt.no{background:#FCE9E6;border-color:#F0A99D;color:#A33A27}
+.svpage-v2 .amock-field{border:1px solid var(--line,#E9E5EF);border-radius:8px;padding:7px 11px;font-size:.76rem;color:var(--muted,#6B6478);background:var(--ground-2,#F7F5FA);min-width:120px}
+.svpage-v2 .amock-field.area{width:100%;min-height:42px}
+.svpage-v2 .amock-flag{margin-top:8px;font-size:.72rem;font-weight:650;color:#A33A27}
+.svpage-v2 .amock-foot{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-top:1px solid var(--line,#E9E5EF);background:var(--ground-2,#F7F5FA);font-size:.74rem;color:var(--muted,#6B6478)}
+.svpage-v2 .amock-foot b{color:var(--accent,#7B3FBF)}

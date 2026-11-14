@@ -45,7 +45,7 @@ export const HOME_V2_SLOTS: SlotDef[] = [
   { key: 'hero.n.manager.sub', group: 'Hero cards', label: 'Approval card: line', default: 'Safeguarding Adults v3.1 signed off' },
   { key: 'hero.n.manager.tag', group: 'Hero cards', label: 'Approval card: tag', default: '2 minutes ago' },
   { key: 'hero.n.edits', group: 'Hero cards', label: 'Label: approved edits', default: 'Approved edits' },
-  { key: 'hero.n.cpd', group: 'Hero cards', label: 'Label beside the CPD Certified mark', default: 'CPD certified training' },
+  { key: 'hero.n.cpd', group: 'Hero cards', label: 'Label beside the CPD Certified mark', default: 'Free CPD certified training' },
   { key: 'hero.n.cqc', group: 'Hero cards', label: 'Label: CQC questions', default: 'CQC questions' },
 
   // ── Proof strip ─────────────────────────────────────────────────────────────

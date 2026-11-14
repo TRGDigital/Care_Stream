@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
-import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info, Wrench, Trash2, GraduationCap, X, ClipboardList, Mail, Loader2, Pencil, Copy, EyeOff, Eye, History, Upload } from 'lucide-react'
+import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info, Wrench, Trash2, GraduationCap, X, ClipboardList, Mail, Loader2, Pencil, Copy, EyeOff, Eye, History, Upload, Lock, Play } from 'lucide-react'
 import { clsx } from 'clsx'
 import { AuditBuilder } from '@/components/admin/audit-builder'
 import { AuditVersionsModal } from '@/components/admin/audit-versions-modal'
@@ -607,7 +607,7 @@ export default function AuditsPage() {
             </button>
             {availOpen && (
               <div className="border-t border-gray-100">
-                <p className="px-4 pt-3 text-xs text-neutral-mid">Every audit your team can run. Scoped audits are completed one resident, staff member or room at a time. To change a built-in audit, copy it and edit your copy; hide the ones you don&rsquo;t use.</p>
+                <p className="px-4 pt-3 text-xs text-neutral-mid">Every audit here is free to run on your plan. Scoped audits are completed one resident, staff member or room at a time. Copying and editing audits, and building your own, is an Enterprise feature. To change a built-in audit, copy it and edit your copy; hide the ones you don&rsquo;t use.</p>
                 <table className="mt-2 w-full text-left text-sm">
                   <tbody className="divide-y divide-gray-50">
                     {templates.map(t => {
@@ -626,10 +626,17 @@ export default function AuditsPage() {
                           <td className="whitespace-nowrap px-4 py-2.5 text-right">
                             {!t.tenant_id && (
                               <span className="inline-flex gap-1.5">
+                                {!t.hidden && (
+                                  <button onClick={() => { setSelTemplate(t.id); setShowNew(true) }}
+                                    title="Run this audit now. Every audit is free to run on your plan."
+                                    className="inline-flex items-center gap-1 rounded-md bg-teal px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-teal-dark">
+                                    <Play size={11} /> Run this audit
+                                  </button>
+                                )}
                                 <button onClick={() => canCustomAudits ? (setCopying(t), setCopyName(`${t.name} (our version)`), setCopyHide(true), setCopyError('')) : router.push('/billing')}
                                   title={canCustomAudits ? 'Copy this audit so you can edit it' : 'Copying and editing audits is an Enterprise feature'}
                                   className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
-                                  <Copy size={12} /> Copy and edit{!canCustomAudits && <LockChip tier="Enterprise" />}
+                                  <Copy size={12} /> Copy and edit{!canCustomAudits && <Lock size={11} className="text-amber-600" aria-label="Enterprise feature" />}
                                 </button>
                                 <button onClick={() => setHidden(t, !t.hidden)} className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
                                   {t.hidden ? <><Eye size={12} /> Show</> : <><EyeOff size={12} /> Hide</>}

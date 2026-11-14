@@ -19,8 +19,8 @@ export function FocusOnHash({ id, scrollTo }: { id: string; scrollTo?: string })
       const a = (e.target as HTMLElement | null)?.closest?.('a[href]') as HTMLAnchorElement | null
       const href = a?.getAttribute('href') ?? ''
       if (a && (href === `#${id}` || href.endsWith(`#${id}`)) && a.pathname === window.location.pathname) {
+        // No history change: the router scrolls to a hash itself, which would override this position.
         e.preventDefault(); e.stopPropagation(); go()
-        history.replaceState(null, '', `#${id}`)
       }
     }
     if (window.location.hash === `#${id}`) window.setTimeout(go, 300)

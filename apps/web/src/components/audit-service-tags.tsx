@@ -18,11 +18,21 @@ export function AuditServiceTags({ name, max = 3 }: { name: string; max?: number
   const full = svc.map(s => SERVICE_LABEL[s] ?? s).join(', ')
   const chip = 'rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-700'
   return (
-    <span className="mt-1 flex flex-wrap items-center gap-1" title={`Suits: ${all ? 'every care service' : full}`}>
+    <span className="mt-1 flex flex-wrap items-center gap-1" title={rest > 0 ? undefined : `Suits: ${all ? 'every care service' : full}`}>
       {all
         ? <span className={chip}>All care services</span>
         : shown.map(s => <span key={s} className={chip}>{SERVICE_LABEL[s] ?? s}</span>)}
-      {rest > 0 && <span className={chip}>+{rest} more</span>}
+      {rest > 0 && (
+        <span className="group relative inline-flex" tabIndex={0}>
+          <span className={`${chip} cursor-default group-hover:bg-sky-100 group-focus:bg-sky-100`}>+{rest} more</span>
+          <span role="tooltip" className="pointer-events-none invisible absolute bottom-full left-0 z-50 mb-1.5 w-max max-w-[16rem] rounded-lg border border-gray-200 bg-white p-2.5 opacity-0 shadow-lg transition-opacity group-hover:visible group-hover:opacity-100 group-focus:visible group-focus:opacity-100">
+            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-neutral-mid">Also suits</span>
+            <span className="flex flex-wrap gap-1">
+              {svc.slice(max).map(s => <span key={s} className={chip}>{SERVICE_LABEL[s] ?? s}</span>)}
+            </span>
+          </span>
+        </span>
+      )}
     </span>
   )
 }

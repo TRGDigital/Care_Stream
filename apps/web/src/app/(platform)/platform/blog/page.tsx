@@ -918,11 +918,13 @@ function PostForm({
 
 // ─── Site Pages ───────────────────────────────────────────────────────────────
 
+import { AUDIT_PAGES } from '@/lib/audit-pages'
+
 const FOOTER_GROUPS = ['Product', 'Trust & Legal', 'Company', 'Get Started'] as const
 
 // Primary marketing pages surfaced under the "Main site pages" tab (and excluded
 // from the generic "Pages" tab so nothing is duplicated across tabs).
-const MAIN_SITE_PATHS_SET = new Set(['/', '/about', '/how-it-works', '/pricing', '/care-policies', '/policy-gap-detection', '/staff-training', '/hr-policies', '/care-audits', '/cqc-compliance', '/business-continuity', '/who-we-serve', '/who-its-for', '/cqc-report-chat', '/contact', '/demo', '/faq', '/trust', '/case-studies'])
+const MAIN_SITE_PATHS_SET = new Set(['/', '/about', '/how-it-works', '/pricing', '/care-policies', '/policy-gap-detection', '/staff-training', '/hr-policies', '/care-audits', ...AUDIT_PAGES.map(a => `/care-audits/${a.slug}`), '/cqc-compliance', '/business-continuity', '/who-we-serve', '/who-its-for', '/cqc-report-chat', '/contact', '/demo', '/faq', '/trust', '/case-studies'])
 
 const DEFAULT_PAGES: Array<{ path: string; title: string; footer_group?: string; footer_label?: string }> = [
   { path: '/',                      title: 'Home' },
@@ -936,6 +938,7 @@ const DEFAULT_PAGES: Array<{ path: string; title: string; footer_group?: string;
   { path: '/demo',                  title: 'Book a Demo',               footer_group: 'Product',      footer_label: 'Book a Demo' },
   { path: '/hr-policies',           title: 'HR Policies',               footer_group: 'Product',      footer_label: 'HR Policies' },
   { path: '/care-audits',           title: 'Care Audits',               footer_group: 'Product',      footer_label: 'Care Audits' },
+  ...AUDIT_PAGES.map(a => ({ path: `/care-audits/${a.slug}`, title: `Audit: ${a.name}` })),
   { path: '/cqc-staff-questions',   title: 'CQC Staff Questions',       footer_group: 'Product',      footer_label: 'CQC Staff Questions' },
   { path: '/business-continuity',   title: 'Business Continuity',       footer_group: 'Product',      footer_label: 'Business Continuity' },
   { path: '/cqc-report-chat',       title: 'CQC Report Chat',           footer_group: 'Product',      footer_label: 'CQC Report Chat' },

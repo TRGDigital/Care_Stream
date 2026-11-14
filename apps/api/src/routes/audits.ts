@@ -1251,8 +1251,11 @@ Write clearly and professionally in UK English. Avoid generic statements that co
 // One run at a time per server instance: overlapping callers share the same run, so a slow seed
 // cannot be started twice and create duplicate library audits.
 let seedingRun: Promise<void> | null = null
+let seededAt = 0
+const SEED_RECHECK_MS = 10 * 60 * 1000   // the library only changes on a deploy, so do not re-check on every request
 export function ensurePlatformTemplatesSeeded(): Promise<void> {
-  if (!seedingRun) seedingRun = seedPlatformTemplates().finally(() => { seedingRun = null })
+  if (Date.now() - seededAt < SEED_RECHECK_MS) return Promise.resolve()
+  if (!seedingRun) seedingRun = seedPlatformTemplates().then(() => { seededAt = Date.now() }).finally(() => { seedingRun = null })
   return seedingRun
 }
 

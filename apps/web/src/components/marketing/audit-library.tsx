@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { AUDIT_CATALOGUE, SERVICE_LABEL } from '@/lib/audit-catalogue'
+import { AUDIT_PAGE_SLUGS } from '@/lib/audit-pages'
 
 // The public library of free audits, labelled with the care services each one suits, on /care-audits.
 // Every card is in the server HTML (this renders on the server too); the chips only narrow what is shown.
@@ -53,9 +54,16 @@ export function AuditLibrary() {
                 <span className="font-semibold text-neutral-dark">For: </span>
                 {a.services.length === Object.keys(SERVICE_LABEL).length ? 'every care service' : a.services.map(s => SERVICE_LABEL[s] ?? s).join(', ')}
               </p>
-              <Link href={`/register?tier=free&source=audit-${a.slug}`} className="mt-4 inline-flex w-fit items-center rounded-lg border border-teal px-3 py-1.5 text-sm font-semibold text-teal hover:bg-teal-light/40">
-                Run it free
-              </Link>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <Link href={`/register?tier=free&source=audit-${a.slug}`} className="inline-flex w-fit items-center rounded-lg border border-teal px-3 py-1.5 text-sm font-semibold text-teal hover:bg-teal-light/40">
+                  Run it free
+                </Link>
+                {AUDIT_PAGE_SLUGS.has(a.slug) && (
+                  <Link href={`/care-audits/${a.slug}`} className="inline-flex w-fit items-center rounded-lg bg-teal px-3 py-1.5 text-sm font-semibold text-white hover:bg-teal-dark">
+                    See this audit
+                  </Link>
+                )}
+              </div>
             </li>
           ))}
         </ul>

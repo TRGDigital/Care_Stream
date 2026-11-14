@@ -2444,6 +2444,11 @@ export default function BlogPage() {
             )}
             {page.content_updated ? 'Updated' : 'Mark updated'}
           </button>
+          {AUDIT_PAGES.some(a => page.path === `/care-audits/${a.slug}`) && (
+            <a href={`${page.path}?yellowkws`} target="_blank" rel="noopener noreferrer"
+               title="Open the live page with the target keywords highlighted and counted"
+               className="rounded-md border border-yellow-300 bg-yellow-100 px-2 py-1 text-xs font-semibold text-yellow-900 hover:bg-yellow-200">Keywords</a>
+          )}
           {page.id && (
             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${page.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
               {page.status}

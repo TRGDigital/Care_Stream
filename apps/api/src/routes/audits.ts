@@ -1248,7 +1248,15 @@ Write clearly and professionally in UK English. Avoid generic statements that co
 
 // ─── Seed helper ─────────────────────────────────────────────────────────────
 
-export async function ensurePlatformTemplatesSeeded() {
+// One run at a time per server instance: overlapping callers share the same run, so a slow seed
+// cannot be started twice and create duplicate library audits.
+let seedingRun: Promise<void> | null = null
+export function ensurePlatformTemplatesSeeded(): Promise<void> {
+  if (!seedingRun) seedingRun = seedPlatformTemplates().finally(() => { seedingRun = null })
+  return seedingRun
+}
+
+async function seedPlatformTemplates() {
   const existing = await (prisma as any).auditTemplate.findMany({
     where:  { is_seed: true, tenant_id: null },
     select: { name: true },
@@ -1291,6 +1299,9 @@ export async function ensurePlatformTemplatesSeeded() {
   const statements = await (prisma as any).qualityStatement.findMany({ select: { id: true, reference_key: true } }).catch(() => [])
   const qsId = new Map<string, string>((statements as any[]).map(r => [r.reference_key, r.id]))
   for (const tmpl of missing) {
+    // Another instance may have created it while this run was busy.
+    const already = await (prisma as any).auditTemplate.findFirst({ where: { is_seed: true, tenant_id: null, name: tmpl.name }, select: { id: true } })
+    if (already) continue
     const row = await (prisma as any).auditTemplate.create({
       data: { name: tmpl.name, description: tmpl.description, is_seed: true, tenant_id: null, frequency: tmpl.frequency, subject_scope: tmpl.subject_scope ?? 'none', version: 0 },
     })

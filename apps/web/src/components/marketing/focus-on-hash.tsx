@@ -3,22 +3,29 @@
 import { useEffect } from 'react'
 
 // A "Search" button that links to #<id> scrolls there, and this puts the cursor in the search box, so a visitor can
-// start typing straight away. Works for a click on any link to that anchor and for opening the page with the hash.
-export function FocusOnHash({ id }: { id: string }) {
+// start typing straight away. It takes over the click (before the site's own link handling) so the position is the
+// same every time: the section named by `scrollTo` (default: the box itself) sits just under the top bar.
+export function FocusOnHash({ id, scrollTo }: { id: string; scrollTo?: string }) {
   useEffect(() => {
     const go = () => {
       const el = document.getElementById(id) as HTMLElement | null
-      if (!el) return
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      window.setTimeout(() => el.focus({ preventScroll: true }), 450)
+      const target = document.getElementById(scrollTo ?? id) ?? el
+      if (!el || !target) return
+      const y = target.getBoundingClientRect().top + window.scrollY - 92
+      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' })
+      window.setTimeout(() => el.focus({ preventScroll: true }), 600)
     }
     const onClick = (e: MouseEvent) => {
       const a = (e.target as HTMLElement | null)?.closest?.('a[href]') as HTMLAnchorElement | null
-      if (a && (a.getAttribute('href') === `#${id}` || a.getAttribute('href')?.endsWith(`#${id}`)) && a.pathname === window.location.pathname) { e.preventDefault(); go() }
+      const href = a?.getAttribute('href') ?? ''
+      if (a && (href === `#${id}` || href.endsWith(`#${id}`)) && a.pathname === window.location.pathname) {
+        e.preventDefault(); e.stopPropagation(); go()
+        history.replaceState(null, '', `#${id}`)
+      }
     }
     if (window.location.hash === `#${id}`) window.setTimeout(go, 300)
-    document.addEventListener('click', onClick)
-    return () => document.removeEventListener('click', onClick)
-  }, [id])
+    document.addEventListener('click', onClick, true)
+    return () => document.removeEventListener('click', onClick, true)
+  }, [id, scrollTo])
   return null
 }

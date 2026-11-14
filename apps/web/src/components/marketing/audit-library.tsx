@@ -25,7 +25,7 @@ export function AuditLibrary() {
     words.every(w => (a.name + ' ' + a.description).toLowerCase().includes(w)))
   return (
     <section className="audlib bg-white py-20" id="audit-library" aria-labelledby="audit-library-h">
-      <FocusOnHash id="audit-search" />
+      <FocusOnHash id="audit-search" scrollTo="audit-library" />
       <div className="mx-auto max-w-6xl px-6">
         <p className="text-xs font-bold uppercase tracking-[0.13em] text-teal">Free audit library</p>
         <h2 id="audit-library-h" className="mt-2 text-3xl font-extrabold tracking-tight text-neutral-dark md:text-4xl">

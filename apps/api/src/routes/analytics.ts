@@ -2706,11 +2706,39 @@ analyticsRouter.get('/training-impact', requireAdmin, async (_req: Request, res:
   const tenantId = getTenantId()
   try {
     await checkFeature(tenantId, 'has_training_impact')
-    const templates = await (prisma as any).auditTemplate.findMany({
+    const ownTemplates = await (prisma as any).auditTemplate.findMany({
       where:  { tenant_id: tenantId, is_active: true, module_ids: { isEmpty: false } },
       select: { id: true, name: true, module_ids: true },
     })
-    if (!(templates as any[]).length) { ok(res, { audits: [] }); return }
+    // Audits linked from the audits page (built-in or the home's own): the home's own training modules, and
+    // the free CPD courses, resolved to the CPD module of the matching topic.
+    const links: Array<{ template_id: string; ref: string }> = await (prisma as any).auditTrainingLink.findMany({ where: { tenant_id: tenantId }, select: { template_id: true, ref: true } }).catch(() => [])
+    const wantsCpd = links.some(l => l.ref.startsWith('cpd:'))
+    const slugify = (t: string) => String(t).toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+    const cpdBySlug = new Map<string, string>()
+    if (wantsCpd) {
+      const cpd = await (prisma as any).trainingModule.findMany({ where: { tenant_id: null, tier: 'cpd', is_active: true, topic_id: { not: null } }, select: { id: true, topic_id: true } }).catch(() => [])
+      const topics = await (prisma as any).trainingTopic.findMany({ where: { id: { in: (cpd as any[]).map(m => m.topic_id) } }, select: { id: true, title: true } }).catch(() => [])
+      const titleOf = new Map((topics as any[]).map(t => [t.id, t.title]))
+      for (const m of cpd as any[]) cpdBySlug.set(slugify(String(titleOf.get(m.topic_id) ?? '')), m.id)
+    }
+    const linkedIds = [...new Set(links.map(l => l.template_id))]
+    const linkedTemplates = linkedIds.length
+      ? await (prisma as any).auditTemplate.findMany({ where: { id: { in: linkedIds }, is_active: true, OR: [{ tenant_id: null }, { tenant_id: tenantId }] }, select: { id: true, name: true, module_ids: true } })
+      : []
+    const byId = new Map<string, any>()
+    for (const t of [...ownTemplates, ...linkedTemplates] as any[]) {
+      const cur = byId.get(t.id) ?? { id: t.id, name: t.name, module_ids: [] as string[] }
+      cur.module_ids = [...new Set([...cur.module_ids, ...(t.module_ids ?? [])])]
+      byId.set(t.id, cur)
+    }
+    for (const l of links) {
+      const t = byId.get(l.template_id); if (!t) continue
+      const mid = l.ref.startsWith('module:') ? l.ref.slice(7) : cpdBySlug.get(l.ref.slice(4))
+      if (mid && !t.module_ids.includes(mid)) t.module_ids.push(mid)
+    }
+    const templates = [...byId.values()].filter(t => t.module_ids.length)
+    if (!templates.length) { ok(res, { audits: [] }); return }
 
     const allModuleIds = [...new Set((templates as any[]).flatMap((t: any) => t.module_ids))]
     const [runs, modules, enrollments] = await Promise.all([

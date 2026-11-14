@@ -1,31 +1,47 @@
 'use client'
 
-// Link an existing custom audit to the training module(s) it measures, so the
-// Training Impact analytics can track audit scores against training completion.
+// Link an audit (a built-in one or the home's own) to training: the free CPD courses and/or the home's own
+// training. A completed audit then offers those courses to assign. On every plan.
 
 import { useEffect, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
+import { trainingForAudit } from '@/lib/audit-training'
 import { X, Loader2 } from 'lucide-react'
 
-export function LinkTrainingModal({ token, template, onClose, onSaved }: {
+type Opts = { cpd: Array<{ ref: string; slug: string; title: string }>; own: Array<{ ref: string; title: string }> }
+
+export function LinkTrainingModal({ token, template, current, onClose, onSaved }: {
   token: string
-  template: { id: string; name: string; module_ids?: string[] }
+  template: { id: string; name: string }
+  current: string[]
   onClose: () => void
-  onSaved: () => void
+  onSaved: (refs: string[]) => void
 }) {
-  const [modules, setModules] = useState<Array<{ id: string; name: string }>>([])
-  const [ids, setIds] = useState<string[]>(template.module_ids ?? [])
+  const [opts, setOpts] = useState<Opts | null>(null)
+  const [refs, setRefs] = useState<string[]>(current)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const suggested = new Set(trainingForAudit(template.name).map(c => `cpd:${c.slug}`))
 
   useEffect(() => {
-    createApiClient(token).faceToFace.modules().then(d => setModules(d.modules)).catch(() => {})
+    createApiClient(token).audits.trainingLinks().then(d => setOpts(d.options)).catch(() => setError('Could not load the training list.'))
   }, [token])
 
+  const toggle = (ref: string) => setRefs(x => x.includes(ref) ? x.filter(y => y !== ref) : [...x, ref])
+
   async function save() {
-    setSaving(true)
-    try { await createApiClient(token).audits.updateTemplateModules(template.id, ids); onSaved(); onClose() }
-    catch { setSaving(false) }
+    setSaving(true); setError('')
+    try { const r = await createApiClient(token).audits.setTrainingLinks(template.id, refs); onSaved(r.refs); onClose() }
+    catch { setSaving(false); setError('Could not save. Please try again.') }
   }
+
+  const row = (ref: string, title: string, tag?: string) => (
+    <label key={ref} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-neutral-light/50">
+      <input type="checkbox" checked={refs.includes(ref)} onChange={() => toggle(ref)} className="accent-teal" />
+      <span className="text-neutral-dark">{title}</span>
+      {tag && <span className="ml-auto rounded-full bg-teal/10 px-2 py-0.5 text-[10px] font-semibold text-teal">{tag}</span>}
+    </label>
+  )
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
@@ -37,22 +53,30 @@ export function LinkTrainingModal({ token, template, onClose, onSaved }: {
           </div>
           <button onClick={onClose} className="text-neutral-mid hover:text-neutral-dark"><X size={18} /></button>
         </div>
-        <p className="mb-3 text-xs text-neutral-mid">Pick the training module(s) this audit measures. <strong>Analytics → Training Impact</strong> then tracks whether completing that training improves this audit&apos;s scores over time.</p>
-        {modules.length === 0 ? (
-          <p className="text-sm text-neutral-mid">No training modules available to link.</p>
+        <p className="mb-3 text-xs text-neutral-mid">
+          Choose the training that supports this audit. When an audit is completed, these courses are offered to assign to your team.
+          {refs.length === 0 && suggested.size > 0 ? ' With nothing chosen, we suggest the courses marked Suggested.' : ''}
+        </p>
+        {!opts ? (
+          <div className="flex justify-center py-6"><Loader2 size={18} className="animate-spin text-neutral-mid" /></div>
         ) : (
-          <div className="mb-4 max-h-64 space-y-1 overflow-y-auto rounded-lg border border-gray-100 p-2">
-            {modules.map(m => (
-              <label key={m.id} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-neutral-light/50">
-                <input type="checkbox" checked={ids.includes(m.id)} onChange={() => setIds(x => x.includes(m.id) ? x.filter(y => y !== m.id) : [...x, m.id])} className="accent-teal" />
-                <span className="text-neutral-dark">{m.name}</span>
-              </label>
-            ))}
+          <div className="mb-4 max-h-72 space-y-3 overflow-y-auto rounded-lg border border-gray-100 p-2">
+            <div>
+              <p className="px-2 pb-1 text-[11px] font-bold uppercase tracking-wide text-neutral-mid">Free CPD certified courses</p>
+              {opts.cpd.map(c => row(c.ref, c.title, suggested.has(c.ref) ? 'Suggested' : undefined))}
+            </div>
+            {opts.own.length > 0 && (
+              <div>
+                <p className="px-2 pb-1 text-[11px] font-bold uppercase tracking-wide text-neutral-mid">Your own training</p>
+                {opts.own.map(m => row(m.ref, m.title))}
+              </div>
+            )}
           </div>
         )}
+        {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
         <div className="flex justify-end gap-2">
           <button onClick={onClose} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:border-teal/40">Cancel</button>
-          <button onClick={save} disabled={saving} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-50">{saving ? <><Loader2 size={14} className="animate-spin" /> Saving…</> : 'Save'}</button>
+          <button onClick={save} disabled={saving || !opts} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-50">{saving ? 'Saving…' : 'Save'}</button>
         </div>
       </div>
     </div>

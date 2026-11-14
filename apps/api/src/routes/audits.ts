@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express'
 import { randomUUID } from 'crypto'
 import { facilityTypeToSetting, SETTING_LABELS } from '../lib/care-setting'
 import { AUDIT_SERVICES } from '../data/audit-services'
+import { CPD_COURSE_OPTIONS } from '../data/cpd-courses'
 import { prisma } from '../db/client'
 import { requireAdmin, requireAuditAccess, auditTemplateAllowed } from '../middleware/auth'
 import { ok, err } from '../lib/response'
@@ -1356,6 +1357,47 @@ export function subjectLabel(scope: string): string {
   return scope === 'resident' ? 'Resident' : scope === 'staff' ? 'Staff member' : scope === 'room' ? 'Room' : ''
 }
 
+// ─── Linked training (any tier) ──────────────────────────────────────────────
+// A home links any audit, built-in or its own, to the free CPD courses and/or its own training. The completed
+// audit then offers those courses, and (Enterprise) Training Impact tracks scores against completion.
+// GET /audits/training-links  { links: { [templateId]: ref[] }, options: { cpd, own } }
+// PUT /audits/templates/:id/training-links  { refs: ['cpd:<slug>' | 'module:<id>'] }
+auditsRouter.get('/training-links', requireAuditAccess, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const [rows, own] = await Promise.all([
+    (prisma as any).auditTrainingLink.findMany({ where: { tenant_id: tenantId }, select: { template_id: true, ref: true } }).catch(() => []),
+    (prisma as any).trainingModule.findMany({ where: { tenant_id: tenantId, is_active: true, source: { not: 'ai_generated' } }, select: { id: true, name: true }, orderBy: { name: 'asc' } }).catch(() => []),
+  ])
+  const links: Record<string, string[]> = {}
+  for (const r of rows as any[]) (links[r.template_id] ??= []).push(r.ref)
+  ok(res, {
+    links,
+    options: {
+      cpd: CPD_COURSE_OPTIONS.map(c => ({ ref: `cpd:${c.slug}`, slug: c.slug, title: c.title })),
+      own: (own as any[]).map(m => ({ ref: `module:${m.id}`, title: m.name })),
+    },
+  })
+})
+
+auditsRouter.put('/templates/:id/training-links', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const id = String(req.params.id)
+  const tpl = await (prisma as any).auditTemplate.findFirst({ where: { id, OR: [{ tenant_id: null }, { tenant_id: tenantId }] }, select: { id: true, tenant_id: true } })
+  if (!tpl) return err(res, 'NOT_FOUND', 'Audit not found', 404)
+  const wanted: string[] = Array.isArray(req.body?.refs) ? [...new Set<string>(req.body.refs.map((x: any) => String(x)))].slice(0, 20) : []
+  const cpdOk = new Set(CPD_COURSE_OPTIONS.map(c => `cpd:${c.slug}`))
+  const ownRows = await (prisma as any).trainingModule.findMany({ where: { tenant_id: tenantId, is_active: true, source: { not: 'ai_generated' } }, select: { id: true } }).catch(() => [])
+  const ownOk = new Set((ownRows as any[]).map(m => `module:${m.id}`))
+  const refs = wanted.filter(r => cpdOk.has(r) || ownOk.has(r))
+  await (prisma as any).$transaction([
+    (prisma as any).auditTrainingLink.deleteMany({ where: { tenant_id: tenantId, template_id: id } }),
+    ...(refs.length ? [(prisma as any).auditTrainingLink.createMany({ data: refs.map(ref => ({ tenant_id: tenantId, template_id: id, ref })), skipDuplicates: true })] : []),
+    // A home's own audit keeps module_ids in step, which is what Training Impact reads for its own audits.
+    ...(tpl.tenant_id ? [(prisma as any).auditTemplate.update({ where: { id }, data: { module_ids: refs.filter(r => r.startsWith('module:')).map(r => r.slice(7)) } })] : []),
+  ])
+  ok(res, { refs })
+})
+
 // ─── Suggested audits ────────────────────────────────────────────────────────
 // GET /audits/suggested  { setting, setting_label, ids }  the built-in audits that suit the care service the home
 // chose (Settings, and the signup question), core checks first, then the ones most specific to that service.
@@ -1639,9 +1681,7 @@ auditsRouter.get('/quality-statements', requireAuditAccess, async (_req: Request
 // ─── PATCH /audits/templates/:id — link/unlink the training modules this audit measures ─
 auditsRouter.patch('/templates/:id', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
-  // Linking audits to training (Training Impact) is an Enterprise feature.
-  try { await checkFeature(tenantId, 'has_training_impact') }
-  catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } throw e }
+  // Linking is open to every plan now (see PUT /templates/:id/training-links); this older route stays for a home's own audits.
   const id = String(req.params.id)
   const existing = await (prisma as any).auditTemplate.findFirst({ where: { id, tenant_id: tenantId }, select: { id: true } })
   if (!existing) { err(res, 'NOT_FOUND', 'Audit not found, or it is a shared template that can\'t be edited here.', 404); return }

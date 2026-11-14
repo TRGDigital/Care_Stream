@@ -75,7 +75,6 @@ export default function AuditsPage() {
   const { data: session }           = useSession()
   const { features }                = usePlanFeatures()
   const canCustomAudits = features == null || features.has_custom_audits
-  const canLinkTraining = features == null || features.has_training_impact
   const userId = session?.user?.email ?? 'guest'
   const isOwner = OWNER_EMAILS.includes((session?.user?.email ?? '').toLowerCase())
   const router                      = useRouter()
@@ -133,6 +132,11 @@ export default function AuditsPage() {
   }
   const byFav = (list: any[]) => [...list].sort((a, b) => Number(favs.includes(b.id)) - Number(favs.includes(a.id)))
   const [linking, setLinking] = useState<any>(null)
+  const [trainingLinks, setTrainingLinks] = useState<Record<string, string[]>>({})
+  useEffect(() => {
+    if (!session?.accessToken) return
+    createApiClient(session.accessToken).audits.trainingLinks().then(r => setTrainingLinks(r.links)).catch(() => {})
+  }, [session?.accessToken])
   const [deleting,    setDeleting]    = useState<string | null>(null)
   const [confirming,  setConfirming]  = useState(false)
   const [selTemplate, setSelTemplate] = useState('')
@@ -279,6 +283,10 @@ export default function AuditsPage() {
                                     <Play size={11} /> Run this audit
                                   </button>
                                 )}
+                                <button onClick={() => setLinking(t)} title="Link this audit to the free CPD courses and/or your own training"
+                                  className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
+                                  <GraduationCap size={12} /> Training{(trainingLinks[t.id]?.length ?? 0) > 0 ? ` (${trainingLinks[t.id].length})` : ''}
+                                </button>
                                 <button onClick={() => canCustomAudits ? (setCopying(t), setCopyName(`${t.name} (our version)`), setCopyHide(true), setCopyError('')) : router.push('/billing')}
                                   title={canCustomAudits ? 'Copy this audit so you can edit it' : 'Copying and editing audits is an Enterprise feature'}
                                   className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
@@ -425,7 +433,7 @@ export default function AuditsPage() {
       )}
 
       {linking && session?.accessToken && (
-        <LinkTrainingModal token={session.accessToken} template={linking} onClose={() => setLinking(null)} onSaved={reloadTemplates} />
+        <LinkTrainingModal token={session.accessToken} template={linking} current={trainingLinks[linking.id] ?? []} onClose={() => setLinking(null)} onSaved={refs => setTrainingLinks(cur => ({ ...cur, [linking.id]: refs }))} />
       )}
 
       {/* ── Your custom audits ─────────────────────────────────────────────────── */}
@@ -450,8 +458,8 @@ export default function AuditsPage() {
                   <button onClick={() => { setCopying(t); setCopyName(`${t.name} (copy)`); setCopyError('') }} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
                     <Copy size={13} /> Copy
                   </button>
-                  <button onClick={() => canLinkTraining ? setLinking(t) : router.push('/billing')} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal" title={canLinkTraining ? undefined : 'Linking audits to training is an Enterprise feature'}>
-                    <GraduationCap size={13} /> Linked training{Array.isArray(t.module_ids) && t.module_ids.length ? ` (${t.module_ids.length})` : ''}{!canLinkTraining && <LockChip tier="Enterprise" />}
+                  <button onClick={() => setLinking(t)} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal" title="Choose the free CPD courses and/or your own training that support this audit">
+                    <GraduationCap size={13} /> Linked training{(trainingLinks[t.id]?.length ?? 0) > 0 ? ` (${trainingLinks[t.id].length})` : ''}
                   </button>
                   <button onClick={() => removeTemplate(t.id, t.name)} disabled={deleting === t.id} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-red-200 hover:text-red-500 disabled:opacity-50">
                     <Trash2 size={13} /> {deleting === t.id ? 'Deleting…' : 'Delete'}

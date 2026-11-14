@@ -746,7 +746,7 @@ export default function AuditRunPage() {
             )}
 
             {isCompleted && run.template?.name && (
-              <AuditTrainingPanel auditName={String(run.template.name)} failing={(report?.sections ?? []).reduce((n: number, sec: any) => n + sec.questions.filter((q: any) => q.outcome === 'fail').length, 0)} />
+              <AuditTrainingPanel token={session?.accessToken} templateId={run.template.id} auditName={String(run.template.name)} failing={(report?.sections ?? []).reduce((n: number, sec: any) => n + sec.questions.filter((q: any) => q.outcome === 'fail').length, 0)} />
             )}
 
             {session?.accessToken && <AuditActionPlan token={session.accessToken} runId={id} canGenerate={isCompleted && !!run.ai_recommendations} />}

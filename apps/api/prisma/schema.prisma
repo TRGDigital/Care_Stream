@@ -2473,6 +2473,19 @@ model AuditRun {
 
 // An action derived from an audit's recommendations (or added by hand). Created as a draft plan
 // the tenant reviews, edits, approves and assigns, then tracks to completion.
+// Which training a home links to an audit: any audit (built-in or its own), the free CPD courses and/or its own
+// training. ref is 'cpd:<course slug>' or 'module:<training module id>'.
+model AuditTrainingLink {
+  tenant_id   String
+  template_id String
+  ref         String
+  created_at  DateTime @default(now())
+
+  @@id([tenant_id, template_id, ref])
+  @@index([tenant_id, template_id])
+  @@map("audit_training_links")
+}
+
 // A user's starred (favourite) audits, kept on the server so they follow the person across devices.
 model AuditFavourite {
   user_id     String

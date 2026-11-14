@@ -1098,6 +1098,8 @@ export function createApiClient(token: string) {
 
     audits: {
       favourites: () => apiFetch<{ ids: string[] }>('/audits/favourites', token),
+      trainingLinks: () => apiFetch<{ links: Record<string, string[]>; options: { cpd: Array<{ ref: string; slug: string; title: string }>; own: Array<{ ref: string; title: string }> } }>('/audits/training-links', token),
+      setTrainingLinks: (templateId: string, refs: string[]) => apiFetch<{ refs: string[] }>(`/audits/templates/${templateId}/training-links`, token, { method: 'PUT', body: JSON.stringify({ refs }) }),
       suggested: () => apiFetch<{ setting: string; setting_label: string; ids: string[] }>('/audits/suggested', token),
       setFavourite: (templateId: string, favourite: boolean) => apiFetch<{ favourite: boolean }>(`/audits/favourites/${templateId}`, token, { method: 'POST', body: JSON.stringify({ favourite }) }),
       replaceFavourites: (ids: string[]) => apiFetch<{ ids: string[] }>('/audits/favourites', token, { method: 'PUT', body: JSON.stringify({ ids }) }),

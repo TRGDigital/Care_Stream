@@ -47,7 +47,7 @@ export async function AuditProductPage({ page: p }: { page: AuditPageData }) {
         block('At a glance', `${short}, in short.`, [part('stats', { items: [
           item('How often', [`Run it ${(FREQ[p.frequency] ?? p.frequency).toLowerCase()}, ${(SCOPE[p.scope] ?? '').toLowerCase()}.`], { marker: FREQ[p.frequency] ?? p.frequency }),
           item('The checks', [`${p.sections.length} sections, each scored, with a space for findings and actions.`], { marker: String(total) }),
-          item('Who runs it', [`${p.who_runs_it}. ${p.evidence_note}`], { marker: SCOPE_SHORT[p.scope] ?? 'Audit' }),
+          item('Who runs it', [p.who_runs_it ? `${p.who_runs_it}. ${p.evidence_note}` : p.evidence_note], { marker: SCOPE_SHORT[p.scope] ?? 'Audit' }),
           item('Cost', ['Free to run on every plan. No card needed.'], { marker: 'Free' }),
         ] })], { kind: 'stats', id: 'at-a-glance' }),
 
@@ -64,9 +64,11 @@ export async function AuditProductPage({ page: p }: { page: AuditPageData }) {
 
         block('Who it is for', 'Care services this audit suits.', [
           part('ticks', { sub: 'Care services', bullets: p.services.map(x => SERVICE_LABEL[x] ?? x) }),
-          part('note', { title: 'What it evidences', paras: [p.evidence_note] }),
-          part('ticks', { sub: 'Regulations it supports', bullets: p.regulations.map(r => `${r.ref}: ${r.title}`) }),
-          part('links', { items: p.regulations.map(r => item(`Read ${r.ref}`, [], { href: r.url })) }),
+          ...(p.regulations.length ? [
+            part('note', { title: 'What it evidences', paras: [p.evidence_note] }),
+            part('ticks', { sub: 'Regulations it supports', bullets: p.regulations.map(r => `${r.ref}: ${r.title}`) }),
+            part('links', { items: p.regulations.map(r => item(`Read ${r.ref}`, [], { href: r.url })) }),
+          ] : [part('note', { title: 'What it evidences', paras: [p.evidence_note] })]),
           part('note', { paras: ['This audit checks that things are in place, recorded and reviewed. It does not give clinical or legal advice.'] }),
         ], { id: 'who-for' }),
 

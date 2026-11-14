@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import './audit-library.css'
 import { AUDIT_CATALOGUE, SERVICE_LABEL } from '@/lib/audit-catalogue'
-import { AUDIT_PAGE_SLUGS } from '@/lib/audit-pages'
+import { AUDIT_PAGE_SLUGS } from '@/lib/audit-pages/slugs'
 
 // The public library of free audits, labelled with the care services each one suits, on /care-audits.
 // Every card is in the server HTML (this renders on the server too); the chips only narrow what is shown.

@@ -918,7 +918,9 @@ function PostForm({
 
 // ─── Site Pages ───────────────────────────────────────────────────────────────
 
-import { AUDIT_PAGES } from '@/lib/audit-pages'
+import { AUDIT_PAGE_SLUGS } from '@/lib/audit-pages/slugs'
+import { AUDIT_CATALOGUE } from '@/lib/audit-catalogue'
+const AUDIT_PAGES = AUDIT_CATALOGUE.filter(a => AUDIT_PAGE_SLUGS.has(a.slug))
 
 const FOOTER_GROUPS = ['Product', 'Trust & Legal', 'Company', 'Get Started'] as const
 

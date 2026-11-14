@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
+import { AuditServiceTags } from '@/components/audit-service-tags'
 import { persistentCache } from '@/lib/page-cache'
 import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info, Wrench, Trash2, GraduationCap, X, ClipboardList, Mail, Loader2, Pencil, Copy, EyeOff, Eye, History, Upload, Lock, Play, Star } from 'lucide-react'
 import { clsx } from 'clsx'
@@ -637,6 +638,7 @@ export default function AuditsPage() {
                             {t.name}
                             {t.tenant_id && <span className="ml-2 rounded bg-teal/10 px-1.5 py-0.5 text-[10px] font-semibold text-teal">Your audit</span>}
                             {t.hidden && <span className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-neutral-mid">Hidden</span>}
+                            <AuditServiceTags name={t.name} />
                           </td>
                           <td className="px-4 py-2.5 text-xs text-neutral-mid">{FREQ_LABEL[t.frequency] ?? t.frequency}</td>
                           <td className="px-4 py-2.5 text-right">

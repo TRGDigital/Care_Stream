@@ -6,6 +6,7 @@ import { createPlatformClient, type AuditSeedTemplate } from '@/lib/platform-api
 import { PlatformShell } from '@/components/platform-shell'
 import { ChevronDown, ClipboardCheck, Loader2, Eye, CheckCircle2 } from 'lucide-react'
 import { clsx } from 'clsx'
+import { AuditServiceTags } from '@/components/audit-service-tags'
 import { AuditSeedEditor } from '@/components/platform/audit-seed-editor'
 
 const FREQUENCY_LABELS: Record<string, string> = {
@@ -82,6 +83,7 @@ function TemplateRow({ template, onOpen, onToggleReviewed }: { template: AuditSe
             {template.description && (
               <p className="mt-0.5 text-xs text-neutral-mid line-clamp-1">{template.description}</p>
             )}
+            <AuditServiceTags name={template.name} max={4} />
           </div>
         </button>
         <div className="flex shrink-0 items-center gap-2">

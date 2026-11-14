@@ -1050,7 +1050,7 @@ export default function SettingsPage() {
         )}
 
         {/* ── Organisation details (policy variables) — for gap-detection tenants ── */}
-        {planFeatures?.has_gap_detection && (
+        {(planFeatures?.has_gap_detection || planFeatures?.tier === 'free') && (
         <SettingSection icon={UserRound} title="Organisation details" description="Names and details used to personalise your policies. Set them once and they are referenced across your policies, so if something changes you update it here and the policies follow.">
           <p className="mb-4 text-sm text-neutral-mid">
             These are your policy <strong>merge fields</strong>. Role-holder names appear beside the role wherever a policy mentions it, and on the sign-off and header of any policy you download. Update them here and the policies follow, with no need to re-adopt.
@@ -1441,83 +1441,85 @@ export default function SettingsPage() {
         </SettingSection>
 
         {/* ── Audits ────────────────────────────────────────────────────────── */}
-        {(planFeatures == null || planFeatures.has_custom_audits) && (
-          <SettingSection icon={ShieldCheck} title="Audits" description="Require your care manager to sign off completed audits before they are final.">
-            <div className="flex items-start justify-between gap-4 rounded-lg border border-gray-200 bg-neutral-light/30 px-4 py-3">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-neutral-dark">Require manager approval for completed audits</p>
-                <p className="mt-0.5 text-sm text-neutral-mid">
-                  When on, a completed audit is sent to your care manager in the hub to review and approve. Their name and the date are saved to the audit as a record. Off by default, so audits are final as soon as they&rsquo;re completed.
-                </p>
-              </div>
-              <button type="button" role="switch" aria-checked={requireAuditApproval} aria-label="Require manager approval for completed audits"
-                onClick={toggleAuditApproval}
-                className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors ${requireAuditApproval ? 'bg-teal' : 'bg-gray-300'}`}>
-                <span className={`absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow transition-transform ${requireAuditApproval ? 'translate-x-5' : 'translate-x-0'}`} />
-              </button>
+        <SettingSection icon={ShieldCheck} title="Audits" description="Require your care manager to sign off completed audits before they are final.">
+            <div className="mb-4 rounded-lg border border-amber-100 bg-amber-50/60 px-4 py-3 text-sm text-neutral-mid">
+              <p className="font-medium text-neutral-dark">Star your favourite audits</p>
+              <p className="mt-0.5">On the Audits page, open Available audits and tick the star beside any audit. Starred audits move to the top of that list and of the audit picker when you start one, so the ones you run most are always first. Untick the star to put an audit back in its usual place. Stars are saved for you on the device and browser you use, so a colleague has their own favourites.</p>
             </div>
-            <div className="mt-4 flex items-start justify-between gap-4 rounded-lg border border-gray-200 bg-neutral-light/30 px-4 py-3">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-neutral-dark">Show the CQC Readiness Score</p>
-                <p className="mt-0.5 text-sm text-neutral-mid">
-                  Shows a CQC Readiness Score (audit performance blended with policy coverage) on your Audits pages. Off by default, so your view stays simple. We keep measuring it in the background either way, so whenever you turn it on the history is already there.
-                </p>
-              </div>
-              <button type="button" role="switch" aria-checked={showReadiness} aria-label="Show the CQC Readiness Score"
-                onClick={toggleReadiness}
-                className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors ${showReadiness ? 'bg-teal' : 'bg-gray-300'}`}>
-                <span className={`absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow transition-transform ${showReadiness ? 'translate-x-5' : 'translate-x-0'}`} />
-              </button>
-            </div>
-            <div className="mt-4 flex items-start justify-between gap-4 rounded-lg border border-gray-200 bg-neutral-light/30 px-4 py-3">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-neutral-dark">Email the PDF report to admins</p>
-                <p className="mt-0.5 text-sm text-neutral-mid">
-                  When an audit is completed (or signed off, if manager approval is on), a PDF report is saved with the audit and emailed to your admins. Turn this off to save it without emailing.
-                </p>
-              </div>
-              <button type="button" role="switch" aria-checked={auditReportEmail} aria-label="Email the PDF report to admins"
-                onClick={toggleAuditReportEmail}
-                className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors ${auditReportEmail ? 'bg-teal' : 'bg-gray-300'}`}>
-                <span className={`absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow transition-transform ${auditReportEmail ? 'translate-x-5' : 'translate-x-0'}`} />
-              </button>
-            </div>
-            <div className="mt-4 rounded-lg border border-gray-200 bg-neutral-light/30 px-4 py-3">
-              <p className="text-sm font-medium text-neutral-dark">Scheduled audits</p>
+          <div className="flex items-start justify-between gap-4 rounded-lg border border-gray-200 bg-neutral-light/30 px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-neutral-dark">Require manager approval for completed audits</p>
               <p className="mt-0.5 text-sm text-neutral-mid">
-                The person an audit is assigned to is emailed when it is assigned, two days before it is due, and when it becomes overdue. Choose when an overdue audit is escalated to admins and managers, and how often admins get a summary of what is due, overdue and done.
-              </p>
-              <div className="mt-3 flex flex-wrap gap-4">
-                <label className="text-sm text-neutral-dark">
-                  <span className="mb-1 block text-xs font-medium text-neutral-mid">Escalate when overdue by</span>
-                  <select value={auditEscalateDays} onChange={e => setAuditSchedulingSetting('audit_escalate_after_days', e.target.value)} className="rounded-md border border-gray-200 px-3 py-1.5 text-sm focus:border-teal focus:outline-none">
-                    <option value="0">The day it becomes overdue</option>
-                    <option value="1">1 day</option>
-                    <option value="2">2 days</option>
-                    <option value="3">3 days</option>
-                    <option value="7">7 days</option>
-                  </select>
-                </label>
-                <label className="text-sm text-neutral-dark">
-                  <span className="mb-1 block text-xs font-medium text-neutral-mid">Summary email to admins</span>
-                  <select value={auditSummary} onChange={e => setAuditSchedulingSetting('audit_summary', e.target.value)} className="rounded-md border border-gray-200 px-3 py-1.5 text-sm focus:border-teal focus:outline-none">
-                    <option value="weekly">Weekly, on Mondays</option>
-                    <option value="daily">Daily</option>
-                    <option value="off">Off</option>
-                  </select>
-                </label>
-              </div>
-            </div>
-            <div className="mt-4 rounded-lg border border-teal/20 bg-teal-light/20 px-4 py-3">
-              <p className="text-sm font-medium text-neutral-dark">Action plans</p>
-              <p className="mt-0.5 text-sm text-neutral-mid">
-                When an audit is completed, CareStream drafts an action plan from its recommendations. Review it, set priorities and due dates, and assign each action to a staff member, then approve it. Approved actions then appear in that person&rsquo;s hub under &ldquo;My actions&rdquo;, where they mark them Start and Done, and you can track progress from the audit. <a href="/guides#monthly-audits" className="font-medium text-teal hover:underline">Learn more</a>.
+                When on, a completed audit is sent to your care manager in the hub to review and approve. Their name and the date are saved to the audit as a record. Off by default, so audits are final as soon as they&rsquo;re completed.
               </p>
             </div>
-            {savingOrg && <p className="mt-2 text-xs text-neutral-mid">Saving…</p>}
-            {orgSaved && <p className="mt-2 flex items-center gap-1 text-xs font-medium text-green-600"><Check size={14} /> Saved</p>}
-          </SettingSection>
-        )}
+            <button type="button" role="switch" aria-checked={requireAuditApproval} aria-label="Require manager approval for completed audits"
+              onClick={toggleAuditApproval}
+              className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors ${requireAuditApproval ? 'bg-teal' : 'bg-gray-300'}`}>
+              <span className={`absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow transition-transform ${requireAuditApproval ? 'translate-x-5' : 'translate-x-0'}`} />
+            </button>
+          </div>
+          <div className="mt-4 flex items-start justify-between gap-4 rounded-lg border border-gray-200 bg-neutral-light/30 px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-neutral-dark">Show the CQC Readiness Score</p>
+              <p className="mt-0.5 text-sm text-neutral-mid">
+                Shows a CQC Readiness Score (audit performance blended with policy coverage) on your Audits pages. Off by default, so your view stays simple. We keep measuring it in the background either way, so whenever you turn it on the history is already there.
+              </p>
+            </div>
+            <button type="button" role="switch" aria-checked={showReadiness} aria-label="Show the CQC Readiness Score"
+              onClick={toggleReadiness}
+              className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors ${showReadiness ? 'bg-teal' : 'bg-gray-300'}`}>
+              <span className={`absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow transition-transform ${showReadiness ? 'translate-x-5' : 'translate-x-0'}`} />
+            </button>
+          </div>
+          <div className="mt-4 flex items-start justify-between gap-4 rounded-lg border border-gray-200 bg-neutral-light/30 px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-neutral-dark">Email the PDF report to admins</p>
+              <p className="mt-0.5 text-sm text-neutral-mid">
+                When an audit is completed (or signed off, if manager approval is on), a PDF report is saved with the audit and emailed to your admins. Turn this off to save it without emailing.
+              </p>
+            </div>
+            <button type="button" role="switch" aria-checked={auditReportEmail} aria-label="Email the PDF report to admins"
+              onClick={toggleAuditReportEmail}
+              className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors ${auditReportEmail ? 'bg-teal' : 'bg-gray-300'}`}>
+              <span className={`absolute left-0.5 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow transition-transform ${auditReportEmail ? 'translate-x-5' : 'translate-x-0'}`} />
+            </button>
+          </div>
+          <div className="mt-4 rounded-lg border border-gray-200 bg-neutral-light/30 px-4 py-3">
+            <p className="text-sm font-medium text-neutral-dark">Scheduled audits</p>
+            <p className="mt-0.5 text-sm text-neutral-mid">
+              The person an audit is assigned to is emailed when it is assigned, two days before it is due, and when it becomes overdue. Choose when an overdue audit is escalated to admins and managers, and how often admins get a summary of what is due, overdue and done.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-4">
+              <label className="text-sm text-neutral-dark">
+                <span className="mb-1 block text-xs font-medium text-neutral-mid">Escalate when overdue by</span>
+                <select value={auditEscalateDays} onChange={e => setAuditSchedulingSetting('audit_escalate_after_days', e.target.value)} className="rounded-md border border-gray-200 px-3 py-1.5 text-sm focus:border-teal focus:outline-none">
+                  <option value="0">The day it becomes overdue</option>
+                  <option value="1">1 day</option>
+                  <option value="2">2 days</option>
+                  <option value="3">3 days</option>
+                  <option value="7">7 days</option>
+                </select>
+              </label>
+              <label className="text-sm text-neutral-dark">
+                <span className="mb-1 block text-xs font-medium text-neutral-mid">Summary email to admins</span>
+                <select value={auditSummary} onChange={e => setAuditSchedulingSetting('audit_summary', e.target.value)} className="rounded-md border border-gray-200 px-3 py-1.5 text-sm focus:border-teal focus:outline-none">
+                  <option value="weekly">Weekly, on Mondays</option>
+                  <option value="daily">Daily</option>
+                  <option value="off">Off</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <div className="mt-4 rounded-lg border border-teal/20 bg-teal-light/20 px-4 py-3">
+            <p className="text-sm font-medium text-neutral-dark">Action plans</p>
+            <p className="mt-0.5 text-sm text-neutral-mid">
+              When an audit is completed, CareStream drafts an action plan from its recommendations. Review it, set priorities and due dates, and assign each action to a staff member, then approve it. Approved actions then appear in that person&rsquo;s hub under &ldquo;My actions&rdquo;, where they mark them Start and Done, and you can track progress from the audit. <a href="/guides#monthly-audits" className="font-medium text-teal hover:underline">Learn more</a>.
+            </p>
+          </div>
+          {savingOrg && <p className="mt-2 text-xs text-neutral-mid">Saving…</p>}
+          {orgSaved && <p className="mt-2 flex items-center gap-1 text-xs font-medium text-green-600"><Check size={14} /> Saved</p>}
+        </SettingSection>
 
         {/* ── Response detail level ─────────────────────────────────────────── */}
         <SettingSection icon={SlidersHorizontal} title="Response detail level" description="Choose how much detail CareStream includes in its responses.">

@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
-import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info, Wrench, Trash2, GraduationCap, X, ClipboardList, Mail, Loader2, Pencil, Copy, EyeOff, Eye, History, Upload, Lock, Play } from 'lucide-react'
+import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info, Wrench, Trash2, GraduationCap, X, ClipboardList, Mail, Loader2, Pencil, Copy, EyeOff, Eye, History, Upload, Lock, Play, Star } from 'lucide-react'
 import { clsx } from 'clsx'
 import { AuditBuilder } from '@/components/admin/audit-builder'
 import { AuditVersionsModal } from '@/components/admin/audit-versions-modal'
@@ -96,6 +96,19 @@ export default function AuditsPage() {
   const [importError, setImportError] = useState('')
   const [imported,    setImported]    = useState<{ draft: any; notes: string | null } | null>(null)
   const [availOpen,   setAvailOpen]   = useState(false)
+  // Starred (favourite) audits for this person, kept in this browser. Starred audits sort to the top.
+  const [favs, setFavs] = useState<string[]>([])
+  useEffect(() => {
+    try { const raw = localStorage.getItem(`cs-audit-favs-${userId}`); if (raw) setFavs(JSON.parse(raw)) } catch { /* private mode */ }
+  }, [userId])
+  function toggleFav(id: string) {
+    setFavs(cur => {
+      const next = cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id]
+      try { localStorage.setItem(`cs-audit-favs-${userId}`, JSON.stringify(next)) } catch { /* private mode */ }
+      return next
+    })
+  }
+  const byFav = (list: any[]) => [...list].sort((a, b) => Number(favs.includes(b.id)) - Number(favs.includes(a.id)))
   const [linking, setLinking] = useState<any>(null)
   const [deleting,    setDeleting]    = useState<string | null>(null)
   const [confirming,  setConfirming]  = useState(false)
@@ -401,7 +414,7 @@ export default function AuditsPage() {
                     onChange={e => setSelTemplate(e.target.value)}
                     className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-neutral-dark focus:border-teal focus:outline-none"
                   >
-                    {templates.filter(t => !t.hidden).map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    {byFav(templates.filter(t => !t.hidden)).map(t => <option key={t.id} value={t.id}>{favs.includes(t.id) ? '★ ' : ''}{t.name}</option>)}
                   </select>
                 </div>
                 <div>
@@ -610,11 +623,17 @@ export default function AuditsPage() {
                 <p className="px-4 pt-3 text-xs text-neutral-mid">Every audit here is free to run on your plan. Scoped audits are completed one resident, staff member or room at a time. Copying and editing audits, and building your own, is an Enterprise feature. To change a built-in audit, copy it and edit your copy; hide the ones you don&rsquo;t use.</p>
                 <table className="mt-2 w-full text-left text-sm">
                   <tbody className="divide-y divide-gray-50">
-                    {templates.map(t => {
+                    {byFav(templates).map(t => {
                       const sc = t.subject_scope ?? (t.room_based ? 'room' : 'none')
                       return (
                         <tr key={t.id}>
                           <td className={clsx('px-4 py-2.5 font-medium', t.hidden ? 'text-neutral-mid' : 'text-neutral-dark')}>
+                            <button type="button" onClick={() => toggleFav(t.id)} aria-pressed={favs.includes(t.id)}
+                              aria-label={favs.includes(t.id) ? `Remove ${t.name} from favourites` : `Add ${t.name} to favourites`}
+                              title={favs.includes(t.id) ? 'Favourite: shown at the top. Click to remove.' : 'Star to move this audit to the top'}
+                              className="mr-2 inline-flex align-middle text-gray-300 hover:text-amber-500">
+                              <Star size={15} className={favs.includes(t.id) ? 'fill-amber-400 text-amber-400' : ''} />
+                            </button>
                             {t.name}
                             {t.tenant_id && <span className="ml-2 rounded bg-teal/10 px-1.5 py-0.5 text-[10px] font-semibold text-teal">Your audit</span>}
                             {t.hidden && <span className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-neutral-mid">Hidden</span>}

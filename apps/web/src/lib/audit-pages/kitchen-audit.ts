@@ -15,7 +15,8 @@ export const page: AuditPageData = {
   "supported_living",
   "ld_autism",
   "childrens",
-  "hospices"
+  "hospices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager or head cook",
  "evidence_note": "Evidences that the kitchen is kept clean and safe, with food stored, cooked and recorded correctly and allergens, equipment, pests and staff hygiene under control.",
@@ -212,7 +213,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a kitchen audit be done?",
-   "answer": "We set this audit to monthly. The audit file does not cite a regulation that sets a number of days, so your own food safety procedures should say how often you audit. Many providers also check daily records such as temperatures between audits."
+   "answer": "We set this audit to monthly. No regulation we cite sets a number of days, so your own food safety procedures should say how often you audit. Many providers also check daily records such as temperatures between audits."
   },
   {
    "question": "Who should carry out a kitchen audit?",

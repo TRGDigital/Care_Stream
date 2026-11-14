@@ -9,7 +9,8 @@ export const page: AuditPageData = {
  "scope": "none",
  "services": [
   "ld_autism",
-  "supported_living"
+  "supported_living",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager or service lead, with a senior from the provider",
  "evidence_note": "It evidences support plans, the restrictive practice register, supervision and training records, tenancy agreements and feedback records.",

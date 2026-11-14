@@ -18,7 +18,9 @@ export const page: AuditPageData = {
   "childrens",
   "dentistry",
   "private_hospitals",
-  "clinics"
+  "clinics",
+  "gp_practices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager",
  "evidence_note": "Evidences a monthly check of building, fire, clinical, kitchen, equipment, security and staff safety, with findings and actions recorded.",
@@ -219,7 +221,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a health and safety audit be done?",
-   "answer": "We set this audit to monthly. The audit file does not cite a rule that fixes the interval, so your own health and safety policy should state how often you audit and who carries it out."
+   "answer": "We set this audit to monthly. No regulation we cite sets the interval, so your own health and safety policy should state how often you audit and who carries it out."
   },
   {
    "question": "Who should carry out the audit?",

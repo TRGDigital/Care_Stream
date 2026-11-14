@@ -27,7 +27,7 @@ export function AuditLibrary() {
       <div className="mx-auto max-w-6xl px-6">
         <p className="text-xs font-bold uppercase tracking-[0.13em] text-teal">Free audit library</p>
         <h2 id="audit-library-h" className="mt-2 text-3xl font-extrabold tracking-tight text-neutral-dark md:text-4xl">
-          90+ free audits, labelled by care service
+          100+ free audits, labelled by care service
         </h2>
         <p className="mt-3 max-w-3xl text-base leading-relaxed text-neutral-mid">
           Every audit here is free to run on a free CareStream account: scored sections, recorded findings, actions and a report. No card needed.
@@ -36,7 +36,7 @@ export function AuditLibrary() {
         <label className="tsearch">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4 4" /></svg>
           <input type="search" value={query} onChange={e => setQuery(e.target.value)}
-                 placeholder={`Search 90+ audits, e.g. MAR chart, fire safety, medication...`} aria-label="Search the free audits by name" />
+                 placeholder={`Search 100+ audits, e.g. MAR chart, fire safety, medication...`} aria-label="Search the free audits by name" />
         </label>
         <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Filter audits by care service">
           <button type="button" onClick={() => setService('all')} aria-pressed={service === 'all'}

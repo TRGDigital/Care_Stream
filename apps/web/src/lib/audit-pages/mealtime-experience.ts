@@ -141,7 +141,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a mealtime audit be done?",
-   "answer": "We set this audit to monthly. The audit file does not cite a regulation that sets a number of days, so your own nutrition and dignity policies should say how often you observe mealtimes."
+   "answer": "We set this audit to monthly. No regulation we cite sets a number of days, so your own nutrition and dignity policies should say how often you observe mealtimes."
   },
   {
    "question": "Who should carry out a mealtime observation?",

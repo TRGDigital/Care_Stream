@@ -16,7 +16,8 @@ export const page: AuditPageData = {
   "supported_living",
   "extra_care",
   "ld_autism",
-  "hospices"
+  "hospices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager or deputy manager",
  "evidence_note": "Evidences that care plans are person-centred, reviewed within a month and supported by current risk assessments, consent records and family involvement.",
@@ -168,7 +169,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a care plan be reviewed?",
-   "answer": "This audit checks the plan was reviewed within the last month, or sooner after a change of need. The audit file cites no regulation that fixes an interval, so your own policy decides how often each care plan review takes place."
+   "answer": "This audit checks the plan was reviewed within the last month, or sooner after a change of need. No regulation we cite sets an interval, so your own policy decides how often each care plan review takes place."
   },
   {
    "question": "How often should a care plan audit be done?",

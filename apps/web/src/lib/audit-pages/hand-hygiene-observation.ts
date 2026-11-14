@@ -16,7 +16,8 @@ export const page: AuditPageData = {
   "dentistry",
   "private_hospitals",
   "clinics",
-  "hospices"
+  "hospices",
+  "gp_practices"
  ],
  "who_runs_it": "Infection prevention and control lead or registered manager",
  "evidence_note": "Evidences that staff clean their hands at the right moments with the right technique and that gaps are fed back and re-checked.",

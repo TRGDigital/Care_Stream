@@ -10,7 +10,8 @@ export const page: AuditPageData = {
  "services": [
   "home_care",
   "live_in",
-  "supported_living"
+  "supported_living",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager, care coordinator or senior carer who visits the person's home",
  "evidence_note": "It evidences the assessment in the person's file, the check of the home on the visit, and the actions, care plan update and next review date.",

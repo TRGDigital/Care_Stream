@@ -12,7 +12,8 @@ export const page: AuditPageData = {
   "live_in",
   "care_homes",
   "nursing",
-  "supported_living"
+  "supported_living",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager, with the nominated deputy",
  "evidence_note": "It evidences the plan itself, the contact list tried on the day, the priority list, cover arrangements, backup records and the test report.",
@@ -216,7 +217,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should the audit be run?",
-   "answer": "We set this audit to run periodically, so you choose the interval. The audit file cites no rule that fixes one, so your own policy decides. Many providers also run it after a test, a real event or a change of premises, systems or management."
+   "answer": "We set this audit to run periodically, so you choose the interval. No regulation we cite sets one, so your own policy decides. Many providers also run it after a test, a real event or a change of premises, systems or management."
   },
   {
    "question": "Who should run it?",

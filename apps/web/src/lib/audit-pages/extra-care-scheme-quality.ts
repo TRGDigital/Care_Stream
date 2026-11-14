@@ -213,7 +213,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should the audit be done?",
-   "answer": "We set this audit to quarterly. Regulation 17 asks providers to assess and monitor their service but does not set an interval in the audit file, so your own policy decides how often you run it."
+   "answer": "We set this audit to quarterly. Regulation 17 asks providers to assess and monitor their service but sets no interval, so your own policy decides how often you run it."
   },
   {
    "question": "Who should run it?",

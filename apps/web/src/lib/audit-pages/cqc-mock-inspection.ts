@@ -21,7 +21,9 @@ export const page: AuditPageData = {
   "clinics",
   "mental_health",
   "substance_misuse",
-  "hospices"
+  "hospices",
+  "gp_practices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager or quality lead",
  "evidence_note": "Evidences a quarterly self-inspection against all five CQC key questions with an action plan for gaps.",
@@ -254,7 +256,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should you run a CQC mock inspection?",
-   "answer": "We set this audit to quarterly. No fixed interval is set for a mock inspection in the audit file, so your own governance policy decides. Many services find a regular walk-round each quarter keeps the action plan current."
+   "answer": "We set this audit to quarterly. No fixed interval is set for a mock inspection by the regulations we cite, so your own governance policy decides. Many services find a regular walk-round each quarter keeps the action plan current."
   },
   {
    "question": "Who should carry out a mock inspection?",

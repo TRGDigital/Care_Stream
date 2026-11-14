@@ -22,7 +22,9 @@ export const page: AuditPageData = {
   "clinics",
   "mental_health",
   "substance_misuse",
-  "hospices"
+  "hospices",
+  "gp_practices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager or safeguarding lead",
  "evidence_note": "It evidences that safeguarding concerns were logged, referred and notified, that the person was involved, and that staff training and learning were reviewed.",
@@ -149,7 +151,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a safeguarding audit be done?",
-   "answer": "We set this audit to monthly, in any setting from a safeguarding audit care home review to home care. The audit file cites no regulation that sets a frequency, so your own safeguarding policy should say how often you review the log."
+   "answer": "We set this audit to monthly, in any setting from a safeguarding audit care home review to home care. We cite no regulation that sets a frequency, so your own safeguarding policy should say how often you review the log."
   },
   {
    "question": "Who should run the safeguarding log review?",

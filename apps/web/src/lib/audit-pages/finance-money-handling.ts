@@ -11,7 +11,12 @@ export const page: AuditPageData = {
   "supported_living",
   "ld_autism",
   "care_homes",
-  "extra_care"
+  "extra_care",
+  "nursing",
+  "dementia",
+  "mental_health",
+  "private_hospitals",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager or senior who does not handle the person's cash",
  "evidence_note": "Evidence is the person's ledger, receipts, two signed balance counts, appointee letter or order, bank statements and the support plan money arrangement.",
@@ -202,7 +207,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a cash handling audit be done?",
-   "answer": "We set this audit to monthly, one person at a time. The audit file cites regulations on good governance and safeguarding but none sets an interval, so your own money handling policy decides how often you check."
+   "answer": "We set this audit to monthly, one person at a time. We cite regulations on good governance and safeguarding but none sets an interval, so your own money handling policy decides how often you check."
   },
   {
    "question": "Who should carry out the audit?",

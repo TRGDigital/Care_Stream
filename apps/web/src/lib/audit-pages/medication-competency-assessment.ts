@@ -15,7 +15,8 @@ export const page: AuditPageData = {
   "live_in",
   "supported_living",
   "extra_care",
-  "ld_autism"
+  "ld_autism",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager or a trained senior or medicines lead",
  "evidence_note": "Evidences that each staff member giving medicines has been assessed as competent, with outcomes, actions and review dates recorded.",

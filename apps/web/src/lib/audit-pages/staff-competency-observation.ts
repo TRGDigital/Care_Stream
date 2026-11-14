@@ -16,7 +16,8 @@ export const page: AuditPageData = {
   "supported_living",
   "extra_care",
   "ld_autism",
-  "hospices"
+  "hospices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager, deputy manager or senior carer trained to assess",
  "evidence_note": "Evidence is direct observation of the task, the person's care plan, equipment service labels and the staff file.",

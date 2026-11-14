@@ -21,7 +21,9 @@ export const page: AuditPageData = {
   "clinics",
   "mental_health",
   "substance_misuse",
-  "hospices"
+  "hospices",
+  "gp_practices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager",
  "evidence_note": "It evidences a quarterly self review against the quality statements under the five key questions, with the evidence for each and the actions agreed.",
@@ -195,7 +197,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a CQC self assessment be done?",
-   "answer": "We set this audit to quarterly. The audit file cites no regulation that fixes a frequency, so your own governance policy should say how often you review yourself against the framework."
+   "answer": "We set this audit to quarterly. We cite no regulation that fixes a frequency, so your own governance policy should say how often you review yourself against the framework."
   },
   {
    "question": "Who should carry out the review?",

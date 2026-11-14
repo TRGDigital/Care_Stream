@@ -39,7 +39,7 @@ export const page: AuditPageData = {
   },
   {
    "ref": "HSE guidance",
-   "title": "Bed rails in health and social care",
+   "title": "Safe use of bed rails",
    "url": "https://www.hse.gov.uk/healthservices/bed-rails.htm"
   }
  ],
@@ -221,7 +221,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should bed rails be checked?",
-   "answer": "We set this audit to monthly, one person at a time. The audit file cites no regulation that sets a number of days, so your bed rails policy should say how often beds are checked and by whom."
+   "answer": "We set this audit to monthly, one person at a time. No regulation we cite sets a number of days, so your bed rails policy should say how often beds are checked and by whom."
   },
   {
    "question": "Who should run the check?",

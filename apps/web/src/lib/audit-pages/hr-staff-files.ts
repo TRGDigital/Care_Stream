@@ -22,7 +22,9 @@ export const page: AuditPageData = {
   "clinics",
   "mental_health",
   "substance_misuse",
-  "hospices"
+  "hospices",
+  "gp_practices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager",
  "evidence_note": "Evidences that a staff member's recruitment and employment file was checked for complete, in date records.",
@@ -155,7 +157,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should staff files be audited?",
-   "answer": "We set this audit to quarterly, one staff member at a time. The audit file cites no rule that fixes the interval, so your own HR or recruitment policy should state how often you check and how many files you sample."
+   "answer": "We set this audit to quarterly, one staff member at a time. No regulation we cite sets the interval, so your own HR or recruitment policy should state how often you check and how many files you sample."
   },
   {
    "question": "Who should carry out the audit?",

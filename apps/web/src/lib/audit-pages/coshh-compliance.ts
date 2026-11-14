@@ -20,7 +20,9 @@ export const page: AuditPageData = {
   "private_hospitals",
   "clinics",
   "mental_health",
-  "hospices"
+  "hospices",
+  "gp_practices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager, health and safety lead or housekeeping lead",
  "evidence_note": "Evidence is the substances register, risk assessments, safety data sheets, the storage areas themselves and staff training records.",
@@ -235,7 +237,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a COSHH audit be done?",
-   "answer": "We set this audit to quarterly. The audit file does not cite a fixed interval, so your own health and safety policy should say how often you check and who signs it off."
+   "answer": "We set this audit to quarterly. No fixed interval is set by the regulations we cite, so your own health and safety policy should say how often you check and who signs it off."
   },
   {
    "question": "Who should run a COSHH audit?",

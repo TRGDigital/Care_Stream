@@ -146,7 +146,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a bedroom audit in a care home be done?",
-   "answer": "We set this audit to monthly. The audit file cites no regulation that sets a number of days, so your own policy should state how often you review and how many rooms you sample."
+   "answer": "We set this audit to monthly. No regulation we cite sets a number of days, so your own policy should state how often you review and how many rooms you sample."
   },
   {
    "question": "Who should carry out the review?",

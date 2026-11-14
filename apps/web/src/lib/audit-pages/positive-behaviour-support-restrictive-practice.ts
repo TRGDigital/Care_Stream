@@ -12,7 +12,8 @@ export const page: AuditPageData = {
   "ld_autism",
   "mental_health",
   "care_homes",
-  "dementia"
+  "dementia",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager or positive behaviour support lead",
  "evidence_note": "Evidences that behaviour support plans are used and restrictive practice is recorded, reviewed and reduced for each person.",
@@ -214,7 +215,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should it be done?",
-   "answer": "We set this audit to monthly, one person at a time. The audit file does not cite a rule that sets the number of days, so your own policy decides how often you review and which people you cover."
+   "answer": "We set this audit to monthly, one person at a time. No rule we cite sets the number of days, so your own policy decides how often you review and which people you cover."
   },
   {
    "question": "Who should carry it out?",

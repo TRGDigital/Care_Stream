@@ -10,10 +10,11 @@ export const page: AuditPageData = {
  "services": [
   "home_care",
   "live_in",
-  "supported_living"
+  "supported_living",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager, field care supervisor or senior carer",
- "evidence_note": "Evidences that each worker is observed in practice at least every three months and that findings are recorded and acted on.",
+ "evidence_note": "Evidences observation of each worker at your policy interval (our default: three months) and that findings are acted on.",
  "regulations": [
   {
    "ref": "Regulation 12",

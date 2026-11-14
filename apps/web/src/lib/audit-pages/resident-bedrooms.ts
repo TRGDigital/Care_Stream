@@ -159,7 +159,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should resident room checks be done?",
-   "answer": "We set this checklist to daily. The audit file cites no regulation that sets a frequency, so your own policy decides how often daily room checks care home staff complete, and who signs them off."
+   "answer": "We set this checklist to daily. We cite no regulation that sets a frequency, so your own policy decides how often daily room checks care home staff complete, and who signs them off."
   },
   {
    "question": "Who should do the daily room checks?",

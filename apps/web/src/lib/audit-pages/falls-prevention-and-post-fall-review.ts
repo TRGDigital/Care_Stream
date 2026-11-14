@@ -135,7 +135,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a falls audit be done?",
-   "answer": "We set this falls audit to monthly, so it matches a month of incident records. The audit file does not cite a regulation that sets an interval, so your own policy decides how often you review falls."
+   "answer": "We set this falls audit to monthly, so it matches a month of incident records. No regulation we cite sets an interval, so your own policy decides how often you review falls."
   },
   {
    "question": "Who should carry out a falls audit?",

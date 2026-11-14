@@ -22,7 +22,9 @@ export const page: AuditPageData = {
   "clinics",
   "mental_health",
   "substance_misuse",
-  "hospices"
+  "hospices",
+  "gp_practices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager",
  "evidence_note": "It evidences that one member of staff has current mandatory and specialist training, induction, supervision, appraisal, competency checks and compliance records.",
@@ -184,7 +186,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should staff training be audited?",
-   "answer": "We set this audit to monthly, one member of staff at a time. The audit file cites no regulation that fixes a frequency, so your own training policy should say how often you check and how many people you sample."
+   "answer": "We set this audit to monthly, one member of staff at a time. We cite no regulation that fixes a frequency, so your own training policy should say how often you check and how many people you sample."
   },
   {
    "question": "Who should run the audit?",

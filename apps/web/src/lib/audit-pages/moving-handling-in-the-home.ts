@@ -209,7 +209,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should the audit be done?",
-   "answer": "We set this audit to quarterly, one client at a time. The audit file does not cite a rule that sets the audit interval, so your own policy should state how often you audit and how many clients you sample."
+   "answer": "We set this audit to quarterly, one client at a time. No rule we cite sets the audit interval, so your own policy should state how often you audit and how many clients you sample."
   },
   {
    "question": "Who should carry out the audit?",
@@ -225,7 +225,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "Which laws does it support?",
-   "answer": "The audit file cites Regulation 4 of the Manual Handling Operations Regulations 1992, Regulation 9 of LOLER 1998, and Regulation 12(2) of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014."
+   "answer": "We cite Regulation 4 of the Manual Handling Operations Regulations 1992, Regulation 9 of LOLER 1998, and Regulation 12(2) of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014."
   },
   {
    "question": "Is the moving and handling audit really free?",

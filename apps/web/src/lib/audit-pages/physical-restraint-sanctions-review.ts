@@ -203,7 +203,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should physical restraint be reviewed?",
-   "answer": "We set this audit to monthly, one child at a time. The audit file sets no review interval, so your own behaviour management policy decides how often you review and who signs off each record."
+   "answer": "We set this audit to monthly, one child at a time. No review interval is set by the regulations we cite, so your own behaviour management policy decides how often you review and who signs off each record."
   },
   {
    "question": "Who should carry out the review?",

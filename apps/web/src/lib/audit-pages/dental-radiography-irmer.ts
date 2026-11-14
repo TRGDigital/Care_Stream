@@ -10,7 +10,8 @@ export const page: AuditPageData = {
  "services": [
   "dentistry",
   "clinics",
-  "private_hospitals"
+  "private_hospitals",
+  "gp_practices"
  ],
  "who_runs_it": "Radiation protection supervisor or practice manager",
  "evidence_note": "Evidence is the patient record, the image and its grade, the evaluation, equipment test and service records, training records and the last audit report.",
@@ -214,7 +215,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a dental radiography audit be done?",
-   "answer": "We set this audit to quarterly. The audit file cites IR(ME)R regulation 7 on clinical audit but we do not claim it sets a number of months, so your own procedure decides the interval and sample size."
+   "answer": "We set this audit to quarterly. We cite IR(ME)R regulation 7 on clinical audit but we do not claim it sets a number of months, so your own procedure decides the interval and sample size."
   },
   {
    "question": "Who should carry out the audit?",
@@ -230,7 +231,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "Which regulations does it support?",
-   "answer": "The audit file lists IR(ME)R 2017 regulations 6 and 7, and Regulations 12 and 17 of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014. It helps evidence audit, quality assurance and governance."
+   "answer": "We cite IR(ME)R 2017 regulations 6 and 7, and Regulations 12 and 17 of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014. It helps evidence audit, quality assurance and governance."
   },
   {
    "question": "Is the audit really free?",

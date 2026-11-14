@@ -13,7 +13,8 @@ export const page: AuditPageData = {
   "ld_autism",
   "childrens",
   "substance_misuse",
-  "supported_living"
+  "supported_living",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager, ward or unit manager, or a trained senior member of staff",
  "evidence_note": "It evidences an in-person room inspection alongside the signed ligature risk assessment, maintenance log, observation record and training record.",

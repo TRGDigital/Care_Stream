@@ -4,13 +4,14 @@ import type { AuditPageData } from './types'
 export const page: AuditPageData = {
  "slug": "antimicrobial-prescribing",
  "name": "Antimicrobial Prescribing Audit",
- "description": "A sampled check of antimicrobial prescribing records covering reason, allergy check, dose, duration and follow up, repeated twice a year.",
+ "description": "A sampled check of antimicrobial prescribing records covering reason, allergy check, dose, duration and follow up, repeated after changes.",
  "frequency": "periodic",
  "scope": "resident",
  "services": [
   "dentistry",
   "clinics",
-  "private_hospitals"
+  "private_hospitals",
+  "gp_practices"
  ],
  "who_runs_it": "Clinical lead or registered manager",
  "evidence_note": "It evidences the sampled prescribing records, the local guideline, training dates and the minutes of the team meeting.",
@@ -210,7 +211,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should the audit be run?",
-   "answer": "We set this audit to run periodically, with a re-audit booked one to two months after you make changes. The audit file cites no regulation that sets a fixed interval, so your own policy decides how often you audit and how many prescriptions you sample."
+   "answer": "We set this audit to run periodically, with a re-audit booked one to two months after you make changes. No regulation we cite sets a fixed interval, so your own policy decides how often you audit and how many prescriptions you sample."
   },
   {
    "question": "Who should carry out the audit?",

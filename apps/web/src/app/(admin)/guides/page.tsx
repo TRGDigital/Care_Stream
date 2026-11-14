@@ -2070,7 +2070,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
       <div className="space-y-5">
         <SectionBlock title="What audits do">
           <p className="text-sm text-neutral-mid">
-            The Audits module gives you a library of 90+ ready-made audits covering the governance of a care setting, plus the tools to build or import your own. Audits can be completed on the web or on a phone or tablet in the <strong>Chat Hub</strong>, scheduled and assigned to named staff, signed and approved, and turned into an action plan that is followed through to a re-check at the next audit. Every completed audit produces a PDF report and feeds the <strong>Trends</strong> panel, so you can show inspectors not just that you audit, but that things improve.
+            The Audits module gives you a library of 100+ ready-made audits covering the governance of a care setting, plus the tools to build or import your own. Audits can be completed on the web or on a phone or tablet in the <strong>Chat Hub</strong>, scheduled and assigned to named staff, signed and approved, and turned into an action plan that is followed through to a re-check at the next audit. Every completed audit produces a PDF report and feeds the <strong>Trends</strong> panel, so you can show inspectors not just that you audit, but that things improve.
           </p>
         </SectionBlock>
 

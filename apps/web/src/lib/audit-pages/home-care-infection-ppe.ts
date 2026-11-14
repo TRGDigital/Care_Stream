@@ -213,7 +213,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should it be done?",
-   "answer": "We set this audit to monthly, one care worker at a time. The regulations in the audit file do not set a number of days, so your own infection prevention policy decides how often each care worker is checked."
+   "answer": "We set this audit to monthly, one care worker at a time. The regulations we cite do not set a number of days, so your own infection prevention policy decides how often each care worker is checked."
   },
   {
    "question": "Who should carry out the audit?",

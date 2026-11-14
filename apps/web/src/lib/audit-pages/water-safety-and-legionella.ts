@@ -18,7 +18,9 @@ export const page: AuditPageData = {
   "childrens",
   "dentistry",
   "private_hospitals",
-  "clinics"
+  "clinics",
+  "gp_practices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager or maintenance lead",
  "evidence_note": "It evidences monthly water temperature readings, flushing and descaling of outlets, mixing valve servicing and an in-date Legionella risk assessment.",

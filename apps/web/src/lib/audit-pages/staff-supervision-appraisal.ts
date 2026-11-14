@@ -18,7 +18,8 @@ export const page: AuditPageData = {
   "ld_autism",
   "childrens",
   "mental_health",
-  "hospices"
+  "hospices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager or deputy manager",
  "evidence_note": "Evidence is the signed supervision and appraisal records, the supervision schedule, and observation or competence records on the staff file.",
@@ -221,7 +222,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "Which regulations does it support?",
-   "answer": "It helps evidence staff support, supervision and appraisal under Regulation 18, and monitoring and accurate staff records under Regulation 17 of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014."
+   "answer": "It helps evidence staff support, supervision and appraisal under Regulation 18, and monitoring and secure staff records under Regulation 17 of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014."
   },
   {
    "question": "Is the supervision audit really free?",

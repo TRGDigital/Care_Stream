@@ -128,7 +128,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a call bell audit be done?",
-   "answer": "We set this audit to monthly. The audit file does not cite a regulation that fixes the interval, so your own policy should say how often you test and how many calls you time."
+   "answer": "We set this audit to monthly. No regulation we cite sets the interval, so your own policy should say how often you test and how many calls you time."
   },
   {
    "question": "Who should carry out a call bell audit?",

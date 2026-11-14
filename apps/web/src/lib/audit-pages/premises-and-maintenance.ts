@@ -15,7 +15,8 @@ export const page: AuditPageData = {
   "supported_living",
   "ld_autism",
   "hospices",
-  "childrens"
+  "childrens",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager",
  "evidence_note": "It evidences that the building and grounds were checked, that servicing certificates were in date, and that outstanding repairs were followed up.",
@@ -140,7 +141,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a premises audit be done?",
-   "answer": "We set this audit to monthly. The audit file does not cite a regulation that sets a number of days, so your own policy decides how often you audit. Many services keep a monthly walk round and check certificate dates at the same time."
+   "answer": "We set this audit to monthly. No regulation we cite sets a number of days, so your own policy decides how often you audit. Many services keep a monthly walk round and check certificate dates at the same time."
   },
   {
    "question": "Who should carry out the premises audit?",

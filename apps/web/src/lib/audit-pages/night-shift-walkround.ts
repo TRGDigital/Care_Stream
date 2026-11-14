@@ -14,7 +14,8 @@ export const page: AuditPageData = {
   "extra_care",
   "supported_living",
   "childrens",
-  "hospices"
+  "hospices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager or senior on call",
  "evidence_note": "It evidences that night staffing, call bells, repositioning, night checks, fire exits and medicines security were observed during an unannounced visit.",

@@ -15,7 +15,7 @@ import './free-dropdown.css'
 const ITEMS = [
   'Give every member of staff CPD certified training, free',
   'Track who has finished in your training matrix',
-  'Run any of our 90+ free audit templates with your team',
+  'Run any of our 100+ free audit templates with your team',
   'Check your first 5 policies against CQC regulations',
   'Add as many staff logins as you need',
   'Certificates for every course, with access that never expires',

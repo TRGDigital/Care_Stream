@@ -21,7 +21,9 @@ export const page: AuditPageData = {
   "clinics",
   "mental_health",
   "substance_misuse",
-  "hospices"
+  "hospices",
+  "gp_practices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager",
  "evidence_note": "Evidence is the incident log, copies of CQC notifications, candour conversation records and letters, and investigation reports.",
@@ -203,11 +205,11 @@ export const page: AuditPageData = {
   },
   {
    "question": "What are statutory notifications to CQC?",
-   "answer": "They are reports a registered provider must send CQC about certain events, such as deaths and other incidents. The audit file cites Regulations 16 and 18 of the Care Quality Commission (Registration) Regulations 2009. Check CQC's own guidance for the full list."
+   "answer": "They are reports a registered provider must send CQC about certain events, such as deaths and other incidents. We cite Regulations 16 and 18 of the Care Quality Commission (Registration) Regulations 2009. Check CQC's own guidance for the full list."
   },
   {
    "question": "How often should this audit be done?",
-   "answer": "We set it to quarterly. Regulation 20 asks for candour promptly but sets no number of days for the audit, so your own governance policy decides how often you review incidents and notifications."
+   "answer": "We set it to quarterly. Regulation 20 says as soon as reasonably practicable and sets no audit interval, so your own governance policy decides how often you review incidents and notifications."
   },
   {
    "question": "Who should carry out the audit?",

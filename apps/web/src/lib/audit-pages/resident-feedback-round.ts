@@ -16,7 +16,8 @@ export const page: AuditPageData = {
   "supported_living",
   "extra_care",
   "ld_autism",
-  "hospices"
+  "hospices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager",
  "evidence_note": "It evidences that people are asked about their care, that their views on choice, dignity, food and activities are recorded, and that feedback is acted on.",
@@ -162,7 +163,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should resident feedback be collected?",
-   "answer": "We set this audit to monthly. The audit file cites no regulation that sets a frequency, so your own policy decides how often you collect feedback and from how many people."
+   "answer": "We set this audit to monthly. We cite no regulation that sets a frequency, so your own policy decides how often you collect feedback and from how many people."
   },
   {
    "question": "Who should run the feedback round?",

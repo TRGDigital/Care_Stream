@@ -220,7 +220,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should an MHA audit be done?",
-   "answer": "We set this audit to monthly, one patient at a time. The audit file does not cite a rule that sets the interval, so your own policy should state how often you audit and how many files you sample."
+   "answer": "We set this audit to monthly, one patient at a time. No regulation we cite sets the interval, so your own policy should state how often you audit and how many files you sample."
   },
   {
    "question": "Who should carry out the audit?",
@@ -236,7 +236,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "Which laws and guidance does it support?",
-   "answer": "The audit file cites sections 17, 58 and 132 of the Mental Health Act 1983, its Code of Practice, and Regulations 11 and 17 of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014."
+   "answer": "We cite sections 17, 58 and 132 of the Mental Health Act 1983, its Code of Practice, and Regulations 11 and 17 of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014."
   },
   {
    "question": "Does it cover tribunal dates?",

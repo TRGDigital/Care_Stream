@@ -22,7 +22,9 @@ export const page: AuditPageData = {
   "clinics",
   "mental_health",
   "substance_misuse",
-  "hospices"
+  "hospices",
+  "gp_practices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager",
  "evidence_note": "It evidences that senior staff reviewed incidents, complaints, audits, staffing, clinical quality data and records each month, with actions tracked.",

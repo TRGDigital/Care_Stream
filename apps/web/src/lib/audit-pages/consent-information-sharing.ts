@@ -10,7 +10,8 @@ export const page: AuditPageData = {
  "services": [
   "dentistry",
   "private_hospitals",
-  "clinics"
+  "clinics",
+  "gp_practices"
  ],
  "who_runs_it": "Registered manager or clinical governance lead",
  "evidence_note": "Evidence is the sampled patient records, signed consent forms, capacity entries and records of information sent to the GP.",
@@ -193,7 +194,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a consent audit be done?",
-   "answer": "We set this audit to quarterly. Regulations 11 and 17 are listed in the audit file but do not name an interval, so your own policy decides how often you audit and how many records you sample."
+   "answer": "We set this audit to quarterly. Regulations 11 and 17 do not name an interval, so your own policy decides how often you audit and how many records you sample."
   },
   {
    "question": "Who should run the audit?",

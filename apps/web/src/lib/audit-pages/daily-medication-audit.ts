@@ -14,7 +14,8 @@ export const page: AuditPageData = {
   "supported_living",
   "extra_care",
   "ld_autism",
-  "hospices"
+  "hospices",
+  "shared_lives"
  ],
  "who_runs_it": "Senior carer, nurse in charge or registered manager",
  "evidence_note": "Evidences daily checks of MAR charts, controlled drugs and stock, storage temperatures, administration practice, and errors and disposal.",
@@ -154,7 +155,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a medication audit be done?",
-   "answer": "We set this audit to daily. The audit file cites no regulation that fixes an interval, so your medicines policy decides how often you audit and how that fits with any weekly or monthly checks."
+   "answer": "We set this audit to daily. No regulation we cite sets an interval, so your medicines policy decides how often you audit and how that fits with any weekly or monthly checks."
   },
   {
    "question": "Who should carry out a medication audit?",

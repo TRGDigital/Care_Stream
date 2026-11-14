@@ -10,7 +10,8 @@ export const page: AuditPageData = {
  "services": [
   "dentistry",
   "private_hospitals",
-  "clinics"
+  "clinics",
+  "gp_practices"
  ],
  "who_runs_it": "Practice manager or clinical lead",
  "evidence_note": "Evidence is the sampled records themselves, with the completed audit showing gaps found and actions closed.",
@@ -210,7 +211,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a clinical records audit be done?",
-   "answer": "We set this audit to quarterly. The regulations in the audit file ask for accurate, complete and contemporaneous records but do not name an interval, so your own policy decides how often you audit and how many records you sample."
+   "answer": "We set this audit to quarterly. The regulations we cite ask for accurate, complete and contemporaneous records but do not name an interval, so your own policy decides how often you audit and how many records you sample."
   },
   {
    "question": "Who should run the audit?",

@@ -10,7 +10,8 @@ export const page: AuditPageData = {
  "services": [
   "supported_living",
   "ld_autism",
-  "extra_care"
+  "extra_care",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager or team leader",
  "evidence_note": "Evidence is the person's support plan, goal and progress records, activity and daily notes, and the person's own views.",
@@ -203,7 +204,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should the review be done?",
-   "answer": "We set this review to quarterly, one person at a time. The audit file cites no rule that sets the interval, so your own policy decides how often you review and how many people you sample."
+   "answer": "We set this review to quarterly, one person at a time. No regulation we cite sets the interval, so your own policy decides how often you review and how many people you sample."
   },
   {
    "question": "Who should carry out the review?",
@@ -223,7 +224,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "Which regulations does it support?",
-   "answer": "The audit file cites Regulation 9, person-centred care, Regulation 10, dignity and respect, and Regulation 17, good governance, of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014."
+   "answer": "We cite Regulation 9, person-centred care, Regulation 10, dignity and respect, and Regulation 17, good governance, of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014."
   },
   {
    "question": "Is the review really free?",

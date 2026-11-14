@@ -13,7 +13,8 @@ export const page: AuditPageData = {
   "care_homes",
   "nursing",
   "dementia",
-  "mental_health"
+  "mental_health",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager, deputy or senior carer responsible for medicines",
  "evidence_note": "Evidence is the medicines list, MAR chart, prescriber review letters, behaviour support plan, PRN protocols and PRN use records.",
@@ -219,7 +220,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should psychotropic medication be reviewed?",
-   "answer": "We set this audit to quarterly. The audit file cites no fixed interval, so the prescriber's advice and your own medicines policy decide how often reviews happen and how often you audit."
+   "answer": "We set this audit to quarterly. We cite no fixed interval, so the prescriber's advice and your own medicines policy decide how often reviews happen and how often you audit."
   },
   {
    "question": "Who should carry out the audit?",

@@ -146,7 +146,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a dementia care environment audit be done?",
-   "answer": "We set this audit to quarterly. The audit file does not cite a regulation that sets an interval, so your own policy decides how often you run it and whether you repeat it after changes to the building."
+   "answer": "We set this audit to quarterly. No regulation we cite sets an interval, so your own policy decides how often you run it and whether you repeat it after changes to the building."
   },
   {
    "question": "Who should carry out the audit?",

@@ -10,7 +10,8 @@ export const page: AuditPageData = {
  "services": [
   "dentistry",
   "private_hospitals",
-  "clinics"
+  "clinics",
+  "gp_practices"
  ],
  "who_runs_it": "Registered manager or clinical lead",
  "evidence_note": "Evidence is the dated kit check log, expiry dates seen, training records and the last drill record.",
@@ -208,7 +209,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "Which regulation does it support?",
-   "answer": "It lists Regulation 12, safe care and treatment, of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014. The audit file cites no other standard."
+   "answer": "It lists Regulation 12, safe care and treatment, of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014. We cite no other standard."
   },
   {
    "question": "Is the audit really free?",

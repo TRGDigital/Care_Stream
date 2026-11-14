@@ -9,7 +9,8 @@ export const page: AuditPageData = {
  "scope": "resident",
  "services": [
   "private_hospitals",
-  "clinics"
+  "clinics",
+  "gp_practices"
  ],
  "who_runs_it": "Theatre manager, lead nurse or clinical governance lead",
  "evidence_note": "Keep the completed observation form with the procedure record and the monthly governance report showing actions closed.",
@@ -170,7 +171,7 @@ export const page: AuditPageData = {
   "Free to run on a free CareStream account, with no card needed"
  ],
  "what_it_is_title": "What the surgical safety checklist audit checks",
- "what_it_is": "You audit one procedure at a time, as an observer. You record whether the whole team paused, read each item aloud and confirmed it, then whether the checklist was filed. The WHO surgical safety checklist is the same tool some teams call five steps to safer surgery. This audit is an observation record. It is not a blank surgical safety checklist template or a PDF of the checklist, so use your organisation's approved version in theatre.",
+ "what_it_is": "You audit one procedure at a time, as an observer. You record whether the whole team paused, read each item aloud and confirmed it, then whether the checklist was filed. NHS England also promotes Five Steps to Safer Surgery alongside the WHO checklist. This audit is an observation record. It is not a blank surgical safety checklist template or a PDF of the checklist, so use your organisation's approved version in theatre.",
  "steps": [
   {
    "name": "Create a free account",
@@ -204,7 +205,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a surgical safety checklist audit be done?",
-   "answer": "We set this audit to monthly, one procedure at a time. The audit file cites Regulation 12 but it does not set a number of days, so your governance policy should say how many procedures you observe and how often."
+   "answer": "We set this audit to monthly, one procedure at a time. We cite Regulation 12 but it does not set a number of days, so your governance policy should say how many procedures you observe and how often."
   },
   {
    "question": "Who should run the audit?",
@@ -216,7 +217,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "What does it support?",
-   "answer": "It supports evidence under Regulation 12, safe care and treatment, of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014. The audit file also lists the WHO Surgical Safety Checklist and the NatSSIPs standards as references."
+   "answer": "It supports evidence under Regulation 12, safe care and treatment, of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014. It also references the WHO Surgical Safety Checklist and the NatSSIPs standards as references."
   },
   {
    "question": "Does it cover the whole checklist?",

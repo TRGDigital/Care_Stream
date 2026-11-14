@@ -201,7 +201,7 @@ export const page: AuditPageData = {
  "faqs": [
   {
    "question": "What is rapid tranquillisation?",
-   "answer": "Rapid tranquillisation is the use of medicine to calm a person quickly when they are acutely disturbed and other approaches have not worked. Because it carries risk, services keep records of the decision, the physical checks afterwards and the review. This audit looks at those records, not at clinical decisions."
+   "answer": "Rapid tranquillisation is the use of medicine to calm a person quickly when they are acutely disturbed. Because it carries risk, services keep records of the decision, the physical checks afterwards and the review. This audit looks at those records, not at clinical decisions."
   },
   {
    "question": "What is a rapid tranquillisation monitoring audit?",

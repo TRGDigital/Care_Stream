@@ -179,7 +179,7 @@ export const page: AuditPageData = {
   },
   {
    "name": "Repeat for every review",
-   "text": "Run the audit each time you complete a review, about every six months. Your results build into a record of how each review compares."
+   "text": "Run the audit each time you complete a review, at least twice a year. Your results build into a record of how each review compares."
   }
  ],
  "faqs": [
@@ -193,7 +193,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should the review be audited?",
-   "answer": "We set this audit to run each time a review is completed, which is about every six months. One check asks whether the review was finished within six months of the last one. Your own policy decides who audits and when."
+   "answer": "We set this audit to run each time a review is completed, at least every six months. One check asks whether the review was finished within six months of the last one. Your own policy decides who audits and when."
   },
   {
    "question": "Who should run the audit?",

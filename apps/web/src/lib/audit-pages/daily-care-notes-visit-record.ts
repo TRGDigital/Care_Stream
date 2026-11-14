@@ -11,7 +11,8 @@ export const page: AuditPageData = {
   "home_care",
   "live_in",
   "supported_living",
-  "extra_care"
+  "extra_care",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager, care coordinator or senior carer",
  "evidence_note": "Evidences that each person has an accurate, complete and contemporaneous record of the care given, reviewed by a senior member of staff.",
@@ -207,7 +208,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should daily care notes be audited?",
-   "answer": "We set this audit to monthly, one person at a time. Regulation 17 covers good governance but the audit file cites no set interval, so your own records policy should state how often and how many people you sample."
+   "answer": "We set this audit to monthly, one person at a time. Regulation 17 covers good governance but it sets no interval, so your own records policy should state how often and how many people you sample."
   },
   {
    "question": "Who should run the audit?",

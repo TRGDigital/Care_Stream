@@ -144,7 +144,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a fluid intake audit be done?",
-   "answer": "We set this audit to daily. The audit file does not cite a regulation that sets a number of days, so your own hydration or nutrition policy decides how often you audit and for whom."
+   "answer": "We set this audit to daily. No regulation we cite sets a number of days, so your own hydration or nutrition policy decides how often you audit and for whom."
   },
   {
    "question": "Who should run the audit?",

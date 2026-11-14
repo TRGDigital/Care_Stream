@@ -199,7 +199,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should it be done?",
-   "answer": "We set it to monthly, for each person who had an incident in that month. Your own policy decides how soon each incident must be reviewed. The audit file does not cite a regulation that sets a number of days."
+   "answer": "We set it to monthly, for each person who had an incident in that month. Your own policy decides how soon each incident must be reviewed. No regulation we cite sets a number of days."
   },
   {
    "question": "Who should run the review?",

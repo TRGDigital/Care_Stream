@@ -3,10 +3,12 @@ import type { AuditPageData } from './types'
 import { page as p_accident_and_incident_book_audit } from './accident-and-incident-book-audit'
 import { page as p_antimicrobial_prescribing } from './antimicrobial-prescribing'
 import { page as p_bed_rails_mattress_safety } from './bed-rails-mattress-safety'
+import { page as p_bereavement_family_support } from './bereavement-family-support'
 import { page as p_business_continuity_emergency_cover } from './business-continuity-emergency-cover'
 import { page as p_call_bell_response } from './call-bell-response'
 import { page as p_care_plan_review_and_update } from './care-plan-review-and-update'
 import { page as p_care_worker_spot_check } from './care-worker-spot-check'
+import { page as p_chaperone_intimate_examination } from './chaperone-intimate-examination'
 import { page as p_clinical_equipment_servicing_validation } from './clinical-equipment-servicing-validation'
 import { page as p_clinical_record_keeping } from './clinical-record-keeping'
 import { page as p_complaints_and_concerns } from './complaints-and-concerns'
@@ -22,6 +24,7 @@ import { page as p_dental_radiography_irmer } from './dental-radiography-irmer'
 import { page as p_dental_waterline_legionella } from './dental-waterline-legionella'
 import { page as p_detox_withdrawal_monitoring } from './detox-withdrawal-monitoring'
 import { page as p_dignity_and_respect } from './dignity-and-respect'
+import { page as p_discharge_transition_aftercare } from './discharge-transition-aftercare'
 import { page as p_dnacpr_advance_care_planning } from './dnacpr-advance-care-planning'
 import { page as p_duty_of_candour_notifications } from './duty-of-candour-notifications'
 import { page as p_end_of_life_care_pathway } from './end-of-life-care-pathway'
@@ -32,6 +35,8 @@ import { page as p_fire_drill_record_form } from './fire-drill-record-form'
 import { page as p_fire_marshall_checklist } from './fire-marshall-checklist'
 import { page as p_fluid_intake_and_hydration } from './fluid-intake-and-hydration'
 import { page as p_gdpr_audit_checklist } from './gdpr-audit-checklist'
+import { page as p_gp_repeat_prescribing_medication_review } from './gp-repeat-prescribing-medication-review'
+import { page as p_gp_test_results_referral_tracking } from './gp-test-results-referral-tracking'
 import { page as p_hand_hygiene_observation } from './hand-hygiene-observation'
 import { page as p_health_action_plan_health_access } from './health-action-plan-health-access'
 import { page as p_health_and_safety } from './health-and-safety'
@@ -50,6 +55,7 @@ import { page as p_lone_working_safety } from './lone-working-safety'
 import { page as p_mar_chart_audit_home_care } from './mar-chart-audit-home-care'
 import { page as p_mealtime_experience } from './mealtime-experience'
 import { page as p_medical_emergencies_resuscitation_readiness } from './medical-emergencies-resuscitation-readiness'
+import { page as p_medical_gases_oxygen_safety } from './medical-gases-oxygen-safety'
 import { page as p_medication_competency_assessment } from './medication-competency-assessment'
 import { page as p_medicines_management } from './medicines-management'
 import { page as p_mental_capacity_consent_audit } from './mental-capacity-consent-audit'
@@ -58,6 +64,9 @@ import { page as p_missing_from_care_review } from './missing-from-care-review'
 import { page as p_monthly_governance_review } from './monthly-governance-review'
 import { page as p_moving_handling_in_the_home } from './moving-handling-in-the-home'
 import { page as p_night_shift_walkround } from './night-shift-walkround'
+import { page as p_observation_engagement_audit } from './observation-engagement-audit'
+import { page as p_opioid_substitution_takehome_naloxone } from './opioid-substitution-takehome-naloxone'
+import { page as p_patient_access_disability_access } from './patient-access-disability-access'
 import { page as p_person_centred_outcomes_community } from './person-centred-outcomes-community'
 import { page as p_physical_health_metabolic_monitoring } from './physical-health-metabolic-monitoring'
 import { page as p_physical_restraint_sanctions_review } from './physical-restraint-sanctions-review'
@@ -77,6 +86,9 @@ import { page as p_restraint_seclusion_incident_review } from './restraint-seclu
 import { page as p_risk_assessment_safety_planning } from './risk-assessment-safety-planning'
 import { page as p_rsrcrc_self_assessment } from './rsrcrc-self-assessment'
 import { page as p_safeguarding_log_review } from './safeguarding-log-review'
+import { page as p_self_administration_of_medicines } from './self-administration-of-medicines'
+import { page as p_shared_lives_carer_household_review } from './shared-lives-carer-household-review'
+import { page as p_shared_lives_matching_placement_review } from './shared-lives-matching-placement-review'
 import { page as p_sharps_inoculation_clinical_waste } from './sharps-inoculation-clinical-waste'
 import { page as p_single_assessment_framework_review } from './single-assessment-framework-review'
 import { page as p_staff_competency_observation } from './staff-competency-observation'
@@ -86,6 +98,7 @@ import { page as p_support_plan_personal_file } from './support-plan-personal-fi
 import { page as p_supported_living_property_tenancy } from './supported-living-property-tenancy'
 import { page as p_syringe_driver_anticipatory_medicines } from './syringe-driver-anticipatory-medicines'
 import { page as p_training_matrix_compliance } from './training-matrix-compliance'
+import { page as p_vaccine_medicines_fridge_cold_chain } from './vaccine-medicines-fridge-cold-chain'
 import { page as p_water_safety_and_legionella } from './water-safety-and-legionella'
 import { page as p_weekly_medication_stock_and_storage } from './weekly-medication-stock-and-storage'
 import { page as p_weight_monitoring_malnutrition } from './weight-monitoring-malnutrition'
@@ -95,10 +108,12 @@ export const AUDIT_PAGES: AuditPageData[] = [
  p_accident_and_incident_book_audit,
  p_antimicrobial_prescribing,
  p_bed_rails_mattress_safety,
+ p_bereavement_family_support,
  p_business_continuity_emergency_cover,
  p_call_bell_response,
  p_care_plan_review_and_update,
  p_care_worker_spot_check,
+ p_chaperone_intimate_examination,
  p_clinical_equipment_servicing_validation,
  p_clinical_record_keeping,
  p_complaints_and_concerns,
@@ -114,6 +129,7 @@ export const AUDIT_PAGES: AuditPageData[] = [
  p_dental_waterline_legionella,
  p_detox_withdrawal_monitoring,
  p_dignity_and_respect,
+ p_discharge_transition_aftercare,
  p_dnacpr_advance_care_planning,
  p_duty_of_candour_notifications,
  p_end_of_life_care_pathway,
@@ -124,6 +140,8 @@ export const AUDIT_PAGES: AuditPageData[] = [
  p_fire_marshall_checklist,
  p_fluid_intake_and_hydration,
  p_gdpr_audit_checklist,
+ p_gp_repeat_prescribing_medication_review,
+ p_gp_test_results_referral_tracking,
  p_hand_hygiene_observation,
  p_health_action_plan_health_access,
  p_health_and_safety,
@@ -142,6 +160,7 @@ export const AUDIT_PAGES: AuditPageData[] = [
  p_mar_chart_audit_home_care,
  p_mealtime_experience,
  p_medical_emergencies_resuscitation_readiness,
+ p_medical_gases_oxygen_safety,
  p_medication_competency_assessment,
  p_medicines_management,
  p_mental_capacity_consent_audit,
@@ -150,6 +169,9 @@ export const AUDIT_PAGES: AuditPageData[] = [
  p_monthly_governance_review,
  p_moving_handling_in_the_home,
  p_night_shift_walkround,
+ p_observation_engagement_audit,
+ p_opioid_substitution_takehome_naloxone,
+ p_patient_access_disability_access,
  p_person_centred_outcomes_community,
  p_physical_health_metabolic_monitoring,
  p_physical_restraint_sanctions_review,
@@ -169,6 +191,9 @@ export const AUDIT_PAGES: AuditPageData[] = [
  p_risk_assessment_safety_planning,
  p_rsrcrc_self_assessment,
  p_safeguarding_log_review,
+ p_self_administration_of_medicines,
+ p_shared_lives_carer_household_review,
+ p_shared_lives_matching_placement_review,
  p_sharps_inoculation_clinical_waste,
  p_single_assessment_framework_review,
  p_staff_competency_observation,
@@ -178,6 +203,7 @@ export const AUDIT_PAGES: AuditPageData[] = [
  p_supported_living_property_tenancy,
  p_syringe_driver_anticipatory_medicines,
  p_training_matrix_compliance,
+ p_vaccine_medicines_fridge_cold_chain,
  p_water_safety_and_legionella,
  p_weekly_medication_stock_and_storage,
  p_weight_monitoring_malnutrition,

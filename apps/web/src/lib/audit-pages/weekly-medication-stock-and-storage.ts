@@ -13,7 +13,8 @@ export const page: AuditPageData = {
   "dementia",
   "extra_care",
   "supported_living",
-  "hospices"
+  "hospices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager or senior carer leading medicines",
  "evidence_note": "It evidences weekly checks of medicines fridge and room temperatures, locked storage, controlled drug balances against the register, and stock, dating and returns.",

@@ -26,7 +26,10 @@ export const AUDIT_PAGE_SOURCES: Array<{ slug: string; name: string; urls: strin
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17",
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/18",
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/19",
-   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/20"
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/20",
+   "https://www.cqc.org.uk/about-us/how-we-do-our-job/five-key-questions-we-ask",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/20A",
+   "https://www.legislation.gov.uk/uksi/2009/3112/regulation/18"
   ]
  },
  {
@@ -38,7 +41,8 @@ export const AUDIT_PAGE_SOURCES: Array<{ slug: string; name: string; urls: strin
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17",
    "https://www.legislation.gov.uk/ukpga/2005/9/section/4",
-   "https://www.resus.org.uk/respect"
+   "https://www.resus.org.uk/respect",
+   "https://www.nhs.uk/conditions/do-not-attempt-cardiopulmonary-resuscitation-dnacpr-decisions/"
   ]
  },
  {
@@ -46,7 +50,8 @@ export const AUDIT_PAGE_SOURCES: Array<{ slug: string; name: string; urls: strin
   "name": "Hand Hygiene Observation Audit",
   "urls": [
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
-   "https://www.gov.uk/government/publications/the-health-and-social-care-act-2008-code-of-practice-on-the-prevention-and-control-of-infections-and-related-guidance"
+   "https://www.gov.uk/government/publications/the-health-and-social-care-act-2008-code-of-practice-on-the-prevention-and-control-of-infections-and-related-guidance",
+   "https://www.nhs.uk/live-well/healthy-body/best-way-to-wash-your-hands/"
   ]
  },
  {
@@ -55,7 +60,8 @@ export const AUDIT_PAGE_SOURCES: Array<{ slug: string; name: string; urls: strin
   "urls": [
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17",
-   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/18"
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/18",
+   "https://www.hse.gov.uk/pubns/indg73.htm"
   ]
  },
  {
@@ -105,7 +111,11 @@ export const AUDIT_PAGE_SOURCES: Array<{ slug: string; name: string; urls: strin
   "urls": [
    "https://www.legislation.gov.uk/uksi/2015/541/regulation/45",
    "https://www.legislation.gov.uk/uksi/2015/541/regulation/40",
-   "https://www.legislation.gov.uk/uksi/2015/541/regulation/6"
+   "https://www.legislation.gov.uk/uksi/2015/541/regulation/6",
+   "https://www.legislation.gov.uk/uksi/2015/541/regulation/45/",
+   "https://www.legislation.gov.uk/uksi/2015/541/regulation/44/",
+   "https://www.legislation.gov.uk/uksi/2015/541/regulation/40/",
+   "https://www.legislation.gov.uk/uksi/2015/541/regulation/6/"
   ]
  },
  {
@@ -146,7 +156,9 @@ export const AUDIT_PAGE_SOURCES: Array<{ slug: string; name: string; urls: strin
    "https://www.legislation.gov.uk/uksi/2002/2677/regulation/12",
    "https://www.legislation.gov.uk/uksi/2002/2677/regulation/13",
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
-   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/15"
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/15",
+   "https://www.hse.gov.uk/coshh/",
+   "https://www.legislation.gov.uk/uksi/2002/2677/regulation/7"
   ]
  },
  {
@@ -206,7 +218,8 @@ export const AUDIT_PAGE_SOURCES: Array<{ slug: string; name: string; urls: strin
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/9",
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17",
-   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/18"
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/18",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/20"
   ]
  },
  {
@@ -298,7 +311,8 @@ export const AUDIT_PAGE_SOURCES: Array<{ slug: string; name: string; urls: strin
   "urls": [
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/14",
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
-   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17"
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17",
+   "https://www.bapen.org.uk/screening-and-must/must/introducing-must"
   ]
  },
  {
@@ -315,7 +329,8 @@ export const AUDIT_PAGE_SOURCES: Array<{ slug: string; name: string; urls: strin
   "urls": [
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17",
-   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/18"
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/18",
+   "https://www.legislation.gov.uk/ukpga/2004/36/schedule/1"
   ]
  },
  {
@@ -326,7 +341,8 @@ export const AUDIT_PAGE_SOURCES: Array<{ slug: string; name: string; urls: strin
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
    "https://www.legislation.gov.uk/uksi/1998/2306/regulation/5",
    "https://www.legislation.gov.uk/uksi/1998/2306/regulation/6",
-   "https://www.legislation.gov.uk/uksi/1998/2306/regulation/9"
+   "https://www.legislation.gov.uk/uksi/1998/2306/regulation/9",
+   "https://www.hse.gov.uk/electricity/faq-portable-appliance-testing.htm"
   ]
  },
  {
@@ -344,7 +360,8 @@ export const AUDIT_PAGE_SOURCES: Array<{ slug: string; name: string; urls: strin
   "name": "Consent and Information Sharing Audit",
   "urls": [
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/11",
-   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17"
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17",
+   "https://www.legislation.gov.uk/ukpga/2005/9/section/1"
   ]
  },
  {
@@ -355,7 +372,9 @@ export const AUDIT_PAGE_SOURCES: Array<{ slug: string; name: string; urls: strin
    "https://www.legislation.gov.uk/uksi/2001/3998/regulation/20",
    "https://www.legislation.gov.uk/uksi/2001/3998/regulation/27",
    "https://www.legislation.gov.uk/uksi/1973/798/contents",
-   "https://www.legislation.gov.uk/uksi/2013/373/regulation/12"
+   "https://www.legislation.gov.uk/uksi/2013/373/regulation/12",
+   "https://www.legislation.gov.uk/uksi/2001/3998/regulation/19",
+   "https://www.legislation.gov.uk/uksi/2013/373/regulation/19"
   ]
  },
  {
@@ -419,7 +438,8 @@ export const AUDIT_PAGE_SOURCES: Array<{ slug: string; name: string; urls: strin
   "urls": [
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/13",
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17",
-   "https://www.legislation.gov.uk/ukpga/2014/23/section/42"
+   "https://www.legislation.gov.uk/ukpga/2014/23/section/42",
+   "https://www.gov.uk/become-appointee-for-someone-claiming-benefits"
   ]
  },
  {
@@ -428,7 +448,8 @@ export const AUDIT_PAGE_SOURCES: Array<{ slug: string; name: string; urls: strin
   "urls": [
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/9",
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
-   "https://www.england.nhs.uk/learning-disabilities/improving-health/annual-health-checks/"
+   "https://www.england.nhs.uk/learning-disabilities/improving-health/annual-health-checks/",
+   "https://www.nhs.uk/conditions/learning-disabilities/annual-health-checks/"
   ]
  },
  {
@@ -449,7 +470,8 @@ export const AUDIT_PAGE_SOURCES: Array<{ slug: string; name: string; urls: strin
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/9",
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/10",
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
-   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17"
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17",
+   "https://www.cqc.org.uk/about-us/how-we-do-our-job/five-key-questions-we-ask"
   ]
  },
  {
@@ -478,7 +500,8 @@ export const AUDIT_PAGE_SOURCES: Array<{ slug: string; name: string; urls: strin
    "https://www.legislation.gov.uk/ukpga/1983/20/section/132",
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/11",
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17",
-   "https://www.gov.uk/government/publications/code-of-practice-mental-health-act-1983"
+   "https://www.gov.uk/government/publications/code-of-practice-mental-health-act-1983",
+   "https://www.legislation.gov.uk/uksi/2008/1184/schedule/1"
   ]
  },
  {
@@ -578,6 +601,15 @@ export const AUDIT_PAGE_SOURCES: Array<{ slug: string; name: string; urls: strin
   ]
  },
  {
+  "slug": "chaperone-intimate-examination",
+  "name": "Chaperone and Intimate Examination Audit",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/10",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/11",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12"
+  ]
+ },
+ {
   "slug": "discharge-transition-aftercare",
   "name": "Discharge, Transition and Aftercare Audit",
   "urls": [
@@ -585,6 +617,22 @@ export const AUDIT_PAGE_SOURCES: Array<{ slug: string; name: string; urls: strin
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17",
    "https://www.legislation.gov.uk/ukpga/1983/20/section/117"
+  ]
+ },
+ {
+  "slug": "gp-repeat-prescribing-medication-review",
+  "name": "Repeat Prescribing and Medication Review Audit",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17"
+  ]
+ },
+ {
+  "slug": "gp-test-results-referral-tracking",
+  "name": "Test Results and Referral Tracking Audit",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17"
   ]
  },
  {
@@ -615,11 +663,49 @@ export const AUDIT_PAGE_SOURCES: Array<{ slug: string; name: string; urls: strin
   ]
  },
  {
+  "slug": "patient-access-disability-access",
+  "name": "Patient Access and Disability Access Audit",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/15",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/10",
+   "https://www.legislation.gov.uk/ukpga/2010/15/section/20",
+   "https://www.england.nhs.uk/accessible-information-standard/how-to-meet-the-standard/"
+  ]
+ },
+ {
   "slug": "self-administration-of-medicines",
   "name": "Self-Administration of Medicines Audit",
   "urls": [
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
    "https://www.legislation.gov.uk/uksi/2014/2936/regulation/11"
+  ]
+ },
+ {
+  "slug": "shared-lives-carer-household-review",
+  "name": "Shared Lives Carer Household Review",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/19"
+  ]
+ },
+ {
+  "slug": "shared-lives-matching-placement-review",
+  "name": "Shared Lives Matching and Placement Review",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/9",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/10",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/11",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/13"
+  ]
+ },
+ {
+  "slug": "vaccine-medicines-fridge-cold-chain",
+  "name": "Vaccine and Medicines Fridge (Cold Chain) Audit",
+  "urls": [
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/12",
+   "https://www.legislation.gov.uk/uksi/2014/2936/regulation/17"
   ]
  }
 ]

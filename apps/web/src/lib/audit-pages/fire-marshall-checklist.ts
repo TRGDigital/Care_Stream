@@ -15,7 +15,8 @@ export const page: AuditPageData = {
   "supported_living",
   "ld_autism",
   "hospices",
-  "childrens"
+  "childrens",
+  "shared_lives"
  ],
  "who_runs_it": "Fire marshal on duty, reviewed by the registered manager",
  "evidence_note": "It evidences that a daily walk round of fire safety basics was made, what was found and what was done about it.",
@@ -138,7 +139,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a fire marshal checklist be done?",
-   "answer": "We set this audit to daily. The audit file does not cite a regulation that sets a number of days, so your own fire safety policy and risk assessment decide how often the round is made."
+   "answer": "We set this audit to daily. No regulation we cite sets a number of days, so your own fire safety policy and risk assessment decide how often the round is made."
   },
   {
    "question": "Who should complete the fire marshal checklist?",

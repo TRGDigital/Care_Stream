@@ -15,7 +15,8 @@ export const page: AuditPageData = {
   "supported_living",
   "ld_autism",
   "hospices",
-  "childrens"
+  "childrens",
+  "shared_lives"
  ],
  "who_runs_it": "Fire marshal, registered manager or the person leading the drill",
  "evidence_note": "It evidences that fire drills are held and recorded, including the alarm panel check, simulated 999 call, meeting point, staff response, issues found and actions required.",
@@ -142,7 +143,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a fire drill be recorded?",
-   "answer": "We set this form to quarterly. The audit file does not cite a regulation that sets an interval, so your own fire policy and fire risk assessment decide how often you hold and record drills."
+   "answer": "We set this form to quarterly. No regulation we cite sets an interval, so your own fire policy and fire risk assessment decide how often you hold and record drills."
   },
   {
    "question": "Who should complete the fire drill form?",

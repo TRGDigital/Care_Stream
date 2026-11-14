@@ -22,7 +22,9 @@ export const page: AuditPageData = {
   "clinics",
   "mental_health",
   "substance_misuse",
-  "hospices"
+  "hospices",
+  "gp_practices",
+  "shared_lives"
  ],
  "who_runs_it": "Infection prevention and control lead",
  "evidence_note": "Evidences a quarterly check of infection prevention practice across hygiene, waste, laundry, pest control, staff health, food safety and MRSA.",
@@ -235,7 +237,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should an infection control audit be done?",
-   "answer": "We set this audit to quarterly. The audit file cites no rule that fixes the interval, so your own infection control policy should state how often you audit and who does it."
+   "answer": "We set this audit to quarterly. No regulation we cite sets the interval, so your own infection control policy should state how often you audit and who does it."
   },
   {
    "question": "Who should carry out the audit?",

@@ -18,7 +18,8 @@ export const page: AuditPageData = {
   "ld_autism",
   "hospices",
   "childrens",
-  "mental_health"
+  "mental_health",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager",
  "evidence_note": "It evidences that medicines are checked each month across supply, storage, administration, recording, controlled drugs and disposal, with actions tracked.",

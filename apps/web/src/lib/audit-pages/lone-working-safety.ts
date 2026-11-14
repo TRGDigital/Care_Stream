@@ -10,7 +10,8 @@ export const page: AuditPageData = {
  "services": [
   "home_care",
   "live_in",
-  "supported_living"
+  "supported_living",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager or field supervisor",
  "evidence_note": "Evidences that risks to staff working alone are assessed, controlled and reviewed, in line with regulations 12(2)(b), 17(2)(b) and 18.",

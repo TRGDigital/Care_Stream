@@ -10,7 +10,8 @@ export const page: AuditPageData = {
  "services": [
   "dentistry",
   "private_hospitals",
-  "clinics"
+  "clinics",
+  "gp_practices"
  ],
  "who_runs_it": "Infection prevention and control lead or practice manager",
  "evidence_note": "It evidences the sharps risk assessment, container checks, injury log, carrier contract, consignment notes and training records.",
@@ -215,7 +216,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a sharps audit be done?",
-   "answer": "We set this audit to quarterly. The audit file does not cite a rule that sets a number of days, so your own infection prevention and control policy decides how often to audit and how many areas to check."
+   "answer": "We set this audit to quarterly. No regulation we cite sets a number of days, so your own infection prevention and control policy decides how often to audit and how many areas to check."
   },
   {
    "question": "Who should carry out the audit?",

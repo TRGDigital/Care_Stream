@@ -15,7 +15,8 @@ export const page: AuditPageData = {
   "supported_living",
   "extra_care",
   "ld_autism",
-  "hospices"
+  "hospices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager or deputy manager",
  "evidence_note": "Answers rest on what the auditor sees and hears during the observation, plus short conversations with people and staff.",

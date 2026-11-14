@@ -16,7 +16,9 @@ export const SERVICE_LABEL: Record<string, string> = {
  "clinics": "Clinics and independent doctors",
  "mental_health": "Mental health services",
  "substance_misuse": "Substance misuse services",
- "hospices": "Hospices"
+ "hospices": "Hospices",
+ "gp_practices": "GP practices",
+ "shared_lives": "Shared Lives"
 }
 
 export interface CatalogueAudit { name: string; slug: string; description: string; frequency: string; scope: string; services: string[]; wave: number }
@@ -37,7 +39,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "supported_living",
    "extra_care",
    "ld_autism",
-   "hospices"
+   "hospices",
+   "shared_lives"
   ],
   "wave": 0
  },
@@ -50,7 +53,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "services": [
    "dentistry",
    "clinics",
-   "private_hospitals"
+   "private_hospitals",
+   "gp_practices"
   ],
   "wave": 3
  },
@@ -70,6 +74,20 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "wave": 2
  },
  {
+  "name": "Bereavement and Family Support Audit",
+  "slug": "bereavement-and-family-support-audit",
+  "description": "Check, for each person who has died, that the family were told in good time and supported, and that belongings and care after death were handled well. Record bereavement information and follow up, and the learning that comes from each death.",
+  "frequency": "quarterly",
+  "scope": "resident",
+  "services": [
+   "hospices",
+   "nursing",
+   "care_homes",
+   "dementia"
+  ],
+  "wave": 4
+ },
+ {
   "name": "Business Continuity and Emergency Cover Audit",
   "slug": "business-continuity-and-emergency-cover-audit",
   "description": "Check that your business continuity plan is current, that emergency contacts work and that you can cover urgent visits or shifts when staff are short. Record the red, amber and green priority list, the last test and every lesson, with an owner and date for each action.",
@@ -80,7 +98,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "live_in",
    "care_homes",
    "nursing",
-   "supported_living"
+   "supported_living",
+   "shared_lives"
   ],
   "wave": 3
  },
@@ -103,7 +122,9 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "private_hospitals",
    "clinics",
    "mental_health",
-   "hospices"
+   "hospices",
+   "gp_practices",
+   "shared_lives"
   ],
   "wave": 2
  },
@@ -127,7 +148,9 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "clinics",
    "mental_health",
    "substance_misuse",
-   "hospices"
+   "hospices",
+   "gp_practices",
+   "shared_lives"
   ],
   "wave": 1
  },
@@ -161,7 +184,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "supported_living",
    "extra_care",
    "ld_autism",
-   "hospices"
+   "hospices",
+   "shared_lives"
   ],
   "wave": 0
  },
@@ -174,9 +198,24 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "services": [
    "home_care",
    "live_in",
-   "supported_living"
+   "supported_living",
+   "shared_lives"
   ],
   "wave": 1
+ },
+ {
+  "name": "Chaperone and Intimate Examination Audit",
+  "slug": "chaperone-and-intimate-examination-audit",
+  "description": "Check that a chaperone was offered and recorded, that the chaperone was trained, and that consent and privacy were handled. Run it each quarter on a sample of records and give every action an owner and a date.",
+  "frequency": "quarterly",
+  "scope": "resident",
+  "services": [
+   "gp_practices",
+   "clinics",
+   "dentistry",
+   "private_hospitals"
+  ],
+  "wave": 4
  },
  {
   "name": "Clinical Equipment, Servicing and Validation Audit",
@@ -187,7 +226,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "services": [
    "dentistry",
    "private_hospitals",
-   "clinics"
+   "clinics",
+   "gp_practices"
   ],
   "wave": 3
  },
@@ -200,7 +240,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "services": [
    "dentistry",
    "private_hospitals",
-   "clinics"
+   "clinics",
+   "gp_practices"
   ],
   "wave": 3
  },
@@ -225,7 +266,9 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "clinics",
    "mental_health",
    "substance_misuse",
-   "hospices"
+   "hospices",
+   "gp_practices",
+   "shared_lives"
   ],
   "wave": 2
  },
@@ -238,7 +281,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "services": [
    "dentistry",
    "private_hospitals",
-   "clinics"
+   "clinics",
+   "gp_practices"
   ],
   "wave": 3
  },
@@ -284,7 +328,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "home_care",
    "live_in",
    "supported_living",
-   "extra_care"
+   "extra_care",
+   "shared_lives"
   ],
   "wave": 2
  },
@@ -301,7 +346,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "supported_living",
    "extra_care",
    "ld_autism",
-   "hospices"
+   "hospices",
+   "shared_lives"
   ],
   "wave": 0
  },
@@ -339,7 +385,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "services": [
    "dentistry",
    "clinics",
-   "private_hospitals"
+   "private_hospitals",
+   "gp_practices"
   ],
   "wave": 3
  },
@@ -379,9 +426,24 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "supported_living",
    "extra_care",
    "ld_autism",
-   "hospices"
+   "hospices",
+   "shared_lives"
   ],
   "wave": 2
+ },
+ {
+  "name": "Discharge, Transition and Aftercare Audit",
+  "slug": "discharge-transition-and-aftercare-audit",
+  "description": "Check each person's discharge from plan to follow up, including what was handed over and whether section 117 aftercare applies. Run it quarterly and keep the evidence for your next inspection.",
+  "frequency": "quarterly",
+  "scope": "resident",
+  "services": [
+   "mental_health",
+   "substance_misuse",
+   "private_hospitals",
+   "hospices"
+  ],
+  "wave": 4
  },
  {
   "name": "Duty of Candour and CQC Notifications Audit",
@@ -403,7 +465,9 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "clinics",
    "mental_health",
    "substance_misuse",
-   "hospices"
+   "hospices",
+   "gp_practices",
+   "shared_lives"
   ],
   "wave": 2
  },
@@ -458,7 +522,12 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "supported_living",
    "ld_autism",
    "care_homes",
-   "extra_care"
+   "extra_care",
+   "nursing",
+   "dementia",
+   "mental_health",
+   "private_hospitals",
+   "shared_lives"
   ],
   "wave": 3
  },
@@ -476,7 +545,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "supported_living",
    "ld_autism",
    "hospices",
-   "childrens"
+   "childrens",
+   "shared_lives"
   ],
   "wave": 0
  },
@@ -494,7 +564,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "supported_living",
    "ld_autism",
    "hospices",
-   "childrens"
+   "childrens",
+   "shared_lives"
   ],
   "wave": 0
  },
@@ -512,7 +583,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "supported_living",
    "ld_autism",
    "hospices",
-   "childrens"
+   "childrens",
+   "shared_lives"
   ],
   "wave": 0
  },
@@ -554,7 +626,9 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "clinics",
    "mental_health",
    "substance_misuse",
-   "hospices"
+   "hospices",
+   "gp_practices",
+   "shared_lives"
   ],
   "wave": 0
  },
@@ -579,7 +653,9 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "clinics",
    "mental_health",
    "substance_misuse",
-   "hospices"
+   "hospices",
+   "gp_practices",
+   "shared_lives"
   ],
   "wave": 0
  },
@@ -598,7 +674,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "dentistry",
    "private_hospitals",
    "clinics",
-   "hospices"
+   "hospices",
+   "gp_practices"
   ],
   "wave": 1
  },
@@ -619,7 +696,9 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "childrens",
    "dentistry",
    "private_hospitals",
-   "clinics"
+   "clinics",
+   "gp_practices",
+   "shared_lives"
   ],
   "wave": 0
  },
@@ -632,7 +711,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "services": [
    "supported_living",
    "ld_autism",
-   "extra_care"
+   "extra_care",
+   "shared_lives"
   ],
   "wave": 3
  },
@@ -673,7 +753,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "services": [
    "home_care",
    "live_in",
-   "supported_living"
+   "supported_living",
+   "shared_lives"
   ],
   "wave": 2
  },
@@ -709,7 +790,9 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "clinics",
    "mental_health",
    "substance_misuse",
-   "hospices"
+   "hospices",
+   "gp_practices",
+   "shared_lives"
   ],
   "wave": 0
  },
@@ -734,7 +817,9 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "clinics",
    "mental_health",
    "substance_misuse",
-   "hospices"
+   "hospices",
+   "gp_practices",
+   "shared_lives"
   ],
   "wave": 0
  },
@@ -752,7 +837,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "supported_living",
    "ld_autism",
    "childrens",
-   "hospices"
+   "hospices",
+   "shared_lives"
   ],
   "wave": 0
  },
@@ -796,7 +882,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "ld_autism",
    "childrens",
    "substance_misuse",
-   "supported_living"
+   "supported_living",
+   "shared_lives"
   ],
   "wave": 2
  },
@@ -820,7 +907,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "services": [
    "home_care",
    "live_in",
-   "supported_living"
+   "supported_living",
+   "shared_lives"
   ],
   "wave": 1
  },
@@ -834,7 +922,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "home_care",
    "live_in",
    "supported_living",
-   "extra_care"
+   "extra_care",
+   "shared_lives"
   ],
   "wave": 1
  },
@@ -862,9 +951,28 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "services": [
    "dentistry",
    "private_hospitals",
-   "clinics"
+   "clinics",
+   "gp_practices"
   ],
   "wave": 3
+ },
+ {
+  "name": "Medical Gases and Oxygen Safety Audit",
+  "slug": "medical-gases-and-oxygen-safety-audit",
+  "description": "Check where oxygen is kept, how it is stored and signed, whether cylinders are in date and whether staff and records match each person's instructions. Use it monthly and keep the actions and sign off in one place.",
+  "frequency": "monthly",
+  "scope": "none",
+  "services": [
+   "hospices",
+   "nursing",
+   "care_homes",
+   "dementia",
+   "home_care",
+   "live_in",
+   "private_hospitals",
+   "dentistry"
+  ],
+  "wave": 4
  },
  {
   "name": "Medication Competency Assessment",
@@ -880,7 +988,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "live_in",
    "supported_living",
    "extra_care",
-   "ld_autism"
+   "ld_autism",
+   "shared_lives"
   ],
   "wave": 1
  },
@@ -901,7 +1010,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "ld_autism",
    "hospices",
    "childrens",
-   "mental_health"
+   "mental_health",
+   "shared_lives"
   ],
   "wave": 0
  },
@@ -919,7 +1029,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "supported_living",
    "extra_care",
    "ld_autism",
-   "mental_health"
+   "mental_health",
+   "shared_lives"
   ],
   "wave": 1
  },
@@ -967,7 +1078,9 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "clinics",
    "mental_health",
    "substance_misuse",
-   "hospices"
+   "hospices",
+   "gp_practices",
+   "shared_lives"
   ],
   "wave": 0
  },
@@ -996,9 +1109,52 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "extra_care",
    "supported_living",
    "childrens",
-   "hospices"
+   "hospices",
+   "shared_lives"
   ],
   "wave": 0
+ },
+ {
+  "name": "Observation and Engagement Audit",
+  "slug": "observation-and-engagement-audit",
+  "description": "Check that each person's observation level is set, reviewed and signed, that records are complete and that staff spend meaningful time with them. Run it monthly for each person and give every gap an owner and a date.",
+  "frequency": "monthly",
+  "scope": "resident",
+  "services": [
+   "mental_health",
+   "private_hospitals",
+   "substance_misuse"
+  ],
+  "wave": 4
+ },
+ {
+  "name": "Opioid Substitution, Take-home and Naloxone Audit",
+  "slug": "opioid-substitution-take-home-and-naloxone-audit",
+  "description": "Check each person on opioid substitution treatment has a current prescription, a recorded take-home risk assessment, safe storage advice and naloxone. Run it monthly, record what is missing and give each action an owner and a date.",
+  "frequency": "monthly",
+  "scope": "resident",
+  "services": [
+   "substance_misuse",
+   "mental_health",
+   "private_hospitals",
+   "clinics",
+   "gp_practices"
+  ],
+  "wave": 4
+ },
+ {
+  "name": "Patient Access and Disability Access Audit",
+  "slug": "patient-access-and-disability-access-audit",
+  "description": "Walk the building as a patient with a disability would, from the car park to the toilet, and record what works and what does not. The audit also checks that access needs are asked about, recorded, flagged and acted on, with an action plan for each gap.",
+  "frequency": "periodic",
+  "scope": "none",
+  "services": [
+   "dentistry",
+   "clinics",
+   "gp_practices",
+   "private_hospitals"
+  ],
+  "wave": 4
  },
  {
   "name": "Person-Centred Outcomes and Community Participation Review",
@@ -1009,7 +1165,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "services": [
    "supported_living",
    "ld_autism",
-   "extra_care"
+   "extra_care",
+   "shared_lives"
   ],
   "wave": 3
  },
@@ -1048,7 +1205,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "ld_autism",
    "mental_health",
    "care_homes",
-   "dementia"
+   "dementia",
+   "shared_lives"
   ],
   "wave": 1
  },
@@ -1066,7 +1224,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "supported_living",
    "ld_autism",
    "hospices",
-   "childrens"
+   "childrens",
+   "shared_lives"
   ],
   "wave": 0
  },
@@ -1098,7 +1257,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "care_homes",
    "nursing",
    "dementia",
-   "mental_health"
+   "mental_health",
+   "shared_lives"
   ],
   "wave": 2
  },
@@ -1123,7 +1283,9 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "clinics",
    "mental_health",
    "substance_misuse",
-   "hospices"
+   "hospices",
+   "gp_practices",
+   "shared_lives"
   ],
   "wave": 0
  },
@@ -1162,6 +1324,18 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "childrens"
   ],
   "wave": 1
+ },
+ {
+  "name": "Repeat Prescribing and Medication Review Audit",
+  "slug": "repeat-prescribing-and-medication-review-audit",
+  "description": "Sample patient records and check that each repeat template is authorised, that reviews are in date and that monitoring is up to date for medicines that need it. Record how changes reached the patient and pharmacy, and give every gap an owner and a date.",
+  "frequency": "quarterly",
+  "scope": "resident",
+  "services": [
+   "gp_practices",
+   "clinics"
+  ],
+  "wave": 4
  },
  {
   "name": "Resident Bedroom Audit",
@@ -1206,7 +1380,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "supported_living",
    "extra_care",
    "ld_autism",
-   "hospices"
+   "hospices",
+   "shared_lives"
   ],
   "wave": 0
  },
@@ -1246,7 +1421,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "scope": "none",
   "services": [
    "ld_autism",
-   "supported_living"
+   "supported_living",
+   "shared_lives"
   ],
   "wave": 3
  },
@@ -1285,9 +1461,55 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "clinics",
    "mental_health",
    "substance_misuse",
-   "hospices"
+   "hospices",
+   "gp_practices",
+   "shared_lives"
   ],
   "wave": 0
+ },
+ {
+  "name": "Self-Administration of Medicines Audit",
+  "slug": "self-administration-of-medicines-audit",
+  "description": "Check, for each person who looks after some or all of their own medicines, that the risk assessment, consent, storage, supplies, checks and reviews are in place. Record actions for any gap and repeat the check every quarter.",
+  "frequency": "quarterly",
+  "scope": "resident",
+  "services": [
+   "care_homes",
+   "nursing",
+   "supported_living",
+   "extra_care",
+   "ld_autism",
+   "mental_health",
+   "hospices",
+   "shared_lives"
+  ],
+  "wave": 4
+ },
+ {
+  "name": "Shared Lives Carer Household Review",
+  "slug": "shared-lives-carer-household-review",
+  "description": "Check one Shared Lives carer household in a single visit, from home safety and carer approval to training, support visits, money and respite. Every gap gets an action, so you hold a record to show an inspector.",
+  "frequency": "periodic",
+  "scope": "room",
+  "services": [
+   "shared_lives",
+   "supported_living",
+   "ld_autism"
+  ],
+  "wave": 4
+ },
+ {
+  "name": "Shared Lives Matching and Placement Review",
+  "slug": "shared-lives-matching-and-placement-review",
+  "description": "Check each Shared Lives arrangement from the first introduction to moving on. The audit covers matching, the written agreement, rights and housing terms, reviews and safeguarding, and it runs once per person.",
+  "frequency": "periodic",
+  "scope": "resident",
+  "services": [
+   "shared_lives",
+   "ld_autism",
+   "supported_living"
+  ],
+  "wave": 4
  },
  {
   "name": "Sharps, Inoculation Injury and Clinical Waste Audit",
@@ -1298,7 +1520,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "services": [
    "dentistry",
    "private_hospitals",
-   "clinics"
+   "clinics",
+   "gp_practices"
   ],
   "wave": 3
  },
@@ -1322,7 +1545,9 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "clinics",
    "mental_health",
    "substance_misuse",
-   "hospices"
+   "hospices",
+   "gp_practices",
+   "shared_lives"
   ],
   "wave": 0
  },
@@ -1341,7 +1566,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "supported_living",
    "extra_care",
    "ld_autism",
-   "hospices"
+   "hospices",
+   "shared_lives"
   ],
   "wave": 2
  },
@@ -1362,7 +1588,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "ld_autism",
    "childrens",
    "mental_health",
-   "hospices"
+   "hospices",
+   "shared_lives"
   ],
   "wave": 2
  },
@@ -1387,7 +1614,9 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "clinics",
    "mental_health",
    "substance_misuse",
-   "hospices"
+   "hospices",
+   "gp_practices",
+   "shared_lives"
   ],
   "wave": 0
  },
@@ -1404,7 +1633,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "live_in",
    "extra_care",
    "care_homes",
-   "dementia"
+   "dementia",
+   "shared_lives"
   ],
   "wave": 2
  },
@@ -1417,7 +1647,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "services": [
    "supported_living",
    "extra_care",
-   "ld_autism"
+   "ld_autism",
+   "shared_lives"
   ],
   "wave": 3
  },
@@ -1433,6 +1664,19 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "care_homes"
   ],
   "wave": 3
+ },
+ {
+  "name": "Test Results and Referral Tracking Audit",
+  "slug": "test-results-and-referral-tracking-audit",
+  "description": "Sample a set of records each month and check that every test request reaches a result, every result is reviewed and passed on to the person, and every referral is logged and chased. Urgent referrals and the weekly failsafe check are covered, and each gap becomes an action with an owner and a date.",
+  "frequency": "monthly",
+  "scope": "resident",
+  "services": [
+   "gp_practices",
+   "clinics",
+   "private_hospitals"
+  ],
+  "wave": 4
  },
  {
   "name": "Training Matrix Compliance Audit",
@@ -1455,9 +1699,27 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "clinics",
    "mental_health",
    "substance_misuse",
-   "hospices"
+   "hospices",
+   "gp_practices",
+   "shared_lives"
   ],
   "wave": 1
+ },
+ {
+  "name": "Vaccine and Medicines Fridge (Cold Chain) Audit",
+  "slug": "vaccine-and-medicines-fridge-cold-chain-audit",
+  "description": "Check each medicines or vaccine fridge for complete temperature records, a clear plan when readings go out of range, and stock that is in date and rotated. Run it monthly for every fridge, record any gap and give each action an owner and a date.",
+  "frequency": "monthly",
+  "scope": "room",
+  "services": [
+   "gp_practices",
+   "clinics",
+   "private_hospitals",
+   "dentistry",
+   "nursing",
+   "hospices"
+  ],
+  "wave": 4
  },
  {
   "name": "WHO Surgical Safety Checklist Observation Audit",
@@ -1467,7 +1729,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
   "scope": "resident",
   "services": [
    "private_hospitals",
-   "clinics"
+   "clinics",
+   "gp_practices"
   ],
   "wave": 3
  },
@@ -1488,7 +1751,9 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "childrens",
    "dentistry",
    "private_hospitals",
-   "clinics"
+   "clinics",
+   "gp_practices",
+   "shared_lives"
   ],
   "wave": 0
  },
@@ -1504,7 +1769,8 @@ export const AUDIT_CATALOGUE: CatalogueAudit[] = [
    "dementia",
    "extra_care",
    "supported_living",
-   "hospices"
+   "hospices",
+   "shared_lives"
   ],
   "wave": 0
  },

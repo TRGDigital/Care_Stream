@@ -203,7 +203,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should missing from care be reviewed?",
-   "answer": "We set this audit to monthly, one child at a time. The audit file cites no fixed interval, so your own missing child policy and local protocol decide how often you review and how soon a return interview happens."
+   "answer": "We set this audit to monthly, one child at a time. We cite no fixed interval, so your own missing child policy and local protocol decide how often you review and how soon a return interview happens."
   },
   {
    "question": "Who should run the audit?",

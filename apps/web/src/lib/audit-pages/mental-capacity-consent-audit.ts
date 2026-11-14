@@ -15,7 +15,8 @@ export const page: AuditPageData = {
   "supported_living",
   "extra_care",
   "ld_autism",
-  "mental_health"
+  "mental_health",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager or deputy manager",
  "evidence_note": "Shows that capacity, best interests, consent and authorisation records are decision-specific, current and reviewed for each person.",
@@ -217,7 +218,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should this audit be done?",
-   "answer": "We set this audit to quarterly, one person at a time. The audit file does not cite a regulation that sets a number of days, so your own policy should say how often you audit and how many people you sample."
+   "answer": "We set this audit to quarterly, one person at a time. No regulation we cite sets a number of days, so your own policy should say how often you audit and how many people you sample."
   },
   {
    "question": "Who should run it?",

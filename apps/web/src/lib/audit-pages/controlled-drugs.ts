@@ -221,7 +221,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a controlled drugs audit be done?",
-   "answer": "We set this audit to monthly. A weekly stock check is a common standard but the audit file did not find it as a legal requirement, so your own controlled drugs procedure decides how often you audit and count."
+   "answer": "We set this audit to monthly. We found no legal interval for audits or stock counts in the Misuse of Drugs Regulations 2001, so your own controlled drugs procedure decides how often you audit and count."
   },
   {
    "question": "Who should run the audit?",
@@ -233,11 +233,11 @@ export const page: AuditPageData = {
   },
   {
    "question": "Do all services need a register?",
-   "answer": "Not always. The audit file notes that a register duty depends on how the service is set up, so you can answer N/A where no register is required."
+   "answer": "Not always. The register duty depends on how the service is set up, so you can answer N/A where no register is required."
   },
   {
    "question": "Which regulations does it support?",
-   "answer": "The audit file lists Regulation 12(2)(g) on safe medicines management, the Misuse of Drugs Regulations 2001 on registers and destruction, the Safe Custody Regulations 1973 and the Controlled Drugs Regulations 2013."
+   "answer": "It helps evidence Regulation 12(2)(g) on medicines, the Misuse of Drugs Regulations 2001 (registers, destruction), the Safe Custody Regulations 1973 and the Controlled Drugs Regulations 2013."
   },
   {
    "question": "Is the controlled drugs audit really free?",

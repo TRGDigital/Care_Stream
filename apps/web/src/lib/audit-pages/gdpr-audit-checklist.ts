@@ -22,7 +22,9 @@ export const page: AuditPageData = {
   "clinics",
   "mental_health",
   "substance_misuse",
-  "hospices"
+  "hospices",
+  "gp_practices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager or data protection lead",
  "evidence_note": "It evidences that the service reviewed how it handles personal information, what gaps it found and what actions followed.",
@@ -156,7 +158,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a GDPR audit be done?",
-   "answer": "We set this audit to periodic, meaning you choose the gap. The audit file cites no regulation that sets a number of days, so your own data protection policy decides how often you repeat it."
+   "answer": "We set this audit to periodic, meaning you choose the gap. No regulation we cite sets a number of days, so your own data protection policy decides how often you repeat it."
   },
   {
    "question": "Who should run a GDPR audit checklist?",

@@ -22,7 +22,9 @@ export const page: AuditPageData = {
   "clinics",
   "mental_health",
   "substance_misuse",
-  "hospices"
+  "hospices",
+  "gp_practices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager",
  "evidence_note": "Evidence is the complaints log, investigation files, response letters, team meeting minutes and the displayed procedure.",
@@ -213,7 +215,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a complaints audit be done?",
-   "answer": "We set this audit to quarterly. The audit file does not cite a fixed interval, so your own complaints policy should say how often you review the log and who signs it off."
+   "answer": "We set this audit to quarterly. No fixed interval is set by the regulations we cite, so your own complaints policy should say how often you review the log and who signs it off."
   },
   {
    "question": "Who should run a complaints audit?",

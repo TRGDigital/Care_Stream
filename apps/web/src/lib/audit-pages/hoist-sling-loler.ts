@@ -230,7 +230,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "What is a LOLER check or LOLER examination?",
-   "answer": "A LOLER examination is a thorough examination of lifting equipment by a competent person. For equipment that lifts people, LOLER sets six months, or a written examination scheme. This audit checks those reports are in date."
+   "answer": "A LOLER examination is a thorough examination of lifting equipment by a competent person. For equipment that lifts people, LOLER sets six months, or an examination scheme. This audit checks those reports are in date."
   },
   {
    "question": "How often should hoists and slings be checked?",

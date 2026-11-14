@@ -10,7 +10,8 @@ export const page: AuditPageData = {
  "services": [
   "dentistry",
   "private_hospitals",
-  "clinics"
+  "clinics",
+  "gp_practices"
  ],
  "who_runs_it": "Practice manager, clinic manager or equipment lead",
  "evidence_note": "It evidences the equipment register, service and calibration records, validation logs, PAT labels, fault log and staff training records.",
@@ -225,7 +226,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should the audit be run?",
-   "answer": "We set this audit to quarterly. The audit file does not cite a rule that fixes how often you must audit, so your own policy decides. Service, calibration and PAT intervals are set by your risk assessment and the manufacturer, not by this audit."
+   "answer": "We set this audit to quarterly. No regulation we cite sets how often you must audit, so your own policy decides. Service, calibration and PAT intervals are set by your risk assessment and the manufacturer, not by this audit."
   },
   {
    "question": "Who should run it?",

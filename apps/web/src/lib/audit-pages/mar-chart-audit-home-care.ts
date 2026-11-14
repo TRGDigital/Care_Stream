@@ -11,7 +11,8 @@ export const page: AuditPageData = {
   "home_care",
   "live_in",
   "supported_living",
-  "extra_care"
+  "extra_care",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager or care coordinator",
  "evidence_note": "It evidences that medicines support is recorded accurately and reviewed, under Regulation 12(2)(g) and Regulation 17.",

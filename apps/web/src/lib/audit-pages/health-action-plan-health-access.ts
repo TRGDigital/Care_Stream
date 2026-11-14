@@ -10,7 +10,8 @@ export const page: AuditPageData = {
  "services": [
   "supported_living",
   "ld_autism",
-  "extra_care"
+  "extra_care",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager or team leader",
  "evidence_note": "Evidence is the health record, GP letters, the health action plan, the hospital passport and appointment records.",
@@ -170,7 +171,7 @@ export const page: AuditPageData = {
   "Free to run on a free CareStream account, with no card needed"
  ],
  "what_it_is_title": "What the health action plan audit checks",
- "what_it_is": "You audit one person at a time, using their health record, GP letters and appointment records. The questions follow a person's health journey, from the GP register to the plan and the passport. A health action plan should be written with the person and name who does what by when. This is a check on records that already exist. It is not a blank health action plan template, so write the plan itself in your own format.",
+ "what_it_is": "You audit one person at a time, using their health record, GP letters and appointment records. The questions follow a person's health journey, from the GP register to the plan and the passport. A health action plan should be written with the person and record the agreed actions and next steps. This is a check on records that already exist. It is not a blank health action plan template, so write the plan itself in your own format.",
  "steps": [
   {
    "name": "Create a free account",
@@ -196,7 +197,7 @@ export const page: AuditPageData = {
  "faqs": [
   {
    "question": "What is a health action plan?",
-   "answer": "It is a written plan about a person's health. It should be made with them, in a form they understand, and name each action, who is responsible and a date. This audit checks that the plan exists and is kept up to date."
+   "answer": "It is a written plan about a person's health. It should record the agreed actions and next steps, made with them in a form they understand. This audit checks that the plan exists and is kept up to date."
   },
   {
    "question": "What does a health action plan audit check?",
@@ -204,7 +205,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should it be done?",
-   "answer": "We set this audit to quarterly, one person at a time. The regulations listed in the audit file do not set a number of days, so your own policy decides how often you check each person."
+   "answer": "We set this audit to quarterly, one person at a time. The regulations we cite do not set a number of days, so your own policy decides how often you check each person."
   },
   {
    "question": "Who should carry out the audit?",

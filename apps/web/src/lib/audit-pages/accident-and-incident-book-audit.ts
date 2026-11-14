@@ -16,7 +16,8 @@ export const page: AuditPageData = {
   "supported_living",
   "extra_care",
   "ld_autism",
-  "hospices"
+  "hospices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager",
  "evidence_note": "The completed audit evidences monthly review of the accident and incident book, including record quality, reporting and follow-up actions.",
@@ -150,7 +151,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should an accident book audit be done?",
-   "answer": "We set this audit to monthly. Your own health and safety or governance policy decides the frequency, and the audit file cites no regulation that sets one."
+   "answer": "We set this audit to monthly. Your own health and safety or governance policy decides the frequency, and No regulation we cite sets one."
   },
   {
    "question": "Who should run the audit?",

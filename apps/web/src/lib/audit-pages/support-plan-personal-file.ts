@@ -14,7 +14,8 @@ export const page: AuditPageData = {
   "live_in",
   "extra_care",
   "care_homes",
-  "dementia"
+  "dementia",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager, deputy manager or senior with a key worker role",
  "evidence_note": "Answers rest on the person's file and records, plus a short conversation with the person and their key worker.",

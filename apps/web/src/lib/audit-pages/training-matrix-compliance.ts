@@ -22,7 +22,9 @@ export const page: AuditPageData = {
   "clinics",
   "mental_health",
   "substance_misuse",
-  "hospices"
+  "hospices",
+  "gp_practices",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager or training lead",
  "evidence_note": "Evidences that staff training is tracked by role, kept in date and backed by certificates, as expected under staffing requirements.",
@@ -221,7 +223,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a training matrix audit be done?",
-   "answer": "We set this audit to monthly. The audit file does not cite a regulation that sets an interval, so your own training policy should state how often you check and who reports the results."
+   "answer": "We set this audit to monthly. No regulation we cite sets an interval, so your own training policy should state how often you check and who reports the results."
   },
   {
    "question": "Who should carry out the audit?",

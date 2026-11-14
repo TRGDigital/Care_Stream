@@ -209,7 +209,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a detox audit be done?",
-   "answer": "We set this audit to monthly, one person at a time. The audit file cites no interval, so your own policy decides how often you audit and how many records you sample."
+   "answer": "We set this audit to monthly, one person at a time. The regulations we cite set no interval, so your own policy decides how often you audit and how many records you sample."
   },
   {
    "question": "Who should run the detox audit?",

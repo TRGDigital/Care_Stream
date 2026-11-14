@@ -137,7 +137,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a pressure ulcer audit be done?",
-   "answer": "We set this audit to monthly, one person at a time. The audit file does not cite a regulation that sets a number of days, so your own policy decides how often you audit and how many people you sample."
+   "answer": "We set this audit to monthly, one person at a time. No regulation we cite sets a number of days, so your own policy decides how often you audit and how many people you sample."
   },
   {
    "question": "Who should carry out the audit?",

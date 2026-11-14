@@ -11126,7 +11126,7 @@ export const AUDIT_LIBRARY_WAVES: LibraryTemplate[] = [
  },
  {
   "name": "Antimicrobial Prescribing Audit",
-  "description": "A sampled check of antimicrobial prescribing records covering reason, allergy check, dose, duration and follow up, repeated twice a year.",
+  "description": "A sampled check of antimicrobial prescribing records covering reason, allergy check, dose, duration and follow up, repeated after changes.",
   "frequency": "periodic",
   "subject_scope": "resident",
   "sections": [

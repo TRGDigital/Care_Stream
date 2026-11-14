@@ -10,7 +10,8 @@ export const page: AuditPageData = {
  "services": [
   "supported_living",
   "extra_care",
-  "ld_autism"
+  "ld_autism",
+  "shared_lives"
  ],
  "who_runs_it": "Registered manager or service manager",
  "evidence_note": "It evidences the certificates, repair log, tenancy agreement and the walk round itself.",
@@ -207,7 +208,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should a tenancy audit be done?",
-   "answer": "We set this audit to quarterly, one property at a time. The audit file cites no rule that sets a number of days, so your own policy decides how often to audit and which properties come first."
+   "answer": "We set this audit to quarterly, one property at a time. No regulation we cite sets a number of days, so your own policy decides how often to audit and which properties come first."
   },
   {
    "question": "Who should carry out the audit?",

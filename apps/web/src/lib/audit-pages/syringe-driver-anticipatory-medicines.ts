@@ -203,7 +203,7 @@ export const page: AuditPageData = {
   },
   {
    "question": "How often should this audit be done?",
-   "answer": "We set this audit to monthly, for each person it applies to. The audit file cites regulations that do not set a number of days, so your own medicines policy should say how often you audit and how many people you sample."
+   "answer": "We set this audit to monthly, for each person it applies to. The regulations it cites set no number of days, so your own medicines policy should say how often you audit and how many people you sample."
   },
   {
    "question": "Who should run the audit?",

@@ -3723,6 +3723,38 @@ adminRouter.post('/indexing/resubmit', async (req: Request, res: Response) => {
   ok(res, { submitted: urls.length })
 })
 
+// GET /admin/audit-pages/performance  how the /care-audits/<slug> product pages are doing: Search Console
+// impressions, clicks and average position, sessions, and when each was pushed through RalfyIndex.
+// ?days=28 (default). Pages with no data yet are listed with zeros, so "not shown yet" is visible.
+adminRouter.get('/audit-pages/performance', async (req: Request, res: Response) => {
+  const days = Math.min(120, Math.max(1, Number(req.query.days) || 28))
+  const since = new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10)
+  const rows: any[] = await (prisma as any).$queryRawUnsafe(
+    `SELECT slug, SUM(impressions)::int AS impressions, SUM(clicks)::int AS clicks, SUM(sessions)::int AS sessions,
+            CASE WHEN SUM(impressions) > 0 THEN ROUND((SUM(position * impressions) / SUM(impressions))::numeric, 1) END AS position,
+            MAX(date)::text AS last_data
+       FROM page_metrics WHERE kind = 'audit' AND date >= $1::date GROUP BY slug ORDER BY impressions DESC`, since)
+  const subs: any[] = await (prisma as any).ralfyIndexSubmission.findMany({
+    where: { status: 'submitted', url: { startsWith: 'https://www.carestreamai.com/care-audits/' } },
+    select: { url: true, created_at: true }, orderBy: { created_at: 'asc' },
+  })
+  const submitted = new Map<string, Date>()
+  for (const s of subs) { const slug = String(s.url).split('/').pop() as string; if (!submitted.has(slug)) submitted.set(slug, s.created_at) }
+  const seen = new Set(rows.map(r => r.slug))
+  const pages = [
+    ...rows.map(r => ({ ...r, position: r.position === null ? null : Number(r.position), submitted_at: submitted.get(r.slug) ?? null })),
+    ...[...submitted.keys()].filter(s => !seen.has(s)).map(slug => ({ slug, impressions: 0, clicks: 0, sessions: 0, position: null, last_data: null, submitted_at: submitted.get(slug) })),
+  ]
+  ok(res, {
+    days, pages,
+    totals: {
+      pages: pages.length, with_impressions: pages.filter(p => p.impressions > 0).length,
+      impressions: pages.reduce((n, p) => n + p.impressions, 0), clicks: pages.reduce((n, p) => n + p.clicks, 0),
+      sessions: pages.reduce((n, p) => n + p.sessions, 0), submitted_to_ralfy: submitted.size,
+    },
+  })
+})
+
 adminRouter.get('/update-queue', async (_req: Request, res: Response) => {
   ok(res, { pages: await getUpdateQueue() })
 })

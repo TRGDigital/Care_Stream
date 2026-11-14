@@ -51,13 +51,13 @@ async function post(url: string, body: unknown, timeoutMs = 25_000): Promise<any
   } finally { clearTimeout(timer) }
 }
 
-/** Search Console rows for blog and collection pages. dimensions: ['page','date'] or ['page','query']. */
+/** Search Console rows for blog, collection and audit pages. dimensions: ['page','date'] or ['page','query']. */
 export async function gscQuery(startDate: string, endDate: string, dimensions: string[]): Promise<Array<{ keys: string[]; clicks: number; impressions: number; position: number }>> {
   const out: any[] = []
   for (let startRow = 0; startRow < 100_000; startRow += 25_000) {
     const j = await post(`https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(GSC_SITE)}/searchAnalytics/query`, {
       startDate, endDate, dimensions, rowLimit: 25_000, startRow, dataState: 'final',
-      dimensionFilterGroups: [{ filters: [{ dimension: 'page', operator: 'includingRegex', expression: '/(blog|collection)/[^/?#]+/?$' }] }],
+      dimensionFilterGroups: [{ filters: [{ dimension: 'page', operator: 'includingRegex', expression: '/(blog|collection|care-audits)/[^/?#]+/?$' }] }],
     })
     const rows = j.rows ?? []
     out.push(...rows)
@@ -78,7 +78,7 @@ export async function ga4Pages(startDate: string, endDate: string): Promise<Arra
       dateRanges: [{ startDate: new Date(from).toISOString().slice(0, 10), endDate: new Date(to).toISOString().slice(0, 10) }],
       dimensions: [{ name: 'pagePath' }, { name: 'date' }],
       metrics: [{ name: 'sessions' }, { name: 'userEngagementDuration' }],
-      dimensionFilter: { filter: { fieldName: 'pagePath', stringFilter: { matchType: 'PARTIAL_REGEXP', value: '^/(blog|collection)/[^/?#]+/?$' } } },
+      dimensionFilter: { filter: { fieldName: 'pagePath', stringFilter: { matchType: 'PARTIAL_REGEXP', value: '^/(blog|collection|care-audits)/[^/?#]+/?$' } } },
       limit: 20000,
     }
     let j: any = null

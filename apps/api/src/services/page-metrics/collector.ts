@@ -7,10 +7,10 @@ import { gscQuery, ga4Pages, googleConfigured } from './google'
 const iso = (d: Date) => d.toISOString().slice(0, 10)
 const daysAgo = (n: number) => iso(new Date(Date.now() - n * 86_400_000))
 
-/** /blog/slug or /collection/slug from a full URL or path; null for anything else. */
-export function pageKey(u: string): { path: string; kind: 'blog' | 'collection'; slug: string } | null {
-  const m = u.replace(/^https?:\/\/[^/]+/i, '').split(/[?#]/)[0].replace(/\/+$/, '').match(/^\/(blog|collection)\/([^/]+)$/)
-  return m ? { path: `/${m[1]}/${m[2]}`, kind: m[1] as 'blog' | 'collection', slug: m[2] } : null
+/** /blog/slug, /collection/slug or /care-audits/slug (kind 'audit') from a full URL or path; null for anything else. */
+export function pageKey(u: string): { path: string; kind: 'blog' | 'collection' | 'audit'; slug: string } | null {
+  const m = u.replace(/^https?:\/\/[^/]+/i, '').split(/[?#]/)[0].replace(/\/+$/, '').match(/^\/(blog|collection|care-audits)\/([^/]+)$/)
+  return m ? { path: `/${m[1]}/${m[2]}`, kind: m[1] === 'care-audits' ? 'audit' : (m[1] as 'blog' | 'collection'), slug: m[2] } : null
 }
 
 type Row = { url: string; date: string; kind: string; slug: string; impressions: number; clicks: number; position: number | null; sessions: number; engaged_seconds: number }

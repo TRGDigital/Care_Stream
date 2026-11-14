@@ -96,7 +96,7 @@ export default function AuditsPage() {
   const [importing,   setImporting]   = useState(false)
   const [importError, setImportError] = useState('')
   const [imported,    setImported]    = useState<{ draft: any; notes: string | null } | null>(null)
-  const [availOpen,   setAvailOpen]   = useState(false)
+  const [availOpen,   setAvailOpen]   = useState(true)
   // Starred (favourite) audits for this person, kept in this browser. Starred audits sort to the top.
   const [favs, setFavs] = useState<string[]>([])
   useEffect(() => {
@@ -226,6 +226,51 @@ export default function AuditsPage() {
 
   const inProgress = runs.filter(r => r.status === 'in_progress')
   const completed  = runs.filter(r => r.status === 'completed')
+
+  const renderRow = (t: any) => {
+    const sc = t.subject_scope ?? (t.room_based ? 'room' : 'none')
+                      return (
+                        <tr key={t.id}>
+                          <td className={clsx('px-4 py-2.5 font-medium', t.hidden ? 'text-neutral-mid' : 'text-neutral-dark')}>
+                            <button type="button" onClick={() => toggleFav(t.id)} aria-pressed={favs.includes(t.id)}
+                              aria-label={favs.includes(t.id) ? `Remove ${t.name} from favourites` : `Add ${t.name} to favourites`}
+                              title={favs.includes(t.id) ? 'Favourite: shown at the top. Click to remove.' : 'Star to move this audit to the top'}
+                              className="mr-2 inline-flex align-middle text-gray-300 hover:text-amber-500">
+                              <Star size={15} className={favs.includes(t.id) ? 'fill-amber-400 text-amber-400' : ''} />
+                            </button>
+                            {t.name}
+                            {t.tenant_id && <span className="ml-2 rounded bg-teal/10 px-1.5 py-0.5 text-[10px] font-semibold text-teal">Your audit</span>}
+                            {t.hidden && <span className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-neutral-mid">Hidden</span>}
+                            <AuditServiceTags name={t.name} />
+                          </td>
+                          <td className="px-4 py-2.5 text-xs text-neutral-mid">{FREQ_LABEL[t.frequency] ?? t.frequency}</td>
+                          <td className="px-4 py-2.5 text-right">
+                            {sc !== 'none' && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-neutral-mid">Per {SCOPE_WORD[sc] ?? sc}</span>}
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-2.5 text-right">
+                            {!t.tenant_id && (
+                              <span className="inline-flex gap-1.5">
+                                {!t.hidden && (
+                                  <button onClick={() => { setSelTemplate(t.id); setShowNew(true) }}
+                                    title="Run this audit now. Every audit is free to run on your plan."
+                                    className="inline-flex items-center gap-1 rounded-md bg-teal px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-teal-dark">
+                                    <Play size={11} /> Run this audit
+                                  </button>
+                                )}
+                                <button onClick={() => canCustomAudits ? (setCopying(t), setCopyName(`${t.name} (our version)`), setCopyHide(true), setCopyError('')) : router.push('/billing')}
+                                  title={canCustomAudits ? 'Copy this audit so you can edit it' : 'Copying and editing audits is an Enterprise feature'}
+                                  className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
+                                  <Copy size={12} /> Copy and edit{!canCustomAudits && <Lock size={11} className="text-amber-600" aria-label="Enterprise feature" />}
+                                </button>
+                                <button onClick={() => setHidden(t, !t.hidden)} className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
+                                  {t.hidden ? <><Eye size={12} /> Show</> : <><EyeOff size={12} /> Hide</>}
+                                </button>
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      )
+  }
 
   if (loading) return <p className="text-sm text-neutral-mid">Loading audits…</p>
 
@@ -417,6 +462,7 @@ export default function AuditsPage() {
                   >
                     {byFav(templates.filter(t => !t.hidden)).map(t => <option key={t.id} value={t.id}>{favs.includes(t.id) ? '★ ' : ''}{t.name}</option>)}
                   </select>
+                  {selTpl && <AuditServiceTags name={selTpl.name} max={5} />}
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-neutral-mid">Audit month</label>
@@ -562,6 +608,22 @@ export default function AuditsPage() {
         </div>
       )}
 
+      {/* ── Favourite audits (starred) ───────────────────────────────────────── */}
+      {templates.some(t => favs.includes(t.id)) && (
+        <div className="mb-6 overflow-hidden rounded-lg border border-amber-100 bg-white">
+          <div className="flex items-center gap-2 border-b border-amber-100 bg-amber-50/50 px-4 py-3">
+            <Star size={15} className="fill-amber-400 text-amber-400" />
+            <h2 className="text-sm font-semibold text-neutral-dark">Favourite audits ({templates.filter(t => favs.includes(t.id)).length})</h2>
+            <span className="ml-auto text-xs text-neutral-mid">Untick the star to move an audit back to Available audits.</span>
+          </div>
+          <table className="w-full text-left text-sm">
+            <tbody className="divide-y divide-gray-50">
+              {templates.filter(t => favs.includes(t.id)).map(t => renderRow(t))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       {/* ── Completed repository ─────────────────────────────────────────────── */}
       <div>
         <h2 className="mb-3 text-sm font-semibold text-neutral-dark">
@@ -616,58 +678,15 @@ export default function AuditsPage() {
               onClick={() => setAvailOpen(v => !v)}
               className="flex w-full items-center gap-2 px-4 py-3 text-left hover:bg-neutral-light/40"
             >
-              <h2 className="text-sm font-semibold text-neutral-dark">Available audits ({templates.filter(t => !t.hidden).length}{templates.some(t => t.hidden) ? `, ${templates.filter(t => t.hidden).length} hidden` : ''})</h2>
+              <h2 className="text-sm font-semibold text-neutral-dark">Available audits ({templates.filter(t => !t.hidden && !favs.includes(t.id)).length}{templates.some(t => t.hidden && !favs.includes(t.id)) ? `, ${templates.filter(t => t.hidden && !favs.includes(t.id)).length} hidden` : ''})</h2>
               <ChevronDown size={16} className={clsx('ml-auto shrink-0 text-neutral-mid transition-transform', !availOpen && '-rotate-90')} />
             </button>
             {availOpen && (
               <div className="border-t border-gray-100">
-                <p className="px-4 pt-3 text-xs text-neutral-mid">Every audit here is free to run on your plan. Scoped audits are completed one resident, staff member or room at a time. Copying and editing audits, and building your own, is an Enterprise feature. To change a built-in audit, copy it and edit your copy; hide the ones you don&rsquo;t use.</p>
+                <p className="px-4 pt-3 text-xs text-neutral-mid">Every audit here is free to run on your plan. Tick the star beside an audit to move it up into Favourite audits. Scoped audits are completed one resident, staff member or room at a time. Copying and editing audits, and building your own, is an Enterprise feature. To change a built-in audit, copy it and edit your copy; hide the ones you don&rsquo;t use.</p>
                 <table className="mt-2 w-full text-left text-sm">
                   <tbody className="divide-y divide-gray-50">
-                    {byFav(templates).map(t => {
-                      const sc = t.subject_scope ?? (t.room_based ? 'room' : 'none')
-                      return (
-                        <tr key={t.id}>
-                          <td className={clsx('px-4 py-2.5 font-medium', t.hidden ? 'text-neutral-mid' : 'text-neutral-dark')}>
-                            <button type="button" onClick={() => toggleFav(t.id)} aria-pressed={favs.includes(t.id)}
-                              aria-label={favs.includes(t.id) ? `Remove ${t.name} from favourites` : `Add ${t.name} to favourites`}
-                              title={favs.includes(t.id) ? 'Favourite: shown at the top. Click to remove.' : 'Star to move this audit to the top'}
-                              className="mr-2 inline-flex align-middle text-gray-300 hover:text-amber-500">
-                              <Star size={15} className={favs.includes(t.id) ? 'fill-amber-400 text-amber-400' : ''} />
-                            </button>
-                            {t.name}
-                            {t.tenant_id && <span className="ml-2 rounded bg-teal/10 px-1.5 py-0.5 text-[10px] font-semibold text-teal">Your audit</span>}
-                            {t.hidden && <span className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-neutral-mid">Hidden</span>}
-                            <AuditServiceTags name={t.name} />
-                          </td>
-                          <td className="px-4 py-2.5 text-xs text-neutral-mid">{FREQ_LABEL[t.frequency] ?? t.frequency}</td>
-                          <td className="px-4 py-2.5 text-right">
-                            {sc !== 'none' && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-neutral-mid">Per {SCOPE_WORD[sc] ?? sc}</span>}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-2.5 text-right">
-                            {!t.tenant_id && (
-                              <span className="inline-flex gap-1.5">
-                                {!t.hidden && (
-                                  <button onClick={() => { setSelTemplate(t.id); setShowNew(true) }}
-                                    title="Run this audit now. Every audit is free to run on your plan."
-                                    className="inline-flex items-center gap-1 rounded-md bg-teal px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-teal-dark">
-                                    <Play size={11} /> Run this audit
-                                  </button>
-                                )}
-                                <button onClick={() => canCustomAudits ? (setCopying(t), setCopyName(`${t.name} (our version)`), setCopyHide(true), setCopyError('')) : router.push('/billing')}
-                                  title={canCustomAudits ? 'Copy this audit so you can edit it' : 'Copying and editing audits is an Enterprise feature'}
-                                  className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
-                                  <Copy size={12} /> Copy and edit{!canCustomAudits && <Lock size={11} className="text-amber-600" aria-label="Enterprise feature" />}
-                                </button>
-                                <button onClick={() => setHidden(t, !t.hidden)} className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
-                                  {t.hidden ? <><Eye size={12} /> Show</> : <><EyeOff size={12} /> Hide</>}
-                                </button>
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      )
-                    })}
+                    {byFav(templates.filter(t => !favs.includes(t.id))).map(t => renderRow(t))}
                   </tbody>
                 </table>
               </div>

@@ -1302,9 +1302,17 @@ async function seedPlatformTemplates() {
     // Another instance may have created it while this run was busy.
     const already = await (prisma as any).auditTemplate.findFirst({ where: { is_seed: true, tenant_id: null, name: tmpl.name }, select: { id: true } })
     if (already) continue
-    const row = await (prisma as any).auditTemplate.create({
-      data: { name: tmpl.name, description: tmpl.description, is_seed: true, tenant_id: null, frequency: tmpl.frequency, subject_scope: tmpl.subject_scope ?? 'none', version: 0 },
-    })
+    // audit_templates_seed_name_uniq (a unique index on name for seed rows) makes this atomic: when
+    // two requests race, the loser gets a unique violation and moves on instead of duplicating.
+    let row: any
+    try {
+      row = await (prisma as any).auditTemplate.create({
+        data: { name: tmpl.name, description: tmpl.description, is_seed: true, tenant_id: null, frequency: tmpl.frequency, subject_scope: tmpl.subject_scope ?? 'none', version: 0 },
+      })
+    } catch (e: any) {
+      if (e?.code === 'P2002') continue
+      throw e
+    }
     const parsed = parseEditorPayload({
       name: tmpl.name, frequency: tmpl.frequency, subject_scope: tmpl.subject_scope ?? 'none',
       sections: tmpl.sections.map((sec, si) => ({

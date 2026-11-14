@@ -1,177 +1,88 @@
-import Link from 'next/link'
-import { CheckCircle2, ClipboardCheck, ChevronDown } from 'lucide-react'
-import { PageCta, SectionLabel } from '@/components/marketing/ui'
 import { JsonLd } from '@/components/json-ld'
-import { BlogFaqs } from '@/components/marketing/blog-faqs'
-import { EditableContentBlock } from '@/components/marketing/editable-content-block'
+import { ServicePageV2, type ServiceBlock, type ServiceItem, type ServicePage, type ServicePart } from '@/components/marketing/service-page-v2'
 import { faqPageSchema, howToSchema, breadcrumbSchema } from '@/lib/schema'
+import { getSitePageContent } from '@/lib/site-page-content'
 import { SERVICE_LABEL } from '@/lib/audit-catalogue'
 import type { AuditPageData } from '@/lib/audit-pages/types'
 
+// A product page for one audit, built on the SAME V2 service template as /care-audits, so it
+// carries the current theme (lavender hero, black pill buttons, tinted bands, theme cards, steps
+// and question accordions). The page is assembled as a ServicePage record from the audit's data.
+
 const FREQ: Record<string, string> = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', quarterly: 'Quarterly', periodic: 'Periodic' }
 const SCOPE: Record<string, string> = { resident: 'One person at a time', staff: 'One staff member at a time', room: 'One room at a time', none: 'Whole service' }
+const SCOPE_SHORT: Record<string, string> = { resident: 'Per person', staff: 'Per staff', room: 'Per room', none: 'Whole site' }
+const HERO_IMAGE = '/images/our-services/care-audits/1.webp'
 
-export function AuditProductPage({ page: p }: { page: AuditPageData }) {
+const item = (title: string, paras: string[] = [], more: Partial<ServiceItem> = {}): ServiceItem =>
+  ({ marker: '', tag: '', tone: '', title, paras, bullets: [], ...more })
+const part = (kind: string, more: Partial<ServicePart>): ServicePart =>
+  ({ kind, where: '', items: [], bullets: [], ...more })
+const block = (label: string, heading: string, parts: ServicePart[], more: Partial<ServiceBlock> = {}): ServiceBlock =>
+  ({ kind: 'cards', tint: false, label, heading, intro: [], image: null, parts, ...more })
+
+export async function AuditProductPage({ page: p }: { page: AuditPageData }) {
   const path = `/care-audits/${p.slug}`
   const total = p.sections.reduce((n, s) => n + s.questions.length, 0)
   const register = `/register?tier=free&source=audit-${p.slug}`
+  const short = p.name.replace(/\s*\(.*\)$/, '')
+  const { faqs: consoleFaqs } = await getSitePageContent(path)
+  // Questions written for this audit first, then any added in the console (Blog, Main site pages).
+  const faqs = [...p.faqs, ...consoleFaqs.filter(f => !p.faqs.some(x => x.question === f.question))]
+
+  const record: ServicePage = {
+    slug: `care-audits-${p.slug}`,
+    title: p.h1_html ?? p.h1,
+    hero_image_url: HERO_IMAGE,
+    content: {
+      eyebrow: `Free audit · ${FREQ[p.frequency] ?? p.frequency} · ${SCOPE[p.scope] ?? p.scope}`,
+      lede: [p.intro],
+      actions: [
+        { label: 'Run this audit free', href: register, style: 'solid', play: false },
+        { label: `See all ${total} checks`, href: '#questions', style: 'ghost', play: false },
+      ],
+      blocks: [
+        block('At a glance', `${short}, in short.`, [part('stats', { items: [
+          item('How often', [`Run it ${(FREQ[p.frequency] ?? p.frequency).toLowerCase()}, ${(SCOPE[p.scope] ?? '').toLowerCase()}.`], { marker: FREQ[p.frequency] ?? p.frequency }),
+          item('The checks', [`${p.sections.length} sections, each scored, with a space for findings and actions.`], { marker: String(total) }),
+          item('Who runs it', [`${p.who_runs_it}. ${p.evidence_note}`], { marker: SCOPE_SHORT[p.scope] ?? 'Audit' }),
+          item('Cost', ['Free to run on every plan. No card needed.'], { marker: 'Free' }),
+        ] })], { kind: 'stats', id: 'at-a-glance' }),
+
+        block('What it covers', p.what_it_is_title, [part('cards', { items: p.sections.map(s =>
+          item(s.title, [s.questions.find(q => !/^(number|how many|date|name)/i.test(q)) ?? s.questions[0]], { tag: `${s.questions.length} checks` })) })],
+          { id: 'what-it-covers', tint: true, intro: [p.what_it_is] }),
+
+        block('How to use it', `How to run the ${short}, step by step.`, [part('steps', { items: p.steps.map((s, i) =>
+          item(s.name, [s.text], { marker: String(i + 1).padStart(2, '0') })) })], { kind: 'steps', id: 'how-to-use' }),
+
+        block('The full question set', `All ${total} checks, section by section.`, [part('faq', { items: p.sections.map(s =>
+          item(`${s.title} (${s.questions.length})`, s.questions.map((q, i) => `${i + 1}. ${q}`))) })],
+          { kind: 'faq', id: 'questions', tint: true, narrow: true, intro: ['You can read every check before you sign up. Inside CareStream each one is scored, can carry a finding and can raise an action.'] }),
+
+        block('Who it is for', 'Care services this audit suits.', [
+          part('cards', { items: [
+            item('Care services', [p.evidence_note], { bullets: p.services.map(s => SERVICE_LABEL[s] ?? s) }),
+            item('Regulations it supports', ['This audit checks that things are in place, recorded and reviewed. It does not give clinical or legal advice.'], { bullets: p.regulations.map(r => `${r.ref}: ${r.title}`) }),
+          ] }),
+          part('links', { sub: 'Read the regulation', items: p.regulations.map(r => item(r.ref, [], { href: r.url })) }),
+        ], { id: 'who-for' }),
+
+        { kind: 'end', tint: false, label: '', heading: `Run the ${short} <em>free.</em>`, intro: ['Create a free account and run it today. No card needed.', `More free audits: ${p.related.join(', ')}.`], image: null,
+          actions: [
+            { label: 'Run this audit free', href: register, style: 'solid', play: false },
+            { label: 'Browse all free audits', href: '/care-audits#audit-library', style: 'ghost', play: false },
+          ] },
+      ],
+    },
+  }
+
   return (
     <>
       <JsonLd data={breadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'Care audits', path: '/care-audits' }, { name: p.name, path }])} />
       <JsonLd data={howToSchema({ name: `How to run the ${p.name}`, description: p.description, path, steps: p.steps })} />
-      <JsonLd data={faqPageSchema(p.faqs)} />
-
-      {/* Hero */}
-      <section className="bg-hero-gradient pb-20 pt-28 text-white">
-        <div className="mx-auto max-w-6xl px-6">
-          <nav aria-label="Breadcrumb" className="text-sm text-white/70">
-            <Link href="/care-audits" className="hover:text-white hover:underline">Care audits</Link>
-            <span className="mx-2" aria-hidden="true">/</span>
-            <span>{p.name}</span>
-          </nav>
-          <div className="mt-5 flex flex-wrap items-center gap-2 text-[11px] font-semibold">
-            <span className="rounded-full bg-white/15 px-2.5 py-1">{FREQ[p.frequency] ?? p.frequency}</span>
-            <span className="rounded-full bg-white/15 px-2.5 py-1">{SCOPE[p.scope] ?? p.scope}</span>
-            <span className="rounded-full bg-green-400/25 px-2.5 py-1 text-green-100">Free to run</span>
-          </div>
-          <h1 className="mt-4 max-w-3xl text-4xl font-extrabold tracking-tight md:text-5xl">{p.h1}</h1>
-          <p className="mt-5 max-w-3xl text-lg leading-relaxed text-white/85">{p.intro}</p>
-          <ul className="mt-6 max-w-3xl space-y-2">
-            {p.lead_points.map(t => (
-              <li key={t} className="flex items-start gap-2 text-base text-white/90">
-                <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-green-300" aria-hidden="true" />{t}
-              </li>
-            ))}
-          </ul>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link href={register} className="inline-flex items-center rounded-lg bg-white px-5 py-3 text-base font-bold text-teal hover:bg-teal-light">Run this audit free</Link>
-            <a href="#questions" className="inline-flex items-center rounded-lg border border-white/50 px-5 py-3 text-base font-semibold text-white hover:bg-white/10">See all {total} checks</a>
-          </div>
-        </div>
-      </section>
-
-      {/* At a glance */}
-      <section className="border-b border-gray-100 bg-white py-10">
-        <div className="mx-auto grid max-w-6xl gap-6 px-6 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { label: 'How often', value: FREQ[p.frequency] ?? p.frequency },
-            { label: 'Who runs it', value: p.who_runs_it },
-            { label: 'Checks', value: `${total} checks in ${p.sections.length} sections` },
-            { label: 'Cost', value: 'Free on every plan' },
-          ].map(x => (
-            <div key={x.label}>
-              <p className="text-xs font-bold uppercase tracking-[0.13em] text-teal">{x.label}</p>
-              <p className="mt-1 text-base font-semibold text-neutral-dark">{x.value}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* What it checks */}
-      <section className="bg-white py-20" id="what-it-checks">
-        <div className="mx-auto max-w-6xl px-6">
-          <SectionLabel>What it covers</SectionLabel>
-          <h2 className="max-w-3xl text-3xl font-extrabold tracking-tight text-neutral-dark md:text-4xl">{p.what_it_is_title}</h2>
-          <p className="mt-4 max-w-3xl text-base leading-relaxed text-neutral-mid">{p.what_it_is}</p>
-          <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {p.sections.map(s => (
-              <li key={s.title} className="rounded-xl border border-gray-200 bg-white p-5">
-                <div className="flex items-center gap-2">
-                  <ClipboardCheck size={16} className="text-teal" aria-hidden="true" />
-                  <h3 className="text-base font-bold text-neutral-dark">{s.title}</h3>
-                </div>
-                <p className="mt-1 text-xs font-semibold text-neutral-mid">{s.questions.length} checks</p>
-                <p className="mt-3 text-sm leading-relaxed text-neutral-mid">{s.questions.find(q => !/^(number|how many|date|name)/i.test(q)) ?? s.questions[0]}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      {/* How to use */}
-      <section className="bg-neutral-light py-20" id="how-to-use">
-        <div className="mx-auto max-w-6xl px-6">
-          <SectionLabel>How to use it</SectionLabel>
-          <h2 className="max-w-3xl text-3xl font-extrabold tracking-tight text-neutral-dark md:text-4xl">How to run the {p.name.replace(/\s*\(.*\)$/, '')}, step by step</h2>
-          <ol className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {p.steps.map((s, i) => (
-              <li key={s.name} className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal text-sm font-bold text-white">{i + 1}</span>
-                <h3 className="mt-3 text-base font-bold text-neutral-dark">{s.name}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-neutral-mid">{s.text}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      {/* Every question, readable without an account */}
-      <section className="bg-white py-20" id="questions">
-        <div className="mx-auto max-w-4xl px-6">
-          <SectionLabel>The full question set</SectionLabel>
-          <h2 className="text-3xl font-extrabold tracking-tight text-neutral-dark md:text-4xl">All {total} checks, section by section</h2>
-          <p className="mt-3 text-base leading-relaxed text-neutral-mid">You can read every check before you sign up. Inside CareStream each one is scored, can carry a finding and can raise an action.</p>
-          <div className="mt-8 space-y-3">
-            {p.sections.map((s, i) => (
-              <details key={s.title} className="group rounded-xl border border-gray-200 bg-white" open={i === 0}>
-                <summary className="flex cursor-pointer list-none items-center gap-3 px-5 py-4">
-                  <h3 className="flex-1 text-base font-bold text-neutral-dark">{s.title} <span className="font-medium text-neutral-mid">({s.questions.length})</span></h3>
-                  <ChevronDown size={18} className="shrink-0 text-neutral-mid transition-transform group-open:rotate-180" aria-hidden="true" />
-                </summary>
-                <ol className="list-decimal space-y-2 border-t border-gray-100 px-5 py-4 pl-10 text-sm leading-relaxed text-neutral-dark">
-                  {s.questions.map(q => <li key={q}>{q}</li>)}
-                </ol>
-              </details>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Services and regulations */}
-      <section className="bg-neutral-light py-20" id="who-for">
-        <div className="mx-auto grid max-w-6xl gap-10 px-6 md:grid-cols-2">
-          <div>
-            <SectionLabel>Who it is for</SectionLabel>
-            <h2 className="text-2xl font-extrabold tracking-tight text-neutral-dark">Care services this audit suits</h2>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {p.services.map(s => <span key={s} className="rounded-full bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">{SERVICE_LABEL[s] ?? s}</span>)}
-            </div>
-            <p className="mt-4 text-sm leading-relaxed text-neutral-mid">{p.evidence_note}</p>
-          </div>
-          <div>
-            <SectionLabel>What it evidences</SectionLabel>
-            <h2 className="text-2xl font-extrabold tracking-tight text-neutral-dark">Regulations it supports</h2>
-            <ul className="mt-4 space-y-3">
-              {p.regulations.map(r => (
-                <li key={r.ref} className="text-sm leading-relaxed text-neutral-mid">
-                  <a href={r.url} target="_blank" rel="noopener" className="font-semibold text-teal underline underline-offset-2">{r.ref}</a>: {r.title}
-                </li>
-              ))}
-            </ul>
-            <p className="mt-4 text-xs leading-relaxed text-neutral-mid">This audit checks that things are in place, recorded and reviewed. It does not give clinical or legal advice.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQs */}
-      <section className="bg-white py-20" id="faqs">
-        <div className="mx-auto max-w-4xl px-6">
-          <BlogFaqs faqs={p.faqs} />
-        </div>
-      </section>
-
-      <EditableContentBlock path={path} />
-
-      {/* Related */}
-      <section className="bg-white pb-16">
-        <div className="mx-auto max-w-6xl px-6">
-          <p className="text-sm text-neutral-mid">
-            More free audits: {p.related.join(', ')}. <Link href="/care-audits#audit-library" className="font-semibold text-teal underline underline-offset-2">See the full audit library</Link>.
-          </p>
-        </div>
-      </section>
-
-      <PageCta heading={`Run the ${p.name.replace(/\s*\(.*\)$/, '')} free`} sub="Create a free account and run it today. No card needed." primary={{ href: register, label: 'Run this audit free' }} secondary={{ href: '/care-audits', label: 'Browse all free audits' }} />
+      <JsonLd data={faqPageSchema(faqs)} />
+      <ServicePageV2 page={record} faqs={faqs} />
     </>
   )
 }

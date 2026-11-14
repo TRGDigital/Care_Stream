@@ -133,6 +133,7 @@ export const page: AuditPageData = {
  "seo_title": "MAR Chart Audit: Free Home Care Template",
  "meta_description": "Free MAR chart audit for home care. Check one person's medication administration record each month: signatures, codes, PRN and allergies. Run it free.",
  "h1": "MAR chart audit for home care",
+ "h1_html": "MAR chart audit for <em>home care.</em>",
  "intro": "A MAR chart audit is a regular check that one person's MAR chart (their medication administration record, sometimes called a MAR sheet) was filled in fully and correctly. This free audit takes you through 42 checks in 7 sections, scores each one, and turns every gap into an action with an owner and a date.",
  "lead_points": [
   "Made for home care, live-in care, supported living and extra care, where carers prompt or give medicines in a person's own home",

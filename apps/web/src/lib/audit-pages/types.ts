@@ -13,6 +13,8 @@ export interface AuditPageData {
   seo_title: string
   meta_description: string
   h1: string
+  /** The headline with an <em> the theme colours. Falls back to h1. */
+  h1_html?: string
   intro: string
   lead_points: string[]
   what_it_is_title: string

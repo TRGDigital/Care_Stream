@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import './audit-library.css'
 import { AUDIT_CATALOGUE, SERVICE_LABEL } from '@/lib/audit-catalogue'
-import { AUDIT_PAGE_SLUGS } from '@/lib/audit-pages/slugs'
+import { AUDIT_PAGE_NAME_SLUG } from '@/lib/audit-pages/slugs'
 
 // The public library of free audits, labelled with the care services each one suits, on /care-audits.
 // Every card is in the server HTML (this renders on the server too); the chips only narrow what is shown.
@@ -77,8 +77,8 @@ export function AuditLibrary() {
                 <Link href={`/register?tier=free&source=audit-${a.slug}`} className="inline-flex w-fit items-center rounded-lg border border-teal px-3 py-1.5 text-sm font-semibold text-teal hover:bg-teal-light/40">
                   Run it free
                 </Link>
-                {AUDIT_PAGE_SLUGS.has(a.slug) && (
-                  <Link href={`/care-audits/${a.slug}`} className="inline-flex w-fit items-center rounded-lg bg-teal px-3 py-1.5 text-sm font-semibold text-white hover:bg-teal-dark">
+                {AUDIT_PAGE_NAME_SLUG[a.name] && (
+                  <Link href={`/care-audits/${AUDIT_PAGE_NAME_SLUG[a.name]}`} className="inline-flex w-fit items-center rounded-lg bg-teal px-3 py-1.5 text-sm font-semibold text-white hover:bg-teal-dark">
                     See this audit
                   </Link>
                 )}

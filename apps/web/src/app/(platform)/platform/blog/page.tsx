@@ -918,9 +918,8 @@ function PostForm({
 
 // ─── Site Pages ───────────────────────────────────────────────────────────────
 
-import { AUDIT_PAGE_SLUGS } from '@/lib/audit-pages/slugs'
-import { AUDIT_CATALOGUE } from '@/lib/audit-catalogue'
-const AUDIT_PAGES = AUDIT_CATALOGUE.filter(a => AUDIT_PAGE_SLUGS.has(a.slug))
+import { AUDIT_PAGE_NAME_SLUG } from '@/lib/audit-pages/slugs'
+const AUDIT_PAGES = Object.entries(AUDIT_PAGE_NAME_SLUG).map(([name, slug]) => ({ name, slug }))
 
 const FOOTER_GROUPS = ['Product', 'Trust & Legal', 'Company', 'Get Started'] as const
 

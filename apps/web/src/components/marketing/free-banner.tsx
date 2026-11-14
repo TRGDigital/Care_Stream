@@ -12,16 +12,16 @@ export type FreeBannerVariant = 'home' | 'audits' | 'gaps' | 'training'
 const COPY: Record<FreeBannerVariant, { badge: string; title: string; text: string; cta: string; href?: string }> = {
   home: {
     badge: 'Free to start',
-    title: 'CPD training, audits and your first 5 policies are free.',
+    title: 'CPD training, 90+ free care audits and your first 5 policies are free.',
     text:
-      'Create a free CareStream account and give every member of staff our CPD certified training, including the Care Certificate and the annual refreshers. Run every audit template with your team. Upload your first 5 policies and screen them for regulation coverage, out of date content, consistency and CQC wording. No card needed.',
+      'Create a free CareStream account and give every member of staff our CPD certified training, including the Care Certificate and the annual refreshers. Run any of our 90+ free care audits with your team. Upload your first 5 policies and screen them for regulation coverage, out of date content, consistency and CQC wording. No card needed.',
     cta: 'Start free',
   },
   audits: {
     badge: 'Free to use',
-    title: 'Care audits are free to use.',
+    title: '90+ care audits are free to use.',
     text:
-      'Sign up free and run every audit template with your team. Score each section and record your findings and actions at no cost. The AI recommendations that follow an audit are part of a paid plan.',
+      'Sign up free and run any of our 90+ audit templates with your team. Score each section and record your findings and actions at no cost. The AI recommendations that follow an audit are part of a paid plan.',
     cta: 'Start free audits',
   },
   training: {

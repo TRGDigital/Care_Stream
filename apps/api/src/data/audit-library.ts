@@ -5,6 +5,8 @@
 // Seeded once each by name alongside PLATFORM_TEMPLATES (routes/audits.ts). Once seeded they are edited
 // on /platform/audit-seeds like any other built-in audit, never here.
 
+import { AUDIT_LIBRARY_WAVES } from './audit-library-waves'
+
 export type LibraryQuestion = {
   key?: string
   text: string
@@ -25,7 +27,7 @@ const yn = (text: string, qs?: string): LibraryQuestion => ({ text, type: 'yes_n
 // A screening question ("Were there any falls?"): answered Yes or No, not scored, used to open follow-ups.
 const YES_NO = { options: [{ label: 'Yes' }, { label: 'No' }] }
 
-export const AUDIT_LIBRARY: LibraryTemplate[] = [
+const BASE_AUDIT_LIBRARY: LibraryTemplate[] = [
   {
     name: 'Dementia Care Environment',
     description: 'Checks the environment, signage, orientation cues and daily experience for people living with dementia.',
@@ -295,3 +297,6 @@ export const AUDIT_LIBRARY: LibraryTemplate[] = [
     ],
   },
 ]
+
+// The shared library: the audits above plus the generated waves (data/audit-library-waves.ts). Seeded once each by name.
+export const AUDIT_LIBRARY: LibraryTemplate[] = [...BASE_AUDIT_LIBRARY, ...AUDIT_LIBRARY_WAVES]

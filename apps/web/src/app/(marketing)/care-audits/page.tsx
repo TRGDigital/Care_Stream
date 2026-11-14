@@ -14,6 +14,7 @@ import { ServicePageIfPublished } from '@/components/marketing/service-page-load
 import { isV2 } from '@/lib/v2-rollout'
 import { freeLive } from '@/lib/free-rollout'
 import { FreeBanner } from '@/components/marketing/free-banner'
+import { AuditLibrary } from '@/components/marketing/audit-library'
 
 const RICH_LINK = '[&_a]:font-semibold [&_a]:text-teal [&_a]:underline [&_a]:underline-offset-2'
 
@@ -101,6 +102,7 @@ export default async function CareAuditsPage(
     const v2 = await ServicePageIfPublished({
       slug: 'care-audits',
       afterHero: (await freeLive(searchParams)) ? <FreeBanner variant="audits" /> : undefined,
+      beforeEnd: <AuditLibrary />,
     })
     if (v2) return v2
   }
@@ -757,6 +759,8 @@ export default async function CareAuditsPage(
           </div>
         </div>
       </section>
+
+      <AuditLibrary />
 
       <EditableContentBlock path="/care-audits" />
 

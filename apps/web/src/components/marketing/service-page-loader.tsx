@@ -25,8 +25,8 @@ export async function loadServicePage(slug: string) {
 }
 
 /** The rebuilt page, or null if there is nothing published to render. */
-export async function ServicePageIfPublished({ slug, afterHero }: { slug: string; afterHero?: ReactNode }) {
+export async function ServicePageIfPublished({ slug, afterHero, beforeEnd }: { slug: string; afterHero?: ReactNode; beforeEnd?: ReactNode }) {
   const page = await loadServicePage(slug)
   if (!page?.content?.blocks?.length) return null
-  return <ServicePageV2 page={page} afterHero={afterHero} />
+  return <ServicePageV2 page={page} afterHero={afterHero} beforeEnd={beforeEnd} />
 }

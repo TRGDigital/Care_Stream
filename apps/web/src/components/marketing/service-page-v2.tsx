@@ -424,11 +424,13 @@ function ConsoleFaqs({ faqs }: { faqs: { question: string; answer: string }[] })
   )
 }
 
-export function ServicePageV2({ page, faqs = [], afterHero }: {
+export function ServicePageV2({ page, faqs = [], afterHero, beforeEnd }: {
   page: ServicePage
   faqs?: { question: string; answer: string }[]
   /** Optional band rendered straight after the hero (the Free plan banner on /care-audits and /policy-gap-detection). */
   afterHero?: ReactNode
+  /** Optional section rendered just before the closing call to action (the audit library on /care-audits). */
+  beforeEnd?: ReactNode
 }) {
   const c = page.content ?? { lede: [], blocks: [] }
   const blocks = c.blocks ?? []
@@ -473,6 +475,7 @@ export function ServicePageV2({ page, faqs = [], afterHero }: {
         if (b.kind === 'end') {
           return (
             <Fragment key={i}>
+              {i === endAt && beforeEnd}
               {i === endAt && faqs.length > 0 && <ConsoleFaqs faqs={faqs} />}
               <section className="svend">
                 <div className="svwrap svend-in">

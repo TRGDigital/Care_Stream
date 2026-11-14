@@ -36,6 +36,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('')
   const [orgName, setOrgName] = useState('')
   const [name, setName] = useState('')
+  const [careSetting, setCareSetting] = useState('')
   const [password, setPassword] = useState('')
   const [agreed, setAgreed] = useState(false)
   const [error, setError] = useState('')
@@ -84,7 +85,7 @@ export default function RegisterPage() {
     }
     setError('')
     setLoading(true)
-    const form = { org_name: orgName, name, email, password }
+    const form = { org_name: orgName, name, email, password, ...(careSetting ? { care_setting: careSetting } : {}) }
     try {
       const res = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
@@ -193,6 +194,24 @@ export default function RegisterPage() {
                      value={trap} onChange={e => setTrap(e.target.value)}
                      style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }} />
             )}
+            <div className="rgfield">
+              <label htmlFor="care_setting">What type of service do you run?</label>
+              <select id="care_setting" value={careSetting} onChange={e => setCareSetting(e.target.value)}>
+                <option value="">Choose one (you can change it later)</option>
+                <option value="residential-care">Residential care home</option>
+                <option value="nursing-homes">Nursing home</option>
+                <option value="domiciliary-care">Home care (domiciliary)</option>
+                <option value="live-in-care">Live-in care</option>
+                <option value="complex-care">Complex care</option>
+                <option value="shared-lives">Shared Lives</option>
+                <option value="substance-misuse">Substance misuse and rehab</option>
+                <option value="hospices">Hospice</option>
+                <option value="independent-hospitals">Independent hospital or clinic</option>
+                <option value="gp-practices">GP or primary care</option>
+                <option value="dental-practices">Dental practice</option>
+              </select>
+              <p className="rghelp">We use this to suggest the audits and training that suit you.</p>
+            </div>
             <div className="rgfield">
               <label htmlFor="password">Password</label>
               <PasswordInput id="password" required minLength={8} autoComplete="new-password"

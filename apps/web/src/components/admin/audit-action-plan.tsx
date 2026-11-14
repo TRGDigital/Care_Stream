@@ -10,9 +10,9 @@ import { persistentCache } from '@/lib/page-cache'
 import { AuthedImage } from '@/components/authed-image'
 import { ClipboardList, Plus, Trash2, Loader2, Check, X } from 'lucide-react'
 
-type Action = { id: string; description: string; priority: string; due_date: string | null; assigned_to: string | null; is_external: boolean; external_name: string | null; status: string; source: string; done_at: string | null } & AuditActionCloseout
+type Action = { id: string; description: string; priority: string; due_date: string | null; assigned_to: string | null; assigned_user_id?: string | null; is_external: boolean; external_name: string | null; status: string; source: string; done_at: string | null } & AuditActionCloseout
 type Plan = { status: string; actions: Action[] }
-type StaffOption = { name: string; job_role: string | null }
+type StaffOption = { id: string; name: string; job_role: string | null; email: string | null; dup: boolean }
 
 // A textarea that grows to fit its content, so the full action text is always visible
 // without the user having to drag it open.
@@ -66,11 +66,11 @@ export function AuditActionPlan({ token, runId, canGenerate, heading }: { token:
     // assignee dropdown is always populated. Keep the last good list if a fetch returns nothing.
     Promise.all([api.audits.actionPlan(runId), api.users.list().catch(() => ({ users: [] }))])
       .then(([p, u]) => {
-        const seen = new Set<string>()
-        const st: StaffOption[] = (((u as any).users ?? []) as any[])
-          .filter(x => x.is_active !== false && x.name && String(x.name).trim())
-          .map(x => ({ name: String(x.name).trim(), job_role: x.job_role ?? null }))
-          .filter(s => (seen.has(s.name) ? false : (seen.add(s.name), true)))
+        // One entry per person (by id), so two people with the same name both appear; the email tells them apart.
+        const raw = (((u as any).users ?? []) as any[]).filter(x => x.is_active !== false && x.id && x.name && String(x.name).trim())
+        const count = new Map<string, number>()
+        for (const x of raw) { const k = String(x.name).trim().toLowerCase(); count.set(k, (count.get(k) ?? 0) + 1) }
+        const st: StaffOption[] = raw.map(x => ({ id: String(x.id), name: String(x.name).trim(), job_role: x.job_role ?? null, email: x.email ?? null, dup: (count.get(String(x.name).trim().toLowerCase()) ?? 0) > 1 }))
         setPlan(p)
         setStaff(prev => (st.length ? st : prev))
         if (p) persistentCache.set(cacheKey, { plan: p, staff: st.length ? st : staff })
@@ -186,11 +186,12 @@ export function AuditActionPlan({ token, runId, canGenerate, heading }: { token:
                         <input type="date" value={a.due_date ? a.due_date.slice(0, 10) : ''} onChange={e => save(a.id, { due_date: e.target.value || null })}
                           className="rounded-md border border-gray-200 px-2 py-1 text-xs focus:border-teal focus:outline-none" />
                         <label className="text-neutral-mid">Assign to</label>
-                        <select value={a.assigned_to ?? ''} onChange={e => save(a.id, { assigned_to: e.target.value || null })}
+                        <select value={a.assigned_user_id ?? staff.find(s => !s.dup && s.name === a.assigned_to)?.id ?? (a.assigned_to ? '__name' : '')}
+                          onChange={e => { const s = staff.find(x => x.id === e.target.value); save(a.id, s ? { assigned_to: s.name, assigned_user_id: s.id } : { assigned_to: null, assigned_user_id: null }) }}
                           className="w-44 rounded-md border border-gray-200 px-2 py-1 text-xs text-neutral-dark focus:border-teal focus:outline-none">
                           <option value="">Unassigned</option>
-                          {staff.map(s => <option key={s.name} value={s.name}>{s.name}{s.job_role ? ` · ${s.job_role}` : ''}</option>)}
-                          {a.assigned_to && !staff.some(s => s.name === a.assigned_to) && <option value={a.assigned_to}>{a.assigned_to}</option>}
+                          {staff.map(s => <option key={s.id} value={s.id}>{s.name}{s.dup && s.email ? ` (${s.email})` : s.job_role ? ` · ${s.job_role}` : ''}</option>)}
+                          {a.assigned_to && !a.assigned_user_id && !staff.some(s => !s.dup && s.name === a.assigned_to) && <option value="__name" disabled>{a.assigned_to} (choose the person)</option>}
                         </select>
                         {/* External contractor: an add-on to the staff assignment. When ticked, the action is
                             tracked by admins in their hub (there is no staff account to assign it to). */}

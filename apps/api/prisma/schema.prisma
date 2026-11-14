@@ -2473,6 +2473,18 @@ model AuditRun {
 
 // An action derived from an audit's recommendations (or added by hand). Created as a draft plan
 // the tenant reviews, edits, approves and assigns, then tracks to completion.
+// A user's starred (favourite) audits, kept on the server so they follow the person across devices.
+model AuditFavourite {
+  user_id     String
+  template_id String
+  tenant_id   String
+  created_at  DateTime @default(now())
+
+  @@id([user_id, template_id])
+  @@index([tenant_id, user_id])
+  @@map("audit_favourites")
+}
+
 model AuditAction {
   id          String    @id @default(uuid())
   run_id      String
@@ -2481,6 +2493,7 @@ model AuditAction {
   priority    String    @default("priority")  // immediate | priority | monitor
   due_date    DateTime?
   assigned_to String?
+  assigned_user_id String?                      // the staff member's user id: what ownership is matched on (assigned_to is just the name shown)
   is_external Boolean   @default(false)        // assigned to an external contractor (tracked by admins in the hub)
   external_name String?                        // optional contractor name when is_external
   status      String    @default("open")       // open | in_progress | done
@@ -2506,6 +2519,7 @@ model AuditAction {
 
   @@index([run_id])
   @@index([tenant_id, status])
+  @@index([tenant_id, assigned_user_id])
   @@map("audit_actions")
 }
 

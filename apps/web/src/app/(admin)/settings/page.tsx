@@ -1444,7 +1444,7 @@ export default function SettingsPage() {
         <SettingSection icon={ShieldCheck} title="Audits" description="Require your care manager to sign off completed audits before they are final.">
             <div className="mb-4 rounded-lg border border-amber-100 bg-amber-50/60 px-4 py-3 text-sm text-neutral-mid">
               <p className="font-medium text-neutral-dark">Star your favourite audits</p>
-              <p className="mt-0.5">On the Audits page, open Available audits and tick the star beside any audit. A starred audit moves out of Available audits into a Favourite audits panel that sits above the Audit repository, and it is listed first in the audit picker when you start one. Untick the star and it moves back to Available audits. Stars are saved for you on the device and browser you use, so a colleague has their own favourites.</p>
+              <p className="mt-0.5">On the Audits page, open Available audits and tick the star beside any audit. A starred audit moves out of Available audits into a Favourite audits panel that sits above the Audit repository, and it is listed first in the audit picker when you start one. Untick the star and it moves back to Available audits. Stars are saved against your own login, so they follow you to any device, and a colleague has their own favourites.</p>
             </div>
           <div className="flex items-start justify-between gap-4 rounded-lg border border-gray-200 bg-neutral-light/30 px-4 py-3">
             <div className="min-w-0">

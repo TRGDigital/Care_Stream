@@ -1,3 +1,4 @@
+import { CARE_SETTINGS, SETTING_LABELS } from '../lib/care-setting'
 import { Router, Request, Response } from 'express'
 import { z } from 'zod'
 import crypto from 'crypto'
@@ -72,6 +73,9 @@ const RegisterSchema = z.object({
   course:          z.string().regex(/^[a-z0-9-]{1,80}$/).optional(),
   // The page the sign up link was on (blog-<slug>, cpd, ...): counted per page in the Performance panel.
   source:          z.string().regex(/^[a-z0-9-]{1,100}$/).optional(),
+  // The type of service they run (a care setting key). Sets the home's facility type, which drives the
+  // audits and content suggested to them. Optional: it can be set later in Settings.
+  care_setting:    z.enum(CARE_SETTINGS).optional(),
 })
 
 authRouter.post('/register', async (req: Request, res: Response) => {
@@ -131,6 +135,7 @@ authRouter.post('/register', async (req: Request, res: Response) => {
         plan_id: tier === 'training_only' ? null : tier === 'free' ? freePlanId : (plan_id ?? null),
         tier,
         branding_signoff: 'The CareStream Team',
+        ...(parsed.data.care_setting ? { facility_type: SETTING_LABELS[parsed.data.care_setting].toLowerCase() } : {}),
         ...(tier === 'free' ? { policies_lifetime_limit: FREE_POLICY_LIMIT, free_since: new Date() } : {}),
         ...(isTest ? { feature_flags: { is_test: true } } : {}),
       },

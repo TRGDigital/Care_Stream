@@ -414,8 +414,8 @@ meRouter.post('/policy-approvals/:policyId/reject', async (req: Request, res: Re
 meRouter.get('/audit-approvals', async (req: Request, res: Response) => {
   const tenantId = (req as any).user.tenant_id
   const userId   = (req as any).user.sub
-  const auditsEnabled = (await getPlanFeatures(tenantId).catch(() => null))?.has_custom_audits
-  if (!auditsEnabled || !(await isCareManager(userId))) {
+  // Manager approval works on every plan (the Settings switch is on every plan too).
+  if (!(await isCareManager(userId))) {
     ok(res, { is_manager: false, audits: [], recent: [] }); return
   }
   const [audits, recent] = await Promise.all([getPendingAuditApprovals(tenantId), getRecentApprovedAudits(tenantId)])
@@ -516,7 +516,7 @@ meRouter.patch('/actions/:id', async (req: Request, res: Response) => {
     const status = String(req.body?.status ?? '')
     // Marking an audit action done can carry what was done. Supervision actions keep the plain status update.
     const isAudit = await (prisma as any).auditAction.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId }, select: { id: true } }).catch(() => null)
-    if (status === 'done' && isAudit) await completeMyAction(tenantId, me?.name ?? '', String(req.params.id), req.body?.note ? String(req.body.note) : null)
+    if (status === 'done' && isAudit) await completeMyAction(tenantId, me?.name ?? '', String(req.params.id), req.body?.note ? String(req.body.note) : null, userId)
     else await setMyActionStatus(tenantId, me?.name ?? '', String(req.params.id), status, userId)
     ok(res, await getMyActions(tenantId, me?.name ?? '', userId))
   } catch (e: any) {

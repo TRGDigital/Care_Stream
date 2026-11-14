@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
 import { AuditServiceTags } from '@/components/audit-service-tags'
 import { persistentCache } from '@/lib/page-cache'
-import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info, Wrench, Trash2, GraduationCap, X, ClipboardList, Mail, Loader2, Pencil, Copy, EyeOff, Eye, History, Upload, Lock, Play, Star } from 'lucide-react'
+import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info, Wrench, Trash2, GraduationCap, X, ClipboardList, Mail, Loader2, Pencil, Copy, EyeOff, Eye, History, Upload, Lock, Play, Star, Sparkles } from 'lucide-react'
 import { clsx } from 'clsx'
 import { AuditBuilder } from '@/components/admin/audit-builder'
 import { AuditVersionsModal } from '@/components/admin/audit-versions-modal'
@@ -97,17 +97,39 @@ export default function AuditsPage() {
   const [importError, setImportError] = useState('')
   const [imported,    setImported]    = useState<{ draft: any; notes: string | null } | null>(null)
   const [availOpen,   setAvailOpen]   = useState(true)
-  // Starred (favourite) audits for this person, kept in this browser. Starred audits sort to the top.
+  // Starred (favourite) audits, saved on the server against the signed-in person so they follow them to any
+  // device. Stars saved in this browser before that are brought across once, then cleared.
   const [favs, setFavs] = useState<string[]>([])
   useEffect(() => {
-    try { const raw = localStorage.getItem(`cs-audit-favs-${userId}`); if (raw) setFavs(JSON.parse(raw)) } catch { /* private mode */ }
-  }, [userId])
+    if (!session?.accessToken) return
+    const api = createApiClient(session.accessToken)
+    const key = `cs-audit-favs-${userId}`
+    let legacy: string[] = []
+    try { legacy = JSON.parse(localStorage.getItem(key) || '[]') } catch { /* private mode */ }
+    api.audits.favourites().then(async r => {
+      let ids = r.ids
+      if (legacy.length) {
+        const merged = [...new Set([...ids, ...legacy])]
+        if (merged.length !== ids.length) ids = (await api.audits.replaceFavourites(merged).catch(() => null))?.ids ?? ids
+        try { localStorage.removeItem(key) } catch { /* ignore */ }
+      }
+      setFavs(ids)
+    }).catch(() => setFavs(legacy))
+  }, [session?.accessToken, userId])
+  // Audits suggested from the care service the home chose, until dismissed. Each person can hide the panel.
+  const [suggested, setSuggested] = useState<{ setting_label: string; ids: string[] } | null>(null)
+  const [suggestHidden, setSuggestHidden] = useState(false)
+  useEffect(() => {
+    if (!session?.accessToken) return
+    try { setSuggestHidden(localStorage.getItem(`cs-audit-suggest-off-${userId}`) === '1') } catch { /* private mode */ }
+    createApiClient(session.accessToken).audits.suggested().then(r => setSuggested({ setting_label: r.setting_label, ids: r.ids })).catch(() => {})
+  }, [session?.accessToken, userId])
+  function hideSuggested() { setSuggestHidden(true); try { localStorage.setItem(`cs-audit-suggest-off-${userId}`, '1') } catch { /* ignore */ } }
   function toggleFav(id: string) {
-    setFavs(cur => {
-      const next = cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id]
-      try { localStorage.setItem(`cs-audit-favs-${userId}`, JSON.stringify(next)) } catch { /* private mode */ }
-      return next
-    })
+    if (!session?.accessToken) return
+    const on = !favs.includes(id)
+    setFavs(cur => on ? [...cur, id] : cur.filter(x => x !== id))
+    createApiClient(session.accessToken).audits.setFavourite(id, on).catch(() => setFavs(cur => on ? cur.filter(x => x !== id) : [...cur, id]))
   }
   const byFav = (list: any[]) => [...list].sort((a, b) => Number(favs.includes(b.id)) - Number(favs.includes(a.id)))
   const [linking, setLinking] = useState<any>(null)
@@ -607,6 +629,25 @@ export default function AuditsPage() {
           </div>
         </div>
       )}
+
+      {/* ── Suggested for the service this home runs ─────────────────────────── */}
+      {(() => {
+        if (!suggested || suggestHidden) return null
+        const done = new Set(runs.filter(r => r.status === 'completed').map((r: any) => r.template_id ?? r.template?.id))
+        const list = suggested.ids.map(id => templates.find(t => t.id === id)).filter((t: any) => t && !t.hidden && !favs.includes(t.id) && !done.has(t.id)).slice(0, 6)
+        if (!list.length) return null
+        return (
+          <div className="mb-6 overflow-hidden rounded-lg border border-teal/20 bg-white">
+            <div className="flex flex-wrap items-center gap-2 border-b border-teal/10 bg-teal/5 px-4 py-3">
+              <Sparkles size={15} className="text-teal" />
+              <h2 className="text-sm font-semibold text-neutral-dark">Suggested for {suggested.setting_label.toLowerCase()}</h2>
+              <span className="text-xs text-neutral-mid">Good audits to start with. Not your service? <a href="/settings" className="font-medium text-teal hover:underline">Change it in Settings</a>.</span>
+              <button type="button" onClick={hideSuggested} className="ml-auto text-xs text-neutral-mid hover:text-neutral-dark">Hide</button>
+            </div>
+            <table className="w-full text-left text-sm"><tbody className="divide-y divide-gray-50">{list.map((t: any) => renderRow(t))}</tbody></table>
+          </div>
+        )
+      })()}
 
       {/* ── Favourite audits (starred) ───────────────────────────────────────── */}
       {templates.some(t => favs.includes(t.id)) && (

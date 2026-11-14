@@ -1,5 +1,6 @@
 'use client'
 
+import { AuditTrainingPanel } from '@/components/audits/audit-training-panel'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useParams, useRouter } from 'next/navigation'
@@ -742,6 +743,10 @@ export default function AuditRunPage() {
                 token={session?.accessToken}
                 summary={(report?.sections ?? []).map((sec: any) => ({ section: String(sec.title), total: sec.questions.length, failing: sec.questions.filter((q: any) => q.outcome === 'fail').length }))}
               />
+            )}
+
+            {isCompleted && run.template?.name && (
+              <AuditTrainingPanel auditName={String(run.template.name)} failing={(report?.sections ?? []).reduce((n: number, sec: any) => n + sec.questions.filter((q: any) => q.outcome === 'fail').length, 0)} />
             )}
 
             {session?.accessToken && <AuditActionPlan token={session.accessToken} runId={id} canGenerate={isCompleted && !!run.ai_recommendations} />}

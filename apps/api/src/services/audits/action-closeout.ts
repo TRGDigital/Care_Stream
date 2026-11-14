@@ -6,6 +6,7 @@
 //    and "not fixed" reopens the action.
 // Plus drawn signatures on audit completion and manager sign-off.
 
+import { ownedBy } from './action-plan'
 import { randomUUID } from 'crypto'
 import { prisma } from '../../db/client'
 import { notifyUsers } from '../../lib/notify'
@@ -41,17 +42,17 @@ async function tenantName(tenantId: string): Promise<string> {
 }
 
 // The action as the signed-in staff member may change it: assigned to them by name, on an approved plan.
-async function ownAction(tenantId: string, staffName: string, actionId: string) {
+async function ownAction(tenantId: string, staffName: string, actionId: string, userId?: string) {
   const name = (staffName ?? '').trim()
-  if (!name) return null
+  if (!name && !userId) return null
   return db.auditAction.findFirst({
-    where: { id: actionId, tenant_id: tenantId, assigned_to: { equals: name, mode: 'insensitive' }, run: { action_plan_status: 'approved' } },
+    where: { id: actionId, tenant_id: tenantId, ...ownedBy(name, userId), run: { action_plan_status: 'approved' } },
     include: { run: { select: { template: { select: { name: true } } } } },
   })
 }
 
-export async function completeMyAction(tenantId: string, staffName: string, actionId: string, note: string | null): Promise<void> {
-  const a = await ownAction(tenantId, staffName, actionId)
+export async function completeMyAction(tenantId: string, staffName: string, actionId: string, note: string | null, userId?: string): Promise<void> {
+  const a = await ownAction(tenantId, staffName, actionId, userId)
   if (!a) throw new Error('Action not found')
   await db.auditAction.update({
     where: { id: a.id },
@@ -60,7 +61,7 @@ export async function completeMyAction(tenantId: string, staffName: string, acti
 }
 
 export async function requestExtension(tenantId: string, staffName: string, userId: string, actionId: string, until: string, reason: string): Promise<void> {
-  const a = await ownAction(tenantId, staffName, actionId)
+  const a = await ownAction(tenantId, staffName, actionId, userId)
   if (!a) throw new Error('Action not found')
   if (a.status === 'done') throw new Error('This action is already done.')
   const date = new Date(until)
@@ -89,8 +90,7 @@ export async function decideExtension(tenantId: string, actionId: string, approv
       : { extension_status: 'declined', extension_decided_by: decidedBy },
   })
   if (!a.assigned_to || a.is_external) return
-  const ids = await userIdsByName(tenantId, [a.assigned_to])
-  const uid = ids.get(a.assigned_to.trim().toLowerCase())
+  const uid = a.assigned_user_id ?? (await userIdsByName(tenantId, [a.assigned_to])).get(a.assigned_to.trim().toLowerCase())
   if (!uid) return
   const org = await tenantName(tenantId)
   await notifyUsers(tenantId, 'audit_updates', [uid], (email, name) => sendAuditUpdateEmail({
@@ -144,8 +144,7 @@ export async function verifyAction(tenantId: string, actionId: string, runId: st
     },
   })
   if (notFixed && a.assigned_to && !a.is_external) {
-    const ids = await userIdsByName(tenantId, [a.assigned_to])
-    const uid = ids.get(a.assigned_to.trim().toLowerCase())
+    const uid = a.assigned_user_id ?? (await userIdsByName(tenantId, [a.assigned_to])).get(a.assigned_to.trim().toLowerCase())
     if (uid) {
       const org = await tenantName(tenantId)
       await notifyUsers(tenantId, 'audit_updates', [uid], (email, name) => sendAuditUpdateEmail({
@@ -172,7 +171,7 @@ export async function processActionReminders(tenant: { id: string; name: string 
     const due = startOfDayUTC(new Date(a.due_date))
     const overdue = due.getTime() < today.getTime()
     const daysOver = overdue ? Math.round((today.getTime() - due.getTime()) / DAY) : 0
-    const assignee = !a.is_external && a.assigned_to ? names.get(String(a.assigned_to).trim().toLowerCase()) : undefined
+    const assignee = !a.is_external && a.assigned_to ? (a.assigned_user_id ?? names.get(String(a.assigned_to).trim().toLowerCase())) : undefined
     const label = `&ldquo;${esc(a.description)}&rdquo; from the <strong>${esc(a.run?.template?.name ?? 'audit')}</strong> audit`
     const data: any = {}
 

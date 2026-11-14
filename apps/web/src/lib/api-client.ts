@@ -1097,6 +1097,10 @@ export function createApiClient(token: string) {
     },
 
     audits: {
+      favourites: () => apiFetch<{ ids: string[] }>('/audits/favourites', token),
+      suggested: () => apiFetch<{ setting: string; setting_label: string; ids: string[] }>('/audits/suggested', token),
+      setFavourite: (templateId: string, favourite: boolean) => apiFetch<{ favourite: boolean }>(`/audits/favourites/${templateId}`, token, { method: 'POST', body: JSON.stringify({ favourite }) }),
+      replaceFavourites: (ids: string[]) => apiFetch<{ ids: string[] }>('/audits/favourites', token, { method: 'PUT', body: JSON.stringify({ ids }) }),
       templates: (opts: { includeHidden?: boolean } = {}) => apiFetch<{ templates: any[]; rooms: string[]; staff: string[]; recent_subjects: Record<string, string[]>; me: { name: string | null; job_role: string | null } }>(`/audits/templates${opts.includeHidden ? '?include_hidden=1' : ''}`, token),
       // The builder: an audit's structure, saving an edit, copying and hiding, and its version history.
       importTemplate: (file: File) => {
@@ -1146,7 +1150,7 @@ export function createApiClient(token: string) {
       complete: (id: string) => apiFetch<{ run: any; recommendations: string | null; approval_required?: boolean; recommendations_locked?: boolean; findings_summary?: Array<{ section: string; failing: number; total: number }> }>(`/audits/runs/${id}/complete`, token, { method: 'POST' }),
       actionPlan: (id: string) => apiFetch<{ status: string; actions: Array<{ id: string; description: string; priority: string; due_date: string | null; assigned_to: string | null; is_external: boolean; external_name: string | null; status: string; source: string; done_at: string | null }> }>(`/audits/runs/${id}/action-plan`, token),
       addAuditAction: (id: string, description: string, priority: string) => apiFetch<{ status: string; actions: any[] }>(`/audits/runs/${id}/actions`, token, { method: 'POST', body: JSON.stringify({ description, priority }) }),
-      updateAuditAction: (actionId: string, patch: { description?: string; priority?: string; due_date?: string | null; assigned_to?: string | null; is_external?: boolean; external_name?: string | null; status?: string }) => apiFetch<{ updated: boolean }>(`/audits/actions/${encodeURIComponent(actionId)}`, token, { method: 'PATCH', body: JSON.stringify(patch) }),
+      updateAuditAction: (actionId: string, patch: { description?: string; priority?: string; due_date?: string | null; assigned_to?: string | null; assigned_user_id?: string | null; is_external?: boolean; external_name?: string | null; status?: string }) => apiFetch<{ updated: boolean }>(`/audits/actions/${encodeURIComponent(actionId)}`, token, { method: 'PATCH', body: JSON.stringify(patch) }),
       deleteAuditAction: (actionId: string) => apiFetch<{ deleted: boolean }>(`/audits/actions/${encodeURIComponent(actionId)}`, token, { method: 'DELETE' }),
       approveActionPlan: (id: string) => apiFetch<{ status: string; actions: any[] }>(`/audits/runs/${id}/action-plan/approve`, token, { method: 'POST' }),
       generateActionPlan: (id: string) => apiFetch<{ status: string; actions: any[] }>(`/audits/runs/${id}/action-plan/generate`, token, { method: 'POST' }),

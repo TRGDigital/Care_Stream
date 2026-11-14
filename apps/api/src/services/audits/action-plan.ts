@@ -82,7 +82,7 @@ export async function getActionPlan(tenantId: string, runId: string) {
   if (!run) return null
   const rows = await (prisma as any).auditAction.findMany({ where: { run_id: runId, tenant_id: tenantId }, include: { evidence: { select: { id: true, file_name: true } } } })
   const actions = (rows as any[])
-    .map(a => ({ id: a.id, description: a.description, priority: a.priority, due_date: a.due_date ? new Date(a.due_date).toISOString() : null, assigned_to: a.assigned_to ?? null, is_external: !!a.is_external, external_name: a.external_name ?? null, status: a.status, source: a.source, done_at: a.done_at ? new Date(a.done_at).toISOString() : null, ...closeoutFields(a) }))
+    .map(a => ({ id: a.id, description: a.description, priority: a.priority, due_date: a.due_date ? new Date(a.due_date).toISOString() : null, assigned_to: a.assigned_to ?? null, assigned_user_id: a.assigned_user_id ?? null, is_external: !!a.is_external, external_name: a.external_name ?? null, status: a.status, source: a.source, done_at: a.done_at ? new Date(a.done_at).toISOString() : null, ...closeoutFields(a) }))
     .sort((x, y) => (PRIORITY_RANK[x.priority] ?? 1) - (PRIORITY_RANK[y.priority] ?? 1))
   return { status: run.action_plan_status as string, actions }
 }
@@ -93,14 +93,19 @@ export async function addAction(tenantId: string, runId: string, description: st
   await (prisma as any).auditAction.create({ data: { run_id: runId, tenant_id: tenantId, description: description.slice(0, 1000), priority: normPriority(priority), source: 'manual' } })
 }
 
-export async function updateAction(tenantId: string, actionId: string, patch: { description?: string; priority?: string; due_date?: string | null; assigned_to?: string | null; is_external?: boolean; external_name?: string | null; status?: string }): Promise<void> {
+export async function updateAction(tenantId: string, actionId: string, patch: { description?: string; priority?: string; due_date?: string | null; assigned_to?: string | null; assigned_user_id?: string | null; is_external?: boolean; external_name?: string | null; status?: string }): Promise<void> {
   const existing = await (prisma as any).auditAction.findFirst({ where: { id: actionId, tenant_id: tenantId }, select: { id: true, status: true } })
   if (!existing) throw new Error('Action not found')
   const data: any = {}
   if (patch.description !== undefined) data.description = String(patch.description).slice(0, 1000)
   if (patch.priority !== undefined) data.priority = normPriority(patch.priority)
   if (patch.due_date !== undefined) data.due_date = patch.due_date ? new Date(patch.due_date) : null
-  if (patch.assigned_to !== undefined) data.assigned_to = patch.assigned_to ? String(patch.assigned_to).slice(0, 120) : null
+  if (patch.assigned_to !== undefined || patch.assigned_user_id !== undefined) {
+    const r = await resolveAssignee(tenantId, patch.assigned_to, patch.assigned_user_id)
+    data.assigned_user_id = r.id
+    // Show the person's current name, so a rename flows through the next time they are assigned.
+    data.assigned_to = r.name ? r.name.slice(0, 120) : (patch.assigned_to ? String(patch.assigned_to).slice(0, 120) : null)
+  }
   if (patch.is_external !== undefined) data.is_external = !!patch.is_external
   if (patch.external_name !== undefined) data.external_name = patch.external_name ? String(patch.external_name).slice(0, 120) : null
   if (patch.status !== undefined && ['open', 'in_progress', 'done'].includes(patch.status)) {
@@ -147,12 +152,17 @@ export async function notifyActionPlanAssignees(tenantId: string, runId: string)
     // Staff-assigned (internal, has a name) — one email per staff member with their actions.
     const staffActions = (rows as any[]).filter(a => !a.is_external && a.assigned_to)
     if (staffActions.length) {
-      const byName = new Map<string, any[]>()
-      for (const a of staffActions) { const arr = byName.get(a.assigned_to) ?? []; arr.push(a); byName.set(a.assigned_to, arr) }
-      const users = await (prisma as any).user.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { name: true, email: true } }).catch(() => [])
-      for (const [name, actions] of byName) {
-        const u = (users as any[]).find(x => (x.name ?? '').trim().toLowerCase() === name.trim().toLowerCase())
-        if (u?.email) await sendActionPlanStaffEmail({ to: u.email, staffName: name, orgName, actions: actions.map(emailLine) }).catch(() => {})
+      const users = await (prisma as any).user.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { id: true, name: true, email: true } }).catch(() => [])
+      // One email per person: by user id where the action has one, else by the one user with that name.
+      const byPerson = new Map<string, { user: any; actions: any[] }>()
+      for (const a of staffActions) {
+        const matches = (users as any[]).filter(x => a.assigned_user_id ? x.id === a.assigned_user_id : (x.name ?? '').trim().toLowerCase() === String(a.assigned_to).trim().toLowerCase())
+        if (matches.length !== 1) continue
+        const g = byPerson.get(matches[0].id) ?? { user: matches[0], actions: [] }
+        g.actions.push(a); byPerson.set(matches[0].id, g)
+      }
+      for (const { user: u, actions } of byPerson.values()) {
+        if (u?.email) await sendActionPlanStaffEmail({ to: u.email, staffName: u.name, orgName, actions: actions.map(emailLine) }).catch(() => {})
       }
     }
 
@@ -194,16 +204,36 @@ export async function listActionPlans(tenantId: string) {
 // Actions are assigned to staff by name (from the tenant's staff list). A signed-in
 // staff member sees the actions assigned to them, but only from APPROVED plans — a
 // draft plan is still being reviewed by the manager and should not reach staff.
+/** Prisma where for "this action is theirs": matched on the user id, falling back to the name only for
+ *  actions saved before ids were stored (assigned_user_id empty). */
+export function ownedBy(name: string, userId?: string) {
+  const byName = { assigned_user_id: null, assigned_to: { equals: name, mode: 'insensitive' } }
+  return userId ? { OR: [{ assigned_user_id: userId }, byName] } : byName
+}
+
+/** The user an assignee name or id points at: the id when it is a real active user of the tenant,
+ *  otherwise the one active user with that exact name (null when the name is shared or unknown). */
+export async function resolveAssignee(tenantId: string, name: string | null | undefined, userId?: string | null): Promise<{ id: string | null; name: string | null }> {
+  const clean = (name ?? '').trim()
+  if (userId) {
+    const u = await (prisma as any).user.findFirst({ where: { id: userId, tenant_id: tenantId, is_active: true }, select: { id: true, name: true } }).catch(() => null)
+    if (u) return { id: u.id, name: String(u.name).trim() }
+  }
+  if (!clean) return { id: null, name: null }
+  const matches = await (prisma as any).user.findMany({ where: { tenant_id: tenantId, is_active: true, name: { equals: clean, mode: 'insensitive' } }, select: { id: true }, take: 2 }).catch(() => [])
+  return { id: (matches as any[]).length === 1 ? matches[0].id : null, name: clean }
+}
+
 const STATUS_RANK: Record<string, number> = { in_progress: 0, open: 1, done: 2 }
 
 export async function getMyActions(tenantId: string, staffName: string, userId?: string) {
   const name = (staffName ?? '').trim()
   const [auditRows, supRows] = await Promise.all([
-    name ? (prisma as any).auditAction.findMany({
+    (name || userId) ? (prisma as any).auditAction.findMany({
       where: {
         tenant_id: tenantId,
         is_external: false,                                   // external-contractor actions are tracked by admins
-        assigned_to: { equals: name, mode: 'insensitive' },
+        ...ownedBy(name, userId),
         run: { action_plan_status: 'approved' },
       },
       include: { run: { select: { id: true, template: { select: { name: true } } } }, evidence: { select: { id: true, file_name: true } } },
@@ -232,10 +262,10 @@ export async function getMyActions(tenantId: string, staffName: string, userId?:
 export async function countMyOpenActions(tenantId: string, staffName: string, userId?: string): Promise<number> {
   const name = (staffName ?? '').trim()
   const [audit, sup] = await Promise.all([
-    name ? (prisma as any).auditAction.count({
+    (name || userId) ? (prisma as any).auditAction.count({
       where: {
         tenant_id: tenantId, is_external: false,
-        assigned_to: { equals: name, mode: 'insensitive' },
+        ...ownedBy(name, userId),
         status: { not: 'done' }, run: { action_plan_status: 'approved' },
       },
     }).catch(() => 0) : Promise.resolve(0),
@@ -305,6 +335,7 @@ export async function getAssignedActionsSummary(tenantId: string) {
     id: a.id,
     description: a.description,
     assigned_to: a.assigned_to as string,
+    assigned_user_id: (a.assigned_user_id ?? null) as string | null,
     status: a.status as string,
     priority: a.priority as string,
     due_date: a.due_date ? new Date(a.due_date).toISOString() : null,
@@ -321,13 +352,14 @@ export async function getAssignedActionsSummary(tenantId: string) {
   }
   const byMap = new Map<string, { name: string; assigned: number; open: number; in_progress: number; done: number; overdue: number }>()
   for (const a of actions) {
-    const g = byMap.get(a.assigned_to) ?? { name: a.assigned_to, assigned: 0, open: 0, in_progress: 0, done: 0, overdue: 0 }
+    const key = a.assigned_user_id ?? a.assigned_to
+    const g = byMap.get(key) ?? { name: a.assigned_to, assigned: 0, open: 0, in_progress: 0, done: 0, overdue: 0 }
     g.assigned++
     if (a.status === 'open') g.open++
     else if (a.status === 'in_progress') g.in_progress++
     else if (a.status === 'done') g.done++
     if (a.overdue) g.overdue++
-    byMap.set(a.assigned_to, g)
+    byMap.set(key, g)
   }
   // Most outstanding first, so the people with the most to do surface at the top.
   const by_staff = [...byMap.values()].sort((a, b) => (b.assigned - b.done) - (a.assigned - a.done) || b.assigned - a.assigned)
@@ -341,8 +373,8 @@ export async function setMyActionStatus(tenantId: string, staffName: string, act
   const doneAt = status === 'done' ? new Date() : null
   // An action id is either an audit action assigned to this staff member, or a supervision action
   // that belongs to them — update whichever it is.
-  const audit = name ? await (prisma as any).auditAction.findFirst({
-    where: { id: actionId, tenant_id: tenantId, assigned_to: { equals: name, mode: 'insensitive' }, run: { action_plan_status: 'approved' } },
+  const audit = (name || userId) ? await (prisma as any).auditAction.findFirst({
+    where: { id: actionId, tenant_id: tenantId, ...ownedBy(name, userId), run: { action_plan_status: 'approved' } },
     select: { id: true },
   }).catch(() => null) : null
   if (audit) { await (prisma as any).auditAction.update({ where: { id: actionId }, data: { status, done_at: doneAt } }); return }

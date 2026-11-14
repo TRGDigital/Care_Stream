@@ -5,6 +5,7 @@ import { getSitePageContent } from '@/lib/site-page-content'
 import { AuditMockup } from '@/components/marketing/audit-mockup'
 import { KeywordHighlighter } from '@/components/marketing/keyword-highlighter'
 import { SERVICE_LABEL } from '@/lib/audit-catalogue'
+import { trainingForAudit } from '@/lib/audit-training'
 import type { AuditPageData } from '@/lib/audit-pages/types'
 
 // A product page for one audit, built on the SAME V2 service template as /care-audits, so it
@@ -57,6 +58,10 @@ export async function AuditProductPage({ page: p }: { page: AuditPageData }) {
 
         block('How to use it', `How to run the ${short}, step by step.`, [part('steps', { items: p.steps.map((s, i) =>
           item(s.name, [s.text], { marker: String(i + 1).padStart(2, '0') })) })], { kind: 'steps', id: 'how-to-use' }),
+
+        ...(trainingForAudit(p.name).length ? [block('Train the team', 'Free CPD training that supports this audit.', [part('cards', { items: trainingForAudit(p.name).map(c =>
+          item(c.title, [c.blurb + ' CPD certified, and free for every member of staff on every plan.', 'See the free course'], { href: `/staff-training/${c.slug}` })) })],
+          { id: 'train-the-team', intro: ['When an audit finds a gap, the fix is often training. These courses are free, so you can assign them straight away.'] })] : []),
 
         block('The full question set', `All ${total} checks, section by section.`, [part('faq', { items: p.sections.map(s =>
           item(`${s.title} (${s.questions.length})`, s.questions.map((q, i) => `${i + 1}. ${q}`))) })],

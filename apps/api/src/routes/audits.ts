@@ -1,5 +1,7 @@
 import { Router, Request, Response } from 'express'
 import { randomUUID } from 'crypto'
+import { facilityTypeToSetting, SETTING_LABELS } from '../lib/care-setting'
+import { AUDIT_SERVICES } from '../data/audit-services'
 import { prisma } from '../db/client'
 import { requireAdmin, requireAuditAccess, auditTemplateAllowed } from '../middleware/auth'
 import { ok, err } from '../lib/response'
@@ -1354,6 +1356,66 @@ export function subjectLabel(scope: string): string {
   return scope === 'resident' ? 'Resident' : scope === 'staff' ? 'Staff member' : scope === 'room' ? 'Room' : ''
 }
 
+// ─── Suggested audits ────────────────────────────────────────────────────────
+// GET /audits/suggested  { setting, setting_label, ids }  the built-in audits that suit the care service the home
+// chose (Settings, and the signup question), core checks first, then the ones most specific to that service.
+const SETTING_TO_SERVICE: Record<string, string> = {
+  'residential-care': 'care_homes', 'nursing-homes': 'nursing', 'domiciliary-care': 'home_care', 'live-in-care': 'live_in',
+  'complex-care': 'nursing', 'shared-lives': 'shared_lives', 'substance-misuse': 'substance_misuse', 'hospices': 'hospices',
+  'independent-hospitals': 'private_hospitals', 'gp-practices': 'gp_practices', 'dental-practices': 'dentistry',
+}
+const CORE_AUDITS = ['Health & Safety', 'Infection Control', 'Medicines Management', 'Fire Marshall Checklist', 'Safeguarding Log Review',
+  'Care Plan Review & Update', 'Accident & Incident Book Audit', 'Hand Hygiene Observation Audit', 'CQC Mock Inspection Walk-round', 'Training Matrix Compliance Audit']
+
+auditsRouter.get('/suggested', requireAuditAccess, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { facility_type: true, hidden_audit_templates: true } })
+  const setting = facilityTypeToSetting(tenant?.facility_type as string)
+  const service = SETTING_TO_SERVICE[setting] ?? 'care_homes'
+  const hidden: string[] = tenant?.hidden_audit_templates ?? []
+  const templates = await (prisma as any).auditTemplate.findMany({ where: { is_active: true, tenant_id: null }, select: { id: true, name: true } })
+  const scored = (templates as any[])
+    .filter(t => !hidden.includes(t.id) && (AUDIT_SERVICES[t.name] ?? []).includes(service) && auditTemplateAllowed(req, t.id))
+    .map(t => {
+      const core = CORE_AUDITS.indexOf(t.name)
+      const n = (AUDIT_SERVICES[t.name] ?? []).length || 1
+      return { id: t.id, score: (core >= 0 ? 200 - core : 0) + 100 / n }
+    })
+    .sort((a, b) => b.score - a.score)
+  ok(res, { setting, setting_label: SETTING_LABELS[setting as keyof typeof SETTING_LABELS] ?? 'your service', ids: scored.slice(0, 8).map(x => x.id) })
+})
+
+// ─── Favourites (starred audits), per user ───────────────────────────────────
+// GET /audits/favourites  { ids: string[] }.   PUT /audits/favourites  { ids } replaces the list (used once to
+// bring over stars saved in the browser).   POST /audits/favourites/:templateId  { favourite: boolean }.
+auditsRouter.get('/favourites', requireAuditAccess, async (req: Request, res: Response) => {
+  const rows = await (prisma as any).auditFavourite.findMany({ where: { user_id: req.user!.sub }, select: { template_id: true }, orderBy: { created_at: 'asc' } }).catch(() => [])
+  ok(res, { ids: (rows as any[]).map(r => r.template_id) })
+})
+
+auditsRouter.put('/favourites', requireAuditAccess, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const wanted: string[] = Array.isArray(req.body?.ids) ? [...new Set<string>(req.body.ids.map((x: any) => String(x)))].slice(0, 300) : []
+  // Only audits this tenant can see (the shared ones, or its own).
+  const valid = wanted.length ? await (prisma as any).auditTemplate.findMany({ where: { id: { in: wanted }, OR: [{ tenant_id: null }, { tenant_id: tenantId }] }, select: { id: true } }) : []
+  const ids = (valid as any[]).map(t => t.id).filter(id => auditTemplateAllowed(req, id))
+  await (prisma as any).$transaction([
+    (prisma as any).auditFavourite.deleteMany({ where: { user_id: req.user!.sub } }),
+    ...(ids.length ? [(prisma as any).auditFavourite.createMany({ data: ids.map(id => ({ user_id: req.user!.sub, template_id: id, tenant_id: tenantId })), skipDuplicates: true })] : []),
+  ])
+  ok(res, { ids })
+})
+
+auditsRouter.post('/favourites/:templateId', requireAuditAccess, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const templateId = String(req.params.templateId)
+  const tpl = await (prisma as any).auditTemplate.findFirst({ where: { id: templateId, OR: [{ tenant_id: null }, { tenant_id: tenantId }] }, select: { id: true } })
+  if (!tpl || !auditTemplateAllowed(req, tpl.id)) return err(res, 'NOT_FOUND', 'Audit not found', 404)
+  if (req.body?.favourite === false) await (prisma as any).auditFavourite.deleteMany({ where: { user_id: req.user!.sub, template_id: templateId } })
+  else await (prisma as any).auditFavourite.upsert({ where: { user_id_template_id: { user_id: req.user!.sub, template_id: templateId } }, update: {}, create: { user_id: req.user!.sub, template_id: templateId, tenant_id: tenantId } })
+  ok(res, { favourite: req.body?.favourite !== false })
+})
+
 auditsRouter.get('/templates', requireAuditAccess, async (req: Request, res: Response) => {
   await ensurePlatformTemplatesSeeded()
   const tenantId = req.user!.tenant_id
@@ -2367,9 +2429,11 @@ auditsRouter.post('/runs/:id/signature', requireAuditAccess, async (req: Request
 })
 
 // GET /audits/runs/:id/signature/:role — the signature image (auditor | manager), tenant-scoped.
-auditsRouter.get('/runs/:id/signature/:role', async (req: Request, res: Response) => {
+// Same audit access as the rest of the audits API: an admin, or a staff member allocated this audit.
+auditsRouter.get('/runs/:id/signature/:role', requireAuditAccess, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
-  const run = await (prisma as any).auditRun.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId }, select: { auditor_signature_key: true, manager_signature_key: true } })
+  const run = await (prisma as any).auditRun.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId }, select: { template_id: true, auditor_signature_key: true, manager_signature_key: true } })
+  if (!run || !auditTemplateAllowed(req, run.template_id)) return err(res, 'NOT_FOUND', 'No signature', 404)
   const key = req.params.role === 'manager' ? run?.manager_signature_key : run?.auditor_signature_key
   if (!key) return err(res, 'NOT_FOUND', 'No signature', 404)
   try {
@@ -2418,11 +2482,11 @@ auditsRouter.post('/actions/:actionId/extension-decision', requireAdmin, async (
 // Who may add or see a photo on an action: admins, and the staff member it is assigned to.
 async function actionForPhotos(req: Request, actionId: string) {
   const tenantId = req.user!.tenant_id
-  const a = await (prisma as any).auditAction.findFirst({ where: { id: actionId, tenant_id: tenantId }, select: { id: true, run_id: true, assigned_to: true, status: true } })
+  const a = await (prisma as any).auditAction.findFirst({ where: { id: actionId, tenant_id: tenantId }, select: { id: true, run_id: true, assigned_to: true, assigned_user_id: true, status: true } })
   if (!a) return null
   if (req.user!.role === 'admin') return a
   const me = await (prisma as any).user.findUnique({ where: { id: req.user!.sub }, select: { name: true } }).catch(() => null)
-  const mine = !!me?.name && !!a.assigned_to && me.name.trim().toLowerCase() === a.assigned_to.trim().toLowerCase()
+  const mine = a.assigned_user_id ? a.assigned_user_id === req.user!.sub : (!!me?.name && !!a.assigned_to && me.name.trim().toLowerCase() === a.assigned_to.trim().toLowerCase())
   return mine ? a : null
 }
 

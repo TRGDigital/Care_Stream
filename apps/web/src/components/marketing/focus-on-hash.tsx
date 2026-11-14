@@ -11,9 +11,17 @@ export function FocusOnHash({ id, scrollTo }: { id: string; scrollTo?: string })
       const el = document.getElementById(id) as HTMLElement | null
       const target = document.getElementById(scrollTo ?? id) ?? el
       if (!el || !target) return
-      const y = target.getBoundingClientRect().top + window.scrollY - 92
-      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' })
-      window.setTimeout(() => el.focus({ preventScroll: true }), 600)
+      const targetY = () => Math.max(0, target.getBoundingClientRect().top + window.scrollY - 92)
+      window.scrollTo({ top: targetY(), behavior: 'smooth' })
+      // Images further up the page can finish loading while a long smooth scroll runs and shift the target, so check
+      // again after the scroll and correct any drift before putting the cursor in the box.
+      let tries = 0
+      const settle = () => {
+        const drift = targetY() - window.scrollY
+        if (Math.abs(drift) > 8 && tries++ < 4) { window.scrollTo({ top: targetY(), behavior: 'instant' as ScrollBehavior }); window.setTimeout(settle, 250) }
+        else el.focus({ preventScroll: true })
+      }
+      window.setTimeout(settle, 900)
     }
     const onClick = (e: MouseEvent) => {
       const a = (e.target as HTMLElement | null)?.closest?.('a[href]') as HTMLAnchorElement | null

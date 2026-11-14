@@ -622,7 +622,7 @@ export interface UseCaseAllocation {
 /** One URL the monitor watches. `signal` says how a change would be detected — or that it
  *  would not be. `has_text` says whether a change could be explained as well as detected. */
 export type MonitoredSource = {
-  subject_kind: 'regulation' | 'quality_statement' | 'lint_signal'
+  subject_kind: 'regulation' | 'quality_statement' | 'lint_signal' | 'audit_page'
   reference_key: string
   official_name: string
   url: string
@@ -1041,7 +1041,7 @@ export function createPlatformClient(token: string) {
           sources: MonitoredSource[]
           totals: {
             urls: number; regulations: number; with_text: number; not_watched: number
-            by_kind: { regulation: number; quality_statement: number; lint_signal: number }
+            by_kind: { regulation: number; quality_statement: number; lint_signal: number; audit_page?: number }
           }
           domains: Array<{ domain: string; urls: number; healthy: number }>
         }>('/regulations/sources', token),

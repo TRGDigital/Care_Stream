@@ -2399,6 +2399,7 @@ adminRouter.get('/regulations/sources', async (_req: Request, res: Response) => 
           regulation:        sources.filter(s => s.subject_kind === 'regulation').length,
           quality_statement: sources.filter(s => s.subject_kind === 'quality_statement').length,
           lint_signal:       sources.filter(s => s.subject_kind === 'lint_signal').length,
+          audit_page:        sources.filter(s => s.subject_kind === 'audit_page').length,
         },
         with_text:   sources.filter(s => s.has_text).length,
         not_watched: sources.filter(s => ['error', 'skipped', 'never-checked'].includes(s.signal)).length,

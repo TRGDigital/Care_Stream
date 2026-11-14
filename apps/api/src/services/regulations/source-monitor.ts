@@ -17,6 +17,7 @@ import crypto from 'crypto'
 import { prisma } from '../../db/client'
 import { mapLimit } from '../../lib/translate'
 import { diffText, resolveImpact, meaningfulLines } from './change-review'
+import { AUDIT_PAGE_SOURCES } from '../../data/audit-page-sources'
 
 const FETCH_TIMEOUT_MS = 9000
 const UA = 'CareStreamAI-RegulationMonitor/1.0 (+https://www.carestreamai.com)'
@@ -106,7 +107,7 @@ export type SourceMonitorSummary = {
 }
 
 export type Subject = {
-  kind: 'regulation' | 'quality_statement' | 'lint_signal'
+  kind: 'regulation' | 'quality_statement' | 'lint_signal' | 'audit_page'
   reference_key: string
   official_name: string
   source_urls: string[]
@@ -157,6 +158,14 @@ export async function gatherSubjects(referenceKey?: string): Promise<Subject[]> 
       official_name: `Stale wording: ${l.label}`,
       source_urls:   l.source_urls ?? [],
     })),
+    // The public /care-audits/<slug> pages cite regulations and guidance; if one of those
+    // sources changes, the page's wording needs a human look. Not for the single-regulation re-check.
+    ...(referenceKey ? [] : AUDIT_PAGE_SOURCES.map(a => ({
+      kind: 'audit_page' as const,
+      reference_key: a.slug,
+      official_name: `Audit page: ${a.name}`,
+      source_urls:   a.urls,
+    }))),
   ]
 }
 

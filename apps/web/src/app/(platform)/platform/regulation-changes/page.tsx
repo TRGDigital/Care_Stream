@@ -38,7 +38,7 @@ export default function RegulationChangesPage() {
     sources: MonitoredSource[]
     totals: {
       urls: number; regulations: number; with_text: number; not_watched: number
-      by_kind: { regulation: number; quality_statement: number; lint_signal: number }
+      by_kind: { regulation: number; quality_statement: number; lint_signal: number; audit_page?: number }
     }
     domains: Array<{ domain: string; urls: number; healthy: number }>
   } | null>(null)
@@ -283,7 +283,7 @@ export default function RegulationChangesPage() {
                 detected as changed but never diffed, so it produces an alert with no evidence. */}
             <p className="text-xs text-neutral-mid">
               {sources.totals.by_kind.regulation} regulation sources, {sources.totals.by_kind.quality_statement} CQC quality statement
-              sources and {sources.totals.by_kind.lint_signal} stale-wording sources.
+              sources, {sources.totals.by_kind.lint_signal} stale-wording sources and {sources.totals.by_kind.audit_page ?? 0} sources behind the public audit pages.
               A source is only useful if a change to it can be <strong>explained</strong>, which needs its text stored.
               Anything counted as not watched returns an error, is a PDF, or has never been reached.
             </p>

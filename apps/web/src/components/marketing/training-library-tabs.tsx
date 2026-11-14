@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { FocusOnHash } from './focus-on-hash'
 import Link from 'next/link'
 import { GraduationCap, ArrowRight, Search, X, ShoppingCart, Plus, Minus, Clock, ShieldCheck, Award } from 'lucide-react'
 import { SiteImage } from '@/components/site-image'
@@ -335,10 +336,11 @@ export function TrainingLibraryTabs({ groups, settings, topics, variant = 'defau
 
     return (
       <>
+        <FocusOnHash id="course-search" />
         <label className="tsearch">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
                strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4 4" /></svg>
-          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)}
+          <input id="course-search" type="search" value={query} onChange={(e) => setQuery(e.target.value)}
                  placeholder={c.search} aria-label="Search training modules" />
         </label>
         <div className="tsettings" role="group" aria-label="Care setting">

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import './audit-library.css'
+import { FocusOnHash } from './focus-on-hash'
 import { AUDIT_CATALOGUE, SERVICE_LABEL } from '@/lib/audit-catalogue'
 import { AUDIT_PAGE_NAME_SLUG } from '@/lib/audit-pages/slugs'
 
@@ -24,6 +25,7 @@ export function AuditLibrary() {
     words.every(w => (a.name + ' ' + a.description).toLowerCase().includes(w)))
   return (
     <section className="audlib bg-white py-20" id="audit-library" aria-labelledby="audit-library-h">
+      <FocusOnHash id="audit-search" />
       <div className="mx-auto max-w-6xl px-6">
         <p className="text-xs font-bold uppercase tracking-[0.13em] text-teal">Free audit library</p>
         <h2 id="audit-library-h" className="mt-2 text-3xl font-extrabold tracking-tight text-neutral-dark md:text-4xl">
@@ -35,7 +37,7 @@ export function AuditLibrary() {
         </p>
         <label className="tsearch">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4 4" /></svg>
-          <input type="search" value={query} onChange={e => setQuery(e.target.value)}
+          <input id="audit-search" type="search" value={query} onChange={e => setQuery(e.target.value)}
                  placeholder={`Search 100+ audits, e.g. MAR chart, fire safety, medication...`} aria-label="Search the free audits by name" />
         </label>
         <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Filter audits by care service">

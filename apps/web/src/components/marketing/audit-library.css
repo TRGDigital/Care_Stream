@@ -9,3 +9,5 @@
 .audlib .tsearch input:hover{border-color:#BFB2D3}
 .audlib .tsearch input:focus{outline:none;border-color:var(--accent,#7B3FBF);box-shadow:0 0 0 4px var(--accent-soft,#F3EDFA),0 8px 24px rgba(23,18,31,.07)}
 .audlib .tsearch svg{position:absolute;left:19px;top:50%;transform:translateY(-50%);width:19px;height:19px;color:var(--accent,#7B3FBF)}
+#audit-search{scroll-margin-top:140px}
+.audlib .tsearch,.audlib .tsearch input{scroll-margin-top:140px}

@@ -136,6 +136,7 @@ export function StaffTrainingIndexV2({ s, catalogue, demo, banner }: {
             </ul>
             <div className="tactions">
               <a className="tbtn solid" href="#courses">Browse the courses</a>
+              <a className="tbtn ghost" href="#course-search">Search the courses</a>
               <Link className="tbtn ghost" href="/demo"><Play /> Book a demo</Link>
             </div>
           </div>

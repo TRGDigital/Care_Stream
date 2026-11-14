@@ -20,3 +20,7 @@
 .svpage-v2 .amock-flag{margin-top:8px;font-size:.72rem;font-weight:650;color:#A33A27}
 .svpage-v2 .amock-foot{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-top:1px solid var(--line,#E9E5EF);background:var(--ground-2,#F7F5FA);font-size:.74rem;color:var(--muted,#6B6478)}
 .svpage-v2 .amock-foot b{color:var(--accent,#7B3FBF)}
+
+/* Audit product pages: section intro paragraphs run the full width of the content, not the
+   44em reading width the theme gives its other service pages. */
+.svpage-v2[data-page^="care-audits-"] .svsec-in > p{max-width:none}

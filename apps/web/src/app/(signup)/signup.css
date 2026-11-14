@@ -100,3 +100,15 @@
 .csreg .rgrevs blockquote{margin:0;font-size:.98rem;line-height:1.62;color:var(--ink)}
 .csreg .rgrevs figcaption{margin-top:14px;font-size:.86rem;color:var(--muted)}
 .csreg .rgrevs figcaption b{color:var(--ink)}
+
+/* Free sign up: what the free account includes, as a short card rather than a block of text. */
+.csreg .rgperks{margin:0 0 26px;padding:18px 20px 6px;text-align:left;border:1px solid var(--line);border-radius:16px;background:var(--ground-2)}
+.csreg .rgperks-h{margin:0 0 10px;font-size:.72rem;font-weight:750;letter-spacing:.13em;text-transform:uppercase;color:var(--accent)}
+.csreg .rgperks ul{list-style:none;margin:0;padding:0}
+.csreg .rgperks li{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--line)}
+.csreg .rgperks li:first-child{border-top:0;padding-top:4px}
+.csreg .rgperks svg{flex:0 0 auto;width:18px;height:18px;margin-top:3px;color:var(--accent)}
+.csreg .rgperks b{display:block;font-size:.97rem;color:var(--ink);line-height:1.35}
+.csreg .rgperks em{display:block;margin-top:2px;font-style:normal;font-size:.88rem;line-height:1.5;color:var(--muted)}
+.csreg .rgpaid{margin:26px auto 0;max-width:420px;font-size:.82rem;line-height:1.55;color:var(--muted)}
+@media (max-width:520px){.csreg .rgperks{padding:16px 16px 4px}}

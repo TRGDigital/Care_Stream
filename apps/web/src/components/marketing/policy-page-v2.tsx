@@ -382,6 +382,13 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
 
             <PolicyBuyPanel item={item} />
 
+            {/* Already have this policy? The free account checks it against the regulations. The sign up page
+                reads the source and says "Check your ... policy free". */}
+            <p className="pcfreecheck" style={{ margin: '14px 0 0', fontSize: '.88rem', lineHeight: 1.5 }}>
+              Already have a {product.title.toLowerCase().replace(/ policy$/, '')} policy?{' '}
+              <Link href={`/register?tier=free&source=policy-${product.slug}`} style={{ fontWeight: 650, textDecoration: 'underline' }}>Check it for gaps, free</Link>.
+            </p>
+
             <PaymentLogos />
             {/* Care groups and councils often cannot pay by card: the same invoice and purchase order
                 request the training page and the checkout offer, with this policy filled in. */}

@@ -1,5 +1,6 @@
 'use client'
 
+import { signupContext } from '@/lib/signup-context'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -29,6 +30,14 @@ const LOGOS: [string, string][] = [
   ['/images/home/queen-elizabeth-care-centre-9320c418.png', 'Queen Elizabeth Care Centre'],
 ]
 
+// What the free account includes. Four rows, a bold name and one line each.
+const PERKS: Array<{ title: string; text: string }> = [
+  { title: 'CPD certified training', text: 'The Care Certificate and annual refreshers for every member of staff, with certificates and a training matrix.' },
+  { title: '100+ audits', text: 'Every audit template, with scoring, reports and action plans.' },
+  { title: 'Policy check', text: 'Gap analysis on your first 5 policies.' },
+  { title: 'Unlimited staff logins', text: 'Add as many people as you need.' },
+]
+
 type Step = 'email' | 'details'
 
 export default function RegisterPage() {
@@ -52,6 +61,7 @@ export default function RegisterPage() {
   const [signupSource, setSignupSource] = useState('')
   const [previewCode, setPreviewCode] = useState('')
   const [trap, setTrap] = useState('')   // honeypot: real people never fill this in
+  const ctx = freeTier ? signupContext(signupSource, courseSlug) : null
   const orgRef = useRef<HTMLInputElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
@@ -123,15 +133,19 @@ export default function RegisterPage() {
       <main className="rgmain">
         {freeTier ? (
           <>
-            <h1>Create your free account</h1>
-            <p className="rgsub">No card needed. CPD certified training for your whole team, every audit, and a policy check on your first 5 policies.</p>
-            <ul className="rgfree" style={{ margin: '0 auto 18px', maxWidth: 420, textAlign: 'left', fontSize: 14, lineHeight: 1.6, listStyle: 'none', padding: 0 }}>
-              <li><b>Free:</b> CPD certified training for every member of staff: the Care Certificate and the annual refreshers, with certificates and a training matrix</li>
-              <li><b>Free:</b> every audit template, with reports and action plans</li>
-              <li><b>Free:</b> gap analysis on up to 5 policies (all four analyses)</li>
-              <li><b>Free:</b> as many staff logins as you need</li>
-              <li><b>Paid plans:</b> AI recommendations at the end of audits, more than 5 policies, staff Q&amp;A, face-to-face training and the CQC evidence pack</li>
-            </ul>
+            <h1>{ctx ? ctx.title : 'Create your free account'}</h1>
+            <p className="rgsub">{ctx ? ctx.sub : 'No card needed. Free for your whole team, for as long as you like.'}</p>
+            <section className="rgperks" aria-label="What you get free">
+              <p className="rgperks-h">What you get, free</p>
+              <ul>
+                {PERKS.map(p => (
+                  <li key={p.title}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5" /></svg>
+                    <span><b>{p.title}</b><em>{p.text}</em></span>
+                  </li>
+                ))}
+              </ul>
+            </section>
           </>
         ) : trainingOnly ? (
           <>
@@ -235,6 +249,9 @@ export default function RegisterPage() {
             </button>
             <p className="rgalt">Already have an account? <Link href="/login">Log in</Link></p>
           </form>
+        )}
+        {freeTier && (
+          <p className="rgpaid">Need more later? Paid plans add AI recommendations at the end of audits, more than 5 policies, staff Q&amp;A, face-to-face training and the CQC evidence pack.</p>
         )}
       </main>
 

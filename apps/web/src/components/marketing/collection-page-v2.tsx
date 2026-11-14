@@ -204,6 +204,9 @@ export function CollectionPageV2({ c, s, siblings = [], related = null }: {
               <p>{s('cta.lede')}</p>
               <div className="btns">
                 <Link className="primary" href="/pricing">See pricing</Link>
+                {training
+                  ? <Link className="ghost" href="/register?tier=free&source=cpd">Get CPD training free</Link>
+                  : <Link className="ghost" href={`/register?tier=free&source=policy-${c.title.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 85)}`}>Check your policies free</Link>}
                 <Link className="ghost" href="/demo">Book a demo</Link>
               </div>
             </div>

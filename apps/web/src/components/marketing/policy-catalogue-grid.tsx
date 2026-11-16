@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { AddToBasket, SavePolicy, BasketPill } from './policy-basket'
 import type { PolicyProduct } from './care-policies-index-v2'
 import { POLICY_SERVICE_LABEL } from '@/lib/service-labels'
+import { FocusOnHash } from './focus-on-hash'
 
 // The /care-policies card grid with the training library's search above it.
 //
@@ -28,10 +29,12 @@ export function PolicyCatalogueGrid({ products }: { products: PolicyProduct[] })
 
   return (
     <>
+      {/* "Search the policies" in the hero lands here with the cursor in the box, as on /care-audits and /staff-training. */}
+      <FocusOnHash id="policy-search" scrollTo="policy-library" />
       <label className="pcsearch">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
              strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4 4" /></svg>
-        <input type="search" value={query} onChange={e => setQuery(e.target.value)}
+        <input id="policy-search" type="search" value={query} onChange={e => setQuery(e.target.value)}
                placeholder="Search care policies, e.g. safeguarding, fire safety…"
                aria-label="Search care policies" />
       </label>

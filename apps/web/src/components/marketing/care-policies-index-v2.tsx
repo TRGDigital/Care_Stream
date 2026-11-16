@@ -203,7 +203,8 @@ export function CarePoliciesIndexV2({ s, products, bundles }: {
             <h1>{s('hero.h1')}</h1>
             {series(s, 'hero.p').map(i => <p key={i}>{s(`hero.p${i}`)}</p>)}
             <div className="svactions">
-              <Link className="svbtn solid" href="/register">Start free trial</Link>
+              <a className="svbtn solid" href="#policy-library">Browse the policies</a>
+              <a className="svbtn ghost" href="#policy-search">Search the policies</a>
               <Link className="svbtn ghost" href="/demo"><Play /> Book a demo</Link>
             </div>
           </div>
@@ -256,7 +257,7 @@ export function CarePoliciesIndexV2({ s, products, bundles }: {
         </div>
       </section>
 
-      <section className="pccat">
+      <section className="pccat" id="policy-library">
         <div className="pccat-in">
           <p className="eb">{s('cat.label')}</p>
           {/* The count comes from the catalogue, not from the copy, so the heading cannot say

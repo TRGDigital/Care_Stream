@@ -2448,6 +2448,10 @@ export default function BlogPage() {
             {!page.id && (
               <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-600">not in CMS</span>
             )}
+            {POLICY_KEYWORD_PAGES.some(p => page.path === `/care-policies/${p.slug}`) && !page.content_updated && (
+              <span className="rounded-full bg-yellow-300 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-yellow-950"
+                    title="A new policy page (waves 1 to 3, built 16 Nov 2026). The tag goes when you click Mark updated.">New</span>
+            )}
           </div>
           {page.description ? (
             <p className="mt-0.5 max-w-xl truncate text-xs text-neutral-mid">{page.description}</p>
@@ -2914,7 +2918,7 @@ export default function BlogPage() {
             {perfReady === false && (
               <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">Search Console numbers are not connected yet: the page_performance table has not been created, or the nightly pull has not run.</p>
             )}
-            <p className="text-sm text-neutral-mid">The paid policy pages at /care-policies, tracked on their own. Click Keywords to see the researched keywords on each page. Pages are added here as each wave is built.</p>
+            <p className="text-sm text-neutral-mid">{policyPagesList.filter(p => p.path !== '/care-policies' && !p.content_updated).length} new policy pages still to review (yellow New tag; it clears when you click Mark updated). The paid policy pages at /care-policies, tracked on their own. Click Keywords to see the researched keywords on each page. Pages are added here as each wave is built.</p>
             {loading ? (
               <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-neutral-mid" /></div>
             ) : (

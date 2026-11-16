@@ -40,3 +40,12 @@
   .fdrop-foot{flex-direction:column;align-items:stretch}
   .fdrop-cpd{align-self:flex-end;height:56px}
 }
+
+/* From the fourth page of a visit: only the title, as a slim bar. The full card stays in the HTML (hidden) for crawlers. */
+.fdrop-bar{display:none;pointer-events:auto;align-items:center;gap:10px;margin-top:10px;padding:9px 16px;border:1px solid #E1D3F2;border-radius:999px;
+  background:#F3EDFA;color:#17121F;font:inherit;font-size:.95rem;font-weight:800;cursor:pointer;box-shadow:0 6px 18px rgba(23,18,31,.12)}
+.fdrop-bar:hover{background:#EBDFF8}
+.fdrop-bar:focus-visible{outline:3px solid #7B3FBF;outline-offset:2px}
+.fdrop-bar svg{color:#7B3FBF}
+.fdrop[data-open="title"] .fdrop-bar{display:inline-flex}
+.fdrop[data-open="title"] .fdrop-card{display:none}

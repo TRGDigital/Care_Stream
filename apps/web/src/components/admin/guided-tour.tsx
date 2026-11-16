@@ -119,7 +119,7 @@ const TRAINING_ONLY_STEPS: TourStep[] = [
 // Which steps are genuinely done, from real data (mirrors the setup checklist).
 export type DoneMap = Partial<Record<TourStep['key'], boolean>>
 
-function ImageSlot({ step, className }: { step: TourStep; className?: string }) {
+function ImageSlot({ step, className, top }: { step: TourStep; className?: string; top?: boolean }) {
   const [failed, setFailed] = useState(false)
   return (
     <div className={`overflow-hidden rounded-lg border border-gray-100 bg-gradient-to-br from-teal-light/40 to-indigo-50 ${className ?? ''}`}>
@@ -129,7 +129,7 @@ function ImageSlot({ step, className }: { step: TourStep; className?: string }) 
         </div>
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={step.img} alt="" className="h-full w-full object-cover" onError={() => setFailed(true)} />
+        <img src={step.img} alt="" className={`h-full w-full object-cover ${top ? 'object-top' : ''}`} onError={() => setFailed(true)} />
       )}
     </div>
   )
@@ -324,7 +324,7 @@ export function GuidedTour({ token, tenantId, tier, openSignal, custom }: {
         </div>
         <button onClick={() => setOpen(false)} aria-label="Close tour" className="rounded p-0.5 text-neutral-mid hover:text-neutral-dark"><X size={16} /></button>
       </div>
-      <ImageSlot step={step} className="mt-3 h-36" />
+      <ImageSlot step={step} className={custom ? 'mt-3 h-52' : 'mt-3 h-36'} top={!!custom} />
       <p className="mt-3 text-sm leading-relaxed text-neutral-mid">{step.desc}</p>
       <ul className="mt-2.5 space-y-1.5">
         {step.how.map((h, j) => (

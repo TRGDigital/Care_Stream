@@ -463,3 +463,8 @@
 .svpage-v2[data-page="care-policies"] .pcfull-buy{display:flex;align-items:center;gap:18px}
 .svpage-v2[data-page="care-policies"] .pcfull-buy em{font-style:normal;font-size:2rem;font-weight:800;letter-spacing:-.03em;color:var(--accent,#7B3FBF)}
 .svpage-v2[data-page="care-policies"] .pcfull-buy i{font-style:normal;font-weight:650;font-size:.92rem;padding:12px 22px;border-radius:999px;background:var(--btn-ink,#17121F);color:var(--btn-ink-text,#fff)}
+/* The November offer banner: its text, the 15% off pill and the end date fill the full width banner. */
+.svpage-v2[data-page="care-policies"] #policy-library .lofr{align-items:center;padding:18px 24px}
+.svpage-v2[data-page="care-policies"] #policy-library .lofr-tx{flex:1 1 auto;width:100%;min-width:0}
+.svpage-v2[data-page="care-policies"] #policy-library .lofr p.lofr-multi{display:block;width:100%;box-sizing:border-box;padding:10px 14px}
+.svpage-v2[data-page="care-policies"] #policy-library .lofr-end{margin-top:10px}

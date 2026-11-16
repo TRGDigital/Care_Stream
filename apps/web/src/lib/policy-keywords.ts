@@ -1215,10 +1215,6 @@ export const POLICY_KEYWORDS: Record<string, PolicyKeywordInfo> = {
     "volume": 480
    },
    {
-    "keyword": "dnacpr guidelines",
-    "volume": 20
-   },
-   {
     "keyword": "respect form training",
     "volume": 20
    },
@@ -1240,7 +1236,7 @@ export const POLICY_KEYWORDS: Record<string, PolicyKeywordInfo> = {
    },
    {
     "question": "What is the ReSPECT form?",
-    "answer": "ReSPECT stands for Recommended Summary Plan for Emergency Care and Treatment. It records a person's recommendations for a future emergency, created through conversations with health professionals. It is not legally binding."
+    "answer": "ReSPECT stands for Recommended Summary Plan for Emergency Care and Treatment. It records a person's preferences and clinical recommendations for a future emergency, created through conversations with health professionals. Clinicians still use their judgement at the time. Your policy covers how staff find and follow it."
    },
    {
     "question": "Can I download a ReSPECT form PDF or the ReSPECT form NHS version from you?",
@@ -1248,7 +1244,7 @@ export const POLICY_KEYWORDS: Record<string, PolicyKeywordInfo> = {
    },
    {
     "question": "Is this an NHS resuscitation policy or a DNACPR policy for care homes?",
-    "answer": "Yes. The DNACPR policy sections follow current DNACPR guidelines in principle and are written for your service type, whether care home, nursing, dementia, home care, extra care or hospice, using your answers on training, equipment and plan storage."
+    "answer": "It is a resuscitation and DNACPR policy written for your service type, whether care home, nursing, dementia, home care, extra care or hospice. It is not an NHS policy. It sets out your own arrangements, from your answers on training, equipment and plan storage, and does not replace decisions by clinicians."
    },
    {
     "question": "Does the policy cover staff CPR training?",

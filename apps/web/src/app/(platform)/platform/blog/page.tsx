@@ -926,7 +926,10 @@ const FOOTER_GROUPS = ['Product', 'Trust & Legal', 'Company', 'Get Started'] as 
 
 // Primary marketing pages surfaced under the "Main site pages" tab (and excluded
 // from the generic "Pages" tab so nothing is duplicated across tabs).
-const MAIN_SITE_PATHS_SET = new Set(['/', '/about', '/how-it-works', '/pricing', '/care-policies', '/policy-gap-detection', '/staff-training', '/hr-policies', '/care-audits', ...AUDIT_PAGES.map(a => `/care-audits/${a.slug}`), ...POLICY_KEYWORD_PAGES.map(p => `/care-policies/${p.slug}`), '/cqc-compliance', '/business-continuity', '/who-we-serve', '/who-its-for', '/cqc-report-chat', '/contact', '/demo', '/faq', '/trust', '/case-studies'])
+const MAIN_SITE_PATHS_SET = new Set(['/', '/about', '/how-it-works', '/pricing', '/policy-gap-detection', '/staff-training', '/hr-policies', '/cqc-compliance', '/business-continuity', '/who-we-serve', '/who-its-for', '/cqc-report-chat', '/contact', '/demo', '/faq', '/trust', '/case-studies'])
+// Policies and audits each get their own tab so their pages can be tracked on their own.
+const POLICY_PATHS_SET = new Set(['/care-policies', ...POLICY_KEYWORD_PAGES.map(p => `/care-policies/${p.slug}`)])
+const AUDIT_PATHS_SET = new Set(['/care-audits', ...AUDIT_PAGES.map(a => `/care-audits/${a.slug}`)])
 
 const DEFAULT_PAGES: Array<{ path: string; title: string; footer_group?: string; footer_label?: string }> = [
   { path: '/',                      title: 'Home' },
@@ -1975,7 +1978,7 @@ function SlotEditor({ page, defs, token, onSaved }: {
 
 export default function BlogPage() {
   const token = usePlatformAuth()
-  const [tab,  setTab]  = useState<'posts' | 'authors' | 'pages' | 'mainsite' | 'training' | 'features' | 'collections' | 'queue' | 'altTags' | 'userCases' | 'careSettings' | 'services'>('posts')
+  const [tab,  setTab]  = useState<'posts' | 'authors' | 'pages' | 'mainsite' | 'policies' | 'audits' | 'training' | 'features' | 'collections' | 'queue' | 'altTags' | 'userCases' | 'careSettings' | 'services'>('posts')
 
   // Posts state
   const [posts,     setPosts]     = useState<BlogPost[]>([])
@@ -2381,12 +2384,16 @@ export default function BlogPage() {
   // Which pages live under the dedicated Main site / Training tabs.
   const isTrainingPath = (p: SitePage) => p.path.startsWith('/staff-training/')
   const isMainSitePath = (p: SitePage) => MAIN_SITE_PATHS_SET.has(p.path)
+  const isPolicyPath = (p: SitePage) => POLICY_PATHS_SET.has(p.path)
+  const isAuditPath = (p: SitePage) => AUDIT_PATHS_SET.has(p.path)
   const trainingPagesList = allPages.filter(isTrainingPath)
   const mainSitePagesList = allPages.filter(isMainSitePath)
+  const policyPagesList = allPages.filter(isPolicyPath)
+  const auditPagesList = allPages.filter(isAuditPath)
 
   // The generic "Pages" tab shows everything that ISN'T already surfaced under the
   // dedicated Main site pages / Training pages tabs, so there are no duplicates.
-  const otherPages = allPages.filter(p => !isTrainingPath(p) && !isMainSitePath(p))
+  const otherPages = allPages.filter(p => !isTrainingPath(p) && !isMainSitePath(p) && !isPolicyPath(p) && !isAuditPath(p))
   const filteredPages = pageSearch
     ? otherPages.filter(p => p.path.includes(pageSearch.toLowerCase()) || p.title.toLowerCase().includes(pageSearch.toLowerCase()))
     : otherPages
@@ -2526,7 +2533,7 @@ export default function BlogPage() {
         {/* Tabs */}
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex gap-6 overflow-x-auto">
-            {(['posts', 'authors', 'pages', 'mainsite', 'training', 'features', 'collections', 'queue', 'userCases', 'careSettings', 'services', 'altTags'] as const).map(t => (
+            {(['posts', 'authors', 'pages', 'mainsite', 'policies', 'audits', 'training', 'features', 'collections', 'queue', 'userCases', 'careSettings', 'services', 'altTags'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -2536,7 +2543,7 @@ export default function BlogPage() {
                     : 'text-neutral-mid hover:text-neutral-dark'
                 }`}
               >
-                {t === 'posts' ? `Posts (${posts.length})` : t === 'authors' ? `Authors (${authors.length})` : t === 'pages' ? `Pages (${allPages.length})` : t === 'mainsite' ? `Main site pages (${mainSitePagesList.length})` : t === 'training' ? `Training pages (${trainingPagesList.length})` : t === 'features' ? `Features pages (${featurePages.length})` : t === 'collections' ? `Collections (${collections.length})` : t === 'queue' ? 'Update queue' : t === 'userCases' ? 'User cases' : t === 'careSettings' ? 'Care settings' : t === 'services' ? 'Our Services' : 'Alt Tags'}
+                {t === 'posts' ? `Posts (${posts.length})` : t === 'authors' ? `Authors (${authors.length})` : t === 'pages' ? `Pages (${allPages.length})` : t === 'mainsite' ? `Main site pages (${mainSitePagesList.length})` : t === 'policies' ? `Policy pages (${policyPagesList.length})` : t === 'audits' ? `Audit pages (${auditPagesList.length})` : t === 'training' ? `Training pages (${trainingPagesList.length})` : t === 'features' ? `Features pages (${featurePages.length})` : t === 'collections' ? `Collections (${collections.length})` : t === 'queue' ? 'Update queue' : t === 'userCases' ? 'User cases' : t === 'careSettings' ? 'Care settings' : t === 'services' ? 'Our Services' : 'Alt Tags'}
               </button>
             ))}
           </nav>
@@ -2860,6 +2867,34 @@ export default function BlogPage() {
             ) : (
               <div className="overflow-hidden rounded-xl border border-gray-200 bg-white divide-y divide-gray-100">
                 {mainSitePagesList.map(renderPageRow)}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── policies tab ── */}
+        {tab === 'policies' && (
+          <div className="space-y-4">
+            <p className="text-sm text-neutral-mid">The paid policy pages at /care-policies, tracked on their own. Click Keywords to see the researched keywords on each page. Pages are added here as each wave is built.</p>
+            {loading ? (
+              <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-neutral-mid" /></div>
+            ) : (
+              <div className="overflow-hidden rounded-xl border border-gray-200 bg-white divide-y divide-gray-100">
+                {policyPagesList.map(renderPageRow)}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── audits tab ── */}
+        {tab === 'audits' && (
+          <div className="space-y-4">
+            <p className="text-sm text-neutral-mid">The care audit pages at /care-audits, tracked on their own. Click Keywords to see the keywords used on each page.</p>
+            {loading ? (
+              <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-neutral-mid" /></div>
+            ) : (
+              <div className="overflow-hidden rounded-xl border border-gray-200 bg-white divide-y divide-gray-100">
+                {auditPagesList.map(renderPageRow)}
               </div>
             )}
           </div>

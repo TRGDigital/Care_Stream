@@ -489,7 +489,7 @@ export const GENERATED_POLICY_CRO: Record<string, PolicyCro> = {
    },
    {
     "title": "A person arrives with a DNACPR or ReSPECT form",
-    "body": "Covers checking the plan on admission, where it is kept and who to ask if it looks out of date. The ReSPECT form is a non-legally binding plan made through conversations with clinicians."
+    "body": "Covers checking the plan on admission, where it is kept and who to ask if it looks out of date. The ReSPECT form is a plan of recommendations made through conversations with clinicians, so the policy also covers what staff do when a plan is unclear."
    },
    {
     "title": "A family asks about resuscitation",

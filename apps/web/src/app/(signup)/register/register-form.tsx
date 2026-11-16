@@ -46,6 +46,7 @@ export interface RegisterInitial {
   course: string
   code: string
   email: string
+  gref: string
   ctx: SignupContext | null
 }
 
@@ -72,6 +73,14 @@ export function RegisterForm({ initial }: { initial: RegisterInitial }) {
   const [signupSource] = useState(initial.source)
   const [previewCode] = useState(initial.code)
   const [trap, setTrap] = useState('')   // honeypot: real people never fill this in
+  // The Growth email this visit came from (?gref=<uuid>): kept for the session so it survives leaving the page and coming back.
+  const [growthRef, setGrowthRef] = useState(initial.gref)
+  useEffect(() => {
+    try {
+      if (initial.gref) sessionStorage.setItem('cs_gref', initial.gref)
+      else { const saved = sessionStorage.getItem('cs_gref'); if (saved && /^[0-9a-f-]{36}$/i.test(saved)) setGrowthRef(saved) }
+    } catch { /* storage blocked: the ref from the address still works */ }
+  }, [initial.gref])
   const ctx = freeTier ? initial.ctx : null
   const orgRef = useRef<HTMLInputElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
@@ -100,7 +109,7 @@ export function RegisterForm({ initial }: { initial: RegisterInitial }) {
       const res = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(freeTier ? { ...form, tier: 'free', preview_code: previewCode || undefined, company_website: trap || undefined, course: courseSlug || undefined, source: signupSource || undefined } : trainingOnly ? { ...form, tier: 'training_only' } : form),
+        body: JSON.stringify(freeTier ? { ...form, tier: 'free', preview_code: previewCode || undefined, company_website: trap || undefined, course: courseSlug || undefined, source: signupSource || undefined, growth_ref: growthRef || undefined } : trainingOnly ? { ...form, tier: 'training_only' } : form),
       })
       const body = await res.json()
       if (!res.ok || !body.success) {

@@ -17,6 +17,7 @@ import { sendVerificationEmail, sendPasswordResetEmail, sendStaffLoginLinkEmail,
 import { createLoginLink, consumeLoginToken, mintLoginToken } from '../lib/login-tokens'
 import { needsBillingFor } from '../lib/tiers'
 import { freeEvent } from '../lib/free-events'
+import { reportSignupToGrowth } from '../lib/growth-event'
 import { freeSignupAllowed, isPreviewCode, checkFreeSignup, FREE_POLICY_LIMIT, isWebmail, emailDomain } from '../lib/free-tier'
 
 
@@ -76,6 +77,8 @@ const RegisterSchema = z.object({
   // The type of service they run (a care setting key). Sets the home's facility type, which drives the
   // audits and content suggested to them. Optional: it can be set later in Settings.
   care_setting:    z.enum(CARE_SETTINGS).optional(),
+  // The Growth email they came from (a contact id). Only used to tell the Growth Engine, so its email sequence stops.
+  growth_ref:      z.string().uuid().nullable().optional(),
 })
 
 authRouter.post('/register', async (req: Request, res: Response) => {
@@ -166,6 +169,8 @@ authRouter.post('/register', async (req: Request, res: Response) => {
     metadata: { org_name, slug, plan_id: plan_id ?? null, tier },
   })
 
+  // Tell the Growth Engine so any cold email sequence for this provider stops. Never for a test (preview code) signup.
+  if (tier === 'free' && !isTest) void reportSignupToGrowth({ email, tenantId: tenant.id, growthRef: parsed.data.growth_ref })
   if (tier === 'free') void freeEvent(tenant.id, 'free_signup', { domain_class: isWebmail(emailDomain(email)) ? 'webmail' : 'organisation' }, user.id)
 
   // Send verification email — awaited so it completes before the serverless function exits

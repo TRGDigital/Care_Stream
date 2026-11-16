@@ -1980,17 +1980,23 @@ export default function BlogPage() {
   const token = usePlatformAuth()
   const [tab,  setTab]  = useState<'posts' | 'authors' | 'pages' | 'mainsite' | 'policies' | 'audits' | 'training' | 'features' | 'collections' | 'queue' | 'altTags' | 'userCases' | 'careSettings' | 'services'>('posts')
 
-  // Search Console numbers per page (pushed nightly), shown on the page rows
-  type PagePerf = { path: string; impressions: number; clicks: number; position: number; prev_impressions: number; prev_clicks: number; prev_position: number; top_queries: Array<{ query: string; impressions: number; clicks: number }>; period_end: string }
+  // Search Console numbers per page for the Policy, Audit and Training pages tabs (the daily page_metrics pull)
+  type PagePerf = { path: string; impressions: number; clicks: number; sessions: number; position: number | null; prev_impressions: number; prev_clicks: number; last_data: string | null; top_queries: Array<{ query: string; impressions: number; clicks: number }> }
   const [gscPerf, setGscPerf] = useState<Record<string, PagePerf>>({})
   const [perfReady, setPerfReady] = useState<boolean | null>(null)
   useEffect(() => {
-    if (!token) return
-    fetch(`${API_URL}/admin/page-performance`, { headers: { Authorization: `Bearer ${token}` } })
+    const section = tab === 'policies' ? 'policies' : tab === 'audits' ? 'audits' : tab === 'training' ? 'training' : null
+    if (!token || !section) return
+    setPerfReady(null)
+    fetch(`${API_URL}/admin/section-performance?section=${section}&days=28`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
-      .then(j => { setGscPerf(Object.fromEntries((j.data?.pages ?? []).map((p: PagePerf) => [p.path, p]))); setPerfReady(!!j.data?.ready) })
+      .then(j => {
+        if (!j.success) { setPerfReady(false); return }
+        setGscPerf(prev => ({ ...prev, ...Object.fromEntries((j.data?.pages ?? []).map((p: PagePerf) => [p.path, p])) }))
+        setPerfReady(true)
+      })
       .catch(() => setPerfReady(false))
-  }, [token])
+  }, [token, tab])
 
   // Posts state
   const [posts,     setPosts]     = useState<BlogPost[]>([])
@@ -2456,10 +2462,10 @@ export default function BlogPage() {
             const d = pf.impressions - pf.prev_impressions
             return (
               <div className="w-44 text-right text-[11px] leading-tight text-neutral-mid"
-                   title={`Last 28 days to ${String(pf.period_end).slice(0, 10)}. Top queries: ${(pf.top_queries ?? []).slice(0, 5).map(q => `${q.query} (${q.impressions})`).join('; ') || 'none yet'}`}>
+                   title={`Last 28 days to ${String(pf.last_data ?? '').slice(0, 10)}. ${pf.sessions} sessions. Top queries: ${(pf.top_queries ?? []).slice(0, 5).map(q => `${q.query} (${q.impressions})`).join('; ') || 'none yet'}`}>
                 <span className="font-semibold text-neutral-dark">{pf.impressions.toLocaleString()}</span> impr
                 {' · '}<span className="font-semibold text-neutral-dark">{pf.clicks}</span> clicks
-                {' · '}pos <span className="font-semibold text-neutral-dark">{pf.position ? pf.position.toFixed(1) : '-'}</span>
+                {' · '}pos <span className="font-semibold text-neutral-dark">{pf.position ? Number(pf.position).toFixed(1) : '-'}</span>
                 <br />
                 <span className={d > 0 ? 'text-green-600' : d < 0 ? 'text-red-500' : ''}>{d > 0 ? '+' : ''}{d} impr vs previous 28 days</span>
               </div>
@@ -2887,7 +2893,7 @@ export default function BlogPage() {
         {tab === 'mainsite' && (
           <div className="space-y-4">
             {perfReady === false && (
-              <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">Search Console numbers are not connected yet: the page_performance table has not been created, or the nightly pull has not run.</p>
+              <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">Search Console numbers could not be loaded. They come from the daily page metrics pull.</p>
             )}
             <p className="text-sm text-neutral-mid">
               Your primary marketing pages (<code className="rounded bg-neutral-light px-1 py-0.5 text-xs">/about</code>, <code className="rounded bg-neutral-light px-1 py-0.5 text-xs">/how-it-works</code> and more). Click Edit to change the SEO, add an editable content section and FAQs — these appear on the live page. Use <strong>Mark updated</strong> to track your progress.

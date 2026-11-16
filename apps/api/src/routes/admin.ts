@@ -3756,6 +3756,42 @@ adminRouter.get('/audit-pages/performance', async (req: Request, res: Response) 
   })
 })
 
+// GET /admin/section-performance?section=policies|audits|training|blog&days=28
+// Search Console and GA4 per page for one section, the last `days` against the `days` before, with the top queries
+// each page shows for. Feeds the Policy, Audit and Training pages tabs in Platform → Blog.
+const SECTION_KIND: Record<string, string> = { policies: 'policy', audits: 'audit', training: 'training', blog: 'blog' }
+adminRouter.get('/section-performance', async (req: Request, res: Response) => {
+  const kind = SECTION_KIND[String(req.query.section ?? '')]
+  if (!kind) { err(res, 'VALIDATION_ERROR', 'section must be policies, audits, training or blog.'); return }
+  const days = Math.min(90, Math.max(7, Number(req.query.days) || 28))
+  const day = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10)
+  try {
+    const rows: any[] = await (prisma as any).$queryRawUnsafe(
+      `SELECT url,
+              SUM(impressions) FILTER (WHERE date >= $2::date)::int AS impressions,
+              SUM(clicks)      FILTER (WHERE date >= $2::date)::int AS clicks,
+              SUM(sessions)    FILTER (WHERE date >= $2::date)::int AS sessions,
+              CASE WHEN SUM(impressions) FILTER (WHERE date >= $2::date) > 0
+                   THEN ROUND((SUM(position * impressions) FILTER (WHERE date >= $2::date) / SUM(impressions) FILTER (WHERE date >= $2::date))::numeric, 1) END AS position,
+              COALESCE(SUM(impressions) FILTER (WHERE date < $2::date), 0)::int AS prev_impressions,
+              COALESCE(SUM(clicks)      FILTER (WHERE date < $2::date), 0)::int AS prev_clicks,
+              MAX(date)::text AS last_data
+         FROM page_metrics WHERE kind = $1 AND date >= $3::date GROUP BY url`, kind, day(days), day(days * 2))
+    const qrows: any[] = await (prisma as any).$queryRawUnsafe(
+      `SELECT url, query, impressions, clicks FROM page_query_metrics
+        WHERE window_end = (SELECT MAX(window_end) FROM page_query_metrics) AND url LIKE $1 ORDER BY impressions DESC`,
+      `/${kind === 'policy' ? 'care-policies' : kind === 'audit' ? 'care-audits' : kind === 'training' ? 'staff-training' : 'blog'}/%`)
+    const queries = new Map<string, Array<{ query: string; impressions: number; clicks: number }>>()
+    for (const q of qrows) { const l = queries.get(q.url) ?? []; if (l.length < 8) l.push({ query: q.query, impressions: q.impressions, clicks: q.clicks }); queries.set(q.url, l) }
+    ok(res, {
+      days,
+      pages: rows.map(r => ({ path: r.url, impressions: r.impressions ?? 0, clicks: r.clicks ?? 0, sessions: r.sessions ?? 0,
+        position: r.position === null ? null : Number(r.position), prev_impressions: r.prev_impressions, prev_clicks: r.prev_clicks,
+        last_data: r.last_data, top_queries: queries.get(r.url) ?? [] })),
+    })
+  } catch (e: any) { err(res, 'PERFORMANCE_FAILED', String(e?.message ?? e).slice(0, 300), 500) }
+})
+
 adminRouter.get('/update-queue', async (_req: Request, res: Response) => {
   ok(res, { pages: await getUpdateQueue() })
 })

@@ -7,10 +7,14 @@ import { gscQuery, ga4Pages, googleConfigured } from './google'
 const iso = (d: Date) => d.toISOString().slice(0, 10)
 const daysAgo = (n: number) => iso(new Date(Date.now() - n * 86_400_000))
 
-/** /blog/slug, /collection/slug or /care-audits/slug (kind 'audit') from a full URL or path; null for anything else. */
-export function pageKey(u: string): { path: string; kind: 'blog' | 'collection' | 'audit'; slug: string } | null {
-  const m = u.replace(/^https?:\/\/[^/]+/i, '').split(/[?#]/)[0].replace(/\/+$/, '').match(/^\/(blog|collection|care-audits)\/([^/]+)$/)
-  return m ? { path: `/${m[1]}/${m[2]}`, kind: m[1] === 'care-audits' ? 'audit' : (m[1] as 'blog' | 'collection'), slug: m[2] } : null
+export type PageKind = 'blog' | 'collection' | 'audit' | 'policy' | 'training'
+const KIND_BY_SECTION: Record<string, PageKind> = { blog: 'blog', collection: 'collection', 'care-audits': 'audit', 'care-policies': 'policy', 'staff-training': 'training' }
+
+/** /blog/slug, /collection/slug, /care-audits/slug (kind 'audit'), /care-policies/slug ('policy') or /staff-training/slug ('training')
+ *  from a full URL or path; null for anything else. */
+export function pageKey(u: string): { path: string; kind: PageKind; slug: string } | null {
+  const m = u.replace(/^https?:\/\/[^/]+/i, '').split(/[?#]/)[0].replace(/\/+$/, '').toLowerCase().match(/^\/(blog|collection|care-audits|care-policies|staff-training)\/([^/]+)$/)
+  return m ? { path: `/${m[1]}/${m[2]}`, kind: KIND_BY_SECTION[m[1]], slug: m[2] } : null
 }
 
 type Row = { url: string; date: string; kind: string; slug: string; impressions: number; clicks: number; position: number | null; sessions: number; engaged_seconds: number }

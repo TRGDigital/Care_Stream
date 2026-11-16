@@ -165,6 +165,8 @@ export async function sendVerificationEmail(to: string, name: string, verificati
 // (override with PLATFORM_NOTIFY_EMAIL).
 export async function sendNewTenantNotification(opts: {
   orgName: string; adminName: string; adminEmail: string; accountNumber: string; slug: string; planName?: string | null
+  accountType?: string; isTest?: boolean; emailType?: string | null; careSetting?: string | null
+  cameFrom?: string[]; ip?: string | null; location?: string | null; device?: string | null
 }): Promise<void> {
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set — skipping new-tenant notification'); return }
@@ -176,20 +178,26 @@ export async function sendNewTenantNotification(opts: {
 
   const html = emailWrapper(`
     <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 6px">🎉 New CareStream account</p>
-    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 18px">A new organisation has just registered on CareStreamAI.</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 18px">A new organisation has just registered on CareStreamAI.${opts.isTest ? ' This is a TEST sign up made with the preview code.' : ''}</p>
     <table style="border-collapse:collapse;margin:0 0 22px">
+      ${row('Account type', opts.accountType ?? opts.planName ?? '—')}
       ${row('Organisation', opts.orgName)}
       ${row('Account number', opts.accountNumber)}
-      ${row('Plan', opts.planName ?? '—')}
       ${row('Admin', opts.adminName)}
       ${row('Admin email', opts.adminEmail)}
+      ${opts.emailType ? row('Email type', opts.emailType) : ''}
+      ${opts.careSetting ? row('Care setting', opts.careSetting) : ''}
+      ${(opts.cameFrom?.length ? opts.cameFrom : ['Not recorded']).map((t, i) => row(i === 0 ? 'Came from' : '', t)).join('')}
+      ${row('IP address', opts.ip ?? 'Not recorded')}
+      ${opts.location ? row('Location (from IP)', opts.location) : ''}
+      ${opts.device ? row('Device', opts.device) : ''}
       ${row('Slug', opts.slug)}
     </table>
     <p style="color:#9ca3af;font-size:12px;margin:0">Open the platform console → Clients to view the account.</p>
     ${emailFooter()}
   `)
 
-  await sgMail.send({ to, from, subject: `New CareStream account: ${opts.orgName} (${opts.accountNumber})`, html })
+  await sgMail.send({ to, from, subject: `${opts.isTest ? '[TEST] ' : ''}New CareStream account${opts.accountType ? ` (${opts.accountType})` : ''}: ${opts.orgName} (${opts.accountNumber})`, html })
 }
 
 // ─── Paid-policy purchase notification to the platform owner ────────────────────

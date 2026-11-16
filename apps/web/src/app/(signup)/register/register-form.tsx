@@ -83,6 +83,22 @@ export function RegisterForm({ initial }: { initial: RegisterInitial }) {
       else { const saved = sessionStorage.getItem('cs_gref'); if (saved && /^[0-9a-f-]{36}$/i.test(saved)) setGrowthRef(saved) }
     } catch { /* storage blocked: the ref from the address still works */ }
   }, [initial.gref])
+  // Where this visit came from (first touch of the session): the referring site, campaign tags and whether it was a Google Ads click. Sent with the sign up so the owner sees it in the new account alert.
+  const [attribution, setAttribution] = useState<Record<string, string | boolean>>({})
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('cs_attr')
+      if (saved) { setAttribution(JSON.parse(saved)); return }
+      const p = new URLSearchParams(window.location.search)
+      const pick = (k: string) => (p.get(k) ?? '').trim().slice(0, 100)
+      let referrer = ''
+      try { if (document.referrer) { const r = new URL(document.referrer); if (r.host !== window.location.host) referrer = `${r.host}${r.pathname}`.slice(0, 200) } } catch { /* no usable referrer */ }
+      const a: Record<string, string | boolean> = {}
+      for (const [k, v] of Object.entries({ referrer, landing: window.location.pathname, utm_source: pick('utm_source'), utm_medium: pick('utm_medium'), utm_campaign: pick('utm_campaign'), utm_content: pick('utm_content'), utm_term: pick('utm_term') })) if (v) a[k] = v
+      if (p.has('gclid')) a.gclid = true
+      setAttribution(a); sessionStorage.setItem('cs_attr', JSON.stringify(a))
+    } catch { /* storage blocked: the sign up still works without it */ }
+  }, [])
   const ctx = freeTier ? initial.ctx : null
   const orgRef = useRef<HTMLInputElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
@@ -111,7 +127,7 @@ export function RegisterForm({ initial }: { initial: RegisterInitial }) {
       const res = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(freeTier ? { ...form, tier: 'free', preview_code: previewCode || undefined, company_website: trap || undefined, course: courseSlug || undefined, source: signupSource || undefined, track: signupTrack || undefined, growth_ref: growthRef || undefined } : trainingOnly ? { ...form, tier: 'training_only' } : form),
+        body: JSON.stringify(freeTier ? { ...form, tier: 'free', preview_code: previewCode || undefined, company_website: trap || undefined, course: courseSlug || undefined, source: signupSource || undefined, track: signupTrack || undefined, growth_ref: growthRef || undefined, attribution } : trainingOnly ? { ...form, tier: 'training_only', attribution } : { ...form, attribution }),
       })
       const body = await res.json()
       if (!res.ok || !body.success) {

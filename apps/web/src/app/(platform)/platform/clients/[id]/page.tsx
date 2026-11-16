@@ -1164,12 +1164,29 @@ export default function ClientDetailPage() {
                   { label: 'Status',            value: detail.tenant.subscription_status },
                   { label: 'Branding sign-off', value: detail.tenant.branding_signoff },
                   { label: 'Joined',            value: new Date(detail.tenant.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) },
+                  { label: 'Sign up IP address', value: detail.tenant.signup_meta?.ip ?? 'Not recorded' },
+                  { label: 'Sign up location',   value: [detail.tenant.signup_meta?.city, detail.tenant.signup_meta?.region, detail.tenant.signup_meta?.country].filter(Boolean).join(', ') || 'Not recorded' },
                 ].map(({ label, value }) => (
                   <div key={label}>
                     <dt className="text-xs text-neutral-mid">{label}</dt>
                     <dd className="mt-0.5 font-medium text-neutral-dark">{value}</dd>
                   </div>
                 ))}
+              </dl>
+              {/* Where they came from, and the device: captured at sign up (accounts made before 16 Nov 2026 have none) */}
+              <dl className="mt-4 space-y-3 border-t border-gray-100 pt-4 text-sm">
+                <div>
+                  <dt className="text-xs text-neutral-mid">Came from</dt>
+                  <dd className="mt-0.5 font-medium text-neutral-dark">
+                    {detail.tenant.signup_meta?.came_from?.length ? detail.tenant.signup_meta.came_from.map((t: string) => <span key={t} className="block">{t}</span>) : 'Not recorded'}
+                  </dd>
+                </div>
+                {detail.tenant.signup_meta?.user_agent && (
+                  <div>
+                    <dt className="text-xs text-neutral-mid">Device at sign up</dt>
+                    <dd className="mt-0.5 break-words text-xs text-neutral-dark">{detail.tenant.signup_meta.user_agent}</dd>
+                  </div>
+                )}
               </dl>
             </div>
 

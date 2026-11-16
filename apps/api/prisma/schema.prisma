@@ -281,6 +281,7 @@ model Tenant {
   policies_lifetime_limit   Int?                                // NULL = unlimited (every paid tenant); 5 on the Free plan
   free_ai_budget_usd        Decimal?          @db.Decimal(8, 2) // lifetime AI budget for gap analysis on Free; NULL = default from env
   free_since                DateTime?                           // when the current free period began
+  signup_meta         Json               @default("{}")                    // sign up details captured at registration: ip, rough location, device, where they came from (lib/signup-meta.ts)
   trial_ends_at       DateTime?                                // when the Stripe trial ends (card-up-front trial)
   plan_id             String?
   tier                String             @default("full")                   // "full" = full CareStream | "training_only" = standard-training-only gateway tier

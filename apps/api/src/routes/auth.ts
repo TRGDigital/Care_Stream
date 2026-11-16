@@ -18,6 +18,7 @@ import { createLoginLink, consumeLoginToken, mintLoginToken } from '../lib/login
 import { needsBillingFor } from '../lib/tiers'
 import { freeEvent } from '../lib/free-events'
 import { reportSignupToGrowth } from '../lib/growth-event'
+import { buildSignupMeta, accountTypeLabel, locationOf } from '../lib/signup-meta'
 import { freeSignupAllowed, isPreviewCode, checkFreeSignup, FREE_POLICY_LIMIT, isWebmail, emailDomain } from '../lib/free-tier'
 
 
@@ -81,6 +82,12 @@ const RegisterSchema = z.object({
   care_setting:    z.enum(CARE_SETTINGS).optional(),
   // The Growth email they came from (a contact id). Only used to tell the Growth Engine, so its email sequence stops.
   growth_ref:      z.string().uuid().nullable().optional(),
+  // Where the visit came from, collected by the register page (first touch of the session): referrer host and path, campaign tags, whether it was a Google Ads click.
+  attribution: z.object({
+    referrer: z.string().max(200).optional(), landing: z.string().max(200).optional(),
+    utm_source: z.string().max(100).optional(), utm_medium: z.string().max(100).optional(), utm_campaign: z.string().max(100).optional(), utm_content: z.string().max(100).optional(), utm_term: z.string().max(100).optional(),
+    gclid: z.boolean().optional(),
+  }).optional(),
 })
 
 authRouter.post('/register', async (req: Request, res: Response) => {
@@ -120,6 +127,9 @@ authRouter.post('/register', async (req: Request, res: Response) => {
     if (!verdict.ok) { err(res, verdict.code, verdict.message, 429); return }
   }
 
+  // IP address, rough location, device and where they came from: kept on the account and sent in the new account alert.
+  const signupMeta = buildSignupMeta(req, { source: parsed.data.source, track: parsed.data.track, course: parsed.data.course, care_setting: parsed.data.care_setting, growth_ref: parsed.data.growth_ref, attribution: parsed.data.attribution })
+
   const verificationToken   = generateVerificationToken()
   const verificationExpires = new Date(Date.now() + VERIFICATION_EXPIRY_MS)
 
@@ -143,6 +153,7 @@ authRouter.post('/register', async (req: Request, res: Response) => {
         ...(parsed.data.care_setting ? { facility_type: SETTING_LABELS[parsed.data.care_setting].toLowerCase() } : {}),
         ...(tier === 'free' ? { policies_lifetime_limit: FREE_POLICY_LIMIT, free_since: new Date() } : {}),
         ...(isTest ? { feature_flags: { is_test: true } } : {}),
+        signup_meta: signupMeta as any,
       },
     })
 
@@ -184,12 +195,17 @@ authRouter.post('/register', async (req: Request, res: Response) => {
     console.error('[register] Failed to send verification email:', e)
   }
 
-  // Notify the platform owner of the new account.
+  // Notify the platform owner of the new account: account type, where they came from, and the IP address.
   try {
-    const plan = plan_id ? await (prisma as any).plan.findUnique({ where: { id: plan_id }, select: { name: true } }).catch(() => null) : null
+    const planId = tier === 'free' ? freePlanId : plan_id
+    const plan = planId ? await (prisma as any).plan.findUnique({ where: { id: planId }, select: { name: true } }).catch(() => null) : null
     await sendNewTenantNotification({
       orgName: tenant.name, adminName: name, adminEmail: email,
       accountNumber: tenant.account_number, slug: tenant.slug, planName: plan?.name ?? null,
+      accountType: accountTypeLabel(tier, plan?.name ?? null), isTest,
+      emailType: isWebmail(emailDomain(email)) ? 'Personal email address (webmail)' : `Company email address (${emailDomain(email)})`,
+      careSetting: parsed.data.care_setting ? SETTING_LABELS[parsed.data.care_setting] : null,
+      cameFrom: signupMeta.came_from, ip: signupMeta.ip, location: locationOf(signupMeta), device: signupMeta.user_agent ?? null,
     })
   } catch (e) {
     console.error('[register] new-account notification failed:', e)

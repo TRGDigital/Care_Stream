@@ -215,8 +215,16 @@ export interface PlatformCosts {
   note: string
 }
 
+/** What was captured when the account was created (empty for accounts made before this existed). */
+export interface SignupMeta {
+  ip?: string | null; country?: string | null; region?: string | null; city?: string | null; user_agent?: string | null
+  source?: string | null; track?: string | null; course?: string | null; care_setting?: string | null; growth_ref?: string | null
+  referrer?: string | null; utm_source?: string | null; utm_medium?: string | null; utm_campaign?: string | null; utm_content?: string | null; gclid?: boolean
+  landing?: string | null; came_from?: string[]; at?: string
+}
+
 export interface TenantDetail {
-  tenant:               TenantSummary & { email_domain: string; branding_signoff: string; parent_tenant_id?: string | null }
+  tenant:               TenantSummary & { email_domain: string; branding_signoff: string; parent_tenant_id?: string | null; signup_meta?: SignupMeta | null }
   group?: {
     parent:   { id: string; name: string; account_number: string } | null
     children: Array<{ id: string; name: string; account_number: string }>

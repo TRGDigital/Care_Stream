@@ -426,7 +426,7 @@ export default function PolicyGapsPage() {
                   const confirmed = notHeld.filter(i => (vOf(i) as GapVerification | undefined)?.real_gap === true)
                   const covered = notHeld.filter(i => { const v = vOf(i); return v && v !== 'error' && !v.real_gap })
                   const pending = notHeld.filter(i => !vOf(i) || vOf(i) === 'error')
-                  const label: Record<string, string> = { covered: 'Covered by a dedicated policy', covered_elsewhere: 'Covered inside another policy', mention_only: 'Only a passing mention', not_found: 'Nothing found' }
+                  const label: Record<string, string> = { covered: 'Covered by a dedicated policy', covered_elsewhere: 'Covered inside another policy', needs_review: 'Borderline: check before pitching', mention_only: 'Only a passing mention', not_found: 'Nothing found' }
                   const row = (i: CatalogueGapItem, tone: 'gap' | 'ok' | 'wait') => {
                     const v = vOf(i) as GapVerification | undefined
                     return (
@@ -463,7 +463,7 @@ export default function PolicyGapsPage() {
                       <p className="text-xs text-neutral-mid">Their own policy text was read. Nothing in it deals with this subject in substance. These are the ones to put to the client.</p>
                       <ul className="mt-1.5 divide-y divide-gray-100 rounded-lg border border-gray-200">{confirmed.map(i => row(i, 'gap'))}{confirmed.length === 0 && <li className="px-3 py-2.5 text-xs text-neutral-mid">None confirmed.</li>}</ul>
                       {pending.length > 0 && (<><h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Not yet checked ({pending.length})</h3><ul className="mt-1.5 divide-y divide-gray-100 rounded-lg border border-gray-200">{pending.map(i => row(i, 'wait'))}</ul></>)}
-                      {covered.length > 0 && (<><h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-green-700">Already covered by their own policies ({covered.length}). Do not pitch these.</h3><ul className="mt-1.5 divide-y divide-gray-100 rounded-lg border border-gray-200">{covered.map(i => row(i, 'ok'))}</ul></>)}
+                      {covered.length > 0 && (<><h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-green-700">Already covered, or borderline ({covered.length}). Do not pitch these without checking.</h3><ul className="mt-1.5 divide-y divide-gray-100 rounded-lg border border-gray-200">{covered.map(i => row(i, 'ok'))}</ul></>)}
                     </>
                   )
                 })()}

@@ -188,7 +188,7 @@ export async function evidenceFor(tenantId: string, query: string, terms: string
 // Only "mention only" and "not found" count as a gap we would put to a client.
 // Every quote is checked by code against the real passages, so the model cannot invent evidence.
 const SONNET = 'claude-sonnet-4-5'
-export type GapVerdict = 'covered' | 'covered_elsewhere' | 'mention_only' | 'not_found'
+export type GapVerdict = 'covered' | 'covered_elsewhere' | 'needs_review' | 'mention_only' | 'not_found'
 export type GapVerification = {
   slug: string; title: string; verdict: GapVerdict; real_gap: boolean
   reasoning: string
@@ -258,6 +258,13 @@ Return JSON: {"verdict":"...","reasoning":"two plain sentences a sales person co
   const evidence = elements.filter((e: any) => e.quote && e.policy).map((e: any) => ({ policy: e.policy as string, quote: e.quote as string })).slice(0, 5)
   // If the model claims covered but not a single quote could be verified, do not trust it as covered.
   const foundCount = elements.filter((e: any) => e.found).length
-  const final: GapVerdict = (verdict === 'covered' || verdict === 'covered_elsewhere') && foundCount === 0 ? 'mention_only' : verdict
-  return { slug, title: product.title, verdict: final, real_gap: final === 'mention_only' || final === 'not_found', reasoning: String(j.reasoning ?? ''), elements, evidence }
+  // Be strict both ways. A claim of "covered" needs at least half the elements really evidenced, otherwise it is borderline.
+  // A gap needs the evidence to be thin (two elements or fewer, or nothing). Anything in between is borderline: we do not
+  // call it covered and we do not put it to a client as a gap; a person decides.
+  const total = Math.max(elements.length, 1)
+  let final: GapVerdict = verdict
+  if ((verdict === 'covered' || verdict === 'covered_elsewhere') && foundCount * 2 < total) final = 'needs_review'
+  if (verdict === 'mention_only' && foundCount > 2) final = 'needs_review'
+  if (verdict === 'not_found' && foundCount > 2) final = 'needs_review'
+  return { slug, title: product.title, verdict: final, real_gap: (final === 'mention_only' || final === 'not_found') && foundCount <= 2, reasoning: String(j.reasoning ?? ''), elements, evidence }
 }

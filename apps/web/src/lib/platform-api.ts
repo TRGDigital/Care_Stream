@@ -1414,7 +1414,7 @@ export function createPlatformClient(token: string) {
 export type CatalogueGapItem = { slug: string; title: string; price_pence: number; description: string; held: boolean; held_by: string | null; is_new: boolean }
 export type CatalogueGapBatch = { total: number; offset: number; next_offset: number | null; setting: string; client_policies: number; items: CatalogueGapItem[] }
 
-export type GapVerdict = 'covered' | 'covered_elsewhere' | 'mention_only' | 'not_found'
+export type GapVerdict = 'covered' | 'covered_elsewhere' | 'needs_review' | 'mention_only' | 'not_found'
 export type GapVerification = {
   slug: string; title: string; verdict: GapVerdict; real_gap: boolean; reasoning: string
   elements: Array<{ element: string; found: boolean; policy: string | null; quote: string | null }>

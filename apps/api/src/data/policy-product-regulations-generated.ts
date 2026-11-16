@@ -168,5 +168,210 @@ export const GENERATED_PRODUCT_REGULATIONS: Record<string, string[]> = {
   "human-rights-act-1998",
   "infection-control",
   "safeguarding-adults"
+ ],
+ "accompanying-people-out-community": [
+  "regulation-9",
+  "regulation-12",
+  "mental-capacity-act-2005",
+  "regulation-11",
+  "safeguarding-adults",
+  "human-rights-act-1998"
+ ],
+ "activities-social-inclusion": [
+  "regulation-9",
+  "regulation-10",
+  "equality-act-2010",
+  "mental-capacity-act-2005",
+  "human-rights-act-1998",
+  "accessible-information-standard"
+ ],
+ "cctv-surveillance-monitoring": [
+  "regulation-10",
+  "regulation-13",
+  "regulation-11",
+  "mental-capacity-act-2005",
+  "data-protection-act",
+  "gdpr",
+  "human-rights-act-1998"
+ ],
+ "continence-catheter-care": [
+  "regulation-10",
+  "regulation-12",
+  "infection-control",
+  "regulation-9",
+  "mental-capacity-act-2005"
+ ],
+ "deteriorating-resident-acute-illness": [
+  "regulation-12",
+  "regulation-18",
+  "mental-capacity-act-2005",
+  "cqc-statutory-notifications",
+  "common-law-duty-of-confidentiality"
+ ],
+ "diabetes-care": [
+  "regulation-12",
+  "regulation-9",
+  "regulation-14",
+  "regulation-18",
+  "nice-sc1-managing-medicines-care-homes"
+ ],
+ "driving-travel-vehicle-use": [
+  "regulation-12",
+  "regulation-17",
+  "regulation-18",
+  "health-and-safety-at-work-act",
+  "safeguarding-adults"
+ ],
+ "extra-care-communal-call-system": [
+  "regulation-12",
+  "regulation-15",
+  "regulatory-reform-fire-safety-order-2005",
+  "health-and-safety-at-work-act",
+  "regulation-17",
+  "gdpr"
+ ],
+ "hate-mate-crime-cuckooing": [
+  "regulation-13",
+  "regulation-10",
+  "safeguarding-adults",
+  "care-act-2014",
+  "modern-slavery-act-2015",
+  "mental-capacity-act-2005",
+  "cqc-statutory-notifications"
+ ],
+ "independent-advocacy": [
+  "care-act-2014",
+  "mental-capacity-act-2005",
+  "regulation-9",
+  "regulation-10",
+  "regulation-16",
+  "human-rights-act-1998",
+  "accessible-information-standard"
+ ],
+ "live-in-accommodation-rota-handover": [
+  "regulation-18",
+  "regulation-12",
+  "regulation-17",
+  "health-and-safety-at-work-act"
+ ],
+ "nursing-procedures-delegation": [
+  "regulation-12",
+  "regulation-18",
+  "the-code:-professional-standards-of-practice-and-behaviour-for-nurses-midwives-and-nursing-associates",
+  "health-and-social-care-act-2008",
+  "regulated-activities-regulations-2014",
+  "mental-capacity-act-2005"
+ ],
+ "oral-health": [
+  "regulation-12",
+  "regulation-10",
+  "regulation-11",
+  "mental-capacity-act-2005",
+  "infection-control"
+ ],
+ "oxygen-smoking-fire-risk-in-the-home": [
+  "regulation-12",
+  "health-and-safety-at-work-act",
+  "regulation-11",
+  "mental-capacity-act-2005",
+  "regulation-17"
+ ],
+ "relationships-sexuality-sexual-safety": [
+  "regulation-10",
+  "regulation-13",
+  "mental-capacity-act-2005",
+  "human-rights-act-1998",
+  "safeguarding-adults",
+  "equality-act-2010"
+ ],
+ "resident-environmental-safety": [
+  "regulation-12",
+  "regulation-15",
+  "health-and-safety-at-work-act",
+  "workplace-health-safety-and-welfare-regulations-1992",
+  "legionella-acop-l8"
+ ],
+ "respite-short-break-care": [
+  "regulation-9",
+  "regulation-11",
+  "regulation-12",
+  "regulation-17",
+  "mental-capacity-act-2005",
+  "care-act-2014"
+ ],
+ "sexuality-relationships-intimacy": [
+  "regulation-10",
+  "regulation-13",
+  "mental-capacity-act-2005",
+  "human-rights-act-1998",
+  "equality-act-2010",
+  "safeguarding-adults"
+ ],
+ "shared-lives-approval-matching-review": [
+  "regulation-12",
+  "regulation-13",
+  "regulation-17",
+  "regulation-19",
+  "disclosure-and-barring-service-dbs",
+  "safeguarding-vulnerable-groups-act-2006",
+  "mental-capacity-act-2005",
+  "care-act-2014"
+ ],
+ "shift-handover-communication": [
+  "regulation-12",
+  "regulation-17",
+  "regulation-9",
+  "regulation-18",
+  "data-protection-act"
+ ],
+ "sickness-absence-return-to-work": [
+  "regulation-18",
+  "regulation-12",
+  "equality-act-2010",
+  "employment-rights-act",
+  "health-and-safety-at-work-act",
+  "gdpr",
+  "data-protection-act"
+ ],
+ "smoking-vaping-oxygen-safety": [
+  "regulation-12",
+  "regulation-15",
+  "regulatory-reform-fire-safety-order-2005",
+  "health-and-safety-at-work-act",
+  "coshh",
+  "mental-capacity-act-2005"
+ ],
+ "social-media-phones-photography": [
+  "regulation-10",
+  "regulation-17",
+  "data-protection-act",
+  "gdpr",
+  "common-law-duty-of-confidentiality",
+  "mental-capacity-act-2005"
+ ],
+ "tenancy-housing-care-separation": [
+  "regulation-9",
+  "regulation-15",
+  "regulation-17",
+  "human-rights-act-1998",
+  "mental-capacity-act-2005",
+  "equality-act-2010",
+  "safeguarding-adults"
+ ],
+ "tenant-property-belongings-keys": [
+  "regulation-10",
+  "regulation-13",
+  "safeguarding-adults",
+  "mental-capacity-act-2005",
+  "human-rights-act-1998",
+  "data-protection-act"
+ ],
+ "wound-care-tissue-viability": [
+  "regulation-12",
+  "regulation-17",
+  "regulation-18",
+  "infection-control",
+  "health-and-social-care-act-infection-control-code",
+  "records-management-code-of-practice-for-health-and-social-care-2021"
  ]
 }

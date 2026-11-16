@@ -550,5 +550,655 @@ export const GENERATED_POLICY_CRO: Record<string, PolicyCro> = {
     "body": "Sets out the Mental Capacity Act 2005 route: consent, best interests, involving relevant people, and when advocacy or an IMCA is considered."
    }
   ]
+ },
+ "accompanying-people-out-community": {
+  "whoFor": "Perfect for services who need an outings policy that shows how staff accompany people to appointments, shops and social activity safely.",
+  "benefits": [
+   "An outings policy built around the activities, transport and money arrangements your service actually uses, not a generic template.",
+   "One clear home care policy covering outings risk assessment, consent, emergencies and recording, ready for your team and your inspector."
+  ],
+  "moments": [
+   {
+    "title": "A person asks to go to a regular activity",
+    "body": "Sets out how you assess the risks of the outing and agree it with the person, so it reflects their preferences. Grounded in Regulation 9 on person-centred care and Regulation 12 on safe care and treatment."
+   },
+   {
+    "title": "Capacity to decide is in doubt",
+    "body": "Covers how staff take reasonable steps to establish capacity and record best interests decisions. Grounded in section 5 of the Mental Capacity Act 2005 on acts in connection with care."
+   },
+   {
+    "title": "Something goes wrong while out",
+    "body": "Covers who staff call, how risk is reduced, and how the incident is recorded and reviewed. Linked to Regulation 12 and your safeguarding policy."
+   },
+   {
+    "title": "A carer is asked to drive or handle money",
+    "body": "Records what staff may and may not do with vehicles and cash, so the practice matches what your service has agreed."
+   }
+  ]
+ },
+ "activities-social-inclusion": {
+  "whoFor": "Perfect for services who need a care home activities policy that shows how every resident, including those who stay in their rooms, is offered meaningful occupation.",
+  "benefits": [
+   "Written around your own programme, coordinator, outings and community links, so it describes what you really do.",
+   "Grounded in the person-centred care and dignity regulations, with equality, capacity and human rights duties built in."
+  ],
+  "moments": [
+   {
+    "title": "An inspector asks how you plan activities",
+    "body": "The policy sets out how interests are gathered, how the programme is built and how it reflects each person's preferences, in line with Regulation 9 on person-centred care, so activities for elderly in care homes are not one size fits all."
+   },
+   {
+    "title": "Residents who stay in their rooms",
+    "body": "It covers one to one provision, reasonable adjustments and how you reach people who cannot join groups, supporting autonomy, independence and involvement in the community under Regulation 10, and tackling loneliness in care homes."
+   },
+   {
+    "title": "Planning care home outings and community links",
+    "body": "It describes how care home outings are arranged, how risks are assessed without taking away choice, and how links with schools, faith groups and volunteers are managed, including activities for seniors in nursing homes."
+   },
+   {
+    "title": "Supporting people living with dementia",
+    "body": "It covers person centred activities that suit people with memory loss, how consent and best interests are handled under the Mental Capacity Act 2005, and activities for dementia residents that reflect their life story."
+   }
+  ]
+ },
+ "cctv-surveillance-monitoring": {
+  "whoFor": "Perfect for services who need a care home CCTV policy template that sets out which monitoring technology you use, why, and how privacy is protected, in your own words.",
+  "benefits": [
+   "Grounded in Regulation 10 on dignity and privacy, Regulation 13 on restraint and Regulation 11 on consent, with data protection law",
+   "Written around your devices, camera locations and footage rules, delivered in 2 working days"
+  ],
+  "moments": [
+   {
+    "title": "You are asked about cameras by a family",
+    "body": "Sets out where cameras are and are not used, the purpose of each device and how people are told, in line with the duty on privacy in Regulation 10(2)(a). Covers the use of CCTV in care homes, CCTV cameras in care homes and what to say to relatives."
+   },
+   {
+    "title": "A door alarm or sensor mat is proposed",
+    "body": "Covers how you agree the device with the person, or decide in their best interests, who responds to alarms, and the check that it does not restrict movement as Regulation 13(7)(b) describes."
+   },
+   {
+    "title": "Someone asks to see footage",
+    "body": "Covers who can view footage, how long it is kept and who decides on disclosure, using your own data protection arrangements."
+   },
+   {
+    "title": "A device has been in place for years",
+    "body": "Sets out your review routine, so each camera, mat or alarm is still needed and proportionate, and the reasons are recorded."
+   }
+  ]
+ },
+ "continence-catheter-care": {
+  "whoFor": "Perfect for services who need a continence policy that sets out how your staff promote continence, support catheter users and protect dignity.",
+  "benefits": [
+   "Grounded in the regulations on dignity, safe care and treatment, and infection prevention",
+   "Written for your service, using your own roles, products and nurse arrangements"
+  ],
+  "moments": [
+   {
+    "title": "An inspection is coming",
+    "body": "Inspectors look at dignity and infection risk. The continence policy covers assessment, products and privacy, tied to Regulation 10 and Regulation 12."
+   },
+   {
+    "title": "Someone has a new catheter",
+    "body": "Sets out who changes the catheter, who empties bags, what daily catheter care your staff carry out and how changes are recorded. You tell us who does what."
+   },
+   {
+    "title": "A urinary tract infection is suspected",
+    "body": "Describes what staff watch for, who is told and how quickly, and how urinary catheter care links to your infection prevention arrangements."
+   },
+   {
+    "title": "Staff are unsure who can do what",
+    "body": "Covers training, competence checks and the limits of care staff tasks, including support for people who lack capacity, whether in a care home, nursing or dementia service."
+   }
+  ]
+ },
+ "deteriorating-resident-acute-illness": {
+  "whoFor": "Perfect for services who need a deteriorating patient policy that shows how staff notice decline, escalate quickly and hand over safely.",
+  "benefits": [
+   "A deteriorating patient policy built around the tools, roles and call routes your service actually has, not a generic template.",
+   "One clear deteriorating resident policy covering sepsis awareness, escalation and handover, ready for your team and your inspector."
+  ],
+  "moments": [
+   {
+    "title": "A resident seems not quite right",
+    "body": "Sets out the signs staff act on, who they tell and how it is recorded. It forms the core of your acute illness policy, grounded in Regulation 12 on safe care and treatment."
+   },
+   {
+    "title": "Sepsis is a possibility",
+    "body": "Covers how staff are made aware, who they call and how fast. This sits within your sepsis policy and your risk duties under Regulation 12."
+   },
+   {
+    "title": "You need to call for help",
+    "body": "Records your escalation policy for GP, 111 and 999, in and out of hours, with the competence of staff linked to Regulation 18 on staffing."
+   },
+   {
+    "title": "Paramedics arrive",
+    "body": "Sets what goes with the person, who speaks to the crew and who tells family. Decisions respect the Mental Capacity Act and shared information follows confidentiality duties."
+   }
+  ]
+ },
+ "diabetes-care": {
+  "whoFor": "Perfect for services who need a diabetes policy that sets out how your staff monitor, support and respond when someone's blood glucose changes.",
+  "benefits": [
+   "Grounded in the regulations on safe care, person-centred care, nutrition and staffing",
+   "Written for your service, using your own monitoring, insulin and escalation arrangements"
+  ],
+  "moments": [
+   {
+    "title": "Someone with diabetes is moving in",
+    "body": "Sets out how needs are assessed, how a diabetes care plan for a care home or home visit is agreed, and who does what from the first day, tied to Regulation 12."
+   },
+   {
+    "title": "A hypo happens on shift",
+    "body": "Covers your own hypoglycaemia response, the supplies you hold, when staff call the GP or 999 and how the event is recorded. A clear hypoglycemia policy stops staff guessing."
+   },
+   {
+    "title": "Staff support insulin or testing",
+    "body": "Names who may help with insulin or glucose testing, how competence is checked and how it links to your medicines arrangements. Your insulin policy section matches what you do."
+   },
+   {
+    "title": "An inspection or review is coming",
+    "body": "A diabetes management policy shows how you assess risk, train staff and record care. It also covers diet, foot checks and review after any incident."
+   }
+  ]
+ },
+ "driving-travel-vehicle-use": {
+  "whoFor": "Perfect for services who need a driving for work policy that shows how staff travel safely between visits and use their own cars.",
+  "benefits": [
+   "A driving for work policy built around the vehicles and checks your service really uses, not a generic template.",
+   "One clear place for licence checks, own car use, travel time and accidents, ready for your team and your inspector."
+  ],
+  "moments": [
+   {
+    "title": "A new carer joins with their own car",
+    "body": "Sets out which licence, insurance and vehicle checks you make and who records them. Your company driving policy, company car policy and own car rules sit side by side, with risk duties under Regulation 12 and employer risk assessment in mind."
+   },
+   {
+    "title": "Staff drive between visits",
+    "body": "Covers journey planning, travel time, phone use and fatigue. This is your safe driving policy for rotas, written around how your rotas are really built and your work related road safety risks."
+   },
+   {
+    "title": "A carer wants to take someone out",
+    "body": "Explains whether carrying people is allowed, with what consent and insurance, and how risk is assessed. Linked to your safeguarding policy and Regulation 12 safe care duties."
+   },
+   {
+    "title": "Snow, a crash or a breakdown",
+    "body": "Covers who decides which visits to prioritise in severe weather, what staff do after a collision, and how it is recorded and reviewed under your governance duties in Regulation 17."
+   }
+  ]
+ },
+ "extra-care-communal-call-system": {
+  "whoFor": "Perfect for services who need an extra care housing policy that sets out how the call system, communal areas and emergency response work in your scheme.",
+  "benefits": [
+   "An extra care housing policy built around your own call system, staffing and building, not a generic template.",
+   "One clear document for care call alarms, medical care alert system checks, communal areas and night cover, ready for your team and your inspector."
+  ],
+  "moments": [
+   {
+    "title": "A call goes unanswered",
+    "body": "Sets out who answers, the response time you aim for, how slow or missed calls are escalated and recorded. Grounded in Regulation 12 on safe care and treatment."
+   },
+   {
+    "title": "The call system fails",
+    "body": "Covers testing of pendants and pull cords, what staff do during a fault, who is told and how checks are recorded. Links to Regulation 15 on equipment that is properly maintained."
+   },
+   {
+    "title": "Night cover is thin",
+    "body": "Records who is on site overnight, who is on call and how an emergency is escalated, so the policy matches the cover you really provide."
+   },
+   {
+    "title": "A shared area is not safe",
+    "body": "Covers communal area checks, fault reporting to the landlord and fire duties for shared spaces, in line with Regulation 15 and the Fire Safety Order."
+   }
+  ]
+ },
+ "hate-mate-crime-cuckooing": {
+  "whoFor": "Perfect for services who need a cuckooing policy that sets out how staff spot and respond when people are exploited, targeted or befriended by others in their own homes.",
+  "benefits": [
+   "A cuckooing policy that names your own reporting route, safeguarding lead and local contacts, so staff know what to do and who to tell.",
+   "Covers cuckooing, mate crime and hate crime in one place, and sits alongside your safeguarding adults policy so concerns are handled the same way every time."
+  ],
+  "moments": [
+   {
+    "title": "A new visitor keeps turning up",
+    "body": "Sets out the signs staff note and who they tell, using your visitor arrangements. It is grounded in the duty under Regulation 13 to operate systems that prevent abuse, while respecting the person's choice under Regulation 10."
+   },
+   {
+    "title": "Someone appears to be taking over a tenancy",
+    "body": "Covers cuckooing of vulnerable adults: recording, the police and housing contacts you named, and a safeguarding referral under the Care Act 2014."
+   },
+   {
+    "title": "A person is befriended and then exploited",
+    "body": "Explains mate crime, how it differs from genuine friendship, and how you involve the person, with the Mental Capacity Act 2005 applied where capacity is in doubt."
+   },
+   {
+    "title": "A person is targeted because of who they are",
+    "body": "Covers hate crime reports, police contact, victim support and review of the support plan, with notifications handled as your service decides under CQC rules. It is written as a cuckooing policy for your service, using your own reporting and escalation arrangements."
+   }
+  ]
+ },
+ "independent-advocacy": {
+  "whoFor": "Perfect for services who need an advocacy policy template, not a generic one, that shows how people are told about independent advocates, referred to them and supported to be heard.",
+  "benefits": [
+   "Grounded in the Care Act 2014, the Mental Capacity Act 2005 and Regulations 9, 10 and 16, with referrals and outcomes recorded",
+   "Written around your local advocacy providers, referral roles and records, so the policy describes what your staff really do"
+  ],
+  "moments": [
+   {
+    "title": "A person struggles to take part in their own review",
+    "body": "The policy sets out how staff notice when someone may need an independent advocate and how your service asks the local authority to arrange one. Under the Care Act, an independent care act advocate is arranged by the council's duty to arrange an advocate applies where the person would have substantial difficulty and has no suitable person to support them. Your policy covers your part: spotting and referring."
+   },
+   {
+    "title": "An important decision is coming up",
+    "body": "It covers how your service links to IMCA support, a mental capacity act imca referral, where the Act applies, who makes the referral and how the IMCA is given access to the person and relevant records. It names your local provider, so staff are not left guessing."
+   },
+   {
+    "title": "A person wants help with a complaint",
+    "body": "The policy covers how people are told about complaints and NHS complaints advocacy, in line with Regulation 16, and how staff step back so the advocate can work independently."
+   },
+   {
+    "title": "An inspector asks how people are heard",
+    "body": "You can show how people are told about advocacy, how need is identified, how referrals are logged and how disagreements are handled. That supports the person centred care that Regulation 9 asks for."
+   }
+  ]
+ },
+ "live-in-accommodation-rota-handover": {
+  "whoFor": "Perfect for services who need a live in care policy that sets out carer accommodation, rota patterns, handover and placement review for live in home care.",
+  "benefits": [
+   "Grounded in Regulation 18 staffing, Regulation 12 safe care and Regulation 17 records, with your accommodation, rota and handover rules set out",
+   "Written around your own rota patterns and handover method, delivered in 2 working days"
+  ],
+  "moments": [
+   {
+    "title": "A new live in care placement is about to start",
+    "body": "Sets out how the carer's room and facilities are checked, what happens if they fall short, and who signs the placement off, so live in care starts on a safe footing."
+   },
+   {
+    "title": "A live in caregiver asks about the rota",
+    "body": "Records your rota patterns, minimum standards and change process, so staff are deployed in sufficient numbers as Regulation 18 expects."
+   },
+   {
+    "title": "One carer is leaving and another is arriving",
+    "body": "Covers handover method and content, and where it is recorded, so records stay accurate and contemporaneous under Regulation 17."
+   },
+   {
+    "title": "A commissioner asks how 24 hour live in care is reviewed",
+    "body": "Explains when placements are reviewed, what triggers an early review, and how risks to the person and the carer are considered under Regulation 12."
+   }
+  ]
+ },
+ "nursing-procedures-delegation": {
+  "whoFor": "Perfect for services who need a delegation policy that sets out which clinical tasks nurses delegate to care staff, how competence is signed off and who stays accountable.",
+  "benefits": [
+   "Sets out your own delegation policy for nursing delegation and delegation of duties in nursing, so staff know which tasks they may do, who checked them and who to call.",
+   "Built from your answers, so it names your procedures, roles and records and never invents a practice you do not have."
+  ],
+  "moments": [
+   {
+    "title": "A nurse asks a carer to take on a new task",
+    "body": "Covers how delegated nursing tasks are chosen, who decides, and how the delegation is recorded. Accountability for the decision stays with the delegating nurse, in line with the Nursing and Midwifery Council Code."
+   },
+   {
+    "title": "You need to prove a carer is competent",
+    "body": "Sets out how competence is assessed, signed off and rechecked, and where the record is kept. Links to Regulation 12(2)(c) on competence, skills and experience, and Regulation 18 on support and training."
+   },
+   {
+    "title": "A person needs a catheter or stoma procedure",
+    "body": "Explains which steps are nurse only, which may be delegated, and how person specific instructions are written. Your catheter care policy and catheterisation policy arrangements sit inside this delegation policy, not alongside it."
+   },
+   {
+    "title": "There is no nurse on site and something changes",
+    "body": "Shows who staff call, when they stop a clinical procedures policy task, and how the event is recorded and reviewed. Consent and capacity are handled under the Mental Capacity Act."
+   }
+  ]
+ },
+ "oral-health": {
+  "whoFor": "Perfect for services who need an oral health policy that sets out how mouth care, denture care and dental access work in your own service.",
+  "benefits": [
+   "An oral health policy built from your own assessment routine, supplies and dentist access, not a generic template.",
+   "One oral care policy that links admission assessment, daily mouth care, denture care and records to each care plan."
+  ],
+  "moments": [
+   {
+    "title": "A new resident moves in",
+    "body": "Sets out how the mouth is assessed on admission, who does it, and how findings reach the care plan. It supports the risk assessment duty in Regulation 12."
+   },
+   {
+    "title": "Daily mouth care is rushed or missed",
+    "body": "Records your routine for cleaning teeth and denture care, who supplies items, and how staff keep a record, so cleaning dentures and mouth care happen consistently."
+   },
+   {
+    "title": "A resident refuses or cannot consent",
+    "body": "Explains how staff offer support with dignity, with privacy and respect in line with Regulation 10, and how capacity and best interests are considered under the Mental Capacity Act 2005."
+   },
+   {
+    "title": "A denture breaks or a mouth is sore",
+    "body": "Covers how problems are reported, how a denture emergency or pain reaches a dentist or GP, and how the care plan is updated afterwards."
+   }
+  ]
+ },
+ "oxygen-smoking-fire-risk-in-the-home": {
+  "whoFor": "Perfect for services who need an oxygen safety at home policy that shows how staff manage smoking, oxygen and fire risk in a person's own home.",
+  "benefits": [
+   "An oxygen safety at home policy built around the support your staff actually give, not a generic template.",
+   "One home care policy covering smoking, emollient creams, heaters, candles and fire service referral, ready for your team and your inspector."
+  ],
+  "moments": [
+   {
+    "title": "A person starts using home oxygen",
+    "body": "Sets out the checks staff make, who they contact at the supplier and what they must not do. Grounded in Regulation 12 on assessing and reducing risk."
+   },
+   {
+    "title": "A person or visitor smokes",
+    "body": "Covers the risk assessment, rules for staff and how the person's choices are recorded, with consent under Regulation 11 and the Mental Capacity Act 2005 where capacity is in doubt."
+   },
+   {
+    "title": "Staff notice a fire hazard",
+    "body": "Covers emollient creams on bedding, candles, heaters and sockets: what staff look for, who is told and how a fire service home safety referral is made."
+   },
+   {
+    "title": "The person declines advice",
+    "body": "Records the decision, who is told and how it is reviewed, so your fire safety domiciliary care approach stays consistent. Supported by your governance duties under Regulation 17."
+   }
+  ]
+ },
+ "relationships-sexuality-sexual-safety": {
+  "whoFor": "Perfect for services who need a personal relationships policy and sexuality policy that shows how you respect adults' relationships and sexuality while keeping them safe from abuse.",
+  "benefits": [
+   "Grounded in Regulation 10 dignity and respect, Regulation 13 safeguarding and the Mental Capacity Act, with consent, privacy and reporting set out clearly",
+   "Written around your own privacy arrangements, boundaries and reporting route, with consensual relationships and sex education for learning disability covered in your own words"
+  ],
+  "moments": [
+   {
+    "title": "A person starts a relationship",
+    "body": "The policy sets out how your staff respect privacy, autonomy and involvement in the community, which Regulation 10 requires, and how they support the person without judging the relationship."
+   },
+   {
+    "title": "Staff doubt a person can consent",
+    "body": "It sets out the Mental Capacity Act starting point: capacity is assumed, practicable support comes first, and an unwise decision is not proof of lack of capacity. It then names your own route when doubt remains."
+   },
+   {
+    "title": "A staff member gets too close to someone they support",
+    "body": "It covers your boundaries and the reporting route. It refers to section 38 of the Sexual Offences Act 2003, which concerns care workers and sexual activity with a person with a mental disorder."
+   },
+   {
+    "title": "You suspect sexual abuse or exploitation",
+    "body": "The policy sets out how concerns are reported and escalated under your safeguarding arrangements, reflecting Regulation 13, which requires systems to prevent abuse of people using the service."
+   }
+  ]
+ },
+ "resident-environmental-safety": {
+  "whoFor": "Perfect for services who need an environmental safety policy that sets out how you control hot water, windows and building hazards for the residents you support.",
+  "benefits": [
+   "Grounded in Regulation 12 safe care and treatment and Regulation 15 premises and equipment, with the health and safety duties that sit alongside them",
+   "Written around your own checks, valves, restrictors and contractors, so it describes what you really do, delivered in 2 working days"
+  ],
+  "moments": [
+   {
+    "title": "A bath or shower is too hot",
+    "body": "Sets out who checks outlet temperatures, what limits you work to, and what happens when a reading is out of range. This supports the duty to keep premises safe to use in Regulation 12(2)(d) and scald prevention."
+   },
+   {
+    "title": "A window opens further than it should",
+    "body": "Covers how window openings are controlled, how restrictors are checked and who fixes a fault. This links to premises being secure and properly maintained under Regulation 15."
+   },
+   {
+    "title": "A resident can reach something hot or hazardous",
+    "body": "Covers hot surfaces, locked areas and individual room risk assessment for residents who may not see the danger, including how you treat ligature risk where it is identified."
+   },
+   {
+    "title": "An inspector asks how you keep the building safe",
+    "body": "Gives you one policy that names roles, check routines and records, so your environmental safety policy matches the evidence you hold. Water safety sits with your legionella policy and risk assessment."
+   }
+  ]
+ },
+ "respite-short-break-care": {
+  "whoFor": "Perfect for services who need a respite care policy that sets out how you plan, assess and deliver short breaks for the person and their family carer.",
+  "benefits": [
+   "Grounded in Regulation 9 person-centred care, with consent, safe care and governance considered, so your respite care policy reflects your own practice",
+   "Written around your booking rules, assessment and emergency cover, delivered in 2 working days"
+  ],
+  "moments": [
+   {
+    "title": "A family carer asks for a break next month",
+    "body": "Sets out how respite care is requested, booked and funded, and how the short term respite care is assessed with the person and carer, in line with Regulation 9(3)(a)."
+   },
+   {
+    "title": "A carer is ill and you need emergency respite care",
+    "body": "Explains who decides, how fast you respond, what is gathered about the person before the first visit and how risks are recorded."
+   },
+   {
+    "title": "Someone living with dementia is new to your service",
+    "body": "Covers continuity of carers, routines from the family and consent and capacity under the Mental Capacity Act 2005, for respite care for dementia patients."
+   },
+   {
+    "title": "A commissioner asks how your respite services are run",
+    "body": "Shows how in home respite care is planned, reviewed and recorded, including adult respite care funded through direct payments, so you can evidence your approach."
+   }
+  ]
+ },
+ "sexuality-relationships-intimacy": {
+  "whoFor": "Perfect for services who need a sexuality policy that respects residents' privacy and relationships while showing how consent, capacity and safeguarding are handled.",
+  "benefits": [
+   "Grounded in Regulation 10 dignity and respect, Regulation 13 safeguarding and the Mental Capacity Act, so privacy and protection sit in one policy",
+   "Written around your rooms, routines and reporting lines, so staff get a sexuality policy that describes what really happens in your service"
+  ],
+  "moments": [
+   {
+    "title": "A resident starts a new relationship",
+    "body": "The policy sets out how staff respond with respect, how privacy is protected and what is recorded. It reflects Regulation 10, which requires the privacy of the service user and support for their autonomy and independence."
+   },
+   {
+    "title": "Staff doubt a resident can consent",
+    "body": "It sets out the Mental Capacity Act starting point that a person is assumed to have capacity and is not treated as lacking it because a decision seems unwise. It then covers who assesses capacity in your service and how the outcome is recorded."
+   },
+   {
+    "title": "Behaviour linked to dementia worries staff",
+    "body": "The policy covers how staff respond calmly to sexual behaviour by a person living with dementia, including dementia and sex questions, family questions about dementia sex drive and sex and dementia in nursing homes. It sets out your recording, care plan review and the point at which a safeguarding referral is made."
+   },
+   {
+    "title": "A concern about abuse or exploitation",
+    "body": "It sets out your route for reporting concerns. Regulation 13 requires systems to prevent abuse and to investigate allegations immediately, and its definition of abuse includes behaviour that is an offence under the Sexual Offences Act 2003."
+   }
+  ]
+ },
+ "shared-lives-approval-matching-review": {
+  "whoFor": "Perfect for services who need a shared lives scheme policy that shows how carers are approved, people are matched and households are reviewed.",
+  "benefits": [
+   "Written around how your shared lives scheme really approves carers, makes matches and reviews households, not a generic template.",
+   "Sets out each step in plain words, so managers, panel members and shared lives carers can follow it."
+  ],
+  "moments": [
+   {
+    "title": "Approving a new shared lives carer",
+    "body": "Covers the stages from enquiry to approval, the checks made on the carer and household, the competence expected of the carer, and who makes the decision."
+   },
+   {
+    "title": "Matching and introductions",
+    "body": "Covers how a person and a carer are matched, how introductions and trial stays work, and how the person's views and any decisions made under the Mental Capacity Act are recorded."
+   },
+   {
+    "title": "Reviewing a carer household",
+    "body": "Covers review visits, how the safety of the home is checked, how the person is seen and heard, and what happens when concerns are raised."
+   },
+   {
+    "title": "Supporting or ending an arrangement",
+    "body": "Covers the support carers receive, how safeguarding concerns are acted on, and how a planned or emergency ending is managed."
+   }
+  ]
+ },
+ "shift-handover-communication": {
+  "whoFor": "Perfect for services who need a shift handover policy that sets out what is passed on, how it is recorded and who is told when something changes.",
+  "benefits": [
+   "Grounded in Regulation 12 safe care and Regulation 17 records, written around your own handover method and sheets",
+   "Covers day, night and weekend handovers for care homes, nursing homes and dementia care, delivered in 2 working days"
+  ],
+  "moments": [
+   {
+    "title": "Important information is lost between shifts",
+    "body": "Sets out the information always passed on, who gives and receives it, and how it is recorded, in line with the duty on accurate, complete and contemporaneous records in Regulation 17."
+   },
+   {
+    "title": "Nursing handover varies from unit to unit",
+    "body": "Your shift handover policy fixes one structure for nursing handover and care staff alike, so each unit hands over in the same way, using your own sheet or prompts."
+   },
+   {
+    "title": "Night staff and agency staff start without a briefing",
+    "body": "Your shift handover policy covers night shift handover, weekend arrangements and how late, absent and agency staff are briefed, so nobody starts work without knowing the risks."
+   },
+   {
+    "title": "A concern cannot wait until the next shift",
+    "body": "Explains how concerns are escalated, to whom, and when, drawing on Regulation 12 on shared and transferred responsibility, with care home handover sheet entries kept private."
+   }
+  ]
+ },
+ "sickness-absence-return-to-work": {
+  "whoFor": "Perfect for services who need a sickness absence policy that sets out how staff report illness, how cover works and how return to work is handled in your care home.",
+  "benefits": [
+   "Grounded in the staffing duty in Regulation 18, the Equality Act 2010 and employment law, with your own reporting, pay and review steps set out",
+   "Written around your sick pay, triggers and cover arrangements, never invented ones, delivered in 2 working days"
+  ],
+  "moments": [
+   {
+    "title": "A carer rings in sick an hour before a shift",
+    "body": "Sets out your sickness reporting steps, who takes the call and how shift cover is arranged, so staffing under Regulation 18 stays safe."
+   },
+   {
+    "title": "A manager needs to run a return to work interview",
+    "body": "Covers who holds the return to work interview, when, what is recorded and how adjustments are considered, with the Equality Act 2010 duty to make reasonable adjustments in view."
+   },
+   {
+    "title": "Someone is off sick for several weeks",
+    "body": "Explains your sickness absence management for long term absence: welfare contact, fit notes, occupational health and review points, as you answer them."
+   },
+   {
+    "title": "A member of staff has sickness and diarrhoea",
+    "body": "Sets out your rules on staying away from work when illness could reach residents, linked to your infection control arrangements and Regulation 12."
+   }
+  ]
+ },
+ "smoking-vaping-oxygen-safety": {
+  "whoFor": "Perfect for services who need a smoking policy that sets out where people may smoke or vape and how oxygen is kept safe.",
+  "benefits": [
+   "A smoking policy template turned into a finished policy that names your own rooms, roles and checks, not generic wording",
+   "Smoking, vaping, oxygen and emollient fire risks covered together, with fire safety duties set out in plain English"
+  ],
+  "moments": [
+   {
+    "title": "A resident wants to smoke or vape",
+    "body": "The policy sets out where smoking and vaping are allowed, how each person's risk is assessed and how the decision is recorded, in line with the duty to assess and manage risk to people using the service."
+   },
+   {
+    "title": "You use or plan a designated smoking room",
+    "body": "It records how the room is designated in writing and clearly marked, and how it is checked, using the conditions in the Smoke-free (Exemptions and Vehicles) Regulations 2007 as the reference point."
+   },
+   {
+    "title": "Someone starts oxygen therapy",
+    "body": "It covers where cylinders and concentrators are stored, signage, who checks them and how smoking, vaping and naked flames are kept away, linked to your fire risk assessment."
+   },
+   {
+    "title": "A fire officer or inspector asks about fire risk",
+    "body": "It shows how smoking, oxygen and emollient risks feed into your fire risk assessment, who is responsible, and how staff are trained and incidents reviewed."
+   }
+  ]
+ },
+ "social-media-phones-photography": {
+  "whoFor": "Perfect for services who need a social media policy that sets out how staff use phones, cameras and online accounts around the people they support.",
+  "benefits": [
+   "Covers personal phones, photographs, consent and staff online conduct in one policy",
+   "Written for your service from your answers, so it never describes a rule you do not have"
+  ],
+  "moments": [
+   {
+    "title": "Staff carry personal phones on shift",
+    "body": "Sets out your mobile phone policy: where phones are kept, when they may be used and what staff do with work devices. It reflects the rules you tell us, not a generic ban."
+   },
+   {
+    "title": "Someone wants to photograph a person",
+    "body": "Covers consent before photographs and video, who decides when a person lacks capacity under the Mental Capacity Act 2005, permitted uses and where images are stored. It links to privacy under Regulation 10 and secure records under Regulation 17."
+   },
+   {
+    "title": "A post appears online",
+    "body": "Sets out your social media guidelines for staff, including posts about people or colleagues, friend requests and official service accounts, and how a breach is reported and handled."
+   },
+   {
+    "title": "Families and visitors ask to take photos",
+    "body": "Explains your rule on visitor photographs, how other people's privacy is protected and how images are kept and deleted in line with data protection law and the duty of confidentiality."
+   }
+  ]
+ },
+ "tenancy-housing-care-separation": {
+  "whoFor": "Perfect for services who need a tenancy and care separation policy that shows people keep real choice over their home, written for your supported living, extra care or Shared Lives service.",
+  "benefits": [
+   "Sits alongside your other supported living policies and procedures with one clear account of who does what.",
+   "Written from your own answers, so it describes your landlord arrangements and not an imagined one."
+  ],
+  "moments": [
+   {
+    "title": "Someone moves into supported living housing",
+    "body": "Sets out how the tenancy and the care agreement are kept apart, how the person is told they can choose or change provider, and how their preferences shape the care, in line with the person-centred care duties in regulation 9."
+   },
+   {
+    "title": "A repair or rent problem comes up",
+    "body": "Explains who deals with repairs, rent and service charges, and that care staff do not act as landlord. It covers the premises and equipment duties in regulation 15 where your service supplies equipment or provides the accommodation as part of care."
+   },
+   {
+    "title": "The person wants to change care provider",
+    "body": "Describes how choice is protected, how the home stays theirs, and how a transition is planned with the person, their advocate and the landlord. For extra care housing and Shared Lives it notes how the arrangement differs."
+   },
+   {
+    "title": "A review or inspection looks at choice and control",
+    "body": "Shows the arrangements you have, how decisions where capacity is in question follow the Mental Capacity Act, and how you review that housing and care remain separate. Useful for teams reviewing policies and procedures for supported living."
+   }
+  ]
+ },
+ "tenant-property-belongings-keys": {
+  "whoFor": "Perfect for services who need a key holding policy that shows how staff enter people's homes, hold keys and treat belongings with respect.",
+  "benefits": [
+   "A key holding policy built around the keys, entry arrangements and storage your service really uses, not a generic template.",
+   "Clear supported living policies for entry, belongings and searches, ready for your team and your inspector."
+  ],
+  "moments": [
+   {
+    "title": "A new tenant moves in",
+    "body": "Records whether you hold a key, how agreement is recorded, and how belongings are listed at move in, with privacy under regulation 10 kept central."
+   },
+   {
+    "title": "A key goes missing",
+    "body": "Sets out who is told, how locks are dealt with and how the loss is recorded, with the service held accountable under its own arrangements."
+   },
+   {
+    "title": "Property is reported missing",
+    "body": "Covers how reports are recorded and when a safeguarding referral is made, because regulation 13 treats theft or misuse of a person's property as abuse."
+   },
+   {
+    "title": "Someone asks to search a room",
+    "body": "States who may decide, what consent and capacity mean in practice, and how the decision and its reason are recorded."
+   }
+  ]
+ },
+ "wound-care-tissue-viability": {
+  "whoFor": "Perfect for services who need a wound care policy that sets out who assesses, dresses and escalates wounds in your care home.",
+  "benefits": [
+   "Grounded in the regulations on safe care, governance, staffing and infection control",
+   "Written for your service, using your own wound care roles, records and referral route"
+  ],
+  "moments": [
+   {
+    "title": "An inspection is coming",
+    "body": "Inspectors look at how risks are assessed and reduced. The wound care policy covers assessment, dressing records and review, tied to Regulation 12 and your governance under Regulation 17."
+   },
+   {
+    "title": "A resident has a wound that is not healing",
+    "body": "Sets out who reviews it, when wound infection signs trigger a call to the GP or NHS 111, and how you reach tissue viability advice. Your tissue viability policy arrangements are described as you run them."
+   },
+   {
+    "title": "You are unsure who may change a dressing",
+    "body": "Describes who does wound dressing in your service, from registered nurses to trained care staff, and what competence checks sit behind it under Regulation 18."
+   },
+   {
+    "title": "You need wound care policies and procedures that match practice",
+    "body": "Covers supplies, storage, disposal of used dressings, record keeping and audit, with infection prevention and control linked in, as your wound management policy should."
+   }
+  ]
  }
 }

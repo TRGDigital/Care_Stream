@@ -87,5 +87,109 @@ export const POLICY_KEYWORD_PAGES: Array<{ slug: string; title: string }> = [
  {
   "slug": "visiting-accompaniment",
   "title": "Visiting and Accompaniment Policy"
+ },
+ {
+  "slug": "accompanying-people-out-community",
+  "title": "Accompanying People Out and Community Activities Policy"
+ },
+ {
+  "slug": "activities-social-inclusion",
+  "title": "Activities, Social Inclusion and Meaningful Occupation Policy"
+ },
+ {
+  "slug": "cctv-surveillance-monitoring",
+  "title": "CCTV, Surveillance and Monitoring Technology Policy"
+ },
+ {
+  "slug": "continence-catheter-care",
+  "title": "Continence Promotion and Catheter Care Policy"
+ },
+ {
+  "slug": "deteriorating-resident-acute-illness",
+  "title": "Deteriorating Resident and Acute Illness Policy"
+ },
+ {
+  "slug": "diabetes-care",
+  "title": "Diabetes Care Policy"
+ },
+ {
+  "slug": "driving-travel-vehicle-use",
+  "title": "Driving, Travel and Vehicle Use for Work Policy"
+ },
+ {
+  "slug": "extra-care-communal-call-system",
+  "title": "Extra Care Communal Areas, Call System and Emergency Response Policy"
+ },
+ {
+  "slug": "hate-mate-crime-cuckooing",
+  "title": "Hate Crime, Mate Crime and Cuckooing Policy"
+ },
+ {
+  "slug": "independent-advocacy",
+  "title": "Independent Advocacy Policy"
+ },
+ {
+  "slug": "live-in-accommodation-rota-handover",
+  "title": "Live-In Carer Accommodation, Rota and Handover Policy"
+ },
+ {
+  "slug": "nursing-procedures-delegation",
+  "title": "Nursing Clinical Procedures and Delegation Policy"
+ },
+ {
+  "slug": "oral-health",
+  "title": "Oral Health Policy"
+ },
+ {
+  "slug": "oxygen-smoking-fire-risk-in-the-home",
+  "title": "Oxygen, Smoking and Fire Risk in the Person's Home Policy"
+ },
+ {
+  "slug": "relationships-sexuality-sexual-safety",
+  "title": "Relationships, Sexuality and Sexual Safety Policy"
+ },
+ {
+  "slug": "resident-environmental-safety",
+  "title": "Resident Environmental Safety Policy (hot water, windows and hazards)"
+ },
+ {
+  "slug": "respite-short-break-care",
+  "title": "Respite and Short Break Care Policy"
+ },
+ {
+  "slug": "sexuality-relationships-intimacy",
+  "title": "Sexuality, Relationships and Intimacy Policy"
+ },
+ {
+  "slug": "shared-lives-approval-matching-review",
+  "title": "Shared Lives Carer Approval, Matching and Household Review Policy"
+ },
+ {
+  "slug": "shift-handover-communication",
+  "title": "Shift Handover and Clinical Communication Policy"
+ },
+ {
+  "slug": "sickness-absence-return-to-work",
+  "title": "Sickness, Absence and Return to Work Policy"
+ },
+ {
+  "slug": "smoking-vaping-oxygen-safety",
+  "title": "Smoking, Vaping and Oxygen Safety Policy"
+ },
+ {
+  "slug": "social-media-phones-photography",
+  "title": "Social Media, Mobile Phones and Photography Policy"
+ },
+ {
+  "slug": "tenancy-housing-care-separation",
+  "title": "Tenancy, Housing and Care Separation Policy"
+ },
+ {
+  "slug": "tenant-property-belongings-keys",
+  "title": "Safe Handling of Property, Tenant Belongings and Keys Policy"
+ },
+ {
+  "slug": "wound-care-tissue-viability",
+  "title": "Wound Care and Tissue Viability Policy"
  }
 ]

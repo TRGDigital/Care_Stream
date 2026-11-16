@@ -173,5 +173,151 @@ export const POLICY_PRODUCT_SERVICES: Record<string, string[]> = {
   "extra_care",
   "ld_autism",
   "hospices"
+ ],
+ "accompanying-people-out-community": [
+  "home_care",
+  "live_in"
+ ],
+ "activities-social-inclusion": [
+  "care_homes",
+  "nursing",
+  "dementia"
+ ],
+ "cctv-surveillance-monitoring": [
+  "care_homes",
+  "nursing",
+  "dementia"
+ ],
+ "continence-catheter-care": [
+  "care_homes",
+  "nursing",
+  "dementia"
+ ],
+ "deteriorating-resident-acute-illness": [
+  "care_homes",
+  "nursing",
+  "dementia"
+ ],
+ "diabetes-care": [
+  "care_homes",
+  "nursing",
+  "dementia",
+  "home_care",
+  "live_in",
+  "extra_care",
+  "supported_living",
+  "ld_autism",
+  "hospices"
+ ],
+ "driving-travel-vehicle-use": [
+  "home_care",
+  "live_in"
+ ],
+ "extra-care-communal-call-system": [
+  "extra_care",
+  "supported_living",
+  "shared_lives",
+  "ld_autism"
+ ],
+ "hate-mate-crime-cuckooing": [
+  "supported_living",
+  "extra_care",
+  "shared_lives",
+  "ld_autism"
+ ],
+ "independent-advocacy": [
+  "supported_living",
+  "extra_care",
+  "shared_lives",
+  "ld_autism"
+ ],
+ "live-in-accommodation-rota-handover": [
+  "live_in",
+  "home_care",
+  "shared_lives",
+  "supported_living"
+ ],
+ "nursing-procedures-delegation": [
+  "care_homes",
+  "nursing",
+  "dementia"
+ ],
+ "oral-health": [
+  "care_homes",
+  "nursing",
+  "dementia"
+ ],
+ "oxygen-smoking-fire-risk-in-the-home": [
+  "home_care",
+  "live_in"
+ ],
+ "relationships-sexuality-sexual-safety": [
+  "supported_living",
+  "extra_care",
+  "shared_lives",
+  "ld_autism"
+ ],
+ "resident-environmental-safety": [
+  "care_homes",
+  "nursing",
+  "dementia"
+ ],
+ "respite-short-break-care": [
+  "home_care",
+  "live_in"
+ ],
+ "sexuality-relationships-intimacy": [
+  "care_homes",
+  "nursing",
+  "dementia"
+ ],
+ "shared-lives-approval-matching-review": [
+  "shared_lives",
+  "supported_living",
+  "extra_care",
+  "ld_autism"
+ ],
+ "shift-handover-communication": [
+  "care_homes",
+  "nursing",
+  "dementia"
+ ],
+ "sickness-absence-return-to-work": [
+  "care_homes",
+  "nursing",
+  "dementia"
+ ],
+ "smoking-vaping-oxygen-safety": [
+  "care_homes",
+  "nursing",
+  "dementia"
+ ],
+ "social-media-phones-photography": [
+  "care_homes",
+  "nursing",
+  "dementia",
+  "home_care",
+  "live_in",
+  "supported_living",
+  "extra_care",
+  "ld_autism",
+  "shared_lives"
+ ],
+ "tenancy-housing-care-separation": [
+  "supported_living",
+  "extra_care",
+  "shared_lives",
+  "ld_autism"
+ ],
+ "tenant-property-belongings-keys": [
+  "supported_living",
+  "extra_care",
+  "shared_lives",
+  "ld_autism"
+ ],
+ "wound-care-tissue-viability": [
+  "care_homes",
+  "nursing",
+  "dementia"
  ]
 }

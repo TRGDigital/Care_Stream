@@ -1383,5 +1383,1597 @@ export const POLICY_KEYWORDS: Record<string, PolicyKeywordInfo> = {
     "answer": "It is for the registered manager, nominated individual and staff who set and apply visiting arrangements. It serves residents, families and friends, and anyone supporting someone who may lack capacity."
    }
   ]
+ },
+ "accompanying-people-out-community": {
+  "primary": {
+   "keyword": "outings policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "outings risk assessment",
+    "volume": 10
+   },
+   {
+    "keyword": "home care policy",
+    "volume": 70
+   },
+   {
+    "keyword": "domiciliary care policy",
+    "volume": 20
+   },
+   {
+    "keyword": "domiciliary care policies and procedures",
+    "volume": 50
+   },
+   {
+    "keyword": "supported living policies",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Outings Policy for Home Care and Live-In Services",
+  "meta_description": "An outings policy written for your service: risk, transport, money, consent and emergencies when staff accompany people in home care and live-in care.",
+  "extra_faqs": [
+   {
+    "question": "What should an outings policy cover?",
+    "answer": "It should cover how risks are assessed, who agrees to the outing, transport, money, medicines, emergency contacts, lone working and how incidents are recorded. Yours is written around the arrangements you tell us about."
+   },
+   {
+    "question": "Do we need a separate outings risk assessment?",
+    "answer": "Regulation 12 requires risks to service users to be assessed and mitigated where reasonably practicable. Many services record outings risks in the care plan. The policy sets out your own method."
+   },
+   {
+    "question": "How does capacity affect going out?",
+    "answer": "Section 5 of the Mental Capacity Act 2005 covers acts in connection with care where a person lacks capacity, once reasonable steps are taken and the act is believed to be in their best interests. The policy sets out how you record this."
+   },
+   {
+    "question": "Is this policy suitable for live-in care?",
+    "answer": "Yes. It is written for home care and live-in services, and the wording follows your answers about who accompanies people, how long outings last and how cover is arranged."
+   },
+   {
+    "question": "Can staff drive people in their own cars?",
+    "answer": "Only if your service allows it. The policy states your rules and checks, such as insurance and licence checks, and says nothing about vehicles if you do not provide them."
+   },
+   {
+    "question": "Is this the same as a domiciliary care policy?",
+    "answer": "No. It is one policy within your wider set of domiciliary care policies and procedures, focused only on accompanying people out. It also suits a domiciliary care policy pack and supported living policies."
+   }
+  ]
+ },
+ "activities-social-inclusion": {
+  "primary": {
+   "keyword": "care home activities",
+   "volume": 390
+  },
+  "secondary": [
+   {
+    "keyword": "activities for elderly in care homes",
+    "volume": 210
+   },
+   {
+    "keyword": "activities for seniors in nursing homes",
+    "volume": 210
+   },
+   {
+    "keyword": "activities for dementia residents",
+    "volume": 90
+   },
+   {
+    "keyword": "activities for dementia patients in nursing homes",
+    "volume": 70
+   },
+   {
+    "keyword": "activities for nursing home residents",
+    "volume": 20
+   },
+   {
+    "keyword": "social inclusion policy",
+    "volume": 10
+   },
+   {
+    "keyword": "person centred activities",
+    "volume": 10
+   },
+   {
+    "keyword": "loneliness in care homes",
+    "volume": 10
+   },
+   {
+    "keyword": "care home outings",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Care Home Activities Policy for Your Service",
+  "meta_description": "A care home activities policy written for your service: meaningful occupation, social inclusion, outings and community links, built on your own arrangements.",
+  "extra_faqs": [
+   {
+    "question": "Does a care home need a written activities policy?",
+    "answer": "The regulations do not use that title. Regulation 9 requires care that meets needs and reflects preferences, and Regulation 10 requires support for autonomy, independence and involvement in the community. A written policy shows how your home does this day to day."
+   },
+   {
+    "question": "What should a care home activities policy cover?",
+    "answer": "It should cover how interests are found out, who plans the programme, one to one provision, outings, community links, spiritual and cultural needs, recording, and how residents help shape care home activities."
+   },
+   {
+    "question": "How do we include residents who do not join group sessions?",
+    "answer": "The policy sets out your one to one offer, such as bedside visits or sensory sessions, and how you respect a person's choice to decline. Activities for nursing home residents should never be limited to group sessions."
+   },
+   {
+    "question": "Are activities for dementia patients in nursing homes covered?",
+    "answer": "Yes. The policy covers activities for dementia patients in nursing homes, including life story work, capacity and best interests decisions, reasonable adjustments and how staff adapt activities to what each person can enjoy."
+   },
+   {
+    "question": "Does the policy cover spiritual and cultural needs?",
+    "answer": "Yes. It records how you support faith, culture and language, with reference to the Equality Act 2010 protected characteristics, and builds a social inclusion policy into daily practice without inventing support you do not offer."
+   },
+   {
+    "question": "Is this a free template?",
+    "answer": "No. It is a care home activities policy written for your organisation from your answers, so it names your roles, outings, links and records rather than leaving blanks for you to fill."
+   }
+  ]
+ },
+ "cctv-surveillance-monitoring": {
+  "primary": {
+   "keyword": "care home cctv policy template",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "cctv in care homes law",
+    "volume": 40
+   },
+   {
+    "keyword": "cctv in care homes",
+    "volume": 30
+   },
+   {
+    "keyword": "cctv cameras in care homes",
+    "volume": 10
+   },
+   {
+    "keyword": "cctv in nursing homes",
+    "volume": 10
+   },
+   {
+    "keyword": "use of cctv in care homes",
+    "volume": 10
+   },
+   {
+    "keyword": "cctv for elderly care",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Care Home CCTV Policy Template, Written for Your Service",
+  "meta_description": "A care home CCTV policy template that is written for your service: cameras, sensor mats, door alarms, consent, privacy and footage. Reviewed by a person.",
+  "extra_faqs": [
+   {
+    "question": "Is CCTV in care homes allowed?",
+    "answer": "There is no blanket ban, but cameras must respect privacy and dignity under Regulation 10 and data protection law. Your policy sets out where cameras are used, why, and where they are never used. Check the law that applies to your service."
+   },
+   {
+    "question": "What is the CCTV in care homes law?",
+    "answer": "The policy refers to Regulation 10 (privacy), Regulation 11 (consent), Regulation 13 (restraint) and data protection law. It does not give legal advice. Your answers set out your own arrangements in line with those duties."
+   },
+   {
+    "question": "Can it cover CCTV for elderly care, sensor mats and door alarms?",
+    "answer": "Yes. The policy covers CCTV and other monitoring technology such as sensor mats and door alarms, including agreement or best interests decisions, alarm response and checks that nothing restricts movement."
+   },
+   {
+    "question": "Is the care home CCTV policy template free?",
+    "answer": "No. It is a care home CCTV policy template in the sense of a ready structure, but it is written for your service from your answers, then checked and reviewed by a person."
+   },
+   {
+    "question": "Does it cover CCTV in nursing homes and dementia units?",
+    "answer": "Yes. It is written for care homes, nursing homes and dementia services, and reflects the extra care needed where people may lack capacity to agree to monitoring."
+   },
+   {
+    "question": "Will it say how long footage is kept?",
+    "answer": "Only what you tell us. You give your retention period and disclosure rules, and the writer uses them. It does not invent a period."
+   }
+  ]
+ },
+ "continence-catheter-care": {
+  "primary": {
+   "keyword": "continence policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "catheter care policy",
+    "volume": 10
+   },
+   {
+    "keyword": "catheter care procedure",
+    "volume": 40
+   },
+   {
+    "keyword": "continence promotion",
+    "volume": 20
+   },
+   {
+    "keyword": "urinary catheter care",
+    "volume": 20
+   },
+   {
+    "keyword": "male catheter care",
+    "volume": 30
+   },
+   {
+    "keyword": "indwelling catheter care",
+    "volume": 10
+   },
+   {
+    "keyword": "daily catheter care",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Continence Policy and Catheter Care Policy for Care Homes",
+  "meta_description": "A continence policy written for your care home, nursing or dementia service: assessment, catheter care, infection prevention and dignity.",
+  "extra_faqs": [
+   {
+    "question": "What does a continence policy cover?",
+    "answer": "A continence policy sets out how your service assesses continence, supplies products, supports toileting, protects dignity and escalates concerns. It describes your own arrangements, not clinical advice."
+   },
+   {
+    "question": "Does it include a catheter care policy?",
+    "answer": "Yes. The catheter care policy part covers indwelling catheter care and the other catheter types you support, who carries out tasks, record keeping and what staff do when problems arise. You tell us your arrangements."
+   },
+   {
+    "question": "Will it include a catheter care procedure with steps?",
+    "answer": "It sets out who does what and when, based on your answers. Clinical technique stays with your nurses and manufacturer or NHS guidance, so the policy does not replace a clinical catheter care procedure."
+   },
+   {
+    "question": "How does continence promotion fit in?",
+    "answer": "Continence promotion is about helping people stay as independent as possible with toileting. The policy records how you assess needs, prompt, support and review, based on what you tell us."
+   },
+   {
+    "question": "Is it suitable for male catheter care and female care?",
+    "answer": "Yes. Male catheter care and female care are covered in the same policy. It records your arrangements, including any gender preference for who provides personal care."
+   },
+   {
+    "question": "How long does it take?",
+    "answer": "Your policy is written for your service and delivered in 2 working days. You answer a short set of questions after purchase, and a person checks it before it carries your name."
+   }
+  ]
+ },
+ "deteriorating-resident-acute-illness": {
+  "primary": {
+   "keyword": "deteriorating patient policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "sepsis policy",
+    "volume": 10
+   },
+   {
+    "keyword": "deteriorating resident policy",
+    "volume": 0
+   },
+   {
+    "keyword": "acute illness policy",
+    "volume": 0
+   },
+   {
+    "keyword": "sepsis policy care home",
+    "volume": 0
+   },
+   {
+    "keyword": "escalation policy care home",
+    "volume": 0
+   }
+  ],
+  "seo_title": "Deteriorating Patient Policy for Care Homes, Written for You",
+  "meta_description": "A deteriorating patient policy written for your care home: early warning signs, escalation to GP, 111 or 999, and handover. Built from your answers.",
+  "extra_faqs": [
+   {
+    "question": "What should a deteriorating patient policy cover?",
+    "answer": "Early warning signs, who takes observations, when to call the GP, 111 or 999, handover to paramedics, informing family and learning afterwards. Yours is written from your own answers, not a fixed template."
+   },
+   {
+    "question": "Do we have to use NEWS2?",
+    "answer": "Not through anything we have confirmed. The policy records the tool you use, if any, and does not name one you do not. Check current NHS England advice on structured observation tools for your setting."
+   },
+   {
+    "question": "Is a sepsis policy part of this document?",
+    "answer": "Yes. Sepsis awareness, who is called and how quickly sit inside the policy, so a separate sepsis policy care home document is not needed unless you choose to keep one."
+   },
+   {
+    "question": "Can care staff take observations?",
+    "answer": "That depends on your training and sign off. The policy states which roles take observations and what competence is needed, in line with Regulation 18, and sets out your escalation policy care home steps."
+   },
+   {
+    "question": "How does it work with resuscitation decisions?",
+    "answer": "The policy points to your resuscitation arrangements and says how the decision travels with the person at handover. It does not replace your separate resuscitation policy."
+   },
+   {
+    "question": "Does it suit nursing and dementia services?",
+    "answer": "Yes. Nursing homes can set out nurse led assessment, and dementia services can add how changes in behaviour and communication are treated as possible signs of illness."
+   }
+  ]
+ },
+ "diabetes-care": {
+  "primary": {
+   "keyword": "diabetes policy",
+   "volume": 20
+  },
+  "secondary": [
+   {
+    "keyword": "diabetes management policy",
+    "volume": 10
+   },
+   {
+    "keyword": "hypoglycemia policy",
+    "volume": 10
+   },
+   {
+    "keyword": "insulin policy",
+    "volume": 10
+   },
+   {
+    "keyword": "diabetes care plan care home",
+    "volume": 10
+   },
+   {
+    "keyword": "nhs diabetes policy",
+    "volume": 10
+   },
+   {
+    "keyword": "health policy for diabetes",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Diabetes Policy for Care Homes and Home Care",
+  "meta_description": "A diabetes policy written for your service: glucose monitoring, hypos, insulin support and foot checks, set against Regulation 12. Delivered in 2 working days.",
+  "extra_faqs": [
+   {
+    "question": "What should a diabetes policy cover?",
+    "answer": "A diabetes policy sets out how your service monitors glucose, responds to low and high readings, supports insulin, plans meals, arranges foot and eye checks, trains staff and records care. It describes your own arrangements, not clinical advice."
+   },
+   {
+    "question": "Does the policy cover a diabetes care plan in a care home?",
+    "answer": "Yes. It explains how each person's care plan records monitoring, treatment targets set by clinicians, diet and emergency steps, and how staff follow and review it. Your diabetes care plan care home process is described in your own words."
+   },
+   {
+    "question": "Can it describe our insulin arrangements?",
+    "answer": "Yes. You tell us whether staff prompt, assist or administer, and who is trained. The insulin policy wording follows your answers, and the policy never states a practice you do not have. It works as a health policy for diabetes in your own setting."
+   },
+   {
+    "question": "Is there a hypoglycemia policy section?",
+    "answer": "Yes. It sets out how staff recognise and respond to low glucose using your own supplies and escalation route, when they call for help and how incidents are recorded and reviewed. Clinical thresholds stay with the person's clinician."
+   },
+   {
+    "question": "Does it work for home care and live-in services?",
+    "answer": "Yes. For home care and live-in teams it reflects visiting carers, the person's own equipment and supplies, and referral to district nurses or the GP rather than in-house nurses."
+   },
+   {
+    "question": "Does the policy give medical advice?",
+    "answer": "No. It records your organisation's arrangements and points staff to the clinician for each person. It sits alongside the NHS diabetes policy and clinical guidance your clinicians follow, and treatment, targets and doses are set by the healthcare team."
+   }
+  ]
+ },
+ "driving-travel-vehicle-use": {
+  "primary": {
+   "keyword": "driving for work policy",
+   "volume": 70
+  },
+  "secondary": [
+   {
+    "keyword": "company car policy",
+    "volume": 50
+   },
+   {
+    "keyword": "company vehicle policy",
+    "volume": 30
+   },
+   {
+    "keyword": "driving at work policy template",
+    "volume": 10
+   },
+   {
+    "keyword": "work related road safety",
+    "volume": 10
+   },
+   {
+    "keyword": "safe driving policy",
+    "volume": 10
+   },
+   {
+    "keyword": "vehicle allowance policy",
+    "volume": 10
+   },
+   {
+    "keyword": "company driving policy",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Driving for Work Policy for Home Care and Live-In Care",
+  "meta_description": "A driving for work policy written for your service: licence checks, own car use, travel between visits and accidents for home care and live-in care.",
+  "extra_faqs": [
+   {
+    "question": "Does a driving for work policy cover staff using their own cars?",
+    "answer": "Yes. It sets out the checks you make, such as licence and business use insurance, and how mileage and travel time are handled. It reflects your own arrangements, not a fixed rule."
+   },
+   {
+    "question": "Is a company vehicle policy different from a driving policy?",
+    "answer": "A company vehicle policy covers cars the service owns. This product covers your whole position, including own cars and service cars, so you answer only the parts that apply to you."
+   },
+   {
+    "question": "Does it cover taking people out in a car?",
+    "answer": "It records whether staff may carry the people you support, and under what consent, insurance and approval. If you do not allow it, the policy says so clearly."
+   },
+   {
+    "question": "Does the policy include a driving at work policy template?",
+    "answer": "It is written for your service from your answers, not a blank driving at work policy template. Nothing is filled in with practices you do not follow."
+   },
+   {
+    "question": "Why do employers need to assess driving risks?",
+    "answer": "Regulation 3 of the Management of Health and Safety at Work Regulations 1999 requires employers to assess risks to employees at work. Driving for work is part of that for many care services."
+   },
+   {
+    "question": "Can it cover a vehicle allowance policy and mileage rates?",
+    "answer": "Yes. You tell us how you pay mileage, travel time or any vehicle allowance, and the policy sets this out. It does not invent a rate."
+   }
+  ]
+ },
+ "extra-care-communal-call-system": {
+  "primary": {
+   "keyword": "extra care housing policy",
+   "volume": 0
+  },
+  "secondary": [
+   {
+    "keyword": "extra care housing",
+    "volume": 1000
+   },
+   {
+    "keyword": "care call alarms",
+    "volume": 40
+   },
+   {
+    "keyword": "medical care alert system",
+    "volume": 10
+   },
+   {
+    "keyword": "supported living",
+    "volume": 3600
+   },
+   {
+    "keyword": "pendant alarm",
+    "volume": 1300
+   },
+   {
+    "keyword": "care alarm",
+    "volume": 320
+   }
+  ],
+  "seo_title": "Extra Care Housing Policy: Call System and Communal Areas",
+  "meta_description": "An extra care housing policy written for your service: call system testing, response times, communal areas, night cover and emergency response.",
+  "extra_faqs": [
+   {
+    "question": "Who is this extra care housing policy for?",
+    "answer": "Extra care schemes and similar settings such as supported living, where people have their own home and share communal areas, with a call system and care staff on site or nearby."
+   },
+   {
+    "question": "Does it cover the call system and pendant alarms?",
+    "answer": "Yes. It sets out testing of each pendant alarm and pull cord, who answers a care alarm and care call alarms, response times, and what you do when the system fails, based on what you use."
+   },
+   {
+    "question": "What about communal areas?",
+    "answer": "It covers checks of shared lounges, corridors and gardens, how faults are reported, and who holds fire duties between landlord and care provider, using your own arrangements."
+   },
+   {
+    "question": "Does it replace our fire risk assessment?",
+    "answer": "No. The Regulatory Reform (Fire Safety) Order 2005 applies to the building. The policy shows how your care team works with that assessment and the evacuation plans."
+   },
+   {
+    "question": "Can it describe night cover?",
+    "answer": "Yes. You tell us what overnight cover you have, such as waking staff or an on call manager, and the policy records exactly that and nothing more."
+   },
+   {
+    "question": "Is it a free template?",
+    "answer": "No. It is written for your service from your answers, so it only describes practice you actually have, for example your medical care alert system and your response standard."
+   }
+  ]
+ },
+ "hate-mate-crime-cuckooing": {
+  "primary": {
+   "keyword": "cuckooing policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "cuckooing",
+    "volume": 9900
+   },
+   {
+    "keyword": "mate crime",
+    "volume": 590
+   },
+   {
+    "keyword": "safeguarding adults policy",
+    "volume": 170
+   },
+   {
+    "keyword": "hate crime policy",
+    "volume": 10
+   },
+   {
+    "keyword": "cuckooing vulnerable adults",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Cuckooing Policy, Hate Crime and Mate Crime Policy",
+  "meta_description": "A cuckooing policy covering hate crime and mate crime, written for your supported living, extra care, shared lives or learning disability service.",
+  "extra_faqs": [
+   {
+    "question": "What is cuckooing?",
+    "answer": "Cuckooing is when someone takes over a person's home, often to deal drugs or store goods. Cuckooing vulnerable adults is a safeguarding concern, and the policy sets out how staff recognise and report it."
+   },
+   {
+    "question": "What is mate crime?",
+    "answer": "Mate crime is when someone pretends to be a friend to exploit a vulnerable person, for example for money, goods or a place to stay. The policy explains how staff spot it and respond."
+   },
+   {
+    "question": "Does it cover hate crime as well?",
+    "answer": "Yes. The hate crime policy section covers recognising targeted abuse, reporting to police, supporting the person and reviewing the support plan, based on your own answers."
+   },
+   {
+    "question": "How does it link to safeguarding?",
+    "answer": "It works alongside your safeguarding adults policy. Concerns follow your referral route to the local authority, grounded in Regulation 13 and the Care Act 2014."
+   },
+   {
+    "question": "Can staff stop people visiting a tenant?",
+    "answer": "The policy follows your own arrangements. In a person's own home, visitors are generally the person's choice, so the policy focuses on recording, supporting the person and involving the right agencies."
+   },
+   {
+    "question": "Which services is it written for?",
+    "answer": "Supported living, extra care, shared lives and learning disability and autism services. Your answers shape the cuckooing policy, so it reflects how your service really works."
+   }
+  ]
+ },
+ "independent-advocacy": {
+  "primary": {
+   "keyword": "advocacy policy template",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "imca",
+    "volume": 2900
+   },
+   {
+    "keyword": "mental capacity act imca",
+    "volume": 90
+   },
+   {
+    "keyword": "advocacy care act 2014",
+    "volume": 20
+   },
+   {
+    "keyword": "independent care act advocate",
+    "volume": 20
+   },
+   {
+    "keyword": "independent advocate care act",
+    "volume": 10
+   },
+   {
+    "keyword": "independent advocacy under the care act 2014",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Advocacy Policy Template for Care Services",
+  "meta_description": "An advocacy policy template written for your service: spotting need, referring to independent advocates, IMCA and Care Act advocacy, and recording outcomes.",
+  "extra_faqs": [
+   {
+    "question": "What does the Care Act say about independent advocacy?",
+    "answer": "Advocacy Care Act 2014 duties mean section 67, which requires the local authority to arrange an independent advocate in certain cases. These are where a person would have substantial difficulty taking part in an assessment or plan and has no suitable person to help."
+   },
+   {
+    "question": "What is an IMCA?",
+    "answer": "An IMCA is an independent mental capacity advocate. The Mental Capacity Act 2005 requires local authorities to arrange IMCA services to represent and support certain people who lack capacity for a decision. Your policy sets out how staff refer."
+   },
+   {
+    "question": "Is the local authority or the provider responsible for arranging an advocate?",
+    "answer": "The Care Act duty sits with the local authority. A provider's part is to notice need, tell people about advocacy, make or prompt referrals and work with advocates. The policy sets out your service's part."
+   },
+   {
+    "question": "Is this an advocacy policy template or one written for my service?",
+    "answer": "Unlike a generic advocacy policy template, it is written for your service. You tell us your local advocacy providers, who refers and where you record it, so the independent advocate care act arrangements described match your practice."
+   },
+   {
+    "question": "Which services is the advocacy policy for?",
+    "answer": "Supported living, extra care, shared lives and learning disability and autism services. The wording differs by setting, for example tenancy meetings in supported living compared with the carer's own home in shared lives."
+   },
+   {
+    "question": "Does the policy cover advocacy under the Care Act 2014 and NHS complaints?",
+    "answer": "Yes. It covers independent advocacy under the Care Act 2014, IMCA referrals and signposting to NHS complaints advocacy, using the providers you name for your area."
+   }
+  ]
+ },
+ "live-in-accommodation-rota-handover": {
+  "primary": {
+   "keyword": "live in care policy",
+   "volume": 0
+  },
+  "secondary": [
+   {
+    "keyword": "live in care",
+    "volume": 5400
+   },
+   {
+    "keyword": "live in home care",
+    "volume": 260
+   },
+   {
+    "keyword": "live in care agencies",
+    "volume": 210
+   },
+   {
+    "keyword": "live in caregiver",
+    "volume": 170
+   },
+   {
+    "keyword": "24 hour live in care",
+    "volume": 110
+   },
+   {
+    "keyword": "live in care providers",
+    "volume": 90
+   }
+  ],
+  "seo_title": "Live In Care Policy: Accommodation, Rota and Handover",
+  "meta_description": "A live in care policy written for your service: carer accommodation, rota patterns, handover between carers and placement review. Reviewed by a person.",
+  "extra_faqs": [
+   {
+    "question": "What should a live in care policy cover?",
+    "answer": "It should set out your own arrangements for carer accommodation, rota patterns, handover between carers and placement review. This policy is written from your answers, so it describes what you actually do."
+   },
+   {
+    "question": "Which regulations does it draw on?",
+    "answer": "Regulation 18 on staff deployment and support, Regulation 12 on safe care and treatment, Regulation 17 on records and governance, plus health and safety law. The live in care policy states your own arrangements under each."
+   },
+   {
+    "question": "Does it suit live in care agencies and home care providers?",
+    "answer": "Yes. Live in care agencies and live in care providers can answer for their own model, and home care services can set out how live-in placements differ from visiting care."
+   },
+   {
+    "question": "Can it cover Shared Lives or supported living?",
+    "answer": "Yes. You can answer for Shared Lives and supported living where accommodation and handover work differently, so live-in rules are not applied by mistake."
+   },
+   {
+    "question": "Does it set a legal minimum room standard?",
+    "answer": "No fixed room standard is stated in the regulations we fetched. The policy records the standard you choose and how you check it. Take specialist advice on employment or housing questions."
+   },
+   {
+    "question": "Is this legal advice?",
+    "answer": "No. It sets out your own arrangements and does not give clinical, medical or legal advice. It is reviewed by a person before delivery."
+   }
+  ]
+ },
+ "nursing-procedures-delegation": {
+  "primary": {
+   "keyword": "delegation policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "nursing delegation",
+    "volume": 110
+   },
+   {
+    "keyword": "delegation in nursing practice",
+    "volume": 10
+   },
+   {
+    "keyword": "delegated nursing tasks",
+    "volume": 10
+   },
+   {
+    "keyword": "delegation of duties in nursing",
+    "volume": 10
+   },
+   {
+    "keyword": "clinical procedures policy",
+    "volume": 10
+   },
+   {
+    "keyword": "catheter care policy",
+    "volume": 10
+   },
+   {
+    "keyword": "catheterisation policy",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Delegation Policy for Nursing and Care Homes",
+  "meta_description": "A delegation policy written for your service: which clinical tasks carers may do, how competence is signed off, and where nurse accountability stays.",
+  "extra_faqs": [
+   {
+    "question": "What is nursing delegation?",
+    "answer": "Nursing delegation is when a registered nurse asks another person to carry out a task, while the nurse stays accountable for the decision to delegate. The policy sets out how your service does this, who can be asked and how competence is checked."
+   },
+   {
+    "question": "Does delegation in nursing practice mean carers do nursing work?",
+    "answer": "Not by default. A good delegation policy says so plainly. The policy states which tasks stay with registered nurses and which, if any, your service delegates. Nothing is delegated unless your answers say it is, and each task needs a competence record."
+   },
+   {
+    "question": "Which regulations does the policy draw on?",
+    "answer": "It is checked against Regulation 12(2)(c) on ensuring people providing care have the competence, skills and experience to do so safely, and Regulation 18 on staffing, support and training. It also reflects the Nursing and Midwifery Council Code."
+   },
+   {
+    "question": "Does it replace professional or clinical judgement?",
+    "answer": "No. Each delegation decision is made by a registered nurse using their own judgement. The policy records your service's arrangements and gives staff a clear route. It is not clinical or legal advice."
+   },
+   {
+    "question": "Can one policy cover catheters, PEG and stoma care?",
+    "answer": "Yes. The policy sets the delegation rules in one place, and you list the procedures your service carries out. Detailed clinical steps for each person stay in their care plan, written by a nurse."
+   },
+   {
+    "question": "Is it suitable for nursing and dementia settings?",
+    "answer": "Yes. It is written for care homes, nursing homes and dementia services, using your own staffing mix, nurse cover and consent routines."
+   }
+  ]
+ },
+ "oral-health": {
+  "primary": {
+   "keyword": "oral health policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "cleaning dentures",
+    "volume": 2900
+   },
+   {
+    "keyword": "denture care",
+    "volume": 320
+   },
+   {
+    "keyword": "denture emergency",
+    "volume": 140
+   },
+   {
+    "keyword": "caring for partial dentures",
+    "volume": 30
+   },
+   {
+    "keyword": "oral care policy",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Oral Health Policy for Care Homes and Nursing Homes",
+  "meta_description": "An oral health policy written for your service: mouth care assessment, daily care, denture care and dental access, built from your own answers.",
+  "extra_faqs": [
+   {
+    "question": "Is an oral health policy a legal requirement?",
+    "answer": "No single law requires a policy with that name. Regulation 12 requires risks to health and safety to be assessed and mitigated, and Regulation 10 requires dignity and respect. A written oral health policy shows how your service meets these duties."
+   },
+   {
+    "question": "Does the policy give clinical or dental advice?",
+    "answer": "No. It sets out your organisation's arrangements: who assesses, how mouth care is given and recorded, and how people reach a dentist. Dental decisions stay with qualified dental professionals."
+   },
+   {
+    "question": "Does it cover denture care?",
+    "answer": "Yes. The writer uses your answers on how dentures are cleaned, stored and labelled, so the denture care in your policy matches what staff really do, including caring for partial dentures."
+   },
+   {
+    "question": "How does it handle people who refuse mouth care?",
+    "answer": "It records your approach to refusal and to people who cannot consent, linked to the Mental Capacity Act 2005 and best interests. It does not invent blanket rules your service does not use."
+   },
+   {
+    "question": "Can it reflect how we access a dentist?",
+    "answer": "Yes. You tell us whether people use a local practice, a community dental service or a visiting dentist, and how urgent problems are escalated. The policy uses only your route."
+   },
+   {
+    "question": "Does it suit dementia and nursing services?",
+    "answer": "Yes. Care homes, nursing homes and dementia services answer the same questions, including support for people who resist care, so the oral care policy reads true to each setting."
+   }
+  ]
+ },
+ "oxygen-smoking-fire-risk-in-the-home": {
+  "primary": {
+   "keyword": "oxygen safety at home",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "oxygen safety",
+    "volume": 10
+   },
+   {
+    "keyword": "emollient cream fire risk",
+    "volume": 30
+   },
+   {
+    "keyword": "smoking policy",
+    "volume": 70
+   },
+   {
+    "keyword": "fire safety domiciliary care",
+    "volume": 10
+   },
+   {
+    "keyword": "home care policy",
+    "volume": 70
+   },
+   {
+    "keyword": "domiciliary care policy",
+    "volume": 20
+   }
+  ],
+  "seo_title": "Oxygen Safety at Home Policy for Home and Live-In Care",
+  "meta_description": "An oxygen safety at home policy written for your service: smoking, emollient creams, heaters and fire risk in people's own homes for home and live-in care.",
+  "extra_faqs": [
+   {
+    "question": "What should an oxygen safety at home policy cover?",
+    "answer": "What staff check where oxygen is used, who they contact at the supplier, smoking and heat sources, what to do in a fire, and how concerns are reported. Yours is written from your own answers."
+   },
+   {
+    "question": "Does oxygen safety need its own policy?",
+    "answer": "Many services fold it into general oxygen safety or health and safety documents. A separate policy puts oxygen, smoking and fire hazards together, so staff in people's homes have one clear reference."
+   },
+   {
+    "question": "Why is emollient cream fire risk in this policy?",
+    "answer": "Creams can soak into fabrics such as bedding and clothing, and the person's prescriber or pharmacist can advise on safe use. The policy sets what your staff look for and how they pass concerns on."
+   },
+   {
+    "question": "Does the smoking policy let staff light a cigarette?",
+    "answer": "That is your decision, and it depends on your risk assessment. The policy records your rule, for example not at all, or only where the person's plan agrees, so every carer follows the same approach."
+   },
+   {
+    "question": "Is this a domiciliary care policy?",
+    "answer": "Yes. It suits home care and live-in services whose staff work in people's own homes. It sits alongside your other domiciliary care policy documents and your home care policy set."
+   },
+   {
+    "question": "Does it cover fire service referrals?",
+    "answer": "It sets how your service asks the local fire and rescue service for a home fire safety visit, who consents and who records it. It does not replace the person's own right to refuse."
+   }
+  ]
+ },
+ "relationships-sexuality-sexual-safety": {
+  "primary": {
+   "keyword": "personal relationships policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "consensual relationships",
+    "volume": 20
+   },
+   {
+    "keyword": "sex education learning disability",
+    "volume": 10
+   },
+   {
+    "keyword": "sexuality policy",
+    "volume": 10
+   },
+   {
+    "keyword": "safe and healthy sex",
+    "volume": 10
+   },
+   {
+    "keyword": "examples of safe sex",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Personal Relationships Policy for Supported Living",
+  "meta_description": "A personal relationships policy written for your supported living, extra care, shared lives or autism service: consent, privacy, boundaries and abuse reporting.",
+  "extra_faqs": [
+   {
+    "question": "What should a personal relationships policy cover?",
+    "answer": "A personal relationships policy should cover respect for privacy and dignity, how consent and capacity are approached, access to sexual health information, staff boundaries and how concerns about abuse are reported. This policy is written around your own arrangements."
+   },
+   {
+    "question": "Can people in supported living have consensual relationships?",
+    "answer": "Adults are presumed to have capacity under the Mental Capacity Act 2005, and Regulation 10 requires dignity, privacy and autonomy. The policy sets out how your service supports consensual relationships and what happens if capacity is in doubt."
+   },
+   {
+    "question": "Why does the policy mention section 38 of the Sexual Offences Act?",
+    "answer": "Section 38 creates an offence where a person involved in the care of someone with a mental disorder intentionally touches them in a sexual way. The policy uses it to set out clear staff boundaries and reporting."
+   },
+   {
+    "question": "Does the policy cover sex education learning disability needs?",
+    "answer": "It records how your service supports safe and healthy sex information, such as easy read material or health professionals, including examples of safe sex advice from a nurse. You tell us what you use, so we do not invent resources you do not have."
+   },
+   {
+    "question": "Who decides if a person can consent to a sexual relationship?",
+    "answer": "The policy follows the Mental Capacity Act principles and sets out your own route, such as who is consulted and when the local authority or an advocate is involved. It does not give legal advice."
+   },
+   {
+    "question": "Is this the same as a care home personal relationships policy?",
+    "answer": "No. This one is written for supported living, extra care, shared lives and learning disability services, with tenancy, privacy at home and community safety in mind. A separate policy covers care homes."
+   }
+  ]
+ },
+ "resident-environmental-safety": {
+  "primary": {
+   "keyword": "environmental safety policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "window restrictors",
+    "volume": 8100
+   },
+   {
+    "keyword": "scalding",
+    "volume": 3600
+   },
+   {
+    "keyword": "health and safety policy care home",
+    "volume": 40
+   },
+   {
+    "keyword": "legionella policy",
+    "volume": 40
+   },
+   {
+    "keyword": "safe environment policy",
+    "volume": 10
+   },
+   {
+    "keyword": "hot surfaces risk assessment",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Environmental Safety Policy for Care Homes",
+  "meta_description": "An environmental safety policy written for your care home: hot water, window restrictors, hot surfaces and access hazards, built on your own checks.",
+  "extra_faqs": [
+   {
+    "question": "What does an environmental safety policy cover?",
+    "answer": "It covers how you keep the building safe for residents: hot water outlets, window openings, hot surfaces, locked areas and room hazards. It sits within your wider health and safety policy care home arrangements and names who checks, how often, and what happens next."
+   },
+   {
+    "question": "Is this the same as a legionella policy?",
+    "answer": "No. A legionella policy covers water system control. This environmental safety policy covers scald risk at outlets and other building hazards. The two should refer to each other, and the policy points to your water safety arrangements."
+   },
+   {
+    "question": "Do we need window restrictors on every window?",
+    "answer": "We do not state a standard we have not confirmed. The policy records which windows you restrict and why, based on your own risk assessment, and how you check them. HSE guidance was not available to verify."
+   },
+   {
+    "question": "How does the policy deal with scalding risk?",
+    "answer": "It sets out your own controls, such as valves or outlet limits, who checks temperatures, how results are recorded and what you do when an outlet is out of range. It does not invent controls you have not fitted."
+   },
+   {
+    "question": "Does the policy cover ligature risk?",
+    "answer": "It describes how you consider ligature and self harm risk where a resident is assessed as at risk, and how rooms and fittings are reviewed. A hot surfaces risk assessment is covered in the same way. It does not give clinical advice."
+   },
+   {
+    "question": "Can I use it as a safe environment policy for a dementia or nursing home?",
+    "answer": "Yes. The services listed use the same core policy, with service differences for dementia, such as individual room risk assessment and stronger controls on access to hazards."
+   }
+  ]
+ },
+ "respite-short-break-care": {
+  "primary": {
+   "keyword": "respite care policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "respite care",
+    "volume": 8100
+   },
+   {
+    "keyword": "emergency respite care",
+    "volume": 390
+   },
+   {
+    "keyword": "respite services",
+    "volume": 260
+   },
+   {
+    "keyword": "short term respite care",
+    "volume": 140
+   },
+   {
+    "keyword": "in home respite care",
+    "volume": 110
+   },
+   {
+    "keyword": "respite care for dementia patients",
+    "volume": 110
+   },
+   {
+    "keyword": "adult respite care",
+    "volume": 110
+   }
+  ],
+  "seo_title": "Respite Care Policy for Home Care and Live-In Services",
+  "meta_description": "A respite care policy written for your home care or live-in service: assessment, booking, emergency breaks and family carer involvement. Reviewed by a person.",
+  "extra_faqs": [
+   {
+    "question": "Is a respite care policy a legal requirement?",
+    "answer": "No single law requires a stand-alone policy by that name. Regulation 9 requires care that is appropriate, meets needs and reflects preferences, and a written policy shows how you do that for short breaks."
+   },
+   {
+    "question": "Does the policy cover emergency respite care?",
+    "answer": "Yes. It sets out how you decide, who is involved and what you collect before starting, based on the answers you give about your own capacity."
+   },
+   {
+    "question": "Can it cover in home respite care for adults?",
+    "answer": "Yes. It is written for home care and live-in services, so it covers in home respite care, adult respite care and how your visits or live-in cover work."
+   },
+   {
+    "question": "How does it handle consent and capacity?",
+    "answer": "It records how you check consent and, where a person may lack capacity, how decisions follow the Mental Capacity Act 2005 and are recorded. It does not give legal advice."
+   },
+   {
+    "question": "Does it involve the family carer?",
+    "answer": "Yes. It sets out how the family carer helps plan the break, shares routines and is updated, using the steps you actually take."
+   },
+   {
+    "question": "Is this a template?",
+    "answer": "No. It is written for your organisation from your answers, then checked by a person, so it describes what you really do."
+   }
+  ]
+ },
+ "sexuality-relationships-intimacy": {
+  "primary": {
+   "keyword": "sexuality policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "dementia and sex",
+    "volume": 90
+   },
+   {
+    "keyword": "sexuality and dementia",
+    "volume": 10
+   },
+   {
+    "keyword": "sex and dementia in nursing homes",
+    "volume": 10
+   },
+   {
+    "keyword": "dementia and inappropriate sexuality",
+    "volume": 10
+   },
+   {
+    "keyword": "dementia sex drive",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Sexuality Policy for Care Homes and Nursing Homes",
+  "meta_description": "A sexuality policy written for your care home, nursing home or dementia service: privacy, relationships, consent and safeguarding.",
+  "extra_faqs": [
+   {
+    "question": "What should a sexuality policy cover in a care home?",
+    "answer": "It should cover privacy, support for relationships, consent and capacity, how staff respond to concerns, safeguarding routes, recording, staff boundaries and training. Yours is written from your own answers, so it describes your practice."
+   },
+   {
+    "question": "Do residents have a right to relationships and intimacy?",
+    "answer": "Regulation 10 requires services to treat people with dignity and respect, which includes their privacy and autonomy. The Human Rights Act 1998 is also relevant. The policy sets out how your service respects these in daily care."
+   },
+   {
+    "question": "How does capacity affect a resident's relationship?",
+    "answer": "Under the Mental Capacity Act 2005, capacity is assumed and an unwise decision does not by itself show a lack of it. Where doubt exists, capacity is assessed for the specific decision. The policy names who does this in your service."
+   },
+   {
+    "question": "How should staff respond to dementia and inappropriate sexuality?",
+    "answer": "Your policy sets out a calm, recorded response. Staff protect the dignity of everyone involved, tell the manager and review the care plan. Where another person may be at risk, it sets out your safeguarding referral route."
+   },
+   {
+    "question": "Is this policy suitable for nursing and dementia services?",
+    "answer": "Yes. It is written for care homes, nursing homes and dementia services. Wording on sexuality and dementia, shared rooms, night checks and clinical care changes with what you tell us about your setting."
+   },
+   {
+    "question": "Is this a free template or written for my service?",
+    "answer": "It is written for your service. You answer questions about your rooms, routines and reporting lines, and the policy reflects only what you tell us. It does not invent practices you do not have."
+   }
+  ]
+ },
+ "shared-lives-approval-matching-review": {
+  "primary": {
+   "keyword": "shared lives scheme",
+   "volume": 1000
+  },
+  "secondary": [
+   {
+    "keyword": "shared lives carer",
+    "volume": 590
+   },
+   {
+    "keyword": "shared lives",
+    "volume": 1600
+   },
+   {
+    "keyword": "shared lives service",
+    "volume": 30
+   },
+   {
+    "keyword": "shared lives care",
+    "volume": 20
+   },
+   {
+    "keyword": "shared lives respite",
+    "volume": 20
+   },
+   {
+    "keyword": "becoming a shared lives carer",
+    "volume": 10
+   },
+   {
+    "keyword": "cqc shared lives",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Shared Lives Scheme Policy: Carer Approval and Matching",
+  "meta_description": "A shared lives scheme policy written for your service: carer approval, matching, placement agreements and household reviews.",
+  "extra_faqs": [
+   {
+    "question": "Does a shared lives service need its own policy?",
+    "answer": "Yes. Shared lives carers use their own homes, so the policy covers approving carers, checking their households and matching people, as well as the care itself. Your answers shape each step."
+   },
+   {
+    "question": "What is involved in becoming a shared lives carer?",
+    "answer": "Becoming a shared lives carer means passing your scheme's assessment. Your scheme sets how carers are assessed and approved before a placement. The policy records your stages, checks and who decides. It does not set a fixed national process for you."
+   },
+   {
+    "question": "What does the policy say about shared lives carer checks?",
+    "answer": "It records the checks you make on carers and other adults in the household, such as DBS checks and references. Regulation 19 requires recruitment procedures to be set up and applied effectively."
+   },
+   {
+    "question": "How does the policy cover matching in shared lives care?",
+    "answer": "It sets out how you match a person with a carer, how introductions work and how the person's wishes are recorded. Where capacity is in doubt, it points to the Mental Capacity Act."
+   },
+   {
+    "question": "Is shared lives respite covered?",
+    "answer": "Yes, if you offer it. Tell us whether you provide shared lives respite, and the policy describes how short stays are matched and reviewed. If you do not offer it, it is left out."
+   },
+   {
+    "question": "How is the shared lives scheme policy used for CQC shared lives inspections?",
+    "answer": "It gives your team a written record of your own arrangements for CQC shared lives inspections, linked to safe care, safeguarding, governance and fit and proper persons. It sets out your own arrangements only."
+   }
+  ]
+ },
+ "shift-handover-communication": {
+  "primary": {
+   "keyword": "shift handover policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "nursing handover",
+    "volume": 90
+   },
+   {
+    "keyword": "shift handover",
+    "volume": 70
+   },
+   {
+    "keyword": "handover policy",
+    "volume": 10
+   },
+   {
+    "keyword": "clinical handover policy",
+    "volume": 10
+   },
+   {
+    "keyword": "care home handover sheet",
+    "volume": 10
+   },
+   {
+    "keyword": "shift handover procedure",
+    "volume": 10
+   },
+   {
+    "keyword": "night shift handover",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Shift Handover Policy for Care Homes, Written for You",
+  "meta_description": "A shift handover policy written for your service: what is passed on, how it is recorded, night and weekend cover, and escalation. Reviewed by a person.",
+  "extra_faqs": [
+   {
+    "question": "What should a shift handover procedure include?",
+    "answer": "That is your decision, and the policy records it. Typical content is changes in condition, risks, medicines changes, appointments and concerns. Your answers shape the shift handover procedure, so staff follow your practice, not a generic list."
+   },
+   {
+    "question": "Does this clinical handover policy suit nursing homes?",
+    "answer": "Yes. It is written for care homes, nursing homes and dementia services. Nursing handover can use your own structure, such as SBAR or a unit sheet, and the policy names only what you actually use."
+   },
+   {
+    "question": "Can the policy cover our care home handover sheet?",
+    "answer": "Yes. You tell us how your care home handover sheet is completed, stored and shredded or filed. The policy then describes that arrangement and who checks it."
+   },
+   {
+    "question": "How does it deal with night shift handover?",
+    "answer": "You describe who briefs whom at night and weekends, and who the on call manager is. Night shift handover is then set out for your service, including how urgent concerns are escalated."
+   },
+   {
+    "question": "Does it keep handover information private?",
+    "answer": "It sets out your privacy arrangements, such as closed rooms and secure storage, with data protection in mind. The policy states what you actually do and does not promise anything you cannot support."
+   },
+   {
+    "question": "Is this a template or a written policy?",
+    "answer": "It is written for your organisation from your answers, then reviewed by a person. It is not a blank handover policy template, so it reflects your units, roles and records."
+   }
+  ]
+ },
+ "sickness-absence-return-to-work": {
+  "primary": {
+   "keyword": "sickness absence policy",
+   "volume": 390
+  },
+  "secondary": [
+   {
+    "keyword": "sickness and absence policy",
+    "volume": 390
+   },
+   {
+    "keyword": "return to work interview",
+    "volume": 720
+   },
+   {
+    "keyword": "absence management policy",
+    "volume": 110
+   },
+   {
+    "keyword": "sickness absence management",
+    "volume": 140
+   },
+   {
+    "keyword": "sickness reporting",
+    "volume": 40
+   },
+   {
+    "keyword": "sickness policy template",
+    "volume": 40
+   },
+   {
+    "keyword": "long term sickness policy",
+    "volume": 20
+   },
+   {
+    "keyword": "sickness procedure",
+    "volume": 30
+   }
+  ],
+  "seo_title": "Sickness Absence Policy for Care Homes, Written for You",
+  "meta_description": "A sickness absence policy written for your care home: reporting, sick pay, return to work, long-term absence and infection exclusion. Reviewed by a person.",
+  "extra_faqs": [
+   {
+    "question": "What does a sickness absence policy cover?",
+    "answer": "A sickness absence policy sets out how staff report illness, what evidence you ask for, sick pay, return to work meetings, long term absence and records. It states your own arrangements, based on your answers."
+   },
+   {
+    "question": "Is statutory sick pay covered?",
+    "answer": "Yes. GOV.UK states statutory sick pay is up to £123.25 a week or 80% of average weekly earnings if lower, for up to 28 weeks. Rates change, so the policy states your pay and refers to current government rates."
+   },
+   {
+    "question": "Do we need a return to work interview?",
+    "answer": "There is no general legal duty to hold one. It is good practice, and the policy sets out whether you hold a return to work interview, who does it and what is recorded in your sickness and absence policy."
+   },
+   {
+    "question": "How does it handle disability and adjustments?",
+    "answer": "Section 20 of the Equality Act 2010 requires reasonable steps where a practice puts a disabled person at a substantial disadvantage. The policy records how you consider adjustments after absence."
+   },
+   {
+    "question": "Can it cover illness that could affect residents?",
+    "answer": "Yes. It records your own sickness procedure for staying away from work after sickness or diarrhoea, and who is told, so it fits your infection control arrangements."
+   },
+   {
+    "question": "Is this a free sickness policy template?",
+    "answer": "No. A sickness policy template is generic. This absence management policy is written for your care home from your answers, including long term sickness policy steps, and reviewed by a person."
+   }
+  ]
+ },
+ "smoking-vaping-oxygen-safety": {
+  "primary": {
+   "keyword": "smoking policy template",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "smoking policy examples",
+    "volume": 10
+   },
+   {
+    "keyword": "sample smoking policy",
+    "volume": 10
+   },
+   {
+    "keyword": "smoking and vaping policy template",
+    "volume": 10
+   },
+   {
+    "keyword": "smoke free policy template",
+    "volume": 10
+   },
+   {
+    "keyword": "workplace smoking policy template",
+    "volume": 10
+   },
+   {
+    "keyword": "no smoking policy template",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Smoking Policy Template for Care Homes, Written for You",
+  "meta_description": "A smoking policy template that is not generic: written for your care home, covering vaping, designated rooms and oxygen safety from your answers.",
+  "extra_faqs": [
+   {
+    "question": "Is this a free smoking policy template?",
+    "answer": "No. A workplace smoking policy template or no smoking policy template is generic. This policy is written for your home from your answers, naming your own rooms, roles and checks."
+   },
+   {
+    "question": "Can a care home have a designated smoking room?",
+    "answer": "The Smoke-free (Exemptions and Vehicles) Regulations 2007 allow a designated room in a care home if it meets set conditions, including written designation, enclosure, no shared ventilation and clear marking. The policy records your arrangement. A smoke free policy template cannot decide this for you."
+   },
+   {
+    "question": "Does the policy cover vaping?",
+    "answer": "Yes. It sets out where e-cigarettes may be used and charged, based on your answers. This works as a smoking and vaping policy template that is finished for your service."
+   },
+   {
+    "question": "Does it cover oxygen?",
+    "answer": "Yes. It covers storage, signage, supplier checks and keeping ignition sources away, using the arrangements you describe. It does not give clinical advice on oxygen therapy."
+   },
+   {
+    "question": "Can I see smoking policy examples before buying?",
+    "answer": "The page shows what the policy covers. A sample smoking policy from another home would not fit yours, so each policy is built from your answers."
+   },
+   {
+    "question": "Will it match our fire risk assessment?",
+    "answer": "It refers to your named responsible person and your fire risk assessment, as the Regulatory Reform (Fire Safety) Order 2005 requires one. You should review the two together."
+   }
+  ]
+ },
+ "social-media-phones-photography": {
+  "primary": {
+   "keyword": "social media policy",
+   "volume": 390
+  },
+  "secondary": [
+   {
+    "keyword": "mobile phone policy",
+    "volume": 170
+   },
+   {
+    "keyword": "social media guidelines",
+    "volume": 140
+   },
+   {
+    "keyword": "social media policy template",
+    "volume": 50
+   },
+   {
+    "keyword": "social media policy for staff",
+    "volume": 50
+   },
+   {
+    "keyword": "workplace social media policy",
+    "volume": 30
+   },
+   {
+    "keyword": "photography policy",
+    "volume": 10
+   },
+   {
+    "keyword": "mobile phone policy template",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Social Media Policy for Care Homes and Home Care Services",
+  "meta_description": "A social media policy, mobile phone and photography policy written for your service from your answers. Consent, online conduct and images covered.",
+  "extra_faqs": [
+   {
+    "question": "Does a care service need a social media policy?",
+    "answer": "Nothing in the regulations we fetched uses that name. Regulation 10 requires privacy and Regulation 17 secure records. A written social media policy shows how your staff protect both when they use phones and online accounts."
+   },
+   {
+    "question": "Can care staff use personal phones at work?",
+    "answer": "That is your decision. The policy records your rule, such as lockers, break only use or emergency pockets, so every shift applies the same mobile phone policy."
+   },
+   {
+    "question": "Is consent needed to photograph a resident?",
+    "answer": "Your policy should set out how consent is gained and recorded before any photograph. Where a person cannot decide, it records how a decision is made under the Mental Capacity Act 2005."
+   },
+   {
+    "question": "What is the difference between this and a template?",
+    "answer": "A social media policy template, mobile phone policy template or workplace social media policy found online is generic. This policy is written for your service from your answers, so it states your actual phone rules, consent steps and reporting route."
+   },
+   {
+    "question": "Does it cover staff posting on their own accounts?",
+    "answer": "Yes. As a social media policy for staff, it sets out your expectations for personal accounts, including posts about people, colleagues and the service, and what happens if a post breaches the rules."
+   },
+   {
+    "question": "Where do photographs have to be stored?",
+    "answer": "Your photography policy records where you store images, who can see them and when they are deleted. Section 170 of the Data Protection Act 2018 makes some knowing or reckless obtaining or disclosure of personal data an offence."
+   }
+  ]
+ },
+ "tenancy-housing-care-separation": {
+  "primary": {
+   "keyword": "supported living policies and procedures",
+   "volume": 20
+  },
+  "secondary": [
+   {
+    "keyword": "supported living",
+    "volume": 3600
+   },
+   {
+    "keyword": "extra care housing",
+    "volume": 1000
+   },
+   {
+    "keyword": "shared lives",
+    "volume": 1600
+   },
+   {
+    "keyword": "extra care",
+    "volume": 1000
+   },
+   {
+    "keyword": "supported living housing",
+    "volume": 40
+   },
+   {
+    "keyword": "policies and procedures for supported living",
+    "volume": 20
+   }
+  ],
+  "seo_title": "Supported Living Policies and Procedures: Tenancy Policy",
+  "meta_description": "Supported living policies and procedures: a tenancy, housing and care separation policy written for your supported living, extra care or Shared Lives service.",
+  "extra_faqs": [
+   {
+    "question": "Why separate housing from care?",
+    "answer": "So a person's home does not depend on one care provider. Separation supports choice and control, including the right to change provider. The policy records how your service keeps tenancy and care agreements apart in practice."
+   },
+   {
+    "question": "Does this policy suit extra care housing?",
+    "answer": "Yes, as part of your supported living policies and procedures set. Extra care housing often has a landlord, a tenancy and an on site care team. The policy is written around how your scheme arranges these, from your answers, so it does not describe a model you do not use."
+   },
+   {
+    "question": "Can it cover Shared Lives arrangements?",
+    "answer": "It can. Shared Lives has its own arrangements, so the policy uses your answers about how the home, the carer and the person relate. It does not assume a tenancy where there is none."
+   },
+   {
+    "question": "Is this one of the supported living policies and procedures regulators expect?",
+    "answer": "The Health and Social Care Act regulations require person-centred care and suitable premises. A written account of how housing and care are kept separate is good evidence of those arrangements. It cannot promise any inspection outcome."
+   },
+   {
+    "question": "Does the policy give tenancy or legal advice?",
+    "answer": "No. It sets out your organisation's own arrangements. People who need advice on tenancy rights should be pointed to an independent advocate, the landlord, the local authority or a legal adviser."
+   },
+   {
+    "question": "Will it work for a learning disability or autism service?",
+    "answer": "Yes. It covers choice of housemates, privacy at home and decisions where capacity is in question, using your answers about how you support people to be involved in decisions about their home."
+   }
+  ]
+ },
+ "tenant-property-belongings-keys": {
+  "primary": {
+   "keyword": "key holding policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "supported living policies",
+    "volume": 10
+   },
+   {
+    "keyword": "supported living policies and procedures",
+    "volume": 20
+   },
+   {
+    "keyword": "safeguarding adults policy",
+    "volume": 170
+   },
+   {
+    "keyword": "supported living services",
+    "volume": 260
+   },
+   {
+    "keyword": "extra care housing",
+    "volume": 1000
+   },
+   {
+    "keyword": "supported living",
+    "volume": 3600
+   },
+   {
+    "keyword": "supported living cqc",
+    "volume": 90
+   }
+  ],
+  "seo_title": "Key Holding Policy for Supported Living and Extra Care",
+  "meta_description": "A key holding policy written for your service: entering tenants' homes, key control, belongings and searches in supported living and extra care.",
+  "extra_faqs": [
+   {
+    "question": "Why does a supported living service need a key holding policy?",
+    "answer": "Staff in tenancies enter people's own homes, so you need clear rules on who holds keys, why and with what agreement. A key holding policy shows this in writing."
+   },
+   {
+    "question": "Can staff search a tenant's room?",
+    "answer": "Only as your own policy allows. It should state who can authorise a search, what consent or lawful authority is needed and how the reason is recorded. Many services rule out searches without agreement."
+   },
+   {
+    "question": "Is theft of a person's belongings a safeguarding matter?",
+    "answer": "Regulation 13 defines abuse to include theft, misuse or misappropriation of money or property belonging to a service user. Your safeguarding adults policy should show how reports are escalated."
+   },
+   {
+    "question": "Does the policy cover extra care housing?",
+    "answer": "Yes. It is written for supported living services, extra care housing, Shared Lives and learning disability and autism services, using your own keys, entry and storage arrangements."
+   },
+   {
+    "question": "Does this replace our supported living policies and procedures?",
+    "answer": "No. It is one policy within your wider supported living policies and procedures, alongside safeguarding, tenancy and privacy. It focuses on keys, entry and belongings."
+   },
+   {
+    "question": "What will inspectors look for on privacy and keys?",
+    "answer": "Regulation 10 requires dignity and respect, including privacy. Inspectors may ask how staff enter homes and how tenants agreed to it. Your records show this, which matters for supported living CQC inspections."
+   }
+  ]
+ },
+ "wound-care-tissue-viability": {
+  "primary": {
+   "keyword": "wound care policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "tissue viability policy",
+    "volume": 10
+   },
+   {
+    "keyword": "wound management policy",
+    "volume": 10
+   },
+   {
+    "keyword": "wound care policies and procedures",
+    "volume": 10
+   },
+   {
+    "keyword": "wound care",
+    "volume": 1000
+   },
+   {
+    "keyword": "tissue viability",
+    "volume": 1000
+   },
+   {
+    "keyword": "wound infection",
+    "volume": 2900
+   },
+   {
+    "keyword": "wound dressing",
+    "volume": 5400
+   }
+  ],
+  "seo_title": "Wound Care Policy for Care Homes and Nursing Homes",
+  "meta_description": "A wound care policy written for your service: assessment, dressings, infection signs, tissue viability referral and records, set against Regulation 12.",
+  "extra_faqs": [
+   {
+    "question": "What does a wound care policy cover?",
+    "answer": "It sets out who assesses wounds, how dressings are chosen, changed and recorded, how infection concerns are escalated, how specialist advice is reached and how records are reviewed. It describes your own arrangements, not clinical advice."
+   },
+   {
+    "question": "Is this a tissue viability policy too?",
+    "answer": "Yes. It includes your route to tissue viability advice, such as an NHS tissue viability nurse, GP or in-house lead. You tell us what you actually use, so the policy never names a service you cannot access."
+   },
+   {
+    "question": "Can care staff change dressings under this wound management policy?",
+    "answer": "Only if that is how your service works. You tell us who does wound care, and the policy reflects it. Nursing services often differ from care homes that rely on district nurses."
+   },
+   {
+    "question": "Does it cover wound infection?",
+    "answer": "It sets out how staff report signs of wound infection and who they call, using the escalation route you describe. It does not give clinical advice or tell staff how to treat an infection."
+   },
+   {
+    "question": "Does it differ for nursing and dementia services?",
+    "answer": "Yes. Nursing services add registered nurse assessment and sign off. Dementia services add support for people who cannot report pain or may pick at dressings. You describe how each works in your service."
+   },
+   {
+    "question": "How long does it take?",
+    "answer": "Your policy is written for your service and delivered in 2 working days. You answer a short set of questions after purchase, and a person checks it before it carries your name."
+   }
+  ]
  }
 }

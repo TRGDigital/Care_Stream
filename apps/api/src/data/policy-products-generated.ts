@@ -1501,5 +1501,1803 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
     "help": "How do you treat professional visitors, children and pets? For example advocates, clergy, therapy animals, children's visits"
    }
   ]
+ },
+ {
+  "slug": "accompanying-people-out-community",
+  "title": "Accompanying People Out and Community Activities Policy",
+  "price_pence": 4900,
+  "taster": false,
+  "bundles": [
+   "health-safety-pack"
+  ],
+  "description": "An outings policy for your service: risk assessment, transport, money, consent and capacity, and emergencies when staff accompany people out.",
+  "fields": [
+   {
+    "key": "outing_types_supported",
+    "label": "Outings you support",
+    "help": "Which kinds of outing do staff accompany? For example GP and hospital appointments, shopping, faith services, social clubs, days out"
+   },
+   {
+    "key": "outing_risk_assessment_method",
+    "label": "Outing risk assessment",
+    "help": "How do you assess risks before staff accompany someone out? For example a section of the care plan, a one off form for new activities, reviewed at each care plan review"
+   },
+   {
+    "key": "transport_arrangements",
+    "label": "Transport arrangements",
+    "help": "How do people travel on outings? For example walking, public transport, taxi booked by the office, the person's own car, staff cars"
+   },
+   {
+    "key": "staff_vehicle_use",
+    "label": "Staff vehicle rules",
+    "help": "Can staff drive people in their own or a service vehicle, and what checks apply? For example not permitted, business insurance and licence checks, service vehicle only"
+   },
+   {
+    "key": "money_on_outings",
+    "label": "Money on outings",
+    "help": "How is money handled when out? For example person carries own money, staff hold a float with receipts, no staff handling of cash"
+   },
+   {
+    "key": "consent_capacity_approach",
+    "label": "Consent and capacity steps",
+    "help": "How do you record consent to go out, and decisions where capacity is in doubt? For example care plan consent, best interests record with family"
+   },
+   {
+    "key": "emergency_contact_route",
+    "label": "Emergency contact route",
+    "help": "Who do staff call if there is an emergency or a problem while out? For example on call manager, office line, then 999"
+   },
+   {
+    "key": "medicines_and_equipment_carried",
+    "label": "Medicines and equipment",
+    "help": "How are medicines, aids and equipment handled when out? For example prompts planned around outing times, staff carry nothing, person carries own inhaler"
+   },
+   {
+    "key": "insurance_cover",
+    "label": "Insurance arrangements",
+    "help": "What insurance covers outings? For example public liability held by the provider, vehicle cover checked yearly"
+   },
+   {
+    "key": "visit_time_allowance",
+    "label": "Time and rota allowance",
+    "help": "How is time for outings planned and charged? For example booked as a longer visit, agreed with the commissioner, charged by the hour"
+   },
+   {
+    "key": "lone_staff_outing_rules",
+    "label": "Lone staff rules",
+    "help": "What applies when one carer accompanies a person alone? For example check in by phone, no unplanned detours, agreed return time"
+   },
+   {
+    "key": "incident_recording",
+    "label": "Incident recording",
+    "help": "How are incidents on outings recorded and reviewed? For example an incident form to the manager within 24 hours, discussed at supervision"
+   }
+  ]
+ },
+ {
+  "slug": "activities-social-inclusion",
+  "title": "Activities, Social Inclusion and Meaningful Occupation Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "A care home activities policy covering meaningful occupation, community links, outings, and cultural and spiritual needs, written around how your home runs its programme.",
+  "fields": [
+   {
+    "key": "activities_lead_role",
+    "label": "Activities lead role",
+    "help": "Who plans and leads activities, and is the role dedicated or shared? For example a full time activities coordinator, care staff on a rota, or a coordinator plus volunteers"
+   },
+   {
+    "key": "interests_gathering_method",
+    "label": "How interests are gathered",
+    "help": "How do you find out what each person enjoys and used to do? For example a life story and interests form at admission, talks with family, and a review at each care plan review"
+   },
+   {
+    "key": "programme_structure",
+    "label": "Programme structure",
+    "help": "How is the activities programme organised? For example a weekly timetable on the noticeboard plus one to one time for people who stay in their rooms"
+   },
+   {
+    "key": "one_to_one_provision",
+    "label": "One to one provision",
+    "help": "How do you include people who cannot or prefer not to join groups? For example bedside visits, sensory sessions, or hand massage offered by named staff"
+   },
+   {
+    "key": "community_links",
+    "label": "Community links",
+    "help": "Which links with the local community do you have? For example school visits, a local church, a day centre, or a befriending group"
+   },
+   {
+    "key": "outings_arrangements",
+    "label": "Outings arrangements",
+    "help": "How do you arrange outings, and do you own or hire transport? For example a minibus with trained drivers, or taxis with accessible vehicles, and the staff ratio you use"
+   },
+   {
+    "key": "spiritual_cultural_support",
+    "label": "Spiritual and cultural support",
+    "help": "How do you meet faith, cultural and language needs? For example visiting ministers, a quiet room, festivals marked, and culturally suitable food and music"
+   },
+   {
+    "key": "activity_recording_method",
+    "label": "Activity recording",
+    "help": "How do you record participation and enjoyment? For example daily notes, an activity log per person, or a monthly summary reviewed by the manager"
+   },
+   {
+    "key": "activity_budget_resources",
+    "label": "Budget and resources",
+    "help": "How is the activities budget set and how are resources managed? For example a monthly amount per resident, a resident fund, or fundraising through friends of the home"
+   },
+   {
+    "key": "volunteer_arrangements",
+    "label": "Volunteer arrangements",
+    "help": "Do volunteers or entertainers support activities, and how are they checked and supervised? For example DBS checks, an induction and a named staff contact"
+   },
+   {
+    "key": "feedback_participation",
+    "label": "Residents' say in activities",
+    "help": "How do residents and families help shape the programme? For example residents' meetings, suggestion box, or a short survey twice a year"
+   }
+  ]
+ },
+ {
+  "slug": "cctv-surveillance-monitoring",
+  "title": "CCTV, Surveillance and Monitoring Technology Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "governance-data-pack"
+  ],
+  "description": "A care home CCTV policy template written for you, covering cameras, sensor mats and door alarms: privacy, consent, best interests and data use.",
+  "fields": [
+   {
+    "key": "technology_in_use",
+    "label": "Monitoring technology in use",
+    "help": "Which monitoring technology do you use? For example CCTV in communal areas only, sensor mats, door alarms, bed sensors, wearable alerts, or none of these."
+   },
+   {
+    "key": "camera_locations",
+    "label": "Camera locations",
+    "help": "Where are cameras sited, and where are they never used? For example entrances, corridors and car park, never in bedrooms, bathrooms or lounges."
+   },
+   {
+    "key": "purpose_of_monitoring",
+    "label": "Purpose of monitoring",
+    "help": "What is each type of monitoring for? For example site security at entrances, alerting staff to a person leaving at night, or falls alerts."
+   },
+   {
+    "key": "consent_and_best_interests",
+    "label": "Consent and best interests process",
+    "help": "How do you decide a person's monitoring is agreed, or in their best interests if they lack capacity? For example a conversation at admission, a capacity assessment, and a best interests meeting with family."
+   },
+   {
+    "key": "alarm_response",
+    "label": "Alarm response arrangements",
+    "help": "Who responds when a sensor mat or door alarm sounds, and how quickly? For example the nearest carer, with the senior on shift informed."
+   },
+   {
+    "key": "signage_and_notice",
+    "label": "Signage and notice",
+    "help": "How are residents, families and visitors told about cameras? For example signs at the entrance and in reception, and a line in the admission pack."
+   },
+   {
+    "key": "footage_access_and_viewing",
+    "label": "Footage access and viewing",
+    "help": "Who can view live or recorded footage, and where? For example the registered manager and deputy only, on a locked office screen."
+   },
+   {
+    "key": "retention_and_disclosure",
+    "label": "Retention and disclosure",
+    "help": "How long is footage kept, and who decides whether to share it? For example overwritten after 30 days, with disclosure decided by the registered manager and data protection lead."
+   },
+   {
+    "key": "data_protection_lead",
+    "label": "Data protection lead",
+    "help": "Who is responsible for data protection and any privacy assessment of your monitoring? For example the registered manager with an external data protection officer."
+   },
+   {
+    "key": "review_of_monitoring",
+    "label": "Review of monitoring",
+    "help": "When do you review whether each device is still needed? For example at every care plan review and annually for CCTV."
+   },
+   {
+    "key": "staff_and_visitor_monitoring",
+    "label": "Staff and visitor monitoring",
+    "help": "Do cameras cover areas staff or visitors use, and how are they told? For example staff briefed at induction, entrance cameras only."
+   },
+   {
+    "key": "restrictive_practice_check",
+    "label": "Restrictive practice check",
+    "help": "How do you check that a device is not restricting a person's movement? For example an alarmed door reviewed against the person's mobility and any DoLS authorisation."
+   }
+  ]
+ },
+ {
+  "slug": "continence-catheter-care",
+  "title": "Continence Promotion and Catheter Care Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "Continence assessment, products, catheter care, UTI prevention and dignity, with clear roles for care staff and nurses, written for your service.",
+  "fields": [
+   {
+    "key": "continence_assessment",
+    "label": "Continence assessment",
+    "help": "How and when is continence assessed for each person? For example on admission using a bladder and bowel chart, then reviewed monthly or after any change"
+   },
+   {
+    "key": "continence_lead",
+    "label": "Continence lead role",
+    "help": "Who leads on continence in your service and what do they do? For example a named senior carer, a link nurse, or no named lead"
+   },
+   {
+    "key": "products_supply",
+    "label": "Continence products supplied",
+    "help": "Who chooses, orders and pays for continence pads and products? For example the NHS continence service supplies, the home buys them, or the family provides"
+   },
+   {
+    "key": "toileting_support",
+    "label": "Toileting support routine",
+    "help": "How do you support people to use the toilet, and how is prompting handled? For example individual prompting plans, call bell response, commodes at night"
+   },
+   {
+    "key": "catheter_types_supported",
+    "label": "Catheter types supported",
+    "help": "Which catheters do you support? For example indwelling urethral, suprapubic, intermittent self-catheterisation, or none"
+   },
+   {
+    "key": "catheter_who_does",
+    "label": "Who does catheter tasks",
+    "help": "Who inserts, changes and removes catheters, and who empties bags? For example district nurses change, trained carers empty bags and clean the site"
+   },
+   {
+    "key": "catheter_change_records",
+    "label": "Catheter change records",
+    "help": "How are catheter type, change dates and problems recorded? For example care plan entry, change schedule on the electronic system, nurse notes"
+   },
+   {
+    "key": "uti_response",
+    "label": "Suspected UTI response",
+    "help": "What do staff do when they suspect a urinary tract infection? For example report to the senior, inform the GP or nurse the same day, record observations"
+   },
+   {
+    "key": "hydration_link",
+    "label": "Hydration and diet link",
+    "help": "How are fluids and diet linked to continence care? For example fluid charts, drinks rounds, dietitian referral"
+   },
+   {
+    "key": "privacy_dignity_measures",
+    "label": "Privacy and dignity measures",
+    "help": "What do you do to protect privacy when giving continence care? For example doors closed, same-gender carer preference recorded, discreet product storage"
+   },
+   {
+    "key": "continence_training",
+    "label": "Continence training",
+    "help": "What continence and catheter training do staff complete and how is competence checked? For example induction module, annual refresher, observed practice by a nurse"
+   }
+  ]
+ },
+ {
+  "slug": "deteriorating-resident-acute-illness",
+  "title": "Deteriorating Resident and Acute Illness Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "Spotting early signs of decline, sepsis awareness, escalation to GP, 111 or 999 and handover to paramedics, written around how your service really works.",
+  "fields": [
+   {
+    "key": "observation_tool",
+    "label": "Observation tool used",
+    "help": "Which tool, if any, do staff use to record and score observations when someone seems unwell? For example NEWS2, RESTORE2, a local early warning chart, or none."
+   },
+   {
+    "key": "who_takes_observations",
+    "label": "Who takes observations",
+    "help": "Which roles take and record observations, and what training or sign off do they hold? For example nurses only, trained seniors, or all care staff after competency checks."
+   },
+   {
+    "key": "equipment_available",
+    "label": "Observation equipment held",
+    "help": "What equipment do you hold on site? For example blood pressure monitor, pulse oximeter, thermometer, blood glucose meter."
+   },
+   {
+    "key": "concern_trigger_points",
+    "label": "Concern trigger points",
+    "help": "What changes make staff raise a concern? For example new confusion, reduced eating or drinking, new pain, breathlessness, or a change from the person's usual."
+   },
+   {
+    "key": "first_call_routes",
+    "label": "First call routes",
+    "help": "Who do staff call first, in and out of hours? For example the nurse in charge, the on call manager, the GP surgery, a community matron or NHS 111."
+   },
+   {
+    "key": "emergency_999_criteria",
+    "label": "999 call criteria",
+    "help": "When do staff call 999 without waiting for a senior? State your own thresholds, for example a suspected stroke, collapse, or a set score."
+   },
+   {
+    "key": "sepsis_awareness",
+    "label": "Sepsis awareness approach",
+    "help": "How do staff learn to recognise possible sepsis and what do they do? For example training, a prompt card, and a rule to call 111 or 999."
+   },
+   {
+    "key": "paramedic_handover",
+    "label": "Handover to paramedics",
+    "help": "What information goes with the person or to the crew? For example a summary sheet, a red bag, medicines list, the resuscitation decision and a named contact."
+   },
+   {
+    "key": "monitoring_after_concern",
+    "label": "Monitoring after a concern",
+    "help": "How often do staff recheck and record when someone is unwell but staying in the home, and who reviews? For example hourly checks and a senior review each shift."
+   },
+   {
+    "key": "family_and_capacity",
+    "label": "Telling family and decisions",
+    "help": "How are the person and their family told, and how are decisions about hospital treated where capacity is in doubt? For example a named contact and a best interests process."
+   },
+   {
+    "key": "review_and_learning",
+    "label": "Review and learning",
+    "help": "How do you review each deterioration or hospital admission? For example a reflective review at handover and a monthly audit at governance meetings."
+   }
+  ]
+ },
+ {
+  "slug": "diabetes-care",
+  "title": "Diabetes Care Policy",
+  "price_pence": 6900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "Glucose monitoring, hypoglycaemia and hyperglycaemia response, insulin support, diet and foot checks, written for your service and the people you support.",
+  "fields": [
+   {
+    "key": "monitoring_method",
+    "label": "Glucose monitoring method",
+    "help": "How is blood glucose monitored and who does it? For example finger-prick tests by trained carers, flash or continuous sensors, district nurse checks"
+   },
+   {
+    "key": "monitoring_frequency",
+    "label": "Monitoring frequency",
+    "help": "How often are levels checked and where is this set? For example as set out in each person's care plan, or as directed by the diabetes nurse"
+   },
+   {
+    "key": "insulin_support",
+    "label": "Insulin support given",
+    "help": "What help with insulin does your service give? For example prompting only, carer administration after training, or nurse administration only"
+   },
+   {
+    "key": "injection_competence",
+    "label": "Injection competence checks",
+    "help": "How is staff competence to support insulin or testing checked? For example observed practice, supplier training, annual sign-off"
+   },
+   {
+    "key": "hypo_response",
+    "label": "Low glucose response",
+    "help": "What do staff do when someone has low glucose? For example the hypo box, set quick-acting carbohydrate, recheck, then call the GP or 999"
+   },
+   {
+    "key": "hyper_response",
+    "label": "High glucose response",
+    "help": "What do staff do when readings are high or the person seems unwell? For example recheck, fluids, call the GP or diabetes nurse, same-day escalation"
+   },
+   {
+    "key": "hypo_supplies",
+    "label": "Hypo supplies and storage",
+    "help": "What emergency supplies do you hold and where are they kept? For example glucose gel and tablets in each unit, glucagon in the clinic room"
+   },
+   {
+    "key": "meal_support",
+    "label": "Meals and diet support",
+    "help": "How are meals, snacks and carbohydrate needs planned? For example menu choices, dietitian advice, support at set mealtimes"
+   },
+   {
+    "key": "foot_eye_checks",
+    "label": "Foot and eye checks",
+    "help": "How are foot checks and diabetic eye screening arranged? For example daily foot look at personal care, podiatrist visits, screening appointments booked by staff"
+   },
+   {
+    "key": "clinical_contacts",
+    "label": "Clinical contacts",
+    "help": "Who provides clinical diabetes advice? For example GP, practice nurse, community diabetes nurse, in-house registered nurse"
+   },
+   {
+    "key": "records_review",
+    "label": "Records and review",
+    "help": "How are readings, incidents and care plans recorded and reviewed? For example daily chart, monthly review, review after any hypo"
+   }
+  ]
+ },
+ {
+  "slug": "driving-travel-vehicle-use",
+  "title": "Driving, Travel and Vehicle Use for Work Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "health-safety-pack"
+  ],
+  "description": "A driving for work policy for your service: licence and insurance checks, travel between visits, own car use, carrying people, bad weather and accidents.",
+  "fields": [
+   {
+    "key": "vehicles_used",
+    "label": "Vehicles used for work",
+    "help": "Which vehicles do staff drive for work? For example own cars only, service-owned cars, pool cars, a mix"
+   },
+   {
+    "key": "licence_check_method",
+    "label": "Licence check method",
+    "help": "How and when do you check driving licences? For example at recruitment and every six months using the DVLA online check, copy of licence held on file"
+   },
+   {
+    "key": "insurance_check_process",
+    "label": "Insurance check process",
+    "help": "How do you confirm staff using their own car have business use cover? For example see the certificate at recruitment and annually"
+   },
+   {
+    "key": "vehicle_condition_checks",
+    "label": "Vehicle checks required",
+    "help": "What do you ask staff to show about their own vehicle? For example valid MOT, tax, a basic weekly check, or nothing beyond MOT"
+   },
+   {
+    "key": "mileage_and_travel_pay",
+    "label": "Mileage and travel pay",
+    "help": "How are mileage and travel time paid? For example a set rate per mile, travel time paid between visits, claim form each month"
+   },
+   {
+    "key": "transporting_people_rules",
+    "label": "Carrying people rules",
+    "help": "Do staff ever take people in their car, and under what conditions? For example never, only with manager approval and written consent, only in service cars"
+   },
+   {
+    "key": "journey_planning_rules",
+    "label": "Journey planning rules",
+    "help": "How are rotas planned to allow safe travel? For example set travel time between calls, no back to back long drives, a limit on daily driving"
+   },
+   {
+    "key": "mobile_phone_rules",
+    "label": "Phone use while driving",
+    "help": "What is your rule for phones and rota apps in the car? For example hands free only, pull over before updating, no calls while driving"
+   },
+   {
+    "key": "severe_weather_arrangements",
+    "label": "Severe weather arrangements",
+    "help": "What happens in snow, ice or flooding? For example priority list of visits, staff not expected to drive in red warnings, 4x4 volunteers"
+   },
+   {
+    "key": "accident_and_breakdown_response",
+    "label": "Accident and breakdown response",
+    "help": "What do staff do after a collision or breakdown on duty? For example make safe, call the on-call manager, record, tell the person affected"
+   },
+   {
+    "key": "fatigue_and_working_hours",
+    "label": "Fatigue and long driving",
+    "help": "How do you manage tiredness, especially for live-in changeovers and night work? For example no driving after a night shift, handover travel limits"
+   },
+   {
+    "key": "driver_incident_review",
+    "label": "Driver incident review",
+    "help": "How are fines, points and incidents handled? For example staff must report within 24 hours, a manager meeting, support or redeployment"
+   }
+  ]
+ },
+ {
+  "slug": "extra-care-communal-call-system",
+  "title": "Extra Care Communal Areas, Call System and Emergency Response Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "health-safety-pack"
+  ],
+  "description": "An extra care housing policy for your scheme: call system testing, who answers and how fast, communal area safety, night cover and emergency response.",
+  "fields": [
+   {
+    "key": "call_system_type",
+    "label": "Call system type",
+    "help": "What call system does the scheme use? For example pendant and pull cords linked to a monitoring centre, an on-site base unit, or a mobile app"
+   },
+   {
+    "key": "call_answering_arrangements",
+    "label": "Who answers calls",
+    "help": "Who answers a call in the day and at night? For example on-site care staff, a remote monitoring centre, a mix with handover times"
+   },
+   {
+    "key": "response_time_standard",
+    "label": "Response time standard",
+    "help": "What response time do you aim for and how is it measured? For example answered in a set number of minutes, reviewed from system reports"
+   },
+   {
+    "key": "call_system_testing",
+    "label": "Call system testing",
+    "help": "How often is the system tested, by whom and how is it recorded? For example weekly pull cord tests by maintenance, annual engineer service"
+   },
+   {
+    "key": "system_failure_plan",
+    "label": "System failure plan",
+    "help": "What happens if the call system fails? For example hourly checks by staff, spare handsets, engineer call out, who is told"
+   },
+   {
+    "key": "night_cover_arrangements",
+    "label": "Night cover",
+    "help": "What cover is in place overnight? For example one waking carer on site, on call manager, remote support"
+   },
+   {
+    "key": "emergency_escalation_route",
+    "label": "Emergency escalation",
+    "help": "Who is called when a person does not respond or needs urgent help? For example 999, on call manager, key holder for the flat"
+   },
+   {
+    "key": "flat_entry_arrangements",
+    "label": "Flat entry method",
+    "help": "How do staff get into a person's flat in an emergency? For example master key in a locked cabinet, key safe, fob access, with who may use it"
+   },
+   {
+    "key": "communal_area_checks",
+    "label": "Communal area checks",
+    "help": "Which shared areas are checked, how often and by whom? For example lounge, corridors, laundry and gardens checked daily by the scheme team"
+   },
+   {
+    "key": "fire_safety_arrangements",
+    "label": "Fire arrangements",
+    "help": "Who holds fire duties for the building and how are evacuation plans shared? For example landlord manages the fire risk assessment, care team holds personal plans"
+   },
+   {
+    "key": "landlord_responsibilities",
+    "label": "Landlord and provider split",
+    "help": "Who is responsible for repairs and communal facilities? For example the housing provider owns the building, the care provider reports faults through a set route"
+   },
+   {
+    "key": "incident_review_process",
+    "label": "Call incident review",
+    "help": "How do you review missed calls or slow responses? For example monthly review by the scheme manager, trends reported to the provider"
+   }
+  ]
+ },
+ {
+  "slug": "hate-mate-crime-cuckooing",
+  "title": "Hate Crime, Mate Crime and Cuckooing Policy",
+  "price_pence": 4900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "Spotting and responding to hate crime, mate crime and cuckooing in people's own homes: signs, reporting, police and safeguarding links, written around your service.",
+  "fields": [
+   {
+    "key": "signs_staff_watch",
+    "label": "Warning signs watched",
+    "help": "What signs of exploitation do your staff watch for and record? For example new unexplained visitors, missing money, a person unable to refuse entry, changes in mood or unusual numbers of people staying."
+   },
+   {
+    "key": "concern_reporting_route",
+    "label": "Concern reporting route",
+    "help": "How does a staff member raise a concern, and to whom? For example tell the shift lead at once, then log on the incident system and tell the registered manager the same day."
+   },
+   {
+    "key": "safeguarding_lead",
+    "label": "Safeguarding lead",
+    "help": "Who is your named safeguarding lead and deputy for these concerns? For example the registered manager, with the deputy manager covering absences."
+   },
+   {
+    "key": "police_threshold",
+    "label": "Police contact threshold",
+    "help": "When do you call the police, and when do you speak to the person first? State your own rule, such as a crime in progress, a threat, or the person asking for police."
+   },
+   {
+    "key": "local_authority_referral",
+    "label": "Local authority referral",
+    "help": "How and when do you refer to the local authority safeguarding team? For example by online form the same day, with a phone call if the person is at immediate risk."
+   },
+   {
+    "key": "visitor_arrangements",
+    "label": "Visitor arrangements",
+    "help": "How do people in your service have visitors, and what is checked? For example open visiting in tenancies, a visitor book in shared schemes, no vetting of friends."
+   },
+   {
+    "key": "tenancy_housing_contacts",
+    "label": "Landlord and housing contacts",
+    "help": "Who do you contact when someone has taken over a tenancy or property? For example the housing association officer, the landlord, or neighbourhood police."
+   },
+   {
+    "key": "person_involvement",
+    "label": "Involving the person",
+    "help": "How is the person involved and supported to decide what happens next? For example a meeting with an advocate, an easy read explanation and a capacity assessment where doubt exists."
+   },
+   {
+    "key": "support_after_incident",
+    "label": "Support after an incident",
+    "help": "What support do you offer after an incident? For example a keyworker check in, victim support referral, advocacy and a review of the support plan."
+   },
+   {
+    "key": "staff_training_awareness",
+    "label": "Staff awareness training",
+    "help": "How are staff trained on exploitation, hate and mate crime? For example induction, annual safeguarding refresher and team meeting case discussions."
+   },
+   {
+    "key": "recording_and_review",
+    "label": "Recording and review",
+    "help": "Where are concerns recorded, and who reviews patterns? For example the incident log reviewed monthly by the registered manager, trends shared with the local authority."
+   }
+  ]
+ },
+ {
+  "slug": "independent-advocacy",
+  "title": "Independent Advocacy Policy",
+  "price_pence": 4900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "How your service spots who needs an independent advocate, refers them, and works with advocates so people are heard, written around your own local arrangements.",
+  "fields": [
+   {
+    "key": "care_act_advocacy_provider",
+    "label": "Care Act advocacy provider",
+    "help": "Which organisation provides Care Act independent advocacy in your local authority area, and how do you contact them? For example a named charity, a council referral form or a phone line."
+   },
+   {
+    "key": "nhs_complaints_advocacy",
+    "label": "NHS complaints advocacy",
+    "help": "Where do you point people who want help with an NHS complaint? For example the local NHS complaints advocacy service, a council signposting page or none yet."
+   },
+   {
+    "key": "identifying_need_stage",
+    "label": "When need is identified",
+    "help": "At which points do staff think about whether a person needs an advocate? For example at referral, at the first care plan, at each review, or when a decision is coming up."
+   },
+   {
+    "key": "who_refers",
+    "label": "Who makes referrals",
+    "help": "Who in your service contacts the local authority or advocacy provider to ask for an advocate? For example the registered manager, a key worker or the deputy manager."
+   },
+   {
+    "key": "informal_support_check",
+    "label": "Family and friends check",
+    "help": "How do you decide whether a family member or friend can support a person, rather than an advocate? For example a conversation with the person and a note in the care plan."
+   },
+   {
+    "key": "advocate_visit_arrangements",
+    "label": "Advocate visit arrangements",
+    "help": "How do advocates arrange to see people in private and look at records? For example booking with the manager, a private room, or visits at the person's own home."
+   },
+   {
+    "key": "advocacy_information_format",
+    "label": "How people are told",
+    "help": "How do you tell people that advocacy exists? For example an easy read leaflet, a welcome pack, a tenancy meeting or a poster, and who explains it."
+   },
+   {
+    "key": "record_of_advocacy",
+    "label": "Where advocacy is recorded",
+    "help": "Where do you record that advocacy was offered, accepted, declined or arranged? For example the care plan, a referral log or the review record."
+   },
+   {
+    "key": "disagree_with_advocate_route",
+    "label": "Disagreement route",
+    "help": "What happens if staff, family or the commissioner disagree with a view the advocate puts forward? For example a meeting with the manager, then the commissioner."
+   },
+   {
+    "key": "advocacy_review_cycle",
+    "label": "Advocacy review cycle",
+    "help": "How often do you check whether people have the advocacy support they need? For example at every care review, quarterly, or when circumstances change."
+   }
+  ]
+ },
+ {
+  "slug": "live-in-accommodation-rota-handover",
+  "title": "Live-In Carer Accommodation, Rota and Handover Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "hr-workforce-pack"
+  ],
+  "description": "Live-in carer room and facilities, rota patterns, handover between carers and placement review, written around how your live-in service really runs.",
+  "fields": [
+   {
+    "key": "carer_room_standard",
+    "label": "Carer room standard",
+    "help": "What minimum standard do you expect for the live-in carer's room before a placement starts? For example a private bedroom with a door that closes, a bed, heating and storage."
+   },
+   {
+    "key": "facilities_access",
+    "label": "Facilities available to carer",
+    "help": "What facilities must the carer be able to use? For example bathroom access, kitchen use, laundry, wifi, and somewhere private to rest."
+   },
+   {
+    "key": "pre_placement_check",
+    "label": "Pre-placement home check",
+    "help": "Who visits the home to check the accommodation, and what do they record? For example the care manager, using a checklist before the first carer arrives."
+   },
+   {
+    "key": "unsuitable_accommodation",
+    "label": "Unsuitable accommodation action",
+    "help": "What happens if the room or facilities do not meet your standard? For example the placement is delayed, the family is asked to fix it, or the placement is declined."
+   },
+   {
+    "key": "rota_pattern",
+    "label": "Rota patterns offered",
+    "help": "What rota patterns do you run? For example two weeks on and one week off, or four weeks on and two off, and how many carers cover each placement."
+   },
+   {
+    "key": "rota_minimums",
+    "label": "Minimum rota standards",
+    "help": "What rules do you apply to every rota? For example a named lead carer, no changeover without a handover, and a maximum run of consecutive days."
+   },
+   {
+    "key": "rota_changes",
+    "label": "Rota change process",
+    "help": "Who can change a rota, how much notice is given, and who is told? For example the care coordinator approves changes and informs the person and family."
+   },
+   {
+    "key": "handover_method",
+    "label": "Handover method",
+    "help": "How does a handover between live-in carers happen? For example an in-person overlap day, a written sheet, or a recorded call with the coordinator."
+   },
+   {
+    "key": "handover_content",
+    "label": "Handover content recorded",
+    "help": "What must every handover cover and where is it recorded? For example medicines, risks, changes in health, appointments, and the care record on your system."
+   },
+   {
+    "key": "continuity_arrangements",
+    "label": "Continuity of carers",
+    "help": "How do you keep the same carers where you can, and introduce a new carer? For example a preferred pair of carers and a settling visit."
+   },
+   {
+    "key": "placement_review_timing",
+    "label": "Placement review timing",
+    "help": "When is each placement reviewed, and by whom? For example after four weeks, then every three months, led by the registered manager."
+   },
+   {
+    "key": "review_triggers",
+    "label": "Early review triggers",
+    "help": "What prompts an earlier review? For example carer fatigue, a change in the person's needs, a complaint, or accommodation problems."
+   }
+  ]
+ },
+ {
+  "slug": "nursing-procedures-delegation",
+  "title": "Nursing Clinical Procedures and Delegation Policy",
+  "price_pence": 6900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "Delegating clinical tasks to care staff, competence sign off and nurse accountability, written around the procedures your service really carries out.",
+  "fields": [
+   {
+    "key": "delegated_procedures",
+    "label": "Procedures delegated to carers",
+    "help": "Which clinical tasks, if any, do nurses delegate to care staff in your service? For example catheter bag emptying, stoma bag changes, PEG site checks, blood glucose monitoring or topical creams."
+   },
+   {
+    "key": "nurse_only_procedures",
+    "label": "Nurse only procedures",
+    "help": "Which procedures are only ever done by a registered nurse? For example injections, wound dressings, catheter changes or PEG tube replacement."
+   },
+   {
+    "key": "delegation_decision_maker",
+    "label": "Delegation decision maker",
+    "help": "Who decides that a task can be delegated, and how is that recorded? For example the nurse in charge, the clinical lead, or the registered manager with a signed delegation form."
+   },
+   {
+    "key": "competence_assessment_method",
+    "label": "Competence assessment method",
+    "help": "How do you assess and sign off a carer as competent for a delegated task? For example observed practice sessions, a competency workbook, or sign off by an external trainer."
+   },
+   {
+    "key": "competence_recheck_routine",
+    "label": "Competence recheck routine",
+    "help": "How often is competence rechecked, and what triggers an earlier check? For example every 12 months, after a long absence or after an incident."
+   },
+   {
+    "key": "delegation_records",
+    "label": "Delegation records kept",
+    "help": "Where are delegation decisions and competence records kept, and who can see them? For example a training matrix, the staff file or an electronic care system."
+   },
+   {
+    "key": "supervision_and_oversight",
+    "label": "Supervision of delegated tasks",
+    "help": "How does the delegating nurse oversee delegated tasks day to day? For example spot checks, handover review or reviewing care notes each shift."
+   },
+   {
+    "key": "person_specific_instructions",
+    "label": "Person specific instructions",
+    "help": "How are the steps for each person's procedure written and shared with staff? For example a nurse written task sheet held in the care plan."
+   },
+   {
+    "key": "consent_and_capacity_steps",
+    "label": "Consent and capacity steps",
+    "help": "How do staff check consent before a clinical task, and what happens if a person lacks capacity? For example verbal consent each time, with a best interests record in the care plan."
+   },
+   {
+    "key": "out_of_hours_cover",
+    "label": "Nurse cover and out of hours",
+    "help": "Who can staff call for clinical advice when no nurse is on site? For example an on call nurse, the district nursing team or NHS 111."
+   },
+   {
+    "key": "escalation_when_unsafe",
+    "label": "Escalation when unsafe",
+    "help": "What should a carer do if they feel unsure or something changes during a delegated task, and who do they tell? For example stop, call the nurse in charge, then record it."
+   },
+   {
+    "key": "incident_review",
+    "label": "Delegation incident review",
+    "help": "How are errors or near misses involving delegated tasks reviewed? For example a nurse led review, a team learning session and a competence recheck."
+   }
+  ]
+ },
+ {
+  "slug": "oral-health",
+  "title": "Oral Health Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "An oral health policy covering mouth care assessment, daily cleaning, denture care and dental access, written around how your service supports each person.",
+  "fields": [
+   {
+    "key": "oral_assessment_timing",
+    "label": "Oral assessment timing",
+    "help": "When is each person's mouth first assessed, and who does it? For example within 48 hours of admission by the named nurse, then reviewed monthly."
+   },
+   {
+    "key": "assessment_tool",
+    "label": "Assessment tool used",
+    "help": "What form or prompts do staff use to check the mouth? For example a mouth care assessment chart, or a section of the care plan."
+   },
+   {
+    "key": "daily_mouth_care",
+    "label": "Daily mouth care routine",
+    "help": "How is mouth care given each day, and how often? For example morning and bedtime brushing, with staff prompting or assisting as needed."
+   },
+   {
+    "key": "mouth_care_supplies",
+    "label": "Mouth care supplies",
+    "help": "Who buys and stores toothbrushes, toothpaste and denture pots, and how are they kept personal? For example named and labelled per person, replaced regularly."
+   },
+   {
+    "key": "denture_care_process",
+    "label": "Denture care process",
+    "help": "How are dentures cleaned, stored overnight and labelled? For example removed at night, soaked in a named pot, marked with the person's name."
+   },
+   {
+    "key": "dentist_access",
+    "label": "Dentist access route",
+    "help": "How do people see a dentist, including those who cannot leave the service? For example a local practice, a community dental service, or a visiting dentist."
+   },
+   {
+    "key": "urgent_dental_problems",
+    "label": "Urgent dental problems",
+    "help": "What do staff do about pain, a broken denture or a mouth sore? For example tell the senior, record it, contact the dentist or GP the same day."
+   },
+   {
+    "key": "refusal_and_capacity",
+    "label": "Refusal and capacity approach",
+    "help": "How do staff respond when someone declines mouth care or cannot consent? For example try again later, change the carer, follow a best interests process."
+   },
+   {
+    "key": "dementia_mouth_care",
+    "label": "Support for dementia needs",
+    "help": "How do staff help people who resist or do not understand mouth care? For example demonstration, consistent carers, adapted brushes, short calm routines."
+   },
+   {
+    "key": "mouth_care_records",
+    "label": "Mouth care records",
+    "help": "Where is mouth care recorded and who checks it? For example daily care notes, a monthly review by the nurse in charge."
+   },
+   {
+    "key": "staff_training",
+    "label": "Mouth care training",
+    "help": "What oral health training do staff receive, and how often? For example induction session, annual refresher, dentist or hygienist delivered."
+   },
+   {
+    "key": "oral_care_champion",
+    "label": "Oral health lead",
+    "help": "Is there a named oral health lead or champion, and what do they do? For example a senior carer who audits supplies and updates staff."
+   }
+  ]
+ },
+ {
+  "slug": "oxygen-smoking-fire-risk-in-the-home",
+  "title": "Oxygen, Smoking and Fire Risk in the Person's Home Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "health-safety-pack"
+  ],
+  "description": "An oxygen safety at home policy for your service: smoking, emollient creams, heaters and candles, fire risk checks and referral to the fire and rescue service.",
+  "fields": [
+   {
+    "key": "oxygen_visit_support",
+    "label": "Oxygen support given",
+    "help": "What do staff do where a person uses oxygen at home? For example check equipment is not near heat, no handling of settings, prompt the person only, or staff trained to assist"
+   },
+   {
+    "key": "oxygen_supplier_contact",
+    "label": "Oxygen supplier contact",
+    "help": "Who do staff contact about oxygen equipment problems? For example the supplier helpline on the person's care plan, the office, or the community respiratory team"
+   },
+   {
+    "key": "smoking_risk_assessment",
+    "label": "Smoking risk assessment",
+    "help": "How do you assess risk where the person or others in the home smoke? For example a section of the home risk assessment completed at start and reviewed each time circumstances change"
+   },
+   {
+    "key": "smoking_staff_rules",
+    "label": "Staff smoking rules",
+    "help": "What are the rules for staff in a person's home? For example no smoking or vaping on shift, no lighting a person's cigarette, or lighting only where the plan agrees"
+   },
+   {
+    "key": "fire_hazard_checks",
+    "label": "Fire hazard checks",
+    "help": "Which hazards do staff look for at each visit? For example emollient creams on bedding or clothing, candles, heaters, overloaded sockets, cooking"
+   },
+   {
+    "key": "emollient_advice",
+    "label": "Emollient fire advice",
+    "help": "What do you tell staff and people about emollient creams and fire risk? For example advice from the prescriber or pharmacist, washing bedding at a set temperature, a leaflet in the home"
+   },
+   {
+    "key": "smoke_alarm_checks",
+    "label": "Smoke alarm checks",
+    "help": "What do staff do about smoke and carbon monoxide alarms? For example check a working alarm is present and report to the office, never test or fit alarms"
+   },
+   {
+    "key": "fire_service_referral",
+    "label": "Fire service referral",
+    "help": "How do you ask the local fire and rescue service for a home fire safety visit? For example the office makes the referral with the person's consent, or the person is helped to refer"
+   },
+   {
+    "key": "person_refuses_advice",
+    "label": "Refusal of advice",
+    "help": "What happens if the person declines fire safety advice or equipment? For example record the decision, review capacity, tell the manager and agree a plan"
+   },
+   {
+    "key": "fire_incident_response",
+    "label": "Fire response steps",
+    "help": "What must staff do if a fire starts or oxygen is involved? For example leave safely, call 999, turn off oxygen only if safe, tell the office"
+   },
+   {
+    "key": "incident_reporting",
+    "label": "Incident reporting route",
+    "help": "How are fires, near misses and unsafe findings reported? For example an incident form to the registered manager, shared with the local authority commissioner"
+   },
+   {
+    "key": "staff_fire_training",
+    "label": "Staff fire training",
+    "help": "What fire and oxygen awareness training do care staff receive? For example fire awareness at induction, refreshed yearly, oxygen awareness from the supplier"
+   }
+  ]
+ },
+ {
+  "slug": "relationships-sexuality-sexual-safety",
+  "title": "Relationships, Sexuality and Sexual Safety Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "How your service supports adult relationships and sexual expression, assesses consent and capacity, sets staff boundaries and acts on abuse concerns, written around your own practice.",
+  "fields": [
+   {
+    "key": "relationship_support_approach",
+    "label": "Relationship support approach",
+    "help": "How do staff support people to form and keep relationships, including intimate ones? For example key worker conversations, support to meet partners, or help to use dating services."
+   },
+   {
+    "key": "privacy_arrangements",
+    "label": "Privacy arrangements",
+    "help": "What arrangements protect privacy for a person and a partner at home? For example lockable rooms, knock and wait rules, agreed times without staff, or visitor overnight rules."
+   },
+   {
+    "key": "capacity_consent_process",
+    "label": "Consent capacity process",
+    "help": "How do you handle doubt about whether a person can consent to a sexual relationship? For example who assesses, who is consulted, and when the local authority or an advocate is asked."
+   },
+   {
+    "key": "sexual_health_access",
+    "label": "Sexual health access",
+    "help": "How do people get sexual health advice, contraception and screening? For example the GP, a sexual health clinic, a nurse, or easy read leaflets."
+   },
+   {
+    "key": "education_resources",
+    "label": "Education and resources",
+    "help": "What relationships and sexuality education or easy read material do you use? For example a named course, a local nurse, a charity pack, or none yet."
+   },
+   {
+    "key": "staff_boundaries",
+    "label": "Staff boundaries",
+    "help": "What rules set out staff boundaries with the people they support? For example no personal relationships, gifts, social media contact, or private meetings, and how breaches are reported."
+   },
+   {
+    "key": "personal_care_intimate_support",
+    "label": "Intimate care limits",
+    "help": "What does your service say about staff role in sexual matters? For example staff never take part, may help with privacy and access to services, and refer requests to the manager."
+   },
+   {
+    "key": "concern_reporting",
+    "label": "Concern reporting route",
+    "help": "How do staff report a concern about sexual abuse, exploitation or an inappropriate relationship? For example to the manager, the safeguarding lead, the local authority, the police and CQC."
+   },
+   {
+    "key": "online_safety_support",
+    "label": "Online and dating safety",
+    "help": "How do you support people to stay safe when meeting people online or in the community? For example safety plans, a trusted contact, public first meetings, or phone check ins."
+   },
+   {
+    "key": "family_involvement",
+    "label": "Family involvement",
+    "help": "When and how are family members told about a person's relationship? For example only with the person's consent, or through best interests meetings where capacity is lacking."
+   },
+   {
+    "key": "recording_review",
+    "label": "Recording and review",
+    "help": "Where are decisions about relationships recorded and how often are they reviewed? For example in the care plan, a relationships plan, reviewed every six months or when things change."
+   }
+  ]
+ },
+ {
+  "slug": "resident-environmental-safety",
+  "title": "Resident Environmental Safety Policy (hot water, windows and hazards)",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "health-safety-pack"
+  ],
+  "description": "Keeping the building safe for residents: hot water outlets, window openings, hot surfaces and access hazards, checked, recorded and acted on by named roles.",
+  "fields": [
+   {
+    "key": "water_temp_checks",
+    "label": "Water temperature checks",
+    "help": "How often are hot water outlet temperatures checked in resident areas, and by whom? For example monthly on sampled outlets by the maintenance lead, with results logged."
+   },
+   {
+    "key": "scald_controls",
+    "label": "Scald prevention controls",
+    "help": "What controls limit hot water at outlets residents use? For example thermostatic mixing valves on baths and showers, a set maximum outlet temperature, or none fitted in some rooms."
+   },
+   {
+    "key": "temp_failure_response",
+    "label": "Out of range response",
+    "help": "What happens when an outlet reads above or below your set limit? For example the outlet is taken out of use, a sign is placed, and maintenance is called the same day."
+   },
+   {
+    "key": "window_controls",
+    "label": "Window opening controls",
+    "help": "How are window openings controlled in resident rooms and communal areas? For example restrictors fitted to all upper floor windows, with keys held by maintenance."
+   },
+   {
+    "key": "window_checks",
+    "label": "Window check routine",
+    "help": "How and when are restrictors and window fittings checked, and who records it? For example a monthly walk round by maintenance, with faults reported the same day."
+   },
+   {
+    "key": "hot_surfaces",
+    "label": "Hot surfaces and heating",
+    "help": "How do you manage radiators, pipes and other hot surfaces residents can touch? For example low surface temperature covers, guards, or an individual risk assessment for rooms."
+   },
+   {
+    "key": "access_hazards",
+    "label": "Access hazards controlled",
+    "help": "Which access hazards do you control and how? For example locked plant rooms, stairwell gates, balcony doors, sluice and cleaning cupboards, chemical stores."
+   },
+   {
+    "key": "individual_risk",
+    "label": "Individual risk assessment",
+    "help": "How do you assess environmental risk for an individual resident, for example one who is confused or at risk of falling from a height? For example a room risk assessment at admission, reviewed after any incident."
+   },
+   {
+    "key": "ligature_risk",
+    "label": "Ligature risk approach",
+    "help": "How do you consider ligature and self harm risk in resident rooms and bathrooms? For example a room check where a risk is identified, with fittings changed after assessment."
+   },
+   {
+    "key": "faults_reporting",
+    "label": "Fault reporting route",
+    "help": "How do staff report an environmental hazard, and how fast does it get dealt with? For example a maintenance log or app, with urgent hazards made safe at once."
+   },
+   {
+    "key": "contractor_water",
+    "label": "Water safety contractor",
+    "help": "Who carries out water safety work, such as legionella risk assessments and valve servicing? For example an external contractor or in house maintenance, with the date of the last assessment held by the manager."
+   },
+   {
+    "key": "incident_review",
+    "label": "Incident review and learning",
+    "help": "What happens after a scald, window or hazard incident? For example a manager review within 24 hours, action recorded, and findings shared at the next staff meeting."
+   }
+  ]
+ },
+ {
+  "slug": "respite-short-break-care",
+  "title": "Respite and Short Break Care Policy",
+  "price_pence": 4900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "Respite care policy for planning, assessing and delivering short breaks at home, with arrangements for the person and the family carer, written around how your service works.",
+  "fields": [
+   {
+    "key": "respite_types_offered",
+    "label": "Respite types offered",
+    "help": "Which kinds of respite or short break do you provide? For example daytime sits, overnight cover, live-in cover for a week, or planned recurring breaks."
+   },
+   {
+    "key": "referral_routes",
+    "label": "Referral and funding routes",
+    "help": "How do people come to you for respite, and how is it funded? For example council commissioned, direct payments, private self-funders or NHS funded."
+   },
+   {
+    "key": "minimum_notice_and_booking",
+    "label": "Booking and notice",
+    "help": "How far ahead must a break be booked, and what is the minimum length? For example two weeks notice and a four hour minimum."
+   },
+   {
+    "key": "first_time_assessment",
+    "label": "Assessment for new users",
+    "help": "What happens before a first respite break with someone new to you? For example a home visit by a senior carer, review of the care plan and a meeting with the family carer."
+   },
+   {
+    "key": "family_carer_involvement",
+    "label": "Family carer involvement",
+    "help": "How do you involve the family carer in planning the break and handing over routines? For example a written routine sheet and a call before the first visit."
+   },
+   {
+    "key": "emergency_respite_process",
+    "label": "Emergency respite process",
+    "help": "Can you provide respite at short notice when a carer is ill or in crisis, and how? For example an on call manager decision within 24 hours."
+   },
+   {
+    "key": "care_plan_and_info_sharing",
+    "label": "Care plan and information",
+    "help": "What information do you collect and keep for a short break? For example a temporary care plan, medicines list, emergency contacts and preferences."
+   },
+   {
+    "key": "medicines_during_break",
+    "label": "Medicines during breaks",
+    "help": "How do you manage medicines for someone on a short break? For example the family carer supplies a list and the medicines are administered from the labelled supply in the home."
+   },
+   {
+    "key": "capacity_and_consent",
+    "label": "Capacity and consent",
+    "help": "How do you check consent and capacity for a break, including who decides if the person cannot? For example a recorded best interests discussion with the family and social worker."
+   },
+   {
+    "key": "continuity_of_carers",
+    "label": "Carer continuity",
+    "help": "How do you choose and keep carers for respite? For example the same small team for repeat breaks, with matching on skills such as dementia care."
+   },
+   {
+    "key": "feedback_and_review",
+    "label": "Feedback and review",
+    "help": "How do you review each break and the wider arrangement? For example a call after each break and a review every six months."
+   }
+  ]
+ },
+ {
+  "slug": "sexuality-relationships-intimacy",
+  "title": "Sexuality, Relationships and Intimacy Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "How your service respects privacy, relationships and intimacy, handles consent and capacity, and acts on safeguarding concerns, written around your own practice.",
+  "fields": [
+   {
+    "key": "private_space_arrangements",
+    "label": "Private space arrangements",
+    "help": "How do residents get private time with a partner or alone? For example a lockable bedroom door, a do not disturb sign, a private lounge, or a booking system for double rooms."
+   },
+   {
+    "key": "room_entry_practice",
+    "label": "Room entry practice",
+    "help": "What must staff do before entering a resident's room, and how does this change at night? For example knock and wait for a reply, and how often night checks happen."
+   },
+   {
+    "key": "couples_rooms",
+    "label": "Couples and shared rooms",
+    "help": "Can couples share a room, and can partners stay overnight? For example double rooms, two adjoining rooms, or overnight stays by agreement with the manager."
+   },
+   {
+    "key": "capacity_to_consent_process",
+    "label": "Capacity to consent process",
+    "help": "If staff doubt a resident can consent to a relationship, who assesses this and how is it recorded? For example the registered manager with the social worker, or the GP, using your capacity forms."
+   },
+   {
+    "key": "relationship_concern_route",
+    "label": "Relationship concern route",
+    "help": "Who do staff tell first if they are worried about a relationship, and what happens next? For example the shift lead, then the registered manager, then a safeguarding referral to the local authority."
+   },
+   {
+    "key": "family_involvement",
+    "label": "Family involvement",
+    "help": "When do you speak to family about a resident's relationship, and what do you need first? For example only with the resident's agreement, or with a legal representative where the resident lacks capacity."
+   },
+   {
+    "key": "relationship_recording",
+    "label": "Relationship recording",
+    "help": "Where and how are a resident's wishes about relationships and intimacy recorded? For example a section of the care plan, a preferences page, or a separate confidential note."
+   },
+   {
+    "key": "personal_care_boundaries",
+    "label": "Personal care boundaries",
+    "help": "How do staff handle personal care so privacy and dignity are protected? For example same gender carer on request, doors closed, and covering the person during care."
+   },
+   {
+    "key": "staff_boundary_expectations",
+    "label": "Staff boundary expectations",
+    "help": "How do you set out what is not acceptable from staff, and how is it covered in induction? For example a code of conduct, a boundaries section in induction, and supervision discussion."
+   },
+   {
+    "key": "dementia_behaviour_response",
+    "label": "Dementia behaviour response",
+    "help": "How do staff respond when a resident living with dementia acts in a sexual way towards another person? For example calm redirection, a recorded incident, a care plan review, and a call to the manager."
+   },
+   {
+    "key": "support_and_information",
+    "label": "Support and information",
+    "help": "What advice or support do residents have on relationships and sexual health? For example a GP or community nurse referral, accessible leaflets, or a named key worker to talk to."
+   },
+   {
+    "key": "training_and_review",
+    "label": "Training and review",
+    "help": "How are staff trained on this topic and how often is the policy reviewed? For example induction, annual refresher, team discussion, and a yearly review by the manager."
+   }
+  ]
+ },
+ {
+  "slug": "shared-lives-approval-matching-review",
+  "title": "Shared Lives Carer Approval, Matching and Household Review Policy",
+  "price_pence": 6900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "A Shared Lives policy for your scheme: how carers are recruited and approved, how people are matched, how households are reviewed, and how an arrangement ends.",
+  "fields": [
+   {
+    "key": "carer_recruitment_routes",
+    "label": "Carer recruitment routes",
+    "help": "How do you find and attract prospective Shared Lives carers? For example local advertising, word of mouth, open evenings, referrals from existing carers"
+   },
+   {
+    "key": "approval_stages",
+    "label": "Approval stages",
+    "help": "What stages does an applicant go through before approval? For example enquiry visit, application, assessment visits, references, checks, panel"
+   },
+   {
+    "key": "approval_decision_maker",
+    "label": "Approval decision maker",
+    "help": "Who decides whether a carer is approved? For example an approval panel, the registered manager, or a senior group, and who sits on it"
+   },
+   {
+    "key": "household_checks",
+    "label": "Household checks",
+    "help": "Which checks do you make on the carer and other adults in the household? For example DBS checks, references, health declaration, home safety check"
+   },
+   {
+    "key": "home_safety_assessment",
+    "label": "Home safety assessment",
+    "help": "How is the carer's home assessed for safety and suitability? For example a checklist at a home visit, fire safety, a bedroom for the person"
+   },
+   {
+    "key": "matching_process",
+    "label": "Matching process",
+    "help": "How do you match a person with a carer? For example profiles, compatibility discussion, visits, who is involved in the decision"
+   },
+   {
+    "key": "introduction_arrangements",
+    "label": "Introduction arrangements",
+    "help": "How are introductions and trial stays arranged before a long term arrangement? For example tea visits, overnight stays, a set trial period"
+   },
+   {
+    "key": "placement_agreement",
+    "label": "Placement agreement",
+    "help": "What written agreement covers the arrangement, and who signs it? For example an agreement signed by the person, carer and scheme, with house rules"
+   },
+   {
+    "key": "household_review_frequency",
+    "label": "Household review frequency",
+    "help": "How often is each carer household reviewed, and how? For example annual review visit plus unannounced visits, with the person seen alone"
+   },
+   {
+    "key": "carer_support_and_supervision",
+    "label": "Carer support and supervision",
+    "help": "What support do carers get between reviews? For example named worker, regular contact, supervision, peer groups, out of hours line"
+   },
+   {
+    "key": "carer_training_expectations",
+    "label": "Carer training expectations",
+    "help": "What training must carers complete, and when? For example induction before first placement, refreshers each year"
+   },
+   {
+    "key": "ending_an_arrangement",
+    "label": "Ending an arrangement",
+    "help": "How is an arrangement ended, by planned move or in an emergency? For example review meeting, notice period, emergency move process"
+   }
+  ]
+ },
+ {
+  "slug": "shift-handover-communication",
+  "title": "Shift Handover and Clinical Communication Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "How each shift hands over, what must be passed on about risks and changes, how it is recorded, and how concerns are escalated between shifts.",
+  "fields": [
+   {
+    "key": "handover_times",
+    "label": "Handover times",
+    "help": "When do handovers take place and how long are they? For example 7:15am and 7:15pm, 20 minutes, with a short mid-shift update for the unit."
+   },
+   {
+    "key": "handover_format",
+    "label": "Handover format used",
+    "help": "How is handover given? For example a face to face meeting in the office, a walk round the unit, a verbal handover from a written sheet, or a recorded digital handover."
+   },
+   {
+    "key": "handover_structure",
+    "label": "Handover structure or prompt",
+    "help": "Do you use a set structure or prompt for what is passed on? For example SBAR, a unit handover sheet with headings, or your own checklist."
+   },
+   {
+    "key": "handover_record",
+    "label": "Handover record and system",
+    "help": "Where is the handover recorded, and who completes it? For example a paper sheet filed daily, a field in the electronic care record, or a senior's shift note."
+   },
+   {
+    "key": "who_leads_handover",
+    "label": "Who gives and receives handover",
+    "help": "Which roles give and receive handover on each unit? For example the outgoing senior carer or nurse to the incoming senior, with team leaders briefing their staff."
+   },
+   {
+    "key": "night_to_day",
+    "label": "Night and weekend handover",
+    "help": "How does handover work between night and day staff, and at weekends or bank holidays when management is absent? For example the night senior briefs the day senior, and the on call manager is told of concerns."
+   },
+   {
+    "key": "key_information",
+    "label": "Information always passed on",
+    "help": "What must always be covered at handover? For example changes in condition, falls, wounds, fluid and food concerns, medicines changes, appointments, family contact, risks and safeguarding."
+   },
+   {
+    "key": "escalation_route",
+    "label": "Escalation of concerns",
+    "help": "How are concerns raised that cannot wait for the next handover, and to whom? For example the nurse in charge, the on call manager, then the GP or 111, using your own thresholds."
+   },
+   {
+    "key": "absent_staff_catchup",
+    "label": "Late, absent and agency staff",
+    "help": "How do staff who miss handover get briefed, including agency and bank staff? For example a one to one briefing by the senior and a read and sign of the handover record."
+   },
+   {
+    "key": "confidentiality_handover",
+    "label": "Privacy during handover",
+    "help": "How is privacy kept during handover? For example held in a closed office, no names on whiteboards, sheets shredded or locked away, handover not given in communal areas."
+   },
+   {
+    "key": "handover_audit",
+    "label": "Checking handover quality",
+    "help": "How do you check handovers are happening and are accurate? For example manager spot checks, comparing the sheet with care notes, night walk round checks, and review in team meetings."
+   }
+  ]
+ },
+ {
+  "slug": "sickness-absence-return-to-work",
+  "title": "Sickness, Absence and Return to Work Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "hr-workforce-pack"
+  ],
+  "description": "Reporting sickness, cover, sick pay, return to work meetings, long-term absence and illness that could reach residents, set out in your own sickness absence arrangements.",
+  "fields": [
+   {
+    "key": "absence_reporting_method",
+    "label": "How staff report absence",
+    "help": "How and by when must staff report sickness, and to whom? For example: phone the senior on duty at least 2 hours before shift, never by text or message"
+   },
+   {
+    "key": "sick_pay_scheme",
+    "label": "Sick pay arrangements",
+    "help": "What sick pay do you offer beyond statutory sick pay, and after what service? For example: statutory sick pay only, or company sick pay after 6 months for up to 4 weeks"
+   },
+   {
+    "key": "self_cert_and_fit_note",
+    "label": "Self certification and fit notes",
+    "help": "What do you ask staff to provide, and from which day? For example: self-certification form on return for the first 7 days, fit note after 7 days"
+   },
+   {
+    "key": "return_to_work_meeting",
+    "label": "Return to work meetings",
+    "help": "Do you hold a return to work meeting, who holds it and when? For example: line manager, on the first shift back, recorded on a short form"
+   },
+   {
+    "key": "absence_triggers",
+    "label": "Absence review triggers",
+    "help": "What level of absence prompts a review or formal stage? For example: 3 episodes in 6 months or 10 days in 12 months. Say if you use no triggers"
+   },
+   {
+    "key": "long_term_absence",
+    "label": "Long term absence contact",
+    "help": "How do you stay in touch and review long term sickness? For example: welfare call every 2 weeks, review meeting at 4 weeks, occupational health referral"
+   },
+   {
+    "key": "occupational_health",
+    "label": "Occupational health support",
+    "help": "Do you use occupational health or an employee assistance line, and when is it offered? For example: external occupational health provider after 4 weeks, free counselling line for all staff"
+   },
+   {
+    "key": "infection_exclusion",
+    "label": "Illness and exclusion from work",
+    "help": "How do you handle staff with sickness, diarrhoea or infection symptoms who could affect residents? For example: stay away 48 hours after last symptom, manager informs infection control lead"
+   },
+   {
+    "key": "cover_arrangements",
+    "label": "Shift cover arrangements",
+    "help": "How is cover arranged when someone calls in sick? For example: on call senior, bank staff list, agency as last resort, minimum staffing numbers by unit"
+   },
+   {
+    "key": "absence_records_access",
+    "label": "Absence records and access",
+    "help": "Where are absence records kept, and who can see sickness reasons? For example: HR file in locked cabinet and payroll system, access by registered manager and administrator only"
+   }
+  ]
+ },
+ {
+  "slug": "smoking-vaping-oxygen-safety",
+  "title": "Smoking, Vaping and Oxygen Safety Policy",
+  "price_pence": 4900,
+  "taster": false,
+  "bundles": [
+   "health-safety-pack"
+  ],
+  "description": "Where people may smoke or vape, how designated rooms are marked, and how oxygen, cylinders and fire risk are managed and recorded in your home.",
+  "fields": [
+   {
+    "key": "smoking_arrangement",
+    "label": "Smoking arrangement",
+    "help": "What is your home's arrangement for smoking? For example: smoke-free premises, designated indoor smoking room, outdoor shelter only"
+   },
+   {
+    "key": "smoking_area_details",
+    "label": "Smoking area details",
+    "help": "Where is the designated room or outdoor area, and how is it marked and supervised? For example: ground floor room with signage, covered shelter near the garden door"
+   },
+   {
+    "key": "designation_record",
+    "label": "Designation record",
+    "help": "Who designated the room in writing, and where is that record kept? For example: registered manager, provider director, stored in the fire file"
+   },
+   {
+    "key": "vaping_rules",
+    "label": "Vaping rules",
+    "help": "Where may e-cigarettes be used and charged? For example: same areas as smoking, own room only, never charged unattended or overnight"
+   },
+   {
+    "key": "risk_assessment_process",
+    "label": "Individual risk assessment",
+    "help": "How do you assess fire risk for each person who smokes or vapes? For example: assessment at admission, review monthly, supervised smoking where needed"
+   },
+   {
+    "key": "oxygen_storage",
+    "label": "Oxygen storage",
+    "help": "Where are cylinders and concentrators kept, and how are they secured? For example: locked store, wall brackets, cylinders upright in a clinical room"
+   },
+   {
+    "key": "oxygen_supplier_checks",
+    "label": "Supplier and checks",
+    "help": "Who supplies oxygen equipment, and who checks stock, expiry and equipment? For example: named supplier, senior carer weekly check, nurse in charge"
+   },
+   {
+    "key": "oxygen_signage",
+    "label": "Signage used",
+    "help": "What signs mark rooms where oxygen is stored or in use? For example: door signs, bedside notices, hazard labels on cylinders"
+   },
+   {
+    "key": "emollient_fire_risk",
+    "label": "Emollient fire risk",
+    "help": "How do you manage fire risk from emollients and dressings on clothes and bedding? For example: pharmacist warnings, bedding changes, flagged on care plan"
+   },
+   {
+    "key": "capacity_and_choice",
+    "label": "Capacity and choice",
+    "help": "How do you handle a person who lacks capacity to understand smoking risks, or who refuses the rules? For example: best interests record, family discussion, advocacy"
+   },
+   {
+    "key": "staff_training_drills",
+    "label": "Training and drills",
+    "help": "How are staff trained on oxygen and smoking risks and fire response? For example: induction, annual fire training, oxygen competency sign-off"
+   },
+   {
+    "key": "incident_reporting",
+    "label": "Incident reporting",
+    "help": "How are smoking breaches, near misses and oxygen incidents reported and reviewed? For example: incident form, manager review within 24 hours, fire officer contact"
+   }
+  ]
+ },
+ {
+  "slug": "social-media-phones-photography",
+  "title": "Social Media, Mobile Phones and Photography Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "governance-data-pack",
+   "hr-workforce-pack"
+  ],
+  "description": "How your staff use personal phones, social media and cameras around the people you support, including consent for photographs, online conduct and what happens when rules are broken.",
+  "fields": [
+   {
+    "key": "personal_phone_rule",
+    "label": "Personal phone rule",
+    "help": "What is the rule on staff carrying and using personal mobile phones while working? For example: phones in lockers during shifts, breaks only in the staff room, or phones allowed in a pocket for emergencies only."
+   },
+   {
+    "key": "work_device_use",
+    "label": "Work devices provided",
+    "help": "Do you provide work phones or tablets, and what may staff use them for? For example: shared care home phone for family calls, tablet for the care planning app, no work device at all."
+   },
+   {
+    "key": "photo_consent_process",
+    "label": "Photograph consent process",
+    "help": "How do you get and record consent before anyone is photographed or filmed? For example: signed consent form on admission, verbal consent noted for each event, best interests decision where the person lacks capacity."
+   },
+   {
+    "key": "permitted_photo_purposes",
+    "label": "Permitted photograph uses",
+    "help": "What may photographs be used for? For example: care records and wound monitoring, activity displays inside the home, newsletters, website and social media with named consent."
+   },
+   {
+    "key": "capacity_and_representatives",
+    "label": "Consent without capacity",
+    "help": "Who decides about photographs when a person cannot decide for themselves? For example: best interests meeting with family and key worker, attorney asked, recorded on the care plan."
+   },
+   {
+    "key": "official_social_accounts",
+    "label": "Service social media accounts",
+    "help": "Does your service run official social media accounts, and who posts? For example: Facebook page run by the activities coordinator, approved by the manager, no accounts at all."
+   },
+   {
+    "key": "staff_online_conduct",
+    "label": "Staff online conduct rule",
+    "help": "What do you expect of staff on their own social media? For example: no posts about residents or colleagues, no photos in uniform at work, no friend requests to residents or families."
+   },
+   {
+    "key": "family_visitor_photos",
+    "label": "Family and visitor photographs",
+    "help": "What is your rule on visitors taking photos or video inside the service? For example: allowed of their own relative only, never of other residents, signs at reception."
+   },
+   {
+    "key": "image_storage_deletion",
+    "label": "Image storage and deletion",
+    "help": "Where are images kept and when are they deleted? For example: care app only, never on personal phones, deleted when the person leaves, reviewed yearly."
+   },
+   {
+    "key": "breach_reporting_route",
+    "label": "Breach reporting route",
+    "help": "Who do staff tell about a photo or post taken or shared without consent, and who decides the response? For example: report to the manager at once, data protection lead assesses, disciplinary process followed."
+   }
+  ]
+ },
+ {
+  "slug": "tenancy-housing-care-separation",
+  "title": "Tenancy, Housing and Care Separation Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "governance-data-pack"
+  ],
+  "description": "A tenancy and care separation policy for your service: how housing and care stay distinct, who does what, and how people keep choice over where and with whom they live.",
+  "fields": [
+   {
+    "key": "housing_provider_arrangement",
+    "label": "Housing provider arrangement",
+    "help": "Who provides the housing and what is your relationship with them? For example an independent housing association, a private landlord, the person's own home, or your own group housing arm"
+   },
+   {
+    "key": "tenure_types_supported",
+    "label": "Tenure types supported",
+    "help": "What kinds of tenure do people you support hold? For example assured shorthold tenancy, assured tenancy, licence, owner occupier, Shared Lives arrangement"
+   },
+   {
+    "key": "separate_agreements",
+    "label": "Separate agreements",
+    "help": "How are the tenancy and the care agreement kept apart? For example two documents signed at different times, by different staff, with no clause linking one to the other"
+   },
+   {
+    "key": "choice_of_care_provider",
+    "label": "Choice of care provider",
+    "help": "How is the person told they can change care provider without losing their home? For example a written explanation at move in and at each review"
+   },
+   {
+    "key": "housing_issue_route",
+    "label": "Housing issue route",
+    "help": "Who do staff and people contact about repairs, rent and tenancy problems? For example the landlord helpline, a named housing officer, a tenancy support worker"
+   },
+   {
+    "key": "rent_service_charge_handling",
+    "label": "Rent and charges handling",
+    "help": "What part, if any, does your service play in rent and service charges? For example none, helping the person set up a direct debit, supporting benefit claims at the person's request"
+   },
+   {
+    "key": "tenancy_support_roles",
+    "label": "Tenancy support roles",
+    "help": "Which role helps people understand their tenancy rights? For example a tenancy officer, a keyworker, an independent advocate, the local authority"
+   },
+   {
+    "key": "living_together_choice",
+    "label": "Choice of housemates",
+    "help": "How do people have a say over who they share with and who moves in? For example housemate meetings, trial visits, a written compatibility record"
+   },
+   {
+    "key": "care_ending_tenancy_impact",
+    "label": "Care ending and tenancy",
+    "help": "What happens to the person's home if care from you ends or changes? For example the tenancy continues, the landlord and local authority are told, a transition plan is agreed"
+   },
+   {
+    "key": "entry_rights_and_privacy",
+    "label": "Entry and privacy rules",
+    "help": "How do you respect that the home is the person's own? For example staff knock and wait, the landlord gives notice before inspection, no entry without agreement except in an emergency"
+   },
+   {
+    "key": "tenancy_review_cycle",
+    "label": "Tenancy review points",
+    "help": "When do you check the housing and care arrangement stays separate and fair? For example at each annual care review and when circumstances change"
+   },
+   {
+    "key": "capacity_and_best_interests_tenancy",
+    "label": "Tenancy decisions and capacity",
+    "help": "How are decisions about signing or ending a tenancy handled where capacity is in question? For example a capacity assessment by the local authority, family and advocate involved, best interests record"
+   }
+  ]
+ },
+ {
+  "slug": "tenant-property-belongings-keys",
+  "title": "Safe Handling of Property, Tenant Belongings and Keys Policy",
+  "price_pence": 4900,
+  "taster": false,
+  "bundles": [
+   "governance-data-pack"
+  ],
+  "description": "A key holding policy for your service: entering people's homes, key control, handling belongings, searches and respecting privacy in a tenancy.",
+  "fields": [
+   {
+    "key": "entry_without_invitation",
+    "label": "Entry rules",
+    "help": "When may staff enter a person's own home or room, and how do they announce themselves? For example: knock and wait, only with agreement, a set agreed notice for planned checks"
+   },
+   {
+    "key": "keys_held_by_service",
+    "label": "Keys held by service",
+    "help": "Which keys does the service hold, for whom and why? For example: office key for each tenancy, master key for shared areas, none held for private flats"
+   },
+   {
+    "key": "key_storage_and_log",
+    "label": "Key storage and log",
+    "help": "How are held keys stored, labelled and signed in and out? For example: locked cabinet, numbered tags, signing log checked weekly"
+   },
+   {
+    "key": "tenant_consent_to_keys",
+    "label": "Key consent record",
+    "help": "How is the person's agreement to you holding a key recorded? For example: tenancy agreement clause, support plan entry, best-interests decision"
+   },
+   {
+    "key": "lost_or_stolen_keys",
+    "label": "Lost key response",
+    "help": "What happens if a key is lost or taken? For example: report to the manager, lock change arranged by the landlord, cost met by the service"
+   },
+   {
+    "key": "belongings_inventory",
+    "label": "Belongings inventory",
+    "help": "How are a person's belongings and valuables listed, and when is the list reviewed? For example: list at move in, reviewed yearly, photos kept"
+   },
+   {
+    "key": "belongings_storage_support",
+    "label": "Belongings storage",
+    "help": "Does the service store anything for people? For example: lockable cupboard in the office, nothing stored, a bank safe for documents"
+   },
+   {
+    "key": "searching_rules",
+    "label": "Searching rules",
+    "help": "Do staff ever search a person's room or belongings, and who can authorise it? For example: never without consent, police only, manager decision with a recorded reason"
+   },
+   {
+    "key": "privacy_and_visitors_access",
+    "label": "Privacy and visitors",
+    "help": "How do you protect privacy when staff or others need to enter, including visitors and contractors? For example: tenant agrees times, escort for contractors"
+   },
+   {
+    "key": "missing_or_damaged_property",
+    "label": "Missing property reports",
+    "help": "What do staff do when belongings are reported missing or damaged? For example: report to the manager at once, record, safeguarding referral if theft is suspected"
+   },
+   {
+    "key": "emergency_entry",
+    "label": "Emergency entry",
+    "help": "Who authorises entering a home in an emergency, and what is recorded? Name the role and what you do with the emergency services"
+   },
+   {
+    "key": "move_out_property_return",
+    "label": "Move out property return",
+    "help": "How are belongings and keys handed back when someone moves out or dies? For example: signed checklist, released to next of kin with ID"
+   }
+  ]
+ },
+ {
+  "slug": "wound-care-tissue-viability",
+  "title": "Wound Care and Tissue Viability Policy",
+  "price_pence": 6900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "Wound assessment, dressing choice, infection signs, tissue viability referral and record keeping, written for your care home, nursing or dementia service.",
+  "fields": [
+   {
+    "key": "wound_care_provider",
+    "label": "Who provides wound care",
+    "help": "Who carries out wound assessment and dressings in your service? For example registered nurses in house, district nurses visiting, or care staff for minor skin tears only"
+   },
+   {
+    "key": "wound_assessment_method",
+    "label": "Wound assessment method",
+    "help": "How are wounds assessed and described when first found? For example a wound assessment chart, body map, measurements and photographs with consent"
+   },
+   {
+    "key": "dressing_selection",
+    "label": "Dressing selection",
+    "help": "Who chooses dressings and what formulary or guidance is followed? For example the nurse in charge, the local tissue viability service formulary, or the district nurse plan"
+   },
+   {
+    "key": "dressing_change_routine",
+    "label": "Dressing change routine",
+    "help": "How are dressing changes planned, done and recorded? For example care plan schedule, a dressing record signed each time, review at each change"
+   },
+   {
+    "key": "infection_escalation",
+    "label": "Infection concern escalation",
+    "help": "What do staff do when a wound looks infected, and who do they call? For example inform the nurse in charge, then GP or NHS 111 the same day"
+   },
+   {
+    "key": "tv_referral_route",
+    "label": "Tissue viability referral route",
+    "help": "How do you reach specialist tissue viability advice? For example local NHS tissue viability nurse referral form, GP referral, or an in-house lead"
+   },
+   {
+    "key": "wound_supplies",
+    "label": "Wound care supplies",
+    "help": "Who supplies and stores dressings and equipment? For example prescribed by the GP per resident, bought in bulk by the home, held in a locked treatment room"
+   },
+   {
+    "key": "clinical_waste_handling",
+    "label": "Used dressing disposal",
+    "help": "How are used dressings and sharps disposed of? For example clinical waste bags, yellow bin collection, sharps box in the treatment room"
+   },
+   {
+    "key": "wound_record_review",
+    "label": "Wound record review",
+    "help": "Who reviews wound records and how often, and are wounds audited? For example weekly clinical lead review, monthly wound audit, trend reported to the manager"
+   },
+   {
+    "key": "wound_training",
+    "label": "Wound care training",
+    "help": "What wound care training and competence checks do staff complete? For example nurse wound competencies, care staff skin and infection awareness, annual refresher"
+   },
+   {
+    "key": "nursing_registration_cover",
+    "label": "Nurse cover and sign off",
+    "help": "How is nurse cover arranged and who signs off wound care plans? For example a registered nurse on every shift, or a visiting nurse plan reviewed by the manager"
+   }
+  ]
  }
 ]

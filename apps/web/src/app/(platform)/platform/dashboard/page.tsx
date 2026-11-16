@@ -16,6 +16,7 @@ import {
   Cpu, Globe, Database, Zap, GitBranch, Shield, GraduationCap, Bot,
   CheckCircle2, XCircle, RefreshCw, ClipboardList, ChevronRight, ChevronLeft, Download,
   Lock, Phone, Mic, CreditCard, BarChart2, LayoutGrid, Settings, HardDrive, Smartphone,
+  SearchCheck,
 } from 'lucide-react'
 import type { PlanLimits } from '@/lib/platform-api'
 import Link from 'next/link'
@@ -2084,6 +2085,24 @@ function SystemReference() {
           <RefRow label="Prompt A"            value="Summary + follow-up questions — used for most staff queries" />
           <RefRow label="Prompt B"            value="Full policy formatter — used when staff ask for the complete section" />
           <RefRow label="Knowledge extraction" value="Prompt C — extracts Q&A pairs from uploaded documents for the per-tenant knowledge base" />
+        </div>
+      </RefSection>
+
+      {/* Policy Gap Checks (what a client is missing) */}
+      <RefSection icon={SearchCheck} title="Policy Gap Checks: what a client is missing (Platform > Policy gaps)">
+        <p className="leading-relaxed text-neutral-mid">
+          Three separate checks for a client on /platform/policy-gaps. They answer different questions, cost different
+          amounts and are run from different buttons. Nothing from the catalogue check is stored: each visit starts at
+          &ldquo;Not run yet&rdquo; until you press Run. Only ever put a client a policy that came out as a confirmed gap.
+        </p>
+        <div className="mt-2 space-y-1">
+          <RefRow label="1. Legislation" value="&ldquo;Missing against legislation&rdquo;. Reads every policy against every regulation in scope for the client's care setting and stores coverage (covered, partial, gap) per regulation. Names a policy only when a regulation has NOTHING behind it, so it finds few gaps and cannot see most newer catalogue policies (they sit under regulations a home already partly covers). Run: Run or Re-run analysis (uses credit). Re-run only after the client's policies or the regulations change; it is NOT needed for check 2." />
+          <RefRow label="2. Catalogue, by name" value="&ldquo;Missing against our policy catalogue&rdquo;, step 1. Takes every CareStream policy that suits the client's setting (service tags in policy-product-services.ts; untagged originals suit everyone) and, 12 at a time, asks Haiku whether the client holds a policy on the same SUBJECT by name and type. Quick and cheap but it can be wrong both ways (plain names, or a name that sounds right). Never use this step alone to tell a client they are missing something." />
+          <RefRow label="3. Catalogue, verified" value="Step 2 of the same button. For each policy that looked missing, finds the client's closest policy passages (vector search over their own policy text), asks Sonnet to list 5 to 7 elements a policy on that subject must contain and tick each one that the passages deal with in substance, with an exact quote. Code then checks every quote really appears in the passage; an element only counts as found if it does." />
+          <RefRow label="Verdicts" value="Covered (a dedicated policy, at least half the elements found), Covered inside another policy (a section of a broader policy), Borderline (check before pitching), Mention only (a sentence or two), Nothing found. A CONFIRMED GAP is Mention only or Nothing found with two or fewer elements found. Claims of covered with under half the elements evidenced become Borderline. Unsure between two verdicts means the more covered one, because a false gap told to a client is worse than a missed one." />
+          <RefRow label="Copy for an email" value="Legislation card: Copy analysis for an email (summary plus each missing policy and its regulation). Catalogue card: Copy for an email lists ONLY confirmed gaps with price, description and the care-policies link. Rich text with a plain text fallback. Open Why on any item to see the elements and quotes before sending." />
+          <RefRow label="Limits" value="Only sees policies uploaded and indexed in CareStream (a policy held elsewhere shows as missing: say so in any client email). It judges their text against our description of the subject, so it is a sales prompt and not legal advice; a person decides before it goes to a client. Ferndale CS-1002 on 16 Nov 2026: Safe Use of Bed Rails is covered by their own Bed Rails policy, which is why the check exists." />
+          <RefRow label="Credit and routes" value="Check 2 step 1 uses Haiku (titles only), step 2 uses Sonnet (about 15 reads for a nursing home). Routes (platform admin): POST /admin/policy-gaps/:tenantId/catalogue-gaps/batch {offset}, POST .../catalogue-gaps/verify {slug}, GET .../evidence?slug=&terms= (free text search of their policy passages, no judgement; use it to look at a subject by hand). Code: apps/api/src/services/analytics/catalogue-gaps.ts." />
         </div>
       </RefSection>
 

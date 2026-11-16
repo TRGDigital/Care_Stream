@@ -1816,6 +1816,22 @@ auditsRouter.post('/templates/:id/customise', requireAdmin, async (req: Request,
   } catch (e: any) { err(res, 'SAVE_FAILED', e?.message ?? 'Could not save your changes.', 500) }
 })
 
+// POST /audits/templates/:id/restore-original — put a built-in audit back: retire this home's edited version of it and
+// show the standard one again. The edited version and its completed audits are kept (retired, not deleted).
+auditsRouter.post('/templates/:id/restore-original', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const id = String(req.params.id)
+  const own = await (prisma as any).auditTemplate.findFirst({ where: { id, tenant_id: tenantId, is_active: true }, select: { id: true, name: true } })
+  if (!own) return err(res, 'NOT_FOUND', 'Audit not found', 404)
+  const sourceId = await sourceOfVersion(id)
+  if (!sourceId) return err(res, 'NOT_FOUND', 'This audit was built from scratch, so there is no standard version to go back to.', 404)
+  const open = await (prisma as any).auditRun.count({ where: { tenant_id: tenantId, template_id: id, status: 'in_progress' } })
+  if (open > 0) return err(res, 'CONFLICT', `Finish or delete the ${open} audit${open === 1 ? '' : 's'} in progress on your version first, then restore the original.`, 409)
+  await (prisma as any).auditTemplate.update({ where: { id }, data: { is_active: false } })
+  await setBuiltInHidden(tenantId, sourceId, false)
+  ok(res, { restored: sourceId })
+})
+
 // GET /audits/templates/:id/versions — the edit history (newest first), with each version's structure.
 auditsRouter.get('/templates/:id/versions', requireAdmin, async (req: Request, res: Response) => {
   const tpl = await readableTemplate(req.user!.tenant_id, String(req.params.id))

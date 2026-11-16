@@ -5,6 +5,7 @@ import { requirePlatformAdmin } from '../middleware/auth'
 import { facilityTypeToSetting, settingLabel } from '../lib/care-setting'
 import { classifyTenantPolicies, knownPolicyTypes } from '../lib/policy-classifier'
 import { missingPolicies } from '../services/analytics/missing-policies'
+import { catalogueGapsBatch } from '../services/analytics/catalogue-gaps'
 import { writePolicy } from '../services/policy-writer/write-policy'
 import { POLICY_PRODUCTS_SEED, POLICY_BUNDLES_SEED, SHARED_INTAKE_FIELDS, COMPLETE_LIBRARY_KEY } from '../data/policy-products-seed'
 import { PRODUCT_REGULATIONS } from '../data/policy-product-regulations'
@@ -746,6 +747,17 @@ platformPolicyGapsRouter.post('/types/restore', async (req: Request, res: Respon
 // Read and run are deliberately separate. Reading is free and instant. Running reads every
 // policy the client holds against every regulation and costs Anthropic credit, so it is never
 // a side effect of opening a screen.
+
+// POST /:tenantId/catalogue-gaps/batch { offset } — COSTS a little Anthropic credit (Haiku, titles only). Judges the next
+// slice of our policy catalogue against the policies this client holds. Nothing is stored; the page accumulates the slices.
+platformPolicyGapsRouter.post('/:tenantId/catalogue-gaps/batch', async (req: Request, res: Response) => {
+  try {
+    const offset = Math.max(0, Math.floor(Number(req.body?.offset) || 0))
+    ok(res, await catalogueGapsBatch(String(req.params.tenantId), offset))
+  } catch (e: any) {
+    err(res, 'CATALOGUE_GAPS_FAILED', e?.message ?? 'could not compare the catalogue', 500)
+  }
+})
 
 // GET /:tenantId/missing-policies — FREE. Reads coverage that has already been analysed.
 platformPolicyGapsRouter.get('/:tenantId/missing-policies', async (req: Request, res: Response) => {

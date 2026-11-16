@@ -6,11 +6,11 @@
 // Not exposed to tenants.
 
 import { useEffect, useMemo, useState } from 'react'
-import { createPlatformClient, type MissingPolicyReport } from '@/lib/platform-api'
+import { createPlatformClient, type MissingPolicyReport, type CatalogueGapItem } from '@/lib/platform-api'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { PolicyOrders } from '@/components/platform/policy-orders'
 import { PlatformShell } from '@/components/platform-shell'
-import { SearchCheck, Loader2, Building2, Sparkles, CheckCircle2, AlertTriangle, EyeOff, Lock, ChevronDown, ChevronRight, Grid3x3, User } from 'lucide-react'
+import { SearchCheck, Loader2, Building2, Sparkles, CheckCircle2, AlertTriangle, EyeOff, Lock, ChevronDown, ChevronRight, Grid3x3, User, Copy, Check } from 'lucide-react'
 
 type Client = { id: string; name: string; account_number: string; setting: string; setting_label: string; policies: number; classified: number }
 type Report = { tenant: { id: string; name: string; setting: string; setting_label: string }; peer_count: number; unclassified: number; have: string[]; missing: Array<{ type: string; peer_count: number; peer_pct: number }> }
@@ -37,6 +37,13 @@ export default function PolicyGapsPage() {
   const [missingLoading, setMissingLoading] = useState(false)
   const [coverageRunning, setCoverageRunning] = useState(false)
   const [coverageProgress, setCoverageProgress] = useState<{ done: number; total: number } | null>(null)
+
+  // Our policy catalogue judged against what the client holds (the second question: what we sell that they lack).
+  const [catItems, setCatItems] = useState<CatalogueGapItem[] | null>(null)
+  const [catMeta, setCatMeta] = useState<{ total: number; client_policies: number } | null>(null)
+  const [catRunning, setCatRunning] = useState(false)
+  const [catProgress, setCatProgress] = useState<{ done: number; total: number } | null>(null)
+  const [copied, setCopied] = useState<'' | 'law' | 'cat'>('')
 
   function loadClients() {
     if (!token) return
@@ -80,6 +87,61 @@ export default function PolicyGapsPage() {
 
   const selectedClient = clients.find(c => c.id === selected)
 
+  // Copy as rich text (so bold and links survive pasting into an email) with a plain text fallback.
+  async function copyRich(html: string, text: string, which: 'law' | 'cat') {
+    try {
+      if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+        await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([text], { type: 'text/plain' }) })])
+      } else await navigator.clipboard.writeText(text)
+      setCopied(which); setTimeout(() => setCopied(''), 2500)
+    } catch { setError('Could not copy. Select the list and copy it by hand.') }
+  }
+  const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const gbp = (p: number) => `£${p % 100 === 0 ? p / 100 : (p / 100).toFixed(2)}`
+
+  // The legislation analysis as an email: what we found, in plain words, with the regulations as the evidence.
+  function copyLegislation() {
+    if (!missingReport?.analysed || !selectedClient) return
+    const r = missingReport
+    const when = r.analysed_at ? new Date(r.analysed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
+    const head = `We checked ${selectedClient.name}'s ${selectedClient.policies} policies against the ${r.regulations_in_scope} regulations that apply to a ${selectedClient.setting_label.toLowerCase()}${when ? ` (analysis run ${when})` : ''}.`
+    const summary = `${r.counts.covered} are fully covered, ${r.counts.partial} are covered in part (a policy exists but is missing elements the regulation expects) and ${r.counts.gap} have no policy behind them at all.`
+    const lead = r.missing.length ? `Policies ${selectedClient.name} does not have:` : 'Every regulation in scope has a policy behind it.'
+    const text = [head, summary, '', lead, ...r.missing.map((m, i) => `${i + 1}. ${m.title}${m.regulations.length ? `\n   Required by: ${m.regulations.map(x => x.official_name).join('; ')}` : ''}`)].join('\n')
+    const html = `<p>${esc(head)}</p><p>${esc(summary)}</p><p><strong>${esc(lead)}</strong></p>` + (r.missing.length ? `<ol>${r.missing.map(m => `<li><strong>${esc(m.title)}</strong><br>Required by: ${esc(m.regulations.map(x => x.official_name).join('; '))}</li>`).join('')}</ol>` : '')
+    copyRich(html, text, 'law')
+  }
+
+  // The catalogue comparison as an email: what we can write for them, with prices and links.
+  function copyCatalogue() {
+    if (!catItems || !selectedClient) return
+    const miss = catItems.filter(i => !i.held)
+    const head = `We compared the ${catMeta?.client_policies ?? selectedClient.policies} policies ${selectedClient.name} holds with the ${catItems.length} CareStream policies written for a ${selectedClient.setting_label.toLowerCase()}. ${miss.length} are not in your library.`
+    const url = (slug: string) => `https://www.carestreamai.com/care-policies/${slug}`
+    const text = [head, '', ...miss.map((m, i) => `${i + 1}. ${m.title} (${gbp(m.price_pence)}): ${m.description}\n   ${url(m.slug)}`)].join('\n')
+    const html = `<p>${esc(head)}</p><ol>${miss.map(m => `<li><strong><a href="${url(m.slug)}">${esc(m.title)}</a></strong> (${gbp(m.price_pence)})<br>${esc(m.description)}</li>`).join('')}</ol>`
+    copyRich(html, text, 'cat')
+  }
+
+  // COSTS a little credit (Haiku, titles only): one slice of the catalogue per call, accumulated here.
+  async function runCatalogue() {
+    if (!token || !selected) return
+    if (!window.confirm('This compares every CareStream policy that suits this service with the policies this client holds. It uses a small amount of Anthropic credit.\n\nRun the comparison now?')) return
+    setCatRunning(true); setError(''); setCatItems([]); setCatProgress(null)
+    try {
+      const api = createPlatformClient(token)
+      let offset = 0; const all: CatalogueGapItem[] = []
+      for (;;) {
+        const b = await api.policyGaps.catalogueGapsBatch(selected, offset)
+        all.push(...b.items); setCatItems([...all]); setCatMeta({ total: b.total, client_policies: b.client_policies })
+        setCatProgress({ done: all.length, total: b.total })
+        if (b.next_offset === null) break
+        offset = b.next_offset
+      }
+    } catch (e: any) { setError(e.message) }
+    finally { setCatRunning(false); setCatProgress(null) }
+  }
+
   async function loadReport(id: string) {
     if (!token) return
     setReportLoading(true); setReport(null); setError('')
@@ -88,7 +150,7 @@ export default function PolicyGapsPage() {
     finally { setReportLoading(false) }
   }
 
-  function pick(id: string) { setSelected(id); if (id) { loadReport(id); loadMissing(id) } }
+  function pick(id: string) { setSelected(id); setCatItems(null); setCatMeta(null); if (id) { loadReport(id); loadMissing(id) } }
 
   async function classify() {
     if (!token || !selected) return
@@ -139,13 +201,13 @@ export default function PolicyGapsPage() {
 
   return (
     <PlatformShell>
-      <div className="max-w-4xl">
+      <div className="w-full">
         <div className="mb-2 flex items-center gap-2">
           <SearchCheck size={22} className="text-teal" />
           <h1 className="text-2xl font-bold text-neutral-dark">Policy gaps</h1>
           <span className="inline-flex items-center gap-1 rounded-full bg-neutral-dark px-2 py-0.5 text-[11px] font-medium text-white"><Lock size={10} /> Internal</span>
         </div>
-        <p className="mb-5 max-w-3xl text-sm text-neutral-mid">
+        <p className="mb-5 text-sm text-neutral-mid">
           Which policies a client <strong>does not have at all</strong>, so we know what we can write and sell them. Judged against the legislation in scope for their service, with a weaker peer comparison below it. Gaps inside the policies they already hold are their own work and live on their gaps page, not here. Internal only; no client&rsquo;s policy content is ever shown to another.
         </p>
 
@@ -227,6 +289,14 @@ export default function PolicyGapsPage() {
                     : 'Not analysed yet for this client.'}
                 </p>
               </div>
+              <div className="flex flex-wrap items-center gap-2">
+              {missingReport?.analysed && (
+                <button onClick={copyLegislation}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"
+                  title="Copy this analysis as an email: what we found, and the regulation behind each missing policy.">
+                  {copied === 'law' ? <><Check size={12} className="text-green-600" /> Copied</> : <><Copy size={12} /> Copy analysis for an email</>}
+                </button>
+              )}
               <button onClick={runCoverage} disabled={coverageRunning}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50"
                 title="Reads every policy against every regulation in scope. Spends Anthropic credit.">
@@ -235,6 +305,7 @@ export default function PolicyGapsPage() {
                   ? (coverageProgress ? `Analysing ${coverageProgress.done}/${coverageProgress.total}…` : 'Analysing…')
                   : missingReport?.analysed ? 'Re-run analysis (uses credit)' : 'Run analysis (uses credit)'}
               </button>
+              </div>
             </div>
 
             {missingLoading ? (
@@ -295,6 +366,65 @@ export default function PolicyGapsPage() {
                       ))}
                     </ul>
                   </>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Missing against our catalogue: what we sell that this client does not appear to hold. The legislation check
+            above cannot name most of these (they sit under regulations a home already partly covers), so this asks
+            the product question directly. */}
+        {selectedClient && (
+          <div className="mb-5 rounded-xl border border-gray-200 bg-white p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-sm font-semibold text-neutral-dark">Missing against our policy catalogue</h2>
+                <p className="mt-0.5 text-xs text-neutral-mid">
+                  {catItems && catItems.length
+                    ? `${catItems.filter(i => !i.held).length} of ${catMeta?.total ?? catItems.length} CareStream policies for a ${selectedClient.setting_label.toLowerCase()} are not in their library of ${catMeta?.client_policies ?? selectedClient.policies}. ${catItems.filter(i => !i.held && i.is_new).length} of them are among the newest policies.`
+                    : 'Compares every CareStream policy that suits this service with the policies they hold, by subject. Not run yet.'}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {catItems && catItems.some(i => !i.held) && (
+                  <button onClick={copyCatalogue} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"
+                    title="Copy the policies they do not hold as an email, with prices and links.">
+                    {copied === 'cat' ? <><Check size={12} className="text-green-600" /> Copied</> : <><Copy size={12} /> Copy for an email</>}
+                  </button>
+                )}
+                <button onClick={runCatalogue} disabled={catRunning}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+                  title="Judges each CareStream policy against the names and types of the policies they hold. Uses a small amount of Anthropic credit.">
+                  {catRunning ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                  {catRunning ? (catProgress ? `Comparing ${catProgress.done}/${catProgress.total}…` : 'Comparing…') : catItems ? 'Re-run comparison (uses credit)' : 'Run comparison (uses credit)'}
+                </button>
+              </div>
+            </div>
+            {catItems && catItems.length > 0 && (
+              <>
+                <p className="mt-3 text-xs text-neutral-mid">
+                  Judged on the names and types of the policies they hold, by meaning rather than wording. Check any you plan to quote before sending: a policy filed under an unusual name can show as missing.
+                </p>
+                <ul className="mt-2 divide-y divide-gray-100 rounded-lg border border-gray-200">
+                  {catItems.filter(i => !i.held).map(i => (
+                    <li key={i.slug} className="flex flex-wrap items-baseline justify-between gap-2 px-3 py-2.5">
+                      <span className="min-w-0 flex-1">
+                        <a href={`/care-policies/${i.slug}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-neutral-dark hover:text-teal">{i.title}</a>
+                        {i.is_new && <span className="ml-2 rounded-full bg-yellow-300 px-2 py-0.5 text-[10px] font-bold uppercase text-yellow-950">New</span>}
+                        <span className="mt-0.5 block text-xs text-neutral-mid">{i.description}</span>
+                      </span>
+                      <span className="text-sm font-semibold text-neutral-dark">{gbp(i.price_pence)}</span>
+                    </li>
+                  ))}
+                </ul>
+                {catItems.some(i => i.held) && (
+                  <details className="mt-3 text-xs text-neutral-mid">
+                    <summary className="cursor-pointer">{catItems.filter(i => i.held).length} policies they already hold (and which of theirs covers it)</summary>
+                    <ul className="mt-2 space-y-1">
+                      {catItems.filter(i => i.held).map(i => <li key={i.slug}><strong className="text-neutral-dark">{i.title}</strong> &larr; {i.held_by ?? 'a policy in their library'}</li>)}
+                    </ul>
+                  </details>
                 )}
               </>
             )}

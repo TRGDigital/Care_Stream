@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { X, Pencil, Plus, Lock, Loader2, Check } from 'lucide-react'
+import { X, Pencil, Plus, Lock, Loader2, Check, RotateCcw } from 'lucide-react'
 import { clsx } from 'clsx'
 import { createApiClient, type AuditEditorTemplate } from '@/lib/api-client'
 
@@ -51,6 +51,7 @@ export function AuditPreview({ token, templateId, onClose, onSaved }: { token: s
   const [error, setError] = useState('')
   const [upgrade, setUpgrade] = useState(false)
   const [done, setDone] = useState(false)
+  const [restoring, setRestoring] = useState(false)
 
   useEffect(() => {
     createApiClient(token).audits.previewTemplate(templateId).then(setData).catch((e: any) => setLoadError(e?.message ?? 'Could not load the audit.'))
@@ -87,6 +88,14 @@ export function AuditPreview({ token, templateId, onClose, onSaved }: { token: s
   }
   const pending = changedEdits().length + added.filter(a => a.text.trim()).length
 
+  async function restore() {
+    if (!window.confirm('Go back to the standard version of this audit?\n\nYour edited version is retired and the standard audit comes back in your list. Audits you have already completed are kept.')) return
+    setRestoring(true); setError(''); setUpgrade(false)
+    try { await createApiClient(token).audits.restoreOriginal(templateId); onSaved(); onClose() }
+    catch (e: any) { setError(e?.message ?? 'Could not restore the original.') }
+    finally { setRestoring(false) }
+  }
+
   async function save() {
     setSaving(true); setError(''); setUpgrade(false)
     try {
@@ -111,6 +120,11 @@ export function AuditPreview({ token, templateId, onClose, onSaved }: { token: s
             {t && <p className="text-xs text-neutral-mid capitalize">{t.frequency}{t.sections.length ? ` · ${t.sections.length} section${t.sections.length === 1 ? '' : 's'} · ${t.sections.reduce((n, s) => n + s.questions.length, 0)} questions` : ''}</p>}
           </div>
           <div className="flex shrink-0 items-center gap-2">
+            {ed?.can_edit && ed.is_own_version && !editing && (
+              <button onClick={restore} disabled={restoring} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal disabled:opacity-50" title="Go back to the standard version of this audit">
+                {restoring ? <Loader2 size={13} className="animate-spin" /> : <RotateCcw size={13} />} Restore original
+              </button>
+            )}
             {ed?.can_edit && !editing && !done && (
               <button onClick={() => setEditing(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark"><Pencil size={13} /> Edit questions</button>
             )}

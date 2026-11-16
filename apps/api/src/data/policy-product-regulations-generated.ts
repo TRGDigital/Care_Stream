@@ -41,7 +41,9 @@ export const GENERATED_PRODUCT_REGULATIONS: Record<string, string[]> = {
   "regulation-14",
   "regulation-12",
   "regulation-11",
-  "mental-capacity-act-2005"
+  "mental-capacity-act-2005",
+  "iddsi-framework",
+  "nice-cg32-nutrition-support-adults"
  ],
  "electronic-call-monitoring": [
   "regulation-17",
@@ -206,14 +208,16 @@ export const GENERATED_PRODUCT_REGULATIONS: Record<string, string[]> = {
   "regulation-18",
   "mental-capacity-act-2005",
   "cqc-statutory-notifications",
-  "common-law-duty-of-confidentiality"
+  "common-law-duty-of-confidentiality",
+  "nice-ng253-suspected-sepsis-16-plus"
  ],
  "diabetes-care": [
   "regulation-12",
   "regulation-9",
   "regulation-14",
   "regulation-18",
-  "nice-sc1-managing-medicines-care-homes"
+  "nice-sc1-managing-medicines-care-homes",
+  "nice-ng19-diabetic-foot-problems"
  ],
  "driving-travel-vehicle-use": [
   "regulation-12",
@@ -267,7 +271,8 @@ export const GENERATED_PRODUCT_REGULATIONS: Record<string, string[]> = {
   "regulation-10",
   "regulation-11",
   "mental-capacity-act-2005",
-  "infection-control"
+  "infection-control",
+  "nice-ng48-oral-health-care-homes"
  ],
  "oxygen-smoking-fire-risk-in-the-home": [
   "regulation-12",
@@ -372,7 +377,8 @@ export const GENERATED_PRODUCT_REGULATIONS: Record<string, string[]> = {
   "regulation-18",
   "infection-control",
   "health-and-social-care-act-infection-control-code",
-  "records-management-code-of-practice-for-health-and-social-care-2021"
+  "records-management-code-of-practice-for-health-and-social-care-2021",
+  "nice-ng19-diabetic-foot-problems"
  ],
  "ch-admissions-placement-planning": [
   "childrens-homes-regulation-14",
@@ -561,7 +567,8 @@ export const GENERATED_PRODUCT_REGULATIONS: Record<string, string[]> = {
   "regulation-11",
   "regulation-17",
   "mental-capacity-act-2005",
-  "health-and-social-care-act-infection-control-code"
+  "health-and-social-care-act-infection-control-code",
+  "nice-cg32-nutrition-support-adults"
  ],
  "hospice-epilepsy-seizure-management": [
   "regulation-12",
@@ -599,7 +606,8 @@ export const GENERATED_PRODUCT_REGULATIONS: Record<string, string[]> = {
   "regulation-17",
   "mental-capacity-act-2005",
   "safeguarding-adults",
-  "cqc-statutory-notifications"
+  "cqc-statutory-notifications",
+  "nice-ng225-self-harm"
  ],
  "hospice-sharps-inoculation-clinical-waste": [
   "regulation-12",

@@ -1,3 +1,4 @@
+import { aOrAn } from '@/lib/service-labels'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -108,7 +109,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const kw = POLICY_KEYWORDS[slug]
   return pageMetadata(`/care-policies/${slug}`, {
     title: kw ? `${kw.seo_title} | CareStreamAI` : policyPageTitle(data.product.title),
-    description: kw?.meta_description ?? `A ${data.product.title} written for your organisation, checked by a person, and kept updated when the law changes. ${price}, delivered within 2 working days of your details.`,
+    description: kw?.meta_description ?? `${aOrAn(data.product.title)} ${data.product.title} written for your organisation, checked by a person, and kept updated when the law changes. ${price}, delivered within 2 working days of your details.`,
   })
 }
 

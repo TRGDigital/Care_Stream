@@ -1,3 +1,4 @@
+import { aOrAn } from '@/lib/service-labels'
 import Link from 'next/link'
 import { SiteImage } from '@/components/site-image'
 import { PolicyIntakeGame } from './policy-intake-game'
@@ -369,7 +370,7 @@ export function PolicyPageV2({ product, regulations, related, bundles, catalogue
               </p>
             </div>
             {it ? <p className="mpe-intent-tag">{it.tag}</p> : <span className="mpe-eyebrow">Personalised · Human-reviewed · Kept updated</span>}
-            <h1>{it ? it.headline : `A ${product.title} written for your service`}</h1>
+            <h1>{it ? it.headline : `${aOrAn(product.title)} ${product.title} written for your service`}</h1>
             {(it?.sub ?? cro.whoFor) && <p className="mpe-for">{it?.sub ?? cro.whoFor}</p>}
             {cro.benefits && (
               <ul className="mpe-benefits">

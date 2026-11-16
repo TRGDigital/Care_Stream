@@ -6,3 +6,6 @@ export const POLICY_SERVICE_LABEL: Record<string, string> = {
   mental_health: 'Mental health services', substance_misuse: 'Substance misuse services', hospices: 'Hospices',
   gp_practices: 'GP practices', shared_lives: 'Shared Lives',
 }
+
+/** "A" or "An" for a policy title, by its first letter. */
+export const aOrAn = (title: string) => (/^[aeiou]/i.test(title.trim()) ? 'An' : 'A')

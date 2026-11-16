@@ -115,7 +115,7 @@ export default async function PackPage({ params }: { params: Promise<{ key: stri
           </div>
           <div className="svshotwrap">
             {/* The lead policy's illustration, with the next few policies' pictures beneath it. */}
-            <div className="svshot app" style={{ display: 'block', width: '100%', aspectRatio: '3 / 2', padding: 0, overflow: 'hidden', position: 'relative' }}>
+            <div className="svshot app" style={{ display: 'block', width: '100%', height: 0, padding: '0 0 66.667% 0', overflow: 'hidden', position: 'relative' }}>
               <SiteImage src={`/images/care-policies/${heroSlug}/1.webp`} alt={`${heroMember?.title ?? bundle.title}, one of the ${products.length} policies in the ${bundle.title}`} fill priority sizes="(max-width: 900px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginTop: 10 }}>

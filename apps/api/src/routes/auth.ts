@@ -18,7 +18,7 @@ import { createLoginLink, consumeLoginToken, mintLoginToken } from '../lib/login
 import { needsBillingFor } from '../lib/tiers'
 import { freeEvent } from '../lib/free-events'
 import { reportSignupToGrowth } from '../lib/growth-event'
-import { buildSignupMeta, accountTypeLabel, locationOf } from '../lib/signup-meta'
+import { buildSignupMeta, accountTypeLabel, locationOf, requestOrigin, contextLines } from '../lib/signup-meta'
 import { freeSignupAllowed, isPreviewCode, checkFreeSignup, FREE_POLICY_LIMIT, isWebmail, emailDomain } from '../lib/free-tier'
 
 
@@ -87,6 +87,8 @@ const RegisterSchema = z.object({
     referrer: z.string().max(200).optional(), landing: z.string().max(200).optional(),
     utm_source: z.string().max(100).optional(), utm_medium: z.string().max(100).optional(), utm_campaign: z.string().max(100).optional(), utm_content: z.string().max(100).optional(), utm_term: z.string().max(100).optional(),
     gclid: z.boolean().optional(),
+    timezone: z.string().max(64).optional(),
+    visit: z.object({ first_at: z.string().max(40).optional(), first_landing: z.string().max(200).optional(), visits: z.number().int().min(1).max(1000).optional() }).optional(),
   }).optional(),
 })
 
@@ -206,6 +208,7 @@ authRouter.post('/register', async (req: Request, res: Response) => {
       emailType: isWebmail(emailDomain(email)) ? 'Personal email address (webmail)' : `Company email address (${emailDomain(email)})`,
       careSetting: parsed.data.care_setting ? SETTING_LABELS[parsed.data.care_setting] : null,
       cameFrom: signupMeta.came_from, ip: signupMeta.ip, location: locationOf(signupMeta), device: signupMeta.user_agent ?? null,
+      context: contextLines(signupMeta),
     })
   } catch (e) {
     console.error('[register] new-account notification failed:', e)
@@ -346,6 +349,7 @@ authRouter.post('/login', async (req: Request, res: Response) => {
       failed_login_attempts: 0,
       locked_until:          null,
       last_login_at:         now,
+      last_login_meta:       requestOrigin(req) as any,
       // first_login_at is written once and never overwritten
       ...(user.first_login_at ? {} : { first_login_at: now }),
     },
@@ -389,11 +393,11 @@ authRouter.post('/login', async (req: Request, res: Response) => {
 
 // Shared success path — record login, audit, issue tokens, respond. `user` must
 // include its `tenant` relation. Reused by password login and magic-link sign-in.
-async function respondWithSession(res: Response, user: any): Promise<void> {
+async function respondWithSession(res: Response, user: any, req?: Request): Promise<void> {
   const now = new Date()
   await (prisma as any).user.update({
     where: { id: user.id },
-    data:  { failed_login_attempts: 0, locked_until: null, last_login_at: now, ...(user.first_login_at ? {} : { first_login_at: now }) },
+    data:  { failed_login_attempts: 0, locked_until: null, last_login_at: now, ...(req ? { last_login_meta: requestOrigin(req) as any } : {}), ...(user.first_login_at ? {} : { first_login_at: now }) },
   })
   await writeAuditLog({ tenant_id: user.tenant_id, user_id: user.id, event_type: 'login', entity_type: 'user', entity_id: user.id })
   // Reviewer (CPD assessor) sign-in alert — fire and forget, never blocks login.
@@ -443,7 +447,7 @@ authRouter.post('/magic-link/verify', async (req: Request, res: Response) => {
     include: { tenant: { select: { id: true, name: true, slug: true, subscription_status: true, stripe_subscription_id: true, tier: true } } },
   })
   if (!user || user.is_active === false) { err(res, 'INVALID_TOKEN', 'This sign-in link is no longer valid.', 401); return }
-  await respondWithSession(res, user)
+  await respondWithSession(res, user, req)
 })
 
 // ─── GET /auth/verify-email?token=xxx ────────────────────────────────────────

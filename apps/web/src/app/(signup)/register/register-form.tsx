@@ -1,5 +1,7 @@
 'use client'
 
+import { hasAnalyticsConsent } from '@/components/marketing/cookie-consent'
+import { readVisits } from '@/components/marketing/visit-tracker'
 import type { SignupContext } from '@/lib/signup-context'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -122,12 +124,24 @@ export function RegisterForm({ initial }: { initial: RegisterInitial }) {
     }
     setError('')
     setLoading(true)
+    // Silent context for the owner's new account alert. Only when the visitor accepted analytics cookies: their timezone and the first visit / visit count remembered in this browser.
+    let silent: Record<string, unknown> = {}
+    try {
+      if (hasAnalyticsConsent()) {
+        const v = readVisits()
+        silent = {
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || undefined,
+          ...(v ? { visit: { first_at: new Date(v.first_at).toISOString(), first_landing: v.first_landing, visits: v.visits } } : {}),
+        }
+      }
+    } catch { /* nothing to add */ }
+    const attributionOut = { ...attribution, ...silent }
     const form = { org_name: orgName, name, email, password, ...(careSetting ? { care_setting: careSetting } : {}) }
     try {
       const res = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(freeTier ? { ...form, tier: 'free', preview_code: previewCode || undefined, company_website: trap || undefined, course: courseSlug || undefined, source: signupSource || undefined, track: signupTrack || undefined, growth_ref: growthRef || undefined, attribution } : trainingOnly ? { ...form, tier: 'training_only', attribution } : { ...form, attribution }),
+        body: JSON.stringify(freeTier ? { ...form, tier: 'free', preview_code: previewCode || undefined, company_website: trap || undefined, course: courseSlug || undefined, source: signupSource || undefined, track: signupTrack || undefined, growth_ref: growthRef || undefined, attribution: attributionOut } : trainingOnly ? { ...form, tier: 'training_only', attribution: attributionOut } : { ...form, attribution: attributionOut }),
       })
       const body = await res.json()
       if (!res.ok || !body.success) {

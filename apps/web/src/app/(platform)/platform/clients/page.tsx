@@ -50,6 +50,18 @@ function atRisk(stats: TenantSummary['stats'], plan: PlanLimits | null): boolean
   return checks.some(({ used, limit }) => limit != null && limit > 0 && used / limit >= 0.9)
 }
 
+const ACTIVATION_STYLE: Record<string, string> = {
+  'New': 'bg-gray-100 text-gray-600', 'Getting started': 'bg-amber-100 text-amber-800', 'Engaged': 'bg-emerald-100 text-emerald-800', 'Power user': 'bg-teal text-white',
+}
+function lastActiveText(iso?: string | null): string {
+  if (!iso) return 'Never'
+  const mins = Math.floor((Date.now() - Date.parse(iso)) / 60000)
+  if (mins < 60) return 'Just now'
+  if (mins < 60 * 24) return 'Today'
+  const days = Math.floor(mins / 1440)
+  return days === 1 ? 'Yesterday' : days < 60 ? `${days} days ago` : new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
 export default function ClientsPage() {
   const token                   = usePlatformAuth()
   const [tenants, setTenants]   = useState<TenantSummary[]>([])
@@ -115,6 +127,8 @@ export default function ClientsPage() {
                   <th className="px-4 py-3">Client</th>
                   <th className="px-4 py-3">Plan</th>
                   <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Last active</th>
+                  <th className="px-4 py-3">Activation</th>
                   <th className="px-4 py-3 text-right">Annual licences (this month)</th>
                   <th className="px-4 py-3 text-right">Queries (this month)</th>
                   <th className="px-4 py-3 text-right">Staff</th>
@@ -173,6 +187,16 @@ export default function ClientsPage() {
                       <td className="px-4 py-3 text-neutral-mid">{t.private_origin ? 'Free courses' : t.tier === 'training_only' ? 'Training module' : t.tier === 'policies_only' ? 'Policy purchase' : (t.plan?.name ?? '—')}</td>
                       <td className="px-4 py-3">
                         <StatusBadge status={t.subscription_status} />
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-xs text-neutral-mid">{lastActiveText(t.engagement?.last_active_at)}</td>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        {t.engagement ? (
+                          <div className="flex items-center gap-1.5" title="Activation: how many of the steps that matter this account has done (audit, policy, course, team, coming back). See the client page for the breakdown.">
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${ACTIVATION_STYLE[t.engagement.label]}`}>{t.engagement.label}</span>
+                            <span className="text-xs text-neutral-mid">{t.engagement.score}/100</span>
+                            {t.engagement.upsell_ready && <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-white" title="A free account that is active and either using the plan well, hit a free limit or clicked Upgrade">Upsell ready</span>}
+                          </div>
+                        ) : <span className="text-xs text-neutral-mid/60">—</span>}
                       </td>
                       <td className="px-4 py-3">
                         {t.tier === 'training_only' || t.tier === 'policies_only' ? (

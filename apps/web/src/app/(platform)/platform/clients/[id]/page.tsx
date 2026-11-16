@@ -511,6 +511,17 @@ function GapUsageSection({ token, tenantId }: { token: string; tenantId: string 
   )
 }
 
+function durationText(sec: number): string {
+  if (sec < 30 * 60) return 'In the same visit'
+  const d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600)
+  if (d === 0) return h <= 1 ? 'About an hour' : `${h} hours`
+  return h > 0 ? `${d} day${d === 1 ? '' : 's'} ${h} hour${h === 1 ? '' : 's'}` : `${d} day${d === 1 ? '' : 's'}`
+}
+const when = (iso?: string | null) => (iso ? new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Never')
+const ACTIVATION_STYLE: Record<string, string> = {
+  'New': 'bg-gray-100 text-gray-600', 'Getting started': 'bg-amber-100 text-amber-800', 'Engaged': 'bg-emerald-100 text-emerald-800', 'Power user': 'bg-teal text-white',
+}
+
 export default function ClientDetailPage() {
   const token   = usePlatformAuth()
   const { id }  = useParams<{ id: string }>()
@@ -1166,6 +1177,9 @@ export default function ClientDetailPage() {
                   { label: 'Joined',            value: new Date(detail.tenant.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) },
                   { label: 'Sign up IP address', value: detail.tenant.signup_meta?.ip ?? 'Not recorded' },
                   { label: 'Sign up location',   value: [detail.tenant.signup_meta?.city, detail.tenant.signup_meta?.region, detail.tenant.signup_meta?.country].filter(Boolean).join(', ') || 'Not recorded' },
+                  { label: 'Last login IP address', value: detail.last_login ? (detail.last_login.ip ?? 'Not recorded') : 'No sign in yet' },
+                  { label: 'Last login location',   value: detail.last_login ? ([detail.last_login.city, detail.last_login.region, detail.last_login.country].filter(Boolean).join(', ') || 'Not recorded') : '—' },
+                  { label: 'Last login',            value: detail.last_login ? `${detail.last_login.name}, ${new Date(detail.last_login.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}` : '—' },
                 ].map(({ label, value }) => (
                   <div key={label}>
                     <dt className="text-xs text-neutral-mid">{label}</dt>
@@ -1188,7 +1202,51 @@ export default function ClientDetailPage() {
                   </div>
                 )}
               </dl>
+              {/* Sign up context, captured silently. Language comes from the request; the rest only exists if the visitor accepted analytics cookies. */}
+              <dl className="mt-4 grid grid-cols-2 gap-4 border-t border-gray-100 pt-4 text-sm sm:grid-cols-3">
+                {[
+                  { label: 'Browser language',        value: detail.tenant.signup_meta?.language ?? 'Not recorded' },
+                  { label: 'Timezone',                value: detail.tenant.signup_meta?.timezone ?? 'Not recorded' },
+                  { label: 'First page they landed on', value: detail.tenant.signup_meta?.first_landing ?? 'Not recorded' },
+                  { label: 'Visits before sign up',   value: detail.tenant.signup_meta?.visits ? `${detail.tenant.signup_meta.visits} (including the sign up visit)` : 'Not recorded' },
+                  { label: 'First visit to sign up',  value: detail.tenant.signup_meta?.seconds_to_signup != null ? durationText(detail.tenant.signup_meta.seconds_to_signup) : 'Not recorded' },
+                ].map(({ label, value }) => (
+                  <div key={label}>
+                    <dt className="text-xs text-neutral-mid">{label}</dt>
+                    <dd className="mt-0.5 break-words font-medium text-neutral-dark">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="mt-3 text-xs text-neutral-mid">Visits and first page are only recorded when the visitor accepted cookies, so they are blank for people who declined and for accounts made before 16 November 2026.</p>
             </div>
+
+            {/* Engagement: last active and activation score, worked out from what the account has done */}
+            {detail.engagement && (
+              <div className="rounded-xl border border-gray-200 bg-white p-5">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="text-sm font-semibold text-neutral-dark">Engagement</h2>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${ACTIVATION_STYLE[detail.engagement.label]}`}>{detail.engagement.label}</span>
+                    <span className="text-sm font-semibold text-neutral-dark">{detail.engagement.score}<span className="font-normal text-neutral-mid"> / 100</span></span>
+                    {detail.engagement.upsell_ready && <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-xs font-semibold text-white">Upsell ready</span>}
+                  </div>
+                </div>
+                <dl className="mb-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
+                  <div><dt className="text-xs text-neutral-mid">Last active</dt><dd className="mt-0.5 font-medium text-neutral-dark">{when(detail.engagement.last_active_at)}</dd></div>
+                  <div><dt className="text-xs text-neutral-mid">Account age</dt><dd className="mt-0.5 font-medium text-neutral-dark">{detail.engagement.days_since_signup} day{detail.engagement.days_since_signup === 1 ? '' : 's'}</dd></div>
+                  <div><dt className="text-xs text-neutral-mid">Upsell signals</dt><dd className="mt-0.5 font-medium text-neutral-dark">{detail.engagement.upsell_signals.length ? detail.engagement.upsell_signals.join(', ') : 'None yet'}</dd></div>
+                </dl>
+                <ul className="grid gap-1.5 text-sm sm:grid-cols-2">
+                  {detail.engagement.milestones.map(m => (
+                    <li key={m.key} className="flex items-center justify-between gap-2 rounded-lg bg-neutral-light/60 px-3 py-1.5">
+                      <span className={m.done ? 'text-neutral-dark' : 'text-neutral-mid'}><span className={m.done ? 'text-emerald-600' : 'text-gray-300'}>{m.done ? '✓' : '○'}</span> {m.label}</span>
+                      <span className="whitespace-nowrap text-xs text-neutral-mid">{m.done ? `${m.at ? new Date(m.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''} · +${m.points}` : `${m.points} pts`}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-xs text-neutral-mid">Score = steps done out of 100. Upsell ready means a free account that has been active in the last 14 days and is using the plan well, has hit a free limit or has clicked Upgrade.</p>
+              </div>
+            )}
 
             {/* Sub-tenants (sites) */}
             <div className="rounded-xl border border-gray-200 bg-white">

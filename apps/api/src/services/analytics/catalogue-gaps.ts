@@ -14,6 +14,8 @@
 
 import { prisma } from '../../db/client'
 import { callClaude } from '../ai/claude'
+import { embedTexts } from '../rag/embedder'
+import { queryVectors, getTenantNamespace } from '../vector/pinecone'
 import { facilityTypeToSetting } from '../../lib/care-setting'
 import { POLICY_PRODUCT_SERVICES } from '../../data/policy-product-services'
 import { isPolicyDocument } from '../../lib/document-kind'
@@ -119,4 +121,60 @@ Return JSON: {"results":[{"n":1,"held":true,"held_by":"the exact name of the pro
     }
   })
   return { total: list.length, offset, next_offset: next, setting, client_policies: names.length, items }
+}
+
+// ─── Evidence: what, in the client's own policy text, speaks to a subject? ────────────────────────────────────────
+//
+// The comparison above judges by policy NAMES, which is quick but can be wrong in both directions: a policy with a plain
+// name can hold a whole section on the subject, and a name can sound right while the text never covers it. Before
+// telling a client "you are missing X", this reads what their policies actually say. It searches their policy text for
+// the subject and returns the policies that mention it with the passages, so a person can see at a glance whether the
+// subject is covered in full, covered inside another policy, or not at all.
+export type EvidencePolicy = {
+  policy_id: string; name: string
+  /** Best similarity of any passage in this policy to the subject (0 to 1). */
+  best_score: number
+  /** How many of the returned passages contain one of the subject's key terms in plain words. */
+  term_hits: number
+  excerpts: Array<{ score: number; heading: string | null; text: string; has_term: boolean }>
+}
+export type EvidenceReport = {
+  query: string; terms: string[]
+  /** Policies whose own NAME contains a key term. */
+  name_matches: Array<{ policy_id: string; name: string }>
+  policies: EvidencePolicy[]
+}
+
+export async function evidenceFor(tenantId: string, query: string, terms: string[] = [], topK = 40): Promise<EvidenceReport> {
+  const namespace = getTenantNamespace(tenantId)
+  const [emb] = await embedTexts([query])
+  const matches = await queryVectors(namespace, emb, topK)
+  const re = terms.length ? new RegExp(terms.map(t => t.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).filter(Boolean).join('|'), 'i') : null
+
+  const ids = [...new Set(matches.map(m => String(m.metadata.policy_id ?? '')).filter(Boolean))]
+  const rows: Array<{ id: string; name: string; status: string }> = ids.length
+    ? await (prisma as any).policy.findMany({ where: { tenant_id: tenantId, id: { in: ids } }, select: { id: true, name: true, status: true } })
+    : []
+  const nameOf = new Map(rows.filter(r => r.status === 'active').map(r => [r.id, r.name]))
+
+  const byPolicy = new Map<string, EvidencePolicy>()
+  for (const m of matches) {
+    const pid = String(m.metadata.policy_id ?? ''); const name = nameOf.get(pid)
+    if (!pid || !name) continue
+    const text = String(m.metadata.chunk_text ?? '')
+    const has = !!re && re.test(text)
+    const cur = byPolicy.get(pid) ?? { policy_id: pid, name, best_score: 0, term_hits: 0, excerpts: [] }
+    cur.best_score = Math.max(cur.best_score, m.score ?? 0)
+    if (has) cur.term_hits++
+    if (cur.excerpts.length < 3) cur.excerpts.push({ score: Math.round((m.score ?? 0) * 1000) / 1000, heading: (m.metadata.section_heading as string) ?? (m.metadata.chapter_title as string) ?? null, text: text.replace(/\s+/g, ' ').trim().slice(0, 600), has_term: has })
+    byPolicy.set(pid, cur)
+  }
+  const policies = [...byPolicy.values()].sort((a, b) => b.term_hits - a.term_hits || b.best_score - a.best_score).slice(0, 12)
+
+  let name_matches: Array<{ policy_id: string; name: string }> = []
+  if (re) {
+    const all: Array<{ id: string; name: string }> = await (prisma as any).policy.findMany({ where: { tenant_id: tenantId, status: 'active' }, select: { id: true, name: true } })
+    name_matches = all.filter(p => re.test(p.name)).map(p => ({ policy_id: p.id, name: p.name }))
+  }
+  return { query, terms, name_matches, policies }
 }

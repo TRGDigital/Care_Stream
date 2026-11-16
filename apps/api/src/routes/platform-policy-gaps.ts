@@ -5,7 +5,7 @@ import { requirePlatformAdmin } from '../middleware/auth'
 import { facilityTypeToSetting, settingLabel } from '../lib/care-setting'
 import { classifyTenantPolicies, knownPolicyTypes } from '../lib/policy-classifier'
 import { missingPolicies } from '../services/analytics/missing-policies'
-import { catalogueGapsBatch } from '../services/analytics/catalogue-gaps'
+import { catalogueGapsBatch, evidenceFor } from '../services/analytics/catalogue-gaps'
 import { writePolicy } from '../services/policy-writer/write-policy'
 import { POLICY_PRODUCTS_SEED, POLICY_BUNDLES_SEED, SHARED_INTAKE_FIELDS, COMPLETE_LIBRARY_KEY } from '../data/policy-products-seed'
 import { PRODUCT_REGULATIONS } from '../data/policy-product-regulations'
@@ -756,6 +756,25 @@ platformPolicyGapsRouter.post('/:tenantId/catalogue-gaps/batch', async (req: Req
     ok(res, await catalogueGapsBatch(String(req.params.tenantId), offset))
   } catch (e: any) {
     err(res, 'CATALOGUE_GAPS_FAILED', e?.message ?? 'could not compare the catalogue', 500)
+  }
+})
+
+// GET /:tenantId/evidence?slug=<catalogue slug>&terms=bed rail,bedrail — what the client's own policy text says about a subject.
+// One embedding call and one vector query, no model judgement: it returns the policies that speak to the subject and the passages.
+platformPolicyGapsRouter.get('/:tenantId/evidence', async (req: Request, res: Response) => {
+  try {
+    const slug = String(req.query.slug ?? '')
+    let query = String(req.query.q ?? '').trim()
+    if (slug) {
+      const p = await (prisma as any).policyProduct.findFirst({ where: { slug }, select: { title: true, description: true } })
+      if (!p) { err(res, 'NOT_FOUND', 'That catalogue policy was not found', 404); return }
+      query = `${p.title}. ${p.description ?? ''}`
+    }
+    if (!query) { err(res, 'VALIDATION_ERROR', 'Give a slug or a q', 400); return }
+    const terms = String(req.query.terms ?? '').split(',').map(t => t.trim()).filter(Boolean).slice(0, 10)
+    ok(res, await evidenceFor(String(req.params.tenantId), query, terms))
+  } catch (e: any) {
+    err(res, 'EVIDENCE_FAILED', e?.message ?? 'could not search the policies', 500)
   }
 })
 

@@ -42,6 +42,9 @@ export default function PolicyGapsPage() {
   const [catItems, setCatItems] = useState<CatalogueGapItem[] | null>(null)
   const [catMeta, setCatMeta] = useState<{ total: number; client_policies: number } | null>(null)
   const [verifs, setVerifs] = useState<Record<string, GapVerification | 'error'>>({})
+  const [catRanAt, setCatRanAt] = useState<string | null>(null)
+  const [catChanged, setCatChanged] = useState(false)
+  const [catSaveFailed, setCatSaveFailed] = useState(false)
   const [catRunning, setCatRunning] = useState(false)
   const [catProgress, setCatProgress] = useState<{ done: number; total: number } | null>(null)
   const [copied, setCopied] = useState<'' | 'law' | 'cat'>('')
@@ -131,10 +134,10 @@ export default function PolicyGapsPage() {
     setCatRunning(true); setError(''); setCatItems([]); setCatProgress(null); setVerifs({})
     try {
       const api = createPlatformClient(token)
-      let offset = 0; const all: CatalogueGapItem[] = []
+      let offset = 0; const all: CatalogueGapItem[] = []; let clientPolicies = 0
       for (;;) {
         const b = await api.policyGaps.catalogueGapsBatch(selected, offset)
-        all.push(...b.items); setCatItems([...all]); setCatMeta({ total: b.total, client_policies: b.client_policies })
+        all.push(...b.items); setCatItems([...all]); clientPolicies = b.client_policies; setCatMeta({ total: b.total, client_policies: b.client_policies })
         setCatProgress({ done: all.length, total: b.total })
         if (b.next_offset === null) break
         offset = b.next_offset
@@ -142,15 +145,21 @@ export default function PolicyGapsPage() {
       // Step 2: read their actual policy text for every apparent gap, three at a time.
       const todo = all.filter(i => !i.held)
       let done = 0; setCatProgress({ done: 0, total: todo.length })
-      let idx = 0
+      let idx = 0; const finalV: Record<string, GapVerification | 'error'> = {}
       await Promise.all(Array.from({ length: 3 }, async () => {
         while (idx < todo.length) {
           const it = todo[idx++]
-          try { const v = await api.policyGaps.verifyGap(selected, it.slug); setVerifs(prev => ({ ...prev, [it.slug]: v })) }
-          catch { setVerifs(prev => ({ ...prev, [it.slug]: 'error' })) }
+          try { const v = await api.policyGaps.verifyGap(selected, it.slug); finalV[it.slug] = v; setVerifs(prev => ({ ...prev, [it.slug]: v })) }
+          catch { finalV[it.slug] = 'error'; setVerifs(prev => ({ ...prev, [it.slug]: 'error' })) }
           done++; setCatProgress({ done, total: todo.length })
         }
       }))
+      // Save the finished result so it is here next time the page is opened.
+      const total0 = all.length
+      try {
+        await api.policyGaps.saveCatalogue(selected, { items: all, meta: { total: total0, client_policies: clientPolicies }, verifs: finalV })
+        setCatRanAt(new Date().toISOString()); setCatChanged(false); setCatSaveFailed(false)
+      } catch { setCatSaveFailed(true) }
     } catch (e: any) { setError(e.message) }
     finally { setCatRunning(false); setCatProgress(null) }
   }
@@ -163,7 +172,17 @@ export default function PolicyGapsPage() {
     finally { setReportLoading(false) }
   }
 
-  function pick(id: string) { setSelected(id); setCatItems(null); setCatMeta(null); setVerifs({}); if (id) { loadReport(id); loadMissing(id) } }
+  async function loadSavedCatalogue(id: string) {
+    if (!token) return
+    try {
+      const saved = await createPlatformClient(token).policyGaps.getSavedCatalogue(id)
+      if (!saved?.payload) return
+      setCatItems(saved.payload.items ?? null); setCatMeta(saved.payload.meta ?? null); setVerifs(saved.payload.verifs ?? {})
+      setCatRanAt(saved.ran_at); setCatChanged(!!saved.changed_since)
+    } catch { /* nothing saved yet */ }
+  }
+
+  function pick(id: string) { setSelected(id); setCatItems(null); setCatMeta(null); setVerifs({}); setCatRanAt(null); setCatChanged(false); if (id) { loadReport(id); loadMissing(id); loadSavedCatalogue(id) } }
 
   async function classify() {
     if (!token || !selected) return
@@ -394,6 +413,8 @@ export default function PolicyGapsPage() {
               <div className="min-w-0">
                 <h2 className="text-sm font-semibold text-neutral-dark">Missing against our policy catalogue</h2>
                 <p className="mt-0.5 text-xs text-neutral-mid">
+                  {catRanAt && <span className="mr-1 font-medium text-neutral-dark">Last run {new Date(catRanAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}.{catChanged ? ' They have added policies since, so re-run for a current picture.' : ''}</span>}
+                  {catSaveFailed && <span className="mr-1 text-red-700">Could not save this result (the saved results table may not exist yet).</span>}
                   {catItems && catItems.length
                     ? (() => { const notHeld = catItems.filter(i => !i.held); const vs = notHeld.map(i => verifs[i.slug]).filter((v): v is GapVerification => !!v && v !== 'error'); const real = vs.filter(v => v.real_gap).length
                         return `${notHeld.length} looked missing by name. After reading their policy text: ${real} confirmed real gaps, ${vs.length - real} already covered, ${notHeld.length - vs.length} not yet checked.` })()

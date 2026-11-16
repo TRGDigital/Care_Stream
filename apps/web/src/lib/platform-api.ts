@@ -1356,6 +1356,10 @@ export function createPlatformClient(token: string) {
       // Our policy catalogue judged against what the client holds. Costs a little credit; one slice per call.
       catalogueGapsBatch: (tenantId: string, offset: number) =>
         adminFetch<CatalogueGapBatch>(`/policy-gaps/${tenantId}/catalogue-gaps/batch`, token, { method: 'POST', body: JSON.stringify({ offset }) }),
+      getSavedCatalogue: (tenantId: string) =>
+        adminFetch<{ ran_at: string; payload: any; changed_since: boolean } | null>(`/policy-gaps/${tenantId}/catalogue-gaps/saved`, token),
+      saveCatalogue: (tenantId: string, payload: unknown) =>
+        adminFetch<{ saved: boolean }>(`/policy-gaps/${tenantId}/catalogue-gaps/saved`, token, { method: 'PUT', body: JSON.stringify({ payload }) }),
       verifyGap: (tenantId: string, slug: string) =>
         adminFetch<GapVerification>(`/policy-gaps/${tenantId}/catalogue-gaps/verify`, token, { method: 'POST', body: JSON.stringify({ slug }) }),
       ignoreType: (name: string, care_setting?: string | null) =>

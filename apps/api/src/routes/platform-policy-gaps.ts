@@ -771,6 +771,34 @@ platformPolicyGapsRouter.post('/:tenantId/catalogue-gaps/verify', async (req: Re
   }
 })
 
+// Saved catalogue comparison (one row per client, table catalogue_gap_runs, docs/sql/2026-11-17-catalogue-gap-runs.sql).
+// Raw SQL so the app still works if the table has not been created yet: saving then fails quietly and the page just re-runs.
+// GET returns { ran_at, payload, changed_since } or null. changed_since is true when the client has added a policy since.
+platformPolicyGapsRouter.get('/:tenantId/catalogue-gaps/saved', async (req: Request, res: Response) => {
+  try {
+    const tenantId = String(req.params.tenantId)
+    let row: any
+    try { row = ((await (prisma as any).$queryRawUnsafe('select ran_at, payload from catalogue_gap_runs where tenant_id = $1', tenantId)) as any[])[0] }
+    catch { ok(res, null); return }
+    if (!row) { ok(res, null); return }
+    const latest = await (prisma as any).policy.aggregate({ where: { tenant_id: tenantId, status: 'active' }, _max: { created_at: true } })
+    const changed = !!latest?._max?.created_at && new Date(latest._max.created_at) > new Date(row.ran_at)
+    ok(res, { ran_at: row.ran_at, payload: row.payload, changed_since: changed })
+  } catch (e: any) { err(res, 'SAVED_FAILED', e?.message ?? 'could not read the saved result', 500) }
+})
+
+platformPolicyGapsRouter.put('/:tenantId/catalogue-gaps/saved', async (req: Request, res: Response) => {
+  try {
+    const payload = req.body?.payload
+    if (!payload || typeof payload !== 'object') { err(res, 'VALIDATION_ERROR', 'payload is required', 400); return }
+    await (prisma as any).$executeRawUnsafe(
+      `insert into catalogue_gap_runs (tenant_id, ran_at, payload) values ($1, now(), $2::jsonb)
+       on conflict (tenant_id) do update set ran_at = now(), payload = excluded.payload`,
+      String(req.params.tenantId), JSON.stringify(payload))
+    ok(res, { saved: true })
+  } catch (e: any) { err(res, 'SAVE_FAILED', 'Could not save (has docs/sql/2026-11-17-catalogue-gap-runs.sql been run?)', 500) }
+})
+
 // GET /:tenantId/evidence?slug=<catalogue slug>&terms=bed rail,bedrail — what the client's own policy text says about a subject.
 // One embedding call and one vector query, no model judgement: it returns the policies that speak to the subject and the passages.
 platformPolicyGapsRouter.get('/:tenantId/evidence', async (req: Request, res: Response) => {

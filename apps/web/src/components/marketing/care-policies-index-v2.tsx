@@ -270,7 +270,7 @@ export function CarePoliciesIndexV2({ s, products, bundles }: {
               {/* In the theme's order, with the theme's one-line descriptions (editable in the
                   console). Title and price stay the shop's. A pack added to the shop later
                   goes after the theme's six, with the shop's own description. */}
-              {[...bundles].sort((a, b) => rank(a.key) - rank(b.key)).map(p => (
+              {[...bundles].filter(p => p.key !== 'complete-library').sort((a, b) => rank(a.key) - rank(b.key)).map(p => (
                 p.key === 'complete-library' ? (
                   <PackLink className="pcpack" pack={p} key={p.key}>
                     <b>{p.title}</b><em>{money(p.price_pence)}</em>
@@ -291,6 +291,19 @@ export function CarePoliciesIndexV2({ s, products, bundles }: {
               ))}
             </div>
           )}
+          {/* The Complete Library: its own full width band under the packs, in the brand tint so it reads as the top option. */}
+          {(() => {
+            const all = bundles.find(b => b.key === 'complete-library')
+            return all ? (
+              <PackLink className="pcfull" pack={all}>
+                <span className="pcfull-main">
+                  <b>{all.title}</b>
+                  <span>{s(`pack.${all.key}.desc`) || all.description}</span>
+                </span>
+                <span className="pcfull-buy"><em>{money(all.price_pence)}</em><i>Buy the library</i></span>
+              </PackLink>
+            ) : null
+          })()}
           <PolicyCatalogueGrid products={products} />
         </div>
       </section>

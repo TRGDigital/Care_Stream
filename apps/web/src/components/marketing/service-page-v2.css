@@ -446,3 +446,20 @@
 .svpage-v2[data-page="care-policies"] .pcsearch,.svpage-v2[data-page="care-policies"] .pcsearch input{scroll-margin-top:140px}
 
 .svpage-v2[data-page="care-policies"] #policy-library{scroll-margin-top:90px}
+
+/* The policy library heading, intro and offer run the full width of the section. */
+.svpage-v2[data-page="care-policies"] #policy-library h2,
+.svpage-v2[data-page="care-policies"] #policy-library .lede3{max-width:none}
+.svpage-v2[data-page="care-policies"] #policy-library .lofr-list{max-width:none}
+.svpage-v2[data-page="care-policies"] #policy-library .lofr{width:100%;box-sizing:border-box}
+/* The Complete Library: a full width band in the brand tint, under the packs. */
+.svpage-v2[data-page="care-policies"] .pcfull{display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap;
+  width:100%;box-sizing:border-box;margin:0 0 38px;padding:26px 32px;border-radius:16px;text-decoration:none;color:inherit;
+  background:var(--accent-soft,#F3EDFA);border:2px solid var(--accent,#7B3FBF);transition:transform .15s,box-shadow .15s}
+.svpage-v2[data-page="care-policies"] .pcfull:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(123,63,191,.16)}
+.svpage-v2[data-page="care-policies"] .pcfull-main{flex:1 1 420px;min-width:0}
+.svpage-v2[data-page="care-policies"] .pcfull-main b{display:block;font-size:1.3rem;letter-spacing:-.025em;margin-bottom:6px}
+.svpage-v2[data-page="care-policies"] .pcfull-main span{display:block;font-size:.98rem;line-height:1.6;color:var(--ink-2)}
+.svpage-v2[data-page="care-policies"] .pcfull-buy{display:flex;align-items:center;gap:18px}
+.svpage-v2[data-page="care-policies"] .pcfull-buy em{font-style:normal;font-size:2rem;font-weight:800;letter-spacing:-.03em;color:var(--accent,#7B3FBF)}
+.svpage-v2[data-page="care-policies"] .pcfull-buy i{font-style:normal;font-weight:650;font-size:.92rem;padding:12px 22px;border-radius:999px;background:var(--btn-ink,#17121F);color:var(--btn-ink-text,#fff)}

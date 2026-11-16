@@ -7,7 +7,7 @@ import { sweep, cursorFor } from '../../lib/tenant-sweep'
 import crypto from 'crypto'
 import { prisma } from '../../db/client'
 import { evaluateCondition } from './conditions'
-import { renderOnboardingEmailHtml, renderOnboardingEmailText, firstNameOf } from './render'
+import { renderOnboardingEmailHtml, renderOnboardingEmailText, firstNameOf, PERSONAL_SENDER } from './render'
 
 const FROM     = process.env.ONBOARDING_FROM_EMAIL ?? 'hello@carestreamai.com'
 const FROM_NAME = 'CareStream'
@@ -118,15 +118,17 @@ async function sendToRecipient(opts: {
   const ropts = { unsubscribeUrl, firstName: firstNameOf(recipientName) }
   const html = renderOnboardingEmailHtml(rendered, ropts)
   const text = renderOnboardingEmailText(rendered, ropts)
+  const personal = tmpl.body?.style === 'plain'
 
   try {
     const [res] = await sgMail.send({
       to: recipientEmail,
-      from: { email: tmpl.from_email || FROM, name: FROM_NAME },
-      replyTo: FROM,
+      from: { email: tmpl.from_email || FROM, name: personal ? PERSONAL_SENDER.name : FROM_NAME },
+      replyTo: personal ? PERSONAL_SENDER.replyTo : FROM,
       subject: tmpl.subject,
       html,
       text,
+      ...(personal ? { headers: { 'List-Unsubscribe': `<${unsubscribeUrl}>` } } : {}),
       customArgs: { onboarding_send_id: row.id },
       trackingSettings: { clickTracking: { enable: true, enableText: false }, openTracking: { enable: true } },
     } as any)
@@ -145,7 +147,8 @@ export async function sendTestEmail(to: string, tmpl: { subject: string; prehead
   if (!ensureSg()) throw new Error('SENDGRID_API_KEY is not set')
   const rendered = { subject: tmpl.subject, preheader: tmpl.preheader, body: tmpl.body }
   const ropts = { unsubscribeUrl: '#', firstName: 'Alex' }   // a sample first name, so the personal greeting shows in a test
-  await sgMail.send({ to, from: { email: FROM, name: FROM_NAME }, replyTo: FROM, subject: `[TEST] ${tmpl.subject}`, html: renderOnboardingEmailHtml(rendered, ropts), text: renderOnboardingEmailText(rendered, ropts) } as any)
+  const personal = tmpl.body?.style === 'plain'
+  await sgMail.send({ to, from: { email: FROM, name: personal ? PERSONAL_SENDER.name : FROM_NAME }, replyTo: personal ? PERSONAL_SENDER.replyTo : FROM, subject: `[TEST] ${tmpl.subject}`, html: renderOnboardingEmailHtml(rendered, ropts), text: renderOnboardingEmailText(rendered, ropts) } as any)
 }
 
 // Enrol a tenant into the drip (one active enrolment per tenant).

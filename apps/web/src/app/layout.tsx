@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { CookieConsent } from '@/components/marketing/cookie-consent'
+import { VisitTracker } from '@/components/marketing/visit-tracker'
 import { Analytics } from '@/components/marketing/analytics'
 import { DemoDialog } from '@/components/marketing/demo-dialog'
 import { AltMapProvider } from '@/components/alt-map-provider'
@@ -83,6 +84,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {children}
         </AltMapProvider>
         <CookieConsent />
+        <VisitTracker />
         <Analytics />
         <DemoDialog />
         <SpeedInsights />

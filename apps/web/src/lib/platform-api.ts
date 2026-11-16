@@ -159,6 +159,7 @@ export interface TenantSummary {
   created_at:          string
   plan:                PlanLimits | null
   sub_tenant_count:    number
+  engagement?:         EngagementBrief | null
   private_origin?:     string | null  // set for a private learner account created by a partner site's free-course grant, e.g. "Carer Badge"
   stats: {
     policyCount:          number
@@ -221,6 +222,15 @@ export interface SignupMeta {
   source?: string | null; track?: string | null; course?: string | null; care_setting?: string | null; growth_ref?: string | null
   referrer?: string | null; utm_source?: string | null; utm_medium?: string | null; utm_campaign?: string | null; utm_content?: string | null; gclid?: boolean
   landing?: string | null; came_from?: string[]; at?: string
+  language?: string | null; timezone?: string | null; first_visit_at?: string | null; first_landing?: string | null; visits?: number | null; seconds_to_signup?: number | null
+}
+
+/** Activation and last activity, worked out from what the account has actually done (api lib/engagement-score.ts). */
+export interface EngagementBrief { score: number; label: 'New' | 'Getting started' | 'Engaged' | 'Power user'; last_active_at: string | null; upsell_ready: boolean }
+export interface EngagementDetail extends EngagementBrief {
+  days_since_signup: number
+  milestones: Array<{ key: string; label: string; points: number; done: boolean; at: string | null }>
+  upsell_signals: string[]
 }
 
 export interface TenantDetail {
@@ -236,6 +246,7 @@ export interface TenantDetail {
   userCount:            number
   queriesThisMonth:     number
   handbookCount:        number
+  engagement?: EngagementDetail | null
   /** The most recent sign in on the account (any user): who, when and where from. Null until someone has signed in. */
   last_login?: { name: string; email: string; role: string; at: string; ip?: string | null; country?: string | null; region?: string | null; city?: string | null; user_agent?: string | null } | null
   annual_license?: {

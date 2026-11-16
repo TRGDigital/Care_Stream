@@ -1,3 +1,4 @@
+import { loadEngagement, engagementBrief } from '../lib/engagement'
 import { signCollectionPreview } from '../lib/collection-preview'
 import { getPagePerformance, getUpdateQueue, logPageEvent } from '../services/page-metrics/performance'
 import { collectPageMetrics } from '../services/page-metrics/collector'
@@ -669,6 +670,7 @@ adminRouter.get('/tenants', async (_req: Request, res: Response) => {
   })
   const originMap = new Map<string, string>((granted as any[]).map(g => [g.tenant_id, GRANT_SOURCES[String(g.stripe_payment_id).split(':')[1]] ?? 'Partner site']))
 
+  const engagementBy = await loadEngagement(tenants.map((t: any) => t.id)).catch(() => new Map())
   const withStats = tenants.map((t: any) => {
     const p = policyByTenant.get(t.id) ?? { internal: 0, handbook: 0 }
     const annualUsed  = annualMap.get(t.id) ?? 0
@@ -687,6 +689,7 @@ adminRouter.get('/tenants', async (_req: Request, res: Response) => {
         annualLicenseLimit:   annualLimit,
       },
       sub_tenant_count: subTenantMap.get(t.id) ?? 0,
+      engagement: engagementBrief(engagementBy.get(t.id)),
       private_origin: t.tier === 'training_only' ? (originMap.get(t.id) ?? null) : null,
     }
   })
@@ -808,7 +811,9 @@ adminRouter.get('/tenants/:id', async (req: Request, res: Response) => {
   }).catch(() => null)
   const last_login = lastLoginUser ? { name: lastLoginUser.name, email: lastLoginUser.email, role: lastLoginUser.role, at: lastLoginUser.last_login_at, ...(lastLoginUser.last_login_meta ?? {}) } : null
 
-  ok(res, { tenant, policies, recentQueries, knowledgeCount, manualKnowledgeCount, userCount, queriesThisMonth, handbookCount, storage, training_licences, annual_license, last_login, group: { parent: groupParent, children: groupChildren } })
+  const engagement = (await loadEngagement([String(req.params.id)]).catch(() => new Map())).get(String(req.params.id)) ?? null
+
+  ok(res, { tenant, policies, recentQueries, knowledgeCount, manualKnowledgeCount, userCount, queriesThisMonth, handbookCount, storage, training_licences, annual_license, last_login, engagement, group: { parent: groupParent, children: groupChildren } })
 })
 
 // ─── PATCH /admin/tenants/:id/group ──────────────────────────────────────────

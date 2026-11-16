@@ -167,6 +167,7 @@ export async function sendNewTenantNotification(opts: {
   orgName: string; adminName: string; adminEmail: string; accountNumber: string; slug: string; planName?: string | null
   accountType?: string; isTest?: boolean; emailType?: string | null; careSetting?: string | null
   cameFrom?: string[]; ip?: string | null; location?: string | null; device?: string | null
+  context?: Array<[string, string]>
 }): Promise<void> {
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set — skipping new-tenant notification'); return }
@@ -191,6 +192,7 @@ export async function sendNewTenantNotification(opts: {
       ${row('IP address', opts.ip ?? 'Not recorded')}
       ${opts.location ? row('Location (from IP)', opts.location) : ''}
       ${opts.device ? row('Device', opts.device) : ''}
+      ${(opts.context ?? []).map(([k, v]) => row(k, v)).join('')}
       ${row('Slug', opts.slug)}
     </table>
     <p style="color:#9ca3af;font-size:12px;margin:0">Open the platform console → Clients to view the account.</p>

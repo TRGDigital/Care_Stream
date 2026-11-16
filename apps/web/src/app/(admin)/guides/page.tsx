@@ -2093,8 +2093,9 @@ const GUIDE_SECTIONS: GuideSection[] = [
             ))}
           </div>
           <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
-            <li><strong>Copy</strong> a built-in audit to make your own version you can edit. You can hide the original at the same time so your team only sees your copy.</li>
-            <li><strong>Hide</strong> any built-in audit you do not use. It disappears from the start list, the hub and reminders, and <strong>Show</strong> brings it back.</li>
+            <li>Click <strong>Preview</strong> on any audit to read every question exactly as it will be asked, before you use it.</li>
+            <li>In the preview, click <strong>Edit questions</strong> to make small changes: reword a question, change its answer type, or add a question to a section. Your edited version replaces the standard one in your list, and <strong>Restore original</strong> in the preview brings the standard audit back (your completed audits are kept).</li>
+            <li>On the Free, Starter and Professional plans you can add up to <strong>2 extra questions</strong> to an audit; Enterprise has no limit and can also build audits from scratch. Wording and answer-type changes are not counted.</li>
           </ul>
         </SectionBlock>
 
@@ -2155,11 +2156,35 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={1}>In <strong>Scheduled audits</strong> on the Monthly Audits page, click <strong>Schedule an audit</strong>.</Step>
             <Step n={2}>Choose the audit, the room, resident or staff member if it has one, the <strong>person it is assigned to</strong>, the <strong>due date</strong> and whether it <strong>repeats</strong>. Staff who are not admins are given access to that audit automatically.</Step>
             <Step n={3}>The person sees it in the hub under <strong>Assigned to you</strong>. When they complete it, the schedule is marked done and the next one is set up from the repeat.</Step>
-            <Step n={4}>Use the filters (<strong>Overdue</strong>, <strong>Due in 7 days</strong>, <strong>All open</strong>, <strong>Done and missed</strong>) to see where things stand. A repeat that passes without being done is recorded as missed.</Step>
+            <Step n={4}>Use the filters on the Schedule tab (<strong>Overdue</strong>, <strong>Due in 7 days</strong>, <strong>All open</strong>, <strong>Done and missed</strong>) to see where things stand. A repeat that passes without being done is recorded as missed.</Step>
           </div>
           <p className="mt-3 text-sm text-neutral-mid">
             The assigned person is emailed when an audit is assigned, two days before it is due, and when it becomes overdue. In <strong>Settings → Audits</strong> you choose when an overdue audit is <strong>escalated</strong> to admins and managers, and whether admins get a <strong>summary email</strong> weekly, daily or not at all. Each staff member&rsquo;s record also lists the audits scheduled for them.
           </p>
+        </SectionBlock>
+
+        <SectionBlock title="Calendar and matrix: keeping on top of what is due">
+          <p className="text-sm text-neutral-mid">
+            Above your scheduled audits there are three tabs: <strong>Schedule</strong> (the list described above), <strong>Calendar</strong> and <strong>Matrix</strong>. They are on every plan and show the whole home, so an admin can see at a glance what is due on which day and what has and has not been done.
+          </p>
+          <p className="mt-3 text-sm font-semibold text-neutral-dark">Which audits appear</p>
+          <p className="mt-1 text-sm text-neutral-mid">
+            Only the audits you have <strong>scheduled</strong> or <strong>added by hand</strong>. Nothing is listed until you choose it, so you are never shown audits as &ldquo;missed&rdquo; that you never meant to do. Scheduling an audit adds it automatically. To track an audit you are not scheduling, open the <strong>Matrix</strong>, pick it from <strong>Add an audit to the matrix</strong> and click <strong>Add</strong>. Audits you added by hand have a small <strong>×</strong> to take them off again.
+          </p>
+          <p className="mt-3 text-sm font-semibold text-neutral-dark">The Calendar</p>
+          <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li>A month view, Monday first. Each audit appears on the day it is due, coloured by state: <strong className="text-teal">teal</strong> due, <strong className="text-amber-700">amber</strong> in progress, <strong className="text-green-700">green</strong> done, <strong className="text-rose-700">red</strong> overdue or missed.</li>
+            <li>Audits completed without being scheduled appear on the day they were completed.</li>
+            <li>Click a day to see everything on it, who it is assigned to, and open a started or completed audit. Use the arrows or <strong>Today</strong> to move between months. The line under the month shows how many are overdue, still to do and done.</li>
+          </ul>
+          <p className="mt-3 text-sm font-semibold text-neutral-dark">The Matrix</p>
+          <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li>One row for each audit on your board and one column for each of the last six months. Use the arrows to move back in steps of three months.</li>
+            <li>Each cell shows <strong>Done</strong>, <strong>In progress</strong>, <strong>Due</strong>, <strong>Overdue</strong>, <strong>Missed</strong> or <strong>Not done</strong>. Daily audits show how many were done that month.</li>
+            <li><strong>Not done</strong> (red) appears only for audits that should happen at least monthly (daily, weekly or monthly), and only from the month you scheduled or added the audit. Quarterly and periodic audits are never marked red just for being quiet in a month.</li>
+            <li>Completed audits count towards a month whether or not they were scheduled. They are matched by audit and month, so audits you have already done show up straight away for the audits on your board.</li>
+          </ul>
+          <Tip>Want a regular rhythm? Schedule each audit with a repeat. The calendar then fills ahead, the matrix turns green as they are completed, and reminders and escalation work as described above.</Tip>
         </SectionBlock>
 
         <SectionBlock title="Completing an audit on the web">

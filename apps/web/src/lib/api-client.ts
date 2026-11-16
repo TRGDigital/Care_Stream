@@ -1123,6 +1123,9 @@ export function createApiClient(token: string) {
       templateInsights: (id: string, months = 12) => apiFetch<AuditTemplateInsights>(`/audits/insights/templates/${id}?months=${months}`, token),
       groupInsights: (months = 3) => apiFetch<AuditGroupInsights>(`/audits/insights/group?months=${months}`, token),
       // Scheduled audits: a named person, a due date and an optional repeat.
+      board: (month?: string) => apiFetch<AuditBoardData>(`/audits/board${month ? `?month=${month}` : ''}`, token),
+      addToBoard: (template_id: string) => apiFetch<{ added: string }>(`/audits/board`, token, { method: 'POST', body: JSON.stringify({ template_id }) }),
+      removeFromBoard: (template_id: string) => apiFetch<{ removed: string }>(`/audits/board/${template_id}`, token, { method: 'DELETE' }),
       assignments: (params: { view?: 'open' | 'overdue' | 'week' | 'completed' | 'all'; user_id?: string; mine?: boolean } = {}) =>
         apiFetch<{ assignments: AuditAssignment[]; counts: { open: number; overdue: number; due_this_week: number } }>(`/audits/assignments?view=${params.view ?? 'open'}${params.user_id ? `&user_id=${params.user_id}` : ''}${params.mine ? '&mine=1' : ''}`, token),
       createAssignment: (data: { template_id: string; assigned_user_id: string; due_date: string; repeat?: string; subject?: string; subject_room?: string; notes?: string }) =>
@@ -1663,4 +1666,12 @@ export interface TenantIntake {
   missing: number
   outstanding: IntakeQuestion[]
   regulations_not_yet_derived: string[]
+}
+
+export type AuditBoardState = 'done' | 'in_progress' | 'overdue' | 'due' | 'missed' | 'not_done' | 'none'
+export type AuditBoardData = {
+  month: string; months: string[]
+  rows: Array<{ template_id: string; name: string; frequency: string; source: 'scheduled' | 'added' | 'both'; cells: Record<string, { state: AuditBoardState; done: number; open: number }> }>
+  entries: Array<{ date: string; template_id: string; name: string; status: 'done' | 'overdue' | 'due' | 'in_progress' | 'missed'; assignee: string | null; assignment_id: string | null; run_id: string | null }>
+  counts: { overdue: number; due_this_month: number; done_this_month: number }
 }

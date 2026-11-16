@@ -30,6 +30,7 @@ import {
 import {
   REPEATS, listAssignments, ensureAllocated, linkRunToAssignment, completeAssignmentsForRun, startOfDayUTC,
 } from '../services/audits/assignments'
+import { buildBoard, addToBoard, removeFromBoard } from '../services/audits/board'
 import { previousActionsForRun, verifyAction, decideExtension, storeSignature } from '../services/audits/action-closeout'
 import { buildAuditReport, qualityStatementNames } from '../services/audits/report'
 import { renderAuditReportPdf, generateAndStoreAuditReport, reportFileName } from '../services/audits/report-pdf'
@@ -1917,6 +1918,23 @@ function repeatAllowed(frequency: string | undefined, repeat: string): boolean {
   return frequency === 'daily' || !['daily', 'weekly'].includes(repeat)
 }
 const REPEAT_HINT = 'Only daily audits can repeat every day or week. Other audits are recorded once a month, so choose monthly, quarterly or no repeat.'
+
+// GET /audits/board?month=YYYY-MM — the calendar and matrix. Every plan; admins only see the whole home.
+auditsRouter.get('/board', requireAdmin, async (req: Request, res: Response) => {
+  ok(res, await buildBoard(req.user!.tenant_id, req.query.month ? String(req.query.month) : undefined))
+})
+// POST /audits/board { template_id } adds an audit to the matrix; DELETE /audits/board/:templateId takes a hand-added one off.
+auditsRouter.post('/board', requireAdmin, async (req: Request, res: Response) => {
+  const tid = String(req.body?.template_id ?? '')
+  const t = await (prisma as any).auditTemplate.findFirst({ where: { id: tid, is_active: true, OR: [{ tenant_id: null }, { tenant_id: req.user!.tenant_id }] }, select: { id: true } })
+  if (!t) return err(res, 'NOT_FOUND', 'Audit not found', 404)
+  await addToBoard(req.user!.tenant_id, tid)
+  ok(res, { added: tid })
+})
+auditsRouter.delete('/board/:templateId', requireAdmin, async (req: Request, res: Response) => {
+  await removeFromBoard(req.user!.tenant_id, String(req.params.templateId))
+  ok(res, { removed: String(req.params.templateId) })
+})
 
 // GET /audits/assignments?view=open|overdue|week|completed|all — admins see everyone's; others their own.
 auditsRouter.get('/assignments', requireAuditAccess, async (req: Request, res: Response) => {

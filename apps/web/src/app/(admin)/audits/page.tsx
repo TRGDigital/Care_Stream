@@ -11,7 +11,7 @@ import { clsx } from 'clsx'
 import { AuditBuilder } from '@/components/admin/audit-builder'
 import { AuditPreview } from '@/components/admin/audit-preview'
 import { AuditVersionsModal } from '@/components/admin/audit-versions-modal'
-import { AuditSchedule } from '@/components/admin/audit-schedule'
+import { AuditBoard } from '@/components/admin/audit-board'
 import { AuditInsightsPanel } from '@/components/admin/audit-insights'
 import { LinkTrainingModal } from '@/components/admin/link-training-modal'
 import { AuditActionPlan } from '@/components/admin/audit-action-plan'
@@ -348,7 +348,7 @@ export default function AuditsPage() {
       {session?.accessToken && <CqcReadinessCard token={session.accessToken} userId={userId} />}
 
       {session?.accessToken && (
-        <AuditSchedule token={session.accessToken} templates={templates.filter(t => !t.hidden)} rooms={rooms} staffNames={staff} />
+        <AuditBoard token={session.accessToken} templates={templates.filter(t => !t.hidden)} rooms={rooms} staffNames={staff} />
       )}
 
       {session?.accessToken && <AuditInsightsPanel token={session.accessToken} />}

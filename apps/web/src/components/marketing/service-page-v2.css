@@ -475,4 +475,4 @@
   .svpage-v2[data-page="care-policies"] #policy-library .lofr-lb,.svpage-v2[data-page="care-policies"] #policy-library .lofr-hd,.svpage-v2[data-page="care-policies"] #policy-library .lofr-end,.svpage-v2[data-page="care-policies"] #policy-library .lofr p.lofr-multi{grid-column:1;grid-row:auto;justify-self:start;text-align:left}
 }
 /* Pack pages: every heading, paragraph and list runs the full width of the content. */
-.packpage .pccat h2,.packpage .pccat h3,.packpage .pccat .lede3,.packpage .pccat p,.packpage .pccat li,.packpage .pccat article{max-width:none}
+.svpage-v2.packpage[data-page="care-policies"] .pccat h2,.svpage-v2.packpage[data-page="care-policies"] .pccat h3,.svpage-v2.packpage[data-page="care-policies"] .pccat .lede3,.svpage-v2.packpage[data-page="care-policies"] .pccat p,.svpage-v2.packpage[data-page="care-policies"] .pccat li,.svpage-v2.packpage[data-page="care-policies"] .pccat article{max-width:none}

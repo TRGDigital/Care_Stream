@@ -11,6 +11,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Loader2, Search, ShoppingCart, CheckCircle2, Library, RefreshCw } from 'lucide-react'
 import { createApiClient, type PolicyPurchase } from '@/lib/api-client'
+import { persistentCache } from '@/lib/page-cache'
 import { ownedFrom, ownership, filterProducts, shopMoney, type ShopProduct, type ShopSort } from '@/lib/policy-shop-tab'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'
@@ -25,9 +26,11 @@ function withTimeout<T>(p: Promise<T>): Promise<T> {
 export function NewPoliciesTab({ token, email, orgName, name, libraryNames, isFree }: {
   token: string; email: string; orgName?: string; name?: string; libraryNames: string[]; isFree: boolean
 }) {
-  const [products, setProducts] = useState<ShopProduct[] | null>(null)
-  const [bundles, setBundles] = useState<Bundle[]>([])
-  const [purchases, setPurchases] = useState<PolicyPurchase[]>([])
+  const catKey = `admin-policy-shop-catalogue-${email}`
+  const ownKey = `admin-policy-shop-orders-${email}`
+  const [products, setProducts] = useState<ShopProduct[] | null>(() => persistentCache.get<any>(catKey)?.products ?? null)
+  const [bundles, setBundles] = useState<Bundle[]>(() => persistentCache.get<any>(catKey)?.bundles ?? [])
+  const [purchases, setPurchases] = useState<PolicyPurchase[]>(() => persistentCache.get<PolicyPurchase[]>(ownKey) ?? [])
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<ShopSort>('recommended')
@@ -36,16 +39,19 @@ export function NewPoliciesTab({ token, email, orgName, name, libraryNames, isFr
   const [buyError, setBuyError] = useState('')
 
   const load = useCallback(() => {
-    setError(''); setProducts(null)
+    setError('')
+    const hadCache = persistentCache.get<any>(catKey) !== undefined
+    if (!hadCache) setProducts(null)
     const cat = withTimeout(fetch(`${API_URL}/public/policy-shop/catalogue`).then(r => r.json()))
       .then((b: any) => {
         if (!b?.success) throw new Error(b?.error?.message ?? 'The catalogue is not available.')
         setProducts(b.data.products ?? []); setBundles(b.data.bundles ?? [])
+        persistentCache.set(catKey, { products: b.data.products ?? [], bundles: b.data.bundles ?? [] })
       })
     // Orders are only used to mark what is already owned; if they cannot be read the list still shows.
-    const own = withTimeout(createApiClient(token).policyPurchases.list()).then(r => setPurchases(r.purchases)).catch(() => {})
-    return Promise.all([cat, own]).catch((e: Error) => { setProducts([]); setError(e.message || 'We could not load the policies.') })
-  }, [token])
+    const own = withTimeout(createApiClient(token).policyPurchases.list()).then(r => { setPurchases(r.purchases); persistentCache.set(ownKey, r.purchases) }).catch(() => {})
+    return Promise.all([cat, own]).catch((e: Error) => { if (!hadCache) { setProducts([]); setError(e.message || 'We could not load the policies.') } })
+  }, [token, catKey, ownKey])
 
   useEffect(() => { load() }, [load])
 

@@ -3,7 +3,9 @@
 // Audit trends on the admin Audits page: repeat failures first, then each audit's score over time with
 // a detailed view (section trends and every question's results), and the homes in a group side by side.
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { useCachedQuery } from '@/lib/use-cached-query'
 import Link from 'next/link'
 import { createApiClient, type AuditInsights as Insights, type AuditTemplateInsights, type AuditGroupInsights } from '@/lib/api-client'
 import { AlertTriangle, ArrowDownRight, ArrowUpRight, Building2, Loader2, TrendingUp, X } from 'lucide-react'
@@ -28,18 +30,15 @@ function Sparkbars({ series }: { series: Array<{ month: string; pct: number }> }
 }
 
 export function AuditInsightsPanel({ token }: { token: string }) {
-  const [data, setData] = useState<Insights | null>(null)
-  const [group, setGroup] = useState<AuditGroupInsights | null>(null)
+  const { data: session } = useSession()
+  const uid = session?.user?.email ?? 'guest'
   const [months, setMonths] = useState(12)
-  const [loading, setLoading] = useState(true)
+  const iq = useCachedQuery<Insights>(`admin-audit-insights-${uid}-${months}`, () => createApiClient(token).audits.insights(months))
+  const gq = useCachedQuery<AuditGroupInsights>(`admin-audit-group-insights-${uid}`, () => createApiClient(token).audits.groupInsights(3))
+  const data = iq.data ?? null
+  const group = gq.data ?? null
+  const loading = iq.loading
   const [detail, setDetail] = useState<{ id: string; name: string } | null>(null)
-
-  useEffect(() => {
-    setLoading(true)
-    const api = createApiClient(token)
-    api.audits.insights(months).then(setData).catch(() => {}).finally(() => setLoading(false))
-    api.audits.groupInsights(3).then(setGroup).catch(() => {})
-  }, [token, months])
 
   if (loading && !data) return <div className="mb-6 h-28 animate-pulse rounded-card bg-gray-50" />
   if (!data || data.completed_runs === 0) return null
@@ -179,9 +178,11 @@ function GroupComparison({ group }: { group: AuditGroupInsights }) {
 const DOT: Record<string, string> = { pass: 'bg-green-500', fail: 'bg-rose-500', na: 'bg-gray-300', unanswered: 'bg-amber-300', info: 'bg-gray-200' }
 
 function TemplateDetail({ token, id, name, months, onClose }: { token: string; id: string; name: string; months: number; onClose: () => void }) {
-  const [d, setD] = useState<AuditTemplateInsights | null>(null)
-  const [error, setError] = useState('')
-  useEffect(() => { createApiClient(token).audits.templateInsights(id, months).then(setD).catch(e => setError(e?.message ?? 'Could not load.')) }, [token, id, months])
+  const { data: session } = useSession()
+  const uid = session?.user?.email ?? 'guest'
+  const tq = useCachedQuery<AuditTemplateInsights>(`admin-audit-template-insights-${uid}-${id}-${months}`, () => createApiClient(token).audits.templateInsights(id, months))
+  const d = tq.data ?? null
+  const error = d ? '' : (tq.error ?? '')
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>

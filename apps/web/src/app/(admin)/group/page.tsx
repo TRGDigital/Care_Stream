@@ -9,6 +9,7 @@ import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
 import { pageCache } from '@/lib/page-cache'
+import { useCachedQuery } from '@/lib/use-cached-query'
 import { Building2, Users, GraduationCap, ClipboardCheck, ShieldCheck, TrendingUp, AlertTriangle, Loader2, ArrowRight, Check, MessageSquareText, Activity } from 'lucide-react'
 
 type Overview = Awaited<ReturnType<ReturnType<typeof createApiClient>['sites']['overview']>>
@@ -52,17 +53,14 @@ function SummaryCard({ label, value, Icon, colour }: { label: string; value: str
 export default function GroupPage() {
   const { data: session } = useSession()
   const router = useRouter()
-  const [data, setData] = useState<Overview | null>(null)
-  const [loading, setLoading] = useState(true)
+  const userKey = session?.user?.email ?? 'guest'
+  const q = useCachedQuery<Overview>(
+    session?.accessToken ? `admin-group-${userKey}` : null,
+    () => createApiClient(session!.accessToken!).sites.overview(),
+  )
+  const data = q.data ?? null
+  const loading = q.loading
   const [switching, setSwitching] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!session?.accessToken) return
-    createApiClient(session.accessToken).sites.overview()
-      .then(setData)
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [session?.accessToken])
 
   async function openSite(id: string) {
     if (!session?.accessToken || switching) return

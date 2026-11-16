@@ -5,7 +5,10 @@
 // the API retires a question that already has answers and adds the new wording as a new question,
 // and every save becomes a new version (see the version history on the audits page).
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { useCachedQuery } from '@/lib/use-cached-query'
+import { persistentCache } from '@/lib/page-cache'
 import { createApiClient, type AuditEditorQuestion } from '@/lib/api-client'
 import { QUESTION_TYPES, QUESTION_TYPE_LABELS, isYesNo } from '@/lib/audit-questions'
 import { ArrowDown, ArrowUp, ChevronDown, Loader2, Plus, Trash2, X } from 'lucide-react'
@@ -43,19 +46,29 @@ export function AuditBuilder({ token, templateId, initial, importNotes, onClose,
   onCreated: () => void
 }) {
   const editing = !!templateId
-  const [loading, setLoading]     = useState(editing)
-  const [name, setName]           = useState('')
-  const [frequency, setFrequency] = useState('periodic')
-  const [description, setDesc]    = useState('')
-  const [scope, setScope]         = useState('none')
-  const [requiresShift, setRequiresShift] = useState(false)
-  const [version, setVersion]     = useState(0)
+  const { data: session } = useSession()
+  const uid = session?.user?.email ?? 'guest'
+  const structKey = `admin-audit-structure-${uid}-${templateId ?? 'new'}`
+  const cachedT = editing ? persistentCache.get<any>(structKey) : undefined
+  const toSections = (t: any): Section[] => t.sections.map((s: any) => ({ id: s.id, key: s.id ?? newKey(), title: s.title, questions: s.questions }))
+  const [name, setName]           = useState(cachedT?.name ?? '')
+  const [frequency, setFrequency] = useState(cachedT?.frequency ?? 'periodic')
+  const [description, setDesc]    = useState(cachedT?.description ?? '')
+  const [scope, setScope]         = useState(cachedT?.subject_scope ?? 'none')
+  const [requiresShift, setRequiresShift] = useState(cachedT?.requires_shift ?? false)
+  const [version, setVersion]     = useState(cachedT?.version ?? 0)
   const [changeNote, setChangeNote] = useState('')
-  const [sections, setSections]   = useState<Section[]>([{ id: null, key: newKey(), title: 'Questions', questions: [blankQuestion()] }])
+  const [sections, setSections]   = useState<Section[]>(() => cachedT ? toSections(cachedT) : [{ id: null, key: newKey(), title: 'Questions', questions: [blankQuestion()] }])
+  const appliedRef = useRef<Section[] | null>(null)
+  if (appliedRef.current === null && cachedT) appliedRef.current = sections
+  const tq = useCachedQuery<any>(editing && templateId ? structKey : null, async () => (await createApiClient(token).audits.templateStructure(templateId as string)).template)
+  const loading = editing && !tq.data && !tq.error
   const [open, setOpen]           = useState<string | null>(null)
-  const [modules, setModules]     = useState<Array<{ id: string; name: string }>>([])
+  const mq = useCachedQuery<Array<{ id: string; name: string }>>(!editing ? `admin-audit-f2f-modules-${uid}` : null, async () => (await createApiClient(token).faceToFace.modules()).modules)
+  const modules = mq.data ?? []
   const [moduleIds, setModuleIds] = useState<string[]>([])
-  const [statements, setStatements] = useState<Array<{ id: string; name: string; key_question: string }>>([])
+  const stq = useCachedQuery<Array<{ id: string; name: string; key_question: string }>>(`admin-audit-quality-statements-${uid}`, async () => (await createApiClient(token).audits.qualityStatements()).statements)
+  const statements = stq.data ?? []
   useEffect(() => {
     if (!initial) return
     setName(initial.name ?? ''); setDesc(initial.description ?? ''); setFrequency(initial.frequency ?? 'periodic')
@@ -65,18 +78,16 @@ export function AuditBuilder({ token, templateId, initial, importNotes, onClose,
   const [saving, setSaving]       = useState(false)
   const [error, setError]         = useState('')
 
+  // Apply the loaded structure: at once from cache, and swap in the fresh copy only while the form is still untouched.
   useEffect(() => {
-    const api = createApiClient(token)
-    api.audits.qualityStatements().then(d => setStatements(d.statements)).catch(() => {})
-    if (!editing) api.faceToFace.modules().then(d => setModules(d.modules)).catch(() => {})
-    if (editing && templateId) {
-      api.audits.templateStructure(templateId).then(({ template: t }) => {
-        setName(t.name); setFrequency(t.frequency); setDesc(t.description ?? ''); setScope(t.subject_scope)
-        setRequiresShift(t.requires_shift); setVersion(t.version)
-        setSections(t.sections.map(s => ({ id: s.id, key: s.id ?? newKey(), title: s.title, questions: s.questions })))
-      }).catch(e => setError(e?.message ?? 'Could not load the audit.')).finally(() => setLoading(false))
-    }
-  }, [token, templateId, editing])
+    const t = tq.data
+    if (!t) return
+    if (appliedRef.current !== null && sections !== appliedRef.current) return
+    setName(t.name); setFrequency(t.frequency); setDesc(t.description ?? ''); setScope(t.subject_scope)
+    setRequiresShift(t.requires_shift); setVersion(t.version)
+    const next = toSections(t); appliedRef.current = next; setSections(next)
+  }, [tq.data]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (tq.error && !tq.data) setError(tq.error) }, [tq.error]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Every question in order, for condition pickers (a condition may only point at an earlier question).
   const ordered = useMemo(() => sections.flatMap(s => s.questions), [sections])

@@ -1,6 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { useCachedQuery } from '@/lib/use-cached-query'
+import { hubKey, persistentCache } from '@/lib/page-cache'
 import { createApiClient } from '@/lib/api-client'
 import { TrainingRatingCard } from '@/components/hub/training-rating-card'
 import { SuggestTranslation } from '@/components/hub/suggest-translation'
@@ -280,8 +283,11 @@ function ResultCard({ delivery, token, onUpdated, showRating = false, lang }: {
 // standalone /cqc route. onChange lets the host refresh the pending-count badge.
 
 export function CqcView({ token, onChange, secondLang = null }: { token: string; onChange?: () => void; secondLang?: { name: string } | null }) {
-  const [deliveries, setDeliveries] = useState<Delivery[]>([])
-  const [loading, setLoading]       = useState(true)
+  const { data: session } = useSession()
+  const cqcKey = hubKey('cqc', session?.user?.email ?? 'guest')
+  const cqcCached = persistentCache.get<{ deliveries: Delivery[]; can_suggest: boolean; lang_code?: string }>(cqcKey)
+  const [deliveries, setDeliveries] = useState<Delivery[]>(cqcCached?.deliveries ?? [])
+  const [loading, setLoading]       = useState(!cqcCached)
   const [error, setError]           = useState('')
   const [expanded, setExpanded]     = useState<string | null>(null)        // question card open
   const [openDomains, setOpenDomains] = useState<Set<string>>(new Set())   // domain accordions open
@@ -291,8 +297,8 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
   const [second, setSecond] = useState<Record<string, Delivery> | null>(null)  // 2nd-language copies by id (lazy)
   const [loadingSecond, setLoadingSecond] = useState(false)
   const [langById, setLangById] = useState<Record<string, boolean>>({})
-  const [canSuggest, setCanSuggest] = useState(false)
-  const [langCode, setLangCode] = useState('eng')
+  const [canSuggest, setCanSuggest] = useState(!!cqcCached?.can_suggest)
+  const [langCode, setLangCode] = useState(cqcCached?.lang_code ?? 'eng')
   const [canSuggest2, setCanSuggest2] = useState(false)
   const [langCode2, setLangCode2] = useState('eng')
   const toggleDomain = (key: string) =>
@@ -360,6 +366,7 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
       const api = createApiClient(token)
       const res = await api.cqcQuestions.myDeliveries()
       setDeliveries(res.deliveries)
+      persistentCache.set(cqcKey, { deliveries: res.deliveries, can_suggest: !!res.can_suggest, lang_code: res.lang_code })
       setCanSuggest(!!res.can_suggest); setLangCode(res.lang_code ?? 'eng')
       const first = res.deliveries.find((d: Delivery) => d.status === 'pending')
       if (first) { setExpanded(first.id); setOpenDomains(new Set([`p:${first.question.domain}`])) }
@@ -368,7 +375,7 @@ export function CqcView({ token, onChange, secondLang = null }: { token: string;
     } finally {
       setLoading(false)
     }
-  }, [token])
+  }, [token, cqcKey])
 
   useEffect(() => { load() }, [load])
 

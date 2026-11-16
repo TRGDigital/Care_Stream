@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { persistentCache } from '@/lib/page-cache'
 import { createApiClient } from '@/lib/api-client'
 import { highlightStaleTerms, highlightSearch, quoteColour, findPhraseBlocks, normPolicyText } from '@/lib/policy-preview'
 import { buildPolicyDiffHtml } from '@/lib/policy-diff'
@@ -22,7 +24,10 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   onClose:    () => void
   onAdopted?: () => void
 }) {
-  const [html, setHtml] = useState<string | null>(null)
+  const { data: lintSess } = useSession()
+  const lintKey = `admin-policy-lint-preview-${lintSess?.user?.email ?? 'guest'}-${policyId}`
+  const lc0 = persistentCache.get<any>(lintKey)
+  const [html, setHtml] = useState<string | null>(lc0?.html ?? null)
   const [previewLoad, setPreviewLoad] = useState(false)
   const [previewErr, setPreviewErr] = useState('')
   const [policySearch, setPolicySearch] = useState('')
@@ -108,10 +113,10 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   const [markCounts, setMarkCounts] = useState<Record<number, number>>({})  // highlighted occurrences per number
   // Changes already applied to the draft (any session). Replayed onto the preview so the policy
   // side shows what's been changed, and listed under a collapsible "already updated" summary.
-  const [appliedChanges, setAppliedChanges] = useState<Array<{ reference_key: string; requirement: string; old_text: string; new_text: string; placement: string }>>([])
-  const [draftContent, setDraftContent] = useState<string | null>(null)   // the draft, to verify a change actually landed
+  const [appliedChanges, setAppliedChanges] = useState<Array<{ reference_key: string; requirement: string; old_text: string; new_text: string; placement: string }>>(lc0?.applied ?? [])
+  const [draftContent, setDraftContent] = useState<string | null>(lc0?.draft ?? null)   // the draft, to verify a change actually landed
   const [showCompleted, setShowCompleted] = useState(false)
-  const [isDiff, setIsDiff] = useState(false)   // right panel is the original→draft diff (vs a plain policy)
+  const [isDiff, setIsDiff] = useState(!!lc0?.isDiff)   // right panel is the original→draft diff (vs a plain policy)
   const [navPos, setNavPos] = useState<Record<number, number>>({})  // 1-based occurrence last shown per number
   const cycleRef = useRef<Record<number, number>>({})               // next occurrence index per number
 
@@ -228,27 +233,32 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
   // fuzzy matching, so tenants see exactly what changed on every policy. With no draft yet, fall back
   // to the formatted policy so outstanding findings can still be highlighted.
   useEffect(() => {
-    setPreviewLoad(true)
+    const cached = persistentCache.get<any>(lintKey)
+    if (cached) { setHtml(cached.html); setAppliedChanges(cached.applied); setDraftContent(cached.draft); setIsDiff(!!cached.isDiff) }
+    else setPreviewLoad(true)
     const client = createApiClient(token)
     client.analytics.policyDocument(policyId)
       .then(d => {
-        setAppliedChanges((d.changes ?? []).map(c => ({
+        const applied = (d.changes ?? []).map(c => ({
           reference_key: c.reference_key, requirement: c.requirement, old_text: c.old_text, new_text: c.new_text, placement: c.placement,
-        })))
+        }))
+        setAppliedChanges(applied)
         const draft = d.document?.draft_content ?? ''
         const original = d.document?.original_content ?? null
         setDraftContent(draft)
         if (original != null && original.trim()) {
           setIsDiff(true)
-          setHtml(buildPolicyDiffHtml(original, draft))
+          const dh = buildPolicyDiffHtml(original, draft)
+          setHtml(dh)
+          persistentCache.set(lintKey, { html: dh, applied, draft, isDiff: true })
           setPreviewLoad(false)
           return
         }
         // No draft document yet — show the formatted policy for context.
         setIsDiff(false)
         client.policies.preview(policyId, { base: true })
-          .then(p => setHtml(p.html || ''))
-          .catch(e => setPreviewErr(e.message ?? 'Could not load the policy.'))
+          .then(p => { setHtml(p.html || ''); persistentCache.set(lintKey, { html: p.html || '', applied, draft, isDiff: false }) })
+          .catch(e => { if (!cached) setPreviewErr(e.message ?? 'Could not load the policy.') })
           .finally(() => setPreviewLoad(false))
       })
       .catch(() => {
@@ -258,7 +268,7 @@ export function PolicyLintModal({ token, policyId, policyName, findings, onClose
           .catch(e => setPreviewErr(e.message ?? 'Could not load the policy.'))
           .finally(() => setPreviewLoad(false))
       })
-  }, [token, policyId])
+  }, [token, policyId, lintKey])
 
   // Re-highlight whenever the policy loads or the search term changes: reset to the original
   // HTML, tint + number each stale phrase's block, then apply the search highlights.

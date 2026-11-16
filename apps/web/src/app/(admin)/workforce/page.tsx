@@ -81,8 +81,8 @@ export default function WorkforcePage() {
 
   const userId = session?.user?.email ?? 'guest'
   const regKey = `admin-workforce-register-${userId}`
-  const [data, setData] = useState<Register | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState<Register | null>(() => persistentCache.get<Register>(regKey) ?? null)
+  const [loading, setLoading] = useState(() => persistentCache.get<Register>(regKey) === undefined)
   const [editing, setEditing] = useState<StaffRow | null>(null)
   // Deep-linkable: /workforce?tab=supervisions opens straight on that tab
   // (used by CareStream Suggestions and anywhere else that links to a tab).

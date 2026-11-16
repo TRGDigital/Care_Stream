@@ -5,6 +5,8 @@
 
 import { useEffect, useState } from 'react'
 import { createApiClient } from '@/lib/api-client'
+import { useSession } from 'next-auth/react'
+import { persistentCache } from '@/lib/page-cache'
 import { AlertCircle, CheckCircle2, ExternalLink, Loader2, Save, X } from 'lucide-react'
 import { fmt, DAY_NAMES, type Module, type Staff } from './training-shared'
 
@@ -137,14 +139,16 @@ export function EnrollmentModal({ api, enrollmentId, onClose, onUpdated }: {
   onClose:      () => void
   onUpdated:    () => void
 }) {
-  const [data,       setData]       = useState<any>(null)
-  const [loading,    setLoading]    = useState(true)
+  const { data: session } = useSession()
+  const encKey = `admin-training-enrollment-${session?.user?.email ?? 'guest'}-${enrollmentId}`
+  const [data,       setData]       = useState<any>(() => persistentCache.get<any>(encKey) ?? null)
+  const [loading,    setLoading]    = useState(() => persistentCache.get<any>(encKey) === undefined)
   const [completing, setCompleting] = useState(false)
   const [removing,   setRemoving]   = useState(false)
 
   useEffect(() => {
     api.training.getEnrollment(enrollmentId)
-      .then(d => setData(d.enrollment))
+      .then(d => { setData(d.enrollment); persistentCache.set(encKey, d.enrollment) })
       .finally(() => setLoading(false))
   }, [enrollmentId])
 

@@ -114,7 +114,7 @@ export default function AuditsPage() {
         if (merged.length !== ids.length) ids = (await api.audits.replaceFavourites(merged).catch(() => null))?.ids ?? ids
         try { localStorage.removeItem(key) } catch { /* ignore */ }
       }
-      setFavs(ids)
+      setFavs(ids); persistentCache.set(`admin-audit-favs-${userId}`, ids)
     }).catch(() => setFavs(legacy))
   }, [session?.accessToken, userId])
   // Audits suggested from the care service the home chose, until dismissed. Each person can hide the panel.
@@ -123,7 +123,7 @@ export default function AuditsPage() {
   useEffect(() => {
     if (!session?.accessToken) return
     try { setSuggestHidden(localStorage.getItem(`cs-audit-suggest-off-${userId}`) === '1') } catch { /* private mode */ }
-    createApiClient(session.accessToken).audits.suggested().then(r => setSuggested({ setting_label: r.setting_label, ids: r.ids })).catch(() => {})
+    createApiClient(session.accessToken).audits.suggested().then(r => { setSuggested({ setting_label: r.setting_label, ids: r.ids }); persistentCache.set(`admin-audit-suggested-${userId}`, { setting_label: r.setting_label, ids: r.ids }) }).catch(() => {})
   }, [session?.accessToken, userId])
   function hideSuggested() { setSuggestHidden(true); try { localStorage.setItem(`cs-audit-suggest-off-${userId}`, '1') } catch { /* ignore */ } }
   function toggleFav(id: string) {
@@ -137,7 +137,7 @@ export default function AuditsPage() {
   const [trainingLinks, setTrainingLinks] = useState<Record<string, string[]>>({})
   useEffect(() => {
     if (!session?.accessToken) return
-    createApiClient(session.accessToken).audits.trainingLinks().then(r => setTrainingLinks(r.links)).catch(() => {})
+    createApiClient(session.accessToken).audits.trainingLinks().then(r => { setTrainingLinks(r.links); persistentCache.set(`admin-audit-links-${userId}`, r.links) }).catch(() => {})
   }, [session?.accessToken])
   const [deleting,    setDeleting]    = useState<string | null>(null)
   const [confirming,  setConfirming]  = useState(false)
@@ -159,7 +159,15 @@ export default function AuditsPage() {
   // render, to avoid an SSR/client hydration mismatch.
   useEffect(() => {
     const cached = persistentCache.get<{ templates: any[]; runs: any[] }>(`admin-audits-${userId}`)
-    if (cached) { setTemplates(cached.templates); setRuns(cached.runs); setLoading(false) }
+    const meta = persistentCache.get<{ rooms: string[]; staff: string[]; me: { name?: string; job_role?: string } | null }>(`admin-audits-meta-${userId}`)
+    if (cached) {
+      setTemplates(cached.templates); setRuns(cached.runs); setLoading(false)
+      const first = cached.templates.find((x: any) => !x.hidden); if (first) setSelTemplate(v => v || first.id)
+    }
+    if (meta) { setRooms(meta.rooms); setStaff(meta.staff); setAuditorName(v => v || (meta.me?.name ?? '')); setAuditorRole(v => v || (meta.me?.job_role ?? '')) }
+    const cFavs = persistentCache.get<string[]>(`admin-audit-favs-${userId}`); if (cFavs) setFavs(cFavs)
+    const cSug = persistentCache.get<{ setting_label: string; ids: string[] }>(`admin-audit-suggested-${userId}`); if (cSug) setSuggested(cSug)
+    const cLinks = persistentCache.get<Record<string, string[]>>(`admin-audit-links-${userId}`); if (cLinks) setTrainingLinks(cLinks)
     const cachedPlans = persistentCache.get<typeof actionPlans>(`admin-action-plans-${userId}`)
     if (cachedPlans) setActionPlans(cachedPlans)
   }, [userId])
@@ -168,7 +176,7 @@ export default function AuditsPage() {
     if (!session?.accessToken) return
     const api = createApiClient(session.accessToken)
     Promise.all([api.audits.templates({ includeHidden: true }), api.audits.runs()])
-      .then(([t, r]) => { setTemplates(t.templates); setRooms(t.rooms ?? []); setStaff(t.staff ?? []); setRuns(r.runs); { const first = t.templates.find((x: any) => !x.hidden); if (first) setSelTemplate(first.id) } setAuditorName(v => v || (t.me?.name ?? '')); setAuditorRole(v => v || (t.me?.job_role ?? '')); persistentCache.set(`admin-audits-${userId}`, { templates: t.templates, runs: r.runs }) })
+      .then(([t, r]) => { setTemplates(t.templates); setRooms(t.rooms ?? []); setStaff(t.staff ?? []); setRuns(r.runs); { const first = t.templates.find((x: any) => !x.hidden); if (first) setSelTemplate(first.id) } setAuditorName(v => v || (t.me?.name ?? '')); setAuditorRole(v => v || (t.me?.job_role ?? '')); persistentCache.set(`admin-audits-${userId}`, { templates: t.templates, runs: r.runs }); persistentCache.set(`admin-audits-meta-${userId}`, { rooms: t.rooms ?? [], staff: t.staff ?? [], me: t.me ?? null }) })
       .catch(() => {})
       .finally(() => setLoading(false))
     api.audits.actionPlans().then(d => { setActionPlans(d.plans); persistentCache.set(`admin-action-plans-${userId}`, d.plans) }).catch(() => {})
@@ -184,7 +192,10 @@ export default function AuditsPage() {
   async function reloadTemplates() {
     if (!session?.accessToken) return
     const t = await createApiClient(session.accessToken).audits.templates({ includeHidden: true }).catch(() => null)
-    if (t) { setTemplates(t.templates); setRooms(t.rooms ?? []); setStaff(t.staff ?? []) }
+    if (t) {
+      setTemplates(t.templates); setRooms(t.rooms ?? []); setStaff(t.staff ?? [])
+      persistentCache.set(`admin-audits-${userId}`, { templates: t.templates, runs: runs })
+    }
   }
   async function removeTemplate(id: string, name: string) {
     if (!session?.accessToken) return

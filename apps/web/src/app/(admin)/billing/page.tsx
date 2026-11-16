@@ -157,6 +157,8 @@ export default function BillingPage() {
     const cached = persistentCache.get<{ summary: any; invoices: any[] }>(`admin-billing-${userId}`)
     if (cached) { setSummary(cached.summary); setInvoices(cached.invoices); setLoading(false) }
     // Training-only clients load purchases instead — same instant-paint treatment.
+    const cachedPlans = persistentCache.get<any[]>(`admin-billing-plans-${userId}`)
+    if (cachedPlans) setPlans(cachedPlans)
     const cachedPurchases = persistentCache.get<any[]>(`admin-billing-purchases-${userId}`)
     if (cachedPurchases) { setPurchases(cachedPurchases); setLoading(false) }
   }, [userId])
@@ -172,7 +174,7 @@ export default function BillingPage() {
       return
     }
     Promise.all([api.billing.summary(), api.billing.invoices(), api.billing.plans()])
-      .then(([s, inv, pl]) => { setSummary(s); setInvoices(inv.invoices); setPlans(pl.plans); persistentCache.set(`admin-billing-${userId}`, { summary: s, invoices: inv.invoices }) })
+      .then(([s, inv, pl]) => { setSummary(s); setInvoices(inv.invoices); setPlans(pl.plans); persistentCache.set(`admin-billing-plans-${userId}`, pl.plans); persistentCache.set(`admin-billing-${userId}`, { summary: s, invoices: inv.invoices }) })
       .catch((e: any) => setError(e.message ?? 'Failed to load billing information.'))
       .finally(() => setLoading(false))
   }, [session?.accessToken, trainingOnly])

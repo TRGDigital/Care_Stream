@@ -177,8 +177,8 @@ export default function GapsPage() {
   const { features, loading: planLoading } = usePlanFeatures()
   const locked = !!features && !features.has_gap_detection
   const userId = session?.user?.email ?? 'guest'
-  const [data,    setData]    = useState<GapsData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [data,    setData]    = useState<GapsData | null>(() => persistentCache.get<GapsData>(`admin-gaps-${userId}`) ?? null)
+  const [loading, setLoading] = useState(() => persistentCache.get<GapsData>(`admin-gaps-${userId}`) === undefined)
   const [error,   setError]   = useState('')
   // A plan limit or the free re-run rule is not a failure: show it above the results, never instead of them.
   const [notice,  setNotice]  = useState<{ code?: string; message: string } | null>(null)
@@ -194,11 +194,11 @@ export default function GapsPage() {
   const [showArchive, setShowArchive] = useState(false)
   const [showCoverage, setShowCoverage] = useState(false)
   // First-run gate before analysis: org-details check → disclaimer → AI-credits notice, one at a time.
-  const [orgDetails, setOrgDetails] = useState<Record<string, string> | null>(null)
+  const [orgDetails, setOrgDetails] = useState<Record<string, string> | null>(() => persistentCache.get<Record<string, string>>(`admin-gaps-org-${userId}`) ?? null)
   const [orgSkipped, setOrgSkipped] = useState(false)
   const [firstRunStep, setFirstRunStep] = useState<'org' | 'disclaimer' | 'credits' | null>(null)
   // Guided pipeline: per-step run/stale status + adopted changes still awaiting review.
-  const [pipeline, setPipeline] = useState<PipelineData | null>(null)
+  const [pipeline, setPipeline] = useState<PipelineData | null>(() => persistentCache.get<PipelineData>(`admin-gaps-pipeline-${userId}`) ?? null)
   // When a run button is clicked while adopted changes are pending, the run is parked
   // here until the tenant confirms (Run anyway) or cancels.
   const [pendingRun, setPendingRun] = useState<{ run: () => void } | null>(null)
@@ -219,13 +219,13 @@ export default function GapsPage() {
   // Resumable runs: did a previous batch analysis stop part-way? Fetched once on load
   // (alongside the pipeline) and refreshed after every run, so each section can offer
   // Resume instead of a destructive fresh start.
-  const [runState, setRunState] = useState<RunStateData | null>(null)
+  const [runState, setRunState] = useState<RunStateData | null>(() => persistentCache.get<RunStateData>(`admin-gaps-runstate-${userId}`) ?? null)
   const loadRunState = useCallback(() => {
     if (!session?.accessToken) return
     createApiClient(session.accessToken).analytics.gapsRunState()
-      .then(setRunState)
+      .then(d => { setRunState(d); persistentCache.set(`admin-gaps-runstate-${userId}`, d) })
       .catch(() => { /* the resume offer is best-effort */ })
-  }, [session?.accessToken])
+  }, [session?.accessToken, userId])
   const runStateFor = useCallback(
     (section: SectionRunState['section']) => runState?.sections.find(s => s.section === section),
     [runState]
@@ -379,9 +379,9 @@ export default function GapsPage() {
   useEffect(() => {
     if (!session?.accessToken || locked) return
     createApiClient(session.accessToken).settings.get()
-      .then(s => setOrgDetails(((s as any).organisation_details ?? {}) as Record<string, string>))
-      .catch(() => setOrgDetails({}))
-  }, [session?.accessToken, locked])
+      .then(s => { const o = ((s as any).organisation_details ?? {}) as Record<string, string>; setOrgDetails(o); persistentCache.set(`admin-gaps-org-${userId}`, o) })
+      .catch(() => { if (persistentCache.get(`admin-gaps-org-${userId}`) === undefined) setOrgDetails({}) })
+  }, [session?.accessToken, locked, userId])
 
   // Organisation-details completeness. These fields personalise the policies, so they matter
   // for the analysis. An approver counts if either the default approver or registered manager is set.
@@ -1022,14 +1022,16 @@ type LintData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics
 function RecentlyUpdatedSection({ token }: { token: string }) {
   type Row = { policy_id: string; policy_name: string; section: 'out_of_date' | 'wording'; resolved_by: string | null; resolved_at: string }
   const [open, setOpen] = useState(false)
-  const [rows, setRows] = useState<Row[]>([])
+  const { data: ruSess } = useSession()
+  const ruKey = `admin-gaps-recently-updated-${ruSess?.user?.email ?? 'guest'}`
+  const [rows, setRows] = useState<Row[]>(() => persistentCache.get<Row[]>(ruKey) ?? [])
   const [loadErr, setLoadErr] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoadErr(false)
-    try { const r = await createApiClient(token).analytics.reviewResolutions(); setRows(r.resolutions) } catch { setLoadErr(true) }
-  }, [token])
+    try { const r = await createApiClient(token).analytics.reviewResolutions(); setRows(r.resolutions); persistentCache.set(ruKey, r.resolutions) } catch { setLoadErr(true) }
+  }, [token, ruKey])
   useEffect(() => { load() }, [load])
 
   async function undo(row: Row) {
@@ -1090,8 +1092,8 @@ function RecentlyUpdatedSection({ token }: { token: string }) {
 }
 
 function PolicyHealthSection({ token, userId, stepInfo, confirmRun, onRunComplete, pendingPolicies }: { token: string; userId: string; stepInfo?: PipelineSection; confirmRun: (run: () => void) => void; onRunComplete: () => void; pendingPolicies: number }) {
-  const [data, setData] = useState<LintData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState<LintData | null>(() => persistentCache.get<LintData>(`admin-policy-lint-${userId}`) ?? null)
+  const [loading, setLoading] = useState(() => persistentCache.get<LintData>(`admin-policy-lint-${userId}`) === undefined)
   const [loadErr, setLoadErr] = useState(false)
   const [scanning, setScanning] = useState(false)
   const [selected, setSelected] = useState<LintData['policies'][number] | null>(null)
@@ -1315,8 +1317,8 @@ function ReviewDateCell({ token, row, onSaved }: { token: string; row: MatrixRow
 }
 
 function PolicyMatrixSection({ token, userId }: { token: string; userId: string }) {
-  const [data, setData] = useState<MatrixData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState<MatrixData | null>(() => persistentCache.get<MatrixData>(`admin-matrix-${userId}`) ?? null)
+  const [loading, setLoading] = useState(() => persistentCache.get<MatrixData>(`admin-matrix-${userId}`) === undefined)
   const [loadErr, setLoadErr] = useState(false)
   const [open, setOpen] = useState(false)
   const [openUpdated, setOpenUpdated] = useState(false)
@@ -1472,8 +1474,8 @@ type Conflict = ConsistencyData['conflicts'][number]
 const CSEV: Record<string, string> = { high: 'bg-rose-50 text-rose-700', medium: 'bg-amber-50 text-amber-700', low: 'bg-slate-100 text-slate-600' }
 
 function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunComplete, pendingPolicies, runState }: { token: string; userId: string; stepInfo?: PipelineSection; confirmRun: (run: () => void) => void; onRunComplete: () => void; pendingPolicies: number; runState?: SectionRunState }) {
-  const [data, setData] = useState<ConsistencyData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState<ConsistencyData | null>(() => persistentCache.get<ConsistencyData>(`admin-consistency-${userId}`) ?? null)
+  const [loading, setLoading] = useState(() => persistentCache.get<ConsistencyData>(`admin-consistency-${userId}`) === undefined)
   const [loadErr, setLoadErr] = useState(false)
   const [running, setRunning] = useState(false)
   const [progress, setProgress] = useState<string | null>(null)
@@ -1640,8 +1642,8 @@ function PolicyConsistencySection({ token, userId, stepInfo, confirmRun, onRunCo
 type WordingData = Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['wordingAlignment']>>
 
 function PolicyWordingAlignmentSection({ token, userId, stepInfo, confirmRun, onRunComplete, pendingPolicies, runState }: { token: string; userId: string; stepInfo?: PipelineSection; confirmRun: (run: () => void) => void; onRunComplete: () => void; pendingPolicies: number; runState?: SectionRunState }) {
-  const [data, setData]       = useState<WordingData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [data, setData]       = useState<WordingData | null>(() => persistentCache.get<WordingData>(`admin-wording-${userId}`) ?? null)
+  const [loading, setLoading] = useState(() => persistentCache.get<WordingData>(`admin-wording-${userId}`) === undefined)
   const [loadErr, setLoadErr] = useState(false)
   const [running, setRunning] = useState(false)
   const [progress, setProgress] = useState<string | null>(null)

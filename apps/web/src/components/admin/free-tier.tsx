@@ -4,10 +4,11 @@
 // the upgrade prompts, the locked-section overlay and the free dashboard. Nothing here renders for
 // any other tier: callers check `useIsFree()` (the session tier) first.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { ArrowRight, Check, ClipboardCheck, FileText, GraduationCap, Loader2, Lock, ScanSearch, Sparkles, UserPlus, X } from 'lucide-react'
+import { useCachedQuery } from '@/lib/use-cached-query'
 import { createApiClient, errorCode, isUpgradeCode } from '@/lib/api-client'
 
 export function useIsFree(): boolean {
@@ -122,10 +123,16 @@ export function PlanLimitNotice({ error, token }: { error: unknown; token?: stri
 // ─── Policies: "X of 5 policies used" ─────────────────────────────────────────
 
 export function PolicyAllowanceStrip({ token, refreshKey = 0, onAllowance }: { token: string; refreshKey?: number; onAllowance?: (a: { used: number; limit: number | null; remaining: number | null }) => void }) {
-  const [a, setA] = useState<{ used: number; limit: number | null; remaining: number | null } | null>(null)
-  useEffect(() => {
-    createApiClient(token).policies.allowance().then(r => { if (r.limited) { setA(r); onAllowance?.(r) } }).catch(() => {})
-  }, [token, refreshKey]) // eslint-disable-line react-hooks/exhaustive-deps
+  const { data: session } = useSession()
+  const uk = session?.user?.email ?? 'guest'
+  const q = useCachedQuery<{ used: number; limit: number | null; remaining: number | null; limited?: boolean } | null>(
+    `admin-free-allowance-${uk}`,
+    async () => { const r = await createApiClient(token).policies.allowance(); return r.limited ? r as any : null },
+  )
+  const a = q.data ?? null
+  const firstRef = useRef(true)
+  useEffect(() => { if (firstRef.current) { firstRef.current = false; return } q.reload() }, [refreshKey]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (a) onAllowance?.(a) }, [a?.used, a?.limit, a?.remaining]) // eslint-disable-line react-hooks/exhaustive-deps
   if (!a || a.limit === null) return null
   const full = (a.remaining ?? 0) <= 0
   return (
@@ -281,19 +288,23 @@ export function LockedRecommendations({ summary, token }: { summary?: FindingsRo
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export function FreeDashboard({ token, name }: { token: string; name?: string | null }) {
-  const [audits, setAudits] = useState<number | null>(null)
-  const [policies, setPolicies] = useState<{ used: number; limit: number | null } | null>(null)
-  const [staff, setStaff] = useState<number | null>(null)
-  const [gapsRan, setGapsRan] = useState<boolean | null>(null)
-  const [cpdAssigned, setCpdAssigned] = useState<boolean | null>(null)
-  useEffect(() => {
+  const { data: session } = useSession()
+  const uk = session?.user?.email ?? 'guest'
+  const q = useCachedQuery(`admin-free-dash-${uk}`, async () => {
     const api = createApiClient(token)
-    api.training.compliance().then((r: any) => setCpdAssigned((r.enrollments ?? []).length > 0)).catch(() => setCpdAssigned(false))
-    api.audits.runs().then((r: any) => setAudits((r.runs ?? []).filter((x: any) => x.status === 'completed').length)).catch(() => setAudits(0))
-    api.policies.allowance().then(r => setPolicies(r)).catch(() => {})
-    api.users.list().then((r: any) => setStaff((r.users ?? r ?? []).length)).catch(() => {})
-    api.analytics.gapsPipeline().then((p: any) => setGapsRan((p.sections ?? []).some((s: any) => s.ran_at))).catch(() => setGapsRan(false))
-  }, [token])
+    const [c, au, po, st, ga] = await Promise.allSettled([
+      api.training.compliance(), api.audits.runs(), api.policies.allowance(), api.users.list(), api.analytics.gapsPipeline(),
+    ])
+    const v = (x: PromiseSettledResult<any>) => (x.status === 'fulfilled' ? x.value : undefined) as any
+    return {
+      cpdAssigned: ((v(c)?.enrollments ?? []).length > 0) as boolean,
+      audits: (v(au)?.runs ?? []).filter((x: any) => x.status === 'completed').length as number,
+      policies: (v(po) ?? null) as { used: number; limit: number | null } | null,
+      staff: (v(st) ? (v(st).users ?? v(st) ?? []).length : null) as number | null,
+      gapsRan: ((v(ga)?.sections ?? []).some((s: any) => s.ran_at)) as boolean,
+    }
+  })
+  const { audits = null, policies = null, staff = null, cpdAssigned = null, gapsRan = null } = q.data ?? {}
   const steps = [
     { done: cpdAssigned === true, href: '/training/annual', Icon: GraduationCap, title: 'Start free CPD training', body: 'Assign the Care Certificate and annual refreshers to your team.' },
     { done: (audits ?? 0) > 0, href: '/audits', Icon: ClipboardCheck, title: 'Run your first audit', body: 'Every audit template is included.' },

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import { persistentCache } from '@/lib/page-cache'
 import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
 import { InfoTip } from '@/components/info-tip'
 import { TrainingCertificate } from '@/components/training-certificate'
@@ -149,8 +150,10 @@ export default function StaffRecordPage() {
   const { data: session } = useSession()
   const token       = session?.accessToken ?? ''
 
-  const [rec,      setRec]      = useState<any>(null)
-  const [loading,  setLoading]  = useState(true)
+  const uid = session?.user?.email ?? 'guest'
+  const recKey = `admin-staff-record-${uid}-${id}`
+  const [rec,      setRec]      = useState<any>(() => persistentCache.get<any>(recKey) ?? null)
+  const [loading,  setLoading]  = useState(() => persistentCache.get<any>(recKey) === undefined)
   const [note,     setNote]     = useState('')
   const [busy,     setBusy]     = useState<string | null>(null)
   const [certItem, setCertItem] = useState<any>(null)
@@ -158,27 +161,34 @@ export default function StaffRecordPage() {
 
   const load = useCallback(() => {
     if (!token) return
-    createApiClient(token).users.record(id).then(setRec).catch(() => {}).finally(() => setLoading(false))
-  }, [token, id])
+    createApiClient(token).users.record(id).then(r => { setRec(r); persistentCache.set(recKey, r) }).catch(() => {}).finally(() => setLoading(false))
+  }, [token, id, recKey])
+  useEffect(() => {
+    const c = persistentCache.get<any>(recKey)
+    if (c) { setRec(c); setLoading(false) }
+  }, [recKey])
   useEffect(load, [load])
 
   // Compliance credentials (Enterprise only) — shown as a read-only section.
   const { features } = usePlanFeatures()
   const hasWorkforce = hasFeature(features, 'has_workforce_compliance')
-  const [compliance, setCompliance] = useState<any>(null)
-  const [supervisions, setSupervisions] = useState<any>(null)
+  const compKey = `admin-staff-compliance-${uid}-${id}`
+  const supKey = `admin-staff-supervisions-${uid}-${id}`
+  const actKey = `admin-staff-actions-${uid}-${id}`
+  const [compliance, setCompliance] = useState<any>(() => persistentCache.get<any>(compKey) ?? null)
+  const [supervisions, setSupervisions] = useState<any>(() => persistentCache.get<any>(supKey) ?? null)
   const [viewSup, setViewSup] = useState<any>(null)
-  const [actions, setActions] = useState<any>(null)
+  const [actions, setActions] = useState<any>(() => persistentCache.get<any>(actKey) ?? null)
   useEffect(() => {
     if (!token || !hasWorkforce) return
     const api = createApiClient(token)
-    api.workforce.staff(id).then(setCompliance).catch(() => {})
-    api.workforce.staffSupervisions(id).then(setSupervisions).catch(() => {})
-  }, [token, id, hasWorkforce])
+    api.workforce.staff(id).then(r => { setCompliance(r); persistentCache.set(compKey, r) }).catch(() => {})
+    api.workforce.staffSupervisions(id).then(r => { setSupervisions(r); persistentCache.set(supKey, r) }).catch(() => {})
+  }, [token, id, hasWorkforce, compKey, supKey])
   useEffect(() => {
     if (!token) return
-    createApiClient(token).users.actions(id).then(setActions).catch(() => {})
-  }, [token, id])
+    createApiClient(token).users.actions(id).then(r => { setActions(r); persistentCache.set(actKey, r) }).catch(() => {})
+  }, [token, id, actKey])
   async function viewComplianceDoc(type: string) {
     try {
       const blob = await createApiClient(token).workforce.downloadDocument(id, type)

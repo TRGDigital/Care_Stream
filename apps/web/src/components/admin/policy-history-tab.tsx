@@ -12,6 +12,7 @@
 // rows would read as lost history rather than as nothing having happened yet.
 
 import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { createApiClient, type PolicyHistoryEntry } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import EditablePolicyBody from '@/components/admin/editable-policy-body'
@@ -23,7 +24,6 @@ const when = (iso: string) =>
 
 const STAGE: Record<string, string> = { admin: 'Admin', manager: 'Care manager', external: 'External reviewer' }
 
-const CACHE_KEY = 'policy-history'
 
 // Policy text is stored as it was extracted from the source document, where every line was hard
 // wrapped to that document's page width. Honouring those breaks renders a policy as a ragged
@@ -57,6 +57,8 @@ export function PolicyHistoryTab({ token }: { token: string }) {
   // is published, which is rare, so a stale minute costs nothing and a spinner on every tab
   // switch costs attention. Refreshed quietly behind whatever is already on screen, and there
   // is a manual refresh for anyone who wants to be sure.
+  const { data: sess } = useSession()
+  const CACHE_KEY = `policy-history-${sess?.user?.email ?? 'guest'}`
   const [history, setHistory] = useState<PolicyHistoryEntry[] | null>(
     () => persistentCache.get<PolicyHistoryEntry[]>(CACHE_KEY) ?? null)
   const [error, setError] = useState('')
@@ -80,7 +82,12 @@ export function PolicyHistoryTab({ token }: { token: string }) {
       .finally(() => setRefreshing(false))
   }
 
-  useEffect(() => { load() }, [token])
+  useEffect(() => {
+    const c = persistentCache.get<PolicyHistoryEntry[]>(CACHE_KEY)
+    if (c) setHistory(c)
+    load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, CACHE_KEY])
 
   async function open(versionId: string, title: string, version: string, at: string) {
     setOpening(versionId); setError(''); setShowRaw(false)

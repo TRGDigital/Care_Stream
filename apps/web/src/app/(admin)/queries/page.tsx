@@ -54,24 +54,27 @@ interface ModalSession {
 export default function QueriesPage() {
   const { data: session }       = useSession()
   const userId = session?.user?.email ?? 'guest'
-  const [queries,  setQueries]  = useState<any[]>([])
-  const [total,    setTotal]    = useState(0)
   const [page,     setPage]     = useState(1)
-  const [loading,  setLoading]  = useState(true)
-  const [expanded, setExpanded] = useState<Set<string>>(new Set())
-  const [modal,    setModal]    = useState<ModalSession | null>(null)
   const [filter,   setFilter]   = useState({
     language_detected: '',
     no_match:          '',
     document_category: '',
   })
+  const listKey = `admin-queries-${userId}-p${page}-${filter.language_detected}-${filter.no_match}-${filter.document_category}`
+  const [queries,  setQueries]  = useState<any[]>(() => persistentCache.get<{ queries: any[]; total: number }>(listKey)?.queries ?? [])
+  const [total,    setTotal]    = useState(() => persistentCache.get<{ queries: any[]; total: number }>(listKey)?.total ?? 0)
+  const [loading,  setLoading]  = useState(() => persistentCache.get(listKey) === undefined)
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const [modal,    setModal]    = useState<ModalSession | null>(null)
 
   const LIMIT = 20
 
   useEffect(() => {
-    const cached = persistentCache.get<{ queries: any[]; total: number }>(`admin-queries-${userId}`)
+    // Paint the stored page for this exact page/filter at once; a page never seen shows the spinner.
+    const cached = persistentCache.get<{ queries: any[]; total: number }>(listKey)
     if (cached) { setQueries(cached.queries); setTotal(cached.total); setLoading(false) }
-  }, [userId])
+    else setLoading(true)
+  }, [listKey])
 
   useEffect(() => {
     if (!session?.accessToken) return
@@ -84,11 +87,11 @@ export default function QueriesPage() {
       .then(data => {
         const q = data?.queries ?? []; const t = data?.total ?? 0
         setQueries(q); setTotal(t)
-        if (page === 1 && !filter.language_detected && !filter.no_match && !filter.document_category) persistentCache.set(`admin-queries-${userId}`, { queries: q, total: t })
+        persistentCache.set(listKey, { queries: q, total: t })
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [session?.accessToken, page, filter])
+  }, [session?.accessToken, listKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setModal(null) }
@@ -106,9 +109,12 @@ export default function QueriesPage() {
 
   async function openModal(row: any) {
     if (row.chat_session_id && row.message_count > 1 && session?.accessToken) {
-      setModal({ row, messages: [], loading: true })
+      const sKey = `admin-query-session-${userId}-${row.chat_session_id}`
+      const cachedMsgs = persistentCache.get<any[]>(sKey)
+      setModal({ row, messages: cachedMsgs ?? [], loading: !cachedMsgs })
       try {
         const data = await createApiClient(session.accessToken).query.session(row.chat_session_id)
+        persistentCache.set(sKey, data.messages)
         setModal({ row, messages: data.messages, loading: false })
       } catch {
         setModal({ row, messages: [{ query_text: row.first_query, response_text: row.response_text, created_at: row.created_at, no_match: row.any_no_match }], loading: false })

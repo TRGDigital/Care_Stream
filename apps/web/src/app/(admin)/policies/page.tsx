@@ -79,8 +79,8 @@ export default function PoliciesPage() {
   const [allowanceKey, setAllowanceKey] = useState(0)
   const freeFull = freeTier && freeLeft !== null && freeLeft <= 0
   const userId = session?.user?.email ?? 'guest'
-  const [policies,       setPolicies]       = useState<any[]>([])
-  const [loading,        setLoading]        = useState(true)
+  const [policies,       setPolicies]       = useState<any[]>(() => persistentCache.get<any[]>(`admin-policies-${userId}`) ?? [])
+  const [loading,        setLoading]        = useState(() => persistentCache.get<any[]>(`admin-policies-${userId}`) === undefined)
   const [tab,            setTab]            = useState<'active' | 'archived' | 'history' | 'new'>('active')
   const [search,         setSearch]         = useState('')
   const [showUpload,     setShowUpload]     = useState(false)
@@ -93,11 +93,11 @@ export default function PoliciesPage() {
   // Set when a policy is published from the review modal — drives the "re-run
   // your Gaps analyses" nudge so the loop back to /gaps closes itself.
   const [justPublished,  setJustPublished]  = useState(false)
-  const [sections,       setSections]       = useState<string[]>([])
-  const [customCategories, setCustomCategories] = useState<string[]>([])
-  const [duplicates,     setDuplicates]     = useState<Array<{ id: string; name: string; version: number; score: number; match: { id: string; name: string; version: number } }>>([])
+  const [sections,       setSections]       = useState<string[]>(() => persistentCache.get<any>(`admin-policies-settings-${userId}`)?.sections ?? [])
+  const [customCategories, setCustomCategories] = useState<string[]>(() => persistentCache.get<any>(`admin-policies-settings-${userId}`)?.cats ?? [])
+  const [duplicates,     setDuplicates]     = useState<Array<{ id: string; name: string; version: number; score: number; match: { id: string; name: string; version: number } }>>(() => persistentCache.get<any[]>(`admin-policies-dups-${userId}`) ?? [])
   const [resolvingDup,   setResolvingDup]   = useState<string | null>(null)
-  const [similarNamed,   setSimilarNamed]   = useState<Array<{ id: string; name: string; matched_name: string; content_pct: number | null }>>([])
+  const [similarNamed,   setSimilarNamed]   = useState<Array<{ id: string; name: string; matched_name: string; content_pct: number | null }>>(() => persistentCache.get<any[]>(`admin-policies-similar-${userId}`) ?? [])
   const [reviewError,    setReviewError]    = useState(false)   // the adopted-changes summary failed to load
   const reviewRetryRef = useRef(0)
 
@@ -156,8 +156,8 @@ export default function PoliciesPage() {
   function loadDuplicates() {
     if (!session?.accessToken) return
     const api = createApiClient(session.accessToken)
-    api.policies.duplicates().then(d => setDuplicates(d?.duplicates ?? [])).catch(() => {})
-    api.policies.similarNamed().then(d => setSimilarNamed(d?.notes ?? [])).catch(() => {})
+    api.policies.duplicates().then(d => { const l = d?.duplicates ?? []; setDuplicates(l); persistentCache.set(`admin-policies-dups-${userId}`, l) }).catch(() => {})
+    api.policies.similarNamed().then(d => { const l = d?.notes ?? []; setSimilarNamed(l); persistentCache.set(`admin-policies-similar-${userId}`, l) }).catch(() => {})
   }
 
   async function dismissSimilar(id: string) {
@@ -180,6 +180,9 @@ export default function PoliciesPage() {
   useEffect(() => {
     const cached = persistentCache.get<any[]>(`admin-policies-${userId}`)
     if (cached) { setPolicies(cached); setLoading(false) }
+    const d = persistentCache.get<any[]>(`admin-policies-dups-${userId}`); if (d) setDuplicates(d)
+    const sn = persistentCache.get<any[]>(`admin-policies-similar-${userId}`); if (sn) setSimilarNamed(sn)
+    const st = persistentCache.get<any>(`admin-policies-settings-${userId}`); if (st) { setSections(st.sections ?? []); setCustomCategories(st.cats ?? []) }
   }, [userId])
 
   useEffect(load, [session?.accessToken])
@@ -215,7 +218,7 @@ export default function PoliciesPage() {
   useEffect(() => {
     if (!session?.accessToken) return
     createApiClient(session.accessToken).settings.get()
-      .then(s => { setSections(s.policy_sections ?? []); setCustomCategories(s.policy_categories ?? []) })
+      .then(s => { setSections(s.policy_sections ?? []); setCustomCategories(s.policy_categories ?? []); persistentCache.set(`admin-policies-settings-${userId}`, { sections: s.policy_sections ?? [], cats: s.policy_categories ?? [] }) })
       .catch(() => {})
   }, [session?.accessToken])
 
@@ -366,6 +369,7 @@ export default function PoliciesPage() {
         >
           History
         </button>
+        {freeTier && (
         <button
           onClick={() => setTab('new')}
           className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
@@ -376,6 +380,7 @@ export default function PoliciesPage() {
         >
           New policies
         </button>
+        )}
       </div>
 
       {/* Possible content duplicates — same policy text under a different name */}
@@ -984,25 +989,36 @@ function PolicyPreviewModal({ token, policy, version, onClose, onRename, readOnl
 }) {
   // Held locally so the heading updates the moment it is saved, without waiting for the
   // list behind the modal to refetch.
+  const { data: sess } = useSession()
+  const uid = sess?.user?.email ?? 'guest'
+  const previewKey = `admin-policy-preview-${uid}-${policy.id}`
+  type PreviewData = { name: string; status: string; cached: boolean; html: string; raw: string; has_raw: boolean }
   const [name, setName] = useState(policy.name)
   const [renaming, setRenaming] = useState<string | null>(null)
-  const [data, setData]     = useState<{ name: string; status: string; cached: boolean; html: string; raw: string; has_raw: boolean } | null>(null)
+  const [data, setData]     = useState<PreviewData | null>(() => persistentCache.get<PreviewData>(previewKey) ?? null)
   const [editNote, setEditNote] = useState('')
-  const [loading, setLoad]  = useState(true)
+  const [loading, setLoad]  = useState(() => persistentCache.get<PreviewData>(previewKey) === undefined)
   const [error, setError]   = useState('')
   const [showRaw, setShowRaw] = useState(false)
   const [org, setOrg]       = useState<OrgCtx | null>(null)
 
   useEffect(() => {
+    const cached = persistentCache.get<PreviewData>(previewKey)
+    if (cached) { setData(cached); setLoad(false) }
     createApiClient(token).policies.preview(policy.id)
-      .then(setData)
-      .catch((e: any) => setError(e.message ?? 'Could not load the preview.'))
+      .then(d => { setData(d); persistentCache.set(previewKey, d) })
+      .catch((e: any) => { if (!cached) setError(e.message ?? 'Could not load the preview.') })
       .finally(() => setLoad(false))
-  }, [token, policy.id])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, policy.id, previewKey])
 
   // Letterhead details for print / PDF: the same organisation context the
   // View / download modal uses, so both produce an identical document.
-  useEffect(() => { createApiClient(token).analytics.adoptionContext().then(setOrg).catch(() => setOrg(null)) }, [token])
+  useEffect(() => {
+    const orgKey = `admin-adoption-context-${uid}`
+    const c = persistentCache.get<OrgCtx>(orgKey); if (c) setOrg(c)
+    createApiClient(token).analytics.adoptionContext().then(o => { setOrg(o); persistentCache.set(orgKey, o) }).catch(() => { if (!c) setOrg(null) })
+  }, [token, uid])
 
   // The preview strips letterhead and footers for on-screen reading; printing puts
   // them back via the shared print document, logo and sign-off included.
@@ -1122,7 +1138,7 @@ function PolicyPreviewModal({ token, policy, version, onClose, onRename, readOnl
                 setData(null)
                 setLoad(true)
                 createApiClient(token).policies.preview(policy.id)
-                  .then(d => setData(d))
+                  .then(d => { setData(d); persistentCache.set(previewKey, d) })
                   .catch((e: any) => setError(e.message ?? 'Could not load the preview.'))
                   .finally(() => setLoad(false))
               }}

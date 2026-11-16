@@ -17,6 +17,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Building2, CheckCircle2, FileText, GraduationCap, KeyRound, ScanSearch, Users, X } from 'lucide-react'
 import { createApiClient } from '@/lib/api-client'
+import { persistentCache } from '@/lib/page-cache'
 
 type TourStep = {
   key:    'policies' | 'organisation' | 'gaps' | 'training' | 'onboarding' | 'staff' | 'licences'
@@ -162,12 +163,16 @@ export function GuidedTour({ token, tenantId, tier, openSignal }: {
 
   // Real-data ticks, fetched when the tour opens. Failures leave a step
   // unticked rather than erroring — the tour must never block.
+  const doneKey = `admin-tour-done-${tenantId}-${trainingOnly ? 'to' : 'full'}`
+  const saveDone = (d: DoneMap) => { setDone(d); persistentCache.set(doneKey, d) }
   const loadDone = useCallback(() => {
+    const cachedDone = persistentCache.get<DoneMap>(doneKey)
+    if (cachedDone) setDone(cachedDone)
     const api = createApiClient(token)
     if (trainingOnly) {
       Promise.allSettled([api.users.list(), api.training.licences()]).then(([u, l]) => {
         const lic = l.status === 'fulfilled' ? ((l.value as any)?.licences ?? []) : []
-        setDone({
+        saveDone({
           staff:    u.status === 'fulfilled' && ((u.value as any)?.users ?? []).filter((x: any) => x?.is_active !== false).length > 1,
           licences: Array.isArray(lic) && lic.some((x: any) => x?.allocated_to),
         })
@@ -189,7 +194,7 @@ export function GuidedTour({ token, tenantId, tier, openSignal }: {
       const named = Object.entries(od).some(([k, v]) =>
         k !== 'show_role_names' && k !== 'require_manager_approval' && k !== 'require_external_approval'
         && typeof v === 'string' && v.trim().length > 0)
-      setDone({
+      saveDone({
         organisation: named,
         policies:   p.status === 'fulfilled' && Number((p.value as any)?.total ?? 0) > 0,
         gaps:       g.status === 'fulfilled' && ((g.value as any)?.sections ?? []).some((s: any) => s?.ran_at),
@@ -198,7 +203,7 @@ export function GuidedTour({ token, tenantId, tier, openSignal }: {
         staff:      u.status === 'fulfilled' && ((u.value as any)?.users ?? []).filter((x: any) => x?.is_active !== false).length > 1,
       })
     })
-  }, [token, trainingOnly])
+  }, [token, trainingOnly, doneKey])
 
   function openTour() {
     setI(0)

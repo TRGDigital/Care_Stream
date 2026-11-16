@@ -1,7 +1,8 @@
 'use client'
 
 import { AuditTrainingPanel } from '@/components/audits/audit-training-panel'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { persistentCache } from '@/lib/page-cache'
 import { useSession } from 'next-auth/react'
 import { useParams, useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
@@ -175,13 +176,18 @@ export default function AuditRunPage() {
 
   const api = session?.accessToken ? createApiClient(session.accessToken) : null
 
-  // Load run
-  useEffect(() => {
-    if (!api) return
-    api.audits.getRun(id).then(({ run: r, approval_required, quality_statements }) => {
-      setRun(r)
-      setApprovalRequired(!!approval_required)
-      setQsNames(quality_statements ?? {})
+  const userId = session?.user?.email ?? 'guest'
+  const runKey = `admin-audit-run-${userId}-${id}`
+  const reportKey = `admin-audit-report-${userId}-${id}`
+  const dirtyRef = useRef(false)   // the user has typed: a background refresh must not overwrite their edits
+  const useIsoLayout = typeof window !== 'undefined' ? useLayoutEffect : useEffect
+
+  function applyRun(d: { run: any; approval_required?: boolean; quality_statements?: any }) {
+    const { run: r, approval_required, quality_statements } = d
+    setRun(r)
+    setApprovalRequired(!!approval_required)
+    setQsNames(quality_statements ?? {})
+    {
       // Hydrate answers from saved data
       const map = new Map<string, AuditAnswer>()
       for (const a of r.answers) map.set(a.question_id, answerFromRow(a))
@@ -195,8 +201,24 @@ export default function AuditRunPage() {
         actions_deadline: r.actions_deadline ?? '',
       })
       setSignedName(r.auditor_name ?? '')
-      if (r.status === 'completed') {
-        api.audits.report(id).then(({ report: rpt }) => { setReport(rpt); loadSignatures(rpt) }).catch(() => {})
+    }
+  }
+
+  // Paint the last seen run (and report) at once from cache, before any request.
+  useIsoLayout(() => {
+    const c = persistentCache.get<any>(runKey)
+    if (c) { applyRun(c); setLoading(false); if (c.run?.status === 'completed') { const rc = persistentCache.get<any>(reportKey); if (rc) setReport(rc) } }
+  }, [runKey]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load run (background refresh when cached)
+  useEffect(() => {
+    if (!api) return
+    api.audits.getRun(id).then(d => {
+      persistentCache.set(runKey, d)
+      if (!dirtyRef.current) applyRun(d)
+      else { setRun(d.run); setApprovalRequired(!!d.approval_required) }
+      if (d.run.status === 'completed') {
+        api.audits.report(id).then(({ report: rpt }) => { persistentCache.set(reportKey, rpt); setReport(rpt); loadSignatures(rpt) }).catch(() => {})
       }
     }).catch(() => {}).finally(() => setLoading(false))
   }, [id, session?.accessToken]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -227,6 +249,7 @@ export default function AuditRunPage() {
   }, [id, api]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function updateAnswer(qId: string, patch: Partial<AuditAnswer>) {
+    dirtyRef.current = true
     setAnswers(prev => {
       const existing = prev.get(qId) ?? EMPTY_ANSWER
       const updated = { ...existing, ...patch }
@@ -251,6 +274,8 @@ export default function AuditRunPage() {
       setTimeout(() => URL.revokeObjectURL(url), 30_000)
     } catch { /* ignore */ } finally { setDownloading(false) }
   }
+
+  function editSummary(fn: (s: typeof summary) => typeof summary) { dirtyRef.current = true; setSummary(fn) }
 
   function loadSignatures(rpt: any) {
     if (!api) return
@@ -286,10 +311,13 @@ export default function AuditRunPage() {
       await api.audits.complete(id)
       // Re-fetch the FULL run (the complete response is a bare update with no template relation,
       // which the page renders). This also picks up the fresh approval status for the banner.
-      const { run: r, approval_required } = await api.audits.getRun(id)
+      const full = await api.audits.getRun(id)
+      const { run: r, approval_required } = full
+      persistentCache.set(runKey, full)
       setRun(r)
       setApprovalRequired(!!approval_required)
       const { report: rpt } = await api.audits.report(id)
+      persistentCache.set(reportKey, rpt)
       setReport(rpt)
       loadSignatures(rpt)
     } catch (e: any) {
@@ -584,7 +612,7 @@ export default function AuditRunPage() {
                   <label className="mb-1 block text-xs font-medium text-neutral-mid">Strengths identified</label>
                   <textarea
                     value={summary.strengths}
-                    onChange={e => setSummary(s => ({ ...s, strengths: e.target.value }))}
+                    onChange={e => editSummary(s => ({ ...s, strengths: e.target.value }))}
                     onBlur={saveSummary}
                     disabled={isCompleted}
                     placeholder="What areas of practice were strong?"
@@ -596,7 +624,7 @@ export default function AuditRunPage() {
                   <label className="mb-1 block text-xs font-medium text-neutral-mid">Areas requiring improvement</label>
                   <textarea
                     value={summary.improvements}
-                    onChange={e => setSummary(s => ({ ...s, improvements: e.target.value }))}
+                    onChange={e => editSummary(s => ({ ...s, improvements: e.target.value }))}
                     onBlur={saveSummary}
                     disabled={isCompleted}
                     placeholder="What needs attention or improvement?"
@@ -609,14 +637,14 @@ export default function AuditRunPage() {
                   {isCompleted || (summary.actions_deadline && !/^\d{4}-\d{2}-\d{2}$/.test(summary.actions_deadline)) ? (
                     <p className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-neutral-dark">
                       {actionsDeadlineLabel(summary.actions_deadline) || 'Not set'}
-                      {!isCompleted && <button type="button" onClick={() => setSummary(s => ({ ...s, actions_deadline: '' }))} className="ml-2 text-xs font-medium text-teal hover:underline">Choose a date</button>}
+                      {!isCompleted && <button type="button" onClick={() => editSummary(s => ({ ...s, actions_deadline: '' }))} className="ml-2 text-xs font-medium text-teal hover:underline">Choose a date</button>}
                     </p>
                   ) : (
                     <input
                       type="date"
                       value={summary.actions_deadline}
                       min={new Date().toISOString().slice(0, 10)}
-                      onChange={e => setSummary(s => ({ ...s, actions_deadline: e.target.value }))}
+                      onChange={e => editSummary(s => ({ ...s, actions_deadline: e.target.value }))}
                       onBlur={saveSummary}
                       className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-neutral-dark focus:border-teal focus:outline-none"
                     />

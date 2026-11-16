@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import { persistentCache } from '@/lib/page-cache'
 import { Button } from '@/components/ui/button'
 import {
   ArrowLeft, Award, Loader2, CheckCircle2, Clock, Users, ChevronDown, ChevronUp,
@@ -32,14 +33,15 @@ export default function AdminDiplomasPage() {
   const { data: session } = useSession()
   const api = session?.accessToken ? createApiClient(session.accessToken) : null
 
-  const [programmes, setProgrammes] = useState<any[] | null>(null)
+  const progKey = `admin-diplomas-programmes-${session?.user?.email ?? 'guest'}`
+  const [programmes, setProgrammes] = useState<any[] | null>(() => persistentCache.get<any[]>(progKey) ?? null)
   const [error, setError] = useState('')
   const [msg, setMsg] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
 
   function load() {
     if (!api) return
-    api.programmes.list().then(d => setProgrammes(d.programmes)).catch(e => setError(e?.message ?? 'Could not load programmes.'))
+    api.programmes.list().then(d => { setProgrammes(d.programmes); persistentCache.set(progKey, d.programmes) }).catch(e => setError(e?.message ?? 'Could not load programmes.'))
   }
   useEffect(() => { if (api) load() /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [session?.accessToken])
 
@@ -131,8 +133,14 @@ function ProgrammePanel({
   onChanged: () => void
   onMessage: (m: { tone: 'ok' | 'err'; text: string } | null) => void
 }) {
-  const [staffRows, setStaffRows] = useState<any[] | null>(null)
-  const [allStaff, setAllStaff] = useState<any[] | null>(null)
+  const { data: ppSession } = useSession()
+  const ppUser = ppSession?.user?.email ?? 'guest'
+  const rowsKey = `admin-diplomas-staffrows-${ppUser}-${programme.id}`
+  const allKey = `admin-diplomas-allstaff-${ppUser}`
+  const [staffRows, setStaffRowsState] = useState<any[] | null>(() => persistentCache.get<any[]>(rowsKey) ?? null)
+  const [allStaff, setAllStaffState] = useState<any[] | null>(() => persistentCache.get<any[]>(allKey) ?? null)
+  const setStaffRows = (v: any[]) => { setStaffRowsState(v); persistentCache.set(rowsKey, v) }
+  const setAllStaff = (v: any[]) => { setAllStaffState(v); persistentCache.set(allKey, v) }
   const [picked, setPicked] = useState<Set<string>>(new Set())
   const [due, setDue] = useState('')
   const [busy, setBusy] = useState(false)

@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
+import { useCachedQuery } from '@/lib/use-cached-query'
+import { hubKey, persistentCache } from '@/lib/page-cache'
 import { createApiClient } from '@/lib/api-client'
 import { InfoTip } from '@/components/info-tip'
 import { Award, Brain, CheckCircle2, ListChecks, Loader2, Sparkles, TrendingUp } from 'lucide-react'
@@ -48,13 +51,10 @@ function StatusPill({ status, ui }: { status: string; ui: Record<string, string>
 // Rendered inside the hub (chat) layout so the sidebar persists, and by the
 // standalone /progress route.
 export function ProgressView({ token }: { token: string }) {
-  const [rec, setRec]         = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (!token) return
-    createApiClient(token).me.progress().then(setRec).catch(() => {}).finally(() => setLoading(false))
-  }, [token])
+  const { data: session } = useSession()
+  const q = useCachedQuery<any>(token ? hubKey('progress', session?.user?.email ?? 'guest') : null, () => createApiClient(token).me.progress())
+  const rec = q.data ?? null
+  const loading = q.loading
 
   if (loading) return <div className="flex flex-1 items-center justify-center"><Loader2 className="animate-spin text-neutral-mid" /></div>
   if (!rec)    return <div className="flex flex-1 items-center justify-center text-sm text-neutral-mid">Couldn&rsquo;t load your progress.</div>

@@ -11,6 +11,8 @@
 // Deliberately independent of the gap report: it asks for orders and nothing else.
 
 import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { persistentCache } from '@/lib/page-cache'
 import { createApiClient, type PolicyPurchase } from '@/lib/api-client'
 import { FileText, Loader2, AlertTriangle, CheckCircle2, Clock, PenLine } from 'lucide-react'
 
@@ -26,7 +28,9 @@ const STATUS: Record<PolicyPurchase['status'], { label: string; hint: string; cl
 }
 
 export function PolicyOrdersPanel({ token }: { token: string }) {
-  const [purchases, setPurchases] = useState<PolicyPurchase[] | null>(null)
+  const { data: sess } = useSession()
+  const ordersKey = `admin-policy-orders-${sess?.user?.email ?? 'guest'}`
+  const [purchases, setPurchases] = useState<PolicyPurchase[] | null>(() => persistentCache.get<PolicyPurchase[]>(ordersKey) ?? null)
   const [intakeFor, setIntakeFor] = useState<PolicyPurchase | null>(null)
   const [values, setValues] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
@@ -38,11 +42,15 @@ export function PolicyOrdersPanel({ token }: { token: string }) {
     setLoadFailed('')
     const timeout = new Promise<never>((_, rej) => setTimeout(() => rej(new Error('This is taking too long.')), 15_000))
     return Promise.race([createApiClient(token).policyPurchases.list(), timeout])
-      .then(r => setPurchases(r.purchases))
-      .catch((e: Error) => setLoadFailed(e.message || 'We could not load your orders.'))
+      .then(r => { setPurchases(r.purchases); persistentCache.set(ordersKey, r.purchases) })
+      .catch((e: Error) => { if (!persistentCache.get(ordersKey)) setLoadFailed(e.message || 'We could not load your orders.') })
   }
 
-  useEffect(() => { load() }, [token])
+  useEffect(() => {
+    const c = persistentCache.get<PolicyPurchase[]>(ordersKey); if (c) setPurchases(c)
+    load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, ordersKey])
 
   function openIntake(p: PolicyPurchase) {
     setIntakeFor(p); setError('')

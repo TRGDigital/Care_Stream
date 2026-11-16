@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { createApiClient, apiAssetUrl } from '@/lib/api-client'
+import { persistentCache } from '@/lib/page-cache'
+import { useCachedQuery } from '@/lib/use-cached-query'
 import { SectionsEditor } from '@/components/training-sections-editor'
 import { ModulePreviewPlayer } from '@/components/training/module-preview-player'
 import { CourseSummarySheet, PracticalChecklistSheet } from '@/components/training/course-printables'
@@ -21,10 +23,18 @@ export default function AnnualTrainingPage() {
   const { data: session } = useSession()
   const api = session?.accessToken ? createApiClient(session.accessToken) : null
 
-  const [groups,  setGroups]  = useState<Record<string, string>>({})
-  const [topics,  setTopics]  = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState('')
+  const userId = session?.user?.email ?? 'guest'
+  type Catalogue = { groups: Record<string, string>; topics: any[] }
+  const catQ = useCachedQuery<Catalogue>(
+    `admin-annual-catalogue-${userId}`,
+    async () => { const d = await api!.training.catalogue('cpd'); return { groups: d.groups, topics: d.topics } },
+    { enabled: !!api },
+  )
+  const groups: Record<string, string> = catQ.data?.groups ?? {}
+  const topics: any[] = catQ.data?.topics ?? []
+  const setTopics = (fn: (prev: any[]) => any[]) => catQ.setData(prev => ({ groups: prev?.groups ?? {}, topics: fn(prev?.topics ?? []) }))
+  const loading = catQ.loading || (!api && !catQ.data)
+  const error = catQ.data ? '' : (catQ.error ?? '')
   const [helpOpen, setHelpOpen] = useState(false)
   const [view,    setView]    = useState<{ mode: 'list' } | { mode: 'review'; id: string } | { mode: 'assign'; id: string; name: string } | { mode: 'view'; id: string; name: string }>({ mode: 'list' })
   const [topicView,     setTopicView]     = useState<'live' | 'soon' | 'archived'>('live')
@@ -50,12 +60,7 @@ export default function AnnualTrainingPage() {
     finally { setArchivingTopic(null) }
   }
 
-  function load() {
-    if (!api) return
-    setLoading(true); setError('')
-    api.training.catalogue('cpd').then(d => { setGroups(d.groups); setTopics(d.topics) }).catch(e => setError(e?.message ?? 'Could not load the catalogue')).finally(() => setLoading(false))
-  }
-  useEffect(() => { load() }, [session?.accessToken]) // eslint-disable-line react-hooks/exhaustive-deps
+  function load() { catQ.reload() }
 
   // Arriving from a free course page (/training/annual?course=<slug>): open that course's assign
   // screen once, so a new free account lands on the course it came for.
@@ -284,15 +289,17 @@ export default function AnnualTrainingPage() {
 // ─── Review / edit a generated module ─────────────────────────────────────────
 
 function ReviewModule({ api, id, onBack, onAssign }: { api: ReturnType<typeof createApiClient>; id: string; onBack: () => void; onAssign: (id: string, name: string) => void }) {
-  const [m, setM] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const { data: rvSession } = useSession()
+  const rvKey = `admin-annual-module-${rvSession?.user?.email ?? 'guest'}-${id}`
+  const [m, setM] = useState<any>(() => persistentCache.get<any>(rvKey) ?? null)
+  const [loading, setLoading] = useState(() => persistentCache.get<any>(rvKey) === undefined)
   const [saving, setSaving] = useState(false)
   const [imgBusy, setImgBusy] = useState(false)
   const [savedNote, setSavedNote] = useState('')
   const [ackOpen, setAckOpen] = useState(false)
   const [ack1, setAck1] = useState(false)
 
-  function load() { setLoading(true); api.training.moduleFull(id).then(d => setM(d.module)).catch(() => {}).finally(() => setLoading(false)) }
+  function load() { setLoading(prev => (m ? prev : true)); api.training.moduleFull(id).then(d => { setM(d.module); persistentCache.set(rvKey, d.module) }).catch(() => {}).finally(() => setLoading(false)) }
   useEffect(() => { load() }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function setField(k: string, v: any) { setM((prev: any) => ({ ...prev, [k]: v })) }
@@ -479,14 +486,16 @@ function ReviewModule({ api, id, onBack, onAssign }: { api: ReturnType<typeof cr
 // ─── Assign a module to staff (by role or individual) ─────────────────────────
 
 function AssignModule({ api, moduleId, moduleName, onBack }: { api: ReturnType<typeof createApiClient>; moduleId: string; moduleName: string; onBack: () => void }) {
-  const [users, setUsers] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: asSession } = useSession()
+  const usersKey = `admin-annual-assign-users-${asSession?.user?.email ?? 'guest'}`
+  const [users, setUsersState] = useState<any[]>(() => persistentCache.get<any[]>(usersKey) ?? [])
+  const [loading, setLoading] = useState(() => persistentCache.get<any[]>(usersKey) === undefined)
   const [sel, setSel] = useState<Set<string>>(new Set())
   const [due, setDue] = useState('')
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(0)
 
-  useEffect(() => { api.users.list().then((d: any) => setUsers(d.users ?? d ?? [])).catch(() => {}).finally(() => setLoading(false)) }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { api.users.list().then((d: any) => { const u = d.users ?? d ?? []; setUsersState(u); persistentCache.set(usersKey, u) }).catch(() => {}).finally(() => setLoading(false)) }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const roles = [...new Set(users.map(u => u.job_role || u.role || 'Staff'))]
   function toggle(id: string) { setSel(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n }) }
@@ -544,16 +553,11 @@ function AssignModule({ api, moduleId, moduleName, onBack }: { api: ReturnType<t
 
 // ─── Read-only viewer for a STANDARD module — stepped, exactly as staff see it ──
 function ViewStandardModule({ api, id, name, onBack }: { api: ReturnType<typeof createApiClient>; id: string; name: string; onBack: () => void }) {
-  const [m, setM] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    api.training.standardModuleFull(id)
-      .then(d => setM(d.module))
-      .catch((e: any) => setError(e?.message ?? 'Could not load the module'))
-      .finally(() => setLoading(false))
-  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+  const { data: vsSession } = useSession()
+  const vsQ = useCachedQuery<any>(`admin-annual-standard-${vsSession?.user?.email ?? 'guest'}-${id}`, async () => (await api.training.standardModuleFull(id)).module)
+  const m = vsQ.data
+  const loading = vsQ.loading
+  const error = m ? '' : (vsQ.error ?? '')
 
   if (loading) {
     return (

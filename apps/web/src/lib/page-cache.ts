@@ -13,6 +13,14 @@ export const pageCache = {
   },
   clear(): void {
     store.clear()
+    // Also drop the stored copies, or the next page would repaint the previous site's data from localStorage.
+    if (typeof window === 'undefined') return
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i)
+        if (k && k.startsWith('pc_') && !k.startsWith('pc_hub-pref')) localStorage.removeItem(k)
+      }
+    } catch { /* storage unavailable */ }
   },
 }
 

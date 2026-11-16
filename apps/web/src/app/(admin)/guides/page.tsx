@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import { persistentCache } from '@/lib/page-cache'
 import {
   ChevronDown, ChevronUp, Search, X,
   FileText, Users, MessageSquare, Mail, ClipboardCheck,
@@ -110,6 +111,7 @@ function SupportRequestModal({ open, onClose, token, userName, userEmail, tenant
   const [message, setMessage]       = useState('')
   const [file, setFile]             = useState<File | null>(null)
   const [preview, setPreview]       = useState<string | null>(null)
+  const { data: session } = useSession()
   const [cs, setCs]                 = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone]             = useState(false)
@@ -118,7 +120,10 @@ function SupportRequestModal({ open, onClose, token, userName, userEmail, tenant
   // Pull the account (CS) number so we can show what will be sent with the ticket.
   useEffect(() => {
     if (!open || !token) return
-    createApiClient(token).settings.get().then(s => setCs((s as any).account_number ?? null)).catch(() => {})
+    const snap = persistentCache.get<any>(`admin-settings-${(session?.user?.email ?? 'guest')}`)
+    const hit = snap?.data?.account_number ?? persistentCache.get<string>(`admin-account-number-${session?.user?.email ?? 'guest'}`)
+    if (hit) setCs(hit)
+    createApiClient(token).settings.get().then(s => { const n = (s as any).account_number ?? null; setCs(n); if (n) persistentCache.set(`admin-account-number-${session?.user?.email ?? 'guest'}`, n) }).catch(() => {})
   }, [open, token])
 
   // Revoke the object URL when the preview changes / on unmount.

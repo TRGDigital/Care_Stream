@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { useCachedQuery } from '@/lib/use-cached-query'
 import Link from 'next/link'
 import { X, Pencil, Plus, Lock, Loader2, Check, RotateCcw } from 'lucide-react'
 import { clsx } from 'clsx'
@@ -42,8 +44,11 @@ function Control({ type, settings }: { type: string; settings: any }) {
 }
 
 export function AuditPreview({ token, templateId, onClose, onSaved }: { token: string; templateId: string; onClose: () => void; onSaved: () => void }) {
-  const [data, setData] = useState<{ template: AuditEditorTemplate; editor: Editor } | null>(null)
-  const [loadError, setLoadError] = useState('')
+  const { data: session } = useSession()
+  const uid = session?.user?.email ?? 'guest'
+  const pq = useCachedQuery<{ template: AuditEditorTemplate; editor: Editor }>(`admin-audit-preview-${uid}-${templateId}`, () => createApiClient(token).audits.previewTemplate(templateId))
+  const data = pq.data ?? null
+  const loadError = data ? '' : (pq.error ?? '')
   const [editing, setEditing] = useState(false)
   const [drafts, setDrafts] = useState<Record<string, Draft>>({})
   const [added, setAdded] = useState<NewQ[]>([])
@@ -52,10 +57,6 @@ export function AuditPreview({ token, templateId, onClose, onSaved }: { token: s
   const [upgrade, setUpgrade] = useState(false)
   const [done, setDone] = useState(false)
   const [restoring, setRestoring] = useState(false)
-
-  useEffect(() => {
-    createApiClient(token).audits.previewTemplate(templateId).then(setData).catch((e: any) => setLoadError(e?.message ?? 'Could not load the audit.'))
-  }, [token, templateId])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }

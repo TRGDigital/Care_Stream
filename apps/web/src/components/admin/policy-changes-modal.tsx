@@ -2,6 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useEffect, useRef, useState } from 'react'
+import { persistentCache } from '@/lib/page-cache'
 import { createApiClient } from '@/lib/api-client'
 import { applyRoleNames } from '@/lib/policy-names'
 import { X, Loader2, Check, RotateCcw, FileCheck2, GitCompare, Printer, Download, Pencil, Send, Eraser, Scale } from 'lucide-react'
@@ -175,15 +176,18 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
   onClose: () => void
   onPublished: (pending: number) => void
 }) {
-  const [doc, setDoc]         = useState<Doc | null>(null)
-  const [html, setHtml]       = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { data: modalSession } = useSession()
+  const uid = modalSession?.user?.email ?? 'guest'
+  const ckey = `admin-policy-changes-${uid}-${policyId}`
+  const c0 = persistentCache.get<any>(ckey)
+  const [doc, setDoc]         = useState<Doc | null>(c0?.doc ?? null)
+  const [html, setHtml]       = useState<string | null>(c0?.html ?? null)
+  const [loading, setLoading] = useState(!c0)
   const [error, setError]     = useState('')
   // A policies-only buyer has no change-adoption, no care manager and no external
   // reviewer: they bought a finished document. Everything built around reviewing a
   // revision is noise to them, so it is hidden — for that tier only. Full CareStream
   // clients see this modal exactly as before.
-  const { data: modalSession } = useSession()
   const policiesOnly = (modalSession?.user as any)?.tier === 'policies_only'
   const [tracked, setTracked] = useState(true)
   // ...and the highlights must start off, or they would see mark-up on a document
@@ -192,34 +196,40 @@ export function PolicyChangesModal({ token, policyId, policyName, onClose, onPub
   const [busy, setBusy]       = useState<string | null>(null)   // 'publish' | change id
   const [publishedMsg, setPublishedMsg] = useState('')
   const [org, setOrg] = useState<OrgCtx | null>(null)
-  const [approval, setApproval] = useState<Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyApprovals']>> | null>(null)
+  const [approval, setApproval] = useState<Awaited<ReturnType<ReturnType<typeof createApiClient>['analytics']['policyApprovals']>> | null>(c0?.approval ?? null)
   const [extName, setExtName]   = useState('')
   const [extEmail, setExtEmail] = useState('')
   const [showExtOverlay, setShowExtOverlay] = useState(false)
   const [editId, setEditId]     = useState<string | null>(null)   // change being edited
   const [editText, setEditText] = useState('')
   const [editTitle, setEditTitle] = useState('')
-  const [versions, setVersions] = useState<Array<{ id: string; version: string; change_count: number; published_by: string; published_at: string }>>([])
+  const [versions, setVersions] = useState<Array<{ id: string; version: string; change_count: number; published_by: string; published_at: string }>>(c0?.versions ?? [])
   const [viewing, setViewing]   = useState<{ version: string; content: string } | null>(null)
   const previewRef = useRef<HTMLDivElement>(null)
 
   function load() {
-    setLoading(true)
+    const live: any = persistentCache.get<any>(ckey) ?? {}
+    if (!live.doc) setLoading(true)
+    const save = (patch: any) => persistentCache.set(ckey, { ...(persistentCache.get<any>(ckey) ?? {}), ...patch })
     const api = createApiClient(token)
-    api.analytics.policyApprovals(policyId).then(a => { setApproval(a); if (a?.external_name) setExtName(a.external_name); if (a?.external_email) setExtEmail(a.external_email) }).catch(() => {})
-    api.analytics.policyVersions(policyId).then(v => setVersions(v.versions)).catch(() => {})
+    api.analytics.policyApprovals(policyId).then(a => { setApproval(a); save({ approval: a }); if (a?.external_name) setExtName(a.external_name); if (a?.external_email) setExtEmail(a.external_email) }).catch(() => {})
+    api.analytics.policyVersions(policyId).then(v => { setVersions(v.versions); save({ versions: v.versions }) }).catch(() => {})
     // base:true renders the PRISTINE ORIGINAL policy, not the live copy. The change overlay
     // below re-applies every adopted change on top, so the view is identical before AND after
     // publishing. (Against the live copy, published changes are already baked in: their
     // old-text anchors no longer exist, and the overlay used to duplicate them at the end —
     // the intermittent "Tracked" breakage.)
     Promise.all([api.analytics.policyDocument(policyId), api.policies.preview(policyId, { base: true }).catch(() => ({ html: '' }))])
-      .then(([d, p]) => { setDoc(d); setHtml((p as any).html || '') })
-      .catch(e => setError(e.message ?? 'Could not load the document.'))
+      .then(([d, p]) => { setDoc(d); setHtml((p as any).html || ''); save({ doc: d, html: (p as any).html || '' }) })
+      .catch(e => { if (!live.doc) setError(e.message ?? 'Could not load the document.') })
       .finally(() => setLoading(false))
   }
   useEffect(load, [token, policyId]) // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { createApiClient(token).analytics.adoptionContext().then(setOrg).catch(() => setOrg(null)) }, [token])
+  useEffect(() => {
+    const orgKey = `admin-adoption-context-${uid}`
+    const c = persistentCache.get<OrgCtx>(orgKey); if (c) setOrg(c)
+    createApiClient(token).analytics.adoptionContext().then(o => { setOrg(o); persistentCache.set(orgKey, o) }).catch(() => { if (!c) setOrg(null) })
+  }, [token, uid])
 
   // Open a print-ready CLEAN copy (no change markers — the filed hard copy) for Save-as-PDF.
   // Built from a detached render so it's always clean regardless of the on-screen toggle.

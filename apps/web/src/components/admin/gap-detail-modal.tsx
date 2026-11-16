@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { persistentCache } from '@/lib/page-cache'
 import { createApiClient } from '@/lib/api-client'
 import EditablePolicyBody from './editable-policy-body'
 import SlowLoadHint from './slow-load-hint'
@@ -442,8 +444,15 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   onCompleted:      (referenceKey: string) => void
 }) {
   const [completing, setCompleting] = useState(false)
-  const [detail,  setDetail]  = useState<Detail | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { data: gapSess } = useSession()
+  const gUid = gapSess?.user?.email ?? 'guest'
+  const detailKey = `admin-gap-detail-${gUid}-${referenceKey}`
+  const adoptionKey = `admin-adoption-context-${gUid}`
+  const d0 = persistentCache.get<Detail>(detailKey)
+  const previewKeyFor = (pid: string) => `admin-gap-preview-${gUid}-${pid}`
+  const pv0 = d0?.target_policy ? persistentCache.get<{ html: string; raw: string }>(previewKeyFor(d0.target_policy.id)) : undefined
+  const [detail,  setDetail]  = useState<Detail | null>(d0 ?? null)
+  const [loading, setLoading] = useState(!d0)
   const [error,   setError]   = useState('')
   // Legal disclaimer gate — the detail is only fetched once accepted.
   const [accepted, setAccepted] = useState(acknowledged)
@@ -467,8 +476,9 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   }
 
   // Coverage tab (policy preview + highlight) — loaded lazily.
-  const [html,        setHtml]        = useState<string | null>(null)
-  const [rawText,     setRawText]     = useState('')
+  const [html,        setHtml]        = useState<string | null>(pv0?.html ?? null)
+  const [rawText,     setRawText]     = useState(pv0?.raw ?? '')
+  const previewRefreshedFor = useRef<string | null>(null)
   // While a wording correction is open, the rebuild effect below must not re-assert the
   // preview HTML — that would move the block out from under the editing card mid-typing.
   const [editingBlock, setEditingBlock] = useState(false)
@@ -482,7 +492,7 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   const previewRef = useRef<HTMLDivElement>(null)
 
   // Policy Change Adoption (beta) — adopt a suggestion into the policy's draft.
-  const [adoption,     setAdoption]     = useState<{ enabled: boolean; variables: Array<{ key: string; label: string; value: string }>; role_holders: Array<{ key: string; role: string; candidates: string[] }>; role_names?: Record<string, string[]>; show_role_names?: boolean } | null>(null)
+  const [adoption,     setAdoption]     = useState<{ enabled: boolean; variables: Array<{ key: string; label: string; value: string }>; role_holders: Array<{ key: string; role: string; candidates: string[] }>; role_names?: Record<string, string[]>; show_role_names?: boolean } | null>(() => persistentCache.get<any>(adoptionKey) ?? null)
   const [adoptingReq,  setAdoptingReq]  = useState<string | null>(null)
   const [adoptText,    setAdoptText]    = useState('')
   const [adoptTitle,   setAdoptTitle]   = useState('')
@@ -502,15 +512,24 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
 
   useEffect(() => {
     if (!accepted) return
-    createApiClient(token).analytics.adoptionContext().then(setAdoption).catch(() => setAdoption(null))
-  }, [accepted, token])
+    const c = persistentCache.get<any>(adoptionKey); if (c) setAdoption(c)
+    createApiClient(token).analytics.adoptionContext().then(o => { setAdoption(o); persistentCache.set(adoptionKey, o) }).catch(() => { if (!c) setAdoption(null) })
+  }, [accepted, token, adoptionKey])
 
   // Reflect changes already adopted into this policy's draft (prior sessions).
   useEffect(() => {
     if (!accepted || !adoption?.enabled || !detail?.target_policy) return
+    const chKey = `admin-gap-adopted-${gUid}-${detail.target_policy.id}`
+    const applyChanges = (changes: any[]) => {
+      setPendingCount(changes.filter(c => !c.published).length)
+      setAdoptedReqs(new Set(changes.map(c => c.requirement)))
+      setAdoptedContent(Object.fromEntries(changes.map(c => [c.requirement, { new_text: c.new_text }])))
+    }
+    const cachedCh = persistentCache.get<any[]>(chKey); if (cachedCh) applyChanges(cachedCh)
     createApiClient(token).analytics.policyDocument(detail.target_policy.id)
       .then(d => {
         const changes = d.changes ?? []
+        persistentCache.set(chKey, changes)
         setPendingCount(changes.filter(c => !c.published).length)
         setAdoptedReqs(new Set(changes.map(c => c.requirement)))
         setAdoptedContent(Object.fromEntries(changes.map(c => [c.requirement, { new_text: c.new_text }])))
@@ -683,28 +702,47 @@ export function GapDetailModal({ token, referenceKey, officialName, acknowledged
   useEffect(() => {
     if (!accepted) return   // don't fetch the remediation detail until the disclaimer is accepted
     let live = true
+    const cachedD = persistentCache.get<Detail>(detailKey)
+    if (cachedD) {
+      setDetail(cachedD); setLoading(false)
+      const m0: Record<string, { decision: string; section_title?: string | null }> = {}
+      for (const dec of ((cachedD as any).decisions ?? [])) m0[dec.requirement] = { decision: dec.decision, section_title: dec.section_title }
+      setDecisions(m0)
+    }
     createApiClient(token).analytics.gapDetail(referenceKey)
       .then(d => {
         if (!live) return
+        persistentCache.set(detailKey, d)
         setDetail(d)
         const map: Record<string, { decision: string; section_title?: string | null }> = {}
         for (const dec of ((d as any).decisions ?? [])) map[dec.requirement] = { decision: dec.decision, section_title: dec.section_title }
         setDecisions(map)
         if (d.effective_status === 'covered') onVerdictCovered(referenceKey)
       })
-      .catch(e => { if (live) setError(e.message ?? 'Could not build the detail.') })
+      .catch(e => { if (live && !cachedD) setError(e.message ?? 'Could not build the detail.') })
       .finally(() => { if (live) setLoading(false) })
     return () => { live = false }
-  }, [token, referenceKey, accepted]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [token, referenceKey, accepted, detailKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load the target policy preview (right pane) as soon as the detail is ready.
   useEffect(() => {
-    if (!detail?.target_policy || html !== null || previewLoad) return
-    setPreviewLoad(true)
-    createApiClient(token).policies.preview(detail.target_policy.id)
-      .then(d => { setHtml(d.html || ''); setRawText(d.raw || '') })
-      .catch(e => setPreviewErr(e.message ?? 'Could not load the policy.'))
+    if (!detail?.target_policy || previewLoad) return
+    const pid = detail.target_policy.id
+    // Fetch when nothing is showing, or once per policy to refresh a cached paint in the background.
+    if (html !== null && previewRefreshedFor.current === pid) return
+    const pKey = previewKeyFor(pid)
+    if (html === null) {
+      const c = persistentCache.get<{ html: string; raw: string }>(pKey)
+      if (c) { setHtml(c.html); setRawText(c.raw) }
+    }
+    const showSpinner = html === null && persistentCache.get(pKey) === undefined
+    previewRefreshedFor.current = pid
+    if (showSpinner) setPreviewLoad(true)
+    createApiClient(token).policies.preview(pid)
+      .then(d => { setHtml(d.html || ''); setRawText(d.raw || ''); persistentCache.set(pKey, { html: d.html || '', raw: d.raw || '' }) })
+      .catch(e => { if (showSpinner) setPreviewErr(e.message ?? 'Could not load the policy.') })
       .finally(() => setPreviewLoad(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detail, html, previewLoad, token])
 
   // This effect is the SOLE owner of the preview node's content — the JSX div is left

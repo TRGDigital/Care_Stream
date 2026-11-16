@@ -3,7 +3,9 @@
 // Link an audit (a built-in one or the home's own) to training: the free CPD courses and/or the home's own
 // training. A completed audit then offers those courses to assign. On every plan.
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { useCachedQuery } from '@/lib/use-cached-query'
 import { createApiClient } from '@/lib/api-client'
 import { trainingForAudit } from '@/lib/audit-training'
 import { X, Loader2 } from 'lucide-react'
@@ -17,15 +19,14 @@ export function LinkTrainingModal({ token, template, current, onClose, onSaved }
   onClose: () => void
   onSaved: (refs: string[]) => void
 }) {
-  const [opts, setOpts] = useState<Opts | null>(null)
+  const { data: session } = useSession()
+  const uid = session?.user?.email ?? 'guest'
+  const oq = useCachedQuery<Opts>(`admin-audit-training-links-${uid}`, async () => (await createApiClient(token).audits.trainingLinks()).options)
+  const opts = oq.data ?? null
   const [refs, setRefs] = useState<string[]>(current)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const suggested = new Set(trainingForAudit(template.name).map(c => `cpd:${c.slug}`))
-
-  useEffect(() => {
-    createApiClient(token).audits.trainingLinks().then(d => setOpts(d.options)).catch(() => setError('Could not load the training list.'))
-  }, [token])
 
   const toggle = (ref: string) => setRefs(x => x.includes(ref) ? x.filter(y => y !== ref) : [...x, ref])
 
@@ -73,7 +74,7 @@ export function LinkTrainingModal({ token, template, current, onClose, onSaved }
             )}
           </div>
         )}
-        {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
+        {(error || (!opts && oq.error)) && <p className="mb-3 text-sm text-red-600">{error || 'Could not load the training list.'}</p>}
         <div className="flex justify-end gap-2">
           <button onClick={onClose} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:border-teal/40">Cancel</button>
           <button onClick={save} disabled={saving || !opts} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal/90 disabled:opacity-50">{saving ? 'Saving…' : 'Save'}</button>

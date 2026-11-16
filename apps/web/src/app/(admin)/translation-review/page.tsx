@@ -5,8 +5,9 @@
 // in that language, for this care setting. Enterprise-independent (part of the
 // core multilingual offering).
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
+import { useCachedQuery } from '@/lib/use-cached-query'
 import { createApiClient, type TranslationSuggestion } from '@/lib/api-client'
 import { Languages, Loader2, Check, X, Pencil, Trash2, Info, ChevronDown } from 'lucide-react'
 
@@ -47,30 +48,30 @@ export default function TranslationReviewPage() {
   const token = session?.accessToken
 
   const [tab, setTab] = useState('pending')
-  const [items, setItems] = useState<TranslationSuggestion[]>([])
-  const [pendingCount, setPendingCount] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const userKey = session?.user?.email ?? 'guest'
   const [error, setError] = useState('')
   const [editing, setEditing] = useState<string | null>(null)
   const [editText, setEditText] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
-  const [autoApprove, setAutoApprove] = useState(false)
   const [savingAuto, setSavingAuto] = useState(false)
 
-  const load = useCallback(() => {
-    if (!token) return
-    setLoading(true)
-    createApiClient(token).settings.translationSuggestions(tab || undefined)
-      .then(r => { setItems(r.suggestions); setPendingCount(r.pending_count) })
-      .catch((e: any) => setError(e.message ?? 'Failed to load'))
-      .finally(() => setLoading(false))
-  }, [token, tab])
-  useEffect(load, [load])
+  type TR = { suggestions: TranslationSuggestion[]; pending_count: number }
+  const q = useCachedQuery<TR>(
+    token ? `admin-translation-review-${userKey}-${tab || 'all'}` : null,
+    () => createApiClient(token!).settings.translationSuggestions(tab || undefined),
+  )
+  const items = q.data?.suggestions ?? []
+  const pendingCount = q.data?.pending_count ?? 0
+  const loading = q.loading
+  const load = q.reload
+  useEffect(() => { if (q.error) setError(q.error) }, [q.error])
 
-  useEffect(() => {
-    if (!token) return
-    createApiClient(token).settings.get().then(s => setAutoApprove(!!s.translation_suggestions_auto_approve)).catch(() => {})
-  }, [token])
+  const autoQ = useCachedQuery<boolean>(
+    token ? `admin-translation-auto-${userKey}` : null,
+    async () => !!(await createApiClient(token!).settings.get()).translation_suggestions_auto_approve,
+  )
+  const autoApprove = autoQ.data ?? false
+  const setAutoApprove = (v: boolean) => autoQ.setData(v)
 
   async function toggleAuto() {
     if (!token) return
@@ -94,7 +95,7 @@ export default function TranslationReviewPage() {
   async function remove(id: string) {
     if (!token) return
     setBusy(id)
-    try { await createApiClient(token).settings.deleteTranslationSuggestion(id); setItems(prev => prev.filter(x => x.id !== id)) }
+    try { await createApiClient(token).settings.deleteTranslationSuggestion(id); q.setData(prev => prev ? { ...prev, suggestions: prev.suggestions.filter(x => x.id !== id) } : prev as any) }
     finally { setBusy(null) }
   }
 

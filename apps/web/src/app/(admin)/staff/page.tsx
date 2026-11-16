@@ -175,12 +175,14 @@ function ActionMenu({
 export default function StaffPage() {
   const { data: session }              = useSession()
   const userId = session?.user?.email ?? 'guest'
-  const [users,        setUsers]       = useState<any[]>([])
-  const [staffRoles,   setStaffRoles]  = useState<string[]>([])
-  const [specialistRoles, setSpecialistRoles] = useState<string[]>([])
-  const [languages,    setLanguages]   = useState<{ code: string; name: string }[]>(LANGUAGES)
-  const [catalog,      setCatalog]     = useState<{ code: string; name: string }[]>([])
-  const [loading,      setLoading]     = useState(true)
+  type StaffSnap = { users: any[]; staffRoles: string[]; specialistRoles: string[]; languages?: { code: string; name: string }[]; catalog?: { code: string; name: string }[] }
+  const snap0 = persistentCache.get<StaffSnap>(`admin-staff-${userId}`)
+  const [users,        setUsers]       = useState<any[]>(snap0?.users ?? [])
+  const [staffRoles,   setStaffRoles]  = useState<string[]>(snap0?.staffRoles ?? [])
+  const [specialistRoles, setSpecialistRoles] = useState<string[]>(snap0?.specialistRoles ?? [])
+  const [languages,    setLanguages]   = useState<{ code: string; name: string }[]>(snap0?.languages ?? LANGUAGES)
+  const [catalog,      setCatalog]     = useState<{ code: string; name: string }[]>(snap0?.catalog ?? [])
+  const [loading,      setLoading]     = useState(!snap0)
   const [showInvite,   setShowInvite]  = useState(false)
   const [showImport,   setShowImport]  = useState(false)
   const [showHubInvite, setShowHubInvite] = useState(false)
@@ -191,14 +193,16 @@ export default function StaffPage() {
   const [agencySpend,  setAgencySpend] = useState<{
     bookings: number; people: number; days: number; cost_pence: number | null; active_now: number
     by_agency: Array<{ agency: string; bookings: number; days: number; cost_pence: number | null }>
-  } | null>(null)
+  } | null>(() => persistentCache.get<any>(`admin-staff-agencyspend-${userId}`) ?? null)
 
+  const fetchedSpend = useRef(false)
   // The spend figures only exist for homes that use agency cover, so the call is
   // only made once an agency worker appears in the list.
   useEffect(() => {
-    if (!session?.accessToken || agencySpend || !users.some(u => u.is_agency)) return
-    createApiClient(session.accessToken).users.agencySpend().then(setAgencySpend).catch(() => {})
-  }, [session?.accessToken, users, agencySpend])
+    if (!session?.accessToken || fetchedSpend.current || !users.some(u => u.is_agency)) return
+    fetchedSpend.current = true
+    createApiClient(session.accessToken).users.agencySpend().then(s => { setAgencySpend(s); persistentCache.set(`admin-staff-agencyspend-${userId}`, s) }).catch(() => {})
+  }, [session?.accessToken, users, userId])
 
   function load() {
     if (!session?.accessToken) return

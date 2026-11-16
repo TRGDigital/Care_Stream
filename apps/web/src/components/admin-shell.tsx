@@ -20,7 +20,7 @@ import { SuggestionsButton } from '@/components/admin/suggestions-drawer'
 import { createApiClient } from '@/lib/api-client'
 import { FreeLockOverlay } from '@/components/admin/free-tier'
 import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
-import { pageCache } from '@/lib/page-cache'
+import { pageCache, persistentCache } from '@/lib/page-cache'
 
 const NAV_SECTIONS = [
   {
@@ -153,8 +153,11 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
   // Load sites list once the session token is available
   useEffect(() => {
     if (!session?.accessToken) return
+    const sk = `admin-shell-sites-${session.user?.email ?? 'guest'}`
+    const cachedSites = persistentCache.get<any[]>(sk)
+    if (cachedSites) setSites(cachedSites)
     createApiClient(session.accessToken).sites.list()
-      .then(d => setSites(d.sites))
+      .then(d => { setSites(d.sites); persistentCache.set(sk, d.sites) })
       .catch(() => {})
   }, [session?.accessToken])
 

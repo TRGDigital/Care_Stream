@@ -540,10 +540,11 @@ export default function CqcQuestionsPage() {
   const userId = session?.user?.email ?? 'guest'
 
   const [tab, setTab]               = useState<'bank' | 'performance'>('bank')
-  const [questions, setQuestions]   = useState<Question[]>([])
-  const [deliveries, setDeliveries] = useState<Delivery[]>([])
-  const [staff, setStaff]           = useState<StaffUser[]>([])
-  const [loading, setLoading]       = useState(true)
+  const q0 = persistentCache.get<{ questions: Question[]; deliveries: Delivery[]; staff: StaffUser[] }>(`admin-cqc-questions-${userId}`)
+  const [questions, setQuestions]   = useState<Question[]>(q0?.questions ?? [])
+  const [deliveries, setDeliveries] = useState<Delivery[]>(q0?.deliveries ?? [])
+  const [staff, setStaff]           = useState<StaffUser[]>(q0?.staff ?? [])
+  const [loading, setLoading]       = useState(!q0)
   const [error, setError]           = useState('')
 
   // Hydrate from the persistent (localStorage) cache after mount — never during
@@ -569,7 +570,7 @@ export default function CqcQuestionsPage() {
       setStaff(staffList)
       persistentCache.set(`admin-cqc-questions-${userId}`, { questions: qRes.questions, deliveries: dRes.deliveries, staff: staffList })
     } catch (e: any) {
-      setError(e.message)
+      if (persistentCache.get(`admin-cqc-questions-${userId}`) === undefined) setError(e.message)
     } finally {
       setLoading(false)
     }

@@ -214,8 +214,12 @@ function PolicyViewer({ token, policyId, stepId, enrollmentId, onClose, onMarked
   onTalk?:       (policyId: string, title: string) => void
   lang?:         '2'
 }) {
-  const [data,     setData]     = useState<{ title: string; content: string; lang: string; html?: boolean; processing?: boolean; translation_pending?: boolean } | null>(null)
-  const [loading,  setLoading]  = useState(true)
+  type PolicyData = { title: string; content: string; lang: string; html?: boolean; processing?: boolean; translation_pending?: boolean }
+  const { data: pvSession } = useSession()
+  const pvKey = hubKey(`policy-${policyId}-${lang ?? '1'}`, pvSession?.user?.email ?? 'guest')
+  const pvCached = persistentCache.get<PolicyData>(pvKey)
+  const [data,     setData]     = useState<PolicyData | null>(pvCached ?? null)
+  const [loading,  setLoading]  = useState(!pvCached)
   const [saved,    setSaved]    = useState(false)
   const [busy,     setBusy]     = useState(false)
   const [scrollPct, setScrollPct] = useState(0)
@@ -227,11 +231,11 @@ function PolicyViewer({ token, policyId, stepId, enrollmentId, onClose, onMarked
   useEffect(() => {
     let active = true
     createApiClient(token).me.policy(policyId, lang)
-      .then(d => { if (active) setData(d) })
+      .then(d => { if (active) { setData(d); if (!(d as any).processing && !(d as any).translation_pending) persistentCache.set(pvKey, d) } })
       .catch(() => {})
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [policyId, token, lang])
+  }, [policyId, token, lang, pvKey])
 
   // Accumulate active reading time (paused when the tab is hidden).
   useEffect(() => {

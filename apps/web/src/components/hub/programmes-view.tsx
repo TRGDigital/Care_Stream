@@ -8,6 +8,9 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Award, GraduationCap, Lock, CheckCircle2, Clock, AlertCircle, ArrowLeft, Printer, TrendingUp, Download, Loader2 } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { useCachedQuery } from '@/lib/use-cached-query'
+import { hubKey, persistentCache } from '@/lib/page-cache'
 import { createApiClient } from '@/lib/api-client'
 import { TakeModule } from '@/components/hub/annual-training-view'
 import { ProgrammeCertificate } from '@/components/programme-certificate'
@@ -72,14 +75,11 @@ function ProgressBar({ percent, complete }: { percent: number; complete: boolean
 }
 
 function ProgrammeList({ token, onOpen }: { token: string; onOpen: (id: string) => void }) {
-  const [items, setItems] = useState<any[] | null>(null)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    createApiClient(token).me.programmes.list()
-      .then(d => setItems(d.items))
-      .catch(e => setError(e?.message ?? 'Could not load your diplomas.'))
-  }, [token])
+  const { data: session } = useSession()
+  const uk = session?.user?.email ?? 'guest'
+  const q = useCachedQuery<any[]>(hubKey('programmes', uk), async () => (await createApiClient(token).me.programmes.list()).items)
+  const items = q.data ?? null
+  const error = q.data ? '' : (q.error ? 'Could not load your diplomas.' : '')
 
   if (error) {
     return (
@@ -179,13 +179,14 @@ function ProgrammeDetail({
   onCert: () => void
   onChange?: () => void
 }) {
-  const [data, setData] = useState<any>(null)
-  const [error, setError] = useState('')
+  const { data: session } = useSession()
+  const uk = session?.user?.email ?? 'guest'
+  const q = useCachedQuery<any>(hubKey(`programme-${id}`, uk), () => createApiClient(token).me.programmes.get(id))
+  const data = q.data ?? null
+  const error = q.data ? '' : (q.error ? 'Could not load this diploma.' : '')
   const [stage, setStage] = useState<'overview' | 'synoptic'>('overview')
 
-  const api = createApiClient(token)
-  const load = () => api.me.programmes.get(id).then(setData).catch(e => setError(e?.message ?? 'Could not load this diploma.'))
-  useEffect(() => { load() /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [token, id])
+  const load = q.reload
 
   if (error) return <div className="mx-auto max-w-2xl p-6 text-sm text-red-600">{error}</div>
   if (!data) return <div className="p-6 text-sm text-neutral-mid">Loading…</div>
@@ -545,14 +546,10 @@ function SynopticAssessment({
 // ─── Certificate ──────────────────────────────────────────────────────────────
 
 function ProgrammeCertView({ token, id, onExit }: { token: string; id: string; onExit: () => void }) {
-  const [data, setData] = useState<any>(null)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    createApiClient(token).me.programmes.certificate(id)
-      .then(setData)
-      .catch(e => setError(e?.message ?? 'No certificate yet.'))
-  }, [token, id])
+  const { data: session } = useSession()
+  const q = useCachedQuery<any>(hubKey(`programme-cert-${id}`, session?.user?.email ?? 'guest'), () => createApiClient(token).me.programmes.certificate(id))
+  const data = q.data ?? null
+  const error = q.data ? '' : (q.error ? 'No certificate yet.' : '')
 
   const certRef = useRef<HTMLDivElement>(null)
   const [saving, setSaving] = useState(false)

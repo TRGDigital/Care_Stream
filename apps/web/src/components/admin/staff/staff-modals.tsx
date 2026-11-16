@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { createApiClient, type StaffContact } from '@/lib/api-client'
+import { persistentCache } from '@/lib/page-cache'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { FreeLanguageLock, useIsFree } from '@/components/admin/free-tier'
@@ -44,17 +45,21 @@ function TrainingAssignStep({ token, userId, userName, onDone }: {
   userName: string
   onDone:   () => void
 }) {
-  const [modules,  setModules]  = useState<any[]>([])
-  const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [loading,  setLoading]  = useState(true)
+  const uidT = useSession().data?.user?.email ?? 'guest'
+  const modKeyT = `admin-staff-assign-modules-${uidT}`
+  const mods0 = persistentCache.get<any[]>(modKeyT)
+  const statutoryIds = (l: any[]) => new Set<string>(l.filter((m: any) => m.category === 'statutory').map((m: any) => m.id))
+  const [modules,  setModules]  = useState<any[]>(mods0 ?? [])
+  const [selected, setSelected] = useState<Set<string>>(() => mods0 ? statutoryIds(mods0) : new Set())
+  const [loading,  setLoading]  = useState(mods0 === undefined)
   const [saving,   setSaving]   = useState(false)
   const [page,     setPage]     = useState(0)
 
   useEffect(() => {
     createApiClient(token).training.modules()
       .then(d => {
-        setModules(d.modules)
-        setSelected(new Set(d.modules.filter((m: any) => m.category === 'statutory').map((m: any) => m.id)))
+        setModules(d.modules); persistentCache.set(modKeyT, d.modules)
+        setSelected(prev => prev.size ? prev : statutoryIds(d.modules))
       })
       .finally(() => setLoading(false))
   }, [token])
@@ -194,15 +199,17 @@ function OnboardingAssignStep({ token, userId, userName, alreadyFlowIds, onDone 
   alreadyFlowIds: string[]
   onDone:         () => void
 }) {
-  const [flows,    setFlows]    = useState<any[]>([])
+  const uidO = useSession().data?.user?.email ?? 'guest'
+  const flowKeyO = `admin-staff-assign-flows-${uidO}`
+  const [flows,    setFlows]    = useState<any[]>(() => persistentCache.get<any[]>(flowKeyO) ?? [])
   const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [loading,  setLoading]  = useState(true)
+  const [loading,  setLoading]  = useState(() => persistentCache.get<any[]>(flowKeyO) === undefined)
   const [saving,   setSaving]   = useState(false)
   const already = new Set(alreadyFlowIds)
 
   useEffect(() => {
     createApiClient(token).onboarding.listFlows()
-      .then(d => setFlows((d.flows ?? []).filter((f: any) => f.is_active !== false)))
+      .then(d => { const l = (d.flows ?? []).filter((f: any) => f.is_active !== false); setFlows(l); persistentCache.set(flowKeyO, l) })
       .finally(() => setLoading(false))
   }, [token])
 
@@ -298,10 +305,12 @@ function AccessLevelField({ token, role, auditIds, onChange }: {
   auditIds:  string[]
   onChange:  (v: { role: string; auditIds: string[] }) => void
 }) {
-  const [templates, setTemplates] = useState<{ id: string; name: string; frequency: string }[]>([])
+  const uidA = useSession().data?.user?.email ?? 'guest'
+  const tplKeyA = `admin-staff-audit-templates-${uidA}`
+  const [templates, setTemplates] = useState<{ id: string; name: string; frequency: string }[]>(() => persistentCache.get<any[]>(tplKeyA) ?? [])
   useEffect(() => {
     createApiClient(token).audits.templates()
-      .then(r => setTemplates(r.templates ?? []))
+      .then(r => { const l = r.templates ?? []; setTemplates(l); persistentCache.set(tplKeyA, l) })
       .catch(() => {})
   }, [token])
 
@@ -1098,8 +1107,10 @@ export function StaffDetailModal({ userId, token, languages, onClose, onEdit, on
   onEdit:    (user: any) => void
   onChanged: (updated: any | null) => void
 }) {
-  const [data,        setData]        = useState<{ user: any; training: any[]; onboarding: any[] } | null>(null)
-  const [loading,     setLoading]     = useState(true)
+  type DetailData = { user: any; training: any[]; onboarding: any[] }
+  const detKey = `admin-staff-detail-${useSession().data?.user?.email ?? 'guest'}-${userId}`
+  const [data,        setData]        = useState<DetailData | null>(() => persistentCache.get<DetailData>(detKey) ?? null)
+  const [loading,     setLoading]     = useState(() => persistentCache.get<DetailData>(detKey) === undefined)
   const [view,        setView]        = useState<'detail' | 'assign' | 'onboard'>('detail')
   // Training-only tenants allocate purchased licences from the Training page — the
   // adhoc/statutory assignment picker does not apply to them.
@@ -1110,9 +1121,9 @@ export function StaffDetailModal({ userId, token, languages, onClose, onEdit, on
   const [savingSuggest, setSavingSuggest] = useState(false)
 
   function load() {
-    setLoading(true)
+    if (persistentCache.get<DetailData>(detKey) === undefined) setLoading(true)
     createApiClient(token).users.get(userId)
-      .then(d => setData(d as any))
+      .then(d => { setData(d as any); persistentCache.set(detKey, d as any) })
       .catch(() => {})
       .finally(() => setLoading(false))
   }

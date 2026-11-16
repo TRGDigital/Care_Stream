@@ -39,7 +39,10 @@ export function FaceToFaceManager({ token }: { token?: string }) {
   // Past/today sessions with staff still not marked attended or absent.
   const [unmarked, setUnmarked] = useState<any[]>(cached?.unmarked ?? [])
   const [markBusy, setMarkBusy] = useState<string | null>(null)  // `${sessionId}:${userId}` in flight
-  const [training, setTraining] = useState<{ adhoc: any[]; prebuilt: any[]; cpd: any[] } | null>(null)  // policy / pre-built / CPD allocations + completions for the visible month
+  const [training, setTraining] = useState<{ adhoc: any[]; prebuilt: any[]; cpd: any[] } | null>(() => {
+    const c = persistentCache.get<{ adhoc: any[]; prebuilt: any[]; cpd: any[] }>(`${cacheKey}-tm2-${today.getFullYear()}-${pad(today.getMonth() + 1)}`)
+    return c && Array.isArray((c as any).prebuilt) ? c : null
+  })  // policy / pre-built / CPD allocations + completions for the visible month
   const [payrollOpen, setPayrollOpen] = useState(false)
   const [evidenceLogOpen, setEvidenceLogOpen] = useState(false)
   const [dayDetail, setDayDetail] = useState<string | null>(null)   // open the per-day overlay
@@ -431,17 +434,21 @@ function SessionModal({ api, modules, staff, initial, presetDate, onClose, onSav
   const [capacity,  setCapacity]  = useState(initial?.capacity != null ? String(initial.capacity) : '')
   const [renewMonths, setRenewMonths] = useState(initial?.renews_after_months != null ? String(initial.renews_after_months) : '')
   const [repeatMonths, setRepeatMonths] = useState(0)   // additional monthly copies (new sessions only)
-  const [attendees, setAttendees] = useState<Set<string>>(new Set())
-  const [owedPay, setOwedPay] = useState<Set<string>>(new Set())
+  const { data: edSession } = useSession()
+  const attKey = initial ? `admin-f2f-attendance-${(edSession?.user as any)?.email ?? 'guest'}-${initial.id}` : null
+  const attCached = attKey ? persistentCache.get<any[]>(attKey) : undefined
+  const [attendees, setAttendees] = useState<Set<string>>(() => new Set((attCached ?? []).map((a: any) => a.user_id)))
+  const [owedPay, setOwedPay] = useState<Set<string>>(() => new Set((attCached ?? []).filter((a: any) => a.owed_pay).map((a: any) => a.user_id)))
   const [filter, setFilter] = useState('')
   const [saving, setSaving] = useState(false)
-  const [loadingAttendees, setLoadingAttendees] = useState(!!initial)
+  const [loadingAttendees, setLoadingAttendees] = useState(!!initial && attCached === undefined)
 
   // For an existing session, load its current attendee set.
   useEffect(() => {
     if (!initial) return
     api.faceToFace.session(initial.id).then(d => {
       const att = d.session.attendance ?? []
+      if (attKey) persistentCache.set(attKey, att)
       setAttendees(new Set(att.map((a: any) => a.user_id)))
       setOwedPay(new Set(att.filter((a: any) => a.owed_pay).map((a: any) => a.user_id)))
     }).catch(() => {}).finally(() => setLoadingAttendees(false))
@@ -629,7 +636,9 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
 }) {
   const { data: session } = useSession()
   const orgName = (session?.user as any)?.tenantName ?? 'Your service'
-  const [data, setData] = useState<any>(null)
+  const sdKey = `admin-f2f-session-${(session?.user as any)?.email ?? 'guest'}-${sessionId}`
+  const [data, setDataState] = useState<any>(() => persistentCache.get<any>(sdKey) ?? null)
+  const setData = (v: any) => setDataState((prev: any) => { const next = typeof v === 'function' ? v(prev) : v; if (next) persistentCache.set(sdKey, next); return next })
   const [saving, setSaving] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [assignMsg, setAssignMsg] = useState('')
@@ -946,11 +955,13 @@ function SessionDetail({ api, staff, modules, sessionId, onClose, onChanged, onE
 function EvidenceLogModal({ api, onClose, onOpenSession }: {
   api: ReturnType<typeof createApiClient>; onClose: () => void; onOpenSession: (sessionId: string) => void
 }) {
-  const [rows, setRows] = useState<any[] | null>(null)
+  const { data: evSession } = useSession()
+  const evKey = `admin-f2f-evidence-${(evSession?.user as any)?.email ?? 'guest'}`
+  const [rows, setRows] = useState<any[] | null>(() => persistentCache.get<any[]>(evKey) ?? null)
   const [msg, setMsg]   = useState('')
 
   useEffect(() => {
-    api.faceToFace.listEvidence().then(d => setRows(d.evidence)).catch(() => setRows([]))
+    api.faceToFace.listEvidence().then(d => { setRows(d.evidence); persistentCache.set(evKey, d.evidence) }).catch(() => setRows(prev => prev ?? []))
   }, [api])
 
   async function openFile(ev: any) {
@@ -1045,7 +1056,8 @@ function PayrollModal({ api, year, month, onClose }: {
   const [y, setY] = useState(year)
   const [m, setM] = useState(month)   // 0-based
   const [weekAnchor, setWeekAnchor] = useState<string>(() => ymd(new Date()))   // any day in the target week
-  const [data, setData] = useState<{ f2f: any[]; adhoc: any[]; prebuilt: any[]; cpd: any[] } | null>(null)
+  type PayrollData = { f2f: any[]; adhoc: any[]; prebuilt: any[]; cpd: any[] }
+  const [data, setData] = useState<PayrollData | null>(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy]   = useState<'pdf' | 'email' | null>(null)
   const [email, setEmail] = useState('')
@@ -1061,9 +1073,11 @@ function PayrollModal({ api, year, month, onClose }: {
   const generated  = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 
   useEffect(() => {
-    setLoading(true)
+    const pKey = `admin-f2f-payroll-${(session?.user as any)?.email ?? 'guest'}-${period === 'weekly' ? `w-${fromStr}-${toStr}` : `m-${monthStr}`}`
+    const cachedP = persistentCache.get<PayrollData>(pKey)
+    setData(cachedP ?? null); setLoading(cachedP === undefined)   // paint the last report for this period at once
     const req = period === 'weekly' ? api.faceToFace.trainingRange(fromStr, toStr) : api.faceToFace.trainingMonth(monthStr)
-    req.then(d => setData({ f2f: d.f2f, adhoc: d.adhoc, prebuilt: d.prebuilt ?? d.annual, cpd: d.cpd ?? [] })).catch(() => setData(null)).finally(() => setLoading(false))
+    req.then(d => { const v = { f2f: d.f2f, adhoc: d.adhoc, prebuilt: d.prebuilt ?? d.annual, cpd: d.cpd ?? [] }; setData(v); persistentCache.set(pKey, v) }).catch(() => setData(prev => prev)).finally(() => setLoading(false))
   }, [period, monthStr, fromStr, toStr]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // The "Owed pay" tick drives payment. We only withhold it if the person was

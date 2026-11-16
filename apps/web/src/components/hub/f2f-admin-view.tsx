@@ -1,20 +1,19 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { useCachedQuery } from '@/lib/use-cached-query'
+import { hubKey, persistentCache } from '@/lib/page-cache'
 import { createApiClient } from '@/lib/api-client'
 import { CalendarDays, AlertTriangle, CheckCircle2, GraduationCap } from 'lucide-react'
 
 // Admin-only hub view: who missed face-to-face sessions, and whether they've
 // completed the digital module they were allocated as a catch-up.
 export function F2FAdminView({ token }: { token: string }) {
-  const [data, setData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
-
-  useEffect(() => {
-    createApiClient(token).faceToFace.analytics()
-      .then(setData).catch(() => setError(true)).finally(() => setLoading(false))
-  }, [token])
+  const { data: session } = useSession()
+  const q = useCachedQuery<any>(hubKey('f2f-admin', session?.user?.email ?? 'guest'), () => createApiClient(token).faceToFace.analytics())
+  const data = q.data ?? null
+  const loading = q.loading
+  const error = !!q.error && !q.data
 
   if (loading) return <div className="flex-1 space-y-3 overflow-y-auto p-6">{[1, 2, 3].map(i => <div key={i} className="h-20 animate-pulse rounded-xl bg-gray-100" />)}</div>
 

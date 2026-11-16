@@ -12,6 +12,8 @@
 // something they do not answers it; a buyer shown a bare form does not.
 
 import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { persistentCache } from '@/lib/page-cache'
 import { createApiClient, type TenantIntake, type IntakeQuestion } from '@/lib/api-client'
 import { Loader2, Check, ShieldAlert, ClipboardList, ChevronRight } from 'lucide-react'
 
@@ -46,25 +48,30 @@ function Field({ q, value, onChange }: {
 }
 
 export function PolicyIntakePanel({ token }: { token: string }) {
-  const [intake, setIntake] = useState<TenantIntake | null>(null)
-  const [draft, setDraft] = useState<Record<string, string>>({})
-  const [open, setOpen] = useState(false)
+  const { data: sess } = useSession()
+  const intakeKey = `admin-policy-intake-${sess?.user?.email ?? 'guest'}`
+  const [intake, setIntake] = useState<TenantIntake | null>(() => persistentCache.get<TenantIntake>(intakeKey) ?? null)
+  const [draft, setDraft] = useState<Record<string, string>>(() => persistentCache.get<TenantIntake>(intakeKey)?.answers ?? {})
+  const [open, setOpen] = useState(() => (persistentCache.get<TenantIntake>(intakeKey)?.missing ?? 0) > 0)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState('')
   const [error, setError] = useState('')
 
   useEffect(() => {
     let live = true
+    const cached = persistentCache.get<TenantIntake>(intakeKey)
+    if (cached) { setIntake(cached); setDraft(cached.answers); setOpen(cached.missing > 0) }
     createApiClient(token).policies.intake()
-      .then(r => { if (!live) return; setIntake(r.intake); setDraft(r.intake.answers); setOpen(r.intake.missing > 0) })
-      .catch(e => { if (live) setError(e?.message ?? 'Could not load what we still need.') })
+      .then(r => { if (!live) return; persistentCache.set(intakeKey, r.intake); setIntake(r.intake); setDraft(r.intake.answers); setOpen(r.intake.missing > 0) })
+      .catch(e => { if (live && !cached) setError(e?.message ?? 'Could not load what we still need.') })
     return () => { live = false }
-  }, [token])
+  }, [token, intakeKey])
 
   async function save() {
     setSaving(true); setError(''); setSaved('')
     try {
       const r = await createApiClient(token).policies.saveIntake(draft)
+      persistentCache.set(intakeKey, r.intake)
       setIntake(r.intake); setDraft(r.intake.answers)
       setSaved(r.intake.missing === 0
         ? 'Thank you. Your policies can now be written entirely from what you have told us.'

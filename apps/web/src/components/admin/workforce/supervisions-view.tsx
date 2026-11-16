@@ -72,8 +72,8 @@ function Cell({ cell }: { cell: Row['supervision'] }) {
 
 export function SupervisionsView({ token, userId }: { token: string; userId: string }) {
   const cacheKey = `admin-workforce-supervisions-${userId}`
-  const [data, setData] = useState<Overview | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState<Overview | null>(() => persistentCache.get<Overview>(cacheKey) ?? null)
+  const [loading, setLoading] = useState(() => persistentCache.get<Overview>(cacheKey) === undefined)
   const [editing, setEditing] = useState<Row | null>(null)
 
   async function load() {
@@ -158,23 +158,26 @@ export function SupervisionsView({ token, userId }: { token: string; userId: str
         </div>
       </div>
 
-      {editing && <SupModal token={token} staff={editing} onClose={() => setEditing(null)} onSaved={load} />}
+      {editing && <SupModal token={token} userId={userId} staff={editing} onClose={() => setEditing(null)} onSaved={load} />}
     </div>
   )
 }
 
 // ── Per-staff history + log form ──────────────────────────────────────────────
-function SupModal({ token, staff, onClose, onSaved }: { token: string; staff: Row; onClose: () => void; onSaved: () => void }) {
+function SupModal({ token, userId, staff, onClose, onSaved }: { token: string; userId: string; staff: Row; onClose: () => void; onSaved: () => void }) {
   const api = createApiClient(token)
-  const [records, setRecords] = useState<SupRecord[]>([])
-  const [loading, setLoading] = useState(true)
+  const histKey = `admin-workforce-suphistory-${userId}-${staff.id}`
+  const adminsKey = `admin-workforce-supadmins-${userId}`
+  type Admin = { id: string; name: string; job_role: string | null }
+  const [records, setRecords] = useState<SupRecord[]>(() => persistentCache.get<SupRecord[]>(histKey) ?? [])
+  const [loading, setLoading] = useState(() => persistentCache.get<SupRecord[]>(histKey) === undefined)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const [form, setForm] = useState({ type: 'supervision', held_on: '', conducted_by_user_id: '', next_due: '', notes: '' })
-  const [admins, setAdmins] = useState<Array<{ id: string; name: string; job_role: string | null }>>([])
+  const [admins, setAdmins] = useState<Admin[]>(() => persistentCache.get<Admin[]>(adminsKey) ?? [])
 
   async function loadHistory() {
-    try { setRecords((await api.workforce.staffSupervisions(staff.id)).records) }
+    try { const r = (await api.workforce.staffSupervisions(staff.id)).records; setRecords(r); persistentCache.set(histKey, r) }
     catch { /* ignore */ }
     finally { setLoading(false) }
   }
@@ -182,7 +185,7 @@ function SupModal({ token, staff, onClose, onSaved }: { token: string; staff: Ro
   // Admins who can conduct a supervision (from the staff list).
   useEffect(() => {
     api.users.list()
-      .then((d: any) => setAdmins((d.users ?? []).filter((u: any) => u.role === 'admin' && u.is_active !== false && u.name).map((u: any) => ({ id: u.id, name: u.name, job_role: u.job_role ?? null }))))
+      .then((d: any) => { const a = (d.users ?? []).filter((u: any) => u.role === 'admin' && u.is_active !== false && u.name).map((u: any) => ({ id: u.id, name: u.name, job_role: u.job_role ?? null })); setAdmins(a); persistentCache.set(adminsKey, a) })
       .catch(() => {})
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 

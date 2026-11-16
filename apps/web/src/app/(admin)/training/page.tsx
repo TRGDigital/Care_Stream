@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react'
 import { createApiClient, apiAssetUrl } from '@/lib/api-client'
 import { AiCreditsBar } from '@/components/ai-usage'
 import { persistentCache } from '@/lib/page-cache'
+import { useCachedQuery } from '@/lib/use-cached-query'
 import { useCart, cart } from '@/lib/cart-store'
 import { gbp, UNIT_PENCE, DISCOUNT_TIERS, discountPctForQty } from '@/lib/training-commerce'
 import {
@@ -221,15 +222,24 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
   // fetched lazily the first time the tab is opened.
   // Cached across mounts so switching tabs (or leaving and coming back) is instant;
   // it still revalidates in the background on first open.
-  const prebuiltCached = persistentCache.get<{ modules: any[]; groups: Record<string, string>; coverage: any }>('admin-prebuilt')
+  const { data: tabSession } = useSession()
+  const tabUserId = tabSession?.user?.email ?? 'guest'
+  const prebuiltKey = `admin-prebuilt-${tabUserId}`
+  const prebuiltCached = persistentCache.get<{ modules: any[]; groups: Record<string, string>; coverage: any }>(prebuiltKey)
   const [prebuilt,       setPrebuilt]       = useState<any[] | null>(prebuiltCached?.modules ?? null)
   const [prebuiltGroups, setPrebuiltGroups] = useState<Record<string, string>>(prebuiltCached?.groups ?? {})
   const [prebuiltCover,  setPrebuiltCover]  = useState<any>(prebuiltCached?.coverage ?? null)
   const [assignPrebuilt, setAssignPrebuilt] = useState<any | null>(null)
   const [practicalSheet, setPracticalSheet] = useState<any | null>(null)
-  const [archived,  setArchived]  = useState<Module[]>([])
+  const archivedKey = `admin-training-archived-${tabUserId}`
+  const [archived,  setArchivedState]  = useState<Module[]>(() => persistentCache.get<Module[]>(archivedKey) ?? [])
+  const setArchived = (v: Module[] | ((p: Module[]) => Module[])) => setArchivedState(prev => {
+    const next = typeof v === 'function' ? (v as (p: Module[]) => Module[])(prev) : v
+    persistentCache.set(archivedKey, next)
+    return next
+  })
   const [archiving, setArchiving] = useState<string | null>(null)
-  useEffect(() => { api.training.archivedModules().then(d => setArchived(d.modules as Module[])).catch(() => {}) }, [api])
+  useEffect(() => { api.training.archivedModules().then(d => setArchived(d.modules as Module[])).catch(() => {}) }, [api]) // eslint-disable-line react-hooks/exhaustive-deps
   const [prebuiltFetched, setPrebuiltFetched] = useState(false)
   useEffect(() => {
     if (view !== 'prebuilt' || prebuiltFetched) return
@@ -237,7 +247,7 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
     api.training.prebuilt()
       .then(d => {
         setPrebuilt(d.modules); setPrebuiltGroups(d.groups); setPrebuiltCover(d.coverage)
-        persistentCache.set('admin-prebuilt', { modules: d.modules, groups: d.groups, coverage: d.coverage })
+        persistentCache.set(prebuiltKey, { modules: d.modules, groups: d.groups, coverage: d.coverage })
       })
       .catch(() => setPrebuilt(prev => prev ?? []))
   }, [view, prebuiltFetched, api])
@@ -910,34 +920,22 @@ function HistoryTab({ api, modules }: {
   api:     ReturnType<typeof createApiClient>
   modules: Module[]
 }) {
-  const [allVersions, setAllVersions] = useState<Array<{ module: Module; versions: any[] }>>([])
-  const [loading,     setLoading]     = useState(true)
+  const { data: histSession } = useSession()
+  const histUserId = histSession?.user?.email ?? 'guest'
   const [expanded,    setExpanded]    = useState<string | null>(null)
   const [filterFrom,  setFilterFrom]  = useState('')
   const [filterTo,    setFilterTo]    = useState('')
 
-  // One browser-cached call for the whole tenant (was one request per module), and a
-  // stable dependency so switching tabs / re-rendering doesn't refetch every time.
-  const moduleKey = modules.map(m => m.id).join(',')
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      try {
-        const { versions } = await api.training.allModuleVersions()
-        if (cancelled) return
-        const results = modules
-          .map(m => ({ module: m, versions: versions[m.id] ?? [] }))
-          .filter(r => r.versions.length > 0)
-        setAllVersions(results)
-      } catch {
-        if (!cancelled) setAllVersions([])
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-    load()
-    return () => { cancelled = true }
-  }, [moduleKey])   // eslint-disable-line react-hooks/exhaustive-deps
+  // One browser-cached call for the whole tenant (was one request per module). Painted from cache on mount,
+  // refreshed in the background; the per-module grouping is derived so it follows the modules prop.
+  const histQ = useCachedQuery<Record<string, any[]>>(
+    `admin-training-history-${histUserId}`,
+    async () => (await api.training.allModuleVersions()).versions,
+  )
+  const loading = histQ.loading
+  const allVersions: Array<{ module: Module; versions: any[] }> = histQ.data
+    ? modules.map(m => ({ module: m, versions: histQ.data![m.id] ?? [] })).filter(r => r.versions.length > 0)
+    : []
 
   // Filter versions by date range
   const fromMs = filterFrom ? new Date(filterFrom).setHours(0,  0,  0, 0) : null
@@ -1126,19 +1124,27 @@ function DeliveryTab({ api, modules, staff, onOpenModules }: {
 }) {
   // Only modules with questions can be sent; the rest are empty adhoc placeholders.
   const available = modules.filter(m => (m.questions?.length ?? 0) > 0)
-  const [events,        setEvents]        = useState<any[]>([])
-  const [eventsLoading, setEventsLoading] = useState(true)
+  const { data: delSession } = useSession()
+  const delUserId = delSession?.user?.email ?? 'guest'
   const [eventType,     setEventType]     = useState('')
   const [openEvent,     setOpenEvent]     = useState<string | null>(null)
   const [qsNote,        setQsNote]        = useState('')
-  const [rules,       setRules]       = useState<any[]>([])
-  const [rulesLoading,setRulesLoading]= useState(true)
+  // Events, rules and the send log paint from cache on mount, then refresh in the background.
+  const eventsQ  = useCachedQuery<any[]>(`admin-training-events-${delUserId}-${eventType || 'all'}`, async () => (await api.training.sendEvents({ type: eventType, limit: 30 })).events)
+  const rulesQ   = useCachedQuery<any[]>(`admin-training-rules-${delUserId}`, async () => (await api.training.deliveryRules()).rules)
+  const logQ     = useCachedQuery<any[]>(`admin-training-sendlog-${delUserId}`, async () => (await api.training.sendLog(30)).logs)
+  const events = eventsQ.data ?? []
+  const eventsLoading = eventsQ.loading
+  const rules = rulesQ.data ?? []
+  const rulesLoading = rulesQ.loading
+  const sendLog = logQ.data ?? []
+  const logLoading = logQ.loading
+  const setRules = (fn: (p: any[]) => any[]) => rulesQ.setData(p => fn(p ?? []))
+  const setSendLog = (v: any[]) => logQ.setData(v)
   const [showModal,   setShowModal]   = useState(false)
   const [editRule,    setEditRule]    = useState<any | null>(null)
   const [triggerLoad, setTriggerLoad] = useState<string | null>(null)
   const [triggerMsg,  setTriggerMsg]  = useState<Record<string, string>>({})
-  const [sendLog,     setSendLog]     = useState<any[]>([])
-  const [logLoading,  setLogLoading]  = useState(true)
 
   // Quick-action state
   const [qsModule,    setQsModule]    = useState('')
@@ -1159,24 +1165,7 @@ function DeliveryTab({ api, modules, staff, onOpenModules }: {
   const [piSending,   setPiSending]   = useState(false)
   const [piResult,    setPiResult]    = useState('')
 
-  function loadEvents(type = eventType) {
-    return api.training.sendEvents({ type, limit: 30 })
-      .then(d => setEvents(d.events))
-      .catch(() => {})
-      .finally(() => setEventsLoading(false))
-  }
-  useEffect(() => { setEventsLoading(true); loadEvents(eventType) }, [eventType])
-
-  useEffect(() => {
-    api.training.deliveryRules()
-      .then(d => setRules(d.rules))
-      .catch(() => {})
-      .finally(() => setRulesLoading(false))
-    api.training.sendLog(30)
-      .then(d => setSendLog(d.logs))
-      .catch(() => {})
-      .finally(() => setLogLoading(false))
-  }, [])
+  function loadEvents() { return eventsQ.reload() }
 
   async function toggleActive(r: any) {
     try {
@@ -1639,9 +1628,15 @@ function AddToBasketButton({ slug, title, outline = false }: { slug: string; tit
 }
 
 function TrainingOnlyTraining({ token }: { token: string | null }) {
-  const [licences,  setLicences]  = useState<any[]>([])
-  const [catalogue, setCatalogue] = useState<CatalogueModule[]>([])
-  const [loading,   setLoading]   = useState(true)
+  const { data: toSession } = useSession()
+  const toUserId = toSession?.user?.email ?? 'guest'
+  const licKey = `admin-training-only-licences-${toUserId}`
+  const catKey = 'admin-training-only-catalogue'   // public catalogue, same for everyone
+  const [licences,  setLicencesState]  = useState<any[]>(() => persistentCache.get<any[]>(licKey) ?? [])
+  const [catalogue, setCatalogueState] = useState<CatalogueModule[]>(() => persistentCache.get<CatalogueModule[]>(catKey) ?? [])
+  const setLicences = (v: any[]) => { setLicencesState(v); persistentCache.set(licKey, v) }
+  const setCatalogue = (v: CatalogueModule[]) => { setCatalogueState(v); persistentCache.set(catKey, v) }
+  const [loading,   setLoading]   = useState(() => persistentCache.get(licKey) === undefined && persistentCache.get(catKey) === undefined)
   const [basketOpen, setBasketOpen] = useState(false)
   const [banner, setBanner] = useState<'success' | 'cancelled' | null>(null)
   const { items: basketItems, totalQty } = useCart()
@@ -2196,10 +2191,12 @@ export default function TrainingPage() {
     const t = new URLSearchParams(window.location.search).get('tab')
     return (['compliance', 'modules', 'history', 'delivery', 'face_to_face', 'progress', 'matrix'] as const).find(k => k === t) ?? 'compliance'
   })
-  const [staff,       setStaff]       = useState<Staff[]>([])
-  const [modules,     setModules]     = useState<Module[]>([])
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([])
-  const [loading,     setLoading]     = useState(true)
+  // Paint the last-seen training data on the very first render (no spinner when cached).
+  const initialCache = persistentCache.get<{ staff: Staff[]; modules: Module[]; enrollments: Enrollment[] }>(`admin-training-${userId}`)
+  const [staff,       setStaff]       = useState<Staff[]>(initialCache?.staff ?? [])
+  const [modules,     setModules]     = useState<Module[]>(initialCache?.modules ?? [])
+  const [enrollments, setEnrollments] = useState<Enrollment[]>(initialCache?.enrollments ?? [])
+  const [loading,     setLoading]     = useState(!initialCache)
   const [error,       setError]       = useState('')
   const [showAssign,  setShowAssign]  = useState(false)
   const [selectedEnrollmentId, setSelectedEnrollmentId] = useState<string | null>(null)
@@ -2596,15 +2593,11 @@ export default function TrainingPage() {
 // Admin read-only preview of a tenant statutory module — the same stepped player
 // staff/validators see (lesson sections then questions), not editable.
 function StatutoryModulePreview({ api, id, name, onBack }: { api: ReturnType<typeof createApiClient>; id: string; name: string; onBack: () => void }) {
-  const [m, setM] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  useEffect(() => {
-    api.training.modulePreview(id)
-      .then(d => setM(d.module))
-      .catch((e: any) => setError(e?.message ?? 'Could not load the preview'))
-      .finally(() => setLoading(false))
-  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+  const { data: pvSession } = useSession()
+  const pvQ = useCachedQuery<any>(`admin-training-preview-${pvSession?.user?.email ?? 'guest'}-${id}`, async () => (await api.training.modulePreview(id)).module)
+  const m = pvQ.data
+  const loading = pvQ.loading
+  const error = m ? '' : (pvQ.error ?? '')
 
   if (loading) return (
     <div className="mx-auto max-w-3xl">

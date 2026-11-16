@@ -85,9 +85,10 @@ function groupPlatformByCategory(entries: KnowledgeEntry[]): Map<string, Knowled
 export default function KnowledgePage() {
   const { data: session }           = useSession()
   const userId = session?.user?.email ?? 'guest'
-  const [entries, setEntries]       = useState<KnowledgeEntry[]>([])
-  const [total, setTotal]           = useState(0)
-  const [loading, setLoading]       = useState(true)
+  const k0 = persistentCache.get<{ entries: KnowledgeEntry[]; total: number }>(`admin-knowledge-${userId}`)
+  const [entries, setEntries]       = useState<KnowledgeEntry[]>(k0?.entries ?? [])
+  const [total, setTotal]           = useState(k0?.total ?? 0)
+  const [loading, setLoading]       = useState(!k0)
   const [generating, setGenerating] = useState(false)
   const [showAdd, setShowAdd]       = useState(false)
   const [editId, setEditId]         = useState<string | null>(null)

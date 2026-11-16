@@ -4,6 +4,8 @@
 // an optional repeat, and see what is overdue, due this week, upcoming and done.
 
 import { useEffect, useRef, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { useCachedQuery } from '@/lib/use-cached-query'
 import Link from 'next/link'
 import { createApiClient, type AuditAssignment } from '@/lib/api-client'
 import { CalendarClock, Loader2, Plus, X } from 'lucide-react'
@@ -36,30 +38,27 @@ function StatusBadge({ a }: { a: AuditAssignment }) {
 
 export function AuditSchedule({ token, templates, rooms, staffNames }: { token: string; templates: any[]; rooms: string[]; staffNames: string[] }) {
   const [view, setView] = useState<View>('overdue')
-  const [items, setItems] = useState<AuditAssignment[]>([])
-  const [counts, setCounts] = useState({ open: 0, overdue: 0, due_this_week: 0 })
-  const [loading, setLoading] = useState(true)
-  const [users, setUsers] = useState<Array<{ id: string; name: string; job_role: string | null }>>([])
+  const { data: session } = useSession()
+  const uid = session?.user?.email ?? 'guest'
+  const firstLoad = useRef(true)
+  const sq = useCachedQuery<{ assignments: AuditAssignment[]; counts: { open: number; overdue: number; due_this_week: number } }>(`admin-audit-schedule-${uid}-${view}`, async () => {
+    const d = await createApiClient(token).audits.assignments({ view })
+    // Open on overdue when there is any, otherwise on what is due this week (first load only).
+    if (firstLoad.current) { firstLoad.current = false; if (view === 'overdue' && d.counts.overdue === 0 && d.counts.open > 0) setView('week') }
+    return d
+  })
+  const items = sq.data?.assignments ?? []
+  const counts = sq.data?.counts ?? { open: 0, overdue: 0, due_this_week: 0 }
+  const loading = sq.loading
+  const uq = useCachedQuery<Array<{ id: string; name: string; job_role: string | null }>>(`admin-audit-users-${uid}`, async () => {
+    const d: any = await createApiClient(token).users.list()
+    return (d.users ?? []).filter((u: any) => u.is_active && u.name)
+  })
+  const users = uq.data ?? []
   const [showNew, setShowNew] = useState(false)
   const [editing, setEditing] = useState<string | null>(null)
   const [error, setError] = useState('')
-  const firstLoad = useRef(true)
-
-  function load(v: View = view) {
-    setLoading(true)
-    createApiClient(token).audits.assignments({ view: v })
-      .then(d => {
-        setItems(d.assignments); setCounts(d.counts)
-        // Open on overdue when there is any, otherwise on what is due this week (first load only).
-        if (firstLoad.current) { firstLoad.current = false; if (v === 'overdue' && d.counts.overdue === 0 && d.counts.open > 0) setView('week') }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }
-  useEffect(() => { load(view) }, [view]) // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    createApiClient(token).users.list().then((d: any) => setUsers((d.users ?? []).filter((u: any) => u.is_active && u.name))).catch(() => {})
-  }, [token])
+  function load() { sq.reload() }
 
   async function update(id: string, patch: Parameters<ReturnType<typeof createApiClient>['audits']['updateAssignment']>[1]) {
     setError('')
@@ -144,7 +143,7 @@ export function AuditSchedule({ token, templates, rooms, staffNames }: { token: 
 
       {showNew && (
         <NewAssignment token={token} templates={templates} users={users} rooms={rooms} staffNames={staffNames}
-          onClose={() => setShowNew(false)} onCreated={() => { setShowNew(false); setView('open'); load('open') }} />
+          onClose={() => setShowNew(false)} onCreated={() => { setShowNew(false); if (view === 'open') load(); else setView('open') }} />
       )}
     </div>
   )

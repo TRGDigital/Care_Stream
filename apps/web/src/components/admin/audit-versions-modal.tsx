@@ -4,6 +4,8 @@
 // on each version, and the questions each version asked.
 
 import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { useCachedQuery } from '@/lib/use-cached-query'
 import { createApiClient } from '@/lib/api-client'
 import { QUESTION_TYPE_LABELS, type QuestionType } from '@/lib/audit-questions'
 import { ChevronDown, History, Loader2, X } from 'lucide-react'
@@ -11,15 +13,14 @@ import { ChevronDown, History, Loader2, X } from 'lucide-react'
 type Version = { version: number; changed_by: string | null; change_note: string | null; created_at: string; runs: number; question_count: number; snapshot: any }
 
 export function AuditVersionsModal({ token, template, onClose }: { token: string; template: { id: string; name: string }; onClose: () => void }) {
-  const [versions, setVersions] = useState<Version[] | null>(null)
-  const [error, setError] = useState('')
+  const { data: session } = useSession()
+  const uid = session?.user?.email ?? 'guest'
+  const vq = useCachedQuery<Version[]>(`admin-audit-versions-${uid}-${template.id}`, async () => (await createApiClient(token).audits.templateVersions(template.id)).versions)
+  const versions = vq.data ?? null
+  const error = versions ? '' : (vq.error ?? '')
   const [open, setOpen] = useState<number | null>(null)
 
-  useEffect(() => {
-    createApiClient(token).audits.templateVersions(template.id)
-      .then(d => { setVersions(d.versions); setOpen(d.versions[0]?.version ?? null) })
-      .catch(e => setError(e?.message ?? 'Could not load the version history.'))
-  }, [token, template.id])
+  useEffect(() => { if (versions && open === null) setOpen(versions[0]?.version ?? null) }, [versions]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>

@@ -4,7 +4,9 @@
 // shows what is due on which day for a month. The Matrix shows, for each audit the home has scheduled or added, which
 // months have been done and which have not. Mirrors the training calendar and matrix. Every plan.
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { useCachedQuery } from '@/lib/use-cached-query'
 import Link from 'next/link'
 import { createApiClient, type AuditBoardData, type AuditBoardState } from '@/lib/api-client'
 import { AuditSchedule } from '@/components/admin/audit-schedule'
@@ -36,17 +38,17 @@ const thisMonth = () => { const d = new Date(); return `${d.getUTCFullYear()}-${
 export function AuditBoard({ token, templates, rooms, staffNames }: { token: string; templates: any[]; rooms: string[]; staffNames: string[] }) {
   const [tab, setTab] = useState<Tab>('schedule')
   const [month, setMonth] = useState(thisMonth())
-  const [data, setData] = useState<AuditBoardData | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const { data: session } = useSession()
+  const uid = session?.user?.email ?? 'guest'
+  const q = useCachedQuery<AuditBoardData>(tab !== 'schedule' ? `admin-audit-board-${uid}-${month}` : null, () => createApiClient(token).audits.board(month))
+  const data = q.data ?? null
+  const loading = q.loading
+  const [actionError, setError] = useState('')
+  const error = actionError || (q.error ?? '')
   const [pickDay, setPickDay] = useState<string | null>(null)
   const [adding, setAdding] = useState('')
 
-  function load(m = month) {
-    setLoading(true); setError('')
-    createApiClient(token).audits.board(m).then(setData).catch((e: any) => setError(e?.message ?? 'Could not load')).finally(() => setLoading(false))
-  }
-  useEffect(() => { if (tab !== 'schedule') load(month) }, [tab, month]) // eslint-disable-line react-hooks/exhaustive-deps
+  function load() { setError(''); q.reload() }
 
   const available = useMemo(() => {
     const on = new Set((data?.rows ?? []).map(r => r.template_id))

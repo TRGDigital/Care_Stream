@@ -14,6 +14,8 @@
 // should certainly not be sold anything on the strength of it.
 
 import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { persistentCache } from '@/lib/page-cache'
 import { createApiClient, type MissingPolicyReport, type PolicyPurchase } from '@/lib/api-client'
 import { AlertTriangle, Loader2, ShoppingCart, Check, Clock, ChevronDown, EyeOff, RotateCcw } from 'lucide-react'
 
@@ -35,8 +37,18 @@ const priceOf = (prices: Prices, title: string) => {
 // Fired when a policy is ignored or restored, so the alert at the top of the page recounts.
 const CHANGED = 'cs-missing-policies-changed'
 
+type MissingBundle = { r: MissingPolicyReport; p: { purchases: PolicyPurchase[]; ignored?: Array<{ policy_title: string; ignored_at: string; ignored_by_name: string | null }>; prices?: Record<string, number>; price_pence: number } }
+const useMissingKey = () => { const { data } = useSession(); return `admin-missing-policies-${data?.user?.email ?? 'guest'}` }
+function countFrom(b: MissingBundle | undefined): number | null {
+  if (!b || !b.r.analysed || !b.r.usable) return null
+  const bought = new Set(b.p.purchases.map(x => x.policy_title))
+  const ignored = new Set((b.p.ignored ?? []).map(x => x.policy_title))
+  return b.r.missing.filter(m => !bought.has(m.title) && !ignored.has(m.title)).length
+}
+
 export function useMissingCount(token: string): number | null {
-  const [count, setCount] = useState<number | null>(null)
+  const mkey = useMissingKey()
+  const [count, setCount] = useState<number | null>(() => countFrom(persistentCache.get<MissingBundle>(mkey)))
   const [version, setVersion] = useState(0)
   useEffect(() => {
     const bump = () => setVersion(v => v + 1)
@@ -47,14 +59,13 @@ export function useMissingCount(token: string): number | null {
     const api = createApiClient(token)
     Promise.all([api.gaps.missingPolicies(), api.policyPurchases.list()])
       .then(([r, p]) => {
-        if (!r.analysed || !r.usable) { setCount(null); return }
-        const bought = new Set(p.purchases.map(x => x.policy_title))
         // A policy the home has chosen to ignore is no longer something they are missing.
-        const ignored = new Set((p.ignored ?? []).map(x => x.policy_title))
-        setCount(r.missing.filter(m => !bought.has(m.title) && !ignored.has(m.title)).length)
+        const b = { r, p } as MissingBundle
+        persistentCache.set(mkey, b)
+        setCount(countFrom(b))
       })
-      .catch(() => setCount(null))
-  }, [token, version])
+      .catch(() => { if (persistentCache.get(mkey) === undefined) setCount(null) })
+  }, [token, version, mkey])
   return count
 }
 
@@ -86,10 +97,12 @@ export function MissingPoliciesAlert({ token }: { token: string }) {
 }
 
 export function MissingPoliciesBanner({ token }: { token: string }) {
-  const [report, setReport] = useState<MissingPolicyReport | null>(null)
-  const [purchases, setPurchases] = useState<PolicyPurchase[]>([])
-  const [prices, setPrices] = useState<Prices>({ byTitle: {}, fallback: 0 })
-  const [ignored, setIgnored] = useState<Array<{ policy_title: string; ignored_at: string; ignored_by_name: string | null }>>([])
+  const mkey = useMissingKey()
+  const c0 = persistentCache.get<MissingBundle>(mkey)
+  const [report, setReport] = useState<MissingPolicyReport | null>(c0?.r ?? null)
+  const [purchases, setPurchases] = useState<PolicyPurchase[]>(c0?.p.purchases ?? [])
+  const [prices, setPrices] = useState<Prices>(c0 ? { byTitle: c0.p.prices ?? {}, fallback: c0.p.price_pence } : { byTitle: {}, fallback: 0 })
+  const [ignored, setIgnored] = useState<Array<{ policy_title: string; ignored_at: string; ignored_by_name: string | null }>>(c0?.p.ignored ?? [])
   const [ignoring, setIgnoring] = useState<string | null>(null)
   const [showIgnored, setShowIgnored] = useState(false)
   const [chosen, setChosen] = useState<Set<string>>(new Set())
@@ -124,13 +137,14 @@ export function MissingPoliciesBanner({ token }: { token: string }) {
     const api = createApiClient(token)
     Promise.all([api.gaps.missingPolicies(), api.policyPurchases.list()])
       .then(([r, p]) => {
+        persistentCache.set(mkey, { r, p } as MissingBundle)
         setReport(r)
         setPurchases(p.purchases)
         setPrices({ byTitle: p.prices ?? {}, fallback: p.price_pence })
         setIgnored(p.ignored ?? [])
       })
       .catch(() => { /* the banner simply does not appear; it is never the main event */ })
-  }, [token])
+  }, [token, mkey])
 
   // Reconcile on return from Stripe. The redirect is not evidence of payment, so the server
   // asks Stripe directly; this only tells it which session to check.

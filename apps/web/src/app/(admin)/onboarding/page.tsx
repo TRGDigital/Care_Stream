@@ -233,8 +233,8 @@ function DemoPreview() {
 export default function OnboardingPage() {
   const { data: session } = useSession()
   const userId = session?.user?.email ?? 'guest'
-  const [flows,    setFlows]    = useState<Flow[]>([])
-  const [loading,  setLoading]  = useState(true)
+  const [flows,    setFlows]    = useState<Flow[]>(() => persistentCache.get<Flow[]>(`admin-onboarding-${userId}`) ?? [])
+  const [loading,  setLoading]  = useState(() => persistentCache.get<Flow[]>(`admin-onboarding-${userId}`) === undefined)
   const [error,    setError]    = useState('')
   const [selected, setSelected] = useState<Flow | null>(null)
   const [showForm, setShowForm] = useState(false)
@@ -263,6 +263,7 @@ export default function OnboardingPage() {
       setGenericPolicies(gp.policies)
       setHasPolicies(((pol as any)?.policies ?? []).length > 0)
       persistentCache.set(`admin-onboarding-${userId}`, d.flows)
+      persistentCache.set(`admin-onboarding-extras-${userId}`, { templates: t.templates, genericPolicies: gp.policies, hasPolicies: ((pol as any)?.policies ?? []).length > 0 })
     } catch (e: any) {
       setError(e.message ?? 'Failed to load')
     } finally {
@@ -297,6 +298,8 @@ export default function OnboardingPage() {
   useEffect(() => {
     const cached = persistentCache.get<Flow[]>(`admin-onboarding-${userId}`)
     if (cached) { setFlows(cached); setLoading(false) }
+    const extras = persistentCache.get<{ templates: any[]; genericPolicies: any[]; hasPolicies: boolean }>(`admin-onboarding-extras-${userId}`)
+    if (extras) { setTemplates(extras.templates); setGenericPolicies(extras.genericPolicies); setHasPolicies(extras.hasPolicies) }
   }, [userId])
 
   useEffect(() => { load() }, [session?.accessToken])

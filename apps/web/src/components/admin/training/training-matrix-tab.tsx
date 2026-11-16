@@ -9,6 +9,8 @@ import Link from 'next/link'
 import {
   ChevronDown, Download, Info, Loader2, Printer, Search, Settings2, ShieldCheck, X,
 } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { persistentCache } from '@/lib/page-cache'
 import { createApiClient, type TrainingMatrix, type TrainingMatrixStatus, type TrainingRequirementsConfig } from '@/lib/api-client'
 import { MATRIX_STATUS, MatrixBadge, cellSummary } from './training-matrix-shared'
 
@@ -51,8 +53,10 @@ function Help() {
 }
 
 export function TrainingMatrixTab({ token, onOpenFaceToFace }: { token: string; onOpenFaceToFace: () => void }) {
-  const [data, setData] = useState<TrainingMatrix | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { data: session } = useSession()
+  const cacheKey = `admin-training-matrix-${session?.user?.email ?? 'guest'}`
+  const [data, setData] = useState<TrainingMatrix | null>(() => persistentCache.get<TrainingMatrix>(cacheKey) ?? null)
+  const [loading, setLoading] = useState(() => persistentCache.get<TrainingMatrix>(cacheKey) === undefined)
   const [error, setError] = useState('')
   const [q, setQ] = useState('')
   const [role, setRole] = useState('')
@@ -61,9 +65,9 @@ export function TrainingMatrixTab({ token, onOpenFaceToFace }: { token: string; 
 
   function load() {
     if (!token) return
-    setLoading(true)
+    setLoading(prev => (data ? prev : true))
     createApiClient(token).trainingMatrix.get()
-      .then(d => { setData(d); setError('') })
+      .then(d => { setData(d); persistentCache.set(cacheKey, d); setError('') })
       .catch(e => setError(e?.message ?? 'Could not load the training matrix.'))
       .finally(() => setLoading(false))
   }
@@ -258,8 +262,15 @@ export function TrainingMatrixTab({ token, onOpenFaceToFace }: { token: string; 
 function RequirementsModal({ token, onClose, onSaved, onOpenFaceToFace }: {
   token: string; onClose: () => void; onSaved: () => void; onOpenFaceToFace: () => void
 }) {
-  const [cfg, setCfg] = useState<TrainingRequirementsConfig | null>(null)
-  const [selected, setSelected] = useState<Map<string, Set<string>>>(new Map())
+  const { data: session } = useSession()
+  const reqKey = `admin-training-requirements-${session?.user?.email ?? 'guest'}`
+  const buildSelected = (c: TrainingRequirementsConfig) => {
+    const m = new Map<string, Set<string>>()
+    for (const i of c.items) { if (!m.has(i.job_role)) m.set(i.job_role, new Set()); m.get(i.job_role)!.add(i.module_id) }
+    return m
+  }
+  const [cfg, setCfg] = useState<TrainingRequirementsConfig | null>(() => persistentCache.get<TrainingRequirementsConfig>(reqKey) ?? null)
+  const [selected, setSelected] = useState<Map<string, Set<string>>>(() => { const c = persistentCache.get<TrainingRequirementsConfig>(reqKey); return c ? buildSelected(c) : new Map() })
   const [active, setActive] = useState(ALL_STAFF)
   const [q, setQ] = useState('')
   const [saving, setSaving] = useState(false)
@@ -268,9 +279,8 @@ function RequirementsModal({ token, onClose, onSaved, onOpenFaceToFace }: {
   useEffect(() => {
     createApiClient(token).trainingMatrix.requirements().then(c => {
       setCfg(c)
-      const m = new Map<string, Set<string>>()
-      for (const i of c.items) { if (!m.has(i.job_role)) m.set(i.job_role, new Set()); m.get(i.job_role)!.add(i.module_id) }
-      setSelected(m)
+      persistentCache.set(reqKey, c)
+      setSelected(buildSelected(c))
     }).catch(e => setError(e?.message ?? 'Could not load the requirements.'))
   }, [token])
 

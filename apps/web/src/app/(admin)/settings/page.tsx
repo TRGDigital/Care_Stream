@@ -336,9 +336,15 @@ export default function SettingsPage() {
   // Staff directory — used to label approved-sender entries with the
   // staff member's name + role for quick admin reference.
   useEffect(() => {
+    const cachedDir = persistentCache.get<any[]>(`admin-settings-staffdir-${userId}`)
+    if (cachedDir) setStaffDir(cachedDir)
+    const cachedScan = persistentCache.get<RoleMentionScan>(`admin-settings-rolescan-${userId}`)
+    if (cachedScan) setRoleScan(cachedScan)
+  }, [userId])
+  useEffect(() => {
     if (!session?.accessToken) return
     createApiClient(session.accessToken).users.list()
-      .then((d: any) => setStaffDir(Array.isArray(d) ? d : (d?.users ?? [])))
+      .then((d: any) => { const list = Array.isArray(d) ? d : (d?.users ?? []); setStaffDir(list); persistentCache.set(`admin-settings-staffdir-${userId}`, list) })
       .catch(() => {})
   }, [session?.accessToken])
 
@@ -434,6 +440,7 @@ export default function SettingsPage() {
     try {
       const r = await createApiClient(session.accessToken).settings.roleMentions()
       setRoleScan(r.scan)
+      if (r.scan) persistentCache.set(`admin-settings-rolescan-${userId}`, r.scan)
     } catch { /* no scan yet is the normal first state; the section offers to run one */ }
   }
 
@@ -443,6 +450,7 @@ export default function SettingsPage() {
     try {
       const r = await createApiClient(session.accessToken).settings.scanRoleMentions()
       setRoleScan(r.scan)
+      if (r.scan) persistentCache.set(`admin-settings-rolescan-${userId}`, r.scan)
     } catch { /* leaves the previous scan in place rather than blanking the section */ }
     finally { setScanningRoles(false) }
   }

@@ -5,7 +5,9 @@
 // panel or enroll dialog is opened.
 
 import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
+import { persistentCache } from '@/lib/page-cache'
 import { Users, CheckCircle2, Clock, AlertCircle, AlertTriangle, X, GripVertical, Plus, Sparkles, Loader2, ThumbsUp, ThumbsDown } from 'lucide-react'
 import type { Step, Flow } from './onboarding-shared'
 
@@ -90,15 +92,17 @@ export function FlowForm({ api, initial, onClose, onSaved }: {
   const [err,    setErr]    = useState('')
 
   // The tenant's uploaded policies, for the "read policy" step typeahead.
-  const [policies,        setPolicies]        = useState<PolicyLite[]>([])
-  const [policiesLoading, setPoliciesLoading] = useState(true)
+  const uidF = useSession().data?.user?.email ?? 'guest'
+  const polKeyF = `admin-onboarding-policies-active-${uidF}`
+  const [policies,        setPolicies]        = useState<PolicyLite[]>(() => persistentCache.get<PolicyLite[]>(polKeyF) ?? [])
+  const [policiesLoading, setPoliciesLoading] = useState(() => persistentCache.get<PolicyLite[]>(polKeyF) === undefined)
   useEffect(() => {
     let alive = true
     api.policies.list({ limit: '2000' })
       .then((d: any) => {
         if (!alive) return
         const list: PolicyLite[] = (d?.policies ?? []).filter((p: any) => !p.status || p.status === 'active')
-        setPolicies(list)
+        setPolicies(list); persistentCache.set(polKeyF, list)
       })
       .catch(() => {})
       .finally(() => { if (alive) setPoliciesLoading(false) })
@@ -406,14 +410,16 @@ export function FlowPreview({ api, flow, onClose, onChanged }: {
   onChanged: (flow: Flow) => void
 }) {
   const [steps, setSteps]       = useState<Array<Step & { id?: string; order?: number }>>(() => [...(flow.steps ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)))
-  const [policies, setPolicies] = useState<PolicyLite[]>([])
+  const uidS = useSession().data?.user?.email ?? 'guest'
+  const polKeyS = `admin-onboarding-policies-map-${uidS}`
+  const [policies, setPolicies] = useState<PolicyLite[]>(() => persistentCache.get<PolicyLite[]>(polKeyS) ?? [])
   const [saving, setSaving]     = useState(false)
   const [confirmDel, setConfirmDel] = useState<number | null>(null)
   const [err, setErr]           = useState('')
 
   useEffect(() => {
     api.policies.list({ limit: '2000' })
-      .then((d: any) => setPolicies((d?.policies ?? []).map((p: any) => ({ id: p.id, name: p.name, document_category: p.document_category, status: p.status }))))
+      .then((d: any) => { const l = (d?.policies ?? []).map((p: any) => ({ id: p.id, name: p.name, document_category: p.document_category, status: p.status })); setPolicies(l); persistentCache.set(polKeyS, l) })
       .catch(() => {})
   }, [api])
 
@@ -534,8 +540,10 @@ export function ProgressPanel({ api, flow, onClose }: {
   flow: Flow
   onClose: () => void
 }) {
-  const [data,    setData]    = useState<{ flow: any; enrollments: any[] } | null>(null)
-  const [loading, setLoading] = useState(true)
+  const uidP = useSession().data?.user?.email ?? 'guest'
+  const progKey = `admin-onboarding-progress-${uidP}-${flow.id}`
+  const [data,    setData]    = useState<{ flow: any; enrollments: any[] } | null>(() => persistentCache.get<{ flow: any; enrollments: any[] }>(progKey) ?? null)
+  const [loading, setLoading] = useState(() => persistentCache.get<any>(progKey) === undefined)
   const [error,   setError]   = useState('')
   const [enrollModal, setEnrollModal] = useState(false)
 
@@ -546,7 +554,7 @@ export function ProgressPanel({ api, flow, onClose }: {
 
   useEffect(() => {
     api.onboarding.flowProgress(flow.id)
-      .then(setData)
+      .then(d => { setData(d); persistentCache.set(progKey, d) })
       .catch((e: any) => setError(e.message))
       .finally(() => setLoading(false))
   }, [flow.id])
@@ -623,7 +631,7 @@ export function ProgressPanel({ api, flow, onClose }: {
           onEnrolled={() => {
             setEnrollModal(false)
             setLoading(true)
-            api.onboarding.flowProgress(flow.id).then(setData).finally(() => setLoading(false))
+            api.onboarding.flowProgress(flow.id).then(d => { setData(d); persistentCache.set(progKey, d) }).finally(() => setLoading(false))
           }}
         />
       )}
@@ -639,14 +647,16 @@ function EnrollModal({ api, flowId, onClose, onEnrolled }: {
   onClose: () => void
   onEnrolled: () => void
 }) {
-  const [users,    setUsers]    = useState<any[]>([])
+  const uidE = useSession().data?.user?.email ?? 'guest'
+  const usersKeyE = `admin-onboarding-enrol-users-${uidE}`
+  const [users,    setUsers]    = useState<any[]>(() => persistentCache.get<any[]>(usersKeyE) ?? [])
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [dueDate,  setDueDate]  = useState('')
-  const [loading,  setLoading]  = useState(true)
+  const [loading,  setLoading]  = useState(() => persistentCache.get<any[]>(usersKeyE) === undefined)
   const [saving,   setSaving]   = useState(false)
 
   useEffect(() => {
-    api.users.list().then(d => setUsers(d.users.filter((u: any) => u.is_active))).finally(() => setLoading(false))
+    api.users.list().then(d => { const l = d.users.filter((u: any) => u.is_active); setUsers(l); persistentCache.set(usersKeyE, l) }).finally(() => setLoading(false))
   }, [])
 
   async function enroll() {

@@ -191,5 +191,141 @@ export const POLICY_KEYWORD_PAGES: Array<{ slug: string; title: string }> = [
  {
   "slug": "wound-care-tissue-viability",
   "title": "Wound Care and Tissue Viability Policy"
+ },
+ {
+  "slug": "ch-admissions-placement-planning",
+  "title": "Admissions, Placement Planning and Induction Policy (Children's Homes)"
+ },
+ {
+  "slug": "ch-anti-bullying",
+  "title": "Anti-Bullying Policy (Children's Homes)"
+ },
+ {
+  "slug": "ch-behaviour-management-restraint",
+  "title": "Behaviour Management, Discipline and Restraint Policy (Children's Homes) with 24 hour, 48 hour and 5 day recording"
+ },
+ {
+  "slug": "ch-case-records-retention-access",
+  "title": "Children's Case Records, Retention and Access Policy"
+ },
+ {
+  "slug": "ch-child-sexual-criminal-exploitation",
+  "title": "Child Sexual Exploitation and Criminal Exploitation Policy (including county lines)"
+ },
+ {
+  "slug": "ch-contact-family-time",
+  "title": "Contact, Family Time and Communications Policy (Children's Homes)"
+ },
+ {
+  "slug": "ch-education-school-attendance",
+  "title": "Education Support and School Attendance Policy (Children's Homes)"
+ },
+ {
+  "slug": "ch-harmful-sexual-behaviour-peer-abuse",
+  "title": "Harmful Sexual Behaviour and Peer on Peer Abuse Policy"
+ },
+ {
+  "slug": "ch-health-and-wellbeing",
+  "title": "Children's Health, Wellbeing and Health Care Policy (Children's Homes)"
+ },
+ {
+  "slug": "ch-leaving-care-moving-on",
+  "title": "Leaving Care, Moving On and Transition Policy (Children's Homes)"
+ },
+ {
+  "slug": "ch-missing-from-care",
+  "title": "Missing from Care Policy (Children's Homes)"
+ },
+ {
+  "slug": "ch-notifications-ofsted-placing-authorities",
+  "title": "Notifications to Ofsted and Placing Authorities Policy (Regulations 40 to 42)"
+ },
+ {
+  "slug": "ch-online-safety-digital-access",
+  "title": "Online Safety and Digital Access Policy for Children in Residential Care"
+ },
+ {
+  "slug": "ch-participation-advocacy-childrens-guide",
+  "title": "Children's Participation, Advocacy and Children's Guide Policy"
+ },
+ {
+  "slug": "ch-pocket-money-savings-reparation",
+  "title": "Children's Pocket Money, Savings and Financial Reparation Policy"
+ },
+ {
+  "slug": "ch-privacy-access-monitoring",
+  "title": "Privacy, Access, Monitoring and Surveillance Policy (Children's Homes)"
+ },
+ {
+  "slug": "ch-regulation-44-45-visits-and-review",
+  "title": "Regulation 44 Independent Person Visits and Regulation 45 Quality of Care Review Procedure"
+ },
+ {
+  "slug": "ch-safeguarding-child-protection",
+  "title": "Safeguarding Children and Child Protection Policy (Children's Homes), including allegations procedure"
+ },
+ {
+  "slug": "hospice-bereavement-support",
+  "title": "Bereavement Support Policy"
+ },
+ {
+  "slug": "hospice-care-after-death-verification",
+  "title": "Care After Death and Verification of Death Policy"
+ },
+ {
+  "slug": "hospice-care-of-the-dying-person",
+  "title": "Care of the Dying Person and Last Days of Life Policy"
+ },
+ {
+  "slug": "hospice-chaperone",
+  "title": "Chaperone Policy"
+ },
+ {
+  "slug": "hospice-enteral-feeding",
+  "title": "Enteral Feeding (PEG and NG) Policy"
+ },
+ {
+  "slug": "hospice-epilepsy-seizure-management",
+  "title": "Epilepsy and Seizure Management Policy"
+ },
+ {
+  "slug": "hospice-long-term-ventilation",
+  "title": "Home and Long-term Ventilation Policy"
+ },
+ {
+  "slug": "hospice-oxygen-medical-gases-safety",
+  "title": "Oxygen and Medical Gases Safety Policy"
+ },
+ {
+  "slug": "hospice-safeguarding-children-young-people",
+  "title": "Safeguarding Children and Young People Policy"
+ },
+ {
+  "slug": "hospice-self-harm-suicide-ligature-risk",
+  "title": "Self-harm, Suicide and Ligature Risk Policy"
+ },
+ {
+  "slug": "hospice-sharps-inoculation-clinical-waste",
+  "title": "Sharps, Inoculation Injury and Clinical Waste Policy"
+ },
+ {
+  "slug": "hospice-syringe-driver-anticipatory-medicines",
+  "title": "Syringe Driver and Anticipatory Medicines Policy"
+ },
+ {
+  "slug": "hospice-tracheostomy-care",
+  "title": "Tracheostomy Care Policy"
+ },
+ {
+  "slug": "hospice-volunteers",
+  "title": "Volunteers Policy"
+ },
+ {
+  "slug": "prison-healthcare-medicines-in-possession",
+  "title": "Medicines In Possession and Custody Medicines Policy (prison healthcare)"
+ },
+ {
+  "slug": "sexual-assault-forensic-evidence-chain-of-custody",
+  "title": "Forensic Examination, Evidence Handling and Chain of Custody Policy (sexual assault services)"
  }
 ]

@@ -1200,5 +1200,855 @@ export const GENERATED_POLICY_CRO: Record<string, PolicyCro> = {
     "body": "Covers supplies, storage, disposal of used dressings, record keeping and audit, with infection prevention and control linked in, as your wound management policy should."
    }
   ]
+ },
+ "ch-admissions-placement-planning": {
+  "whoFor": "Perfect for services who need a children's home admissions policy that sets out how a child is matched, admitted, settled and helped to move on.",
+  "benefits": [
+   "Built around Regulation 14, the care planning standard, with the statement of purpose, placement plan and safeguarding duties considered, so your children's home admissions policy reflects how you work",
+   "Written around your own matching, emergency admission and induction practice, delivered in 2 working days"
+  ],
+  "moments": [
+   {
+    "title": "A placing authority asks you to take a child tomorrow",
+    "body": "Sets out how the registered manager checks that the child's needs are within the range in your statement of purpose before an emergency admission is agreed, as Regulation 14(2)(a) expects."
+   },
+   {
+    "title": "A new child arrives and the first week matters",
+    "body": "Explains children's home induction: who welcomes the child, how routines are explained and how settling in is reviewed, in line with Regulation 14(2)(b)(i)."
+   },
+   {
+    "title": "The placement plan needs agreeing and signing",
+    "body": "Covers how the registered person co-operates with the placing authority on the placement plan and attends meetings, following Regulation 17 as the Children Act 1989 framework applies."
+   },
+   {
+    "title": "A child approaches sixteen and moving on is near",
+    "body": "Describes placement planning for leaving or moving to adult care, agreed with the placing authority, and when the home asks for a review of the child's plans."
+   }
+  ]
+ },
+ "ch-anti-bullying": {
+  "whoFor": "Perfect for services who need an anti bullying policy for a children's home that sets out how your children's home prevents bullying and deals with every allegation.",
+  "benefits": [
+   "Built around Regulation 34(3) and the positive relationships standard in the Children's Homes (England) Regulations 2015",
+   "Written from your own routines, roles and reporting routes, not a generic anti bullying policy template"
+  ],
+  "moments": [
+   {
+    "title": "Children need to know what is not acceptable",
+    "body": "Sets out how your anti bullying policy for the children's home is explained to children in words they understand, and how staff make clear that bullying is unacceptable, as Regulation 11 asks."
+   },
+   {
+    "title": "A child says they are being bullied",
+    "body": "A bullying procedure children's home staff can follow, and a bullying policy children's homes can implement. It covers how staff listen, record, escalate and tell the people you name, such as the placing authority and registered manager."
+   },
+   {
+    "title": "Tension between children in the house",
+    "body": "Covers children's home policies on how you manage relationships between children to prevent harm, linked to the protection of children standard and each child's risk assessment and plans."
+   },
+   {
+    "title": "Bullying online or after an incident",
+    "body": "Explains your approach to phone and social media bullying, support for everyone involved, monitoring of patterns and how the bullying policy for your children's home is reviewed. Not legal advice."
+   }
+  ]
+ },
+ "ch-behaviour-management-restraint": {
+  "whoFor": "Perfect for services who need a behaviour management policy that sets out positive behaviour, permitted measures, prohibited sanctions and restraint records for a children's home.",
+  "benefits": [
+   "A behaviour management policy built on your own approach, your training model and your named sign off roles, not a generic template.",
+   "Clear steps for the 24 hour record, 48 hour manager sign off and 5 day confirmation that the child has been spoken to."
+  ],
+  "moments": [
+   {
+    "title": "Ofsted asks to see your policy",
+    "body": "Covers how appropriate behaviour is promoted and which measures of control, discipline and restraint may be used, kept under review, as Regulation 35 requires. Your positive behaviour management approach is set out in your words."
+   },
+   {
+    "title": "A child needs to be restrained",
+    "body": "Covers when restraint may be used, that it must be necessary and proportionate, and the aims in Regulation 20. Your physical intervention policy arrangements and training model are written from your answers."
+   },
+   {
+    "title": "The incident has happened and the clock is running",
+    "body": "Covers the record within 24 hours, the manager or authorised person speaking to the user and signing within 48 hours, and the confirmation that the child was spoken to within 5 days."
+   },
+   {
+    "title": "A sanction is being considered",
+    "body": "Covers the measures that must never be used, such as corporal punishment, withholding food or drink and deprivation of sleep, with the sanctions your home does allow. It works as a physical restraint policy and a positive behaviour management policy for staff."
+   }
+  ]
+ },
+ "ch-case-records-retention-access": {
+  "whoFor": "Perfect for children's homes who need a record keeping policy that sets out how case records are written, kept, retained and shared with the children they are about.",
+  "benefits": [
+   "A record keeping policy built around your own systems, storage and people, not a generic template.",
+   "Retention, closure transfer and children's access written to the Children's Homes (England) Regulations 2015."
+  ],
+  "moments": [
+   {
+    "title": "An inspector asks to see a child's file",
+    "body": "The policy sets out what each case record holds, that entries are signed and dated by their author and how you keep records up to date, in line with regulation 36 and Schedule 3."
+   },
+   {
+    "title": "You need a retention schedule that stands up",
+    "body": "It states how long records are kept (15 years from death if a child dies before 18, otherwise 75 years from date of birth) and who tracks dates, as a record retention policy built for children's homes. It includes a records retention schedule for your home."
+   },
+   {
+    "title": "A former resident asks to read their records",
+    "body": "It covers how staff help children access and contribute to their records, and how requests from children and former residents are handled under your access to records policy and data protection law."
+   },
+   {
+    "title": "The home may close or merge",
+    "body": "It sets out how records are held securely and, if the home closed, how they would be transferred to another of your homes or to the placing authority, as regulation 36 requires."
+   }
+  ]
+ },
+ "ch-child-sexual-criminal-exploitation": {
+  "whoFor": "Perfect for services who need a county lines policy that sets out how staff recognise, assess and respond to the sexual and criminal exploitation of children in their care.",
+  "benefits": [
+   "Built around Regulations 11, 12, 34 and 40 of the Children's Homes (England) Regulations 2015, so staff and Ofsted can see the link",
+   "Written from your own risk tools, police contacts and notification steps, not a generic criminal exploitation policy"
+  ],
+  "moments": [
+   {
+    "title": "A child returns with new gifts or a new phone",
+    "body": "Sets out, as a child criminal exploitation policy, what staff record, who they tell and how the risk assessment is reviewed, using your own tools. It supports the duty in Regulation 12 to assess each child's risk of harm and act on signs of it."
+   },
+   {
+    "title": "A child goes missing and returns late",
+    "body": "Links missing episodes to exploitation risk, including return conversations and the review of patterns. It sits alongside your missing child policy required by Regulation 34."
+   },
+   {
+    "title": "You suspect sexual exploitation",
+    "body": "Explains the decision to inform the police and the placing authority, and how the registered manager notifies Ofsted and others without delay under Regulation 40. This child sexual exploitation policy section uses your own steps."
+   },
+   {
+    "title": "Older peers or unknown adults make contact",
+    "body": "Covers the exploitation policy children's home staff follow for unknown contacts, how children are helped to understand harmful relationships under Regulation 11, and how your child exploitation policy links to local safeguarding arrangements."
+   }
+  ]
+ },
+ "ch-contact-family-time": {
+  "whoFor": "Perfect for services who need a contact policy that sets out how children keep in touch with family, friends and professionals, and how any restriction is agreed.",
+  "benefits": [
+   "Covers family time, private phone, post and email access and restrictions in one policy",
+   "Written for your home from your answers, so it never describes a contact practice you do not have"
+  ],
+  "moments": [
+   {
+    "title": "A child wants to see their family",
+    "body": "Sets out how children's home contact with family is arranged and supported in line with the child's plans, where private meetings happen and how supervised contact works. It reflects Regulation 14, which requires contact to be promoted, and Regulation 22 on private meeting facilities."
+   },
+   {
+    "title": "A child asks to use the phone or post",
+    "body": "Explains how children reach a private telephone, private post and email where provided, without asking staff, and what aids are available for disabled children. This is your contact policy children's home teams can follow on every shift."
+   },
+   {
+    "title": "Someone proposes restricting contact",
+    "body": "Records who may decide, that restriction must be necessary to safeguard or promote the child's welfare and how placing authority consent is gained, or details sent within 24 hours in an emergency. Court orders on contact are followed."
+   },
+   {
+    "title": "Contact is mistaken for a sanction",
+    "body": "Makes clear that contact and communications are never withdrawn as a punishment, as Regulation 19 prohibits it unless imposed by a court or made under Regulation 22. It sets out how staff record decisions and how the independent person can review them."
+   }
+  ]
+ },
+ "ch-education-school-attendance": {
+  "whoFor": "Perfect for services who need an education policy that shows how children are helped to attend school, learn and move on to training or work.",
+  "benefits": [
+   "Covers attendance, exclusion, special educational needs, school contact and post-16 support in one education policy",
+   "Written for your home from your answers, so it never describes an education practice you do not have"
+  ],
+  "moments": [
+   {
+    "title": "A child refuses to go to school",
+    "body": "Sets out how staff understand barriers to learning, encourage attendance and tell the school and placing authority. This school attendance policy reflects Regulation 8, which requires help to attend in line with each child's plans."
+   },
+   {
+    "title": "A child is excluded or not in school",
+    "body": "Records how the home supports learning during exclusion or non-attendance and works to get the child back as soon as possible. Your education policy for children's homes names who contacts the school and the placing authority."
+   },
+   {
+    "title": "A child may need more help",
+    "body": "Explains how staff raise a need for further assessment or specialist provision with the school and placing authority, and how education, health and care plans are followed. It keeps the child's views at the centre."
+   },
+   {
+    "title": "A young person nears the end of Year 11",
+    "body": "Covers help into further education, training or employment and preparing for what comes next. It sets out the learning equipment, study space and informal learning the home provides, taken from your answers."
+   }
+  ]
+ },
+ "ch-harmful-sexual-behaviour-peer-abuse": {
+  "whoFor": "Perfect for services who need a peer on peer abuse policy that sets out how staff respond to harmful sexual behaviour between children and keep every child safe.",
+  "benefits": [
+   "Built around Regulations 11, 12, 34 and 40 of the Children's Homes (England) Regulations 2015, so staff and Ofsted can see the link",
+   "Written from your own risk assessment, supervision and reporting arrangements, not a generic peer on peer abuse policy template"
+  ],
+  "moments": [
+   {
+    "title": "A child tells staff about something another child did",
+    "body": "Sets out, as a child on child abuse policy, what staff do straight away, who they tell and how it is recorded. It supports the duty in Regulation 12 to take effective action on a serious welfare concern."
+   },
+   {
+    "title": "You are worried about sexualised behaviour in the home",
+    "body": "Covers harmful sexual behaviour in children, how risk is assessed for each child and how relationships between children are managed. This follows Regulation 12 and uses your own assessment method."
+   },
+   {
+    "title": "Both children need support",
+    "body": "Explains the support for the child harmed and the child who showed the behaviour, and how the placing authority is involved. It reflects Regulation 11 on helping children understand harmful relationships."
+   },
+   {
+    "title": "Ofsted or a placing authority asks how you respond",
+    "body": "Shows how your safeguarding policy under Regulation 34 and your notifications under Regulation 40 work with this peer on peer abuse policy, so your arrangements are clear."
+   }
+  ]
+ },
+ "ch-health-and-wellbeing": {
+  "whoFor": "Perfect for services who need a health and wellbeing policy that sets out how your children's home meets each child's health needs, from GP and dentist registration to emotional wellbeing.",
+  "benefits": [
+   "Built around Regulation 10 (health and well-being standard) and Regulation 6 of the Children's Homes (England) Regulations 2015",
+   "Written from your own routines, roles and local arrangements, not a generic wellbeing policy template"
+  ],
+  "moments": [
+   {
+    "title": "A child arrives",
+    "body": "Sets out how the home makes sure the child is registered with a GP and a dentist, and how existing health information is gathered. Your health and wellbeing policy shows who does what, as Regulation 10 asks."
+   },
+   {
+    "title": "Appointments and understanding",
+    "body": "Covers how staff help each child attend appointments and understand their health needs and options in a way suited to their age and understanding. Covers your approach to a mental health and wellbeing policy too, with access to psychiatric and psychological services as the child requires."
+   },
+   {
+    "title": "A therapy outside the NHS is proposed",
+    "body": "Explains how care that is not part of the NHS is approved and reviewed by the placing authority, delivered by a suitably skilled person, and how the child's GP is kept informed, as Regulation 6 sets out."
+   },
+   {
+    "title": "Staying healthy day to day",
+    "body": "Records how the home helps children lead healthy lives and how the children's home medication policy and wider health and wellbeing policy children's home practice fit together. Not clinical or legal advice."
+   }
+  ]
+ },
+ "ch-leaving-care-moving-on": {
+  "whoFor": "Perfect for services who need a leaving care policy that sets out how young people are prepared to return home, move placement or live independently.",
+  "benefits": [
+   "Covers planning, independence skills, introductions, handover and unplanned moves in one policy",
+   "Written for your home from your answers, so it never describes a transition practice you do not have"
+  ],
+  "moments": [
+   {
+    "title": "A young person is approaching adulthood",
+    "body": "Sets out how your leaving care policy children's home teams follow starts planning early and works with the placing authority's plans. It reflects Regulation 14, which requires arrangements to prepare each child to leave or move into adult care, and Regulation 6 on building skills to live independently."
+   },
+   {
+    "title": "A move to a new placement is agreed",
+    "body": "Explains the moving on policy children's home staff use for introductions, visits and handover of records, consistent with arrangements agreed with the placing authority, so the child has a positive experience of moving on."
+   },
+   {
+    "title": "A young person needs help with education or work",
+    "body": "Records how staff help young people above compulsory school age into further education, training or employment and prepare for future care, education or employment, in line with Regulation 8."
+   },
+   {
+    "title": "A move happens suddenly",
+    "body": "Describes how your transition policy children's home managers handle an unplanned move, when the placing authority is contacted and how a review of the child's relevant plans is requested, as Regulation 14 provides."
+   }
+  ]
+ },
+ "ch-missing-from-care": {
+  "whoFor": "Perfect for services who need a missing from care policy that sets out how your children's home prevents absence, responds, and learns when a child is missing.",
+  "benefits": [
+   "Built around Regulation 34 of the Children's Homes (England) Regulations 2015 and the protection and care planning standards",
+   "Written from your own routines, roles and local protocols, not a generic template"
+  ],
+  "moments": [
+   {
+    "title": "A child is not where expected",
+    "body": "Sets out your first response, who leads, when the police are called and who else is told. A missing from care policy and a missing child policy staff can follow on shift."
+   },
+   {
+    "title": "You want to prevent absence",
+    "body": "Covers the steps you take to prevent a child being absent without permission, using each child's risk assessment and relevant plans, as Regulation 34 asks of a missing child policy."
+   },
+   {
+    "title": "A child returns",
+    "body": "Records the welfare check and how you offer a return home interview, who is told, and how the child's views shape the plan. Not clinical or legal advice."
+   },
+   {
+    "title": "Absences keep happening",
+    "body": "Explains how repeated absence is spotted and how the placing authority is asked for a review of the child's plans under Regulation 14. Your children's home policies stay joined up with local protocols and a missing from care children's home procedure that is consulted on and reviewed."
+   }
+  ]
+ },
+ "ch-notifications-ofsted-placing-authorities": {
+  "whoFor": "Perfect for services who need an Ofsted notification policy that sets out who is told, how fast and in what form when something serious happens in a children's home.",
+  "benefits": [
+   "An Ofsted notification policy that names your decision maker, out of hours route and recording system, so staff know who to tell and when.",
+   "Covers serious events, admission and discharge notices and the reporting of convictions in one place, with written confirmation built into each step."
+  ],
+  "moments": [
+   {
+    "title": "A serious incident happens at night",
+    "body": "Sets out who decides what to notify, who is told and how it is confirmed in writing, using your out of hours arrangements. Regulation 40 requires notification without delay of listed serious events, with details of the matter, others told and actions taken."
+   },
+   {
+    "title": "An allegation is made against a worker",
+    "body": "Covers notifying Ofsted, the placing authority and others without delay, alongside your safeguarding route and the local authority designated officer. It is written as a children's home incident notification policy that reflects how you handle allegations."
+   },
+   {
+    "title": "A child moves in or out",
+    "body": "Explains the written notice of every admission and discharge to the local authority for the area, with the details Regulation 41 lists, unless that authority is also the placing authority."
+   },
+   {
+    "title": "A senior person is convicted of an offence",
+    "body": "Covers the duty on the registered provider, registered manager, responsible individual and directors to give written notice of a conviction under Regulation 42. It sits as a serious incident notification policy alongside your fit person checks and governance records."
+   }
+  ]
+ },
+ "ch-online-safety-digital-access": {
+  "whoFor": "Perfect for services who need an online safety policy for children's homes that sets out how children use phones and the internet safely.",
+  "benefits": [
+   "Built around regulations 22, 21 and 19 of the Children's Homes (England) Regulations 2015 on contact, privacy and restriction",
+   "Written from your own wifi, device and supervision arrangements, not a generic online safety policy template"
+  ],
+  "moments": [
+   {
+    "title": "A child needs a phone and internet",
+    "body": "Sets out how children get private phone, post and email access, and how the home keeps that access reasonable. Your online safety policy for children's homes reflects your own set up."
+   },
+   {
+    "title": "You need to limit access",
+    "body": "Covers who decides, why, how the placing authority is asked, and how any limit is kept under review. Access to helplines is not removed as a sanction. Inspectors ask about this."
+   },
+   {
+    "title": "Social media worries staff",
+    "body": "Records your internet safety policy and your social media policy for children's homes: messaging and gaming, and how supervision changes with age and each child's risk assessment."
+   },
+   {
+    "title": "A child is harmed online",
+    "body": "Sets out how staff respond to grooming, exploitation or bullying, who is told, and how the home learns afterwards. A free online safety policy example cannot name your roles."
+   }
+  ]
+ },
+ "ch-participation-advocacy-childrens-guide": {
+  "whoFor": "Perfect for services who need a participation policy that shows how children's views, wishes and feelings shape care, how the children's guide is kept current and how advocacy is offered.",
+  "benefits": [
+   "Built on Regulation 7 and the Quality Standards, with the guide, complaints and advocacy covered in one participation policy",
+   "Written around your own consultation methods, advocacy provider and guide formats, so the policy describes what your staff really do"
+  ],
+  "moments": [
+   {
+    "title": "A child arrives and needs to know their rights",
+    "body": "Your participation policy sets out who explains the children's guide, the complaints procedure and advocacy soon after arrival, as Regulation 7(2)(d) asks, and how the explanation is repeated later."
+   },
+   {
+    "title": "Time to review the children's guide",
+    "body": "It covers how the guide is kept under review and how children's comments are sought before it is changed. For a children's home, the children's guide children's home arrangements you use are written in, including formats, in a children's home children's guide policy section."
+   },
+   {
+    "title": "A child wants someone independent on their side",
+    "body": "It describes how advocacy support is offered, who your advocacy provider is and how children see advocates privately. The advocacy policy children's home section also links to your complaints procedure under Regulation 39."
+   },
+   {
+    "title": "An inspector asks how children's views are used",
+    "body": "You can show consultation methods, how views are recorded and how they feed the six monthly quality review and the independent person's visits. A children's home participation policy that matches practice makes that conversation straightforward."
+   }
+  ]
+ },
+ "ch-pocket-money-savings-reparation": {
+  "whoFor": "Perfect for services who need a pocket money policy that shows how children's money is given, kept safe and never used as a punishment.",
+  "benefits": [
+   "A pocket money policy built around your own amounts, accounts and records, not a generic template.",
+   "Clear children's home policies for savings, cash handling and reparation, ready for your staff and for Ofsted."
+  ],
+  "moments": [
+   {
+    "title": "A child moves in",
+    "body": "Records how pocket money is set and funded, who agrees it with the placing authority and how money is handed over and signed for."
+   },
+   {
+    "title": "A child wants to save",
+    "body": "Sets out how children's home pocket money and savings are held, who oversees any account and how statements and balances are checked."
+   },
+   {
+    "title": "Damage is caused in the home",
+    "body": "Explains your approach to reparation. Regulation 19 bans financial penalties other than a reasonable sum by way of reparation, which may be paid by instalments."
+   },
+   {
+    "title": "A child leaves the home",
+    "body": "Covers how money, savings and records are handed over, so looked after children pocket money is returned openly and in writing."
+   }
+  ]
+ },
+ "ch-privacy-access-monitoring": {
+  "whoFor": "Perfect for services who need a children's home privacy policy that sets out how children's privacy is protected, when it may be limited and how any monitoring is used, in your own words.",
+  "benefits": [
+   "Grounded in Regulation 21 on privacy and access and Regulation 24 on monitoring and surveillance of the Children's Homes (England) Regulations 2015",
+   "Written around your devices, access limits and review routine, delivered in 2 working days"
+  ],
+  "moments": [
+   {
+    "title": "A child asks why a door is locked",
+    "body": "Sets out which areas are not open to children and why, and that any limit on access must aim to safeguard each child, be necessary and proportionate and be kept under review, as Regulation 21 describes."
+   },
+   {
+    "title": "A staff member wants to search a room",
+    "body": "Covers room searches in a children's home as you run them, including who can authorise one, how the child is involved and how it is recorded. Reflects the Regulation 21 test that any limit on privacy must be proportionate and reviewed."
+   },
+   {
+    "title": "Cameras or door alarms are proposed",
+    "body": "Covers the conditions in Regulation 24: safeguarding purpose, the placing authority's written consent, telling the child in advance where practicable and no more intrusion than necessary. Sets out your children's home CCTV policy and your children's home surveillance policy."
+   },
+   {
+    "title": "Ofsted asks how you protect privacy",
+    "body": "Brings your privacy and access policy for children's homes together with your other children's home policies, in line with your statement of purpose, so that the manager can explain CCTV in children's homes and other monitoring, who reviews it and when."
+   }
+  ]
+ },
+ "ch-regulation-44-45-visits-and-review": {
+  "whoFor": "Perfect for services who need a regulation 44 and regulation 45 policy that shows how independent visits and quality of care reviews really run in your children's home.",
+  "benefits": [
+   "Written around how your children's home arranges regulation 44 visits and the regulation 45 review, not a generic template.",
+   "Shows who does what, from booking the independent person to sending the quality of care review children's home report on time."
+  ],
+  "moments": [
+   {
+    "title": "A regulation 44 visit is due",
+    "body": "Covers booking the regulation 44 visit, helping the independent person to see children and staff in private, and what records they can inspect."
+   },
+   {
+    "title": "The independent person report arrives",
+    "body": "Covers the regulation 44 independent person's opinion on safeguarding and well-being, who receives copies, and how recommendations are considered."
+   },
+   {
+    "title": "The six month review comes round",
+    "body": "Covers the regulation 45 review (reg 45): how children's views are gathered, how the system monitors quality of care, and who writes the report."
+   },
+   {
+    "title": "Sending the regulation 45 report",
+    "body": "Covers sending the regulation 45 report to HMCI within 28 days, giving placing authorities a copy on request, and the annual location review."
+   }
+  ]
+ },
+ "ch-safeguarding-child-protection": {
+  "whoFor": "Perfect for services who need a safeguarding policy that sets out how your children's home protects children from abuse or neglect and handles allegations in line with your own arrangements.",
+  "benefits": [
+   "A safeguarding policy that names your own safeguarding lead, referral routes and records, so every member of staff knows what to do and who to tell.",
+   "Combines child protection and the allegations procedure in one document, so it works as more than a safeguarding policy template and reflects how your home really runs."
+  ],
+  "moments": [
+   {
+    "title": "A child tells a member of staff something worrying",
+    "body": "Sets out how staff report without delay, who they tell and what is recorded, using your own reporting route and the duty in Regulation 34 for a policy to safeguard children from abuse or neglect."
+   },
+   {
+    "title": "An allegation is made against a member of staff",
+    "body": "Covers liaison with the local authority, prompt referral to the placing authority, the records kept and the measures that protect children, as Regulation 34 requires for the allegations procedure. It uses your named allegations lead and local contacts."
+   },
+   {
+    "title": "A new starter asks who the designated safeguarding lead is",
+    "body": "Names your safeguarding lead and deputy, explains staff roles under the protection of children standard in Regulation 12 and sets out the training you provide."
+   },
+   {
+    "title": "Ofsted or the independent person asks how you monitor practice",
+    "body": "Describes how you check that staff follow the policy and review it, in line with Regulation 12 and Regulation 34, and how serious events are notified. Written around your own checks and records."
+   }
+  ]
+ },
+ "hospice-bereavement-support": {
+  "whoFor": "Perfect for hospices who need a bereavement support policy that sets out your own support for families, children and staff before and after a death.",
+  "benefits": [
+   "Grounded in Regulation 9 person-centred care, Regulation 10 dignity and respect and Regulation 18 staffing, with the NICE guideline on care of dying adults and your end of life framework referred to",
+   "Written around your own follow up contact, services, referral routes and staff support, so it reads like your bereavement policy in practice, not a bereavement policy template or sample"
+  ],
+  "moments": [
+   {
+    "title": "A family is facing a death",
+    "body": "The policy sets out the support offered before a death, how families are kept informed and involved in line with Regulation 9, and who leads that support in your hospice."
+   },
+   {
+    "title": "Someone has just died",
+    "body": "It covers support at the time of death, time with the person, practical information and how dignity and respect are kept, using your own arrangements."
+   },
+   {
+    "title": "You follow up after the funeral",
+    "body": "It sets out your follow up contact, who is contacted, what consent and contact records you keep and the bereavement support you really offer, with referral and signposting where you do not."
+   },
+   {
+    "title": "Children or staff are affected",
+    "body": "It covers how bereaved children are supported, how your team and volunteers are looked after, and how you review the service."
+   }
+  ]
+ },
+ "hospice-care-after-death-verification": {
+  "whoFor": "Perfect for hospices who need a care after death policy that sets out your own arrangements, from verification of expected death to last offices, family and property.",
+  "benefits": [
+   "Grounded in the regulations on dignity and respect, safe care and good governance, with the coroner notification rules and consent and capacity covered",
+   "Written around your own verifiers, mortuary, notifications and family time, so your last offices policy matches practice and not a generic template"
+  ],
+  "moments": [
+   {
+    "title": "A person dies and death must be verified",
+    "body": "The policy sets out who may verify death, how out of hours verification works and how it is recorded. It works as a verification of death policy written from your answers, covering your verification of expected death arrangements."
+   },
+   {
+    "title": "Staff carry out last offices",
+    "body": "It covers personal care after death, faith and cultural wishes, and how family can take part, in line with the duty to treat people with dignity and respect under Regulation 10."
+   },
+   {
+    "title": "A death may need to go to the coroner",
+    "body": "It sets out your own route for deciding on referral and who contacts the coroner, with reference to the Notification of Deaths Regulations 2019 and your CQC statutory notifications."
+   },
+   {
+    "title": "Family, belongings and handover",
+    "body": "It covers telling family and the GP, time with the person, property and medicines, mortuary and funeral director handover, and support for staff afterwards."
+   }
+  ]
+ },
+ "hospice-care-of-the-dying-person": {
+  "whoFor": "Perfect for hospices who need a care of the dying person policy that sets out your own arrangements for the last days of life, from recognising dying to care after death.",
+  "benefits": [
+   "Grounded in Regulation 9 person-centred care, Regulation 12 safe care and treatment and the NICE guideline on care of dying adults, with consent and capacity covered",
+   "Written around your own review routine, symptom control, family facilities and bereavement support, so it matches your end of life care policy in practice, not a generic template"
+  ],
+  "moments": [
+   {
+    "title": "Someone may be entering the last days",
+    "body": "The policy sets out how your team recognises dying, who confirms it and how the person and those close to them are told, in line with the duty to involve people in decisions under Regulation 9."
+   },
+   {
+    "title": "You plan care for the last days",
+    "body": "It covers the individual plan: preferences, symptom control, mouth care, hydration and nutrition choices, with risks assessed and reviewed as Regulation 12 requires. It sets out how end of life plans and wishes are recorded."
+   },
+   {
+    "title": "The person cannot decide for themselves",
+    "body": "It sets out the Mental Capacity Act starting points, including best interests decisions, and how attorneys, advocates and family take part, using your own arrangements."
+   },
+   {
+    "title": "A family asks what to expect",
+    "body": "It covers how you explain what is happening, what families can do and use, spiritual and cultural needs, care after death and the bereavement support you really offer."
+   }
+  ]
+ },
+ "hospice-chaperone": {
+  "whoFor": "Perfect for services who need a chaperone policy that sets out when a chaperone is offered, who can act and how it is recorded.",
+  "benefits": [
+   "Sets out your own chaperone policy, from the offer and consent to chaperone training and records, so every clinician follows the same steps.",
+   "Built from your answers, so it names your roles and routines and never invents a practice you do not have. Not a free chaperone policy template."
+  ],
+  "moments": [
+   {
+    "title": "An intimate examination is planned",
+    "body": "Covers when a chaperone is offered, how the person's choice is respected and what happens if they decline. Links to Regulation 10 on dignity and privacy and Regulation 11 on consent."
+   },
+   {
+    "title": "You need to show chaperones are ready",
+    "body": "Sets out who may act, and your chaperone training and sign off, so staff know the role. Your chaperone procedure sits inside this policy."
+   },
+   {
+    "title": "No chaperone is available",
+    "body": "Explains your fallback, such as rearranging, and how it is recorded. Covers chaperone in healthcare practice where care is urgent."
+   },
+   {
+    "title": "Someone raises a concern",
+    "body": "Shows how a person, family member or colleague can raise a concern and how it is followed up, linking to your complaints and safeguarding arrangements."
+   }
+  ]
+ },
+ "hospice-enteral-feeding": {
+  "whoFor": "Perfect for services who need an enteral feeding policy that sets out who may feed and flush, how competence is signed off and what staff do when a tube goes wrong.",
+  "benefits": [
+   "Sets out your own enteral feeding policy and peg feeding policy arrangements, so staff know who may feed, flush and give medicines by tube, and who to call.",
+   "Built from your answers, so it names your tube types, roles and records and never invents a practice your hospice does not have."
+  ],
+  "moments": [
+   {
+    "title": "A person is admitted with a feeding tube",
+    "body": "Covers how enteral nutrition is planned on admission, who sets the feed and flush regimen, and where it is recorded. Links to Regulation 14 on meeting nutritional and hydration needs, including prescribed supplements."
+   },
+   {
+    "title": "You need to show staff are competent",
+    "body": "Sets out who may carry out enteral feeding, how competence is observed, signed off and rechecked, and where records sit. Reflects Regulation 12(2)(c) on staff having the qualifications, competence, skills and experience to provide care safely."
+   },
+   {
+    "title": "Something goes wrong with the tube",
+    "body": "Your enteral feeding policy explains your steps for a blocked, leaking or dislodged enteral feeding tube, uncertain ng tube placement, enteral feeding pump alarms and signs of aspiration, including who staff call and how it is recorded. Risks are assessed and reduced under Regulation 12(2)(a) and (b)."
+   },
+   {
+    "title": "Feeding choices change near the end of life",
+    "body": "Describes how consent, capacity and best interests are handled under the Mental Capacity Act, how decisions to continue, reduce or stop g tube feeding are discussed with the person and family, and how the discussion is recorded."
+   }
+  ]
+ },
+ "hospice-epilepsy-seizure-management": {
+  "whoFor": "Perfect for services who need an epilepsy policy that sets out how your hospice plans, responds to, records and reviews seizures and rescue medicines.",
+  "benefits": [
+   "Grounded in the regulations on safe care and treatment, person centred care, governance and staffing, drawn from the text of Regulation 12",
+   "Written for your hospice, using your own rescue medicines, roles, training and emergency routes, never a practice you do not have"
+  ],
+  "moments": [
+   {
+    "title": "An inspection is coming",
+    "body": "Inspectors look at how care is made safe and medicines managed. Your epilepsy policy covers seizure plans, rescue medicine and records, tied to Regulation 12 and record keeping under Regulation 17."
+   },
+   {
+    "title": "A patient with epilepsy is admitted",
+    "body": "Sets out how a seizure care plan is agreed, shared with staff and reviewed, so a health policy for epilepsy is reflected in each person's plan, using the format you describe."
+   },
+   {
+    "title": "Staff are unsure who can give rescue medicine",
+    "body": "Describes who may give rescue medicine in your hospice and the competence checks behind it under Regulation 12 and Regulation 18, from induction to refresher."
+   },
+   {
+    "title": "A seizure happens at night or at home",
+    "body": "Covers your emergency triggers, recording on a seizure chart, the review afterwards and how the community team and family are involved."
+   }
+  ]
+ },
+ "hospice-long-term-ventilation": {
+  "whoFor": "Perfect for services who need a long term ventilation policy that shows how staff keep people safe on ventilators, including in an alarm or power failure.",
+  "benefits": [
+   "A long term ventilation policy built around the equipment, cover and training your hospice really has, not a generic template.",
+   "One home ventilation policy covering checks, alarms, backup power, emergency escalation and competence, including non invasive ventilation policy points, ready for your team and inspector."
+  ],
+  "moments": [
+   {
+    "title": "A person arrives on a ventilator",
+    "body": "Sets out who supplies the equipment, who may change settings and how staff become competent before caring alone. Grounded in Regulation 12 on safe care and treatment and Regulation 18 on staffing."
+   },
+   {
+    "title": "An alarm sounds or the power fails",
+    "body": "Covers the first checks on the person, the steps staff take, who is called and how battery and spare equipment arrangements work. Linked to Regulation 12(2)(e) on safe equipment."
+   },
+   {
+    "title": "Equipment needs servicing or replacing",
+    "body": "Covers daily checks, supplier contact, spare equipment and how faults are recorded, with Regulation 15 on premises and equipment in mind."
+   },
+   {
+    "title": "Going home or out on a visit",
+    "body": "Covers how people and family carers are involved, what equipment travels with them and how plans are agreed and recorded, in line with Regulation 9 on person-centred care."
+   }
+  ]
+ },
+ "hospice-oxygen-medical-gases-safety": {
+  "whoFor": "Perfect for services who need a medical gases policy that shows how your hospice stores, handles and uses oxygen safely.",
+  "benefits": [
+   "A medical gases policy built around the gases, equipment and staff roles your hospice really has, not a generic template.",
+   "Oxygen cylinder storage, signage, flow rate authority and incident steps in one document, ready for your team and your inspector."
+  ],
+  "moments": [
+   {
+    "title": "A new cylinder store or ward",
+    "body": "Sets out oxygen cylinder storage signage, oxygen storage safety and separation of full and empty cylinders, in line with the premises and equipment duties in Regulation 12 and Regulation 15."
+   },
+   {
+    "title": "A person needs oxygen",
+    "body": "Covers who authorises oxygen and its flow rate, who may set it up, and how it is recorded. This supports oxygen therapy safety and the safe care and treatment duty in Regulation 12."
+   },
+   {
+    "title": "A fire risk near oxygen",
+    "body": "Covers smoking, heat sources and emergency steps where oxygen is in use, alongside your fire risk assessment under the Regulatory Reform (Fire Safety) Order 2005."
+   },
+   {
+    "title": "An inspector asks how you manage gases",
+    "body": "Shows your equipment checks, supplier arrangements, staff training under Regulation 18 and incident review under Regulation 17, so your oxygen safety guidelines are easy to evidence."
+   }
+  ]
+ },
+ "hospice-safeguarding-children-young-people": {
+  "whoFor": "Perfect for services who need a safeguarding children and young people policy that covers young patients, siblings and visiting children in a hospice setting.",
+  "benefits": [
+   "Draws on Working Together to Safeguard Children and Regulation 13, with your lead, routes and records set out in your own words",
+   "Written for hospice life: young patients, siblings, volunteers and visitors, plus the move into adult services"
+  ],
+  "moments": [
+   {
+    "title": "A staff member is worried about a child",
+    "body": "The policy sets out who staff tell, how the concern is recorded and when your lead refers to children's services. It follows Working Together to Safeguard Children, which sets out how organisations work with local safeguarding partners. It also covers a child safeguarding policy for visiting children."
+   },
+   {
+    "title": "A young patient is moving to adult services",
+    "body": "The policy describes your transition arrangements and when adult safeguarding applies. Regulation 13 asks providers to run systems that prevent abuse and investigate allegations, and your answers show how you do this for older teenagers."
+   },
+   {
+    "title": "An allegation is made about a colleague or volunteer",
+    "body": "Your safeguarding children procedure names who is told, who contacts the local authority and how the person is supported. Recruitment and checks under the Safeguarding Vulnerable Groups Act and DBS rules are set out as you apply them."
+   },
+   {
+    "title": "Inspectors or commissioners ask for your child protection policy",
+    "body": "You hold a clear child protection policy showing named leads, training levels, information sharing and learning. It reflects your own practice and the duties in the sources, with a hospice safeguarding policy suited to your service."
+   }
+  ]
+ },
+ "hospice-self-harm-suicide-ligature-risk": {
+  "whoFor": "Perfect for services who need a ligature risk policy that sets out how staff assess self-harm and suicide risk, check the environment and respond, in line with your own arrangements.",
+  "benefits": [
+   "Built around Regulations 12, 13 and 17 and the Mental Capacity Act 2005",
+   "Written from your own environment checks, observation and review steps, not a generic template"
+  ],
+  "moments": [
+   {
+    "title": "Someone voices thoughts of ending their life",
+    "body": "Sets out how staff record the concern, who is told, and the immediate steps you take, as part of a self harm policy written from your own arrangements."
+   },
+   {
+    "title": "A room needs a ligature risk assessment",
+    "body": "Covers how your service completes a ligature point risk assessment, records findings and agrees practical measures with the person, as Regulation 12 requires premises to be safe for their purpose."
+   },
+   {
+    "title": "Extra checks are being considered",
+    "body": "Records who can authorise closer observation and how it is kept proportionate, so care is not unnecessary or disproportionate control under Regulation 13."
+   },
+   {
+    "title": "An inspector asks what you learned",
+    "body": "Shows how incidents are reported, reviewed and fed back into plans and ligature risk management, with the records Regulation 17 expects of a well governed service."
+   }
+  ]
+ },
+ "hospice-sharps-inoculation-clinical-waste": {
+  "whoFor": "Perfect for services who need a sharps policy that sets out how your hospice uses, disposes of and responds to injuries from sharps, with clinical waste handled alongside.",
+  "benefits": [
+   "Grounded in the regulations on safe care, governance, staff competence and infection control",
+   "Written for your hospice, using your own devices, containers, waste contractor and occupational health route"
+  ],
+  "moments": [
+   {
+    "title": "An inspection is coming",
+    "body": "Inspectors look at safe care and infection control. The sharps policy covers safe use, disposal and recording, tied to Regulation 12 and your governance under Regulation 17."
+   },
+   {
+    "title": "A member of staff has had a needlestick",
+    "body": "Sets out the immediate steps, who assesses the risk and how the injury is recorded. Your needle stick injury policy arrangements are described as you run them, with reporting under RIDDOR considered."
+   },
+   {
+    "title": "You are reviewing your sharps policy and procedure",
+    "body": "Covers sharps containers, recapping rules, safer devices, and sharps in patients' homes, so your sharps policy and procedure match what nurses and volunteers actually do."
+   },
+   {
+    "title": "Clinical waste is not being sorted properly",
+    "body": "Describes segregation, storage and collection of clinical waste, with your sharps disposal policy and infection prevention and control linked in, and training under Regulation 18."
+   }
+  ]
+ },
+ "hospice-syringe-driver-anticipatory-medicines": {
+  "whoFor": "Perfect for services who need a syringe driver policy that sets out how your hospice prescribes, sets up, monitors and records subcutaneous medicines.",
+  "benefits": [
+   "Grounded in the regulations on safe care, governance and staffing, with NICE end of life guidance named where relevant",
+   "Written for your hospice, using your own devices, roles, stock and out of hours arrangements"
+  ],
+  "moments": [
+   {
+    "title": "An inspection is coming",
+    "body": "Inspectors look at how medicines are managed safely. The syringe driver policy covers set up, checks and records, tied to Regulation 12, with record keeping under Regulation 17."
+   },
+   {
+    "title": "A patient is entering the last days of life",
+    "body": "Sets out how anticipatory medication is prescribed, stored and reached out of hours, so symptoms can be managed without delay in anticipatory medication end of life planning, using the arrangements you describe."
+   },
+   {
+    "title": "You are unsure who may start a syringe driver",
+    "body": "Describes who may set up and change a driver in your hospice and the competence checks behind it under Regulation 18, from induction to annual reassessment."
+   },
+   {
+    "title": "A patient moves between the hospice and home",
+    "body": "Covers how syringe driver palliative care is supported in the community, how anticipatory medicines travel with the person, and how controlled drugs are recorded."
+   }
+  ]
+ },
+ "hospice-tracheostomy-care": {
+  "whoFor": "Perfect for services who need a tracheostomy care policy that sets out who is competent, how suction and tube changes are done and what staff do in an emergency.",
+  "benefits": [
+   "Sets out your own tracheostomy care policy, from tracheostomy care training and competence to suction, spares and emergency steps, so staff know what to do.",
+   "Built from your answers, so it names your roles, equipment and contacts and never invents a practice you do not have."
+  ],
+  "moments": [
+   {
+    "title": "A person with a tracheostomy is admitted",
+    "body": "Covers how risks are assessed, which tracheostomy care nursing arrangements apply and which staff may care for the person. Links to Regulation 12(2)(a) and (b) on assessing and reducing risk."
+   },
+   {
+    "title": "You need to show staff are competent",
+    "body": "Sets out tracheostomy care training, sign off and rechecks, and where records are kept. Links to Regulation 12(2)(c) on competence, skills and experience and Regulation 18 on training."
+   },
+   {
+    "title": "Suction or a tube change is needed",
+    "body": "Explains who carries out tracheostomy suction and tube changes, how it is recorded and when to call for help. Your tracheostomy care procedure and tracheostomy care and suctioning steps sit inside this policy."
+   },
+   {
+    "title": "A tube blocks or comes out",
+    "body": "Shows your emergency steps, the kit and spares kept to hand, and who is called. Links to Regulation 12(2)(e) and (f) on safe equipment and sufficient quantities."
+   }
+  ]
+ },
+ "hospice-volunteers": {
+  "whoFor": "Perfect for services who need a volunteers policy that shows how volunteers are recruited, checked, trained and supported alongside paid staff.",
+  "benefits": [
+   "Written around how your hospice really uses volunteers, not a generic volunteer policy template.",
+   "Sets out each step in plain words, so volunteer coordinators, ward teams and volunteers all follow the same rules."
+  ],
+  "moments": [
+   {
+    "title": "Recruiting and checking a new volunteer",
+    "body": "Covers application, references, the checks that apply to each role, and how your hospice decides a volunteer is suitable, in line with the fitness requirements of Regulation 19."
+   },
+   {
+    "title": "Inducting and training volunteers",
+    "body": "Covers induction, training, who supervises and how support is given, reflecting Regulation 18 on support, training and supervision."
+   },
+   {
+    "title": "Setting boundaries and keeping confidence",
+    "body": "Covers the tasks volunteers do and do not do, confidentiality, gifts, social media and how safeguarding concerns are raised."
+   },
+   {
+    "title": "Handling expenses, concerns and endings",
+    "body": "Covers expense claims, how concerns about a volunteer are handled and how a volunteering role comes to an end."
+   }
+  ]
+ },
+ "prison-healthcare-medicines-in-possession": {
+  "whoFor": "Perfect for services who need a self administration of medicines policy that sets out how in possession medicines, supervised doses and secure storage work in your own setting.",
+  "benefits": [
+   "A medicines in possession policy built from your own risk assessment, possession levels and storage, not a generic template.",
+   "One in possession medication policy that links assessment, supervised doses, diversion checks and records to each person's medicines review."
+  ],
+  "moments": [
+   {
+    "title": "Someone arrives with their own medicines",
+    "body": "Sets out who assesses whether the person can keep medicines, how the decision is recorded and how it links to the safe management of medicines duty in Regulation 12."
+   },
+   {
+    "title": "Held medicines are shared or traded",
+    "body": "Covers your checks for hoarding and diversion, what happens when medicines go missing, and how concerns about safety are escalated and recorded. It also sets out supervised administration of medicines where a person cannot hold their own."
+   },
+   {
+    "title": "A person's circumstances change",
+    "body": "Explains when possession decisions are reviewed, such as a new prescription or a change in risk, and how patient self administration of medication is stopped or supervised."
+   },
+   {
+    "title": "Storage and stock need checking",
+    "body": "Records your safe storage of medicines policy: lockable storage, stock handling, controlled drugs under the Misuse of Drugs Act 1971, and who audits the records."
+   }
+  ]
+ },
+ "sexual-assault-forensic-evidence-chain-of-custody": {
+  "whoFor": "Perfect for services who need a chain of custody policy that sets out how forensic evidence is collected, stored and handed over, with consent at the centre.",
+  "benefits": [
+   "Grounded in Regulation 11 consent, Regulation 13 safeguarding and Regulation 17 record keeping, with a forensic evidence policy that reflects your own examiners and storage",
+   "Written around your own evidence handling policy and evidence storage policy, so staff follow steps your service actually has"
+  ],
+  "moments": [
+   {
+    "title": "A person asks about a forensic medical examination",
+    "body": "The policy sets out how staff explain the forensic medical examination, who may act as the forensic medical examiner in your service, and how consent is sought and recorded, in line with Regulation 11."
+   },
+   {
+    "title": "A person changes their mind part way through",
+    "body": "It sets out how forensic examination consent is handled in stages, how a person's decision is respected and recorded, and who supports them, using your own consent process."
+   },
+   {
+    "title": "A sealed kit needs storing or handing over",
+    "body": "It covers sealing, labelling, secure storage, access logs and signed handover, so each step is recorded as Regulation 17 expects of accurate and secure records."
+   },
+   {
+    "title": "A kit is lost or a concern about a child is raised",
+    "body": "It sets out your own breach route and how safeguarding concerns reach your lead, reflecting Regulation 13 on preventing abuse and improper treatment."
+   }
+  ]
  }
 }

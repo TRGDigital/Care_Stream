@@ -373,5 +373,282 @@ export const GENERATED_PRODUCT_REGULATIONS: Record<string, string[]> = {
   "infection-control",
   "health-and-social-care-act-infection-control-code",
   "records-management-code-of-practice-for-health-and-social-care-2021"
+ ],
+ "ch-admissions-placement-planning": [
+  "childrens-homes-regulation-14",
+  "childrens-homes-regulation-16",
+  "childrens-homes-regulation-13",
+  "childrens-homes-regulation-12",
+  "children-act-1989-looked-after-children",
+  "guide-to-the-childrens-homes-regulations"
+ ],
+ "ch-anti-bullying": [
+  "childrens-homes-regulation-34",
+  "childrens-homes-regulation-11",
+  "childrens-homes-regulation-12",
+  "children-act-1989-looked-after-children",
+  "working-together-to-safeguard-children",
+  "guide-to-the-childrens-homes-regulations"
+ ],
+ "ch-behaviour-management-restraint": [
+  "childrens-homes-regulation-35",
+  "childrens-homes-regulation-19",
+  "childrens-homes-regulation-20",
+  "childrens-homes-regulation-11",
+  "childrens-homes-regulation-13",
+  "childrens-homes-regulation-45"
+ ],
+ "ch-case-records-retention-access": [
+  "childrens-homes-regulation-36",
+  "childrens-homes-regulation-14",
+  "childrens-homes-regulation-37",
+  "childrens-homes-regulation-38",
+  "data-protection-act",
+  "guide-to-the-childrens-homes-regulations"
+ ],
+ "ch-child-sexual-criminal-exploitation": [
+  "childrens-homes-regulation-11",
+  "childrens-homes-regulation-12",
+  "childrens-homes-regulation-34",
+  "childrens-homes-regulation-40",
+  "working-together-to-safeguard-children",
+  "guide-to-the-childrens-homes-regulations"
+ ],
+ "ch-contact-family-time": [
+  "childrens-homes-regulation-22",
+  "childrens-homes-regulation-19",
+  "childrens-homes-regulation-14",
+  "childrens-homes-regulation-44",
+  "children-act-1989-looked-after-children",
+  "guide-to-the-childrens-homes-regulations"
+ ],
+ "ch-education-school-attendance": [
+  "childrens-homes-regulation-8",
+  "childrens-homes-regulation-5",
+  "childrens-homes-regulation-14",
+  "childrens-homes-regulation-7",
+  "childrens-homes-regulation-16",
+  "guide-to-the-childrens-homes-regulations"
+ ],
+ "ch-harmful-sexual-behaviour-peer-abuse": [
+  "childrens-homes-regulation-11",
+  "childrens-homes-regulation-12",
+  "childrens-homes-regulation-34",
+  "childrens-homes-regulation-40",
+  "working-together-to-safeguard-children",
+  "guide-to-the-childrens-homes-regulations"
+ ],
+ "ch-health-and-wellbeing": [
+  "childrens-homes-regulation-10",
+  "childrens-homes-regulation-6",
+  "childrens-homes-regulation-7",
+  "childrens-homes-regulation-14",
+  "children-act-1989-looked-after-children",
+  "guide-to-the-childrens-homes-regulations"
+ ],
+ "ch-leaving-care-moving-on": [
+  "childrens-homes-regulation-14",
+  "childrens-homes-regulation-6",
+  "childrens-homes-regulation-8",
+  "childrens-homes-regulation-5",
+  "children-act-1989-looked-after-children",
+  "corporate-parenting-principles"
+ ],
+ "ch-missing-from-care": [
+  "childrens-homes-regulation-34",
+  "childrens-homes-regulation-12",
+  "childrens-homes-regulation-14",
+  "children-act-1989-looked-after-children",
+  "working-together-to-safeguard-children",
+  "guide-to-the-childrens-homes-regulations"
+ ],
+ "ch-notifications-ofsted-placing-authorities": [
+  "childrens-homes-regulation-40",
+  "childrens-homes-regulation-41",
+  "childrens-homes-regulation-42",
+  "childrens-homes-regulation-45",
+  "guide-to-the-childrens-homes-regulations",
+  "working-together-to-safeguard-children",
+  "care-standards-act-2000-childrens-homes"
+ ],
+ "ch-online-safety-digital-access": [
+  "childrens-homes-regulation-22",
+  "childrens-homes-regulation-21",
+  "childrens-homes-regulation-19",
+  "childrens-homes-regulation-12",
+  "childrens-homes-regulation-11",
+  "working-together-to-safeguard-children",
+  "guide-to-the-childrens-homes-regulations"
+ ],
+ "ch-participation-advocacy-childrens-guide": [
+  "childrens-homes-regulation-7",
+  "childrens-homes-regulation-39",
+  "childrens-homes-regulation-6",
+  "childrens-homes-regulation-45",
+  "childrens-homes-regulation-44",
+  "guide-to-the-childrens-homes-regulations"
+ ],
+ "ch-pocket-money-savings-reparation": [
+  "childrens-homes-regulation-19",
+  "childrens-homes-regulation-9",
+  "childrens-homes-regulation-12",
+  "children-act-1989-looked-after-children",
+  "corporate-parenting-principles",
+  "guide-to-the-childrens-homes-regulations"
+ ],
+ "ch-privacy-access-monitoring": [
+  "childrens-homes-regulation-21",
+  "childrens-homes-regulation-24",
+  "childrens-homes-regulation-12",
+  "childrens-homes-regulation-22",
+  "guide-to-the-childrens-homes-regulations",
+  "data-protection-act",
+  "human-rights-act-1998"
+ ],
+ "ch-regulation-44-45-visits-and-review": [
+  "childrens-homes-regulation-44",
+  "childrens-homes-regulation-45",
+  "childrens-homes-regulation-43",
+  "childrens-homes-regulation-13",
+  "childrens-homes-regulation-12",
+  "guide-to-the-childrens-homes-regulations"
+ ],
+ "ch-safeguarding-child-protection": [
+  "childrens-homes-regulation-34",
+  "childrens-homes-regulation-12",
+  "childrens-homes-regulation-33",
+  "childrens-homes-regulation-40",
+  "working-together-to-safeguard-children",
+  "children-act-1989-looked-after-children"
+ ],
+ "hospice-bereavement-support": [
+  "regulation-9",
+  "regulation-10",
+  "regulation-18",
+  "nice_ng31_-_care_of_dying_adults",
+  "gold-standards-framework-gsf",
+  "data-protection-act"
+ ],
+ "hospice-care-after-death-verification": [
+  "regulation-9",
+  "regulation-10",
+  "regulation-12",
+  "regulation-17",
+  "cqc-statutory-notifications",
+  "mental-capacity-act-2005",
+  "infection-control",
+  "records-management-code-of-practice-for-health-and-social-care-2021"
+ ],
+ "hospice-care-of-the-dying-person": [
+  "regulation-9",
+  "regulation-12",
+  "regulation-10",
+  "mental-capacity-act-2005",
+  "nice_ng31_-_care_of_dying_adults",
+  "gold-standards-framework-gsf"
+ ],
+ "hospice-chaperone": [
+  "regulation-10",
+  "regulation-11",
+  "regulation-9",
+  "mental-capacity-act-2005",
+  "safeguarding-adults",
+  "equality-act-2010"
+ ],
+ "hospice-enteral-feeding": [
+  "regulation-12",
+  "regulation-14",
+  "regulation-11",
+  "regulation-17",
+  "mental-capacity-act-2005",
+  "health-and-social-care-act-infection-control-code"
+ ],
+ "hospice-epilepsy-seizure-management": [
+  "regulation-12",
+  "regulation-9",
+  "regulation-17",
+  "regulation-18",
+  "nice-sc1-managing-medicines-care-homes"
+ ],
+ "hospice-long-term-ventilation": [
+  "regulation-12",
+  "regulation-15",
+  "regulation-18",
+  "regulation-17",
+  "regulation-9"
+ ],
+ "hospice-oxygen-medical-gases-safety": [
+  "regulation-12",
+  "regulation-15",
+  "regulation-17",
+  "regulation-18",
+  "regulatory-reform-fire-safety-order-2005",
+  "health-and-safety-at-work-act"
+ ],
+ "hospice-safeguarding-children-young-people": [
+  "working-together-to-safeguard-children",
+  "regulation-13",
+  "safeguarding-vulnerable-groups-act-2006",
+  "disclosure-and-barring-service-dbs",
+  "common-law-duty-of-confidentiality",
+  "cqc-statutory-notifications"
+ ],
+ "hospice-self-harm-suicide-ligature-risk": [
+  "regulation-12",
+  "regulation-13",
+  "regulation-17",
+  "mental-capacity-act-2005",
+  "safeguarding-adults",
+  "cqc-statutory-notifications"
+ ],
+ "hospice-sharps-inoculation-clinical-waste": [
+  "regulation-12",
+  "regulation-17",
+  "regulation-18",
+  "infection-control",
+  "health-and-social-care-act-infection-control-code",
+  "riddor",
+  "health-and-safety-at-work-act"
+ ],
+ "hospice-syringe-driver-anticipatory-medicines": [
+  "regulation-12",
+  "regulation-17",
+  "regulation-18",
+  "nice_ng31_-_care_of_dying_adults",
+  "nice-sc1-managing-medicines-care-homes",
+  "rps-professional-guidance-on-the-safe-and-secure-handling-of-medicines",
+  "misuse-of-drugs-act-1971"
+ ],
+ "hospice-tracheostomy-care": [
+  "regulation-12",
+  "regulation-18",
+  "regulation-9",
+  "infection-control",
+  "mental-capacity-act-2005",
+  "regulated-activities-regulations-2014"
+ ],
+ "hospice-volunteers": [
+  "regulation-18",
+  "regulation-19",
+  "regulation-13",
+  "disclosure-and-barring-service-dbs",
+  "safeguarding-vulnerable-groups-act-2006",
+  "gdpr"
+ ],
+ "prison-healthcare-medicines-in-possession": [
+  "regulation-12",
+  "regulation-13",
+  "regulation-17",
+  "misuse-of-drugs-act-1971",
+  "medicines-act-1968",
+  "rps-professional-guidance-on-the-safe-and-secure-handling-of-medicines"
+ ],
+ "sexual-assault-forensic-evidence-chain-of-custody": [
+  "regulation-11",
+  "regulation-13",
+  "regulation-17",
+  "common-law-duty-of-confidentiality",
+  "data-protection-act",
+  "safeguarding-adults"
  ]
 }

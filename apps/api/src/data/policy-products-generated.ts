@@ -3299,5 +3299,2379 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
     "help": "How is nurse cover arranged and who signs off wound care plans? For example a registered nurse on every shift, or a visiting nurse plan reviewed by the manager"
    }
   ]
+ },
+ {
+  "slug": "ch-admissions-placement-planning",
+  "title": "Admissions, Placement Planning and Induction Policy (Children's Homes)",
+  "price_pence": 6900,
+  "taster": false,
+  "bundles": [
+   "governance-data-pack"
+  ],
+  "description": "Children's home admissions policy covering matching to the statement of purpose, emergency admissions, placement plans with the placing authority, induction and moving on.",
+  "fields": [
+   {
+    "key": "admission_decision_maker",
+    "label": "Admission decision maker",
+    "help": "Who decides whether a child can be admitted, and who covers when they are away? For example the registered manager, with the responsible individual deciding if the manager is absent."
+   },
+   {
+    "key": "needs_range_in_statement",
+    "label": "Needs range in statement",
+    "help": "How does the home check a referral against the range of needs in its statement of purpose? For example a written matching checklist completed by the registered manager before any offer."
+   },
+   {
+    "key": "referral_information_required",
+    "label": "Referral information required",
+    "help": "What information do you ask the placing authority for before agreeing to a placement? For example the care plan, risk assessments, health and education records and the reason for the move."
+   },
+   {
+    "key": "impact_on_current_children",
+    "label": "Impact on current children",
+    "help": "How do you consider the effect of a new admission on the children already living in the home? For example a group dynamics discussion at a team meeting and a recorded decision."
+   },
+   {
+    "key": "emergency_admission_rules",
+    "label": "Emergency admission rules",
+    "help": "Do you accept emergency admissions, and what must be in place first? For example only inside the statement of purpose, with a manager decision and a placement plan meeting within five days."
+   },
+   {
+    "key": "placement_plan_process",
+    "label": "Placement plan process",
+    "help": "How is the placement plan agreed and signed with the placing authority, and where is it kept? For example the registered manager signs at the first planning meeting and a copy is held in the child's file."
+   },
+   {
+    "key": "pre_admission_visits",
+    "label": "Pre-admission visits",
+    "help": "Do children visit before moving in, and what happens at those visits? For example one or two visits with their social worker and a chance to see the bedroom and meet staff."
+   },
+   {
+    "key": "induction_first_weeks",
+    "label": "Induction in first weeks",
+    "help": "What induction does each child get when they arrive? For example a named key worker, a welcome pack, a tour, house routines explained and a settling in review at two weeks."
+   },
+   {
+    "key": "placement_review_cycle",
+    "label": "Placement review cycle",
+    "help": "How does the home manage and review each placement? For example a monthly internal review by the registered manager and attendance at the statutory review."
+   },
+   {
+    "key": "moving_on_planning",
+    "label": "Moving on planning",
+    "help": "How do you plan with the placing authority for a child to leave or move into adult care? For example planning starts six months before a sixteenth birthday and includes a leaving care worker."
+   },
+   {
+    "key": "unplanned_endings",
+    "label": "Unplanned endings",
+    "help": "What happens if a placement is at risk of ending suddenly? For example an urgent meeting with the placing authority within 48 hours and a written support plan."
+   }
+  ]
+ },
+ {
+  "slug": "ch-anti-bullying",
+  "title": "Anti-Bullying Policy (Children's Homes)",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [],
+  "description": "An anti-bullying policy written for your children's home: what counts as bullying, prevention, how allegations are dealt with, support for children and review.",
+  "fields": [
+   {
+    "key": "bullying_definition",
+    "label": "How bullying is defined",
+    "help": "How does your home describe bullying so staff and children share one understanding? For example repeated unkind behaviour, online bullying, exclusion, discriminatory language, written in child friendly words"
+   },
+   {
+    "key": "how_children_told",
+    "label": "Telling children it is unacceptable",
+    "help": "How do staff make clear to children that bullying is unacceptable? For example at admission, house meetings, key worker sessions, a child friendly version of the policy"
+   },
+   {
+    "key": "prevention_steps",
+    "label": "Prevention steps",
+    "help": "What does the home do day to day to prevent bullying? For example agreed house expectations, staff presence at busy times, mix of children considered at admission"
+   },
+   {
+    "key": "peer_risk_management",
+    "label": "Managing peer relationships",
+    "help": "How do you manage relationships between children to prevent them harming each other? For example impact risk assessment on admission, room and seating arrangements, staffing at key times"
+   },
+   {
+    "key": "how_children_report",
+    "label": "Ways children can report",
+    "help": "How can a child raise a bullying concern? For example tell any staff member, key worker, advocate, independent visitor, suggestion box, children's meeting"
+   },
+   {
+    "key": "online_bullying_approach",
+    "label": "Online and phone bullying",
+    "help": "How does the home respond to bullying through phones, games and social media? For example agreed device rules, screenshots kept, report to platform, speak to the child"
+   },
+   {
+    "key": "allegation_procedure_steps",
+    "label": "Allegation procedure steps",
+    "help": "What are the steps once a bullying allegation is made? For example listen, record the same shift, shift lead informed, manager review within a set time"
+   },
+   {
+    "key": "record_keeping",
+    "label": "Recording incidents",
+    "help": "Where and how are bullying allegations and the action taken recorded? For example incident record, child's file, manager sign off, monthly log"
+   },
+   {
+    "key": "support_for_children",
+    "label": "Support for children involved",
+    "help": "What support is offered to the child who was bullied and the child who bullied? For example key worker time, restorative conversation, counselling referral, review of the child's plans"
+   },
+   {
+    "key": "who_is_told",
+    "label": "Who is told",
+    "help": "Who is informed about bullying concerns, and when? For example placing authority social worker, parents or carers, the independent visitor, Ofsted where the event is notifiable"
+   },
+   {
+    "key": "staff_skills_supervision",
+    "label": "Staff skills and supervision",
+    "help": "How are staff helped to recognise and deal with bullying? For example induction, de-escalation training, supervision, team meeting reflection"
+   },
+   {
+    "key": "monitoring_and_review",
+    "label": "Monitoring and review",
+    "help": "How do you monitor patterns of bullying and review this policy? For example monthly manager analysis, children's views, review at the quality of care review or after an incident"
+   }
+  ]
+ },
+ {
+  "slug": "ch-behaviour-management-restraint",
+  "title": "Behaviour Management, Discipline and Restraint Policy (Children's Homes) with 24 hour, 48 hour and 5 day recording",
+  "price_pence": 7900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "A behaviour management policy for children's homes: positive behaviour, permitted measures, prohibited sanctions, restraint, and 24 hour, 48 hour and 5 day recording.",
+  "fields": [
+   {
+    "key": "positive_behaviour_approach",
+    "label": "Positive behaviour approach",
+    "help": "How does your home promote appropriate behaviour day to day? For example a relational approach, rewards and recognition, key worker time, house meetings, a named therapeutic model."
+   },
+   {
+    "key": "permitted_consequences",
+    "label": "Consequences and sanctions used",
+    "help": "Which consequences or sanctions may staff use when a child's behaviour needs a response? For example a conversation, loss of a privilege linked to the behaviour, reparation by agreement, a restorative meeting."
+   },
+   {
+    "key": "physical_intervention_model",
+    "label": "Physical intervention training",
+    "help": "Does your home use physical intervention, and which accredited training model do staff hold? For example a named model, refresher interval, no physical intervention, agency staff rules."
+   },
+   {
+    "key": "restraint_authorisation",
+    "label": "Who authorises restraint",
+    "help": "Who may use or lead a restraint and who decides it was necessary and proportionate afterwards? For example trained staff only, shift leader on duty, registered manager review."
+   },
+   {
+    "key": "recording_system",
+    "label": "Incident recording system",
+    "help": "Where are measures of control, discipline and restraint recorded? For example an electronic care record, a bound restraint log, an incident form with a body map."
+   },
+   {
+    "key": "authorised_signatory",
+    "label": "Authorised person for sign off",
+    "help": "Who speaks to the staff member and signs the record within 48 hours? For example the registered manager, a deputy manager authorised in writing, a named senior."
+   },
+   {
+    "key": "child_debrief_practice",
+    "label": "Child debrief practice",
+    "help": "How and by whom is the child spoken to after a measure, and how is it recorded within 5 days? For example key worker or manager, independent person offer, child's words recorded."
+   },
+   {
+    "key": "injury_and_medical_check",
+    "label": "Post incident health checks",
+    "help": "What checks follow a restraint for the child and staff? For example a check by a first aider, GP or nurse call, body map, notes of any treatment."
+   },
+   {
+    "key": "notifying_others",
+    "label": "People told after restraint",
+    "help": "Who is told after a restraint and when? For example the social worker, parents where appropriate, the responsible individual, the placing authority, Ofsted where required."
+   },
+   {
+    "key": "ehc_planned_restraint",
+    "label": "Planned restraint in plans",
+    "help": "Does any child have planned or routine restraint written into an EHC plan or statement of special educational needs? For example none, or how it is shared with the home. Do not name children."
+   },
+   {
+    "key": "monitoring_and_review",
+    "label": "Monitoring and policy review",
+    "help": "How are patterns reviewed and how often is this policy reviewed? For example monthly trend review by the manager, six monthly quality of care review, an annual policy review."
+   },
+   {
+    "key": "staff_support_debrief",
+    "label": "Staff debrief and support",
+    "help": "What support do staff receive after a restraint? For example a same shift debrief, supervision within a week, reflective practice session, access to counselling."
+   }
+  ]
+ },
+ {
+  "slug": "ch-case-records-retention-access",
+  "title": "Children's Case Records, Retention and Access Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "governance-data-pack"
+  ],
+  "description": "A children's home record keeping policy written for you, covering case record content, signed entries, secure storage, retention, transfer on closure and children's access.",
+  "fields": [
+   {
+    "key": "case_record_format",
+    "label": "Case record format",
+    "help": "Are case records kept on paper, electronically or both, and which system is the main record? For example an electronic care system with a paper file for signed legal documents."
+   },
+   {
+    "key": "record_entry_routine",
+    "label": "Writing and signing entries",
+    "help": "How do staff write, sign and date entries, and how soon after an event? For example by the end of the shift, with an electronic signature and a time stamp."
+   },
+   {
+    "key": "record_quality_checks",
+    "label": "Checking record quality",
+    "help": "Who checks that case records are complete and up to date, and how often? For example the deputy manager reviews each file monthly and the registered manager samples quarterly."
+   },
+   {
+    "key": "storage_while_resident",
+    "label": "Storage while child lives here",
+    "help": "Where and how are current case records kept securely in the home? For example a locked cabinet in the office and an electronic system with named user logins."
+   },
+   {
+    "key": "storage_after_leaving",
+    "label": "Storage after a child leaves",
+    "help": "Where and how are records of children who have left kept securely until the end of the retention period? For example archived to a locked store at head office or a secure electronic archive."
+   },
+   {
+    "key": "retention_review_process",
+    "label": "Retention and destruction check",
+    "help": "Who tracks retention dates and what happens when a record reaches the end of its period? For example the registered manager keeps a register of dates and the responsible individual authorises secure destruction."
+   },
+   {
+    "key": "access_levels",
+    "label": "Who can see records",
+    "help": "Which roles can read, add to or amend case records? For example key workers can add entries, only the registered manager can amend, and agency staff have read access to current plans."
+   },
+   {
+    "key": "child_access_support",
+    "label": "Helping children see records",
+    "help": "How do staff help each child access and contribute to their own records? For example at key work sessions, with a child friendly summary, and the child may add their own views."
+   },
+   {
+    "key": "access_request_handling",
+    "label": "Handling access requests",
+    "help": "Who deals with requests for records from children, former residents, families or others, and how are they decided and recorded? For example the registered manager with advice from the data protection lead, logged in a request register."
+   },
+   {
+    "key": "former_residents_access",
+    "label": "Access for former residents",
+    "help": "How can an adult who lived in the home ask to see their records, and what support is offered? For example a written request to the registered manager, with a trained member of staff to go through the file."
+   },
+   {
+    "key": "closure_transfer_plan",
+    "label": "Transfer of records on closure",
+    "help": "If the home closed, where would records go and who is responsible? For example to the provider's nearest other home, or to placing authorities where there is none."
+   },
+   {
+    "key": "data_protection_lead",
+    "label": "Data protection contact",
+    "help": "Who is your data protection lead or officer, and how are staff told about records and data rules? For example the responsible individual, with training at induction and yearly."
+   }
+  ]
+ },
+ {
+  "slug": "ch-child-sexual-criminal-exploitation",
+  "title": "Child Sexual Exploitation and Criminal Exploitation Policy (including county lines)",
+  "price_pence": 6900,
+  "taster": false,
+  "bundles": [],
+  "description": "A county lines policy for children's homes: recognising, assessing and responding to sexual and criminal exploitation, linked to missing episodes, police and notification.",
+  "fields": [
+   {
+    "key": "exploitation_lead_role",
+    "label": "Exploitation lead role",
+    "help": "Who leads on exploitation concerns in the home and who covers when they are away? For example the registered manager, a named safeguarding lead, an on call manager out of hours"
+   },
+   {
+    "key": "exploitation_risk_tool",
+    "label": "Exploitation risk tool",
+    "help": "What tool or format do you use to assess and record each child's risk of sexual or criminal exploitation? For example the placing authority's screening tool, your own risk assessment, reviewed monthly"
+   },
+   {
+    "key": "indicators_staff_record",
+    "label": "Indicators staff record",
+    "help": "What changes do staff record that may point to exploitation? For example unexplained money or gifts, new phones, unknown adults, returning late, changes in mood"
+   },
+   {
+    "key": "local_exploitation_contacts",
+    "label": "Local exploitation contacts",
+    "help": "Which local contacts and panels do you use for exploitation concerns? For example the local police exploitation team, a multi agency exploitation meeting, the placing authority social worker"
+   },
+   {
+    "key": "link_to_missing_episodes",
+    "label": "Link to missing episodes",
+    "help": "How do missing and late return episodes feed into exploitation risk? For example return home conversations, independent return interviews, a review of patterns by the manager"
+   },
+   {
+    "key": "contact_with_unknown_adults",
+    "label": "Unknown adults and visitors",
+    "help": "How do staff respond when unknown adults or older peers contact a child or visit the home? For example visitor checks, recording details, informing the police and placing authority"
+   },
+   {
+    "key": "phones_online_safety",
+    "label": "Phones and online safety",
+    "help": "How do you help children stay safe online and with phones, and what do staff do about concerns? For example agreed device rules, online safety conversations, reporting to police"
+   },
+   {
+    "key": "police_referral_route",
+    "label": "Police referral route",
+    "help": "When and how do you refer or inform the police about suspected exploitation? For example a call to the local police contact, a recorded decision by the manager, written confirmation"
+   },
+   {
+    "key": "notification_process",
+    "label": "Notification process",
+    "help": "How do you notify Ofsted, the placing authority and other relevant people of suspected sexual exploitation? For example registered manager notifies without delay, then confirms in writing"
+   },
+   {
+    "key": "key_work_direct_work",
+    "label": "Key work and direct work",
+    "help": "What direct work do key workers do with children about safe relationships and exploitation? For example one to one sessions, resources used, therapeutic input"
+   },
+   {
+    "key": "staff_training_exploitation",
+    "label": "Exploitation training",
+    "help": "What training do staff have on exploitation and how often is it refreshed? For example induction course, annual update, local safeguarding partnership events"
+   },
+   {
+    "key": "review_and_learning",
+    "label": "Review and learning",
+    "help": "How do you review exploitation concerns and learn from them? For example a manager review after each incident, team meeting, update to the child's plans"
+   }
+  ]
+ },
+ {
+  "slug": "ch-contact-family-time",
+  "title": "Contact, Family Time and Communications Policy (Children's Homes)",
+  "price_pence": 6900,
+  "taster": false,
+  "bundles": [],
+  "description": "How your children's home supports family time and contact, private phone, post and email access, and how any restriction is agreed with the placing authority.",
+  "fields": [
+   {
+    "key": "private_meeting_space",
+    "label": "Private meeting space",
+    "help": "Where can a child meet family, friends and professionals in private? For example: a dedicated family room, the quiet lounge with a sign on the door, a community venue for some visits."
+   },
+   {
+    "key": "visiting_arrangements",
+    "label": "Visiting times and booking",
+    "help": "How do family and friends arrange visits, and when can they happen? For example: agreed in the child's plan, any reasonable time with notice to the shift lead, no fixed visiting hours."
+   },
+   {
+    "key": "phone_access_arrangements",
+    "label": "Phone access arrangements",
+    "help": "How do children access a private telephone? For example: own mobile phone kept by the child, a landline in a private room, phone available at any reasonable time without asking."
+   },
+   {
+    "key": "post_and_email_access",
+    "label": "Post and email access",
+    "help": "How do children send and receive post and use email where provided? For example: post handed over unopened, a private email account on a home laptop, no email provided."
+   },
+   {
+    "key": "communication_aids",
+    "label": "Communication aids and support",
+    "help": "What aids or support help disabled children communicate with others? For example: symbol boards, a tablet with a communication app, a signer for family calls, none needed currently."
+   },
+   {
+    "key": "supervised_contact_process",
+    "label": "Supervised contact process",
+    "help": "When contact is supervised or supported by staff, how is that decided and who does it? For example: set by the placing authority plan, a named worker supports it, contact centre used for some sessions."
+   },
+   {
+    "key": "contact_restriction_decision",
+    "label": "Restriction decision route",
+    "help": "Who decides if contact or communications need restricting to safeguard a child, and how is it recorded? For example: registered manager decides, written reason on file, review at each shift handover."
+   },
+   {
+    "key": "placing_authority_consent",
+    "label": "Placing authority consent",
+    "help": "How do you obtain consent from the placing authority for a restriction, and what happens in an emergency? For example: social worker phoned and email follow up, full details sent within 24 hours."
+   },
+   {
+    "key": "court_order_checks",
+    "label": "Court order checks",
+    "help": "How does the home find out about and follow court orders on contact? For example: copies kept in the child's file, checked at admission, placing social worker confirms any change."
+   },
+   {
+    "key": "contact_records_review",
+    "label": "Contact records and review",
+    "help": "How is contact recorded and reviewed with children and their plans? For example: contact log after each visit, discussed in key worker sessions, reviewed at placement review."
+   },
+   {
+    "key": "family_time_after_contact",
+    "label": "Support after family time",
+    "help": "What support do children receive before and after family time? For example: key worker check in, quiet space, debrief the same day, extra staffing on difficult days."
+   }
+  ]
+ },
+ {
+  "slug": "ch-education-school-attendance",
+  "title": "Education Support and School Attendance Policy (Children's Homes)",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [],
+  "description": "How your children's home supports learning and school attendance, works with schools and the placing authority, and helps excluded children and post-16 young people move forward.",
+  "fields": [
+   {
+    "key": "education_lead_role",
+    "label": "Education lead role",
+    "help": "Who leads on education in the home and what do they do? For example: a named education champion, the deputy manager, each key worker for their own child."
+   },
+   {
+    "key": "school_contact_routine",
+    "label": "School contact routine",
+    "help": "How often and how do staff keep in touch with each child's school or provider? For example: weekly call to the designated teacher, daily home-school book, termly meeting."
+   },
+   {
+    "key": "placing_authority_education_liaison",
+    "label": "Placing authority education liaison",
+    "help": "How do you work with the placing authority and virtual school on education? For example: social worker and virtual school head contacted before each review, termly update by email."
+   },
+   {
+    "key": "morning_routine_attendance",
+    "label": "Getting children to school",
+    "help": "What do staff do each school morning to help children attend? For example: wake-up routine, transport by minibus, walking with staff, taxi arranged by the local authority."
+   },
+   {
+    "key": "non_attendance_response",
+    "label": "Response to non-attendance",
+    "help": "What happens when a child does not go to school or leaves during the day? For example: staff encourage, school informed by 9.30, manager told, placing social worker told the same day."
+   },
+   {
+    "key": "exclusion_arrangements",
+    "label": "Exclusion and part-time timetables",
+    "help": "How do you support a child who is excluded or on a reduced timetable? For example: same-day call to the school, work set and supervised in the home, review meeting within a week."
+   },
+   {
+    "key": "learning_space_resources",
+    "label": "Learning space and equipment",
+    "help": "What equipment and space do children have for homework and study? For example: study room, laptops with filters, library membership, tutoring paid by the placing authority."
+   },
+   {
+    "key": "special_educational_needs_support",
+    "label": "Special educational needs support",
+    "help": "How do staff support children with special educational needs or an education, health and care plan? For example: plan shared with key worker, staff attend annual review, SENCO contacted."
+   },
+   {
+    "key": "education_records_review",
+    "label": "Education records and review",
+    "help": "How are education targets, attendance and progress recorded and reviewed? For example: attendance log, targets in the placement plan, reviewed monthly by the manager."
+   },
+   {
+    "key": "post16_transition_support",
+    "label": "Post-16 support",
+    "help": "How do you help young people above compulsory school age into college, training or work? For example: college visits, apprenticeship help, a link with the leaving care team."
+   },
+   {
+    "key": "informal_learning_opportunities",
+    "label": "Informal learning opportunities",
+    "help": "What informal learning do children get in the home? For example: cooking and budgeting sessions, reading time, trips to museums, homework club."
+   },
+   {
+    "key": "child_voice_education",
+    "label": "Children's views on education",
+    "help": "How do children share views about their education and how are they acted on? For example: key worker sessions, education section in the monthly meeting, school review preparation."
+   }
+  ]
+ },
+ {
+  "slug": "ch-harmful-sexual-behaviour-peer-abuse",
+  "title": "Harmful Sexual Behaviour and Peer on Peer Abuse Policy",
+  "price_pence": 6900,
+  "taster": false,
+  "bundles": [],
+  "description": "A peer on peer abuse policy for children's homes: responding to harmful sexual behaviour between children, risk assessment, support for all involved and reporting.",
+  "fields": [
+   {
+    "key": "safeguarding_lead_role",
+    "label": "Safeguarding lead role",
+    "help": "Who leads on harmful behaviour between children and who covers when they are away? For example the registered manager, a named safeguarding lead, or an on call manager out of hours."
+   },
+   {
+    "key": "recognising_signs",
+    "label": "Recognising concerns",
+    "help": "How are staff helped to spot harmful sexual behaviour or abuse between children? For example induction, supervision, team discussion, a checklist, or training from a named provider."
+   },
+   {
+    "key": "immediate_response",
+    "label": "Immediate response steps",
+    "help": "What do staff do straight away when they see or hear about harmful behaviour between children? For example separate the children, make both safe, tell the manager, and record what was seen."
+   },
+   {
+    "key": "risk_assessment_process",
+    "label": "Risk assessment process",
+    "help": "How are risks assessed for the child who was harmed and the child who showed the behaviour? For example a written risk assessment led by the manager, reviewed after any incident with the social worker."
+   },
+   {
+    "key": "supervision_arrangements",
+    "label": "Supervision and separation",
+    "help": "What arrangements keep children safe in the home once a concern is raised? For example room allocation, extra supervision at set times, bedroom door rules, or separate activities."
+   },
+   {
+    "key": "support_child_harmed",
+    "label": "Support for child harmed",
+    "help": "What support is offered to a child who has been harmed? For example a key worker, a named counsellor, the placing authority's therapy service, or a health referral."
+   },
+   {
+    "key": "support_child_harming",
+    "label": "Support for child who harmed",
+    "help": "What support and work is offered to a child who has shown harmful behaviour? For example specialist assessment through the placing authority, key work sessions, or a behaviour support plan."
+   },
+   {
+    "key": "referral_routes",
+    "label": "Referral and reporting routes",
+    "help": "Who do you tell, and when? For example the placing authority, the local authority designated officer, the police, parents where appropriate, and Ofsted."
+   },
+   {
+    "key": "keeping_safe_education",
+    "label": "Keeping safe education",
+    "help": "How are children helped to understand healthy relationships and keep safe? For example key work sessions, group discussions, age appropriate resources, or sessions with a visiting nurse."
+   },
+   {
+    "key": "recording_monitoring",
+    "label": "Recording and monitoring",
+    "help": "Where are incidents recorded and how are patterns reviewed? For example the child's file, an incident log, and a monthly review by the registered manager."
+   },
+   {
+    "key": "review_learning",
+    "label": "Review and learning",
+    "help": "How does the home review what happened and learn from it? For example a post incident meeting, a debrief with staff, and a review at the regulation 45 report."
+   }
+  ]
+ },
+ {
+  "slug": "ch-health-and-wellbeing",
+  "title": "Children's Health, Wellbeing and Health Care Policy (Children's Homes)",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "A health and wellbeing policy written for your children's home: GP and dentist registration, appointments, specialist services, emotional wellbeing and non-NHS care.",
+  "fields": [
+   {
+    "key": "gp_dentist_registration",
+    "label": "GP and dentist registration",
+    "help": "How do you make sure each child is registered with a GP and a dentist, and what happens for a child who arrives out of area or at short notice? For example register within a set number of days, keep the previous GP until a local one is agreed, manager checks the record"
+   },
+   {
+    "key": "health_plan_responsibilities",
+    "label": "Health plans and who keeps them",
+    "help": "Who keeps each child's health plan and health assessment information up to date, and how is it shared with staff? For example key worker updates after each appointment, manager checks monthly, held in the child's file"
+   },
+   {
+    "key": "appointment_support",
+    "label": "Appointment support",
+    "help": "How do staff help children attend medical, dental, optician and other appointments? For example a named escort, a diary reviewed each week, a follow up call when an appointment is missed"
+   },
+   {
+    "key": "explaining_health_to_children",
+    "label": "Explaining health to children",
+    "help": "How do staff help each child understand their health needs and the options open to them, in a way suited to their age and understanding? For example key worker conversations, easy read leaflets, the child joining the appointment"
+   },
+   {
+    "key": "healthy_lifestyle_support",
+    "label": "Healthy lifestyle support",
+    "help": "How does the home help children lead healthy lives? For example shared meal planning, sleep routines, exercise activities, sexual health and substance use advice, smoking and vaping support"
+   },
+   {
+    "key": "emotional_wellbeing_support",
+    "label": "Emotional wellbeing support",
+    "help": "How do you support children's emotional wellbeing and mental health day to day, and how do you reach CAMHS or other specialist services? For example key worker sessions, in house therapeutic support, referral by the placing authority or GP"
+   },
+   {
+    "key": "non_nhs_care_approval",
+    "label": "Non-NHS care approval",
+    "help": "How is any health or development care that is not provided by the NHS approved, supervised and reviewed? For example written approval from the placing authority, practitioner qualification checks, review dates, GP told of progress"
+   },
+   {
+    "key": "gp_kept_informed",
+    "label": "Keeping the GP informed",
+    "help": "How and when is the child's GP told about non-NHS care or significant health changes? For example a letter at the start of therapy, update after each review, manager sign off"
+   },
+   {
+    "key": "health_info_sharing",
+    "label": "Sharing health information",
+    "help": "Who is told about a child's health needs and how is the information protected? For example placing authority social worker, independent reviewing officer, parents with permission, secure files with limited access"
+   },
+   {
+    "key": "health_concern_escalation",
+    "label": "Health concern escalation",
+    "help": "What do staff do when a child is unwell, injured, refuses treatment or has a health concern that cannot wait? For example call the GP or 111, tell the shift lead, inform the placing authority the same day, record it"
+   },
+   {
+    "key": "health_review_monitoring",
+    "label": "Health review and monitoring",
+    "help": "How does the registered manager check children's health outcomes are met, and where is it reviewed? For example monthly health audit, key worker report, six monthly quality of care review"
+   }
+  ]
+ },
+ {
+  "slug": "ch-leaving-care-moving-on",
+  "title": "Leaving Care, Moving On and Transition Policy (Children's Homes)",
+  "price_pence": 6900,
+  "taster": false,
+  "bundles": [],
+  "description": "How your children's home prepares each young person to move on, return home or live independently, with a leaving care policy agreed with the placing authority.",
+  "fields": [
+   {
+    "key": "transition_planning_start",
+    "label": "When planning starts",
+    "help": "When does planning for a child's move begin, and who leads it? For example: at admission as part of the placement plan, from age 16 with a named worker, as soon as a move date is known."
+   },
+   {
+    "key": "pathway_plan_link",
+    "label": "Link to pathway plans",
+    "help": "How does the home work with the placing authority's plans for leaving care? For example: key worker attends pathway plan meetings, plan copied to the child's file, reviewed with the personal adviser."
+   },
+   {
+    "key": "independence_skills_programme",
+    "label": "Independence skills programme",
+    "help": "How are young people helped to build independence skills? For example: a skills checklist in key work, cooking and budgeting sessions, a training flat on site, none formal."
+   },
+   {
+    "key": "move_on_destinations",
+    "label": "Usual move on routes",
+    "help": "Where do young people usually move to from the home? For example: return to family, foster carer, supported lodgings, semi-independent unit, own tenancy."
+   },
+   {
+    "key": "introductions_and_visits",
+    "label": "Introductions and visits",
+    "help": "How are moves introduced and what visits happen before a child moves? For example: a staged plan of visits and overnight stays agreed with the new carer, a visit to the new address with a key worker."
+   },
+   {
+    "key": "education_and_work_support",
+    "label": "Education, training and work help",
+    "help": "How are young people helped into further education, training or work as they move on? For example: college applications supported by the key worker, links with a local employer, a careers adviser visit."
+   },
+   {
+    "key": "health_and_money_preparation",
+    "label": "Health and money preparation",
+    "help": "How are young people prepared to manage health appointments, money and documents? For example: own bank account opened with the placing authority, health passport shared, copies of key documents given."
+   },
+   {
+    "key": "handover_information",
+    "label": "Handover and records",
+    "help": "What is handed to the new placement or leaving care team, and how is the child's record shared? For example: a summary and plan sent by the registered manager, child helps write a life story book."
+   },
+   {
+    "key": "emergency_or_unplanned_moves",
+    "label": "Unplanned and emergency moves",
+    "help": "How does the home handle a move that was not planned? For example: registered manager contacts the placing authority at once, a review of plans requested, a settling in call made the next day."
+   },
+   {
+    "key": "after_leaving_contact",
+    "label": "Contact after leaving",
+    "help": "What contact or support does the home offer after a young person has left? For example: a named worker phones after one week, invitation to events, no ongoing contact."
+   },
+   {
+    "key": "young_person_voice",
+    "label": "Young person's voice in moving on",
+    "help": "How are children's wishes and feelings about their move gathered and recorded? For example: key work sessions, a moving on meeting chaired by the child, an advocate invited."
+   }
+  ]
+ },
+ {
+  "slug": "ch-missing-from-care",
+  "title": "Missing from Care Policy (Children's Homes)",
+  "price_pence": 6900,
+  "taster": false,
+  "bundles": [],
+  "description": "A missing from care policy written for your children's home: prevention, staff roles, search, police and placing authority contact, return and review.",
+  "fields": [
+   {
+    "key": "absence_prevention_steps",
+    "label": "Prevention steps",
+    "help": "What steps does the home take to prevent children being absent without permission? For example welcoming induction, key worker time, agreed routines, individual risk plans reviewed after each incident"
+   },
+   {
+    "key": "risk_assessment_process",
+    "label": "Missing risk assessment",
+    "help": "How do you assess and record each child's risk of going missing and of harm while away? For example at admission, then at each placement review or after any absence, using the placing authority plan"
+   },
+   {
+    "key": "child_information_held",
+    "label": "Information held for searches",
+    "help": "What up to date information is kept so a child can be found quickly? For example a recent photograph, description, known places and contacts, and who keeps it"
+   },
+   {
+    "key": "agreed_return_times",
+    "label": "Agreed times and sign out",
+    "help": "How do children go out, and what is agreed about return times and contact while out? For example agreed return times by age, sign out book, phone check in"
+   },
+   {
+    "key": "first_response_steps",
+    "label": "First response steps",
+    "help": "What do staff do first when a child is not where expected? For example search the home and grounds, ring the child, tell the shift lead, set a time to escalate"
+   },
+   {
+    "key": "police_report_thresholds",
+    "label": "Police reporting thresholds",
+    "help": "When do you report a child missing to the police, and who decides? For example straight away for high risk, or after a set time for low risk, as set in the local protocol"
+   },
+   {
+    "key": "roles_and_responsibilities",
+    "label": "Staff roles when missing",
+    "help": "Who does what when a child is absent? Name roles, including out of hours cover. For example shift lead, registered manager, on call manager, responsible individual"
+   },
+   {
+    "key": "who_is_told",
+    "label": "Who is told and when",
+    "help": "Who do you inform, in what order, when a child is missing? For example placing authority, parents or carers, independent visitor, Ofsted if the event is notifiable"
+   },
+   {
+    "key": "local_protocols_followed",
+    "label": "Local protocols followed",
+    "help": "Which local authority and police missing children protocols do you work to, and how do you consult on changes? For example the host authority protocol, consultation with placing authorities and children"
+   },
+   {
+    "key": "return_and_welfare_check",
+    "label": "Return and welfare check",
+    "help": "What happens when a child is found or returns? For example welfare and health check, a calm conversation, who offers a return interview, who is told"
+   },
+   {
+    "key": "persistent_absence_review",
+    "label": "Persistent absence review",
+    "help": "How do you spot repeated absences and ask the placing authority for a review? For example a monthly pattern check, manager review, a request for a plan review after repeated episodes"
+   },
+   {
+    "key": "learning_and_monitoring",
+    "label": "Learning and monitoring",
+    "help": "How do you record, review and learn from missing episodes? For example incident record, debrief, manager analysis, review at the six monthly quality of care review"
+   }
+  ]
+ },
+ {
+  "slug": "ch-notifications-ofsted-placing-authorities",
+  "title": "Notifications to Ofsted and Placing Authorities Policy (Regulations 40 to 42)",
+  "price_pence": 6900,
+  "taster": false,
+  "bundles": [
+   "governance-data-pack"
+  ],
+  "description": "Who your children's home tells, how fast and in what form when a serious event, admission, discharge or conviction occurs, with written confirmation built in.",
+  "fields": [
+   {
+    "key": "notification_decision_maker",
+    "label": "Who decides to notify",
+    "help": "Who decides that an event is notifiable, and who covers when they are away? For example the registered manager, with the deputy or on-call senior covering nights and weekends."
+   },
+   {
+    "key": "serious_incident_threshold",
+    "label": "Serious incident threshold",
+    "help": "How does your home decide that an incident is serious enough to notify under the 'any other serious incident' limb? For example any injury needing hospital treatment, any missing episode over a set time, or any use of restraint causing harm."
+   },
+   {
+    "key": "notification_timescale",
+    "label": "Time targets for notifying",
+    "help": "What time targets does your home set for telling Ofsted and placing authorities? For example by phone as soon as the child is safe, written confirmation the same day."
+   },
+   {
+    "key": "notification_method",
+    "label": "How notifications are sent",
+    "help": "How are notifications made to Ofsted and others, and how is the written confirmation sent? For example the Ofsted online notification form, then an email to the social worker with a copy on file."
+   },
+   {
+    "key": "who_is_told",
+    "label": "People and bodies told",
+    "help": "Which other people or bodies does your home usually tell besides Ofsted and the placing authority? For example the independent reviewing officer, the child's parents with the placing authority's agreement, the local authority designated officer, the police and the integrated care board."
+   },
+   {
+    "key": "out_of_hours_arrangements",
+    "label": "Out of hours arrangements",
+    "help": "How are notifications made at night, weekends and bank holidays? For example the on-call senior contacts the placing authority emergency duty team and sends the Ofsted notification in the morning."
+   },
+   {
+    "key": "allegation_notification_route",
+    "label": "Allegations against staff route",
+    "help": "How does your home handle an allegation against a worker or the home, and who is told? For example the registered manager contacts the local authority designated officer, then notifies Ofsted and the placing authority."
+   },
+   {
+    "key": "admission_discharge_notice",
+    "label": "Admission and discharge notices",
+    "help": "Who sends the written notice of an admission or discharge to the local authority where the home is located, and how soon? For example the registered manager's administrator sends it the same working day."
+   },
+   {
+    "key": "conviction_reporting_people",
+    "label": "Conviction reporting arrangements",
+    "help": "How do the registered provider, registered manager, responsible individual and any directors know to report a conviction to Ofsted, and how is it recorded? For example a declaration at each supervision and annual fit person check."
+   },
+   {
+    "key": "notification_record_keeping",
+    "label": "Notification records",
+    "help": "Where are notifications and their written confirmations recorded, and who checks them? For example a notifications log kept by the registered manager and reviewed monthly by the responsible individual."
+   },
+   {
+    "key": "staff_briefing_training",
+    "label": "Staff briefing on notifications",
+    "help": "How do staff learn what must be notified and who to tell? For example induction, a notification flowchart in the office and a discussion at team meetings."
+   },
+   {
+    "key": "learning_from_notifications",
+    "label": "Learning and review",
+    "help": "How does your home review notifications for patterns and learning? For example monthly review by the registered manager and quarterly by the responsible individual, shared in the Regulation 44 and 45 reports."
+   }
+  ]
+ },
+ {
+  "slug": "ch-online-safety-digital-access",
+  "title": "Online Safety and Digital Access Policy for Children in Residential Care",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [],
+  "description": "An online safety policy for children's homes: phone and internet access, filtering, supervision by age, social media, and responding to online harm.",
+  "fields": [
+   {
+    "key": "device_access_arrangements",
+    "label": "Device and phone access",
+    "help": "What access do children have to phones, tablets, games consoles and the internet, and how is private phone, post and email access provided? For example own phones kept by the child, a home phone in a private space, wifi in bedrooms and lounge"
+   },
+   {
+    "key": "filtering_and_monitoring",
+    "label": "Filtering and monitoring tools",
+    "help": "What filtering or monitoring is used on home wifi and devices, and who manages it? For example router level filtering, parental controls on shared devices, reviewed monthly by the registered manager"
+   },
+   {
+    "key": "age_based_supervision",
+    "label": "Supervision by age",
+    "help": "How does supervision of online use vary with age, understanding and each child's risk assessment? For example shared spaces for under 13s, more freedom for older teenagers where risk is low"
+   },
+   {
+    "key": "individual_online_risk",
+    "label": "Individual online risk plans",
+    "help": "How is each child's online risk assessed and recorded, and who reviews it? For example part of the individual risk assessment at admission, reviewed after any incident or at placement review"
+   },
+   {
+    "key": "social_media_gaming_rules",
+    "label": "Social media and gaming",
+    "help": "What approach does the home take to social media, messaging apps and online games? For example age limits set by platforms, agreed rules with the child, no blanket bans"
+   },
+   {
+    "key": "restriction_decisions",
+    "label": "Restricting access decisions",
+    "help": "Who decides to limit a child's phone or internet access for safeguarding, how is it recorded and how is the placing authority told? For example registered manager decides, written reason, placing authority consent sought, reviewed weekly"
+   },
+   {
+    "key": "online_harm_response",
+    "label": "Responding to online harm",
+    "help": "What do staff do if a child is at risk from online grooming, exploitation, bullying or harmful content? For example tell the designated safeguarding lead, preserve evidence, report to police or CEOP, inform the placing authority"
+   },
+   {
+    "key": "helplines_and_support",
+    "label": "Helplines and support",
+    "help": "How do children get to helplines and online counselling services, and how do you keep that access open? For example posters, saved numbers, private time on a device"
+   },
+   {
+    "key": "education_and_awareness",
+    "label": "Online safety education",
+    "help": "How do children learn to stay safe online, and how are staff trained? For example key work sessions, group discussions, annual staff training, guest sessions"
+   },
+   {
+    "key": "lead_roles",
+    "label": "Online safety lead",
+    "help": "Who leads online safety and what do they do? For example named staff member, registered manager oversight, responsible individual review"
+   },
+   {
+    "key": "review_and_recording",
+    "label": "Review and recording",
+    "help": "How are online incidents recorded, reviewed and used to improve practice? For example incident log, monthly manager review, discussed at the regulation 45 review"
+   }
+  ]
+ },
+ {
+  "slug": "ch-participation-advocacy-childrens-guide",
+  "title": "Children's Participation, Advocacy and Children's Guide Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "governance-data-pack"
+  ],
+  "description": "How your children's home gathers and acts on children's views, keeps its children's guide current and makes independent advocacy available, written around your own arrangements.",
+  "fields": [
+   {
+    "key": "advocacy_provider",
+    "label": "Independent advocacy provider",
+    "help": "Which organisation provides independent advocacy for children in your home, and how do children and staff reach it? For example the local authority commissioned service, a national children's charity helpline or a named advocate who visits."
+   },
+   {
+    "key": "advocacy_visits",
+    "label": "Advocate visit arrangements",
+    "help": "How often do advocates visit and how do children see them in private? For example monthly drop-ins, visits on request or phone and video contact only."
+   },
+   {
+    "key": "guide_format",
+    "label": "Children's guide formats",
+    "help": "In what formats is your children's guide available? For example a printed booklet, an easy read version, a video, translated copies or a version in the child's own language."
+   },
+   {
+    "key": "guide_review_cycle",
+    "label": "Guide review cycle",
+    "help": "How often is the children's guide reviewed, and how are children's comments gathered before changes? For example yearly at a house meeting, or after each inspection."
+   },
+   {
+    "key": "induction_explanation",
+    "label": "Explaining the guide on arrival",
+    "help": "Who explains the guide, the complaints procedure and advocacy to a child soon after arrival, and when? For example the key worker within 48 hours, with a follow up at the first review."
+   },
+   {
+    "key": "consultation_methods",
+    "label": "Ways children are consulted",
+    "help": "What regular ways do you use to ask children for their views on the quality of care? For example house meetings, one to one key work sessions, feedback forms or a children's council."
+   },
+   {
+    "key": "views_recording",
+    "label": "Recording views and responses",
+    "help": "Where do you record children's views and what was done about them? For example the daily log, key work records, a you said we did board or the child's review paperwork."
+   },
+   {
+    "key": "review_preparation",
+    "label": "Preparing children for reviews",
+    "help": "How do staff help children prepare for reviews of their plans and share their views? For example a pre review key work session, a consultation form or an advocate attending."
+   },
+   {
+    "key": "ways_to_complain",
+    "label": "Ways to raise concerns",
+    "help": "How can a child raise a concern or complaint, in addition to telling a member of staff? For example a comments box, a freephone line, a trusted adult, an advocate or direct contact with the independent person."
+   },
+   {
+    "key": "independent_person_contact",
+    "label": "Independent person contact",
+    "help": "How do children meet the independent person who visits monthly? For example introduced at the visit, a photo board, or a private chat during each visit."
+   },
+   {
+    "key": "quality_review_feedback",
+    "label": "Feeding views into quality review",
+    "help": "How do children's views feed into your six monthly review of the quality of care? For example a summary of consultation themes taken to the review meeting."
+   },
+   {
+    "key": "privacy_limits",
+    "label": "Explaining privacy and its limits",
+    "help": "How do you explain to children how privacy is respected and when it may be limited? For example in the guide, at arrival and in key work sessions."
+   }
+  ]
+ },
+ {
+  "slug": "ch-pocket-money-savings-reparation",
+  "title": "Children's Pocket Money, Savings and Financial Reparation Policy",
+  "price_pence": 4900,
+  "taster": false,
+  "bundles": [
+   "governance-data-pack"
+  ],
+  "description": "A children's home pocket money policy written for you: weekly amounts, savings, personal money records and the limits on reparation payments.",
+  "fields": [
+   {
+    "key": "pocket_money_amounts",
+    "label": "Weekly pocket money amounts",
+    "help": "How much pocket money does each child receive and how is it set? For example: a set weekly amount by age band, the placing authority rate, or an amount agreed at the placement planning meeting."
+   },
+   {
+    "key": "pocket_money_funding",
+    "label": "Who funds pocket money",
+    "help": "Who pays pocket money and how is it claimed? For example: the home from its budget, the placing authority reimbursing monthly, or a mix agreed in each placement agreement."
+   },
+   {
+    "key": "pocket_money_handover",
+    "label": "How money is given",
+    "help": "How and when is money handed over and recorded? For example: weekly on a set day, signed for by the child and a member of staff, or paid into a child's account."
+   },
+   {
+    "key": "money_not_withheld",
+    "label": "Pocket money and behaviour",
+    "help": "Is pocket money ever linked to behaviour, and what does the home say about this? For example: never reduced or withheld as a sanction, or a stated exception agreed in writing."
+   },
+   {
+    "key": "savings_arrangements",
+    "label": "Savings arrangements",
+    "help": "Does the home help children save, and where is savings money held? For example: a bank or savings account in the child's name, a savings pot kept in the home safe, or none held."
+   },
+   {
+    "key": "account_oversight",
+    "label": "Account oversight",
+    "help": "Who opens and oversees children's accounts, and who must agree? For example: the registered manager with the social worker's written agreement, with statements checked each month."
+   },
+   {
+    "key": "cash_handling_records",
+    "label": "Cash holding and records",
+    "help": "How is children's money held safely and who checks the records? For example: locked cash box, individual ledgers, a weekly count signed by two staff."
+   },
+   {
+    "key": "earnings_and_gifts",
+    "label": "Earnings, gifts and allowances",
+    "help": "How does the home treat money a child earns or receives from family, such as part time work or birthday gifts? For example: kept by the child, paid into savings, recorded by the key worker."
+   },
+   {
+    "key": "reparation_practice",
+    "label": "Reparation practice",
+    "help": "Does the home ever ask a child to pay a sum for damage, and if so when? For example: never, only a reasonable sum agreed with the child and the placing authority, by small instalments."
+   },
+   {
+    "key": "reparation_decision_process",
+    "label": "Reparation decision process",
+    "help": "Who decides on a reparation payment, who is consulted and how is the reason recorded? For example: the registered manager, after talking to the child and the social worker, recorded on the child's file."
+   },
+   {
+    "key": "spending_support",
+    "label": "Support to spend and budget",
+    "help": "How are children helped to budget and spend? For example: key worker sessions, shopping trips, a budgeting plan for older young people."
+   },
+   {
+    "key": "leaving_care_money",
+    "label": "Money on leaving",
+    "help": "What happens to a child's money and savings when they move on or leave the home? For example: handed over with a signed receipt, transferred to the new carer, passed to the leaving care team."
+   }
+  ]
+ },
+ {
+  "slug": "ch-privacy-access-monitoring",
+  "title": "Privacy, Access, Monitoring and Surveillance Policy (Children's Homes)",
+  "price_pence": 6900,
+  "taster": false,
+  "bundles": [
+   "governance-data-pack"
+  ],
+  "description": "A children's home privacy policy written for you, covering bedroom privacy, room searches, access to areas and the conditions for CCTV and other monitoring devices.",
+  "fields": [
+   {
+    "key": "privacy_arrangements",
+    "label": "Everyday privacy arrangements",
+    "help": "How is each child's privacy protected day to day? For example staff knock and wait, bedroom doors can be closed, private bathrooms, and a lockable drawer for personal items."
+   },
+   {
+    "key": "restricted_areas",
+    "label": "Areas with limited access",
+    "help": "Which areas of the home are not open to children at all times, and why? For example the office, staff room, medicine room and kitchen out of hours."
+   },
+   {
+    "key": "limit_decision_process",
+    "label": "Deciding a limit on privacy",
+    "help": "Who decides to limit a child's privacy or access, how is the reason recorded, and who is told? For example the registered manager decides, records the reason on the child's file and informs the social worker."
+   },
+   {
+    "key": "limit_review_routine",
+    "label": "Reviewing limits on privacy",
+    "help": "How often is any limit reviewed, and by whom? For example at each shift handover for a short limit and at every key worker meeting or placing authority review."
+   },
+   {
+    "key": "room_search_practice",
+    "label": "Room and belongings searches",
+    "help": "Does your home ever search a child's room or belongings, and under what conditions? For example never routinely, only on the registered manager's authority where there is a safeguarding concern, with the child present, or no searches at all."
+   },
+   {
+    "key": "monitoring_devices",
+    "label": "Monitoring devices in use",
+    "help": "Which monitoring or surveillance devices does the home use? For example external CCTV only, door alarms on exits, a motion sensor at night, or none."
+   },
+   {
+    "key": "device_locations",
+    "label": "Device locations",
+    "help": "Where are devices sited and where are they never used? For example entrance, driveway and car park only, never in bedrooms, bathrooms or lounges."
+   },
+   {
+    "key": "placing_authority_consent",
+    "label": "Placing authority consent process",
+    "help": "How do you get and keep the placing authority's written consent before a device affects a child? For example consent requested before admission and filed on the child's record."
+   },
+   {
+    "key": "telling_children",
+    "label": "Telling children about devices",
+    "help": "How and when are children told about monitoring, given their age and understanding? For example at the welcome meeting, in the children's guide, and again in house meetings."
+   },
+   {
+    "key": "footage_access_retention",
+    "label": "Footage access and retention",
+    "help": "Who can view footage, where, how long is it kept and who decides on sharing it? For example the registered manager and deputy only, overwritten after 30 days."
+   },
+   {
+    "key": "monitoring_review_lead",
+    "label": "Who reviews monitoring",
+    "help": "Who checks that each device is still needed and no more intrusive than necessary, and how often? For example the registered manager at each regulation 45 review."
+   },
+   {
+    "key": "statement_of_purpose_link",
+    "label": "Statement of purpose wording",
+    "help": "What does your statement of purpose say about monitoring and surveillance? For example CCTV at the entrance only, used for safety and never in private areas."
+   }
+  ]
+ },
+ {
+  "slug": "ch-regulation-44-45-visits-and-review",
+  "title": "Regulation 44 Independent Person Visits and Regulation 45 Quality of Care Review Procedure",
+  "price_pence": 6900,
+  "taster": false,
+  "bundles": [
+   "governance-data-pack"
+  ],
+  "description": "A procedure for your children's home covering regulation 44 monthly visits, the regulation 45 six monthly quality of care review, reports, distribution and follow up.",
+  "fields": [
+   {
+    "key": "independent_person_arrangement",
+    "label": "Independent person arrangement",
+    "help": "How is your independent person engaged? For example an individual contractor, a pool from an external provider, or rotated between visitors, and who appoints them"
+   },
+   {
+    "key": "visit_scheduling",
+    "label": "Visit scheduling",
+    "help": "How are monthly visits planned? For example a rolling calendar set by the provider, mixed announced and unannounced visits, and who confirms the date"
+   },
+   {
+    "key": "private_interview_arrangements",
+    "label": "Private interview arrangements",
+    "help": "How do children, staff and others speak to the visitor in private? For example a private room, child chooses who to see, staff interviewed away from the office"
+   },
+   {
+    "key": "records_made_available",
+    "label": "Records made available",
+    "help": "Which records does the independent person see on a visit? For example logs, complaints, restraint records, rota, with case records only by consent"
+   },
+   {
+    "key": "report_receipt_and_circulation",
+    "label": "Report receipt and circulation",
+    "help": "Who receives the visit report and who sends it on? For example the visitor emails the manager, responsible individual, provider, HMCI and placing authorities"
+   },
+   {
+    "key": "recommendation_tracking",
+    "label": "Recommendation tracking",
+    "help": "How are report recommendations recorded and acted on? For example an action tracker, a decision within a set time, review at the next visit"
+   },
+   {
+    "key": "children_views_capture",
+    "label": "Children's views capture",
+    "help": "How do you gather children's views for the visit and the review? For example surveys, house meetings, keyworker sessions, advocacy contact"
+   },
+   {
+    "key": "review_cycle_and_lead",
+    "label": "Review cycle and lead",
+    "help": "When is the quality of care review done and who leads it? For example every six months in April and October, led by the registered manager with the responsible individual"
+   },
+   {
+    "key": "review_evidence_sources",
+    "label": "Review evidence sources",
+    "help": "What information feeds the review? For example incident data, complaints, staff supervision, placing authority feedback, Ofsted findings"
+   },
+   {
+    "key": "review_report_sign_off",
+    "label": "Review report sign off",
+    "help": "Who writes, approves and sends the review report, and how is it sent to HMCI? For example drafted by the manager, signed by the provider, sent through the Ofsted portal"
+   },
+   {
+    "key": "placing_authority_requests",
+    "label": "Placing authority requests",
+    "help": "How do you handle requests for reports from placing authorities? For example a named person sends a copy within a set time"
+   },
+   {
+    "key": "premises_location_review",
+    "label": "Premises location review",
+    "help": "How and when is the annual review of the home's location carried out? For example each December, with local risk checks and a record kept"
+   }
+  ]
+ },
+ {
+  "slug": "ch-safeguarding-child-protection",
+  "title": "Safeguarding Children and Child Protection Policy (Children's Homes), including allegations procedure",
+  "price_pence": 7900,
+  "taster": false,
+  "bundles": [
+   "governance-data-pack"
+  ],
+  "description": "Protecting children from abuse and neglect, with a clear allegations procedure: how staff report, who you refer to and what is recorded, written around your children's home.",
+  "fields": [
+   {
+    "key": "safeguarding_lead_roles",
+    "label": "Safeguarding lead and deputy",
+    "help": "Who is the named safeguarding lead in the home and who deputises? For example the registered manager as lead, with the deputy manager covering absences and the responsible individual as the escalation point."
+   },
+   {
+    "key": "staff_concern_reporting",
+    "label": "Staff concern reporting route",
+    "help": "How and to whom do staff report a concern about a child without delay? For example tell the shift leader at once, record on the same shift and inform the registered manager before handover."
+   },
+   {
+    "key": "local_authority_referral",
+    "label": "Local authority referral route",
+    "help": "How do you refer a concern to the local authority children's social care and the placing authority? For example by phone to the duty team then written referral the same day, with the social worker informed."
+   },
+   {
+    "key": "allegation_handling_lead",
+    "label": "Allegations handling lead",
+    "help": "Who takes the lead when an allegation is made against a member of staff? For example the registered manager, or the responsible individual if the allegation concerns the manager."
+   },
+   {
+    "key": "designated_officer_contact",
+    "label": "Local authority allegations contact",
+    "help": "Who in the local authority do you contact about allegations against adults who work with children? For example the designated officer in the host authority, reached by the published referral form."
+   },
+   {
+    "key": "protective_measures_staff",
+    "label": "Protective measures after allegation",
+    "help": "What measures can you take to protect children after an allegation? For example move the member of staff to non-contact duties, suspend on full pay under the disciplinary procedure, or arrange extra supervision."
+   },
+   {
+    "key": "allegation_records",
+    "label": "Allegation recording system",
+    "help": "Where do you record allegations and the action taken, and who can see them? For example a restricted safeguarding log, with the registered manager and responsible individual having access."
+   },
+   {
+    "key": "child_voice_complaints",
+    "label": "Children raising concerns",
+    "help": "How do children raise a worry or make a complaint, and who can they talk to outside the home? For example the key worker, an advocate, the independent visitor or the children's rights helpline."
+   },
+   {
+    "key": "staff_safeguarding_training",
+    "label": "Staff safeguarding training",
+    "help": "What safeguarding training do staff complete and how often? For example induction in the first week, level 3 training within three months and a yearly refresher with team discussion."
+   },
+   {
+    "key": "policy_monitoring_review",
+    "label": "Policy monitoring and review",
+    "help": "How do you check that staff follow this policy and review it? For example monthly manager audit of records, a review after any serious incident and an annual review with the responsible individual."
+   },
+   {
+    "key": "ofsted_notification_route",
+    "label": "Notifying Ofsted and others",
+    "help": "How do you decide what to notify to Ofsted and the placing authority, and who sends it? For example the registered manager notifies the same day using the Ofsted portal after checking the serious events list."
+   }
+  ]
+ },
+ {
+  "slug": "hospice-bereavement-support",
+  "title": "Bereavement Support Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "A bereavement support policy written for your hospice: support before and after a death, follow up contact, children, referral and care for your own staff.",
+  "fields": [
+   {
+    "key": "bereavement_lead",
+    "label": "Bereavement support lead",
+    "help": "Who leads bereavement support and what is their role? For example: family support coordinator, bereavement service manager, named nurse lead with a small volunteer team"
+   },
+   {
+    "key": "pre_bereavement_support",
+    "label": "Support before a death",
+    "help": "What support do families and those close to the person get before a death? For example: family support worker visit, anticipatory grief conversation, information leaflet, carers group"
+   },
+   {
+    "key": "risk_screening_approach",
+    "label": "Identifying who needs more help",
+    "help": "How do you identify who may need more support in bereavement, and who decides? For example: risk screening by the family support team, nurse judgement at the time of death, a recorded tool"
+   },
+   {
+    "key": "immediate_support_at_death",
+    "label": "Support at the time of death",
+    "help": "What support is offered to family and friends around the time of death? For example: time with the person, a named nurse stays, tea and quiet room, practical information pack"
+   },
+   {
+    "key": "follow_up_contact",
+    "label": "Follow up contact after death",
+    "help": "What contact do you make after a death, when, and who makes it? For example: card within two weeks, call at six weeks, letter at three months, no routine contact"
+   },
+   {
+    "key": "support_services_offered",
+    "label": "Bereavement services offered",
+    "help": "What support do you provide yourselves after a death? For example: one to one counselling, drop in group, memorial service, annual remembrance event, volunteers"
+   },
+   {
+    "key": "children_young_people_support",
+    "label": "Support for children",
+    "help": "How do you support children and young people who are bereaved? For example: specialist children's worker, resource packs, referral to a local children's bereavement charity, none in house"
+   },
+   {
+    "key": "referral_and_signposting",
+    "label": "Referral and signposting routes",
+    "help": "Where do you refer or signpost people who need support you do not provide, and how? For example: GP, local bereavement charity, mental health services, helpline details in pack"
+   },
+   {
+    "key": "eligibility_wider_community",
+    "label": "Who can use your support",
+    "help": "Who can use your bereavement support? For example: families of patients who died here only, wider community, hospice at home families, waiting list for counselling"
+   },
+   {
+    "key": "staff_volunteer_support",
+    "label": "Staff and volunteer support",
+    "help": "How are staff and volunteers supported after a death? For example: team debrief, reflective practice, occupational health, counselling line, memorial moment"
+   },
+   {
+    "key": "contact_records_consent",
+    "label": "Contact preferences and consent",
+    "help": "How do you record who may be contacted after a death, and who can stop contact? For example: next of kin consent at admission, recorded in notes, opt out letter, stop list"
+   },
+   {
+    "key": "review_feedback",
+    "label": "Reviewing the service",
+    "help": "How do you review and improve bereavement support? For example: family feedback form, annual audit, governance report, volunteer meetings"
+   }
+  ]
+ },
+ {
+  "slug": "hospice-care-after-death-verification",
+  "title": "Care After Death and Verification of Death Policy",
+  "price_pence": 6900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "A care after death policy covering verification of expected death, last offices, notifying family and the coroner, and property, written around how your hospice works.",
+  "fields": [
+   {
+    "key": "verifying_roles",
+    "label": "Who verifies expected death",
+    "help": "Which roles in your hospice verify an expected death, and what training or sign off do they hold? For example senior nurses assessed as competent, or the on call doctor only."
+   },
+   {
+    "key": "verification_out_of_hours",
+    "label": "Out of hours verification",
+    "help": "How is death verified at night, weekends and for hospice at home patients? For example the on call nurse, or the person's GP or district nurse team."
+   },
+   {
+    "key": "verification_recording",
+    "label": "Verification recording",
+    "help": "Where and how is verification recorded, and what details are noted? For example a verification form in the clinical record, signed with time and date."
+   },
+   {
+    "key": "last_offices_approach",
+    "label": "Last offices approach",
+    "help": "How is personal care after death carried out, and who may do it? For example two staff, with family invited to take part, following the person's wishes."
+   },
+   {
+    "key": "cultural_faith_wishes",
+    "label": "Faith and cultural wishes",
+    "help": "How do you find out and follow a person's faith or cultural wishes after death? For example a pre recorded wishes section, chaplain contact, faith community advice."
+   },
+   {
+    "key": "family_time_after_death",
+    "label": "Family time after death",
+    "help": "How do families spend time with the person, and for how long? For example the room stays private for as long as needed before moving to the mortuary."
+   },
+   {
+    "key": "who_to_notify",
+    "label": "Who is notified and how",
+    "help": "Who tells the GP, the family and others after a death, and in what order? For example the nurse in charge phones the next of kin, then informs the GP the same day."
+   },
+   {
+    "key": "coroner_referral",
+    "label": "Coroner referral process",
+    "help": "How does your hospice decide whether a death is referred to the coroner, and who makes the contact? For example the doctor decides and the nurse in charge records the referral."
+   },
+   {
+    "key": "certification_process",
+    "label": "Medical certificate process",
+    "help": "Who completes the medical certificate of cause of death, and how is it passed on? For example the hospice doctor or GP, handed to the family or sent to the registrar."
+   },
+   {
+    "key": "mortuary_funeral_arrangements",
+    "label": "Mortuary and funeral director",
+    "help": "Where is the person cared for after leaving the ward, and how are funeral directors handed over? For example a hospice mortuary, with a signed handover record."
+   },
+   {
+    "key": "property_and_belongings",
+    "label": "Property and belongings",
+    "help": "How are belongings, valuables and medicines handled after a death? For example inventory by two staff, family signs on collection, medicines returned or destroyed."
+   },
+   {
+    "key": "staff_support_debrief",
+    "label": "Staff support after a death",
+    "help": "What support or debrief do staff receive after a death? For example team huddle, access to chaplain or counselling, clinical supervision."
+   }
+  ]
+ },
+ {
+  "slug": "hospice-care-of-the-dying-person",
+  "title": "Care of the Dying Person and Last Days of Life Policy",
+  "price_pence": 6900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "A care of the dying person policy written for your hospice: recognising dying, an individual plan for the last days, comfort, hydration, family and review.",
+  "fields": [
+   {
+    "key": "recognising_dying_process",
+    "label": "Recognising dying process",
+    "help": "How do your clinicians recognise that someone may be entering the last days of life, and who confirms it? For example: senior nurse and doctor review, multidisciplinary team huddle, recorded in the notes with the date"
+   },
+   {
+    "key": "individual_plan_format",
+    "label": "Individual care plan format",
+    "help": "What plan do you use for each person in the last days of life, and where is it kept? For example: a hospice care plan, electronic record template, paper booklet at the bedside"
+   },
+   {
+    "key": "review_frequency",
+    "label": "Review frequency",
+    "help": "How often is the person's condition and plan reviewed in the last days, and by whom? For example: at least daily by the senior nurse, twice daily doctor review, any change triggers a review"
+   },
+   {
+    "key": "symptom_control_arrangements",
+    "label": "Symptom control arrangements",
+    "help": "How are symptoms such as pain, breathlessness, agitation and secretions managed, and who prescribes? For example: anticipatory medicines prescribed in advance, specialist palliative doctor on call, syringe pump set up by trained nurses"
+   },
+   {
+    "key": "hydration_nutrition_approach",
+    "label": "Hydration and nutrition approach",
+    "help": "How do you decide about food, drink and clinically assisted hydration in the last days, and who is involved? For example: mouth care schedule, shared decision with the person and family, doctor review of any fluids"
+   },
+   {
+    "key": "communication_with_family",
+    "label": "Communication with family",
+    "help": "How do you talk with the person and those close to them about what is happening, and how often? For example: named nurse conversation, family meeting, daily update, written information leaflet"
+   },
+   {
+    "key": "spiritual_cultural_support",
+    "label": "Spiritual and cultural support",
+    "help": "How do you find out and meet spiritual, religious and cultural wishes around dying? For example: chaplaincy or spiritual care lead, links to local faith leaders, wishes recorded at admission"
+   },
+   {
+    "key": "family_presence_facilities",
+    "label": "Family presence and facilities",
+    "help": "What can families do and use when someone is dying? For example: unrestricted visiting, overnight bed or recliner, kitchen access, quiet room, pets, children welcome"
+   },
+   {
+    "key": "after_death_care",
+    "label": "Care after death",
+    "help": "What happens straight after a death, and who is responsible? For example: personalised care after death, verification of death by a registered nurse, family time with the person, link to funeral directors"
+   },
+   {
+    "key": "bereavement_support",
+    "label": "Bereavement support offered",
+    "help": "What support do families and those close to the person get after a death? For example: follow up call, bereavement counsellor, memorial service, support group, signposting only"
+   },
+   {
+    "key": "staff_training_support",
+    "label": "Staff training and support",
+    "help": "What training and support do staff have for caring for dying people? For example: communication skills course, annual update, clinical supervision, debrief after a death"
+   }
+  ]
+ },
+ {
+  "slug": "hospice-chaperone",
+  "title": "Chaperone Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "Chaperones for intimate examinations and care in your hospice: offering, who can act, consent, recording and concerns, written around your own arrangements.",
+  "fields": [
+   {
+    "key": "chaperone_offer_point",
+    "label": "When a chaperone is offered",
+    "help": "When and how is a chaperone offered to a person before an intimate examination or intimate care? For example at the start of the consultation by the clinician, and again before the examination."
+   },
+   {
+    "key": "chaperone_who_acts",
+    "label": "Who may act as chaperone",
+    "help": "Which staff may act as a chaperone, and who may not? For example a trained nurse or healthcare assistant, never a receptionist or volunteer."
+   },
+   {
+    "key": "chaperone_training",
+    "label": "Chaperone training and sign off",
+    "help": "How are chaperones trained and signed off before they act? For example an internal session on the role, then observed practice signed off by the clinical lead."
+   },
+   {
+    "key": "chaperone_family_choice",
+    "label": "Family or own choice of chaperone",
+    "help": "Can a person ask for a relative or friend to be present instead of or as well as a staff chaperone? For example yes as well, but a trained member of staff is still offered."
+   },
+   {
+    "key": "chaperone_declined",
+    "label": "If a person declines",
+    "help": "What happens if a person declines a chaperone, and how is that recorded? For example the clinician notes the offer and decision, and may offer to rearrange."
+   },
+   {
+    "key": "chaperone_unavailable",
+    "label": "If no chaperone is available",
+    "help": "What do staff do if no suitable chaperone is available? For example offer to delay the examination to another time unless it is urgent, and record the reason."
+   },
+   {
+    "key": "chaperone_position_conduct",
+    "label": "Position and conduct",
+    "help": "Where does the chaperone stand and what are they expected to do? For example in a position to see the procedure, staying for the whole examination."
+   },
+   {
+    "key": "chaperone_recording",
+    "label": "Recording the offer and the chaperone",
+    "help": "What is recorded in the person's notes about the offer, the outcome and the chaperone's name? For example offer, decision, chaperone name and role, entered by the clinician."
+   },
+   {
+    "key": "chaperone_capacity_consent",
+    "label": "Consent and capacity arrangements",
+    "help": "How is consent checked, and what happens when a person may lack capacity to decide? For example the clinician checks understanding first, and follows the best interests process."
+   },
+   {
+    "key": "chaperone_preferences_needs",
+    "label": "Gender, culture and communication needs",
+    "help": "How are preferences about gender, faith, language or communication met when arranging a chaperone? For example an interpreter or a same gender chaperone where requested and possible."
+   },
+   {
+    "key": "chaperone_concerns",
+    "label": "Concerns and complaints route",
+    "help": "How can a person or family raise a concern about an examination, and how do staff raise concerns? For example report to the registered manager, who follows the complaints and safeguarding policies."
+   },
+   {
+    "key": "chaperone_audit_review",
+    "label": "Audit and review routine",
+    "help": "How do you check the policy is followed? For example a quarterly audit of notes for recorded offers, reported to the governance meeting."
+   }
+  ]
+ },
+ {
+  "slug": "hospice-enteral-feeding",
+  "title": "Enteral Feeding (PEG and NG) Policy",
+  "price_pence": 6900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "Tube feeding for people in your hospice: who may feed and flush, competence sign off, aspiration and blockage risks, and emergency actions, built around your own arrangements.",
+  "fields": [
+   {
+    "key": "tube_types_supported",
+    "label": "Tube types supported",
+    "help": "Which types of feeding tube does your hospice care for? For example nasogastric (NG), PEG or RIG gastrostomy, jejunostomy, or only tubes placed before admission."
+   },
+   {
+    "key": "who_may_feed_and_flush",
+    "label": "Who may feed and flush",
+    "help": "Which roles may start feeds, give flushes and give medicines through a tube? For example registered nurses only, or trained healthcare assistants under nurse delegation."
+   },
+   {
+    "key": "competence_sign_off",
+    "label": "Competence sign off",
+    "help": "How do staff become signed off for tube feeding, and who signs? For example a nurse educator observing three supervised feeds, then a signed competency record."
+   },
+   {
+    "key": "competence_recheck",
+    "label": "Competence recheck routine",
+    "help": "How often is competence rechecked, and what triggers an earlier check? For example every 12 months, after a long absence or after an incident."
+   },
+   {
+    "key": "regimen_authorisation",
+    "label": "Who sets the feed regimen",
+    "help": "Who writes and reviews each person's feed and flush regimen? For example a dietitian, the medical team or a community nutrition nurse, with the plan held in the care record."
+   },
+   {
+    "key": "tube_position_checks",
+    "label": "Tube position checks",
+    "help": "What checks do staff make before using a tube, and what do you do if position is uncertain? For example a stated NG position check method, then stop and call a nurse."
+   },
+   {
+    "key": "aspiration_prevention",
+    "label": "Aspiration risk precautions",
+    "help": "What precautions do staff take against aspiration during and after feeds? For example head of bed raised, pump checks, and a set time upright after a feed."
+   },
+   {
+    "key": "stoma_site_care",
+    "label": "Stoma and skin site care",
+    "help": "How are gastrostomy sites checked and cleaned, and how often? For example a daily check by nursing staff, with changes in redness or leakage recorded."
+   },
+   {
+    "key": "blockage_and_dislodgement",
+    "label": "Blockage and dislodgement response",
+    "help": "What do staff do if a tube blocks, leaks or comes out? For example stop the feed, call the nurse in charge, and contact the hospital or community team the same day."
+   },
+   {
+    "key": "equipment_and_supplies",
+    "label": "Pumps, bags and supplies",
+    "help": "How are feeding pumps, giving sets and supplies managed? For example a named supplier, nurse checks at set up, and a log of pump servicing."
+   },
+   {
+    "key": "medicines_via_tube",
+    "label": "Medicines given via tube",
+    "help": "How are medicines given by tube, and who advises on suitable forms? For example the hospice pharmacist, and one medicine at a time with a flush between."
+   },
+   {
+    "key": "consent_and_best_interests",
+    "label": "Consent and best interests",
+    "help": "How is consent to tube feeding checked or reviewed, including at end of life? For example discussion at admission, MCA best interests record, and review with the person's family."
+   }
+  ]
+ },
+ {
+  "slug": "hospice-epilepsy-seizure-management",
+  "title": "Epilepsy and Seizure Management Policy",
+  "price_pence": 6900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "Seizure care plans, rescue medicines, recording, emergency triggers and staff training, in an epilepsy policy written for your hospice and the people you care for.",
+  "fields": [
+   {
+    "key": "seizure_care_plans",
+    "label": "Seizure care plan format",
+    "help": "How are individual seizure care plans written and kept? For example a plan agreed with the doctor on admission, held in the care record and reviewed at each change in condition"
+   },
+   {
+    "key": "rescue_medicines_used",
+    "label": "Rescue medicines held",
+    "help": "Which rescue medicines does your hospice hold or use for prolonged seizures? For example buccal midazolam prescribed per person, or none held on site"
+   },
+   {
+    "key": "rescue_authorisation",
+    "label": "Who may give rescue medicine",
+    "help": "Which staff may give rescue medicine and on whose authority? For example registered nurses with signed competence, or trained carers in the community"
+   },
+   {
+    "key": "rescue_storage",
+    "label": "Rescue medicine storage",
+    "help": "Where is rescue medicine kept and how is it checked? For example a locked cupboard on the unit, weekly expiry check, patient named supply at home"
+   },
+   {
+    "key": "emergency_triggers",
+    "label": "Emergency call triggers",
+    "help": "When do staff call 999 or the on call doctor? For example a seizure beyond the time in the care plan, repeated seizures, injury or breathing difficulty"
+   },
+   {
+    "key": "seizure_recording",
+    "label": "Seizure recording method",
+    "help": "How is each seizure recorded and where? For example a seizure chart with time, length and recovery, copied into the patient record"
+   },
+   {
+    "key": "training_competence",
+    "label": "Epilepsy training and competence",
+    "help": "What epilepsy training do staff have and how is it renewed? For example induction awareness, practical rescue medicine sign off, annual refresh"
+   },
+   {
+    "key": "medicines_continuity",
+    "label": "Antiseizure medicine continuity",
+    "help": "How do you keep antiseizure medicines going when swallowing changes or at end of life? For example doctor review the same day and a route change agreed with pharmacy"
+   },
+   {
+    "key": "safety_precautions",
+    "label": "Safety and environment steps",
+    "help": "What safety steps are used for people at risk of seizures? For example bed height, padded rails only after assessment, supervised bathing"
+   },
+   {
+    "key": "family_information",
+    "label": "Family and carer information",
+    "help": "What information do families get about seizures and what to do? For example a leaflet at admission and a named nurse conversation"
+   },
+   {
+    "key": "post_seizure_review",
+    "label": "After a seizure review",
+    "help": "What happens after a seizure? For example recovery observations, doctor informed, care plan reviewed, incident form if harm"
+   },
+   {
+    "key": "community_arrangements",
+    "label": "Community and home arrangements",
+    "help": "How is seizure care supported for people at home? For example hospice community nurses share the plan with the GP and give family rescue medicine guidance"
+   }
+  ]
+ },
+ {
+  "slug": "hospice-long-term-ventilation",
+  "title": "Home and Long-term Ventilation Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "A long term ventilation policy for your hospice: ventilator checks, alarms, backup power, emergency and power failure plans, and staff competence for people using ventilation.",
+  "fields": [
+   {
+    "key": "ventilation_types_supported",
+    "label": "Ventilation you support",
+    "help": "Which types of ventilation does your hospice support? For example non-invasive ventilation by mask only, invasive ventilation through a tracheostomy, or ventilation only started elsewhere and continued here"
+   },
+   {
+    "key": "equipment_ownership",
+    "label": "Equipment ownership and supply",
+    "help": "Who supplies and maintains the ventilators and accessories? For example the person's home ventilation service, the hospital, or hospice-owned equipment serviced by a named provider"
+   },
+   {
+    "key": "settings_responsibility",
+    "label": "Who changes settings",
+    "help": "Who may change or review ventilator settings? For example only the specialist respiratory team, or named hospice clinicians following written instructions"
+   },
+   {
+    "key": "daily_equipment_checks",
+    "label": "Daily equipment checks",
+    "help": "What checks are made on the ventilator, circuit and humidifier, and how often? For example a check each shift using a checklist signed in the care record"
+   },
+   {
+    "key": "alarm_response",
+    "label": "Alarm response steps",
+    "help": "What must staff do when a ventilator alarm sounds? For example check the person first, use a bag valve mask if trained, then call the nurse in charge and the supplier helpline"
+   },
+   {
+    "key": "backup_power_arrangements",
+    "label": "Backup power arrangements",
+    "help": "How is the ventilator kept running in a power failure? For example internal and external batteries, a generator, and a battery check on each shift"
+   },
+   {
+    "key": "spare_equipment",
+    "label": "Spare equipment held",
+    "help": "What spare equipment is kept on site? For example a second ventilator, a manual resuscitation bag and suction, held in a named place and checked weekly"
+   },
+   {
+    "key": "emergency_escalation",
+    "label": "Emergency escalation route",
+    "help": "Who is called in an equipment failure or deterioration, in and out of hours? For example the on-call hospice doctor, the specialist ventilation centre, then 999"
+   },
+   {
+    "key": "competency_training",
+    "label": "Staff competence and training",
+    "help": "How do staff become competent to care for a person using a ventilator? For example supplier training, a signed competency record and an annual refresh before working unsupervised"
+   },
+   {
+    "key": "person_family_involvement",
+    "label": "Person and family involvement",
+    "help": "How are people and family carers involved in ventilation care and going home or out? For example agreed plans, family trained and signed off, and a travel plan with spare batteries"
+   },
+   {
+    "key": "advance_care_planning",
+    "label": "Treatment decisions and review",
+    "help": "How are decisions about ventilation recorded and reviewed? For example a ventilation section in the advance care plan reviewed with the person and clinician when needs change"
+   },
+   {
+    "key": "incident_reporting",
+    "label": "Incident reporting route",
+    "help": "How are equipment failures and near misses reported and learned from? For example an incident form, a report to the supplier, and review at the clinical governance meeting"
+   }
+  ]
+ },
+ {
+  "slug": "hospice-oxygen-medical-gases-safety",
+  "title": "Oxygen and Medical Gases Safety Policy",
+  "price_pence": 6900,
+  "taster": false,
+  "bundles": [
+   "health-safety-pack",
+   "clinical-care-pack"
+  ],
+  "description": "A medical gases policy for your hospice: oxygen cylinder storage, signage, handling, flow rates, fire risk, training and oxygen use for people in the unit or at home.",
+  "fields": [
+   {
+    "key": "gases_in_use",
+    "label": "Medical gases in use",
+    "help": "Which medical gases does your hospice use? For example oxygen only, oxygen and medical air, or Entonox for procedures"
+   },
+   {
+    "key": "oxygen_sources",
+    "label": "Oxygen supply sources",
+    "help": "How is oxygen supplied to people? For example portable cylinders, oxygen concentrators, piped supply in the unit, or home oxygen from an NHS supplier"
+   },
+   {
+    "key": "cylinder_store",
+    "label": "Cylinder storage arrangements",
+    "help": "Where are full and empty cylinders kept? For example a locked ventilated store with separate full and empty racks, or a secured cupboard on each ward"
+   },
+   {
+    "key": "signage_labelling",
+    "label": "Signs and labelling",
+    "help": "What signs mark oxygen storage and rooms where oxygen is in use? For example no smoking and oxygen signs on store doors and a door notice on rooms in use"
+   },
+   {
+    "key": "cylinder_handling",
+    "label": "Cylinder handling rules",
+    "help": "How do staff move and secure cylinders? For example trolleys or stands only, cylinders never left free standing, valve checks on delivery"
+   },
+   {
+    "key": "flow_rate_authority",
+    "label": "Who sets oxygen flow",
+    "help": "Who prescribes or authorises oxygen and its flow rate, and how is it recorded? For example prescribed on the medication chart by the doctor, with a target range and review date"
+   },
+   {
+    "key": "staff_who_may_administer",
+    "label": "Who may set up oxygen",
+    "help": "Which staff may set up, adjust or stop oxygen? For example registered nurses and trained healthcare assistants who have completed a sign off"
+   },
+   {
+    "key": "oxygen_in_home",
+    "label": "Oxygen in the home",
+    "help": "If you support people at home, what does your community team do where oxygen is used? For example check the supplier contact, advise on heat sources, or not applicable"
+   },
+   {
+    "key": "equipment_servicing",
+    "label": "Equipment checks and servicing",
+    "help": "How are regulators, flowmeters and concentrators checked and serviced? For example a weekly nurse check and annual servicing by a named contractor"
+   },
+   {
+    "key": "supplier_arrangements",
+    "label": "Gas supplier arrangements",
+    "help": "Who supplies medical gases and how are deliveries and returns handled? For example a named supplier, a stock check on delivery and a nominated person for orders"
+   },
+   {
+    "key": "gas_incident_response",
+    "label": "Gas incident response",
+    "help": "What must staff do if there is a leak, a cylinder fault or a fire near oxygen? For example raise the alarm, close valves if safe, move people, call 999 and tell the manager"
+   },
+   {
+    "key": "incident_oversight",
+    "label": "Incident reporting and review",
+    "help": "How are gas incidents and near misses reported and reviewed? For example an incident form to the registered manager, reviewed at the quarterly health and safety meeting"
+   }
+  ]
+ },
+ {
+  "slug": "hospice-safeguarding-children-young-people",
+  "title": "Safeguarding Children and Young People Policy",
+  "price_pence": 7900,
+  "taster": false,
+  "bundles": [
+   "governance-data-pack"
+  ],
+  "description": "How your hospice protects children and young people who are patients, siblings or visitors, from concerns to referral, recorded and written around your own arrangements.",
+  "fields": [
+   {
+    "key": "child_safeguarding_lead",
+    "label": "Safeguarding lead for children",
+    "help": "Who is your named lead for children's safeguarding, and who deputises? For example the director of care as lead with a named senior nurse as deputy, with their training level."
+   },
+   {
+    "key": "children_in_scope",
+    "label": "Children your hospice meets",
+    "help": "In which ways do children and young people come into contact with your hospice? For example young patients, siblings in bereavement groups, visiting grandchildren, young volunteers, or young adults in transition."
+   },
+   {
+    "key": "local_partnership_contacts",
+    "label": "Local referral routes",
+    "help": "Which local safeguarding partnership and children's services contact points do staff use, and how are they kept up to date? For example the local authority front door, and the emergency duty team out of hours."
+   },
+   {
+    "key": "concern_recording_method",
+    "label": "Concern recording method",
+    "help": "How do staff record and pass on a concern about a child? For example a safeguarding concern form, a note in the clinical record, and the time limit for telling the lead."
+   },
+   {
+    "key": "staff_training_levels",
+    "label": "Staff training levels",
+    "help": "What children's safeguarding training does each staff group complete, and how often is it renewed? For example clinical staff at one level, the lead at a higher level, and volunteers at awareness level."
+   },
+   {
+    "key": "parent_consent_sharing",
+    "label": "Sharing information approach",
+    "help": "How do staff decide whether to share information about a child with parents, children's services or other agencies? For example speak to the lead first, record the reason, and share without consent only where a child may be at risk."
+   },
+   {
+    "key": "allegation_handling_route",
+    "label": "Allegations against staff route",
+    "help": "Who is told first if an allegation is made about a member of staff or volunteer, and who contacts the local authority designated officer? For example the registered manager, or the chair of trustees if it concerns the manager."
+   },
+   {
+    "key": "volunteer_visitor_checks",
+    "label": "Volunteer and visitor checks",
+    "help": "What checks and supervision apply to staff, volunteers and visitors who work near children? For example enhanced DBS checks, barred list checks where eligible, and supervised access for unchecked visitors."
+   },
+   {
+    "key": "young_adult_transition",
+    "label": "Transition to adult services",
+    "help": "How do you support young people moving from children's to adult services? For example joint planning from age 14, a named transition worker, and adult safeguarding links once they turn 18."
+   },
+   {
+    "key": "learning_after_concerns",
+    "label": "Learning after concerns",
+    "help": "How does the hospice review safeguarding concerns and share learning? For example a quarterly governance report, a trustee safeguarding lead, and case reviews with partners."
+   }
+  ]
+ },
+ {
+  "slug": "hospice-self-harm-suicide-ligature-risk",
+  "title": "Self-harm, Suicide and Ligature Risk Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "A ligature risk policy written for your hospice: self-harm and suicide risk assessment, environmental ligature checks, observation, response and review, set out in your own words.",
+  "fields": [
+   {
+    "key": "risk_identification",
+    "label": "Risk identification routine",
+    "help": "How do staff identify and record a risk of self-harm or suicide for someone in your care? For example a prompt at admission, at each review, and when mood or circumstances change"
+   },
+   {
+    "key": "risk_assessment_approach",
+    "label": "Risk assessment approach",
+    "help": "How is a risk assessment completed and who completes it? For example a clinician led conversation, a written plan with the person, shared with the wider team"
+   },
+   {
+    "key": "environment_ligature_review",
+    "label": "Ligature point environment review",
+    "help": "How do you check the building for ligature points, and how often? For example a room by room walk round by the manager, at each new admission, after any change"
+   },
+   {
+    "key": "environment_measures",
+    "label": "Environmental risk measures",
+    "help": "What practical steps do you take where a risk is found? For example room allocation, removing or covering items, tailored plan for a named room, agreed with the person"
+   },
+   {
+    "key": "observation_levels",
+    "label": "Observation arrangements",
+    "help": "What increased checks can you put in place, and who authorises them? For example more frequent checks, a named staff member, ended when the risk has eased"
+   },
+   {
+    "key": "medicines_and_items_safety",
+    "label": "Medicines and personal items",
+    "help": "How do you manage access to medicines, sharp items and personal belongings where there is a risk? For example locked storage, agreed arrangements, discussion with the person"
+   },
+   {
+    "key": "immediate_response",
+    "label": "Immediate response steps",
+    "help": "What do staff do if someone has self-harmed or expresses intent to end their life? For example stay with them, call a named clinician, emergency services, record afterwards"
+   },
+   {
+    "key": "specialist_support_access",
+    "label": "Specialist support access",
+    "help": "Who do you involve for mental health and psychological support? For example the GP, community mental health team, in house psychological support, chaplaincy or counselling"
+   },
+   {
+    "key": "family_and_carer_involvement",
+    "label": "Family and carer involvement",
+    "help": "When and how do you involve families or those close to the person, within consent and confidentiality? For example agreed at assessment, discussed at review"
+   },
+   {
+    "key": "staff_training_support",
+    "label": "Staff training and support",
+    "help": "What training and support do staff receive on these risks? For example induction session, annual update, supervision and debrief after an incident"
+   },
+   {
+    "key": "incident_review_learning",
+    "label": "Incident review and learning",
+    "help": "How do you review each incident and share learning? For example manager review within a set time, team discussion, plan and environment updated"
+   },
+   {
+    "key": "reporting_and_notifications",
+    "label": "Reporting and notifications",
+    "help": "How do you record and report incidents, including to CQC, the coroner or safeguarding? For example incident form, registered manager decides on notifications"
+   }
+  ]
+ },
+ {
+  "slug": "hospice-sharps-inoculation-clinical-waste",
+  "title": "Sharps, Inoculation Injury and Clinical Waste Policy",
+  "price_pence": 6900,
+  "taster": false,
+  "bundles": [
+   "health-safety-pack",
+   "clinical-care-pack"
+  ],
+  "description": "Safe use and disposal of sharps, safer devices, inoculation injury response and clinical waste handling, written for your hospice.",
+  "fields": [
+   {
+    "key": "sharps_devices_used",
+    "label": "Sharps devices in use",
+    "help": "Which sharps do staff use in your hospice? For example insulin pens, syringe drivers and cannulas, blood sampling devices, and lancets"
+   },
+   {
+    "key": "safer_sharps_devices",
+    "label": "Safer sharps devices",
+    "help": "Which safer sharps devices do you provide and where are they used? For example safety cannulas and retractable needles on wards and in community visits"
+   },
+   {
+    "key": "sharps_container_arrangements",
+    "label": "Sharps container arrangements",
+    "help": "Where are sharps containers sited, who assembles, dates and signs them, and when are they closed? For example wall-mounted in treatment rooms and carried in community bags, closed at the fill line"
+   },
+   {
+    "key": "needle_recapping_rule",
+    "label": "Recapping and handling rule",
+    "help": "What is your rule on recapping, bending, passing and carrying used needles? For example no recapping, dispose at the point of use, no sharps passed by hand"
+   },
+   {
+    "key": "injury_first_response",
+    "label": "Immediate injury response",
+    "help": "What must staff do straight after a needlestick, cut or splash? For example encourage bleeding, wash with soap and water, cover, report to the nurse in charge"
+   },
+   {
+    "key": "injury_risk_assessment_route",
+    "label": "Injury risk assessment route",
+    "help": "Who carries out the risk assessment after an injury and how is the source patient approached? For example occupational health or the nearest emergency department, using agreed consent steps"
+   },
+   {
+    "key": "occupational_health_provider",
+    "label": "Occupational health provider",
+    "help": "Which occupational health service supports injured staff and volunteers, including out of hours? For example an NHS trust service in hours and emergency department out of hours"
+   },
+   {
+    "key": "injury_reporting_recording",
+    "label": "Injury reporting and recording",
+    "help": "How is an injury reported, recorded and reviewed, and who decides on external reporting? For example an incident form the same shift, review by the infection control lead, RIDDOR judged by the manager"
+   },
+   {
+    "key": "clinical_waste_streams",
+    "label": "Clinical waste segregation",
+    "help": "How do you segregate clinical, offensive and general waste? For example orange, yellow and tiger stripe bags, with sharps boxes and medicines waste kept separate"
+   },
+   {
+    "key": "waste_contractor_storage",
+    "label": "Waste storage and collection",
+    "help": "Where is waste stored and who collects it, and how often? For example a locked external store and a licensed contractor collecting weekly"
+   },
+   {
+    "key": "sharps_training_audit",
+    "label": "Sharps training and audit",
+    "help": "What training do staff and volunteers receive on sharps, and how is practice checked? For example induction, annual update and a quarterly sharps and waste audit"
+   },
+   {
+    "key": "community_sharps_arrangements",
+    "label": "Sharps in patients' homes",
+    "help": "How are sharps carried, used and returned when staff visit people at home? For example a travel sharps box in the bag and return to the hospice for disposal"
+   }
+  ]
+ },
+ {
+  "slug": "hospice-syringe-driver-anticipatory-medicines",
+  "title": "Syringe Driver and Anticipatory Medicines Policy",
+  "price_pence": 7900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "Syringe driver set up, monitoring and anticipatory medicines, from prescribing and stock to competence and 24 hour access, written for your hospice.",
+  "fields": [
+   {
+    "key": "driver_models_used",
+    "label": "Syringe driver models",
+    "help": "Which syringe driver models and sizes does your hospice use? For example one named model across the inpatient unit and community team, with a standard syringe type"
+   },
+   {
+    "key": "who_sets_up_driver",
+    "label": "Who sets up and changes drivers",
+    "help": "Which staff may set up, start, change and stop a syringe driver? For example registered nurses with signed competence, or two nurses for controlled drugs"
+   },
+   {
+    "key": "driver_competence_assessment",
+    "label": "Driver competence assessment",
+    "help": "How is competence for syringe driver use assessed and renewed? For example a signed practical assessment on induction, then annual reassessment and an e-learning module"
+   },
+   {
+    "key": "prescribing_authorisation",
+    "label": "Prescribing and authorisation",
+    "help": "Who prescribes and how are driver medicines authorised and checked? For example a hospice doctor or non-medical prescriber on the chart, with a second nurse check before starting"
+   },
+   {
+    "key": "driver_monitoring_checks",
+    "label": "Monitoring checks on a driver",
+    "help": "What checks are made on a running driver, how often and where recorded? For example hourly site and rate checks on the inpatient unit and each visit in the community, on a driver chart"
+   },
+   {
+    "key": "anticipatory_prescribing",
+    "label": "Anticipatory medicines prescribing",
+    "help": "When and how are anticipatory medicines prescribed? For example a just in case set for each patient on a shared template, reviewed by the doctor at each change in condition"
+   },
+   {
+    "key": "anticipatory_stock_storage",
+    "label": "Anticipatory stock and storage",
+    "help": "How is stock of anticipatory medicines held, stored and checked? For example a locked cupboard and controlled drugs cabinet, weekly stock check, patient named boxes in the home"
+   },
+   {
+    "key": "out_of_hours_access",
+    "label": "Out of hours medicines access",
+    "help": "How are medicines and advice reached at night and weekends? For example 24 hour advice line, on call doctor, and an agreed community pharmacy rota"
+   },
+   {
+    "key": "controlled_drug_handling",
+    "label": "Controlled drugs in drivers",
+    "help": "How are controlled drugs for drivers ordered, recorded, witnessed and disposed of? For example a controlled drug register with two signatures, returns to pharmacy"
+   },
+   {
+    "key": "driver_incident_reporting",
+    "label": "Driver incident reporting",
+    "help": "How are driver errors, alarms and near misses reported and reviewed? For example an incident form, discussion at the medicines safety group, learning shared at handover"
+   },
+   {
+    "key": "community_driver_arrangements",
+    "label": "Community driver support",
+    "help": "How are drivers supported when a patient is at home or in a care home? For example hospice community nurses loan the driver, district nurses check daily, family given a contact number"
+   }
+  ]
+ },
+ {
+  "slug": "hospice-tracheostomy-care",
+  "title": "Tracheostomy Care Policy",
+  "price_pence": 7900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "Tracheostomy care for people in your hospice: competence, suction, tube changes, emergency management, equipment and spares, written around your own arrangements.",
+  "fields": [
+   {
+    "key": "trache_competence_levels",
+    "label": "Competence levels and roles",
+    "help": "Which staff may provide which parts of tracheostomy care, and who signs them off? For example only registered nurses suction, while trained healthcare assistants do stoma cleaning."
+   },
+   {
+    "key": "trache_training_route",
+    "label": "Training and sign off route",
+    "help": "How are staff trained and assessed before they care for a person with a tracheostomy? For example an external course, then observed practice signed off by the clinical lead."
+   },
+   {
+    "key": "trache_recheck_routine",
+    "label": "Competence recheck routine",
+    "help": "How often is competence rechecked, and what triggers an earlier check? For example every 12 months, or after a long absence or an incident."
+   },
+   {
+    "key": "trache_suction_arrangements",
+    "label": "Suction arrangements",
+    "help": "When and how is suction carried out, and who decides? For example nurse led, as needed, with a record of secretions each time."
+   },
+   {
+    "key": "trache_tube_change_arrangements",
+    "label": "Tube change arrangements",
+    "help": "Who changes tubes and inner cannulas, how often and where? For example inner cannula cleaned each shift by a nurse, outer tube changed by the specialist team."
+   },
+   {
+    "key": "trache_emergency_kit",
+    "label": "Emergency kit and spares",
+    "help": "What emergency equipment and spare tubes are kept at the bedside or in the room, and who checks them? For example a bedside box with spare tubes one size smaller, checked each shift."
+   },
+   {
+    "key": "trache_emergency_response",
+    "label": "Emergency response route",
+    "help": "What do staff do if a tube blocks or comes out, and who do they call? For example call for help, follow the bedside emergency plan, then call 999 and the on call doctor."
+   },
+   {
+    "key": "trache_humidification",
+    "label": "Humidification and airway care",
+    "help": "How is the airway kept humidified and cared for? For example heat and moisture exchangers, nebulisers or humidified oxygen as prescribed."
+   },
+   {
+    "key": "trache_specialist_links",
+    "label": "Specialist and out of hours support",
+    "help": "Which specialist team or on call service gives advice, and how do staff reach them? For example the hospital tracheostomy team, the hospice doctor on call or NHS 111."
+   },
+   {
+    "key": "trache_equipment_checks",
+    "label": "Equipment checks and servicing",
+    "help": "How are suction machines, humidifiers and alarms checked, serviced and recorded? For example daily checks by the nurse in charge and annual servicing by an approved engineer."
+   },
+   {
+    "key": "trache_family_involvement",
+    "label": "Family and carer involvement",
+    "help": "How are families or carers included, for example if they are trained to do some care? For example a family member trained and signed off by the clinical lead before helping."
+   },
+   {
+    "key": "trache_incident_review",
+    "label": "Incident review routine",
+    "help": "How are blocked tubes, falls out and near misses reviewed? For example a clinical lead review within a week and learning shared at handover."
+   }
+  ]
+ },
+ {
+  "slug": "hospice-volunteers",
+  "title": "Volunteers Policy",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "hr-workforce-pack"
+  ],
+  "description": "A volunteers policy written for your hospice: how volunteers are recruited, checked, inducted, trained, supervised and supported, and where their role ends.",
+  "fields": [
+   {
+    "key": "volunteer_roles",
+    "label": "Volunteer roles",
+    "help": "Which roles do volunteers fill in your hospice? For example: ward companions, drivers, shop and fundraising helpers, garden team, reception, complementary therapy support"
+   },
+   {
+    "key": "roles_not_permitted",
+    "label": "Tasks volunteers must not do",
+    "help": "Which tasks are volunteers never asked to do? For example: personal care, giving medicines, handling clinical waste, being alone with a patient overnight"
+   },
+   {
+    "key": "recruitment_process",
+    "label": "Recruitment process",
+    "help": "What steps does a prospective volunteer go through? For example: application form, informal interview, two references, trial session"
+   },
+   {
+    "key": "checks_by_role",
+    "label": "Checks by role",
+    "help": "Which pre-start checks apply to which volunteer roles, and who decides the DBS level? For example: enhanced DBS for patient-facing roles, references for all, health declaration for kitchen roles"
+   },
+   {
+    "key": "induction_programme",
+    "label": "Induction programme",
+    "help": "What induction does a volunteer complete before starting, and who delivers it? For example: half day with the volunteer coordinator, fire safety, infection control, a shadow shift"
+   },
+   {
+    "key": "training_requirements",
+    "label": "Volunteer training",
+    "help": "What training must volunteers complete and how often is it refreshed? For example: safeguarding, confidentiality, manual handling, dementia awareness every two years"
+   },
+   {
+    "key": "supervision_and_support",
+    "label": "Supervision and support",
+    "help": "Who supervises volunteers and how often do they meet? For example: named ward lead, volunteer coordinator check-in every three months, debrief after difficult shifts"
+   },
+   {
+    "key": "confidentiality_agreement",
+    "label": "Confidentiality agreement",
+    "help": "How do volunteers agree to keep information private, and when? For example: signed agreement at induction, reminder at annual review"
+   },
+   {
+    "key": "boundaries_and_conduct",
+    "label": "Boundaries and conduct",
+    "help": "What boundaries do you set, and where is the code written? For example: no gifts, no social media contact with patients or families, a volunteer code of conduct"
+   },
+   {
+    "key": "expenses_arrangements",
+    "label": "Expenses arrangements",
+    "help": "What expenses do you repay and how are claims made? For example: travel at set rate, meals on long shifts, claim form to the coordinator within a month"
+   },
+   {
+    "key": "concerns_and_ending",
+    "label": "Concerns and ending",
+    "help": "How do you handle concerns about a volunteer, and how does a volunteering role end? For example: informal chat first, a pause pending review, exit conversation"
+   }
+  ]
+ },
+ {
+  "slug": "prison-healthcare-medicines-in-possession",
+  "title": "Medicines In Possession and Custody Medicines Policy (prison healthcare)",
+  "price_pence": 5900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "A self administration of medicines policy for secure and custody settings: in possession risk assessment, supervised doses, secure storage and diversion checks.",
+  "fields": [
+   {
+    "key": "possession_risk_assessment",
+    "label": "In possession risk assessment",
+    "help": "Who completes the risk assessment that decides whether a person keeps their own medicines, and when? For example the nurse on first reception screening, repeated at each medicines review."
+   },
+   {
+    "key": "possession_categories",
+    "label": "Possession categories used",
+    "help": "How are people grouped, such as keep on person, supervised doses, or nurse administered? For example three levels, with the level recorded in the medicines record."
+   },
+   {
+    "key": "possession_review_triggers",
+    "label": "Review triggers",
+    "help": "What causes a possession decision to be reviewed? For example a new prescription, a change in mental state, a safeguarding concern, or a set interval."
+   },
+   {
+    "key": "medicines_excluded_from_possession",
+    "label": "Medicines never held in possession",
+    "help": "Which medicines are always supervised or kept by healthcare staff? For example controlled drugs, opioids, sedatives, and medicines at high risk of misuse."
+   },
+   {
+    "key": "secure_storage_arrangements",
+    "label": "Secure storage arrangements",
+    "help": "Where do people keep medicines they hold, and how are other stocks stored? For example lockable in-cell cabinets, nurse held stock cupboards, locked trolleys."
+   },
+   {
+    "key": "supervised_administration",
+    "label": "Supervised administration process",
+    "help": "How are supervised doses given and witnessed? For example at a hatch, with mouth checks by trained staff, recorded straight after."
+   },
+   {
+    "key": "diversion_and_trading_checks",
+    "label": "Diversion and trading checks",
+    "help": "How does the service check for hoarding, sharing or trading of medicines? For example counts of held packs, spot checks, joint review with custody staff."
+   },
+   {
+    "key": "lost_or_misused_medicines",
+    "label": "Lost or misused medicines",
+    "help": "What happens if held medicines go missing, are overdosed or shared? For example report to the nurse in charge, review possession level, complete an incident form."
+   },
+   {
+    "key": "custody_staff_liaison",
+    "label": "Liaison with custody staff",
+    "help": "How do healthcare and custody or secure staff share what is needed about medicines? For example a joint briefing, a named contact, a shared alert process."
+   },
+   {
+    "key": "transfers_and_releases",
+    "label": "Transfers and releases",
+    "help": "How are medicines handled when someone moves, is released or is admitted elsewhere? For example a medicines supply, a discharge summary, a handover to the receiving team."
+   },
+   {
+    "key": "possession_records_audit",
+    "label": "Records and audit",
+    "help": "Where are possession decisions recorded and who audits them? For example the clinical record, a monthly audit by the lead pharmacist."
+   },
+   {
+    "key": "staff_competence_medicines",
+    "label": "Staff competence and training",
+    "help": "What training and competence checks cover this work? For example induction, annual medicines competency, controlled drug update."
+   }
+  ]
+ },
+ {
+  "slug": "sexual-assault-forensic-evidence-chain-of-custody",
+  "title": "Forensic Examination, Evidence Handling and Chain of Custody Policy (sexual assault services)",
+  "price_pence": 6900,
+  "taster": false,
+  "bundles": [
+   "clinical-care-pack"
+  ],
+  "description": "How your service seeks consent for forensic examination, collects, seals, stores and hands over evidence, and records every step, written around your own arrangements.",
+  "fields": [
+   {
+    "key": "examination_model",
+    "label": "Examination model",
+    "help": "Who carries out forensic examinations and where? For example your own trained examiners on site, a commissioned examiner service, or examinations at a partner centre."
+   },
+   {
+    "key": "consent_process",
+    "label": "Consent process",
+    "help": "How is consent obtained and recorded for examination, evidence collection and sharing with police, and can a person change their mind? For example staged consent forms, a named practitioner, and consent reviewed at each stage."
+   },
+   {
+    "key": "self_referral_police_routes",
+    "label": "Referral routes",
+    "help": "Which routes can a person use to reach you, and do you examine without a police report? For example police referral, self referral, or both, with evidence stored for a set period."
+   },
+   {
+    "key": "crisis_worker_role",
+    "label": "Crisis worker role",
+    "help": "What do crisis workers or support staff do before, during and after examination? For example meet the person, explain each step, stay present if wanted, and arrange follow up."
+   },
+   {
+    "key": "kit_storage_security",
+    "label": "Kit storage and security",
+    "help": "Where and how are collected samples and kits stored, and who can access them? For example locked forensic fridge, access log, and temperature checks."
+   },
+   {
+    "key": "sealing_labelling",
+    "label": "Sealing and labelling",
+    "help": "How are samples sealed, labelled and signed for? For example tamper evident seals, two person checks, and numbered kit forms."
+   },
+   {
+    "key": "custody_record",
+    "label": "Custody record",
+    "help": "How is each handling step recorded from collection to handover? For example a paper chain of custody form, an electronic log, or both, held with the person's record."
+   },
+   {
+    "key": "handover_to_police",
+    "label": "Handover to police",
+    "help": "How are items handed to police or a laboratory and what is signed? For example named officer, signed receipt, and a copy kept on file."
+   },
+   {
+    "key": "retention_period",
+    "label": "Retention and disposal",
+    "help": "How long do you keep stored evidence and records, and who decides on disposal? For example a set period agreed with commissioners, then review with the person."
+   },
+   {
+    "key": "incident_breach_route",
+    "label": "Breach or loss route",
+    "help": "What happens if a kit is lost, damaged or access is breached? For example report to the manager, inform police, record an incident and review the process."
+   },
+   {
+    "key": "competency_training",
+    "label": "Examiner competence",
+    "help": "How do you check and maintain examiner and support staff competence? For example sign off by a named lead, peer review, and supervised cases."
+   },
+   {
+    "key": "safeguarding_link",
+    "label": "Safeguarding link",
+    "help": "How do concerns about children or adults at risk raised in an examination reach your safeguarding lead? For example same day report to the named lead and local authority."
+   }
+  ]
  }
 ]

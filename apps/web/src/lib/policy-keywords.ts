@@ -2975,5 +2975,1997 @@ export const POLICY_KEYWORDS: Record<string, PolicyKeywordInfo> = {
     "answer": "Your policy is written for your service and delivered in 2 working days. You answer a short set of questions after purchase, and a person checks it before it carries your name."
    }
   ]
+ },
+ "ch-admissions-placement-planning": {
+  "primary": {
+   "keyword": "children's home admissions policy",
+   "volume": 0
+  },
+  "secondary": [
+   {
+    "keyword": "placement planning",
+    "volume": 30
+   },
+   {
+    "keyword": "placement plan",
+    "volume": 0
+   },
+   {
+    "keyword": "emergency admission",
+    "volume": 0
+   },
+   {
+    "keyword": "children's home induction",
+    "volume": 0
+   },
+   {
+    "keyword": "statement of purpose",
+    "volume": 0
+   }
+  ],
+  "seo_title": "Children's Home Admissions Policy and Placement Planning",
+  "meta_description": "A children's home admissions policy written for your home: matching, emergency admission, placement plan, induction and moving on. Reviewed by a person.",
+  "extra_faqs": [
+   {
+    "question": "Can a children's home admit any child referred to it?",
+    "answer": "No. Regulation 14(2)(a) says a child may be admitted only if their needs are within the range of needs set out in the home's statement of purpose. Your policy records how that check is made and by whom."
+   },
+   {
+    "question": "Is a children's home admissions policy a legal requirement?",
+    "answer": "Schedule 1 to the Regulations lists matters the statement of purpose must cover, including admission arrangements. Your policy sets out your own arrangements in more detail. Check the current text with your Ofsted inspector."
+   },
+   {
+    "question": "Does the policy cover emergency admission?",
+    "answer": "Yes. It records whether you accept emergency admission, who decides, what is checked first and how the placement plan is agreed afterwards. It only describes practice you tell us you follow."
+   },
+   {
+    "question": "What does the placement plan section cover?",
+    "answer": "Regulation 17 asks the registered person to co-operate with the placing authority in agreeing and signing the placement plan, and to provide information and attend meetings on request. The policy sets out how you do this."
+   },
+   {
+    "question": "Does it cover induction and moving on?",
+    "answer": "Yes. Regulation 14(2)(b) requires arrangements for induction, for managing and reviewing each placement, and for preparing a child to leave or move into adult care. The policy records yours."
+   },
+   {
+    "question": "Who writes my policy?",
+    "answer": "It is drafted from your answers, checked against the regulations and reviewed by a person. You review and approve it before use. It is not legal advice."
+   }
+  ]
+ },
+ "ch-anti-bullying": {
+  "primary": {
+   "keyword": "anti bullying policy",
+   "volume": 260
+  },
+  "secondary": [
+   {
+    "keyword": "anti bullying policy template",
+    "volume": 20
+   },
+   {
+    "keyword": "anti bullying policy children's home",
+    "volume": 0
+   },
+   {
+    "keyword": "bullying policy children's homes",
+    "volume": 0
+   },
+   {
+    "keyword": "bullying procedure children's home",
+    "volume": 0
+   },
+   {
+    "keyword": "children's home policies",
+    "volume": 0
+   }
+  ],
+  "seo_title": "Anti Bullying Policy for Children's Homes",
+  "meta_description": "An anti bullying policy written for your children's home: prevention, allegation procedure, support for children and review. Built from your own practice.",
+  "extra_faqs": [
+   {
+    "question": "Does a children's home have to have an anti-bullying policy?",
+    "answer": "Regulation 34(3) says the registered person must prepare and implement a policy for the prevention of bullying in the home, which must set out the procedure for dealing with an allegation of bullying."
+   },
+   {
+    "question": "What must the procedure cover?",
+    "answer": "The regulation requires the policy to set out the procedure for dealing with an allegation of bullying. CareStream writes the steps from your answers on listening, recording, telling others and support, so staff follow your real practice."
+   },
+   {
+    "question": "What do staff need to understand about bullying?",
+    "answer": "Regulation 11 says staff understand and communicate to children that bullying is unacceptable, and have the skills to recognise incidents or indications of bullying and how to deal with them."
+   },
+   {
+    "question": "How is this different from an anti bullying policy template?",
+    "answer": "A template is the same for every home. This anti bullying policy children's home document is written from your answers about your children, routines, roles and reporting routes, then checked before it is released."
+   },
+   {
+    "question": "Does the policy cover online bullying?",
+    "answer": "It covers it as you describe it. You tell us how the home responds to bullying through phones and social media, and the writer uses only that. We do not add device rules you do not have."
+   },
+   {
+    "question": "Does it promise an Ofsted outcome?",
+    "answer": "No. It sets out your own arrangements against the regulations it is built on. It gives no legal advice and cannot promise any inspection judgement."
+   }
+  ]
+ },
+ "ch-behaviour-management-restraint": {
+  "primary": {
+   "keyword": "behaviour management policy",
+   "volume": 70
+  },
+  "secondary": [
+   {
+    "keyword": "positive behaviour management",
+    "volume": 140
+   },
+   {
+    "keyword": "restraint policy",
+    "volume": 30
+   },
+   {
+    "keyword": "physical intervention policy",
+    "volume": 20
+   },
+   {
+    "keyword": "behaviour management policy template",
+    "volume": 10
+   },
+   {
+    "keyword": "physical restraint policy",
+    "volume": 10
+   },
+   {
+    "keyword": "positive behaviour management policy",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Behaviour Management Policy for Children's Homes",
+  "meta_description": "A behaviour management policy written for your children's home: positive behaviour, restraint and 24 hour, 48 hour and 5 day records from your answers.",
+  "extra_faqs": [
+   {
+    "question": "What must a behaviour management policy for a children's home contain?",
+    "answer": "Regulation 35 says it must set out how appropriate behaviour is promoted and which measures of control, discipline and restraint may be used. It must be kept under review. Your policy is written from your own answers."
+   },
+   {
+    "question": "How quickly must restraint be recorded?",
+    "answer": "A record must be made within 24 hours. Within 48 hours the registered person or an authorised person speaks to the user and signs it. Within 5 days they add confirmation that the child was spoken to."
+   },
+   {
+    "question": "Does it list prohibited sanctions?",
+    "answer": "Yes. Regulation 19 bars corporal punishment, withholding food or drink, intentional deprivation of sleep, group punishment and other measures. The policy states them plainly for staff and sets out the sanctions your home does use."
+   },
+   {
+    "question": "Is this a restraint policy as well?",
+    "answer": "Yes. It covers when restraint is permitted, that it must be necessary and proportionate, and how it is recorded and reviewed. It sits within the wider behaviour management policy rather than as a separate document."
+   },
+   {
+    "question": "Can I use it as a behaviour management policy template?",
+    "answer": "It is a policy written for your home, not a blank behaviour management policy template. You answer questions about your approach, training and sign off roles, and the policy reflects them without inventing practice."
+   },
+   {
+    "question": "What about children with planned restraint in an EHC plan?",
+    "answer": "Regulation 35 excepts restraint planned or routinely provided for in an EHC plan or statement of special educational needs from the record requirement. You tell us whether this applies, and the policy says so without naming children."
+   }
+  ]
+ },
+ "ch-case-records-retention-access": {
+  "primary": {
+   "keyword": "record keeping policy",
+   "volume": 30
+  },
+  "secondary": [
+   {
+    "keyword": "record retention policy",
+    "volume": 50
+   },
+   {
+    "keyword": "document retention policy",
+    "volume": 70
+   },
+   {
+    "keyword": "records retention schedule",
+    "volume": 90
+   },
+   {
+    "keyword": "access to records policy",
+    "volume": 10
+   },
+   {
+    "keyword": "record keeping policy and procedure",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Children's Home Record Keeping Policy, Retention and Access",
+  "meta_description": "A children's home record keeping policy written for your home: case records, 75 year retention, closure transfer and children's access. Instant draft.",
+  "extra_faqs": [
+   {
+    "question": "How long must a children's home keep case records?",
+    "answer": "Regulation 36 says 75 years from the child's date of birth, or 15 years from death if the child dies before 18. Your record retention policy should name who tracks these dates and how records are destroyed."
+   },
+   {
+    "question": "What must a children's home case record contain?",
+    "answer": "The information and documents listed in Schedule 3 of the 2015 Regulations. Each entry must be signed and dated by its author and the record kept up to date. Your record keeping policy shows how this happens in your home."
+   },
+   {
+    "question": "Do children have a right to see their own records?",
+    "answer": "Regulation 14 requires staff to help each child access and contribute to the records kept about them. Your access to records policy sets out how, alongside data protection law."
+   },
+   {
+    "question": "What happens to records if a children's home closes?",
+    "answer": "Under regulation 36 records go to the provider's other home, or the nearest if there are several. If there is none, they go to the placing authority or the authority for the child's EHC plan or statement."
+   },
+   {
+    "question": "Is this the same as a generic document retention policy?",
+    "answer": "No. A generic document retention policy does not carry the 75 year rule, signed entries or closure transfer. This record keeping policy and procedure is written for your children's home and your own systems."
+   },
+   {
+    "question": "Can I keep records electronically?",
+    "answer": "Regulation 38 allows the registered person to keep specified records in electronic form. The policy describes your system, who has access and how it is kept secure, from the answers you give."
+   }
+  ]
+ },
+ "ch-child-sexual-criminal-exploitation": {
+  "primary": {
+   "keyword": "county lines policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "criminal exploitation policy",
+    "volume": 0
+   },
+   {
+    "keyword": "child sexual exploitation policy",
+    "volume": 0
+   },
+   {
+    "keyword": "child exploitation policy",
+    "volume": 0
+   },
+   {
+    "keyword": "exploitation policy children's home",
+    "volume": 0
+   },
+   {
+    "keyword": "child criminal exploitation policy",
+    "volume": 0
+   }
+  ],
+  "seo_title": "County Lines Policy for Children's Homes, Written for You",
+  "meta_description": "A county lines policy written for your children's home: how staff recognise, assess and respond to sexual and criminal exploitation.",
+  "extra_faqs": [
+   {
+    "question": "What is county lines?",
+    "answer": "The Home Office guidance describes county lines and the criminal exploitation linked to it. The county lines policy sets out how your staff recognise signs, record concerns and tell the right people, using your own arrangements."
+   },
+   {
+    "question": "Does the policy cover sexual exploitation as well?",
+    "answer": "Yes. It covers child sexual exploitation and criminal exploitation together, because the signs often overlap. Your answers decide how staff assess risk, respond and notify."
+   },
+   {
+    "question": "What does Regulation 40 require?",
+    "answer": "The registered person must notify Ofsted and other relevant people without delay of sexual exploitation or suspected sexual exploitation. Notifications are made or confirmed in writing. The policy records who does this in your home."
+   },
+   {
+    "question": "How does it link to missing children?",
+    "answer": "Regulation 34 requires a missing child policy. This policy links missing and late return episodes to exploitation risk, so patterns are reviewed and acted on."
+   },
+   {
+    "question": "Does it replace our safeguarding policy?",
+    "answer": "No. It works alongside your safeguarding policy and allegations procedure. It adds the detail staff need for exploitation, including risk assessment, police contact and learning after incidents."
+   },
+   {
+    "question": "Is it a free template?",
+    "answer": "No. It is written for your home from your answers about leads, tools, contacts and notifications. A person checks it. It does not give legal advice."
+   }
+  ]
+ },
+ "ch-contact-family-time": {
+  "primary": {
+   "keyword": "contact policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "supervised contact policy",
+    "volume": 10
+   },
+   {
+    "keyword": "contact policy children's home",
+    "volume": 0
+   },
+   {
+    "keyword": "family time policy",
+    "volume": 0
+   },
+   {
+    "keyword": "children's home contact with family",
+    "volume": 0
+   },
+   {
+    "keyword": "children's homes policies and procedures",
+    "volume": 0
+   }
+  ],
+  "seo_title": "Contact Policy for Children's Homes and Family Time",
+  "meta_description": "A contact policy for children's homes covering family time, phone, post and email access and restrictions. Written for your home from your answers.",
+  "extra_faqs": [
+   {
+    "question": "Does a children's home need a contact policy?",
+    "answer": "The Regulations set duties on contact, including Regulation 22 on private meetings and communications, and Regulation 14(2) on promoting contact in line with plans. A written contact policy sets out how your home meets them."
+   },
+   {
+    "question": "Can a children's home restrict a child's contact?",
+    "answer": "Only where necessary to safeguard or promote the child's welfare, and with the placing authority's consent. In an emergency, full details go to the authority within 24 hours. Court requirements on contact still apply."
+   },
+   {
+    "question": "Can contact be taken away as a consequence for behaviour?",
+    "answer": "No. Regulation 19 prohibits restricting contact, visits or communications as discipline, unless imposed by a court or made under Regulation 22. Your policy says how staff avoid this and what they do instead."
+   },
+   {
+    "question": "What does a supervised contact policy cover?",
+    "answer": "Your supervised contact policy section records how supervised or supported contact is decided, who staff it and how it follows the child's plans and any court orders. The details come from your answers."
+   },
+   {
+    "question": "Is this the same as a free family time policy template?",
+    "answer": "No. A family time policy template found online is generic. This policy is written for your home from your answers, so it states your actual meeting space, phone access and restriction process."
+   },
+   {
+    "question": "Does it replace a children's home policies and procedures set?",
+    "answer": "It covers one subject in depth. It sits alongside your wider children's homes policies and procedures and your statement of purpose, which Schedule 1 requires to include contact arrangements."
+   }
+  ]
+ },
+ "ch-education-school-attendance": {
+  "primary": {
+   "keyword": "education policy",
+   "volume": 480
+  },
+  "secondary": [
+   {
+    "keyword": "attendance policy",
+    "volume": 260
+   },
+   {
+    "keyword": "inclusive education policy",
+    "volume": 30
+   },
+   {
+    "keyword": "school attendance policy",
+    "volume": 0
+   },
+   {
+    "keyword": "personal education plan policy",
+    "volume": 0
+   },
+   {
+    "keyword": "education policy for children's homes",
+    "volume": 0
+   }
+  ],
+  "seo_title": "Education Policy for Children's Homes and School Attendance",
+  "meta_description": "An education policy for children's homes covering school attendance, exclusion, special educational needs and post-16 support, written for your home.",
+  "extra_faqs": [
+   {
+    "question": "Does a children's home need an education policy?",
+    "answer": "Regulation 8 sets the education standard, and Schedule 1 requires the statement of purpose to give details of support for special educational needs and arrangements to attend local schools. Your policy sets out how you meet them."
+   },
+   {
+    "question": "What should a school attendance policy cover?",
+    "answer": "Your school attendance policy section records how staff help children attend, what happens when they do not, who tells the school and placing authority, and how this follows each child's relevant plans."
+   },
+   {
+    "question": "What happens when a child is excluded?",
+    "answer": "Regulation 8 requires staff to help a child who is excluded or not attending to access educational support throughout and return to school as soon as possible. Your policy records the steps your home takes."
+   },
+   {
+    "question": "Is this an inclusive education policy?",
+    "answer": "It supports an inclusive education policy approach by covering barriers to learning, special educational needs and requests for further assessment. Details come from your answers about the support you actually give."
+   },
+   {
+    "question": "Is this the same as a free attendance policy template?",
+    "answer": "No. A generic attendance policy found online is not written for a children's home. This one is built from your answers, so it states your real routines and contacts."
+   },
+   {
+    "question": "Does it replace a personal education plan policy?",
+    "answer": "No. A personal education plan is made by the placing authority. This policy sets out how your staff help children meet the targets in their plans and keep in regular contact with the school."
+   }
+  ]
+ },
+ "ch-harmful-sexual-behaviour-peer-abuse": {
+  "primary": {
+   "keyword": "peer on peer abuse policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "peer on peer abuse",
+    "volume": 260
+   },
+   {
+    "keyword": "peer on peer abuse policy template",
+    "volume": 0
+   },
+   {
+    "keyword": "harmful sexual behaviour policy",
+    "volume": 0
+   },
+   {
+    "keyword": "harmful sexual behaviour children",
+    "volume": 0
+   },
+   {
+    "keyword": "child on child abuse policy",
+    "volume": 0
+   }
+  ],
+  "seo_title": "Peer on Peer Abuse Policy for Children's Homes",
+  "meta_description": "A peer on peer abuse policy written for your children's home: harmful sexual behaviour, risk assessment, support for children and reporting.",
+  "extra_faqs": [
+   {
+    "question": "What is peer on peer abuse in a children's home?",
+    "answer": "It means abuse or harmful behaviour between children, which can include sexual behaviour, bullying and coercion. The peer on peer abuse policy sets out how your staff recognise, respond to and record it, using your own arrangements."
+   },
+   {
+    "question": "Does the policy cover harmful sexual behaviour?",
+    "answer": "Yes. The harmful sexual behaviour policy section covers harmful sexual behaviour children may show towards other children, including risk assessment, supervision and who is told."
+   },
+   {
+    "question": "Is this a peer on peer abuse policy template?",
+    "answer": "No. It is written for your home from your answers, so it describes your own supervision, support and reporting rather than generic wording you must edit."
+   },
+   {
+    "question": "Does it cover support for the child who caused harm?",
+    "answer": "Yes. Children who harm are children too. The policy records the support, assessment and key work your home provides, and how the placing authority is involved, based on what you tell us."
+   },
+   {
+    "question": "Which regulations does it reflect?",
+    "answer": "It is built around Regulations 11, 12, 34 and 40 of the Children's Homes (England) Regulations 2015, plus Working Together to Safeguard Children. It does not promise any inspection outcome."
+   },
+   {
+    "question": "Who should use this child on child abuse policy?",
+    "answer": "Registered managers and responsible individuals of children's homes in England. It names your registered manager, placing authorities and Ofsted, and sets out your own routes for telling them."
+   }
+  ]
+ },
+ "ch-health-and-wellbeing": {
+  "primary": {
+   "keyword": "health and wellbeing policy",
+   "volume": 30
+  },
+  "secondary": [
+   {
+    "keyword": "wellbeing policy",
+    "volume": 90
+   },
+   {
+    "keyword": "mental health and wellbeing policy",
+    "volume": 50
+   },
+   {
+    "keyword": "health care policy examples",
+    "volume": 20
+   },
+   {
+    "keyword": "health and wellbeing policy children's home",
+    "volume": 0
+   },
+   {
+    "keyword": "children's home medication policy",
+    "volume": 0
+   }
+  ],
+  "seo_title": "Health and Wellbeing Policy for Children's Homes",
+  "meta_description": "A health and wellbeing policy written for your children's home: GP and dentist, appointments, emotional wellbeing and non-NHS care, from your own practice.",
+  "extra_faqs": [
+   {
+    "question": "What must a health and wellbeing policy cover in a children's home?",
+    "answer": "Regulation 10 says the home must meet children's health and well-being needs, help them lead healthy lifestyles, register each child with a GP and dentist, and ensure access to the services they require. Your policy sets out how you do this."
+   },
+   {
+    "question": "Does this replace our wellbeing policy for staff?",
+    "answer": "No. This is a wellbeing policy about the health of children in your home. Staff wellbeing is a separate subject and is not covered here."
+   },
+   {
+    "question": "What about therapies outside the NHS?",
+    "answer": "Regulation 6 says health care not arranged through the NHS must be approved and reviewed by the placing authority, meet the child's needs, be delivered by a suitably skilled person and keep the child's GP informed. The policy records how you do each part."
+   },
+   {
+    "question": "Does it cover medication?",
+    "answer": "It sets out the health arrangements you describe, including where your separate children's home medication policy applies. It does not write clinical advice, and it works alongside your medicines procedures."
+   },
+   {
+    "question": "How is this different from health care policy examples online?",
+    "answer": "Examples are the same for every home. This policy is written from your answers about your GP and dentist, appointment support, referrals and reviews, then checked by a person."
+   },
+   {
+    "question": "Will it secure a good inspection outcome?",
+    "answer": "No. It sets out your own arrangements clearly against the regulations. Ofsted judges the quality of care your home actually delivers."
+   }
+  ]
+ },
+ "ch-leaving-care-moving-on": {
+  "primary": {
+   "keyword": "leaving care policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "leaving care policy children's home",
+    "volume": 0
+   },
+   {
+    "keyword": "moving on policy children's home",
+    "volume": 0
+   },
+   {
+    "keyword": "transition policy children's home",
+    "volume": 0
+   },
+   {
+    "keyword": "leaving care procedure",
+    "volume": 0
+   },
+   {
+    "keyword": "preparation for independence children's home",
+    "volume": 0
+   },
+   {
+    "keyword": "children's home policies and procedures",
+    "volume": 0
+   }
+  ],
+  "seo_title": "Leaving Care Policy for Children's Homes and Moving On",
+  "meta_description": "A leaving care policy for children's homes covering moving on, transition and preparing young people for independence. Written for your home from your answers.",
+  "extra_faqs": [
+   {
+    "question": "Does a children's home need a leaving care policy?",
+    "answer": "Regulation 14(2)(b)(iii) requires arrangements to plan for, and help, each child prepare to leave the home or move into adult care. A written leaving care policy sets out how your home meets that duty."
+   },
+   {
+    "question": "Who is responsible for a child's pathway plan?",
+    "answer": "Leaving care duties sit with the placing authority. The home works with it and follows each child's relevant plans. Your policy records how staff take part. The Leaving Care Act duties themselves were not reviewed for this product."
+   },
+   {
+    "question": "What is a moving on policy for a children's home?",
+    "answer": "A moving on policy children's home managers use explains how moves, introductions, handover and settling in are planned with the child and the placing authority, so the move is a positive experience."
+   },
+   {
+    "question": "What does a leaving care procedure include?",
+    "answer": "Your leaving care procedure covers when planning starts, who leads it, independence skills, education and work help, handover records and what happens after a young person leaves. The detail comes from your answers."
+   },
+   {
+    "question": "How does the home prepare young people for independence?",
+    "answer": "Regulation 6 expects staff to help children develop resilience and skills to return home, live in a new placement or live independently. Your preparation for independence children's home section states what you actually offer."
+   },
+   {
+    "question": "Is this a free template?",
+    "answer": "No. It is written for your home from your answers, so it states your real programme and handover. It sits alongside your wider children's home policies and procedures and your statement of purpose."
+   }
+  ]
+ },
+ "ch-missing-from-care": {
+  "primary": {
+   "keyword": "missing from care policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "missing from care",
+    "volume": 20
+   },
+   {
+    "keyword": "return home interview",
+    "volume": 40
+   },
+   {
+    "keyword": "missing child policy",
+    "volume": 0
+   },
+   {
+    "keyword": "children's home policies",
+    "volume": 0
+   },
+   {
+    "keyword": "missing from care children's home",
+    "volume": 0
+   }
+  ],
+  "seo_title": "Missing from Care Policy for Children's Homes",
+  "meta_description": "A missing from care policy written for your children's home: prevention, staff roles, police and placing authority contact, return and review.",
+  "extra_faqs": [
+   {
+    "question": "What must a missing from care policy cover?",
+    "answer": "Regulation 34(4) says the missing child policy sets out steps to prevent absence without permission, and the procedures and staff roles when a child is absent. CareStream writes each part from your answers about your home."
+   },
+   {
+    "question": "Do we have to consult on it?",
+    "answer": "Regulation 34(5) says that before implementing or substantively amending the policy, the registered person consults each relevant person and has regard to local authority or police protocols on missing children. Your policy records how you do this."
+   },
+   {
+    "question": "What is a return home interview?",
+    "answer": "It is a conversation offered after a child has been missing, to understand why and what would help. The policy sets out how your home offers it and who does it, as you describe. We do not invent a process."
+   },
+   {
+    "question": "When do we ask the placing authority for a review?",
+    "answer": "Regulation 14(2) says the placing authority is contacted and a review of the child's relevant plans requested if a child is persistently absent without permission. The policy sets your own pattern trigger."
+   },
+   {
+    "question": "How is this different from a missing child policy template?",
+    "answer": "A template is the same for every home. This missing from care policy is written from your answers on routines, roles, police thresholds and review, then checked by a person."
+   },
+   {
+    "question": "Does it replace the local protocol?",
+    "answer": "No. It works alongside the local authority and police protocols you name, which the regulations say you must have regard to. It does not give legal advice or promise an inspection outcome."
+   }
+  ]
+ },
+ "ch-notifications-ofsted-placing-authorities": {
+  "primary": {
+   "keyword": "ofsted notification policy",
+   "volume": 0
+  },
+  "secondary": [
+   {
+    "keyword": "ofsted notification",
+    "volume": 1000
+   },
+   {
+    "keyword": "notifying ofsted",
+    "volume": 1000
+   },
+   {
+    "keyword": "regulation 40 children's homes",
+    "volume": 90
+   },
+   {
+    "keyword": "serious incident notification policy",
+    "volume": 0
+   },
+   {
+    "keyword": "children's home incident notification policy",
+    "volume": 0
+   }
+  ],
+  "seo_title": "Ofsted Notification Policy for Children's Homes",
+  "meta_description": "An Ofsted notification policy covering serious events, admissions, discharges and offences, written for your children's home around your own arrangements.",
+  "extra_faqs": [
+   {
+    "question": "What do Regulation 40 children's homes duties cover?",
+    "answer": "Regulation 40 lists a child's death, a section 35 referral of a worker, sexual exploitation, serious police incidents, allegations of abuse and child protection enquiries. The duty also covers any other incident you consider serious."
+   },
+   {
+    "question": "Is notifying Ofsted always in writing?",
+    "answer": "A notification must be made or confirmed in writing. It must give details of the matter, who else was told and any action taken. The policy sets out your own method for notifying Ofsted and your written confirmation step."
+   },
+   {
+    "question": "Who else must be told besides Ofsted?",
+    "answer": "Depending on the event, the placing authority and other relevant persons are named in Regulation 40. The policy lists the people and bodies you tell, based on your own answers, so the Ofsted notification policy matches your contacts."
+   },
+   {
+    "question": "What do admission and discharge notices involve?",
+    "answer": "Regulation 41 requires written notice to the local authority where the home is located, without delay, giving the child's name, date of birth, legal status, placing authority and independent reviewing officer contacts and any EHC plan details."
+   },
+   {
+    "question": "Who must report a conviction?",
+    "answer": "Under Regulation 42 the registered provider, registered manager, responsible individual and any director or partner must give written notice to Ofsted without delay, stating the date and place, the offence and the penalty."
+   },
+   {
+    "question": "Does it replace the regulations?",
+    "answer": "No. It sets out your own arrangements around Regulation 40 for children's homes, using your answers. It is not legal advice, and you should check the regulations and Ofsted guidance for your service."
+   }
+  ]
+ },
+ "ch-online-safety-digital-access": {
+  "primary": {
+   "keyword": "online safety policy for children's homes",
+   "volume": 0
+  },
+  "secondary": [
+   {
+    "keyword": "online safety policy template",
+    "volume": 10
+   },
+   {
+    "keyword": "e safety policy template",
+    "volume": 10
+   },
+   {
+    "keyword": "online safety policy example",
+    "volume": 10
+   },
+   {
+    "keyword": "internet safety policy",
+    "volume": 0
+   },
+   {
+    "keyword": "social media policy for children's homes",
+    "volume": 0
+   }
+  ],
+  "seo_title": "Online Safety Policy for Children's Homes",
+  "meta_description": "An online safety policy for children's homes, covering phone and internet access, filtering, social media and online harm. Written for your service.",
+  "extra_faqs": [
+   {
+    "question": "Is online safety a named regulation for children's homes?",
+    "answer": "Not in the regulations we fetched. The policy rests on regulation 22 (contact and communications), regulation 21 (privacy and access), regulation 19 and regulation 12 (protection of children). Online safety is an inspector expectation drawn from those duties."
+   },
+   {
+    "question": "Can we restrict a child's phone or internet?",
+    "answer": "Regulation 22(5) allows limits on contact or communications only where necessary to safeguard or promote the child's welfare. Regulation 22(6) needs the placing authority's consent, or full details within 24 hours in an emergency."
+   },
+   {
+    "question": "Can internet access be removed as a punishment?",
+    "answer": "Regulation 19(2)(c) prohibits restricting a child's access to internet or telephone helplines providing counselling, unless imposed by a court or made under regulation 22. The policy reflects this."
+   },
+   {
+    "question": "How is this different from an online safety policy template?",
+    "answer": "An online safety policy template is the same for every home. This policy is written from your answers on devices, filtering, supervision and roles, then checked by a person."
+   },
+   {
+    "question": "What does an online safety policy for children's homes need from us?",
+    "answer": "Your device and wifi arrangements, filtering, supervision by age, how restrictions are decided, who leads online safety and how you respond to harm. No information about individual children is needed."
+   },
+   {
+    "question": "Does it give legal or safeguarding advice?",
+    "answer": "No. It sets out your home's own arrangements and does not promise any inspection outcome. Your registered manager remains responsible for how it is used."
+   }
+  ]
+ },
+ "ch-participation-advocacy-childrens-guide": {
+  "primary": {
+   "keyword": "participation policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "children's guide children's home",
+    "volume": 0
+   },
+   {
+    "keyword": "children's home participation policy",
+    "volume": 0
+   },
+   {
+    "keyword": "advocacy policy children's home",
+    "volume": 0
+   },
+   {
+    "keyword": "children's home children's guide policy",
+    "volume": 0
+   },
+   {
+    "keyword": "children's views wishes and feelings",
+    "volume": 0
+   }
+  ],
+  "seo_title": "Participation Policy for Children's Homes",
+  "meta_description": "A participation policy written for your children's home: children's views, the children's guide, independent advocacy and complaints, in your own words.",
+  "extra_faqs": [
+   {
+    "question": "What does Regulation 7 say about children's views?",
+    "answer": "The children's views wishes and feelings standard in Regulation 7 says children receive care from staff who build positive relationships, engage with them and take their views, wishes and feelings into account in matters affecting their care and lives."
+   },
+   {
+    "question": "Does a children's home have to have a children's guide?",
+    "answer": "Regulation 7(2) requires the registered person to ensure each child has access to the children's guide and complaints procedure, to keep them under review with children's comments, and to explain them soon after arrival."
+   },
+   {
+    "question": "What is the children's guide children's home staff must explain?",
+    "answer": "Regulation 7(2)(d) refers to the children's guide, how to complain and advocacy. Your policy records who explains these, when and in which formats, based on what you tell us."
+   },
+   {
+    "question": "Is this a generic participation policy?",
+    "answer": "No. This participation policy is written for your home from your answers about consultation, advocacy and the guide, so it does not describe practices you do not have."
+   },
+   {
+    "question": "Does the policy cover advocacy?",
+    "answer": "Yes. Regulation 7(2)(b) requires appropriate advocacy support for each child. The advocacy policy children's home section names your provider, how children reach them and how visits stay private."
+   },
+   {
+    "question": "How does it link to complaints?",
+    "answer": "It points to your complaints procedure under Regulation 39 and records how children raise concerns. Complaint handling itself sits in your complaints procedure, which this policy cross refers to."
+   }
+  ]
+ },
+ "ch-pocket-money-savings-reparation": {
+  "primary": {
+   "keyword": "pocket money policy",
+   "volume": 0
+  },
+  "secondary": [
+   {
+    "keyword": "children's home pocket money",
+    "volume": 0
+   },
+   {
+    "keyword": "children's home policies",
+    "volume": 0
+   },
+   {
+    "keyword": "looked after children pocket money",
+    "volume": 0
+   },
+   {
+    "keyword": "saving money for children in care",
+    "volume": 0
+   },
+   {
+    "keyword": "children's savings",
+    "volume": 0
+   },
+   {
+    "keyword": "financial reparation",
+    "volume": 0
+   }
+  ],
+  "seo_title": "Pocket Money Policy for Children's Homes",
+  "meta_description": "A pocket money policy written for your children's home: pocket money, savings, personal money records and limits on reparation payments.",
+  "extra_faqs": [
+   {
+    "question": "Does a children's home need a pocket money policy?",
+    "answer": "The regulations we checked do not name one. Inspectors often ask how children's money is managed, so a written pocket money policy shows your arrangements are clear and fair."
+   },
+   {
+    "question": "Can a home take pocket money as a punishment?",
+    "answer": "Regulation 19 bans financial penalties as discipline, except a reasonable sum by way of reparation. Your policy should show how you keep pocket money separate from sanctions."
+   },
+   {
+    "question": "What is reparation under regulation 19?",
+    "answer": "Financial reparation is a reasonable sum paid to put right harm a child has caused, which may be paid by instalments. Your policy states whether the home uses it and who decides."
+   },
+   {
+    "question": "How is saving money for children in care handled?",
+    "answer": "The policy records whether the home holds children's savings, where they are kept, who oversees any account and how they are returned. It follows what you actually do."
+   },
+   {
+    "question": "What do we need to tell the placing authority?",
+    "answer": "Your policy states how amounts, accounts and any reparation are agreed and recorded with the placing authority, so the social worker can see how a child's money is handled."
+   },
+   {
+    "question": "Is this a generic children's home policies template?",
+    "answer": "No. After purchase you answer questions about your amounts, accounts, records and reparation practice, and the policy is written for your home and not invented."
+   }
+  ]
+ },
+ "ch-privacy-access-monitoring": {
+  "primary": {
+   "keyword": "children's home privacy policy",
+   "volume": 0
+  },
+  "secondary": [
+   {
+    "keyword": "children's home cctv policy",
+    "volume": 0
+   },
+   {
+    "keyword": "cctv in children's homes",
+    "volume": 0
+   },
+   {
+    "keyword": "children's home surveillance policy",
+    "volume": 0
+   },
+   {
+    "keyword": "children's home policies",
+    "volume": 0
+   },
+   {
+    "keyword": "children's home privacy",
+    "volume": 0
+   }
+  ],
+  "seo_title": "Children's Home Privacy Policy, Written for Your Home",
+  "meta_description": "A children's home privacy policy written for your home: privacy, room searches, access to areas, CCTV and monitoring, grounded in Regulations 21 and 24.",
+  "extra_faqs": [
+   {
+    "question": "What does Regulation 21 say about privacy?",
+    "answer": "The registered person must ensure children's privacy is appropriately protected and children can access all appropriate areas. Any limit must aim to safeguard each child, be necessary and proportionate, be kept under review and allow as much freedom as possible."
+   },
+   {
+    "question": "Is CCTV allowed in children's homes?",
+    "answer": "Regulation 24 allows monitoring devices only for safeguarding or promoting welfare, with the placing authority's written consent, the child told in advance where practicable, and no more intrusion than necessary. The policy sets out your own arrangements."
+   },
+   {
+    "question": "Does it cover room searches in a children's home?",
+    "answer": "Yes. It sets out your own approach to room searches, as you describe it, tested against the Regulation 21 need for any limit on privacy to be necessary, proportionate and reviewed. If you do not search, it says so."
+   },
+   {
+    "question": "Can it work as a children's home CCTV policy?",
+    "answer": "Yes. It covers cameras, door alarms and sensors you use, where they are and are not sited, consent, notice to children, footage access and review. It is written for your home from your answers."
+   },
+   {
+    "question": "Is the children's home privacy policy a free template?",
+    "answer": "No. It is written for your home from your answers, then checked against the regulations and reviewed by a person. It does not invent devices or practices you have not told us about."
+   },
+   {
+    "question": "Does it replace my statement of purpose?",
+    "answer": "No. Schedule 1 requires your statement of purpose to set out your approach to monitoring and surveillance. The policy is written to match what you say there. Check the wording stays consistent."
+   }
+  ]
+ },
+ "ch-regulation-44-45-visits-and-review": {
+  "primary": {
+   "keyword": "regulation 44",
+   "volume": 320
+  },
+  "secondary": [
+   {
+    "keyword": "regulation 45",
+    "volume": 140
+   },
+   {
+    "keyword": "reg 45",
+    "volume": 140
+   },
+   {
+    "keyword": "regulation 44 visit",
+    "volume": 0
+   },
+   {
+    "keyword": "regulation 45 report",
+    "volume": 0
+   },
+   {
+    "keyword": "regulation 44 independent person",
+    "volume": 0
+   },
+   {
+    "keyword": "quality of care review children's home",
+    "volume": 0
+   }
+  ],
+  "seo_title": "Regulation 44 and 45 Policy for Children's Homes",
+  "meta_description": "Regulation 44 and regulation 45 procedure written for your children's home: independent visits, quality of care reviews, reports and follow up.",
+  "extra_faqs": [
+   {
+    "question": "How often must a regulation 44 visit happen?",
+    "answer": "At least once each month. A visit may be unannounced. The registered person must help the independent person interview children, parents, relatives and staff in private if they consent, and inspect the premises and records."
+   },
+   {
+    "question": "What must the regulation 44 independent person report on?",
+    "answer": "The report sets out their opinion on whether children are effectively safeguarded and whether the conduct of the home promotes children's well-being. It may recommend actions and timescales within which you must consider them."
+   },
+   {
+    "question": "Who gets a copy of the regulation 44 report?",
+    "answer": "The independent person must send a copy to HMCI, the placing authorities, the registered provider, the registered manager if applicable and the responsible individual if nominated. The local authority for the area receives one on request."
+   },
+   {
+    "question": "How often is the regulation 45 review needed?",
+    "answer": "At least once every six months. You must keep a system for monitoring quality of care and children's feedback, then write a report including the actions you intend to take."
+   },
+   {
+    "question": "When does the regulation 45 report go to HMCI?",
+    "answer": "A copy must reach HMCI within 28 days of the review being completed. A placing authority that is not a child's parent can ask for a copy, and you must make it available."
+   },
+   {
+    "question": "Is the quality of care review children's home report shared with children?",
+    "answer": "The regulations do not set this out, so the policy records your own arrangement. It must provide for ascertaining and considering the opinions of children, parents, placing authorities and staff."
+   }
+  ]
+ },
+ "ch-safeguarding-child-protection": {
+  "primary": {
+   "keyword": "safeguarding policy",
+   "volume": 2400
+  },
+  "secondary": [
+   {
+    "keyword": "designated safeguarding lead",
+    "volume": 1000
+   },
+   {
+    "keyword": "safeguarding policy template",
+    "volume": 390
+   },
+   {
+    "keyword": "allegations against staff",
+    "volume": 10
+   },
+   {
+    "keyword": "child protection policy",
+    "volume": 0
+   },
+   {
+    "keyword": "allegations procedure",
+    "volume": 0
+   }
+  ],
+  "seo_title": "Safeguarding Policy for Children's Homes | Child Protection",
+  "meta_description": "A safeguarding policy with allegations procedure, written for your children's home around your own roles, referral routes and records. Not a free template.",
+  "extra_faqs": [
+   {
+    "question": "Is this a free safeguarding policy template?",
+    "answer": "No. It is a safeguarding policy written for your children's home from your answers, so it names your own safeguarding lead, referral routes and records rather than leaving blanks to fill in."
+   },
+   {
+    "question": "Does it include an allegations procedure?",
+    "answer": "Yes. Regulation 34 expects the safeguarding policy to include a procedure for allegations. Yours covers liaison with the local authority, referral to the placing authority, records, protective measures and how staff report concerns."
+   },
+   {
+    "question": "Who is the designated safeguarding lead?",
+    "answer": "You decide. The policy names your designated safeguarding lead and deputy from your answers, and sets out their role. It does not invent a post your home does not have."
+   },
+   {
+    "question": "Does it cover allegations against staff who work with children?",
+    "answer": "Yes. It sets out who leads, who you contact in the local authority, what is recorded and what protective measures you can use, based on your disciplinary procedure and local arrangements."
+   },
+   {
+    "question": "Does it replace our safeguarding adults policy?",
+    "answer": "It is written for children, using the Children's Homes (England) Regulations 2015 and Working Together to Safeguard Children, not the Care Act. Use it for children's services only."
+   },
+   {
+    "question": "How does the policy reflect the child protection policy duty?",
+    "answer": "Regulation 12 expects staff to follow your child protection policy and its effectiveness to be monitored. The policy states how you monitor and review it, using your own checks."
+   }
+  ]
+ },
+ "hospice-bereavement-support": {
+  "primary": {
+   "keyword": "bereavement support policy",
+   "volume": 0
+  },
+  "secondary": [
+   {
+    "keyword": "bereavement support",
+    "volume": 3600
+   },
+   {
+    "keyword": "bereavement policy template",
+    "volume": 10
+   },
+   {
+    "keyword": "bereavement policy examples",
+    "volume": 10
+   },
+   {
+    "keyword": "bereavement policy sample",
+    "volume": 10
+   },
+   {
+    "keyword": "bereavement support procedure",
+    "volume": 0
+   }
+  ],
+  "seo_title": "Bereavement Support Policy for Hospices, Written for You",
+  "meta_description": "A bereavement support policy written for your hospice: support before and after a death, follow up, children and staff, built from your own answers.",
+  "extra_faqs": [
+   {
+    "question": "What does a bereavement support policy cover?",
+    "answer": "It sets out how your hospice supports families, carers, children and staff before and after a death, including follow up contact, services offered, referral and signposting, and review. It reads as your bereavement support procedure in practice, written from your answers."
+   },
+   {
+    "question": "Is this a bereavement policy template?",
+    "answer": "No. A bereavement policy template is a blank document you fill in yourself. This is a policy written for your hospice from your answers, so it only describes support you really provide."
+   },
+   {
+    "question": "Is it about staff bereavement leave?",
+    "answer": "No. It covers bereavement support for families and those close to people in your care, and support for staff after a death at work. Leave entitlements sit in your HR policies."
+   },
+   {
+    "question": "Which regulations does it refer to?",
+    "answer": "It is written around Regulation 9 person-centred care, Regulation 10 dignity and respect and Regulation 18 staffing, with the NICE guideline on care of dying adults and your own end of life framework where you use one."
+   },
+   {
+    "question": "Can it reflect the bereavement support we actually offer?",
+    "answer": "Yes. You tell us your services, follow up timings, eligibility, children's support and referral routes. The writer uses only what you provide and does not invent practices you do not have."
+   },
+   {
+    "question": "Do you provide bereavement policy examples?",
+    "answer": "You get one policy written for your hospice rather than bereavement policy examples or a bereavement policy sample to adapt. It does not give clinical advice and records your own arrangements and roles."
+   }
+  ]
+ },
+ "hospice-care-after-death-verification": {
+  "primary": {
+   "keyword": "care after death policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "verification of expected death",
+    "volume": 40
+   },
+   {
+    "keyword": "verification of death",
+    "volume": 590
+   },
+   {
+    "keyword": "last offices",
+    "volume": 590
+   },
+   {
+    "keyword": "last offices policy",
+    "volume": 10
+   },
+   {
+    "keyword": "hospice care after death",
+    "volume": 10
+   },
+   {
+    "keyword": "verification of death policy",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Care After Death Policy for Hospices",
+  "meta_description": "A care after death policy written for your hospice: verification of death, last offices, family, coroner and property, built from your own answers.",
+  "extra_faqs": [
+   {
+    "question": "What does a care after death policy cover?",
+    "answer": "It sets out how your hospice verifies death, carries out last offices, tells family and the GP, refers to the coroner where needed, hands over to the funeral director and looks after belongings. It is written from your answers."
+   },
+   {
+    "question": "What is verification of death in a hospice?",
+    "answer": "It is the confirmation that a person has died, which your hospice assigns to defined roles. The policy records who in your service does it, how it works out of hours and where it is recorded."
+   },
+   {
+    "question": "What are last offices?",
+    "answer": "Last offices means the personal care given to a person after death, with respect for their wishes. The policy records who carries it out, how family can take part and how faith and cultural needs are met."
+   },
+   {
+    "question": "Does the policy cover coroner notification?",
+    "answer": "Yes. It sets out your own route for referral decisions and contact, with reference to the Notification of Deaths Regulations 2019. It does not give legal advice, so check individual cases with the doctor involved."
+   },
+   {
+    "question": "Can this be used for inpatient and hospice at home?",
+    "answer": "Yes. For hospice care after death, you describe how verification, last offices and notifications work in each setting, including out of hours and in the person's own home."
+   },
+   {
+    "question": "Is the policy a ready made template?",
+    "answer": "No. Your answers about roles, mortuary, notifications and property shape the policy, so it does not describe practices your hospice does not have."
+   }
+  ]
+ },
+ "hospice-care-of-the-dying-person": {
+  "primary": {
+   "keyword": "care of the dying person policy",
+   "volume": 0
+  },
+  "secondary": [
+   {
+    "keyword": "end of life care policy",
+    "volume": 10
+   },
+   {
+    "keyword": "policies for end of life care",
+    "volume": 10
+   },
+   {
+    "keyword": "palliative care policies",
+    "volume": 10
+   },
+   {
+    "keyword": "end of life plans",
+    "volume": 210
+   },
+   {
+    "keyword": "end of life practices",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Care of the Dying Person Policy for Hospices, Written for You",
+  "meta_description": "A care of the dying person policy written for your hospice: recognising dying, last days plans, comfort, family and review, built from your own answers.",
+  "extra_faqs": [
+   {
+    "question": "What does a care of the dying person policy cover?",
+    "answer": "It sets out how your hospice recognises dying, plans and reviews care in the last days, controls symptoms, supports hydration choices, involves family, meets spiritual needs and cares for the person after death. It is written from your answers."
+   },
+   {
+    "question": "How is this different from an end of life care policy?",
+    "answer": "A general end of life care policy covers advance care planning and palliative care broadly. This policy focuses on the last days of life, when dying has been recognised, and the individual plan, review and family communication at that time."
+   },
+   {
+    "question": "Which guidance does the policy refer to?",
+    "answer": "It is written around Regulation 9 person-centred care, Regulation 12 safe care and treatment, Regulation 10 dignity and respect, the Mental Capacity Act 2005 and the NICE guideline on care of dying adults, plus any framework you tell us you use."
+   },
+   {
+    "question": "Does it give clinical advice?",
+    "answer": "No. It records your own arrangements and roles. Clinical decisions stay with your doctors, nurses and prescribers, and the policy says so. It does not set doses, medicines or treatment choices."
+   },
+   {
+    "question": "Can it reflect our own end of life practices?",
+    "answer": "Yes. You tell us your review routine, symptom control arrangements, family facilities, spiritual support and bereavement offer. The writer uses only what you provide and does not invent practices you do not have."
+   },
+   {
+    "question": "Which policies for end of life care should sit alongside it?",
+    "answer": "Many hospices also keep policies for end of life care on advance care planning, medicines, consent and capacity, and resuscitation decisions. Palliative care policies of this kind work best when they refer to each other."
+   }
+  ]
+ },
+ "hospice-chaperone": {
+  "primary": {
+   "keyword": "chaperone policy",
+   "volume": 70
+  },
+  "secondary": [
+   {
+    "keyword": "chaperone training",
+    "volume": 110
+   },
+   {
+    "keyword": "chaperone policy template",
+    "volume": 10
+   },
+   {
+    "keyword": "chaperone procedure",
+    "volume": 10
+   },
+   {
+    "keyword": "chaperone in healthcare",
+    "volume": 10
+   },
+   {
+    "keyword": "medical chaperone training",
+    "volume": 10
+   },
+   {
+    "keyword": "chaperone training course",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Chaperone Policy for Hospices, Written for You",
+  "meta_description": "A chaperone policy written for your hospice: offering chaperones, who can act, consent, recording and concerns, based on your own arrangements.",
+  "extra_faqs": [
+   {
+    "question": "What does a chaperone policy cover?",
+    "answer": "It sets out when a chaperone is offered for intimate examinations and care in your hospice, who may act, how consent and refusal are handled and how it is recorded, based on your own arrangements."
+   },
+   {
+    "question": "Does it cover chaperone training?",
+    "answer": "Yes. It records how staff are trained and signed off before acting as a chaperone, using the route you describe. Medical chaperone training courses are one option you can name."
+   },
+   {
+    "question": "Is this a chaperone policy template?",
+    "answer": "No. It is written for your hospice from your answers, so it names your roles and routines instead of leaving blanks for you to fill."
+   },
+   {
+    "question": "Which regulations is it checked against?",
+    "answer": "It is checked against Regulation 10 on dignity and respect, Regulation 11 on consent, Regulation 9 on person centred care, and the Mental Capacity Act 2005, among others."
+   },
+   {
+    "question": "Does it cover people who lack capacity?",
+    "answer": "It records how your hospice checks consent and what it does when a person may lack capacity, following the Mental Capacity Act as Regulation 11 requires. Decisions stay with the clinicians."
+   },
+   {
+    "question": "Is this clinical or legal advice?",
+    "answer": "No. It sets out your hospice's own arrangements. Clinical judgement stays with qualified clinicians, and professional body guidance should be followed alongside it."
+   }
+  ]
+ },
+ "hospice-enteral-feeding": {
+  "primary": {
+   "keyword": "enteral feeding policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "enteral feeding",
+    "volume": 2400
+   },
+   {
+    "keyword": "enteral nutrition",
+    "volume": 720
+   },
+   {
+    "keyword": "g tube feeding",
+    "volume": 480
+   },
+   {
+    "keyword": "ng tube placement",
+    "volume": 320
+   },
+   {
+    "keyword": "enteral feeding tube",
+    "volume": 170
+   },
+   {
+    "keyword": "enteral feeding pump",
+    "volume": 140
+   },
+   {
+    "keyword": "ng tube feeding procedure",
+    "volume": 90
+   },
+   {
+    "keyword": "peg feeding policy",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Enteral Feeding Policy for Hospices (PEG and NG)",
+  "meta_description": "An enteral feeding policy written for your hospice: who may feed and flush, competence, aspiration risk and emergency actions, built from your answers.",
+  "extra_faqs": [
+   {
+    "question": "What is enteral feeding?",
+    "answer": "Enteral feeding means giving nutrition through a tube into the stomach or bowel, such as an NG tube or a gastrostomy (PEG). The policy sets out how your hospice plans, delivers and records it."
+   },
+   {
+    "question": "Does the policy include an ng tube feeding procedure?",
+    "answer": "It sets out your hospice's arrangements: who may carry out tube checks, feeds and flushes, and what staff do if position is uncertain. Step by step clinical technique stays in your clinical procedures and each person's care plan."
+   },
+   {
+    "question": "Which regulations is it checked against?",
+    "answer": "Regulation 12 on safe care and treatment, including staff competence and risk assessment, Regulation 14 on nutrition and hydration, and the Mental Capacity Act for consent. It also draws on your infection control code and governance duties."
+   },
+   {
+    "question": "Can care staff or healthcare assistants carry out tube feeding?",
+    "answer": "Only if your answers say so. The policy records which roles may feed, flush or give medicines by tube, and requires a competence record for each. Nothing is delegated that you do not already allow."
+   },
+   {
+    "question": "Does it cover both PEG and NG tubes?",
+    "answer": "Yes. You choose which tube types your hospice supports, and the policy covers enteral feeding for those only, including site care for gastrostomy and position checks for NG tubes."
+   },
+   {
+    "question": "Is this clinical advice?",
+    "answer": "No. It is not clinical or legal advice. The policy records your hospice's own arrangements, and clinical decisions for each person stay with their doctor, nurse and dietitian."
+   }
+  ]
+ },
+ "hospice-epilepsy-seizure-management": {
+  "primary": {
+   "keyword": "epilepsy policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "epilepsy care plan example",
+    "volume": 30
+   },
+   {
+    "keyword": "epilepsy care plan sample",
+    "volume": 30
+   },
+   {
+    "keyword": "epilepsy care plan template",
+    "volume": 10
+   },
+   {
+    "keyword": "seizure care plan template",
+    "volume": 10
+   },
+   {
+    "keyword": "seizure care plan example",
+    "volume": 10
+   },
+   {
+    "keyword": "health policy for epilepsy",
+    "volume": 10
+   },
+   {
+    "keyword": "seizure policy",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Epilepsy Policy for Hospices | Seizure Management Policy",
+  "meta_description": "An epilepsy policy written for your hospice: seizure care plans, rescue medicines, recording, emergency triggers and staff training, ready in 2 working days.",
+  "extra_faqs": [
+   {
+    "question": "What does an epilepsy policy cover?",
+    "answer": "It sets out how your hospice plans for seizures, who gives rescue medicine, when emergency help is called, how seizures are recorded and how staff are trained. It describes your own arrangements, not clinical advice."
+   },
+   {
+    "question": "Can I use a seizure care plan template instead?",
+    "answer": "An epilepsy care plan template or seizure care plan example covers one person. A seizure policy covers how your whole hospice works. This policy is written for your service, and individual plans stay with your clinicians."
+   },
+   {
+    "question": "Does it cover rescue medicines?",
+    "answer": "Yes. You say which rescue medicines you hold, who may give them and how they are stored and checked. The policy names only what you tell us, so it never invents a medicine or role."
+   },
+   {
+    "question": "Is this an epilepsy care plan example or sample?",
+    "answer": "No. Searching for an epilepsy care plan example or epilepsy care plan sample finds a single plan. This is an organisation level policy, written for your hospice, with no information about individual patients."
+   },
+   {
+    "question": "Does it cover people at home?",
+    "answer": "Yes. You describe how seizure care is shared with community nurses, GPs and family, and the policy reflects those arrangements. It does not name a service you do not work with."
+   },
+   {
+    "question": "How long does it take?",
+    "answer": "Your policy is written for your hospice and delivered in 2 working days. You answer a short set of questions after purchase, and a person checks it before it carries your name."
+   }
+  ]
+ },
+ "hospice-long-term-ventilation": {
+  "primary": {
+   "keyword": "long term ventilation policy",
+   "volume": 0
+  },
+  "secondary": [
+   {
+    "keyword": "long term ventilation",
+    "volume": 50
+   },
+   {
+    "keyword": "long term mechanical ventilation",
+    "volume": 10
+   },
+   {
+    "keyword": "ventilator long term",
+    "volume": 10
+   },
+   {
+    "keyword": "home ventilation policy",
+    "volume": 0
+   },
+   {
+    "keyword": "non invasive ventilation policy",
+    "volume": 0
+   }
+  ],
+  "seo_title": "Long Term Ventilation Policy for Hospices | Home Ventilation",
+  "meta_description": "A long term ventilation policy written for your hospice: ventilator checks, alarms, backup power and staff competence, built from your own arrangements.",
+  "extra_faqs": [
+   {
+    "question": "Does a long term ventilation policy cover invasive and non invasive ventilation?",
+    "answer": "It covers the types you tell us you support, including long term mechanical ventilation. If you only continue non-invasive ventilation started elsewhere, the policy says so."
+   },
+   {
+    "question": "Will it set out who can change ventilator settings?",
+    "answer": "Yes. You tell us who may review or change settings, and the policy states that. We do not give care staff authority you have not described."
+   },
+   {
+    "question": "Does the policy cover power failure and backup power?",
+    "answer": "Yes. It uses your own battery, generator and spare equipment arrangements, and sets out the steps staff take and who they call."
+   },
+   {
+    "question": "Is this a home ventilation policy as well?",
+    "answer": "It covers people going home or out on visits, including what equipment travels with them and how family carers are involved, and staff supporting a person on a ventilator long term, as you describe it."
+   },
+   {
+    "question": "Can it replace clinical guidance from the specialist team?",
+    "answer": "No. It sets out your organisation's own arrangements and refers to the specialist respiratory team. It is not clinical, medical or legal advice."
+   },
+   {
+    "question": "How is the policy checked against the regulations?",
+    "answer": "After you answer our questions, the written policy is checked against Regulations 9, 12, 15, 17 and 18 of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014."
+   }
+  ]
+ },
+ "hospice-oxygen-medical-gases-safety": {
+  "primary": {
+   "keyword": "medical gases policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "oxygen cylinder storage",
+    "volume": 70
+   },
+   {
+    "keyword": "oxygen storage",
+    "volume": 40
+   },
+   {
+    "keyword": "oxygen therapy safety",
+    "volume": 10
+   },
+   {
+    "keyword": "oxygen safety guidelines",
+    "volume": 10
+   },
+   {
+    "keyword": "oxygen cylinder storage signage",
+    "volume": 10
+   },
+   {
+    "keyword": "storage of medical oxygen cylinders",
+    "volume": 10
+   },
+   {
+    "keyword": "oxygen storage safety",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Medical Gases Policy for Hospices: Oxygen Safety",
+  "meta_description": "A medical gases policy written for your hospice: oxygen cylinder storage, signage, handling, flow rates, fire risk and staff training from your own answers.",
+  "extra_faqs": [
+   {
+    "question": "What should a medical gases policy cover?",
+    "answer": "Which gases you hold, where cylinders are stored, signage, handling, who authorises and sets up oxygen, equipment checks, supplier arrangements, fire risk and incident reporting. Yours is written from your own answers."
+   },
+   {
+    "question": "Does the policy cover oxygen cylinder storage?",
+    "answer": "Yes. It covers the storage of medical oxygen cylinders: where full and empty cylinders are kept, how they are secured and who checks the store. It uses your own premises and does not invent a store you do not have."
+   },
+   {
+    "question": "Is oxygen storage guidance the same as a policy?",
+    "answer": "No. Oxygen storage guidance is general advice. A policy sets your hospice's own arrangements, who is responsible and what staff must do, so every shift follows the same approach."
+   },
+   {
+    "question": "Does it set oxygen flow rates?",
+    "answer": "No. It does not give clinical advice. It records who in your hospice authorises oxygen and its flow rate, and how that is written down, following your own clinical process."
+   },
+   {
+    "question": "Can it cover oxygen used in people's homes?",
+    "answer": "If your hospice has a community team, the policy can set what staff do where oxygen is used at home. Answer the home oxygen question and the writer will include it, or leave it out."
+   },
+   {
+    "question": "Which regulations does it draw on?",
+    "answer": "Regulation 12 on safe care and treatment, Regulation 15 on premises and equipment, Regulation 17 on governance, Regulation 18 on staffing, the Health and Safety at Work Act 1974 and the Fire Safety Order 2005."
+   }
+  ]
+ },
+ "hospice-safeguarding-children-young-people": {
+  "primary": {
+   "keyword": "safeguarding children and young people policy",
+   "volume": 0
+  },
+  "secondary": [
+   {
+    "keyword": "hospice safeguarding policy",
+    "volume": 0
+   },
+   {
+    "keyword": "child protection policy",
+    "volume": 0
+   },
+   {
+    "keyword": "safeguarding children policy template",
+    "volume": 0
+   },
+   {
+    "keyword": "safeguarding children procedure",
+    "volume": 0
+   },
+   {
+    "keyword": "child safeguarding policy",
+    "volume": 0
+   },
+   {
+    "keyword": "safeguarding children policy",
+    "volume": 0
+   }
+  ],
+  "seo_title": "Safeguarding Children and Young People Policy: Hospices",
+  "meta_description": "A safeguarding children and young people policy written for your hospice: concerns, referrals, allegations and transition, set out around your practice.",
+  "extra_faqs": [
+   {
+    "question": "Does a hospice need a safeguarding children and young people policy?",
+    "answer": "Working Together to Safeguard Children is statutory guidance that applies to organisations with functions relating to children, including health and voluntary bodies. Hospices that care for or meet children should set out their arrangements in writing."
+   },
+   {
+    "question": "Is this a safeguarding children policy template?",
+    "answer": "No. A generic safeguarding children policy template fits no one. Your policy is written from your answers on leads, referral routes, records and training, so it describes what your hospice really does."
+   },
+   {
+    "question": "Does it cover visiting children and siblings?",
+    "answer": "Yes, if you tell us they come into contact with the service. Your hospice safeguarding policy can cover young patients, siblings, visiting grandchildren and young volunteers."
+   },
+   {
+    "question": "What about allegations against staff?",
+    "answer": "The safeguarding children procedure sets out who is told first and who contacts the local authority, using the route you name. We do not invent a route you do not have."
+   },
+   {
+    "question": "How does it relate to adult safeguarding?",
+    "answer": "It sits beside your adult safeguarding policy. Your safeguarding children and young people policy describes the handover as a young person turns 18, so child safeguarding policy and adult arrangements link up."
+   },
+   {
+    "question": "Is it legal or clinical advice?",
+    "answer": "No. The policy sets out your organisation's own arrangements. It does not replace advice from your safeguarding lead, local partnership or solicitor."
+   }
+  ]
+ },
+ "hospice-self-harm-suicide-ligature-risk": {
+  "primary": {
+   "keyword": "ligature risk policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "ligature risk assessment",
+    "volume": 70
+   },
+   {
+    "keyword": "self harm policy",
+    "volume": 10
+   },
+   {
+    "keyword": "ligature risk management",
+    "volume": 10
+   },
+   {
+    "keyword": "ligature point risk assessment",
+    "volume": 10
+   },
+   {
+    "keyword": "ligature risk assessment policy",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Ligature Risk Policy for Hospices, Written for You",
+  "meta_description": "A ligature risk policy written for your hospice: self-harm and suicide risk, environment checks, response and review under Regulations 12, 13 and 17.",
+  "extra_faqs": [
+   {
+    "question": "What should a ligature risk policy cover?",
+    "answer": "It should cover how risk is identified, how the environment is checked, what measures follow, immediate response, reporting and review. CareStream writes each part from your own answers about your hospice."
+   },
+   {
+    "question": "Is a ligature risk assessment the same as the policy?",
+    "answer": "No. The assessment records findings for a room or building. The ligature risk assessment policy sets out who does it, how often, and what happens next. This product writes the policy."
+   },
+   {
+    "question": "Does it cover self-harm as well as suicide risk?",
+    "answer": "Yes. The self harm policy sections cover both, using your own steps for identifying concern, responding, involving specialist support and reviewing. We write only what you tell us you do."
+   },
+   {
+    "question": "Does it recommend observation levels?",
+    "answer": "No. It records the arrangements you already use, who authorises them, and how they are kept proportionate. It does not give clinical advice or invent levels your staff would not recognise."
+   },
+   {
+    "question": "Is it relevant to hospices?",
+    "answer": "Yes. It is written for people receiving hospice care and their families, in a setting that is not designed as a mental health unit, so environment and staff response sections reflect that."
+   },
+   {
+    "question": "How is it different from a template?",
+    "answer": "A template is the same for everyone. This policy is written from your answers on environment checks, observation, response and review, then read by a person before you receive it."
+   }
+  ]
+ },
+ "hospice-sharps-inoculation-clinical-waste": {
+  "primary": {
+   "keyword": "sharps policy",
+   "volume": 20
+  },
+  "secondary": [
+   {
+    "keyword": "needle stick injury policy",
+    "volume": 40
+   },
+   {
+    "keyword": "needlestick injury policy",
+    "volume": 10
+   },
+   {
+    "keyword": "clinical waste policy",
+    "volume": 10
+   },
+   {
+    "keyword": "sharps injury procedure",
+    "volume": 10
+   },
+   {
+    "keyword": "inoculation injury policy",
+    "volume": 10
+   },
+   {
+    "keyword": "sharps disposal policy",
+    "volume": 10
+   },
+   {
+    "keyword": "sharps policy and procedure",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Sharps Policy for Hospices: Injury and Clinical Waste",
+  "meta_description": "A sharps policy written for your hospice: safe use and disposal, inoculation injury response and clinical waste, set against the Sharps Regulations 2013.",
+  "extra_faqs": [
+   {
+    "question": "What does a sharps policy cover?",
+    "answer": "It sets out how your hospice uses and disposes of sharps, which safer devices you provide, how containers are managed, what staff do after an injury (your sharps injury procedure), and how clinical waste is handled."
+   },
+   {
+    "question": "What should an inoculation injury policy include?",
+    "answer": "It describes first aid after a sharps injury, who assesses the risk, how occupational health is reached, how the injury is recorded and reviewed, and what support staff receive. Your inoculation injury policy is written around your own arrangements."
+   },
+   {
+    "question": "Which law sits behind a sharps policy?",
+    "answer": "The Health and Safety (Sharp Instruments in Healthcare) Regulations 2013 have headings on use and disposal of medical sharps, information and training, and arrangements in the event of injury. The policy also draws on Regulation 12."
+   },
+   {
+    "question": "Does it cover needlestick injury in the community?",
+    "answer": "Yes. If your staff visit people at home, your needlestick injury policy can set out how sharps are carried, used and returned, using the community arrangements you describe."
+   },
+   {
+    "question": "How does it deal with clinical waste?",
+    "answer": "It sets out segregation, storage and collection using your own contractor and colour coding. Your clinical waste policy sits alongside sharps disposal rather than being a separate document."
+   },
+   {
+    "question": "Is this a free template?",
+    "answer": "No. It is written for your hospice from the answers you give, so it describes your devices, containers, contractor and reporting route, and not generic practice you do not follow."
+   }
+  ]
+ },
+ "hospice-syringe-driver-anticipatory-medicines": {
+  "primary": {
+   "keyword": "syringe driver policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "syringe driver",
+    "volume": 12100
+   },
+   {
+    "keyword": "anticipatory medication",
+    "volume": 2900
+   },
+   {
+    "keyword": "syringe driver palliative care",
+    "volume": 480
+   },
+   {
+    "keyword": "anticipatory medications",
+    "volume": 390
+   },
+   {
+    "keyword": "anticipatory medicines",
+    "volume": 210
+   },
+   {
+    "keyword": "csci syringe driver",
+    "volume": 110
+   },
+   {
+    "keyword": "anticipatory medication end of life",
+    "volume": 50
+   }
+  ],
+  "seo_title": "Syringe Driver Policy for Hospices | Anticipatory Medicines",
+  "meta_description": "A syringe driver policy written for your hospice: set up, monitoring, anticipatory medicines, stock, competence and out of hours access.",
+  "extra_faqs": [
+   {
+    "question": "What does a syringe driver policy cover?",
+    "answer": "It sets out who prescribes, sets up and checks a driver, how medicines are authorised and recorded, how problems are reported and how competence is kept up. It describes your hospice's own arrangements, not clinical advice."
+   },
+   {
+    "question": "Does it cover anticipatory medicines?",
+    "answer": "Yes. It covers how anticipatory medicines and anticipatory medications are prescribed, stored, stock checked and reached out of hours. You describe your own process, so the policy never names a service or rota you do not have."
+   },
+   {
+    "question": "Is it specific to one syringe driver model?",
+    "answer": "Only if you tell us. You name the models you use, and the policy refers to your own devices and checks. It does not take instructions from a manufacturer or replace their guidance."
+   },
+   {
+    "question": "Does it handle controlled drugs in a driver?",
+    "answer": "For a csci syringe driver, it covers how controlled drugs are ordered, recorded, witnessed and returned, using your own register and checks. Misuse of Drugs Act duties are referenced, but it does not give legal advice."
+   },
+   {
+    "question": "Can it cover community and care home patients?",
+    "answer": "Yes. You describe how drivers and anticipatory medication are supported at home or in a care home, and who checks them. The policy then reflects the shared arrangements you actually run."
+   },
+   {
+    "question": "How long does it take?",
+    "answer": "Your policy is written for your hospice and delivered in 2 working days. You answer a short set of questions after purchase, and a person checks it before it carries your name."
+   }
+  ]
+ },
+ "hospice-tracheostomy-care": {
+  "primary": {
+   "keyword": "tracheostomy care policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "tracheostomy care",
+    "volume": 720
+   },
+   {
+    "keyword": "tracheostomy suction",
+    "volume": 170
+   },
+   {
+    "keyword": "tracheostomy care training",
+    "volume": 50
+   },
+   {
+    "keyword": "tracheostomy care nursing",
+    "volume": 30
+   },
+   {
+    "keyword": "tracheostomy policy",
+    "volume": 10
+   },
+   {
+    "keyword": "tracheostomy care procedure",
+    "volume": 10
+   },
+   {
+    "keyword": "tracheostomy care and suctioning",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Tracheostomy Care Policy for Hospices",
+  "meta_description": "A tracheostomy care policy written for your hospice: competence, suction, tube changes, emergencies and equipment, based on your own arrangements.",
+  "extra_faqs": [
+   {
+    "question": "What does a tracheostomy care policy cover?",
+    "answer": "It sets out how your hospice cares for people with a tracheostomy: competence, suction, tube changes, humidification, equipment, spares and emergency steps. It is built around your own staffing and arrangements."
+   },
+   {
+    "question": "Does it include tracheostomy suction and tube changes?",
+    "answer": "Yes. It records who carries out tracheostomy suction and tube changes in your hospice and how each is recorded. Clinical steps for each person stay in their care plan, written by a qualified clinician."
+   },
+   {
+    "question": "How does it handle tracheostomy care training?",
+    "answer": "It sets out how staff are trained, assessed and signed off, and how often competence is rechecked, using the routes you describe. This links to Regulation 12(2)(c) and Regulation 18."
+   },
+   {
+    "question": "Which regulations is it checked against?",
+    "answer": "It is checked against Regulation 12 on safe care and treatment, Regulation 18 on staffing and training, Regulation 9 on person centred care and infection control requirements, among others."
+   },
+   {
+    "question": "Is this clinical advice?",
+    "answer": "No. The policy sets out your hospice's own arrangements. Clinical decisions stay with the qualified clinicians caring for each person, and national clinical guidance should be followed alongside it."
+   },
+   {
+    "question": "Does the tracheostomy policy cover families?",
+    "answer": "Yes. If families or carers help with care, the tracheostomy policy records how they are trained and signed off and who they call, based on your answers."
+   }
+  ]
+ },
+ "hospice-volunteers": {
+  "primary": {
+   "keyword": "volunteers policy",
+   "volume": 170
+  },
+  "secondary": [
+   {
+    "keyword": "volunteer handbook",
+    "volume": 70
+   },
+   {
+    "keyword": "volunteer code of conduct",
+    "volume": 50
+   },
+   {
+    "keyword": "volunteer policy template",
+    "volume": 30
+   },
+   {
+    "keyword": "volunteer expenses policy",
+    "volume": 20
+   },
+   {
+    "keyword": "volunteer recruitment policy",
+    "volume": 10
+   }
+  ],
+  "seo_title": "Volunteers Policy for Hospices: Recruitment and Support",
+  "meta_description": "A volunteers policy written for your hospice: recruitment, DBS checks, induction, training, supervision, boundaries and expenses.",
+  "extra_faqs": [
+   {
+    "question": "Does a hospice need a volunteers policy?",
+    "answer": "A hospice that uses volunteers should set out how they are recruited, trained and supervised. Regulation 18 covers support, training and supervision of staff, and Regulation 19 includes volunteers. A written volunteers policy shows your arrangements."
+   },
+   {
+    "question": "What should a volunteer handbook contain?",
+    "answer": "A volunteer handbook usually explains the roles, code of conduct, confidentiality, who to ask for help and how to raise concerns. This policy sets out your hospice's arrangements, which you can draw on for your handbook."
+   },
+   {
+    "question": "Do hospice volunteers need DBS checks?",
+    "answer": "It depends on the role. Your answers record which checks apply to which roles and who decides. The policy states your arrangements and does not give legal advice on eligibility for a particular check."
+   },
+   {
+    "question": "Can I use a volunteer policy template instead?",
+    "answer": "A free volunteer policy template is generic. This policy is written from your answers about roles, checks, training and supervision, so it describes what your hospice actually does."
+   },
+   {
+    "question": "Does it cover a volunteer code of conduct?",
+    "answer": "Yes. It sets out the boundaries you describe, such as gifts, social media, confidentiality and conduct with patients and families. A separate volunteer code of conduct can sit alongside it. Your volunteer recruitment policy steps are set out in the same document."
+   },
+   {
+    "question": "Does it cover volunteer expenses?",
+    "answer": "Yes. A volunteer expenses policy section records what you repay, the rates you use and how claims are made, based on your answers. We do not invent limits."
+   }
+  ]
+ },
+ "prison-healthcare-medicines-in-possession": {
+  "primary": {
+   "keyword": "self administration of medicines policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "patient self administration of medication",
+    "volume": 10
+   },
+   {
+    "keyword": "medicines in possession policy",
+    "volume": 0
+   },
+   {
+    "keyword": "in possession medication policy",
+    "volume": 0
+   },
+   {
+    "keyword": "safe storage of medicines policy",
+    "volume": 0
+   },
+   {
+    "keyword": "medicines in possession",
+    "volume": 0
+   },
+   {
+    "keyword": "supervised administration of medicines",
+    "volume": 0
+   }
+  ],
+  "seo_title": "Self Administration of Medicines Policy for Custody Healthcare",
+  "meta_description": "A self administration of medicines policy written for your service: in possession risk assessment, supervised doses and secure storage, built from your answers.",
+  "extra_faqs": [
+   {
+    "question": "Is a self administration of medicines policy a legal requirement?",
+    "answer": "No single law requires a policy with that name. Regulation 12 requires the proper and safe management of medicines, and Regulation 17 requires good governance. A written policy shows how your service meets these duties."
+   },
+   {
+    "question": "Does the policy cover prison and custody settings?",
+    "answer": "It is written around your answers, so it can set out in possession arrangements for secure and custody healthcare. NHS England describes equivalence of care for people in the justice system, and the policy reflects your own arrangements."
+   },
+   {
+    "question": "What is a medicines in possession policy?",
+    "answer": "It sets out how your service decides which people may keep their own medicines, which doses are supervised, and how storage, records and reviews work. It records your arrangements, not clinical decisions."
+   },
+   {
+    "question": "Does it include supervised doses and storage?",
+    "answer": "Yes. The in possession medication policy covers supervised administration, secure storage, diversion checks and records, using the process you describe. Clinical decisions about a person stay with their prescriber."
+   },
+   {
+    "question": "Does the policy cover controlled drugs?",
+    "answer": "It records how controlled drugs are kept outside possession and handled in line with the Misuse of Drugs Act 1971, using your own storage and recording arrangements."
+   },
+   {
+    "question": "Is the policy clinical or legal advice?",
+    "answer": "No. It sets out your organisation's own arrangements for medicines in possession. Clinical decisions stay with qualified professionals, and legal questions with a legal adviser."
+   }
+  ]
+ },
+ "sexual-assault-forensic-evidence-chain-of-custody": {
+  "primary": {
+   "keyword": "chain of custody policy",
+   "volume": 10
+  },
+  "secondary": [
+   {
+    "keyword": "forensic medical examination",
+    "volume": 20
+   },
+   {
+    "keyword": "forensic medical examiner",
+    "volume": 210
+   },
+   {
+    "keyword": "forensic evidence policy",
+    "volume": 0
+   },
+   {
+    "keyword": "evidence handling policy",
+    "volume": 0
+   },
+   {
+    "keyword": "evidence storage policy",
+    "volume": 0
+   },
+   {
+    "keyword": "forensic examination consent",
+    "volume": 0
+   }
+  ],
+  "seo_title": "Chain of Custody Policy for Sexual Assault Services",
+  "meta_description": "A chain of custody policy written for your sexual assault, hospice or specialist service: consent, forensic evidence handling, storage and police handover.",
+  "extra_faqs": [
+   {
+    "question": "What is a chain of custody policy?",
+    "answer": "It sets out how evidence is held from collection to handover, who handled it, when, and where it was stored. Each step is recorded so the route of every item can be shown."
+   },
+   {
+    "question": "Does the policy cover consent?",
+    "answer": "Yes. The chain of custody policy reflects Regulation 11, which says care and treatment must only be provided with the consent of the relevant person, and uses your own consent steps for examination and evidence sharing."
+   },
+   {
+    "question": "Does the policy replace clinical or forensic guidance?",
+    "answer": "No. It sets out your organisation's own arrangements. Examiners follow their professional and forensic guidance, and the policy does not give clinical or legal advice."
+   },
+   {
+    "question": "What records does the policy cover?",
+    "answer": "It covers the records you keep for each person and for evidence handling, reflecting Regulation 17, which requires accurate, complete and contemporaneous records kept securely."
+   },
+   {
+    "question": "Can it be used by a hospice or specialist service?",
+    "answer": "It is written for sexual assault services and similar CQC regulated settings. You tell us who examines, where kits are stored and who receives them, and the policy follows your answers."
+   },
+   {
+    "question": "Who is it written for?",
+    "answer": "Registered managers, forensic leads and safeguarding leads who must show staff how evidence handling, storage and handover work in practice, in plain language."
+   }
+  ]
  }
 }

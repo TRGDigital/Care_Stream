@@ -319,5 +319,113 @@ export const POLICY_PRODUCT_SERVICES: Record<string, string[]> = {
   "care_homes",
   "nursing",
   "dementia"
+ ],
+ "ch-admissions-placement-planning": [
+  "childrens"
+ ],
+ "ch-anti-bullying": [
+  "childrens"
+ ],
+ "ch-behaviour-management-restraint": [
+  "childrens"
+ ],
+ "ch-case-records-retention-access": [
+  "childrens"
+ ],
+ "ch-child-sexual-criminal-exploitation": [
+  "childrens"
+ ],
+ "ch-contact-family-time": [
+  "childrens"
+ ],
+ "ch-education-school-attendance": [
+  "childrens"
+ ],
+ "ch-harmful-sexual-behaviour-peer-abuse": [
+  "childrens"
+ ],
+ "ch-health-and-wellbeing": [
+  "childrens"
+ ],
+ "ch-leaving-care-moving-on": [
+  "childrens"
+ ],
+ "ch-missing-from-care": [
+  "childrens"
+ ],
+ "ch-notifications-ofsted-placing-authorities": [
+  "childrens"
+ ],
+ "ch-online-safety-digital-access": [
+  "childrens"
+ ],
+ "ch-participation-advocacy-childrens-guide": [
+  "childrens"
+ ],
+ "ch-pocket-money-savings-reparation": [
+  "childrens"
+ ],
+ "ch-privacy-access-monitoring": [
+  "childrens"
+ ],
+ "ch-regulation-44-45-visits-and-review": [
+  "childrens"
+ ],
+ "ch-safeguarding-child-protection": [
+  "childrens"
+ ],
+ "hospice-bereavement-support": [
+  "hospices"
+ ],
+ "hospice-care-after-death-verification": [
+  "hospices"
+ ],
+ "hospice-care-of-the-dying-person": [
+  "hospices"
+ ],
+ "hospice-chaperone": [
+  "hospices"
+ ],
+ "hospice-enteral-feeding": [
+  "hospices"
+ ],
+ "hospice-epilepsy-seizure-management": [
+  "hospices"
+ ],
+ "hospice-long-term-ventilation": [
+  "hospices"
+ ],
+ "hospice-oxygen-medical-gases-safety": [
+  "hospices"
+ ],
+ "hospice-safeguarding-children-young-people": [
+  "hospices",
+  "private_hospitals",
+  "clinics"
+ ],
+ "hospice-self-harm-suicide-ligature-risk": [
+  "hospices"
+ ],
+ "hospice-sharps-inoculation-clinical-waste": [
+  "hospices"
+ ],
+ "hospice-syringe-driver-anticipatory-medicines": [
+  "hospices"
+ ],
+ "hospice-tracheostomy-care": [
+  "hospices"
+ ],
+ "hospice-volunteers": [
+  "hospices"
+ ],
+ "prison-healthcare-medicines-in-possession": [
+  "hospices",
+  "mental_health",
+  "substance_misuse"
+ ],
+ "sexual-assault-forensic-evidence-chain-of-custody": [
+  "hospices",
+  "clinics",
+  "private_hospitals"
  ]
 }

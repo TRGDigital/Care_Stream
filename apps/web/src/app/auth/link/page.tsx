@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { getSession, signIn } from 'next-auth/react'
 import { AlertCircle, Loader2, LogIn } from 'lucide-react'
+import { displayModeNow } from '@/lib/forward-client'
 
 // Magic-link landing. The token is SINGLE-USE, so it must only be consumed on a
 // human click — email security scanners (Microsoft Safe Links etc.) pre-render
@@ -20,7 +21,7 @@ function LinkConsumer() {
     if (!token || state === 'busy') return
     setState('busy')
     try {
-      const res = await signIn('credentials', { mode: 'magic', token, redirect: false })
+      const res = await signIn('credentials', { mode: 'magic', token, display_mode: displayModeNow(), redirect: false })
       if (res?.ok) {
         // A training-only buyer's manager lands on their dashboard (licences to allocate), not
         // the staff hub; everyone else goes to the hub as before.

@@ -1,3 +1,4 @@
+import { clientOrigin } from '../lib/client-origin'
 import rateLimit from 'express-rate-limit'
 
 // §11.1 — 100 req/min per user on general API routes
@@ -11,9 +12,11 @@ export const apiLimiter = rateLimit({
 })
 
 // §11.1 — 10 req/min on auth routes
+// Keyed on the real visitor: sign in reaches the API from the website's server, so req.ip alone would put every person in one shared bucket.
 export const authLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 10,
+  keyGenerator: (req) => clientOrigin(req).ip ?? req.ip ?? 'unknown',
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, error: { code: 'RATE_LIMITED', message: 'Too many requests. Please try again shortly.' } },

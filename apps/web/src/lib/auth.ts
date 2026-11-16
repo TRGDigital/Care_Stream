@@ -2,6 +2,7 @@
 // tenant_id and role embedded in token claims so every server component can
 // read them without a DB round-trip.
 
+import { forwardHeaders } from '@/lib/forward-client'
 import NextAuth, { type NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 
@@ -69,8 +70,11 @@ export const authOptions: NextAuthOptions = {
         tenant_name:   { label: 'Tenant Name',   type: 'text' },
         user_name:     { label: 'User Name',     type: 'text' },
         user_email:    { label: 'User Email',    type: 'text' },
+        display_mode:  { label: 'Display mode',  type: 'text' },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
+        // The API sees this server, not the person: pass their real IP, location and device along (see lib/forward-client.ts).
+        const fwd = forwardHeaders(req?.headers as any, { mode: credentials?.display_mode === 'installed_web' ? 'installed_web' : undefined })
         // ─── Site-switch mode ─────────────────────────────────────────────────
         // Called after a successful /auth/switch-site API call to update the
         // NextAuth session with the new site's tokens, transparent to all pages.
@@ -100,7 +104,7 @@ export const authOptions: NextAuthOptions = {
           try {
             const res = await fetch(`${API_URL}/auth/magic-link/verify`, {
               method:  'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json', ...fwd },
               body:    JSON.stringify({ token: credentials.token }),
             })
             const body = await res.json()
@@ -127,7 +131,7 @@ export const authOptions: NextAuthOptions = {
 
         const res = await fetch(`${API_URL}/auth/login`, {
           method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...fwd },
           body:    JSON.stringify({
             email:    credentials.email,
             password: credentials.password,

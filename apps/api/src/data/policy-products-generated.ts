@@ -8,6 +8,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "Fees, deposits, notice, fee increases, fees after death and the information given before a person signs, set out in your own admission contract arrangements.",
   "fields": [
    {
     "key": "funding_routes_accepted",
@@ -72,6 +73,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "Pre-admission assessment, capacity to agree, emergency admissions, hospital transfer and return, and planned discharge, written around how your service really works.",
   "fields": [
    {
     "key": "admission_decision_maker",
@@ -136,6 +138,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "Checks on agency, bank and temporary workers before a shift: identity, DBS, training evidence, profiles, induction and handover, written around how you really book cover.",
   "fields": [
    {
     "key": "cover_sources",
@@ -200,6 +203,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "Who may have bed rails, how each person is assessed, how bed, rails and mattress are matched and checked, and how entrapment risks are managed.",
   "fields": [
    {
     "key": "rail_types_in_use",
@@ -264,6 +268,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "Person centred dementia care: knowing each person, communication, distress, leaving unsupported, activity, capacity and end of life, written around your service.",
   "fields": [
    {
     "key": "life_story_method",
@@ -333,6 +338,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "A dysphagia policy covering swallowing concerns, referral, texture modified food and drink, mealtime support and choking response.",
   "fields": [
    {
     "key": "swallow_concern_trigger",
@@ -397,6 +403,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "An electronic call monitoring policy for how visits are logged and monitored, what happens when logging fails, and how visit records are audited.",
   "fields": [
    {
     "key": "logging_method",
@@ -461,6 +468,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "Falls risk assessment, prevention measures, post-fall checks, escalation and learning, written around how your service really supports people.",
   "fields": [
    {
     "key": "falls_risk_tool",
@@ -525,6 +533,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "Annual health checks, health action plans and hospital passports for people with a learning disability, with reasonable adjustments and review set out for your service.",
   "fields": [
    {
     "key": "learning_disability_register_check",
@@ -594,6 +603,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "Assessing the safety of a person's own home for them and for staff: access, fire, equipment, pets, smoking and agreed actions, reviewed on a schedule.",
   "fields": [
    {
     "key": "assessment_timing",
@@ -658,6 +668,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 4900,
   "taster": false,
   "bundles": [],
+  "description": "A key safe policy for your service: who holds keys and codes, how staff enter a person's home, lost keys, and how access details are kept secure.",
   "fields": [
    {
     "key": "access_methods_used",
@@ -727,6 +738,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "Live in carer rest breaks, sleep arrangements, night disturbance, relief cover and handover, written around how your live-in or Shared Lives service really runs.",
   "fields": [
    {
     "key": "carer_status",
@@ -796,6 +808,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "What counts as a missed or late visit, how the office is alerted, how the person is made safe, and how every case is recorded and learned from.",
   "fields": [
    {
     "key": "late_threshold",
@@ -860,6 +873,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "A missing person policy written for your service: risk assessment, search steps, escalation, return and review, linked to capacity and deprivation of liberty.",
   "fields": [
    {
     "key": "leaving_risk_assessment",
@@ -924,6 +938,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "How your staff hold, spend, record and safeguard people's cash, cards, valuables and shopping, including appointeeship and deputies, and how financial abuse is prevented.",
   "fields": [
    {
     "key": "money_held_model",
@@ -993,6 +1008,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "What staff do when no one answers the door: retries, key holders, contacts, police and ambulance, recording and notifications, written around how your service works.",
   "fields": [
    {
     "key": "first_response_steps",
@@ -1057,6 +1073,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "How your service supports informed choice and independence, weighs risk against rights, records decisions and reviews them, written around your own practice.",
   "fields": [
    {
     "key": "risk_enablement_tool",
@@ -1116,6 +1133,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "Risk screening, repositioning, pressure-relieving equipment, skin checks, grading and escalation of pressure damage, written for your service.",
   "fields": [
    {
     "key": "skin_risk_tool",
@@ -1180,6 +1198,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "A service wide plan for reducing restrictive practice: monitoring, post incident debrief, review of every restriction and governance oversight.",
   "fields": [
    {
     "key": "restrictions_in_use",
@@ -1239,6 +1258,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "How your service responds to a collapse, finds and follows DNACPR and ReSPECT plans, and involves people, families and clinicians in decisions.",
   "fields": [
    {
     "key": "emergency_response_lead",
@@ -1308,6 +1328,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "Non-drug options, PRN psychotropic use, structured reviews and safe reduction plans, written around how your service supports people.",
   "fields": [
    {
     "key": "psychotropic_oversight_lead",
@@ -1377,6 +1398,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "A care home visiting policy built on Regulation 9A: supporting visits and trips out, with proportionate precautions, consent and best interests.",
   "fields": [
    {
     "key": "visiting_hours_model",
@@ -1441,6 +1463,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 4900,
   "taster": false,
   "bundles": [],
+  "description": "An outings policy for your service: risk assessment, transport, money, consent and capacity, and emergencies when staff accompany people out.",
   "fields": [
    {
     "key": "outing_types_supported",
@@ -1510,6 +1533,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "A care home activities policy covering meaningful occupation, community links, outings, and cultural and spiritual needs, written around how your home runs its programme.",
   "fields": [
    {
     "key": "activities_lead_role",
@@ -1574,6 +1598,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "A care home CCTV policy template written for you, covering cameras, sensor mats and door alarms: privacy, consent, best interests and data use.",
   "fields": [
    {
     "key": "technology_in_use",
@@ -1643,6 +1668,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "Continence assessment, products, catheter care, UTI prevention and dignity, with clear roles for care staff and nurses, written for your service.",
   "fields": [
    {
     "key": "continence_assessment",
@@ -1707,6 +1733,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "Spotting early signs of decline, sepsis awareness, escalation to GP, 111 or 999 and handover to paramedics, written around how your service really works.",
   "fields": [
    {
     "key": "observation_tool",
@@ -1771,6 +1798,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "Glucose monitoring, hypoglycaemia and hyperglycaemia response, insulin support, diet and foot checks, written for your service and the people you support.",
   "fields": [
    {
     "key": "monitoring_method",
@@ -1835,6 +1863,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "A driving for work policy for your service: licence and insurance checks, travel between visits, own car use, carrying people, bad weather and accidents.",
   "fields": [
    {
     "key": "vehicles_used",
@@ -1904,6 +1933,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "An extra care housing policy for your scheme: call system testing, who answers and how fast, communal area safety, night cover and emergency response.",
   "fields": [
    {
     "key": "call_system_type",
@@ -1973,6 +2003,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 4900,
   "taster": false,
   "bundles": [],
+  "description": "Spotting and responding to hate crime, mate crime and cuckooing in people's own homes: signs, reporting, police and safeguarding links, written around your service.",
   "fields": [
    {
     "key": "signs_staff_watch",
@@ -2037,6 +2068,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 4900,
   "taster": false,
   "bundles": [],
+  "description": "How your service spots who needs an independent advocate, refers them, and works with advocates so people are heard, written around your own local arrangements.",
   "fields": [
    {
     "key": "care_act_advocacy_provider",
@@ -2096,6 +2128,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "Live-in carer room and facilities, rota patterns, handover between carers and placement review, written around how your live-in service really runs.",
   "fields": [
    {
     "key": "carer_room_standard",
@@ -2165,6 +2198,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "Delegating clinical tasks to care staff, competence sign off and nurse accountability, written around the procedures your service really carries out.",
   "fields": [
    {
     "key": "delegated_procedures",
@@ -2234,6 +2268,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "An oral health policy covering mouth care assessment, daily cleaning, denture care and dental access, written around how your service supports each person.",
   "fields": [
    {
     "key": "oral_assessment_timing",
@@ -2303,6 +2338,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "An oxygen safety at home policy for your service: smoking, emollient creams, heaters and candles, fire risk checks and referral to the fire and rescue service.",
   "fields": [
    {
     "key": "oxygen_visit_support",
@@ -2372,6 +2408,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "How your service supports adult relationships and sexual expression, assesses consent and capacity, sets staff boundaries and acts on abuse concerns, written around your own practice.",
   "fields": [
    {
     "key": "relationship_support_approach",
@@ -2436,6 +2473,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "Keeping the building safe for residents: hot water outlets, window openings, hot surfaces and access hazards, checked, recorded and acted on by named roles.",
   "fields": [
    {
     "key": "water_temp_checks",
@@ -2505,6 +2543,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 4900,
   "taster": false,
   "bundles": [],
+  "description": "Respite care policy for planning, assessing and delivering short breaks at home, with arrangements for the person and the family carer, written around how your service works.",
   "fields": [
    {
     "key": "respite_types_offered",
@@ -2569,6 +2608,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "How your service respects privacy, relationships and intimacy, handles consent and capacity, and acts on safeguarding concerns, written around your own practice.",
   "fields": [
    {
     "key": "private_space_arrangements",
@@ -2638,6 +2678,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "A Shared Lives policy for your scheme: how carers are recruited and approved, how people are matched, how households are reviewed, and how an arrangement ends.",
   "fields": [
    {
     "key": "carer_recruitment_routes",
@@ -2707,6 +2748,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "How each shift hands over, what must be passed on about risks and changes, how it is recorded, and how concerns are escalated between shifts.",
   "fields": [
    {
     "key": "handover_times",
@@ -2771,6 +2813,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "Reporting sickness, cover, sick pay, return to work meetings, long-term absence and illness that could reach residents, set out in your own sickness absence arrangements.",
   "fields": [
    {
     "key": "absence_reporting_method",
@@ -2830,6 +2873,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 4900,
   "taster": false,
   "bundles": [],
+  "description": "Where people may smoke or vape, how designated rooms are marked, and how oxygen, cylinders and fire risk are managed and recorded in your home.",
   "fields": [
    {
     "key": "smoking_arrangement",
@@ -2899,6 +2943,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "How your staff use personal phones, social media and cameras around the people you support, including consent for photographs, online conduct and what happens when rules are broken.",
   "fields": [
    {
     "key": "personal_phone_rule",
@@ -2958,6 +3003,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "A tenancy and care separation policy for your service: how housing and care stay distinct, who does what, and how people keep choice over where and with whom they live.",
   "fields": [
    {
     "key": "housing_provider_arrangement",
@@ -3027,6 +3073,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 4900,
   "taster": false,
   "bundles": [],
+  "description": "A key holding policy for your service: entering people's homes, key control, handling belongings, searches and respecting privacy in a tenancy.",
   "fields": [
    {
     "key": "entry_without_invitation",
@@ -3096,6 +3143,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "Wound assessment, dressing choice, infection signs, tissue viability referral and record keeping, written for your care home, nursing or dementia service.",
   "fields": [
    {
     "key": "wound_care_provider",
@@ -3160,6 +3208,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "Children's home admissions policy covering matching to the statement of purpose, emergency admissions, placement plans with the placing authority, induction and moving on.",
   "fields": [
    {
     "key": "admission_decision_maker",
@@ -3224,6 +3273,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "An anti-bullying policy written for your children's home: what counts as bullying, prevention, how allegations are dealt with, support for children and review.",
   "fields": [
    {
     "key": "bullying_definition",
@@ -3293,6 +3343,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 7900,
   "taster": false,
   "bundles": [],
+  "description": "A behaviour management policy for children's homes: positive behaviour, permitted measures, prohibited sanctions, restraint, and 24 hour, 48 hour and 5 day recording.",
   "fields": [
    {
     "key": "positive_behaviour_approach",
@@ -3362,6 +3413,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "A children's home record keeping policy written for you, covering case record content, signed entries, secure storage, retention, transfer on closure and children's access.",
   "fields": [
    {
     "key": "case_record_format",
@@ -3431,6 +3483,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "A county lines policy for children's homes: recognising, assessing and responding to sexual and criminal exploitation, linked to missing episodes, police and notification.",
   "fields": [
    {
     "key": "exploitation_lead_role",
@@ -3500,6 +3553,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "How your children's home supports family time and contact, private phone, post and email access, and how any restriction is agreed with the placing authority.",
   "fields": [
    {
     "key": "private_meeting_space",
@@ -3564,6 +3618,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "How your children's home supports learning and school attendance, works with schools and the placing authority, and helps excluded children and post-16 young people move forward.",
   "fields": [
    {
     "key": "education_lead_role",
@@ -3633,6 +3688,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "A peer on peer abuse policy for children's homes: responding to harmful sexual behaviour between children, risk assessment, support for all involved and reporting.",
   "fields": [
    {
     "key": "safeguarding_lead_role",
@@ -3697,6 +3753,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "A health and wellbeing policy written for your children's home: GP and dentist registration, appointments, specialist services, emotional wellbeing and non-NHS care.",
   "fields": [
    {
     "key": "gp_dentist_registration",
@@ -3761,6 +3818,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "How your children's home prepares each young person to move on, return home or live independently, with a leaving care policy agreed with the placing authority.",
   "fields": [
    {
     "key": "transition_planning_start",
@@ -3825,6 +3883,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "A missing from care policy written for your children's home: prevention, staff roles, search, police and placing authority contact, return and review.",
   "fields": [
    {
     "key": "absence_prevention_steps",
@@ -3894,6 +3953,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "Who your children's home tells, how fast and in what form when a serious event, admission, discharge or conviction occurs, with written confirmation built in.",
   "fields": [
    {
     "key": "notification_decision_maker",
@@ -3963,6 +4023,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "An online safety policy for children's homes: phone and internet access, filtering, supervision by age, social media, and responding to online harm.",
   "fields": [
    {
     "key": "device_access_arrangements",
@@ -4027,6 +4088,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "How your children's home gathers and acts on children's views, keeps its children's guide current and makes independent advocacy available, written around your own arrangements.",
   "fields": [
    {
     "key": "advocacy_provider",
@@ -4096,6 +4158,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 4900,
   "taster": false,
   "bundles": [],
+  "description": "A children's home pocket money policy written for you: weekly amounts, savings, personal money records and the limits on reparation payments.",
   "fields": [
    {
     "key": "pocket_money_amounts",
@@ -4165,6 +4228,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "A children's home privacy policy written for you, covering bedroom privacy, room searches, access to areas and the conditions for CCTV and other monitoring devices.",
   "fields": [
    {
     "key": "privacy_arrangements",
@@ -4234,6 +4298,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "A procedure for your children's home covering regulation 44 monthly visits, the regulation 45 six monthly quality of care review, reports, distribution and follow up.",
   "fields": [
    {
     "key": "independent_person_arrangement",
@@ -4303,6 +4368,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 7900,
   "taster": false,
   "bundles": [],
+  "description": "Protecting children from abuse and neglect, with a clear allegations procedure: how staff report, who you refer to and what is recorded, written around your children's home.",
   "fields": [
    {
     "key": "safeguarding_lead_roles",
@@ -4367,6 +4433,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "A bereavement support policy written for your hospice: support before and after a death, follow up contact, children, referral and care for your own staff.",
   "fields": [
    {
     "key": "bereavement_lead",
@@ -4436,6 +4503,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "A care after death policy covering verification of expected death, last offices, notifying family and the coroner, and property, written around how your hospice works.",
   "fields": [
    {
     "key": "verifying_roles",
@@ -4505,6 +4573,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "A care of the dying person policy written for your hospice: recognising dying, an individual plan for the last days, comfort, hydration, family and review.",
   "fields": [
    {
     "key": "recognising_dying_process",
@@ -4569,6 +4638,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "Chaperones for intimate examinations and care in your hospice: offering, who can act, consent, recording and concerns, written around your own arrangements.",
   "fields": [
    {
     "key": "chaperone_offer_point",
@@ -4638,6 +4708,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "Tube feeding for people in your hospice: who may feed and flush, competence sign off, aspiration and blockage risks, and emergency actions, built around your own arrangements.",
   "fields": [
    {
     "key": "tube_types_supported",
@@ -4707,6 +4778,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "Seizure care plans, rescue medicines, recording, emergency triggers and staff training, in an epilepsy policy written for your hospice and the people you care for.",
   "fields": [
    {
     "key": "seizure_care_plans",
@@ -4776,6 +4848,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "A long term ventilation policy for your hospice: ventilator checks, alarms, backup power, emergency and power failure plans, and staff competence for people using ventilation.",
   "fields": [
    {
     "key": "ventilation_types_supported",
@@ -4845,6 +4918,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "A medical gases policy for your hospice: oxygen cylinder storage, signage, handling, flow rates, fire risk, training and oxygen use for people in the unit or at home.",
   "fields": [
    {
     "key": "gases_in_use",
@@ -4914,6 +4988,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 7900,
   "taster": false,
   "bundles": [],
+  "description": "How your hospice protects children and young people who are patients, siblings or visitors, from concerns to referral, recorded and written around your own arrangements.",
   "fields": [
    {
     "key": "child_safeguarding_lead",
@@ -4973,6 +5048,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "A ligature risk policy written for your hospice: self-harm and suicide risk assessment, environmental ligature checks, observation, response and review, set out in your own words.",
   "fields": [
    {
     "key": "risk_identification",
@@ -5042,6 +5118,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "Safe use and disposal of sharps, safer devices, inoculation injury response and clinical waste handling, written for your hospice.",
   "fields": [
    {
     "key": "sharps_devices_used",
@@ -5111,6 +5188,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 7900,
   "taster": false,
   "bundles": [],
+  "description": "Syringe driver set up, monitoring and anticipatory medicines, from prescribing and stock to competence and 24 hour access, written for your hospice.",
   "fields": [
    {
     "key": "driver_models_used",
@@ -5175,6 +5253,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 7900,
   "taster": false,
   "bundles": [],
+  "description": "Tracheostomy care for people in your hospice: competence, suction, tube changes, emergency management, equipment and spares, written around your own arrangements.",
   "fields": [
    {
     "key": "trache_competence_levels",
@@ -5244,6 +5323,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "A volunteers policy written for your hospice: how volunteers are recruited, checked, inducted, trained, supervised and supported, and where their role ends.",
   "fields": [
    {
     "key": "volunteer_roles",
@@ -5308,6 +5388,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 5900,
   "taster": false,
   "bundles": [],
+  "description": "A self administration of medicines policy for secure and custody settings: in possession risk assessment, supervised doses, secure storage and diversion checks.",
   "fields": [
    {
     "key": "possession_risk_assessment",
@@ -5377,6 +5458,7 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "price_pence": 6900,
   "taster": false,
   "bundles": [],
+  "description": "How your service seeks consent for forensic examination, collects, seals, stores and hands over evidence, and records every step, written around your own arrangements.",
   "fields": [
    {
     "key": "examination_model",

@@ -8,6 +8,7 @@ import { missingPolicies } from '../services/analytics/missing-policies'
 import { writePolicy } from '../services/policy-writer/write-policy'
 import { POLICY_PRODUCTS_SEED, POLICY_BUNDLES_SEED, SHARED_INTAKE_FIELDS, COMPLETE_LIBRARY_KEY } from '../data/policy-products-seed'
 import { PRODUCT_REGULATIONS } from '../data/policy-product-regulations'
+import { GENERATED_PACKS, PACK_MEMBERSHIP } from '../data/policy-packs-generated'
 import { questionsForReferenceKeys, regulationsWithoutQuestions } from '../data/policy-intake-questions'
 import { verifyPaidPolicyDraft, verificationFailures, isWorthRewriting } from '../services/policy-writer/verify-policy'
 import { buildPolicyProvenance, runPolicyChallenge, buildPolicyMarkup } from '../services/policy-writer/policy-provenance'
@@ -149,7 +150,8 @@ platformPolicyGapsRouter.post('/catalogue/seed', async (_req: Request, res: Resp
         reference_keys: PRODUCT_REGULATIONS[p.slug] ?? [],
         // Every product is part of the Complete Library; appended here so the seed
         // file never has to repeat it.
-        bundle_keys: [...(p.bundles ?? []), COMPLETE_LIBRARY_KEY],
+        // plus the generated packs (children's homes, hospice, home care ...) this policy belongs to
+        bundle_keys: [...new Set([...(p.bundles ?? []), ...Object.entries(PACK_MEMBERSHIP).filter(([, slugs]) => slugs.includes(p.slug)).map(([k]) => k), COMPLETE_LIBRARY_KEY])],
         intake_fields: [...SHARED_INTAKE_FIELDS, ...(p.fields ?? [])],
         sort_order: i,
       }
@@ -160,14 +162,14 @@ platformPolicyGapsRouter.post('/catalogue/seed', async (_req: Request, res: Resp
       })
       upserted++
     }
-    for (const b of POLICY_BUNDLES_SEED) {
+    for (const b of [...POLICY_BUNDLES_SEED, ...GENERATED_PACKS]) {
       await (prisma as any).policyBundle.upsert({
         where: { key: b.key },
         update: { title: b.title, description: b.description, price_pence: b.price_pence, renewal_cap_pence: b.renewal_cap_pence ?? null },
         create: { id: randomUUID(), key: b.key, title: b.title, description: b.description, price_pence: b.price_pence, renewal_cap_pence: b.renewal_cap_pence ?? null },
       })
     }
-    ok(res, { products: upserted, bundles: POLICY_BUNDLES_SEED.length, unmapped_products: unmapped })
+    ok(res, { products: upserted, bundles: POLICY_BUNDLES_SEED.length + GENERATED_PACKS.length, unmapped_products: unmapped })
   } catch (e: any) {
     err(res, 'SEED_FAILED', e?.message ?? 'could not seed the catalogue', 500)
   }

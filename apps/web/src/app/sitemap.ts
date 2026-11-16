@@ -113,10 +113,18 @@ async function policyPages(): Promise<Entry[]> {
   try {
     const res = await fetch(`${API_URL}/public/policy-shop/catalogue`, { next: { revalidate: 3600 } })
     if (res.ok) {
-      const products = ((await res.json())?.data?.products ?? []) as Array<{ slug?: string }>
-      return products
-        .filter((p): p is { slug: string } => !!p.slug)
-        .map((p) => ({ url: `/care-policies/${p.slug}`, changeFrequency: 'monthly' as const, priority: 0.7 }))
+      const data = (await res.json())?.data ?? {}
+      const products = (data.products ?? []) as Array<{ slug?: string }>
+      const bundles = (data.bundles ?? []) as Array<{ key?: string }>
+      return [
+        ...products
+          .filter((p): p is { slug: string } => !!p.slug)
+          .map((p) => ({ url: `/care-policies/${p.slug}`, changeFrequency: 'monthly' as const, priority: 0.7 })),
+        // The policy packs have a page each (/care-policies/packs/<key>); the Complete Library has none.
+        ...bundles
+          .filter((b): b is { key: string } => !!b.key && b.key !== 'complete-library')
+          .map((b) => ({ url: `/care-policies/packs/${b.key}`, changeFrequency: 'monthly' as const, priority: 0.7 })),
+      ]
     }
   } catch {
     // fall through

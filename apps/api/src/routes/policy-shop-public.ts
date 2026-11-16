@@ -88,6 +88,36 @@ policyShopPublicRouter.get('/catalogue', async (_req: Request, res: Response) =>
   }
 })
 
+// GET /bundles/:key: one pack with the policies in it, for the pack page. `individual_total_pence` is what the
+// members cost bought one by one, so the page can state the real saving.
+policyShopPublicRouter.get('/bundles/:key', async (req: Request, res: Response) => {
+  try {
+    const key = String(req.params.key)
+    const bundle = await (prisma as any).policyBundle.findFirst({
+      where: { key, active: true }, select: { key: true, title: true, description: true, price_pence: true },
+    })
+    if (!bundle) return err(res, 'NOT_FOUND', 'That pack was not found', 404)
+    const rows = await (prisma as any).policyProduct.findMany({
+      where: { active: true, bundle_keys: { has: key } },
+      select: { slug: true, title: true, price_pence: true, taster: true, description: true, image_key: true, reference_keys: true },
+      orderBy: [{ sort_order: 'asc' }, { title: 'asc' }],
+    })
+    const products = rows.map(({ image_key, reference_keys, ...p }: any) => {
+      const regs = (reference_keys ?? []).length
+      return { ...p, description: p.description ?? '', meta: regs ? `${regs} regulation${regs === 1 ? '' : 's'}` : '',
+        image_url: shopImageUrl(image_key), services: POLICY_PRODUCT_SERVICES[p.slug] ?? [] }
+    })
+    const individual_total_pence = rows.reduce((n: number, p: any) => n + (p.price_pence ?? 0), 0)
+    const others = await (prisma as any).policyBundle.findMany({
+      where: { active: true, key: { notIn: [key, 'complete-library'] } }, select: { key: true, title: true, price_pence: true, description: true },
+      orderBy: [{ price_pence: 'asc' }],
+    })
+    ok(res, { bundle, products, individual_total_pence, other_packs: others })
+  } catch (e: any) {
+    err(res, 'BUNDLE_FAILED', e?.message ?? 'could not read the pack', 500)
+  }
+})
+
 // GET /products/:slug — one product, its intake demo and the regulations analysed.
 policyShopPublicRouter.get('/products/:slug', async (req: Request, res: Response) => {
   try {

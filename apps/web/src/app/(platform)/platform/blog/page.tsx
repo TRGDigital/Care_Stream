@@ -921,6 +921,7 @@ function PostForm({
 import { AUDIT_PAGE_NAME_SLUG } from '@/lib/audit-pages/slugs'
 const AUDIT_PAGES = Object.entries(AUDIT_PAGE_NAME_SLUG).map(([name, slug]) => ({ name, slug }))
 import { POLICY_KEYWORD_PAGES } from '@/lib/policy-keyword-slugs'
+import { POLICY_PACK_PAGES } from '@/lib/policy-pack-slugs'
 
 const FOOTER_GROUPS = ['Product', 'Trust & Legal', 'Company', 'Get Started'] as const
 
@@ -928,7 +929,7 @@ const FOOTER_GROUPS = ['Product', 'Trust & Legal', 'Company', 'Get Started'] as 
 // from the generic "Pages" tab so nothing is duplicated across tabs).
 const MAIN_SITE_PATHS_SET = new Set(['/', '/about', '/how-it-works', '/pricing', '/policy-gap-detection', '/staff-training', '/hr-policies', '/cqc-compliance', '/business-continuity', '/who-we-serve', '/who-its-for', '/cqc-report-chat', '/contact', '/demo', '/faq', '/trust', '/case-studies'])
 // Policies and audits each get their own tab so their pages can be tracked on their own.
-const POLICY_PATHS_SET = new Set(['/care-policies', ...POLICY_KEYWORD_PAGES.map(p => `/care-policies/${p.slug}`)])
+const POLICY_PATHS_SET = new Set(['/care-policies', ...POLICY_KEYWORD_PAGES.map(p => `/care-policies/${p.slug}`), ...POLICY_PACK_PAGES.map(p => `/care-policies/packs/${p.key}`)])
 const AUDIT_PATHS_SET = new Set(['/care-audits', ...AUDIT_PAGES.map(a => `/care-audits/${a.slug}`)])
 
 const DEFAULT_PAGES: Array<{ path: string; title: string; footer_group?: string; footer_label?: string }> = [
@@ -945,6 +946,7 @@ const DEFAULT_PAGES: Array<{ path: string; title: string; footer_group?: string;
   { path: '/care-audits',           title: 'Care Audits',               footer_group: 'Product',      footer_label: 'Care Audits' },
   ...AUDIT_PAGES.map(a => ({ path: `/care-audits/${a.slug}`, title: `Audit: ${a.name}` })),
   ...POLICY_KEYWORD_PAGES.map(p => ({ path: `/care-policies/${p.slug}`, title: `Policy: ${p.title}` })),
+  ...POLICY_PACK_PAGES.map(p => ({ path: `/care-policies/packs/${p.key}`, title: `Pack: ${p.title}` })),
   { path: '/cqc-staff-questions',   title: 'CQC Staff Questions',       footer_group: 'Product',      footer_label: 'CQC Staff Questions' },
   { path: '/business-continuity',   title: 'Business Continuity',       footer_group: 'Product',      footer_label: 'Business Continuity' },
   { path: '/cqc-report-chat',       title: 'CQC Report Chat',           footer_group: 'Product',      footer_label: 'CQC Report Chat' },
@@ -2448,7 +2450,7 @@ export default function BlogPage() {
             {!page.id && (
               <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-600">not in CMS</span>
             )}
-            {POLICY_KEYWORD_PAGES.some(p => page.path === `/care-policies/${p.slug}`) && !page.content_updated && (
+            {(POLICY_KEYWORD_PAGES.some(p => page.path === `/care-policies/${p.slug}`) || POLICY_PACK_PAGES.some(p => page.path === `/care-policies/packs/${p.key}`)) && !page.content_updated && (
               <span className="rounded-full bg-yellow-300 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-yellow-950"
                     title="A new policy page (waves 1 to 3, built 16 Nov 2026). The tag goes when you click Mark updated.">New</span>
             )}
@@ -2491,7 +2493,7 @@ export default function BlogPage() {
             )}
             {page.content_updated ? 'Updated' : 'Mark updated'}
           </button>
-          {(AUDIT_PAGES.some(a => page.path === `/care-audits/${a.slug}`) || POLICY_KEYWORD_PAGES.some(p => page.path === `/care-policies/${p.slug}`)) && (
+          {(AUDIT_PAGES.some(a => page.path === `/care-audits/${a.slug}`) || POLICY_KEYWORD_PAGES.some(p => page.path === `/care-policies/${p.slug}`) || POLICY_PACK_PAGES.some(p => page.path === `/care-policies/packs/${p.key}`)) && (
             <a href={`${page.path}?yellowkws`} target="_blank" rel="noopener noreferrer"
                title="Open the live page with the target keywords highlighted and counted"
                className="rounded-md border border-yellow-300 bg-yellow-100 px-2 py-1 text-xs font-semibold text-yellow-900 hover:bg-yellow-200">Keywords</a>
@@ -2918,7 +2920,7 @@ export default function BlogPage() {
             {perfReady === false && (
               <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">Search Console numbers are not connected yet: the page_performance table has not been created, or the nightly pull has not run.</p>
             )}
-            <p className="text-sm text-neutral-mid">{policyPagesList.filter(p => p.path !== '/care-policies' && !p.content_updated).length} new policy pages still to review (yellow New tag; it clears when you click Mark updated). The paid policy pages at /care-policies, tracked on their own. Click Keywords to see the researched keywords on each page. Pages are added here as each wave is built.</p>
+            <p className="text-sm text-neutral-mid">{policyPagesList.filter(p => p.path !== '/care-policies' && !p.content_updated).length} new policy and pack pages still to review (yellow New tag; it clears when you click Mark updated). The paid policy pages at /care-policies, tracked on their own. Click Keywords to see the researched keywords on each page. Pages are added here as each wave is built.</p>
             {loading ? (
               <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-neutral-mid" /></div>
             ) : (

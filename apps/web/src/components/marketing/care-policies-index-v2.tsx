@@ -271,10 +271,23 @@ export function CarePoliciesIndexV2({ s, products, bundles }: {
                   console). Title and price stay the shop's. A pack added to the shop later
                   goes after the theme's six, with the shop's own description. */}
               {[...bundles].sort((a, b) => rank(a.key) - rank(b.key)).map(p => (
-                <PackLink className="pcpack" pack={p} key={p.key}>
-                  <b>{p.title}</b><em>{money(p.price_pence)}</em>
-                  <span>{s(`pack.${p.key}.desc`) || p.description}</span>
-                </PackLink>
+                p.key === 'complete-library' ? (
+                  <PackLink className="pcpack" pack={p} key={p.key}>
+                    <b>{p.title}</b><em>{money(p.price_pence)}</em>
+                    <span>{s(`pack.${p.key}.desc`) || p.description}</span>
+                  </PackLink>
+                ) : (
+                <div className="pcpack" key={p.key}>
+                  <Link href={`/care-policies/packs/${p.key}`} style={{ color: 'inherit', textDecoration: 'none', display: 'block' }}>
+                    <b>{p.title}</b><em>{money(p.price_pence)}</em>
+                    <span>{s(`pack.${p.key}.desc`) || p.description}</span>
+                  </Link>
+                  <div style={{ display: 'flex', gap: 14, marginTop: 14, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <Link href={`/care-policies/packs/${p.key}`} style={{ fontWeight: 650, fontSize: '.88rem', color: 'var(--accent)' }}>See what is inside</Link>
+                    <PackLink className="svbtn ghost" pack={p}>Buy the pack</PackLink>
+                  </div>
+                </div>
+                )
               ))}
             </div>
           )}

@@ -35,6 +35,7 @@ import { trainingMatrixRouter } from './routes/training-matrix'
 import { workforceRouter } from './routes/workforce'
 import { cqcQuestionsRouter } from './routes/cqc-staff-questions'
 import { auditsRouter } from './routes/audits'
+import { freeTourRouter } from './routes/free-tour'
 import { featureRequestsRouter } from './routes/feature-requests'
 import { supportRequestsRouter } from './routes/support-requests'
 import { publicBlogRouter } from './routes/blog-public'
@@ -240,6 +241,7 @@ app.use('/training-matrix', trainingMatrixRouter)
 app.use('/workforce', workforceRouter)
 app.use('/cqc-questions', cqcQuestionsRouter)
 app.use('/audits', auditsRouter)
+app.use('/free-tour', freeTourRouter)
 app.use('/feature-requests', featureRequestsRouter)
 app.use('/support-requests', supportRequestsRouter)
 app.use('/agent-actions', agentActionsRouter)

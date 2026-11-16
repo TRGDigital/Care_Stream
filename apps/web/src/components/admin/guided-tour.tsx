@@ -19,8 +19,8 @@ import { Building2, CheckCircle2, FileText, GraduationCap, KeyRound, ScanSearch,
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 
-type TourStep = {
-  key:    'policies' | 'organisation' | 'gaps' | 'training' | 'onboarding' | 'staff' | 'licences'
+export type TourStep = {
+  key:    'policies' | 'organisation' | 'gaps' | 'training' | 'onboarding' | 'staff' | 'licences' | (string & {})
   title:  string
   desc:   string
   how:    string[]     // "how it works" bullets — the extra detail Len asked for
@@ -117,7 +117,7 @@ const TRAINING_ONLY_STEPS: TourStep[] = [
 ]
 
 // Which steps are genuinely done, from real data (mirrors the setup checklist).
-type DoneMap = Partial<Record<TourStep['key'], boolean>>
+export type DoneMap = Partial<Record<TourStep['key'], boolean>>
 
 function ImageSlot({ step, className }: { step: TourStep; className?: string }) {
   const [failed, setFailed] = useState(false)
@@ -135,14 +135,25 @@ function ImageSlot({ step, className }: { step: TourStep; className?: string }) 
   )
 }
 
-export function GuidedTour({ token, tenantId, tier, openSignal }: {
+// A free account's tour (audits, training or policies). Supplies its own steps and real-data ticks; the host decides
+// when it opens (first login, or the "Take the tour" chooser), so none of the automatic first-visit logic runs.
+export type CustomTour = {
+  tourId:   string
+  steps:    TourStep[]
+  loadDone: () => Promise<DoneMap>
+  onStart?:  () => void
+  onFinish?: () => void
+}
+
+export function GuidedTour({ token, tenantId, tier, openSignal, custom }: {
   token:      string
   tenantId:   string
   tier?:      string
   openSignal: number   // increment to (re)open the tour from the sidebar button
+  custom?:    CustomTour
 }) {
   const trainingOnly = tier === 'training_only'
-  const steps = trainingOnly ? TRAINING_ONLY_STEPS : FULL_STEPS
+  const steps = custom ? custom.steps : trainingOnly ? TRAINING_ONLY_STEPS : FULL_STEPS
   const seenKey = `cs-tour-seen-${tenantId}`
 
   const [open, setOpen] = useState(false)
@@ -163,11 +174,12 @@ export function GuidedTour({ token, tenantId, tier, openSignal }: {
 
   // Real-data ticks, fetched when the tour opens. Failures leave a step
   // unticked rather than erroring — the tour must never block.
-  const doneKey = `admin-tour-done-${tenantId}-${trainingOnly ? 'to' : 'full'}`
+  const doneKey = `admin-tour-done-${tenantId}-${custom ? custom.tourId : trainingOnly ? 'to' : 'full'}`
   const saveDone = (d: DoneMap) => { setDone(d); persistentCache.set(doneKey, d) }
   const loadDone = useCallback(() => {
     const cachedDone = persistentCache.get<DoneMap>(doneKey)
     if (cachedDone) setDone(cachedDone)
+    if (custom) { custom.loadDone().then(saveDone).catch(() => {}); return }
     const api = createApiClient(token)
     if (trainingOnly) {
       Promise.allSettled([api.users.list(), api.training.licences()]).then(([u, l]) => {
@@ -203,12 +215,13 @@ export function GuidedTour({ token, tenantId, tier, openSignal }: {
         staff:      u.status === 'fulfilled' && ((u.value as any)?.users ?? []).filter((x: any) => x?.is_active !== false).length > 1,
       })
     })
-  }, [token, trainingOnly, doneKey])
+  }, [token, trainingOnly, doneKey, custom])
 
   function openTour() {
     setI(0)
     loadDone()
     setOpen(true)
+    custom?.onStart?.()
     try { localStorage.setItem(seenKey, '1') } catch { /* ignore */ }
   }
 
@@ -219,6 +232,7 @@ export function GuidedTour({ token, tenantId, tier, openSignal }: {
   // started yet (no policies for full accounts, no staff for training-only) so
   // established accounts never get surprised by a tour.
   useEffect(() => {
+    if (custom) return   // a free tour is opened by its host, never automatically from here
     if (!token || !tenantId) return
     try { if (localStorage.getItem(seenKey) === '1') return } catch { return }
     const api = createApiClient(token)
@@ -295,7 +309,7 @@ export function GuidedTour({ token, tenantId, tier, openSignal }: {
         <Link href={step.href} onClick={() => setOpen(false)} className="rounded-btn border border-teal px-3 py-1.5 text-xs font-semibold text-teal hover:bg-teal-light/30">{step.cta}</Link>
         {i < steps.length - 1
           ? <button onClick={() => setI(i + 1)} className="rounded-btn bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark">Next</button>
-          : <button onClick={() => setOpen(false)} className="rounded-btn bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark">Finish</button>}
+          : <button onClick={() => { custom?.onFinish?.(); setOpen(false) }} className="rounded-btn bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark">Finish</button>}
       </div>
     </div>
   )

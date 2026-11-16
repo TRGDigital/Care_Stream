@@ -565,6 +565,11 @@ export function createApiClient(token: string) {
       dismiss: (key: string) => apiFetch<{ dismissed: boolean }>(`/suggestions/${encodeURIComponent(key)}/dismiss`, token, { method: 'POST' }),
     },
 
+    freeTour: {
+      get: () => apiFetch<FreeTourState>('/free-tour', token),
+      event: (event: 'started' | 'finished' | 'auto_opened', tour?: string) =>
+        apiFetch<unknown>('/free-tour/event', token, { method: 'POST', body: JSON.stringify({ event, tour }) }),
+    },
     billing: {
       // Free accounts: report an Upgrade click for the funnel (never blocks the checkout).
       freeEvent: (source: string) => apiFetch<{ recorded: boolean }>('/billing/free-event', token, { method: 'POST', body: JSON.stringify({ source }) }),
@@ -1668,6 +1673,7 @@ export interface TenantIntake {
   regulations_not_yet_derived: string[]
 }
 
+export type FreeTourState = { track: 'audits' | 'training' | 'policies' | null; tours: Record<string, { started_at?: string; finished_at?: string }>; auto_opened: boolean; is_new: boolean }
 export type AuditBoardState = 'done' | 'in_progress' | 'overdue' | 'due' | 'missed' | 'not_done' | 'none'
 export type AuditBoardData = {
   month: string; months: string[]

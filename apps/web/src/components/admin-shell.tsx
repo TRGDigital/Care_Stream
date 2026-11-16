@@ -16,6 +16,7 @@ import {
   PanelLeftClose, PanelLeftOpen, Languages, Compass, Award,
 } from 'lucide-react'
 import { GuidedTour } from '@/components/admin/guided-tour'
+import { FreeTourHost } from '@/components/admin/free-tours'
 import { SuggestionsButton } from '@/components/admin/suggestions-drawer'
 import { createApiClient } from '@/lib/api-client'
 import { FreeLockOverlay } from '@/components/admin/free-tier'
@@ -311,7 +312,10 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
               self-serve tiers: care suggestions read the full-platform signals (gaps,
               audits, queries, onboarding) that neither tier has, so they have nothing
               to say. */}
-          {!selfServe && session?.accessToken && (session.user as any)?.tenantId && (
+          {freeTier && session?.accessToken && (session.user as any)?.tenantId && (
+        <FreeTourHost token={session.accessToken} tenantId={(session.user as any).tenantId} openSignal={tourSignal} />
+      )}
+      {!selfServe && session?.accessToken && (session.user as any)?.tenantId && (
             <SuggestionsButton token={session.accessToken} tenantId={(session.user as any).tenantId} />
           )}
           </div>
@@ -479,7 +483,7 @@ function SidebarContent({ pathname, trainingOnly, policiesOnly, freeTier, selfSe
 
       {/* Back to portal */}
       <div className="border-t border-white/10 px-3 py-3">
-        {!selfServe && (
+        {(!selfServe || freeTier) && (
           <button
             onClick={() => { setTip(null); onTour?.() }}
             {...tipProps('Take the tour')}

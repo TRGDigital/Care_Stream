@@ -1980,6 +1980,18 @@ export default function BlogPage() {
   const token = usePlatformAuth()
   const [tab,  setTab]  = useState<'posts' | 'authors' | 'pages' | 'mainsite' | 'policies' | 'audits' | 'training' | 'features' | 'collections' | 'queue' | 'altTags' | 'userCases' | 'careSettings' | 'services'>('posts')
 
+  // Search Console numbers per page (pushed nightly), shown on the page rows
+  type PagePerf = { path: string; impressions: number; clicks: number; position: number; prev_impressions: number; prev_clicks: number; prev_position: number; top_queries: Array<{ query: string; impressions: number; clicks: number }>; period_end: string }
+  const [gscPerf, setGscPerf] = useState<Record<string, PagePerf>>({})
+  const [perfReady, setPerfReady] = useState<boolean | null>(null)
+  useEffect(() => {
+    if (!token) return
+    fetch(`${API_URL}/admin/page-performance`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(j => { setGscPerf(Object.fromEntries((j.data?.pages ?? []).map((p: PagePerf) => [p.path, p]))); setPerfReady(!!j.data?.ready) })
+      .catch(() => setPerfReady(false))
+  }, [token])
+
   // Posts state
   const [posts,     setPosts]     = useState<BlogPost[]>([])
   const [showPost,  setShowPost]  = useState(false)
@@ -2438,6 +2450,21 @@ export default function BlogPage() {
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          {(() => {
+            const pf = gscPerf[page.path]
+            if (!pf) return perfReady ? <span className="w-44 text-right text-[11px] text-neutral-mid" title="No Search Console impressions for this page in the last 28 days">no impressions yet</span> : null
+            const d = pf.impressions - pf.prev_impressions
+            return (
+              <div className="w-44 text-right text-[11px] leading-tight text-neutral-mid"
+                   title={`Last 28 days to ${String(pf.period_end).slice(0, 10)}. Top queries: ${(pf.top_queries ?? []).slice(0, 5).map(q => `${q.query} (${q.impressions})`).join('; ') || 'none yet'}`}>
+                <span className="font-semibold text-neutral-dark">{pf.impressions.toLocaleString()}</span> impr
+                {' · '}<span className="font-semibold text-neutral-dark">{pf.clicks}</span> clicks
+                {' · '}pos <span className="font-semibold text-neutral-dark">{pf.position ? pf.position.toFixed(1) : '-'}</span>
+                <br />
+                <span className={d > 0 ? 'text-green-600' : d < 0 ? 'text-red-500' : ''}>{d > 0 ? '+' : ''}{d} impr vs previous 28 days</span>
+              </div>
+            )
+          })()}
           <button
             type="button"
             onClick={() => toggleContentUpdated(page)}
@@ -2859,6 +2886,9 @@ export default function BlogPage() {
         {/* ── Main site pages tab ─────────────────────────────────────────── */}
         {tab === 'mainsite' && (
           <div className="space-y-4">
+            {perfReady === false && (
+              <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">Search Console numbers are not connected yet: the page_performance table has not been created, or the nightly pull has not run.</p>
+            )}
             <p className="text-sm text-neutral-mid">
               Your primary marketing pages (<code className="rounded bg-neutral-light px-1 py-0.5 text-xs">/about</code>, <code className="rounded bg-neutral-light px-1 py-0.5 text-xs">/how-it-works</code> and more). Click Edit to change the SEO, add an editable content section and FAQs — these appear on the live page. Use <strong>Mark updated</strong> to track your progress.
             </p>
@@ -2875,6 +2905,9 @@ export default function BlogPage() {
         {/* ── policies tab ── */}
         {tab === 'policies' && (
           <div className="space-y-4">
+            {perfReady === false && (
+              <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">Search Console numbers are not connected yet: the page_performance table has not been created, or the nightly pull has not run.</p>
+            )}
             <p className="text-sm text-neutral-mid">The paid policy pages at /care-policies, tracked on their own. Click Keywords to see the researched keywords on each page. Pages are added here as each wave is built.</p>
             {loading ? (
               <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-neutral-mid" /></div>
@@ -2889,6 +2922,9 @@ export default function BlogPage() {
         {/* ── audits tab ── */}
         {tab === 'audits' && (
           <div className="space-y-4">
+            {perfReady === false && (
+              <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">Search Console numbers are not connected yet: the page_performance table has not been created, or the nightly pull has not run.</p>
+            )}
             <p className="text-sm text-neutral-mid">The care audit pages at /care-audits, tracked on their own. Click Keywords to see the keywords used on each page.</p>
             {loading ? (
               <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-neutral-mid" /></div>
@@ -2903,6 +2939,9 @@ export default function BlogPage() {
         {/* ── Training pages tab ───────────────────────────────────────────── */}
         {tab === 'training' && (
           <div className="space-y-4">
+            {perfReady === false && (
+              <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">Search Console numbers are not connected yet: the page_performance table has not been created, or the nightly pull has not run.</p>
+            )}
             <p className="text-sm text-neutral-mid">
               The per-module training pages at <code className="rounded bg-neutral-light px-1 py-0.5 text-xs">/staff-training/&hellip;</code>. Click Edit to change the SEO, add an editable content section and FAQs — these appear on the live page below the module content.
             </p>

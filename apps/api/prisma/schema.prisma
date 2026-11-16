@@ -3216,3 +3216,20 @@ model PageEvent {
   @@index([url, created_at])
   @@map("page_events")
 }
+
+// Search Console numbers per page, pushed nightly by ~/traffic-reports/page_performance.py and read by the
+// Platform → Blog tabs (policies, audits, training, main site). One row per path; the last 28 days and the 28 before.
+model PagePerformance {
+  path             String   @id
+  impressions      Int      @default(0)
+  clicks           Int      @default(0)
+  position         Float    @default(0)
+  prev_impressions Int      @default(0)
+  prev_clicks      Int      @default(0)
+  prev_position    Float    @default(0)
+  top_queries      Json     @default("[]")
+  period_end       DateTime @db.Date
+  updated_at       DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("page_performance")
+}

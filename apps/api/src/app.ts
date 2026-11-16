@@ -47,6 +47,7 @@ import { servicePagesAdminRouter } from './routes/service-pages-admin'
 import { publicTrainingRouter } from './routes/training-public'
 import { publicOffersRouter } from './routes/offers-public'
 import { shopExtrasRouter } from './routes/shop-extras'
+import { pagePerformanceIngestRouter, pagePerformanceAdminRouter } from './routes/page-performance'
 import { publicTrainingReviewRouter } from './routes/training-review-public'
 import { publicPolicyReviewRouter } from './routes/policy-review-public'
 import { publicPagesRouter } from './routes/pages-public'
@@ -141,6 +142,7 @@ app.use('/admin/standard-training', standardTrainingRouter)
 app.use('/admin/standard-programmes', standardProgrammesRouter)
 app.use('/admin/policy-seeds', policySeedsRouter)
 app.use('/admin/audit-seeds', auditSeedsAdminRouter)
+app.use('/admin/page-performance', pagePerformanceAdminRouter)
 app.use('/admin/platform-glossary', platformGlossaryRouter)
 app.use('/admin/translation-changes', platformTranslationChangesRouter)
 app.use('/admin/policy-gaps', platformPolicyGapsRouter)
@@ -177,6 +179,7 @@ app.use('/public/policy-shop', policyShopPublicRouter)
 app.use('/public/training', publicTrainingRouter)
 app.use('/public/offers', publicOffersRouter)
 app.use('/public/shop', shopExtrasRouter)
+app.use('/public/page-performance', pagePerformanceIngestRouter)
 
 // Public external review/sign-off of standard modules (password-gated), no auth. BEFORE requireAuth.
 app.use('/public/training-review', publicTrainingReviewRouter)

@@ -920,12 +920,13 @@ function PostForm({
 
 import { AUDIT_PAGE_NAME_SLUG } from '@/lib/audit-pages/slugs'
 const AUDIT_PAGES = Object.entries(AUDIT_PAGE_NAME_SLUG).map(([name, slug]) => ({ name, slug }))
+import { POLICY_KEYWORD_PAGES } from '@/lib/policy-keyword-slugs'
 
 const FOOTER_GROUPS = ['Product', 'Trust & Legal', 'Company', 'Get Started'] as const
 
 // Primary marketing pages surfaced under the "Main site pages" tab (and excluded
 // from the generic "Pages" tab so nothing is duplicated across tabs).
-const MAIN_SITE_PATHS_SET = new Set(['/', '/about', '/how-it-works', '/pricing', '/care-policies', '/policy-gap-detection', '/staff-training', '/hr-policies', '/care-audits', ...AUDIT_PAGES.map(a => `/care-audits/${a.slug}`), '/cqc-compliance', '/business-continuity', '/who-we-serve', '/who-its-for', '/cqc-report-chat', '/contact', '/demo', '/faq', '/trust', '/case-studies'])
+const MAIN_SITE_PATHS_SET = new Set(['/', '/about', '/how-it-works', '/pricing', '/care-policies', '/policy-gap-detection', '/staff-training', '/hr-policies', '/care-audits', ...AUDIT_PAGES.map(a => `/care-audits/${a.slug}`), ...POLICY_KEYWORD_PAGES.map(p => `/care-policies/${p.slug}`), '/cqc-compliance', '/business-continuity', '/who-we-serve', '/who-its-for', '/cqc-report-chat', '/contact', '/demo', '/faq', '/trust', '/case-studies'])
 
 const DEFAULT_PAGES: Array<{ path: string; title: string; footer_group?: string; footer_label?: string }> = [
   { path: '/',                      title: 'Home' },
@@ -940,6 +941,7 @@ const DEFAULT_PAGES: Array<{ path: string; title: string; footer_group?: string;
   { path: '/hr-policies',           title: 'HR Policies',               footer_group: 'Product',      footer_label: 'HR Policies' },
   { path: '/care-audits',           title: 'Care Audits',               footer_group: 'Product',      footer_label: 'Care Audits' },
   ...AUDIT_PAGES.map(a => ({ path: `/care-audits/${a.slug}`, title: `Audit: ${a.name}` })),
+  ...POLICY_KEYWORD_PAGES.map(p => ({ path: `/care-policies/${p.slug}`, title: `Policy: ${p.title}` })),
   { path: '/cqc-staff-questions',   title: 'CQC Staff Questions',       footer_group: 'Product',      footer_label: 'CQC Staff Questions' },
   { path: '/business-continuity',   title: 'Business Continuity',       footer_group: 'Product',      footer_label: 'Business Continuity' },
   { path: '/cqc-report-chat',       title: 'CQC Report Chat',           footer_group: 'Product',      footer_label: 'CQC Report Chat' },
@@ -2445,7 +2447,7 @@ export default function BlogPage() {
             )}
             {page.content_updated ? 'Updated' : 'Mark updated'}
           </button>
-          {AUDIT_PAGES.some(a => page.path === `/care-audits/${a.slug}`) && (
+          {(AUDIT_PAGES.some(a => page.path === `/care-audits/${a.slug}`) || POLICY_KEYWORD_PAGES.some(p => page.path === `/care-policies/${p.slug}`)) && (
             <a href={`${page.path}?yellowkws`} target="_blank" rel="noopener noreferrer"
                title="Open the live page with the target keywords highlighted and counted"
                className="rounded-md border border-yellow-300 bg-yellow-100 px-2 py-1 text-xs font-semibold text-yellow-900 hover:bg-yellow-200">Keywords</a>

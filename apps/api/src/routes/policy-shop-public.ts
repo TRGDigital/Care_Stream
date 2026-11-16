@@ -6,6 +6,7 @@
 // library via expected_policy_titles so the page can never drift from what the
 // verification gate actually checks.
 
+import { POLICY_PRODUCT_SERVICES } from '../data/policy-product-services'
 import { Router, Request, Response } from 'express'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
@@ -77,6 +78,7 @@ policyShopPublicRouter.get('/catalogue', async (_req: Request, res: Response) =>
         ...p,
         description: p.description ?? '',
         meta: regs ? `${regs} regulation${regs === 1 ? '' : 's'}` : '',
+        services: POLICY_PRODUCT_SERVICES[p.slug] ?? [],
         image_url: shopImageUrl(image_key),
       }
     })

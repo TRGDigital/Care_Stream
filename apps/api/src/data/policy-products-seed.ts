@@ -13,6 +13,8 @@
 // Every product also belongs to the Complete Library; the seed route appends that key
 // automatically so this file never needs to repeat it.
 
+import { GENERATED_POLICY_PRODUCTS } from './policy-products-generated'
+
 export type IntakeField = { key: string; label: string; help?: string; shared?: boolean }
 
 export const SHARED_INTAKE_FIELDS: IntakeField[] = [
@@ -25,7 +27,7 @@ export const SHARED_INTAKE_FIELDS: IntakeField[] = [
   { key: 'nominated_individual', label: 'Nominated individual', shared: true },
 ]
 
-type SeedProduct = {
+export type SeedProduct = {
   slug: string; title: string; description: string; price_pence: number
   taster?: boolean; bundles?: string[]; fields?: IntakeField[]
 }
@@ -82,7 +84,7 @@ export const POLICY_BUNDLES_SEED = [
   },
 ]
 
-export const POLICY_PRODUCTS_SEED: SeedProduct[] = [
+const BASE_POLICY_PRODUCTS_SEED: SeedProduct[] = [
   // ── Flagships, £79 ──────────────────────────────────────────────────────────
   { slug: 'safeguarding-adults', title: 'Safeguarding Adults Policy', price_pence: 7900, bundles: [STARTER],
     description: 'Recognising, responding to and reporting abuse and neglect, aligned to the Care Act 2014 and your local authority procedures.',
@@ -283,3 +285,6 @@ export const POLICY_PRODUCTS_SEED: SeedProduct[] = [
   { slug: 'accessible-information', title: 'Accessible Information Standard Policy', price_pence: 3900, taster: true,
     description: 'Identifying, recording and meeting communication needs under the Accessible Information Standard. Our trial policy: same personalisation, same human review, same updates.' },
 ]
+
+// The original 66 plus the policies added by service wave (generated from the drafted specs: tools/policy_merge.py).
+export const POLICY_PRODUCTS_SEED: SeedProduct[] = [...BASE_POLICY_PRODUCTS_SEED, ...GENERATED_POLICY_PRODUCTS]

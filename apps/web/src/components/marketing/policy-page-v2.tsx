@@ -8,6 +8,7 @@ import { ScrollSequence } from './scroll-sequence'
 import { HeroGallery, Mini, type GallerySlide } from './hero-gallery'
 import { REVIEWS } from '@/lib/reviews'
 import { POLICY_CRO } from '@/lib/policy-cro'
+import { POLICY_KEYWORDS } from '@/lib/policy-keywords'
 import { PaymentLogos } from './payment-logos'
 import { InvoiceRequest } from './shop-upsells'
 import { ExitQuestion } from './shop-questions'
@@ -145,8 +146,9 @@ const COMPARE_COST = ['£39 to £79 per policy, one-off', '£250 to £995 for th
 
 /** The six questions the theme asks, and the current page asks, in the order both show them.
  *  One list, so the page and its FAQPage structured data cannot say different things. */
-export function policyFaqs(p: { title: string }, elements: number, starter: PolicyBundle | undefined,
+export function policyFaqs(p: { title: string; slug?: string }, elements: number, starter: PolicyBundle | undefined,
                            catalogueCount: number) {
+  const extra = (p.slug && POLICY_KEYWORDS[p.slug]?.extra_faqs) || []
   return [
     { question: 'What exactly do I receive?',
       answer: `A complete ${p.title} written for your organisation, in your dashboard and as a print-ready PDF on your own letterhead. It names your service, your registration details and your leads, because you gave us them.` },
@@ -160,6 +162,7 @@ export function policyFaqs(p: { title: string }, elements: number, starter: Poli
       answer: 'No, and deliberately so: we stand behind every word we approve. If something needs changing, tell us and we amend and re-verify it, so it always remains a document we can both defend to an inspector.' },
     { question: 'What if I need more than one policy?',
       answer: `Most services do. The Statutory Starter Pack covers the twenty policies every CQC-registered service is expected to hold${starter ? ` for ${money(starter.price_pence)}` : ''}, and the Complete Policy Library covers all ${catalogueCount}.` },
+    ...extra,
   ]
 }
 

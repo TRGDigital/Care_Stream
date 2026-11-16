@@ -5,6 +5,7 @@
 // be something the policy actually covers: check it against the policy's required elements.
 
 import { GDPR_POLICY_INTENTS } from './policy-cro-gdpr'
+import { GENERATED_POLICY_CRO } from './policy-cro-generated'
 
 export interface PolicyMoment { title: string; body: string }
 /** A version of the top of the page for one Google Ads ad group or sitelink (?intent=<key>), so
@@ -14,7 +15,7 @@ export interface PolicyIntent { tag: string; headline: string; sub: string; mome
 /** story: the founder's "Our story" in his words for this policy page. Only shown where Len has approved it. */
 export interface PolicyCro { whoFor?: string; benefits?: [string, string]; moments?: PolicyMoment[]; story?: string; intents?: Record<string, PolicyIntent> }
 
-export const POLICY_CRO: Record<string, PolicyCro> = {
+const MANUAL_POLICY_CRO: Record<string, PolicyCro> = {
   'data-protection-gdpr': {
     // Ad group and sitelink versions, written in the keyword tool (scripts/gdpr_plan.py).
     intents: GDPR_POLICY_INTENTS,
@@ -48,3 +49,6 @@ export const POLICY_CRO: Record<string, PolicyCro> = {
     ],
   },
 }
+
+/** Written copy by hand (above) plus the copy for the policies added by service wave. Hand written copy wins. */
+export const POLICY_CRO: Record<string, PolicyCro> = { ...GENERATED_POLICY_CRO, ...MANUAL_POLICY_CRO }

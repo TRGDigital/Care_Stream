@@ -12,6 +12,8 @@ import { JsonLd } from '@/components/json-ld'
 import { PolicyIntakeGame } from '@/components/marketing/policy-intake-game'
 import { HomeFaq, type Faq } from '@/components/marketing/home-faq'
 import { isV2 } from '@/lib/v2-rollout'
+import { POLICY_KEYWORDS } from '@/lib/policy-keywords'
+import { KeywordHighlighter } from '@/components/marketing/keyword-highlighter'
 
 // The policy shop's product page — ONE page perfected before rollout (Len, 11 Sept).
 // Structure mirrors /staff-training/[slug]: hero with the intake demo as the focal
@@ -101,9 +103,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // pageMetadata adds the self-canonical on the www host (without it Google reported these as
   // "Duplicate without user-selected canonical") and treats the title as absolute, so it carries
   // the brand suffix exactly once.
+  // A policy added with researched keywords carries its own search title and description (keyword first);
+  // the others use the standard form.
+  const kw = POLICY_KEYWORDS[slug]
   return pageMetadata(`/care-policies/${slug}`, {
-    title: policyPageTitle(data.product.title),
-    description: `A ${data.product.title} written for your organisation, checked by a person, and kept updated when the law changes. ${price}, delivered within 2 working days of your details.`,
+    title: kw ? `${kw.seo_title} | CareStreamAI` : policyPageTitle(data.product.title),
+    description: kw?.meta_description ?? `A ${data.product.title} written for your organisation, checked by a person, and kept updated when the law changes. ${price}, delivered within 2 working days of your details.`,
   })
 }
 
@@ -156,6 +161,10 @@ export default async function PolicyProductPage(
           catalogueCount={count}
           intent={typeof sp?.intent === 'string' ? sp.intent : undefined}
         />
+        {/* ?yellowkws (platform admins only): the researched keywords, highlighted and counted. */}
+        {POLICY_KEYWORDS[slug] && (
+          <KeywordHighlighter slug={slug} keywords={{ primary: POLICY_KEYWORDS[slug].primary.keyword, secondary: POLICY_KEYWORDS[slug].secondary.map(k => k.keyword) }} />
+        )}
       </>
     )
   }

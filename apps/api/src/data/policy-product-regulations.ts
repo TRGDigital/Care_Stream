@@ -1,3 +1,4 @@
+import { GENERATED_PRODUCT_REGULATIONS } from './policy-product-regulations-generated'
 // Which regulations each sold policy must satisfy.
 //
 // This mapping is the grounding for the whole paid-policy pipeline, and its absence was a
@@ -20,7 +21,7 @@
 // regulation-13 alone, missing the Care Act 2014 that the policy is actually built on.
 // Where a policy genuinely sits across several instruments, all of them are listed.
 
-export const PRODUCT_REGULATIONS: Record<string, string[]> = {
+const BASE_PRODUCT_REGULATIONS: Record<string, string[]> = {
   'accessible-information':      ['accessible-information-standard', 'equality-act-2010'],
   'anti-bribery-gifts':          ['bribery-act-2010'],
   'asbestos-management':         ['control-of-asbestos-regulations-2012', 'health-and-safety-at-work-act'],
@@ -91,3 +92,6 @@ export const PRODUCT_REGULATIONS: Record<string, string[]> = {
   'whistleblowing':              ['public-interest-disclosure-act', 'employment-rights-act', 'freedom-to-speak-up', 'whistleblowing'],
   'working-time':                ['working-time-regulations-1998'],
 }
+
+/** The original products' regulations plus those of the policies added by service wave. */
+export const PRODUCT_REGULATIONS: Record<string, string[]> = { ...BASE_PRODUCT_REGULATIONS, ...GENERATED_PRODUCT_REGULATIONS }

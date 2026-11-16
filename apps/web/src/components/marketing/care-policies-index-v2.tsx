@@ -27,6 +27,8 @@ export interface PolicyProduct {
   /** Optional so the page still renders against an API that predates them (web and api
    *  deploy in parallel). */
   description?: string; meta?: string; image_url?: string | null
+  /** The care services the policy is written for; empty means it applies to every service. */
+  services?: string[]
 }
 export interface PolicyBundle {
   key: string; title: string; description: string; price_pence: number

@@ -87,7 +87,7 @@ platformPolicyImagesRouter.get('/', async (_req: Request, res: Response) => {
 
 // ─── GET /models — which image models this account can use (names only) ─────────
 platformPolicyImagesRouter.get('/models', async (_req: Request, res: Response) => {
-  try { ok(res, { models: await listImageModels(), in_use: process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1' }) }
+  try { ok(res, { models: await listImageModels(), in_use: process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2' }) }
   catch (e: any) { err(res, 'MODELS_FAILED', e?.message ?? 'could not list models', 500) }
 })
 

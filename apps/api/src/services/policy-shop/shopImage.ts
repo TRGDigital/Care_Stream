@@ -149,7 +149,7 @@ function castFor(key: string): string {
 
 // The image model. gpt-image-1 stopped resolving for this account on 2026-11-16 ("model does not exist"),
 // so it is set by OPENAI_IMAGE_MODEL and checked from Platform → Policy images → /models.
-const IMAGE_MODEL = () => process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1'
+const IMAGE_MODEL = () => process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2'
 
 /** The image and DALL-E models this OpenAI account can use right now (names only). */
 export async function listImageModels(): Promise<string[]> {

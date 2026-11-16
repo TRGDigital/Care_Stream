@@ -143,13 +143,14 @@ cronRouter.get('/training-renewals', (req, res) =>
   job('training-renewals', req, res, () => sendRenewalReminders()))
 
 // Weekly training reminders: every Monday, each staff member with training outstanding gets one email and each admin gets one digest.
-// Query options (cron secret only): tenant=<id>, preview_to=<email> (sends only there, nothing logged, needs tenant), dry=1 (sends nothing).
+// Query options (cron secret only): tenant=<id>, preview_to=<email> (sends only there, nothing logged, needs tenant; limit=N staff or users=id1,id2 to choose who, one digest), dry=1 (sends nothing).
 cronRouter.get('/training-weekly-reminders', async (req: Request, res: Response) =>
   job('training-weekly-reminders', req, res, () => runWeeklyTrainingReminders({
     tenantId: typeof req.query.tenant === 'string' ? req.query.tenant : undefined,
     previewTo: typeof req.query.preview_to === 'string' ? req.query.preview_to : undefined,
     dryRun: req.query.dry === '1',
     previewStaffLimit: Number(req.query.limit) || undefined,
+    previewUserIds: typeof req.query.users === 'string' ? req.query.users.split(',').map(x => x.trim()).filter(Boolean) : undefined,
   })))
 
 // Daily: email Enterprise admins a digest of staff credentials (DBS, right to

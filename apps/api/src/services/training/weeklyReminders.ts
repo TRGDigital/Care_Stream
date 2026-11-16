@@ -17,7 +17,7 @@ const INBOUND_DOMAIN = process.env.INBOUND_EMAIL_DOMAIN ?? 'carestreamai.co.uk'
 const MAGIC_TTL_MS = 7 * 24 * 3600_000
 const LOG_WINDOW_DAYS = 120
 
-export type RunOptions = { now?: Date; tenantId?: string; previewTo?: string; dryRun?: boolean; previewStaffLimit?: number }
+export type RunOptions = { now?: Date; tenantId?: string; previewTo?: string; dryRun?: boolean; previewStaffLimit?: number; previewUserIds?: string[] }
 export type RunResult = {
   mode: 'live' | 'preview' | 'dry'; week_start: string; tenants: number
   staff_sent: number; digests_sent: number; skipped: number; failed: number; paused: number
@@ -75,7 +75,7 @@ export async function runWeeklyTrainingReminders(opts: RunOptions = {}): Promise
   const base = siteUrl()
   const facts = await loadFacts(opts.tenantId, now)
   res.tenants = facts.length
-  let staffShown = 0
+  let staffShown = 0, digestsShown = 0
 
   const deliver = async (kind: 'staff_weekly' | 'admin_digest', plan: StaffPlan | DigestPlan, tenantId: string): Promise<void> => {
     const isStaff = kind === 'staff_weekly'
@@ -103,11 +103,16 @@ export async function runWeeklyTrainingReminders(opts: RunOptions = {}): Promise
     res.skipped += plan.skipped.length
     res.paused += plan.skipped.filter((s) => /^paused/.test(s.reason)).length
     for (const s of plan.staff) {
+      // a preview can be narrowed to named people (?users=id1,id2); otherwise it shows the first few
+      if (preview && opts.previewUserIds?.length && !opts.previewUserIds.includes(s.user_id)) { res.skipped++; continue }
       if (preview && staffShown >= (opts.previewStaffLimit ?? 3)) { res.skipped++; continue }
       staffShown++
       try { await deliver('staff_weekly', s, t.id) } catch (e: any) { res.failed++; res.errors.push(`staff ${s.to}: ${String(e?.message ?? e).slice(0, 120)}`) }
     }
     for (const d of plan.digests) {
+      // a preview shows one digest, not one per administrator
+      if (preview && digestsShown >= 1) { res.skipped++; continue }
+      digestsShown++
       try { await deliver('admin_digest', d, t.id) } catch (e: any) { res.failed++; res.errors.push(`digest ${d.to}: ${String(e?.message ?? e).slice(0, 120)}`) }
     }
   }

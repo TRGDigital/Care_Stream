@@ -16,7 +16,7 @@ import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { requirePlatformAdmin } from '../middleware/auth'
 import {
-  generatePolicyHeroImage, generateRegulationImage, shopImageUrl, listImageModels,
+  generatePolicyHeroImage, generateRegulationImage, generateFeatureImage, shopImageUrl, listImageModels,
 } from '../services/policy-shop/shopImage'
 import { titleVariants } from './policy-shop-public'
 
@@ -108,6 +108,21 @@ platformPolicyImagesRouter.post('/regulation/:key', async (req: Request, res: Re
   try {
     const key = await generateRegulationImage(reference_key)
     ok(res, { reference_key, image_url: shopImageUrl(key) })
+  } catch (e: any) {
+    err(res, 'GENERATE_FAILED', e?.message ?? 'could not generate that image', 500)
+  }
+})
+
+// ─── POST /feature/:key — generate one locked-feature image { title, summary } (portrait, not stored on a record) ───
+// The caller saves the returned file into apps/web/public/images/locked/<key>.webp.
+platformPolicyImagesRouter.post('/feature/:key', async (req: Request, res: Response) => {
+  const key = String(req.params.key)
+  const title = String(req.body?.title ?? '').trim()
+  const summary = String(req.body?.summary ?? '').trim()
+  if (!title || !summary) return err(res, 'VALIDATION_ERROR', 'title and summary are required', 400)
+  try {
+    const stored = await generateFeatureImage(key, title, summary)
+    ok(res, { key, image_url: shopImageUrl(stored) })
   } catch (e: any) {
     err(res, 'GENERATE_FAILED', e?.message ?? 'could not generate that image', 500)
   }

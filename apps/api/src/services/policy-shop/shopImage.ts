@@ -159,11 +159,11 @@ export async function listImageModels(): Promise<string[]> {
   return ids.sort()
 }
 
-async function generate(template: string, topic: string, context: string, key: string): Promise<string> {
+async function generate(template: string, topic: string, context: string, key: string, size: '1536x1024' | '1024x1536' = SIZE): Promise<string> {
   const result = await openai.images.generate({
     model:  IMAGE_MODEL(),
     prompt: build(template, topic, context) + castFor(key),
-    size:   SIZE,
+    size,
   })
   recordCostUsd(IMAGE_MODEL(), imageCostUsd((result as any).usage))
   const b64 = result.data?.[0]?.b64_json
@@ -220,4 +220,26 @@ export function shopImageUrl(key?: string | null): string | null {
   if (!key) return null
   const file = key.split('/').pop()
   return file ? `/public/policy-shop/image/${file}` : null
+}
+
+// ─── Locked feature art (the upgrade overlay a free account sees when it clicks a locked sidebar item) ─────────────
+// Same flat teal style as the policy and training art. A tall portrait frame, because it sits beside the text.
+export const FEATURE_PROMPT_USAGE = 'feature_lock_image_generation'
+export const DEFAULT_FEATURE_PROMPT = `Create an illustration for one feature of a care management app used by UK care providers.
+Feature: "{{topic}}".
+What it does: {{summary}}
+
+Illustrate what the feature is FOR IN PRACTICE: one ordinary, believable moment in a UK care setting where a care manager or member of staff benefits from it. Never illustrate the words in its name, and never use a symbol to stand for the idea.
+
+Do NOT include: screens showing readable text, dashboards with lettering, scales of justice, gavels, anatomical diagrams, brains, lightbulbs, floating or disembodied body parts, thought bubbles, tick or cross marks, shields, padlocks, or any other icon used as a metaphor. People are shown doing something real together in a real room.
+Nothing distressing, coercive or punitive. Everyone in the scene is treated with dignity.
+
+Style: flat modern vector illustration, soft rounded shapes, warm and friendly, gentle teal and warm-neutral palette on a light warm-neutral background, plenty of clean negative space. A calm UK care setting.
+The illustration fills the ENTIRE frame, edge to edge. There is no caption, no title bar, no label strip, no banner, no border and no margin of flat colour along any edge. Any lettering anywhere in the image is a failure: no text, no numbers, no logos, no signs.
+Do NOT show realistic human faces: keep any people stylised, simple and abstract.
+Compose for a TALL portrait frame: keep the subject centred and away from the left and right edges, which are cropped.
+Professional and reassuring.`
+
+export async function generateFeatureImage(featureKey: string, title: string, summary: string): Promise<string> {
+  return generate(await promptFor(FEATURE_PROMPT_USAGE, DEFAULT_FEATURE_PROMPT), title, summary, featureKey, '1024x1536')
 }

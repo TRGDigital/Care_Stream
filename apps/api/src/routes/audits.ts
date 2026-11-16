@@ -22,7 +22,7 @@ import { generateActionPlanForRun, getActionPlan, addAction, updateAction, delet
 import { sendActionPlanStaffEmail, sendActionPlanExternalEmail } from '../services/email/outbound'
 import {
   SECTIONS_WITH_ALL_QUESTIONS, shapeRunTemplate, visibleQuestions, isAnswered, outcomeFor, answerText, isYesNo, isNarrative,
-  actionsDeadlineLabel,
+  actionsDeadlineLabel, QUESTION_TYPES, normaliseSettings,
 } from '../lib/audit-questions'
 import {
   parseEditorPayload, saveTemplateStructure, createTemplateFromPayload, copyTemplate, templateForEditor,
@@ -1646,6 +1646,174 @@ auditsRouter.post('/templates/:id/hidden', requireAdmin, async (req: Request, re
   if (!tpl) return err(res, 'NOT_FOUND', 'Only built-in audits can be hidden. Delete your own audits instead.', 404)
   await setBuiltInHidden(tenantId, id, req.body?.hidden !== false)
   ok(res, { hidden: req.body?.hidden !== false })
+})
+
+// ─── Preview, and small edits on every plan ──────────────────────────────────
+//
+// Any audit can be previewed read-only. Any plan can make SMALL edits to a built-in audit: reword
+// questions, change a question's type, and add up to SMALL_EDIT_MAX_ADDED questions. The first edit
+// makes the home its own version of the built-in audit (the built-in is hidden from this home's lists
+// and the version records which audit it came from in audit_templates.source_template_id); later edits
+// go to that version. Plans with has_custom_audits (Enterprise) have no cap, as they have the builder.
+// Anything bigger on the other plans (more added questions, removing or reordering questions, new
+// sections, new audits) needs the builder, which is the Enterprise feature.
+//
+// source_template_id is read and written with raw SQL, so these endpoints are the only code that depends
+// on the column; until it exists they answer "being set up" and the rest of audits is unaffected.
+const SMALL_EDIT_MAX_ADDED = 2
+
+const flatQuestions = (t: any): any[] => (t?.sections ?? []).flatMap((s: any) => s.questions)
+
+async function columnReady(): Promise<boolean> {
+  try { await (prisma as any).$queryRawUnsafe('select source_template_id from audit_templates limit 1'); return true }
+  catch { return false }
+}
+async function ownVersionOf(tenantId: string, builtInId: string): Promise<string | null> {
+  try {
+    const rows: any[] = await (prisma as any).$queryRawUnsafe('select id from audit_templates where tenant_id = $1 and source_template_id = $2 and is_active = true limit 1', tenantId, builtInId)
+    return rows[0]?.id ?? null
+  } catch { return null }
+}
+async function sourceOfVersion(templateId: string): Promise<string | null> {
+  try {
+    const rows: any[] = await (prisma as any).$queryRawUnsafe('select source_template_id from audit_templates where id = $1', templateId)
+    return rows[0]?.source_template_id ?? null
+  } catch { return null }
+}
+async function isUnlimitedEditor(tenantId: string): Promise<boolean> {
+  try { await checkFeature(tenantId, 'has_custom_audits'); return true } catch { return false }
+}
+
+// GET /audits/templates/:id/preview — the audit as it would be asked, read only, with what this home may change.
+auditsRouter.get('/templates/:id/preview', requireAuditAccess, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const tpl = await readableTemplate(tenantId, String(req.params.id))
+  if (!tpl) return err(res, 'NOT_FOUND', 'Audit not found', 404)
+  // A built-in audit this home has already edited previews as the home's own version.
+  const ownId = !tpl.tenant_id ? await ownVersionOf(tenantId, tpl.id) : null
+  const shownId = ownId ?? tpl.id
+  const template = await templateForEditor(shownId)
+  if (!template) return err(res, 'NOT_FOUND', 'Audit not found', 404)
+  const sourceId = !tpl.tenant_id ? tpl.id : await sourceOfVersion(tpl.id)
+  const source = sourceId ? await templateForEditor(sourceId) : null
+  const unlimited = await isUnlimitedEditor(tenantId)
+  const addedSoFar = source ? Math.max(0, flatQuestions(template).length - flatQuestions(source).length) : null
+  ok(res, {
+    template,
+    editor: {
+      can_edit: req.user!.role === 'admin',
+      unlimited,
+      max_added: unlimited ? null : SMALL_EDIT_MAX_ADDED,
+      added_so_far: addedSoFar,
+      built_in: !template.tenant_id,
+      is_own_version: !!source,
+      ready: await columnReady(),
+    },
+  })
+})
+
+// POST /audits/templates/:id/customise — body { edits: [{ id, text?, type?, settings? }], added: [{ section_id, text, type?, settings? }] }
+auditsRouter.post('/templates/:id/customise', requireAdmin, async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const tpl = await readableTemplate(tenantId, String(req.params.id))
+  if (!tpl) return err(res, 'NOT_FOUND', 'Audit not found', 404)
+  if (!(await columnReady())) return err(res, 'NOT_READY', 'Editing audits is being set up. Please try again shortly.', 503)
+
+  const edits: any[] = Array.isArray(req.body?.edits) ? req.body.edits.slice(0, 200) : []
+  const added: any[] = Array.isArray(req.body?.added) ? req.body.added.slice(0, 50) : []
+  if (!edits.length && !added.length) return err(res, 'VALIDATION_ERROR', 'There is nothing to save.', 400)
+  const unlimited = await isUnlimitedEditor(tenantId)
+
+  // What are we editing, and what did it start from?
+  let targetId = tpl.id
+  let sourceId: string | null = null
+  if (!tpl.tenant_id) { sourceId = tpl.id; targetId = (await ownVersionOf(tenantId, tpl.id)) ?? '' }
+  else { sourceId = await sourceOfVersion(tpl.id) }
+  const source = sourceId ? await templateForEditor(sourceId) : null
+  const target = targetId ? await templateForEditor(targetId) : null
+  // Home built audits (no built-in behind them) are the builder's: only plans with it may edit those.
+  if (tpl.tenant_id && !source && !unlimited) return err(res, 'UPGRADE_REQUIRED', 'Editing an audit you built yourself is an Enterprise feature.', 402)
+
+  const base = target ?? source
+  if (!base) return err(res, 'NOT_FOUND', 'Audit not found', 404)
+  const addedBefore = target && source ? Math.max(0, flatQuestions(target).length - flatQuestions(source).length) : 0
+  if (!unlimited && addedBefore + added.length > SMALL_EDIT_MAX_ADDED) {
+    return err(res, 'UPGRADE_REQUIRED',
+      `You can add up to ${SMALL_EDIT_MAX_ADDED} questions to a built-in audit. Adding more, removing questions or restructuring an audit is an Enterprise feature.`, 402)
+  }
+
+  // Ids the page holds are the built-in's until the home has its own version, so map by position.
+  const posOf = (struct: any) => { const m = new Map<string, [number, number]>(); (struct?.sections ?? []).forEach((s: any, si: number) => s.questions.forEach((q: any, qi: number) => m.set(q.id, [si, qi]))); return m }
+  const srcPos = posOf(source)
+  const secPos = new Map<string, number>((source?.sections ?? []).map((s: any, si: number) => [s.id, si]))
+  const work = JSON.parse(JSON.stringify(base))
+  const qAt = (struct: any, id: string) => { for (const s of struct.sections) for (const q of s.questions) if (q.id === id) return q; return null }
+  const resolveQuestion = (id: string) => {
+    const direct = qAt(work, id); if (direct) return direct
+    const pos = srcPos.get(id); return pos ? work.sections[pos[0]]?.questions[pos[1]] ?? null : null
+  }
+  const resolveSection = (id: string) => {
+    const direct = work.sections.find((s: any) => s.id === id); if (direct) return direct
+    const i = secPos.get(id); return i !== undefined ? work.sections[i] ?? null : null
+  }
+  const validType = (t: any) => (QUESTION_TYPES as readonly string[]).includes(t)
+  let changed = 0
+  for (const e of edits) {
+    const q = resolveQuestion(String(e?.id ?? ''))
+    if (!q) return err(res, 'VALIDATION_ERROR', 'One of the questions could not be found. Reload the audit and try again.', 400)
+    const text = typeof e.text === 'string' ? e.text.trim().slice(0, 1000) : q.text
+    const type = e.type !== undefined ? (validType(e.type) ? e.type : null) : q.type
+    if (!text) return err(res, 'VALIDATION_ERROR', 'A question cannot be empty.', 400)
+    if (!type) return err(res, 'VALIDATION_ERROR', 'That question type is not available.', 400)
+    const settings = (type !== q.type || e.settings !== undefined) ? normaliseSettings(type, e.settings) : q.settings
+    if ((type === 'choice' || type === 'multi_choice') && (settings?.options?.length ?? 0) < 2) return err(res, 'VALIDATION_ERROR', `"${text.slice(0, 60)}" needs at least two options.`, 400)
+    if (text !== q.text || type !== q.type || JSON.stringify(settings ?? null) !== JSON.stringify(q.settings ?? null)) changed++
+    q.text = text; q.type = type; q.settings = settings
+  }
+  let n = 0
+  for (const a of added) {
+    const sec = resolveSection(String(a?.section_id ?? '')) ?? work.sections[0]
+    const text = String(a?.text ?? '').trim().slice(0, 1000)
+    const type = validType(a?.type) ? a.type : 'yes_no_na'
+    if (!text) return err(res, 'VALIDATION_ERROR', 'A new question needs some text.', 400)
+    const settings = normaliseSettings(type, a?.settings)
+    if ((type === 'choice' || type === 'multi_choice') && (settings?.options?.length ?? 0) < 2) return err(res, 'VALIDATION_ERROR', `"${text.slice(0, 60)}" needs at least two options.`, 400)
+    sec.questions.push({ id: null, key: `new-${n++}`, text, type, settings, show_if: null, quality_statement_id: null })
+    changed++
+  }
+  if (!changed) return ok(res, { template: base, unchanged: true })
+
+  const me = await (prisma as any).user.findUnique({ where: { id: req.user!.sub }, select: { name: true } }).catch(() => null)
+  try {
+    // First edit of a built-in audit: make the home's own version and hide the built-in.
+    if (!target && source) {
+      const copyId = await copyTemplate(source.id, tenantId, source.name, me?.name ?? null)
+      if (!copyId) return err(res, 'NOT_FOUND', 'Audit not found', 404)
+      await (prisma as any).$executeRawUnsafe('update audit_templates set source_template_id = $1 where id = $2', source.id, copyId)
+      await setBuiltInHidden(tenantId, source.id, true)
+      targetId = copyId
+      // The copy's questions have new ids; the working copy of the built-in has the built-in's ids, so clear them
+      // (the copy was made from the same structure, in the same order) and let the copy's own ids be filled in.
+      const fresh = await templateForEditor(copyId)
+      work.sections.forEach((s: any, si: number) => s.questions.forEach((q: any, qi: number) => {
+        const orig = fresh?.sections[si]?.questions[qi]
+        if (q.id !== null) { q.id = orig?.id ?? null; q.key = orig?.id ?? q.key }
+      }))
+      work.sections.forEach((s: any, si: number) => { s.id = fresh?.sections[si]?.id ?? null })
+      // "Only ask if" conditions point at the built-in's question ids; point them at the copy's.
+      const idMap = new Map<string, string>()
+      for (const [srcId, [si, qi]] of srcPos) { const f = fresh?.sections[si]?.questions[qi]; if (f) idMap.set(srcId, f.id) }
+      for (const sec of work.sections) for (const q of sec.questions) {
+        if (q.show_if) q.show_if = { ...q.show_if, key: idMap.get(q.show_if.key) ?? q.show_if.key }
+      }
+    }
+    const version = await saveTemplateStructure(targetId, {
+      sections: work.sections,
+      change_note: `Small edit: ${edits.length ? `${edits.length} changed` : ''}${edits.length && added.length ? ', ' : ''}${added.length ? `${added.length} added` : ''}`,
+    }, { changedBy: me?.name ?? null })
+    const after = await templateForEditor(targetId)
+    ok(res, { version, template: after, own_version_id: targetId })
+  } catch (e: any) { err(res, 'SAVE_FAILED', e?.message ?? 'Could not save your changes.', 500) }
 })
 
 // GET /audits/templates/:id/versions — the edit history (newest first), with each version's structure.

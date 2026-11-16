@@ -9,6 +9,7 @@ import { persistentCache } from '@/lib/page-cache'
 import { ClipboardCheck, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, ChevronDown, Info, Wrench, Trash2, GraduationCap, X, ClipboardList, Mail, Loader2, Pencil, Copy, EyeOff, Eye, History, Upload, Lock, Play, Star, Sparkles } from 'lucide-react'
 import { clsx } from 'clsx'
 import { AuditBuilder } from '@/components/admin/audit-builder'
+import { AuditPreview } from '@/components/admin/audit-preview'
 import { AuditVersionsModal } from '@/components/admin/audit-versions-modal'
 import { AuditSchedule } from '@/components/admin/audit-schedule'
 import { AuditInsightsPanel } from '@/components/admin/audit-insights'
@@ -85,6 +86,7 @@ export default function AuditsPage() {
   const [showNew,     setShowNew]     = useState(false)
   const [showBuilder, setShowBuilder] = useState(false)
   const [editingId,   setEditingId]   = useState<string | null>(null)
+  const [previewId,   setPreviewId]   = useState<string | null>(null)
   const [versionsOf,  setVersionsOf]  = useState<any>(null)
   const [copying,     setCopying]     = useState<any>(null)
   const [copyName,    setCopyName]    = useState('')
@@ -287,13 +289,15 @@ export default function AuditsPage() {
                                   className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
                                   <GraduationCap size={12} /> Training{(trainingLinks[t.id]?.length ?? 0) > 0 ? ` (${trainingLinks[t.id].length})` : ''}
                                 </button>
-                                <button onClick={() => canCustomAudits ? (setCopying(t), setCopyName(`${t.name} (our version)`), setCopyHide(true), setCopyError('')) : router.push('/billing')}
-                                  title={canCustomAudits ? 'Copy this audit so you can edit it' : 'Copying and editing audits is an Enterprise feature'}
+                                {t.hidden && (
+                                  <button onClick={() => setHidden(t, false)} title="This audit was hidden earlier. Show it in your lists again."
+                                    className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
+                                    <Eye size={12} /> Show again
+                                  </button>
+                                )}
+                                <button onClick={() => setPreviewId(t.id)} title="See the questions in this audit. You can make small edits from the preview."
                                   className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
-                                  <Copy size={12} /> Copy and edit{!canCustomAudits && <Lock size={11} className="text-amber-600" aria-label="Enterprise feature" />}
-                                </button>
-                                <button onClick={() => setHidden(t, !t.hidden)} className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
-                                  {t.hidden ? <><Eye size={12} /> Show</> : <><EyeOff size={12} /> Hide</>}
+                                  <Eye size={12} /> Preview
                                 </button>
                               </span>
                             )}
@@ -432,6 +436,10 @@ export default function AuditsPage() {
         </div>
       )}
 
+      {previewId && session?.accessToken && (
+        <AuditPreview token={session.accessToken} templateId={previewId} onClose={() => setPreviewId(null)} onSaved={reloadTemplates} />
+      )}
+
       {linking && session?.accessToken && (
         <LinkTrainingModal token={session.accessToken} template={linking} current={trainingLinks[linking.id] ?? []} onClose={() => setLinking(null)} onSaved={refs => setTrainingLinks(cur => ({ ...cur, [linking.id]: refs }))} />
       )}
@@ -449,7 +457,7 @@ export default function AuditsPage() {
                   <p className="text-xs text-neutral-mid capitalize">{t.frequency}{typeof t._count?.sections === 'number' ? ` · ${t._count.sections} section${t._count.sections === 1 ? '' : 's'}` : ''}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <button onClick={() => setEditingId(t.id)} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
+                  <button onClick={() => canCustomAudits ? setEditingId(t.id) : setPreviewId(t.id)} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">
                     <Pencil size={13} /> Edit
                   </button>
                   <button onClick={() => setVersionsOf(t)} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">

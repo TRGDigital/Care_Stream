@@ -1112,6 +1112,9 @@ export function createApiClient(token: string) {
       templateStructure: (id: string) => apiFetch<{ template: AuditEditorTemplate }>(`/audits/templates/${id}/structure`, token),
       updateTemplate: (id: string, data: any) => apiFetch<{ version: number; template: AuditEditorTemplate }>(`/audits/templates/${id}`, token, { method: 'PUT', body: JSON.stringify(data) }),
       copyTemplate: (id: string, data: { name?: string; hide_original?: boolean }) => apiFetch<{ template: AuditEditorTemplate }>(`/audits/templates/${id}/copy`, token, { method: 'POST', body: JSON.stringify(data) }),
+      // Read-only preview of any audit, with what this home may change in it (small edits on every plan).
+      previewTemplate: (id: string) => apiFetch<{ template: AuditEditorTemplate; editor: { can_edit: boolean; unlimited: boolean; max_added: number | null; added_so_far: number | null; built_in: boolean; is_own_version: boolean; ready: boolean } }>(`/audits/templates/${id}/preview`, token),
+      customiseTemplate: (id: string, data: { edits: Array<{ id: string; text?: string; type?: string; settings?: any }>; added: Array<{ section_id: string; text: string; type?: string; settings?: any }> }) => apiFetch<{ version?: number; template: AuditEditorTemplate; own_version_id?: string; unchanged?: boolean }>(`/audits/templates/${id}/customise`, token, { method: 'POST', body: JSON.stringify(data) }),
       setTemplateHidden: (id: string, hidden: boolean) => apiFetch<{ hidden: boolean }>(`/audits/templates/${id}/hidden`, token, { method: 'POST', body: JSON.stringify({ hidden }) }),
       templateVersions: (id: string) => apiFetch<{ versions: Array<{ version: number; changed_by: string | null; change_note: string | null; created_at: string; runs: number; question_count: number; snapshot: any }> }>(`/audits/templates/${id}/versions`, token),
       // Trends: scores over time, repeat failures, one audit in detail, and the group comparison.

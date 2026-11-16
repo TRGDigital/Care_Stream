@@ -148,7 +148,7 @@ export default async function PackPage({ params }: { params: Promise<{ key: stri
           <div className="pccat-in" style={{ maxWidth: 860 }}>
             {info.sections.map(sc => (
               <article key={sc.heading} style={{ marginBottom: 34 }}>
-                <h2 style={{ fontSize: '1.5rem', letterSpacing: '-.025em', margin: '0 0 12px' }}>{sc.heading}</h2>
+                <h2 style={{ fontSize: '1.5rem', letterSpacing: '-.025em', margin: '0 0 12px', maxWidth: 'none' }}>{sc.heading}</h2>
                 {sc.body.split(/\n\s*\n/).map((t, i) => <p key={i} style={{ lineHeight: 1.75, margin: '0 0 12px' }}>{t}</p>)}
               </article>
             ))}

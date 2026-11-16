@@ -941,6 +941,9 @@ export function createPlatformClient(token: string) {
           is_active: boolean; created_at: string; first_login_at: string | null; last_login_at: string | null
         }>; total: number }>(`/tenants/${id}/staff`, token),
 
+      staffProfile: (tenantId: string, userId: string, tab: string, page = 1) =>
+        adminFetch<{ header: any; tab: string; data: any }>(`/tenants/${tenantId}/staff/${userId}/profile/${tab}?page=${page}`, token),
+
       staffRecord: (tenantId: string, userId: string) =>
         adminFetch<StaffRecord>(`/tenants/${tenantId}/staff/${userId}/record`, token),
 

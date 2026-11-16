@@ -5,7 +5,6 @@ import { useParams } from 'next/navigation'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { createPlatformClient, type TenantDetail, type TenantAuditStats, type TenantInsights, type TenantSummary } from '@/lib/platform-api'
 import { PlatformShell } from '@/components/platform-shell'
-import { StaffRecordDrawer } from '@/components/platform/staff-record-drawer'
 import { Button } from '@/components/ui/button'
 import {
   AlertTriangle, ArrowLeft, Building2, Check, CheckCircle2, ChevronDown,
@@ -555,7 +554,6 @@ export default function ClientDetailPage() {
 
   // Staff state
   const [staff,        setStaff]        = useState<any[]>([])
-  const [recordFor,    setRecordFor]    = useState<{ id: string; name: string } | null>(null)
   const [staffLoading, setStaffLoading] = useState(true)
   const [showInactive, setShowInactive] = useState(false)
   const [resetCreds,   setResetCreds]   = useState<{ userId: string; name: string; email: string; password: string } | null>(null)
@@ -1441,7 +1439,7 @@ export default function ClientDetailPage() {
                         >
                           <td className="px-5 py-3">
                             <div className="flex items-center gap-2">
-                              <button type="button" onClick={() => setRecordFor({ id: u.id, name: u.name })} className="font-medium text-teal hover:underline" title="See this person's activity and training">{u.name}</button>
+                              <Link href={`/platform/clients/${id}/staff/${u.id}`} className="font-medium text-teal hover:underline" title="Open their full profile: training, audits, chats, sign ins and more">{u.name}</Link>
                               {u.is_active === false && (
                                 <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
                                   Deactivated
@@ -1608,7 +1606,6 @@ export default function ClientDetailPage() {
           />
         )}
       </div>
-          <StaffRecordDrawer tenantId={id} token={token} user={recordFor} onClose={() => setRecordFor(null)} />
     </PlatformShell>
   )
 }

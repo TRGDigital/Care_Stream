@@ -476,3 +476,10 @@
 }
 /* Pack pages: every heading, paragraph and list runs the full width of the content. */
 .svpage-v2.packpage[data-page="care-policies"] .pccat h2,.svpage-v2.packpage[data-page="care-policies"] .pccat h3,.svpage-v2.packpage[data-page="care-policies"] .pccat .lede3,.svpage-v2.packpage[data-page="care-policies"] .pccat p,.svpage-v2.packpage[data-page="care-policies"] .pccat li,.svpage-v2.packpage[data-page="care-policies"] .pccat article{max-width:none}
+
+/* Pack pages: the hero lines up with the sections beneath it (the site wide hero rule makes it far wider). */
+.svpage-v2.packpage .svhero .svwrap{max-width:1180px!important}
+.svpage-v2.packpage .pcbenefits{list-style:none;margin:20px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.svpage-v2.packpage .pcbenefits li{position:relative;padding:14px 16px 14px 44px;border:1px solid var(--line);border-radius:12px;background:var(--ground);line-height:1.55;font-size:.95rem}
+.svpage-v2.packpage .pcbenefits li::before{content:"";position:absolute;left:16px;top:17px;width:16px;height:16px;border-radius:50%;background:var(--accent-soft,#F3EDFA)}
+.svpage-v2.packpage .pcbenefits li::after{content:"";position:absolute;left:21px;top:21px;width:5px;height:8px;border:solid var(--accent,#7B3FBF);border-width:0 2px 2px 0;transform:rotate(45deg)}

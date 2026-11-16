@@ -63,9 +63,9 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   ],
   "seo_title": "Childrens Home Policies: 18 Policy Pack for England",
   "meta_description": "Childrens home policies for England: 18 policies written for your service, with a 65% saving against buying them one by one. Personalised to your home.",
-  "intro": "Childrens home policies have to match how your home really runs, and an inspector will ask to see them. This children's home policy pack gives you eighteen policies written for your service, covering safeguarding, missing from care, behaviour and restraint, notifications and the Regulation 44 and 45 cycle.\n\nIf you have looked for children's home policy templates or a children's home policy bundle, you will know most are generic downloads. Here each policy is personalised from your answers, and the whole pack costs 65% less than buying the policies one by one. It suits registered managers and responsible individuals in England, regulated by Ofsted.",
+  "intro": "Childrens home policies need to describe how your home really runs, because an inspector will ask to see them. This children's home policy pack gives you eighteen, covering safeguarding, missing from care, behaviour and restraint, notifications and the Regulation 44 and 45 cycle.\n\nMost children's home policy templates are generic downloads that leave you to rewrite them. Here, each policy is written from your answers about your home, and the whole pack costs 65% less than buying the policies one by one. It suits registered managers and responsible individuals in England, regulated by Ofsted.",
   "cro": {
-   "whoFor": "Perfect for registered managers and responsible individuals of children's homes in England who want childrens home policies written for their own service in one pack.",
+   "whoFor": "Perfect for registered managers and responsible individuals of children's homes in England who want policies written around their own service, in one pack.",
    "benefits": [
     "Eighteen policies in one pack, 65% less than buying them separately",
     "Each policy is personalised from your answers about your home, not a generic children's home policy template",
@@ -74,7 +74,7 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
    "moments": [
     {
      "title": "You are preparing for an Ofsted inspection",
-     "body": "Your childrens home policy set sits in one place, each written around your statement of purpose, staffing and local arrangements, so you can show how your home works."
+     "body": "Your policies sit in one place, each written around your statement of purpose, staffing and local arrangements, so you can show how your home works."
     },
     {
      "title": "You are registering a new children's home",
@@ -82,11 +82,11 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
     },
     {
      "title": "A child has gone missing and staff need a clear procedure",
-     "body": "The missing from care policy sets out prevention, search, police contact and return interviews, so staff know their roles before it happens."
+     "body": "The missing from care policy sets out prevention, searching, police contact and return interviews, so staff know their roles before it happens."
     },
     {
      "title": "Your policies were written years ago and no longer match practice",
-     "body": "Replace out of date residential childcare policies with a consistent set, written to your current service and local authority arrangements."
+     "body": "Replace out of date policies with one consistent set, written to your current service and local authority arrangements."
     }
    ],
    "groups": [
@@ -133,15 +133,15 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   "faqs": [
    {
     "question": "What is in the children's home policy pack?",
-    "answer": "Eighteen childrens home policies for England, including safeguarding, missing from care, behaviour management and restraint, online safety, notifications to Ofsted and the Regulation 44 and 45 procedure."
+    "answer": "Eighteen policies for children's homes in England, such as safeguarding, missing from care, behaviour management and restraint, online safety, notifications to Ofsted and the Regulation 44 and 45 procedure."
    },
    {
     "question": "Are the policies personalised, or are they templates?",
-    "answer": "Each policy is personalised. You answer questions about your home, and every policy is written around those answers, so it describes your practice rather than acting as a generic children's home policy template."
+    "answer": "Each policy is personalised. You answer questions about your home and every policy is written around those answers, so it describes your practice rather than acting as a generic children's home policy template."
    },
    {
-    "question": "How long does delivery take?",
-    "answer": "Within 2 working days of you completing your answers. You will receive the full set of policies written for your home."
+    "question": "Who are these childrens home policies for?",
+    "answer": "Registered managers and responsible individuals of children's homes in England, regulated by Ofsted. Owners and new providers use them too when preparing to register."
    },
    {
     "question": "What if I already hold some of these policies?",
@@ -152,8 +152,8 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
     "answer": "Yes. Policies are refunded within 14 days if they are not right for you."
    },
    {
-    "question": "Is this a children's home policy pack or a template download?",
-    "answer": "It is a paid pack of eighteen policies written for your home from your answers, then read by a person before it carries your name. It is not a free download or a blank children's home policy template."
+    "question": "Is this a children's home policy bundle or a template download?",
+    "answer": "It is a paid bundle of eighteen policies written for your home from your answers, then read by a person before it carries your name. It is not a free download or a blank template."
    },
    {
     "question": "Does the pack cover the Regulation 44 visit?",
@@ -167,24 +167,24 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   "hero_slug": "ch-safeguarding-child-protection",
   "sections": [
    {
-    "heading": "What policies does a children's home need?",
-    "body": "A children's home in England works to the Children's Homes (England) Regulations 2015 and the Quality Standards, and Ofsted expects written policies that match how you really run the home. Most homes need policies for safeguarding, missing from care, behaviour and restraint, privacy, online safety, health, education, contact and family time, records, notifications and oversight.\n\nThis pack brings those policies for children's homes into one set of eighteen. Each is written from short questions about your service, so the wording reflects your statement of purpose, your staffing and your placing authorities rather than a generic list."
+    "heading": "Childrens home policies: what does Ofsted expect to see?",
+    "body": "A children's home in England works to the Children's Homes (England) Regulations 2015 and the Quality Standards. Ofsted expects written policies that match how you actually run the home.\n\nMost homes need policies on safeguarding, missing from care, behaviour and restraint, privacy, online safety, health, education, family time, records, notifications and oversight. This pack puts all of them in one set of eighteen.\n\nEach policy is written from short questions about your service. The wording reflects your statement of purpose, your staffing and your placing authorities, not a generic list."
    },
    {
     "heading": "What should a children's home safeguarding policy cover?",
-    "body": "A children's home safeguarding policy should say how staff recognise and report concerns, who the designated safeguarding lead is, how you refer to the local authority, and how allegations against staff are handled. Our safeguarding policy includes an allegations procedure and sits alongside related policies on exploitation, peer abuse, bullying and online safety.\n\nThat way the children's home safeguarding policy does not stand alone. Staff can see how each risk links to the next, and what they do in the first hour of a concern. We write it around your own reporting lines and local arrangements."
+    "body": "It should say how staff spot and report concerns, who the designated safeguarding lead is, how you refer to the local authority and how allegations against staff are handled. Ours includes an allegations procedure.\n\nIt also sits alongside policies on exploitation, peer abuse, bullying and online safety, so staff can see how one risk leads to the next. They know what to do in the first hour of a concern.\n\nWe write it around your own reporting lines and local arrangements, using the names and numbers your team already works with."
    },
    {
     "heading": "Do you need a missing from care policy and a county lines policy?",
-    "body": "Yes, in practice. A missing from care policy sets out prevention, who searches, when to call the police, how the placing authority is told and how a return interview is offered. It matters because children who go missing are at higher risk of exploitation.\n\nA county lines policy covers recognising and responding to criminal and sexual exploitation, including grooming, unexplained gifts and drug debt. Both are included in the pack and written to work together, so a missing episode can trigger the right exploitation checks for your home."
+    "body": "Yes, in practice. A missing from care policy sets out prevention, who searches, when to call the police, how the placing authority is told and how a return interview is offered. Children who go missing are at higher risk of exploitation, so staff need to know their roles in advance.\n\nA county lines policy covers criminal and sexual exploitation, including grooming, unexplained gifts and drug debt. Both are in the pack and written to work together. A missing episode can then trigger the right exploitation checks for your home."
    },
    {
-    "heading": "What is a peer on peer abuse policy for a children's home?",
-    "body": "A peer on peer abuse policy explains how your home responds when harm happens between children, including harmful sexual behaviour. It covers risk assessment, supervision, separating and supporting the children involved, recording, and referral to the right agencies.\n\nIt works with your behaviour management and restraint policy, which sets out positive approaches, prohibited sanctions and the recording expected after any physical intervention, and with your anti-bullying policy. Written together, these residential childcare policies give staff one consistent approach rather than three that disagree."
+    "heading": "What is a peer on peer abuse policy?",
+    "body": "It explains how your home responds when harm happens between children, including harmful sexual behaviour. It covers risk assessment, supervision, supporting the children involved, recording and referral to the right agencies.\n\nIt works alongside your behaviour management and restraint policy, which sets out positive approaches, prohibited sanctions and the recording expected after any physical intervention. Your anti-bullying policy sits beside both. Together, your residential childcare policies should give staff one approach, not three that disagree."
    },
    {
     "heading": "How do Regulation 44 and 45 fit in?",
-    "body": "Regulation 44 requires an independent person to carry out a monthly Regulation 44 visit, speak to children and staff, and report on how well the home is meeting children's needs. Regulation 45 requires a regular review of the quality of care, which you use to plan improvements.\n\nThe pack includes a procedure for both, with who prepares, who responds to findings and how actions are tracked. It sits with your notifications policy, so Ofsted and placing authorities are told what they should be, when they should be. Policies cannot promise an inspection outcome, but clear procedures help you show your work."
+    "body": "Regulation 44 requires an independent person to make a monthly visit. They speak to children and staff, then report on how well the home meets children's needs. Regulation 45 requires a regular review of the quality of care, which you use to plan improvements.\n\nThe pack includes a procedure for each Regulation 44 visit and for the Regulation 45 review: who prepares, who responds to findings and how actions are tracked. It links to your notifications policy, so Ofsted and placing authorities hear what they should, when they should.\n\nNo policy can promise an inspection outcome, but clear procedures help you show your work."
    }
   ],
   "original": false
@@ -242,22 +242,22 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   ],
   "seo_title": "Hospice Policies and Procedures Pack, 65% Off",
   "meta_description": "Hospice policies and procedures for 18 topics, written for your service and bought together at 65% off the separate price. Delivered within two working days.",
-  "intro": "A hospice carries clinical risks that most care services never meet: syringe drivers, tracheostomies, long term ventilation, controlled drugs and care after death. This pack gives you hospice policies and procedures for all of them, plus the wider policies every specialist service needs.\n\nEach policy is written for your hospice from your own answers, not copied from a generic hospice policy and procedure manual. Buy the 18 together and save 65% on the separate price. Everything you need for your hospice policy pack arrives in one go, within two working days of your answers.",
+  "intro": "A hospice faces clinical risks most care services never meet: syringe drivers, tracheostomies, long term ventilation, controlled drugs and care after death. This pack gives you hospice policies and procedures for all of them, plus the wider policies any specialist service needs.\n\nEach policy is written from your own answers, so it describes how your hospice really works. Buy all 18 together and save 65% on the separate price. Your hospice policy pack arrives in one go, within two working days of your answers.",
   "cro": {
-   "whoFor": "Perfect for hospices and specialist palliative, complex and nursing services that need a full set of hospice policies written around how they really work.",
+   "whoFor": "Perfect for hospices and specialist palliative, complex and nursing services that want a full set of hospice policies written around how they really work.",
    "benefits": [
-    "18 policies covering end of life, clinical procedures, medicines, safeguarding and volunteers in one purchase",
+    "18 policies covering end of life care, clinical procedures, medicines, safeguarding and volunteers in one purchase",
     "Saves 65% against buying the policies one by one",
-    "Each hospice care policy is written from your answers, so it matches your own arrangements"
+    "Every policy is written from your answers, so it matches your own arrangements"
    ],
    "moments": [
     {
      "title": "You are preparing for an inspection",
-     "body": "Having palliative care policies and procedures, and policies and procedures for palliative care teams, for syringe drivers, controlled drugs and resuscitation means you can show how staff are guided in the highest risk areas."
+     "body": "Written guidance for syringe drivers, controlled drugs and resuscitation shows how staff are guided in your highest risk areas. Inspectors can see who does what and when to escalate."
     },
     {
      "title": "You are setting up a new hospice or service",
-     "body": "A new registration needs a whole library at once. This pack covers the policies for palliative care that a new service will be asked about first."
+     "body": "A new registration needs a whole library at once. This pack covers the areas a new service is asked about first, from medicines to care after death."
     },
     {
      "title": "You are adding a new type of care",
@@ -265,7 +265,7 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
     },
     {
      "title": "Your old policy manual is out of date",
-     "body": "Replace scattered documents with a consistent set, written in the same style and with the same review dates."
+     "body": "Replace scattered documents with one consistent set, written in the same style and with the same review dates."
     }
    ],
    "groups": [
@@ -321,15 +321,15 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
    },
    {
     "question": "Are the policies personalised to my hospice?",
-    "answer": "Yes. Every policy is written from your own answers about your service, tools and arrangements, then checked by hand. You are not buying a generic hospice policy manual with a name swapped in."
+    "answer": "Yes. Every policy is written from your own answers about your service, tools and arrangements, then checked by hand. You are not getting a generic template with a name swapped in."
    },
    {
     "question": "Is this a free hospice policy and procedure manual?",
-    "answer": "No. This is a paid pack of personalised policies written for your hospice from your answers. It is not a free download, and each policy is read by a person before it carries your name."
+    "answer": "No. This is a paid pack of personalised policies written from your answers. It is not a free download, and a person reads each policy before it carries your name."
    },
    {
     "question": "How long does delivery take?",
-    "answer": "Your policies are delivered within two working days of you giving your answers. You answer a short set of questions for each policy in the pack."
+    "answer": "Your policies arrive within two working days of you giving your answers. You answer a short set of questions for each policy in the pack."
    },
    {
     "question": "What if I already hold one of the policies?",
@@ -348,23 +348,23 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   "sections": [
    {
     "heading": "What policies and procedures does a hospice need?",
-    "body": "A hospice needs more than the usual care home set. Alongside safeguarding and medicines, inspectors expect written guidance for the risks that are specific to palliative care. This pack covers 18 of them, so your hospice policies and procedures are in one consistent set.\n\nThe list runs from care after death verification and bereavement support to oxygen and medical gases, sharps and clinical waste, and the use of volunteers. Each policy says who does what, what to record and when to escalate, using your own roles and tools."
+    "body": "A hospice needs more than the usual care home set. Alongside safeguarding and medicines, inspectors expect written guidance on the risks that belong to palliative care. This pack covers 18 of them, so your hospice policies and procedures sit in one consistent set.\n\nThe list runs from care after death verification and bereavement support to oxygen and medical gases, sharps and clinical waste, and the use of volunteers. Each policy says who does what, what to record and when to escalate, using your own roles and tools."
    },
    {
     "heading": "What should a syringe driver policy cover?",
-    "body": "A syringe driver policy sets out who may prescribe, prepare, set up and check a driver, and how often it is checked. Ours covers anticipatory medicines too, including how they are authorised, stored and given when a person's symptoms change out of hours.\n\nIt also covers records, controlled drug handling, what to do if a driver alarms or stops, and how staff are signed off as competent. It is written around the equipment and prescribers you actually use, and read by a person before it carries your name."
+    "body": "It should say who may prescribe, prepare, set up and check a driver, and how often it is checked. Ours also covers anticipatory medicines: how they are authorised, stored and given when symptoms change out of hours.\n\nIt covers records, controlled drug handling, what to do if a driver alarms or stops, and how staff are signed off as competent. It is written around the equipment and prescribers you actually use, and a person reads it before it carries your name."
    },
    {
-    "heading": "Palliative care policies and end of life care policy cover",
-    "body": "Your palliative care policies and procedures should guide staff through the whole journey. The end of life care policy sets the approach, the care of the dying policy covers recognising dying, comfort, hydration and family involvement, and the resuscitation policy covers DNACPR decisions and how they are respected.\n\nTogether these policies for end of life care make sure the person's wishes are recorded, reviewed and followed. They sit beside bereavement support and care after death, so nothing is left to memory on a hard night."
+    "heading": "Palliative care policies and procedures",
+    "body": "Palliative care policies should guide staff through the whole journey. The end of life care policy sets the approach. The care of the dying policy covers recognising dying, comfort, hydration and family involvement. The resuscitation policy covers DNACPR decisions and how they are respected.\n\nPolicies for end of life care like these make sure a person's wishes are recorded, reviewed and followed. They sit beside bereavement support and care after death, so nothing is left to memory on a hard night."
    },
    {
-    "heading": "Tracheostomy, ventilation and feeding tube policies",
-    "body": "Hospices and specialist nursing services increasingly support people with complex needs. A tracheostomy policy and procedure explains routine care, emergency steps, suction, equipment checks and who is trained. The long term ventilation policy covers alarms, back up power and escalation.\n\nEnteral feeding and epilepsy policies follow the same pattern, with clear steps, records and competence sign off. Having these written before you start the care means staff are trained first, rather than learning from an incident."
+    "heading": "Tracheostomy, ventilation and feeding tube care",
+    "body": "Hospices and specialist nursing services increasingly support people with complex needs. A tracheostomy policy and procedure explains routine care, emergency steps, suction, equipment checks and who is trained. The long term ventilation policy covers alarms, back up power and escalation.\n\nThe enteral feeding and epilepsy policies follow the same pattern, with clear steps, records and competence sign off. Writing them before you start the care means staff are trained first, rather than learning from an incident."
    },
    {
-    "heading": "Is a hospice policy pack better than a policy manual?",
-    "body": "A hospice policy and procedure manual is often a long document that nobody opens. A hospice policy pack gives you separate policies, one per topic, each short enough to read and easy to review when something changes.\n\nBecause each is written from your answers, the content reflects how your hospice really runs, not a template with the name swapped. You buy all 18 at one fixed price, which saves 65% against buying them one by one, and you can keep reviewing them on your own schedule."
+    "heading": "Is a policy pack better than a policy manual?",
+    "body": "A hospice policy and procedure manual is often one long document that nobody opens. A hospice policy pack gives you a separate policy for each topic, short enough to read and easy to review when something changes.\n\nEach one is written from your answers, so it reflects how your hospice runs, not a template with the name swapped. You buy all 18 at one fixed price, saving 65% against buying them one by one, and you review them on your own schedule."
    }
   ],
   "original": false
@@ -414,9 +414,9 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   ],
   "seo_title": "Home Care Policies Pack for Agencies and Live-in Care",
   "meta_description": "Home care policies: 16 policies for home care and live in care, written for your service, at 65% less than buying them separately. Fourteen day refund.",
-  "intro": "Staff in a home care agency work alone, in other people's homes, with nobody watching. Your home care policies have to cover that: missed visits, no answer at the door, lone working, key safes and medicines in a person's own kitchen.\n\nThis pack brings together 16 policies for home care and live in care. Each is written for your service from short questions you answer, then read by a person before it carries your name. It costs 65% less than buying the policies one by one, whether you are registering a new agency or replacing a generic set.",
+  "intro": "Your carers work alone, in other people's homes, with nobody watching. Home care policies have to cover that: missed visits, no answer at the door, lone working, key safes and medicines in a person's own kitchen.\n\nThis pack brings together 16 policies for home care and live in care. You answer short questions about your service, and a person reads each policy before it carries your name. It costs 65% less than buying them one by one, whether you are registering a new agency or replacing a generic set.",
   "cro": {
-   "whoFor": "Perfect for domiciliary care agencies and live in care providers who need a complete, personalised set of home care policies without writing each one from scratch.",
+   "whoFor": "Perfect for domiciliary care agencies and live in providers who want a complete, personalised set of home care policies without writing each one from scratch.",
    "benefits": [
     "16 policies written for how your agency works, covering visits, access, safety, money and medicines",
     "65% less than buying the same policies one at a time, for one payment",
@@ -425,11 +425,11 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
    "moments": [
     {
      "title": "You are registering a new home care agency",
-     "body": "You need a full set of domiciliary care policies before you start, covering the risks that are specific to working in people's homes."
+     "body": "You need a full set of policies before your first visit. They must cover the risks that come with working in people's homes."
     },
     {
      "title": "An inspection is coming and your policies are generic",
-     "body": "Inspectors look for policies that match what your staff really do. A personalised set shows your own process for missed visits, access and lone working, so your care agency policies and procedures read like your service."
+     "body": "Inspectors look for policies that match what your staff really do. A personalised set shows your own process for missed visits, access and lone working."
     },
     {
      "title": "You are adding live in care to a visiting service",
@@ -490,7 +490,11 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
     "answer": "Sixteen policies for home care and live in care, grouped under visits and access, safety in the home, live in care, out and about, and hands on care. Every one is written for your service."
    },
    {
-    "question": "Are these home care policies personalised?",
+    "question": "Is this a home care agency policy and procedures manual?",
+    "answer": "It is a set of 16 separate policies rather than one long manual. Each can be read, reviewed and updated on its own, and you can add single policies later."
+   },
+   {
+    "question": "Are the policies personalised?",
     "answer": "Yes. You answer short questions about your agency, such as roles, call monitoring and escalation routes, and each policy is written around your answers. They are not generic templates."
    },
    {
@@ -510,38 +514,38 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
     "answer": "Yes. If the pack is not right for you, ask within fourteen days of buying and we will refund you."
    },
    {
-    "question": "Will this work for a small home care agency?",
-    "answer": "Yes. In home care policies and procedures are written around your size and set up, so an agency with a handful of carers gets policies that fit it."
+    "question": "Do in home care policies and procedures suit a small agency?",
+    "answer": "Yes. Each policy is written around your size and set up, so an agency with a handful of carers gets policies that fit it."
    }
   ],
   "hero_slug": "missed-late-visits",
   "sections": [
    {
     "heading": "What policies does a home care agency need?",
-    "body": "A home care agency needs policies for the risks of working in people's own homes, as well as the usual care and governance set. In practice that means how you handle missed and late visits, what staff do when nobody answers the door, how they enter a home safely, how visits are logged, and how staff are protected when working alone. It also covers medicines, moving and handling, first aid, money and valuables, and travel between calls. This pack covers those home care policies in one set, written around your own roles and systems. If you want home care policies and procedures that stand up to questions, start with what your staff really do each day."
+    "body": "A home care agency needs policies for the risks of working in people's own homes, on top of the usual care and governance set. That means how you handle missed and late visits, what staff do when nobody answers the door, and how they enter a home safely. It also means how visits are logged and how lone workers are protected. Medicines, moving and handling, first aid, money and valuables, and travel between calls complete the picture. This pack covers all of it in one set, written around your own roles and systems. Start with what your staff really do each day, and the policies follow from there."
    },
    {
     "heading": "Domiciliary care policies for visits and access",
-    "body": "Visit and access problems are where home care goes wrong fastest. The missed and late visits policy sets out what counts as missed, who is alerted and how the person is made safe. The no access policy covers retries, key holders and when to call the police or ambulance. Your key safe policy records who holds codes and what happens when a key is lost. The electronic call monitoring policy covers what staff do when logging fails and how records are audited. These domiciliary care policies are written around your own escalation routes."
+    "body": "Visit and access problems are where home care goes wrong fastest. The missed and late visits policy sets out what counts as missed, who is alerted and how the person is made safe. The no access policy covers retries, key holders and when to call the police or an ambulance. Your key safe policy records who holds codes and what happens when a key is lost. The electronic call monitoring policy explains what staff do when logging fails and how records are audited. Each one follows your own escalation routes."
    },
    {
-    "heading": "Policies and procedures for a home care agency, and for live in care",
-    "body": "Live in care needs its own rules, separate from short visits. Rest breaks, sleep and night disturbance, relief cover, the carer's room, rota patterns and handover between carers all need to be written down. The respite and short break policy covers planned breaks for the person and the family carer. If you are looking for policies and procedures for home care agency work that also stretch to live in placements, this set covers both under one price. A home care agency policy and procedures set should read the same way for a visiting carer and a live in carer."
+    "heading": "Policies and procedures for home care agency and live in work",
+    "body": "Live in care needs its own rules, separate from short visits. Rest breaks, sleep and night disturbance, relief cover, the carer's room, rota patterns and handover between carers all need to be written down. The respite and short break policy covers planned breaks for the person and the family carer. One set covers visiting and live in placements under a single price. Your visiting carers and your live in carers then work from policies that read the same way."
    },
    {
     "heading": "Safety in the person's home and out in the community",
-    "body": "Staff cannot control the home they work in, so policies have to help them assess it. The home environment risk assessment covers access, fire, equipment, pets and smoking. A separate policy covers oxygen, smoking and fire risk in the home. Lone working sets out check in and escalation when a worker cannot be reached. Further policies cover driving between visits, accompanying people on outings, and handling money and valuables. Together these care agency policies and procedures protect the person and your staff."
+    "body": "Staff cannot control the home they work in, so policies have to help them assess it. The home environment risk assessment covers access, fire, equipment, pets and smoking. A separate policy deals with oxygen, smoking and fire risk. Lone working sets out check in and escalation when a worker cannot be reached. Care agency policies and procedures such as driving between visits, accompanying people on outings, and handling money and valuables protect the person and your staff alike."
    },
    {
-    "heading": "Policies and procedures for a domiciliary care agency, written for you",
-    "body": "Many agencies start from a generic manual and never adapt it. Here you answer short questions about your service, such as who your registered manager is, which call monitoring system you use and how the office is covered out of hours. Each policy is then written around those answers and read by a person before it carries your name. That gives you policies and procedures for domiciliary care agency teams that match your day to day practice, linked to the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014 that the Care Quality Commission uses."
+    "heading": "Policies and procedures for domiciliary care agency teams",
+    "body": "Many agencies start from a generic manual and never adapt it. Here you answer short questions about your service. Who is your registered manager? Which call monitoring system do you use? How is the office covered out of hours? Each policy is then written around those answers and read by a person before it carries your name. The result matches your day to day practice. It also links to the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014 that the Care Quality Commission uses."
    }
   ],
   "original": false
  },
  "resident-safety-pack": {
   "title": "Care Home Resident Safety Pack",
-  "description": "Fourteen personalised nursing home policy documents on falls, skin, swallowing, bed rails, nutrition and acute illness, written for your home at 65% off.",
+  "description": "Fourteen personalised policies for nursing and residential homes, covering falls, skin, swallowing, bed rails, nutrition and acute illness, written for your home at 65% off.",
   "price_pence": 30900,
   "individual_total_pence": 87600,
   "primary": {
@@ -592,9 +596,9 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   ],
   "seo_title": "Nursing Home Policy Pack: 14 Resident Safety Policies",
   "meta_description": "A nursing home policy pack on resident safety: 14 policies written for your service and 65% cheaper than buying them one by one. Delivered in 2 days.",
-  "intro": "Resident safety is where a nursing home policy gets tested. Falls, pressure sores, choking, bed rails and a resident who is getting worse all need clear steps that staff can follow on a night shift. This pack gives you 14 of them in one purchase.\n\nEach policy is written for your own home from short questions, so it describes what you really do. That is different from a template you edit yourself. You pay 65% less than buying all 14 separately. It suits nursing homes and residential homes, including dementia care.",
+  "intro": "Falls, pressure sores, choking, bed rails and a resident who is getting worse all need clear steps that staff can follow on a night shift. This pack gives you 14 policies for resident safety in one purchase.\n\nEach policy is written for your own home from short questions, so it describes what you really do. That is different from a template you edit yourself. You pay 65% less than buying all 14 separately. It suits nursing homes and residential homes, including dementia care.",
   "cro": {
-   "whoFor": "Perfect for registered managers and owners of nursing and residential homes who want resident safety policies that match how their home runs, without writing 14 documents.",
+   "whoFor": "Perfect for registered managers and owners of nursing and residential homes who want safety policies that match how their home runs, without writing 14 documents.",
    "benefits": [
     "14 resident safety policies on falls, skin, swallowing, bed rails and acute illness, bought once at 65% off",
     "Every policy is written from your answers, so staff read your routines, equipment and referral routes",
@@ -603,11 +607,11 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
    "moments": [
     {
      "title": "You are preparing for an inspection",
-     "body": "Inspectors ask how you keep people safe from falls, skin damage and choking. Have a nursing home policy set ready that describes your own practice."
+     "body": "Inspectors ask how you keep people safe from falls, skin damage and choking. A nursing home policy that describes your own practice lets staff and inspectors hear the same story."
     },
     {
      "title": "You are opening or registering a new home",
-     "body": "Writing a clinical safety set takes weeks. This pack covers the resident safety core in one go, so you can focus on the rest of your registration."
+     "body": "Writing a full clinical safety set takes weeks. This pack covers the core in one go, so you can focus on the rest of your registration."
     },
     {
      "title": "An incident has shown a gap",
@@ -657,7 +661,7 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   },
   "faqs": [
    {
-    "question": "What do the nursing home policies in this pack cover?",
+    "question": "What do the policies in this pack cover?",
     "answer": "There are 14 policies: falls, pressure care, wounds, continence, diabetes, oral health, nutrition, swallowing, bed rails, environmental safety, smoking and oxygen, missing residents, moving and handling, and acute illness."
    },
    {
@@ -677,8 +681,8 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
     "answer": "Yes. The policies are written for your service, so they suit nursing homes, residential homes and homes supporting people living with dementia. Tell us about your home in the questions."
    },
    {
-    "question": "Is each policy personalised separately?",
-    "answer": "Yes. Every policy has its own short set of questions, so the falls policy reflects your falls practice and the bed rail policy reflects your beds and checks."
+    "question": "Is this a nursing home policy pack or a template?",
+    "answer": "It is a nursing home policy pack written for your service, not a blank template. You answer short questions for each policy, so the falls policy reflects your falls practice and the bed rail policy reflects your beds and checks."
    },
    {
     "question": "Can I get a refund?",
@@ -688,24 +692,24 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   "hero_slug": "falls-prevention",
   "sections": [
    {
-    "heading": "What policies does a nursing home need for resident safety?",
-    "body": "A nursing home policy set for resident safety usually starts with falls, skin, swallowing and acute illness, because these are the risks that cause the most harm. Regulation 12 expects safe care and treatment, which means risks are assessed and staff know what to do.\n\nThis pack covers 14 areas: falls, pressure care, wounds, continence, diabetes, oral health, nutrition, swallowing, bed rails, the building, smoking and oxygen, missing residents, moving people and spotting decline. Each one names who does what in your home."
+    "heading": "Which policies does a nursing home need for resident safety?",
+    "body": "Start with falls, skin, swallowing and acute illness, because these risks cause the most harm. Regulation 12 expects safe care and treatment, which means risks are assessed and staff know what to do.\n\nThis pack covers 14 areas: falls, pressure care, wounds, continence, diabetes, oral health, nutrition, swallowing, bed rails, the building, smoking and oxygen, missing residents, moving people and spotting decline. Each one names who does what in your home. Together they make a nursing home policy set your whole team can use."
    },
    {
-    "heading": "What should a falls policy and moving and handling policy cover?",
-    "body": "A falls policy should cover risk assessment on admission, what you do to reduce risk, checks after a fall, when to call 999 or 111 and how you learn from each event. It should also say who reviews the pattern across the home.\n\nA moving and handling policy covers safe lifting, equipment checks, training and individual handling plans. Here both are written around your layout, hoists and staffing, so they match what staff do. We give no clinical or legal advice."
+    "heading": "What should a falls policy and a moving and handling policy cover?",
+    "body": "A falls policy covers risk assessment on admission, steps to reduce risk, checks after a fall, when to call 999 or 111 and how you learn from each event. It also says who reviews the pattern across the home.\n\nA moving and handling policy covers safe lifting, equipment checks, training and individual handling plans. Both are written around your layout, hoists and staffing, so they match what staff do. We give no clinical or legal advice."
    },
    {
-    "heading": "What belongs in a bed rail risk assessment and bed rail policy?",
-    "body": "A bed rail policy sets out who may have rails and who should not. A bed rail risk assessment looks at the person, the bed, the rails and the mattress together, and checks for entrapment risks. Many homes find this the hardest area to document well.\n\nThe safe use of bed rails section in this pack describes who assesses, how often you check fit and what you record. It is written for the equipment you actually use and the people you support."
+    "heading": "What belongs in a bed rail risk assessment?",
+    "body": "A bed rail risk assessment looks at the person, the bed, the rails and the mattress together, and checks for entrapment. Many homes find this the hardest area to document well.\n\nYour bed rail policy then sets out who may have rails and who should not. The section on safe use of bed rails describes who assesses, how often you check fit and what you record. It is written for the equipment you actually use and the people you support."
    },
    {
-    "heading": "How do you write a pressure sore policy and wound management policy?",
-    "body": "A pressure sore policy covers risk screening, skin checks, repositioning, equipment and when to escalate damage. Many managers also look for a pressure ulcer policy and procedure that staff can follow, and for the nice guidelines for pressure ulcers to be reflected in it.\n\nThe wound management policy covers assessment, dressings, signs of infection, tissue viability referral and records. Your versions name your nurses, your equipment and your referral routes."
+    "heading": "How do you write a pressure sore policy and a wound management policy?",
+    "body": "A pressure sore policy covers risk screening, skin checks, repositioning, equipment and when to escalate damage. Some managers call the same document a pressure ulcer policy and procedure. Either way, it should reflect the nice guidelines for pressure ulcers.\n\nA wound management policy covers assessment, dressings, signs of infection, tissue viability referral and records. Your versions name your nurses, your equipment and your referral routes. Staff then see one clear route from spotting a problem to getting the right person involved."
    },
    {
     "heading": "Why does resident safety need written policies in a care home?",
-    "body": "Resident safety depends on every shift doing the same things the same way. Written policies give agency staff, new starters and nurses one clear reference, and give you evidence of what your home does.\n\nThese policies also cover swallowing and choking, nutrition, continence, diabetes, mouth care and the safety of your building. Each is personalised from short questions and read by a person before delivery. They support good practice but do not replace your own risk assessments."
+    "body": "Resident safety depends on every shift doing the same things the same way. Written policies give agency staff, new starters and nurses one clear reference, and give you evidence of what your home does.\n\nThe pack also covers swallowing and choking, nutrition, continence, diabetes, mouth care and the safety of your building. Each policy is personalised from short questions and read by a person before delivery. They support good practice but do not replace your own risk assessments."
    }
   ],
   "original": false
@@ -763,9 +767,9 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   ],
   "seo_title": "Dementia Policies and Procedures: 14 Policy Pack",
   "meta_description": "Dementia policies and procedures for your service: 14 policies on capacity, DoLS and restrictive practice, 66% less than buying separately, written for you.",
-  "intro": "Supporting people living with dementia puts more pressure on your dementia policies and procedures than almost any other area. Capacity, restraint, missing persons, medicines and consent all meet in one person's day. This pack brings the 14 policies that cover that ground into one purchase.\n\nEach policy is written for your own service from short questions, not downloaded as a generic template. You pay once, at 66% less than buying the 14 separately, and your whole set stays consistent from page to page. A person reads each one before it carries your name.",
+  "intro": "Dementia care asks a lot of your paperwork. Capacity, restraint, missing persons, medicines and consent can all meet in one person's day, and staff need to know what to do in each. This pack brings 14 linked policies together, so your dementia policies and procedures agree with one another.\n\nEach policy is written for your own service from short questions, not downloaded as a generic template. You pay once, at 66% less than buying the 14 separately. A person reads each one before it carries your name.",
   "cro": {
-   "whoFor": "Perfect for registered managers of care homes, nursing homes and extra care services who need dementia policies and procedures that cover capacity and restrictive practice together.",
+   "whoFor": "Perfect for registered managers of care homes, nursing homes and extra care services who want dementia policies and procedures that deal with capacity and restrictive practice together.",
    "benefits": [
     "14 linked policies in one pack, so capacity, restraint, consent and missing person responses all point the same way",
     "Each policy is written around how your service runs, so staff recognise their own practice in it",
@@ -773,20 +777,20 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
    ],
    "moments": [
     {
-     "title": "You are preparing for an inspection",
-     "body": "Inspectors look closely at how you protect people who lack capacity. A matched set of dementia policies and procedures shows one joined up approach, from your mental capacity act policy to restraint and consent."
+     "title": "An inspection is coming",
+     "body": "Inspectors look closely at how you protect people who lack capacity. A matched set shows one joined up approach, from capacity and best interests through to restraint and consent."
     },
     {
-     "title": "You are opening a new registration or dementia unit",
-     "body": "A new service needs its DoLS policy, restrictive practice policy and DNACPR policy in place before the first person moves in. The pack gives you all of them at once."
+     "title": "You are opening a new service or dementia unit",
+     "body": "A new service needs its DoLS, restrictive practice and DNACPR policies in place before the first person moves in. The pack gives you all of them at once."
     },
     {
-     "title": "Your service is taking on more people living with dementia",
-     "body": "More people with changing capacity means more decisions about risk, sensor technology, visiting and medicines. Your policy set needs to keep up."
+     "title": "You are supporting more people living with dementia",
+     "body": "More people with changing capacity means more decisions about risk, sensor technology, visiting and medicines. Your policies need to keep up."
     },
     {
-     "title": "An incident has exposed a gap",
-     "body": "After a missing person event, an unplanned restraint or a disputed best interests decision, the review often points to policy. Your missing person policy care home version is one of the 14 you can replace in one go."
+     "title": "An incident has shown a gap",
+     "body": "After a missing person event, an unplanned restraint or a disputed best interests decision, the review often points to policy. The pack lets you replace the whole set in one go."
     }
    ],
    "groups": [
@@ -859,24 +863,24 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   "hero_slug": "dementia-care",
   "sections": [
    {
-    "heading": "What policies does a dementia care service need?",
-    "body": "A service supporting people living with dementia needs more than one dementia policy. The core document sets out how you support each person, but it relies on others: capacity and best interests, consent, positive risk taking, dignity, activities, visiting and relationships. Then come the harder areas where staff need clear steps: restraint, restrictive practice, missing persons, psychotropic medicines and resuscitation decisions.\n\nThis pack covers all of those in 14 policies. Together they form a complete set of dementia policies and procedures, so a new member of staff, an inspector or a family member can see how your service handles each situation."
+    "heading": "Which policies does a dementia service need?",
+    "body": "One dementia policy is not enough. It sets out how you support each person, but it leans on others: capacity and best interests, consent, positive risk taking, dignity, activities, visiting and relationships. Then come the harder areas where staff need clear steps: restraint, missing persons, psychotropic medicines and resuscitation decisions.\n\nThis pack covers all of them in 14 policies. Together they make a full set of dementia policies and procedures, so a new member of staff, an inspector or a family member can see how you handle each situation."
    },
    {
     "heading": "Does a care home need a mental capacity act policy?",
-    "body": "Yes, in practice. Any service that supports people whose capacity may be affected needs a clear mental capacity act policy. It explains how staff assess capacity for a specific decision, what a best interests decision involves, who is consulted and how it is recorded. A mental capacity act policy for care homes also links to consent, because care should only be delivered with consent or a recorded best interests basis.\n\nThe pack includes mental capacity and DoLS as one policy, plus a separate consent to care policy. Both are written around your own service and the way your team records decisions. We do not give legal advice, and your policies should be read alongside the Mental Capacity Act 2005."
+    "body": "Yes, in practice. Any service supporting people whose capacity may change needs one. It explains how staff assess capacity for a specific decision, what a best interests decision involves, who is consulted and how it is recorded. A mental capacity act policy for care homes should also link to consent, because care is only given with consent or a recorded best interests basis.\n\nThe pack includes mental capacity and DoLS as one policy, plus a separate consent to care policy. Both are written around your service and the way your team records decisions. We do not give legal advice, so read your policies alongside the Mental Capacity Act 2005."
    },
    {
     "heading": "What is a DoLS policy and why does it matter?",
-    "body": "A DoLS policy explains how your service recognises when someone may be deprived of their liberty, how to apply for authorisation and how conditions are met and reviewed. Staff need to know the difference between supporting someone and restricting them. A deprivation of liberty safeguards policy should also say who is responsible for applications, how expiry dates are tracked and what happens when a person's circumstances change.\n\nIn this pack the DoLS policy sits with capacity, so the two never contradict each other. It also connects to your restrictive practice policy and to positive risk taking, because the least restrictive option is part of every decision."
+    "body": "A DoLS policy explains how staff spot that someone may be deprived of their liberty, how to apply for authorisation and how conditions are met and reviewed. Staff need to know the difference between supporting someone and restricting them. A deprivation of liberty safeguards policy should also say who makes applications, how expiry dates are tracked and what happens when circumstances change.\n\nHere the DoLS policy sits with capacity, so the two never contradict each other. It also connects to restrictive practice and positive risk taking, because the least restrictive option is part of every decision."
    },
    {
     "heading": "How do you write a restrictive practice policy?",
-    "body": "A restrictive practice policy sets out what your service counts as a restriction, how staff try less restrictive options first and how any restraint is recorded, reviewed and learned from. It should cover physical restraint, environmental controls, sensor technology and cameras, and the use of medicines. Staff should know that restraint is a last resort used for the shortest time possible.\n\nThe pack gives you four connected policies here: reducing restrictive practice, restraint and the least restrictive option, CCTV and monitoring, and psychotropic medicines under STOMP. Each is personalised to your service, so the steps match your premises, your team and the people you support."
+    "body": "Start by defining what your service counts as a restriction. Then show how staff try less restrictive options first, and how any restraint is recorded, reviewed and learned from. Cover physical restraint, locked doors, sensor technology, cameras and medicines. Restraint is a last resort, used for the shortest time possible.\n\nThe pack gives you four connected policies here: reducing restrictive practice, restraint and the least restrictive option, CCTV and monitoring, and psychotropic medicines under STOMP. Each is personalised to your premises, your team and the people you support."
    },
    {
-    "heading": "What other dementia policies are worth having in place?",
-    "body": "Some of the most useful policies are the ones people forget until something happens. A missing person policy care home version tells staff exactly what to do in the first minutes. A DNACPR policy explains how resuscitation decisions are respected, recorded and shared with ambulance crews. Further policies cover activities, visiting, intimacy and relationships.\n\nThese are the areas families ask about and inspectors notice. Written together, they read as one dementia care policy set rather than separate documents from different years. Each is personalised from short questions and checked by a person before delivery."
+    "heading": "Which other dementia policies are worth having?",
+    "body": "Some of the most useful policies are forgotten until something happens. Two are easy to overlook. A missing person policy care home staff can follow tells them what to do in the first minutes. A DNACPR policy explains how resuscitation decisions are respected, recorded and shared with ambulance crews.\n\nFamilies ask about these areas and inspectors notice them. Written together, they read as one dementia care policy set rather than separate documents from different years. Each is personalised from short questions and checked by a person before delivery."
    }
   ],
   "original": false
@@ -930,30 +934,30 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   ],
   "seo_title": "Supported Living Policies and Procedures Pack, 15 Policies",
   "meta_description": "Supported living policies and procedures for learning disability and autism services. 15 policies written for your service, 65% off buying them one by one.",
-  "intro": "Supported living policies and procedures have to cover more than care. People hold tenancies, manage their own money, form relationships and make choices that carry risk. This pack gives you fifteen policies built for that reality, covering supported living, extra care, Shared Lives and learning disability and autism services.\n\nEach policy is written for your organisation from your own answers, not downloaded as a blank template. You get the whole set at 65% off buying the policies separately, with positive behaviour support, restrictive practice, STOMP, advocacy and tenancy all in one order.",
+  "intro": "People in supported living hold tenancies, manage their own money, form relationships and make choices that carry risk. Your policies have to cover all of that, not just care. This pack gives you fifteen of them for supported living, extra care, Shared Lives and learning disability and autism services.\n\nEach policy is written from your own answers, so it describes how your service really works. You get the whole set at 65% off buying them separately, including positive behaviour support, restrictive practice, STOMP, advocacy and tenancy.",
   "cro": {
-   "whoFor": "Perfect for providers of supported living, extra care, Shared Lives and learning disability and autism services who want one complete, personalised set of policies and procedures.",
+   "whoFor": "Perfect for registered managers of supported living, extra care, Shared Lives and learning disability and autism services who want one complete set of policies written around their own service.",
    "benefits": [
-    "Fifteen policies at 65% off buying them separately, so a full supported living policy pack costs less than a handful of single policies",
+    "Fifteen policies at 65% off buying them separately, so the full set costs less than a handful of single policies",
     "Each policy is written around your service, your tenancy model and your local arrangements, not a generic template",
-    "Delivered within two working days of your answers, covering behaviour support, health, money, safety and housing in one go"
+    "Delivered within two working days of your answers, covering behaviour support, health, money, safety and housing"
    ],
    "moments": [
     {
      "title": "You are preparing for an inspection",
-     "body": "A full set of supported living policies and procedures lets you show how rights, risk and restrictive practice are managed, with every document written for how you really work."
+     "body": "Inspectors will want to see how you manage rights, risk and restrictive practice. A full set of supported living policies and procedures lets you show it, in documents that match how you really work."
     },
     {
      "title": "You are registering a new service",
-     "body": "Start with the whole list of policies for supported living in one order, plus policies and procedures for supported living tenancies, instead of chasing them one at a time."
+     "body": "Get the whole list of policies for supported living in one order, tenancy included, instead of chasing them one at a time."
     },
     {
      "title": "You are adding Shared Lives or extra care",
-     "body": "Shared Lives policies for approval and matching sit beside call systems, communal areas and the core learning disability and autism policies."
+     "body": "Shared Lives policies for approval and matching sit alongside call systems, communal areas and the core learning disability and autism policies."
     },
     {
-     "title": "Your policies pre-date the latest guidance",
-     "body": "Replace a patchwork of old documents, including your positive behaviour support policy, with a consistent set that reflects STOMP, restraint reduction and the Oliver McGowan training duty."
+     "title": "Your policies are out of date",
+     "body": "Replace a patchwork of old documents with one consistent set. It reflects STOMP, restraint reduction and the Oliver McGowan training duty, and includes a current positive behaviour support policy."
     }
    ],
    "groups": [
@@ -1001,7 +1005,7 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   },
   "faqs": [
    {
-    "question": "What are supported living policies and procedures in this pack?",
+    "question": "What are the supported living policies and procedures in this pack?",
     "answer": "Fifteen policies for supported living, extra care, Shared Lives and learning disability and autism services. They include positive behaviour support, restrictive practice, STOMP, advocacy, tenancy, money and property, each written for your organisation."
    },
    {
@@ -1018,7 +1022,7 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
    },
    {
     "question": "How much do I save compared with buying separately?",
-    "answer": "The pack is 65% off the combined price of the fifteen policies bought one by one, so the supported living policy pack costs far less than the individual policies."
+    "answer": "The pack is 65% off the combined price of the fifteen policies bought one by one, so the whole set costs far less than the individual policies."
    },
    {
     "question": "Can I get a refund?",
@@ -1026,30 +1030,30 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
    },
    {
     "question": "Does the pack cover Shared Lives and extra care as well as learning disability services?",
-    "answer": "Yes. It includes Shared Lives approval, matching and household review, and extra care communal areas and call systems, alongside the core learning disability policies and procedures covering behaviour support, health and rights."
+    "answer": "Yes. It includes Shared Lives approval, matching and household review, and extra care communal areas and call systems. These sit alongside the core learning disability policies on behaviour support, health and rights."
    }
   ],
   "hero_slug": "positive-behaviour-support",
   "sections": [
    {
     "heading": "What policies does a supported living service need?",
-    "body": "A supported living service supports people who hold their own tenancy, so the list of policies for supported living has to cover two things at once: good care and a person's rights as a tenant. This pack includes fifteen. At the core are learning disability and autism, positive behaviour support, reducing restrictive practice, STOMP and Oliver McGowan training. Around them sit health action plans, advocacy, relationships, hate crime, tenancy, property and money.\n\nThat gives you one consistent set of supported living policies, written for your service, rather than a mix of documents from different places and different years."
+    "body": "People in supported living are tenants as well as people who receive care, and your policies have to respect both. This pack has fifteen. The core group covers learning disability and autism, positive behaviour support, reducing restrictive practice, STOMP and Oliver McGowan training. Around that sit health action plans, advocacy, relationships, hate crime, tenancy, property and money.\n\nThe result is one consistent set of supported living policies and procedures, written for your service, instead of documents collected from different places and different years."
    },
    {
     "heading": "What should a positive behaviour support policy cover?",
-    "body": "A positive behaviour support policy explains how your staff understand why a person behaves as they do, and how they respond without relying on force. In this pack it works alongside your restrictive practice policy, which sets out how you reduce restraint, seclusion and other limits on freedom, and your STOMP policy on reviewing psychotropic medicines.\n\nTogether they show how you keep restrictions to a minimum, how incidents are reviewed, and how people and their families are involved. Each one is written from your answers about your service, so it describes how your team really works."
+    "body": "A positive behaviour support policy explains how staff understand why a person behaves as they do, and how they respond without force. Here it works alongside your restrictive practice policy, which sets out how you reduce restraint, seclusion and other limits on freedom, and your STOMP policy on reviewing psychotropic medicines.\n\nTogether they show how restrictions stay minimal, how incidents are reviewed and how people and families are involved. Each is written from your answers, so it describes how your team really works."
    },
    {
-    "heading": "Which policies and procedures for supported living cover tenancy, money and property?",
-    "body": "People in supported living are tenants first. Three policies in the pack deal with that: one separating housing from care, one covering belongings and keys, and one covering money and valuables. They set out who holds what, who can enter a person's home and how spending is recorded and checked.\n\nThese are the policies and procedures for supported living that often go missing from a care-only set, and the ones that matter most when a person's independence is at stake. Extra care schemes also get a communal areas and call system policy."
+    "heading": "Policies and procedures for supported living: tenancy, money and property",
+    "body": "Three policies deal with the tenancy side. One separates housing from care. One covers belongings and keys. One covers money and valuables. They set out who holds what, who can enter a person's home and how spending is recorded and checked.\n\nThese are the policies that often go missing from a care only set, and they matter most when a person's independence is at stake. Extra care schemes also get a communal areas and call system policy."
    },
    {
-    "heading": "Do learning disability policies and procedures include choice and risk?",
-    "body": "Yes. Good learning disability policies and procedures make room for choice. The pack includes a positive risk taking policy, so staff know how to support a person to do something with some risk attached, and how that decision is recorded and reviewed. It also covers independent advocacy, relationships and sexual safety, and health action plans with annual health checks.\n\nHate crime, mate crime and cuckooing are covered too, because people with a learning disability can be targeted by those who pose as friends. The aim is a set of policies that protect people without taking away their say."
+    "heading": "Learning disability policies and procedures: choice and risk",
+    "body": "Good policies make room for choice. The pack includes a positive risk taking policy, so staff know how to support someone to do something with some risk attached, and how that decision is recorded and reviewed. It also covers independent advocacy, relationships and sexual safety, and health action plans with annual health checks.\n\nHate crime, mate crime and cuckooing are included too, because people with a learning disability can be targeted by those who pose as friends. The aim is policies that protect people without taking away their say."
    },
    {
-    "heading": "Is there Shared Lives and a supported living policy pack in one order?",
-    "body": "There is. The Shared Lives policies in this pack cover approval, matching and household review, so a Shared Lives scheme can show how it chooses and checks carers. Extra care is covered by the communal areas and call system policy.\n\nIf you have been looking for a supported living policy pack that also works for learning disability and autism services, this one brings them together at a fixed price, with every policy personalised from short questions about your own service. A person on your team reads each one before it carries your name."
+    "heading": "Shared Lives and a supported living policy pack in one order",
+    "body": "The Shared Lives policies cover approval, matching and household review, so a scheme can show how it chooses and checks its carers. Extra care is covered by the communal areas and call system policy.\n\nIf you run learning disability and autism services as well, one supported living policy pack brings everything together at a fixed price. Every policy is personalised from short questions about your service, and a person on your team reads each one before it carries your name."
    }
   ],
   "original": false
@@ -1103,26 +1107,26 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   ],
   "seo_title": "Care Home Admission Policy and Resident Rights Pack",
   "meta_description": "A care home admission policy plus visiting, dignity, complaints and fees policies. 14 policies written for your service, saving 65% on buying separately.",
-  "intro": "A care home admission policy is where a person's experience of your service begins. This pack gives you that policy alongside 14 policies covering how people join, how they live and how they are treated, from the pre admission assessment to complaints and confidentiality.\n\nEvery policy is written for your own care home from a few short questions, then read by a person before it carries your name. Buying the set costs 65% less than buying the 14 policies one at a time, and the pack price is fixed.",
+  "intro": "A care home admission policy is where a person's experience of your service begins. This pack pairs it with 13 more policies on how people join, how they live and how they are treated, from the pre admission assessment to complaints and confidentiality.\n\nEach policy is written for your own home from a few short questions, then read by a person before it carries your name. The set costs 65% less than buying the 14 one at a time, and the pack price is fixed.",
   "cro": {
-   "whoFor": "Perfect for care homes, nursing homes and residential services that want admission, rights and everyday resident experience policies written around how they really work.",
+   "whoFor": "Perfect for care homes, nursing homes and residential services that want admission, rights and everyday resident policies written around how they really work.",
    "benefits": [
-    "Fourteen policies in one purchase at 65% less than buying them separately",
-    "Each policy is written for your service from your own answers, not a blank template",
+    "Fourteen policies in one purchase, 65% less than buying them separately",
+    "Each policy is written from your own answers, not a blank template",
     "Delivered within 2 working days of your answers, with a 14 day refund"
    ],
    "moments": [
     {
      "title": "A family says they were not listened to",
-     "body": "A clear complaints procedure, backed by communication and dignity policies, lets staff respond calmly and consistently and shows how the service learns."
+     "body": "A clear complaints procedure, backed by communication and dignity policies, lets staff reply calmly and consistently. It also shows the family how the service learns."
     },
     {
      "title": "You are opening a home or registering a new service",
-     "body": "A new registration needs a full set of resident facing policies. This pack gives you the core set in one go, from your care home admission policy to a care home visiting policy."
+     "body": "A new registration needs a full set of resident facing policies. This pack gives you the core set in one go, from admissions to visiting."
     },
     {
      "title": "Your admission contract and fees paperwork is out of date",
-     "body": "Fees, deposits, notice and what happens after a death need plain wording. The contract, fees and admissions policies keep your pre-admission information consistent."
+     "body": "Fees, deposits, notice and what happens after a death need plain wording. The contract, fees and admissions policies keep your pre admission information consistent."
     },
     {
      "title": "A relative asks about cameras, money or relationships",
@@ -1190,7 +1194,7 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
    },
    {
     "question": "Does it include a care home admission policy?",
-    "answer": "Yes. The admissions, transfer and discharge policy covers pre admission assessment, emergency admissions and discharge, written for your service type. The pack also includes the complaints policy."
+    "answer": "Yes. The admissions, transfer and discharge policy covers pre admission assessment, emergency admissions and discharge, written for your service type. The complaints policy is in the pack too."
    },
    {
     "question": "Does it suit nursing homes as well as residential care?",
@@ -1205,30 +1209,30 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   "sections": [
    {
     "heading": "What should a care home admission policy include?",
-    "body": "A care home admission policy should explain how a person is assessed before they move in, how capacity to agree is considered, what happens in an emergency admission and how a planned discharge or transfer works. Regulation 9 requires care to be based on an assessment of needs and preferences.\n\nThe admissions, transfer and discharge policy in this pack is written around your own service, so your care home admission policy reflects whether you provide nursing, dementia or residential care. It sits alongside the contract and fees policy, so families get the same answer from the manager and the paperwork."
+    "body": "A care home admission policy starts with the assessment. Before anyone moves in, it should say who assesses needs and preferences, how you consider whether the person can agree to the move, and what you do when a hospital needs a bed found in a hurry. Regulation 9 requires care to be based on that assessment.\n\nIt should also cover planned transfers and discharge, so families know what to expect when needs change. The admissions, transfer and discharge policy in this pack is written around your service, whether you offer nursing, dementia or residential care. It sits beside the contract and fees policy, so the manager and the paperwork give families the same answer."
    },
    {
     "heading": "What should a complaints procedure say?",
-    "body": "A complaints procedure should say how someone can complain, who receives it, how quickly they get a reply and what happens if they are still unhappy. Regulation 16 of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014 requires providers to have an effective system for handling complaints.\n\nThe care home complaints policy in this pack covers receiving, investigating and learning from complaints, and signposting to the Local Government and Social Care Ombudsman. A residential care home complaints procedure should also be easy for residents and families to find and understand."
+    "body": "It should say how to complain, who receives the complaint, how soon the person gets a reply and where to go if they are still unhappy. Regulation 16 of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014 requires an effective system for handling complaints.\n\nThe care home complaints policy in this pack covers receiving, investigating and learning from complaints. It also points people to the Local Government and Social Care Ombudsman. Residents and families should find it without asking and read it without help. A residential care home complaints procedure that sits in a drawer does not do its job."
    },
    {
     "heading": "Do nursing homes need a different complaints policy?",
-    "body": "The duty is the same for every registered service, but the detail differs. A nursing homes complaints procedure often involves clinical staff, GPs and hospital teams, so your complaints policy in a care home with nursing needs to say who investigates clinical concerns and how findings are shared.\n\nBecause each policy is written from your answers, it reflects whether you provide nursing, dementia care or residential care only. It also links to your communication and confidentiality policies, so a complaint is handled openly but privately."
+    "body": "The duty is the same for every registered service, but the detail differs. Anyone looking for a nursing homes complaints procedure is usually asking about the clinical side: nurses, GPs and hospital teams. Your complaints policy in a care home with nursing should say who investigates a clinical concern and how the findings are shared.\n\nBecause each policy is written from your answers, it reflects the care you actually provide. It also links to your communication and confidentiality policies, so a complaint is handled openly but privately."
    },
    {
     "heading": "What should a care home visiting policy say?",
-    "body": "A care home visiting policy should support people to see those who matter to them. Regulation 9A covers visiting and accompanying people, and any restriction must be proportionate, time limited and based on the person's consent or best interests.\n\nThe visiting policy in this pack sets out how visits and trips out are supported and what precautions are reasonable. A nursing home visiting policy also needs to say what happens at end of life, so families know where they stand before a difficult day arrives."
+    "body": "It should support people to see those who matter to them. Regulation 9A covers visiting and accompanying people. Any restriction must be proportionate, time limited and based on the person's consent or best interests.\n\nThe visiting policy in this pack sets out how visits and trips out are supported and which precautions are reasonable. Policies such as a nursing home visiting policy also need to say what happens at the end of life, so families know where they stand before a difficult day arrives."
    },
    {
     "heading": "Which policies protect dignity, privacy and confidentiality?",
-    "body": "Dignity and respect are set out in Regulation 10, and the dignity in care policy here describes how staff protect privacy, choice and independence day to day. The confidentiality policy explains when information stays private and when sharing is right.\n\nThe pack also includes a care home confidentiality policy partner for modern questions: phones and photography, sexuality and relationships, and a care home cctv policy covering cameras, sensor mats and door alarms. Together they give staff clear, consistent answers on everyday privacy."
+    "body": "Regulation 10 sets out dignity and respect. The dignity in care policy here describes how staff protect privacy, choice and independence day to day. The confidentiality policy explains when information stays private and when sharing is right.\n\nThe pack also covers newer questions: phones and photography, sexuality and relationships, and cameras, sensor mats and door alarms. A care home confidentiality policy and a care home cctv policy sit side by side here, so staff give the same clear answer every time."
    }
   ],
   "original": false
  },
  "statutory-starter": {
   "title": "Statutory Starter Pack",
-  "description": "20 core policies every CQC registered adult social care service needs, from safeguarding to business continuity, written for your service at one pack price.",
+  "description": "The 20 core policies a CQC registered adult social care service needs, from safeguarding to business continuity, written for your service at one pack price.",
   "price_pence": 49500,
   "individual_total_pence": 136000,
   "primary": {
@@ -1283,30 +1287,30 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   ],
   "seo_title": "CQC Policies and Procedures: 20 Core Policy Pack",
   "meta_description": "Get your CQC policies and procedures in one pack: 20 core policies written for your service, saving 64% on buying them one by one.",
-  "intro": "Setting up or checking your CQC policies and procedures is a big job. Inspectors expect to see a core set that matches how your service really runs, and that your staff know and use.\n\nThe Statutory Starter Pack gives you 20 of those core policies, from safeguarding and medicines to fire safety and business continuity. Each one is written for your organisation from a few short questions, so it carries your name, your people and your processes. It saves 64% against buying the policies one at a time.",
+  "intro": "Setting up or checking your CQC policies and procedures is a big job. Inspectors expect a core set that matches how your service really runs, and that your staff know and use.\n\nThe Statutory Starter Pack gives you 20 of those policies, from safeguarding and medicines to fire safety and business continuity. Each one is written from a few short questions, so it carries your name, your people and your processes. It costs 64% less than buying the policies one at a time.",
   "cro": {
-   "whoFor": "Perfect for any CQC registered adult social care service setting up or checking its core policy set.",
+   "whoFor": "Perfect for CQC registered adult social care services that are setting up, or checking, their core policies.",
    "benefits": [
-    "Get the 20 core policies a registered service is expected to hold in one purchase, at 64% less than buying them separately.",
-    "Every policy is personalised to your service from short questions, then read by a person before it carries your name.",
+    "All 20 core policies in one purchase, at 64% less than buying them separately.",
+    "Each policy is personalised to your service from short questions, then read by a person before it carries your name.",
     "Delivered within 2 working days of your answers, with a fourteen day refund if it is not right for you."
    ],
    "moments": [
     {
      "title": "You are registering a new service",
-     "body": "The application, the first inspection and your first staff all need a sound set of policies, and you need them quickly."
+     "body": "The application, the first inspection and your first staff all need sound policies, and you need them quickly."
     },
     {
      "title": "An inspection is announced",
-     "body": "You need to show current policies that match what staff actually do, not a folder of generic documents."
+     "body": "You want current policies that match what staff really do, not a folder of generic documents."
     },
     {
      "title": "A new manager takes over",
-     "body": "You inherit a policy set of unknown age and want one consistent, up to date set in your own service's name."
+     "body": "You have inherited policies of unknown age and want one consistent, up to date set in your service's name."
     },
     {
-     "title": "A safeguarding concern or incident exposes a gap",
-     "body": "You realise a policy is missing or out of date, and you want the whole core set fixed in one go."
+     "title": "An incident exposes a gap",
+     "body": "A safeguarding concern shows a policy is missing or out of date, and you want the whole core set put right in one go."
     }
    ],
    "groups": [
@@ -1355,7 +1359,7 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   "faqs": [
    {
     "question": "What is in the Statutory Starter Pack?",
-    "answer": "It holds 20 core policies, your CQC policies and procedures starter set, for a CQC registered adult social care service, including safeguarding, medicines, mental capacity, health and safety, fire, infection control, data protection, complaints and business continuity. Each is written for your service."
+    "answer": "It holds 20 core policies, your starter set of CQC policies and procedures, for a CQC registered adult social care service. They include safeguarding, medicines, mental capacity, health and safety, fire, infection control, data protection, complaints and business continuity. Each is written for your service."
    },
    {
     "question": "How are the policies personalised?",
@@ -1363,7 +1367,7 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
    },
    {
     "question": "Does a person check the policies?",
-    "answer": "Yes. Every policy is read by a person before it carries your name and reaches you, so you receive something that makes sense for your service and is ready to review and adopt."
+    "answer": "Yes. Every policy is read by a person before it carries your name and reaches you. You receive something that makes sense for your service and is ready to review and adopt."
    },
    {
     "question": "How long does delivery take?",
@@ -1385,31 +1389,31 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   "hero_slug": "safeguarding-adults",
   "sections": [
    {
-    "heading": "What are the CQC policy requirements for a care service?",
-    "body": "The CQC does not publish one fixed list of policies. What it expects is that your service can show how it meets the regulations, and policies are the usual way to do that. Safeguarding, medicines, consent, complaints, duty of candour, safer recruitment and good governance all link directly to the fundamental standards.\n\nSo the CQC policy requirements come down to a simple test. Do you have a clear, current policy for each area of risk, and do your staff follow it? This pack covers the 20 areas almost every adult social care service needs, so you start from a strong base rather than a blank page."
+    "heading": "What are the CQC policy requirements?",
+    "body": "The CQC does not publish one fixed list of policies. It expects you to show how your service meets the regulations, and written policies are the usual way to do that. Safeguarding, medicines, consent, complaints, duty of candour, safer recruitment and governance all link to the fundamental standards.\n\nSo the test is simple. Is there a clear, current policy for each area of risk, and do your staff follow it? This pack covers the 20 areas almost every adult social care service needs. You start from a strong base instead of a blank page, and you can compare it with any CQC policies you already hold."
    },
    {
-    "heading": "Which safeguarding and capacity policies do you need?",
-    "body": "A safeguarding adults policy sets out how staff spot abuse and neglect, who they tell and how you work with your local authority. For a safeguarding policy care home managers can rely on, it should name your own safeguarding lead and your referral route.\n\nIt sits alongside a mental capacity act policy, which covers capacity assessments, best interests decisions and deprivation of liberty safeguards. Consent, dignity and equality policies complete the picture, so staff handle choice and rights the same way every day. A duty of candour policy sits here too, because being open when things go wrong protects people and your service."
+    "heading": "Safeguarding, capacity and candour policies",
+    "body": "A safeguarding adults policy explains how staff spot abuse and neglect, who they tell and how you work with your local authority. If you look at a \"safeguarding policy care home\" example, check that yours names your own safeguarding lead and referral route.\n\nIt works alongside a mental capacity act policy, which covers capacity assessments, best interests decisions and deprivation of liberty safeguards. Consent, dignity and equality policies sit beside them, so staff treat choice and rights the same way every day.\n\nA duty of candour policy belongs here too. Being open when something goes wrong protects people, and it protects your service."
    },
    {
-    "heading": "What should a medication and medicines policy cover?",
-    "body": "Medicines errors are one of the most common causes of harm in care, and inspectors look closely at them. A medication policy care home teams can follow should cover ordering, storage, administration, recording, disposal, errors and self administration.\n\nPeople often search for a CQC medication policy because they want to see that the process matches what the inspector will ask about. Your policy should name who is trained to give medicines, how you check records and how you report and learn from mistakes. Nutrition, hydration and food allergen policies in the pack cover the other daily risks around what people take in."
+    "heading": "What a medicines policy should cover",
+    "body": "Medicines errors are among the most common causes of harm in care, and inspectors look at them closely. Documents titled \"medication policy care home\" tend to share the same core headings: ordering, storage, administration, recording, disposal, errors and self administration.\n\nYours should also name who is trained to give medicines, how records are checked and how mistakes are reported and learned from. Those are the details to test if you want a CQC medication policy that stands up to an inspector's questions. The nutrition, hydration and food allergen policies in the pack cover the other daily risks around what people eat and drink."
    },
    {
-    "heading": "Which health and safety policies does a care home need?",
-    "body": "A health and safety policy care home owners can show an inspector sets out your general statement, who is responsible and your arrangements. Fire safety, moving and handling, incident reporting and business continuity build on it.\n\nAn infection control policy care home inspectors expect to see covers hand hygiene, cleaning schedules, outbreaks and audit. Together these policies show how you keep people, staff and visitors safe, and how you respond when something goes wrong. Each is written around your premises, your people and your escalation contacts, not a generic template."
+    "heading": "Health and safety, fire and infection control",
+    "body": "Managers often ask first for a \"health and safety policy care home\" document. It sets out your general statement, who is responsible and your arrangements. Fire safety, moving and handling, incident reporting and business continuity build on it.\n\nThe infection control side covers hand hygiene, cleaning schedules, outbreaks and audit. Searches for an \"infection control policy care home\" usually want exactly that practical detail.\n\nTogether these policies show how you keep people, staff and visitors safe, and how you respond when something goes wrong. Each is written around your premises, your people and your escalation contacts."
    },
    {
-    "heading": "How do governance, data and workforce policies fit in?",
-    "body": "Good governance runs through every CQC inspection. Data protection and confidentiality policies show how you handle personal information lawfully. A complaints policy shows how you listen and learn.\n\nA CQC whistleblowing policy shows staff how to raise concerns safely, and safer recruitment covers DBS checks, references and fit and proper persons. Without these, even strong care practice is hard to evidence. Having them in one consistent set makes your CQC policies and procedures easier to keep up to date and easier to explain to inspectors."
+    "heading": "How governance, data and workforce policies fit in",
+    "body": "Good governance runs through every inspection. Data protection and confidentiality policies show how you handle personal information lawfully. A complaints policy shows how you listen and learn.\n\nA CQC whistleblowing policy tells staff how to raise concerns safely. Safer recruitment covers DBS checks, references and fit and proper persons. Without these, even strong care is hard to evidence.\n\nKeeping everything in one consistent set makes your CQC policies and procedures easier to review and easier to explain to inspectors."
    }
   ],
   "original": true
  },
  "health-safety-pack": {
   "title": "Health & Safety Pack",
-  "description": "Twenty three policies for premises, fire, water, equipment, handling and safety in people's homes, written for your service.",
+  "description": "Twenty three policies covering fire, water, gas, equipment, handling and lone working, written for your service and ready to put your name on.",
   "price_pence": 46900,
   "individual_total_pence": 133700,
   "primary": {
@@ -1460,30 +1464,30 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   ],
   "seo_title": "Health and Safety Policies for Care Homes, 23 Policy Pack",
   "meta_description": "Health and safety policies for care homes: 23 policies written for your service, at 65% off buying them separately. Fire, water, equipment and more.",
-  "intro": "Safety work in a care service is never one document. Fire, water, gas, electrics, hoists, chemicals and lone working each carry their own duties, and each needs a policy your staff can follow on a bad day. Health and safety policies for care homes also have to say who does what, how often, and where it is recorded.\n\nThis pack brings together 23 policies for premises, equipment, fire and safety in people's own homes. Each is written for your service from short questions, then read by a person before it carries your name. It costs about 65% less than buying them one by one, and suits care homes, nursing homes and home care providers alike.",
+  "intro": "Safety in a care service is never one document. Fire, water, gas, electrics, hoists, chemicals and lone working each carry their own duties. Each needs a policy your staff can follow on a bad day.\n\nThis pack holds 23 health and safety policies for care homes, nursing homes and home care providers. Each one says who does what, how often, and where the record is kept. You answer a few short questions about your service, and a person reads every policy before it carries your name. The set costs about 65% less than buying the policies one by one.",
   "cro": {
-   "whoFor": "Perfect for registered managers and owners who need a complete, personalised set of safety policies for their premises, equipment and staff without writing each one from scratch.",
+   "whoFor": "Perfect for registered managers and owners who want a complete set of safety policies for their premises, equipment and staff, without writing each one from scratch.",
    "benefits": [
-    "23 policies written for how your service works, from fire and Legionella to bed rails and lone working",
+    "23 policies written around your service, from fire and Legionella to bed rails and lone working",
     "About 65% off buying the same policies one at a time, for one payment",
     "Delivered within 2 working days of your answers, with your name, roles and checks already in"
    ],
    "moments": [
     {
      "title": "You are opening or registering a new service",
-     "body": "You need your premises and safety policies in place before the first person moves in, and a clear owner for each check."
+     "body": "Your premises and safety policies need to be in place before the first person moves in. Each check needs a named owner."
     },
     {
-     "title": "A fire risk assessment or water risk assessment has raised actions",
-     "body": "The assessor can point to gaps. A matching policy shows who tests, how often and where results are kept."
+     "title": "A fire or water risk assessment has raised actions",
+     "body": "The assessor can point to gaps. A matching policy shows who tests, how often and where the results are kept."
     },
     {
-     "title": "Your safety policies are old or copied from elsewhere",
-     "body": "Generic text names roles and equipment you do not have. A personalised set of care home health and safety policies reads like your own service."
+     "title": "Your policies are old or copied from elsewhere",
+     "body": "Borrowed text names roles and equipment you do not have. A personalised set of care home health and safety policies reads like your own service."
     },
     {
      "title": "An accident has shown a gap",
-     "body": "A fall from a window, a scald or a faulty hoist quickly shows which policy was missing or not followed."
+     "body": "A fall from a window, a scald or a faulty hoist soon shows which policy was missing or not followed."
     }
    ],
    "groups": [
@@ -1540,11 +1544,11 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   "faqs": [
    {
     "question": "What is in the Health and Safety Pack?",
-    "answer": "Twenty three policies covering health and safety, fire, evacuation, gas, electrics, asbestos, Legionella, COSHH, first aid, equipment, bed rails, lone working and safety in people's homes. Every one is written for your service."
+    "answer": "Twenty three policies. They cover health and safety, fire, evacuation, gas, electrics, asbestos, Legionella, COSHH, first aid, equipment, bed rails, lone working and safety in people's homes. Every one is written for your service."
    },
    {
     "question": "Are the policies personalised to our service?",
-    "answer": "Yes. You answer short questions about your service, such as your roles, premises and equipment. Each of the health and safety policies for care homes in the pack is written around your answers, then read by a person before it carries your name."
+    "answer": "Yes. You answer short questions about your roles, premises and equipment. Every one of the health and safety policies for care homes in this pack is written around your answers, then read by a person before it carries your name."
    },
    {
     "question": "How long does delivery take?",
@@ -1552,15 +1556,19 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
    },
    {
     "question": "What if we already hold some of these policies?",
-    "answer": "The pack price is fixed, so there is no discount for policies you already have. Single policies cost between £39 and £79, so check whether the full set suits you better."
+    "answer": "The pack price is fixed, so there is no discount for policies you already have. Single policies cost between £39 and £79, so compare that with the full set."
    },
    {
     "question": "Does this pack suit a nursing home or home care agency?",
-    "answer": "Yes. It covers premises and equipment policies for care and nursing homes, and policies for safety in a person's own home. Your answers decide which wording each policy uses."
+    "answer": "Yes. It includes premises and equipment policies for care and nursing homes, and policies for safety in a person's own home. Your answers decide which wording each policy uses."
+   },
+   {
+    "question": "Is this the same as a health and safety policy for each setting?",
+    "answer": "Some managers search for \"health and safety policies and procedures care home\" or ask for a single policy. This pack gives you the main policy and 22 supporting ones, so each duty has its own clear procedure."
    },
    {
     "question": "Will these policies give us a good inspection result?",
-    "answer": "No policy can promise an outcome. Good policies show how you meet your duties, and inspectors look at what your staff do in practice, so we help you write policies you can follow."
+    "answer": "No policy can promise an outcome. Good policies show how you meet your duties, and inspectors look at what staff do in practice. We help you write policies you can follow."
    },
    {
     "question": "Can I get a refund?",
@@ -1571,30 +1579,30 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   "sections": [
    {
     "heading": "What health and safety policies does a care home need?",
-    "body": "A care home needs more than one general statement. The Health and Safety at Work etc. Act 1974 sets the base, and separate rules cover fire, gas, electrics, asbestos, hazardous substances, lifting equipment and water. Under the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014, premises and equipment must be safe and suitable.\n\nThis pack gives you a policy for each of those duties, plus incident reporting and first aid. These health and safety policies for care homes work together as one set, and the health and safety policies and procedures care home managers need are all in one place. Your staff can follow them and your manager can evidence them."
+    "body": "More than one general statement. The Health and Safety at Work etc. Act 1974 sets the base. Separate rules then cover fire, gas, electrics, asbestos, hazardous substances, lifting equipment and water. The Health and Social Care Act 2008 (Regulated Activities) Regulations 2014 adds that premises and equipment must be safe and suitable.\n\nThis pack gives you a policy for each duty, plus incident reporting and first aid. Health and safety policies for care homes work best as one set. Staff can follow them, and you can show an inspector how each duty is met. If you are looking for health and safety policies and procedures for a care home, this is the full list in one place."
    },
    {
     "heading": "What should a care home health and safety policy include?",
-    "body": "A care home health and safety policy should state who holds responsibility, how risks are assessed and how staff are trained. It then points to the detailed arrangements: who checks what, how often and where the record lives.\n\nOur Health and Safety Policy anchors the pack, and the other 22 policies sit under it. The same applies to a health and safety policy in residential care homes of any size, and to a nursing home health and safety policy, where hoists, bed rails and oxygen carry extra weight. The duties follow the activity, not the headcount."
+    "body": "It should say who holds responsibility, how risks are assessed and how staff are trained. It should then point to the detailed arrangements: who checks what, how often, and where the record lives.\n\nOur Health and Safety Policy anchors the pack, and the other 22 policies sit under it. The same structure suits a health and safety policy in residential care homes of any size. A nursing home health and safety policy adds more weight on hoists, bed rails and oxygen. The duties follow the activity, not the number of beds."
    },
    {
-    "heading": "What does a fire safety policy for a care home cover?",
-    "body": "A fire safety policy care home teams rely on sets out prevention, detection, alarm testing, staff duties and how people leave the building. Under the Regulatory Reform (Fire Safety) Order 2005, you need a fire risk assessment and a plan that follows from it.\n\nThe pack pairs the Fire Safety Policy with an Evacuation Policy, covering personal emergency evacuation plans and assembly points. It also adds a policy on smoking, vaping and oxygen, because oxygen near ignition sources is one of the most serious fire risks in care."
+    "heading": "Fire safety policy care home: what to cover",
+    "body": "A good fire safety policy covers prevention, detection, alarm testing, staff duties and how people leave the building. The Regulatory Reform (Fire Safety) Order 2005 expects a fire risk assessment and a plan that follows from it.\n\nThe pack pairs the Fire Safety Policy with an Evacuation Policy, which covers personal emergency evacuation plans and assembly points. A third policy covers smoking, vaping and oxygen. Oxygen near a flame or spark is one of the most serious fire risks in care, so it gets its own page."
    },
    {
-    "heading": "Do we need a Legionella and water safety policy?",
-    "body": "If you manage a building with water systems, you must control the risk of Legionella. A legionella policy care home managers can show names the responsible person, the risk assessment, temperature checks, flushing of little used outlets and records. A nursing home legionella policy follows the same pattern, with close attention to people who are more vulnerable to infection.\n\nThe Water Safety and Legionella Policy in this pack follows HSG274 and L8 and links to hot water checks in the Resident Environmental Safety Policy."
+    "heading": "Legionella policy care home: what to cover",
+    "body": "If your building has water systems, you must control the risk of Legionella. Your policy should name the responsible person and the risk assessment. It should also set out temperature checks, flushing of little used outlets and where records are kept.\n\nA nursing home legionella policy follows the same pattern, with extra care for people who are more vulnerable to infection. The Water Safety and Legionella Policy in this pack follows HSG274 and L8. It links to the hot water checks in the Resident Environmental Safety Policy."
    },
    {
-    "heading": "What about lone working in social care?",
-    "body": "Many care staff work alone, at night or in someone's home. A lone working policy social care providers can use sets out how risks are assessed, how staff check in and what happens when a worker cannot be reached. The same idea sits behind a lone working policy health and social care teams of any kind need.\n\nThe Lone Working Policy is joined here by Key Safe and Access to the Home, Home Environment Risk Assessment and Driving for Work policies, so the whole journey is covered, from the car to the front door."
+    "heading": "Lone working policy social care: what to cover",
+    "body": "Many care staff work alone, at night or in someone's home. The policy sets out how risks are assessed, how staff check in, and what happens when a worker cannot be reached. You may see it titled a lone working policy health and social care teams can adopt. The content is the same.\n\nThe Lone Working Policy sits beside Key Safe and Access to the Home, Home Environment Risk Assessment and Driving for Work. Together they cover the whole journey, from the car to the front door."
    }
   ],
   "original": true
  },
  "clinical-care-pack": {
   "title": "Clinical Care Pack",
-  "description": "39 personalised clinical policies for care homes, nursing homes and home care providers, from medicines and infection control to capacity and end of life care.",
+  "description": "39 personalised clinical policies for care homes, nursing homes and home care providers, covering medicines, infection control, capacity and end of life care.",
   "price_pence": 88900,
   "individual_total_pence": 255100,
   "primary": {
@@ -1649,9 +1657,9 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   ],
   "seo_title": "Nursing Home Policies: 39 Clinical Policy Pack",
   "meta_description": "Nursing home policies for clinical care: 39 policies on medicines, infection control and capacity, 65% less than buying separately, written for your service.",
-  "intro": "Clinical care is where a service is tested every day, and where nursing home policies matter most. Medicines, infection control, wound care, consent and end of life care all need a written approach your staff can follow. This pack brings the 39 policies that cover that ground into one purchase.\n\nEach policy is written for your own service from short questions, not downloaded as a generic template. You pay once, at 65% less than buying the 39 separately, and the whole set stays consistent from page to page. A person reads each one before it carries your name.",
+  "intro": "Clinical care is tested every day: at the medicines trolley, at the bedside and on every home visit. This pack gives you 39 clinical policies in one purchase, including the nursing home policies most services are asked about first.\n\nEach policy is written around your own service, using short questions you answer. You pay once, 65% less than buying the 39 separately, and the set stays consistent throughout. A person reads each policy before it carries your name.",
   "cro": {
-   "whoFor": "Perfect for registered managers and clinical leads of care homes, nursing homes and home care providers who need one joined up set of clinical policies.",
+   "whoFor": "Perfect for registered managers and clinical leads of care homes, nursing homes and home care providers who want one joined up set of clinical policies.",
    "benefits": [
     "39 linked clinical policies in one pack, so medicines, consent, capacity and end of life care all point the same way",
     "Each policy is written around how your service runs, so staff recognise their own practice in it",
@@ -1660,7 +1668,7 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
    "moments": [
     {
      "title": "You are preparing for an inspection",
-     "body": "Inspectors look at how clinical care is governed and recorded. A matched set of nursing home policies shows one joined up approach from medicines to deteriorating health."
+     "body": "Inspectors look at how clinical care is governed and recorded. A matched set of nursing home policies shows one joined up approach, from medicines to deteriorating health."
     },
     {
      "title": "You are registering a new nursing service",
@@ -1779,31 +1787,31 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   "hero_slug": "medicines-management",
   "sections": [
    {
-    "heading": "What clinical policies does a nursing home need?",
-    "body": "A nursing home needs written policies for every clinical task its staff carry out, plus the governance that ties them together. That usually starts with a medicines management policy, a controlled drugs policy, infection control and a clinical governance policy. It then covers physical care such as wound care, pressure ulcers, continence, nutrition and falls, and the legal areas of consent, capacity and restrictive practice.\n\nThis pack covers all of those in 39 policies, so your nursing home policies cover the regulations that apply to you: safe care and treatment, consent, and good governance. Your registered manager decides which policies apply to your service."
+    "heading": "What nursing home policies does a service need?",
+    "body": "Every clinical task your staff carry out needs a written policy, plus governance that ties them together. Most services start with medicines, controlled drugs, infection control and clinical governance. Next come physical care policies such as wound care, pressure ulcers, continence, nutrition and falls, then the legal areas of consent, capacity and restrictive practice.\n\nThis pack covers all of that in 39 policies. They line up with the regulations on safe care and treatment, consent and good governance. Your registered manager decides which policies apply to your service, and you can adjust each one once it arrives."
    },
    {
     "heading": "What should a medicines management policy cover?",
-    "body": "A medicines management policy sets out how medicines are ordered, stored, given, recorded and disposed of, and what happens when something goes wrong. A care home medication policy also needs to explain who may give medicines, how errors are reported and how covert administration decisions are made.\n\nIn this pack the medicines management policy sits beside the controlled drugs policy, the STOMP policy on psychotropic medicines and the nursing procedures and delegation policy. Reading them together means your staff get one clear picture instead of five documents that disagree."
+    "body": "It should set out how medicines are ordered, stored, given, recorded and disposed of, and what happens when something goes wrong. It should also say who may give medicines, how errors are reported and how covert administration decisions are made. Some services call this their care home medication policy. It is the same ground.\n\nIn this pack it sits beside the controlled drugs policy, the STOMP policy on psychotropic medicines and the nursing procedures and delegation policy. Read together, they give staff one clear picture instead of several documents that disagree."
    },
    {
     "heading": "How do infection control and outbreak policies fit together?",
-    "body": "An infection control policy covers day to day practice: hand hygiene, protective equipment, cleaning, laundry, waste and sharps. It is the policy people search for most, but it only works with a plan for what happens when infection spreads.\n\nThe pack pairs the infection prevention and control policy with an outbreak management policy that covers isolation, reporting, visiting and staffing. Each is written for the type of service you run, whether that is a residential home, a nursing home or a home care agency."
+    "body": "An infection control policy covers daily practice: hand hygiene, protective equipment, cleaning, laundry, waste and sharps. It only works alongside a plan for when infection spreads.\n\nThe pack pairs it with an outbreak management policy covering isolation, reporting, visiting and staffing. Each is written for the type of service you run, whether that is a residential home, a nursing home or a home care agency, so staff see steps that match their own building and routines."
    },
    {
     "heading": "Which policies cover capacity, consent and restrictive practice?",
-    "body": "A mental capacity act policy explains how staff assess capacity, make best interests decisions and apply the Deprivation of Liberty Safeguards. It works alongside a consent policy, a restraint policy and a positive behaviour support policy, which sets out how staff respond to distress without relying on force.\n\nThe pack also includes policies on reducing restrictive practice, the Mental Health Act, and positive risk taking. Together they help staff protect people's rights while still supporting them to live the life they choose."
+    "body": "A mental capacity act policy explains how staff assess capacity, make best interests decisions and apply the Deprivation of Liberty Safeguards. It works alongside the consent policy and the restraint policy. A positive behaviour support policy then shows how staff respond to distress without relying on force.\n\nThe pack also includes policies on reducing restrictive practice, the Mental Health Act and positive risk taking. Together they help staff protect people's rights while supporting them to live the life they choose."
    },
    {
-    "heading": "Which policies cover physical health, wounds and end of life care?",
-    "body": "Day to day physical care needs its own policies. A wound care policy and a pressure ulcer policy set out how skin is checked and how damage is escalated. A dysphagia policy explains how choking risks and modified diets are managed. A palliative care policy and a DNACPR policy cover end of life wishes and the decisions around resuscitation.\n\nThese sit with diabetes, continence, oral health and falls policies. A clinical governance policy then sets how you audit and review all of it, which supports the clinical policies and procedures your nursing home policies and procedures need to show."
+    "heading": "Which policies cover wounds, swallowing and end of life care?",
+    "body": "Physical care needs its own policies, such as a wound care policy, a dysphagia policy, a palliative care policy and a DNACPR policy. They cover how skin is checked and damage escalated, how choking risks and modified diets are managed, and how end of life wishes and resuscitation decisions are recorded. Diabetes, continence, oral health and falls policies sit alongside them.\n\nA clinical governance policy then sets how you audit and review all of it. That gives you the nursing home policies and procedures an inspector will want to see."
    }
   ],
   "original": true
  },
  "governance-data-pack": {
   "title": "Governance & Data Pack",
-  "description": "Twenty three personalised governance, data protection and records policies, led by an information governance policy, for registered managers and nominated individuals at one pack price.",
+  "description": "Twenty three personalised governance, data protection and records policies for registered managers, with an information governance policy at the centre, at one pack price.",
   "price_pence": 48900,
   "individual_total_pence": 139700,
   "primary": {
@@ -1850,30 +1858,30 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   ],
   "seo_title": "Information Governance Policy: Governance & Data Pack",
   "meta_description": "An information governance policy plus 22 more governance, data and records policies written for your service, with a 65% saving on buying them one by one.",
-  "intro": "Registered managers are asked to show how a service is led, audited and kept safe with its information. This pack gives you an information governance policy and 22 more governance, data protection and records policies in one set of 23, each written for your own service.\n\nThey cover quality assurance, risk, duty of candour, notifications, fit and proper persons, the Caldicott principles and more. You answer short questions, a person reads every policy before it carries your name, and the pack costs 65% less than buying each policy separately.",
+  "intro": "Inspectors want to see how your service is led, audited and kept safe with its information. This pack gives you 23 governance, data protection and records policies, starting with an information governance policy. Each one is written for your own service.\n\nThey cover quality assurance, risk, duty of candour, notifications, fit and proper persons and the Caldicott principles, among others. You answer a few short questions. A person reads every policy before it carries your name. The pack costs 65% less than buying each policy separately.",
   "cro": {
-   "whoFor": "Perfect for registered managers and nominated individuals who need their governance, data and records policies in place and consistent.",
+   "whoFor": "Perfect for registered managers and nominated individuals who want their governance, data and records policies in place and agreeing with each other.",
    "benefits": [
-    "23 policies written for your service at one fixed pack price, 65% below buying them singly",
-    "An information governance policy, data protection and records policies that agree with each other",
+    "23 policies written for your service at one fixed price, 65% below buying them singly",
+    "Data protection, records and confidentiality policies that agree with each other, so staff get one set of rules",
     "Each policy read by a person before it carries your name, delivered within two working days of your answers"
    ],
    "moments": [
     {
      "title": "A data breach has just happened",
-     "body": "You need to know who reports it, to whom and by when, and your policies should already say so."
+     "body": "Staff need to know who reports it, to whom and by when. Your policies should already say so."
     },
     {
      "title": "An inspector asks how you audit",
-     "body": "You can point to a quality assurance policy with your own calendar and how findings become actions."
+     "body": "You can show a quality assurance policy with your own audit calendar, and how each finding turns into an action."
     },
     {
      "title": "A new director or manager is appointed",
-     "body": "You need a clear fit and proper persons process, checked at appointment and kept under review."
+     "body": "You have a clear process for checking fitness at appointment and keeping it under review."
     },
     {
      "title": "You want one consistent set of rules",
-     "body": "Confidentiality, records and your information governance policy should not contradict one another across the service."
+     "body": "Confidentiality, records and information sharing should never contradict one another across the service."
     }
    ],
    "groups": [
@@ -1945,7 +1953,7 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
    },
    {
     "question": "Will a policy pack secure a good rating?",
-    "answer": "No. Policies are one part of the evidence a service holds. Inspectors also look at what staff do day to day, so the pack is a foundation for good practice, not a promise about an outcome."
+    "answer": "No. Policies are one part of the evidence a service holds. Inspectors also look at what staff do day to day, so the pack is a foundation for good practice and not a promise about an outcome."
    },
    {
     "question": "Is there a refund if the pack is not right?",
@@ -1959,24 +1967,24 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   "hero_slug": "governance",
   "sections": [
    {
-    "heading": "Which policies sit around an information governance policy?",
-    "body": "CQC governance is about how the service is led, and the Care Quality Commission looks at how a service is led and how it handles information, and the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014 set the duties behind both. This pack brings the policies together in one place, with the information governance policy at the centre: governance, quality assurance and audit, risk management, clinical governance, records management, data protection and the Statement of Purpose. Each one is written around your service, your named roles and your own audit calendar, so a manager can show how things actually run rather than hand over a generic file."
+    "heading": "What does CQC governance look like in practice?",
+    "body": "CQC governance is about how a service is led. The Care Quality Commission looks at how you check quality, manage risk and handle information, and the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014 set the duties behind it. This pack puts the supporting policies in one place. An information governance policy sits at the centre. Around it are governance, quality assurance and audit, risk management, clinical governance, records and data protection, plus your Statement of Purpose. Each is written around your service, your named roles and your own audit calendar. A manager can then show how things really run, rather than hand over a generic file."
    },
    {
-    "heading": "What does a data protection policy template need to cover for a care service?",
-    "body": "A data protection policy template downloaded from the internet rarely reflects how a care service really works. Yours should cover lawful handling of personal and special category data under UK GDPR and the Data Protection Act 2018, who the data protection lead is, how a breach is reported, and how long each type of record is kept. In this pack the data protection policy sits alongside confidentiality, records management and the information governance policy, so staff get one consistent set of rules rather than four that disagree."
+    "heading": "What should a data protection policy template cover in a care service?",
+    "body": "A data protection policy template from the internet rarely fits how a care service works. Yours should explain how personal and special category data is handled under UK GDPR and the Data Protection Act 2018. It should name your data protection lead and say how a breach is reported. It should also state how long each type of record is kept. In this pack the data protection policy sits beside confidentiality and records management. Staff get one clear set of rules instead of four that quietly disagree. Each policy uses your own roles, systems and retention periods, so the answers are specific to you."
    },
    {
-    "heading": "How do the Caldicott principles and an information governance policy fit together?",
-    "body": "The Caldicott principles set out when personal information can be shared and who decides. An information governance policy is the framework over them: accountability, staff training, breach handling and alignment with the Data Security and Protection Toolkit. The pack includes the Caldicott and Information Sharing Policy, the information governance policy and the records management policy, so the question of who may see what, and for how long, is answered once and written down. We apply the principles to your service rather than reciting them."
+    "heading": "How do the Caldicott principles fit with information governance?",
+    "body": "The Caldicott principles say when personal information can be shared and who decides. Your information governance policy is the framework around them. It covers accountability, staff training, breach handling and the Data Security and Protection Toolkit. The pack includes the Caldicott and Information Sharing Policy, plus a records management policy that sets how long each record is kept. Between them, the question of who may see what, and for how long, is answered once and written down. We apply the principles to your service. We do not simply recite them. Staff can then check the policy when a relative or another professional asks for information."
    },
    {
-    "heading": "What must a registered manager do about CQC notifications, duty of candour and fit and proper persons?",
-    "body": "Three duties catch out busy managers. CQC notifications set out which events must be reported, by whom and how quickly. The duty of candour policy covers being open and honest when something goes wrong, under Regulation 20. The fit and proper persons policy covers directors and managers meeting Regulation 5, at appointment and afterwards. Each policy names who does what in your service, which is what a good information governance policy and its neighbours should do. Together they give a manager a clear route to follow on the day an incident happens, and a record of how it was handled."
+    "heading": "What must a registered manager do about notifications, candour and fitness?",
+    "body": "Three duties catch out busy managers. CQC notifications set out which events must be reported, by whom and how quickly. A duty of candour policy covers being open and honest when something goes wrong, under Regulation 20. The rules on fit and proper persons cover directors and managers under Regulation 5, at appointment and afterwards. Each policy names who does what in your service. Together they give a manager a clear route to follow on the day an incident happens, and a record of how it was handled. That record matters later, when you are asked to explain what you did and why."
    },
    {
-    "heading": "Do you need a business continuity plan for a care home and policies for CCTV, keys and visiting?",
-    "body": "A business continuity plan care home managers can use should say how people stay safe through outages, staffing crises and emergencies, with your escalation contacts included. The pack also covers areas that often sit outside a basic set: CCTV and surveillance, social media and photography, visiting, electronic call monitoring, handling money and valuables, admission contracts and fees, and a key holding policy for services where people hold tenancies. Each is written for your type of service and read by a person before it carries your name."
+    "heading": "Do you need a business continuity plan care home managers can use?",
+    "body": "A business continuity plan should say how people stay safe through power cuts, staffing crises and emergencies, with your escalation contacts included. The pack also covers areas that often sit outside a basic set. These include CCTV, social media and photography, visiting, electronic call monitoring, money and valuables, and admission contracts and fees. There is also a key holding policy for services where people hold tenancies. Each is written for your type of service and read by a person before it carries your name. You review the finished set and adopt what suits you."
    }
   ],
   "original": true
@@ -2034,9 +2042,9 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   ],
   "seo_title": "HR Policies and Procedures for Care Services, 16 Policy Pack",
   "meta_description": "HR policies and procedures for care: 16 policies written for your service, at 66% less than buying them one by one. Fourteen day refund.",
-  "intro": "Recruitment, conduct, supervision and rotas are where a care service is most often asked to show its working. Your HR policies and procedures need to say what your managers actually do, and name the roles and systems you actually use.\n\nThis pack brings together 16 policies for managers and HR leads. Each is written for your service from short questions you answer, then read by a person before it carries your name. It costs 66% less than buying the policies one by one.",
+  "intro": "Recruitment, conduct, supervision and rotas are where a care service is most often asked to show its working. Your HR policies and procedures should describe what your managers actually do, using the roles and systems you actually have.\n\nThis pack brings together 16 policies for managers and HR leads. You answer a few short questions, we write each policy around your answers, and a person reads it before it carries your name. It costs 66% less than buying them one by one.",
   "cro": {
-   "whoFor": "Perfect for registered managers and HR leads who need a complete, personalised set of staff policies without writing each one from scratch.",
+   "whoFor": "Perfect for registered managers and HR leads who want a complete set of staff policies and procedures, personalised to their service, without writing each one from scratch.",
    "benefits": [
     "16 policies covering recruitment, conduct, supervision, training, staffing and absence",
     "66% less than buying the same policies one at a time, for one payment",
@@ -2045,19 +2053,19 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
    "moments": [
     {
      "title": "You are registering a new service",
-     "body": "You need recruitment, conduct and supervision policies in place before the first member of staff starts."
+     "body": "Recruitment, conduct and supervision policies need to be in place before your first member of staff starts."
     },
     {
      "title": "Your staff handbook is generic",
-     "body": "Inspectors look for staff policies that match what your managers do. A personalised set shows your own process for checks, concerns and supervision."
+     "body": "Inspectors look for policies that match what your managers really do. A personalised set shows your own process for checks, concerns and supervision."
     },
     {
      "title": "A disciplinary or grievance has landed",
-     "body": "You need a fair, staged procedure written down before you act, linked to safeguarding and speaking up."
+     "body": "Write down a fair, staged procedure before you act, and link it to safeguarding and speaking up."
     },
     {
      "title": "You are using more agency or bank cover",
-     "body": "You need clear checks and handover for temporary workers before they cover a shift."
+     "body": "Temporary workers need clear checks and a proper handover before they cover a shift."
     }
    ],
    "groups": [
@@ -2110,6 +2118,10 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
     "answer": "You answer short questions about your service for each policy. We write the policies around your answers, a person reads each one, and you receive the full set within 2 working days of your answers."
    },
    {
+    "question": "Does it include a safer recruitment policy and a fit and proper persons policy?",
+    "answer": "Yes. Both are in the pack, along with agency and temporary staff checks, so recruitment and the suitability of directors and managers are covered together."
+   },
+   {
     "question": "What if I already hold some of these policies?",
     "answer": "The pack price is fixed, so there is no discount for policies you hold. Single policies cost from £39 to £79, so the pack suits you best if you need most of the set."
    },
@@ -2138,23 +2150,23 @@ export const POLICY_PACKS: Record<string, PolicyPackInfo> = {
   "sections": [
    {
     "heading": "What HR policies and procedures does a care service need?",
-    "body": "A care service needs more than a general staff handbook. Alongside the basics of conduct and absence, regulation expects written arrangements for recruitment, fitness of directors and managers, supervision, training, staffing levels and speaking up. This pack covers all of those in 16 policies, so your HR policies and procedures match what the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014 ask of a provider.\n\nEach policy is written for your service from short questions about your roles, systems and escalation routes. That means the document describes what your managers really do, not a template that nobody follows."
+    "body": "A care service needs more than a general staff handbook. Alongside conduct and absence, the regulations expect written arrangements for recruitment, the fitness of directors and managers, supervision, training, staffing levels and speaking up.\n\nThis pack covers all of those in 16 policies, so your HR policies and procedures match what the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014 ask of a provider.\n\nEach policy is written from short questions about your roles, systems and escalation routes. The result describes what your managers really do, not a template that nobody follows."
    },
    {
-    "heading": "What should a safer recruitment policy for a care service include?",
-    "body": "A safer recruitment policy should set out each step before someone works with the people you support: application and gap checks, references, identity and right to work checks, and a Disclosure and Barring Service check at the right level. It should also say who decides when a result is not clear cut, and how suitability is kept under review after the person starts.\n\nOur safer recruitment policy follows Regulation 19, fit and proper persons employed. It sits beside the separate fit and proper persons policy, which covers directors and managers under Regulation 5, so both are written once and cross referenced."
+    "heading": "What should a safer recruitment policy include?",
+    "body": "Start with the steps taken before someone works with the people you support. That means application and gap checks, references, identity and right to work checks, and a Disclosure and Barring Service check at the right level.\n\nThe policy should also say who decides when a result is not clear cut, and how suitability is kept under review once the person has started.\n\nThis one follows Regulation 19, fit and proper persons employed. It sits beside the separate fit and proper persons policy for directors and managers under Regulation 5, so each is written once and cross referenced."
    },
    {
     "heading": "How do you handle disciplinary and grievance matters fairly?",
-    "body": "A disciplinary and grievance policy needs clear stages, set timescales, the right to be accompanied and a route to appeal. Care settings add questions of their own, such as when to suspend someone, when a concern becomes a safeguarding referral and how to protect the person who raised it. The staff disciplinary procedure and the hr grievance process in this pack are aligned with the ACAS code of practice.\n\nThey link to the whistleblowing policy care home staff rely on, which explains protections under the Public Interest Disclosure Act, so a concern is never treated as a conduct issue by mistake."
+    "body": "Disciplinary and grievance matters need clear stages, set timescales, the right to be accompanied and a route to appeal. Care settings add questions of their own: when to suspend someone, when a concern becomes a safeguarding referral, and how to protect the person who raised it.\n\nThe pack gives you a staff disciplinary procedure and an HR grievance process, both aligned with the ACAS code of practice.\n\nThree policies connect here: the disciplinary and grievance policy, the whistleblowing policy care home managers need beside it, and professional standards. Together they make sure a protected concern under the Public Interest Disclosure Act is never treated as a conduct issue by mistake."
    },
    {
     "heading": "What do supervision, training and staffing policies cover?",
-    "body": "Regulation 18 expects enough suitably skilled staff, with the training, supervision and appraisal to do the job. The staff supervision policy sets frequencies and records. The training and development policy covers induction, mandatory training and refreshers mapped to the Care Certificate, and the Oliver McGowan training policy covers the learning disability and autism duty by role.\n\nThe staffing and rota policy deals with skill mix and dependency, and the working time policy covers hours, rest breaks, night work and opt outs. These hr procedures give an inspector one clear account of how your team is led and supported."
+    "body": "Regulation 18 expects enough suitably skilled staff, with the training, supervision and appraisal to do the job. Your staff supervision policy sets how often supervision happens and what is recorded.\n\nThe training and development policy covers induction, mandatory training and refreshers mapped to the Care Certificate. The Oliver McGowan policy sets out the learning disability and autism training duty by role.\n\nThe staffing and rota policy deals with skill mix and dependency. The working time policy covers hours, rest breaks, night work and opt outs. Together these HR procedures give an inspector one clear account of how your team is led and supported."
    },
    {
     "heading": "Which other staff policies and procedures are in the pack?",
-    "body": "The pack also covers the everyday people issues managers meet. A sickness absence policy covers reporting, cover, return to work meetings and long term absence. A policy on social media, phones and photography covers personal devices and consent around the people you support. Equality, diversity and human rights covers the Equality Act 2010 in employment and care.\n\nIf you use agency or bank staff, or run live in care, there are policies for those too: agency and temporary staff checks, live in accommodation and handover, and rest breaks and relief cover. Use them as written for your service, or leave them in the pack if they do not apply."
+    "body": "The pack also covers everyday people issues. The sickness absence policy deals with reporting, cover, return to work meetings and long term absence. The social media, phones and photography policy covers personal devices and consent around the people you support. Equality, diversity and human rights covers the Equality Act 2010 in employment and care.\n\nIf you use agency or bank staff, or run live in care, there are policies for those too: checks for temporary staff, live in accommodation and handover, and rest breaks and relief cover. Use them as written, or leave them in the pack if they do not apply."
    }
   ],
   "original": true

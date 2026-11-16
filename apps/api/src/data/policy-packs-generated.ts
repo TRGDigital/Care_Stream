@@ -24,7 +24,7 @@ export const GENERATED_PACKS: Array<{ key: string; title: string; description: s
  {
   "key": "resident-safety-pack",
   "title": "Care Home Resident Safety Pack",
-  "description": "Fourteen personalised nursing home policy documents on falls, skin, swallowing, bed rails, nutrition and acute illness, written for your home at 65% off.",
+  "description": "Fourteen personalised policies for nursing and residential homes, covering falls, skin, swallowing, bed rails, nutrition and acute illness, written for your home at 65% off.",
   "price_pence": 30900,
   "renewal_cap_pence": 8900
  },

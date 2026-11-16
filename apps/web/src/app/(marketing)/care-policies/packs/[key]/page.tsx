@@ -136,8 +136,8 @@ export default async function PackPage({ params }: { params: Promise<{ key: stri
             <p className="eb">Who it is for</p>
             <h2>Who the {bundle.title} is for</h2>
             <p style={{ fontSize: '1.18rem', lineHeight: 1.6, margin: '0 0 6px' }}>{info.cro.whoFor}</p>
-            <ul style={{ margin: '14px 0 0', paddingLeft: 20, lineHeight: 1.7 }}>{info.cro.benefits.map(b => <li key={b}>{b}</li>)}</ul>
-            <div className="pcpacks" style={{ marginTop: 26 }}>
+            <ul className="pcbenefits">{info.cro.benefits.map(b => <li key={b}>{b}</li>)}</ul>
+            <div className="pcpacks" style={{ marginTop: 22 }}>
               {info.cro.moments.map(m => <div className="pcpack" key={m.title}><b>{m.title}</b><span>{m.body}</span></div>)}
             </div>
           </div>

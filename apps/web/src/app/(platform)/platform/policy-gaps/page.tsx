@@ -119,8 +119,8 @@ export default function PolicyGapsPage() {
     const miss = catItems.filter(i => !i.held && (verifs[i.slug] as GapVerification | undefined)?.real_gap === true)
     const head = `We compared the ${catMeta?.client_policies ?? selectedClient.policies} policies ${selectedClient.name} holds with the ${catItems.length} CareStream policies written for a ${selectedClient.setting_label.toLowerCase()}. ${miss.length} are not covered by any of your policies.`
     const url = (slug: string) => `https://www.carestreamai.com/care-policies/${slug}`
-    const text = [head, '', ...miss.map((m, i) => `${i + 1}. ${m.title} (${gbp(m.price_pence)}): ${m.description}\n   ${url(m.slug)}`)].join('\n')
-    const html = `<p>${esc(head)}</p><ol>${miss.map(m => `<li><strong><a href="${url(m.slug)}">${esc(m.title)}</a></strong> (${gbp(m.price_pence)})<br>${esc(m.description)}</li>`).join('')}</ol>`
+    const text = [head, '', ...miss.map((m, i) => `${i + 1}. ${m.title}: ${m.description}\n   ${url(m.slug)}`)].join('\n')
+    const html = `<p>${esc(head)}</p><ol>${miss.map(m => `<li><strong><a href="${url(m.slug)}">${esc(m.title)}</a></strong><br>${esc(m.description)}</li>`).join('')}</ol>`
     copyRich(html, text, 'cat')
   }
 

@@ -159,10 +159,10 @@ export async function listImageModels(): Promise<string[]> {
   return ids.sort()
 }
 
-async function generate(template: string, topic: string, context: string, key: string, size: '1536x1024' | '1024x1536' = SIZE): Promise<string> {
+async function generate(template: string, topic: string, context: string, key: string, size: '1536x1024' | '1024x1536' = SIZE, cast?: string): Promise<string> {
   const result = await openai.images.generate({
     model:  IMAGE_MODEL(),
-    prompt: build(template, topic, context) + castFor(key),
+    prompt: build(template, topic, context) + (cast ?? castFor(key)),
     size,
   })
   recordCostUsd(IMAGE_MODEL(), imageCostUsd((result as any).usage))
@@ -225,21 +225,26 @@ export function shopImageUrl(key?: string | null): string | null {
 // ─── Locked feature art (the upgrade overlay a free account sees when it clicks a locked sidebar item) ─────────────
 // Same flat teal style as the policy and training art. A tall portrait frame, because it sits beside the text.
 export const FEATURE_PROMPT_USAGE = 'feature_lock_image_generation'
-export const DEFAULT_FEATURE_PROMPT = `Create an illustration for one feature of a care management app used by UK care providers.
+export const DEFAULT_FEATURE_PROMPT = `Create an illustration for one feature of a care management app, showing the WORK it supports: the management and administration of a UK care provider. Not the delivery of personal care.
 Feature: "{{topic}}".
 What it does: {{summary}}
 
-Illustrate what the feature is FOR IN PRACTICE: one ordinary, believable moment in a UK care setting where a care manager or member of staff benefits from it. Never illustrate the words in its name, and never use a symbol to stand for the idea.
+Show the people who USE this feature doing that work together: a registered manager, deputy, senior carer or administrator in the office, the staff room, the nurses' station or a team meeting, with the real things that work involves (desks, files and ring binders, wall planners, noticeboards, laptops and tablets, printed reports, a wall chart). The scene must make the feature's PURPOSE clear to someone who has never seen the app.
+Do NOT show a carer giving personal care, a carer sitting with a resident or any person receiving care. The picture is about running the service.
 
-Do NOT include: screens showing readable text, dashboards with lettering, scales of justice, gavels, anatomical diagrams, brains, lightbulbs, floating or disembodied body parts, thought bubbles, tick or cross marks, shields, padlocks, or any other icon used as a metaphor. People are shown doing something real together in a real room.
-Nothing distressing, coercive or punitive. Everyone in the scene is treated with dignity.
+Do NOT include: readable text of any kind on screens, paper, walls or signs; scales of justice, gavels, anatomical diagrams, brains, lightbulbs, floating or disembodied body parts, thought bubbles, tick or cross marks, shields, padlocks, or any other icon used as a metaphor. Charts and plans are shown as abstract coloured shapes only, with no numbers or letters.
+Everyone in the scene is treated with dignity and the mood is calm and organised.
 
-Style: flat modern vector illustration, soft rounded shapes, warm and friendly, gentle teal and warm-neutral palette on a light warm-neutral background, plenty of clean negative space. A calm UK care setting.
+Style: flat modern vector illustration, soft rounded shapes, warm and friendly, gentle teal and warm-neutral palette on a light warm-neutral background, plenty of clean negative space. A UK care provider's office or staff area.
 The illustration fills the ENTIRE frame, edge to edge. There is no caption, no title bar, no label strip, no banner, no border and no margin of flat colour along any edge. Any lettering anywhere in the image is a failure: no text, no numbers, no logos, no signs.
 Do NOT show realistic human faces: keep any people stylised, simple and abstract.
 Compose for a TALL portrait frame: keep the subject centred and away from the left and right edges, which are cropped.
 Professional and reassuring.`
 
 export async function generateFeatureImage(featureKey: string, title: string, summary: string): Promise<string> {
-  return generate(await promptFor(FEATURE_PROMPT_USAGE, DEFAULT_FEATURE_PROMPT), title, summary, featureKey, '1024x1536')
+  // The cast is the management team, never residents (the shared cast helper adds a resident to every scene).
+  const cast = '\n\nThe people in this scene are members of the care provider\'s management or admin team: '
+    + `${pick(CARE_WORKERS, featureKey)} and ${pick(CARE_WORKERS, featureKey, 5)}. They must look visibly different from one another. `
+    + 'Show their skin tone and presentation clearly through the flat illustration style, without drawing realistic facial detail. No residents appear.'
+  return generate(await promptFor(FEATURE_PROMPT_USAGE, DEFAULT_FEATURE_PROMPT), title, summary, featureKey, '1024x1536', cast)
 }

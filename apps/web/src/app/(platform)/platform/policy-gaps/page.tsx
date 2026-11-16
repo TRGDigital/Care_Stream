@@ -6,7 +6,7 @@
 // Not exposed to tenants.
 
 import { useEffect, useMemo, useState } from 'react'
-import { createPlatformClient, type MissingPolicyReport, type CatalogueGapItem } from '@/lib/platform-api'
+import { createPlatformClient, type MissingPolicyReport, type CatalogueGapItem, type GapVerification } from '@/lib/platform-api'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { PolicyOrders } from '@/components/platform/policy-orders'
 import { PlatformShell } from '@/components/platform-shell'
@@ -41,6 +41,7 @@ export default function PolicyGapsPage() {
   // Our policy catalogue judged against what the client holds (the second question: what we sell that they lack).
   const [catItems, setCatItems] = useState<CatalogueGapItem[] | null>(null)
   const [catMeta, setCatMeta] = useState<{ total: number; client_policies: number } | null>(null)
+  const [verifs, setVerifs] = useState<Record<string, GapVerification | 'error'>>({})
   const [catRunning, setCatRunning] = useState(false)
   const [catProgress, setCatProgress] = useState<{ done: number; total: number } | null>(null)
   const [copied, setCopied] = useState<'' | 'law' | 'cat'>('')
@@ -115,8 +116,8 @@ export default function PolicyGapsPage() {
   // The catalogue comparison as an email: what we can write for them, with prices and links.
   function copyCatalogue() {
     if (!catItems || !selectedClient) return
-    const miss = catItems.filter(i => !i.held)
-    const head = `We compared the ${catMeta?.client_policies ?? selectedClient.policies} policies ${selectedClient.name} holds with the ${catItems.length} CareStream policies written for a ${selectedClient.setting_label.toLowerCase()}. ${miss.length} are not in your library.`
+    const miss = catItems.filter(i => !i.held && (verifs[i.slug] as GapVerification | undefined)?.real_gap === true)
+    const head = `We compared the ${catMeta?.client_policies ?? selectedClient.policies} policies ${selectedClient.name} holds with the ${catItems.length} CareStream policies written for a ${selectedClient.setting_label.toLowerCase()}. ${miss.length} are not covered by any of your policies.`
     const url = (slug: string) => `https://www.carestreamai.com/care-policies/${slug}`
     const text = [head, '', ...miss.map((m, i) => `${i + 1}. ${m.title} (${gbp(m.price_pence)}): ${m.description}\n   ${url(m.slug)}`)].join('\n')
     const html = `<p>${esc(head)}</p><ol>${miss.map(m => `<li><strong><a href="${url(m.slug)}">${esc(m.title)}</a></strong> (${gbp(m.price_pence)})<br>${esc(m.description)}</li>`).join('')}</ol>`
@@ -126,8 +127,8 @@ export default function PolicyGapsPage() {
   // COSTS a little credit (Haiku, titles only): one slice of the catalogue per call, accumulated here.
   async function runCatalogue() {
     if (!token || !selected) return
-    if (!window.confirm('This compares every CareStream policy that suits this service with the policies this client holds. It uses a small amount of Anthropic credit.\n\nRun the comparison now?')) return
-    setCatRunning(true); setError(''); setCatItems([]); setCatProgress(null)
+    if (!window.confirm('Step 1 compares every CareStream policy that suits this service with the names of the policies this client holds. Step 2 then reads the client\'s own policy text for each policy that looks missing, to confirm it is a real gap (about 15 reads). Both use Anthropic credit.\n\nRun it now?')) return
+    setCatRunning(true); setError(''); setCatItems([]); setCatProgress(null); setVerifs({})
     try {
       const api = createPlatformClient(token)
       let offset = 0; const all: CatalogueGapItem[] = []
@@ -138,6 +139,18 @@ export default function PolicyGapsPage() {
         if (b.next_offset === null) break
         offset = b.next_offset
       }
+      // Step 2: read their actual policy text for every apparent gap, three at a time.
+      const todo = all.filter(i => !i.held)
+      let done = 0; setCatProgress({ done: 0, total: todo.length })
+      let idx = 0
+      await Promise.all(Array.from({ length: 3 }, async () => {
+        while (idx < todo.length) {
+          const it = todo[idx++]
+          try { const v = await api.policyGaps.verifyGap(selected, it.slug); setVerifs(prev => ({ ...prev, [it.slug]: v })) }
+          catch { setVerifs(prev => ({ ...prev, [it.slug]: 'error' })) }
+          done++; setCatProgress({ done, total: todo.length })
+        }
+      }))
     } catch (e: any) { setError(e.message) }
     finally { setCatRunning(false); setCatProgress(null) }
   }
@@ -150,7 +163,7 @@ export default function PolicyGapsPage() {
     finally { setReportLoading(false) }
   }
 
-  function pick(id: string) { setSelected(id); setCatItems(null); setCatMeta(null); if (id) { loadReport(id); loadMissing(id) } }
+  function pick(id: string) { setSelected(id); setCatItems(null); setCatMeta(null); setVerifs({}); if (id) { loadReport(id); loadMissing(id) } }
 
   async function classify() {
     if (!token || !selected) return
@@ -382,14 +395,15 @@ export default function PolicyGapsPage() {
                 <h2 className="text-sm font-semibold text-neutral-dark">Missing against our policy catalogue</h2>
                 <p className="mt-0.5 text-xs text-neutral-mid">
                   {catItems && catItems.length
-                    ? `${catItems.filter(i => !i.held).length} of ${catMeta?.total ?? catItems.length} CareStream policies for a ${selectedClient.setting_label.toLowerCase()} are not in their library of ${catMeta?.client_policies ?? selectedClient.policies}. ${catItems.filter(i => !i.held && i.is_new).length} of them are among the newest policies.`
+                    ? (() => { const notHeld = catItems.filter(i => !i.held); const vs = notHeld.map(i => verifs[i.slug]).filter((v): v is GapVerification => !!v && v !== 'error'); const real = vs.filter(v => v.real_gap).length
+                        return `${notHeld.length} looked missing by name. After reading their policy text: ${real} confirmed real gaps, ${vs.length - real} already covered, ${notHeld.length - vs.length} not yet checked.` })()
                     : 'Compares every CareStream policy that suits this service with the policies they hold, by subject. Not run yet.'}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                {catItems && catItems.some(i => !i.held) && (
+                {catItems && catItems.some(i => (verifs[i.slug] as GapVerification | undefined)?.real_gap) && (
                   <button onClick={copyCatalogue} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"
-                    title="Copy the policies they do not hold as an email, with prices and links.">
+                    title="Copy only the confirmed gaps as an email, with prices and links.">
                     {copied === 'cat' ? <><Check size={12} className="text-green-600" /> Copied</> : <><Copy size={12} /> Copy for an email</>}
                   </button>
                 )}
@@ -397,27 +411,62 @@ export default function PolicyGapsPage() {
                   className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50"
                   title="Judges each CareStream policy against the names and types of the policies they hold. Uses a small amount of Anthropic credit.">
                   {catRunning ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-                  {catRunning ? (catProgress ? `Comparing ${catProgress.done}/${catProgress.total}…` : 'Comparing…') : catItems ? 'Re-run comparison (uses credit)' : 'Run comparison (uses credit)'}
+                  {catRunning ? (catProgress ? `Reading policies ${catProgress.done}/${catProgress.total}…` : 'Comparing names…') : catItems ? 'Re-run comparison (uses credit)' : 'Run comparison (uses credit)'}
                 </button>
               </div>
             </div>
             {catItems && catItems.length > 0 && (
               <>
                 <p className="mt-3 text-xs text-neutral-mid">
-                  Judged on the names and types of the policies they hold, by meaning rather than wording. Check any you plan to quote before sending: a policy filed under an unusual name can show as missing.
+                  Step 1 judges by policy names; step 2 reads their policy text against what a policy on the subject must contain, and only items that survive are called gaps. Open “Why” on any item to see the evidence.
                 </p>
-                <ul className="mt-2 divide-y divide-gray-100 rounded-lg border border-gray-200">
-                  {catItems.filter(i => !i.held).map(i => (
-                    <li key={i.slug} className="flex flex-wrap items-baseline justify-between gap-2 px-3 py-2.5">
-                      <span className="min-w-0 flex-1">
-                        <a href={`/care-policies/${i.slug}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-neutral-dark hover:text-teal">{i.title}</a>
-                        {i.is_new && <span className="ml-2 rounded-full bg-yellow-300 px-2 py-0.5 text-[10px] font-bold uppercase text-yellow-950">New</span>}
-                        <span className="mt-0.5 block text-xs text-neutral-mid">{i.description}</span>
-                      </span>
-                      <span className="text-sm font-semibold text-neutral-dark">{gbp(i.price_pence)}</span>
-                    </li>
-                  ))}
-                </ul>
+                {(() => {
+                  const notHeld = catItems.filter(i => !i.held)
+                  const vOf = (i: CatalogueGapItem) => verifs[i.slug]
+                  const confirmed = notHeld.filter(i => (vOf(i) as GapVerification | undefined)?.real_gap === true)
+                  const covered = notHeld.filter(i => { const v = vOf(i); return v && v !== 'error' && !v.real_gap })
+                  const pending = notHeld.filter(i => !vOf(i) || vOf(i) === 'error')
+                  const label: Record<string, string> = { covered: 'Covered by a dedicated policy', covered_elsewhere: 'Covered inside another policy', mention_only: 'Only a passing mention', not_found: 'Nothing found' }
+                  const row = (i: CatalogueGapItem, tone: 'gap' | 'ok' | 'wait') => {
+                    const v = vOf(i) as GapVerification | undefined
+                    return (
+                      <li key={i.slug} className="px-3 py-2.5">
+                        <div className="flex flex-wrap items-baseline justify-between gap-2">
+                          <span className="min-w-0 flex-1">
+                            <a href={`/care-policies/${i.slug}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-neutral-dark hover:text-teal">{i.title}</a>
+                            {i.is_new && <span className="ml-2 rounded-full bg-yellow-300 px-2 py-0.5 text-[10px] font-bold uppercase text-yellow-950">New</span>}
+                            {v && v !== ('error' as any) && <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-semibold ${tone === 'gap' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>{label[v.verdict]}</span>}
+                            {tone === 'wait' && <span className="ml-2 text-[10px] text-neutral-mid">{vOf(i) === 'error' ? 'Check failed, re-run' : 'Checking their policy text…'}</span>}
+                          </span>
+                          <span className="text-sm font-semibold text-neutral-dark">{gbp(i.price_pence)}</span>
+                        </div>
+                        {v && v !== ('error' as any) && (
+                          <details className="mt-1 text-xs text-neutral-mid">
+                            <summary className="cursor-pointer">Why: {v.reasoning || 'see evidence'}</summary>
+                            <ul className="mt-1.5 space-y-1 rounded-md bg-gray-50 p-2">
+                              {v.elements.map((e, k) => (
+                                <li key={k}>
+                                  <span className={e.found ? 'text-green-700' : 'text-red-700'}>{e.found ? '✓' : '✗'}</span> <strong className="text-neutral-dark">{e.element}</strong>
+                                  {e.found && e.quote && <span> in <em>{e.policy}</em>: “{e.quote}”</span>}
+                                </li>
+                              ))}
+                              {v.elements.length === 0 && <li>No relevant passages in their library.</li>}
+                            </ul>
+                          </details>
+                        )}
+                      </li>
+                    )
+                  }
+                  return (
+                    <>
+                      <h3 className="mt-3 text-xs font-semibold uppercase tracking-wide text-red-700">Confirmed gaps ({confirmed.length})</h3>
+                      <p className="text-xs text-neutral-mid">Their own policy text was read. Nothing in it deals with this subject in substance. These are the ones to put to the client.</p>
+                      <ul className="mt-1.5 divide-y divide-gray-100 rounded-lg border border-gray-200">{confirmed.map(i => row(i, 'gap'))}{confirmed.length === 0 && <li className="px-3 py-2.5 text-xs text-neutral-mid">None confirmed.</li>}</ul>
+                      {pending.length > 0 && (<><h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Not yet checked ({pending.length})</h3><ul className="mt-1.5 divide-y divide-gray-100 rounded-lg border border-gray-200">{pending.map(i => row(i, 'wait'))}</ul></>)}
+                      {covered.length > 0 && (<><h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-green-700">Already covered by their own policies ({covered.length}). Do not pitch these.</h3><ul className="mt-1.5 divide-y divide-gray-100 rounded-lg border border-gray-200">{covered.map(i => row(i, 'ok'))}</ul></>)}
+                    </>
+                  )
+                })()}
                 {catItems.some(i => i.held) && (
                   <details className="mt-3 text-xs text-neutral-mid">
                     <summary className="cursor-pointer">{catItems.filter(i => i.held).length} policies they already hold (and which of theirs covers it)</summary>

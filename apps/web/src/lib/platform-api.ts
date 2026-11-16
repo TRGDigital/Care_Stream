@@ -1356,6 +1356,8 @@ export function createPlatformClient(token: string) {
       // Our policy catalogue judged against what the client holds. Costs a little credit; one slice per call.
       catalogueGapsBatch: (tenantId: string, offset: number) =>
         adminFetch<CatalogueGapBatch>(`/policy-gaps/${tenantId}/catalogue-gaps/batch`, token, { method: 'POST', body: JSON.stringify({ offset }) }),
+      verifyGap: (tenantId: string, slug: string) =>
+        adminFetch<GapVerification>(`/policy-gaps/${tenantId}/catalogue-gaps/verify`, token, { method: 'POST', body: JSON.stringify({ slug }) }),
       ignoreType: (name: string, care_setting?: string | null) =>
         adminFetch<{ ignored: boolean }>('/policy-gaps/types/ignore', token, { method: 'POST', body: JSON.stringify({ name, care_setting }) }),
       // Missing policies judged against legislation rather than against peers. Reading is
@@ -1411,6 +1413,13 @@ export function createPlatformClient(token: string) {
 /** Policies a client does not hold, judged against the regulations in scope for their service. */
 export type CatalogueGapItem = { slug: string; title: string; price_pence: number; description: string; held: boolean; held_by: string | null; is_new: boolean }
 export type CatalogueGapBatch = { total: number; offset: number; next_offset: number | null; setting: string; client_policies: number; items: CatalogueGapItem[] }
+
+export type GapVerdict = 'covered' | 'covered_elsewhere' | 'mention_only' | 'not_found'
+export type GapVerification = {
+  slug: string; title: string; verdict: GapVerdict; real_gap: boolean; reasoning: string
+  elements: Array<{ element: string; found: boolean; policy: string | null; quote: string | null }>
+  evidence: Array<{ policy: string; quote: string }>
+}
 
 export interface MissingPolicyReport {
   /** False when coverage has never run: the list means nothing yet, which is not the same as nothing missing. */

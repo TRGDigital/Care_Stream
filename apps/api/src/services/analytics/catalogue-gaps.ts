@@ -178,3 +178,86 @@ export async function evidenceFor(tenantId: string, query: string, terms: string
   }
   return { query, terms, name_matches, policies }
 }
+
+// ─── Verification: is it a real gap, or does a policy they hold already deal with it? ────────────────────────────────
+//
+// A gap is only worth telling a client about if it survives a close read of their own text. This reads the passages of
+// the client's policies that speak to the subject and judges them against the elements a policy on that subject must
+// contain. A dedicated policy that handles most elements is "covered". A section inside a broader policy is "covered
+// elsewhere". A sentence or two that touch the subject are a "mention only". Nothing relevant is "not found".
+// Only "mention only" and "not found" count as a gap we would put to a client.
+// Every quote is checked by code against the real passages, so the model cannot invent evidence.
+const SONNET = 'claude-sonnet-4-5'
+export type GapVerdict = 'covered' | 'covered_elsewhere' | 'mention_only' | 'not_found'
+export type GapVerification = {
+  slug: string; title: string; verdict: GapVerdict; real_gap: boolean
+  reasoning: string
+  elements: Array<{ element: string; found: boolean; policy: string | null; quote: string | null }>
+  evidence: Array<{ policy: string; quote: string }>
+}
+
+export async function verifyGap(tenantId: string, slug: string): Promise<GapVerification> {
+  const product = await (prisma as any).policyProduct.findFirst({ where: { slug }, select: { title: true, description: true } })
+  if (!product) throw new Error('That catalogue policy was not found')
+  const namespace = getTenantNamespace(tenantId)
+  const queries = [`${product.title}. ${product.description ?? ''}`, product.title]
+  const embs = await embedTexts(queries)
+  const seen = new Map<string, { policy_id: string; text: string; score: number }>()
+  for (const emb of embs) {
+    for (const m of await queryVectors(namespace, emb, 25)) {
+      const pid = String(m.metadata.policy_id ?? ''); const text = String(m.metadata.chunk_text ?? '').replace(/\s+/g, ' ').trim()
+      if (!pid || !text) continue
+      const key = `${pid}:${m.metadata.chunk_index}`
+      const cur = seen.get(key)
+      if (!cur || (m.score ?? 0) > cur.score) seen.set(key, { policy_id: pid, text, score: m.score ?? 0 })
+    }
+  }
+  const top = [...seen.values()].sort((a, b) => b.score - a.score).slice(0, 14)
+  const rows: Array<{ id: string; name: string; status: string }> = top.length
+    ? await (prisma as any).policy.findMany({ where: { tenant_id: tenantId, id: { in: [...new Set(top.map(t => t.policy_id))] } }, select: { id: true, name: true, status: true } })
+    : []
+  const nameOf = new Map(rows.filter(r => r.status === 'active').map(r => [r.id, r.name]))
+  const passages = top.filter(t => nameOf.has(t.policy_id)).map(t => ({ policy: nameOf.get(t.policy_id)!, text: t.text.slice(0, 900) }))
+
+  if (!passages.length) {
+    return { slug, title: product.title, verdict: 'not_found', real_gap: true, reasoning: 'Nothing in their policy library speaks to this subject.', elements: [], evidence: [] }
+  }
+
+  const system = 'You are a careful UK adult social care compliance reviewer. You decide whether a care provider already has a policy covering a subject. Respond only with valid JSON.'
+  const user = `SUBJECT OF THE POLICY WE SELL: ${product.title}
+${product.description ?? ''}
+
+Step 1. List the 5 to 7 essential elements a good policy on this subject must contain (for example: who is responsible, the risk assessment or decision process, the practical safeguards, training, recording, review, the law or guidance it follows).
+
+Step 2. Below are passages from the provider's OWN policies. For each element, say whether the passages deal with it in substance (a rule, procedure or responsibility, not a passing mention). Quote the exact words (max 200 characters, copied exactly, no ellipsis) when found.
+
+PASSAGES:
+${passages.map((p, i) => `[${i + 1}] (from "${p.policy}") ${p.text}`).join('\n\n')}
+
+Step 3. Give a verdict:
+- "covered": one policy is mainly ABOUT this subject and deals with most of the elements.
+- "covered_elsewhere": the subject is dealt with in substance as a section of a broader policy (most elements, or the core procedure).
+- "mention_only": the subject is touched on in a sentence or two, or only a few elements, with no real procedure.
+- "not_found": nothing relevant.
+When genuinely unsure between two verdicts, choose the MORE covered one. A false gap told to a client is much worse than a missed one.
+
+Return JSON: {"verdict":"...","reasoning":"two plain sentences a sales person could read to the client","elements":[{"element":"...","found":true,"passage":1,"quote":"exact words or null"}]}`
+
+  const raw = await callClaude(system, user, { model: SONNET, maxTokens: 1800, temperature: 0, feature: 'catalogue_gap_verify' })
+  const m = raw.match(/\{[\s\S]*\}/)
+  let j: any
+  try { j = JSON.parse(m ? m[0] : raw) } catch { throw new Error('The verification could not be read. Try again.') }
+  const verdict: GapVerdict = (['covered', 'covered_elsewhere', 'mention_only', 'not_found'] as const).includes(j.verdict) ? j.verdict : 'covered_elsewhere'
+  const norm = (t: string) => t.replace(/\s+/g, ' ').toLowerCase()
+  const elements = (Array.isArray(j.elements) ? j.elements : []).slice(0, 8).map((e: any) => {
+    const p = passages[Number(e.passage) - 1]
+    const quote = typeof e.quote === 'string' && p && norm(p.text).includes(norm(e.quote)) ? e.quote : null
+    // An element only counts as found if its quote really exists in that policy's text.
+    return { element: String(e.element ?? ''), found: !!e.found && !!quote, policy: p?.policy ?? null, quote }
+  })
+  const evidence = elements.filter((e: any) => e.quote && e.policy).map((e: any) => ({ policy: e.policy as string, quote: e.quote as string })).slice(0, 5)
+  // If the model claims covered but not a single quote could be verified, do not trust it as covered.
+  const foundCount = elements.filter((e: any) => e.found).length
+  const final: GapVerdict = (verdict === 'covered' || verdict === 'covered_elsewhere') && foundCount === 0 ? 'mention_only' : verdict
+  return { slug, title: product.title, verdict: final, real_gap: final === 'mention_only' || final === 'not_found', reasoning: String(j.reasoning ?? ''), elements, evidence }
+}

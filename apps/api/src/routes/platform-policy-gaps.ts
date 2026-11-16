@@ -5,7 +5,7 @@ import { requirePlatformAdmin } from '../middleware/auth'
 import { facilityTypeToSetting, settingLabel } from '../lib/care-setting'
 import { classifyTenantPolicies, knownPolicyTypes } from '../lib/policy-classifier'
 import { missingPolicies } from '../services/analytics/missing-policies'
-import { catalogueGapsBatch, evidenceFor } from '../services/analytics/catalogue-gaps'
+import { catalogueGapsBatch, evidenceFor, verifyGap } from '../services/analytics/catalogue-gaps'
 import { writePolicy } from '../services/policy-writer/write-policy'
 import { POLICY_PRODUCTS_SEED, POLICY_BUNDLES_SEED, SHARED_INTAKE_FIELDS, COMPLETE_LIBRARY_KEY } from '../data/policy-products-seed'
 import { PRODUCT_REGULATIONS } from '../data/policy-product-regulations'
@@ -756,6 +756,18 @@ platformPolicyGapsRouter.post('/:tenantId/catalogue-gaps/batch', async (req: Req
     ok(res, await catalogueGapsBatch(String(req.params.tenantId), offset))
   } catch (e: any) {
     err(res, 'CATALOGUE_GAPS_FAILED', e?.message ?? 'could not compare the catalogue', 500)
+  }
+})
+
+// POST /:tenantId/catalogue-gaps/verify { slug } — COSTS credit (Sonnet). Reads the client's own policy text and decides
+// whether this catalogue policy is a real gap, with quoted evidence. Only real_gap items should go to a client.
+platformPolicyGapsRouter.post('/:tenantId/catalogue-gaps/verify', async (req: Request, res: Response) => {
+  try {
+    const slug = String(req.body?.slug ?? '')
+    if (!slug) { err(res, 'VALIDATION_ERROR', 'slug is required', 400); return }
+    ok(res, await verifyGap(String(req.params.tenantId), slug))
+  } catch (e: any) {
+    err(res, 'VERIFY_FAILED', e?.message ?? 'could not verify', 500)
   }
 })
 

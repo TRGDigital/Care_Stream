@@ -82,7 +82,7 @@ export default async function PackPage({ params }: { params: Promise<{ key: stri
   const coversFor = (slug: string): string[] => (POLICY_CRO[slug]?.moments ?? []).slice(0, 2).map(m => m.title)
 
   return (
-    <div className="svpage-v2" data-page="care-policies">
+    <div className="svpage-v2 packpage" data-page="care-policies">
       <JsonLd data={breadcrumbSchema([{ name: 'Care policies', path: '/care-policies' }, { name: bundle.title, path: `/care-policies/packs/${key}` }])} />
       <JsonLd data={faqPageSchema(faqs)} />
       <JsonLd data={{
@@ -134,7 +134,8 @@ export default async function PackPage({ params }: { params: Promise<{ key: stri
         <section className="pccat">
           <div className="pccat-in">
             <p className="eb">Who it is for</p>
-            <h2>{info.cro.whoFor.replace(/^Perfect for /, 'Perfect for ')}</h2>
+            <h2>Who the {bundle.title} is for</h2>
+            <p style={{ fontSize: '1.18rem', lineHeight: 1.6, margin: '0 0 6px' }}>{info.cro.whoFor}</p>
             <ul style={{ margin: '14px 0 0', paddingLeft: 20, lineHeight: 1.7 }}>{info.cro.benefits.map(b => <li key={b}>{b}</li>)}</ul>
             <div className="pcpacks" style={{ marginTop: 26 }}>
               {info.cro.moments.map(m => <div className="pcpack" key={m.title}><b>{m.title}</b><span>{m.body}</span></div>)}
@@ -145,7 +146,7 @@ export default async function PackPage({ params }: { params: Promise<{ key: stri
 
       {info && info.sections?.length > 0 && (
         <section className="pccat">
-          <div className="pccat-in" style={{ maxWidth: 860 }}>
+          <div className="pccat-in">
             {info.sections.map(sc => (
               <article key={sc.heading} style={{ marginBottom: 34 }}>
                 <h2 style={{ fontSize: '1.5rem', letterSpacing: '-.025em', margin: '0 0 12px', maxWidth: 'none' }}>{sc.heading}</h2>

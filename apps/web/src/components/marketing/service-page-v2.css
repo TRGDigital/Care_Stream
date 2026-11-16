@@ -463,8 +463,16 @@
 .svpage-v2[data-page="care-policies"] .pcfull-buy{display:flex;align-items:center;gap:18px}
 .svpage-v2[data-page="care-policies"] .pcfull-buy em{font-style:normal;font-size:2rem;font-weight:800;letter-spacing:-.03em;color:var(--accent,#7B3FBF)}
 .svpage-v2[data-page="care-policies"] .pcfull-buy i{font-style:normal;font-weight:650;font-size:.92rem;padding:12px 22px;border-radius:999px;background:var(--btn-ink,#17121F);color:var(--btn-ink-text,#fff)}
-/* The November offer banner: its text, the 15% off pill and the end date fill the full width banner. */
-.svpage-v2[data-page="care-policies"] #policy-library .lofr{align-items:center;padding:18px 24px}
-.svpage-v2[data-page="care-policies"] #policy-library .lofr-tx{flex:1 1 auto;width:100%;min-width:0}
-.svpage-v2[data-page="care-policies"] #policy-library .lofr p.lofr-multi{display:block;width:100%;box-sizing:border-box;padding:10px 14px}
-.svpage-v2[data-page="care-policies"] #policy-library .lofr-end{margin-top:10px}
+/* The November offer banner: full width and compact. Badge, headline and end date share the first row, the 15% off line fills the second. */
+.svpage-v2[data-page="care-policies"] #policy-library .lofr{align-items:center;padding:14px 22px;margin-bottom:22px}
+.svpage-v2[data-page="care-policies"] #policy-library .lofr-tx{flex:1 1 auto;width:100%;min-width:0;display:grid;grid-template-columns:auto 1fr auto;column-gap:14px;row-gap:8px;align-items:center}
+.svpage-v2[data-page="care-policies"] #policy-library .lofr-lb{grid-column:1;grid-row:1;margin:0}
+.svpage-v2[data-page="care-policies"] #policy-library .lofr-hd{grid-column:2;grid-row:1}
+.svpage-v2[data-page="care-policies"] #policy-library .lofr-end{grid-column:3;grid-row:1;margin:0;justify-self:end;text-align:right}
+.svpage-v2[data-page="care-policies"] #policy-library .lofr p.lofr-multi{grid-column:1 / -1;grid-row:2;display:block;width:100%;box-sizing:border-box;margin:0;padding:9px 14px}
+@media (max-width:760px){
+  .svpage-v2[data-page="care-policies"] #policy-library .lofr-tx{grid-template-columns:1fr}
+  .svpage-v2[data-page="care-policies"] #policy-library .lofr-lb,.svpage-v2[data-page="care-policies"] #policy-library .lofr-hd,.svpage-v2[data-page="care-policies"] #policy-library .lofr-end,.svpage-v2[data-page="care-policies"] #policy-library .lofr p.lofr-multi{grid-column:1;grid-row:auto;justify-self:start;text-align:left}
+}
+/* Pack pages: every heading, paragraph and list runs the full width of the content. */
+.packpage .pccat h2,.packpage .pccat h3,.packpage .pccat .lede3,.packpage .pccat p,.packpage .pccat li,.packpage .pccat article{max-width:none}

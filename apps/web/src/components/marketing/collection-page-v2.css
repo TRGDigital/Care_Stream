@@ -117,7 +117,8 @@
 .clpage-v2 .clcard .clshot span{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.58rem;letter-spacing:.11em;text-transform:uppercase;color:var(--accent)}
 .clpage-v2 .clcard .in{padding:20px 22px 22px;display:flex;flex-direction:column;flex:1}
 .clpage-v2 .clcard b{font-size:1.06rem;letter-spacing:-.02em;line-height:1.35;margin-bottom:9px}
-.clpage-v2 .clcard p{margin:0 0 16px;font-size:.89rem;line-height:1.65;color:var(--muted);flex:1;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+/* No line clamp: the longer descriptions (and the 'Covers' line on pack pages) must show in full, not be cut mid line. */
+.clpage-v2 .clcard p{margin:0 0 16px;font-size:.89rem;line-height:1.65;color:var(--muted);flex:1;display:block;overflow:visible}
 .clpage-v2 .clcard .foot{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .clpage-v2 .clcard em{font-style:normal;font-size:1.3rem;font-weight:800;letter-spacing:-.028em}
 .clpage-v2 .clcard i{font-style:normal;font-size:.76rem;color:var(--muted)}

@@ -1,6 +1,7 @@
 // What we know about a sign up at the moment it happens: the IP address, a rough location, the device, and where the person came from.
 // Stored on tenants.signup_meta (shown on the platform client page) and written into the new account alert email.
 import type { Request } from 'express'
+import { clientOrigin } from './client-origin'
 
 export type SignupAttribution = {
   referrer?: string; utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string; utm_term?: string; gclid?: boolean; landing?: string
@@ -119,13 +120,9 @@ export function accountTypeLabel(tier: string, planName?: string | null): string
   return planName ? `Paid plan: ${planName} (trial)` : 'Paid plan (trial)'
 }
 
-/** Where a request came from: IP address, rough location (Vercel geo headers) and device. Used for the last login on a user. */
-export type RequestOrigin = { ip: string | null; country: string | null; region: string | null; city: string | null; user_agent: string | null; at: string }
+/** Where a request came from: IP address, rough location and device, with the website's forwarded values when they are proven genuine (see client-origin.ts). Used for the last login on a user. */
+export type RequestOrigin = { ip: string | null; country: string | null; region: string | null; city: string | null; user_agent: string | null; client: string; device: string | null; at: string }
 export function requestOrigin(req: Request): RequestOrigin {
-  return {
-    ip: cleanIp(req.ip),
-    country: header(req, 'x-vercel-ip-country'), region: decode(header(req, 'x-vercel-ip-country-region')), city: decode(header(req, 'x-vercel-ip-city')),
-    user_agent: clip(req.headers['user-agent'], 300),
-    at: new Date().toISOString(),
-  }
+  const o = clientOrigin(req)
+  return { ip: o.ip, country: o.country, region: o.region, city: o.city, user_agent: o.user_agent, client: o.client, device: o.device, at: new Date().toISOString() }
 }

@@ -19,6 +19,7 @@ import { needsBillingFor } from '../lib/tiers'
 import { freeEvent } from '../lib/free-events'
 import { reportSignupToGrowth } from '../lib/growth-event'
 import { buildSignupMeta, accountTypeLabel, locationOf, requestOrigin, contextLines } from '../lib/signup-meta'
+import { recordSignIn } from '../lib/sign-in-log'
 import { freeSignupAllowed, isPreviewCode, checkFreeSignup, FREE_POLICY_LIMIT, isWebmail, emailDomain } from '../lib/free-tier'
 
 
@@ -288,16 +289,19 @@ authRouter.post('/login', async (req: Request, res: Response) => {
   }
 
   if (user.is_active === false) {
+    await recordSignIn(req, user, { success: false, method: 'password', reason: 'account_deactivated' })
     err(res, 'ACCOUNT_DEACTIVATED', 'This account has been deactivated. Please contact your administrator.', 403)
     return
   }
 
   if (!user.email_verified) {
+    await recordSignIn(req, user, { success: false, method: 'password', reason: 'email_not_verified' })
     err(res, 'EMAIL_NOT_VERIFIED', 'Please verify your email address before signing in. Check your inbox for a verification link.', 403)
     return
   }
 
   if (isAccountLocked(user.locked_until)) {
+    await recordSignIn(req, user, { success: false, method: 'password', reason: 'account_locked' })
     await writeAuditLog({
       tenant_id: user.tenant_id,
       user_id: user.id,
@@ -313,6 +317,7 @@ authRouter.post('/login', async (req: Request, res: Response) => {
   const passwordValid = await verifyPassword(password, user.password_hash)
 
   if (!passwordValid) {
+    await recordSignIn(req, user, { success: false, method: 'password', reason: 'wrong_password' })
     const attempts = user.failed_login_attempts + 1
     const shouldLock = attempts >= LOCKOUT_THRESHOLD
 
@@ -354,6 +359,7 @@ authRouter.post('/login', async (req: Request, res: Response) => {
       ...(user.first_login_at ? {} : { first_login_at: now }),
     },
   })
+  await recordSignIn(req, user, { success: true, method: 'password' })
 
   await writeAuditLog({
     tenant_id: user.tenant_id,
@@ -399,6 +405,7 @@ async function respondWithSession(res: Response, user: any, req?: Request): Prom
     where: { id: user.id },
     data:  { failed_login_attempts: 0, locked_until: null, last_login_at: now, ...(req ? { last_login_meta: requestOrigin(req) as any } : {}), ...(user.first_login_at ? {} : { first_login_at: now }) },
   })
+  if (req) await recordSignIn(req, user, { success: true, method: 'magic_link' })
   await writeAuditLog({ tenant_id: user.tenant_id, user_id: user.id, event_type: 'login', entity_type: 'user', entity_id: user.id })
   // Reviewer (CPD assessor) sign-in alert — fire and forget, never blocks login.
   notifyReviewerActivity(user.id, 'signin', 'signed in to the hub').catch(() => {})

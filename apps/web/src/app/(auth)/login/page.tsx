@@ -5,6 +5,7 @@ import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { PasswordInput } from '../auth-fields'
+import { displayModeNow } from '@/lib/forward-client'
 
 // Where to land after signing in: the page the user was on when their session
 // expired (?callbackUrl=), else the last console page they visited (stored by
@@ -50,7 +51,7 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
 
-    const result = await signIn('credentials', { email, password, redirect: false })
+    const result = await signIn('credentials', { email, password, display_mode: displayModeNow(), redirect: false })
     setLoading(false)
 
     if (result?.error) {

@@ -3237,3 +3237,26 @@ model TrainingReminderLog {
   @@index([tenant_id, created_at])
   @@map("training_reminder_log")
 }
+
+// Every sign in attempt by a known user, successful or not: when, from where, on what, and how they opened CareStream (browser, installed web app,
+// Android app). The platform console shows it on the staff profile (Access and devices). Starts 16 Nov 2026; earlier sign ins were not recorded.
+model UserSignIn {
+  id             String   @id @default(uuid())
+  tenant_id      String
+  user_id        String   @db.Uuid
+  at             DateTime @default(now())
+  success        Boolean
+  method         String                       // password | magic_link
+  failure_reason String?                      // wrong_password | account_locked | email_not_verified | account_deactivated
+  ip             String?
+  country        String?
+  region         String?
+  city           String?
+  user_agent     String?
+  device         String?                      // "Chrome on Android"
+  client         String   @default("unknown") // web | installed_web | android_app | ios_app | unknown
+
+  @@index([user_id, at(sort: Desc)])
+  @@index([tenant_id, at(sort: Desc)])
+  @@map("user_sign_ins")
+}

@@ -233,6 +233,20 @@ export interface EngagementDetail extends EngagementBrief {
   upsell_signals: string[]
 }
 
+/** One staff member's activity record for the platform console (GET /admin/tenants/:id/staff/:userId/record). Counts and times only for AI questions. */
+export interface StaffRecordItem { module_name: string; category: string; source: string; status: string; score: { pct: number } | null; assigned_at: string | null; completed_at: string | null; due_date: string | null; expires_at: string | null; overdue: boolean; due_soon: boolean; reminders_sent: number; last_reminded_at: string | null }
+export interface StaffRecordSummary { assigned: number; completed: number; in_progress: number; not_started: number; overdue: number; due_soon: number; expired: number; completion_pct: number | null }
+export interface StaffRecord {
+  user: { id: string; name: string; email: string; role: string; job_role: string | null; is_active: boolean; created_at: string; first_login_at: string | null; last_login_at: string | null; last_login: { ip?: string | null; country?: string | null; region?: string | null; city?: string | null; user_agent?: string | null; at?: string } | null }
+  activity: { label: 'Never signed in' | 'No activity' | 'Active this week' | 'Occasional' | 'Dormant'; last_active_at: string | null; queries_total: number; queries_30d: number; last_query_at: string | null }
+  training: { summary: StaffRecordSummary; items: StaffRecordItem[] }
+  annual_training: { summary: StaffRecordSummary; items: StaffRecordItem[] }
+  onboarding: { summary: { assigned?: number; completed?: number; overdue?: number } }
+  flags: Array<{ level: 'high' | 'medium' | 'low'; kind: string; label: string }>
+  timeline: Array<{ at: string; type: string; label: string }>
+  reminders: { weekly: Array<{ kind: string; week_start: string; created_at: string; outstanding: number; overdue: number }>; manual_total: number }
+}
+
 export interface TenantDetail {
   tenant:               TenantSummary & { email_domain: string; branding_signoff: string; parent_tenant_id?: string | null; signup_meta?: SignupMeta | null }
   group?: {
@@ -926,6 +940,9 @@ export function createPlatformClient(token: string) {
           id: string; name: string; email: string; role: string; job_role: string | null
           is_active: boolean; created_at: string; first_login_at: string | null; last_login_at: string | null
         }>; total: number }>(`/tenants/${id}/staff`, token),
+
+      staffRecord: (tenantId: string, userId: string) =>
+        adminFetch<StaffRecord>(`/tenants/${tenantId}/staff/${userId}/record`, token),
 
       resetStaffPassword: (tenantId: string, userId: string) =>
         adminFetch<{ user: { id: string; name: string; email: string }; temp_password: string }>(

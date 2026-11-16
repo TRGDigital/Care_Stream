@@ -22,6 +22,7 @@ type AuditEventType =
   | 'login'
   | 'login_failed'
   | 'account_locked'
+  | 'platform_viewed_staff_record'   // TRG looked at a staff member's activity record from the platform console
 
 type AuditEntityType = 'policy' | 'user' | 'tenant' | 'query'
 

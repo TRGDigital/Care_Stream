@@ -43,6 +43,7 @@ import { runAgencyAccess } from '../services/workforce/agencyAccess'
 import { runPolicyReviewReminders } from '../services/policies/review-reminders'
 import { runScheduledTrainingDelivery } from '../services/training/delivery-schedule'
 import { sendRenewalReminders } from '../services/training/renewalReminders'
+import { runWeeklyTrainingReminders } from '../services/training/weeklyReminders'
 import { buildCronReport, sendCronReport } from '../services/ops/cron-report'
 import { buildIndexingReport } from '../services/ralfyindex/weekly-report'
 import { sendIndexingReportEmail } from '../services/email/outbound'
@@ -140,6 +141,16 @@ cronRouter.get('/training-delivery', (req, res) =>
 // The service existed for months; this is the first thing to actually call it.
 cronRouter.get('/training-renewals', (req, res) =>
   job('training-renewals', req, res, () => sendRenewalReminders()))
+
+// Weekly training reminders: every Monday, each staff member with training outstanding gets one email and each admin gets one digest.
+// Query options (cron secret only): tenant=<id>, preview_to=<email> (sends only there, nothing logged, needs tenant), dry=1 (sends nothing).
+cronRouter.get('/training-weekly-reminders', async (req: Request, res: Response) =>
+  job('training-weekly-reminders', req, res, () => runWeeklyTrainingReminders({
+    tenantId: typeof req.query.tenant === 'string' ? req.query.tenant : undefined,
+    previewTo: typeof req.query.preview_to === 'string' ? req.query.preview_to : undefined,
+    dryRun: req.query.dry === '1',
+    previewStaffLimit: Number(req.query.limit) || undefined,
+  })))
 
 // Daily: email Enterprise admins a digest of staff credentials (DBS, right to
 // work, registration) that have expired or expire within 30 days.

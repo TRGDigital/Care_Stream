@@ -3218,3 +3218,22 @@ model PageEvent {
   @@index([url, created_at])
   @@map("page_events")
 }
+
+// One row per weekly training email actually sent (lib: services/training/weeklyReminders.ts). The unique key means a person can never get the
+// same kind of email twice in one week, and it is how "weeks without activity" is counted for the six week pause. Previews are never logged.
+model TrainingReminderLog {
+  id              String   @id @default(uuid())
+  tenant_id       String
+  user_id         String   @db.Uuid
+  kind            String                       // staff_weekly | admin_digest
+  week_start      DateTime @db.Date            // the Monday (Europe/London) of the week it was sent for
+  email_to        String?
+  outstanding     Int      @default(0)
+  overdue         Int      @default(0)
+  never_signed_in Boolean  @default(false)
+  created_at      DateTime @default(now())
+
+  @@unique([user_id, kind, week_start])
+  @@index([tenant_id, created_at])
+  @@map("training_reminder_log")
+}

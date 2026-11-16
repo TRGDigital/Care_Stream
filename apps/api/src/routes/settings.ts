@@ -32,6 +32,7 @@ const EMAIL_PREF_DEFAULTS: Record<string, boolean> = {
   policy_review_reminders: true,
   staff_engagement_alerts: true,
   training_updates:        true,
+  weekly_training_reminders: true,
   audit_updates:           true,
   cqc_staff_prep:          true,
   onboarding_updates:      true,

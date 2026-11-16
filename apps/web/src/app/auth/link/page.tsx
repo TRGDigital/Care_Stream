@@ -25,7 +25,10 @@ function LinkConsumer() {
         // A training-only buyer's manager lands on their dashboard (licences to allocate), not
         // the staff hub; everyone else goes to the hub as before.
         const u = (await getSession())?.user as { tier?: string; role?: string } | undefined
-        router.replace(u?.tier === 'training_only' && u?.role === 'admin' ? '/dashboard' : '/chat')
+        // A link from a training reminder says which hub page to land on (?next=/chat?view=training). Same-site paths only.
+        const next = params.get('next')
+        const safeNext = next && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/login') ? next : null
+        router.replace(safeNext ?? (u?.tier === 'training_only' && u?.role === 'admin' ? '/dashboard' : '/chat'))
       }
       else setState('error')
     } catch {

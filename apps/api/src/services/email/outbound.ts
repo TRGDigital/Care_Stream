@@ -34,7 +34,7 @@ function emailHeader(): string {
   </div>`
 }
 
-function emailFooter(orgName?: string): string {
+export function emailFooter(orgName?: string): string {
   const text = orgName
     ? `This email was sent on behalf of <strong>${orgName}</strong> via CareStreamAI. If you were not expecting this, please contact your administrator.`
     : `The CareStreamAI Team &mdash; Powered by TRG Digital`
@@ -44,7 +44,7 @@ function emailFooter(orgName?: string): string {
   </div>`
 }
 
-function emailWrapper(content: string): string {
+export function emailWrapper(content: string): string {
   return `
 <div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e5e7eb">
   ${emailHeader()}

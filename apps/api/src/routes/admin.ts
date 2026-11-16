@@ -1,3 +1,5 @@
+import { buildStaffRecord } from '../lib/staff-record'
+import { requestOrigin } from '../lib/signup-meta'
 import { loadEngagement, engagementBrief } from '../lib/engagement'
 import { signCollectionPreview } from '../lib/collection-preview'
 import { getPagePerformance, getUpdateQueue, logPageEvent } from '../services/page-metrics/performance'
@@ -974,6 +976,55 @@ adminRouter.get('/tenants/:id/staff', async (req: Request, res: Response) => {
   })
 
   ok(res, { users, total: users.length })
+})
+
+// ─── GET /admin/tenants/:id/staff/:userId/record ─────────────────────────────
+// A personal view of one staff member for the platform console: what they have been allocated, what they have done, when they were last active, and the
+// reminders they have been sent. Built on the same record the client's own admins see, but trimmed on purpose:
+//   - counts and times only for AI questions, never what was typed (staff may mention residents)
+//   - every view is written to the audit log, so there is a record of TRG looking
+adminRouter.get('/tenants/:id/staff/:userId/record', async (req: Request, res: Response) => {
+  const tenantId = String(req.params.id), userId = String(req.params.userId)
+  const p = prisma as any
+  const user = await p.user.findFirst({
+    where: { id: userId, tenant_id: tenantId },
+    select: { id: true, name: true, email: true, role: true, job_role: true, is_active: true, created_at: true, first_login_at: true, last_login_at: true, last_login_meta: true },
+  })
+  if (!user) { err(res, 'NOT_FOUND', 'Staff member not found', 404); return }
+  try {
+    const [rec, reminders, enrolReminders] = await Promise.all([
+      buildStaffRecord(tenantId, userId, { includeTeam: false, includeReading: false }),
+      p.trainingReminderLog.findMany({ where: { user_id: userId }, orderBy: { created_at: 'desc' }, take: 12, select: { kind: true, week_start: true, created_at: true, outstanding: true, overdue: true } }),
+      p.trainingEnrollment.findMany({ where: { user_id: userId, tenant_id: tenantId }, select: { id: true, last_reminded_at: true, reminder_count: true } }),
+    ])
+    if (!rec) { err(res, 'NOT_FOUND', 'Staff record not available', 404); return }
+    const remindBy = new Map<string, { last_reminded_at: Date | null; reminder_count: number }>((enrolReminders as any[]).map(e => [e.id, e]))
+    const items = (list: any[]) => (list ?? []).map(i => ({
+      module_name: i.module_name, category: i.category, source: i.source, status: i.status, score: i.score ?? null,
+      assigned_at: i.assigned_at, completed_at: i.completed_at, due_date: i.due_date, expires_at: i.expires_at, overdue: !!i.overdue, due_soon: !!i.due_soon,
+      reminders_sent: remindBy.get(i.enrollment_id)?.reminder_count ?? 0, last_reminded_at: remindBy.get(i.enrollment_id)?.last_reminded_at ?? null,
+    }))
+    const lastCompleted = [...(rec.training.items ?? []), ...(rec.annual_training.items ?? [])].map((i: any) => (i.completed_at ? new Date(i.completed_at).getTime() : 0))
+    const times = [user.last_login_at, rec.engagement.last_query_at, ...lastCompleted.map(t => (t ? new Date(t) : null))].filter(Boolean).map((d: any) => new Date(d).getTime())
+    const lastActive = times.length ? new Date(Math.max(...times)) : null
+    const ageDays = lastActive ? (Date.now() - lastActive.getTime()) / 86_400_000 : null
+    const label = !user.first_login_at ? 'Never signed in' : ageDays === null ? 'No activity' : ageDays <= 7 ? 'Active this week' : ageDays <= 30 ? 'Occasional' : 'Dormant'
+
+    await writeAuditLog({ tenant_id: tenantId, event_type: 'platform_viewed_staff_record', entity_type: 'user', entity_id: userId, metadata: { via: 'platform_console', from_ip: requestOrigin(req).ip } })
+
+    ok(res, {
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, job_role: user.job_role, is_active: user.is_active, created_at: user.created_at, first_login_at: user.first_login_at, last_login_at: user.last_login_at, last_login: user.last_login_meta ?? null },
+      activity: { label, last_active_at: lastActive, queries_total: rec.engagement.queries_total, queries_30d: rec.engagement.queries_30d, last_query_at: rec.engagement.last_query_at },
+      training: { summary: rec.training.summary, items: items(rec.training.items) },
+      annual_training: { summary: rec.annual_training.summary, items: items(rec.annual_training.items) },
+      onboarding: { summary: rec.onboarding.summary },
+      flags: rec.flags, timeline: rec.timeline,
+      reminders: { weekly: reminders, manual_total: (enrolReminders as any[]).reduce((n, e) => n + (e.reminder_count ?? 0), 0) },
+    })
+  } catch (e: any) {
+    console.error('[admin/staff-record]', e)
+    err(res, 'FETCH_FAILED', e?.message ?? 'Could not build the staff record', 500)
+  }
 })
 
 // ─── POST /admin/tenants/:id/staff/:userId/reset-password ────────────────────

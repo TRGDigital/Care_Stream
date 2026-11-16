@@ -8,6 +8,8 @@ import { POLICY_PACKS } from '@/lib/policy-packs'
 import { KeywordHighlighter } from '@/components/marketing/keyword-highlighter'
 import { AddToBasket, PackLink, BasketPill } from '@/components/marketing/policy-basket'
 import { HomeFaq } from '@/components/marketing/home-faq'
+import { SiteImage } from '@/components/site-image'
+import { POLICY_CRO } from '@/lib/policy-cro'
 import '@/components/marketing/service-page-v2.css'
 import '@/components/marketing/collection-page-v2.css'
 
@@ -25,6 +27,7 @@ interface PackData {
   products: Member[]
   individual_total_pence: number
   other_packs: Array<{ key: string; title: string; price_pence: number; description: string }>
+  laws?: Array<{ key: string; name: string; policies: number }>
 }
 
 async function getPack(key: string): Promise<PackData | null> {
@@ -72,6 +75,12 @@ export default async function PackPage({ params }: { params: Promise<{ key: stri
     { question: 'What if it is not right for my service?', answer: 'Tell us within fourteen days and we refund it in full.' },
   ]
 
+  const heroSlug = info?.hero_slug && bySlug.has(info.hero_slug) ? info.hero_slug : products[0]?.slug
+  const heroMember = heroSlug ? bySlug.get(heroSlug) : undefined
+  const thumbs = products.filter(p => p.slug !== heroSlug).slice(0, 4)
+  const laws = (data.laws ?? []).slice(0, 12)
+  const coversFor = (slug: string): string[] => (POLICY_CRO[slug]?.moments ?? []).slice(0, 2).map(m => m.title)
+
   return (
     <div className="svpage-v2" data-page="care-policies">
       <JsonLd data={breadcrumbSchema([{ name: 'Care policies', path: '/care-policies' }, { name: bundle.title, path: `/care-policies/packs/${key}` }])} />
@@ -84,22 +93,40 @@ export default async function PackPage({ params }: { params: Promise<{ key: stri
       }} />
 
       <section className="svhero">
-        <div className="svwrap">
-          <nav aria-label="Breadcrumb" style={{ fontSize: '.85rem', color: 'var(--muted)', marginBottom: 14 }}>
-            <Link href="/care-policies">Care policies</Link> / {bundle.title}
-          </nav>
-          <span className="uc-eyebrow">Policy pack · {products.length} policies</span>
-          <h1>{info?.title ?? bundle.title}</h1>
-          {(info?.intro ? info.intro.split(/\n\s*\n/) : [bundle.description]).map((t, i) => <p key={i}>{t}</p>)}
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, flexWrap: 'wrap', margin: '18px 0 6px' }}>
-            <b style={{ fontSize: '2.2rem', letterSpacing: '-.03em' }}>{money(bundle.price_pence)}</b>
-            {saving > 0 && <span style={{ color: 'var(--muted)' }}>one-off for all {products.length}. Bought separately: <s>{money(data.individual_total_pence)}</s>. You save {money(saving)} ({pct}%).</span>}
+        <div className="svwrap svhero-in">
+          <div>
+            <nav aria-label="Breadcrumb" style={{ fontSize: '.85rem', color: 'var(--muted)', marginBottom: 14 }}>
+              <Link href="/care-policies">Care policies</Link> / {bundle.title}
+            </nav>
+            <span className="uc-eyebrow">Policy pack · {products.length} policies</span>
+            <h1>{info?.title ?? bundle.title}</h1>
+            {(info?.intro ? info.intro.split(/\n\s*\n/) : [bundle.description]).map((t, i) => <p key={i}>{t}</p>)}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, flexWrap: 'wrap', margin: '18px 0 6px' }}>
+              <b style={{ fontSize: '2.2rem', letterSpacing: '-.03em' }}>{money(bundle.price_pence)}</b>
+              {saving > 0 && <span style={{ color: 'var(--muted)' }}>one-off for all {products.length}. Bought separately: <s>{money(data.individual_total_pence)}</s>. You save {money(saving)} ({pct}%).</span>}
+            </div>
+            <div className="svactions">
+              <PackLink className="svbtn solid" pack={bundle}>Buy the pack · {money(bundle.price_pence)}</PackLink>
+              <a className="svbtn ghost" href="#in-the-pack">See what is inside</a>
+            </div>
+            <ul style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 18px', listStyle: 'none', padding: 0, margin: '16px 0 0', fontSize: '.86rem', color: 'var(--ink-2)' }}>
+              <li>✓ Written for your service</li><li>✓ Read by a person</li><li>✓ Delivered within 2 working days</li><li>✓ Fourteen day refund</li>
+            </ul>
           </div>
-          <div className="svactions">
-            <PackLink className="svbtn solid" pack={bundle}>Buy the pack · {money(bundle.price_pence)}</PackLink>
-            <a className="svbtn ghost" href="#in-the-pack">See what is inside</a>
+          <div className="svshotwrap">
+            {/* The lead policy's illustration, with the next few policies' pictures beneath it. */}
+            <div className="svshot app" style={{ padding: 0, overflow: 'hidden', position: 'relative' }}>
+              <SiteImage src={`/images/care-policies/${heroSlug}/1.webp`} alt={`${heroMember?.title ?? bundle.title}, one of the ${products.length} policies in the ${bundle.title}`} fill priority sizes="(max-width: 900px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginTop: 10 }}>
+              {thumbs.map(t => (
+                <Link key={t.slug} href={`/care-policies/${t.slug}`} title={t.title} style={{ position: 'relative', display: 'block', aspectRatio: '3 / 2', borderRadius: 10, overflow: 'hidden', border: '1px solid var(--line)' }}>
+                  <SiteImage src={`/images/care-policies/${t.slug}/1.webp`} alt={t.title} fill sizes="12vw" style={{ objectFit: 'cover' }} />
+                </Link>
+              ))}
+            </div>
+            <p style={{ fontSize: '.78rem', color: 'var(--muted)', margin: '8px 2px 0' }}>{heroMember?.title}{products.length > 1 ? ` and ${products.length - 1} more` : ''}</p>
           </div>
-          <p style={{ fontSize: '.85rem', color: 'var(--muted)', marginTop: 12 }}>Every policy is written for your service, read by a person before it carries your name, and delivered within 2 working days of your answers. Fourteen day refund.</p>
         </div>
       </section>
 
@@ -112,6 +139,19 @@ export default async function PackPage({ params }: { params: Promise<{ key: stri
             <div className="pcpacks" style={{ marginTop: 26 }}>
               {info.cro.moments.map(m => <div className="pcpack" key={m.title}><b>{m.title}</b><span>{m.body}</span></div>)}
             </div>
+          </div>
+        </section>
+      )}
+
+      {info && info.sections?.length > 0 && (
+        <section className="pccat">
+          <div className="pccat-in" style={{ maxWidth: 860 }}>
+            {info.sections.map(sc => (
+              <article key={sc.heading} style={{ marginBottom: 34 }}>
+                <h2 style={{ fontSize: '1.5rem', letterSpacing: '-.025em', margin: '0 0 12px' }}>{sc.heading}</h2>
+                {sc.body.split(/\n\s*\n/).map((t, i) => <p key={i} style={{ lineHeight: 1.75, margin: '0 0 12px' }}>{t}</p>)}
+              </article>
+            ))}
           </div>
         </section>
       )}
@@ -133,6 +173,7 @@ export default async function PackPage({ params }: { params: Promise<{ key: stri
                       <div className="in">
                         <Link className="tl" href={`/care-policies/${p.slug}`}><b>{p.title}</b></Link>
                         <p>{p.description}</p>
+                        {coversFor(p.slug).length > 0 && <p style={{ fontSize: '.8rem', color: 'var(--muted)', margin: '4px 0 0' }}>Covers: {coversFor(p.slug).join('; ')}</p>}
                         <div className="foot"><em>{money(p.price_pence)} alone</em><i>{p.meta ?? ''}</i></div>
                         <div className="clbuy"><AddToBasket className="clbuy-add" item={{ slug: p.slug, title: p.title, price_pence: p.price_pence }} /></div>
                       </div>
@@ -143,6 +184,40 @@ export default async function PackPage({ params }: { params: Promise<{ key: stri
             </div>
           ))}
           <BasketPill />
+        </div>
+      </section>
+
+      {laws.length > 0 && (
+        <section className="pccat">
+          <div className="pccat-in">
+            <p className="eb">The law and guidance behind it</p>
+            <h2>What the {bundle.title} is written against</h2>
+            <p className="lede3">Every policy is structured from the regulations and guidance below, and checked against the required elements of each before a person reads it. The most used across this pack:</p>
+            <ul style={{ columns: '2 320px', columnGap: 36, margin: '14px 0 0', paddingLeft: 20, lineHeight: 1.75 }}>
+              {laws.map(l => <li key={l.key}>{l.name} <span style={{ color: 'var(--muted)' }}>({l.policies} {l.policies === 1 ? 'policy' : 'policies'})</span></li>)}
+            </ul>
+          </div>
+        </section>
+      )}
+
+      <section className="pccat">
+        <div className="pccat-in">
+          <p className="eb">How it works</p>
+          <h2>From buying the pack to {products.length} finished policies</h2>
+          <div className="pcpacks" style={{ marginTop: 18 }}>
+            <div className="pcpack"><b>1. Buy the pack</b><span>One payment covers every policy in it. The company details you give once are reused across the pack.</span></div>
+            <div className="pcpack"><b>2. Answer short questions</b><span>Each policy asks only what it needs: your leads, your arrangements and the practices you really use, so nothing is invented.</span></div>
+            <div className="pcpack"><b>3. We write and check</b><span>Each policy is written for your service, checked against the regulations it relies on and read by a person before it carries your name.</span></div>
+            <div className="pcpack"><b>4. You receive them</b><span>In your dashboard and as print-ready PDFs on your own letterhead, within 2 working days of your answers.</span></div>
+          </div>
+          {saving > 0 && (
+            <div style={{ marginTop: 26, border: '1px solid var(--line)', borderRadius: 14, padding: '18px 22px', display: 'flex', gap: 28, flexWrap: 'wrap', alignItems: 'baseline' }}>
+              <div><span style={{ color: 'var(--muted)', fontSize: '.85rem' }}>{products.length} policies bought one by one</span><br /><b style={{ fontSize: '1.4rem' }}><s>{money(data.individual_total_pence)}</s></b></div>
+              <div><span style={{ color: 'var(--muted)', fontSize: '.85rem' }}>The {bundle.title}</span><br /><b style={{ fontSize: '1.4rem', color: 'var(--accent)' }}>{money(bundle.price_pence)}</b></div>
+              <div><span style={{ color: 'var(--muted)', fontSize: '.85rem' }}>You save</span><br /><b style={{ fontSize: '1.4rem' }}>{money(saving)} ({pct}%)</b></div>
+              <PackLink className="svbtn solid" pack={bundle}>Buy the pack</PackLink>
+            </div>
+          )}
         </div>
       </section>
 

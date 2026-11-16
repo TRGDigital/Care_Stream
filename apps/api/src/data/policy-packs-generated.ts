@@ -16,15 +16,15 @@ export const GENERATED_PACKS: Array<{ key: string; title: string; description: s
  },
  {
   "key": "home-care-pack",
-  "title": "Domiciliary Care Policies and Procedures Pack",
-  "description": "Sixteen policies for home care agencies and live in care providers, from missed visits to medicines, written around how your service runs.",
+  "title": "Home Care and Live-in Care Policy Pack",
+  "description": "Sixteen home care policies for domiciliary agencies and live in providers, from missed visits to medicines, written around how your service runs.",
   "price_pence": 32900,
   "renewal_cap_pence": 9900
  },
  {
   "key": "resident-safety-pack",
   "title": "Care Home Resident Safety Pack",
-  "description": "Fourteen personalised care home policies and procedures on falls, skin, swallowing, nutrition and acute illness, written for your home at 65% off.",
+  "description": "Fourteen personalised nursing home policy documents on falls, skin, swallowing, bed rails, nutrition and acute illness, written for your home at 65% off.",
   "price_pence": 30900,
   "renewal_cap_pence": 8900
  },
@@ -44,7 +44,7 @@ export const GENERATED_PACKS: Array<{ key: string; title: string; description: s
  },
  {
   "key": "admissions-rights-pack",
-  "title": "Care Home Admission Policy and Rights Pack",
+  "title": "Admissions, Rights and Resident Experience Pack",
   "description": "Fourteen personalised policies on admission, fees, visiting, money, dignity, complaints and confidentiality, for care homes setting out how people join, live and are treated.",
   "price_pence": 29900,
   "renewal_cap_pence": 8900

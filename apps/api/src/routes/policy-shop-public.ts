@@ -102,6 +102,15 @@ policyShopPublicRouter.get('/bundles/:key', async (req: Request, res: Response) 
       select: { slug: true, title: true, price_pence: true, taster: true, description: true, image_key: true, reference_keys: true },
       orderBy: [{ sort_order: 'asc' }, { title: 'asc' }],
     })
+    // The law and guidance behind the pack: the regulation records its policies are written against, most used first.
+    const keyCount = new Map<string, number>()
+    for (const r of rows as any[]) for (const k of (r.reference_keys ?? []) as string[]) keyCount.set(k, (keyCount.get(k) ?? 0) + 1)
+    const topKeys = [...keyCount.entries()].sort((a, b) => b[1] - a[1]).slice(0, 18)
+    const regRows = topKeys.length ? await (prisma as any).externalRegulation.findMany({
+      where: { reference_key: { in: topKeys.map(([k]) => k) } }, select: { reference_key: true, official_name: true },
+    }) : []
+    const nameOf = new Map<string, string>((regRows as any[]).map(r => [r.reference_key, r.official_name]))
+    const laws = topKeys.filter(([k]) => nameOf.has(k)).map(([k, n]) => ({ key: k, name: nameOf.get(k) as string, policies: n }))
     const products = rows.map(({ image_key, reference_keys, ...p }: any) => {
       const regs = (reference_keys ?? []).length
       return { ...p, description: p.description ?? '', meta: regs ? `${regs} regulation${regs === 1 ? '' : 's'}` : '',
@@ -112,7 +121,7 @@ policyShopPublicRouter.get('/bundles/:key', async (req: Request, res: Response) 
       where: { active: true, key: { notIn: [key, 'complete-library'] } }, select: { key: true, title: true, price_pence: true, description: true },
       orderBy: [{ price_pence: 'asc' }],
     })
-    ok(res, { bundle, products, individual_total_pence, other_packs: others })
+    ok(res, { bundle, products, individual_total_pence, other_packs: others, laws })
   } catch (e: any) {
     err(res, 'BUNDLE_FAILED', e?.message ?? 'could not read the pack', 500)
   }

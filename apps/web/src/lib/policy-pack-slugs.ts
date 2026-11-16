@@ -10,7 +10,7 @@ export const POLICY_PACK_PAGES: Array<{ key: string; title: string }> = [
  },
  {
   "key": "home-care-pack",
-  "title": "Domiciliary Care Policies and Procedures Pack"
+  "title": "Home Care and Live-in Care Policy Pack"
  },
  {
   "key": "resident-safety-pack",
@@ -26,6 +26,26 @@ export const POLICY_PACK_PAGES: Array<{ key: string; title: string }> = [
  },
  {
   "key": "admissions-rights-pack",
-  "title": "Care Home Admission Policy and Rights Pack"
+  "title": "Admissions, Rights and Resident Experience Pack"
+ },
+ {
+  "key": "statutory-starter",
+  "title": "Statutory Starter Pack"
+ },
+ {
+  "key": "health-safety-pack",
+  "title": "Health & Safety Pack"
+ },
+ {
+  "key": "clinical-care-pack",
+  "title": "Clinical Care Pack"
+ },
+ {
+  "key": "governance-data-pack",
+  "title": "Governance & Data Pack"
+ },
+ {
+  "key": "hr-workforce-pack",
+  "title": "HR & Workforce Pack"
  }
 ]

@@ -7,7 +7,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Admission Contracts, Fees and Pre-Admission Information Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "governance-data-pack"
+  ],
   "description": "Fees, deposits, notice, fee increases, fees after death and the information given before a person signs, set out in your own admission contract arrangements.",
   "fields": [
    {
@@ -72,7 +74,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Admissions, Transfer and Discharge Policy",
   "price_pence": 6900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "clinical-care-pack"
+  ],
   "description": "Pre-admission assessment, capacity to agree, emergency admissions, hospital transfer and return, and planned discharge, written around how your service really works.",
   "fields": [
    {
@@ -137,7 +141,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Agency, Bank and Temporary Staff Policy",
   "price_pence": 6900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "hr-workforce-pack"
+  ],
   "description": "Checks on agency, bank and temporary workers before a shift: identity, DBS, training evidence, profiles, induction and handover, written around how you really book cover.",
   "fields": [
    {
@@ -202,7 +208,10 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Safe Use of Bed Rails Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "health-safety-pack",
+   "clinical-care-pack"
+  ],
   "description": "Who may have bed rails, how each person is assessed, how bed, rails and mattress are matched and checked, and how entrapment risks are managed.",
   "fields": [
    {
@@ -267,7 +276,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Dementia Care Policy",
   "price_pence": 6900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "clinical-care-pack"
+  ],
   "description": "Person centred dementia care: knowing each person, communication, distress, leaving unsupported, activity, capacity and end of life, written around your service.",
   "fields": [
    {
@@ -337,7 +348,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Dysphagia, Choking and Modified Diet Policy",
   "price_pence": 6900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "clinical-care-pack"
+  ],
   "description": "A dysphagia policy covering swallowing concerns, referral, texture modified food and drink, mealtime support and choking response.",
   "fields": [
    {
@@ -402,7 +415,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Electronic Call Monitoring and Visit Records Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "governance-data-pack"
+  ],
   "description": "An electronic call monitoring policy for how visits are logged and monitored, what happens when logging fails, and how visit records are audited.",
   "fields": [
    {
@@ -467,7 +482,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Falls Prevention and Management Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "clinical-care-pack"
+  ],
   "description": "Falls risk assessment, prevention measures, post-fall checks, escalation and learning, written around how your service really supports people.",
   "fields": [
    {
@@ -532,7 +549,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Health Action Plans, Annual Health Checks and Hospital Passports Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "clinical-care-pack"
+  ],
   "description": "Annual health checks, health action plans and hospital passports for people with a learning disability, with reasonable adjustments and review set out for your service.",
   "fields": [
    {
@@ -602,7 +621,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Home Environment Risk Assessment Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "health-safety-pack"
+  ],
   "description": "Assessing the safety of a person's own home for them and for staff: access, fire, equipment, pets, smoking and agreed actions, reviewed on a schedule.",
   "fields": [
    {
@@ -667,7 +688,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Key Safe and Access to the Home Policy",
   "price_pence": 4900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "health-safety-pack"
+  ],
   "description": "A key safe policy for your service: who holds keys and codes, how staff enter a person's home, lost keys, and how access details are kept secure.",
   "fields": [
    {
@@ -737,7 +760,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Live-In Care Rest Breaks, Sleep and Relief Cover Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "hr-workforce-pack"
+  ],
   "description": "Live in carer rest breaks, sleep arrangements, night disturbance, relief cover and handover, written around how your live-in or Shared Lives service really runs.",
   "fields": [
    {
@@ -807,7 +832,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Missed and Late Visits Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "clinical-care-pack"
+  ],
   "description": "What counts as a missed or late visit, how the office is alerted, how the person is made safe, and how every case is recorded and learned from.",
   "fields": [
    {
@@ -872,7 +899,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Missing Person, Absconding and Absence from Support Policy",
   "price_pence": 6900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "clinical-care-pack"
+  ],
   "description": "A missing person policy written for your service: risk assessment, search steps, escalation, return and review, linked to capacity and deprivation of liberty.",
   "fields": [
    {
@@ -937,7 +966,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Handling People's Money, Valuables and Property Policy",
   "price_pence": 6900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "governance-data-pack"
+  ],
   "description": "How your staff hold, spend, record and safeguard people's cash, cards, valuables and shopping, including appointeeship and deputies, and how financial abuse is prevented.",
   "fields": [
    {
@@ -1007,7 +1038,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "No Access and Concern for Welfare Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "clinical-care-pack"
+  ],
   "description": "What staff do when no one answers the door: retries, key holders, contacts, police and ambulance, recording and notifications, written around how your service works.",
   "fields": [
    {
@@ -1072,7 +1105,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Positive Risk-Taking and Enablement Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "clinical-care-pack"
+  ],
   "description": "How your service supports informed choice and independence, weighs risk against rights, records decisions and reviews them, written around your own practice.",
   "fields": [
    {
@@ -1132,7 +1167,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Pressure Ulcer Prevention and Skin Integrity Policy",
   "price_pence": 6900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "clinical-care-pack"
+  ],
   "description": "Risk screening, repositioning, pressure-relieving equipment, skin checks, grading and escalation of pressure damage, written for your service.",
   "fields": [
    {
@@ -1197,7 +1234,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Reducing Restrictive Practice and Restraint Reduction Policy",
   "price_pence": 6900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "clinical-care-pack"
+  ],
   "description": "A service wide plan for reducing restrictive practice: monitoring, post incident debrief, review of every restriction and governance oversight.",
   "fields": [
    {
@@ -1257,7 +1296,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Resuscitation, DNACPR and ReSPECT Policy",
   "price_pence": 6900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "clinical-care-pack"
+  ],
   "description": "How your service responds to a collapse, finds and follows DNACPR and ReSPECT plans, and involves people, families and clinicians in decisions.",
   "fields": [
    {
@@ -1327,7 +1368,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "STOMP and Psychotropic Medicines Reduction Policy",
   "price_pence": 6900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "clinical-care-pack"
+  ],
   "description": "Non-drug options, PRN psychotropic use, structured reviews and safe reduction plans, written around how your service supports people.",
   "fields": [
    {
@@ -1397,7 +1440,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Visiting and Accompaniment Policy",
   "price_pence": 6900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "governance-data-pack"
+  ],
   "description": "A care home visiting policy built on Regulation 9A: supporting visits and trips out, with proportionate precautions, consent and best interests.",
   "fields": [
    {
@@ -1462,7 +1507,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Accompanying People Out and Community Activities Policy",
   "price_pence": 4900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "health-safety-pack"
+  ],
   "description": "An outings policy for your service: risk assessment, transport, money, consent and capacity, and emergencies when staff accompany people out.",
   "fields": [
    {
@@ -1597,7 +1644,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "CCTV, Surveillance and Monitoring Technology Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "governance-data-pack"
+  ],
   "description": "A care home CCTV policy template written for you, covering cameras, sensor mats and door alarms: privacy, consent, best interests and data use.",
   "fields": [
    {
@@ -1667,7 +1716,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Continence Promotion and Catheter Care Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "clinical-care-pack"
+  ],
   "description": "Continence assessment, products, catheter care, UTI prevention and dignity, with clear roles for care staff and nurses, written for your service.",
   "fields": [
    {
@@ -1732,7 +1783,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Deteriorating Resident and Acute Illness Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "clinical-care-pack"
+  ],
   "description": "Spotting early signs of decline, sepsis awareness, escalation to GP, 111 or 999 and handover to paramedics, written around how your service really works.",
   "fields": [
    {
@@ -1797,7 +1850,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Diabetes Care Policy",
   "price_pence": 6900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "clinical-care-pack"
+  ],
   "description": "Glucose monitoring, hypoglycaemia and hyperglycaemia response, insulin support, diet and foot checks, written for your service and the people you support.",
   "fields": [
    {
@@ -1862,7 +1917,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Driving, Travel and Vehicle Use for Work Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "health-safety-pack"
+  ],
   "description": "A driving for work policy for your service: licence and insurance checks, travel between visits, own car use, carrying people, bad weather and accidents.",
   "fields": [
    {
@@ -1932,7 +1989,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Extra Care Communal Areas, Call System and Emergency Response Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "health-safety-pack"
+  ],
   "description": "An extra care housing policy for your scheme: call system testing, who answers and how fast, communal area safety, night cover and emergency response.",
   "fields": [
    {
@@ -2127,7 +2186,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Live-In Carer Accommodation, Rota and Handover Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "hr-workforce-pack"
+  ],
   "description": "Live-in carer room and facilities, rota patterns, handover between carers and placement review, written around how your live-in service really runs.",
   "fields": [
    {
@@ -2197,7 +2258,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Nursing Clinical Procedures and Delegation Policy",
   "price_pence": 6900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "clinical-care-pack"
+  ],
   "description": "Delegating clinical tasks to care staff, competence sign off and nurse accountability, written around the procedures your service really carries out.",
   "fields": [
    {
@@ -2267,7 +2330,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Oral Health Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "clinical-care-pack"
+  ],
   "description": "An oral health policy covering mouth care assessment, daily cleaning, denture care and dental access, written around how your service supports each person.",
   "fields": [
    {
@@ -2337,7 +2402,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Oxygen, Smoking and Fire Risk in the Person's Home Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "health-safety-pack"
+  ],
   "description": "An oxygen safety at home policy for your service: smoking, emollient creams, heaters and candles, fire risk checks and referral to the fire and rescue service.",
   "fields": [
    {
@@ -2472,7 +2539,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Resident Environmental Safety Policy (hot water, windows and hazards)",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "health-safety-pack"
+  ],
   "description": "Keeping the building safe for residents: hot water outlets, window openings, hot surfaces and access hazards, checked, recorded and acted on by named roles.",
   "fields": [
    {
@@ -2747,7 +2816,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Shift Handover and Clinical Communication Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "clinical-care-pack"
+  ],
   "description": "How each shift hands over, what must be passed on about risks and changes, how it is recorded, and how concerns are escalated between shifts.",
   "fields": [
    {
@@ -2812,7 +2883,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Sickness, Absence and Return to Work Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "hr-workforce-pack"
+  ],
   "description": "Reporting sickness, cover, sick pay, return to work meetings, long-term absence and illness that could reach residents, set out in your own sickness absence arrangements.",
   "fields": [
    {
@@ -2872,7 +2945,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Smoking, Vaping and Oxygen Safety Policy",
   "price_pence": 4900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "health-safety-pack"
+  ],
   "description": "Where people may smoke or vape, how designated rooms are marked, and how oxygen, cylinders and fire risk are managed and recorded in your home.",
   "fields": [
    {
@@ -2942,7 +3017,10 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Social Media, Mobile Phones and Photography Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "governance-data-pack",
+   "hr-workforce-pack"
+  ],
   "description": "How your staff use personal phones, social media and cameras around the people you support, including consent for photographs, online conduct and what happens when rules are broken.",
   "fields": [
    {
@@ -3002,7 +3080,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Tenancy, Housing and Care Separation Policy",
   "price_pence": 5900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "governance-data-pack"
+  ],
   "description": "A tenancy and care separation policy for your service: how housing and care stay distinct, who does what, and how people keep choice over where and with whom they live.",
   "fields": [
    {
@@ -3072,7 +3152,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Safe Handling of Property, Tenant Belongings and Keys Policy",
   "price_pence": 4900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "governance-data-pack"
+  ],
   "description": "A key holding policy for your service: entering people's homes, key control, handling belongings, searches and respecting privacy in a tenancy.",
   "fields": [
    {
@@ -3142,7 +3224,9 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "title": "Wound Care and Tissue Viability Policy",
   "price_pence": 6900,
   "taster": false,
-  "bundles": [],
+  "bundles": [
+   "clinical-care-pack"
+  ],
   "description": "Wound assessment, dressing choice, infection signs, tissue viability referral and record keeping, written for your care home, nursing or dementia service.",
   "fields": [
    {

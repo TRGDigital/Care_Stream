@@ -14,58 +14,58 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "funding_routes_accepted",
-    "label": "Which funding routes do you accept, and which contract applies to each?",
-    "help": "For example: self-funders on our contract, local authority placements on the council contract, NHS continuing healthcare"
+    "label": "Funding routes and contracts",
+    "help": "Which funding routes do you accept, and which contract applies to each? For example: self-funders on our contract, local authority placements on the council contract, NHS continuing healthcare"
    },
    {
     "key": "pre_contract_information",
-    "label": "What written information do you give a person before they sign, and when?",
-    "help": "For example: fee schedule, sample contract and brochure sent at enquiry, at least 7 days before admission"
+    "label": "Pre-contract information",
+    "help": "What written information do you give a person before they sign, and when? For example: fee schedule, sample contract and brochure sent at enquiry, at least 7 days before admission"
    },
    {
     "key": "fee_components",
-    "label": "What does the basic fee include, and what extras do you charge for?",
-    "help": "For example: hairdressing, chiropody, newspapers, escorts to appointments"
+    "label": "Fee inclusions and extras",
+    "help": "What does the basic fee include, and what extras do you charge for? For example: hairdressing, chiropody, newspapers, escorts to appointments"
    },
    {
     "key": "deposit_and_upfront_charges",
-    "label": "Do you take a deposit, advance payment or any upfront charge, and how is it handled and returned?",
-    "help": "Say if you take none. For example: one month in advance, held and refunded within 14 days"
+    "label": "Deposits and upfront charges",
+    "help": "Do you take a deposit, advance payment or any upfront charge, and how is it handled and returned? Say if you take none. For example: one month in advance, held and refunded within 14 days"
    },
    {
     "key": "fee_review_process",
-    "label": "How and when do you review fees, and how much notice do you give of an increase?",
-    "help": "For example: annual review each April, 28 days written notice, explanation of the reasons"
+    "label": "Fee review and notice",
+    "help": "How and when do you review fees, and how much notice do you give of an increase? For example: annual review each April, 28 days written notice, explanation of the reasons"
    },
    {
     "key": "third_party_top_ups",
-    "label": "How do you handle third party top-up payments for a council funded place?",
-    "help": "For example: separate written top-up agreement signed by the payer, reviewed yearly"
+    "label": "Third party top ups",
+    "help": "How do you handle third party top-up payments for a council funded place? For example: separate written top-up agreement signed by the payer, reviewed yearly"
    },
    {
     "key": "notice_and_ending_contract",
-    "label": "What notice does the person give to leave, and what notice do you give to end the contract?",
-    "help": "For example: 28 days either way, shorter if the person moves to hospital long term"
+    "label": "Notice to end contract",
+    "help": "What notice does the person give to leave, and what notice do you give to end the contract? For example: 28 days either way, shorter if the person moves to hospital long term"
    },
    {
     "key": "fees_after_death_or_leaving",
-    "label": "For how long are fees charged after a person dies or leaves, and what happens to their belongings?",
-    "help": "For example: fees stop 7 days after death once the room is cleared, belongings returned to the family"
+    "label": "Fees after death or leaving",
+    "help": "For how long are fees charged after a person dies or leaves, and what happens to their belongings? For example: fees stop 7 days after death once the room is cleared, belongings returned to the family"
    },
    {
     "key": "capacity_and_representatives",
-    "label": "Who signs the contract when a person lacks capacity to agree it, and what do you ask to see?",
-    "help": "For example: person with lasting power of attorney for property and affairs, with the document copied"
+    "label": "Contract signer without capacity",
+    "help": "Who signs the contract when a person lacks capacity to agree it, and what do you ask to see? For example: person with lasting power of attorney for property and affairs, with the document copied"
    },
    {
     "key": "contract_format_support",
-    "label": "How do you help people understand the contract, and in what formats can you provide it?",
-    "help": "For example: walk through with the manager, large print, easy read, family present"
+    "label": "Contract format support",
+    "help": "How do you help people understand the contract, and in what formats can you provide it? For example: walk through with the manager, large print, easy read, family present"
    },
    {
     "key": "complaints_about_fees",
-    "label": "How are complaints about fees or the contract handled, and who reviews contract terms?",
-    "help": "For example: registered manager responds within 20 days, provider reviews terms each year"
+    "label": "Fee complaints handling",
+    "help": "How are complaints about fees or the contract handled, and who reviews contract terms? For example: registered manager responds within 20 days, provider reviews terms each year"
    }
   ]
  },
@@ -81,58 +81,58 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "admission_decision_maker",
-    "label": "Who decides whether the service can meet a person's needs, and who signs off an admission?",
-    "help": "For example: registered manager, with the clinical lead for nursing needs"
+    "label": "Admission decision maker",
+    "help": "Who decides whether the service can meet a person's needs, and who signs off an admission? For example: registered manager, with the clinical lead for nursing needs"
    },
    {
     "key": "pre_admission_assessment",
-    "label": "How is the pre-admission assessment carried out, and where, and by whom?",
-    "help": "For example: visit to the person at home or hospital by the manager within 48 hours of referral"
+    "label": "Assessment arrangements",
+    "help": "How is the pre-admission assessment carried out, and where, and by whom? For example: visit to the person at home or hospital by the manager within 48 hours of referral"
    },
    {
     "key": "assessment_tools",
-    "label": "Which assessment forms or tools do you use before and on admission?",
-    "help": "For example: your own form, local authority assessment, NHS continuing healthcare documents"
+    "label": "Assessment tools used",
+    "help": "Which assessment forms or tools do you use before and on admission? For example: your own form, local authority assessment, NHS continuing healthcare documents"
    },
    {
     "key": "emergency_admission_rules",
-    "label": "Do you accept emergency or out of hours admissions, and what must be in place first?",
-    "help": "For example: no emergency admissions after 6pm; manager approval and a basic care plan required"
+    "label": "Emergency admission rules",
+    "help": "Do you accept emergency or out of hours admissions, and what must be in place first? For example: no emergency admissions after 6pm; manager approval and a basic care plan required"
    },
    {
     "key": "capacity_to_agree",
-    "label": "How do you check whether a person can agree to the admission, and what happens if they cannot?",
-    "help": "For example: capacity assessment by the manager, best-interests meeting, referral to the local authority"
+    "label": "Capacity to agree",
+    "help": "How do you check whether a person can agree to the admission, and what happens if they cannot? For example: capacity assessment by the manager, best-interests meeting, referral to the local authority"
    },
    {
     "key": "admission_paperwork",
-    "label": "What must you receive before or on the day of admission?",
-    "help": "For example: medication list, discharge summary, DNACPR form, funding confirmation, power of attorney details"
+    "label": "Admission paperwork needed",
+    "help": "What must you receive before or on the day of admission? For example: medication list, discharge summary, DNACPR form, funding confirmation, power of attorney details"
    },
    {
     "key": "hospital_transfer_pack",
-    "label": "What information goes with a person when they go to hospital?",
-    "help": "For example: red bag, hospital passport, medication record, escalation plan, named staff escort"
+    "label": "Hospital transfer pack",
+    "help": "What information goes with a person when they go to hospital? For example: red bag, hospital passport, medication record, escalation plan, named staff escort"
    },
    {
     "key": "hospital_return_process",
-    "label": "What happens when a person returns from hospital?",
-    "help": "For example: review of discharge summary, medicines reconciliation with the pharmacy, care plan update within 24 hours"
+    "label": "Hospital return process",
+    "help": "What happens when a person returns from hospital? For example: review of discharge summary, medicines reconciliation with the pharmacy, care plan update within 24 hours"
    },
    {
     "key": "bed_hold_and_trial",
-    "label": "Do you hold a bed during a hospital stay, and do you run a trial or settling in period?",
-    "help": "For example: bed held for 14 days; four week review of the placement"
+    "label": "Bed hold and trial period",
+    "help": "Do you hold a bed during a hospital stay, and do you run a trial or settling in period? For example: bed held for 14 days; four week review of the placement"
    },
    {
     "key": "discharge_triggers",
-    "label": "When might you end a placement or discharge someone, and who must be told?",
-    "help": "For example: needs can no longer be met; notice period; local authority and family informed"
+    "label": "Discharge triggers",
+    "help": "When might you end a placement or discharge someone, and who must be told? For example: needs can no longer be met; notice period; local authority and family informed"
    },
    {
     "key": "planned_discharge_steps",
-    "label": "What do you do for a planned move to another service or home?",
-    "help": "For example: transfer summary, medicines handover, key worker visit, follow-up call after a week"
+    "label": "Planned discharge steps",
+    "help": "What do you do for a planned move to another service or home? For example: transfer summary, medicines handover, key worker visit, follow-up call after a week"
    }
   ]
  },
@@ -148,58 +148,58 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "cover_sources",
-    "label": "Where does temporary cover come from: external agencies, your own bank, or both?",
-    "help": "For example: two approved agencies plus an in house bank of 12 staff"
+    "label": "Cover sources",
+    "help": "Where does temporary cover come from: external agencies, your own bank, or both? For example: two approved agencies plus an in house bank of 12 staff"
    },
    {
     "key": "who_authorises_cover",
-    "label": "Who can authorise and book agency or bank cover, and when?",
-    "help": "For example: duty manager for same day cover, registered manager for block bookings"
+    "label": "Cover authoriser",
+    "help": "Who can authorise and book agency or bank cover, and when? For example: duty manager for same day cover, registered manager for block bookings"
    },
    {
     "key": "agency_selection",
-    "label": "How do you select and approve an agency, and what do you ask them to confirm?",
-    "help": "For example: framework agreement, annual review, written confirmation of checks"
+    "label": "Agency approval process",
+    "help": "How do you select and approve an agency, and what do you ask them to confirm? For example: framework agreement, annual review, written confirmation of checks"
    },
    {
     "key": "worker_profile_checks",
-    "label": "What do you check on a worker's profile before they start a shift?",
-    "help": "For example: photo ID matched on arrival, DBS level and date, training dates, right to work, professional registration"
+    "label": "Worker profile checks",
+    "help": "What do you check on a worker's profile before they start a shift? For example: photo ID matched on arrival, DBS level and date, training dates, right to work, professional registration"
    },
    {
     "key": "dbs_position",
-    "label": "How do you confirm DBS status for agency and bank workers, and who holds the evidence?",
-    "help": "For example: agency confirms enhanced check with barred list, we see the certificate or Update Service result"
+    "label": "DBS confirmation",
+    "help": "How do you confirm DBS status for agency and bank workers, and who holds the evidence? For example: agency confirms enhanced check with barred list, we see the certificate or Update Service result"
    },
    {
     "key": "minimum_training_evidence",
-    "label": "What training evidence must an agency or bank worker have before working with you?",
-    "help": "For example: moving and handling, safeguarding, fire, medicines competency within 12 months"
+    "label": "Minimum training evidence",
+    "help": "What training evidence must an agency or bank worker have before working with you? For example: moving and handling, safeguarding, fire, medicines competency within 12 months"
    },
    {
     "key": "induction_on_arrival",
-    "label": "What induction does a temporary worker get at the start of a shift?",
-    "help": "For example: 20 minute orientation, fire exits, key codes, named buddy, sign in sheet"
+    "label": "Arrival induction",
+    "help": "What induction does a temporary worker get at the start of a shift? For example: 20 minute orientation, fire exits, key codes, named buddy, sign in sheet"
    },
    {
     "key": "handover_and_information",
-    "label": "How is a temporary worker told about the people they will support?",
-    "help": "For example: verbal handover, summary sheet of risks, access to care plans on the system"
+    "label": "Handover information",
+    "help": "How is a temporary worker told about the people they will support? For example: verbal handover, summary sheet of risks, access to care plans on the system"
    },
    {
     "key": "use_limits_and_continuity",
-    "label": "Do you limit agency use or aim for regular workers on the same team?",
-    "help": "For example: block bookings of the same workers, escalation if agency use exceeds a set level"
+    "label": "Agency use limits",
+    "help": "Do you limit agency use or aim for regular workers on the same team? For example: block bookings of the same workers, escalation if agency use exceeds a set level"
    },
    {
     "key": "performance_concerns",
-    "label": "How are concerns about a temporary worker's conduct or competence raised and recorded?",
-    "help": "For example: incident form, feedback to the agency within 24 hours, worker not rebooked"
+    "label": "Concerns process",
+    "help": "How are concerns about a temporary worker's conduct or competence raised and recorded? For example: incident form, feedback to the agency within 24 hours, worker not rebooked"
    },
    {
     "key": "records_kept",
-    "label": "Where do you keep records of temporary workers, and for how long?",
-    "help": "For example: agency folder held by the office, shift log on the rota system"
+    "label": "Records kept",
+    "help": "Where do you keep records of temporary workers, and for how long? For example: agency folder held by the office, shift log on the rota system"
    }
   ]
  },
@@ -216,58 +216,58 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "rail_types_in_use",
-    "label": "Which types of bed rail and bed does the service use?",
-    "help": "e.g. integral profiling bed rails, clip-on rails, bed levers, bumpers, hired and owned beds"
+    "label": "Rail and bed types",
+    "help": "Which types of bed rail and bed does the service use? e.g. integral profiling bed rails, clip-on rails, bed levers, bumpers, hired and owned beds"
    },
    {
     "key": "assessment_owner",
-    "label": "Who is competent to carry out the bed rail assessment?",
-    "help": "Role titles, e.g. senior nurse, team leader with equipment training, occupational therapist"
+    "label": "Assessment owner",
+    "help": "Who is competent to carry out the bed rail assessment? Role titles, e.g. senior nurse, team leader with equipment training, occupational therapist"
    },
    {
     "key": "assessment_timing",
-    "label": "When is the assessment done and reviewed?",
-    "help": "e.g. before admission or first use, monthly, after a fall, after a change in condition or mattress"
+    "label": "Assessment timing",
+    "help": "When is the assessment done and reviewed? e.g. before admission or first use, monthly, after a fall, after a change in condition or mattress"
    },
    {
     "key": "mattress_types",
-    "label": "Which mattress types are used with rails, including overlays and pressure relieving mattresses?",
-    "help": "e.g. foam, alternating pressure, overlay, and who decides the pairing"
+    "label": "Mattress types",
+    "help": "Which mattress types are used with rails, including overlays and pressure relieving mattresses? e.g. foam, alternating pressure, overlay, and who decides the pairing"
    },
    {
     "key": "fit_check_method",
-    "label": "How are gaps, fit and mattress position checked and recorded?",
-    "help": "e.g. checklist at set-up and each shift, gap measurement against manufacturer instructions"
+    "label": "Fit check method",
+    "help": "How are gaps, fit and mattress position checked and recorded? e.g. checklist at set-up and each shift, gap measurement against manufacturer instructions"
    },
    {
     "key": "inspection_servicing",
-    "label": "Who inspects and services beds and rails, and how often?",
-    "help": "e.g. in-house maintenance, external contractor, planned inspection schedule"
+    "label": "Inspection and servicing",
+    "help": "Who inspects and services beds and rails, and how often? e.g. in-house maintenance, external contractor, planned inspection schedule"
    },
    {
     "key": "capacity_consent_route",
-    "label": "How do you handle consent or a best interests decision for bed rails?",
-    "help": "e.g. discussion with the person and family, MCA best interests record, advocacy referral"
+    "label": "Consent route",
+    "help": "How do you handle consent or a best interests decision for bed rails? e.g. discussion with the person and family, MCA best interests record, advocacy referral"
    },
    {
     "key": "alternatives_tried",
-    "label": "What alternatives to rails do you consider first?",
-    "help": "e.g. low-low beds, crash mats, sensor alerts, increased checks"
+    "label": "Alternatives tried first",
+    "help": "What alternatives to rails do you consider first? e.g. low-low beds, crash mats, sensor alerts, increased checks"
    },
    {
     "key": "staff_training",
-    "label": "How are staff trained and checked as competent on bed rails?",
-    "help": "e.g. induction, annual update, observed practice, supplier training"
+    "label": "Staff training",
+    "help": "How are staff trained and checked as competent on bed rails? e.g. induction, annual update, observed practice, supplier training"
    },
    {
     "key": "incident_reporting",
-    "label": "How are rail incidents, near misses and faulty equipment reported and acted on?",
-    "help": "e.g. incident form, manager review, supplier or MHRA reporting, removal from use"
+    "label": "Incident reporting",
+    "help": "How are rail incidents, near misses and faulty equipment reported and acted on? e.g. incident form, manager review, supplier or MHRA reporting, removal from use"
    },
    {
     "key": "home_setting_arrangements",
-    "label": "For people in their own homes or extra care flats, who supplies and checks the bed and rails?",
-    "help": "e.g. person owns the bed, NHS or council equipment service, family supplied"
+    "label": "Home setting arrangements",
+    "help": "For people in their own homes or extra care flats, who supplies and checks the bed and rails? e.g. person owns the bed, NHS or council equipment service, family supplied"
    }
   ]
  },
@@ -283,63 +283,63 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "life_story_method",
-    "label": "How do you learn and record what matters to each person with dementia?",
-    "help": "e.g. life story book, This Is Me form, family interview, key worker conversations, and who keeps it up to date"
+    "label": "Life story method",
+    "help": "How do you learn and record what matters to each person with dementia? e.g. life story book, This Is Me form, family interview, key worker conversations, and who keeps it up to date"
    },
    {
     "key": "communication_approaches",
-    "label": "What communication approaches do staff use with people who find speaking or understanding hard?",
-    "help": "e.g. picture cards, simple choices, non-verbal cues, translated phrases, hearing and sight checks"
+    "label": "Communication approaches",
+    "help": "What communication approaches do staff use with people who find speaking or understanding hard? e.g. picture cards, simple choices, non-verbal cues, translated phrases, hearing and sight checks"
    },
    {
     "key": "distress_response",
-    "label": "What do staff do first when someone is distressed or agitated?",
-    "help": "e.g. check pain, hunger, toilet, noise and boredom, use known comfort items, record the trigger on a chart"
+    "label": "First response to distress",
+    "help": "What do staff do first when someone is distressed or agitated? e.g. check pain, hunger, toilet, noise and boredom, use known comfort items, record the trigger on a chart"
    },
    {
     "key": "distress_escalation",
-    "label": "Who is told, and what happens, if distress continues or care plans need changing?",
-    "help": "e.g. senior on shift, manager, GP or community mental health team, family, multidisciplinary review"
+    "label": "Distress escalation",
+    "help": "Who is told, and what happens, if distress continues or care plans need changing? e.g. senior on shift, manager, GP or community mental health team, family, multidisciplinary review"
    },
    {
     "key": "leaving_unsupported_risk",
-    "label": "How do you manage the risk of someone leaving the building or home unsupported?",
-    "help": "e.g. door alarms, keypad doors, sensor mats, location devices only with agreed consent or best interests decision, personal risk plan"
+    "label": "Leaving unsupported risk",
+    "help": "How do you manage the risk of someone leaving the building or home unsupported? e.g. door alarms, keypad doors, sensor mats, location devices only with agreed consent or best interests decision, personal risk plan"
    },
    {
     "key": "activity_programme",
-    "label": "What activities and daily routines do you offer people with dementia?",
-    "help": "e.g. activity coordinator, one to one time, music, gardening, reminiscence, evening and weekend cover, activities at home"
+    "label": "Activity programme",
+    "help": "What activities and daily routines do you offer people with dementia? e.g. activity coordinator, one to one time, music, gardening, reminiscence, evening and weekend cover, activities at home"
    },
    {
     "key": "environment_adaptations",
-    "label": "What adaptations to the environment have you made for people with dementia?",
-    "help": "e.g. signage, contrasting colours, lighting, memory boxes, quiet spaces, or in a person's own home, advice given to family"
+    "label": "Environment adaptations",
+    "help": "What adaptations to the environment have you made for people with dementia? e.g. signage, contrasting colours, lighting, memory boxes, quiet spaces, or in a person's own home, advice given to family"
    },
    {
     "key": "capacity_dols_route",
-    "label": "How are capacity, best interests and any deprivation of liberty applications handled for people with dementia?",
-    "help": "e.g. who assesses, how decisions are recorded, who applies for authorisations, how family and advocates are involved"
+    "label": "Capacity and DoLS route",
+    "help": "How are capacity, best interests and any deprivation of liberty applications handled for people with dementia? e.g. who assesses, how decisions are recorded, who applies for authorisations, how family and advocates are involved"
    },
    {
     "key": "medicines_for_distress",
-    "label": "What is your approach to medicines used for distress or agitation?",
-    "help": "e.g. non-drug approaches first, prescriber and pharmacist review dates, PRN protocols, who records the reason for use"
+    "label": "Medicines for distress",
+    "help": "What is your approach to medicines used for distress or agitation? e.g. non-drug approaches first, prescriber and pharmacist review dates, PRN protocols, who records the reason for use"
    },
    {
     "key": "family_involvement",
-    "label": "How do families and others close to the person take part in care and reviews?",
-    "help": "e.g. review meetings, keeping a diary or app, open visiting, support groups, lasting power of attorney checks"
+    "label": "Family involvement",
+    "help": "How do families and others close to the person take part in care and reviews? e.g. review meetings, keeping a diary or app, open visiting, support groups, lasting power of attorney checks"
    },
    {
     "key": "end_of_life_dementia",
-    "label": "How do you plan for later stages of dementia and end of life?",
-    "help": "e.g. advance care planning while the person can take part, palliative care team links, anticipatory care records, spiritual and cultural wishes"
+    "label": "End of life planning",
+    "help": "How do you plan for later stages of dementia and end of life? e.g. advance care planning while the person can take part, palliative care team links, anticipatory care records, spiritual and cultural wishes"
    },
    {
     "key": "dementia_training",
-    "label": "What dementia training do staff receive, and how do you check it works in practice?",
-    "help": "e.g. induction, annual update, dementia champion, observation of practice, supervision topics"
+    "label": "Dementia training",
+    "help": "What dementia training do staff receive, and how do you check it works in practice? e.g. induction, annual update, dementia champion, observation of practice, supervision topics"
    }
   ]
  },
@@ -355,58 +355,58 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "swallow_concern_trigger",
-    "label": "What signs make staff raise a swallowing concern?",
-    "help": "For example coughing at meals, wet voice, food pocketing, weight loss, repeated chest infections."
+    "label": "Swallow concern signs",
+    "help": "What signs make staff raise a swallowing concern? For example coughing at meals, wet voice, food pocketing, weight loss, repeated chest infections."
    },
    {
     "key": "slt_referral_route",
-    "label": "How do you get a swallowing assessment, and who makes the referral?",
-    "help": "For example GP referral to the NHS speech and language therapy team, or a private therapist."
+    "label": "Therapy referral route",
+    "help": "How do you get a swallowing assessment, and who makes the referral? For example GP referral to the NHS speech and language therapy team, or a private therapist."
    },
    {
     "key": "texture_descriptor_system",
-    "label": "Which texture and fluid descriptors do you use to name modified diets?",
-    "help": "For example IDDSI levels, or the terms your kitchen and the therapist use."
+    "label": "Texture descriptor system",
+    "help": "Which texture and fluid descriptors do you use to name modified diets? For example IDDSI levels, or the terms your kitchen and the therapist use."
    },
    {
     "key": "modified_diet_preparation",
-    "label": "Who prepares and checks texture modified food and who thickens drinks?",
-    "help": "For example the cook prepares, the senior checks; in home care, a family member or the carer."
+    "label": "Modified diet preparation",
+    "help": "Who prepares and checks texture modified food and who thickens drinks? For example the cook prepares, the senior checks; in home care, a family member or the carer."
    },
    {
     "key": "thickener_handling",
-    "label": "How are thickeners stored, recorded and measured?",
-    "help": "For example named per person, kept out of reach, recorded on the fluid chart."
+    "label": "Thickener handling",
+    "help": "How are thickeners stored, recorded and measured? For example named per person, kept out of reach, recorded on the fluid chart."
    },
    {
     "key": "diet_information_sharing",
-    "label": "How is each person's current diet and fluid level communicated to everyone who serves food?",
-    "help": "For example kitchen diet sheet, care plan summary, bedside notice, agency briefing."
+    "label": "Diet information sharing",
+    "help": "How is each person's current diet and fluid level communicated to everyone who serves food? For example kitchen diet sheet, care plan summary, bedside notice, agency briefing."
    },
    {
     "key": "mealtime_support_staffing",
-    "label": "How do you make sure people at risk are supported or supervised when eating?",
-    "help": "For example staff present in the dining room, one to one support, family present at home visits."
+    "label": "Mealtime support staffing",
+    "help": "How do you make sure people at risk are supported or supervised when eating? For example staff present in the dining room, one to one support, family present at home visits."
    },
    {
     "key": "choking_response_procedure",
-    "label": "What is the choking response in your service and who is trained in it?",
-    "help": "For example first aid trained staff on every shift, and who calls 999."
+    "label": "Choking response",
+    "help": "What is the choking response in your service and who is trained in it? For example first aid trained staff on every shift, and who calls 999."
    },
    {
     "key": "eating_support_approach",
-    "label": "How do staff support people who refuse, rush or struggle with modified food, including people with dementia or a learning disability?",
-    "help": "For example posture, pace, adapted cutlery, a calm meal setting, a best interests process."
+    "label": "Eating support approach",
+    "help": "How do staff support people who refuse, rush or struggle with modified food, including people with dementia or a learning disability? For example posture, pace, adapted cutlery, a calm meal setting, a best interests process."
    },
    {
     "key": "incident_review_process",
-    "label": "What happens after a choking incident or a swallowing concern?",
-    "help": "For example incident form, manager review, care plan update, referral back to the therapist."
+    "label": "Incident review process",
+    "help": "What happens after a choking incident or a swallowing concern? For example incident form, manager review, care plan update, referral back to the therapist."
    },
    {
     "key": "swallowing_training",
-    "label": "What swallowing and mealtime support training do staff receive, and how often?",
-    "help": "For example induction session, annual refresher, therapist delivered training."
+    "label": "Swallowing training",
+    "help": "What swallowing and mealtime support training do staff receive, and how often? For example induction session, annual refresher, therapist delivered training."
    }
   ]
  },
@@ -422,58 +422,58 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "logging_method",
-    "label": "How do workers log the start and end of a visit?",
-    "help": "For example an app with location check, a phone number the person's landline calls, a tag at the door, or manual entry."
+    "label": "Visit logging method",
+    "help": "How do workers log the start and end of a visit? For example an app with location check, a phone number the person's landline calls, a tag at the door, or manual entry."
    },
    {
     "key": "monitoring_system_name",
-    "label": "Which system or provider do you use for call monitoring and visit records?",
-    "help": "Give the product name, or say that you use a paper or manual process."
+    "label": "Monitoring system name",
+    "help": "Which system or provider do you use for call monitoring and visit records? Give the product name, or say that you use a paper or manual process."
    },
    {
     "key": "live_monitoring_roles",
-    "label": "Who watches the live call monitoring screen, and at what hours?",
-    "help": "For example the coordinator from 7am to 10pm and the on call manager overnight."
+    "label": "Live monitoring roles and hours",
+    "help": "Who watches the live call monitoring screen, and at what hours? For example the coordinator from 7am to 10pm and the on call manager overnight."
    },
    {
     "key": "short_call_rule",
-    "label": "When is a visit treated as too short or too long, and what happens next?",
-    "help": "For example under 80 percent of the planned time triggers a check by the coordinator."
+    "label": "Short or long visit rule",
+    "help": "When is a visit treated as too short or too long, and what happens next? For example under 80 percent of the planned time triggers a check by the coordinator."
    },
    {
     "key": "logging_failure_steps",
-    "label": "What do workers do if they cannot log in or out, for example no signal, a flat phone or a system outage?",
-    "help": "For example phone the office, record the real times on a paper sheet, and the coordinator corrects the record."
+    "label": "Logging failure steps",
+    "help": "What do workers do if they cannot log in or out, for example no signal, a flat phone or a system outage? For example phone the office, record the real times on a paper sheet, and the coordinator corrects the record."
    },
    {
     "key": "manual_edit_rules",
-    "label": "Who can change a logged visit time, and how is the reason recorded?",
-    "help": "For example only coordinators, with a reason code and a note, and a weekly list reviewed by the registered manager."
+    "label": "Manual edit rules",
+    "help": "Who can change a logged visit time, and how is the reason recorded? For example only coordinators, with a reason code and a note, and a weekly list reviewed by the registered manager."
    },
    {
     "key": "visit_note_standard",
-    "label": "What must a visit note contain, and when must it be completed?",
-    "help": "For example tasks done, how the person was, any concerns, completed before leaving the home."
+    "label": "Visit note standard",
+    "help": "What must a visit note contain, and when must it be completed? For example tasks done, how the person was, any concerns, completed before leaving the home."
    },
    {
     "key": "record_audit_routine",
-    "label": "How are visit logs and notes audited, how often, and by whom?",
-    "help": "For example a monthly sample of 10 visits per worker, compared with the care plan and rota."
+    "label": "Record audit routine",
+    "help": "How are visit logs and notes audited, how often, and by whom? For example a monthly sample of 10 visits per worker, compared with the care plan and rota."
    },
    {
     "key": "data_use_and_retention",
-    "label": "What do you tell staff and people about location data, and how long are visit records kept?",
-    "help": "For example location used only to confirm arrival, records kept per your retention schedule."
+    "label": "Data use and retention",
+    "help": "What do you tell staff and people about location data, and how long are visit records kept? For example location used only to confirm arrival, records kept per your retention schedule."
    },
    {
     "key": "commissioner_data_sharing",
-    "label": "Do you share call monitoring data with commissioners, and how?",
-    "help": "For example a monthly report or live data feed under contract, or none."
+    "label": "Commissioner data sharing",
+    "help": "Do you share call monitoring data with commissioners, and how? For example a monthly report or live data feed under contract, or none."
    },
    {
     "key": "live_in_supported_records",
-    "label": "For live-in, supported living or extra care, how are arrival, handover and support sessions recorded?",
-    "help": "For example a shift log at handover or a sign-in for planned support slots."
+    "label": "Live-in record keeping",
+    "help": "For live-in, supported living or extra care, how are arrival, handover and support sessions recorded? For example a shift log at handover or a sign-in for planned support slots."
    }
   ]
  },
@@ -489,58 +489,58 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "falls_risk_tool",
-    "label": "Which falls risk screening tool do you use, and when is it completed?",
-    "help": "For example a named tool at admission or first visit, then monthly and after any change."
+    "label": "Falls risk screening tool",
+    "help": "Which falls risk screening tool do you use, and when is it completed? For example a named tool at admission or first visit, then monthly and after any change."
    },
    {
     "key": "falls_review_triggers",
-    "label": "What events trigger a falls risk review?",
-    "help": "For example a fall, a new medicine, a hospital discharge, or a change in mobility."
+    "label": "Falls review triggers",
+    "help": "What events trigger a falls risk review? For example a fall, a new medicine, a hospital discharge, or a change in mobility."
    },
    {
     "key": "post_fall_checks",
-    "label": "What checks does a staff member carry out after a fall, and who may carry them out?",
-    "help": "For example observations, a head injury check, or waiting for a senior or nurse."
+    "label": "Post fall checks",
+    "help": "What checks does a staff member carry out after a fall, and who may carry them out? For example observations, a head injury check, or waiting for a senior or nurse."
    },
    {
     "key": "lifting_from_floor",
-    "label": "How is a person helped up from the floor, and what equipment do you have for it?",
-    "help": "For example a flat lifter, an emergency lifting cushion, or paramedics only."
+    "label": "Lifting from floor method",
+    "help": "How is a person helped up from the floor, and what equipment do you have for it? For example a flat lifter, an emergency lifting cushion, or paramedics only."
    },
    {
     "key": "emergency_call_criteria",
-    "label": "When do staff call 999, NHS 111, a GP or an out of hours clinician?",
-    "help": "State your own thresholds, such as suspected head, hip or neck injury, or being unable to get up."
+    "label": "Emergency call criteria",
+    "help": "When do staff call 999, NHS 111, a GP or an out of hours clinician? State your own thresholds, such as suspected head, hip or neck injury, or being unable to get up."
    },
    {
     "key": "unwitnessed_falls_process",
-    "label": "What extra steps apply to an unwitnessed fall or a person found on the floor?",
-    "help": "For example neurological observations for a set period, and who is told."
+    "label": "Unwitnessed fall steps",
+    "help": "What extra steps apply to an unwitnessed fall or a person found on the floor? For example neurological observations for a set period, and who is told."
    },
    {
     "key": "falls_aids_sensors",
-    "label": "Which falls aids do you use, such as sensor mats, bed rails, pendant alarms or low beds?",
-    "help": "List only what is in use, and who decides."
+    "label": "Falls aids in use",
+    "help": "Which falls aids do you use, such as sensor mats, bed rails, pendant alarms or low beds? List only what is in use, and who decides."
    },
    {
     "key": "falls_aids_decision",
-    "label": "How do you decide a sensor, rail or alarm is right for a person, and who is involved?",
-    "help": "For example a best interests decision, family input, or a therapist assessment."
+    "label": "Falls aids decision process",
+    "help": "How do you decide a sensor, rail or alarm is right for a person, and who is involved? For example a best interests decision, family input, or a therapist assessment."
    },
    {
     "key": "falls_monitoring_review",
-    "label": "How are falls recorded, analysed and reviewed across the service?",
-    "help": "For example a monthly falls log reviewed at a governance meeting, with trend analysis."
+    "label": "Falls monitoring and review",
+    "help": "How are falls recorded, analysed and reviewed across the service? For example a monthly falls log reviewed at a governance meeting, with trend analysis."
    },
    {
     "key": "falls_physio_pharmacy",
-    "label": "Which professionals do you refer to for falls, such as a falls clinic, physiotherapist or pharmacist?",
-    "help": "Name the local route, for example a community falls service or GP referral."
+    "label": "Falls referral routes",
+    "help": "Which professionals do you refer to for falls, such as a falls clinic, physiotherapist or pharmacist? Name the local route, for example a community falls service or GP referral."
    },
    {
     "key": "person_own_home_arrangements",
-    "label": "For people in their own home, who is told after a fall and what do staff do if they are alone with the person?",
-    "help": "For example family contact, the on call manager, and the lone worker position."
+    "label": "Own home arrangements",
+    "help": "For people in their own home, who is told after a fall and what do staff do if they are alone with the person? For example family contact, the on call manager, and the lone worker position."
    }
   ]
  },
@@ -556,63 +556,63 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "learning_disability_register_check",
-    "label": "How do you confirm each person is on their GP's learning disability register?",
-    "help": "For example a check at admission or move in, then an annual check with the surgery."
+    "label": "Register check method",
+    "help": "How do you confirm each person is on their GP's learning disability register? For example a check at admission or move in, then an annual check with the surgery."
    },
    {
     "key": "health_check_booking_process",
-    "label": "Who books the annual health check, and how far ahead is it prompted?",
-    "help": "For example the keyworker diarises it a month before the due date and phones the surgery."
+    "label": "Health check booking",
+    "help": "Who books the annual health check, and how far ahead is it prompted? For example the keyworker diarises it a month before the due date and phones the surgery."
    },
    {
     "key": "health_check_preparation",
-    "label": "How do you prepare a person for the check and what do staff take along?",
-    "help": "For example a pre-visit information sheet, a health diary, a medicines list and an easy read leaflet."
+    "label": "Health check preparation",
+    "help": "How do you prepare a person for the check and what do staff take along? For example a pre-visit information sheet, a health diary, a medicines list and an easy read leaflet."
    },
    {
     "key": "accompaniment_arrangements",
-    "label": "Who goes with the person to the check and to hospital, and who covers that time?",
-    "help": "For example the keyworker, a named support worker, or a family member by agreement."
+    "label": "Accompaniment arrangements",
+    "help": "Who goes with the person to the check and to hospital, and who covers that time? For example the keyworker, a named support worker, or a family member by agreement."
    },
    {
     "key": "health_action_plan_format",
-    "label": "What format is the health action plan in, who writes it with the person, and how does the person take part?",
-    "help": "For example an easy read plan written with the person at a keyworker session using pictures."
+    "label": "Health action plan format",
+    "help": "What format is the health action plan in, who writes it with the person, and how does the person take part? For example an easy read plan written with the person at a keyworker session using pictures."
    },
    {
     "key": "health_action_plan_review",
-    "label": "How often is the plan reviewed, and what events trigger an early review?",
-    "help": "For example every six months, and after a hospital stay, a new diagnosis or a change in medicines."
+    "label": "Plan review schedule",
+    "help": "How often is the plan reviewed, and what events trigger an early review? For example every six months, and after a hospital stay, a new diagnosis or a change in medicines."
    },
    {
     "key": "hospital_passport_use",
-    "label": "What hospital passport or health passport format do you use, and where is it kept?",
-    "help": "For example a named local form, a paper copy in a grab bag and a digital copy."
+    "label": "Hospital passport format",
+    "help": "What hospital passport or health passport format do you use, and where is it kept? For example a named local form, a paper copy in a grab bag and a digital copy."
    },
    {
     "key": "hospital_admission_support",
-    "label": "What happens when a person is admitted or attends A and E, including out of hours?",
-    "help": "For example staff take the passport, stay with the person, and the on-call manager is told."
+    "label": "Hospital admission support",
+    "help": "What happens when a person is admitted or attends A and E, including out of hours? For example staff take the passport, stay with the person, and the on-call manager is told."
    },
    {
     "key": "reasonable_adjustments_examples",
-    "label": "Which reasonable adjustments do you usually ask health services to make?",
-    "help": "For example a longer appointment, a quiet waiting area, a first slot of the day or easy read information."
+    "label": "Usual reasonable adjustments",
+    "help": "Which reasonable adjustments do you usually ask health services to make? For example a longer appointment, a quiet waiting area, a first slot of the day or easy read information."
    },
    {
     "key": "screening_and_health_promotion",
-    "label": "How do you support access to screening, dental, eye and hearing checks?",
-    "help": "For example a tracker by person, with invitations and appointments checked monthly."
+    "label": "Screening and checks support",
+    "help": "How do you support access to screening, dental, eye and hearing checks? For example a tracker by person, with invitations and appointments checked monthly."
    },
    {
     "key": "consent_and_best_interests",
-    "label": "How do you handle consent to health checks and sharing the passport when a person may lack capacity?",
-    "help": "For example a capacity assessment by the person asking, a best interests meeting and an advocate."
+    "label": "Consent and best interests",
+    "help": "How do you handle consent to health checks and sharing the passport when a person may lack capacity? For example a capacity assessment by the person asking, a best interests meeting and an advocate."
    },
    {
     "key": "declined_or_missed_checks",
-    "label": "What do you do when a person declines or misses a check, or the surgery will not book one?",
-    "help": "For example a new offer, a conversation with the practice manager, then escalation to the registered manager."
+    "label": "Declined or missed checks",
+    "help": "What do you do when a person declines or misses a check, or the surgery will not book one? For example a new offer, a conversation with the practice manager, then escalation to the registered manager."
    }
   ]
  },
@@ -628,58 +628,58 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "assessment_timing",
-    "label": "When is the home environment assessed, and by whom?",
-    "help": "For example at the first visit before care starts, by a senior or coordinator."
+    "label": "Assessment timing and assessor",
+    "help": "When is the home environment assessed, and by whom? For example at the first visit before care starts, by a senior or coordinator."
    },
    {
     "key": "assessment_tool",
-    "label": "What form or tool do you use to record the home assessment?",
-    "help": "Name your own form, a CareStream audit, or your care planning system."
+    "label": "Assessment form used",
+    "help": "What form or tool do you use to record the home assessment? Name your own form, a CareStream audit, or your care planning system."
    },
    {
     "key": "review_triggers",
-    "label": "How often is the home reassessed, and what events trigger an early review?",
-    "help": "For example every six months, after a fall, a new piece of equipment or a change in who lives there."
+    "label": "Reassessment triggers",
+    "help": "How often is the home reassessed, and what events trigger an early review? For example every six months, after a fall, a new piece of equipment or a change in who lives there."
    },
    {
     "key": "consent_to_assess",
-    "label": "How do you get the person's agreement to assess their home, and what if they decline?",
-    "help": "For example written consent, or a best interests route where capacity is in doubt."
+    "label": "Consent to assess",
+    "help": "How do you get the person's agreement to assess their home, and what if they decline? For example written consent, or a best interests route where capacity is in doubt."
    },
    {
     "key": "hazards_checked",
-    "label": "Which hazards does your assessment cover?",
-    "help": "For example access, trips, fire and smoking, gas and electrics, oxygen, pets, cleanliness, water temperature."
+    "label": "Hazards covered",
+    "help": "Which hazards does your assessment cover? For example access, trips, fire and smoking, gas and electrics, oxygen, pets, cleanliness, water temperature."
    },
    {
     "key": "landlord_family_route",
-    "label": "Who do you tell when a risk sits with the landlord, family or housing provider, and how?",
-    "help": "For example a letter to the landlord, or a call to the family, recorded on the file."
+    "label": "Landlord and family route",
+    "help": "Who do you tell when a risk sits with the landlord, family or housing provider, and how? For example a letter to the landlord, or a call to the family, recorded on the file."
    },
    {
     "key": "unsafe_home_response",
-    "label": "What happens if a risk cannot be reduced enough for staff to work safely?",
-    "help": "For example a manager decision, a temporary care change, or referral to the commissioner."
+    "label": "Unsafe home response",
+    "help": "What happens if a risk cannot be reduced enough for staff to work safely? For example a manager decision, a temporary care change, or referral to the commissioner."
    },
    {
     "key": "equipment_in_home",
-    "label": "Who supplies and checks equipment in the home, such as hoists, beds and alarms?",
-    "help": "For example the NHS equipment service, the family, or your own stock, with who checks it."
+    "label": "Home equipment responsibility",
+    "help": "Who supplies and checks equipment in the home, such as hoists, beds and alarms? For example the NHS equipment service, the family, or your own stock, with who checks it."
    },
    {
     "key": "pets_smoking_oxygen",
-    "label": "How do you handle pets, smoking and oxygen in the home?",
-    "help": "For example pets secured during visits, a no smoking rule while staff are present, fire service referral for oxygen."
+    "label": "Pets, smoking and oxygen",
+    "help": "How do you handle pets, smoking and oxygen in the home? For example pets secured during visits, a no smoking rule while staff are present, fire service referral for oxygen."
    },
    {
     "key": "staff_safety_violence",
-    "label": "How do you assess risks to staff from other people in the home, such as aggression or unsafe visitors?",
-    "help": "For example a lone worker check, a two staff visit, or a managed visiting arrangement."
+    "label": "Staff safety risks",
+    "help": "How do you assess risks to staff from other people in the home, such as aggression or unsafe visitors? For example a lone worker check, a two staff visit, or a managed visiting arrangement."
    },
    {
     "key": "findings_record_sharing",
-    "label": "Where is the assessment kept, and which staff and agencies see it?",
-    "help": "For example the care plan on your system, shared with the allocated carers and the commissioner."
+    "label": "Findings storage and sharing",
+    "help": "Where is the assessment kept, and which staff and agencies see it? For example the care plan on your system, shared with the allocated carers and the commissioner."
    }
   ]
  },
@@ -695,63 +695,63 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "access_methods_used",
-    "label": "Which ways do staff get into people's homes?",
-    "help": "For example key safe, keys held by the service, keys held by family, person lets staff in, smart lock"
+    "label": "Access methods used",
+    "help": "Which ways do staff get into people's homes? For example key safe, keys held by the service, keys held by family, person lets staff in, smart lock"
    },
    {
     "key": "key_safe_installation",
-    "label": "Who arranges and fits a key safe, and who pays for it?",
-    "help": "For example the person or family arranges it, or the service recommends a fitter"
+    "label": "Key safe fitting",
+    "help": "Who arranges and fits a key safe, and who pays for it? For example the person or family arranges it, or the service recommends a fitter"
    },
    {
     "key": "consent_to_access_record",
-    "label": "How do you record the person's agreement to the access method?",
-    "help": "For example a signed section in the care plan, or a recorded best-interests decision"
+    "label": "Access consent record",
+    "help": "How do you record the person's agreement to the access method? For example a signed section in the care plan, or a recorded best-interests decision"
    },
    {
     "key": "code_sharing_rules",
-    "label": "How do staff receive a key safe code, and how do you limit who knows it?",
-    "help": "For example given by the office at allocation, never sent by text, changed at set intervals"
+    "label": "Code sharing rules",
+    "help": "How do staff receive a key safe code, and how do you limit who knows it? For example given by the office at allocation, never sent by text, changed at set intervals"
    },
    {
     "key": "code_change_triggers",
-    "label": "When is a code changed?",
-    "help": "For example staff leaving, a suspected breach, a set number of months"
+    "label": "Code change triggers",
+    "help": "When is a code changed? For example staff leaving, a suspected breach, a set number of months"
    },
    {
     "key": "service_held_keys_storage",
-    "label": "If you hold keys, where and how are they stored and logged?",
-    "help": "For example locked cabinet in the office, coded tags, a signing in and out log"
+    "label": "Held keys storage",
+    "help": "If you hold keys, where and how are they stored and logged? For example locked cabinet in the office, coded tags, a signing in and out log"
    },
    {
     "key": "key_labelling_method",
-    "label": "How do you stop a key or code being linked to a person's name and address?",
-    "help": "For example numbered tags, a separate coded list held by the office"
+    "label": "Key labelling method",
+    "help": "How do you stop a key or code being linked to a person's name and address? For example numbered tags, a separate coded list held by the office"
    },
    {
     "key": "no_answer_procedure",
-    "label": "What do staff do if they cannot get in or the person does not answer?",
-    "help": "For example call the office, contact the family, escalate to emergency services after set time"
+    "label": "No answer procedure",
+    "help": "What do staff do if they cannot get in or the person does not answer? For example call the office, contact the family, escalate to emergency services after set time"
    },
    {
     "key": "lost_key_response",
-    "label": "What happens if a key or code is lost, or a breach is suspected?",
-    "help": "For example who is told, how locks are changed, who bears the cost"
+    "label": "Lost key response",
+    "help": "What happens if a key or code is lost, or a breach is suspected? For example who is told, how locks are changed, who bears the cost"
    },
    {
     "key": "locking_up_and_secure_leaving",
-    "label": "How do staff leave the home secure after a visit?",
-    "help": "For example check door locked, key safe closed and code scrambled"
+    "label": "Secure leaving steps",
+    "help": "How do staff leave the home secure after a visit? For example check door locked, key safe closed and code scrambled"
    },
    {
     "key": "access_log_review",
-    "label": "Do you review key and code access, and how often?",
-    "help": "For example monthly check of the key log by the registered manager"
+    "label": "Access log review",
+    "help": "Do you review key and code access, and how often? For example monthly check of the key log by the registered manager"
    },
    {
     "key": "emergency_entry_authority",
-    "label": "Who can authorise forced entry in an emergency?",
-    "help": "Name the role and what you do with the emergency services"
+    "label": "Emergency entry authority",
+    "help": "Who can authorise forced entry in an emergency? Name the role and what you do with the emergency services"
    }
   ]
  },
@@ -767,63 +767,63 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "carer_status",
-    "label": "Are your live-in carers employed, workers or self-employed, and does that differ by arrangement?",
-    "help": "State the status you use for each type of arrangement. Say if you are unsure."
+    "label": "Live-in carer status",
+    "help": "Are your live-in carers employed, workers or self-employed, and does that differ by arrangement? State the status you use for each type of arrangement. Say if you are unsure."
    },
    {
     "key": "standard_placement_pattern",
-    "label": "What is the usual placement length and daily pattern for a live-in carer?",
-    "help": "For example two weeks on and one off, with the hours of active support and the hours off duty."
+    "label": "Standard placement pattern",
+    "help": "What is the usual placement length and daily pattern for a live-in carer? For example two weeks on and one off, with the hours of active support and the hours off duty."
    },
    {
     "key": "daily_break_arrangements",
-    "label": "How are daily breaks given, how long are they, and who covers the person during them?",
-    "help": "For example a two hour afternoon break, with family or a visiting carer covering."
+    "label": "Daily break arrangements",
+    "help": "How are daily breaks given, how long are they, and who covers the person during them? For example a two hour afternoon break, with family or a visiting carer covering."
    },
    {
     "key": "sleep_arrangements",
-    "label": "Where does the carer sleep, and what is expected overnight?",
-    "help": "For example a separate room, a monitor, and whether the carer is expected to respond if woken."
+    "label": "Sleep arrangements",
+    "help": "Where does the carer sleep, and what is expected overnight? For example a separate room, a monitor, and whether the carer is expected to respond if woken."
    },
    {
     "key": "night_disturbance_process",
-    "label": "How are night disturbances recorded, and what happens to rest and next day duties after a disturbed night?",
-    "help": "For example a log, a compensatory rest rule, or a second carer called in."
+    "label": "Night disturbance process",
+    "help": "How are night disturbances recorded, and what happens to rest and next day duties after a disturbed night? For example a log, a compensatory rest rule, or a second carer called in."
    },
    {
     "key": "weekly_rest_days",
-    "label": "How are weekly rest and days off given and recorded?",
-    "help": "For example a full day off each week or a block of days between placements."
+    "label": "Weekly rest days",
+    "help": "How are weekly rest and days off given and recorded? For example a full day off each week or a block of days between placements."
    },
    {
     "key": "relief_carer_sourcing",
-    "label": "How is relief cover arranged, and who is the usual relief carer?",
-    "help": "For example a pool of trained relief carers, a partner agency, or family members."
+    "label": "Relief carer sourcing",
+    "help": "How is relief cover arranged, and who is the usual relief carer? For example a pool of trained relief carers, a partner agency, or family members."
    },
    {
     "key": "relief_notice_and_emergency",
-    "label": "How much notice is given for planned relief, and what happens if a carer cannot continue or is ill?",
-    "help": "State the notice period and your emergency cover route."
+    "label": "Relief notice and emergency",
+    "help": "How much notice is given for planned relief, and what happens if a carer cannot continue or is ill? State the notice period and your emergency cover route."
    },
    {
     "key": "handover_process",
-    "label": "How is handover done between the live-in carer and relief, and what is recorded?",
-    "help": "For example a written handover sheet, a call with the manager, and medicines and risks covered."
+    "label": "Handover process",
+    "help": "How is handover done between the live-in carer and relief, and what is recorded? For example a written handover sheet, a call with the manager, and medicines and risks covered."
    },
    {
     "key": "monitoring_working_time",
-    "label": "How do you monitor hours worked, breaks taken and rest, and who reviews it?",
-    "help": "For example weekly timesheets checked by the registered manager."
+    "label": "Working time monitoring",
+    "help": "How do you monitor hours worked, breaks taken and rest, and who reviews it? For example weekly timesheets checked by the registered manager."
    },
    {
     "key": "agreeing_breaks_with_person",
-    "label": "How do you agree break times with the person and their family, and what if they decline cover?",
-    "help": "For example a conversation at assessment, recorded in the care plan."
+    "label": "Agreeing breaks with person",
+    "help": "How do you agree break times with the person and their family, and what if they decline cover? For example a conversation at assessment, recorded in the care plan."
    },
    {
     "key": "shared_lives_arrangements",
-    "label": "If you run Shared Lives, how do respite and short breaks for the Shared Lives carer work?",
-    "help": "For example planned respite weeks with another approved carer. Leave blank if not applicable."
+    "label": "Shared Lives respite",
+    "help": "If you run Shared Lives, how do respite and short breaks for the Shared Lives carer work? For example planned respite weeks with another approved carer. Leave blank if not applicable."
    }
   ]
  },
@@ -839,58 +839,58 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "late_threshold",
-    "label": "How many minutes after the planned time is a visit late, and when does it become missed?",
-    "help": "For example late after 15 minutes, missed after 60, or different limits for time-critical visits."
+    "label": "Late and missed limits",
+    "help": "How many minutes after the planned time is a visit late, and when does it become missed? For example late after 15 minutes, missed after 60, or different limits for time-critical visits."
    },
    {
     "key": "time_critical_visits",
-    "label": "Which visits do you treat as time critical, and how are they identified?",
-    "help": "For example medicines, meals for diabetics, or people who cannot be left without support."
+    "label": "Time critical visits",
+    "help": "Which visits do you treat as time critical, and how are they identified? For example medicines, meals for diabetics, or people who cannot be left without support."
    },
    {
     "key": "alert_system",
-    "label": "How is the office alerted that a visit has not started?",
-    "help": "For example electronic call monitoring alerts, a live rota screen, or a worker phoning in."
+    "label": "Missed visit alert method",
+    "help": "How is the office alerted that a visit has not started? For example electronic call monitoring alerts, a live rota screen, or a worker phoning in."
    },
    {
     "key": "monitoring_hours",
-    "label": "Who watches for missed and late visits, and at what hours?",
-    "help": "Name the roles, such as the coordinator by day and the on call manager at night and weekends."
+    "label": "Monitoring roles and hours",
+    "help": "Who watches for missed and late visits, and at what hours? Name the roles, such as the coordinator by day and the on call manager at night and weekends."
    },
    {
     "key": "contact_person_steps",
-    "label": "What steps are taken to reach the person when a visit is missed?",
-    "help": "For example phone the person, then the family or key holder, then a welfare check."
+    "label": "Steps to reach the person",
+    "help": "What steps are taken to reach the person when a visit is missed? For example phone the person, then the family or key holder, then a welfare check."
    },
    {
     "key": "welfare_check_route",
-    "label": "If the person cannot be reached, who attends or calls for help, and when is 999 or the police used?",
-    "help": "State your own thresholds and any key safe or keyholder arrangements."
+    "label": "Welfare check route",
+    "help": "If the person cannot be reached, who attends or calls for help, and when is 999 or the police used? State your own thresholds and any key safe or keyholder arrangements."
    },
    {
     "key": "cover_arrangements",
-    "label": "How is cover found for a missed visit, and who authorises it?",
-    "help": "For example reallocating to another worker, a manager attending, or asking a partner agency."
+    "label": "Cover arrangements",
+    "help": "How is cover found for a missed visit, and who authorises it? For example reallocating to another worker, a manager attending, or asking a partner agency."
    },
    {
     "key": "commissioner_notification",
-    "label": "Who do you tell when a visit is missed, and within what time?",
-    "help": "For example the person, family, the local authority commissioner or an NHS team, per contract."
+    "label": "Commissioner notification",
+    "help": "Who do you tell when a visit is missed, and within what time? For example the person, family, the local authority commissioner or an NHS team, per contract."
    },
    {
     "key": "recording_and_reporting",
-    "label": "Where is each missed or late visit recorded, and how is it reviewed?",
-    "help": "For example an incident form, a monthly report to governance, with trends by round."
+    "label": "Recording and review",
+    "help": "Where is each missed or late visit recorded, and how is it reviewed? For example an incident form, a monthly report to governance, with trends by round."
    },
    {
     "key": "harm_response",
-    "label": "What happens if a missed visit causes harm or risk of harm?",
-    "help": "For example safeguarding referral, duty of candour conversation, investigation and CQC notification checks."
+    "label": "Harm response",
+    "help": "What happens if a missed visit causes harm or risk of harm? For example safeguarding referral, duty of candour conversation, investigation and CQC notification checks."
    },
    {
     "key": "live_in_supported_cover",
-    "label": "For live-in, supported living or extra care, what counts as a missed or late visit or shift, and who covers?",
-    "help": "For example a live-in worker not arriving for handover, or a missed planned support slot."
+    "label": "Live in and supported cover",
+    "help": "For live-in, supported living or extra care, what counts as a missed or late visit or shift, and who covers? For example a live-in worker not arriving for handover, or a missed planned support slot."
    }
   ]
  },
@@ -906,58 +906,58 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "leaving_risk_assessment",
-    "label": "How do you assess and record the risk of a person leaving unsupported or going missing?",
-    "help": "For example at admission or move in, then at each care plan review or after a change"
+    "label": "Leaving risk assessment",
+    "help": "How do you assess and record the risk of a person leaving unsupported or going missing? For example at admission or move in, then at each care plan review or after a change"
    },
    {
     "key": "identification_information",
-    "label": "What up to date information do you keep to help find a person quickly?",
-    "help": "For example a recent photograph, description, usual places, and who holds it"
+    "label": "Identification information held",
+    "help": "What up to date information do you keep to help find a person quickly? For example a recent photograph, description, usual places, and who holds it"
    },
    {
     "key": "building_security_measures",
-    "label": "What measures are in place at doors, grounds and entrances?",
-    "help": "For example keypad doors, door alarms, sensors, open access with sign out"
+    "label": "Building security measures",
+    "help": "What measures are in place at doors, grounds and entrances? For example keypad doors, door alarms, sensors, open access with sign out"
    },
    {
     "key": "search_procedure",
-    "label": "What do staff do first when someone is not where expected?",
-    "help": "For example search the building and grounds, check sign out records, assign a search lead"
+    "label": "First search steps",
+    "help": "What do staff do first when someone is not where expected? For example search the building and grounds, check sign out records, assign a search lead"
    },
    {
     "key": "escalation_thresholds",
-    "label": "At what point do you contact the police, family and the commissioner or social worker?",
-    "help": "Give your own thresholds, such as time elapsed or risk level, and who makes the call"
+    "label": "Escalation thresholds",
+    "help": "At what point do you contact the police, family and the commissioner or social worker? Give your own thresholds, such as time elapsed or risk level, and who makes the call"
    },
    {
     "key": "search_roles_on_shift",
-    "label": "Who leads a search, and how do you cover other residents during it?",
-    "help": "Name roles, including out of hours and on call arrangements"
+    "label": "Search leads and cover",
+    "help": "Who leads a search, and how do you cover other residents during it? Name roles, including out of hours and on call arrangements"
    },
    {
     "key": "out_of_service_routines",
-    "label": "How do people go out independently, and how is it signed out and agreed?",
-    "help": "For example sign out book, agreed return time, mobile phone, check in call"
+    "label": "Independent outing routine",
+    "help": "How do people go out independently, and how is it signed out and agreed? For example sign out book, agreed return time, mobile phone, check in call"
    },
    {
     "key": "capacity_and_dols_link",
-    "label": "How do you link a leaving risk to capacity, best interests and deprivation of liberty?",
-    "help": "For example mental capacity assessment, DoLS or court authorisation checked before restrictions"
+    "label": "Capacity and DoLS link",
+    "help": "How do you link a leaving risk to capacity, best interests and deprivation of liberty? For example mental capacity assessment, DoLS or court authorisation checked before restrictions"
    },
    {
     "key": "return_and_welfare_check",
-    "label": "What happens when the person is found or returns?",
-    "help": "For example welfare and health check, calm conversation, record, who is told"
+    "label": "Return welfare check",
+    "help": "What happens when the person is found or returns? For example welfare and health check, calm conversation, record, who is told"
    },
    {
     "key": "post_incident_review",
-    "label": "How do you review each incident and update the care plan?",
-    "help": "For example debrief within a set time, manager review, care plan and risk assessment update"
+    "label": "Post incident review",
+    "help": "How do you review each incident and update the care plan? For example debrief within a set time, manager review, care plan and risk assessment update"
    },
    {
     "key": "reporting_and_recording",
-    "label": "How do you record and report a missing episode, including to CQC or the local authority?",
-    "help": "For example incident form, safeguarding referral, notification decision by the registered manager"
+    "label": "Recording and reporting",
+    "help": "How do you record and report a missing episode, including to CQC or the local authority? For example incident form, safeguarding referral, notification decision by the registered manager"
    }
   ]
  },
@@ -973,63 +973,63 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "money_held_model",
-    "label": "Does your service hold money for people, and in what form?",
-    "help": "For example: personal allowance cash in a locked safe, individual client accounts, pre-paid cards, or no money held at all."
+    "label": "Money held model",
+    "help": "Does your service hold money for people, and in what form? For example: personal allowance cash in a locked safe, individual client accounts, pre-paid cards, or no money held at all."
    },
    {
     "key": "cash_limit_and_storage",
-    "label": "Where is cash kept, who holds the keys or codes, and what is the most you hold per person?",
-    "help": "For example: wall safe in the office, two key holders, limit of 200 pounds per person."
+    "label": "Cash limit and storage",
+    "help": "Where is cash kept, who holds the keys or codes, and what is the most you hold per person? For example: wall safe in the office, two key holders, limit of 200 pounds per person."
    },
    {
     "key": "transaction_recording",
-    "label": "How is every payment in and out recorded, and who signs?",
-    "help": "For example: ledger per person, receipt for each spend, two signatures over a set amount, monthly balance check by the manager."
+    "label": "Transaction recording",
+    "help": "How is every payment in and out recorded, and who signs? For example: ledger per person, receipt for each spend, two signatures over a set amount, monthly balance check by the manager."
    },
    {
     "key": "reconciliation_and_audit",
-    "label": "Who checks the balances, how often, and how are discrepancies escalated?",
-    "help": "For example: senior carer weekly count, manager monthly check, provider audit quarterly."
+    "label": "Balance checks and audit",
+    "help": "Who checks the balances, how often, and how are discrepancies escalated? For example: senior carer weekly count, manager monthly check, provider audit quarterly."
    },
    {
     "key": "shopping_arrangements",
-    "label": "Do staff shop for people, and how are cash, cards, receipts and change handled?",
-    "help": "For example: float and receipt envelope, no use of the person's bank card, change returned and signed for."
+    "label": "Shopping arrangements",
+    "help": "Do staff shop for people, and how are cash, cards, receipts and change handled? For example: float and receipt envelope, no use of the person's bank card, change returned and signed for."
    },
    {
     "key": "appointee_role",
-    "label": "Does your organisation act as DWP appointee for anyone, and who in the organisation holds that role?",
-    "help": "Say if never, sometimes or routinely, and which post manages the claims and reports changes to DWP."
+    "label": "Appointee role",
+    "help": "Does your organisation act as DWP appointee for anyone, and who in the organisation holds that role? Say if never, sometimes or routinely, and which post manages the claims and reports changes to DWP."
    },
    {
     "key": "deputies_and_attorneys",
-    "label": "How do you work with Court of Protection deputies, attorneys and family who manage someone's money?",
-    "help": "For example: copy of the order or power of attorney held on file, annual statement requested, queries raised with the deputy first."
+    "label": "Deputies and attorneys",
+    "help": "How do you work with Court of Protection deputies, attorneys and family who manage someone's money? For example: copy of the order or power of attorney held on file, annual statement requested, queries raised with the deputy first."
    },
    {
     "key": "capacity_and_consent_to_money",
-    "label": "How do you decide whether a person can manage their own money, and who records it?",
-    "help": "For example: capacity assessment recorded by the key worker, best interests meeting with family and social worker."
+    "label": "Money capacity decisions",
+    "help": "How do you decide whether a person can manage their own money, and who records it? For example: capacity assessment recorded by the key worker, best interests meeting with family and social worker."
    },
    {
     "key": "valuables_and_property",
-    "label": "How are valuables and personal property listed, stored and returned?",
-    "help": "For example: inventory on admission, valuables register, lockable cupboard in each room, return to next of kin on leaving."
+    "label": "Valuables and property",
+    "help": "How are valuables and personal property listed, stored and returned? For example: inventory on admission, valuables register, lockable cupboard in each room, return to next of kin on leaving."
    },
    {
     "key": "gifts_wills_loans",
-    "label": "What is your rule on staff accepting gifts, being named in wills, or lending and borrowing money?",
-    "help": "For example: no gifts over 10 pounds, all offers reported to the manager, no loans either way."
+    "label": "Gifts, wills and loans",
+    "help": "What is your rule on staff accepting gifts, being named in wills, or lending and borrowing money? For example: no gifts over 10 pounds, all offers reported to the manager, no loans either way."
    },
    {
     "key": "suspected_financial_abuse",
-    "label": "Who do staff tell about suspected theft or financial abuse, and who makes the safeguarding referral?",
-    "help": "For example: report to the manager at once, manager refers to the local authority and notifies CQC where required."
+    "label": "Financial abuse reporting",
+    "help": "Who do staff tell about suspected theft or financial abuse, and who makes the safeguarding referral? For example: report to the manager at once, manager refers to the local authority and notifies CQC where required."
    },
    {
     "key": "after_death_property",
-    "label": "What happens to a person's money and belongings if they die or leave suddenly?",
-    "help": "For example: inventory signed by two staff, items released only to the executor or next of kin with ID."
+    "label": "Property after death",
+    "help": "What happens to a person's money and belongings if they die or leave suddenly? For example: inventory signed by two staff, items released only to the executor or next of kin with ID."
    }
   ]
  },
@@ -1045,58 +1045,58 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "first_response_steps",
-    "label": "What must a carer do in the first minutes when nobody answers the door?",
-    "help": "For example knock, ring, call the person's phone, check windows and look for signs of movement."
+    "label": "First response steps",
+    "help": "What must a carer do in the first minutes when nobody answers the door? For example knock, ring, call the person's phone, check windows and look for signs of movement."
    },
    {
     "key": "office_contact_timing",
-    "label": "How soon must the carer contact the office or on-call manager, and by what route?",
-    "help": "For example straight away by phone to the on-call line, never by text."
+    "label": "Office contact timing",
+    "help": "How soon must the carer contact the office or on-call manager, and by what route? For example straight away by phone to the on-call line, never by text."
    },
    {
     "key": "contact_sources",
-    "label": "Where do staff find the person's emergency contacts and who may be called?",
-    "help": "For example the care plan, the rostering app or a locked contact sheet at the office."
+    "label": "Emergency contact sources",
+    "help": "Where do staff find the person's emergency contacts and who may be called? For example the care plan, the rostering app or a locked contact sheet at the office."
    },
    {
     "key": "key_safe_arrangements",
-    "label": "Do you hold keys or key safe codes, and who may use them to enter?",
-    "help": "For example key safe code held by the office only, released by a manager."
+    "label": "Key safe arrangements",
+    "help": "Do you hold keys or key safe codes, and who may use them to enter? For example key safe code held by the office only, released by a manager."
    },
    {
     "key": "forced_entry_decision",
-    "label": "Who decides whether to request forced entry, and who is called to do it?",
-    "help": "For example the on-call manager decides, then police or fire and rescue attend."
+    "label": "Forced entry decision maker",
+    "help": "Who decides whether to request forced entry, and who is called to do it? For example the on-call manager decides, then police or fire and rescue attend."
    },
    {
     "key": "emergency_services_threshold",
-    "label": "When do you call 999 or the police, and when do you try other contacts first?",
-    "help": "State your own threshold, such as signs of someone on the floor or no reply when risk is known."
+    "label": "Emergency services threshold",
+    "help": "When do you call 999 or the police, and when do you try other contacts first? State your own threshold, such as signs of someone on the floor or no reply when risk is known."
    },
    {
     "key": "risk_rating_visits",
-    "label": "Do you rate visits by risk, such as time critical medicines or a known fall risk?",
-    "help": "For example high risk visits trigger escalation sooner than low risk ones."
+    "label": "Visit risk rating",
+    "help": "Do you rate visits by risk, such as time critical medicines or a known fall risk? For example high risk visits trigger escalation sooner than low risk ones."
    },
    {
     "key": "family_neighbour_checks",
-    "label": "Are neighbours, family or a warden asked to check, and what has the person agreed to?",
-    "help": "For example named relatives recorded in the care plan as agreeing to be called."
+    "label": "Family and neighbour checks",
+    "help": "Are neighbours, family or a warden asked to check, and what has the person agreed to? For example named relatives recorded in the care plan as agreeing to be called."
    },
    {
     "key": "extra_care_onsite_support",
-    "label": "Where you work in extra care or supported living, who on site can check on a person?",
-    "help": "For example a scheme manager, a concierge or a night team with master keys."
+    "label": "Extra care site support",
+    "help": "Where you work in extra care or supported living, who on site can check on a person? For example a scheme manager, a concierge or a night team with master keys."
    },
    {
     "key": "recording_and_followup",
-    "label": "Where is a no access visit recorded, and who reviews it afterwards?",
-    "help": "For example the call log, an incident form, then a review by the registered manager within a day."
+    "label": "No access recording",
+    "help": "Where is a no access visit recorded, and who reviews it afterwards? For example the call log, an incident form, then a review by the registered manager within a day."
    },
    {
     "key": "commissioner_notification",
-    "label": "Who do you tell after a no access event, such as the local authority or commissioner?",
-    "help": "For example the commissioning team on the same day and the family if agreed."
+    "label": "Commissioner notification",
+    "help": "Who do you tell after a no access event, such as the local authority or commissioner? For example the commissioning team on the same day and the family if agreed."
    }
   ]
  },
@@ -1112,53 +1112,53 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "risk_enablement_tool",
-    "label": "Which form or tool do you use to record a positive risk taking decision for a person?",
-    "help": "For example a named risk enablement plan, or a section of the care plan. Say who completes it."
+    "label": "Risk enablement tool",
+    "help": "Which form or tool do you use to record a positive risk taking decision for a person? For example a named risk enablement plan, or a section of the care plan. Say who completes it."
    },
    {
     "key": "decision_participants",
-    "label": "Who is involved when a risky choice is discussed, and who signs it off?",
-    "help": "For example the person, their key worker, family, advocate, social worker, and the registered manager."
+    "label": "Decision participants",
+    "help": "Who is involved when a risky choice is discussed, and who signs it off? For example the person, their key worker, family, advocate, social worker, and the registered manager."
    },
    {
     "key": "capacity_doubt_process",
-    "label": "What do staff do when they doubt a person can make a specific risky decision?",
-    "help": "For example who completes the capacity assessment, and when you ask the local authority or an IMCA."
+    "label": "Capacity doubt process",
+    "help": "What do staff do when they doubt a person can make a specific risky decision? For example who completes the capacity assessment, and when you ask the local authority or an IMCA."
    },
    {
     "key": "unwise_choice_examples",
-    "label": "Which kinds of choice do people in your service most often make that staff find hard to support?",
-    "help": "For example going out alone, cooking, managing money, smoking, alcohol, or refusing equipment."
+    "label": "Hard to support choices",
+    "help": "Which kinds of choice do people in your service most often make that staff find hard to support? For example going out alone, cooking, managing money, smoking, alcohol, or refusing equipment."
    },
    {
     "key": "risk_benefit_method",
-    "label": "How do you weigh the benefits of a choice against the risks, and who decides the final plan?",
-    "help": "For example a risk benefit table, a team meeting, or a best interests meeting."
+    "label": "Risk benefit method",
+    "help": "How do you weigh the benefits of a choice against the risks, and who decides the final plan? For example a risk benefit table, a team meeting, or a best interests meeting."
    },
    {
     "key": "safeguards_agreed",
-    "label": "What safeguards do you usually agree to make a risky choice safer?",
-    "help": "For example a phone check, a trial period, a buddy, a route plan, or supervised first attempts."
+    "label": "Agreed safeguards",
+    "help": "What safeguards do you usually agree to make a risky choice safer? For example a phone check, a trial period, a buddy, a route plan, or supervised first attempts."
    },
    {
     "key": "review_frequency",
-    "label": "How often is a positive risk plan reviewed, and what triggers an earlier review?",
-    "help": "For example every three months, or after an incident, a change in health, or a change in staffing."
+    "label": "Plan review frequency",
+    "help": "How often is a positive risk plan reviewed, and what triggers an earlier review? For example every three months, or after an incident, a change in health, or a change in staffing."
    },
    {
     "key": "disagreement_process",
-    "label": "What happens when the person, family and staff disagree about a risk?",
-    "help": "For example a mediation meeting, a referral to the commissioner, or the complaints process."
+    "label": "Disagreement process",
+    "help": "What happens when the person, family and staff disagree about a risk? For example a mediation meeting, a referral to the commissioner, or the complaints process."
    },
    {
     "key": "incident_learning",
-    "label": "After an incident linked to a planned risk, how do you review it and tell people?",
-    "help": "For example a team debrief, a review of the plan, and who is informed, such as family or the local authority."
+    "label": "Incident learning",
+    "help": "After an incident linked to a planned risk, how do you review it and tell people? For example a team debrief, a review of the plan, and who is informed, such as family or the local authority."
    },
    {
     "key": "staff_confidence_support",
-    "label": "How do you support staff to carry out positive risk plans, including lone workers?",
-    "help": "For example supervision, training, on call manager advice, or shadowing."
+    "label": "Staff confidence support",
+    "help": "How do you support staff to carry out positive risk plans, including lone workers? For example supervision, training, on call manager advice, or shadowing."
    }
   ]
  },
@@ -1174,58 +1174,58 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "skin_risk_tool",
-    "label": "Which pressure ulcer risk assessment tool do you use?",
-    "help": "For example Waterlow, Braden or MUST-linked screening, or your commissioner's own form"
+    "label": "Skin risk tool",
+    "help": "Which pressure ulcer risk assessment tool do you use? For example Waterlow, Braden or MUST-linked screening, or your commissioner's own form"
    },
    {
     "key": "risk_screen_timing",
-    "label": "When is skin risk first assessed, and how often is it reviewed?",
-    "help": "For example on admission or at the first visit, then monthly or after any change"
+    "label": "Risk screening timing",
+    "help": "When is skin risk first assessed, and how often is it reviewed? For example on admission or at the first visit, then monthly or after any change"
    },
    {
     "key": "skin_check_routine",
-    "label": "How and when are skin checks done and recorded?",
-    "help": "For example at personal care, daily body map, weekly full check"
+    "label": "Skin check routine",
+    "help": "How and when are skin checks done and recorded? For example at personal care, daily body map, weekly full check"
    },
    {
     "key": "repositioning_method",
-    "label": "How is repositioning planned, timed and recorded?",
-    "help": "For example individual turning charts, set intervals agreed in the care plan"
+    "label": "Repositioning method",
+    "help": "How is repositioning planned, timed and recorded? For example individual turning charts, set intervals agreed in the care plan"
    },
    {
     "key": "pressure_equipment",
-    "label": "What pressure-relieving equipment do you provide or arrange?",
-    "help": "For example alternating mattresses, cushions, heel protectors, and who supplies them"
+    "label": "Pressure relieving equipment",
+    "help": "What pressure-relieving equipment do you provide or arrange? For example alternating mattresses, cushions, heel protectors, and who supplies them"
    },
    {
     "key": "equipment_checks",
-    "label": "Who checks mattress settings and equipment, and how often?",
-    "help": "For example daily setting check by carers, monthly servicing by the supplier"
+    "label": "Equipment checks",
+    "help": "Who checks mattress settings and equipment, and how often? For example daily setting check by carers, monthly servicing by the supplier"
    },
    {
     "key": "clinical_referral_route",
-    "label": "Who do staff call when skin changes, and how quickly?",
-    "help": "For example district nurse, tissue viability nurse, GP or in-house nurse"
+    "label": "Clinical referral route",
+    "help": "Who do staff call when skin changes, and how quickly? For example district nurse, tissue viability nurse, GP or in-house nurse"
    },
    {
     "key": "grading_and_wound_care",
-    "label": "Who grades damage and who provides wound care?",
-    "help": "For example registered nurses in house, or district nursing team"
+    "label": "Grading and wound care",
+    "help": "Who grades damage and who provides wound care? For example registered nurses in house, or district nursing team"
    },
    {
     "key": "incident_reporting",
-    "label": "How is pressure damage reported, reviewed and learned from?",
-    "help": "For example incident form, manager review within a set time, local authority safeguarding referral threshold"
+    "label": "Incident reporting",
+    "help": "How is pressure damage reported, reviewed and learned from? For example incident form, manager review within a set time, local authority safeguarding referral threshold"
    },
    {
     "key": "training_competence",
-    "label": "What pressure care training do staff complete and how is competence checked?",
-    "help": "For example induction module, annual refresher, observed practice"
+    "label": "Training and competence",
+    "help": "What pressure care training do staff complete and how is competence checked? For example induction module, annual refresher, observed practice"
    },
    {
     "key": "nutrition_link",
-    "label": "How are nutrition and continence needs linked to skin care?",
-    "help": "For example MUST screening, dietitian referral, continence assessment"
+    "label": "Nutrition and continence link",
+    "help": "How are nutrition and continence needs linked to skin care? For example MUST screening, dietitian referral, continence assessment"
    }
   ]
  },
@@ -1241,53 +1241,53 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "restrictions_in_use",
-    "label": "Which restrictive practices are used or have been used in your service in the last year?",
-    "help": "For example physical holds, locked doors, PRN medicines, sensors, restricted access to rooms, food or money."
+    "label": "Restrictive practices used",
+    "help": "Which restrictive practices are used or have been used in your service in the last year? For example physical holds, locked doors, PRN medicines, sensors, restricted access to rooms, food or money."
    },
    {
     "key": "reduction_lead",
-    "label": "Who leads the reduction programme and who do they report to?",
-    "help": "For example the registered manager with a named senior, reporting to the provider's governance meeting."
+    "label": "Reduction programme lead",
+    "help": "Who leads the reduction programme and who do they report to? For example the registered manager with a named senior, reporting to the provider's governance meeting."
    },
    {
     "key": "recording_method",
-    "label": "How is every restriction or restraint recorded?",
-    "help": "For example incident form, ABC chart, electronic care record, with duration and who was present."
+    "label": "Restraint recording method",
+    "help": "How is every restriction or restraint recorded? For example incident form, ABC chart, electronic care record, with duration and who was present."
    },
    {
     "key": "data_review_frequency",
-    "label": "How often is restrictive practice data reviewed, and by whom?",
-    "help": "For example monthly by the manager, quarterly at the provider board, with trends by person and by shift."
+    "label": "Data review frequency",
+    "help": "How often is restrictive practice data reviewed, and by whom? For example monthly by the manager, quarterly at the provider board, with trends by person and by shift."
    },
    {
     "key": "debrief_process",
-    "label": "What debrief happens after a restraint, for the person and for staff?",
-    "help": "For example immediate check for injury, a staff debrief within 24 hours, and a conversation with the person when ready."
+    "label": "Post restraint debrief",
+    "help": "What debrief happens after a restraint, for the person and for staff? For example immediate check for injury, a staff debrief within 24 hours, and a conversation with the person when ready."
    },
    {
     "key": "restraint_training_provider",
-    "label": "Which training do staff receive on restraint reduction and de-escalation, and who provides it?",
-    "help": "For example an accredited external provider, refresher interval, whether agency staff are included."
+    "label": "De-escalation training provider",
+    "help": "Which training do staff receive on restraint reduction and de-escalation, and who provides it? For example an accredited external provider, refresher interval, whether agency staff are included."
    },
    {
     "key": "individual_plan_link",
-    "label": "How are restrictions linked to each person's care or support plan and reviewed?",
-    "help": "For example a named plan section, a review every three months, involvement of family and advocates."
+    "label": "Care plan link and review",
+    "help": "How are restrictions linked to each person's care or support plan and reviewed? For example a named plan section, a review every three months, involvement of family and advocates."
    },
    {
     "key": "lawful_authority_checks",
-    "label": "How do you check that a restriction has lawful authority or a best interests decision?",
-    "help": "For example MCA assessment on file, DoLS authorisation, or a Mental Health Act status check by the manager."
+    "label": "Lawful authority checks",
+    "help": "How do you check that a restriction has lawful authority or a best interests decision? For example MCA assessment on file, DoLS authorisation, or a Mental Health Act status check by the manager."
    },
    {
     "key": "external_oversight",
-    "label": "Who outside the service sees your restrictive practice data or concerns?",
-    "help": "For example commissioners, the local authority safeguarding team, an independent advocate or the board."
+    "label": "External oversight",
+    "help": "Who outside the service sees your restrictive practice data or concerns? For example commissioners, the local authority safeguarding team, an independent advocate or the board."
    },
    {
     "key": "alternatives_used",
-    "label": "What alternatives do staff try first to avoid restraint?",
-    "help": "For example low arousal environment, communication passports, distraction, sensory items, extra staff at known trigger times."
+    "label": "Alternatives tried first",
+    "help": "What alternatives do staff try first to avoid restraint? For example low arousal environment, communication passports, distraction, sensory items, extra staff at known trigger times."
    }
   ]
  },
@@ -1303,63 +1303,63 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "emergency_response_lead",
-    "label": "Who leads the response when someone collapses on shift?",
-    "help": "For example the senior carer on duty, the nurse in charge or the on-call manager"
+    "label": "Collapse response lead",
+    "help": "Who leads the response when someone collapses on shift? For example the senior carer on duty, the nurse in charge or the on-call manager"
    },
    {
     "key": "cpr_trained_cover",
-    "label": "How do you make sure a CPR-trained member of staff is on every shift?",
-    "help": "For example rota checks, a named trained person per shift or training matrix review"
+    "label": "CPR trained shift cover",
+    "help": "How do you make sure a CPR-trained member of staff is on every shift? For example rota checks, a named trained person per shift or training matrix review"
    },
    {
     "key": "cpr_training_provider",
-    "label": "What CPR and basic life support training do staff receive, and how often is it refreshed?",
-    "help": "Provider, course name and refresher interval"
+    "label": "CPR training and refresher",
+    "help": "What CPR and basic life support training do staff receive, and how often is it refreshed? Provider, course name and refresher interval"
    },
    {
     "key": "emergency_equipment",
-    "label": "What emergency equipment do you hold and who checks it?",
-    "help": "For example defibrillator, oxygen, pocket mask, suction; checked weekly by a named role"
+    "label": "Emergency equipment held",
+    "help": "What emergency equipment do you hold and who checks it? For example defibrillator, oxygen, pocket mask, suction; checked weekly by a named role"
    },
    {
     "key": "plan_format_used",
-    "label": "Which form do you expect for resuscitation decisions?",
-    "help": "For example ReSPECT, a local DNACPR form from the ICB or hospital, or both"
+    "label": "Resuscitation form used",
+    "help": "Which form do you expect for resuscitation decisions? For example ReSPECT, a local DNACPR form from the ICB or hospital, or both"
    },
    {
     "key": "plan_storage_location",
-    "label": "Where is each person's DNACPR or ReSPECT form kept so staff can find it in seconds?",
-    "help": "For example front of the care file, a red folder or the digital record"
+    "label": "Form storage location",
+    "help": "Where is each person's DNACPR or ReSPECT form kept so staff can find it in seconds? For example front of the care file, a red folder or the digital record"
    },
    {
     "key": "plan_check_on_admission",
-    "label": "How do you check, record and query a plan when someone arrives from hospital or home?",
-    "help": "For example check on arrival, confirm with the GP within a set time"
+    "label": "Admission plan check",
+    "help": "How do you check, record and query a plan when someone arrives from hospital or home? For example check on arrival, confirm with the GP within a set time"
    },
    {
     "key": "clinician_contacts",
-    "label": "Which clinicians do you contact to start or review a decision?",
-    "help": "For example GP, community nurse team, palliative care team or consultant"
+    "label": "Clinician contacts",
+    "help": "Which clinicians do you contact to start or review a decision? For example GP, community nurse team, palliative care team or consultant"
    },
    {
     "key": "family_involvement_approach",
-    "label": "How do you involve families, attorneys and advocates in these conversations?",
-    "help": "For example who invites them, and how you record who was consulted"
+    "label": "Family involvement approach",
+    "help": "How do you involve families, attorneys and advocates in these conversations? For example who invites them, and how you record who was consulted"
    },
    {
     "key": "review_trigger_practice",
-    "label": "What prompts you to ask a clinician to review a plan?",
-    "help": "For example hospital discharge, a change in health, a fall or a family request"
+    "label": "Plan review triggers",
+    "help": "What prompts you to ask a clinician to review a plan? For example hospital discharge, a change in health, a fall or a family request"
    },
    {
     "key": "ambulance_handover",
-    "label": "What do staff hand to the ambulance crew when 999 is called?",
-    "help": "For example the plan, medication list and a grab sheet"
+    "label": "Ambulance handover items",
+    "help": "What do staff hand to the ambulance crew when 999 is called? For example the plan, medication list and a grab sheet"
    },
    {
     "key": "post_incident_review",
-    "label": "What happens after a collapse, such as debrief and incident reporting?",
-    "help": "For example staff debrief and a recorded review within a set time"
+    "label": "Post collapse review",
+    "help": "What happens after a collapse, such as debrief and incident reporting? For example staff debrief and a recorded review within a set time"
    }
   ]
  },
@@ -1375,63 +1375,63 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "psychotropic_oversight_lead",
-    "label": "Who oversees psychotropic medicines in your service, and what is their role?",
-    "help": "For example the registered manager, a senior with medicines training, or a named nurse."
+    "label": "Psychotropic oversight lead",
+    "help": "Who oversees psychotropic medicines in your service, and what is their role? For example the registered manager, a senior with medicines training, or a named nurse."
    },
    {
     "key": "psychotropic_register",
-    "label": "How do you keep a list of people who take psychotropic medicines, and who updates it?",
-    "help": "For example a register reviewed monthly, or a flag on each care record."
+    "label": "Psychotropic medicines register",
+    "help": "How do you keep a list of people who take psychotropic medicines, and who updates it? For example a register reviewed monthly, or a flag on each care record."
    },
    {
     "key": "non_drug_approaches",
-    "label": "Which non-drug approaches do staff use before or alongside medicines?",
-    "help": "For example positive behaviour support, sensory plans, communication passports or activity plans."
+    "label": "Non drug approaches",
+    "help": "Which non-drug approaches do staff use before or alongside medicines? For example positive behaviour support, sensory plans, communication passports or activity plans."
    },
    {
     "key": "behaviour_support_link",
-    "label": "How is a behaviour support plan linked to a person's medicines, and who writes it?",
-    "help": "For example an in-house practitioner, the community team or an external provider."
+    "label": "Behaviour support plan link",
+    "help": "How is a behaviour support plan linked to a person's medicines, and who writes it? For example an in-house practitioner, the community team or an external provider."
    },
    {
     "key": "prn_protocol_process",
-    "label": "How are PRN psychotropic protocols written, approved and kept with the MAR?",
-    "help": "State who agrees them, what they must include and where staff find them."
+    "label": "PRN protocol process",
+    "help": "How are PRN psychotropic protocols written, approved and kept with the MAR? State who agrees them, what they must include and where staff find them."
    },
    {
     "key": "prn_use_recording",
-    "label": "What do staff record each time a PRN psychotropic is offered or given, and who reviews the pattern?",
-    "help": "For example the reason, other options tried, the outcome, and a weekly or monthly review."
+    "label": "PRN use recording",
+    "help": "What do staff record each time a PRN psychotropic is offered or given, and who reviews the pattern? For example the reason, other options tried, the outcome, and a weekly or monthly review."
    },
    {
     "key": "prescriber_review_routine",
-    "label": "How often are psychotropic medicines reviewed with the prescriber, and who arranges and attends?",
-    "help": "For example every three or six months, with the GP, psychiatrist or community learning disability team."
+    "label": "Prescriber review routine",
+    "help": "How often are psychotropic medicines reviewed with the prescriber, and who arranges and attends? For example every three or six months, with the GP, psychiatrist or community learning disability team."
    },
    {
     "key": "review_preparation",
-    "label": "What information do staff prepare for a medicines review?",
-    "help": "For example behaviour and sleep records, side effect observations, PRN use and the person's views."
+    "label": "Review preparation information",
+    "help": "What information do staff prepare for a medicines review? For example behaviour and sleep records, side effect observations, PRN use and the person's views."
    },
    {
     "key": "reduction_plan_process",
-    "label": "How is a reduction or stop plan agreed, recorded and monitored, and who is involved?",
-    "help": "For example prescriber led, with a written plan, observation records and family or advocate input."
+    "label": "Reduction plan process",
+    "help": "How is a reduction or stop plan agreed, recorded and monitored, and who is involved? For example prescriber led, with a written plan, observation records and family or advocate input."
    },
    {
     "key": "person_family_involvement",
-    "label": "How are the person, their family or an advocate told about and involved in medicines decisions?",
-    "help": "For example easy read information, best interests meetings or an independent advocate."
+    "label": "Person and family involvement",
+    "help": "How are the person, their family or an advocate told about and involved in medicines decisions? For example easy read information, best interests meetings or an independent advocate."
    },
    {
     "key": "side_effect_monitoring",
-    "label": "How do staff monitor and report side effects and physical health checks for these medicines?",
-    "help": "For example a named checklist, annual health check links, or reports to the GP."
+    "label": "Side effect monitoring",
+    "help": "How do staff monitor and report side effects and physical health checks for these medicines? For example a named checklist, annual health check links, or reports to the GP."
    },
    {
     "key": "concerns_escalation",
-    "label": "What should staff do if they think a person is over medicated, and who do they tell?",
-    "help": "For example speak to the lead, then the prescriber, then safeguarding or whistleblowing routes."
+    "label": "Over medication concerns route",
+    "help": "What should staff do if they think a person is over medicated, and who do they tell? For example speak to the lead, then the prescriber, then safeguarding or whistleblowing routes."
    }
   ]
  },
@@ -1447,58 +1447,58 @@ export const GENERATED_POLICY_PRODUCTS: SeedProduct[] = [
   "fields": [
    {
     "key": "visiting_hours_model",
-    "label": "What are your visiting arrangements?",
-    "help": "For example open visiting at any reasonable time, or set windows with flexibility on request"
+    "label": "Visiting arrangements",
+    "help": "What are your visiting arrangements? For example open visiting at any reasonable time, or set windows with flexibility on request"
    },
    {
     "key": "visitor_booking_method",
-    "label": "Do visitors need to book or sign in, and how?",
-    "help": "For example no booking, a phone call, or a signing-in book at reception"
+    "label": "Visiting booking method",
+    "help": "Do visitors need to book or sign in, and how? For example no booking, a phone call, or a signing-in book at reception"
    },
    {
     "key": "essential_care_giver_arrangement",
-    "label": "Do you name a close family member or friend who can always visit, even during restrictions?",
-    "help": "Say how you agree this with the person and record it"
+    "label": "Essential care giver",
+    "help": "Do you name a close family member or friend who can always visit, even during restrictions? Say how you agree this with the person and record it"
    },
    {
     "key": "visits_out_arrangements",
-    "label": "How do you support residents to go out with family or friends?",
-    "help": "For example sign out procedure, medicines taken out, return time expectations"
+    "label": "Visits out arrangements",
+    "help": "How do you support residents to go out with family or friends? For example sign out procedure, medicines taken out, return time expectations"
    },
    {
     "key": "visitor_precautions",
-    "label": "What precautions do you ask visitors to take as standard?",
-    "help": "For example hand hygiene, staying away when unwell, masks only during outbreaks"
+    "label": "Standard visitor precautions",
+    "help": "What precautions do you ask visitors to take as standard? For example hand hygiene, staying away when unwell, masks only during outbreaks"
    },
    {
     "key": "outbreak_visiting_approach",
-    "label": "How do you keep visiting going during an outbreak?",
-    "help": "For example visits in the person's room, end of life visits always allowed, who decides"
+    "label": "Outbreak visiting approach",
+    "help": "How do you keep visiting going during an outbreak? For example visits in the person's room, end of life visits always allowed, who decides"
    },
    {
     "key": "restriction_decision_maker",
-    "label": "Who can decide to limit a visit, and how is it recorded and reviewed?",
-    "help": "Name the role, such as the registered manager, and how often it is reviewed"
+    "label": "Restriction decision maker",
+    "help": "Who can decide to limit a visit, and how is it recorded and reviewed? Name the role, such as the registered manager, and how often it is reviewed"
    },
    {
     "key": "visitor_concerns_process",
-    "label": "What do you do if a visitor causes a safeguarding or conduct concern?",
-    "help": "For example speak to the visitor, supervised visits, refer to the local authority"
+    "label": "Visitor concerns process",
+    "help": "What do you do if a visitor causes a safeguarding or conduct concern? For example speak to the visitor, supervised visits, refer to the local authority"
    },
    {
     "key": "capacity_visiting_decisions",
-    "label": "How do you decide about visits for someone who lacks capacity to decide?",
-    "help": "For example a best interests meeting with family, advocate or IMCA involvement"
+    "label": "Capacity and visiting decisions",
+    "help": "How do you decide about visits for someone who lacks capacity to decide? For example a best interests meeting with family, advocate or IMCA involvement"
    },
    {
     "key": "complaints_about_visiting",
-    "label": "How can residents and families raise a concern about visiting?",
-    "help": "Name the route, such as the manager, the complaints policy, or the resident meeting"
+    "label": "Visiting concerns route",
+    "help": "How can residents and families raise a concern about visiting? Name the route, such as the manager, the complaints policy, or the resident meeting"
    },
    {
     "key": "other_visitors_professionals",
-    "label": "How do you treat professional visitors, children and pets?",
-    "help": "For example advocates, clergy, therapy animals, children's visits"
+    "label": "Professionals children and pets",
+    "help": "How do you treat professional visitors, children and pets? For example advocates, clergy, therapy animals, children's visits"
    }
   ]
  }

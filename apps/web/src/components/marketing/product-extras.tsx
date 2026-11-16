@@ -145,7 +145,9 @@ export interface FaqRegulation { reference_key: string; official_name: string; r
 
 /** The fields only this policy asks for (its leads and dates), not the company details every
  *  policy shares. */
-const ownFields = (p: FaqPolicy) => (p.intake_fields ?? []).filter(f => !f.shared)
+// Capped at five: the newer policies ask up to twelve practice questions, and listing them all turns the
+// FAQ answers and the sample page into a wall of text. Their short labels are what is shown.
+const ownFields = (p: FaqPolicy) => (p.intake_fields ?? []).filter(f => !f.shared).slice(0, 5)
 
 export function policyProductFaqs(p: FaqPolicy, regs: FaqRegulation[], elements: number): Faq[] {
   const own = ownFields(p)

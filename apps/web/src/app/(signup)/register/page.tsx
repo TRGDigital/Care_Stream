@@ -23,7 +23,10 @@ export default async function RegisterPage(props: { searchParams?: Record<string
   const email = String(Array.isArray(q.email) ? q.email[0] : q.email ?? '').trim().slice(0, 200)
   const code = String(Array.isArray(q.code) ? q.code[0] : q.code ?? '').slice(0, 100)
   const topic = clean(q.topic, 20)
+  // The Growth email a visitor clicked (a contact id, a UUID). Anything else is ignored.
+  const grefRaw = String(Array.isArray(q.gref) ? q.gref[0] : q.gref ?? '').trim()
+  const gref = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(grefRaw) ? grefRaw.toLowerCase() : ''
   const title = tier === 'free' && source.startsWith('blog-') ? await blogTitle(source.slice(5)) : null
   const ctx = tier === 'free' ? signupContext(source, course, { topic, blogTitle: title }) : null
-  return <RegisterForm initial={{ tier, source, course, code, email, ctx }} />
+  return <RegisterForm initial={{ tier, source, course, code, email, gref, ctx }} />
 }

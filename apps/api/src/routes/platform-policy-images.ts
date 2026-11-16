@@ -16,7 +16,7 @@ import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { requirePlatformAdmin } from '../middleware/auth'
 import {
-  generatePolicyHeroImage, generateRegulationImage, shopImageUrl,
+  generatePolicyHeroImage, generateRegulationImage, shopImageUrl, listImageModels,
 } from '../services/policy-shop/shopImage'
 import { titleVariants } from './policy-shop-public'
 
@@ -83,6 +83,12 @@ platformPolicyImagesRouter.get('/', async (_req: Request, res: Response) => {
   } catch (e: any) {
     err(res, 'IMAGES_FAILED', e?.message ?? 'could not read the image library', 500)
   }
+})
+
+// ─── GET /models — which image models this account can use (names only) ─────────
+platformPolicyImagesRouter.get('/models', async (_req: Request, res: Response) => {
+  try { ok(res, { models: await listImageModels(), in_use: process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1' }) }
+  catch (e: any) { err(res, 'MODELS_FAILED', e?.message ?? 'could not list models', 500) }
 })
 
 // ─── POST /policy/:slug — generate (or regenerate) one policy hero ────────────

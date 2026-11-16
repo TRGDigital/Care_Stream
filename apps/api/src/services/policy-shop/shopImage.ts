@@ -147,13 +147,25 @@ function castFor(key: string): string {
 }
 
 
+// The image model. gpt-image-1 stopped resolving for this account on 2026-11-16 ("model does not exist"),
+// so it is set by OPENAI_IMAGE_MODEL and checked from Platform → Policy images → /models.
+const IMAGE_MODEL = () => process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1'
+
+/** The image and DALL-E models this OpenAI account can use right now (names only). */
+export async function listImageModels(): Promise<string[]> {
+  const list = await openai.models.list()
+  const ids: string[] = []
+  for await (const m of list as any) if (/image|dall/i.test(m.id)) ids.push(m.id)
+  return ids.sort()
+}
+
 async function generate(template: string, topic: string, context: string, key: string): Promise<string> {
   const result = await openai.images.generate({
-    model:  'gpt-image-1',
+    model:  IMAGE_MODEL(),
     prompt: build(template, topic, context) + castFor(key),
     size:   SIZE,
   })
-  recordCostUsd('gpt-image-1', imageCostUsd((result as any).usage))
+  recordCostUsd(IMAGE_MODEL(), imageCostUsd((result as any).usage))
   const b64 = result.data?.[0]?.b64_json
   if (!b64) throw new Error('Image generation returned no data')
   return uploadShopImage(Buffer.from(b64, 'base64'))

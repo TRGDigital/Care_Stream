@@ -1,6 +1,6 @@
 // Run: npx tsx src/lib/signup-meta.test.ts
 import assert from 'node:assert/strict'
-import { buildSignupMeta, describeCameFrom, cleanIp, accountTypeLabel, locationOf } from './signup-meta'
+import { buildSignupMeta, describeCameFrom, cleanIp, accountTypeLabel, locationOf, requestOrigin } from './signup-meta'
 
 const req = (o: any = {}) => ({ ip: '::ffff:81.2.69.142', headers: { 'x-vercel-ip-country': 'GB', 'x-vercel-ip-city': 'Bexley%20Heath', 'x-vercel-ip-country-region': 'ENG', 'user-agent': 'Mozilla/5.0', ...(o.headers ?? {}) }, ...o }) as any
 
@@ -26,4 +26,9 @@ assert.equal(accountTypeLabel('full'), 'Paid plan (trial)')
 // a request with no geo headers and no attribution still works
 const bare = buildSignupMeta({ ip: undefined, headers: {} } as any, {})
 assert.equal(bare.ip, null); assert.equal(bare.country ?? null, null); assert.deepEqual(bare.came_from, ['Direct visit, no referrer'])
+// last login origin
+const o = requestOrigin(req())
+assert.equal(o.ip, '81.2.69.142'); assert.equal(o.city, 'Bexley Heath'); assert.equal(o.country, 'GB'); assert.ok(o.at)
+const none = requestOrigin({ ip: undefined, headers: {} } as any)
+assert.equal(none.ip, null); assert.equal(none.user_agent, null)
 console.log('signup-meta tests passed')

@@ -67,3 +67,14 @@ export function accountTypeLabel(tier: string, planName?: string | null): string
   if (tier === 'training_only') return 'Training only (pay per course)'
   return planName ? `Paid plan: ${planName} (trial)` : 'Paid plan (trial)'
 }
+
+/** Where a request came from: IP address, rough location (Vercel geo headers) and device. Used for the last login on a user. */
+export type RequestOrigin = { ip: string | null; country: string | null; region: string | null; city: string | null; user_agent: string | null; at: string }
+export function requestOrigin(req: Request): RequestOrigin {
+  return {
+    ip: cleanIp(req.ip),
+    country: header(req, 'x-vercel-ip-country'), region: decode(header(req, 'x-vercel-ip-country-region')), city: decode(header(req, 'x-vercel-ip-city')),
+    user_agent: clip(req.headers['user-agent'], 300),
+    at: new Date().toISOString(),
+  }
+}

@@ -800,7 +800,15 @@ adminRouter.get('/tenants/:id', async (req: Request, res: Response) => {
     }),
   ])
 
-  ok(res, { tenant, policies, recentQueries, knowledgeCount, manualKnowledgeCount, userCount, queriesThisMonth, handbookCount, storage, training_licences, annual_license, group: { parent: groupParent, children: groupChildren } })
+  // The most recent sign in on the account (any user): who, when, and where from.
+  const lastLoginUser = await (prisma as any).user.findFirst({
+    where: { tenant_id: req.params.id, last_login_at: { not: null } },
+    orderBy: { last_login_at: 'desc' },
+    select: { name: true, email: true, role: true, last_login_at: true, last_login_meta: true },
+  }).catch(() => null)
+  const last_login = lastLoginUser ? { name: lastLoginUser.name, email: lastLoginUser.email, role: lastLoginUser.role, at: lastLoginUser.last_login_at, ...(lastLoginUser.last_login_meta ?? {}) } : null
+
+  ok(res, { tenant, policies, recentQueries, knowledgeCount, manualKnowledgeCount, userCount, queriesThisMonth, handbookCount, storage, training_licences, annual_license, last_login, group: { parent: groupParent, children: groupChildren } })
 })
 
 // ─── PATCH /admin/tenants/:id/group ──────────────────────────────────────────

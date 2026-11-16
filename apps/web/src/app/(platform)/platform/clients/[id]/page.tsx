@@ -1166,6 +1166,9 @@ export default function ClientDetailPage() {
                   { label: 'Joined',            value: new Date(detail.tenant.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) },
                   { label: 'Sign up IP address', value: detail.tenant.signup_meta?.ip ?? 'Not recorded' },
                   { label: 'Sign up location',   value: [detail.tenant.signup_meta?.city, detail.tenant.signup_meta?.region, detail.tenant.signup_meta?.country].filter(Boolean).join(', ') || 'Not recorded' },
+                  { label: 'Last login IP address', value: detail.last_login ? (detail.last_login.ip ?? 'Not recorded') : 'No sign in yet' },
+                  { label: 'Last login location',   value: detail.last_login ? ([detail.last_login.city, detail.last_login.region, detail.last_login.country].filter(Boolean).join(', ') || 'Not recorded') : '—' },
+                  { label: 'Last login',            value: detail.last_login ? `${detail.last_login.name}, ${new Date(detail.last_login.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}` : '—' },
                 ].map(({ label, value }) => (
                   <div key={label}>
                     <dt className="text-xs text-neutral-mid">{label}</dt>

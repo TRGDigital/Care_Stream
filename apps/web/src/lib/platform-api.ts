@@ -236,6 +236,8 @@ export interface TenantDetail {
   userCount:            number
   queriesThisMonth:     number
   handbookCount:        number
+  /** The most recent sign in on the account (any user): who, when and where from. Null until someone has signed in. */
+  last_login?: { name: string; email: string; role: string; at: string; ip?: string | null; country?: string | null; region?: string | null; city?: string | null; user_agent?: string | null } | null
   annual_license?: {
     used:      number
     limit:     number | null

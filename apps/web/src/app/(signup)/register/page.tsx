@@ -28,5 +28,7 @@ export default async function RegisterPage(props: { searchParams?: Record<string
   const gref = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(grefRaw) ? grefRaw.toLowerCase() : ''
   const title = tier === 'free' && source.startsWith('blog-') ? await blogTitle(source.slice(5)) : null
   const ctx = tier === 'free' ? signupContext(source, course, { topic, blogTitle: title }) : null
-  return <RegisterForm initial={{ tier, source, course, code, email, gref, ctx }} />
+  // Which free tier email sequence a blog sign up joins: the post's topic (the API only sees the source).
+  const track = tier === 'free' && source.startsWith('blog-') ? ({ audits: 'audits', cpd: 'training', policy: 'policies' } as Record<string, string>)[topic] ?? '' : ''
+  return <RegisterForm initial={{ tier, source, course, code, email, gref, ctx, track }} />
 }

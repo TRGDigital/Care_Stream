@@ -7,7 +7,7 @@ import { sweep, cursorFor } from '../../lib/tenant-sweep'
 import crypto from 'crypto'
 import { prisma } from '../../db/client'
 import { evaluateCondition } from './conditions'
-import { renderOnboardingEmailHtml } from './render'
+import { renderOnboardingEmailHtml, renderOnboardingEmailText, firstNameOf } from './render'
 
 const FROM     = process.env.ONBOARDING_FROM_EMAIL ?? 'hello@carestreamai.com'
 const FROM_NAME = 'CareStream'
@@ -74,10 +74,10 @@ async function template(plan: string, day_index: number): Promise<any | null> {
   return row?.is_active ? row : null
 }
 
-async function activeAdmins(tenantId: string): Promise<Array<{ id: string; email: string }>> {
+async function activeAdmins(tenantId: string): Promise<Array<{ id: string; email: string; name?: string | null }>> {
   return (prisma as any).user.findMany({
     where: { tenant_id: tenantId, role: 'admin', is_active: true },
-    select: { id: true, email: true },
+    select: { id: true, email: true, name: true },
   })
 }
 
@@ -91,9 +91,9 @@ export function verifyUnsub(enrolmentId: string, token: string): boolean {
 // ─── Sending ──────────────────────────────────────────────────────────────────
 
 async function sendToRecipient(opts: {
-  tenantId: string; enrolment: any; tmpl: any; recipientEmail: string; recipientUserId?: string | null; scheduledFor: Date
+  tenantId: string; enrolment: any; tmpl: any; recipientEmail: string; recipientUserId?: string | null; scheduledFor: Date; recipientName?: string | null
 }): Promise<'sent' | 'skipped' | 'failed'> {
-  const { tenantId, enrolment, tmpl, recipientEmail, recipientUserId, scheduledFor } = opts
+  const { tenantId, enrolment, tmpl, recipientEmail, recipientUserId, scheduledFor, recipientName } = opts
 
   // Idempotent: one send per (tenant, email, recipient).
   let row = await (prisma as any).onboardingSend.findFirst({ where: { tenant_id: tenantId, email_id: tmpl.id, recipient_email: recipientEmail } })
@@ -114,7 +114,10 @@ async function sendToRecipient(opts: {
   }
 
   const unsubscribeUrl = `${API_BASE}/onboarding/unsubscribe?e=${enrolment?.id ?? ''}&t=${enrolment ? unsubToken(enrolment.id) : ''}`
-  const html = renderOnboardingEmailHtml({ subject: tmpl.subject, preheader: tmpl.preheader, body: tmpl.body }, { unsubscribeUrl })
+  const rendered = { subject: tmpl.subject, preheader: tmpl.preheader, body: tmpl.body }
+  const ropts = { unsubscribeUrl, firstName: firstNameOf(recipientName) }
+  const html = renderOnboardingEmailHtml(rendered, ropts)
+  const text = renderOnboardingEmailText(rendered, ropts)
 
   try {
     const [res] = await sgMail.send({
@@ -123,6 +126,7 @@ async function sendToRecipient(opts: {
       replyTo: FROM,
       subject: tmpl.subject,
       html,
+      text,
       customArgs: { onboarding_send_id: row.id },
       trackingSettings: { clickTracking: { enable: true, enableText: false }, openTracking: { enable: true } },
     } as any)
@@ -139,8 +143,9 @@ async function sendToRecipient(opts: {
 // logged to onboarding_sends and no tracking, so it never pollutes the stats.
 export async function sendTestEmail(to: string, tmpl: { subject: string; preheader: string; body: any }): Promise<void> {
   if (!ensureSg()) throw new Error('SENDGRID_API_KEY is not set')
-  const html = renderOnboardingEmailHtml({ subject: tmpl.subject, preheader: tmpl.preheader, body: tmpl.body }, { unsubscribeUrl: '#' })
-  await sgMail.send({ to, from: { email: FROM, name: FROM_NAME }, replyTo: FROM, subject: `[TEST] ${tmpl.subject}`, html } as any)
+  const rendered = { subject: tmpl.subject, preheader: tmpl.preheader, body: tmpl.body }
+  const ropts = { unsubscribeUrl: '#', firstName: 'Alex' }   // a sample first name, so the personal greeting shows in a test
+  await sgMail.send({ to, from: { email: FROM, name: FROM_NAME }, replyTo: FROM, subject: `[TEST] ${tmpl.subject}`, html: renderOnboardingEmailHtml(rendered, ropts), text: renderOnboardingEmailText(rendered, ropts) } as any)
 }
 
 // Enrol a tenant into the drip (one active enrolment per tenant).
@@ -161,7 +166,7 @@ export async function enrolTenant(tenantId: string, planName: string | null, sta
 // buyer who later takes a licence needs both, which is why the enrolment key is
 // (tenant, campaign). `plan` carries the campaign name so the existing lookup by
 // (plan, day_index) resolves the campaign's own emails.
-export async function enrolInCampaign(tenantId: string, campaign: 'training_shop' | 'policy_shop' | 'free_plan', startStr?: string): Promise<any> {
+export async function enrolInCampaign(tenantId: string, campaign: import('./campaigns').CampaignKey, startStr?: string): Promise<any> {
   const start = startStr ?? new Date().toISOString().slice(0, 10)
   const existing = await (prisma as any).onboardingEnrolment.findUnique({
     where: { tenant_id_campaign: { tenant_id: tenantId, campaign } },
@@ -260,7 +265,7 @@ export async function dispatchDue(opts: { force?: boolean; tenantId?: string } =
       if (isCatchup) summary.caught_up++
       summary.due.push({ tenant_id: enr.tenant_id, plan: enr.plan, day, recipients: recipients.length, catchup: isCatchup })
       for (const r of recipients) {
-        const outcome = await sendToRecipient({ tenantId: enr.tenant_id, enrolment: enr, tmpl, recipientEmail: r.email, recipientUserId: r.id, scheduledFor: new Date() })
+        const outcome = await sendToRecipient({ tenantId: enr.tenant_id, enrolment: enr, tmpl, recipientEmail: r.email, recipientUserId: r.id, recipientName: r.name, scheduledFor: new Date() })
         summary[outcome]++
       }
     }

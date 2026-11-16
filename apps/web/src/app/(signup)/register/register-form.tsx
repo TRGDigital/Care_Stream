@@ -44,6 +44,7 @@ export interface RegisterInitial {
   tier: 'free' | 'training_only' | 'full'
   source: string
   course: string
+  track?: string
   code: string
   email: string
   gref: string
@@ -71,6 +72,7 @@ export function RegisterForm({ initial }: { initial: RegisterInitial }) {
   const [freeTier] = useState(initial.tier === 'free')
   const [courseSlug] = useState(initial.course)
   const [signupSource] = useState(initial.source)
+  const [signupTrack] = useState(initial.track ?? '')
   const [previewCode] = useState(initial.code)
   const [trap, setTrap] = useState('')   // honeypot: real people never fill this in
   // The Growth email this visit came from (?gref=<uuid>): kept for the session so it survives leaving the page and coming back.
@@ -109,7 +111,7 @@ export function RegisterForm({ initial }: { initial: RegisterInitial }) {
       const res = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(freeTier ? { ...form, tier: 'free', preview_code: previewCode || undefined, company_website: trap || undefined, course: courseSlug || undefined, source: signupSource || undefined, growth_ref: growthRef || undefined } : trainingOnly ? { ...form, tier: 'training_only' } : form),
+        body: JSON.stringify(freeTier ? { ...form, tier: 'free', preview_code: previewCode || undefined, company_website: trap || undefined, course: courseSlug || undefined, source: signupSource || undefined, track: signupTrack || undefined, growth_ref: growthRef || undefined } : trainingOnly ? { ...form, tier: 'training_only' } : form),
       })
       const body = await res.json()
       if (!res.ok || !body.success) {

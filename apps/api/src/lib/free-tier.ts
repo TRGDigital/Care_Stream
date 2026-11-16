@@ -273,7 +273,7 @@ export async function liftFreeLimits(tenantId: string): Promise<void> {
     await freeEvent(tenantId, 'free_upgraded', { plan: t?.plan?.name ?? null, days_since_signup: t?.created_at ? Math.floor((Date.now() - new Date(t.created_at).getTime()) / 86400000) : null })
   })()
   try {
-    await (prisma as any).onboardingEnrolment.updateMany({ where: { tenant_id: tenantId, campaign: 'free_plan', status: 'active' }, data: { status: 'completed' } })
+    await (prisma as any).onboardingEnrolment.updateMany({ where: { tenant_id: tenantId, campaign: { in: ['free_plan', 'free_audits', 'free_training', 'free_policies', 'free_general'] }, status: 'active' }, data: { status: 'completed' } })
     const t = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { plan: { select: { name: true } } } })
     if (t?.plan?.name) {
       const { enrolTenant, ukNow } = await import('../services/onboarding/dispatch')

@@ -4095,7 +4095,7 @@ adminRouter.get('/onboarding/emails', async (req: Request, res: Response) => {
 adminRouter.get('/onboarding/emails/:id/preview', async (req: Request, res: Response) => {
   const e = await (prisma as any).onboardingEmail.findUnique({ where: { id: req.params.id } })
   if (!e) { err(res, 'NOT_FOUND', 'Email not found', 404); return }
-  const html = renderOnboardingEmailHtml({ subject: e.subject, preheader: e.preheader, body: e.body }, { unsubscribeUrl: '#' })
+  const html = renderOnboardingEmailHtml({ subject: e.subject, preheader: e.preheader, body: e.body }, { unsubscribeUrl: '#', firstName: 'Alex' })   // a sample first name so the personal greeting shows
   ok(res, { html, subject: e.subject })
 })
 

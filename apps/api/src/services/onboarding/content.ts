@@ -21,6 +21,8 @@ export interface OnboardingEmail {
   where?:     string        // "where to click" guidance shown with the screenshot
   imageSrc?:  string        // real platform screenshot (added once captured)
   draft?:     boolean       // seeds is_active = false: visible in the editor, never dispatched
+  style?:     'plain' | 'branded'   // 'plain' is the personal style (first name greeting, no logo or boxes)
+  banner?:    { text: string; ctaLabel: string; ctaHref: string }   // a small note under the sign off, used for the upgrade mention
 }
 
 export interface Sequence {

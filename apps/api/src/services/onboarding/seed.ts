@@ -57,6 +57,8 @@ export async function seedOnboardingEmails(): Promise<{ inserted: number; total:
             where:     e.where ?? null,
             imageSrc:  e.imageSrc ?? null,
             badge:     e.badge ?? null,
+            style:     e.style ?? null,
+            banner:    e.banner ?? null,
           },
         },
       })

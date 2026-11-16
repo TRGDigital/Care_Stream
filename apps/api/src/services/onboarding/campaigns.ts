@@ -12,8 +12,12 @@
 
 import type { OnboardingEmail } from './content'
 import { FREE_PLAN_EMAILS } from './free-campaign'
+import { FREE_TRACK_EMAILS } from './free-tracks'
 
-export type CampaignKey = 'training_shop' | 'policy_shop' | 'free_plan'
+export type CampaignKey = 'training_shop' | 'policy_shop' | 'free_plan' | 'free_audits' | 'free_training' | 'free_policies' | 'free_general'
+
+/** The four free tier tracks: which one someone is enrolled in depends on where they signed up (see free-track.ts). */
+export const FREE_TRACK_KEYS = ['free_audits', 'free_training', 'free_policies', 'free_general'] as const
 
 export interface CampaignEmail extends OnboardingEmail {
   /** Predicate from conditions.ts, checked when this email is due. */
@@ -316,12 +320,32 @@ export const CAMPAIGNS: Record<CampaignKey, Campaign> = {
     blurb: 'For someone who bought a written policy without a CareStream plan. Follows the order from paid through intake, drafting and approval.',
     emails: POLICY,
   },
+  free_audits: {
+    key: 'free_audits', label: 'Free: audits',
+    blurb: 'For people who signed up from an audit page. Twelve instructional emails, one per working day: audits first, then training, the policy check and the team. Emails 11 and 12 carry a small upgrade banner.',
+    emails: FREE_TRACK_EMAILS.free_audits,
+  },
+  free_training: {
+    key: 'free_training', label: 'Free: training',
+    blurb: 'For people who signed up from a training course page. Twelve instructional emails, one per working day: free staff training and the matrix first, then audits, the policy check and the team. Emails 11 and 12 carry a small upgrade banner.',
+    emails: FREE_TRACK_EMAILS.free_training,
+  },
+  free_policies: {
+    key: 'free_policies', label: 'Free: policies',
+    blurb: 'For people who signed up from a policy page. Twelve instructional emails, one per working day: the free policy check first, then audits, training and the team. Emails 11 and 12 carry a small upgrade banner.',
+    emails: FREE_TRACK_EMAILS.free_policies,
+  },
+  free_general: {
+    key: 'free_general', label: 'Free: general',
+    blurb: 'For people who signed up from anywhere else (pricing, home page, the free account overlay). Twelve instructional emails, one per working day, led by audits then spread across everything. Emails 11 and 12 carry a small upgrade banner.',
+    emails: FREE_TRACK_EMAILS.free_general,
+  },
   free_plan: {
     key: 'free_plan',
-    label: 'Free account',
+    label: 'Free account (older draft)',
     blurb: 'For people on the free plan. Gated on what they have done: audits run, how many of the 5 free policies are used, staff added. Upgrading ends it and starts the plan sequence.',
     emails: FREE_PLAN_EMAILS,
   },
 }
 
-export const CAMPAIGN_ORDER: CampaignKey[] = ['training_shop', 'policy_shop', 'free_plan']
+export const CAMPAIGN_ORDER: CampaignKey[] = ['training_shop', 'policy_shop', 'free_audits', 'free_training', 'free_policies', 'free_general', 'free_plan']

@@ -123,8 +123,16 @@ const PREDICATES: Record<string, (tenantId: string) => Promise<ConditionResult>>
   free_slots_one_left: async (tenantId) => { const f = await freeSlots(tenantId); return f.limit !== null && f.used === f.limit - 1 },
   /** All places used. */
   free_slots_exhausted: async (tenantId) => { const f = await freeSlots(tenantId); return f.limit !== null && f.used >= f.limit },
+  /** True once at least one policy has been added (so the emails about reading the results make sense). */
+  free_policy_added: async (tenantId) => (await freeSlots(tenantId)).used > 0,
   /** True while only the sign-up admin exists (nobody else has been added). */
   free_no_staff_invited: async (tenantId) => (await (prisma as any).user.count({ where: { tenant_id: tenantId, is_active: true } })) <= 1,
+  /** True until anyone at the organisation has started a training module. */
+  free_no_training_started: async (tenantId) => (await (prisma as any).trainingEnrollment.count({ where: { tenant_id: tenantId } })) === 0,
+  /** True once anyone has started a training module. */
+  free_training_started: async (tenantId) => (await (prisma as any).trainingEnrollment.count({ where: { tenant_id: tenantId } })) > 0,
+  /** True once anyone has finished a training module. */
+  free_training_completed: async (tenantId) => (await (prisma as any).trainingEnrollment.count({ where: { tenant_id: tenantId, completed_at: { not: null } } })) > 0,
   /** True while the tenant is still on the Free tier (suppresses the upgrade nudge after upgrading). */
   free_not_upgraded: async (tenantId) => (await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { tier: true } }))?.tier === 'free',
 

@@ -74,6 +74,8 @@ const RegisterSchema = z.object({
   course:          z.string().regex(/^[a-z0-9-]{1,80}$/).optional(),
   // The page the sign up link was on (blog-<slug>, cpd, ...): counted per page in the Performance panel.
   source:          z.string().regex(/^[a-z0-9-]{1,100}$/).optional(),
+  // Which free tier sequence to start (blog sign ups: the post's topic). See services/onboarding/free-track.ts.
+  track:           z.enum(['audits', 'training', 'policies']).optional(),
   // The type of service they run (a care setting key). Sets the home's facility type, which drives the
   // audits and content suggested to them. Optional: it can be set later in Settings.
   care_setting:    z.enum(CARE_SETTINGS).optional(),
@@ -171,7 +173,7 @@ authRouter.post('/register', async (req: Request, res: Response) => {
 
   // Tell the Growth Engine so any cold email sequence for this provider stops. Never for a test (preview code) signup.
   if (tier === 'free' && !isTest) void reportSignupToGrowth({ email, tenantId: tenant.id, growthRef: parsed.data.growth_ref })
-  if (tier === 'free') void freeEvent(tenant.id, 'free_signup', { domain_class: isWebmail(emailDomain(email)) ? 'webmail' : 'organisation' }, user.id)
+  if (tier === 'free') void freeEvent(tenant.id, 'free_signup', { domain_class: isWebmail(emailDomain(email)) ? 'webmail' : 'organisation', source: parsed.data.source ?? null, track: parsed.data.track ?? null }, user.id)
 
   // Send verification email — awaited so it completes before the serverless function exits
   const webUrl = siteUrl()
@@ -200,16 +202,20 @@ authRouter.post('/register', async (req: Request, res: Response) => {
     if (process.env.FREE_TEST_ENROL === 'true') {
       try {
         const { enrolInCampaign, sendDayOneNow } = await import('../services/onboarding/dispatch')
-        await enrolInCampaign(tenant.id, 'free_plan' as any)
-        await sendDayOneNow(tenant.id, email, user.id, 'free_plan')
+        const { freeCampaignFor } = await import('../services/onboarding/free-track')
+        const campaign = freeCampaignFor({ source: parsed.data.source, course: parsed.data.course, track: parsed.data.track })
+        await enrolInCampaign(tenant.id, campaign)
+        await sendDayOneNow(tenant.id, email, user.id, campaign)
       } catch (e) { console.error('[register] test enrol failed:', e) }
     }
   } else if (tier === 'free') {
     // The free account has its own campaign (drafts until published on the email marketing page).
     try {
       const { enrolInCampaign, sendDayOneNow } = await import('../services/onboarding/dispatch')
-      await enrolInCampaign(tenant.id, 'free_plan' as any)
-      await sendDayOneNow(tenant.id, email, user.id, 'free_plan')
+      const { freeCampaignFor } = await import('../services/onboarding/free-track')
+      const campaign = freeCampaignFor({ source: parsed.data.source, course: parsed.data.course, track: parsed.data.track })
+      await enrolInCampaign(tenant.id, campaign)
+      await sendDayOneNow(tenant.id, email, user.id, campaign)
     } catch (e) {
       console.error('[register] free onboarding enrol failed:', e)
     }

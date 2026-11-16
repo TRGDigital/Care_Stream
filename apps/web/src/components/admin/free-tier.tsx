@@ -217,7 +217,8 @@ export function FreeLockOverlay({ feature, onClose, token }: { feature: string; 
   const plan = info?.plan ?? 'Starter'
   return (
     <div role="dialog" aria-modal="true" aria-label={`${feature} is part of the paid plans`} className="fixed inset-0 z-[100] flex items-center justify-center bg-neutral-dark/60 p-4" onClick={onClose}>
-      <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white p-7 shadow-elevated" onClick={e => e.stopPropagation()}>
+      <div className="flex max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-elevated" onClick={e => e.stopPropagation()}>
+      <div className="min-w-0 flex-1 overflow-y-auto p-7">
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <p className="mb-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700"><Lock size={9} /> {plan} plan and above</p>
@@ -238,6 +239,23 @@ export function FreeLockOverlay({ feature, onClose, token }: { feature: string; 
           <Link href="/billing" className="inline-flex items-center gap-1 text-sm font-semibold text-teal hover:underline">Compare plans <ArrowRight size={14} /></Link>
         </div>
       </div>
+      <LockedFeatureArt feature={feature} />
+      </div>
+    </div>
+  )
+}
+
+/** The picture on the right of the lock overlay: one illustration per locked feature, in the same flat teal style as the
+ *  policy and training art. Desktop only, and it quietly disappears if a feature has no image yet. */
+function LockedFeatureArt({ feature }: { feature: string }) {
+  const [failed, setFailed] = useState(false)
+  useEffect(() => { setFailed(false) }, [feature])
+  if (failed) return null
+  const slug = feature.toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '')
+  return (
+    <div className="relative hidden w-[40%] shrink-0 bg-teal-light/30 md:block">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={`/images/locked/${slug}.webp`} alt="" className="absolute inset-0 h-full w-full object-cover" onError={() => setFailed(true)} />
     </div>
   )
 }

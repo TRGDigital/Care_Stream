@@ -111,9 +111,9 @@ const SUGGESTED: Record<DocumentCategory, string[]> = {
     'Which areas have the most recommendations and what should we prioritise?',
   ],
   resident: [
-    'What does Margaret like to drink, and how does she take it?',
-    'What helps when a resident is upset or anxious?',
-    'Who likes brass band music?',
+    'Who enjoys music, and what kind do they like?',
+    'What helps residents who get anxious or upset?',
+    'Who likes gardening or being outdoors?',
   ],
   business_continuity: [
     'What should I do if we have a serious staff shortage during a shift?',
@@ -967,7 +967,7 @@ function ChatPageInner() {
           <button
             onClick={() => !hubLocked('chat') && setView('chat')}
             title={hubLocked('chat') ? LOCKED_TITLE : undefined}
-            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'chat' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'} ${hubLocked('chat') ? lockedCls : ''}`}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'chat' && category !== 'resident' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'} ${hubLocked('chat') ? lockedCls : ''}`}
           >
             <MessageSquare size={15} />
             Chat
@@ -1405,8 +1405,8 @@ function ChatPageInner() {
 
         {/* Input bar */}
         {view === 'chat' && <div className="flex-shrink-0 border-t border-gray-200 bg-white px-4 py-4">
-          {/* Colour key for the suggested follow-up questions */}
-          {!isEmpty && (
+          {/* Colour key for the suggested follow-up questions (policy chats only: resident answers have no policy or regulation sources) */}
+          {!isEmpty && category !== 'resident' && (
             <div className="mx-auto mb-2.5 flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-mid">
               <span className="font-medium">Suggested questions:</span>
               <span className="inline-flex items-center gap-1.5">

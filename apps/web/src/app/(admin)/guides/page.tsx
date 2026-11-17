@@ -1657,16 +1657,28 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={4}>To check what you have approved, open the <strong>From family</strong> tab. It lists each person who answered as a drawer: open one to see what they told you, when you approved it and who approved it. If you edited an answer first, you can still see what they originally wrote.</Step>
           </div>
         </SectionBlock>
-        <SectionBlock title="What staff see">
+        <SectionBlock title="What staff see: asking about a resident">
           <p className="text-sm text-neutral-mid">
-            Once a home has at least one profile with content, staff see a <strong>This is me</strong> tab in the Chat Hub. It shows
-            each current resident as a card (searchable by name or room); opening one shows their profile in large, clear text, ready
-            for a quick read before a shift or a first visit to a room.
+            Once a home has at least one profile with content, staff see a <strong>This is me</strong> topic in the Chat Hub, in the sidebar
+            and when they start a new chat. It works the same way as asking about a policy: they type a question about a resident and the
+            chat answers, using only the profiles your home has written and approved.
           </p>
+          <div className="mt-2 rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
+            {[
+              ['Ask about one person', '\u201cWhat does Margaret like to drink?\u201d, \u201cWhat helps when Tom is anxious?\u201d or \u201cTell me about Peggy before I go in.\u201d'],
+              ['Ask across everyone', '\u201cWho enjoys music?\u201d or \u201cWho likes being outdoors?\u201d finds the residents whose profiles mention it.'],
+              ['If it is not recorded', 'The chat says so plainly and suggests asking the person, their family or the team. It never makes something up, and it does not give medical advice: for anything clinical it points staff to the care plan.'],
+            ].map(([k, v]) => (
+              <div key={k} className="grid grid-cols-[10rem_1fr] gap-3 px-4 py-3">
+                <span className="font-medium text-neutral-dark">{k}</span>
+                <span className="text-neutral-mid">{v}</span>
+              </div>
+            ))}
+          </div>
           <p className="mt-2 text-sm text-neutral-mid">
-            Staff can also just ask the chat about a resident by name, for example &ldquo;What does Margaret like to drink?&rdquo;
-            or &ldquo;What helps when Tom is anxious?&rdquo;. The answer comes from the profile, and the source is shown by name.
+            The answer names who a detail came from when family supplied it, and the profiles it used are listed under the answer.
             This is a fast way for a new starter, an agency worker or someone covering a shift to learn what the regular team already knows.
+            Only current residents are included: when someone dies or moves on they are removed straight away.
           </p>
         </SectionBlock>
         <SectionBlock title="When a resident dies or moves on">

@@ -2233,6 +2233,7 @@ export async function sendContentDraftsEmail(opts: {
       ? `Nightly ${label}s: nothing created (needs a look)`
       : `Nightly ${label}s: ${n} draft${n === 1 ? '' : 's'} created`,
     html,
+    trackingSettings: { clickTracking: { enable: false, enableText: false } },
   })
 }
 
@@ -2271,7 +2272,7 @@ export async function sendResidentFamilyInviteEmail(opts: {
     <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0">This link is just for you and stops working after ${opts.days} days. If you were not expecting this email, you can ignore it.</p>
     ${emailFooter(opts.homeName)}
   `)
-  await sgMail.send({ to: opts.to, from: residentFrom('CareStream'), subject: `Help us get to know ${opts.residentName}`, html })
+  await sgMail.send({ to: opts.to, from: residentFrom('CareStream'), subject: `Help us get to know ${opts.residentName}`, html, trackingSettings: { clickTracking: { enable: false, enableText: false } } })
 }
 
 /** To the admin who invited a family member: they have replied, answers are waiting for approval. */
@@ -2290,7 +2291,7 @@ export async function sendResidentFamilySubmissionEmail(opts: {
     ${residentButton(opts.link, 'Review the answers')}
     ${emailFooter(opts.homeName)}
   `)
-  await sgMail.send({ to: opts.to, from: residentFrom('CareStream'), subject: `${opts.contributorName} has added to ${opts.residentName}'s profile`, html })
+  await sgMail.send({ to: opts.to, from: residentFrom('CareStream'), subject: `${opts.contributorName} has added to ${opts.residentName}'s profile`, html, trackingSettings: { clickTracking: { enable: false, enableText: false } } })
 }
 
 /** To the admins who hold the resident archive permission: someone has died or moved on and the archive needs actioning. */
@@ -2315,7 +2316,7 @@ export async function sendResidentArchiveTaskEmail(opts: {
     ${residentButton(opts.link, 'Open the archive')}
     ${emailFooter(opts.homeName)}
   `)
-  await sgMail.send({ to: opts.to, from: residentFrom('CareStream'), subject: `Archive needed: ${opts.residentName}`, html })
+  await sgMail.send({ to: opts.to, from: residentFrom('CareStream'), subject: `Archive needed: ${opts.residentName}`, html, trackingSettings: { clickTracking: { enable: false, enableText: false } } })
 }
 
 /** To the archive admins: retention dates that are near or have passed. */
@@ -2334,5 +2335,5 @@ export async function sendResidentRetentionEmail(opts: {
     ${residentButton(opts.link, 'Open the archive')}
     ${emailFooter(opts.homeName)}
   `)
-  await sgMail.send({ to: opts.to, from: residentFrom('CareStream'), subject: `Archived profiles to review (${opts.items.length})`, html })
+  await sgMail.send({ to: opts.to, from: residentFrom('CareStream'), subject: `Archived profiles to review (${opts.items.length})`, html, trackingSettings: { clickTracking: { enable: false, enableText: false } } })
 }

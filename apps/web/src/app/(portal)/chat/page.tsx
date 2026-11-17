@@ -22,8 +22,6 @@ import { ProgressView } from '@/components/hub/progress-view'
 import { MyActionsView } from '@/components/hub/my-actions-view'
 import { SuggestTranslation } from '@/components/hub/suggest-translation'
 import { SupervisionsHubView } from '@/components/hub/supervisions-view'
-import { ThisIsMeView } from '@/components/hub/this-is-me-view'
-import { createResidentsClient, type HubResident, type ResidentSectionDef } from '@/lib/residents-api'
 import { DisplaySettings } from '@/components/hub/display-settings'
 import Link from 'next/link'
 import { createApiClient, apiAssetUrl, type Citation } from '@/lib/api-client'
@@ -68,7 +66,7 @@ interface StoredSession {
   updatedAt:  string  // ISO
 }
 
-type DocumentCategory = 'internal_policy' | 'staff_handbook' | 'training_module' | 'cqc_report' | 'audit_report' | 'business_continuity'
+type DocumentCategory = 'internal_policy' | 'staff_handbook' | 'training_module' | 'cqc_report' | 'audit_report' | 'business_continuity' | 'resident'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -112,6 +110,11 @@ const SUGGESTED: Record<DocumentCategory, string[]> = {
     'Are there any recurring issues across our monthly audits?',
     'Which areas have the most recommendations and what should we prioritise?',
   ],
+  resident: [
+    'What does Margaret like to drink, and how does she take it?',
+    'What helps when a resident is upset or anxious?',
+    'Who likes brass band music?',
+  ],
   business_continuity: [
     'What should I do if we have a serious staff shortage during a shift?',
     'Who do I contact if we have a power or IT outage?',
@@ -140,6 +143,7 @@ const CATEGORY_LABELS: Record<DocumentCategory, { title: string; subtitle: strin
   cqc_report:      { title: 'CQC Compliance',         subtitle: 'Inspection readiness & regulatory compliance' },
   audit_report:         { title: 'Auditing',               subtitle: 'Ask about audit findings & AI recommendations' },
   business_continuity:  { title: 'Business Continuity',    subtitle: 'Emergency procedures & contingency plans' },
+  resident:             { title: 'This is me',             subtitle: 'Ask about the people you support' },
 }
 
 const MAX_SESSIONS = 50
@@ -353,7 +357,7 @@ function ChatPageInner() {
   const { data: session }                              = useSession()
   const userId                                         = session?.user?.email ?? 'guest'
 
-  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'diplomas' | 'cqc' | 'progress' | 'f2f' | 'supervisions' | 'this-is-me' | 'policies' | 'audit-approvals' | 'actions'>('chat')
+  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'diplomas' | 'cqc' | 'progress' | 'f2f' | 'supervisions' | 'policies' | 'audit-approvals' | 'actions'>('chat')
   const [policyApprovals, setPolicyApprovals]          = useState<{ is_manager: boolean; count: number }>({ is_manager: false, count: 0 })
   const [dueReviewCount, setDueReviewCount]            = useState(0)   // policies past their review date (admins)
   const [auditApprovals, setAuditApprovals]            = useState<{ is_manager: boolean; count: number }>({ is_manager: false, count: 0 })
@@ -405,8 +409,6 @@ function ChatPageInner() {
   // "new chat" topic tiles can grey out ones with nothing uploaded. null = not yet loaded.
   const [availableCats, setAvailableCats]               = useState<string[] | null>(null)
   const [hasResidents,  setHasResidents]                = useState(false)
-  const [meDefs,        setMeDefs]                      = useState<ResidentSectionDef[]>([])
-  const [meProfiles,    setMeProfiles]                  = useState<HubResident[]>([])  // 'This is me' profiles (approved, living residents only)
   // Per-conversation second-language switch: while on, chat answers (and any policy
   // the staff opens from a citation) come back in their 2nd language. Resets to their
   // first language whenever they start a new chat/discussion.
@@ -605,23 +607,6 @@ function ChatPageInner() {
 
   // Warm the view caches in the background shortly after the hub opens, so the
   // first click of a view paints instantly instead of fetching on click. Gated to
-  // "This is me" resident profiles. Deferred so it never competes with the first paint; cached per user so the nav
-  // item appears at once on later visits. The API answers enabled:false on plans without the feature.
-  useEffect(() => {
-    if (!session?.accessToken || trainingOnly || freeTier) { setMeProfiles([]); return }
-    const key = hubKey('this-is-me', userId)
-    const cached = persistentCache.get<HubResident[]>(key)
-    if (cached) setMeProfiles(cached)
-    const cachedDefs = persistentCache.get<ResidentSectionDef[]>(hubKey('this-is-me-defs', userId))
-    if (cachedDefs) setMeDefs(cachedDefs)
-    const t = setTimeout(() => {
-      createResidentsClient(session.accessToken).hub()
-        .then(r => { const list = r.enabled ? (r.residents ?? []) : []; setMeProfiles(list); persistentCache.set(key, list); if (r.section_defs?.length) { setMeDefs(r.section_defs); persistentCache.set(hubKey('this-is-me-defs', userId), r.section_defs) } })
-        .catch(() => {})
-    }, 800)
-    return () => clearTimeout(t)
-  }, [session?.accessToken, userId, trainingOnly, freeTier])
-
   // views whose persistent cache is still COLD (never loaded on this device) — once
   // warm, this stays silent and the view's own on-click revalidation keeps it
   // fresh, so we don't add background load on every hub open. Deferred so it never
@@ -704,6 +689,13 @@ function ChatPageInner() {
     setPolicyQuestions(null)
     setSessionId(crypto.randomUUID())
     setInput('')
+  }
+
+  // "This is me": a fresh chat in the resident topic, so staff can ask about the people they support.
+  function openResidentChat() {
+    startNewChat()
+    setView('chat')
+    setCategory('resident')
   }
 
   // Open a fresh chat focused on one policy, seeded with questions about it.
@@ -1063,10 +1055,10 @@ function ChatPageInner() {
               Supervisions
             </button>
           )}
-          {meProfiles.length > 0 && !isReviewer && !hubLocked('this-is-me') && (
+          {availableCats?.includes('resident') && !isReviewer && !hubLocked('chat') && (
             <button
-              onClick={() => setView('this-is-me')}
-              className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'this-is-me' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+              onClick={openResidentChat}
+              className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'chat' && category === 'resident' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
             >
               <Heart size={15} />
               This is me
@@ -1211,6 +1203,7 @@ function ChatPageInner() {
                                 : s.category === 'cqc_report' ? <ShieldCheck size={10} />
                                 : s.category === 'audit_report' ? <ClipboardCheck size={10} />
                                 : s.category === 'business_continuity' ? <LifeBuoy size={10} />
+                                : s.category === 'resident' ? <Heart size={10} />
                                 : <Users size={10} />}
                               {CATEGORY_LABELS[s.category].title}
                             </span>
@@ -1314,10 +1307,6 @@ function ChatPageInner() {
           <SupervisionsHubView token={session.accessToken} userId={userId} />
         )}
 
-        {/* This is me: resident profiles (Professional and Enterprise) */}
-        {view === 'this-is-me' && meProfiles.length > 0 && !hubLocked('this-is-me') && session?.accessToken && (
-          <ThisIsMeView residents={meProfiles} defs={meDefs} />
-        )}
 
         {/* F2F Training (admin-only) */}
         {view === 'f2f' && canF2F && session?.accessToken && (
@@ -1335,6 +1324,7 @@ function ChatPageInner() {
                   : category === 'cqc_report' ? <ShieldCheck size={13} className="text-teal" />
                   : category === 'audit_report' ? <ClipboardCheck size={13} className="text-teal" />
                   : category === 'business_continuity' ? <LifeBuoy size={13} className="text-teal" />
+                  : category === 'resident' ? <Heart size={13} className="text-teal" />
                   : <Users size={13} className="text-teal" />}
                 <span className="truncate text-xs font-medium text-teal">
                   {pinnedPolicy ? `Talking about: ${pinnedPolicy.title}` : topicTitleFor(category, CATEGORY_LABELS[category].title, hasResidents)}
@@ -1456,7 +1446,9 @@ function ChatPageInner() {
                             ? 'Ask about audit findings, AI recommendations, or outstanding actions…'
                             : category === 'business_continuity'
                               ? 'Ask about emergency procedures, contingency plans, or escalation contacts…'
-                              : 'Ask about a policy, regulation, or HR matter…'
+                              : category === 'resident'
+                                ? 'Ask about a resident, for example what they like or what helps when they are upset…'
+                                : 'Ask about a policy, regulation, or HR matter…'
                 }
                 maxLength={1000}
                 disabled={sending || category === null}
@@ -1501,7 +1493,9 @@ function ChatPageInner() {
                     ? 'Responses draw on your completed audit reports and AI-generated recommendations'
                     : category === 'business_continuity'
                       ? 'Responses draw on your Business Continuity knowledge base entries'
-                      : 'Responses are generated from your organisation\'s policies'}
+                      : category === 'resident'
+                        ? 'Answers come only from the resident profiles your home has written and approved'
+                        : 'Responses are generated from your organisation\'s policies'}
           </p>
         </div>}
 
@@ -1551,6 +1545,7 @@ const CHAT_TOPICS: Array<{ key: DocumentCategory; Icon: typeof BookOpen; title: 
   { key: 'staff_handbook',      Icon: Users,       title: 'Staff Handbook',        subtitle: 'HR, employment & staff guidance' },
   { key: 'cqc_report',          Icon: ShieldCheck, title: 'CQC Compliance',        subtitle: 'Inspection readiness & regulatory compliance' },
   { key: 'business_continuity', Icon: LifeBuoy,    title: 'Business Continuity',   subtitle: 'Emergency procedures & contingency plans' },
+  { key: 'resident',            Icon: Heart,       title: 'This is me',            subtitle: 'Ask about the people you support' },
 ]
 
 // Resident knowledge is retrieved under Policies & Procedures, so once a home has
@@ -1574,7 +1569,7 @@ function CategorySelect({ onSelect, available, hasResidents }: { onSelect: (c: D
         <p className="mt-2 text-sm text-neutral-mid">Choose a knowledge area to get started</p>
       </div>
       <div className="grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2">
-        {CHAT_TOPICS.map(({ key, Icon, title: baseTitle, subtitle: baseSubtitle }) => {
+        {CHAT_TOPICS.filter(tp => tp.key !== 'resident' || (available !== null && available.includes('resident'))).map(({ key, Icon, title: baseTitle, subtitle: baseSubtitle }) => {
           const title    = topicTitleFor(key, baseTitle, hasResidents)
           const subtitle = topicSubtitleFor(key, baseSubtitle, hasResidents)
           // Until we know what's uploaded (available === null), keep tiles enabled.

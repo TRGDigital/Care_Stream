@@ -325,7 +325,7 @@ export const isUpgradeCode = (c?: string) =>
 export function createApiClient(token: string) {
   return {
     query: {
-      send: (data: { query_text: string; policy_id?: string; staff_name?: string; document_category?: 'internal_policy' | 'staff_handbook' | 'training_module' | 'cqc_report' | 'audit_report' | 'business_continuity'; chat_session_id?: string; language?: string; conversation_history?: Array<{ role: 'user' | 'assistant'; content: string }> }) =>
+      send: (data: { query_text: string; policy_id?: string; staff_name?: string; document_category?: 'internal_policy' | 'staff_handbook' | 'training_module' | 'cqc_report' | 'audit_report' | 'business_continuity' | 'resident'; chat_session_id?: string; language?: string; conversation_history?: Array<{ role: 'user' | 'assistant'; content: string }> }) =>
         apiFetch<QueryResponse>('/query', token, {
           method: 'POST',
           body:   JSON.stringify(data),
@@ -353,7 +353,7 @@ export function createApiClient(token: string) {
       // Stream the answer paragraph by paragraph (SSE). Calls onParagraph as each block
       // arrives, then onDone with the final payload (citations, suggestions, etc.).
       stream: async (
-        data: { query_text: string; policy_id?: string; staff_name?: string; document_category?: 'internal_policy' | 'staff_handbook' | 'training_module' | 'cqc_report' | 'audit_report' | 'business_continuity'; chat_session_id?: string; language?: string; conversation_history?: Array<{ role: 'user' | 'assistant'; content: string }> },
+        data: { query_text: string; policy_id?: string; staff_name?: string; document_category?: 'internal_policy' | 'staff_handbook' | 'training_module' | 'cqc_report' | 'audit_report' | 'business_continuity' | 'resident'; chat_session_id?: string; language?: string; conversation_history?: Array<{ role: 'user' | 'assistant'; content: string }> },
         handlers: { onParagraph: (html: string) => void; onDone: (d: { html: string; citations?: Citation[]; seedSources?: SeedSource[]; manualSources?: ManualSource[]; referenceSources?: ReferenceSource[]; suggestedQuestions?: string[]; queryId?: string; languageDetected?: string; noMatch?: boolean }) => void; onError: (msg: string) => void },
       ): Promise<void> => {
         const res = await fetch(`${API_URL}/query/stream`, {

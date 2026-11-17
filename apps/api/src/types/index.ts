@@ -3,7 +3,7 @@
 export type SubscriptionStatus = 'active' | 'trialling' | 'past_due' | 'cancelled'
 export type UserRole = 'admin' | 'staff'
 export type PolicyStatus = 'active' | 'processing' | 'archived' | 'superseded'
-export type DocumentCategory = 'internal_policy' | 'staff_handbook' | 'external_regulation' | 'training_module' | 'cqc_report' | 'audit_report' | 'business_continuity'
+export type DocumentCategory = 'internal_policy' | 'staff_handbook' | 'external_regulation' | 'training_module' | 'cqc_report' | 'audit_report' | 'business_continuity' | 'resident'
 export type QueryChannel = 'chat' | 'email' | 'whatsapp' | 'voice'
 export type IntentType = 'summary' | 'full_policy' | 'follow_up'
 

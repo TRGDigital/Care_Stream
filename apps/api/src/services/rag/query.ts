@@ -1096,6 +1096,133 @@ At the end of your response, append this comment (do not display it to the user)
     }
   }
 
+  // ─── "This is me" resident chat path ─────────────────────────────────────
+  // Staff ask about the people they support. The answer may only use the approved resident profile entries
+  // ("This is me: <name>"), never policies. If the question names a resident we load that person's whole profile;
+  // otherwise we search the resident entries by meaning (for example "who likes Glenn Miller?").
+
+  if (selectedCategory === 'resident') {
+    const { residentsEnabled, displayName, THIS_IS_ME_PREFIX } = await import('../../lib/residents')
+    const enabled = await residentsEnabled(tenantId)
+    const norm = (s: string) => (s || '').toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ').trim()
+    const q = ` ${norm(queryText)} `
+
+    let residents: any[] = []
+    if (enabled) {
+      residents = await (prisma as any).resident.findMany({
+        where: { tenant_id: tenantId, status: 'living' },
+        select: { id: true, first_name: true, last_name: true, preferred_name: true, room: true, entry_ids: true },
+        take: 500,
+      }).catch(() => [])
+    }
+
+    // Which residents does the question name? Full name scores highest, then a first, preferred or last name on its own.
+    const scored = residents.map(r => {
+      const first = norm(r.first_name), last = norm(r.last_name), pref = norm(r.preferred_name ?? '')
+      let score = 0
+      const has = (w: string) => w.length > 1 && q.includes(` ${w} `)
+      if ((has(first) && has(last)) || (pref && has(pref) && has(last))) score = 3
+      else if (has(first) || (pref && has(pref))) score = 2
+      else if (has(last) && last.length > 2) score = 1
+      return { r, score }
+    }).filter(x => x.score > 0)
+    const best = scored.reduce((m, x) => Math.max(m, x.score), 0)
+    const named = scored.filter(x => x.score === best).map(x => x.r).slice(0, 4)
+
+    let entries: any[] = []
+    if (named.length > 0) {
+      const ids = named.flatMap(r => (Array.isArray(r.entry_ids) ? r.entry_ids : []) as string[])
+      entries = ids.length
+        ? await (prisma as any).knowledgeEntry.findMany({
+            where: { id: { in: ids }, tenant_id: tenantId, approved: true },
+            select: { id: true, question: true, answer: true, source_name: true, source_type: true },
+            orderBy: [{ source_name: 'asc' }, { created_at: 'asc' }],
+          })
+        : []
+    } else if (residents.length > 0) {
+      const embedding = await embedText(queryText)
+      const hits = await queryKnowledgeVectors(tenantId, embedding, 40).catch(() => [] as any[])
+      const ids = [...new Set(hits.map((h: any) => h.metadata?.entry_id).filter(Boolean))] as string[]
+      const rows = ids.length
+        ? await (prisma as any).knowledgeEntry.findMany({
+            where: { id: { in: ids }, tenant_id: tenantId, approved: true, source_name: { startsWith: THIS_IS_ME_PREFIX } },
+            select: { id: true, question: true, answer: true, source_name: true, source_type: true },
+          })
+        : []
+      const byId = new Map(rows.map((r: any) => [r.id, r]))
+      entries = ids.map(id => byId.get(id)).filter(Boolean).slice(0, 12) as any[]
+    }
+
+    const DEFAULT_RESIDENT_PROMPT = `You are a care companion for staff in a UK adult social care home. Staff ask you about the people they support, and you answer from the "This is me" resident profiles the home has written, which are the only source you may use.
+
+Rules:
+1. Answer ONLY from the [RESIDENT PROFILES] provided. Never guess, never add details, and never use information about anyone else.
+2. If the profiles do not say, answer plainly that it is not recorded in their profile yet, and suggest asking the person, their family or the team, and that the manager can add it. Do not make something up to be helpful.
+3. If the question does not name a resident or you cannot tell which one is meant, ask which resident they mean. If several residents could match, list their names and ask.
+4. Use the name the resident likes to be called. Where a detail came from family it may end with a name in brackets such as (Sally, daughter); you can say who it came from.
+5. These profiles are about who the person is, not their care record. For anything clinical, such as medication, diet texture, mobility, risks or safeguarding, say the care plan and the person's nurse or senior take priority, and do not give clinical advice.
+6. Be warm, brief and practical: lead with the answer, then a few short bullet points if useful. Never recite the whole profile unless asked.
+
+Format responses as clean, readable HTML using <p>, <ul>, <li>, <strong> tags.
+
+At the end of your response, append this comment (do not display it to the user):
+<!--FOLLOWUP:["follow-up question 1","follow-up question 2","follow-up question 3"]-->`
+
+    const parts: string[] = []
+    if (queryText) parts.push(`[STAFF QUESTION]\n${queryText}`)
+    if (staffName) parts.push(`[STAFF MEMBER NAME]\n${staffName}`)
+    if (!enabled) {
+      parts.push('[NOTE]\nResident profiles are not available on this plan.')
+    } else if (residents.length === 0) {
+      parts.push('[NOTE]\nNo resident profiles have been added yet. A manager can add them from the Knowledge Base, under Residents.')
+    } else if (named.length > 1 && best < 3) {
+      parts.push(`[NOTE]\nSeveral residents could match this question: ${named.map(r => displayName(r)).join(', ')}.`)
+    } else if (entries.length === 0) {
+      parts.push(named.length
+        ? `[NOTE]\n${displayName(named[0])} has a profile but nothing has been written in it yet.`
+        : '[NOTE]\nNo resident profile matched this question.')
+    }
+    if (entries.length > 0) {
+      parts.push('[RESIDENT PROFILES]')
+      for (const e of entries) parts.push(`--- ${e.source_name} ---\n${e.answer}`)
+    }
+
+    const context = parts.join('\n\n')
+    const systemPrompt = appendLanguageInstruction(
+      await getAiPrompt('resident_chat', DEFAULT_RESIDENT_PROMPT),
+      langResolution.pattern,
+      langResolution.requestedLanguage,
+    )
+    const responseHtml = await generateAnswer(onText, systemPrompt, conversationHistory, context, { maxTokens: 2048, temperature: 0.2 })
+    const { html: cleanedHtml, suggestions } = extractSuggestions(responseHtml)
+
+    const residentNoMatch = entries.length === 0
+    const savedQueryId = await saveQueryRecord({
+      tenantId, userId, channel, queryText,
+      responseHtml:            cleanedHtml,
+      intentType:              'summary',
+      documentCategoryQueried: 'resident',
+      policyIdsCited:          [],
+      noMatch:                 residentNoMatch,
+      languageDetected:        langDetection.code,
+      responseTimeMs:          Date.now() - start,
+      chatSessionId,
+    })
+
+    return {
+      responseHtml:       cleanedHtml,
+      intentType:         'summary',
+      citations:          [],
+      seedSources:        [],
+      manualSources:      buildManualSources(entries as any[]),
+      noMatch:            residentNoMatch,
+      languageDetected:   langDetection.code,
+      responseTimeMs:     Date.now() - start,
+      suggestedQuestions: suggestions,
+      queryId:            savedQueryId,
+    }
+  }
+
   // ─── Business Continuity chat path ───────────────────────────────────────
   // Context comes from approved KnowledgeEntry records tagged 'business_continuity'
   // stored in Postgres — no Pinecone search needed.

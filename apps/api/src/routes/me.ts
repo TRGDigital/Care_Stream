@@ -169,9 +169,19 @@ meRouter.get('/document-categories', async (req: Request, res: Response) => {
   // not filter by category), so the hub advertises residents on that tile once the
   // home has approved resident entries. Without the flag staff have no way to know
   // they can ask about a named resident at all.
+  // "This is me" resident profiles have their own topic, so they are not counted here (that would rename Policies & Procedures).
   const residents = await (prisma as any).knowledgeEntry.count({
-    where: { tenant_id: tenantId, knowledge_category: 'resident', approved: true },
+    where: { tenant_id: tenantId, knowledge_category: 'resident', approved: true, NOT: { source_name: { startsWith: 'This is me:' } } },
   }).catch(() => 0)
+
+  // The "This is me" topic: only when the plan has it and at least one living resident has a profile with something in it.
+  try {
+    const { residentsEnabled } = await import('../lib/residents')
+    if (await residentsEnabled(tenantId)) {
+      const rows = await (prisma as any).resident.findMany({ where: { tenant_id: tenantId, status: 'living' }, select: { sections: true }, take: 500 })
+      if (rows.some((r: any) => Object.values((r.sections ?? {}) as Record<string, unknown>).some(v => typeof v === 'string' && v.trim()))) available.add('resident')
+    }
+  } catch { /* the resident tables may not exist yet */ }
 
   ok(res, { available: Array.from(available), has_residents: residents > 0 })
 })

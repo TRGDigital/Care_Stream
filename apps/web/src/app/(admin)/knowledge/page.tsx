@@ -236,6 +236,11 @@ export default function KnowledgePage() {
       ) : (
         <div className="space-y-10">
 
+          {/* "This is me" resident profiles: shown first and in their own colour, click one to open the Residents overlay on that person. */}
+          {session?.accessToken && (
+            <ResidentsKnowledgeSection token={session.accessToken} userId={userId} onOpen={id => { setOpenResidentId(id); setShowResidents(true) }} />
+          )}
+
           {/* Manual entries — grouped by knowledge_category. Kept first: this is
               where tenants add home/care-setting nuances unique to their service. */}
           {manualEntries.length > 0 && (
@@ -257,11 +262,6 @@ export default function KnowledgePage() {
                 onApprove={handleApprove}
               />
             </section>
-          )}
-
-          {/* "This is me" resident profiles: click one to open the Residents overlay on that person. */}
-          {session?.accessToken && (
-            <ResidentsKnowledgeSection token={session.accessToken} userId={userId} onOpen={id => { setOpenResidentId(id); setShowResidents(true) }} />
           )}
 
           {/* Policy-generated entries — grouped by policy */}

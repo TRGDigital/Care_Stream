@@ -19,5 +19,8 @@
       "src": "/(.*)",
       "dest": "/src/app.ts"
     }
+  ],
+  "regions": [
+    "dub1"
   ]
 }

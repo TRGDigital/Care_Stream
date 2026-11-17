@@ -6,7 +6,7 @@ import { Dialog, btnSecondary, btnPrimary, btnDanger, ErrorBox, errMsg } from '@
 
 export const STATUS_LABEL: Record<CampaignStatus, string> = {
   draft: 'Draft',
-  awaiting_approval: 'Awaiting care manager approval',
+  awaiting_approval: 'Awaiting approval',
   live: 'Live',
   ended: 'Ended',
   rejected: 'Rejected',
@@ -23,7 +23,7 @@ const STATUS_CLS: Record<CampaignStatus, string> = {
 }
 
 export function CampaignStatusChip({ status }: { status: CampaignStatus }) {
-  return <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_CLS[status]}`}>{STATUS_LABEL[status]}</span>
+  return <span className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_CLS[status]}`}>{STATUS_LABEL[status]}</span>
 }
 
 export const CLAIM_LABEL: Record<ClaimStatus, string> = {
@@ -45,7 +45,7 @@ const CLAIM_CLS: Record<ClaimStatus, string> = {
 }
 
 export function ClaimChip({ status }: { status: ClaimStatus }) {
-  return <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${CLAIM_CLS[status]}`}>{CLAIM_LABEL[status]}</span>
+  return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${CLAIM_CLS[status]}`}>{CLAIM_LABEL[status]}</span>
 }
 
 export function monthLabel(m: string): string {
@@ -75,12 +75,39 @@ export function fmtDay(iso: string | null | undefined): string {
 
 export const pounds = (pence: number) => `£${(pence / 100).toFixed(2)}`
 
+/** A big number with a small label, for the summary rows. */
+export function StatTile({ label, value, hint, tone = 'plain' }: { label: string; value: ReactNode; hint?: string; tone?: 'plain' | 'good' | 'warn' }) {
+  const ring = tone === 'good' ? 'border-green-200 bg-green-50/60' : tone === 'warn' ? 'border-amber-200 bg-amber-50/60' : 'border-gray-200 bg-white'
+  return (
+    <div className={`rounded-card border px-4 py-3 ${ring}`}>
+      <p className="text-2xl font-bold leading-none text-neutral-dark">{value}</p>
+      <p className="mt-1.5 text-xs font-semibold text-neutral-dark">{label}</p>
+      {hint && <p className="mt-0.5 text-xs text-neutral-mid">{hint}</p>}
+    </div>
+  )
+}
+
+/** Round initials, so a list of names is quicker to scan. */
+export function Initials({ name }: { name: string }) {
+  const s = name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]!.toUpperCase()).join('')
+  return <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal/10 text-xs font-bold text-teal">{s || '?'}</span>
+}
+
+export function ProgressBar({ pct, label, done }: { pct: number; label: string; done?: boolean }) {
+  const v = Math.max(0, Math.min(100, Math.round(pct)))
+  return (
+    <div className="h-2.5 w-full overflow-hidden rounded-full bg-gray-100" role="progressbar" aria-valuenow={v} aria-valuemin={0} aria-valuemax={100} aria-label={label}>
+      <div className={`h-full rounded-full transition-all ${done ? 'bg-green-500' : 'bg-teal'}`} style={{ width: `${v}%` }} />
+    </div>
+  )
+}
+
 export function Section({ title, hint, children }: { title: string; hint?: ReactNode; children: ReactNode }) {
   return (
-    <section className="rounded-card border border-gray-200 bg-white p-4 shadow-card sm:p-5">
-      <h3 className="text-sm font-bold text-neutral-dark">{title}</h3>
-      {hint && <div className="mt-1 text-xs text-neutral-mid">{hint}</div>}
-      <div className="mt-3">{children}</div>
+    <section className="rounded-card border border-gray-200 bg-white p-5 shadow-card sm:p-6">
+      <h3 className="text-base font-bold text-neutral-dark">{title}</h3>
+      {hint && <div className="mt-1 text-sm text-neutral-mid">{hint}</div>}
+      <div className="mt-4">{children}</div>
     </section>
   )
 }

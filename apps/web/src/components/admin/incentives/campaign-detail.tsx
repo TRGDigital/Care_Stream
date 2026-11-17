@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { AlertTriangle, Download, X } from 'lucide-react'
+import { AlertTriangle, Download, Gift, Info, X } from 'lucide-react'
 import { createIncentivesClient, type IncentiveCampaignDetail, type IncentiveClaim } from '@/lib/incentives-api'
 import { useCachedQuery } from '@/lib/use-cached-query'
 import { btnPrimary, btnSecondary, btnDangerOutline, ErrorBox, errMsg } from '@/components/admin/residents/ui'
-import { CampaignStatusChip, ClaimChip, ConfirmDialog, Section, fmtDay, fmtWhen, monthLabel, pounds } from './shared'
+import { CampaignStatusChip, ClaimChip, ConfirmDialog, Initials, ProgressBar, Section, StatTile, fmtDay, fmtWhen, monthLabel, pounds } from './shared'
 
 function banner(c: IncentiveCampaignDetail): { cls: string; text: string } {
   switch (c.status) {
@@ -76,145 +76,181 @@ export function CampaignDetail({ id, token, eventLabels, onClose, onEdit, onChan
   const cancellable = c && (c.status === 'awaiting_approval' || c.status === 'live')
   const totalValue = c ? (d!.claims.filter(x => x.status === 'approved' || x.status === 'given').reduce((n, x) => n + (x.value_pence ?? 0), 0)) : 0
 
+  // Summary figures, worked out from what the API already returns.
+  const totalPoints = d ? d.progress.reduce((n, p) => n + p.points, 0) : 0
+  const earners = d ? d.progress.filter(p => p.points > 0).length : 0
+  const reached = d ? d.claims.filter(x => ['held', 'approved', 'given'].includes(x.status)).length : 0
+  const given = d ? d.claims.filter(x => x.status === 'given').length : 0
+  const waiting = d ? d.claims.filter(x => x.status === 'held').length : 0
+  const placesTaken = (key: string) => d ? d.claims.filter(x => x.reward_key === key && ['held', 'approved', 'given'].includes(x.status)).length : 0
+  const b = c ? banner(c) : null
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-light" role="dialog" aria-modal="true" aria-label="Incentive details">
-      <div className="mx-auto max-w-5xl px-4 py-4 sm:py-8">
-        <div ref={topRef} tabIndex={-1} className="mb-4 flex items-start justify-between gap-3 focus:outline-none">
-          <div className="min-w-0">
-            <h2 className="break-words text-xl font-bold text-neutral-dark">{c?.name ?? 'Incentive'}</h2>
-            {c && <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-neutral-mid">{monthLabel(c.month)} <CampaignStatusChip status={c.status} /></p>}
+      <div className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 backdrop-blur">
+        <div ref={topRef} tabIndex={-1} className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-3 px-4 py-4 focus:outline-none sm:px-6">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h2 className="break-words text-xl font-bold text-neutral-dark sm:text-2xl">{c?.name ?? 'Incentive'}</h2>
+              {c && <CampaignStatusChip status={c.status} />}
+            </div>
+            {c && <p className="mt-0.5 text-sm text-neutral-mid">{monthLabel(c.month)}</p>}
           </div>
-          <button type="button" onClick={onClose} aria-label="Close" className="rounded-lg p-2 text-neutral-mid hover:bg-white"><X size={18} /></button>
+          <div className="flex flex-wrap items-center gap-2">
+            {c && editable && <button type="button" className={btnSecondary} onClick={() => onEdit(c)}>Edit</button>}
+            {c && editable && <button type="button" className={btnPrimary} onClick={() => setConfirm('submit')}>Submit for approval</button>}
+            {c && cancellable && <button type="button" className={btnDangerOutline} onClick={() => setConfirm('cancel')}>Cancel incentive</button>}
+            {c && c.status === 'draft' && <button type="button" className={btnDangerOutline} onClick={() => setConfirm('delete')}>Delete</button>}
+            {c && <button type="button" className={btnSecondary} onClick={downloadCsv} disabled={exporting}><Download size={14} /> {exporting ? 'Preparing...' : 'Download CSV'}</button>}
+            <button type="button" onClick={onClose} aria-label="Close" className="rounded-lg p-2 text-neutral-mid hover:bg-gray-100"><X size={20} /></button>
+          </div>
         </div>
+      </div>
 
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
         {q.loading && !d && <p className="py-10 text-center text-sm text-neutral-mid" role="status">Loading...</p>}
         {q.error && !d && <ErrorBox>{q.error}</ErrorBox>}
 
-        {d && c && (
-          <div className="space-y-4">
-            <div className={`rounded-card border px-4 py-3 text-sm ${banner(c).cls}`} role="status">{banner(c).text}</div>
+        {d && c && b && (
+          <div className="space-y-6">
+            <div className={`flex items-start gap-3 rounded-card border px-5 py-4 text-sm leading-relaxed ${b.cls}`} role="status">
+              <Info size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
+              <div>
+                <p className="font-medium">{b.text}</p>
+                <p className="mt-1 opacity-80">
+                  {c.everyone ? 'Applies to all current staff (agency staff excluded).' : `Applies to ${c.participants_count} chosen staff.`}
+                  {c.created_by_name ? ` Created by ${c.created_by_name}.` : ''}
+                  {c.approved_by_name ? ` Approved by ${c.approved_by_name}${c.approved_at ? ` on ${fmtWhen(c.approved_at)}` : ''}.` : ''}
+                </p>
+              </div>
+            </div>
             {q.error && <ErrorBox>{q.error}</ErrorBox>}
             {actionError && <ErrorBox>{actionError}</ErrorBox>}
 
-            <div className="flex flex-wrap gap-2">
-              {editable && <button type="button" className={btnSecondary} onClick={() => onEdit(c)}>Edit</button>}
-              {editable && <button type="button" className={btnPrimary} onClick={() => setConfirm('submit')}>Submit for approval</button>}
-              {cancellable && <button type="button" className={btnDangerOutline} onClick={() => setConfirm('cancel')}>Cancel incentive</button>}
-              {c.status === 'draft' && <button type="button" className={btnDangerOutline} onClick={() => setConfirm('delete')}>Delete</button>}
-              <button type="button" className={`${btnSecondary} sm:ml-auto`} onClick={downloadCsv} disabled={exporting}><Download size={14} /> {exporting ? 'Preparing...' : 'Download CSV'}</button>
+            {(c.status === 'live' || c.status === 'ended') && (
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <StatTile label="Points earned" value={totalPoints} hint={`${earners} of ${d.progress.length} people`} />
+                <StatTile label="Rewards reached" value={reached} />
+                <StatTile label="Waiting for a care manager" value={waiting} tone={waiting > 0 ? 'warn' : 'plain'} />
+                <StatTile label="Given" value={given} tone={given > 0 ? 'good' : 'plain'} hint={totalValue > 0 ? `${pounds(totalValue)} approved or given` : undefined} />
+              </div>
+            )}
+
+            <div className="grid gap-6 lg:grid-cols-5">
+              <div className="lg:col-span-3">
+                <Section title="Rewards">
+                  <ul className="space-y-3">
+                    {c.rewards.map(r => {
+                      const taken = placesTaken(r.key)
+                      return (
+                        <li key={r.key} className="flex items-center gap-4 rounded-xl border border-gray-100 bg-gray-50/60 p-4">
+                          {r.image_data
+                            ? <img src={r.image_data} alt="" className="h-14 w-14 shrink-0 rounded-xl border border-gray-200 bg-white object-contain p-1" />
+                            : <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-teal/10"><Gift size={22} className="text-teal" /></span>}
+                          <div className="min-w-0 flex-1">
+                            <p className="break-words text-base font-semibold text-neutral-dark">{r.title}</p>
+                            <p className="mt-0.5 text-sm text-neutral-mid">
+                              {r.quantity != null ? `${r.quantity} ${r.quantity === 1 ? 'place' : 'places'}, earliest completion time first` : 'Everyone who reaches it'}
+                              {r.value_pence != null ? `. Worth ${pounds(r.value_pence)} each` : ''}
+                            </p>
+                            {(c.status === 'live' || c.status === 'ended') && (
+                              <p className="mt-1 text-xs font-medium text-neutral-mid">{r.quantity != null ? `${taken} of ${r.quantity} places taken` : `${taken} ${taken === 1 ? 'person has' : 'people have'} reached it`}</p>
+                            )}
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <p className="text-2xl font-bold leading-none text-teal">{r.target_points}</p>
+                            <p className="mt-1 text-xs text-neutral-mid">points needed</p>
+                          </div>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </Section>
+              </div>
+              <div className="lg:col-span-2">
+                <Section title="How points are earned">
+                  <ul className="divide-y divide-gray-100">
+                    {c.rules.map((r, i) => (
+                      <li key={r.id ?? i} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-neutral-dark">{eventLabels[r.event] ?? r.event}</p>
+                          {r.max_per_month != null && <p className="text-xs text-neutral-mid">Up to {r.max_per_month} times each</p>}
+                        </div>
+                        <span className="shrink-0 rounded-full bg-teal/10 px-3 py-1 text-sm font-bold text-teal">+{r.points}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </Section>
+              </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <Section title="How points are earned">
-                <ul className="space-y-2 text-sm">
-                  {c.rules.map((r, i) => (
-                    <li key={r.id ?? i} className="flex items-start justify-between gap-3">
-                      <span className="text-neutral-dark">{eventLabels[r.event] ?? r.event}</span>
-                      <span className="shrink-0 text-right text-neutral-mid"><strong className="text-neutral-dark">{r.points}</strong> points{r.max_per_month != null ? `, up to ${r.max_per_month} times each` : ''}</span>
-                    </li>
-                  ))}
-                </ul>
-              </Section>
-              <Section title="Rewards">
-                <ul className="space-y-3 text-sm">
-                  {c.rewards.map(r => (
-                    <li key={r.key} className="flex items-start gap-3">
-                      {r.image_data && <img src={r.image_data} alt="" className="h-10 w-10 shrink-0 rounded border border-gray-200 object-contain" />}
-                      <div className="min-w-0">
-                        <p className="font-medium text-neutral-dark">{r.title}</p>
-                        <p className="text-xs text-neutral-mid">
-                          {r.target_points} points. {r.quantity != null ? `${r.quantity} ${r.quantity === 1 ? 'place' : 'places'}, earliest completion time first` : 'Everyone who reaches it'}.
-                          {r.value_pence != null ? ` Worth ${pounds(r.value_pence)} each.` : ''}
-                        </p>
+            <Section title="Progress" hint={d.progress.length > 0 ? 'Everyone in this incentive, most points first.' : undefined}>
+              {d.progress.length === 0 ? <p className="text-sm text-neutral-mid">Points show here once the incentive is live.</p> : (
+                <ul className="divide-y divide-gray-100">
+                  {d.progress.map(p => (
+                    <li key={p.user_id} className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 md:flex-row md:items-center md:gap-6">
+                      <div className="flex min-w-0 items-center gap-3 md:w-64 md:shrink-0">
+                        <Initials name={p.name} />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-neutral-dark">{p.name}</p>
+                          {p.job_role && <p className="truncate text-xs text-neutral-mid">{p.job_role}</p>}
+                        </div>
+                        <p className="shrink-0 text-right"><span className="text-xl font-bold text-neutral-dark">{p.points}</span><span className="ml-1 text-xs text-neutral-mid">pts</span></p>
+                      </div>
+                      <div className="grid flex-1 gap-3 sm:grid-cols-2">
+                        {c.rewards.map(r => {
+                          const x = p.rewards.find(y => y.key === r.key)
+                          if (!x) return null
+                          return (
+                            <div key={r.key} className="min-w-0">
+                              <div className="mb-1 flex items-baseline justify-between gap-2 text-xs">
+                                <span className="truncate font-medium text-neutral-dark">{r.title}</span>
+                                <span className="shrink-0 text-neutral-mid">{Math.min(p.points, x.target)} of {x.target}</span>
+                              </div>
+                              <ProgressBar pct={x.pct} done={!!x.claim && x.claim !== 'missed'} label={`${p.name}, ${r.title}`} />
+                              {x.claim && <div className="mt-1.5"><ClaimChip status={x.claim} /></div>}
+                            </div>
+                          )
+                        })}
                       </div>
                     </li>
                   ))}
                 </ul>
-                {totalValue > 0 && <p className="mt-3 text-xs text-neutral-mid">Approved and given so far: {pounds(totalValue)}</p>}
-              </Section>
-            </div>
-
-            <p className="text-xs text-neutral-mid">
-              {c.everyone ? 'Everyone (all current staff, agency staff excluded).' : `${c.participants_count} chosen staff.`}
-              {c.created_by_name ? ` Created by ${c.created_by_name}.` : ''}
-              {c.approved_by_name ? ` Approved by ${c.approved_by_name}${c.approved_at ? ` on ${fmtWhen(c.approved_at)}` : ''}.` : ''}
-            </p>
-
-            <Section title="Progress">
-              {d.progress.length === 0 ? <p className="text-sm text-neutral-mid">Nobody has any points yet.</p> : (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[32rem] text-left text-sm">
-                    <thead className="text-xs text-neutral-mid">
-                      <tr>
-                        <th scope="col" className="py-2 pr-3 font-medium">Person</th>
-                        <th scope="col" className="px-3 py-2 font-medium">Points</th>
-                        {c.rewards.map(r => <th key={r.key} scope="col" className="px-3 py-2 font-medium">{r.title}</th>)}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {d.progress.map(p => (
-                        <tr key={p.user_id} className="align-top">
-                          <th scope="row" className="py-2 pr-3 font-medium text-neutral-dark">{p.name}{p.job_role && <span className="block text-xs font-normal text-neutral-mid">{p.job_role}</span>}</th>
-                          <td className="px-3 py-2 font-semibold text-neutral-dark">{p.points}</td>
-                          {c.rewards.map(r => {
-                            const x = p.rewards.find(y => y.key === r.key)
-                            if (!x) return <td key={r.key} className="px-3 py-2 text-neutral-mid">-</td>
-                            const pct = Math.max(0, Math.min(100, Math.round(x.pct)))
-                            return (
-                              <td key={r.key} className="px-3 py-2">
-                                <div className="h-2 w-28 overflow-hidden rounded-full bg-gray-100" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${p.name}, ${r.title}`}>
-                                  <div className="h-full rounded-full bg-teal" style={{ width: `${pct}%` }} />
-                                </div>
-                                <p className="mt-1 text-xs text-neutral-mid">{Math.min(p.points, x.target)} of {x.target}</p>
-                                {x.claim && <div className="mt-1"><ClaimChip status={x.claim} /></div>}
-                              </td>
-                            )
-                          })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
               )}
             </Section>
 
-            <Section title="Payouts">
+            <Section title="Payouts" hint="Rewards people have reached. A care manager approves each one, then someone marks it as given. Check with your payroll provider if a reward is paid through pay.">
               {d.claims.length === 0 ? <p className="text-sm text-neutral-mid">Nobody has reached a reward yet.</p> : (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[40rem] text-left text-sm">
-                    <thead className="text-xs text-neutral-mid">
-                      <tr>
-                        {['Person', 'Reward', 'Place', 'Status', 'Reached', 'Approved by', 'Given by', ''].map((h, i) => <th key={i} scope="col" className="px-2 py-2 font-medium first:pl-0">{h || <span className="sr-only">Actions</span>}</th>)}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {d.claims.map(cl => (
-                        <tr key={cl.id} className="align-top">
-                          <th scope="row" className="py-2 pr-2 font-medium text-neutral-dark">{cl.user_name}</th>
-                          <td className="px-2 py-2">{cl.reward_title || rewardTitle(cl.reward_key)}</td>
-                          <td className="px-2 py-2">{cl.rank ?? '-'}</td>
-                          <td className="px-2 py-2">
-                            <ClaimChip status={cl.status} />
-                            {cl.tied && (
-                              <span className="mt-1 flex items-start gap-1 rounded bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-800">
-                                <AlertTriangle size={12} className="mt-0.5 shrink-0" /> Same time as the next person: the care manager decides
-                              </span>
-                            )}
-                            {cl.status === 'rejected' && cl.reject_reason && <p className="mt-1 text-xs text-neutral-mid">{cl.reject_reason}</p>}
-                          </td>
-                          <td className="px-2 py-2 text-xs text-neutral-mid">{fmtWhen(cl.reached_at)}</td>
-                          <td className="px-2 py-2 text-xs text-neutral-mid">{cl.decided_by_name ?? ''}</td>
-                          <td className="px-2 py-2 text-xs text-neutral-mid">{cl.given_by_name ? `${cl.given_by_name}${cl.given_at ? `, ${fmtWhen(cl.given_at)}` : ''}` : ''}</td>
-                          <td className="px-2 py-2">
-                            {cl.status === 'approved' && (
-                              <button type="button" className={btnPrimary} disabled={givingId === cl.id} onClick={() => markGiven(cl)}>{givingId === cl.id ? 'Saving...' : 'Mark as given'}</button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <ul className="space-y-3">
+                  {d.claims.map(cl => (
+                    <li key={cl.id} className="flex flex-col gap-3 rounded-xl border border-gray-100 p-4 sm:flex-row sm:items-center">
+                      <div className="flex min-w-0 flex-1 items-center gap-3">
+                        <Initials name={cl.user_name} />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-neutral-dark">{cl.user_name}</p>
+                          <p className="truncate text-sm text-neutral-mid">{cl.reward_title || rewardTitle(cl.reward_key)}{cl.rank != null ? `, place ${cl.rank}` : ''}</p>
+                          <p className="mt-0.5 text-xs text-neutral-mid">
+                            Reached {fmtWhen(cl.reached_at)}
+                            {cl.decided_by_name ? `. Approved by ${cl.decided_by_name}` : ''}
+                            {cl.given_by_name ? `. Given by ${cl.given_by_name}${cl.given_at ? `, ${fmtWhen(cl.given_at)}` : ''}` : ''}
+                          </p>
+                          {cl.status === 'rejected' && cl.reject_reason && <p className="mt-1 text-xs text-neutral-mid">{cl.reject_reason}</p>}
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                        <ClaimChip status={cl.status} />
+                        {cl.tied && (
+                          <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">
+                            <AlertTriangle size={12} aria-hidden="true" /> Same time as the next person, the care manager decides
+                          </span>
+                        )}
+                        {cl.status === 'approved' && (
+                          <button type="button" className={btnPrimary} disabled={givingId === cl.id} onClick={() => markGiven(cl)}>{givingId === cl.id ? 'Saving...' : 'Mark as given'}</button>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               )}
             </Section>
           </div>

@@ -60,6 +60,7 @@ export interface IncentiveCampaignSummary {
   everyone: boolean
   participants_count: number
   rewards_count: number
+  reward_titles?: string[]         // for the list cards
   claims: { held: number; approved: number; given: number; missed: number }
   created_by_name: string | null
   approved_by_name: string | null

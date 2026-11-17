@@ -71,10 +71,11 @@ async function summaries(tenantId: string, campaigns: any[]) {
   const ids = campaigns.map(c => c.id)
   const [counts, rewards, parts] = await Promise.all([
     claimCounts(ids),
-    db.incentiveReward.groupBy({ by: ['campaign_id'], where: { campaign_id: { in: ids } }, _count: { _all: true } }),
+    db.incentiveReward.findMany({ where: { campaign_id: { in: ids } }, select: { campaign_id: true, title: true, position: true }, orderBy: { position: 'asc' } }),
     db.incentiveParticipant.groupBy({ by: ['campaign_id'], where: { campaign_id: { in: ids } }, _count: { _all: true } }),
   ])
-  const rc = new Map<string, number>((rewards as any[]).map(r => [r.campaign_id, r._count._all]))
+  const titles = new Map<string, string[]>()
+  for (const r of rewards as any[]) titles.set(r.campaign_id, [...(titles.get(r.campaign_id) ?? []), r.title])
   const pc = new Map<string, number>((parts as any[]).map(r => [r.campaign_id, r._count._all]))
   const everyoneCount = campaigns.some(c => c.everyone)
     ? await db.user.count({ where: { tenant_id: tenantId, is_active: true, is_agency: false, is_reviewer: false } })
@@ -82,7 +83,7 @@ async function summaries(tenantId: string, campaigns: any[]) {
   return campaigns.map(c => ({
     id: c.id, name: c.name, month: c.month, status: c.status, everyone: c.everyone,
     participants_count: c.everyone ? Math.max(everyoneCount, pc.get(c.id) ?? 0) : (pc.get(c.id) ?? 0),
-    rewards_count: rc.get(c.id) ?? 0,
+    rewards_count: (titles.get(c.id) ?? []).length, reward_titles: titles.get(c.id) ?? [],
     claims: counts.get(c.id) ?? { held: 0, approved: 0, given: 0, missed: 0 },
     created_by_name: c.created_by_name ?? null, approved_by_name: c.approved_by_name ?? null, approved_at: iso(c.approved_at), rejected_reason: c.rejected_reason ?? null,
   }))

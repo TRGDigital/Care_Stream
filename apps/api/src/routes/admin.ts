@@ -1,3 +1,4 @@
+import { loadHeader, profileTab, PROFILE_TABS, type ProfileTab } from '../lib/staff-profile'
 import { buildStaffRecord } from '../lib/staff-record'
 import { requestOrigin } from '../lib/signup-meta'
 import { loadEngagement, engagementBrief } from '../lib/engagement'
@@ -1024,6 +1025,28 @@ adminRouter.get('/tenants/:id/staff/:userId/record', async (req: Request, res: R
   } catch (e: any) {
     console.error('[admin/staff-record]', e)
     err(res, 'FETCH_FAILED', e?.message ?? 'Could not build the staff record', 500)
+  }
+})
+
+// ─── GET /admin/tenants/:id/staff/:userId/profile/:tab ───────────────────────
+// The full staff profile for the platform console, one tab at a time (lib/staff-profile.ts). Chats are shown IN FULL, including chats the person deleted (marked as such).
+// Every view is written to the audit log: tab opens as platform_viewed_staff_record, chats as platform_viewed_staff_chats.
+adminRouter.get('/tenants/:id/staff/:userId/profile/:tab', async (req: Request, res: Response) => {
+  const tenantId = String(req.params.id), userId = String(req.params.userId), tab = String(req.params.tab) as ProfileTab
+  if (!(PROFILE_TABS as readonly string[]).includes(tab)) { err(res, 'VALIDATION_ERROR', 'Unknown tab', 400); return }
+  try {
+    const header = await loadHeader(tenantId, userId)
+    if (!header) { err(res, 'NOT_FOUND', 'Staff member not found', 404); return }
+    const data = await profileTab(tenantId, userId, tab, { page: Number(req.query.page) || 1 })
+    if (data === null) { err(res, 'NOT_FOUND', 'Staff member not found', 404); return }
+    await writeAuditLog({
+      tenant_id: tenantId, event_type: tab === 'chats' ? 'platform_viewed_staff_chats' : 'platform_viewed_staff_record', entity_type: 'user', entity_id: userId,
+      metadata: { via: 'platform_console', tab, from_ip: requestOrigin(req).ip, ...(tab === 'chats' ? { messages_shown: (data as any).messages?.length ?? 0 } : {}) },
+    })
+    ok(res, { header, tab, data })
+  } catch (e: any) {
+    console.error('[admin/staff-profile]', tab, e)
+    err(res, 'FETCH_FAILED', e?.message ?? 'Could not build the staff profile', 500)
   }
 })
 

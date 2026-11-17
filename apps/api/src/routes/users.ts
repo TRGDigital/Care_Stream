@@ -3,6 +3,7 @@
 import { Router, Request, Response } from 'express'
 import { z } from 'zod'
 import { prisma } from '../db/client'
+import { archivedEmail, originalEmail, isArchivedEmail } from '../lib/user-email'
 import { hashPassword } from '../services/auth/password'
 import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
@@ -344,10 +345,18 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
     throw e
   }
 
-  const existing = await (prisma as any).user.findUnique({ where: { email } })
+  const existing = await (prisma as any).user.findUnique({ where: { email }, select: { id: true, name: true, email: true, tenant_id: true, is_active: true } })
   if (existing) {
-    err(res, 'EMAIL_IN_USE', 'A user with that email address already exists.')
-    return
+    if (existing.tenant_id === tenantId && existing.is_active === false) {
+      // A former member of staff in this home (deactivated before addresses were released on archiving): give the address up now.
+      await (prisma as any).user.update({ where: { id: existing.id }, data: { email: archivedEmail(existing.email, existing.id) } })
+    } else if (existing.tenant_id === tenantId) {
+      err(res, 'EMAIL_IN_USE', `${existing.name} is already using that email address. If they have left, deactivate their account first and the address will be free for the new person.`)
+      return
+    } else {
+      err(res, 'EMAIL_IN_USE', 'A user with that email address already exists.')
+      return
+    }
   }
 
   // Check phone number isn't already registered to another user in this tenant
@@ -598,7 +607,7 @@ usersRouter.post('/:id/deactivate', async (req: Request, res: Response) => {
 
   const user = await (prisma as any).user.findUnique({
     where:  { id },
-    select: { id: true, tenant_id: true, is_active: true },
+    select: { id: true, tenant_id: true, is_active: true, email: true },
   })
 
   if (!user || user.tenant_id !== tenantId) {
@@ -606,12 +615,14 @@ usersRouter.post('/:id/deactivate', async (req: Request, res: Response) => {
     return
   }
 
+  // Access ends and the account keeps its history, but it gives up its email address so a new person (for example the next
+  // holder of a shared mailbox such as enquiries@) can use it. Reactivating restores the address if it is still free.
   await (prisma as any).user.update({
     where: { id },
-    data:  { is_active: false },
+    data:  { is_active: false, email: archivedEmail(user.email, user.id) },
   })
 
-  ok(res, { deactivated: true })
+  ok(res, { deactivated: true, released_email: originalEmail(user.email) })
 })
 
 // ─── POST /users/:id/reactivate ───────────────────────────────────────────────
@@ -622,7 +633,7 @@ usersRouter.post('/:id/reactivate', async (req: Request, res: Response) => {
 
   const user = await (prisma as any).user.findUnique({
     where:  { id },
-    select: { id: true, tenant_id: true },
+    select: { id: true, tenant_id: true, email: true },
   })
 
   if (!user || user.tenant_id !== tenantId) {
@@ -630,12 +641,24 @@ usersRouter.post('/:id/reactivate', async (req: Request, res: Response) => {
     return
   }
 
+  // Put back the address the account gave up when it was archived, if nobody else has it now.
+  let restored = user.email
+  if (isArchivedEmail(user.email)) {
+    const original = originalEmail(user.email)
+    const taken = await (prisma as any).user.findUnique({ where: { email: original }, select: { id: true, name: true } })
+    if (taken && taken.id !== user.id) {
+      err(res, 'EMAIL_IN_USE', `${original} is now used by ${taken.name}. Deactivate that account first, or use a different address for this person.`)
+      return
+    }
+    restored = original
+  }
+
   await (prisma as any).user.update({
     where: { id },
-    data:  { is_active: true },
+    data:  { is_active: true, email: restored },
   })
 
-  ok(res, { reactivated: true })
+  ok(res, { reactivated: true, email: restored })
 })
 
 // ─── POST /users/:id/login-link ──────────────────────────────────────────────

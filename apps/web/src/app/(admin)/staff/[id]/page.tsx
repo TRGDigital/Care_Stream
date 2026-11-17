@@ -439,6 +439,9 @@ export default function StaffRecordPage() {
           </div>
         </div>
 
+        {/* Incentives (this month's position and every past month; hidden on plans without incentives) */}
+        {token && <StaffIncentivesSection token={token} userId={id} viewerKey={uid} firstName={u.name.split(' ')[0]} />}
+
         {/* Required training for their role (same rules as Training > Training Matrix) */}
         {rec.required_training && (rec.required_training.items.length > 0 || rec.required_training.safe_to_work) && (
           <div className="pdf-card rounded-card border border-gray-100 bg-white shadow-card">
@@ -956,9 +959,6 @@ export default function StaffRecordPage() {
             })()}
           </div>
         )}
-
-        {/* Incentives (hidden when the plan has none or there is no history) */}
-        {token && <StaffIncentivesSection token={token} userId={id} viewerKey={uid} firstName={u.name.split(' ')[0]} />}
 
         {/* Timeline */}
         <div className="pdf-card rounded-card border border-gray-100 bg-white p-5 shadow-card">

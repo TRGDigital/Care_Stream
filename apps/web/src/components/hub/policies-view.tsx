@@ -122,7 +122,7 @@ export function PoliciesView({ token, userId, onChange }: { token: string; userI
         <button onClick={() => setSelected(null)} className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-neutral-mid hover:text-teal"><ChevronLeft size={15} /> Back to policies</button>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <h2 className="truncate text-lg font-bold text-neutral-dark">{selected.name}</h2>
+            <h2 className="truncate text-xl font-bold text-neutral-dark">{selected.name}</h2>
             <p className="mt-0.5 text-xs text-neutral-mid">
               {detail?.version ? <>Version {detail.version} · </> : null}
               {ro ? 'Published and live for staff' : <>{selected.changes} change{selected.changes === 1 ? '' : 's'} to approve</>}
@@ -182,7 +182,7 @@ export function PoliciesView({ token, userId, onChange }: { token: string; userI
   // ── List ──
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-5xl">
       {/* Policies due for review — the review dates set on the gap-analysis page that have come around. */}
       {dueReview.length > 0 && (
         <div className="mb-6 rounded-card border border-red-200 bg-red-50/50 p-4">
@@ -210,7 +210,7 @@ export function PoliciesView({ token, userId, onChange }: { token: string; userI
         </div>
       )}
 
-      <h2 className="text-lg font-bold text-neutral-dark">Policies to approve</h2>
+      <h2 className="text-xl font-bold text-neutral-dark">Policies to approve</h2>
       <p className="mt-1 text-sm text-neutral-mid">Policy changes the admin has approved and sent to you for your approval. Review the changes, then approve them or send them back.</p>
       {msg && <div className="mt-4 flex items-center gap-2 rounded-md border border-green-100 bg-green-50 px-4 py-2.5 text-sm text-green-800"><Check size={15} /> {msg}</div>}
       {list.length === 0 ? (

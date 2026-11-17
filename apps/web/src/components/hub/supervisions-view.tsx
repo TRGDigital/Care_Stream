@@ -44,7 +44,7 @@ export function SupervisionsHubView({ token, userId }: { token: string; userId?:
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
-      <div className="mx-auto max-w-3xl space-y-6">
+      <div className="mx-auto max-w-5xl space-y-6">
         {/* Sessions I'm conducting — complete the recording form here (conductors only) */}
         {conducting.length > 0 && (
           <div>

@@ -460,7 +460,7 @@ function ChatPageInner() {
   const searchParams = useSearchParams()
   useEffect(() => {
     const v = searchParams.get('view')
-    if (v === 'induction' || v === 'training' || v === 'annual' || v === 'diplomas' || v === 'followup' || v === 'audits' || v === 'cqc' || v === 'progress' || v === 'policies' || v === 'audit-approvals' || v === 'actions') {
+    if (v === 'induction' || v === 'training' || v === 'annual' || v === 'diplomas' || v === 'followup' || v === 'audits' || v === 'cqc' || v === 'progress' || v === 'policies' || v === 'audit-approvals' || v === 'actions' || v === 'my-incentives' || v === 'incentive-approvals') {
       if (!hubLocked(v)) setView(v)
     }
   }, [searchParams]) // eslint-disable-line react-hooks/exhaustive-deps

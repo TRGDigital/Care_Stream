@@ -67,7 +67,7 @@ export function IncentiveApprovalsView({ token, userId, onChange }: { token: str
     else run(rejecting.id, 'reject', () => api.rejectClaim(rejecting.id, r), `Rejected ${rejecting.label}. The place passes to the next person if there is one.`)
   }
 
-  if (q.loading) return <div className="flex flex-1 items-center justify-center gap-2 py-16 text-base text-neutral-mid"><Loader2 size={18} className="animate-spin text-teal" /> Loading...</div>
+  if (q.loading) return <div className="flex flex-1 items-center justify-center gap-2 py-16 text-sm text-neutral-mid"><Loader2 size={18} className="animate-spin text-teal" /> Loading...</div>
 
   const campaigns = q.data?.campaigns ?? []
   const claims = q.data?.claims ?? []
@@ -76,35 +76,35 @@ export function IncentiveApprovalsView({ token, userId, onChange }: { token: str
 
   const rejectBox = (p: NonNullable<Pending>) => (
     <div className="mt-3 rounded-md border border-rose-100 bg-rose-50/50 p-3">
-      <label htmlFor={`rej-${p.id}`} className="text-sm font-medium text-neutral-dark">Reason for rejecting (needed)</label>
-      <textarea id={`rej-${p.id}`} value={reason} onChange={e => setReason(e.target.value)} rows={3} className="mt-1 w-full rounded-md border border-gray-200 px-2.5 py-1.5 text-sm focus:border-teal focus:outline-none" />
+      <label htmlFor={`rej-${p.id}`} className="text-xs font-medium text-neutral-dark">Reason for rejecting (needed)</label>
+      <textarea id={`rej-${p.id}`} value={reason} onChange={e => setReason(e.target.value)} rows={3} className="mt-1 w-full rounded-md border border-gray-200 px-2.5 py-1.5 text-xs focus:border-teal focus:outline-none" />
       <div className="mt-2 flex gap-2">
-        <button onClick={submitReject} disabled={busy === p.id} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-btn bg-rose-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-50"><X size={14} /> Reject</button>
-        <button onClick={() => { setRejecting(null); setReason(''); setError('') }} className="min-h-[40px] rounded-btn border border-gray-200 px-3 py-1.5 text-sm font-medium text-neutral-mid hover:bg-gray-50">Cancel</button>
+        <button onClick={submitReject} disabled={busy === p.id} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-btn bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-700 disabled:opacity-50"><X size={14} /> Reject</button>
+        <button onClick={() => { setRejecting(null); setReason(''); setError('') }} className="min-h-[40px] rounded-btn border border-gray-200 px-3 py-1.5 text-xs font-medium text-neutral-mid hover:bg-gray-50">Cancel</button>
       </div>
     </div>
   )
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
-      <div className="mx-auto max-w-3xl">
-        <h2 className="text-lg font-bold text-neutral-dark">Incentive approvals</h2>
-        <p className="mt-1 text-sm text-neutral-mid">Rewards cost the home money. Please check each one carefully before you approve it. CareStream records and reports; it does not buy or pay for anything.</p>
-        {msg && <div role="status" className="mt-4 flex items-center gap-2 rounded-md border border-green-100 bg-green-50 px-4 py-2.5 text-sm text-green-800"><Check size={15} /> {msg}</div>}
-        {error && <div role="alert" className="mt-4 rounded-md border border-red-100 bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>}
+      <div className="mx-auto max-w-5xl">
+        <h2 className="text-xl font-bold text-neutral-dark">Incentive approvals</h2>
+        <p className="mt-1 text-xs text-neutral-mid">Rewards cost the home money. Please check each one carefully before you approve it. CareStream records and reports; it does not buy or pay for anything.</p>
+        {msg && <div role="status" className="mt-4 flex items-center gap-2 rounded-md border border-green-100 bg-green-50 px-4 py-2.5 text-xs text-green-800"><Check size={15} /> {msg}</div>}
+        {error && <div role="alert" className="mt-4 rounded-md border border-red-100 bg-red-50 px-4 py-2.5 text-xs text-red-700">{error}</div>}
 
         {/* Campaigns waiting to go live */}
-        <h3 className="mt-6 text-sm font-bold text-neutral-dark">Incentives waiting to go live</h3>
+        <h3 className="mt-6 text-xs font-bold text-neutral-dark">Incentives waiting to go live</h3>
         {campaigns.length === 0 ? (
-          <p className="mt-2 rounded-card border border-gray-100 bg-white px-4 py-5 text-sm text-neutral-mid">Nothing is waiting to go live.</p>
+          <p className="mt-2 rounded-card border border-gray-100 bg-white px-4 py-5 text-xs text-neutral-mid">Nothing is waiting to go live.</p>
         ) : (
           <ul className="mt-2 space-y-3">
             {campaigns.map(c => (
               <li key={c.id} className="rounded-card border border-gray-100 bg-white p-4 shadow-card">
-                <p className="break-words text-base font-bold text-neutral-dark">{c.name}</p>
-                <p className="text-sm text-neutral-mid">{monthName(c.month)} · made by {c.created_by_name ?? 'an admin'} · applies to {c.everyone ? 'everyone on staff' : `${c.participants_count} chosen ${c.participants_count === 1 ? 'person' : 'people'}`}</p>
+                <p className="break-words text-sm font-bold text-neutral-dark">{c.name}</p>
+                <p className="text-xs text-neutral-mid">{monthName(c.month)} · made by {c.created_by_name ?? 'an admin'} · applies to {c.everyone ? 'everyone on staff' : `${c.participants_count} chosen ${c.participants_count === 1 ? 'person' : 'people'}`}</p>
                 <p className="mt-3 text-xs font-bold uppercase tracking-wide text-neutral-mid">How points are earned</p>
-                <ul className="mt-1 space-y-0.5 text-sm text-neutral-dark">
+                <ul className="mt-1 space-y-0.5 text-xs text-neutral-dark">
                   {c.rules.map((r, i) => <li key={i}>{eventLabel(r.event)}: {r.points} {r.points === 1 ? 'point' : 'points'}{r.max_per_month ? `, up to ${r.max_per_month} times` : ''}</li>)}
                 </ul>
                 <p className="mt-3 text-xs font-bold uppercase tracking-wide text-neutral-mid">Rewards</p>
@@ -115,7 +115,7 @@ export function IncentiveApprovalsView({ token, userId, onChange }: { token: str
                         // eslint-disable-next-line @next/next/no-img-element
                         ? <img src={r.image_data} alt="" className="h-10 w-10 shrink-0 rounded border border-gray-100 object-contain" />
                         : <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-teal/10 text-teal"><Gift size={18} aria-hidden="true" /></span>}
-                      <div className="min-w-0 text-sm text-neutral-dark">
+                      <div className="min-w-0 text-xs text-neutral-dark">
                         <p className="break-words font-medium">{r.title}</p>
                         <p className="text-xs text-neutral-mid">
                           {r.target_points} points needed · {r.quantity === null ? 'everyone who qualifies' : `${r.quantity} ${r.quantity === 1 ? 'place' : 'places'}`}{r.value_pence !== null ? ` · ${money(r.value_pence)} each` : ''}
@@ -126,8 +126,8 @@ export function IncentiveApprovalsView({ token, userId, onChange }: { token: str
                 </ul>
                 {rejecting?.kind === 'campaign' && rejecting.id === c.id ? rejectBox(rejecting) : (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <button onClick={() => approveCampaign(c)} disabled={busy === c.id} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">{busy === c.id ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Approve</button>
-                    <button onClick={() => { setRejecting({ kind: 'campaign', id: c.id, label: c.name }); setReason(''); setError('') }} disabled={busy === c.id} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-btn border border-rose-200 px-3 py-1.5 text-sm font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"><X size={14} /> Reject</button>
+                    <button onClick={() => approveCampaign(c)} disabled={busy === c.id} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-dark disabled:opacity-50">{busy === c.id ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Approve</button>
+                    <button onClick={() => { setRejecting({ kind: 'campaign', id: c.id, label: c.name }); setReason(''); setError('') }} disabled={busy === c.id} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-btn border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"><X size={14} /> Reject</button>
                   </div>
                 )}
               </li>
@@ -136,21 +136,21 @@ export function IncentiveApprovalsView({ token, userId, onChange }: { token: str
         )}
 
         {/* Reward payouts */}
-        <h3 className="mt-8 text-sm font-bold text-neutral-dark">Rewards waiting for approval</h3>
+        <h3 className="mt-8 text-xs font-bold text-neutral-dark">Rewards waiting for approval</h3>
         {toApprove.length === 0 ? (
-          <p className="mt-2 rounded-card border border-gray-100 bg-white px-4 py-5 text-sm text-neutral-mid">No rewards are waiting for approval.</p>
+          <p className="mt-2 rounded-card border border-gray-100 bg-white px-4 py-5 text-xs text-neutral-mid">No rewards are waiting for approval.</p>
         ) : (
           <ul className="mt-2 space-y-3">
             {toApprove.map(c => (
               <li key={c.id} className="rounded-card border border-gray-100 bg-white p-4 shadow-card">
-                <p className="break-words text-base font-bold text-neutral-dark">{c.user_name}</p>
-                <p className="text-sm text-neutral-dark">{c.reward_title}{c.value_pence !== null ? ` (${money(c.value_pence)})` : ''}</p>
+                <p className="break-words text-sm font-bold text-neutral-dark">{c.user_name}</p>
+                <p className="text-xs text-neutral-dark">{c.reward_title}{c.value_pence !== null ? ` (${money(c.value_pence)})` : ''}</p>
                 <p className="text-xs text-neutral-mid">{c.campaign_name} · {c.rank ? `place ${c.rank}` : 'no place number'} · reached {when(c.reached_at)}</p>
-                {c.tied && <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">This person reached the target at exactly the same time as someone else and only one place is left. Please decide carefully.</p>}
+                {c.tied && <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">This person reached the target at exactly the same time as someone else and only one place is left. Please decide carefully.</p>}
                 {rejecting?.kind === 'claim' && rejecting.id === c.id ? rejectBox(rejecting) : (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <button onClick={() => approveClaim(c)} disabled={busy === c.id} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50">{busy === c.id ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Approve</button>
-                    <button onClick={() => { setRejecting({ kind: 'claim', id: c.id, label: `${c.user_name}'s ${c.reward_title}` }); setReason(''); setError('') }} disabled={busy === c.id} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-btn border border-rose-200 px-3 py-1.5 text-sm font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"><X size={14} /> Reject</button>
+                    <button onClick={() => approveClaim(c)} disabled={busy === c.id} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-btn bg-teal px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-dark disabled:opacity-50">{busy === c.id ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Approve</button>
+                    <button onClick={() => { setRejecting({ kind: 'claim', id: c.id, label: `${c.user_name}'s ${c.reward_title}` }); setReason(''); setError('') }} disabled={busy === c.id} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-btn border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"><X size={14} /> Reject</button>
                   </div>
                 )}
               </li>
@@ -160,15 +160,15 @@ export function IncentiveApprovalsView({ token, userId, onChange }: { token: str
 
         {toGive.length > 0 && (
           <>
-            <h3 className="mt-8 text-sm font-bold text-neutral-dark">Approved, ready to give</h3>
+            <h3 className="mt-8 text-xs font-bold text-neutral-dark">Approved, ready to give</h3>
             <ul className="mt-2 space-y-2">
               {toGive.map(c => (
                 <li key={c.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-gray-100 bg-white p-4">
                   <div className="min-w-0">
-                    <p className="break-words text-sm font-medium text-neutral-dark">{c.user_name}: {c.reward_title}</p>
+                    <p className="break-words text-xs font-medium text-neutral-dark">{c.user_name}: {c.reward_title}</p>
                     <p className="text-xs text-neutral-mid">{c.campaign_name}{c.decided_by_name ? ` · approved by ${c.decided_by_name}` : ''}</p>
                   </div>
-                  <button onClick={() => markGiven(c)} disabled={busy === c.id} className="inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-btn border border-teal px-3 py-1.5 text-sm font-medium text-teal hover:bg-teal/5 disabled:opacity-50">{busy === c.id ? <Loader2 size={14} className="animate-spin" /> : <Trophy size={14} />} Mark as given</button>
+                  <button onClick={() => markGiven(c)} disabled={busy === c.id} className="inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-btn border border-teal px-3 py-1.5 text-xs font-medium text-teal hover:bg-teal/5 disabled:opacity-50">{busy === c.id ? <Loader2 size={14} className="animate-spin" /> : <Trophy size={14} />} Mark as given</button>
                 </li>
               ))}
             </ul>

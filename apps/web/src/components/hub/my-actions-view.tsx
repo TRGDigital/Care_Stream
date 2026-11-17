@@ -157,8 +157,8 @@ export function MyActionsView({ token, userId, isAdmin, onChange }: { token: str
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
-      <div className="mx-auto max-w-3xl">
-        <h2 className="flex items-center gap-2 text-lg font-bold text-neutral-dark"><ListChecks size={19} className="text-teal" /> My actions</h2>
+      <div className="mx-auto max-w-5xl">
+        <h2 className="flex items-center gap-2 text-xl font-bold text-neutral-dark"><ListChecks size={20} className="text-teal" /> My actions</h2>
         <p className="mt-1 text-sm text-neutral-mid">Actions from your care home&rsquo;s audits that have been assigned to you. Mark each one as you go so your manager can see it is being handled.</p>
 
         {nothingAtAll ? (

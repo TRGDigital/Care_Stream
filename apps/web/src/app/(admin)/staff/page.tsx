@@ -74,13 +74,26 @@ function ActionMenu({
     setOpen(true)
   }
 
+  // Re-send login: emails a one-time sign-in link (no password needed) and leaves their password alone.
+  async function handleResendLogin() {
+    setOpen(false)
+    if (!confirm(`Email ${user.name} a sign-in link at ${user.email}? Their password is not changed. The link works once and lasts 14 days.`)) return
+    setWorking(true)
+    try {
+      await createApiClient(token).users.loginLink(user.id, true)
+      alert(`Sign-in link sent to ${user.email}. If it does not arrive in a few minutes, check the spam folder.`)
+    } catch (e: any) { alert(e?.message || 'We could not send the sign-in link.') } finally { setWorking(false) }
+  }
+
+  // Reset password: changes it straight away and shows the new one once (with an option to email it).
   async function handleReset() {
     setOpen(false)
+    if (!confirm(`Reset the password for ${user.name}? Their current password stops working straight away and you will be shown a new one. Nothing is emailed unless you choose to send it.`)) return
     setWorking(true)
     try {
       const res = await createApiClient(token).users.resetPassword(user.id)
       onResetPassword({ userId: res.user.id, name: res.user.name, email: res.user.email, password: res.temp_password, contact: res.contact })
-    } catch { /* ignore */ } finally { setWorking(false) }
+    } catch (e: any) { alert(e?.message || 'We could not reset the password.') } finally { setWorking(false) }
   }
 
   async function handleDeactivate() {
@@ -133,7 +146,7 @@ function ActionMenu({
             Edit details
           </button>
           <button
-            onClick={handleReset}
+            onClick={handleResendLogin}
             className="group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-neutral-dark transition-colors hover:bg-neutral-light"
           >
             <Mail size={15} className="shrink-0 text-neutral-mid transition-colors group-hover:text-teal" />

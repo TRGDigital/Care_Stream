@@ -679,9 +679,17 @@ usersRouter.post('/:id/login-link', async (req: Request, res: Response) => {
     if (sendEmail) await freeStaffGuard(tenantId, 'email')
     const url = await createLoginLink(user.id, tenantId, ttlMs)
     if (sendEmail) {
-      await sendStaffLoginLinkEmail({ to: user.email as string, name: user.name as string, link: url, expiresMins: 14 * 24 * 60 }).catch(e => console.error('[login-link] email', e))
+      // Say so if it did not go: a manager who is told "sent" and then waits for an email that never comes is worse than an error.
+      if (!process.env.SENDGRID_API_KEY) { err(res, 'EMAIL_FAILED', 'Email is not set up on this server, so the link could not be sent. Copy the link instead.', 500); return }
+      try {
+        await sendStaffLoginLinkEmail({ to: user.email as string, name: user.name as string, link: url, expiresMins: 14 * 24 * 60 })
+      } catch (e: any) {
+        console.error('[login-link] email', e)
+        err(res, 'EMAIL_FAILED', 'We could not send the email to that address. Please check it is correct, or copy the link instead.', 502)
+        return
+      }
     }
-    ok(res, { url, expires_at: new Date(Date.now() + ttlMs).toISOString(), emailed: sendEmail })
+    ok(res, { url, expires_at: new Date(Date.now() + ttlMs).toISOString(), emailed: sendEmail, sent_to: sendEmail ? user.email : null })
   } catch (e: any) {
     if (e instanceof PlanLimitError) { err(res, e.code, e.message, 429); return }
     err(res, 'LINK_FAILED', e.message, 500)

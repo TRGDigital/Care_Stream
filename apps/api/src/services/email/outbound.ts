@@ -157,6 +157,7 @@ export async function sendVerificationEmail(to: string, name: string, verificati
     from,
     subject: 'Verify your CareStreamAI email address',
     html,
+    trackingSettings: { clickTracking: { enable: false, enableText: false } },
   })
 }
 
@@ -487,7 +488,7 @@ export async function sendStaffLoginLinkEmail(opts: { to: string; name: string; 
     ${emailFooter()}
   `)
 
-  await sgMail.send({ to: opts.to, from, subject: 'Your CareStream sign-in link', html })
+  await sgMail.send({ to: opts.to, from, subject: 'Your CareStream sign-in link', html, trackingSettings: { clickTracking: { enable: false, enableText: false } } })
 }
 
 // ─── External policy review invitation ─────────────────────────────────────────
@@ -631,6 +632,7 @@ export async function sendPasswordResetEmail(to: string, name: string, resetUrl:
     from,
     subject: 'Reset your CareStreamAI password',
     html,
+    trackingSettings: { clickTracking: { enable: false, enableText: false } },
   })
 }
 
@@ -681,6 +683,7 @@ export async function sendPasswordSetupEmail(to: string, name: string, setupUrl:
     from,
     subject: 'Set up your CareStreamAI password',
     html,
+    trackingSettings: { clickTracking: { enable: false, enableText: false } },
   })
 }
 
@@ -1139,6 +1142,7 @@ export async function sendStaffWelcomeEmail(opts: SendWelcomeEmailOptions): Prom
     from,
     subject: `Your CareStreamAI login details — ${opts.orgName}`,
     html,
+    trackingSettings: { clickTracking: { enable: false, enableText: false } },
   })
 }
 

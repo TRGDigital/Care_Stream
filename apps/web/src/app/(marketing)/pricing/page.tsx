@@ -95,6 +95,7 @@ const MATRIX: Group[] = [
       { label: 'Document versioning',                values: [true, true, true] },
       { label: 'Home knowledge base (auto)',         values: [true, true, true] },
       { label: 'Home knowledge base (manual)',       values: ['Up to 50 entries', 'Unlimited', 'Unlimited'] },
+      { label: 'Resident profiles ("This is me")',   values: [false, true, true] },
     ],
   },
   {

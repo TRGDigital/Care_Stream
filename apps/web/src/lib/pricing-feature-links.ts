@@ -17,6 +17,7 @@ export const PRICING_FEATURE_LINKS: Record<string, string> = {
   'Voice input': '/features/voice-input',
   'Your own knowledge base, built automatically': '/features/home-knowledge-base-auto',
   'Your own knowledge base, manual entries': '/features/home-knowledge-base-manual',
+  'Resident profiles ("This is me")': '/features/resident-profiles-this-is-me',
   'External regulatory knowledge base': '/features/external-regulatory-knowledge-base',
   // Policies and approvals
   'Document version history': '/features/document-versioning',

@@ -1554,7 +1554,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id:      'knowledge-base',
     icon:    BookOpen,
     title:   'Knowledge base',
-    summary: 'Add and manage facts that CareStream always knows about your service',
+    summary: 'Add and manage facts that CareStream always knows about your service, and resident profiles ("This is me")',
     content: (
       <div className="space-y-5">
         <SectionBlock title="What the knowledge base is for">
@@ -1566,9 +1566,10 @@ const GUIDE_SECTIONS: GuideSection[] = [
           </p>
         </SectionBlock>
         <SectionBlock title="Where your knowledge comes from">
-          <p className="text-sm text-neutral-mid">The Knowledge Base page groups entries into three types:</p>
+          <p className="text-sm text-neutral-mid">The Knowledge Base page groups what CareStream knows into these types:</p>
           <div className="mt-2 rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
             {[
+              ['Residents', 'On the Professional and Enterprise plans: a profile for each current resident ("This is me"), shown first in its own colour. Click a resident to open the Residents screen on them. See "Resident profiles" below.'],
               ['Manual entries', 'Facts you type in yourself, the home and care-setting nuances unique to your service (like the COSHH cupboards above). Shown first on the page because this is where your own knowledge lives.'],
               ['From uploaded policies', 'Question-and-answer pairs CareStream generates automatically from the policy documents you upload. Use "Regenerate all" to (re)build them.'],
               ['CareStream standard entries', 'A pre-loaded library of UK care regulatory knowledge (CQC Key Questions, health & safety, infection control, medication and more), provided as a starting point. You can edit these to make them specific to your home. They do not count against your document limit.'],
@@ -1596,37 +1597,110 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <p>The category you choose for a manual entry determines where it is used:</p>
             <ul className="list-disc list-inside space-y-1 ml-2">
               <li><strong>General</strong>: available across all policy and handbook queries via the general knowledge base.</li>
-              <li><strong>Resident</strong>: what your staff need to know about an individual resident. Stored apart from your policies and coloured violet on the page, and answered under the Policies, Procedures &amp; Residents topic in the hub.</li>
+              <li><strong>Resident</strong>: no longer chosen here. Information about individual residents is now kept in Resident profiles, with the <strong>Residents</strong> button at the top of the page (see below).</li>
               <li><strong>Business Continuity</strong>: appears exclusively in the Business Continuity chat channel. Staff can access it on the portal by selecting the Business Continuity card.</li>
               <li><strong>Policies &amp; Procedures, HR &amp; Staff, Health &amp; Safety, Medication, Infection Control</strong>: all feed into the general knowledge base and appear alongside relevant policy content.</li>
             </ul>
           </div>
         </SectionBlock>
-        <SectionBlock title="Resident knowledge">
+        <SectionBlock title="Resident profiles: &ldquo;This is me&rdquo;">
           <p className="text-sm text-neutral-mid">
-            A policy tells your staff what the home does. Resident entries tell them about the person
-            in front of them: what they like to be called, what they did before they came to you, the
-            food they enjoy, the routine that settles them at night, who visits and when.
+            A policy tells your staff what the home does. A resident profile tells them about the person in front of them:
+            what they like to be called, their life before they came to you, the food and music they love, what settles them
+            at night, who matters to them. It is available on the <strong>Professional</strong> and <strong>Enterprise</strong> plans.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
-            Add one the same way as any other entry and choose the <strong>Resident</strong> category.
-            It is kept apart from your policies, coloured so you can see at a glance which entries are
-            about people, and once approved your staff can ask about that resident by name in the hub.
-            That is the fastest way for a new starter, a bank member or someone covering a shift to
-            learn what the regular team already knows.
+            Profiles are managed with the <strong>Residents</strong> button at the top of the <strong>Knowledge Base</strong> page,
+            and each current resident also appears in a <strong>Residents</strong> group above your manual entries. Click a name
+            to open the Residents screen on that person.
+          </p>
+          <Tip>
+            A profile is about who they are, not their care record. Do not put medical, medication or safeguarding information in it.
+            Keep that in the care plan. The Residents screen reminds you of this every time.
+          </Tip>
+        </SectionBlock>
+        <SectionBlock title="Adding a resident">
+          <div className="space-y-3">
+            <Step n={1}>Click <strong>Residents</strong> at the top of the Knowledge Base, then <strong>Add resident</strong>.</Step>
+            <Step n={2}>Enter their first and last name, and if you like a preferred name, date of birth and room.</Step>
+            <Step n={3}>Fill in as many of the eleven sections as you can: life story, interests, likes, dislikes, food and drink they enjoy, daily routine, what helps when they are upset or anxious, how they like to communicate, important people and pets, faith and traditions, and anything else. Each has a hint under it.</Step>
+            <Step n={4}>Click <strong>Save</strong>. Staff can use the profile straight away.</Step>
+          </div>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Because you wrote the profile, it does not need a separate approval. You can edit it whenever something changes, and the
+            assistant uses the latest version.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Asking family and friends to add to it">
+          <p className="text-sm text-neutral-mid">
+            The people who know a resident best are often their family and friends. You can invite them to tell you more, without
+            giving them a login.
           </p>
           <div className="mt-2 space-y-3">
-            <Step n={1}>Click <strong>Add entry</strong> and set the <strong>Category</strong> to <strong>Resident</strong>.</Step>
-            <Step n={2}>Write the question the way a staff member would ask it, for example &ldquo;Tell me about Peggy Whitcombe&rdquo;, and put everything worth knowing in the answer.</Step>
-            <Step n={3}>Approve it. Until it is approved it is not used in any answer.</Step>
+            <Step n={1}>Open the resident and go to the <strong>Family</strong> tab.</Step>
+            <Step n={2}>Enter the person&rsquo;s name, email address and how they know the resident (for example daughter, son or friend), then click <strong>Send invitation</strong>.</Step>
+            <Step n={3}>They receive an email with a private link to a short form. It asks one gentle question for each section, and they can answer as many or as few as they like. The link is just for them and stops working after 14 days.</Step>
+            <Step n={4}>You can see whether each invitation has been sent, opened or answered. Use <strong>Resend</strong> to send a new link, or <strong>Revoke</strong> to cancel one.</Step>
           </div>
-          <Tip>
-            Once you have approved your first resident entry, the hub&rsquo;s Policies &amp; Procedures card
-            renames itself to <strong>Policies, Procedures &amp; Residents</strong>, so staff know they can ask.
-          </Tip>
+          <Tip>You can invite up to ten people for each resident. Each person gets their own link. If someone has already answered and wants to add more, resend their invitation.</Tip>
+        </SectionBlock>
+        <SectionBlock title="Approving what they write, and checking it afterwards">
+          <p className="text-sm text-neutral-mid">
+            <strong>Nothing a family member writes is shown to staff or used by the assistant until you approve it.</strong> That
+            keeps you in control: a relative might mention a favourite treat that does not suit the person&rsquo;s diet, or something
+            you would rather word differently.
+          </p>
+          <div className="mt-2 space-y-3">
+            <Step n={1}>When someone answers, you get an email and a count appears on the resident&rsquo;s <strong>Approvals</strong> tab (and on their row in the Knowledge Base).</Step>
+            <Step n={2}>Read each answer. Choose <strong>Approve</strong>, <strong>Edit then approve</strong> if you want to change the wording first, or <strong>Reject</strong>.</Step>
+            <Step n={3}>Approved answers are added to the profile with the person&rsquo;s name and relationship after them, so staff can see who said it, for example &ldquo;(Sally, daughter)&rdquo;.</Step>
+            <Step n={4}>To check what you have approved, open the <strong>From family</strong> tab. It lists each person who answered as a drawer: open one to see what they told you, when you approved it and who approved it. If you edited an answer first, you can still see what they originally wrote.</Step>
+          </div>
+        </SectionBlock>
+        <SectionBlock title="What staff see">
+          <p className="text-sm text-neutral-mid">
+            Once a home has at least one profile with content, staff see a <strong>This is me</strong> tab in the Chat Hub. It shows
+            each current resident as a card (searchable by name or room); opening one shows their profile in large, clear text, ready
+            for a quick read before a shift or a first visit to a room.
+          </p>
           <p className="mt-2 text-sm text-neutral-mid">
-            Treat these entries as care records: only put in what you would be comfortable any member of
-            staff reading, keep them accurate, and remove them when a resident leaves.
+            Staff can also just ask the chat about a resident by name, for example &ldquo;What does Margaret like to drink?&rdquo;
+            or &ldquo;What helps when Tom is anxious?&rdquo;. The answer comes from the profile, and the source is shown by name.
+            This is a fast way for a new starter, an agency worker or someone covering a shift to learn what the regular team already knows.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="When a resident dies or moves on">
+          <p className="text-sm text-neutral-mid">
+            In the resident&rsquo;s <strong>Profile</strong> tab, use <strong>Mark as died or moved on</strong> in the red area at the bottom.
+            Choose passed away or moved on, set the date and add a note if you want one. When you confirm:
+          </p>
+          <ul className="mt-2 ml-2 list-inside list-disc space-y-1 text-sm text-neutral-mid">
+            <li>They disappear from the hub and from the assistant straight away.</li>
+            <li>Any family invitations are cancelled and nothing waiting for approval can reach staff.</li>
+            <li>The profile moves to <strong>Archived</strong> and is kept for <strong>seven years</strong> from the day it was archived. You can extend that date but not shorten it.</li>
+            <li>The admins who can action archives get an email.</li>
+          </ul>
+          <p className="mt-3 text-sm text-neutral-mid">
+            Archived profiles are visible only to admins with archive access, from the <strong>Archived</strong> button in the Residents
+            screen. Each one has four steps:
+          </p>
+          <div className="mt-2 space-y-3">
+            <Step n={1}><strong>Confirm the archive</strong>: say whether a memory book was shared with the family or they declined, add a note, and tick the box to remove the family&rsquo;s email addresses if you no longer need them.</Step>
+            <Step n={2}><strong>Download a copy</strong> as a text file, if you want one for a memory book or the record.</Step>
+            <Step n={3}><strong>Retention date</strong>, and extend it if the home needs to keep the profile longer.</Step>
+            <Step n={4}><strong>Delete the profile</strong> once the retention date has passed. You can delete earlier if you have a reason, which you must type in. You will be asked to type the resident&rsquo;s name to confirm. This cannot be undone.</Step>
+          </div>
+          <p className="mt-3 text-sm text-neutral-mid">
+            <strong>Who can action archives.</strong> Until you choose, every admin can. In the Archived view you can narrow it to named
+            admins. Every view, download and deletion of an archived profile is logged.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="Data protection">
+          <p className="text-sm text-neutral-mid">
+            Resident profiles hold personal information about the people you support, and what family members tell you about them.
+            Each home is responsible for using the feature in line with its own data protection approach: telling residents
+            (or those acting for them) that a profile exists, covering it in your privacy notice, and deciding what is appropriate to record.
+            Family answers are held for your approval and are never shown to staff automatically.
           </p>
         </SectionBlock>
         <SectionBlock title="How your knowledge shows in chat answers, the source colours">

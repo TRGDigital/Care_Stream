@@ -85,7 +85,7 @@ function ActionMenu({
 
   async function handleDeactivate() {
     setOpen(false)
-    if (!confirm(`Archive ${user.name}? They’ll move to Archived staff and can no longer log in. Their records are kept for compliance.`)) return
+    if (!confirm(`Archive ${user.name}? They’ll move to Archived staff and can no longer log in. Their records are kept for compliance, and their email address is freed so someone else can use it (for example a shared address like enquiries@).`)) return
     setWorking(true)
     try {
       await createApiClient(token).users.deactivate(user.id)
@@ -99,7 +99,7 @@ function ActionMenu({
     try {
       await createApiClient(token).users.reactivate(user.id)
       onReactivate(user.id)
-    } catch { /* ignore */ } finally { setWorking(false) }
+    } catch (e: any) { alert(e?.message || 'Could not restore this person.') } finally { setWorking(false) }
   }
 
   return (
@@ -171,6 +171,11 @@ function ActionMenu({
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
+
+// An archived account gives up its email address (see api lib/user-email.ts): enquiries@x becomes enquiries+archived-1a2b3c4d@x.
+const ARCHIVED_ADDRESS = /^(.*)\+archived-[0-9a-f]{8}(@[^@]+)$/i
+const isArchivedAddress = (email: string) => ARCHIVED_ADDRESS.test(email)
+const shownEmail = (email: string) => { const m = ARCHIVED_ADDRESS.exec(email); return m ? `${m[1]}${m[2]}` : email }
 
 export default function StaffPage() {
   const { data: session }              = useSession()
@@ -518,7 +523,7 @@ export default function StaffPage() {
                         <LineChart size={13} /> View
                       </Link>
                     </td>
-                    <td className="px-6 py-3 text-neutral-mid">{u.email}</td>
+                    <td className="px-6 py-3 text-neutral-mid">{shownEmail(u.email)}{isArchivedAddress(u.email) && <span className="ml-1.5 text-xs text-neutral-mid/80">(address released)</span>}</td>
                     <td className="px-6 py-3">
                       <Badge variant={u.role === 'admin' ? 'admin' : 'staff'}>
                         {u.role === 'admin'

@@ -3423,6 +3423,22 @@ adminRouter.get('/service-requests/:id/image', async (req: Request, res: Respons
   } catch (e: any) { err(res, 'DOWNLOAD_FAILED', e?.message ?? 'Could not load image', 500) }
 })
 
+// Platform owner diagnostic: how long a database round trip takes from this API instance, and where both sit.
+// Returns the database HOST and port only (never credentials). Used to find out why every page is slow.
+adminRouter.get('/diagnostics/db-latency', async (_req: Request, res: Response) => {
+  let host: string | null = null, port: string | null = null
+  try { const u = new URL(process.env.DATABASE_URL ?? ''); host = u.hostname; port = u.port || null } catch { /* leave null */ }
+  const time = async (fn: () => Promise<unknown>) => { const t0 = Date.now(); await fn(); return Date.now() - t0 }
+  const select1: number[] = []
+  for (let i = 0; i < 6; i++) select1.push(await time(() => (prisma as any).$queryRaw`SELECT 1`))
+  const tx = await time(() => (prisma as any).$transaction(async (t: any) => {
+    await t.$executeRaw`SELECT set_config('app.current_tenant_id', 'diagnostic', true)`
+    await t.$queryRaw`SELECT 1`
+  }))
+  const tenants = await time(() => (prisma as any).tenant.count())
+  ok(res, { vercel_region: process.env.VERCEL_REGION ?? null, db_host: host, db_port: port, select1_ms: select1, transaction_ms: tx, tenant_count_ms: tenants, node: process.version })
+})
+
 adminRouter.get('/blog/authors', async (_req: Request, res: Response) => {
   const authors = await (prisma as any).blogAuthor.findMany({ orderBy: { name: 'asc' } })
   ok(res, { authors, total: authors.length })

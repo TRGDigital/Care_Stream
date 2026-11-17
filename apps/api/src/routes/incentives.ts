@@ -448,14 +448,19 @@ incentivesRouter.get('/staff/:userId', async (req: Request, res: Response) => {
     db.incentiveClaim.findMany({ where: { tenant_id: tenantId, user_id: userId } }),
     db.incentiveParticipant.findMany({ where: { tenant_id: tenantId, user_id: userId } }),
   ])
-  const ids = Array.from(new Set([...(ledger as any[]).map(l => l.campaign_id), ...(claims as any[]).map(c => c.campaign_id)]))
-  if (!ids.length) { ok(res, { months: [] }); return }
-  const [camps, rewards] = await Promise.all([
-    db.incentiveCampaign.findMany({ where: { id: { in: ids }, status: { in: ['live', 'ended'] } } }),
-    db.incentiveReward.findMany({ where: { campaign_id: { in: ids } }, orderBy: { position: 'asc' } }),
-  ])
+  // Every live or ended campaign this person is part of (even with no points yet), plus any that hold their points or claims.
+  const recent = await db.incentiveCampaign.findMany({ where: { tenant_id: tenantId, status: { in: ['live', 'ended'] } }, orderBy: { month: 'desc' }, take: 36 })
+  const camps: any[] = []
+  for (const c of recent as any[]) {
+    const parts = await db.incentiveParticipant.findMany({ where: { campaign_id: c.id } })
+    const people = await campaignPeople(tenantId, c, parts)
+    const has = (ledger as any[]).some(l => l.campaign_id === c.id) || (claims as any[]).some(x => x.campaign_id === c.id)
+    if (has || people.some(p => p.id === userId)) camps.push(c)
+  }
+  if (!camps.length) { ok(res, { months: [] }); return }
+  const rewards = await db.incentiveReward.findMany({ where: { campaign_id: { in: camps.map(c => c.id) } }, orderBy: { position: 'asc' } })
   const byMonth = new Map<string, any[]>()
-  for (const c of camps as any[]) {
+  for (const c of camps) {
     const cl = (claims as any[]).filter(x => x.campaign_id === c.id)
     const entries = (ledger as any[]).filter(l => l.campaign_id === c.id)
     const part = (partRows as any[]).filter(p => p.campaign_id === c.id)

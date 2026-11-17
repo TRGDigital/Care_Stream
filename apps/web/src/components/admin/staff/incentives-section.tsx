@@ -17,21 +17,23 @@ const CLAIM: Record<string, string> = {
 }
 
 export function StaffIncentivesSection({ token, userId, viewerKey, firstName }: { token: string; userId: string; viewerKey: string; firstName: string }) {
-  const q = useCachedQuery<{ months: StaffPointsMonth[] }>(
+  const q = useCachedQuery<{ months: StaffPointsMonth[]; hidden?: boolean }>(
     token ? `admin-staff-incentives-${viewerKey}-${userId}` : null,
     () => createIncentivesClient(token).staffHistory(userId).catch((e: any) => {
-      if (e?.status === 403) return { months: [] }   // plan without incentives, or not allowed: hide
+      if (e?.status === 403) return { months: [], hidden: true }   // plan without incentives, or not allowed: hide
       throw e
     }),
   )
   const [open, setOpen] = useState<Record<string, boolean>>({})
   const months = q.data?.months ?? []
-  if (months.length === 0) return null
+  if (q.data?.hidden || (!q.data && !q.loading)) return null
+  if (q.loading && !q.data) return null
 
   return (
     <div className="pdf-card rounded-card border border-gray-100 bg-white p-5 shadow-card">
       <p className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Trophy size={15} className="text-teal" /> Incentives</p>
       <p className="mb-3 text-xs text-neutral-mid">Points {firstName} has earned in monthly incentive campaigns, and the rewards they were working towards.</p>
+      {months.length === 0 && <p className="rounded-lg bg-neutral-light/40 px-3 py-3 text-sm text-neutral-mid">{firstName} is not in an incentive yet. When one is live, this month's position and every past month will show here.</p>}
       <div className="space-y-2">
         {months.map((m, i) => {
           const isOpen = open[m.month] ?? i === 0
@@ -40,7 +42,7 @@ export function StaffIncentivesSection({ token, userId, viewerKey, firstName }: 
             <div key={m.month} className="rounded-lg border border-gray-100">
               <button type="button" aria-expanded={isOpen} onClick={() => setOpen(o => ({ ...o, [m.month]: !isOpen }))}
                 className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-neutral-light/40">
-                <span className="text-sm font-medium text-neutral-dark">{monthName(m.month)}</span>
+                <span className="text-sm font-medium text-neutral-dark">{monthName(m.month)}{m.campaigns.some(c => c.status === 'live') && <span className="ml-2 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-700">This month</span>}</span>
                 <span className="flex items-center gap-2 text-xs text-neutral-mid">{total} {total === 1 ? 'point' : 'points'}<ChevronDown size={15} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} /></span>
               </button>
               {isOpen && (
@@ -51,9 +53,14 @@ export function StaffIncentivesSection({ token, userId, viewerKey, firstName }: 
                       {c.rewards.length > 0 && (
                         <ul className="mt-1.5 space-y-1">
                           {c.rewards.map((r, ri) => (
-                            <li key={ri} className="flex items-start justify-between gap-3 text-sm">
-                              <span className="min-w-0 break-words text-neutral-dark">{r.title} <span className="text-xs text-neutral-mid">(target {r.target})</span></span>
-                              <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-mid">{r.claim ? CLAIM[r.claim] ?? r.claim : 'Not reached'}</span>
+                            <li key={ri} className="text-sm">
+                              <div className="flex items-start justify-between gap-3">
+                                <span className="min-w-0 break-words text-neutral-dark">{r.title} <span className="text-xs text-neutral-mid">({Math.min(c.points, r.target)} of {r.target} points)</span></span>
+                                <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-mid">{r.claim ? CLAIM[r.claim] ?? r.claim : c.status === 'live' ? 'In progress' : 'Not reached'}</span>
+                              </div>
+                              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-100" role="progressbar" aria-valuenow={Math.min(100, Math.round((c.points / r.target) * 100))} aria-valuemin={0} aria-valuemax={100} aria-label={`${r.title} progress`}>
+                                <div className={`h-full rounded-full ${r.claim && r.claim !== 'missed' ? 'bg-green-500' : 'bg-teal'}`} style={{ width: `${Math.min(100, Math.round((c.points / r.target) * 100))}%` }} />
+                              </div>
                             </li>
                           ))}
                         </ul>

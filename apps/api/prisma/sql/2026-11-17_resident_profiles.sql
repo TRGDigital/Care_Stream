@@ -68,5 +68,6 @@ alter table public.residents enable row level security;
 alter table public.resident_invites enable row level security;
 alter table public.resident_contributions enable row level security;
 
--- Daily reminder to the archive admins when a retention date is near or passed (same pattern as the other jobs; see manual_cron_schedules.sql):
---   select cron.schedule('resident-retention', '15 7 * * *', $$ select net.http_post(url := 'https://api.carestreamai.com/cron/resident-retention', headers := jsonb_build_object('Authorization', 'Bearer ' || current_setting('app.cron_secret', true))) $$);
+-- Optional, run once: daily reminder to the archive admins when a retention date is near or passed (same helper as the other jobs).
+-- select cron.unschedule('cs-resident-retention') where exists (select 1 from cron.job where jobname = 'cs-resident-retention');
+-- select cron.schedule('cs-resident-retention', '15 9 * * *', $$select public.carestream_cron('resident-retention')$$);

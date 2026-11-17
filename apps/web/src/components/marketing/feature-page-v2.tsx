@@ -95,9 +95,11 @@ function img(slug: string, n: number) {
 // The wide crop beside the "In short" list. Half the capabilities have their own fifth image
 // and half do not, so the theme falls back to the shared one rather than leaving a hole. The
 // set is read off the generated manifest, so this can never point at a file that isn't there.
-const WIDE_SHOTS = new Set(
-  THEME_IMAGES.map(i => i.src).filter(s => /^\/images\/features\/[^/]+\/5\.webp$/.test(s)),
-)
+const WIDE_SHOTS = new Set([
+  ...THEME_IMAGES.map(i => i.src).filter(s => /^\/images\/features\/[^/]+\/5\.webp$/.test(s)),
+  // Pages added after the theme was generated (not in the manifest) that ship their own fifth image.
+  '/images/features/resident-profiles-this-is-me/5.webp',
+])
 const SHARED_WIDE = '/images/_shared/1.webp'
 
 function wideShot(slug: string) {

@@ -1642,16 +1642,20 @@ function CategorySelect({ onSelect, available, hasResidents }: { onSelect: (c: D
               </div>
             )
           }
+          // "This is me" is about people rather than documents, so its card spans the full width in a warm colour of its own.
+          const person = key === 'resident'
           return (
             <button
               key={key}
               onClick={() => onSelect(key)}
-              className="flex flex-col items-center gap-4 rounded-2xl border-2 border-gray-200 bg-white px-6 py-8 transition-all hover:border-teal hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal focus:ring-offset-2"
+              className={person
+                ? 'flex flex-col items-center gap-4 rounded-2xl border-2 border-rose-200 bg-rose-50 px-6 py-8 transition-all hover:border-rose-400 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2 sm:col-span-2 sm:flex-row sm:justify-center sm:gap-6'
+                : 'flex flex-col items-center gap-4 rounded-2xl border-2 border-gray-200 bg-white px-6 py-8 transition-all hover:border-teal hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal focus:ring-offset-2'}
             >
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-teal-light">
-                <Icon className="text-teal" size={28} />
+              <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full ${person ? 'bg-rose-100' : 'bg-teal-light'}`}>
+                <Icon className={person ? 'text-rose-500' : 'text-teal'} size={28} />
               </div>
-              <div className="text-center">
+              <div className="text-center sm:text-left">
                 <p className="text-base font-semibold text-neutral-dark">{title}</p>
                 <p className="mt-1 text-xs text-neutral-mid">{subtitle}</p>
               </div>

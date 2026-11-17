@@ -1,0 +1,93 @@
+// Endpoints for the nightly CareStream content routines (blog posts and collection pages).
+//
+// A cloud routine has no repository and no platform login, so it talks to these three endpoints with a bearer token
+// (CONTENT_ROUTINE_TOKEN):
+//   GET  /routine/content/bundle       the writing guidelines, checker tools, backlogs and catalogues (a snapshot of
+//                                      ~/carestream-content made by tools/sync_engine.py)
+//   GET  /routine/content/state        what is already on the platform (so a night never repeats a slug, keyword,
+//                                      heading, opening or image), and the platform's draft counts
+//   POST /routine/content/blog         save posts as DRAFTS
+//   POST /routine/content/collections  save collections as DRAFTS
+//
+// Nothing here can publish, change a published page, or refresh one: the shared import functions are called with
+// allowRefresh false, and every item is forced to status draft. A human approves each page in /platform/blog.
+
+import { Router, Request, Response, NextFunction } from 'express'
+import { timingSafeEqual } from 'crypto'
+import { prisma } from '../db/client'
+import { ok, err } from '../lib/response'
+import { importBlogDrafts, importCollectionDrafts } from './admin'
+import bundle from '../data/content-engine/bundle.json'
+
+export const contentRoutineRouter = Router()
+
+function authorised(req: Request): boolean {
+  const want = process.env.CONTENT_ROUTINE_TOKEN
+  if (!want || want.length < 24) return false
+  const got = String(req.headers.authorization ?? '').replace(/^Bearer\s+/i, '')
+  const a = Buffer.from(got); const b = Buffer.from(want)
+  return a.length === b.length && timingSafeEqual(a, b)
+}
+
+contentRoutineRouter.use((req: Request, res: Response, next: NextFunction) => {
+  if (!process.env.CONTENT_ROUTINE_TOKEN) { err(res, 'NOT_CONFIGURED', 'The content routine is not configured.'); return }
+  if (!authorised(req)) { err(res, 'INVALID_TOKEN', 'Token is invalid.'); return }
+  next()
+})
+
+const stripTags = (h: string) => h.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim()
+const h2s = (html: string) => Array.from(html.matchAll(/<h2[^>]*>([\s\S]*?)<\/h2>/gi)).map(m => stripTags(m[1])).filter(Boolean)
+const imgs = (html: string) => Array.from(html.matchAll(/<img[^>]+src="([^"]+)"/gi)).map(m => m[1])
+function first12(html: string): string {
+  for (const m of html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)) {
+    const t = stripTags(m[1])
+    if (t.split(' ').length > 6) return (t.toLowerCase().match(/[a-z0-9']+/g) ?? []).slice(0, 12).join(' ')
+  }
+  return ''
+}
+
+contentRoutineRouter.get('/bundle', (_req: Request, res: Response) => {
+  ok(res, bundle)
+})
+
+contentRoutineRouter.get('/state', async (_req: Request, res: Response) => {
+  const [posts, cols] = await Promise.all([
+    (prisma as any).blogPost.findMany({ select: { slug: true, title: true, status: true, topic_cluster: true, primary_keyword: true, secondary_keywords: true, feature_image_url: true, content: true, created_at: true } }),
+    (prisma as any).collection.findMany({ select: { slug: true, title: true, status: true, kind: true, cluster_key: true, topic_cluster: true, primary_keyword: true, secondary_keywords: true, intro: true, body: true, created_at: true } }),
+  ])
+  const blogs = posts.map((p: any) => ({
+    slug: p.slug, title: p.title, status: p.status, topic_cluster: p.topic_cluster ?? null, primary_keyword: p.primary_keyword ?? null,
+    secondary_keywords: p.secondary_keywords ?? [], feature_image: p.feature_image_url ?? null,
+    h2s: h2s(p.content ?? ''), first12: first12(p.content ?? ''), images: imgs(p.content ?? ''),
+  }))
+  const collections = cols.map((c: any) => {
+    const html = `${c.intro ?? ''} ${c.body ?? ''}`
+    return {
+      slug: c.slug, title: c.title, status: c.status, kind: c.kind, cluster_key: c.cluster_key, topic_cluster: c.topic_cluster ?? null,
+      primary_keyword: c.primary_keyword ?? null, secondary_keywords: c.secondary_keywords ?? [],
+      h2s: h2s(html), first12: first12(c.intro ?? ''), images: imgs(html),
+    }
+  })
+  ok(res, {
+    blogs, collections,
+    counts: {
+      blog_drafts: posts.filter((p: any) => p.status === 'draft').length,
+      collection_drafts: cols.filter((c: any) => c.status === 'draft').length,
+    },
+  })
+})
+
+contentRoutineRouter.post('/blog', async (req: Request, res: Response) => {
+  const list = Array.isArray(req.body?.posts) ? req.body.posts.slice(0, 10) : []
+  if (!list.length) { err(res, 'VALIDATION_ERROR', 'posts must be a non empty array.'); return }
+  // Never publish, never refresh, never feature: the import forces a draft and the routine cannot ask otherwise.
+  const clean = list.map((p: any) => { const { refresh: _r, status: _s, is_featured: _f, publication_date: _d, ...rest } = p ?? {}; return rest })
+  ok(res, await importBlogDrafts(clean, false))
+})
+
+contentRoutineRouter.post('/collections', async (req: Request, res: Response) => {
+  const list = Array.isArray(req.body?.collections) ? req.body.collections.slice(0, 10) : []
+  if (!list.length) { err(res, 'VALIDATION_ERROR', 'collections must be a non empty array.'); return }
+  const clean = list.map((c: any) => { const { refresh: _r, status: _s, ...rest } = c ?? {}; return rest })
+  ok(res, await importCollectionDrafts(clean, false))
+})

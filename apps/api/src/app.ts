@@ -61,6 +61,7 @@ import { lpPublicRouter } from './routes/lp-public'
 import { policyShopPublicRouter } from './routes/policy-shop-public'
 import { agentActionsRouter } from './routes/agent-actions'
 import { cronRouter } from './routes/cron'
+import { contentRoutineRouter } from './routes/content-routine'
 import { standardTrainingRouter } from './routes/standard-training'
 import { standardProgrammesRouter } from './routes/standard-programmes'
 import { programmesRouter } from './routes/programmes'
@@ -209,6 +210,8 @@ app.use('/public/lp', lpPublicRouter)
 // Vercel Cron jobs — self-authorise via x-vercel-cron header / CRON_SECRET.
 // Must be mounted BEFORE requireAuth.
 app.use('/cron', cronRouter)
+// Nightly content routines (blog and collection drafts): bearer token CONTENT_ROUTINE_TOKEN, drafts only.
+app.use('/routine/content', contentRoutineRouter)
 
 // §11.1 — All routes below require a valid JWT + tenant context.
 // apiLimiter: 100 req/min per user.

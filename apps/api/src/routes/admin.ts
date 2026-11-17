@@ -3553,9 +3553,9 @@ adminRouter.delete('/blog/posts/:id', async (req: Request, res: Response) => {
 // POST /admin/blog/import  { posts: [...] }  creates DRAFT posts from the content pipeline.
 // Always status 'draft' (never published from here). A slug that already exists is UPDATED when that
 // post is still a draft, and skipped when it is published. Returns created, updated and skipped. Same field names as POST /admin/blog/posts.
-adminRouter.post('/blog/import', async (req: Request, res: Response) => {
-  const list = Array.isArray(req.body?.posts) ? req.body.posts.slice(0, 50) : []
-  if (!list.length) { err(res, 'VALIDATION_ERROR', 'posts must be a non empty array.'); return }
+/** Saves posts from the content pipeline as DRAFTS. Shared by the platform's Import drafts button (allowRefresh: true,
+ *  an approved revamp of a published post) and the nightly content routine (allowRefresh: false, so a published post is never touched). */
+export async function importBlogDrafts(list: any[], allowRefresh: boolean) {
   const created: Array<{ id: string; slug: string; title: string }> = []
   const updated: Array<{ id: string; slug: string; title: string }> = []
   const skipped: Array<{ slug: string; reason: string }> = []
@@ -3574,7 +3574,7 @@ adminRouter.post('/blog/import', async (req: Request, res: Response) => {
     // publication date and featured flag are never touched; the change is logged as a 'refreshed' event and
     // the page is resubmitted for indexing (once per 14 days per URL).
     if (existing && existing.status !== 'draft') {
-      if (raw?.refresh !== true) { skipped.push({ slug, reason: 'already published, not touched' }); continue }
+      if (!(allowRefresh && raw?.refresh === true)) { skipped.push({ slug, reason: 'already published, not touched' }); continue }
       try {
         const { slug: _s, status: _st, publication_date: _pd, is_featured: _f, use_case_slugs: _u, ...rest } = raw
         const upd = await (prisma as any).blogPost.update({ where: { id: existing.id }, data: buildPostData(rest) })
@@ -3599,7 +3599,13 @@ adminRouter.post('/blog/import', async (req: Request, res: Response) => {
       created.push({ id: post.id, slug: post.slug, title: post.title })
     } catch (e: any) { skipped.push({ slug, reason: String(e?.message ?? e).slice(0, 160) }) }
   }
-  ok(res, { created, updated, skipped })
+  return { created, updated, skipped }
+}
+
+adminRouter.post('/blog/import', async (req: Request, res: Response) => {
+  const list = Array.isArray(req.body?.posts) ? req.body.posts.slice(0, 50) : []
+  if (!list.length) { err(res, 'VALIDATION_ERROR', 'posts must be a non empty array.'); return }
+  ok(res, await importBlogDrafts(list, true))
 })
 
 adminRouter.post('/blog/upload-image', imageUploadMiddleware, async (req: any, res: Response) => {
@@ -3716,9 +3722,8 @@ adminRouter.post('/collections', async (req: Request, res: Response) => {
 // POST /admin/collections/import  { collections: [...] }  creates DRAFT collections from the content
 // pipeline. Always draft; an existing slug is updated only while it is still a draft, never when
 // published. Each item needs a valid cluster_key (the grid is the page).
-adminRouter.post('/collections/import', async (req: Request, res: Response) => {
-  const list = Array.isArray(req.body?.collections) ? req.body.collections.slice(0, 50) : []
-  if (!list.length) { err(res, 'VALIDATION_ERROR', 'collections must be a non empty array.'); return }
+/** Saves collections from the content pipeline as DRAFTS (see importBlogDrafts for allowRefresh). */
+export async function importCollectionDrafts(list: any[], allowRefresh: boolean) {
   const created: Array<{ id: string; slug: string; title: string }> = []
   const updated: Array<{ id: string; slug: string; title: string }> = []
   const skipped: Array<{ slug: string; reason: string }> = []
@@ -3728,7 +3733,7 @@ adminRouter.post('/collections/import', async (req: Request, res: Response) => {
     if (!slug || !title) { skipped.push({ slug: slug || '(none)', reason: 'title and slug are required' }); continue }
     // An approved revamp of a PUBLISHED collection (refresh: true): copy, meta, FAQs and keywords change; the slug,
     // status, kind, product cluster, eyebrow, links and images never do. Logged as a refresh and resubmitted for indexing.
-    if (raw?.refresh === true) {
+    if (allowRefresh && raw?.refresh === true) {
       try {
         const cur = await (prisma as any).collection.findUnique({ where: { slug } })
         if (!cur) { skipped.push({ slug, reason: 'refresh: no collection with this slug' }); continue }
@@ -3761,7 +3766,13 @@ adminRouter.post('/collections/import', async (req: Request, res: Response) => {
       }
     } catch (e: any) { skipped.push({ slug, reason: String(e?.message ?? e).slice(0, 160) }) }
   }
-  ok(res, { created, updated, skipped })
+  return { created, updated, skipped }
+}
+
+adminRouter.post('/collections/import', async (req: Request, res: Response) => {
+  const list = Array.isArray(req.body?.collections) ? req.body.collections.slice(0, 50) : []
+  if (!list.length) { err(res, 'VALIDATION_ERROR', 'collections must be a non empty array.'); return }
+  ok(res, await importCollectionDrafts(list, true))
 })
 
 adminRouter.patch('/collections/:id', async (req: Request, res: Response) => {

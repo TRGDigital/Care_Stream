@@ -7,7 +7,7 @@ import {
   type IncentiveCampaignDetail, type IncentiveCampaignInput, type RuleEventDef, type RuleEvent,
 } from '@/lib/incentives-api'
 import { inputCls, btnPrimary, btnSecondary, btnDangerOutline, ErrorBox, errMsg, Field } from '@/components/admin/residents/ui'
-import { Section, currentMonth, monthLabel } from './shared'
+import { ConfirmDialog, Section, currentMonth, monthLabel } from './shared'
 import { resizeImageToDataUrl } from './image-utils'
 
 export interface StaffOption { id: string; name: string; job_role: string | null }
@@ -60,6 +60,7 @@ export function CampaignBuilder({ token, events, maxImageBytes, staff, staffLoad
   onSaved: (id: string) => void
 }) {
   const init = useMemo(() => fromDetail(existing, events), []) // eslint-disable-line react-hooks/exhaustive-deps
+  const [askClose, setAskClose] = useState(false)
   const [name, setName] = useState(init.name)
   const [month, setMonth] = useState(init.month)
   const [everyone, setEveryone] = useState(init.everyone)
@@ -83,7 +84,7 @@ export function CampaignBuilder({ token, events, maxImageBytes, staff, staffLoad
     topRef.current?.focus()
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || document.querySelector('[data-nested-dialog]')) return
-      if (!dirty.current || window.confirm('Close without saving your changes?')) onClose()
+      tryClose()
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
@@ -213,18 +214,21 @@ export function CampaignBuilder({ token, events, maxImageBytes, staff, staffLoad
 
   const rewardHeading = (r: RewardRow, i: number) => r.title.trim() || `Reward ${i + 1}`
 
+  const tryClose = () => { if (dirty.current) setAskClose(true); else onClose() }
+
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-light" role="dialog" aria-modal="true" aria-label={existing ? 'Edit incentive' : 'New incentive'}>
-      <div className="mx-auto max-w-4xl px-4 py-4 sm:py-8">
-        <div ref={topRef} tabIndex={-1} className="mb-4 flex items-start justify-between gap-3 focus:outline-none">
+    <div className="fixed inset-0 z-[60] flex items-stretch justify-center bg-black/50 md:p-6" onMouseDown={e => { if (e.target === e.currentTarget) tryClose() }}>
+     <div className="flex h-full w-full max-w-5xl flex-col overflow-hidden bg-white shadow-2xl md:rounded-2xl" role="dialog" aria-modal="true" aria-label={existing ? 'Edit incentive' : 'New incentive'}>
+        <div ref={topRef} tabIndex={-1} className="flex shrink-0 items-start justify-between gap-3 border-b border-gray-200 bg-white px-4 py-4 focus:outline-none sm:px-6">
           <div>
             <h2 className="text-xl font-bold text-neutral-dark">{existing ? 'Edit incentive' : 'New incentive'}</h2>
             <p className="mt-0.5 text-sm text-neutral-mid">A care manager approves the incentive before it goes live.</p>
           </div>
-          <button type="button" onClick={() => { if (!dirty.current || window.confirm('Close without saving your changes?')) onClose() }} aria-label="Close" className="rounded-lg p-2 text-neutral-mid hover:bg-white"><X size={18} /></button>
+          <button type="button" onClick={() => { tryClose() }} aria-label="Close" className="rounded-lg p-2 text-neutral-mid hover:bg-white"><X size={18} /></button>
         </div>
 
-        <div className="space-y-4">
+       <div className="min-h-0 flex-1 overflow-y-auto bg-neutral-light px-4 py-6 sm:px-6">
+        <div className="mx-auto max-w-4xl space-y-4">
           {errors.length > 0 && (
             <ErrorBox>
               <p className="font-semibold">Please fix the following before saving.</p>
@@ -400,12 +404,14 @@ export function CampaignBuilder({ token, events, maxImageBytes, staff, staffLoad
 
           <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center justify-end gap-2 border-t border-gray-200 bg-white/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-card sm:border">
             <p className="mr-auto text-xs text-neutral-mid">A care manager approves the incentive before it goes live.</p>
-            <button type="button" className={btnSecondary} onClick={() => { if (!dirty.current || window.confirm('Close without saving your changes?')) onClose() }} disabled={busy !== null}>Cancel</button>
+            <button type="button" className={btnSecondary} onClick={() => { tryClose() }} disabled={busy !== null}>Cancel</button>
             <button type="button" className={btnSecondary} onClick={() => save(false)} disabled={busy !== null}>{busy === 'save' ? 'Saving...' : 'Save draft'}</button>
             <button type="button" className={btnPrimary} onClick={() => save(true)} disabled={busy !== null}>{busy === 'submit' ? 'Submitting...' : 'Submit for approval'}</button>
           </div>
         </div>
-      </div>
+       </div>
+     </div>
+     {askClose && <ConfirmDialog title="Close without saving?" confirmLabel="Close" danger body="Your changes will be lost." onConfirm={async () => onClose()} onClose={() => setAskClose(false)} />}
     </div>
   )
 }

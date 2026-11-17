@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* A full screen overlay must always cover the whole window. Tailwind's space-y-* adds a top margin to every sibling after the
+   first, which would push an overlay that sits inside such a container down (leaving the top bar un-dimmed). */
+.fixed.inset-0 { margin: 0 !important; }
+
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 

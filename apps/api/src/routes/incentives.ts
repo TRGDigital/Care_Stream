@@ -388,6 +388,17 @@ incentivesRouter.put('/campaigns/:id', async (req: Request, res: Response) => {
   ok(res, await detail(tenantId, upd))
 })
 
+// Rename at any time (a live incentive cannot otherwise be edited).
+incentivesRouter.patch('/campaigns/:id', async (req: Request, res: Response) => {
+  const name = z.string().trim().min(1).max(100).safeParse(req.body?.name)
+  if (!name.success) { err(res, 'VALIDATION_ERROR', 'Enter a name up to 100 characters.'); return }
+  const tenantId = getTenantId()
+  const c = await editable(tenantId, String(req.params.id))
+  if (!c) { err(res, 'NOT_FOUND', 'Incentive not found.', 404); return }
+  const upd = await db.incentiveCampaign.update({ where: { id: c.id }, data: { name: name.data } })
+  ok(res, await detail(tenantId, upd))
+})
+
 incentivesRouter.post('/campaigns/:id/submit', async (req: Request, res: Response) => {
   const tenantId = getTenantId()
   const c = await editable(tenantId, String(req.params.id))

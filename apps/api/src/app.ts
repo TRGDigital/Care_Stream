@@ -285,6 +285,8 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
   // reaches this handler would otherwise be invisible, so still raise the internal alert.
   const issue = classifyProviderError(err?.message)
   if (issue) void alertProviderIssue({ issue, rawMessage: String(err?.message ?? err), context: 'Unhandled express error' })
+  // A browser origin we do not allow is a refusal, not a server fault: say 403 so it does not look like an outage in the logs.
+  if (!res.headersSent && /^CORS: origin not allowed/.test(String(err?.message ?? ''))) { res.status(403).json({ success: false, error: { code: 'CORS_FORBIDDEN', message: 'This origin is not allowed.' } }); return }
   if (!res.headersSent) res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred.' } })
 })
 

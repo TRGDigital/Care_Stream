@@ -34,6 +34,23 @@ function buildClient() {
     log: process.env.NODE_ENV === 'development' ? ['query', 'warn', 'error'] : ['warn', 'error'],
   })
 
+  // Brief connection saturation: the pooler allows a fixed number of client connections for the whole project. A burst of
+  // requests (for example right after a deploy, when the website regenerates its pages) can use them all for a few seconds, and
+  // Prisma then fails with "max client connections reached" before it has run anything. Nothing has executed at that point, so
+  // retrying is safe: wait a moment, with jitter, and try again instead of returning a 500. Only connection failures are retried.
+  const SATURATED = /EMAXCONN|max client connections reached|too many clients|remaining connection slots/i
+  client.$use(async (params, next) => {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await next(params)
+      } catch (e: any) {
+        const connectionFailure = e?.name === 'PrismaClientInitializationError' && SATURATED.test(String(e?.message ?? ''))
+        if (!connectionFailure || attempt >= 3) throw e
+        await new Promise(r => setTimeout(r, 200 * 2 ** attempt + Math.random() * 200))   // about 0.3s, 0.5s, 0.9s
+      }
+    }
+  })
+
   // Tenant isolation middleware — injects tenant_id into read queries automatically.
   // §3.1: "queries scoped to tenant_id... middleware rejects cross-tenant requests"
   client.$use(async (params, next) => {

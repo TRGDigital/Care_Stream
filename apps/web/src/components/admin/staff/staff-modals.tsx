@@ -513,6 +513,8 @@ export function InviteModal({
   const isFree = useIsFree()
   const [loading,   setLoading]   = useState(false)
   const [onboardingNote, setOnboardingNote] = useState('')
+  const [sendLink, setSendLink] = useState(true)          // email them a one-time sign-in link now (ticked by default)
+  const [linkNote, setLinkNote] = useState<{ ok: boolean; text: string } | null>(null)
 
   function update(k: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
@@ -526,6 +528,7 @@ export function InviteModal({
     setLoading(true)
 
     const res = await createApiClient(token).users.invite({
+      send_login_link: sendLink,
       name:            form.name,
       email:           form.email,
       role:            form.role,
@@ -559,6 +562,12 @@ export function InviteModal({
           : 'No onboarding flow matches this role yet — create one on the Onboarding page and they’ll auto-enrol next time.'
       )
     }
+
+    if (sendLink) {
+      setLinkNote(res.login_link_emailed
+        ? { ok: true, text: `We have emailed ${form.email} a sign-in link. It works once and lasts 14 days, so they do not need the password below.` }
+        : { ok: false, text: res.login_link_error || 'We could not email the sign-in link. Use Re-send login from their menu, or share the details below.' })
+    } else setLinkNote(null)
 
     // Refresh the list in the background, but keep modal open to show credentials
     onInvited()
@@ -781,6 +790,14 @@ export function InviteModal({
 
             {error && <p className="text-sm text-red-600">{error}</p>}
 
+            <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-gray-200 bg-neutral-light/60 px-3 py-2.5 text-sm text-neutral-dark">
+              <input type="checkbox" className="mt-0.5 h-4 w-4 shrink-0 accent-teal" checked={sendLink} onChange={e => setSendLink(e.target.checked)} />
+              <span>
+                <span className="font-medium">Email them a sign-in link now</span>
+                <span className="block text-xs text-neutral-mid">A one-time link, so they can get in without a password. Untick it if you would rather pass the details on yourself.</span>
+              </span>
+            </label>
+
             <div className="flex justify-end gap-3 pt-1">
               <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
               <Button type="submit" disabled={loading}>
@@ -790,6 +807,11 @@ export function InviteModal({
           </form>
         ) : step === 'credentials' && creds ? (
           <>
+            {linkNote && (
+              <div className={`mb-4 rounded-md border px-4 py-3 text-sm ${linkNote.ok ? 'border-green-200 bg-green-50 text-green-800' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
+                {linkNote.text}
+              </div>
+            )}
             {onboardingNote && (
               <div className="mb-4 rounded-md border border-teal/20 bg-teal-light/30 px-4 py-3 text-sm text-neutral-dark">
                 {onboardingNote}

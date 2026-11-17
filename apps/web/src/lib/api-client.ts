@@ -529,8 +529,8 @@ export function createApiClient(token: string) {
           bookings: number; people: number; days: number; cost_pence: number | null; active_now: number
           by_agency: Array<{ agency: string; bookings: number; days: number; cost_pence: number | null }>
         }>(`/users/agency/spend${since ? `?since=${encodeURIComponent(since)}` : ''}`, token),
-      invite: (data: { email: string; name: string; role: string; job_role?: string; specialisms?: string[]; audit_template_ids?: string[]; phone_number?: string; shift_type?: 'any' | 'day' | 'night'; training_hourly_rate?: number | null; first_language?: string; second_language?: string; comms_always_first_language?: boolean; allow_language_switching?: boolean; new_starter?: boolean; is_agency?: boolean; agency_name?: string; agency_start?: string; agency_end?: string; agency_day_rate_pence?: number | null }) =>
-        apiFetch<{ user: any; temp_password: string; contact: StaffContact; onboarding_enrolled?: number; new_starter?: boolean }>('/users/invite', token, {
+      invite: (data: { send_login_link?: boolean; email: string; name: string; role: string; job_role?: string; specialisms?: string[]; audit_template_ids?: string[]; phone_number?: string; shift_type?: 'any' | 'day' | 'night'; training_hourly_rate?: number | null; first_language?: string; second_language?: string; comms_always_first_language?: boolean; allow_language_switching?: boolean; new_starter?: boolean; is_agency?: boolean; agency_name?: string; agency_start?: string; agency_end?: string; agency_day_rate_pence?: number | null }) =>
+        apiFetch<{ user: any; temp_password: string; contact: StaffContact; onboarding_enrolled?: number; new_starter?: boolean; login_link_emailed?: boolean; login_link_error?: string | null }>('/users/invite', token, {
           method: 'POST',
           body:   JSON.stringify(data),
         }),

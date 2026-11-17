@@ -245,6 +245,7 @@ const InviteSchema = z.object({
   second_language: z.string().length(3).optional(),
   comms_always_first_language: z.boolean().optional(),
   allow_language_switching: z.boolean().optional(),
+  send_login_link: z.boolean().optional(),   // true: email them a one-time sign-in link now (the add staff form ticks this; the spreadsheet import does not)
   new_starter:     z.boolean().optional(),   // true → auto-enrol into matching onboarding flows
   // ─── Agency booking ─────────────────────────────────────────────────────────
   // A flag, not a different kind of person: they read policies and answer training exactly as
@@ -472,6 +473,24 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
     }
   }
 
+  // Optionally email them a one-time sign-in link straight away, so a new person gets in without the manager passing on a password.
+  let loginLinkEmailed = false
+  let loginLinkError: string | null = null
+  if (parsed.data.send_login_link) {
+    try {
+      await freeStaffGuard(tenantId, 'email')
+      if (!process.env.SENDGRID_API_KEY) throw new Error('Email is not set up on this server.')
+      const url = await createLoginLink(user.id, tenantId, 14 * 24 * 60 * 60 * 1000)
+      await sendStaffLoginLinkEmail({ to: user.email as string, name: user.name as string, link: url, expiresMins: 14 * 24 * 60 })
+      loginLinkEmailed = true
+    } catch (e: any) {
+      console.error('[invite] sign-in link email failed', e)
+      loginLinkError = e instanceof PlanLimitError
+        ? e.message
+        : 'The account was created, but we could not email the sign-in link. Use Re-send login from their menu, or share the details below.'
+    }
+  }
+
   const contactTenant = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
     select: { slug: true, twilio_whatsapp_number: true },
@@ -480,6 +499,8 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
   ok(res, {
     user,
     temp_password:      tempPassword,
+    login_link_emailed: loginLinkEmailed,
+    login_link_error:   loginLinkError,
     onboarding_enrolled: onboardingEnrolled,
     new_starter:        !!new_starter,
     contact:            contactTenant ? tenantContact(contactTenant) : { login_url: LOGIN_URL, inbound_email: null, whatsapp_number: null },

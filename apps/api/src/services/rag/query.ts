@@ -1103,6 +1103,7 @@ At the end of your response, append this comment (do not display it to the user)
 
   if (selectedCategory === 'resident') {
     const { residentsEnabled, displayName, THIS_IS_ME_PREFIX } = await import('../../lib/residents')
+    const { tidyResidentSource, formatResidentAnswer } = await import('../../lib/resident-format')
     const enabled = await residentsEnabled(tenantId)
     const norm = (s: string) => (s || '').toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ').trim()
     const q = ` ${norm(queryText)} `
@@ -1162,6 +1163,7 @@ Rules:
 4. Use the name the resident likes to be called. Where a detail came from family it may end with a name in brackets such as (Sally, daughter); you can say who it came from.
 5. These profiles are about who the person is, not their care record. For anything clinical, such as medication, diet texture, mobility, risks or safeguarding, say the care plan and the person's nurse or senior take priority, and do not give clinical advice.
 6. Be warm, brief and practical: lead with the answer, then a few short bullet points if useful. Never recite the whole profile unless asked.
+7. The profiles may be written with bullet characters, dashes, asterisks or numbers. Never copy those characters. Write every list as <ul><li> items (or <ol><li> if the order matters), every heading as <p><strong>Heading</strong></p>, and never use markdown such as ** or *.
 
 Format responses as clean, readable HTML using <p>, <ul>, <li>, <strong> tags.
 
@@ -1184,7 +1186,7 @@ At the end of your response, append this comment (do not display it to the user)
     }
     if (entries.length > 0) {
       parts.push('[RESIDENT PROFILES]')
-      for (const e of entries) parts.push(`--- ${e.source_name} ---\n${e.answer}`)
+      for (const e of entries) parts.push(`--- ${e.source_name} ---\n${tidyResidentSource(e.answer)}`)
     }
 
     const context = parts.join('\n\n')
@@ -1194,7 +1196,9 @@ At the end of your response, append this comment (do not display it to the user)
       langResolution.requestedLanguage,
     )
     const responseHtml = await generateAnswer(onText, systemPrompt, conversationHistory, context, { maxTokens: 2048, temperature: 0.2 })
-    const { html: cleanedHtml, suggestions } = extractSuggestions(responseHtml)
+    const { html: extracted, suggestions } = extractSuggestions(responseHtml)
+    // The assistant sometimes copies the bullets and asterisks it was given: always hand the hub clean HTML.
+    const cleanedHtml = formatResidentAnswer(extracted)
 
     const residentNoMatch = entries.length === 0
     const savedQueryId = await saveQueryRecord({

@@ -86,9 +86,10 @@ export function CampaignDetail({ id, token, eventLabels, onClose, onEdit, onChan
   const b = c ? banner(c) : null
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-light" role="dialog" aria-modal="true" aria-label="Incentive details">
-      <div className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 backdrop-blur">
-        <div ref={topRef} tabIndex={-1} className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-3 px-4 py-4 focus:outline-none sm:px-6">
+    <div className="fixed inset-0 z-[60] flex items-stretch justify-center bg-black/50 md:p-6" onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
+     <div className="flex h-full w-full max-w-6xl flex-col overflow-hidden bg-white shadow-2xl md:rounded-2xl" role="dialog" aria-modal="true" aria-label="Incentive details">
+      <div className="shrink-0 border-b border-gray-200 bg-white">
+        <div ref={topRef} tabIndex={-1} className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-4 focus:outline-none sm:px-6">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <h2 className="break-words text-xl font-bold text-neutral-dark sm:text-2xl">{c?.name ?? 'Incentive'}</h2>
@@ -107,7 +108,8 @@ export function CampaignDetail({ id, token, eventLabels, onClose, onEdit, onChan
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+      <div className="min-h-0 flex-1 overflow-y-auto bg-neutral-light px-4 py-6 sm:px-6 sm:py-8">
+       <div className="mx-auto max-w-5xl">
         {q.loading && !d && <p className="py-10 text-center text-sm text-neutral-mid" role="status">Loading...</p>}
         {q.error && !d && <ErrorBox>{q.error}</ErrorBox>}
 
@@ -255,7 +257,9 @@ export function CampaignDetail({ id, token, eventLabels, onClose, onEdit, onChan
             </Section>
           </div>
         )}
+       </div>
       </div>
+     </div>
 
       {confirm === 'submit' && c && (
         <ConfirmDialog title="Submit for approval" confirmLabel="Submit" onClose={() => setConfirm(null)}

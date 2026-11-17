@@ -255,7 +255,7 @@ function LockedFeatureArt({ feature }: { feature: string }) {
   return (
     <div className="relative hidden w-[40%] shrink-0 bg-teal-light/30 md:block">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={`/images/locked/${slug}.webp`} alt="" className="absolute inset-0 h-full w-full object-cover" onError={() => setFailed(true)} />
+      <img src={`/images/locked/${slug}.webp?v=2`} alt="" className="absolute inset-0 h-full w-full object-cover" onError={() => setFailed(true)} />
     </div>
   )
 }

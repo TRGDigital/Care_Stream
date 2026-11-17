@@ -29,6 +29,8 @@ knowledgeRouter.get('/', async (req: Request, res: Response) => {
   const sourceId  = req.query.source_id as string | undefined
   const where: Record<string, unknown> = {}
   if (sourceId) where.source_id = sourceId
+  // "This is me" resident profiles feed the assistant through knowledge entries, but they are managed from Residents, not here.
+  where.NOT = { source_name: { startsWith: 'This is me:' } }
 
   const [entries, total] = await Promise.all([
     (prisma as any).knowledgeEntry.findMany({
@@ -127,6 +129,10 @@ knowledgeRouter.patch('/:id', async (req: Request, res: Response) => {
     err(res, 'NOT_FOUND', 'Knowledge entry not found', 404)
     return
   }
+  if (String(existing.source_name ?? '').startsWith('This is me:')) {
+    err(res, 'FORBIDDEN', 'This comes from a resident profile. Edit it in Residents.', 403)
+    return
+  }
   if (existing.source_type !== 'manual') {
     err(res, 'FORBIDDEN', 'Policy-generated entries cannot be edited manually. Re-generate from the policy instead.', 403)
     return
@@ -163,6 +169,10 @@ knowledgeRouter.delete('/:id', async (req: Request, res: Response) => {
   })
   if (!existing) {
     err(res, 'NOT_FOUND', 'Knowledge entry not found', 404)
+    return
+  }
+  if (String(existing.source_name ?? '').startsWith('This is me:')) {
+    err(res, 'FORBIDDEN', 'This comes from a resident profile. Manage it in Residents.', 403)
     return
   }
 

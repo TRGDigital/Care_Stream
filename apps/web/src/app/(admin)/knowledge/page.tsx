@@ -8,9 +8,10 @@ import { persistentCache } from '@/lib/page-cache'
 
 // Lazy-loaded: only fetched when the user opens the "Add entry" dialog.
 const AddEntryModal = dynamic(() => import('@/components/admin/knowledge/add-entry-modal').then(m => m.AddEntryModal), { ssr: false })
+const ResidentsOverlay = dynamic(() => import('@/components/admin/residents-overlay').then(m => m.ResidentsOverlay), { ssr: false })
 import {
   BookOpen, Plus, Sparkles, Trash2, Pencil, X, Check,
-  Loader2, ChevronDown, ChevronRight, ShieldCheck, Clock, UserRound,
+  Loader2, ChevronDown, ChevronRight, ShieldCheck, Clock, UserRound, Users,
 } from 'lucide-react'
 import { KNOWLEDGE_CATEGORY_OPTIONS, KNOWLEDGE_CATEGORY_LABELS, categoryAccent, isResidentCategory } from '@/lib/knowledge-categories'
 
@@ -91,6 +92,7 @@ export default function KnowledgePage() {
   const [loading, setLoading]       = useState(!k0)
   const [generating, setGenerating] = useState(false)
   const [showAdd, setShowAdd]       = useState(false)
+  const [showResidents, setShowResidents] = useState(false)
   const [editId, setEditId]         = useState<string | null>(null)
   const [error, setError]           = useState<string | null>(null)
 
@@ -172,6 +174,13 @@ export default function KnowledgePage() {
               Add entry
             </button>
             <button
+              onClick={() => setShowResidents(true)}
+              className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-neutral-dark hover:bg-neutral-light"
+            >
+              <Users size={14} />
+              Residents
+            </button>
+            <button
               onClick={handleGenerateAll}
               disabled={generating}
               className="flex items-center gap-2 rounded-lg bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-dark disabled:opacity-50"
@@ -185,7 +194,7 @@ export default function KnowledgePage() {
           Your knowledge base is the library of approved Q&amp;A pairs that power every response your staff receive from CareStreamAI, across both chat and email. Entries are generated automatically from your uploaded policies, pre-loaded from CareStreamAI&apos;s UK care regulations library, or added manually by your admin team. The more complete and approved your knowledge base, the richer and more accurate the answers CareStreamAI can provide, giving every staff member instant access to the right information whenever they need it.
         </p>
         <p className="mt-2 text-sm text-neutral-mid leading-relaxed">
-          You can also add <strong className="text-neutral-dark">resident</strong> entries: what a person likes to be called, their background, the food they enjoy, the routine that settles them at night. Choose the Resident category when you add an entry and it is stored apart from your policies, coloured so you can see it at a glance. Once you have approved one, your staff can ask about that resident by name in the hub, which is a fast way for a new starter or a bank member to learn what the regular team already knows.
+          Use <strong className="text-neutral-dark">Residents</strong> to keep what a person likes to be called, their background, the food they enjoy and the routine that settles them at night. You can also ask their family and friends to add to it, and you approve every answer first. Your staff can then ask about that resident by name in the hub, which is a fast way for a new starter or a bank member to learn what the regular team already knows.
         </p>
         <div className="mt-3 flex items-center gap-4">
           <p className="text-xs text-neutral-mid">{total} Q&amp;A pairs in your knowledge base.</p>
@@ -285,6 +294,10 @@ export default function KnowledgePage() {
             </section>
           )}
         </div>
+      )}
+
+      {showResidents && session?.accessToken && (
+        <ResidentsOverlay token={session.accessToken} userId={userId} onClose={() => setShowResidents(false)} />
       )}
 
       {showAdd && (

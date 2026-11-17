@@ -23,6 +23,7 @@ import { timingSafeEqual } from 'crypto'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { runKnowledgeGapDailyJob } from '../services/knowledge-gaps/digest'
+import { runResidentRetentionReminders } from '../services/residents/retention'
 import { sendDailyAuditReminders } from '../services/audits/reminders'
 import { sendLicenceRenewalReminders } from '../services/training/licence-renewals'
 import { runOfferChanges } from '../services/offers'
@@ -128,6 +129,10 @@ cronRouter.get('/knowledge-gaps', (req, res) =>
 
 // Daily: email a tenant's admins when policies reach their review date. Several policies due on
 // the same day go in ONE email. Fires once per review cycle (re-armed when a new date is set).
+// Daily: remind the archive admins when an archived "This is me" profile reaches the end of its retention period.
+cronRouter.get('/resident-retention', (req, res) =>
+  job('resident-retention', req, res, () => runResidentRetentionReminders()))
+
 cronRouter.get('/policy-review-reminders', (req, res) =>
   job('policy-review-reminders', req, res, () => runPolicyReviewReminders({ force: req.query.force === '1' })))
 

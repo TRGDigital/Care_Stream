@@ -1,9 +1,10 @@
 // Knowledge-base category options — shared by the knowledge page and its
 // (lazy-loaded) add-entry modal.
 
+// 'resident' is no longer offered when adding an entry (resident profiles live in the Residents overlay), but
+// existing entries tagged resident still display with their label and accent.
 export const KNOWLEDGE_CATEGORY_OPTIONS: { value: string; label: string }[] = [
   { value: 'general',             label: 'General'                },
-  { value: 'resident',            label: 'Resident'               },
   { value: 'business_continuity', label: 'Business Continuity'    },
   { value: 'policies_procedures', label: 'Policies & Procedures'  },
   { value: 'hr_staff',            label: 'HR & Staff Handbook'    },
@@ -13,7 +14,7 @@ export const KNOWLEDGE_CATEGORY_OPTIONS: { value: string; label: string }[] = [
 ]
 
 export const KNOWLEDGE_CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
-  KNOWLEDGE_CATEGORY_OPTIONS.map(o => [o.value, o.label]),
+  [...KNOWLEDGE_CATEGORY_OPTIONS, { value: 'resident', label: 'Resident' }].map(o => [o.value, o.label]),
 )
 
 // Resident knowledge is about a named person rather than a procedure, so it is

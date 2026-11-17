@@ -23,9 +23,11 @@ type AuditEventType =
   | 'login_failed'
   | 'account_locked'
   | 'platform_viewed_staff_record'
+  | 'resident_created' | 'resident_updated' | 'resident_archived' | 'resident_archive_confirmed' | 'resident_retention_changed'
+  | 'resident_exported' | 'resident_deleted' | 'resident_family_invited' | 'resident_contribution_decided' | 'resident_archive_viewed'
   | 'platform_viewed_staff_chats'      // TRG opened a staff member's chats (full text) in the platform console   // TRG looked at a staff member's activity record from the platform console
 
-type AuditEntityType = 'policy' | 'user' | 'tenant' | 'query'
+type AuditEntityType = 'policy' | 'user' | 'tenant' | 'query' | 'resident'
 
 interface AuditParams {
   tenant_id?: string | null

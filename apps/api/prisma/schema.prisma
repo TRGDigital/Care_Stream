@@ -3260,3 +3260,70 @@ model UserSignIn {
   @@index([tenant_id, at(sort: Desc)])
   @@map("user_sign_ins")
 }
+
+
+// ─── "This is me" resident profiles (Professional and Enterprise) ─────────────────
+// See prisma/sql/2026-11-17_resident_profiles.sql. No relations on purpose (same as UserSignIn): the tables can be added
+// before or after the code ships, and a missing table is handled in routes/residents.ts.
+model Resident {
+  id              String    @id @default(uuid())
+  tenant_id       String
+  first_name      String
+  last_name       String
+  preferred_name  String?
+  dob             DateTime? @db.Date
+  room            String?
+  status          String    @default("living")   // living | left | deceased
+  status_at       DateTime? @db.Date
+  status_note     String?
+  sections        Json      @default("{}")
+  entry_ids       Json      @default("[]")
+  archive         Json?
+  archived_at     DateTime?
+  retention_until DateTime? @db.Date
+  retention_notified_at DateTime?
+  created_by      String?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  @@index([tenant_id, status])
+  @@map("residents")
+}
+
+model ResidentInvite {
+  id           String    @id @default(uuid())
+  tenant_id    String
+  resident_id  String
+  email        String
+  name         String
+  relationship String
+  token_hash   String    @unique
+  sent_at      DateTime  @default(now())
+  expires_at   DateTime
+  opened_at    DateTime?
+  submitted_at DateTime?
+  revoked_at   DateTime?
+  created_by   String?
+
+  @@index([resident_id])
+  @@map("resident_invites")
+}
+
+model ResidentContribution {
+  id               String    @id @default(uuid())
+  tenant_id        String
+  resident_id      String
+  invite_id        String
+  contributor_name String
+  relationship     String
+  section_key      String
+  text             String
+  status           String    @default("pending")   // pending | approved | rejected
+  submitted_at     DateTime  @default(now())
+  decided_at       DateTime?
+  decided_by       String?
+  approved_text    String?
+
+  @@index([resident_id, status])
+  @@map("resident_contributions")
+}

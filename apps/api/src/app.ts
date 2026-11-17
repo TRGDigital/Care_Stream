@@ -62,6 +62,8 @@ import { policyShopPublicRouter } from './routes/policy-shop-public'
 import { agentActionsRouter } from './routes/agent-actions'
 import { cronRouter } from './routes/cron'
 import { contentRoutineRouter } from './routes/content-routine'
+import { publicFamilyRouter } from './routes/residents-public'
+import { residentsRouter } from './routes/residents'
 import { standardTrainingRouter } from './routes/standard-training'
 import { standardProgrammesRouter } from './routes/standard-programmes'
 import { programmesRouter } from './routes/programmes'
@@ -192,6 +194,9 @@ app.use('/public/site-pages', publicPagesRouter)
 // Public marketing collections (ecommerce-style SEO pages) — published only, no auth. BEFORE requireAuth.
 app.use('/public/collections', publicCollectionsRouter)
 
+// "This is me": the private family form (token link, no sign in). BEFORE requireAuth.
+app.use('/public/family', publicFamilyRouter)
+
 // Public DB-driven feature pages (the /pricing feature list) — published only, no auth. BEFORE requireAuth.
 app.use('/public/feature-pages', publicFeaturePagesRouter)
 
@@ -235,6 +240,7 @@ app.use('/settings', settingsRouter)
 app.use('/policy-purchases', policyPurchasesRouter)
 app.use('/translation-suggestions', translationSuggestionsRouter)
 app.use('/knowledge', knowledgeRouter)
+app.use('/residents', residentsRouter)
 app.use('/sites', sitesRouter)
 app.use('/onboarding', onboardingRouter)
 app.use('/training', trainingRouter)

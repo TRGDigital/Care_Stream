@@ -22,6 +22,8 @@ import { ProgressView } from '@/components/hub/progress-view'
 import { MyActionsView } from '@/components/hub/my-actions-view'
 import { SuggestTranslation } from '@/components/hub/suggest-translation'
 import { SupervisionsHubView } from '@/components/hub/supervisions-view'
+import { ThisIsMeView } from '@/components/hub/this-is-me-view'
+import { createResidentsClient, type HubResident, type ResidentSectionDef } from '@/lib/residents-api'
 import { DisplaySettings } from '@/components/hub/display-settings'
 import Link from 'next/link'
 import { createApiClient, apiAssetUrl, type Citation } from '@/lib/api-client'
@@ -32,7 +34,7 @@ import { persistentCache, hubKey, wasHardReload } from '@/lib/page-cache'
 // localStorage before first paint so cached values never flash empty.
 const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 import { Spinner } from '@/components/ui/spinner'
-import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, CalendarDays, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, Lightbulb, LifeBuoy, ListChecks, Menu, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, Volume2, X, XCircle, Award, AlertTriangle, Circle, Clock } from 'lucide-react'
+import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, Brain, CalendarDays, ChevronDown, ChevronUp, CheckCircle2, ClipboardCheck, FileText, Globe, GraduationCap, Heart, Lightbulb, LifeBuoy, ListChecks, Menu, MessageSquare, Mic, MicOff, Plus, RefreshCw, Send, ShieldCheck, Sparkles, Square, ThumbsDown, ThumbsUp, Trash2, TrendingUp, Users, Volume2, X, XCircle, Award, AlertTriangle, Circle, Clock } from 'lucide-react'
 import { useSpeech } from '@/hooks/useSpeech'
 import { bcp47 } from '@/lib/locale'
 
@@ -351,7 +353,7 @@ function ChatPageInner() {
   const { data: session }                              = useSession()
   const userId                                         = session?.user?.email ?? 'guest'
 
-  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'diplomas' | 'cqc' | 'progress' | 'f2f' | 'supervisions' | 'policies' | 'audit-approvals' | 'actions'>('chat')
+  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'diplomas' | 'cqc' | 'progress' | 'f2f' | 'supervisions' | 'this-is-me' | 'policies' | 'audit-approvals' | 'actions'>('chat')
   const [policyApprovals, setPolicyApprovals]          = useState<{ is_manager: boolean; count: number }>({ is_manager: false, count: 0 })
   const [dueReviewCount, setDueReviewCount]            = useState(0)   // policies past their review date (admins)
   const [auditApprovals, setAuditApprovals]            = useState<{ is_manager: boolean; count: number }>({ is_manager: false, count: 0 })
@@ -403,6 +405,8 @@ function ChatPageInner() {
   // "new chat" topic tiles can grey out ones with nothing uploaded. null = not yet loaded.
   const [availableCats, setAvailableCats]               = useState<string[] | null>(null)
   const [hasResidents,  setHasResidents]                = useState(false)
+  const [meDefs,        setMeDefs]                      = useState<ResidentSectionDef[]>([])
+  const [meProfiles,    setMeProfiles]                  = useState<HubResident[]>([])  // 'This is me' profiles (approved, living residents only)
   // Per-conversation second-language switch: while on, chat answers (and any policy
   // the staff opens from a citation) come back in their 2nd language. Resets to their
   // first language whenever they start a new chat/discussion.
@@ -601,6 +605,23 @@ function ChatPageInner() {
 
   // Warm the view caches in the background shortly after the hub opens, so the
   // first click of a view paints instantly instead of fetching on click. Gated to
+  // "This is me" resident profiles. Deferred so it never competes with the first paint; cached per user so the nav
+  // item appears at once on later visits. The API answers enabled:false on plans without the feature.
+  useEffect(() => {
+    if (!session?.accessToken || trainingOnly || freeTier) { setMeProfiles([]); return }
+    const key = hubKey('this-is-me', userId)
+    const cached = persistentCache.get<HubResident[]>(key)
+    if (cached) setMeProfiles(cached)
+    const cachedDefs = persistentCache.get<ResidentSectionDef[]>(hubKey('this-is-me-defs', userId))
+    if (cachedDefs) setMeDefs(cachedDefs)
+    const t = setTimeout(() => {
+      createResidentsClient(session.accessToken).hub()
+        .then(r => { const list = r.enabled ? (r.residents ?? []) : []; setMeProfiles(list); persistentCache.set(key, list); if (r.section_defs?.length) { setMeDefs(r.section_defs); persistentCache.set(hubKey('this-is-me-defs', userId), r.section_defs) } })
+        .catch(() => {})
+    }, 800)
+    return () => clearTimeout(t)
+  }, [session?.accessToken, userId, trainingOnly, freeTier])
+
   // views whose persistent cache is still COLD (never loaded on this device) — once
   // warm, this stays silent and the view's own on-click revalidation keeps it
   // fresh, so we don't add background load on every hub open. Deferred so it never
@@ -1042,6 +1063,15 @@ function ChatPageInner() {
               Supervisions
             </button>
           )}
+          {meProfiles.length > 0 && !isReviewer && !hubLocked('this-is-me') && (
+            <button
+              onClick={() => setView('this-is-me')}
+              className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'this-is-me' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+            >
+              <Heart size={15} />
+              This is me
+            </button>
+          )}
           {!isReviewer && (
           <button
             onClick={() => !hubLocked('cqc') && setView('cqc')}
@@ -1282,6 +1312,11 @@ function ChatPageInner() {
         {/* Supervisions & appraisals (Enterprise) */}
         {view === 'supervisions' && canSupervisions && session?.accessToken && (
           <SupervisionsHubView token={session.accessToken} userId={userId} />
+        )}
+
+        {/* This is me: resident profiles (Professional and Enterprise) */}
+        {view === 'this-is-me' && meProfiles.length > 0 && !hubLocked('this-is-me') && session?.accessToken && (
+          <ThisIsMeView residents={meProfiles} defs={meDefs} />
         )}
 
         {/* F2F Training (admin-only) */}

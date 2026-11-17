@@ -2235,3 +2235,104 @@ export async function sendContentDraftsEmail(opts: {
     html,
   })
 }
+
+
+// ─── "This is me" resident profiles ────────────────────────────────────────────
+function residentFrom(name: string) {
+  const fromEmail = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  return { email: fromEmail, name }
+}
+const escResident = (s: any) => String(s ?? '').replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c] as string))
+const residentButton = (href: string, label: string) => `
+  <div style="text-align:center;margin:0 0 28px">
+    <a href="${href}" style="display:inline-block;padding:14px 32px;background:${PURPLE};color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">${escResident(label)}</a>
+  </div>
+  <p style="color:#9ca3af;font-size:12px;margin:0 0 8px">If the button does not work, copy and paste this link into your browser:<br><span style="color:${PURPLE}">${escResident(href)}</span></p>`
+
+/** To a friend or family member: a private link to a short form about the resident. Throws on a send failure so the caller can say so. */
+export async function sendResidentFamilyInviteEmail(opts: {
+  to: string; inviteeName: string; residentName: string; homeName: string; senderName: string; link: string; days: number
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set, skipping resident family invite'); return }
+  const first = (opts.inviteeName || '').trim().split(' ')[0] || 'there'
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hello ${escResident(first)},</p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px">
+      ${escResident(opts.senderName)} at <strong>${escResident(opts.homeName)}</strong> would love your help getting to know <strong>${escResident(opts.residentName)}</strong> a little better.
+    </p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px">
+      The form takes about five minutes. It asks the kind of things that help the team care for ${escResident(opts.residentName)} as the person they are: favourite things, routines, what helps when they are worried, the people who matter to them. Answer as many or as few as you like.
+    </p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 22px">
+      Your answers go to the manager at ${escResident(opts.homeName)}, who reads them first. They are only shared with the care team once the manager has approved them. Please do not include medical details or anything private you would not want the team to know.
+    </p>
+    ${residentButton(opts.link, 'Tell us about ' + opts.residentName)}
+    <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0">This link is just for you and stops working after ${opts.days} days. If you were not expecting this email, you can ignore it.</p>
+    ${emailFooter(opts.homeName)}
+  `)
+  await sgMail.send({ to: opts.to, from: residentFrom('CareStream'), subject: `Help us get to know ${opts.residentName}`, html })
+}
+
+/** To the admin who invited a family member: they have replied, answers are waiting for approval. */
+export async function sendResidentFamilySubmissionEmail(opts: {
+  to: string; adminName: string; homeName: string; residentName: string; contributorName: string; relationship: string; count: number; link: string
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set, skipping resident submission email'); return }
+  const first = (opts.adminName || '').trim().split(' ')[0] || 'there'
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 16px">Hi ${escResident(first)},</p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px">
+      <strong>${escResident(opts.contributorName)}</strong> (${escResident(opts.relationship)}) has added ${opts.count} ${opts.count === 1 ? 'answer' : 'answers'} about <strong>${escResident(opts.residentName)}</strong>.
+      They are waiting for you to read and approve. Staff cannot see them until you do.
+    </p>
+    ${residentButton(opts.link, 'Review the answers')}
+    ${emailFooter(opts.homeName)}
+  `)
+  await sgMail.send({ to: opts.to, from: residentFrom('CareStream'), subject: `${opts.contributorName} has added to ${opts.residentName}'s profile`, html })
+}
+
+/** To the admins who hold the resident archive permission: someone has died or moved on and the archive needs actioning. */
+export async function sendResidentArchiveTaskEmail(opts: {
+  to: string[]; homeName: string; residentName: string; status: 'deceased' | 'left'; statusDate: string; retentionUntil: string; link: string
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set, skipping resident archive email'); return }
+  if (!opts.to.length) return
+  const what = opts.status === 'deceased' ? 'has died' : 'has moved on'
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 12px">An archive needs your attention</p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px">
+      <strong>${escResident(opts.residentName)}</strong> ${what} (${escResident(opts.statusDate)}). Their "This is me" profile has been taken out of the hub and the assistant, and any family links have been cancelled.
+    </p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 8px">Please action the archive in the Knowledge base, under Residents, then Archived:</p>
+    <ul style="color:#374151;font-size:14px;line-height:1.7;margin:0 0 18px;padding-left:20px">
+      <li>Confirm the archive and whether a memory book was shared with the family</li>
+      <li>Remove the family email addresses once they are no longer needed</li>
+      <li>Keep a copy if the home needs one (the profile is kept until ${escResident(opts.retentionUntil)}, seven years from archiving, then it should be deleted)</li>
+    </ul>
+    ${residentButton(opts.link, 'Open the archive')}
+    ${emailFooter(opts.homeName)}
+  `)
+  await sgMail.send({ to: opts.to, from: residentFrom('CareStream'), subject: `Archive needed: ${opts.residentName}`, html })
+}
+
+/** To the archive admins: retention dates that are near or have passed. */
+export async function sendResidentRetentionEmail(opts: {
+  to: string[]; homeName: string; link: string
+  items: Array<{ name: string; retentionUntil: string; overdue: boolean }>
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set, skipping resident retention email'); return }
+  if (!opts.to.length || !opts.items.length) return
+  const rows = opts.items.map(i => `<li style="margin:0 0 6px"><strong>${escResident(i.name)}</strong>: ${i.overdue ? 'retention ended' : 'retention ends'} ${escResident(i.retentionUntil)}</li>`).join('')
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 12px">Archived resident profiles to review</p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 12px">These archived profiles have reached, or are close to, the end of their retention period. Please delete them if they are no longer needed, or extend the date.</p>
+    <ul style="color:#374151;font-size:14px;line-height:1.7;margin:0 0 20px;padding-left:20px">${rows}</ul>
+    ${residentButton(opts.link, 'Open the archive')}
+    ${emailFooter(opts.homeName)}
+  `)
+  await sgMail.send({ to: opts.to, from: residentFrom('CareStream'), subject: `Archived profiles to review (${opts.items.length})`, html })
+}

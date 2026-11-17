@@ -409,3 +409,39 @@
 .hpage-v2 .review figcaption{display:flex;flex-direction:column;gap:2px;font-size:.9rem;padding-top:18px;border-top:1px solid var(--line)}
 .hpage-v2 .review figcaption b{color:var(--ink);font-weight:700}
 .hpage-v2 .review figcaption span{color:var(--muted)}
+
+
+/* ── Staff incentives banner (light, above Policy intelligence) ───────────────────────────────── */
+.hpage-v2 .incband{padding:8px 0 24px}
+.hpage-v2 .incband-in{display:flex;align-items:center;gap:28px;flex-wrap:wrap;padding:30px 34px;border-radius:20px;
+    background:linear-gradient(105deg,#FFF6E4 0%,#F6EFFC 60%,#FFFFFF 100%);border:1px solid var(--line);
+    box-shadow:0 1px 2px rgba(23,18,31,.04),0 14px 36px rgba(23,18,31,.06)}
+.hpage-v2 .incband-ico{flex:0 0 auto;width:64px;height:64px;border-radius:18px;background:#D08A15;color:#fff;display:grid;place-items:center}
+.hpage-v2 .incband-ico svg{width:34px;height:34px}
+.hpage-v2 .incband-copy{flex:1 1 440px;min-width:0;text-align:left}
+.hpage-v2 .incband-badge{display:inline-block;margin-bottom:10px;padding:4px 12px;border-radius:999px;background:#FFE3A6;color:#6B4300;
+    font-size:.74rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+.hpage-v2 .incband-copy h2{font-size:clamp(1.5rem,2.6vw,2.1rem);line-height:1.15;letter-spacing:-.025em;margin:0 0 8px;text-wrap:balance}
+.hpage-v2 .incband-copy p{margin:0;max-width:64ch;font-size:1rem;line-height:1.55;color:var(--ink-2)}
+.hpage-v2 .incband-actions{display:flex;gap:12px;flex-wrap:wrap;flex:0 0 auto}
+@media (max-width:720px){
+  .hpage-v2 .incband-in{padding:24px 20px;gap:18px}
+  .hpage-v2 .incband-actions{width:100%}
+  .hpage-v2 .incband-actions .pill{flex:1 1 150px;justify-content:center;text-align:center}
+}
+
+/* ── A showcase slide that steps through a few screens ───────────────────────────────────────── */
+.hpage-v2 .shot.steps{position:relative}
+.hpage-v2 .shot .stepimg{display:none}
+.hpage-v2 .shot .stepimg.on{display:block}
+.hpage-v2 .shot .stepbar{position:absolute;left:0;right:0;bottom:14px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:0 12px}
+.hpage-v2 .shot .stepbar button{font:inherit;font-size:.78rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;
+    padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.94);color:var(--ink-2);
+    box-shadow:0 2px 8px rgba(23,18,31,.1)}
+.hpage-v2 .shot .stepbar button b{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:.7rem;background:var(--ground-2);color:var(--muted)}
+.hpage-v2 .shot .stepbar button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.hpage-v2 .shot .stepbar button.on b{background:#fff;color:var(--ink)}
+@media (max-width:620px){
+  .hpage-v2 .shot .stepbar{position:static;padding:10px 8px 12px;background:var(--ground-2)}
+  .hpage-v2 .shot .stepbar button{padding:6px 10px;font-size:.72rem}
+}

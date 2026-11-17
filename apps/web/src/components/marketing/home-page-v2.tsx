@@ -86,8 +86,25 @@ const SHOWCASE: Slide[] = ([
   ['Staff Onboarding', '#3B82C4', '/uses/staff-onboarding', 17,
    'Step-by-step induction flows that take a new starter from day one to signed off, with the reading acknowledged.',
    <I24 key="i"><circle cx="9" cy="9" r="3.1" stroke="currentColor" strokeWidth="1.7" /><circle cx="16.2" cy="10.2" r="2.5" stroke="currentColor" strokeWidth="1.7" /><path d="M3.6 19.2c.7-2.9 2.8-4.3 5.4-4.3s4.7 1.4 5.4 4.3" {...sc} strokeWidth="1.7" /></I24>],
-] as [string, string, string, number, string, React.ReactNode][]).map(([title, colour, href, n, body, icon]) => ({
-  title, colour, href, body, icon, image: `/images/index/${n}.webp`,
+  ['Staff Incentives', '#D08A15', '/features/staff-incentives', 22,
+   'Monthly points for the training your team completes, rewards you choose, and a care manager approving every one. Staff only see their own.',
+   <I24 key="i"><path d="M7.5 3.5h9v6a4.5 4.5 0 0 1-9 0z" {...st} strokeWidth="1.7" /><path d="M7.5 5.5H4.5v1.8a3 3 0 0 0 3 3M16.5 5.5h3v1.8a3 3 0 0 1-3 3M12 14v3.2M8.5 20h7" {...scj} strokeWidth="1.7" /></I24>],
+  ['Residents · This is me', '#D6336C', '/features/resident-profiles-this-is-me', 23,
+   'What makes each resident who they are, added to by their family and approved by you, then answered by the hub chat in seconds.',
+   <I24 key="i"><path d="M12 19.5S4.2 15 4.2 9.4A4 4 0 0 1 12 8a4 4 0 0 1 7.8 1.4c0 5.6-7.8 10.1-7.8 10.1z" {...st} strokeWidth="1.7" /></I24>,
+   [
+     { src: '/images/index/23.webp', label: 'Invite family', alt: 'Adding a family member to a resident profile in CareStream' },
+     { src: '/images/index/24.webp', label: 'Family add what only they know', alt: 'The private form a resident\'s family member fills in, with one gentle question for each section' },
+     { src: '/images/index/25.webp', label: 'Staff just ask', alt: 'A carer asking the hub chat what a resident likes and getting a short answer from the approved profile' },
+   ]],
+  ['CPD Training · Free', '#1F8A5B', '/staff-training', 20,
+   'CPD certified courses for every member of staff, free on every plan, with the Care Certificate and the annual refreshers.',
+   <I24 key="i"><circle cx="12" cy="9" r="5" stroke="currentColor" strokeWidth="1.7" /><path d="m9 13.5-1.5 6 4.5-2.2 4.5 2.2-1.5-6" {...scj} strokeWidth="1.7" /></I24>],
+  ['100+ Free Audits', '#177A50', '/care-audits', 21,
+   'Run any of our 100+ audit templates with your team, score each section and record the findings and actions, free on every plan.',
+   <I24 key="i"><path d="M6 4h12v16H6z" stroke="currentColor" strokeWidth="1.7" /><path d="m9 9.5 1.6 1.6 3-3M9 15h6" {...scj} strokeWidth="1.7" /></I24>],
+] as [string, string, string, number, string, React.ReactNode, { src: string; label: string; alt: string }[]?][]).map(([title, colour, href, n, body, icon, steps]) => ({
+  title, colour, href, body, icon, image: `/images/index/${n}.webp`, ...(steps ? { steps } : {}),
 }))
 
 // The cards around the hub diagram, in the design's order, colours and icons.
@@ -219,6 +236,14 @@ export function HomePageV2({ s, showFree = false }: { s: HomeCopy; showFree?: bo
             <span className="dot" style={{ background: '#D08A15' }}><I20><circle cx="10" cy="10" r="7.2" stroke="currentColor" strokeWidth="1.8" /><path d="M10 13.2v-.4c0-1.1 2.1-1.5 2.1-3.2A2.1 2.1 0 0 0 8.1 8.6" {...sc} strokeWidth="1.8" /></I20></span>
             {s('hero.n.cqc')}
           </span>
+          <span className="np" id="n-incentives" style={{ '--d': '2.2s', left: 'max(12%,168px)', top: '60%', '--rot': '1deg' } as Css}>
+            <span className="dot" style={{ background: '#D08A15' }}><I20><path d="M6.5 3h7v4.5a3.5 3.5 0 0 1-7 0z" {...st} strokeWidth="1.8" /><path d="M6.5 4.5H4v1.4a2.3 2.3 0 0 0 2.5 2.2M13.5 4.5H16v1.4a2.3 2.3 0 0 1-2.5 2.2M10 11v3M7.5 16.5h5" {...scj} strokeWidth="1.8" /></I20></span>
+            {s('hero.n.incentives')}
+          </span>
+          <span className="np" id="n-residents" style={{ '--d': '3.2s', left: 'min(89%,calc(100% - 128px))', top: '64%', '--rot': '-1deg' } as Css}>
+            <span className="dot" style={{ background: '#D6336C' }}><I20><path d="M10 16.2S3.6 12.5 3.6 7.9A3.3 3.3 0 0 1 10 6.8a3.3 3.3 0 0 1 6.4 1.1c0 4.6-6.4 8.3-6.4 8.3z" {...st} strokeWidth="1.8" /></I20></span>
+            {s('hero.n.residents')}
+          </span>
 
           <div className="wrap-inner">
             <h1>
@@ -316,6 +341,26 @@ export function HomePageV2({ s, showFree = false }: { s: HomeCopy; showFree?: bo
                     <span className="i" style={{ background: colour }}>{icon}</span>{label}
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Staff incentives: a light banner above Policy intelligence. */}
+        <section className="incband" aria-label="Staff incentives">
+          <div className="wrap">
+            <div className="incband-in">
+              <span className="incband-ico" aria-hidden="true">
+                <I24><path d="M7.5 3.5h9v6a4.5 4.5 0 0 1-9 0z" {...st} strokeWidth="1.7" /><path d="M7.5 5.5H4.5v1.8a3 3 0 0 0 3 3M16.5 5.5h3v1.8a3 3 0 0 1-3 3M12 14v3.2M8.5 20h7" {...scj} strokeWidth="1.7" /></I24>
+              </span>
+              <div className="incband-copy">
+                <span className="incband-badge">{s('incband.badge')}</span>
+                <h2>{s('incband.title')}</h2>
+                <p>{s('incband.text')}</p>
+              </div>
+              <div className="incband-actions">
+                <Link className="pill pill-solid" href="/features/staff-incentives">{s('incband.cta')}</Link>
+                <Link className="pill pill-ghost" href="/pricing">{s('incband.cta2')}</Link>
               </div>
             </div>
           </div>

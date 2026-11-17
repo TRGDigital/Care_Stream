@@ -47,6 +47,9 @@ export const HOME_V2_SLOTS: SlotDef[] = [
   { key: 'hero.n.edits', group: 'Hero cards', label: 'Label: approved edits', default: 'Approved edits' },
   { key: 'hero.n.cpd', group: 'Hero cards', label: 'Label beside the CPD Certified mark', default: 'Free CPD certified training' },
   { key: 'hero.n.cqc', group: 'Hero cards', label: 'Label: CQC questions', default: 'CQC questions' },
+  { key: 'hero.n.incentives', group: 'Hero cards', label: 'Label: staff incentives', default: 'Staff incentives' },
+  { key: 'hero.n.residents', group: 'Hero cards', label: 'Label: resident profiles', default: 'Residents, This is me' },
+
 
   // ── Proof strip ─────────────────────────────────────────────────────────────
   { key: 'proof.stat', group: 'Proof strip', label: 'Heading', default: 'Trusted by CQC-registered services across England' },
@@ -68,6 +71,13 @@ export const HOME_V2_SLOTS: SlotDef[] = [
   { key: 'hub.h2', group: 'One source of truth', label: 'Heading (a new line breaks it, as the design does)', multiline: true, default: 'Everything runs off\nyour policy library' },
   { key: 'hub.lede', group: 'One source of truth', label: 'Paragraph', multiline: true, default: 'Nothing is typed twice. Change a policy and the training, the answers your staff get and the evidence in your file all move with it.' },
   { key: 'hub.core', group: 'One source of truth', label: 'Label on the centre', default: 'Your policy library' },
+
+  // ── Staff incentives banner (above Policy intelligence) ─────────────────────
+  { key: 'incband.badge', group: 'Staff incentives banner', label: 'Badge', default: 'New: Staff incentives' },
+  { key: 'incband.title', group: 'Staff incentives banner', label: 'Heading', default: 'Give your team a reason to finish their training.' },
+  { key: 'incband.text', group: 'Staff incentives banner', label: 'Paragraph', multiline: true, default: 'Staff earn points for the training they complete, reach a target to unlock a reward you choose, and a care manager approves every one. Points come from real records, staff only see their own, and CareStream never buys or pays anything. On the Professional and Enterprise plans.' },
+  { key: 'incband.cta', group: 'Staff incentives banner', label: 'Button', default: 'See staff incentives' },
+  { key: 'incband.cta2', group: 'Staff incentives banner', label: 'Second button', default: 'See pricing' },
 
   // ── Policy intelligence ─────────────────────────────────────────────────────
   { key: 'pi.eyebrow', group: 'Policy intelligence', label: 'Eyebrow', default: 'Policy intelligence' },

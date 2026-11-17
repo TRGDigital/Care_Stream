@@ -23,6 +23,8 @@ export interface Slide {
   colour: string
   /** The theme's icon for this area, drawn in the coloured tile. */
   icon: React.ReactNode
+  /** Optional steps: when present the screen steps through these (with labels) instead of showing one picture. */
+  steps?: { src: string; label: string; alt: string }[]
 }
 
 const ReadMoreArrow = () => (
@@ -30,6 +32,35 @@ const ReadMoreArrow = () => (
     <path d="M3 7h8M7.5 3.5 11 7l-3.5 3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 )
+
+
+// A slide that tells its story in a few screens: they step through on their own (every few seconds, never under
+// prefers-reduced-motion) and the labels beneath can be pressed to jump. Every picture is in the page, only one is shown.
+function ShotSteps({ steps }: { steps: NonNullable<Slide['steps']> }) {
+  const [i, setI] = useState(0)
+  const [paused, setPaused] = useState(false)
+  useEffect(() => {
+    if (paused || typeof window === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const t = setInterval(() => setI(n => (n + 1) % steps.length), 4500)
+    return () => clearInterval(t)
+  }, [paused, steps.length])
+  return (
+    <div className="shot steps" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      {steps.map((s, n) => (
+        <div className={`stepimg${n === i ? ' on' : ''}`} key={s.src} aria-hidden={n !== i}>
+          <SiteImage src={s.src} alt={s.alt} />
+        </div>
+      ))}
+      <div className="stepbar" role="tablist" aria-label="Steps">
+        {steps.map((s, n) => (
+          <button type="button" role="tab" aria-selected={n === i} className={n === i ? 'on' : ''} key={s.label} onClick={() => { setI(n); setPaused(true) }}>
+            <b>{n + 1}</b> {s.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export function HomeShowcase({ slides, hint, head }: {
   slides: Slide[]; hint: string
@@ -103,7 +134,7 @@ export function HomeShowcase({ slides, hint, head }: {
                 <div><h3>{s.title}</h3><p>{s.body}</p></div>
                 <Link className="readmore" href={s.href}>Read more <ReadMoreArrow /></Link>
               </div>
-              <div className="shot"><SiteImage src={s.image} alt={s.title} /></div>
+              {s.steps ? <ShotSteps steps={s.steps} /> : <div className="shot"><SiteImage src={s.image} alt={s.title} /></div>}
             </div>
           ))}
           <div style={{ flex: '0 0 max(28px,calc((100vw - min(940px,88vw))/2 - 22px))' }}

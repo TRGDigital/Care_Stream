@@ -98,8 +98,8 @@ export default function AnnualTrainingPage() {
       <Link href="/training" className="mb-3 inline-flex items-center gap-1.5 text-sm text-neutral-mid hover:text-teal"><ArrowLeft size={14} /> Training</Link>
       <h1 className="text-2xl font-bold text-neutral-dark">CPD training</h1>
       <p className="mb-2 mt-1 inline-flex items-center gap-1.5 rounded-full bg-teal/10 px-2.5 py-0.5 text-xs font-semibold text-teal">Free for every member of your team, on every plan</p>
-      <p className="mb-4 max-w-3xl text-sm text-neutral-mid">
-        Deepened courses your staff complete in the hub (in their first language on paid plans) — richer lessons, interactive elements and a fuller assessment than the pre-built library, built for CPD accreditation. Each shows its certification status; the <strong>CPD Certified</strong> badge appears on a course (and its certificate) once the CPD Certification Service has certified it.
+      <p className="mb-4 text-sm text-neutral-mid">
+        CPD courses your whole team completes in the hub, free on every plan. They have richer lessons, interactive activities and a fuller assessment than the pre-built library. The CPD Certified badge appears on a course, and on its certificate, once the CPD Certification Service has certified it. On paid plans staff can learn in their first language, and free accounts learn in English.
       </p>
 
       {/* How this works — explainer accordion */}

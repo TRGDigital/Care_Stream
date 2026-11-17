@@ -2364,16 +2364,32 @@ export async function sendEmailDeliveryTest(to: string): Promise<{ status: numbe
 
 // ─── Staff incentives ──────────────────────────────────────────────────────────
 /** A short plain notification about incentives (an incentive waiting for approval, approved or rejected). One button, no tracking. */
-export async function sendIncentiveEmail(opts: { to: string[]; subject: string; heading: string; body: string; buttonLabel: string; link: string; orgName: string }): Promise<void> {
+export type EmailBlock = { h: string } | { p: string } | { list: Array<string | { text: string; note?: string }> }
+
+function renderBlocks(body: string | EmailBlock[]): string {
+  const blocks: EmailBlock[] = typeof body === 'string' ? [{ p: body }] : body
+  return blocks.map(b => {
+    if ('h' in b) return `<p style="color:${NEUTRAL_DARK};font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin:22px 0 8px">${escResident(b.h)}</p>`
+    if ('p' in b) return `<p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px">${escResident(b.p)}</p>`
+    const items = b.list.map(i => {
+      const text = typeof i === 'string' ? i : i.text
+      const note = typeof i === 'string' ? '' : i.note
+      return `<tr><td style="padding:10px 14px;border-bottom:1px solid #f1f1f4;color:#374151;font-size:15px;line-height:1.5">${escResident(text)}</td>${note ? `<td style="padding:10px 14px;border-bottom:1px solid #f1f1f4;color:${PURPLE_DARK};font-size:14px;font-weight:700;text-align:right;white-space:nowrap;vertical-align:top">${escResident(note)}</td>` : ''}</tr>`
+    }).join('')
+    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #f1f1f4;border-radius:8px;border-collapse:separate;margin:0 0 16px">${items}</table>`
+  }).join('')
+}
+
+export async function sendIncentiveEmail(opts: { to: string[]; subject: string; heading: string; body: string | EmailBlock[]; buttonLabel: string; link: string; orgName: string }): Promise<void> {
   ensureInitialised()
   if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set, skipping incentive email'); return }
   const to = Array.from(new Set(opts.to.filter(Boolean)))
   if (!to.length) return
   const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
   const html = emailWrapper(`
-    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 12px">${escResident(opts.heading)}</p>
-    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 22px">${escResident(opts.body)}</p>
-    <div style="text-align:center;margin:0 0 24px">
+    <p style="color:${NEUTRAL_DARK};font-size:20px;font-weight:700;margin:0 0 16px">${escResident(opts.heading)}</p>
+    ${renderBlocks(opts.body)}
+    <div style="text-align:center;margin:26px 0 8px">
       <a href="${opts.link}" style="display:inline-block;padding:14px 32px;background:${PURPLE};color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">${escResident(opts.buttonLabel)}</a>
     </div>
     ${emailFooter(opts.orgName)}

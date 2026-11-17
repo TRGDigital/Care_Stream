@@ -10,7 +10,7 @@
 import { prisma } from '../../db/client'
 import { siteUrl } from '../../lib/urls'
 import { isArchivedEmail } from '../../lib/user-email'
-import { sendIncentiveEmail } from '../email/outbound'
+import { sendIncentiveEmail, type EmailBlock } from '../email/outbound'
 import { launchMail, plural, pointsMail, thanksMail, winnerMail } from './content'
 import { campaignPeople, targetFor } from './engine'
 
@@ -40,7 +40,7 @@ async function recipients(tenantId: string, campaign: any, participants: any[]):
   return (rows as any[]).filter(u => u.email && !isArchivedEmail(u.email)).map(u => ({ id: u.id, name: u.name ?? '', email: u.email }))
 }
 
-async function sendTo(person: Person, tenantId: string, campaignId: string, kind: string, ref: string, orgName: string, mail: { subject: string; heading: string; body: string; buttonLabel?: string; to?: string }) {
+async function sendTo(person: Person, tenantId: string, campaignId: string, kind: string, ref: string, orgName: string, mail: { subject: string; heading: string; body: EmailBlock[]; buttonLabel?: string; to?: string }) {
   if (!(await claim(tenantId, campaignId, person.id, kind, ref))) return
   try {
     await sendIncentiveEmail({ to: [person.email], subject: mail.subject, heading: mail.heading, body: mail.body, buttonLabel: mail.buttonLabel ?? 'See my incentives', link: mail.to ?? link(), orgName })

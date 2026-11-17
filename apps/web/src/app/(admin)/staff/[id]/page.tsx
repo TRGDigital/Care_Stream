@@ -9,6 +9,7 @@ import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
 import { InfoTip } from '@/components/info-tip'
 import { TrainingCertificate } from '@/components/training-certificate'
 import { SignInLinkButton } from '@/components/admin/staff/sign-in-link'
+import { StaffIncentivesSection } from '@/components/admin/staff/incentives-section'
 import { SupervisionRecordModal } from '@/components/admin/supervision-record-modal'
 import { MATRIX_STATUS, MatrixBadge } from '@/components/admin/training/training-matrix-shared'
 import {
@@ -955,6 +956,9 @@ export default function StaffRecordPage() {
             })()}
           </div>
         )}
+
+        {/* Incentives (hidden when the plan has none or there is no history) */}
+        {token && <StaffIncentivesSection token={token} userId={id} viewerKey={uid} firstName={u.name.split(' ')[0]} />}
 
         {/* Timeline */}
         <div className="pdf-card rounded-card border border-gray-100 bg-white p-5 shadow-card">

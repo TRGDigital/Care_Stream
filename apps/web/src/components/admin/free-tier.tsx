@@ -169,6 +169,11 @@ const LOCKED_FEATURES: Record<string, LockedFeature> = {
     summary: 'Teach CareStream the things only your home knows, beyond your policies.',
     benefits: ['Add local procedures, contacts and routines so staff get answers specific to your home', 'Staff questions are answered from your policies and your knowledge base together', 'Keeps answers consistent, whoever is on shift', 'Edit or remove an entry at any time'],
   },
+  'Incentives': {
+    plan: 'Professional',
+    summary: 'Run monthly incentives so your team engages with training, with a care manager approving every reward.',
+    benefits: ['Staff earn points for completing training, on time, CPD and onboarding', 'Set a points target that unlocks a reward you choose', 'A care manager approves each incentive and each payout', 'CareStream records and reports only. It never buys vouchers or moves money'],
+  },
   'Compliance': {
     plan: 'Enterprise',
     summary: 'A workforce compliance register for the checks that decide whether someone is safe to work.',

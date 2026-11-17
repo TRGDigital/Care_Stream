@@ -3327,3 +3327,113 @@ model ResidentContribution {
   @@index([resident_id, status])
   @@map("resident_contributions")
 }
+
+
+// ─── Staff incentives (Professional and Enterprise) ─────────────────────────────
+// See prisma/sql/2026-11-17_staff_incentives.sql. No relations on purpose (same as the resident tables).
+model IncentiveCampaign {
+  id                String    @id @default(uuid())
+  tenant_id         String
+  name              String
+  month             String
+  period_start      DateTime
+  period_end        DateTime
+  everyone          Boolean   @default(true)
+  status            String    @default("draft")   // draft | awaiting_approval | live | ended | rejected | cancelled
+  created_by        String?
+  created_by_name   String?
+  submitted_at      DateTime?
+  approved_by       String?
+  approved_by_name  String?
+  approved_at       DateTime?
+  rejected_reason   String?
+  last_evaluated_at DateTime?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  @@index([tenant_id, month(sort: Desc)])
+  @@map("incentive_campaigns")
+}
+
+model IncentiveRule {
+  id            String @id @default(uuid())
+  tenant_id     String
+  campaign_id   String
+  event         String
+  points        Int
+  max_per_month Int?
+
+  @@index([campaign_id])
+  @@map("incentive_rules")
+}
+
+model IncentiveReward {
+  id            String  @id @default(uuid())
+  tenant_id     String
+  campaign_id   String
+  key           String
+  title         String
+  image_data    String?
+  target_points Int
+  quantity      Int?
+  value_pence   Int?
+  position      Int     @default(0)
+
+  @@index([campaign_id])
+  @@map("incentive_rewards")
+}
+
+model IncentiveParticipant {
+  id          String @id @default(uuid())
+  tenant_id   String
+  campaign_id String
+  user_id     String
+  targets     Json   @default("{}")
+
+  @@unique([campaign_id, user_id])
+  @@map("incentive_participants")
+}
+
+model IncentiveLedger {
+  id          String   @id @default(uuid())
+  tenant_id   String
+  campaign_id String
+  user_id     String
+  rule_id     String
+  event       String
+  source_id   String
+  label       String
+  points      Int
+  occurred_at DateTime
+  created_at  DateTime @default(now())
+
+  @@unique([campaign_id, rule_id, user_id, source_id])
+  @@index([tenant_id, user_id, occurred_at(sort: Desc)])
+  @@map("incentive_ledger")
+}
+
+model IncentiveClaim {
+  id              String    @id @default(uuid())
+  tenant_id       String
+  campaign_id     String
+  reward_id       String
+  user_id         String
+  reached_at      DateTime
+  status          String    @default("held")   // held | approved | given | missed | rejected | forfeited
+  rank            Int?
+  tied            Boolean   @default(false)
+  decided_by      String?
+  decided_by_name String?
+  decided_at      DateTime?
+  reject_reason   String?
+  given_by        String?
+  given_by_name   String?
+  given_at        DateTime?
+  note            String?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  @@unique([reward_id, user_id])
+  @@index([campaign_id, status])
+  @@map("incentive_claims")
+}

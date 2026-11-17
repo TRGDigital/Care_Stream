@@ -64,6 +64,7 @@ import { cronRouter } from './routes/cron'
 import { contentRoutineRouter } from './routes/content-routine'
 import { publicFamilyRouter } from './routes/residents-public'
 import { residentsRouter } from './routes/residents'
+import { incentivesRouter } from './routes/incentives'
 import { standardTrainingRouter } from './routes/standard-training'
 import { standardProgrammesRouter } from './routes/standard-programmes'
 import { programmesRouter } from './routes/programmes'
@@ -241,6 +242,7 @@ app.use('/policy-purchases', policyPurchasesRouter)
 app.use('/translation-suggestions', translationSuggestionsRouter)
 app.use('/knowledge', knowledgeRouter)
 app.use('/residents', residentsRouter)
+app.use('/incentives', incentivesRouter)
 app.use('/sites', sitesRouter)
 app.use('/onboarding', onboardingRouter)
 app.use('/training', trainingRouter)

@@ -15,6 +15,10 @@ import { ProgrammesView } from '@/components/hub/programmes-view'
 import { CqcView } from '@/components/hub/cqc-view'
 import { PoliciesView } from '@/components/hub/policies-view'
 import { AuditApprovalsView } from '@/components/hub/audit-approvals-view'
+import { MyIncentivesView, incentivesMineKey } from '@/components/hub/my-incentives-view'
+import { IncentiveApprovalsView, incentiveQueueKey } from '@/components/hub/incentive-approvals-view'
+import { createIncentivesClient } from '@/lib/incentives-api'
+import { useCachedQuery } from '@/lib/use-cached-query'
 import { F2FAdminView } from '@/components/hub/f2f-admin-view'
 import { usePlanFeatures } from '@/lib/use-plan-features'
 import { TrainingRatingCard } from '@/components/hub/training-rating-card'
@@ -357,7 +361,7 @@ function ChatPageInner() {
   const { data: session }                              = useSession()
   const userId                                         = session?.user?.email ?? 'guest'
 
-  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'diplomas' | 'cqc' | 'progress' | 'f2f' | 'supervisions' | 'policies' | 'audit-approvals' | 'actions'>('chat')
+  const [view,     setView]                            = useState<'chat' | 'induction' | 'training' | 'followup' | 'audits' | 'annual' | 'diplomas' | 'cqc' | 'progress' | 'f2f' | 'supervisions' | 'policies' | 'audit-approvals' | 'actions' | 'my-incentives' | 'incentive-approvals'>('chat')
   const [policyApprovals, setPolicyApprovals]          = useState<{ is_manager: boolean; count: number }>({ is_manager: false, count: 0 })
   const [dueReviewCount, setDueReviewCount]            = useState(0)   // policies past their review date (admins)
   const [auditApprovals, setAuditApprovals]            = useState<{ is_manager: boolean; count: number }>({ is_manager: false, count: 0 })
@@ -494,6 +498,23 @@ function ChatPageInner() {
     const timer = setInterval(refreshAuditApprovals, 3 * 60_000)
     return () => { window.removeEventListener('focus', onFocus); clearInterval(timer) }
   }, [refreshAuditApprovals])
+
+  // Staff incentives (Professional and Enterprise). Both fetches are deferred and cached (keys include the user), and never
+  // run for free or training-only accounts, so first paint is untouched and those accounts never see the items.
+  const incentivesEligible = !!session?.accessToken && !trainingOnly && !freeTier
+  const incMine = useCachedQuery(incentivesEligible ? incentivesMineKey(userId) : null, () => createIncentivesClient(session!.accessToken as string).mine())
+  const incQueue = useCachedQuery(incentivesEligible ? incentiveQueueKey(userId) : null, () => createIncentivesClient(session!.accessToken as string).queue())
+  const showMyIncentives = incentivesEligible && incMine.data?.enabled === true && (incMine.data?.campaigns?.length ?? 0) > 0
+  const showIncentiveApprovals = incentivesEligible && incQueue.data?.is_manager === true
+  const refreshIncentiveQueue = incQueue.reload
+  useEffect(() => {
+    // A reward can reach a manager while the hub is open: check again on focus and every few minutes.
+    if (!incentivesEligible) return
+    const onFocus = () => { incMine.reload(); incQueue.reload() }
+    window.addEventListener('focus', onFocus)
+    const timer = setInterval(() => incQueue.reload(), 3 * 60_000)
+    return () => { window.removeEventListener('focus', onFocus); clearInterval(timer) }
+  }, [incentivesEligible]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Remember the plan's Supervisions entitlement for an instant, stable nav on reload.
   useEffect(() => {
@@ -1021,7 +1042,7 @@ function ChatPageInner() {
             Follow-up
             {navCounts.followup > 0 && <NavBadge count={navCounts.followup} className="bg-red-500" />}
           </button>
-          {(canAudit || canF2F || (canSupervisions && !isReviewer) || !isReviewer || policyApprovals.is_manager || auditApprovals.is_manager) && (
+          {(canAudit || canF2F || (canSupervisions && !isReviewer) || !isReviewer || policyApprovals.is_manager || auditApprovals.is_manager || showIncentiveApprovals) && (
             <p className="px-3 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-wider text-neutral-mid/70">Compliance</p>
           )}
           {canAudit && (
@@ -1095,6 +1116,16 @@ function ChatPageInner() {
             {auditApprovals.count > 0 && <NavBadge count={auditApprovals.count} className="bg-rose-500" />}
           </button>
           )}
+          {showIncentiveApprovals && (
+          <button
+            onClick={() => setView('incentive-approvals')}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'incentive-approvals' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+          >
+            <Award size={15} />
+            Incentive approvals
+            {(incQueue.data?.count ?? 0) > 0 && <NavBadge count={incQueue.data?.count ?? 0} className="bg-rose-500" />}
+          </button>
+          )}
           {!isReviewer && (
             <p className="px-3 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-wider text-neutral-mid/70">For you</p>
           )}
@@ -1117,6 +1148,15 @@ function ChatPageInner() {
           >
             <TrendingUp size={15} />
             My Progress
+          </button>
+          )}
+          {!isReviewer && showMyIncentives && (
+          <button
+            onClick={() => setView('my-incentives')}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${view === 'my-incentives' ? 'bg-teal/10 text-teal' : 'text-neutral-mid hover:bg-neutral-light hover:text-neutral-dark'}`}
+          >
+            <Award size={15} />
+            My incentives
           </button>
           )}
 
@@ -1288,6 +1328,16 @@ function ChatPageInner() {
         {/* Audits to approve (care manager) */}
         {view === 'audit-approvals' && !trainingOnly && session?.accessToken && (
           <AuditApprovalsView token={session.accessToken} userId={userId} onChange={refreshAuditApprovals} />
+        )}
+
+        {/* Incentive approvals (care manager) */}
+        {view === 'incentive-approvals' && showIncentiveApprovals && session?.accessToken && (
+          <IncentiveApprovalsView token={session.accessToken} userId={userId} onChange={refreshIncentiveQueue} />
+        )}
+
+        {/* My incentives (staff: their own points only) */}
+        {view === 'my-incentives' && showMyIncentives && session?.accessToken && (
+          <MyIncentivesView token={session.accessToken} userId={userId} onOpenTraining={() => setView('training')} />
         )}
 
         {/* My Progress view */}

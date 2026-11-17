@@ -2360,3 +2360,23 @@ export async function sendEmailDeliveryTest(to: string): Promise<{ status: numbe
   const [resp] = await sgMail.send({ to, from, subject: 'CareStream delivery test', html, trackingSettings: { clickTracking: { enable: false, enableText: false } } })
   return { status: resp.statusCode, message_id: (resp.headers?.['x-message-id'] as string) ?? null, from, to }
 }
+
+
+// ─── Staff incentives ──────────────────────────────────────────────────────────
+/** A short plain notification about incentives (an incentive waiting for approval, approved or rejected). One button, no tracking. */
+export async function sendIncentiveEmail(opts: { to: string[]; subject: string; heading: string; body: string; buttonLabel: string; link: string; orgName: string }): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set, skipping incentive email'); return }
+  const to = Array.from(new Set(opts.to.filter(Boolean)))
+  if (!to.length) return
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 12px">${escResident(opts.heading)}</p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 22px">${escResident(opts.body)}</p>
+    <div style="text-align:center;margin:0 0 24px">
+      <a href="${opts.link}" style="display:inline-block;padding:14px 32px;background:${PURPLE};color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none">${escResident(opts.buttonLabel)}</a>
+    </div>
+    ${emailFooter(opts.orgName)}
+  `)
+  await sgMail.send({ to, from, subject: opts.subject, html, trackingSettings: { clickTracking: { enable: false, enableText: false } } })
+}

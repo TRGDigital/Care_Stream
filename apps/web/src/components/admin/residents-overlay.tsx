@@ -18,11 +18,11 @@ type Tab = 'profile' | 'family' | 'approvals' | 'from-family'
 const displayName = (r: Resident) => `${r.preferred_name || r.first_name} ${r.last_name}`
 const STATUS_LABEL: Record<string, string> = { deceased: 'Passed away', left: 'Moved on', living: 'Living' }
 
-export function ResidentsOverlay({ token, userId, onClose }: { token: string; userId: string; onClose: () => void }) {
+export function ResidentsOverlay({ token, userId, onClose, initialResidentId = null }: { token: string; userId: string; onClose: () => void; initialResidentId?: string | null }) {
   const client = useMemo(() => createResidentsClient(token), [token])
   const dialogRef = useRef<HTMLDivElement>(null)
   const [scope, setScope] = useState<'current' | 'archived'>('current')
-  const [selected, setSelected] = useState<string | 'new' | null>(null)
+  const [selected, setSelected] = useState<string | 'new' | null>(initialResidentId)
   const [tab, setTab] = useState<Tab>('profile')
   const [search, setSearch] = useState('')
   const [statusFor, setStatusFor] = useState<Resident | null>(null)
@@ -51,6 +51,15 @@ export function ResidentsOverlay({ token, userId, onClose }: { token: string; us
     document.addEventListener('keydown', onKey)
     return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = overflow; prev?.focus?.() }
   }, [onClose])
+
+  // Opened from a resident on the Knowledge page: if they have answers waiting, go straight to them.
+  const openedInitial = useRef(false)
+  useEffect(() => {
+    if (openedInitial.current || !initialResidentId || !current.data) return
+    openedInitial.current = true
+    const r = current.data.residents.find(x => x.id === initialResidentId)
+    if (r && r.pending_count > 0) setTab('approvals')
+  }, [initialResidentId, current.data])
 
   const refreshAll = useCallback(() => { current.reload(); if (canArchive) archived.reload(); detail.reload() }, [current, archived, detail, canArchive])
 

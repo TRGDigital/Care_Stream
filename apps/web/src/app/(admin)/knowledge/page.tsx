@@ -8,6 +8,7 @@ import { persistentCache } from '@/lib/page-cache'
 
 // Lazy-loaded: only fetched when the user opens the "Add entry" dialog.
 const AddEntryModal = dynamic(() => import('@/components/admin/knowledge/add-entry-modal').then(m => m.AddEntryModal), { ssr: false })
+import { ResidentsKnowledgeSection } from '@/components/admin/residents-knowledge-section'
 const ResidentsOverlay = dynamic(() => import('@/components/admin/residents-overlay').then(m => m.ResidentsOverlay), { ssr: false })
 import {
   BookOpen, Plus, Sparkles, Trash2, Pencil, X, Check,
@@ -93,6 +94,7 @@ export default function KnowledgePage() {
   const [generating, setGenerating] = useState(false)
   const [showAdd, setShowAdd]       = useState(false)
   const [showResidents, setShowResidents] = useState(false)
+  const [openResidentId, setOpenResidentId] = useState<string | null>(null)
   const [editId, setEditId]         = useState<string | null>(null)
   const [error, setError]           = useState<string | null>(null)
 
@@ -174,7 +176,7 @@ export default function KnowledgePage() {
               Add entry
             </button>
             <button
-              onClick={() => setShowResidents(true)}
+              onClick={() => { setOpenResidentId(null); setShowResidents(true) }}
               className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-neutral-dark hover:bg-neutral-light"
             >
               <Users size={14} />
@@ -257,6 +259,11 @@ export default function KnowledgePage() {
             </section>
           )}
 
+          {/* "This is me" resident profiles: click one to open the Residents overlay on that person. */}
+          {session?.accessToken && (
+            <ResidentsKnowledgeSection token={session.accessToken} userId={userId} onOpen={id => { setOpenResidentId(id); setShowResidents(true) }} />
+          )}
+
           {/* Policy-generated entries — grouped by policy */}
           {policyEntries.length > 0 && (
             <section>
@@ -297,7 +304,7 @@ export default function KnowledgePage() {
       )}
 
       {showResidents && session?.accessToken && (
-        <ResidentsOverlay token={session.accessToken} userId={userId} onClose={() => setShowResidents(false)} />
+        <ResidentsOverlay token={session.accessToken} userId={userId} initialResidentId={openResidentId} onClose={() => { setShowResidents(false); setOpenResidentId(null) }} />
       )}
 
       {showAdd && (

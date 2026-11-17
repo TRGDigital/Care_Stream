@@ -15,6 +15,7 @@ import { DEFAULT_ONBOARDING_FLOW_PROMPT, DEFAULT_ONBOARDING_QUESTIONS_PROMPT } f
 import { DEFAULT_TRAINING_MODULE_PROMPT } from '../services/training/moduleGenerator'
 import { DEFAULT_TRAINING_IMAGE_PROMPT } from '../services/training/moduleImage'
 import { DEFAULT_WEBSITE_CHAT_PROMPT } from '../services/website-chat/answer'
+import { DEFAULT_RESIDENT_PROMPT } from '../services/rag/resident-prompt'
 import { DEFAULT_POLICY_ANONYMISE_PROMPT } from './policy-seeds'
 import { imageUploadMiddleware } from '../middleware/upload'
 import { uploadBlogImage, deleteTenantFiles, getTenantStorageStats, getPlatformStorageStats, downloadExtractedText, downloadFile } from '../services/storage/s3'
@@ -2873,6 +2874,7 @@ const USAGE_LABELS: Record<string, string> = {
   policy_writer:                   'Policy Writer — Policies we write for clients',
   regulation_change_review:        'Legislation Monitor — Change review',
   website_chat:                    'Website AI Chat — Visitor answers',
+  resident_chat:                   'This is me — Hub chat answers',
 }
 
 // Seed any missing prompts — checks per-usage so new prompts are added even when others already exist.
@@ -2904,6 +2906,7 @@ async function ensurePromptsSeeded() {
     policy_writer:              DEFAULT_POLICY_WRITER_PROMPT,
     regulation_change_review:   DEFAULT_CHANGE_REVIEW_PROMPT,
     website_chat:               DEFAULT_WEBSITE_CHAT_PROMPT,
+    resident_chat:              DEFAULT_RESIDENT_PROMPT,
   }
   for (const [usage, content] of Object.entries(inlineDefaults)) {
     const existing = await (prisma as any).aiPrompt.findUnique({ where: { usage } })

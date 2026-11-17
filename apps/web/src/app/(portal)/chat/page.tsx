@@ -1168,24 +1168,24 @@ function ChatPageInner() {
         </div>
 
         {/* Saved policies and saved chats live in overlays, so the sidebar stays short */}
-        <div className="space-y-0.5 border-t border-gray-100 px-3 py-2">
+        <div className="space-y-2 border-t border-gray-100 px-3 py-3">
           {!isReviewer && (
             <button
               onClick={() => setLibrary('policies')}
-              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-neutral-mid transition-colors hover:bg-neutral-light hover:text-teal"
+              className="flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-neutral-dark shadow-sm transition-colors hover:border-teal hover:bg-teal-light/30 hover:text-teal focus:outline-none focus-visible:ring-2 focus-visible:ring-teal"
             >
-              <Bookmark size={15} />
+              <Bookmark size={15} className="shrink-0 text-teal" />
               Saved policies
-              {savedPolicies.length > 0 && <span className="ml-auto rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-neutral-mid">{savedPolicies.length}</span>}
+              {savedPolicies.length > 0 && <span className="ml-auto rounded-full bg-teal/10 px-2 py-0.5 text-[11px] font-bold text-teal">{savedPolicies.length}</span>}
             </button>
           )}
           <button
             onClick={() => setLibrary('chats')}
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-neutral-mid transition-colors hover:bg-neutral-light hover:text-teal"
+            className="flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-neutral-dark shadow-sm transition-colors hover:border-teal hover:bg-teal-light/30 hover:text-teal focus:outline-none focus-visible:ring-2 focus-visible:ring-teal"
           >
-            <MessageSquare size={15} />
+            <MessageSquare size={15} className="shrink-0 text-teal" />
             Saved chats
-            {grouped.reduce((n, g) => n + g.items.length, 0) > 0 && <span className="ml-auto rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-neutral-mid">{grouped.reduce((n, g) => n + g.items.length, 0)}</span>}
+            {grouped.reduce((n, g) => n + g.items.length, 0) > 0 && <span className="ml-auto rounded-full bg-teal/10 px-2 py-0.5 text-[11px] font-bold text-teal">{grouped.reduce((n, g) => n + g.items.length, 0)}</span>}
           </button>
         </div>
       </aside>

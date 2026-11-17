@@ -22,6 +22,7 @@ import { EVENTS, EVENT_KEYS, periodFor, currentMonth, pct } from '../services/in
 import { evaluateCampaign, campaignPeople, targetFor } from '../services/incentives/engine'
 import { sendIncentiveEmail } from '../services/email/outbound'
 import { notifyLaunch } from '../services/incentives/notify'
+import { launchMail, pointsMail, winnerMail, thanksMail } from '../services/incentives/content'
 
 export const incentivesRouter = Router()
 const db = prisma as any
@@ -530,4 +531,26 @@ incentivesRouter.put('/settings', async (req: Request, res: Response) => {
     await db.incentiveSetting.upsert({ where: { tenant_id: tenantId }, create: { tenant_id: tenantId, monthly_budget_pence: p.data.monthly_budget_pence }, update: { monthly_budget_pence: p.data.monthly_budget_pence } })
   } catch { err(res, 'NOT_READY', 'The budget can be saved once the latest database update has been run.', 503); return }
   ok(res, { monthly_budget_pence: p.data.monthly_budget_pence })
+})
+
+
+// An admin can send the four staff emails, with sample figures, to a member of their own home to check the wording.
+incentivesRouter.post('/preview-emails', async (req: Request, res: Response) => {
+  const p = z.object({ to: z.string().email() }).safeParse(req.body)
+  if (!p.success) { err(res, 'VALIDATION_ERROR', 'Enter an email address.'); return }
+  const tenantId = getTenantId()
+  const member = await db.user.findFirst({ where: { tenant_id: tenantId, is_active: true, email: { equals: p.data.to, mode: 'insensitive' } }, select: { email: true } })
+  if (!member) { err(res, 'FORBIDDEN', 'You can only send a preview to someone in your own home.', 403); return }
+  const tenant = await db.tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
+  const org = tenant?.name ?? 'your home'
+  const mails = [
+    launchMail({ name: 'Training champions', month: currentMonth(), rules: [{ event: 'training_completed', points: 10 }, { event: 'training_on_time', points: 5 }, { event: 'cpd_completed', points: 15 }, { event: 'onboarding_completed', points: 25 }, { event: 'practical_signed', points: 10 }], rewards: [{ title: '£25.00 M&S voucher', target_points: 20, quantity: 2 }, { title: 'Pizza delivery for your shift', target_points: 40, quantity: null }] }),
+    pointsMail({ name: 'Training champions', total: 15, fresh: [{ label: 'Completed Safeguarding Adults', points: 10 }, { label: 'Finished Safeguarding Adults on time', points: 5 }], next: { title: '£25.00 M&S voucher', target: 20 } }),
+    winnerMail({ name: 'Training champions', org, won: ['£25.00 M&S voucher', 'Pizza delivery for your shift'] }),
+    thanksMail({ name: 'Training champions', points: 15, outstanding: 2 }),
+  ]
+  for (const [i, m] of mails.entries()) {
+    await sendIncentiveEmail({ to: [member.email], subject: `[Preview ${i + 1} of ${mails.length}] ${m.subject}`, heading: m.heading, body: m.body, buttonLabel: m.buttonLabel, link: `${siteUrl()}/chat?view=my-incentives`, orgName: org })
+  }
+  ok(res, { sent: mails.length, to: member.email })
 })

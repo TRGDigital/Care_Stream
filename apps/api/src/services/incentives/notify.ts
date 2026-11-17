@@ -11,14 +11,12 @@ import { prisma } from '../../db/client'
 import { siteUrl } from '../../lib/urls'
 import { isArchivedEmail } from '../../lib/user-email'
 import { sendIncentiveEmail } from '../email/outbound'
-import { EVENTS } from './logic'
+import { launchMail, plural, pointsMail, thanksMail, winnerMail } from './content'
 import { campaignPeople, targetFor } from './engine'
 
 const db = prisma as any
 const DAY_MS = 20 * 60 * 60 * 1000   // a little under a day, so a daily job never skips a person
 const link = () => `${siteUrl()}/chat?view=my-incentives`
-const monthName = (m: string) => { const [y, mo] = m.split('-').map(Number); return y && mo ? new Date(Date.UTC(y, mo - 1, 1)).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }) : m }
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
 async function ready(): Promise<boolean> {
   try { await db.incentiveNotification.findFirst({ select: { id: true } }); return true } catch { return false }
@@ -72,12 +70,9 @@ export async function notifyLaunch(tenantId: string, campaignId: string): Promis
   if (!(await ready())) return
   const { campaign, rewards, rules, participants, org } = await load(tenantId, campaignId)
   if (!campaign || campaign.status !== 'live') return
-  const how = rules.map(r => `${(EVENTS.find((e: any) => e.key === r.event)?.label ?? r.event)}: ${plural(r.points, 'point', 'points')}`).join('; ')
-  const prizes = rewards.map(r => `${r.title} (${plural(r.target_points, 'point', 'points')}${r.quantity != null ? `, first ${plural(r.quantity, 'person', 'people')} to reach it` : ''})`).join('; ')
-  const limited = rewards.some(r => r.quantity != null)
-  const body = `${campaign.name} is open for ${monthName(campaign.month)}. You earn points when you look after your training. ${how}. The rewards are: ${prizes}. ${limited ? 'Some rewards have limited places, and they go to the people who reach the target first. ' : ''}You can see your own points in the hub at any time. Nobody else can see them.`
+  const mail = launchMail({ name: campaign.name, month: campaign.month, rules, rewards })
   const people = await recipients(tenantId, campaign, participants)
-  await inBatches(people, p => sendTo(p, tenantId, campaignId, 'launch', '', org, { subject: `New staff incentive: ${campaign.name}`, heading: 'A new staff incentive has started', body }))
+  await inBatches(people, p => sendTo(p, tenantId, campaignId, 'launch', '', org, mail))
 }
 
 /** New points: one summary email per person, at most once a day. Safe to call as often as you like. */
@@ -98,9 +93,8 @@ export async function notifyPoints(tenantId: string, campaignId: string): Promis
     const total = mine.reduce((n, l) => n + l.points, 0)
     const targets = rewards.map(r => ({ title: r.title, target: targetFor(r, participants, p.id) })).sort((a, b) => a.target - b.target)
     const next = targets.find(t => t.target > total)
-    const newest = fresh.slice(-3).map(l => `${l.label} (+${l.points})`).join('; ')
-    const body = `You now have ${plural(total, 'point', 'points')} in ${campaign.name}. New since we last wrote: ${newest}${fresh.length > 3 ? ` and ${fresh.length - 3} more` : ''}. ${next ? `You are ${plural(next.target - total, 'point', 'points')} away from ${next.title}.` : 'You have reached every reward target. A care manager will approve your rewards next.'}`
-    await sendTo(p, tenantId, campaignId, 'points', String(+fresh[fresh.length - 1].created_at), org, { subject: `You have ${plural(total, 'point', 'points')} in ${campaign.name}`, heading: 'You have earned points', body, buttonLabel: 'See my points' })
+    const mail = pointsMail({ name: campaign.name, total, fresh, next: next ?? null })
+    await sendTo(p, tenantId, campaignId, 'points', String(+fresh[fresh.length - 1].created_at), org, mail)
   })
 }
 
@@ -117,24 +111,9 @@ export async function notifyResults(tenantId: string, campaignId: string): Promi
   await inBatches(people, async p => {
     const won = (claims as any[]).filter(c => c.user_id === p.id).map(c => rewards.find(r => r.id === c.reward_id)?.title).filter(Boolean) as string[]
     const points = (ledger as any[]).filter(l => l.user_id === p.id).reduce((n, l) => n + l.points, 0)
-    if (won.length) {
-      await sendTo(p, tenantId, campaignId, 'result', '', org, {
-        subject: `Well done: you earned a reward in ${campaign.name}`, heading: 'Well done, you earned a reward',
-        body: `${campaign.name} has finished and you reached: ${won.join(', ')}. A care manager approves each reward, then ${org} will give it to you. Thank you for keeping your training up to date. A new incentive will launch soon.`,
-        buttonLabel: 'See my incentives',
-      })
-      return
-    }
+    if (won.length) { await sendTo(p, tenantId, campaignId, 'result', '', org, winnerMail({ name: campaign.name, org, won })); return }
     const outstanding = await db.trainingEnrollment.count({ where: { tenant_id: tenantId, user_id: p.id, status: { in: ['not_started', 'in_progress'] } } }).catch(() => 0)
-    const first = points > 0
-      ? `${campaign.name} has finished. You earned ${plural(points, 'point', 'points')}, but this time you did not reach a reward, and some places went to colleagues who got there first.`
-      : `${campaign.name} has finished and you did not earn any points this time.`
-    const nudge = outstanding > 0 ? ` You have ${plural(outstanding, 'training module', 'training modules')} waiting for you. Finishing them keeps you and the people we support safe, and it is the quickest way to earn points next time.` : ' Keeping your training up to date is the quickest way to earn points next time.'
-    await sendTo(p, tenantId, campaignId, 'result', '', org, {
-      subject: `Thank you for taking part in ${campaign.name}`, heading: 'Thank you for taking part',
-      body: `${first} Thank you for the effort you put in.${nudge} A new incentive will launch soon, so there is a fresh chance to earn.`,
-      buttonLabel: outstanding > 0 ? 'Open my training' : 'See my incentives',
-      to: outstanding > 0 ? `${siteUrl()}/chat?view=training` : undefined,
-    })
+    const mail = thanksMail({ name: campaign.name, points, outstanding })
+    await sendTo(p, tenantId, campaignId, 'result', '', org, { ...mail, to: mail.toTraining ? `${siteUrl()}/chat?view=training` : undefined })
   })
 }

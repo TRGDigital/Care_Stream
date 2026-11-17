@@ -55,7 +55,7 @@ publicFamilyRouter.post('/:token', async (req: Request, res: Response) => {
   if (!p.success) { err(res, 'VALIDATION_ERROR', 'Please add your name, how you know them, and at least one answer.', 400); return }
   const rows = Object.entries(p.data.answers)
     .filter(([k]) => SECTION_KEYS.has(k))
-    .map(([k, v]) => [k, cleanText(v, 1500)] as const)
+    .map(([k, v]) => [k, cleanText(v, 4000)] as const)
     .filter(([, v]) => v.length > 0)
   if (!rows.length) { err(res, 'VALIDATION_ERROR', 'Please answer at least one question.', 400); return }
 

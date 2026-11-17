@@ -166,7 +166,7 @@ function cleanSections(input: Record<string, string> | undefined, base: Record<s
   const out = { ...base }
   for (const [k, v] of Object.entries(input ?? {})) {
     if (!SECTION_KEYS.has(k)) continue
-    const t = cleanText(v, 3000)
+    const t = cleanText(v, 6000)
     if (t) out[k] = t; else delete out[k]
   }
   return out
@@ -344,7 +344,7 @@ residentsRouter.post('/:id/contributions/:cid/decision', async (req: Request, re
   const now = new Date()
   let approvedText: string | null = null
   if (p.data.decision === 'approve') {
-    const final = cleanText(p.data.text ?? c.text, 3000)
+    const final = cleanText(p.data.text ?? c.text, 4000)
     if (!final) { err(res, 'VALIDATION_ERROR', 'There is no text to approve.'); return }
     approvedText = final === c.text ? null : final
     const sections = { ...((r.sections ?? {}) as Record<string, string>) }

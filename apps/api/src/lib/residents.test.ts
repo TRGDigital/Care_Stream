@@ -1,7 +1,7 @@
 // "This is me" pure logic. Run with:  npx tsx src/lib/residents.test.ts   (no database needed)
 
 import assert from 'node:assert/strict'
-import { SECTIONS, SECTION_KEYS, RETENTION_YEARS, ageFrom, addYears, cleanText, displayName, hashToken, newInviteToken, dateOnly, labelFor } from './residents'
+import { SECTIONS, SECTION_KEYS, RETENTION_YEARS, ageFrom, addYears, cleanText, displayName, hashToken, newInviteToken, dateOnly, labelFor, chunkText } from './residents'
 
 let n = 0
 const t = (name: string, fn: () => void) => { fn(); n++; console.log('ok  ', name) }
@@ -47,6 +47,17 @@ t('invite tokens are long, unique, url safe and only the hash is derivable', () 
   assert.equal(a.hash, hashToken(a.token))
   assert.notEqual(a.hash, a.token)
   assert.equal(a.hash.length, 64)
+})
+
+t('long text is split at paragraphs and sentences, nothing is lost or cut mid word', () => {
+  const sentence = 'He met Mum at a dance at the Mecca Ballroom in nineteen fifty four. '
+  const long = Array.from({ length: 4 }, () => sentence.repeat(30)).join('\n\n')   // about 8,000 characters
+  const parts = chunkText(long, 3800)
+  assert.ok(parts.length >= 3)
+  for (const p of parts) assert.ok(p.length <= 3800)
+  assert.equal(parts.join(' ').replace(/\s+/g, ' '), long.replace(/\s+/g, ' ').trim())
+  assert.deepEqual(chunkText('short'), ['short'])
+  assert.deepEqual(chunkText('   '), [])
 })
 
 console.log(`\n${n} groups passed`)

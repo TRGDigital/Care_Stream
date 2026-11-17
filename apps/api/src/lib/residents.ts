@@ -45,6 +45,28 @@ export async function tablesReady(): Promise<boolean> {
   try { await db.resident.findFirst({ select: { id: true } }); return true } catch { return false }
 }
 
+/** Splits long text into pieces the assistant can hold as separate knowledge entries, breaking at paragraphs, then sentences, then spaces. */
+export function chunkText(text: string, max = 3800): string[] {
+  const t = text.trim()
+  if (t.length <= max) return t ? [t] : []
+  const out: string[] = []
+  let cur = ''
+  const push = () => { if (cur.trim()) out.push(cur.trim()); cur = '' }
+  const pieces = t.split(/\n{2,}/).flatMap(par => {
+    if (par.length <= max) return [par]
+    const sentences = par.match(/[^.!?]+[.!?]+\s*|[^.!?]+$/g) ?? [par]
+    return sentences.flatMap(s => {
+      if (s.length <= max) return [s]
+      const words = s.split(/\s+/); const parts: string[] = []; let w = ''
+      for (const word of words) { if ((w + ' ' + word).length > max) { parts.push(w); w = word } else w = w ? `${w} ${word}` : word }
+      if (w) parts.push(w); return parts
+    })
+  })
+  for (const p of pieces) { if ((cur + '\n\n' + p).length > max) push(); cur = cur ? `${cur}\n\n${p}` : p }
+  push()
+  return out
+}
+
 export const cleanText = (s: unknown, max: number) =>
   String(s ?? '').replace(/<[^>]*>/g, '').replace(/\r\n/g, '\n').replace(/[ \t]+\n/g, '\n').trim().slice(0, max)
 
@@ -124,20 +146,22 @@ export async function syncResidentKnowledge(tenantId: string, residentId: string
       const age = ageFrom(r.dob)
       const sections = (r.sections ?? {}) as Record<string, string>
       for (const def of SECTIONS) {
-        const text = (sections[def.key] ?? '').trim()
-        if (!text) continue
-        const question = `${full}${r.preferred_name && r.preferred_name !== r.first_name ? ` (${r.preferred_name})` : ''}: ${def.label}`
-        const answer = `${name}${age !== null ? `, aged ${age}` : ''}${r.room ? `, room ${r.room}` : ''}. ${def.label}: ${text}`
-        const sourceName = `${THIS_IS_ME_PREFIX} ${full}`
-        const e = await db.knowledgeEntry.create({
-          data: {
-            tenant_id: tenantId, question: question.slice(0, 500), answer: answer.slice(0, 5000), source_type: 'manual', source_name: sourceName,
-            knowledge_category: 'resident', approved: true, approved_at: new Date(), approved_by: 'this-is-me',
-          },
-        })
-        const vectorId = await embedManualEntry(tenantId, e.id, question.slice(0, 500), answer.slice(0, 5000), sourceName)
-        await db.knowledgeEntry.update({ where: { id: e.id }, data: { vector_id: vectorId } })
-        ids.push(e.id)
+        const pieces = chunkText((sections[def.key] ?? '').trim())
+        for (let i = 0; i < pieces.length; i++) {
+          const part = pieces.length > 1 ? ` (part ${i + 1} of ${pieces.length})` : ''
+          const question = `${full}${r.preferred_name && r.preferred_name !== r.first_name ? ` (${r.preferred_name})` : ''}: ${def.label}${part}`
+          const answer = `${name}${age !== null ? `, aged ${age}` : ''}${r.room ? `, room ${r.room}` : ''}. ${def.label}${part}: ${pieces[i]}`
+          const sourceName = `${THIS_IS_ME_PREFIX} ${full}`
+          const e = await db.knowledgeEntry.create({
+            data: {
+              tenant_id: tenantId, question: question.slice(0, 500), answer: answer.slice(0, 5000), source_type: 'manual', source_name: sourceName,
+              knowledge_category: 'resident', approved: true, approved_at: new Date(), approved_by: 'this-is-me',
+            },
+          })
+          const vectorId = await embedManualEntry(tenantId, e.id, question.slice(0, 500), answer.slice(0, 5000), sourceName)
+          await db.knowledgeEntry.update({ where: { id: e.id }, data: { vector_id: vectorId } })
+          ids.push(e.id)
+        }
       }
     }
     await db.resident.update({ where: { id: residentId }, data: { entry_ids: ids } })

@@ -7,13 +7,14 @@ import { ArrowLeft, Archive, Loader2, Lock, Plus, Search, Users, X } from 'lucid
 import { createResidentsClient, type Resident } from '@/lib/residents-api'
 import { useCachedQuery } from '@/lib/use-cached-query'
 import { ApprovalsTab } from './residents/approvals-tab'
+import { FamilyAnswersTab } from './residents/family-answers-tab'
 import { ArchiveAccessSettings, ArchivePanel } from './residents/archive-panel'
 import { FamilyTab } from './residents/family-tab'
 import { ResidentEditor } from './residents/resident-editor'
 import { StatusDialog } from './residents/status-dialog'
 import { ErrorBox, btnDangerOutline, btnSecondary, fmtDate, inputCls } from './residents/ui'
 
-type Tab = 'profile' | 'family' | 'approvals'
+type Tab = 'profile' | 'family' | 'approvals' | 'from-family'
 const displayName = (r: Resident) => `${r.preferred_name || r.first_name} ${r.last_name}`
 const STATUS_LABEL: Record<string, string> = { deceased: 'Passed away', left: 'Moved on', living: 'Living' }
 
@@ -169,7 +170,7 @@ export function ResidentsOverlay({ token, userId, onClose }: { token: string; us
 
                   {scope === 'current' && selected !== 'new' && (
                     <div className="flex gap-1 overflow-x-auto border-b border-gray-200 px-3" role="tablist" aria-label="Resident sections">
-                      {([['profile', 'Profile'], ['family', 'Family'], ['approvals', 'Approvals']] as const).map(([k, l]) => {
+                      {([['profile', 'Profile'], ['family', 'Family'], ['approvals', 'Approvals'], ['from-family', 'From family']] as const).map(([k, l]) => {
                         const n = k === 'approvals' ? (detail.data?.pending_count ?? selectedResident?.pending_count ?? 0) : 0
                         return (
                           <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
@@ -214,6 +215,7 @@ export function ResidentsOverlay({ token, userId, onClose }: { token: string; us
                           </div>
                         )}
                         {tab === 'family' && <FamilyTab client={client} resident={detail.data} onChanged={refreshAll} />}
+                        {tab === 'from-family' && <FamilyAnswersTab resident={detail.data} sections={sections} />}
                         {tab === 'approvals' && <ApprovalsTab client={client} resident={detail.data} sections={sections} onChanged={refreshAll} />}
                       </>
                     ) : null}

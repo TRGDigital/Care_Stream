@@ -9,7 +9,7 @@ import {
   FileText, Users, MessageSquare, Mail, ClipboardCheck,
   GraduationCap, BarChart2, BookOpen, ShieldAlert, Settings, Zap, ClipboardList,
   LifeBuoy, Upload, CheckCircle, Info, UserPlus, RefreshCw, CalendarDays, Lightbulb, Loader2, Building2, BadgeCheck,
-  UserRound, BriefcaseBusiness, ListChecks, Sparkles,
+  UserRound, BriefcaseBusiness, ListChecks, Sparkles, Gift,
 } from 'lucide-react'
 
 function FeatureRequestModal({ open, onClose, token }: { open: boolean; onClose: () => void; token?: string }) {
@@ -2534,6 +2534,100 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Every completed supervision is saved on the staff member&rsquo;s <strong>record page</strong>, listed under their supervisions with a link to <strong>open the full form</strong> and the <strong>next session booked</strong> off it. Any items allocated from an action show a small badge on the record, so you can see at a glance what came out of each session. The register keeps colour-coding the last and next dates so overdue supervisions stand out.
           </p>
           <div className="mt-3"><Tip>Staff can see their own booked and past sessions in their hub under <strong>Supervisions</strong>. You can turn the confirmation and reminder emails on or off under <strong>Settings &rarr; Email communications &rarr; Supervisions &amp; appraisals</strong>.</Tip></div>
+        </SectionBlock>
+      </div>
+    ),
+  },
+  {
+    id:      'staff-incentives',
+    icon:    Gift,
+    title:   'Staff incentives',
+    summary: 'Run a monthly incentive so your team finishes training: points from real records, rewards you choose, and a care manager who approves each one',
+    content: (
+      <div className="space-y-5">
+        <SectionBlock title="What it is, on the Professional and Enterprise plans">
+          <p className="text-sm text-neutral-mid">
+            Staff incentives give your team a reason to keep their training up to date. You set up an incentive for a month. Staff earn <strong>points</strong> for things CareStream records, and reaching a <strong>target</strong> unlocks a <strong>reward</strong> you have chosen, such as a shop voucher or a pizza for the shift.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            CareStream records, approves and reports. It <strong>never buys vouchers or moves money</strong>. You give the reward yourself and tell CareStream it has been given.
+          </p>
+          <div className="mt-3"><Tip>If a reward is paid through pay, or has a cash value, check with your payroll provider or adviser how it should be treated. CareStream does not give tax or employment advice.</Tip></div>
+        </SectionBlock>
+
+        <SectionBlock title="1. Setting up an incentive">
+          <div className="space-y-3">
+            <Step n={1}>Open <strong>Incentives</strong> in the <strong>Team</strong> section of the sidebar and click <strong>New incentive</strong>.</Step>
+            <Step n={2}>Give it a <strong>name</strong> and choose the <strong>month</strong>. Points are counted from the first to the last day of that month, and reset each month.</Step>
+            <Step n={3}>Choose <strong>who it applies to</strong>: everyone, or chosen staff. Agency workers are left out unless you choose them.</Step>
+            <Step n={4}>Add the <strong>ways to earn points</strong> and how many points each is worth. You can also limit how many times each can count for one person.</Step>
+            <Step n={5}>Add the <strong>rewards</strong>: a title, an optional picture such as the shop logo, the points needed, and either a number of places or everyone who qualifies. You can add the value of each reward, which the dashboard uses to show what the incentive costs.</Step>
+            <Step n={6}>Optionally set a <strong>different target for a person</strong>. This keeps it fair for part-time, new and long-serving staff.</Step>
+            <Step n={7}>Click <strong>Submit for approval</strong>. Use <strong>Save draft</strong> if you want to come back to it.</Step>
+          </div>
+        </SectionBlock>
+
+        <SectionBlock title="2. How points are earned">
+          <p className="text-sm text-neutral-mid">Points come only from what CareStream records. Nobody types them in. The ways to earn are:</p>
+          <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong>Completes a training module</strong></li>
+            <li><strong>Finishes a module on or before its due date</strong></li>
+            <li><strong>Completes a CPD course</strong></li>
+            <li><strong>Completes an onboarding flow</strong></li>
+            <li><strong>Has a practical sign-off recorded</strong></li>
+          </ul>
+          <div className="mt-3"><Tip>Points follow evidence, never speed. A module only earns points once the assessment has been <strong>passed</strong> at the module&rsquo;s pass mark. If a module needs an observed practical, it earns nothing until a manager has signed the practical off.</Tip></div>
+        </SectionBlock>
+
+        <SectionBlock title="3. Limited rewards and who wins them">
+          <p className="text-sm text-neutral-mid">
+            A reward can have a <strong>number of places</strong>, for example two vouchers this month, or be for <strong>everyone who qualifies</strong>. When places are limited, they go to the first people to reach the target. &ldquo;First&rdquo; is decided by the real time the work was completed, not by when anyone looked at the screen.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            If two people reached it at exactly the same time and only one place is left, the incentive page flags it and the care manager decides. If a care manager does not approve a reward, or someone leaves, the place passes to the next person in order.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="4. Approvals: the care manager has the final say">
+          <p className="text-sm text-neutral-mid">
+            A <strong>care manager</strong> is a staff member whose job role is Care Manager or Registered Manager, usually the person who holds the budget. They approve at two points:
+          </p>
+          <ol className="mt-1 list-decimal space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong>The incentive itself</strong>, before it goes live. They are emailed when you submit it, and find it under <strong>Incentive approvals</strong> in their hub. They can approve it or reject it with a reason.</li>
+            <li><strong>Each reward</strong>, before it is given. When someone reaches a reward it is held for them, and the care manager approves it.</li>
+          </ol>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Once approved, someone hands the reward over and clicks <strong>Mark as given</strong>. Open an incentive and use <strong>Download CSV</strong> for a list of who has been given what, for payroll or your own records.
+          </p>
+          <div className="mt-3"><Tip>If you submit an incentive and the home has nobody with the job role Care Manager or Registered Manager, CareStream tells you. Set the job role on the staff record first.</Tip></div>
+        </SectionBlock>
+
+        <SectionBlock title="5. What staff see">
+          <ul className="list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li><strong>My incentives</strong> in their hub: their own points, a progress bar for each reward, places left, and how they earned each point.</li>
+            <li>A small <strong>live points tracker</strong> in the top bar of the hub, on a phone as well as a computer.</li>
+            <li><strong>Emails</strong>: one when an incentive starts, a short summary when they earn points (never more than one a day), and at the end of the month a message for the winners and a thank you for everyone else, saying a new incentive will launch soon.</li>
+          </ul>
+          <p className="mt-2 text-sm text-neutral-mid">
+            Staff see <strong>only their own points</strong>. There is no leaderboard. If someone misses a limited reward they get a kind thank you that points them to any training still waiting for them, because the aim is a team that keeps its training up to date.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="6. What you see">
+          <ul className="list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li>The <strong>Incentives</strong> page: every incentive by month, then for each one the rewards, the ways to earn, everyone&rsquo;s progress, and the payouts.</li>
+            <li>The <strong>staff record</strong> (<strong>Staff</strong>, then a person): this month&rsquo;s position and every previous month, award by award.</li>
+            <li>A <strong>Staff incentives card on the dashboard</strong>: the share of staff who have earned points, rewards reached, waiting and given, the cost this month, and training completions compared with last month. Use <strong>Set a monthly budget</strong> on the card to see the cost against a budget.</li>
+          </ul>
+        </SectionBlock>
+
+        <SectionBlock title="Good to know">
+          <ul className="list-disc space-y-1 pl-5 text-sm text-neutral-mid">
+            <li>An incentive can be <strong>renamed</strong> at any time. A draft or rejected incentive can also be edited. Once it is live, cancel it and start a new one if you need to change the rules.</li>
+            <li>When someone <strong>leaves</strong>, they lose access to their points and rewards. A reward already handed over stays on record.</li>
+            <li>When the month ends, the incentive closes and any approved rewards can still be marked as given.</li>
+            <li>There is no dispute process. The results come from what CareStream recorded, and the care manager approves each reward.</li>
+          </ul>
         </SectionBlock>
       </div>
     ),

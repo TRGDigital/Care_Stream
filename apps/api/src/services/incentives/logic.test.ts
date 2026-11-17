@@ -69,3 +69,21 @@ t('progress percentage is clamped', () => {
   assert.equal(pct(5, 20), 25); assert.equal(pct(50, 20), 100); assert.equal(pct(-1, 20), 0); assert.equal(pct(5, 0), 0)
 })
 console.log(`\n${n} groups passed`)
+
+// earnedAt: points follow a passed assessment and any practical sign off
+{
+  const { earnedAt } = require('./logic')
+  const d = (s: string) => new Date(s)
+  const q = [{ id: 'a' }, { id: 'b' }, { id: 'c' }, { id: 'd' }, { id: 'e' }]
+  const ans = (n: number) => q.map((x, i) => ({ question_id: x.id, is_correct: i < n }))
+  const base = { completed_at: d('2026-11-10T10:00:00Z'), practical_signed: false, practical_signed_at: null, questions: q, pass_mark: 80, requires_practical: false }
+  const assert = require('node:assert')
+  assert.equal(earnedAt({ ...base, answers: ans(5) })?.toISOString(), '2026-11-10T10:00:00.000Z')   // 100 percent
+  assert.equal(earnedAt({ ...base, answers: ans(4) })?.toISOString(), '2026-11-10T10:00:00.000Z')   // 80 percent meets the mark
+  assert.equal(earnedAt({ ...base, answers: ans(3) }), null)                                          // 60 percent: no points
+  assert.equal(earnedAt({ ...base, questions: [], answers: [] })?.toISOString(), '2026-11-10T10:00:00.000Z') // lesson only
+  assert.equal(earnedAt({ ...base, answers: ans(5), requires_practical: true }), null)                // practical not signed
+  assert.equal(earnedAt({ ...base, answers: ans(5), requires_practical: true, practical_signed: true, practical_signed_at: d('2026-11-12T09:00:00Z') })?.toISOString(), '2026-11-12T09:00:00.000Z')
+  assert.equal(earnedAt({ ...base, completed_at: null, answers: ans(5) }), null)
+  console.log('earnedAt ok')
+}

@@ -3437,3 +3437,25 @@ model IncentiveClaim {
   @@index([campaign_id, status])
   @@map("incentive_claims")
 }
+
+model IncentiveNotification {
+  id          String   @id @default(uuid())
+  tenant_id   String
+  campaign_id String
+  user_id     String
+  kind        String   // launch | points | result
+  ref         String   @default("")
+  sent_at     DateTime @default(now())
+
+  @@unique([campaign_id, user_id, kind, ref])
+  @@index([campaign_id, user_id, kind, sent_at])
+  @@map("incentive_notifications")
+}
+
+model IncentiveSetting {
+  tenant_id            String   @id
+  monthly_budget_pence Int?
+  updated_at           DateTime @updatedAt
+
+  @@map("incentive_settings")
+}

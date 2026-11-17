@@ -112,3 +112,5 @@ alter table public.incentive_claims enable row level security;
 -- Optional, run once after this: evaluate live campaigns every 30 minutes so claims form even if nobody opens the page.
 -- select cron.unschedule('cs-incentives') where exists (select 1 from cron.job where jobname = 'cs-incentives');
 -- select cron.schedule('cs-incentives', '*/30 * * * *', $$select public.carestream_cron('incentives')$$);
+
+-- (emails and budget tables are in 2026-11-17_staff_incentives_emails.sql)

@@ -172,6 +172,18 @@ async function call<T>(path: string, token: string, init: RequestInit = {}): Pro
   return body.data as T
 }
 
+export interface IncentiveSummary {
+  month: string
+  campaigns: Array<{ id: string; name: string; status: CampaignStatus }>
+  people: number
+  earners: number
+  points: number
+  rewards: { reached: number; waiting: number; given: number }
+  value_pence: { approved_or_given: number; waiting: number }
+  budget_pence: number | null
+  training: { this_month: number; last_month: number }
+}
+
 export function createIncentivesClient(token: string) {
   const j = (v: unknown) => JSON.stringify(v)
   return {
@@ -198,6 +210,10 @@ export function createIncentivesClient(token: string) {
     rejectClaim: (id: string, reason: string) => call<IncentiveClaim>(`/incentives/claims/${id}/reject`, token, { method: 'POST', body: j({ reason }) }),
     /** Care manager or admin: the reward has been handed over (approved -> given). */
     markGiven: (id: string, note?: string) => call<IncentiveClaim>(`/incentives/claims/${id}/given`, token, { method: 'POST', body: j({ note }) }),
+
+    // Admin: dashboard card and the optional monthly budget
+    summary: () => call<IncentiveSummary>('/incentives/summary', token),
+    saveBudget: (monthly_budget_pence: number | null) => call<{ monthly_budget_pence: number | null }>('/incentives/settings', token, { method: 'PUT', body: j({ monthly_budget_pence }) }),
 
     // Staff: their own points only
     mine: () => call<{ enabled: boolean; campaigns: MyCampaign[]; outstanding_training: number }>('/incentives/me', token),

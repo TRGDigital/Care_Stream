@@ -21,6 +21,7 @@ import { residentsEnabled } from '../lib/residents'
 import { EVENTS, EVENT_KEYS, periodFor, currentMonth, pct } from '../services/incentives/logic'
 import { evaluateCampaign, campaignPeople, targetFor } from '../services/incentives/engine'
 import { sendIncentiveEmail } from '../services/email/outbound'
+import { notifyLaunch } from '../services/incentives/notify'
 
 export const incentivesRouter = Router()
 const db = prisma as any
@@ -210,6 +211,7 @@ incentivesRouter.post('/campaigns/:id/approve', requireManager, async (req: Requ
   const me = await actor(req)
   const upd = await db.incentiveCampaign.update({ where: { id: c.id }, data: { status: 'live', approved_by: me.email, approved_by_name: me.name, approved_at: new Date(), rejected_reason: null, last_evaluated_at: null } })
   await evaluateCampaign(tenantId, c.id, { force: true }).catch(e => console.error('[incentives] evaluate', e))
+  void notifyLaunch(tenantId, c.id).catch(e => console.error('[incentives] launch email failed', e))
   void notifyCreator(tenantId, c, `Approved: ${c.name}`, 'Your incentive is live', `${me.name} approved "${c.name}". Staff can see it in the hub now.`)
   ok(res, await detail(tenantId, upd))
 })
@@ -471,4 +473,61 @@ incentivesRouter.get('/staff/:userId', async (req: Request, res: Response) => {
     }])
   }
   ok(res, { months: Array.from(byMonth.entries()).sort((a, b) => b[0].localeCompare(a[0])).map(([month, campaigns]) => ({ month, campaigns })) })
+})
+
+
+// ─── Dashboard summary and the optional monthly budget ────────────────────────
+const monthRange = (offset: number) => {
+  const now = new Date()
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + offset, 1))
+  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + offset + 1, 1) - 1)
+  return { start, end }
+}
+
+async function budgetPence(tenantId: string): Promise<number | null> {
+  try { return (await db.incentiveSetting.findUnique({ where: { tenant_id: tenantId } }))?.monthly_budget_pence ?? null } catch { return null }
+}
+
+incentivesRouter.get('/summary', async (_req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const month = currentMonth()
+  const camps = await db.incentiveCampaign.findMany({ where: { tenant_id: tenantId, month, status: { in: ['live', 'ended'] } }, orderBy: { created_at: 'asc' } })
+  for (const c of camps as any[]) if (c.status === 'live') await evaluateCampaign(tenantId, c.id).catch(() => {})
+  const ids = (camps as any[]).map(c => c.id)
+  const [claims, rewards, ledger, participants] = ids.length ? await Promise.all([
+    db.incentiveClaim.findMany({ where: { campaign_id: { in: ids }, status: { in: ['held', 'approved', 'given'] } } }),
+    db.incentiveReward.findMany({ where: { campaign_id: { in: ids } } }),
+    db.incentiveLedger.findMany({ where: { campaign_id: { in: ids } }, select: { campaign_id: true, user_id: true, points: true } }),
+    db.incentiveParticipant.findMany({ where: { campaign_id: { in: ids } } }),
+  ]) : [[], [], [], []]
+  const valueOf = (rewardId: string) => (rewards as any[]).find(r => r.id === rewardId)?.value_pence ?? 0
+  const sum = (status: string[]) => (claims as any[]).filter(c => status.includes(c.status)).reduce((n, c) => n + valueOf(c.reward_id), 0)
+  let people = 0
+  const earners = new Set<string>()
+  for (const c of camps as any[]) {
+    const ps = (participants as any[]).filter(p => p.campaign_id === c.id)
+    people += (await campaignPeople(tenantId, c, ps)).filter(p => p.is_active).length
+  }
+  for (const l of ledger as any[]) earners.add(`${l.campaign_id}:${l.user_id}`)
+  const doneIn = (r: { start: Date; end: Date }) => db.trainingEnrollment.count({ where: { tenant_id: tenantId, status: 'complete', completed_at: { gte: r.start, lte: r.end } } }).catch(() => 0)
+  const [thisMonth, lastMonth] = await Promise.all([doneIn(monthRange(0)), doneIn(monthRange(-1))])
+  ok(res, {
+    month,
+    campaigns: (camps as any[]).map(c => ({ id: c.id, name: c.name, status: c.status })),
+    people, earners: earners.size, points: (ledger as any[]).reduce((n, l) => n + l.points, 0),
+    rewards: { reached: (claims as any[]).length, waiting: (claims as any[]).filter(c => c.status === 'held').length, given: (claims as any[]).filter(c => c.status === 'given').length },
+    value_pence: { approved_or_given: sum(['approved', 'given']), waiting: sum(['held']) },
+    budget_pence: await budgetPence(tenantId),
+    training: { this_month: thisMonth, last_month: lastMonth },
+  })
+})
+
+incentivesRouter.put('/settings', async (req: Request, res: Response) => {
+  const p = z.object({ monthly_budget_pence: z.number().int().min(0).max(100_000_000).nullable() }).safeParse(req.body)
+  if (!p.success) { err(res, 'VALIDATION_ERROR', 'Enter a budget in pounds, or leave it empty for none.'); return }
+  const tenantId = getTenantId()
+  try {
+    await db.incentiveSetting.upsert({ where: { tenant_id: tenantId }, create: { tenant_id: tenantId, monthly_budget_pence: p.data.monthly_budget_pence }, update: { monthly_budget_pence: p.data.monthly_budget_pence } })
+  } catch { err(res, 'NOT_READY', 'The budget can be saved once the latest database update has been run.', 503); return }
+  ok(res, { monthly_budget_pence: p.data.monthly_budget_pence })
 })

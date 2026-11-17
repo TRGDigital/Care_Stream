@@ -73,3 +73,30 @@ export function rankClaims(claims: RankInput[], quantity: number | null): RankOu
 }
 
 export const pct = (points: number, target: number) => (target > 0 ? Math.max(0, Math.min(100, Math.round((points / target) * 100))) : 0)
+
+
+/**
+ * Has this person earned the right to the points for a training module? Points follow evidence, never speed:
+ *  - a module with an assessment needs the correct answers to reach its pass mark (default 80 percent);
+ *  - a module with no questions (a lesson only) counts as passed once marked complete;
+ *  - a module that needs an observed practical earns nothing until a manager has signed the practical off.
+ * Returns the time the points were earned (the later of completion and practical sign off), or null if not yet earned.
+ */
+export function earnedAt(e: {
+  completed_at: Date | null; practical_signed: boolean; practical_signed_at: Date | null
+  questions: Array<{ id: string }> | null; answers: Array<{ question_id: string; is_correct: boolean }>
+  pass_mark: number | null; requires_practical: boolean
+}): Date | null {
+  if (!e.completed_at) return null
+  const bank = Array.isArray(e.questions) ? e.questions : []
+  if (bank.length > 0) {
+    const ids = new Set(bank.map(q => q.id))
+    const correct = e.answers.filter(a => ids.has(a.question_id) && a.is_correct).length
+    if (Math.round((correct / bank.length) * 100) < (e.pass_mark ?? 80)) return null
+  }
+  if (e.requires_practical) {
+    if (!e.practical_signed || !e.practical_signed_at) return null
+    return e.practical_signed_at > e.completed_at ? e.practical_signed_at : e.completed_at
+  }
+  return e.completed_at
+}

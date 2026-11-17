@@ -7,7 +7,7 @@
 // job ran. Limited rewards hold a place for the earliest people; a care manager approves each payout. CareStream never pays anything.
 
 import { prisma } from '../../db/client'
-import { applyCaps, periodFor, rankClaims, reachedAt, type RawEvent } from './logic'
+import { applyCaps, earnedAt, periodFor, rankClaims, reachedAt, type RawEvent } from './logic'
 
 const db = prisma as any
 const THROTTLE_MS = 90_000
@@ -40,19 +40,32 @@ async function findEvents(tenantId: string, campaign: any, rules: any[], userIds
   const ruleFor = (e: string) => rules.find(r => r.event === e)
 
   if (has('training_completed') || has('training_on_time') || has('cpd_completed')) {
+    // Points need evidence: a passed assessment (and the practical sign off where the module needs one). See earnedAt().
     const done = await db.trainingEnrollment.findMany({
-      where: { tenant_id: tenantId, user_id: { in: userIds }, status: 'complete', completed_at: range },
-      select: { id: true, user_id: true, completed_at: true, due_date: true, module: { select: { name: true, tier: true } } },
+      where: {
+        tenant_id: tenantId, user_id: { in: userIds }, status: 'complete',
+        OR: [{ completed_at: range }, { practical_signed_at: range }],
+      },
+      select: {
+        id: true, user_id: true, completed_at: true, due_date: true, practical_signed: true, practical_signed_at: true,
+        answers: { select: { question_id: true, is_correct: true } },
+        module: { select: { name: true, tier: true, questions: true, pass_mark: true, requires_practical: true } },
+      },
     })
     for (const e of done as any[]) {
-      if (!e.completed_at) continue
-      const src = `${e.id}@${new Date(e.completed_at).getTime()}`
+      const at = earnedAt({
+        completed_at: e.completed_at ? new Date(e.completed_at) : null, practical_signed: !!e.practical_signed,
+        practical_signed_at: e.practical_signed_at ? new Date(e.practical_signed_at) : null,
+        questions: e.module?.questions ?? null, answers: e.answers ?? [], pass_mark: e.module?.pass_mark ?? null, requires_practical: !!e.module?.requires_practical,
+      })
+      if (!at || at < campaign.period_start || at > campaign.period_end) continue
+      const src = `${e.id}@${at.getTime()}`
       const name = e.module?.name ?? 'a training module'
-      const base = { user_id: e.user_id, source_id: src, occurred_at: new Date(e.completed_at) }
+      const base = { user_id: e.user_id, source_id: src, occurred_at: at }
       const r1 = ruleFor('training_completed')
       if (r1) out.push({ ...base, rule_id: r1.id, event: r1.event, points: r1.points, label: `Completed ${name}` })
       const r2 = ruleFor('training_on_time')
-      if (r2 && e.due_date && new Date(e.completed_at) <= new Date(new Date(e.due_date).getTime() + 86_399_000)) {
+      if (r2 && e.due_date && at <= new Date(new Date(e.due_date).getTime() + 86_399_000)) {
         out.push({ ...base, rule_id: r2.id, event: r2.event, points: r2.points, label: `Finished ${name} on time` })
       }
       const r3 = ruleFor('cpd_completed')
@@ -157,6 +170,13 @@ export async function evaluateCampaign(tenantId: string, campaignId: string, opt
 
   const finished = campaign.status === 'live' && now > campaign.period_end
   await db.incentiveCampaign.update({ where: { id: campaignId }, data: { last_evaluated_at: now, ...(finished ? { status: 'ended' } : {}) } })
+
+  // Emails to the people taking part (each one is logged, so repeats are harmless; nothing is sent until the log table exists).
+  try {
+    const mail = await import('./notify')
+    if (finished || campaign.status === 'ended') await mail.notifyResults(tenantId, campaignId)
+    else await mail.notifyPoints(tenantId, campaignId)
+  } catch (e) { console.error('[incentives] notify failed', e) }
 }
 
 /** Every live campaign (and any that have just run out of month), for the scheduled job. */

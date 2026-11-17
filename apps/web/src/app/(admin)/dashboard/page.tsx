@@ -7,6 +7,7 @@ import { createApiClient } from '@/lib/api-client'
 import { AiUsageCards } from '@/components/ai-usage'
 import { SetupChecklist } from '@/components/admin/setup-checklist'
 import { PlanCard } from '@/components/admin/plan-card'
+import { IncentivesDashboardCard } from '@/components/admin/incentives/dashboard-card'
 import { TrainingOnlyDashboard } from '@/components/admin/training-only-dashboard'
 import { FreeDashboard } from '@/components/admin/free-tier'
 import { persistentCache } from '@/lib/page-cache'
@@ -380,6 +381,9 @@ export default function DashboardPage() {
           </div>
         ))}
       </div>
+
+      {/* Staff incentives (Professional and Enterprise): hidden on other plans */}
+      {session?.accessToken && (session.user as any)?.tier !== 'training_only' && <IncentivesDashboardCard token={session.accessToken} userKey={session.user?.email ?? 'guest'} />}
 
       {/* Needs follow-up — staff with unreviewed knowledge gaps */}
       {followUp && followUp.staff.length > 0 && (

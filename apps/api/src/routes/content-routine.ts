@@ -8,6 +8,8 @@
 //                                      heading, opening or image), and the platform's draft counts
 //   POST /routine/content/blog         save posts as DRAFTS
 //   POST /routine/content/collections  save collections as DRAFTS
+//   POST /routine/content/notify       once at the end of a night: emails the platform owner the drafts created in the
+//                                      last day plus the routine's own report
 //
 // Nothing here can publish, change a published page, or refresh one: the shared import functions are called with
 // allowRefresh false, and every item is forced to status draft. A human approves each page in /platform/blog.
@@ -17,6 +19,7 @@ import { timingSafeEqual } from 'crypto'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { importBlogDrafts, importCollectionDrafts } from './admin'
+import { sendContentDraftsEmail } from '../services/email/outbound'
 import bundle from '../data/content-engine/bundle.json'
 
 export const contentRoutineRouter = Router()
@@ -90,4 +93,21 @@ contentRoutineRouter.post('/collections', async (req: Request, res: Response) =>
   if (!list.length) { err(res, 'VALIDATION_ERROR', 'collections must be a non empty array.'); return }
   const clean = list.map((c: any) => { const { refresh: _r, status: _s, ...rest } = c ?? {}; return rest })
   ok(res, await importCollectionDrafts(clean, false))
+})
+
+// POST /routine/content/notify  { kind: 'blog' | 'collections', report?: string }
+// Looks the drafts up in the database rather than trusting the routine's list, so the email is a true record.
+contentRoutineRouter.post('/notify', async (req: Request, res: Response) => {
+  const kind = req.body?.kind
+  if (kind !== 'blog' && kind !== 'collections') { err(res, 'VALIDATION_ERROR', "kind must be 'blog' or 'collections'."); return }
+  const since = new Date(Date.now() - 8 * 3600 * 1000)
+  const rows = kind === 'blog'
+    ? await (prisma as any).blogPost.findMany({ where: { created_at: { gte: since } }, orderBy: { created_at: 'asc' }, select: { title: true, slug: true, primary_keyword: true, created_at: true, status: true } })
+    : await (prisma as any).collection.findMany({ where: { created_at: { gte: since } }, orderBy: { created_at: 'asc' }, select: { title: true, slug: true, primary_keyword: true, created_at: true, status: true } })
+  try {
+    await sendContentDraftsEmail({ kind, items: rows, report: String(req.body?.report ?? '') })
+  } catch (e: any) {
+    err(res, 'EMAIL_FAILED', String(e?.message ?? e).slice(0, 200)); return
+  }
+  ok(res, { kind, listed: rows.length })
 })

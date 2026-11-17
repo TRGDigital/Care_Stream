@@ -2183,3 +2183,55 @@ export async function sendReminderEmail(r: DueReminder, links: { cro: string; ch
   await sgMail.send({ to, from, subject: `Reminder: ${r.title}`.slice(0, 200), html })
 }
 
+
+
+// ─── Nightly content routine confirmation, to the platform owner ─────────────────
+// Sent once at the end of the nightly blog and collection routines (POST /routine/content/notify) with the drafts
+// created in the last day, so Len can keep track. A night that created nothing says so loudly, because the quiet
+// failure is the one that goes unnoticed. If no email arrives at all, the routine itself did not run to the end.
+export async function sendContentDraftsEmail(opts: {
+  kind: 'blog' | 'collections'
+  items: Array<{ title: string; slug: string; primary_keyword: string | null; created_at: Date | string }>
+  report: string
+}): Promise<void> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) { console.warn('[email] SENDGRID_API_KEY not set, skipping content drafts email'); return }
+
+  const to   = process.env.CONTENT_REPORT_EMAIL ?? 'lenny@trgdigital.co.uk'
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const esc  = (s: any) => String(s ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string))
+  const label = opts.kind === 'blog' ? 'blog post' : 'collection page'
+  const n = opts.items.length
+  const link = `${siteUrl()}/platform/blog`
+  const rows = opts.items.map(i => `
+    <tr>
+      <td style="padding:8px 0;border-top:1px solid #f3f4f6;font-size:13px;color:#374151">
+        <strong style="color:${NEUTRAL_DARK}">${esc(i.title)}</strong><br>
+        <span style="color:#6b7280">${esc(opts.kind === 'blog' ? '/blog/' : '/collection/')}${esc(i.slug)}${i.primary_keyword ? ` &middot; ${esc(i.primary_keyword)}` : ''}</span>
+      </td>
+    </tr>`).join('')
+  const report = String(opts.report ?? '').slice(0, 6000)
+
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:16px;font-weight:700;margin:0 0 6px">
+      ${n === 0 ? `No ${label}s were created last night` : `${n} ${label}${n === 1 ? '' : 's'} created last night`}
+    </p>
+    <p style="color:#374151;font-size:13px;line-height:1.6;margin:0 0 14px">
+      ${n === 0
+        ? 'The routine reported in but saved nothing. Its own report is below, so you can see why.'
+        : `They are drafts and are not public. Review and publish them in <a href="${link}" style="color:${PURPLE_DARK}">the platform blog area</a>${opts.kind === 'collections' ? ' (Collections tab)' : ''}.`}
+    </p>
+    ${n ? `<table style="width:100%;border-collapse:collapse;margin:0 0 16px">${rows}</table>` : ''}
+    ${report ? `<p style="color:${NEUTRAL_DARK};font-size:13px;font-weight:700;margin:0 0 6px">The routine's report</p>
+    <div style="white-space:pre-wrap;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;font-size:12px;line-height:1.55;color:#374151">${esc(report)}</div>` : ''}
+    ${emailFooter()}
+  `)
+
+  await sgMail.send({
+    to, from,
+    subject: n === 0
+      ? `Nightly ${label}s: nothing created (needs a look)`
+      : `Nightly ${label}s: ${n} draft${n === 1 ? '' : 's'} created`,
+    html,
+  })
+}

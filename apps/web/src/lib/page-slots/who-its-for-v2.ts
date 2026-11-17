@@ -28,7 +28,7 @@ export const WHO_ITS_FOR_V2_SLOTS: SlotDef[] = [
   { key: 'training.label', group: 'Training managers', label: 'Eyebrow', default: 'Training managers' },
   { key: 'training.h2', group: 'Training managers', label: 'Heading', default: 'Assign, track and prove training, from one library, in every language.' },
   { key: 'training.lede', group: 'Training managers', label: 'Paragraph', multiline: true, default: 'Move beyond the annual tick-box. Roll out ready-built modules or generate new ones from your own policies, then watch completion and compliance across your whole team on a single dashboard.' },
-  { key: 'training.try', group: 'Training managers', label: 'Demo caption', multiline: true, default: 'Read the lesson, answer the question, then tap the language button to flip the whole step into another language. The same flow your staff use in the hub, in over 50 languages.' },
+  { key: 'training.try', group: 'Training managers', label: 'Demo caption', multiline: true, default: 'Read the lesson, answer the question, then tap the language button to flip the whole step into another language. The same flow your staff use in the hub, in over 60 languages.' },
 
   { key: 'end.h2', group: 'Closing', label: 'Heading', default: 'See it against your own policies.' },
   { key: 'end.lede', group: 'Closing', label: 'Paragraph', multiline: true, default: 'Whatever you run, upload what you already have and see it working inside a fortnight.' },

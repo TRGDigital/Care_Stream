@@ -332,7 +332,7 @@ function TrainingManagersSection({ catalogue, demo }: { catalogue: TrainingCatal
               <span className="text-sm font-bold text-white">Training Managers</span>
             </div>
             <h2 className="text-2xl font-extrabold leading-snug text-neutral-dark md:text-3xl">
-              Assign, track and prove training — from one library, in every language
+              Assign, track and prove training, from one library, in every language
             </h2>
             <p className="mt-4 leading-relaxed text-neutral-mid">
               Move beyond the annual tick-box. Roll out ready-built modules or generate new ones
@@ -349,12 +349,12 @@ function TrainingManagersSection({ catalogue, demo }: { catalogue: TrainingCatal
             {demo && (
               <div>
                 <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-teal">
-                  Try a lesson — the exact experience your team gets
+                  Try a lesson: the exact experience your team gets
                 </p>
                 <TrainingDemo demo={demo} buyHref={`/buy/${FEATURED_DEMO_SLUG}`} variant="card" />
                 <p className="mt-3 text-sm leading-relaxed text-neutral-mid">
                   Read the lesson, answer the question, then tap the language button to flip the whole
-                  step into another language — the same flow, in over 60 languages, that your staff use in the hub.
+                  step into another language. The same flow your staff use in the hub, in over 60 languages.
                 </p>
               </div>
             )}

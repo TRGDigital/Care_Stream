@@ -218,3 +218,85 @@
 .wfpage-v2 .shot,.wfpage-v2 .sshot,.wfpage-v2 .sscen-shot,.wfpage-v2 .uc-shot,.wfpage-v2 .wcshot,.wfpage-v2 .svshot,.wfpage-v2 .wwshot,.wfpage-v2 .wfshot,.wfpage-v2 .wfheroshot,.wfpage-v2 .tpshot,.wfpage-v2 .rgshot,.wfpage-v2 .dmshot,.wfpage-v2 .plate:not(.shotplate),.wfpage-v2 .smock,.wfpage-v2 .ucread-art,.wfpage-v2 .pcrel-art{display:block!important;overflow:hidden;padding:0!important;aspect-ratio:auto!important;height:auto!important;min-height:0!important;max-height:none!important}
 .wfpage-v2 .shot img,.wfpage-v2 .sshot img,.wfpage-v2 .sscen-shot img,.wfpage-v2 .uc-shot img,.wfpage-v2 .wcshot img,.wfpage-v2 .svshot img,.wfpage-v2 .wwshot img,.wfpage-v2 .wfshot img,.wfpage-v2 .wfheroshot img,.wfpage-v2 .tpshot img,.wfpage-v2 .rgshot img,.wfpage-v2 .dmshot img,.wfpage-v2 .plate:not(.shotplate) img,.wfpage-v2 .smock img,.wfpage-v2 .ucread-art img,.wfpage-v2 .pcrel-art img{display:block;width:100%!important;height:auto!important;object-fit:contain;border-radius:inherit}
 .wfpage-v2 .fchips,.wfpage-v2 .schips,.wfpage-v2 .smock-tabs,.wfpage-v2 .uc-tags{flex-wrap:wrap;overflow:visible}
+
+/* The live training taster (TrainingDemo, theme variant). Ported unchanged from staff-training-index-v2.css and re-scoped, because
+ * these rules were scoped to .stpage-v2 and so never reached this page, which left the demo unstyled. Same tokens, same look. */
+.wfpage-v2 .demo-steps{display:flex;align-items:center;gap:9px;padding:13px 22px;border-bottom:1px solid var(--line)}
+.wfpage-v2 .demo-steps .s{display:flex;align-items:center;gap:8px}
+.wfpage-v2 .demo-steps .n{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;font-size:.74rem;font-weight:800;background:var(--ground-2);color:var(--muted);flex:0 0 auto}
+.wfpage-v2 .demo-steps .s.on .n{background:var(--accent);color:#fff}
+.wfpage-v2 .demo-steps .s.done .n{background:var(--accent-soft);color:var(--accent)}
+.wfpage-v2 .demo-steps .lb{font-size:.8rem;font-weight:700;color:var(--muted)}
+.wfpage-v2 .demo-steps .s.on .lb{color:var(--ink)}
+.wfpage-v2 .demo-steps .bar{width:18px;height:1px;background:var(--line);flex:0 0 auto}
+.wfpage-v2 .demo-res{padding:20px 22px}
+.wfpage-v2 .demo-verdict{display:flex;align-items:center;gap:11px;border-radius:12px;padding:13px 15px;margin-bottom:16px;font-weight:750;font-size:1rem}
+.wfpage-v2 .demo-verdict.right{background:#E7F5EE;color:#0E5D3C}
+.wfpage-v2 .demo-verdict.wrong{background:#FDF3E7;color:#8A5A16}
+.wfpage-v2 .demo-verdict svg{width:20px;height:20px;flex:0 0 auto}
+.wfpage-v2 .demo-ans{display:grid;gap:9px;margin-bottom:15px}
+.wfpage-v2 .demo-ans div{display:grid;grid-template-columns:auto 1fr;gap:11px;align-items:start;border:1px solid var(--line);border-radius:11px;padding:12px 14px;font-size:.88rem;line-height:1.55;background:var(--ground);opacity:.55}
+.wfpage-v2 .demo-ans div.right{border-color:#8FD3B4;background:#E7F5EE;color:#0E5D3C;opacity:1;font-weight:650}
+.wfpage-v2 .demo-ans div.wrong{border-color:#E8B3A8;background:#FBEAE7;color:#8C3123;opacity:1}
+.wfpage-v2 .demo-ans .k{width:19px;height:19px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;font-size:.62rem;font-weight:800;color:var(--muted);flex:0 0 auto}
+.wfpage-v2 .demo-ans div.right .k, .wfpage-v2 .demo-ans div.wrong .k{border:0}
+.wfpage-v2 .demo-why{background:var(--ground-2);border-radius:12px;padding:14px 15px;font-size:.87rem;line-height:1.62;color:var(--ink-2)}
+.wfpage-v2 .demo-why b{color:var(--ink)}
+.wfpage-v2 .demo-follow{margin-top:11px;border:1px solid var(--accent-soft);background:#FBF8FE;border-radius:12px;padding:13px 15px}
+.wfpage-v2 .demo-follow .hd{display:flex;align-items:center;gap:9px;font-size:.88rem;font-weight:650}
+.wfpage-v2 .demo-follow .hd svg{width:15px;height:15px;stroke:var(--accent);flex:0 0 auto}
+.wfpage-v2 .demo-follow button{border:0;background:none;padding:0;cursor:pointer;color:var(--accent);font-size:.8rem;font-weight:650;text-decoration:underline}
+.wfpage-v2 .demo-follow p{margin:9px 0 0;font-size:.85rem;line-height:1.6;color:var(--muted)}
+.wfpage-v2 .demo-cta{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.wfpage-v2 .demo-cta .lead{font-size:.9rem;font-weight:650;margin:0 0 12px}
+.wfpage-v2 .demo-cta .row{display:flex;gap:10px;flex-wrap:wrap}
+.wfpage-v2 .demo-cta .row a{flex:1 1 160px;font-size:.85rem;padding:11px 16px;justify-content:center;text-align:center}
+.wfpage-v2 .demo-again{margin-top:13px;display:inline-flex;align-items:center;gap:7px;border:0;background:none;padding:0;cursor:pointer;color:var(--muted);font-size:.82rem;font-weight:650}
+.wfpage-v2 .demo-again:hover{color:var(--accent)}
+.wfpage-v2 .demo-again svg{width:14px;height:14px}
+.wfpage-v2 .tbtn{display:inline-flex;align-items:center;gap:8px;border-radius:999px;text-decoration:none;
+    font:inherit;font-size:.9rem;font-weight:650;padding:12px 21px;cursor:pointer;border:0}
+.wfpage-v2 .tbtn.solid{background:var(--btn-ink);color:var(--btn-ink-text)}
+.wfpage-v2 .tbtn.ghost{border:1px solid var(--line);background:var(--ground);color:var(--ink)}
+.wfpage-v2 .tbtn.ghost:hover{border-color:#D9D2E6}
+.wfpage-v2 .tbtn svg{width:14px;height:14px}
+.wfpage-v2 .demo{background:var(--ground);border:1px solid var(--line);border-radius:18px;
+    box-shadow:var(--shadow-lg);overflow:hidden}
+.wfpage-v2 .demo-top{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:13px 18px;border-bottom:1px solid var(--line);background:var(--ground-2)}
+.wfpage-v2 .demo-top b{font-size:.85rem;letter-spacing:-.01em}
+.wfpage-v2 .demo-step{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.66rem;
+    letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.wfpage-v2 .demo-pic{width:100%;height:auto;aspect-ratio:21/8;object-fit:cover;display:block;background:var(--plate)}
+.wfpage-v2 .demo-body{padding:20px 22px}
+.wfpage-v2 .demo-body h3{font-size:1.05rem;letter-spacing:-.018em;margin:0 0 10px}
+.wfpage-v2 .demo-body p{font-size:.9rem;line-height:1.62;color:var(--ink-2);margin:0 0 16px}
+.wfpage-v2 .demo-q{font-size:.95rem;font-weight:600;line-height:1.5;margin:0 0 14px;letter-spacing:-.012em}
+.wfpage-v2 .demo-opts{display:grid;gap:7px;margin-bottom:12px}
+.wfpage-v2 .demo-opt{display:flex;gap:10px;align-items:flex-start;text-align:left;font:inherit;font-size:.85rem;
+    line-height:1.45;cursor:pointer;background:var(--ground);border:1px solid var(--line);
+    border-radius:10px;padding:10px 13px;color:var(--ink-2);width:100%}
+.wfpage-v2 .demo-opt:hover{border-color:#D9D2E6}
+.wfpage-v2 .demo-opt .k{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.74rem;
+    font-weight:700;color:var(--muted);flex:0 0 auto}
+.wfpage-v2 .demo-opt[data-state="right"]{background:#E7F5EE;border-color:#8FD3B4;color:#0E5D3C}
+.wfpage-v2 .demo-opt[data-state="right"] .k{color:#0E5D3C}
+.wfpage-v2 .demo-opt[data-state="wrong"]{background:#FBEAE7;border-color:#E8B3A8;color:#8C3123}
+.wfpage-v2 .demo-opt[data-state="wrong"] .k{color:#8C3123}
+.wfpage-v2 .demo-opt[disabled]{cursor:default}
+.wfpage-v2 .demo-fb{font-size:.87rem;line-height:1.6;border-radius:11px;padding:13px 15px;margin-bottom:4px}
+.wfpage-v2 .demo-fb.right{background:#E7F5EE;color:#0E5D3C}
+.wfpage-v2 .demo-fb.wrong{background:var(--accent-soft);color:var(--ink-2)}
+.wfpage-v2 .demo-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    padding:13px 18px;border-top:1px solid var(--line);background:var(--ground-2);
+    font-size:.78rem;color:var(--muted)}
+.wfpage-v2 .demo-foot .langs{display:flex;gap:6px}
+.wfpage-v2 .demo-lang{font:inherit;font-size:.7rem;font-weight:600;cursor:pointer;
+    background:var(--ground);border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--ink-2)}
+.wfpage-v2 .demo-lang:hover{border-color:#D9D2E6}
+.wfpage-v2 .demo-lang[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.wfpage-v2 .demo-foot .langs{flex-wrap:wrap}
+
+/* Placement on this page: the taster sits under the section intro, no wider than a comfortable reading width. */
+.wfpage-v2 #training-managers .demo{max-width:980px;margin:30px 0 0}
+.wfpage-v2 #training-managers .wftag{max-width:980px}

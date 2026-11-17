@@ -2341,3 +2341,22 @@ export async function sendResidentRetentionEmail(opts: {
   `)
   await sgMail.send({ to: opts.to, from: residentFrom('CareStream'), subject: `Archived profiles to review (${opts.items.length})`, html, trackingSettings: { clickTracking: { enable: false, enableText: false } } })
 }
+
+
+/** Platform owner diagnostic: send a plain test email and report exactly what SendGrid answered (status and message id), plus the From address
+ *  actually in use. A 202 means SendGrid accepted it for delivery; it does not mean the recipient's mail system accepted it. */
+export async function sendEmailDeliveryTest(to: string): Promise<{ status: number; message_id: string | null; from: string; to: string }> {
+  ensureInitialised()
+  if (!process.env.SENDGRID_API_KEY) throw new Error('SENDGRID_API_KEY is not set on this server.')
+  const from = process.env.SENDGRID_FROM_ADDRESS ?? process.env.SENDGRID_FROM_EMAIL ?? `noreply@${INBOUND_DOMAIN}`
+  const html = emailWrapper(`
+    <p style="color:${NEUTRAL_DARK};font-size:15px;margin:0 0 12px">This is a delivery test from CareStream.</p>
+    <p style="color:#374151;font-size:14px;line-height:1.6;margin:0 0 12px">
+      You are seeing it because someone asked us to check that email reaches <strong>${escHtml(to)}</strong>. There is nothing for you to do.
+      It was sent from <strong>${escHtml(from)}</strong>.
+    </p>
+    ${emailFooter()}
+  `)
+  const [resp] = await sgMail.send({ to, from, subject: 'CareStream delivery test', html, trackingSettings: { clickTracking: { enable: false, enableText: false } } })
+  return { status: resp.statusCode, message_id: (resp.headers?.['x-message-id'] as string) ?? null, from, to }
+}

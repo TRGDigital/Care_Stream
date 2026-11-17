@@ -3425,6 +3425,18 @@ adminRouter.get('/service-requests/:id/image', async (req: Request, res: Respons
 
 // Platform owner diagnostic: how long a database round trip takes from this API instance, and where both sit.
 // Returns the database HOST and port only (never credentials). Used to find out why every page is slow.
+// Platform owner: send a delivery test to an address and see exactly what SendGrid answered (and which From address is in use).
+adminRouter.post('/diagnostics/email-test', async (req: Request, res: Response) => {
+  const to = String(req.body?.to ?? '').trim().toLowerCase()
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) { err(res, 'VALIDATION_ERROR', 'Give a valid email address in "to".'); return }
+  try {
+    const { sendEmailDeliveryTest } = await import('../services/email/outbound')
+    ok(res, await sendEmailDeliveryTest(to))
+  } catch (e: any) {
+    err(res, 'EMAIL_FAILED', String(e?.response?.body ? JSON.stringify(e.response.body) : (e?.message ?? e)).slice(0, 500), 502)
+  }
+})
+
 adminRouter.get('/diagnostics/db-latency', async (_req: Request, res: Response) => {
   let host: string | null = null, port: string | null = null
   try { const u = new URL(process.env.DATABASE_URL ?? ''); host = u.hostname; port = u.port || null } catch { /* leave null */ }

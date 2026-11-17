@@ -526,7 +526,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             The list in Settings shows each entry alongside the staff member it belongs to, for example <em>jane@example.com, Jane Smith (Care Assistant)</em>, so you can see at a glance who each address belongs to. Only addresses on this list can query CareStream by email; messages from anyone else are ignored. You can still add shared or external addresses manually in Settings.
           </p>
         </SectionBlock>
-        <Tip>Adding a staff member creates a login for them. You'll see their credentials once, on screen, share them securely, and use <strong>Re-send login</strong> from the staff member's menu if they're ever needed again.</Tip>
+        <Tip>Adding a staff member creates a login for them. You'll see their credentials once, on screen, so share them securely. If they ever need to get back in, use <strong>Re-send login</strong> from their menu: it emails them a one-time sign-in link (no password needed) and leaves their password alone. If they have forgotten their password and you want to give them a new one, use <strong>Reset password</strong> instead: it changes the password straight away and shows you the new one, with an option to email it.</Tip>
       </div>
     ),
   },

@@ -1380,6 +1380,12 @@ export function createPlatformClient(token: string) {
         adminFetch<{ ran_at: string; payload: any; changed_since: boolean } | null>(`/policy-gaps/${tenantId}/catalogue-gaps/saved`, token),
       saveCatalogue: (tenantId: string, payload: unknown) =>
         adminFetch<{ saved: boolean }>(`/policy-gaps/${tenantId}/catalogue-gaps/saved`, token, { method: 'PUT', body: JSON.stringify({ payload }) }),
+      getPush: (tenantId: string) =>
+        adminFetch<{ pushed_at: string; count: number; dismissed: number } | null>(`/policy-gaps/${tenantId}/catalogue-gaps/push`, token),
+      pushGaps: (tenantId: string, slugs: string[]) =>
+        adminFetch<{ pushed: number }>(`/policy-gaps/${tenantId}/catalogue-gaps/push`, token, { method: 'PUT', body: JSON.stringify({ slugs }) }),
+      removePush: (tenantId: string) =>
+        adminFetch<{ removed: boolean }>(`/policy-gaps/${tenantId}/catalogue-gaps/push`, token, { method: 'DELETE' }),
       verifyGap: (tenantId: string, slug: string) =>
         adminFetch<GapVerification>(`/policy-gaps/${tenantId}/catalogue-gaps/verify`, token, { method: 'POST', body: JSON.stringify({ slug }) }),
       ignoreType: (name: string, care_setting?: string | null) =>

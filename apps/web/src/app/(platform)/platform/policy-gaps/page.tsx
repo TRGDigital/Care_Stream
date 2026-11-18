@@ -10,7 +10,7 @@ import { createPlatformClient, type MissingPolicyReport, type CatalogueGapItem, 
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
 import { PolicyOrders } from '@/components/platform/policy-orders'
 import { PlatformShell } from '@/components/platform-shell'
-import { SearchCheck, Loader2, Building2, Sparkles, CheckCircle2, AlertTriangle, EyeOff, Lock, ChevronDown, ChevronRight, Grid3x3, User, Copy, Check } from 'lucide-react'
+import { Send, SearchCheck, Loader2, Building2, Sparkles, CheckCircle2, AlertTriangle, EyeOff, Lock, ChevronDown, ChevronRight, Grid3x3, User, Copy, Check } from 'lucide-react'
 
 type Client = { id: string; name: string; account_number: string; setting: string; setting_label: string; policies: number; classified: number }
 type Report = { tenant: { id: string; name: string; setting: string; setting_label: string }; peer_count: number; unclassified: number; have: string[]; missing: Array<{ type: string; peer_count: number; peer_pct: number }> }
@@ -47,6 +47,8 @@ export default function PolicyGapsPage() {
   const [catSaveFailed, setCatSaveFailed] = useState(false)
   const [catRunning, setCatRunning] = useState(false)
   const [catProgress, setCatProgress] = useState<{ done: number; total: number } | null>(null)
+  const [pushing, setPushing] = useState(false)
+  const [pushInfo, setPushInfo] = useState<{ pushed_at: string; count: number; dismissed: number } | null>(null)
   const [copied, setCopied] = useState<'' | 'law' | 'cat'>('')
 
   function loadClients() {
@@ -127,6 +129,23 @@ export default function PolicyGapsPage() {
     copyRich(html, text, 'cat')
   }
 
+  // Push the confirmed gaps to the client's /policies page. Replaces whatever was pushed before.
+  async function pushToClient() {
+    if (!token || !selected || !selectedClient || !catItems) return
+    const slugs = catItems.filter(i => !i.held && (verifs[i.slug] as GapVerification | undefined)?.real_gap === true).map(i => i.slug)
+    if (!slugs.length) return
+    if (!window.confirm(`Show these ${slugs.length} missing policies to ${selectedClient.name} at the top of their Policies page? This replaces anything you pushed before. They can dismiss each one.`)) return
+    setPushing(true); setError('')
+    try { const c = createPlatformClient(token); await c.policyGaps.pushGaps(selected, slugs); setPushInfo(await c.policyGaps.getPush(selected)) }
+    catch (e: any) { setError(e?.message ?? 'Could not push to the client.') }
+    finally { setPushing(false) }
+  }
+  async function removePush() {
+    if (!token || !selected || !window.confirm('Remove the pushed list from this client\'s Policies page?')) return
+    setPushing(true)
+    try { await createPlatformClient(token).policyGaps.removePush(selected); setPushInfo(null) } catch (e: any) { setError(e?.message ?? 'Could not remove.') } finally { setPushing(false) }
+  }
+
   // COSTS a little credit (Haiku, titles only): one slice of the catalogue per call, accumulated here.
   async function runCatalogue() {
     if (!token || !selected) return
@@ -182,7 +201,7 @@ export default function PolicyGapsPage() {
     } catch { /* nothing saved yet */ }
   }
 
-  function pick(id: string) { setSelected(id); setCatItems(null); setCatMeta(null); setVerifs({}); setCatRanAt(null); setCatChanged(false); if (id) { loadReport(id); loadMissing(id); loadSavedCatalogue(id) } }
+  function pick(id: string) { setSelected(id); setCatItems(null); setCatMeta(null); setVerifs({}); setCatRanAt(null); setCatChanged(false); setPushInfo(null); if (id) { createPlatformClient(token!).policyGaps.getPush(id).then(setPushInfo).catch(() => {}); loadReport(id); loadMissing(id); loadSavedCatalogue(id) } }
 
   async function classify() {
     if (!token || !selected) return
@@ -414,6 +433,7 @@ export default function PolicyGapsPage() {
                 <h2 className="text-sm font-semibold text-neutral-dark">Missing against our policy catalogue</h2>
                 <p className="mt-0.5 text-xs text-neutral-mid">
                   {catRanAt && <span className="mr-1 font-medium text-neutral-dark">Last run {new Date(catRanAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}.{catChanged ? ' They have added policies since, so re-run for a current picture.' : ''}</span>}
+                  {pushInfo && <span className="mr-1 text-teal">On the client&rsquo;s Policies page since {new Date(pushInfo.pushed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}: {pushInfo.count} pushed{pushInfo.dismissed ? `, ${pushInfo.dismissed} dismissed by them` : ''}. <button onClick={removePush} className="underline hover:no-underline">Remove</button>.</span>}
                   {catSaveFailed && <span className="mr-1 text-red-700">Could not save this result (the saved results table may not exist yet).</span>}
                   {catItems && catItems.length
                     ? (() => { const notHeld = catItems.filter(i => !i.held); const vs = notHeld.map(i => verifs[i.slug]).filter((v): v is GapVerification => !!v && v !== 'error'); const real = vs.filter(v => v.real_gap).length
@@ -426,6 +446,13 @@ export default function PolicyGapsPage() {
                   <button onClick={copyCatalogue} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal/40 hover:text-teal"
                     title="Copy only the confirmed gaps as an email, with prices and links.">
                     {copied === 'cat' ? <><Check size={12} className="text-green-600" /> Copied</> : <><Copy size={12} /> Copy for an email</>}
+                  </button>
+                )}
+                {catItems && catItems.some(i => (verifs[i.slug] as GapVerification | undefined)?.real_gap) && (
+                  <button onClick={pushToClient} disabled={pushing || catRunning}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-teal/40 bg-teal/5 px-3 py-1.5 text-xs font-medium text-teal hover:bg-teal/10 disabled:opacity-50"
+                    title="Show the confirmed gaps at the top of this client's Policies page, with prices and links.">
+                    {pushing ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />} Push to client
                   </button>
                 )}
                 <button onClick={runCatalogue} disabled={catRunning}

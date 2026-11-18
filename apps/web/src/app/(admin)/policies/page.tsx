@@ -98,6 +98,7 @@ export default function PoliciesPage() {
   const [duplicates,     setDuplicates]     = useState<Array<{ id: string; name: string; version: number; score: number; match: { id: string; name: string; version: number } }>>(() => persistentCache.get<any[]>(`admin-policies-dups-${userId}`) ?? [])
   const [resolvingDup,   setResolvingDup]   = useState<string | null>(null)
   const [similarNamed,   setSimilarNamed]   = useState<Array<{ id: string; name: string; matched_name: string; content_pct: number | null }>>(() => persistentCache.get<any[]>(`admin-policies-similar-${userId}`) ?? [])
+  const [suggested,      setSuggested]      = useState<Array<{ slug: string; title: string; description: string; price_pence: number }>>([])
   const [reviewError,    setReviewError]    = useState(false)   // the adopted-changes summary failed to load
   const reviewRetryRef = useRef(0)
 
@@ -156,8 +157,15 @@ export default function PoliciesPage() {
   function loadDuplicates() {
     if (!session?.accessToken) return
     const api = createApiClient(session.accessToken)
+    api.policies.suggested().then(d => setSuggested(d?.items ?? [])).catch(() => {})
     api.policies.duplicates().then(d => { const l = d?.duplicates ?? []; setDuplicates(l); persistentCache.set(`admin-policies-dups-${userId}`, l) }).catch(() => {})
     api.policies.similarNamed().then(d => { const l = d?.notes ?? []; setSimilarNamed(l); persistentCache.set(`admin-policies-similar-${userId}`, l) }).catch(() => {})
+  }
+
+  async function dismissSuggested(slug: string) {
+    if (!session?.accessToken) return
+    setSuggested(prev => prev.filter(s => s.slug !== slug))
+    try { await createApiClient(session.accessToken).policies.dismissSuggested(slug) } catch { /* returns on next load */ }
   }
 
   async function dismissSimilar(id: string) {
@@ -382,6 +390,31 @@ export default function PoliciesPage() {
         </button>
         )}
       </div>
+
+      {/* Policies the CareStream team has found missing from this library */}
+      {tab === 'active' && suggested.length > 0 && (
+        <div className="mb-4 rounded-card border border-teal/30 bg-teal-light/20 p-4">
+          <p className="text-sm font-semibold text-teal">
+            {suggested.length === 1 ? 'A policy your library is missing' : `${suggested.length} policies your library is missing`}
+          </p>
+          <p className="mb-3 mt-0.5 text-xs text-neutral-mid">
+            We compared your policies with the CareStream policies written for your type of service and read your policy text to check. Nothing in your library deals with these subjects in substance.
+          </p>
+          <div className="space-y-2">
+            {suggested.map(s => (
+              <div key={s.slug} className="flex flex-wrap items-start gap-x-3 gap-y-1 rounded-lg border border-teal/10 bg-white px-3 py-2">
+                <div className="min-w-0 flex-1">
+                  <a href={`/care-policies/${s.slug}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-neutral-dark hover:text-teal">{s.title}</a>
+                  {s.description && <p className="mt-0.5 text-xs text-neutral-mid">{s.description}</p>}
+                </div>
+                <span className="text-sm font-semibold text-neutral-dark">{`£${s.price_pence % 100 === 0 ? s.price_pence / 100 : (s.price_pence / 100).toFixed(2)}`}</span>
+                <a href={`/care-policies/${s.slug}`} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-teal/40 px-2.5 py-1 text-xs font-medium text-teal hover:bg-teal/5">View policy</a>
+                <button onClick={() => dismissSuggested(s.slug)} className="text-xs font-medium text-neutral-mid hover:text-neutral-dark">Dismiss</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Possible content duplicates — same policy text under a different name */}
       {tab === 'active' && duplicates.length > 0 && (

@@ -15,7 +15,7 @@ import { createHash } from 'crypto'
 import { z as zTts } from 'zod'
 import { normaliseActivities, collectActivityTexts, applyActivityTexts, type Activity } from '../lib/training-activities'
 import { getOrCreateLesson } from '../lib/remediation'
-import { trackAiAction, getPlanFeatures } from '../lib/plan-limits'
+import { trackAiAction, getPlanFeatures, PlanLimitError } from '../lib/plan-limits'
 import { illustrationUrl } from '../services/training/moduleImage'
 import { pickImageSource } from '../services/training/coverMatch'
 import { buildProgrammeState, syncProgrammeStatus } from '../services/training/programme'
@@ -676,9 +676,12 @@ meRouter.get('/follow-up/lesson', async (req: Request, res: Response) => {
   ])
   const { code: lang, name: langName } = hubContentLang(user, req.query, tenant?.custom_languages)
 
-  const lesson = await getOrCreateLesson(tenantId, source as any, ref, enrollmentId, lang, langName).catch((e: any) => {
+  let limitErr: PlanLimitError | null = null
+  const lesson = await getOrCreateLesson(tenantId, source as any, ref, enrollmentId, lang, langName, userId).catch((e: any) => {
+    if (e instanceof PlanLimitError) { limitErr = e; return null }
     console.error('[me/follow-up/lesson] generate failed:', e?.message ?? e); return null
   })
+  if (limitErr) { err(res, (limitErr as PlanLimitError).code, "New follow-up lessons are paused because your home has used its AI allowance for this month. Please ask your manager.", 402); return }
   if (!lesson) { err(res, 'NOT_FOUND', 'Could not build a lesson for this gap.', 404); return }
 
   const { check, ...rest } = lesson
@@ -707,7 +710,9 @@ meRouter.post('/follow-up/lesson/answer', async (req: Request, res: Response) =>
   ])
   const { code: lang, name: langName } = hubContentLang(user, req.query, tenant?.custom_languages)
 
-  const lesson = await getOrCreateLesson(tenantId, source as any, ref, enrollmentId, lang, langName).catch(() => null)
+  let limitErr2: PlanLimitError | null = null
+  const lesson = await getOrCreateLesson(tenantId, source as any, ref, enrollmentId, lang, langName, userId).catch((e: any) => { if (e instanceof PlanLimitError) limitErr2 = e; return null })
+  if (limitErr2) { err(res, (limitErr2 as PlanLimitError).code, "New follow-up lessons are paused because your home has used its AI allowance for this month. Please ask your manager.", 402); return }
   if (!lesson) { err(res, 'NOT_FOUND', 'Lesson not found.', 404); return }
 
   const correct = selected === lesson.check.correct_option

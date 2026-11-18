@@ -5,7 +5,7 @@
 
 import { prisma } from '../db/client'
 import { callClaude } from '../services/ai/claude'
-import { trackAiAction } from './plan-limits'
+import { trackAiAction, checkAiCreditLimit } from './plan-limits'
 import { downloadExtractedText } from '../services/storage/s3'
 
 export type LessonPayload = {
@@ -182,6 +182,16 @@ Create the micro-lesson now.`
 }
 
 // Cache-aware: return the lesson for a gap, generating + storing it on first use.
+//
+// The cache key carries the tenant and the module (or flow) the question belongs to.
+// It used to be just "<source>:<question id>" + language, and generated modules number
+// their questions q1..qN, so one home could be served another home's lesson, built from
+// that home's policy text. The enrollment is also checked here, so a lesson is only ever
+// returned for an enrollment that belongs to this tenant (and this user, when given).
+//
+// Generating a lesson spends AI tokens, so it is checked against the plan allowance like
+// every other generation. A cache hit costs nothing and is always served. Throws
+// PlanLimitError when the allowance is used up, for the caller to report.
 export async function getOrCreateLesson(
   tenantId: string,
   source:   'training' | 'induction',
@@ -189,17 +199,26 @@ export async function getOrCreateLesson(
   enrollmentId: string,
   lang:     string,
   langName: string,
+  userId?:  string,
 ): Promise<LessonPayload | null> {
-  const refKey = `${source}:${ref}`
+  const owner = userId ? { user_id: userId } : {}
+  const scopeId: string | null = source === 'induction'
+    ? (await (prisma as any).onboardingEnrollment.findFirst({ where: { id: enrollmentId, tenant_id: tenantId, ...owner }, select: { flow_id: true } }).catch(() => null))?.flow_id ?? null
+    : (await (prisma as any).trainingEnrollment.findFirst({ where: { id: enrollmentId, tenant_id: tenantId, ...owner }, select: { module_id: true } }).catch(() => null))?.module_id ?? null
+  if (!scopeId) return null
+
+  const refKey = `${tenantId}:${source}:${scopeId}:${ref}`
   const cached = await (prisma as any).remediationLesson.findUnique({ where: { ref_key_lang: { ref_key: refKey, lang } } }).catch(() => null)
   if (cached?.payload) return cached.payload as LessonPayload
+
+  await checkAiCreditLimit(tenantId)
 
   const ctx = await buildGapContext(tenantId, source, ref, enrollmentId)
   if (!ctx) return null
   const lesson = await generateLesson(ctx, lang, langName)
   await (prisma as any).remediationLesson.create({
     data: { tenant_id: tenantId, ref_key: refKey, lang, payload: lesson as any },
-  }).catch(() => {}) // unique race — fine, next read serves the winner
+  }).catch(() => {}) // unique race, fine: next read serves the winner
   trackAiAction(tenantId, 'remediation', refKey)
   return lesson
 }

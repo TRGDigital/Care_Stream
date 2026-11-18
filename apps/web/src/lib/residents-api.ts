@@ -108,6 +108,8 @@ export interface FamilyForm {
   expires_at: string
   already_submitted: boolean
   sections: ResidentSectionDef[]
+  /** True only for the /family/demo link: a sample resident and home, nothing is saved. */
+  demo?: boolean
 }
 
 async function call<T>(path: string, token: string | null, init: RequestInit = {}): Promise<T> {

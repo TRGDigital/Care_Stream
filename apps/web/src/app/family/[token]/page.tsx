@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { CheckCircle2, Heart, Loader2, LinkIcon } from 'lucide-react'
+import { CheckCircle2, Heart, Info, Loader2, LinkIcon } from 'lucide-react'
 import { getFamilyForm, submitFamilyForm, type FamilyForm } from '@/lib/residents-api'
 
 const FIELD = 'w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-neutral-dark outline-none focus:border-teal focus:ring-2 focus:ring-teal/20'
@@ -19,6 +19,15 @@ function Shell({ children }: { children: React.ReactNode }) {
       </div>
       <div className="mx-auto max-w-xl">{children}</div>
     </main>
+  )
+}
+
+function DemoNotice() {
+  return (
+    <div className="mb-5 flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-relaxed text-amber-900" role="note">
+      <Info size={18} className="mt-0.5 shrink-0 text-amber-600" aria-hidden="true" />
+      <p><strong>This is a demonstration for care managers.</strong> It shows exactly what a family member sees, using a sample resident and home. Nothing you type here is saved or sent to anyone.</p>
+    </div>
   )
 }
 
@@ -66,6 +75,17 @@ export default function FamilyFormPage() {
   const home = form.home_name || 'The home'
   const resident = form.resident_name
 
+  if (done && form.demo) {
+    return (
+      <Shell>
+        <DemoNotice />
+        <Card icon={<CheckCircle2 size={36} className="text-green-500" />} title="Thank you, that is the family's side">
+          In a real link, the answers would now go to the manager. They appear under <strong>Approvals</strong> in the Residents screen, the manager reads each one, and can approve it, edit it or reject it. Staff and the hub chat never see an answer until it is approved. Nothing from this demonstration was saved.
+        </Card>
+        <p className="mt-5 text-center"><button type="button" onClick={() => { setDone(false); setAnswers({}); setRelationship('') }} className="text-base font-semibold text-teal hover:underline">Try it again</button></p>
+      </Shell>
+    )
+  }
   if (done) {
     return <Shell><Card icon={<CheckCircle2 size={36} className="text-green-500" />} title="Thank you">Your answers have been sent to the manager at {home}. They will check them before the care team sees them. You can close this page.</Card></Shell>
   }
@@ -97,6 +117,7 @@ export default function FamilyFormPage() {
 
   return (
     <Shell>
+      {form.demo && <DemoNotice />}
       <form onSubmit={submit} className="space-y-5" noValidate>
         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
           <Heart size={26} className="mb-2 text-teal" aria-hidden="true" />

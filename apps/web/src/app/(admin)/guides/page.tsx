@@ -1643,6 +1643,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={4}>You can see whether each invitation has been sent, opened or answered. Use <strong>Resend</strong> to send a new link, or <strong>Revoke</strong> to cancel one.</Step>
           </div>
           <Tip>You can invite up to ten people for each resident. Each person gets their own link. If someone has already answered and wants to add more, resend their invitation.</Tip>
+          <div className="mt-3"><Tip>Want to show a colleague what a family member sees, without sending anything? Share the demonstration link <strong>carestreamai.com/family/demo</strong>. It uses a sample resident and home, never expires, and nothing typed into it is saved or sent.</Tip></div>
         </SectionBlock>
         <SectionBlock title="Approving what they write, and checking it afterwards">
           <p className="text-sm text-neutral-mid">

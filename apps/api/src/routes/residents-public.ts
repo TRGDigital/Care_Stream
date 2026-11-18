@@ -27,7 +27,15 @@ async function liveInvite(token: string) {
   return { inv, resident, homeName: tenant?.name ?? 'the home' }
 }
 
+// A permanent demonstration link, /family/demo, so care managers can see exactly what a family member sees. It shows the real questions
+// with a sample resident and home, never reads or writes a resident, and never sends an email. Nothing typed into it is kept.
+const DEMO_TOKEN = 'demo'
+
 publicFamilyRouter.get('/:token', async (req: Request, res: Response) => {
+  if (req.params.token === DEMO_TOKEN) {
+    ok(res, { resident_name: 'Tim', home_name: 'Sample Care Home', invitee_name: 'Sally', expires_at: '2099-12-31T00:00:00.000Z', already_submitted: false, sections: SECTIONS, demo: true })
+    return
+  }
   const live = await liveInvite(String(req.params.token))
   if (!live) { err(res, 'UNAVAILABLE', DEAD, 410); return }
   if (!live.inv.opened_at) await db.residentInvite.update({ where: { id: live.inv.id }, data: { opened_at: new Date() } }).catch(() => undefined)
@@ -48,6 +56,7 @@ const SubmitSchema = z.object({
 })
 
 publicFamilyRouter.post('/:token', async (req: Request, res: Response) => {
+  if (req.params.token === DEMO_TOKEN) { ok(res, { submitted: 0, demo: true }, 201); return }   // demonstration only: nothing is saved
   const live = await liveInvite(String(req.params.token))
   if (!live) { err(res, 'UNAVAILABLE', DEAD, 410); return }
   if (live.inv.submitted_at) { err(res, 'ALREADY_SUBMITTED', 'Thank you, your answers have already been sent. The home can send you a new link if you would like to add more.', 409); return }

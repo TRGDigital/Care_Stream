@@ -261,6 +261,7 @@ Do NOT include: scales of justice, gavels, courtrooms, anatomical diagrams, brai
 Nothing distressing, coercive or punitive. Everyone in the scene is treated with dignity.
 Style: flat modern vector illustration, soft rounded shapes, warm and friendly, gentle teal and warm-neutral palette on a light warm-neutral background, plenty of clean negative space.
 The illustration fills the ENTIRE frame, edge to edge. There is no caption, no title bar, no label strip, no banner, no border and no margin of flat colour along any edge. Any lettering anywhere in the image is a failure: no text, words, letters, numbers, captions or logos, including on clipboards, signs, folders or screens within the scene.
+Do NOT show any software, app, website, dashboard or screen interface, and no charts, tables or forms with detail: this is a scene of people and places, never a picture of a product. Computers and tablets, if present, face away from the viewer or show only a plain blank glow.
 Do NOT show realistic human faces: keep any people stylised, simple and abstract.
 Compose for a WIDE landscape frame: keep the subject centred and away from the top and bottom edges, which are cropped.
 Professional and reassuring.`

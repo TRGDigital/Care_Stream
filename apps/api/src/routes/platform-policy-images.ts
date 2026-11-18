@@ -16,7 +16,7 @@ import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { requirePlatformAdmin } from '../middleware/auth'
 import {
-  generatePolicyHeroImage, generateRegulationImage, generateFeatureImage, shopImageUrl, listImageModels,
+  generatePolicyHeroImage, generateRegulationImage, generateFeatureImage, generateContentImage, shopImageUrl, listImageModels,
 } from '../services/policy-shop/shopImage'
 import { titleVariants } from './policy-shop-public'
 
@@ -123,6 +123,20 @@ platformPolicyImagesRouter.post('/feature/:key', async (req: Request, res: Respo
   try {
     const stored = await generateFeatureImage(key, title, summary)
     ok(res, { key, image_url: shopImageUrl(stored) })
+  } catch (e: any) {
+    err(res, 'GENERATE_FAILED', e?.message ?? 'could not generate that image', 500)
+  }
+})
+
+// ─── POST /content-image — one house style illustration for a blog or collection { topic, scene, key? } ───
+// For fixing or adding an article image from the console. Returns an absolute URL on the API.
+platformPolicyImagesRouter.post('/content-image', async (req: Request, res: Response) => {
+  const topic = String(req.body?.topic ?? '').trim().slice(0, 200)
+  const scene = String(req.body?.scene ?? '').trim().slice(0, 600)
+  if (topic.length < 3 || scene.length < 15) return err(res, 'VALIDATION_ERROR', 'topic and a scene description are required', 400)
+  try {
+    const url = await generateContentImage(topic, scene, String(req.body?.key || topic))
+    ok(res, { url: `https://api.carestreamai.com${url}` })
   } catch (e: any) {
     err(res, 'GENERATE_FAILED', e?.message ?? 'could not generate that image', 500)
   }

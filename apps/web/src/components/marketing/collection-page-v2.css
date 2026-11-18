@@ -146,6 +146,9 @@
 .clpage-v2 .clbody ul{margin:0 0 14px;padding-left:0;list-style:none;max-width:none}
 .clpage-v2 .clbody li{position:relative;padding-left:26px;margin-bottom:10px;font-size:.97rem;line-height:1.7;color:var(--ink-2)}
 .clpage-v2 .clbody li::before{content:'';position:absolute;left:6px;top:.62em;width:7px;height:7px;border-radius:2px;background:var(--accent)}
+.clpage-v2 .clbody p a,.clpage-v2 .clbody li a{color:var(--accent);font-weight:600;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;text-decoration-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+.clpage-v2 .clbody p a:hover,.clpage-v2 .clbody li a:hover{text-decoration-color:var(--accent)}
+.clpage-v2 .clbody h3{font-size:1.12rem;line-height:1.3;margin:26px 0 8px}
 .clpage-v2 .clfaq{padding:56px 0}
 .clpage-v2 .clfaq h2{font-size:clamp(1.3rem,.7vw + 1.1rem,1.75rem);letter-spacing:-.028em;margin:0 0 22px}
 .clpage-v2 .clfaq details{border-bottom:1px solid var(--line);padding:16px 0}

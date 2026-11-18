@@ -8,7 +8,6 @@ import { siteUrl } from '../lib/urls'
 
 const PURPLE = '#9B52B5', DARK = '#1A1530', BODY = '#374151', MUTED = '#6b7280'
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string))
-const gbp = (p: number) => `£${p % 100 === 0 ? p / 100 : (p / 100).toFixed(2)}`
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many)
 
 export type PushedPolicy = { slug: string; title: string; description: string; price_pence: number }
@@ -18,7 +17,7 @@ export function renderPolicyPushEmail(o: { firstName: string; orgName: string; i
   const n = o.items.length
   const subject = `${n} ${plural(n, 'policy', 'policies')} missing from your library at ${o.orgName}`
   const link = (slug: string) => `${o.shopBase}/care-policies/${encodeURIComponent(slug)}`
-  const rows = o.items.map((i) => `<tr><td style="padding:10px 12px 10px 0;border-top:1px solid #eee;vertical-align:top"><a href="${esc(link(i.slug))}" style="color:${DARK};font-size:14px;font-weight:600;text-decoration:none">${esc(i.title)}</a>${i.description ? `<br><span style="color:${MUTED};font-size:12px;line-height:1.5">${esc(i.description)}</span>` : ''}</td><td style="padding:10px 0;border-top:1px solid #eee;text-align:right;white-space:nowrap;vertical-align:top;color:${DARK};font-size:14px;font-weight:600">${esc(gbp(i.price_pence))}</td></tr>`).join('')
+  const rows = o.items.map((i) => `<tr><td style="padding:10px 12px 10px 0;border-top:1px solid #eee;vertical-align:top"><a href="${esc(link(i.slug))}" style="color:${DARK};font-size:14px;font-weight:600;text-decoration:none">${esc(i.title)}</a>${i.description ? `<br><span style="color:${MUTED};font-size:12px;line-height:1.5">${esc(i.description)}</span>` : ''}</td></tr>`).join('')
   const html = emailWrapper(`
     <p style="color:${DARK};font-size:15px;margin:0 0 14px">Hi ${esc(o.firstName)},</p>
     <p style="color:${BODY};font-size:15px;line-height:1.6;margin:0 0 14px">We compared the policies in ${esc(o.orgName)}'s library with the CareStream policies written for your type of service, and then read your own policy text to check. Nothing in your library deals with ${n === 1 ? 'this subject' : 'these subjects'} in substance:</p>
@@ -28,7 +27,7 @@ export function renderPolicyPushEmail(o: { firstName: string; orgName: string; i
     ${emailFooter(esc(o.orgName))}
   `)
   const text = [`Hi ${o.firstName},`, '', `We compared the policies in ${o.orgName}'s library with the CareStream policies written for your type of service, and then read your own policy text to check. Nothing in your library deals with ${n === 1 ? 'this subject' : 'these subjects'} in substance:`, '',
-    ...o.items.map((i) => `- ${i.title} (${gbp(i.price_pence)})\n  ${link(i.slug)}`), '', `See ${n === 1 ? 'it' : 'them'} on your Policies page: ${o.policiesUrl}`].join('\n')
+    ...o.items.map((i) => `- ${i.title}\n  ${link(i.slug)}`), '', `See ${n === 1 ? 'it' : 'them'} on your Policies page: ${o.policiesUrl}`].join('\n')
   return { subject, html, text }
 }
 

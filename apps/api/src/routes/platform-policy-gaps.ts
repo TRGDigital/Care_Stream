@@ -16,6 +16,7 @@ import { buildPolicyProvenance, runPolicyChallenge, buildPolicyMarkup } from '..
 import { purchaseIntakeState } from '../services/policy-writer/intake'
 import { sendTrainingUpdateEmail } from '../services/email/outbound'
 import { writeAuditLog } from '../lib/audit'
+import { sendPolicyPushEmails } from '../services/policy-push-email'
 import { uploadPolicyFile } from '../services/storage/s3'
 import { enqueueIngestion } from '../workers/queue'
 import { randomUUID } from 'crypto'
@@ -826,7 +827,9 @@ platformPolicyGapsRouter.put('/:tenantId/catalogue-gaps/push', async (req: Reque
        on conflict (tenant_id) do update set pushed_at = now(), pushed_by = excluded.pushed_by, items = excluded.items`,
       tenantId, (req as any).user?.id ?? null, JSON.stringify(items))
     writeAuditLog({ tenant_id: tenantId, user_id: (req as any).user?.id ?? null, event_type: 'platform_pushed_policy_gaps', entity_type: 'tenant', entity_id: tenantId, metadata: { count: items.length, slugs: items.map((i: any) => i.slug) } })
-    ok(res, { pushed: items.length })
+    // Tell the account's admins what was shared. A failed email does not undo the push.
+    const emailed = req.body?.notify === false ? { sent: 0, failed: 0 } : await sendPolicyPushEmails(tenantId, items)
+    ok(res, { pushed: items.length, emailed: emailed.sent, email_failed: emailed.failed })
   } catch (e: any) { err(res, 'PUSH_FAILED', 'Could not push (has docs/sql/2026-11-18-policy-gap-pushes.sql been run?)', 500) }
 })
 

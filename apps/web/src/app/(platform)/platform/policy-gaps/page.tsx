@@ -48,6 +48,7 @@ export default function PolicyGapsPage() {
   const [catRunning, setCatRunning] = useState(false)
   const [catProgress, setCatProgress] = useState<{ done: number; total: number } | null>(null)
   const [pushing, setPushing] = useState(false)
+  const [pushMsg, setPushMsg] = useState('')
   const [pushInfo, setPushInfo] = useState<{ pushed_at: string; count: number; dismissed: number } | null>(null)
   const [copied, setCopied] = useState<'' | 'law' | 'cat'>('')
 
@@ -134,9 +135,9 @@ export default function PolicyGapsPage() {
     if (!token || !selected || !selectedClient || !catItems) return
     const slugs = catItems.filter(i => !i.held && (verifs[i.slug] as GapVerification | undefined)?.real_gap === true).map(i => i.slug)
     if (!slugs.length) return
-    if (!window.confirm(`Show these ${slugs.length} missing policies to ${selectedClient.name} at the top of their Policies page? This replaces anything you pushed before. They can dismiss each one.`)) return
+    if (!window.confirm(`Show these ${slugs.length} missing policies to ${selectedClient.name} at the top of their Policies page, and email their admins to say so? This replaces anything you pushed before. They can dismiss each one.`)) return
     setPushing(true); setError('')
-    try { const c = createPlatformClient(token); await c.policyGaps.pushGaps(selected, slugs); setPushInfo(await c.policyGaps.getPush(selected)) }
+    try { const c = createPlatformClient(token); const r = await c.policyGaps.pushGaps(selected, slugs); setPushMsg(r.emailed ? `Pushed, and ${r.emailed} admin${r.emailed === 1 ? '' : 's'} emailed.` : 'Pushed. No admin was emailed (test account or no admin email).'); setPushInfo(await c.policyGaps.getPush(selected)) }
     catch (e: any) { setError(e?.message ?? 'Could not push to the client.') }
     finally { setPushing(false) }
   }
@@ -433,6 +434,7 @@ export default function PolicyGapsPage() {
                 <h2 className="text-sm font-semibold text-neutral-dark">Missing against our policy catalogue</h2>
                 <p className="mt-0.5 text-xs text-neutral-mid">
                   {catRanAt && <span className="mr-1 font-medium text-neutral-dark">Last run {new Date(catRanAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}.{catChanged ? ' They have added policies since, so re-run for a current picture.' : ''}</span>}
+                  {pushMsg && <span className="mr-1 font-medium text-green-700">{pushMsg}</span>}
                   {pushInfo && <span className="mr-1 text-teal">On the client&rsquo;s Policies page since {new Date(pushInfo.pushed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}: {pushInfo.count} pushed{pushInfo.dismissed ? `, ${pushInfo.dismissed} dismissed by them` : ''}. <button onClick={removePush} className="underline hover:no-underline">Remove</button>.</span>}
                   {catSaveFailed && <span className="mr-1 text-red-700">Could not save this result (the saved results table may not exist yet).</span>}
                   {catItems && catItems.length

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { CollectionIntro } from './collection-intro'
 import { AddToBasket, SavePolicy, BasketPill } from './policy-basket'
+import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 import { freeCpdHref, FREE_CPD_COPY, STANDARD_COURSE_PRICE, FREE_COURSE_PRICE } from '@/lib/free-cpd'
 import { TrainingAddButton, TrainingSaveButton, TrainingCartLink } from './training-cart-buttons'
 import './collection-page-v2.css'
@@ -132,12 +133,12 @@ export function CollectionPageV2({ c, s, siblings = [], related = null }: {
                     <Link className="tl" href={p.href}><b>{p.title}</b></Link>
                     <p>{p.description}</p>
                     <div className="foot">
-                      <em>{training && p.cpd_accredited ? <><s style={{ fontWeight: 400, opacity: 0.6, marginRight: 6 }}>{STANDARD_COURSE_PRICE}</s>{FREE_COURSE_PRICE}</> : money(p.price_pence)}</em><i>{p.meta}</i>
+                      <em>{training && p.cpd_accredited ? <><s style={{ fontWeight: 400, opacity: 0.6, marginRight: 6 }}>{STANDARD_COURSE_PRICE}</s>{FREE_COURSE_PRICE}</> : money(p.price_pence)}</em><i>{training && p.cpd_accredited ? <img className="clcpd" src={CPD_CERTIFIED_LOGO} alt="CPD Certified" /> : p.meta}</i>
                     </div>
                     <div className="clbuy">
                       {training && p.cpd_accredited ? (
                         <>
-                          <Link className="clbuy-add" href={freeCpdHref(p.slug)}>{FREE_CPD_COPY.cta}</Link>
+                          <Link className="clbuy-add clbuy-free" href={freeCpdHref(p.slug)}>{FREE_CPD_COPY.cta}</Link>
                           <TrainingSaveButton className="clbuy-save" slug={p.slug} title={p.title} />
                         </>
                       ) : training ? (

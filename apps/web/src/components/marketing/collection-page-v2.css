@@ -129,6 +129,9 @@
 .clpage-v2 .clbuy button{font:inherit}
 .clpage-v2 .clbuy .clbuy-add{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:9px;background:var(--btn-ink);color:var(--btn-ink-text);border:0;border-radius:12px;padding:13px 16px;font-size:.92rem;font-weight:650;cursor:pointer;line-height:1}
 .clpage-v2 .clbuy .clbuy-add:hover{opacity:.9}
+.clpage-v2 .clbuy .clbuy-add.clbuy-free{background:#bf5700;color:#fff}
+.clpage-v2 .clbuy .clbuy-add.clbuy-free:hover{background:#a34900;opacity:1}
+.clpage-v2 .foot i .clcpd{height:30px;width:auto;display:block}
 .clpage-v2 .clbuy .clbuy-add svg{width:16px;height:16px;flex:0 0 auto}
 .clpage-v2 .clbuy .clbuy-save{width:46px;flex:0 0 auto;display:grid;place-items:center;background:none;border:1px solid var(--line);border-radius:12px;cursor:pointer;color:var(--muted)}
 .clpage-v2 .clbuy .clbuy-save svg{width:17px;height:17px}

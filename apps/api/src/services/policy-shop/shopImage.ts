@@ -262,12 +262,14 @@ Nothing distressing, coercive or punitive. Everyone in the scene is treated with
 Style: flat modern vector illustration, soft rounded shapes, warm and friendly, gentle teal and warm-neutral palette on a light warm-neutral background, plenty of clean negative space.
 The illustration fills the ENTIRE frame, edge to edge. There is no caption, no title bar, no label strip, no banner, no border and no margin of flat colour along any edge. Any lettering anywhere in the image is a failure: no text, words, letters, numbers, captions or logos, including on clipboards, signs, folders or screens within the scene.
 Do NOT show any software, app, website, dashboard or screen interface, and no charts, tables or forms with detail: this is a scene of people and places, never a picture of a product. Computers and tablets, if present, face away from the viewer or show only a plain blank glow.
-Do NOT show realistic human faces: keep any people stylised, simple and abstract.
+People have simple, friendly, stylised faces with OPEN, clearly visible eyes (a simple dark eye with a small highlight is enough), a gentle expression, and a nose and mouth. Never a blank, featureless or faceless head, and never closed, shut or hidden eyes. Keep the faces flat and illustrated, not realistic or photographic.
 Compose for a WIDE landscape frame: keep the subject centred and away from the top and bottom edges, which are cropped.
 Professional and reassuring.`
 
 /** Generate one article illustration and return its public URL path (served by /public/policy-shop/image/:file). */
 export async function generateContentImage(topic: string, scene: string, key: string): Promise<string> {
-  const stored = await generate(await promptFor(BLOG_IMAGE_PROMPT_USAGE, DEFAULT_BLOG_IMAGE_PROMPT), topic, scene, key)
+  // The shared cast line asks for no facial detail, which gave blank faces here, so it is swapped for open, visible eyes.
+  const cast = castFor(key).replace('without drawing realistic facial detail', 'with simple, friendly, stylised faces that have open, clearly visible eyes')
+  const stored = await generate(await promptFor(BLOG_IMAGE_PROMPT_USAGE, DEFAULT_BLOG_IMAGE_PROMPT), topic, scene, key, SIZE, cast)
   return shopImageUrl(stored) as string
 }

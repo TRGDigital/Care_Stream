@@ -799,6 +799,44 @@ platformPolicyGapsRouter.put('/:tenantId/catalogue-gaps/saved', async (req: Requ
   } catch (e: any) { err(res, 'SAVE_FAILED', 'Could not save (has docs/sql/2026-11-17-catalogue-gap-runs.sql been run?)', 500) }
 })
 
+// Push the confirmed gaps to the client's /policies page. The server rebuilds each item from the live catalogue (title,
+// description, price) so the client never sees anything the browser sent. Pushing again replaces the list; slugs the client
+// dismissed stay dismissed. Table policy_gap_pushes (docs/sql/2026-11-18-policy-gap-pushes.sql).
+platformPolicyGapsRouter.get('/:tenantId/catalogue-gaps/push', async (req: Request, res: Response) => {
+  try {
+    let row: any
+    try { row = ((await (prisma as any).$queryRawUnsafe('select pushed_at, items, dismissed from policy_gap_pushes where tenant_id = $1', String(req.params.tenantId))) as any[])[0] }
+    catch { ok(res, null); return }
+    ok(res, row ? { pushed_at: row.pushed_at, count: (row.items as any[]).length, dismissed: (row.dismissed as string[]).length } : null)
+  } catch (e: any) { err(res, 'PUSH_READ_FAILED', e?.message ?? 'could not read', 500) }
+})
+
+platformPolicyGapsRouter.put('/:tenantId/catalogue-gaps/push', async (req: Request, res: Response) => {
+  try {
+    const tenantId = String(req.params.tenantId)
+    const slugs: string[] = Array.isArray(req.body?.slugs) ? [...new Set<string>(req.body.slugs.map(String))].slice(0, 200) : []
+    if (!slugs.length) { err(res, 'VALIDATION_ERROR', 'slugs is required', 400); return }
+    const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { id: true, name: true } })
+    if (!tenant) { err(res, 'NOT_FOUND', 'Client not found', 404); return }
+    const products = await (prisma as any).policyProduct.findMany({ where: { slug: { in: slugs }, active: true }, select: { slug: true, title: true, description: true, price_pence: true, sort_order: true }, orderBy: { sort_order: 'asc' } })
+    if (!products.length) { err(res, 'VALIDATION_ERROR', 'None of those policies are in the catalogue', 400); return }
+    const items = products.map((p: any) => ({ slug: p.slug, title: p.title, description: p.description, price_pence: p.price_pence }))
+    await (prisma as any).$executeRawUnsafe(
+      `insert into policy_gap_pushes (tenant_id, pushed_at, pushed_by, items) values ($1, now(), $2, $3::jsonb)
+       on conflict (tenant_id) do update set pushed_at = now(), pushed_by = excluded.pushed_by, items = excluded.items`,
+      tenantId, (req as any).user?.id ?? null, JSON.stringify(items))
+    writeAuditLog({ tenant_id: tenantId, user_id: (req as any).user?.id ?? null, event_type: 'platform_pushed_policy_gaps', entity_type: 'tenant', entity_id: tenantId, metadata: { count: items.length, slugs: items.map((i: any) => i.slug) } })
+    ok(res, { pushed: items.length })
+  } catch (e: any) { err(res, 'PUSH_FAILED', 'Could not push (has docs/sql/2026-11-18-policy-gap-pushes.sql been run?)', 500) }
+})
+
+platformPolicyGapsRouter.delete('/:tenantId/catalogue-gaps/push', async (req: Request, res: Response) => {
+  try {
+    await (prisma as any).$executeRawUnsafe('delete from policy_gap_pushes where tenant_id = $1', String(req.params.tenantId))
+    ok(res, { removed: true })
+  } catch (e: any) { err(res, 'PUSH_REMOVE_FAILED', e?.message ?? 'could not remove', 500) }
+})
+
 // GET /:tenantId/evidence?slug=<catalogue slug>&terms=bed rail,bedrail — what the client's own policy text says about a subject.
 // One embedding call and one vector query, no model judgement: it returns the policies that speak to the subject and the passages.
 platformPolicyGapsRouter.get('/:tenantId/evidence', async (req: Request, res: Response) => {

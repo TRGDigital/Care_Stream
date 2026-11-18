@@ -232,6 +232,37 @@ policiesRouter.get('/similar-named', requireAdmin, async (_req: Request, res: Re
   ok(res, { notes })
 })
 
+// ─── GET /policies/suggested ─────────────────────────────────────────────────
+// Policies the CareStream team has pushed to this client as missing from their library (platform policy-gaps page).
+// Anything the client dismissed, or has since added, is left out. Raw SQL so the page still loads if the table is absent.
+policiesRouter.get('/suggested', requireAdmin, async (_req: Request, res: Response) => {
+  try {
+    const tenantId = getTenantId()
+    let row: any
+    try { row = ((await (prisma as any).$queryRawUnsafe('select pushed_at, items, dismissed from policy_gap_pushes where tenant_id = $1', tenantId)) as any[])[0] }
+    catch { ok(res, { items: [], pushed_at: null }); return }
+    if (!row) { ok(res, { items: [], pushed_at: null }); return }
+    const gone = new Set<string>(row.dismissed ?? [])
+    const items = ((row.items ?? []) as any[]).filter(i => !gone.has(i.slug))
+    // Hide one the client has bought since: a paid order for that policy.
+    let bought = new Set<string>()
+    try {
+      const o = (await (prisma as any).$queryRawUnsafe(`select distinct product_slug as slug from policy_purchase where tenant_id = $1 and product_slug is not null and status <> 'refunded'`, tenantId)) as any[]
+      bought = new Set(o.map(r => r.slug))
+    } catch { /* ordering table differs: show everything */ }
+    ok(res, { items: items.filter(i => !bought.has(i.slug)), pushed_at: row.pushed_at })
+  } catch (e: any) { err(res, 'SUGGESTED_FAILED', e?.message ?? 'could not load', 500) }
+})
+
+policiesRouter.post('/suggested/:slug/dismiss', requireAdmin, async (req: Request, res: Response) => {
+  try {
+    await (prisma as any).$executeRawUnsafe(
+      'update policy_gap_pushes set dismissed = array_append(dismissed, $2) where tenant_id = $1 and not ($2 = any(dismissed))',
+      getTenantId(), String(req.params.slug))
+    ok(res, { dismissed: true })
+  } catch (e: any) { err(res, 'DISMISS_FAILED', e?.message ?? 'could not dismiss', 500) }
+})
+
 // ─── POST /policies/:id/similar-named/dismiss ─────────────────────────────────
 policiesRouter.post('/:id/similar-named/dismiss', requireAdmin, async (req: Request, res: Response) => {
   const tenantId = getTenantId()

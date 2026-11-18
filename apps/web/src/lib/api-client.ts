@@ -494,6 +494,10 @@ export function createApiClient(token: string) {
         apiFetch<{ resolved: boolean; action: string }>(`/policies/${id}/duplicate/resolve`, token, { method: 'POST', body: JSON.stringify({ action }) }),
       similarNamed: () =>
         apiFetch<{ notes: Array<{ id: string; name: string; matched_name: string; content_pct: number | null }> }>('/policies/similar-named', token),
+      suggested: () =>
+        apiFetch<{ items: Array<{ slug: string; title: string; description: string; price_pence: number }>; pushed_at: string | null }>('/policies/suggested', token),
+      dismissSuggested: (slug: string) =>
+        apiFetch<{ dismissed: boolean }>(`/policies/suggested/${encodeURIComponent(slug)}/dismiss`, token, { method: 'POST' }),
       dismissSimilarNamed: (id: string) =>
         apiFetch<{ dismissed: boolean }>(`/policies/${id}/similar-named/dismiss`, token, { method: 'POST' }),
       backfillSignatures: (limit = 40) =>

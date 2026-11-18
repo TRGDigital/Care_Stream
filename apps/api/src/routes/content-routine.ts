@@ -8,6 +8,7 @@
 //                                      heading, opening or image), and the platform's draft counts
 //   POST /routine/content/blog         save posts as DRAFTS
 //   POST /routine/content/collections  save collections as DRAFTS
+//   POST /routine/content/image       make one illustration in the house style when no stock image fits (capped per day)
 //   POST /routine/content/notify       once at the end of a night: emails the platform owner the drafts created in the
 //                                      last day plus the routine's own report
 //
@@ -20,6 +21,7 @@ import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
 import { importBlogDrafts, importCollectionDrafts } from './admin'
 import { sendContentDraftsEmail } from '../services/email/outbound'
+import { generateContentImage } from '../services/policy-shop/shopImage'
 import bundle from '../data/content-engine/bundle.json'
 
 export const contentRoutineRouter = Router()
@@ -93,6 +95,28 @@ contentRoutineRouter.post('/collections', async (req: Request, res: Response) =>
   if (!list.length) { err(res, 'VALIDATION_ERROR', 'collections must be a non empty array.'); return }
   const clean = list.map((c: any) => { const { refresh: _r, status: _s, ...rest } = c ?? {}; return rest })
   ok(res, await importCollectionDrafts(clean, false))
+})
+
+// POST /routine/content/image  { topic, scene, key? }  ->  { url, alt_hint }
+// For when the stock library has nothing that fits a page. The scene is a plain description of one ordinary care moment. The image is
+// generated in the house flat teal style (prompt editable as `blog_image_generation` in Platform Console, AI Prompts), stored, and its
+// public URL returned. Capped so a runaway routine cannot spend: 12 images a day in total, 3 per request.
+let imageDay = ''; let imageCount = 0
+contentRoutineRouter.post('/image', async (req: Request, res: Response) => {
+  const topic = String(req.body?.topic ?? '').trim().slice(0, 200)
+  const scene = String(req.body?.scene ?? '').trim().slice(0, 600)
+  if (topic.length < 3 || scene.length < 15) { err(res, 'VALIDATION_ERROR', 'topic and a scene description (a sentence or two) are required.'); return }
+  const today = new Date().toISOString().slice(0, 10)
+  if (imageDay !== today) { imageDay = today; imageCount = 0 }
+  if (imageCount >= 12) { err(res, 'DAILY_LIMIT', 'The daily image limit has been reached. Use a stock image or flag [CHECK] new image needed.', 429); return }
+  imageCount++
+  try {
+    const url = await generateContentImage(topic, scene, String(req.body?.key || topic))
+    ok(res, { url: `https://api.carestreamai.com${url}`, generated_today: imageCount })
+  } catch (e: any) {
+    imageCount = Math.max(0, imageCount - 1)
+    err(res, 'GENERATE_FAILED', e?.message ?? 'could not generate that image', 500)
+  }
 })
 
 // POST /routine/content/notify  { kind: 'blog' | 'collections', report?: string }

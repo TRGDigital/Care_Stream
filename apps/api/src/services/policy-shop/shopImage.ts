@@ -248,3 +248,25 @@ export async function generateFeatureImage(featureKey: string, title: string, su
     + 'Show their skin tone and presentation clearly through the flat illustration style, without drawing realistic facial detail. No residents appear.'
   return generate(await promptFor(FEATURE_PROMPT_USAGE, DEFAULT_FEATURE_PROMPT), title, summary, featureKey, '1024x1536', cast)
 }
+
+// ─── Blog and collection illustrations (made on demand by the nightly content routines) ───────────────────────────
+// Used only when the stock library has nothing that fits the point of a page. Same flat teal style as the policy and training
+// art, so a post sits comfortably beside the rest of the site. A wide landscape frame; the routine supplies a plain scene brief.
+export const BLOG_IMAGE_PROMPT_USAGE = 'blog_image_generation'
+export const DEFAULT_BLOG_IMAGE_PROMPT = `Create an illustration for an article on a UK care provider's website.
+Article topic: "{{topic}}".
+The scene to show: {{summary}}
+Illustrate the topic IN PRACTICE: one ordinary, believable moment in a UK care setting or care office. Never illustrate the words in the title and never use a symbol to stand for the idea.
+Do NOT include: scales of justice, gavels, courtrooms, anatomical diagrams, brains, lightbulbs, floating or disembodied body parts, thought bubbles, tick or cross marks, shields, padlocks, or any other icon used as a metaphor. People, rooms and everyday objects only.
+Nothing distressing, coercive or punitive. Everyone in the scene is treated with dignity.
+Style: flat modern vector illustration, soft rounded shapes, warm and friendly, gentle teal and warm-neutral palette on a light warm-neutral background, plenty of clean negative space.
+The illustration fills the ENTIRE frame, edge to edge. There is no caption, no title bar, no label strip, no banner, no border and no margin of flat colour along any edge. Any lettering anywhere in the image is a failure: no text, words, letters, numbers, captions or logos, including on clipboards, signs, folders or screens within the scene.
+Do NOT show realistic human faces: keep any people stylised, simple and abstract.
+Compose for a WIDE landscape frame: keep the subject centred and away from the top and bottom edges, which are cropped.
+Professional and reassuring.`
+
+/** Generate one article illustration and return its public URL path (served by /public/policy-shop/image/:file). */
+export async function generateContentImage(topic: string, scene: string, key: string): Promise<string> {
+  const stored = await generate(await promptFor(BLOG_IMAGE_PROMPT_USAGE, DEFAULT_BLOG_IMAGE_PROMPT), topic, scene, key)
+  return shopImageUrl(stored) as string
+}

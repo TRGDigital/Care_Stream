@@ -2,6 +2,7 @@ import { loadHeader, profileTab, PROFILE_TABS, type ProfileTab } from '../lib/st
 import { buildStaffRecord } from '../lib/staff-record'
 import { requestOrigin } from '../lib/signup-meta'
 import { loadEngagement, engagementBrief } from '../lib/engagement'
+import { keywordVolumes } from '../services/keyword-volumes'
 import { signCollectionPreview } from '../lib/collection-preview'
 import { getPagePerformance, getUpdateQueue, logPageEvent } from '../services/page-metrics/performance'
 import { collectPageMetrics } from '../services/page-metrics/collector'
@@ -3486,6 +3487,11 @@ adminRouter.patch('/blog/authors/:id', async (req: Request, res: Response) => {
 adminRouter.delete('/blog/authors/:id', async (req: Request, res: Response) => {
   await (prisma as any).blogAuthor.delete({ where: { id: req.params.id } })
   ok(res, { deleted: true })
+})
+
+// GET /admin/keyword-volumes — UK searches a month for post and collection keywords (shown by ?yellowkws)
+adminRouter.get('/keyword-volumes', async (_req: Request, res: Response) => {
+  ok(res, { volumes: keywordVolumes() })
 })
 
 // ─── Blog Posts ───────────────────────────────────────────────────────────────

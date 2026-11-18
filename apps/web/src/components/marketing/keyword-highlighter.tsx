@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getPlatformToken } from '@/lib/platform-api'
 import kwVolumes from '@/lib/keyword-volumes.json'
 
@@ -20,6 +20,7 @@ type Kw = { term: string; primary: boolean; count: number }
 export function KeywordHighlighter({ slug, kind = 'post', keywords }: { slug: string; kind?: 'post' | 'collection'; keywords?: { primary: string | null; secondary: string[] } }) {
   const [panel, setPanel] = useState<{ kws: Kw[]; words: number; inFirst100: boolean | null; none: boolean } | null>(null)
   const [open, setOpen] = useState(true)
+  const volumesRef = useRef<Record<string, number>>(kwVolumes.volumes as Record<string, number>)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -39,6 +40,12 @@ export function KeywordHighlighter({ slug, kind = 'post', keywords }: { slug: st
           secondary = p?.secondary_keywords ?? []
         } catch { /* leave empty */ }
       }
+      let live: Record<string, number> = {}
+      try {
+        const r = await fetch(`${API_URL}/admin/keyword-volumes`, { headers: { Authorization: `Bearer ${token}` } })
+        live = (await r.json())?.data?.volumes ?? {}
+      } catch { /* fall back to the saved figures */ }
+      volumesRef.current = { ...(kwVolumes.volumes as Record<string, number>), ...live }
       if (cancelled) return
       const terms: Array<{ term: string; primary: boolean }> = [
         ...(primary ? [{ term: primary, primary: true }] : []),
@@ -125,7 +132,7 @@ export function KeywordHighlighter({ slug, kind = 'post', keywords }: { slug: st
                   {panel.kws.map(k => (
                     <tr key={k.term} style={{ borderBottom: '1px solid #F3F4F6' }}>
                       <td style={{ padding: '4px 0' }}><mark style={{ background: '#FFE600', padding: '0 3px', borderRadius: 2, outline: k.primary ? '2px solid #F59E0B' : 'none' }}>{k.term}</mark>{k.primary && <span style={{ marginLeft: 6, color: '#B45309', fontWeight: 700 }}>primary</span>}</td>
-                      <td style={{ padding: '4px 8px', textAlign: 'right', color: '#374151' }} title="UK searches a month, Google Keyword Planner. A dash means under 10 or no data.">{(kwVolumes.volumes as Record<string, number>)[k.term.toLowerCase()]?.toLocaleString('en-GB') ?? '\u2013'}</td>
+                      <td style={{ padding: '4px 8px', textAlign: 'right', color: '#374151' }} title="UK searches a month, Google Keyword Planner. A dash means under 10 or no data.">{volumesRef.current[k.term.toLowerCase()]?.toLocaleString('en-GB') ?? '\u2013'}</td>
                       <td style={{ padding: '4px 0', textAlign: 'right', fontWeight: 700, color: k.count === 0 ? '#DC2626' : '#047857' }}>{k.count}x</td>
                     </tr>
                   ))}

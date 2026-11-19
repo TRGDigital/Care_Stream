@@ -1994,6 +1994,17 @@ function FollowUpView({ token, userId, onChange, onTalkToPolicy, secondLang = nu
   const [loadingSecond, setLoadingSecond] = useState(false)
 
   const keyOf = (it: any) => `${it.source}:${it.enrollment_id}:${it.ref}`
+  // Grouped by the course they came from (first appearance order), all closed to start with.
+  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set())
+  const groups = (() => {
+    const m = new Map<string, { key: string; source: string; topic: string; items: any[] }>()
+    for (const it of items) {
+      const key = `${it.source}:${it.enrollment_id}`
+      if (!m.has(key)) m.set(key, { key, source: it.source, topic: it.topic ?? (it.source === 'training' ? 'Training' : 'Induction'), items: [] })
+      m.get(key)!.items.push(it)
+    }
+    return [...m.values()]
+  })()
 
   function load() {
     api.me.followUp().then(d => { setItems(d.items); persistentCache.set(ck, d.items) }).catch(() => {}).finally(() => setLoading(false))
@@ -2028,20 +2039,48 @@ function FollowUpView({ token, userId, onChange, onTalkToPolicy, secondLang = nu
       <div className="mx-auto max-w-5xl">
         <h2 className="mb-1 text-xl font-bold text-neutral-dark">Follow-up</h2>
         <p className="mb-5 text-sm text-neutral-mid">A few things to revisit. Learn the point, then answer — or just retry. Either way it clears from here.{secondLang ? ' Use the language button on a card to read just that one in your second language.' : ''}</p>
-        <div className="space-y-4">
-          {items.map(it => (
-            <GapCard
-              key={keyOf(it)}
-              it={it}
-              token={token}
-              secondLang={secondLang}
-              secondIt={secondItems?.[keyOf(it)] ?? null}
-              onNeedSecond={ensureSecond}
-              loadingSecond={loadingSecond}
-              onTalkToPolicy={onTalkToPolicy}
-              onResolved={() => { setTimeout(() => { load(); onChange?.() }, 2200) }}
-            />
-          ))}
+        {/* One accordion per course, closed until the person opens it. A person can have many questions to revisit, so they are grouped
+            under the training they came from instead of listed all at once. */}
+        <div className="space-y-3">
+          {groups.map(g => {
+            const open = openGroups.has(g.key)
+            return (
+              <div key={g.key} className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                <button
+                  type="button"
+                  onClick={() => setOpenGroups(prev => { const n = new Set(prev); n.has(g.key) ? n.delete(g.key) : n.add(g.key); return n })}
+                  aria-expanded={open}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-neutral-light/50"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-neutral-dark">{g.topic}</span>
+                    <span className="mt-0.5 flex items-center gap-2 text-xs text-neutral-mid">
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${g.source === 'training' ? 'bg-teal/10 text-teal' : 'bg-indigo-50 text-indigo-500'}`}>{g.source === 'training' ? 'Training' : 'Induction'}</span>
+                      {g.items.length} {g.items.length === 1 ? 'question' : 'questions'} to revisit
+                    </span>
+                  </span>
+                  <ChevronDown size={18} className={`shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />
+                </button>
+                {open && (
+                  <div className="space-y-4 border-t border-gray-100 bg-neutral-light/30 p-3 sm:p-4">
+                    {g.items.map(it => (
+                      <GapCard
+                        key={keyOf(it)}
+                        it={it}
+                        token={token}
+                        secondLang={secondLang}
+                        secondIt={secondItems?.[keyOf(it)] ?? null}
+                        onNeedSecond={ensureSecond}
+                        loadingSecond={loadingSecond}
+                        onTalkToPolicy={onTalkToPolicy}
+                        onResolved={() => { setTimeout(() => { load(); onChange?.() }, 2200) }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>

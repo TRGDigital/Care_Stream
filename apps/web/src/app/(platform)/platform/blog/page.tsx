@@ -32,6 +32,15 @@ function calcReadTime(html = '') {
   return Math.max(1, Math.round(words / 200))
 }
 
+// Posts whose hero image was regenerated in the new house style (open friendly faces) and still needs a
+// look. The tag shows on the post list until you press Done (remembered in this browser).
+const HERO_TO_CHECK = [
+  'gdpr-audit', 'care-certificate-workbook-answers', 'loler-inspection-care-home', 'deprivation-of-liberty-safeguards',
+  'care-home-compliance-software', 'data-protection-certificate', 'health-and-safety-audit', 'care-home-software',
+  'coshh-certificate', 'how-often-should-dbs-be-renewed', 'safeguarding-audit',
+]
+const HERO_CHECKED_KEY = 'blog_hero_checked'
+
 const STATUS_COLOURS: Record<string, string> = {
   published: 'bg-green-100 text-green-700',
   draft:     'bg-amber-100 text-amber-700',
@@ -2425,6 +2434,17 @@ export default function BlogPage() {
     return acc
   }, {} as any)
 
+  const [heroChecked, setHeroChecked] = useState<string[]>([])
+  useEffect(() => {
+    try { setHeroChecked(JSON.parse(localStorage.getItem(HERO_CHECKED_KEY) || '[]')) } catch { /* ignore */ }
+  }, [])
+  function markHeroChecked(slug: string) {
+    setHeroChecked(prev => {
+      const next = Array.from(new Set([...prev, slug]))
+      try { localStorage.setItem(HERO_CHECKED_KEY, JSON.stringify(next)) } catch { /* ignore */ }
+      return next
+    })
+  }
   const publishedCount = posts.filter(p => p.status === 'published').length
   const featuredCount  = posts.filter(p => p.is_featured).length
 
@@ -2653,6 +2673,12 @@ export default function BlogPage() {
                               <p className="text-sm font-medium text-neutral-dark">{post.title}</p>
                               {post.is_featured && (
                                 <span className="rounded-full bg-teal-light px-2 py-0.5 text-xs font-medium text-teal">Featured</span>
+                              )}
+                              {HERO_TO_CHECK.includes(post.slug) && !heroChecked.includes(post.slug) && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-fuchsia-100 px-2 py-0.5 text-xs font-semibold text-fuchsia-800">
+                                  <a href={`/platform/blog/preview/${post.slug}`} target="_blank" rel="noopener noreferrer" className="hover:underline">New hero: check</a>
+                                  <button type="button" title="Mark as checked" onClick={() => markHeroChecked(post.slug)} className="rounded-full px-1 text-fuchsia-700 hover:bg-fuchsia-200">Done</button>
+                                </span>
                               )}
                             </div>
                             <p className="mt-0.5 text-xs text-neutral-mid">

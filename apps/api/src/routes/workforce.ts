@@ -403,6 +403,20 @@ async function adminDetail(req: Request, res: Response) {
   if (!detail) { err(res, 'NOT_FOUND', 'Not found.', 404); return null }
   return { detail, tenantId, actorId: (req as any).user.sub as string }
 }
+workforceRouter.post('/staff/:userId/suggestions/action', async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const m = await stl()
+  if (!(await m.supervisionTrainingEnabled(tenantId))) { err(res, 'NOT_AVAILABLE', 'Not available for this account.', 404); return }
+  const userId = String(req.params.userId)
+  if (!(await requireStaff(tenantId, userId))) { err(res, 'NOT_FOUND', 'Staff member not found.', 404); return }
+  const sid = String(req.body?.supervision_id ?? '')
+  const sup = sid ? await (prisma as any).staffSupervision.findFirst({ where: { id: sid, tenant_id: tenantId, user_id: userId }, select: { id: true } }) : null
+  if (!sup) { err(res, 'VALIDATION_ERROR', 'Choose a supervision to add it to.', 400); return }
+  const result = await m.addSuggestionAsAction(tenantId, userId, sup.id, String(req.body?.suggestion_id ?? ''))
+  if (result === 'not_found') { err(res, 'NOT_FOUND', 'That suggestion is no longer available.', 404); return }
+  ok(res, { result })
+})
+
 workforceRouter.get('/staff/:userId/training-detail/print', async (req: Request, res: Response) => {
   const x = await adminDetail(req, res); if (!x) return
   ok(res, { html: await (await import('../lib/supervision-training-share')).printPage(x.tenantId, x.actorId, x.detail) })

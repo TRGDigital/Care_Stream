@@ -9,6 +9,7 @@
 import { prisma } from '../db/client'
 import { buildStaffRecord } from './staff-record'
 import { getPlanFeatures } from './plan-limits'
+import { suggestionsFor, type Suggestion } from './supervision-training-suggestions'
 
 const DAY = 86_400_000
 const p = () => prisma as any
@@ -229,6 +230,7 @@ export type TrainingDetail = {
   linked: Array<{ action_id: string; description: string; action_status: string; added_on: string | null; course: CourseDetail | null }>
   others: CourseDetail[]            // allocated since the previous supervision, not tied to this one
   follow_up: Array<{ method: 'learn' | 'retry'; label: string | null; when: string }>   // gaps they went back over (lesson or retry)
+  suggestions: Suggestion[]         // what the supervisor might do, from the scores and answers (rules, no AI)
   since: string | null
   generated_at: string
 }
@@ -296,11 +298,27 @@ export async function buildTrainingDetail(tenantId: string, userId: string, supe
     return { action_id: a.id, description: a.description, action_status: a.status, added_on: iso(a.created_at), course: e ? courseDetailOf(e) : null }
   })
   const others = (enr as any[]).filter(e => !linkedEnrIds.has(e.id)).map(e => courseDetailOf(e))
-  return {
+  const base = {
     person: { id: user.id, name: user.name, job_role: user.job_role ?? null },
     supervision: sup ? { id: sup.id, type: sup.type, held_on: iso(sup.held_on) as string, status: sup.status } : null,
     linked, others,
     follow_up: (rem as any[]).map(r => ({ method: r.method === 'retry' ? 'retry' as const : 'learn' as const, label: r.label ?? null, when: iso(r.created_at) as string })),
     since: iso(since), generated_at: new Date().toISOString(),
   }
+  return { ...base, suggestions: suggestionsFor({ ...base, suggestions: [] }) }
+}
+
+/**
+ * Add one suggestion to a supervision as an agreed action. The text comes from the server's own list (recomputed here), never from the
+ * browser. Not linked to a course: it is a conversation point, so it stays open until the person or the supervisor marks it done.
+ */
+export async function addSuggestionAsAction(tenantId: string, userId: string, supervisionId: string, suggestionId: string): Promise<'added' | 'already' | 'not_found'> {
+  const detail = await buildTrainingDetail(tenantId, userId, supervisionId)
+  const s = detail?.suggestions.find(x => x.id === suggestionId)
+  if (!detail || !s) return 'not_found'
+  const text = s.action_text.slice(0, 1000)
+  const existing = await p().supervisionAction.findFirst({ where: { supervision_id: supervisionId, tenant_id: tenantId, description: { equals: text, mode: 'insensitive' } }, select: { id: true } })
+  if (existing) return 'already'
+  await p().supervisionAction.create({ data: { supervision_id: supervisionId, tenant_id: tenantId, user_id: userId, description: text, linked_by: 'suggestion' } })
+  return 'added'
 }

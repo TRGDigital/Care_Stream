@@ -83,6 +83,21 @@ export function SupervisionForm({ token, supervisionId, onClose, onSaved }: { to
     return () => { alive = false }
   }, [token, supervisionId])
 
+  // An action added from a suggestion (or the assign screen) while this form is open must appear here as a row, or saving the form would
+  // remove it. Rows are matched by the action id, and an empty placeholder row makes way for it.
+  async function pullLinkedActions() {
+    try {
+      const d = await createApiClient(token).me.conductingDetail(supervisionId)
+      setActions(prev => {
+        const have = new Set(prev.map(r => r.action_id).filter(Boolean))
+        const fresh = (d.linked_actions ?? []).filter(la => !have.has(la.id)).map(la => ({ description: la.description, alloc_type: '' as AllocType, alloc_id: '', action_id: la.id }))
+        if (!fresh.length) return prev
+        const kept = prev.length === 1 && !prev[0].description.trim() && !prev[0].action_id ? [] : prev
+        return [...kept, ...fresh]
+      })
+    } catch { /* the action is saved on the server either way */ }
+  }
+
   const patchAction = (k: number, patch: Partial<ActionRow>) => setActions(p => p.map((x, j) => j === k ? { ...x, ...patch } : x))
 
   async function save() {
@@ -143,6 +158,7 @@ export function SupervisionForm({ token, supervisionId, onClose, onSaved }: { to
               </details>
             )}
             {showDetail && <TrainingDetailModal title={`${rec.supervisee}: training`} load={async () => (await createApiClient(token).me.conductingTrainingDetail(supervisionId)).detail} onClose={() => setShowDetail(false)}
+              onAddSuggestion={async id => { const r = await createApiClient(token).me.addConductingSuggestion(supervisionId, id); if (r.result === 'added') await pullLinkedActions(); return r.result }}
               share={{ print: async () => (await createApiClient(token).me.conductingTrainingDetailPrint(supervisionId)).html, email: to => createApiClient(token).me.conductingTrainingDetailEmail(supervisionId, to), admins: async () => ((await createApiClient(token).users.list()).users ?? []).filter((u: any) => u.role === 'admin' && u.is_active !== false && u.name).map((u: any) => ({ id: u.id, name: u.name })) }} />}
 
             {/* Sections 1-9 */}

@@ -8,18 +8,20 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { Search, Lock, FileText, Users, BookOpen, ClipboardCheck, GraduationCap, HelpCircle, Heart, CornerDownLeft, Sparkles, Compass } from 'lucide-react'
+import { Search, Lock, FileText, Users, BookOpen, ClipboardCheck, GraduationCap, HelpCircle, Heart, CornerDownLeft, Sparkles, Compass, PlusCircle, UserPlus } from 'lucide-react'
 import { createApiClient, type SearchRecord } from '@/lib/api-client'
 import { usePlanFeatures } from '@/lib/use-plan-features'
 import { FEATURES, PLAN_NOTE, type FeatureEntry } from '@/lib/admin-search/features'
 import { searchFeatures, searchGuides, tokens, type GuideEntry } from '@/lib/admin-search/search'
-import { tierLock, type AccountKind } from '@/lib/admin-search/access'
+import { tierLock, basePath, type AccountKind } from '@/lib/admin-search/access'
+import { runIntent } from '@/lib/admin-search/intents'
 
 type Item = {
   key: string; group: string; title: string; sub?: string | null; href: string
   locked?: { note: string; plan?: string; viaOverlay: boolean } | null
   alt?: { label: string; href: string }          // a second action on the row, shown as a small button
   openPolicy?: { id: string; name: string }       // policies: the main action opens this policy itself
+  cta?: string                                    // what the main action does, in a few words
   Icon: React.ElementType
 }
 
@@ -87,24 +89,33 @@ export function AdminSearch({ account, onLocked }: { account: AccountKind; onLoc
     const term = q.trim()
     if (term.length < 2) return []
     const out: Item[] = []
-    for (const { entry } of searchFeatures(term, FEATURES).slice(0, 8)) {
+    const found = searchFeatures(term, FEATURES)
+    for (const { entry } of found.filter(x => x.entry.action).slice(0, 4)) {
+      out.push({ key: 'f-' + entry.id, group: 'Do something', title: entry.title, sub: entry.about, href: entry.href, locked: lockOf(entry.href, entry.requires), Icon: PlusCircle })
+    }
+    for (const { entry } of found.filter(x => !x.entry.action).slice(0, 7)) {
       out.push({ key: 'f-' + entry.id, group: 'Pages and features', title: entry.title, sub: entry.about, href: entry.href, locked: lockOf(entry.href, entry.requires), Icon: Compass })
     }
     for (const g of searchGuides(term, guides).slice(0, 5)) {
       out.push({ key: 'g-' + g.guide.id + (g.block ?? ''), group: 'Help and guides', title: g.block ? `${g.guide.title}: ${g.block}` : g.guide.title, sub: g.snippet, href: `/guides#${g.guide.id}`, Icon: HelpCircle })
     }
-    const rec = (k: string, group: string, Icon: React.ElementType, base: string, withQ = false, to?: (id: string) => string) => (records?.[k] ?? []).forEach(r =>
-      out.push({ key: `${k}-${r.id}`, group, title: r.title, sub: r.sub, href: to ? to(r.id) : withQ ? `${base}?q=${encodeURIComponent(r.title)}` : base, locked: lockOf(base), Icon }))
+    const rec = (k: string, group: string, Icon: React.ElementType, base: string, withQ = false, to?: (id: string) => string, cta?: string, alt?: { label: string; href: (id: string) => string }) => (records?.[k] ?? []).forEach(r =>
+      out.push({ key: `${k}-${r.id}`, group, title: r.title, sub: r.sub, href: to ? to(r.id) : withQ ? `${base}?q=${encodeURIComponent(r.title)}` : base, locked: lockOf(base), Icon, cta, alt: alt ? { label: alt.label, href: alt.href(r.id) } : undefined }))
     ;(records?.policies ?? []).forEach(r => out.push({
       key: `policies-${r.id}`, group: 'Your policies', title: r.title, sub: r.sub, Icon: FileText, locked: lockOf('/policies'),
       href: `/policies?open=${encodeURIComponent(r.id)}&name=${encodeURIComponent(r.title)}`, openPolicy: { id: r.id, name: r.title },
       alt: { label: 'Policies page', href: `/policies?q=${encodeURIComponent(r.title)}` },
     }))
     rec('staff', 'Your staff', Users, '/staff', false, id => `/staff/${id}`)
-    rec('residents', 'Your residents', Heart, '/knowledge', false, id => `/knowledge?resident=${id}`)
+    rec('residents', 'Your residents', Heart, '/knowledge', false, id => `/knowledge?resident=${id}`, 'Open profile', { label: 'Invite family', href: id => `/knowledge?resident=${id}&tab=family` })
     rec('knowledge', 'Your knowledge base', BookOpen, '/knowledge')
-    rec('audits', 'Audits', ClipboardCheck, '/audits')
-    rec('training', 'Training courses', GraduationCap, '/training')
+    rec('audits', 'Audits', ClipboardCheck, '/audits', false, id => `/audits?do=start-audit&template=${encodeURIComponent(id)}`, 'Start this audit', { label: 'Audits page', href: () => '/audits' })
+    ;(records?.training ?? []).forEach(r => {
+      const path = r.annual ? '/training/annual' : '/training'
+      const href = r.annual ? `/training/annual?do=assign-cpd&module=${encodeURIComponent(r.id)}&name=${encodeURIComponent(r.title)}` : `/training?do=assign-training&module=${encodeURIComponent(r.id)}`
+      out.push({ key: `training-${r.id}`, group: 'Training courses', title: r.title, sub: r.sub, Icon: GraduationCap, locked: lockOf(path), href, cta: 'Assign to staff', alt: { label: r.annual ? 'CPD page' : 'Training page', href: path } })
+    })
+    rec('onboarding', 'Staff onboarding flows', UserPlus, '/onboarding', false, id => `/onboarding?do=allocate-flow&flow=${encodeURIComponent(id)}`, 'Allocate to staff', { label: 'Onboarding page', href: () => '/onboarding' })
     return out
   }, [q, guides, records, lockOf])
 
@@ -125,12 +136,24 @@ export function AdminSearch({ account, onLocked }: { account: AccountKind; onLoc
       router.push('/billing'); close(); return
     }
     if (it.openPolicy && pathname === '/policies') { window.dispatchEvent(new CustomEvent('cs-open-policy', { detail: it.openPolicy })); close(); return }
-    router.push(it.href); close()
+    navigate(it.href)
   }
 
   function goAlt(it: Item) {
     if (!it.alt) return
-    router.push(it.alt.href); close()
+    navigate(it.alt.href)
+  }
+
+  // A link with ?do= on the page that is already open is done in place; anything else is a normal navigation.
+  function navigate(href: string) {
+    const u = new URL(href, window.location.origin)
+    const name = u.searchParams.get('do')
+    close()
+    if (name && u.pathname === pathname) {
+      const params: Record<string, string> = {}
+      u.searchParams.forEach((v, k) => { if (k !== 'do') params[k] = v })
+      runIntent(name, params)
+    } else router.push(href)
   }
 
   if (!enabled) return null
@@ -185,7 +208,7 @@ export function AdminSearch({ account, onLocked }: { account: AccountKind; onLoc
                           {it.locked && <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700"><Lock size={9} /> {it.locked.plan ?? 'Upgrade'}</span>}
                         </span>
                         {it.sub && <span className="mt-0.5 line-clamp-2 block text-xs text-neutral-mid">{it.sub}</span>}
-                        {it.openPolicy && !it.locked && <span className="mt-0.5 block text-[11px] font-medium text-teal">Open this policy</span>}
+                        {(it.openPolicy ? 'Open this policy' : it.cta) && !it.locked && <span className="mt-0.5 block text-[11px] font-medium text-teal">{it.openPolicy ? 'Open this policy' : it.cta}</span>}
                         {it.locked && <span className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-teal"><Sparkles size={11} /> {it.locked.note}. {it.locked.viaOverlay ? 'See what CareStream adds' : 'See plans'}</span>}
                       </span>
                       {i === active && !it.alt && <CornerDownLeft size={13} className="mt-1 shrink-0 text-neutral-mid" />}

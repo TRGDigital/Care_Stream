@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useSearchIntent } from '@/lib/admin-search/intents'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
@@ -204,6 +205,7 @@ export default function StaffPage() {
   const [showInvite,   setShowInvite]  = useState(false)
   const [showImport,   setShowImport]  = useState(false)
   const [showHubInvite, setShowHubInvite] = useState(false)
+  useSearchIntent({ 'add-staff': () => setShowInvite(true), 'import-staff': () => setShowImport(true), 'hub-invites': () => setShowHubInvite(true) })
   const [tab,          setTab]         = useState<'active' | 'archived'>('active')
   const [editUser,     setEditUser]    = useState<any | null>(null)
   const [detailUserId, setDetailUserId] = useState<string | null>(null)

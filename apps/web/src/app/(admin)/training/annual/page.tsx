@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchIntent } from '@/lib/admin-search/intents'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { createApiClient, apiAssetUrl } from '@/lib/api-client'
@@ -37,6 +38,7 @@ export default function AnnualTrainingPage() {
   const error = catQ.data ? '' : (catQ.error ?? '')
   const [helpOpen, setHelpOpen] = useState(false)
   const [view,    setView]    = useState<{ mode: 'list' } | { mode: 'review'; id: string } | { mode: 'assign'; id: string; name: string } | { mode: 'view'; id: string; name: string }>({ mode: 'list' })
+  useSearchIntent({ 'assign-cpd': p => { if (p.module) setView({ mode: 'assign', id: p.module, name: p.name ?? 'Training' }) } })
   const [topicView,     setTopicView]     = useState<'live' | 'soon' | 'archived'>('live')
   const [archivingTopic, setArchivingTopic] = useState<string | null>(null)
   const [sheet, setSheet] = useState<null | { kind: 'summary' | 'practical'; module: any }>(null)

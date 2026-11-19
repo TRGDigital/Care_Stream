@@ -40,3 +40,21 @@ test('the committed guides index matches the Help and Guides page (re-run script
   const { build } = await import('../../../scripts/build-admin-search-guides.mjs')
   assert.deepEqual(JSON.parse(JSON.stringify(build())), guides)
 })
+
+test('people find the action, not just the page', () => {
+  assert.equal(top('add a staff member'), 'do-add-staff')
+  assert.equal(top('upload a policy'), 'do-upload-policy')
+  assert.equal(top('new face to face session'), 'do-new-f2f')
+  assert.equal(top('add faq'), 'do-add-entry')
+  assert.equal(top('new incentive'), 'do-new-incentive')
+  assert.equal(top('create onboarding flow'), 'do-new-flow')
+})
+test('every action in the map is performed by a page (no dead links)', async () => {
+  const { execSync } = await import('node:child_process')
+  const root = new URL('../../', import.meta.url).pathname
+  const src = execSync(`grep -rhoE "useSearchIntent\\(\\{[^;]*" ${root} || true`, { encoding: 'utf8' }) + execSync(`grep -rh -A4 "useSearchIntent({" ${root} || true`, { encoding: 'utf8' })
+  for (const f of FEATURES.filter(x => x.action)) {
+    const name = new URL(f.href, 'http://x').searchParams.get('do')
+    assert.ok(src.includes(`'${name}'`), `${f.id}: no page handles do=${name}`)
+  }
+})

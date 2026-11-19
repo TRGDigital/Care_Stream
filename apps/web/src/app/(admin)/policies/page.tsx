@@ -3,6 +3,7 @@
 // §14.7 — Policy library: searchable table, upload, archive.
 
 import { useEffect, useState, useRef } from 'react'
+import { useSearchIntent } from '@/lib/admin-search/intents'
 import dynamic from 'next/dynamic'
 import { useSession } from 'next-auth/react'
 import { PolicyOrdersPanel } from '@/components/admin/policy-orders-panel'
@@ -84,6 +85,7 @@ export default function PoliciesPage() {
   const [tab,            setTab]            = useState<'active' | 'archived' | 'history' | 'new'>('active')
   const [search,         setSearch]         = useState(() => (typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('q') ?? ''))   // /policies?q= comes from admin search
   const [showUpload,     setShowUpload]     = useState(false)
+  useSearchIntent({ 'upload-policy': () => setShowUpload(true) })
   const [showBulkUpload, setShowBulkUpload] = useState(false)
   const [versionTarget,  setVersionTarget]  = useState<{ id: string; name: string } | null>(null)
   const [previewPolicy,  setPreviewPolicy]  = useState<{ id: string; name: string } | null>(null)

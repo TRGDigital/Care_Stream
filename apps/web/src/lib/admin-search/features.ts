@@ -15,6 +15,7 @@ export type FeatureEntry = {
   words: string[]               // what people type for it
   requires?: { feature: FeatureKey; plan: Plan }
   guide?: string                // id of the guide that explains it (links to /guides#id)
+  action?: boolean              // opens a form to do something (shown under Do something), via ?do= on its page
 }
 
 const f = (id: string, group: string, title: string, href: string, about: string, words: string[], extra: Partial<FeatureEntry> = {}): FeatureEntry => ({ id, group, title, href, about, words, ...extra })
@@ -71,6 +72,22 @@ export const FEATURES: FeatureEntry[] = [
   f('support', 'Admin', 'Raise a support request', '/guides', 'Report a problem and send us a screenshot.', ['problem', 'bug', 'error', 'contact', 'support', 'help me', 'broken']),
   f('licences', 'Admin', 'Training licences', '/licences', 'Allocate the training licences you bought.', ['licence', 'license', 'allocate', 'seats']),
 ]
+
+
+// Things to DO. Each opens the right form on the right page (see lib/admin-search/intents.ts); nothing is saved or sent by the search.
+const a = (id: string, title: string, path: string, name: string, about: string, words: string[], extra: Partial<FeatureEntry> = {}): FeatureEntry =>
+  ({ id, group: 'Do something', title, href: `${path}${path.includes('?') ? '&' : '?'}do=${name}`, about, words, action: true, ...extra })
+FEATURES.push(
+  a('do-add-staff', 'Add a staff member', '/staff', 'add-staff', 'Add someone to your team and send their login.', ['new staff', 'new starter', 'add carer', 'add employee', 'invite staff', 'create staff'], { guide: 'staff' }),
+  a('do-import-staff', 'Import staff from a spreadsheet', '/staff', 'import-staff', 'Add many staff at once from a CSV file.', ['csv', 'bulk add', 'import staff', 'upload staff', 'spreadsheet']),
+  a('do-hub-invites', 'Send hub invites to staff', '/staff', 'hub-invites', 'Invite staff to install the CareStream hub on their phone.', ['hub', 'install app', 'download app', 'phone app', 'invite to hub']),
+  a('do-upload-policy', 'Upload a policy', '/policies', 'upload-policy', 'Add a policy document (PDF or Word).', ['add policy', 'new policy', 'upload document', 'upload pdf'], { guide: 'policies' }),
+  a('do-add-entry', 'Add a knowledge base entry', '/knowledge', 'add-entry', 'Add a question and answer that staff can ask about.', ['new entry', 'add faq', 'new faq', 'add information', 'add answer', 'knowledge entry'], { guide: 'knowledge-base' }),
+  a('do-new-incentive', 'Start a new incentive', '/incentives', 'new-incentive', 'Create a reward campaign for staff.', ['new reward', 'create incentive', 'start incentive', 'new campaign', 'recognition'], { guide: 'staff-incentives' }),
+  a('do-new-f2f', 'Create a face to face training session', '/training?tab=face_to_face', 'new-f2f', 'Book a classroom or practical session and invite staff.', ['new session', 'book training', 'schedule training', 'add session', 'create face to face', 'book trainer'], { requires: { feature: 'has_face_to_face', plan: 'Professional' }, guide: 'face-to-face' }),
+  a('do-new-flow', 'Create an onboarding flow', '/onboarding', 'new-flow', 'Build an induction flow for new starters.', ['new flow', 'new induction', 'create induction', 'build onboarding'], { guide: 'onboarding' }),
+  a('do-build-audit', 'Build your own audit', '/audits', 'build-audit', 'Create an audit template of your own.', ['create audit', 'new audit template', 'own audit', 'design audit'], { requires: { feature: 'has_custom_audits', plan: 'Enterprise' } }),
+)
 
 // Plans in order, for the upgrade message.
 export const PLAN_NOTE: Record<Plan, string> = {

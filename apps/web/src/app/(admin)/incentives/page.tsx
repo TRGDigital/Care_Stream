@@ -4,6 +4,7 @@
 // staff earn points from recorded training events. CareStream records and reports only.
 
 import { useMemo, useState } from 'react'
+import { useSearchIntent } from '@/lib/admin-search/intents'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { ArrowRight, Check, Gift, Lock, Plus } from 'lucide-react'
@@ -58,6 +59,7 @@ export default function IncentivesPage() {
   const token = session?.accessToken ?? ''
   const uk = session?.user?.email ?? 'guest'
   const [view, setView] = useState<View>(null)
+  useSearchIntent({ 'new-incentive': () => setView({ mode: 'builder', existing: null }) })
 
   const meta = useCachedQuery(token ? `admin-incentives-meta-${uk}` : null, () => createIncentivesClient(token).meta())
   const enabled = meta.data?.enabled === true

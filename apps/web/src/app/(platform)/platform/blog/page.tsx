@@ -11,6 +11,8 @@ import { slotsForPath, type SlotDef } from '@/lib/page-slots'
 import { PlatformShell } from '@/components/platform-shell'
 import { AltTagsPanel } from './AltTagsPanel'
 import { UserCasesPanel } from './UserCasesPanel'
+import { ScenariosPanel } from './ScenariosPanel'
+import { ALL_SCENARIOS } from '@/data/scenarios'
 import { ServicesPanel } from './ServicesPanel'
 import { FeatureSeedBar } from './FeatureSeedBar'
 import { SettingsPanel } from './SettingsPanel'
@@ -2055,7 +2057,7 @@ function HeroCheckTag({ slug }: { slug: string }) {
 
 export default function BlogPage() {
   const token = usePlatformAuth()
-  const [tab,  setTab]  = useState<'posts' | 'authors' | 'pages' | 'mainsite' | 'policies' | 'audits' | 'training' | 'features' | 'collections' | 'queue' | 'altTags' | 'userCases' | 'careSettings' | 'services'>('posts')
+  const [tab,  setTab]  = useState<'posts' | 'authors' | 'pages' | 'mainsite' | 'policies' | 'audits' | 'training' | 'features' | 'collections' | 'queue' | 'altTags' | 'userCases' | 'careSettings' | 'services' | 'scenarios'>('posts')
 
   // Search Console numbers per page for the Policy, Audit and Training pages tabs (the daily page_metrics pull)
   type PagePerf = { path: string; impressions: number; clicks: number; sessions: number; position: number | null; prev_impressions: number; prev_clicks: number; last_data: string | null; top_queries: Array<{ query: string; impressions: number; clicks: number }> }
@@ -2647,7 +2649,7 @@ export default function BlogPage() {
         {/* Tabs */}
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex gap-6 overflow-x-auto">
-            {(['posts', 'authors', 'pages', 'mainsite', 'policies', 'audits', 'training', 'features', 'collections', 'queue', 'userCases', 'careSettings', 'services', 'altTags'] as const).map(t => (
+            {(['posts', 'authors', 'pages', 'mainsite', 'policies', 'audits', 'training', 'features', 'collections', 'queue', 'userCases', 'scenarios', 'careSettings', 'services', 'altTags'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -2657,7 +2659,7 @@ export default function BlogPage() {
                     : 'text-neutral-mid hover:text-neutral-dark'
                 }`}
               >
-                {t === 'posts' ? `Posts (${posts.length})` : t === 'authors' ? `Authors (${authors.length})` : t === 'pages' ? `Pages (${allPages.length})` : t === 'mainsite' ? `Main site pages (${mainSitePagesList.length})` : t === 'policies' ? `Policy pages (${policyPagesList.length})` : t === 'audits' ? `Audit pages (${auditPagesList.length})` : t === 'training' ? `Training pages (${trainingPagesList.length})` : t === 'features' ? `Features pages (${featurePages.length})` : t === 'collections' ? `Collections (${collections.length})` : t === 'queue' ? 'Update queue' : t === 'userCases' ? 'User cases' : t === 'careSettings' ? 'Care settings' : t === 'services' ? 'Our Services' : 'Alt Tags'}
+                {t === 'scenarios' ? `Scenarios (${ALL_SCENARIOS.length})` : t === 'posts' ? `Posts (${posts.length})` : t === 'authors' ? `Authors (${authors.length})` : t === 'pages' ? `Pages (${allPages.length})` : t === 'mainsite' ? `Main site pages (${mainSitePagesList.length})` : t === 'policies' ? `Policy pages (${policyPagesList.length})` : t === 'audits' ? `Audit pages (${auditPagesList.length})` : t === 'training' ? `Training pages (${trainingPagesList.length})` : t === 'features' ? `Features pages (${featurePages.length})` : t === 'collections' ? `Collections (${collections.length})` : t === 'queue' ? 'Update queue' : t === 'userCases' ? 'User cases' : t === 'careSettings' ? 'Care settings' : t === 'services' ? 'Our Services' : 'Alt Tags'}
               </button>
             ))}
           </nav>
@@ -3234,6 +3236,7 @@ export default function BlogPage() {
 
         {tab === 'altTags' && token && <AltTagsPanel token={token} />}
         {tab === 'userCases' && token && <UserCasesPanel token={token} />}
+        {tab === 'scenarios' && token && <ScenariosPanel token={token} />}
         {tab === 'careSettings' && token && <SettingsPanel token={token} />}
         {tab === 'services' && token && <ServicesPanel token={token} />}
 

@@ -67,6 +67,7 @@ import { publicFamilyRouter } from './routes/residents-public'
 import { residentsRouter } from './routes/residents'
 import { incentivesRouter } from './routes/incentives'
 import { standardTrainingRouter } from './routes/standard-training'
+import { seoIndexRouter } from './routes/seo-index'
 import { standardProgrammesRouter } from './routes/standard-programmes'
 import { programmesRouter } from './routes/programmes'
 import { seedTrainingModulesIfEmpty } from './lib/seed-training'
@@ -144,6 +145,7 @@ app.use('/admin/service-pages', servicePagesAdminRouter)
 app.use('/admin/setting-pages', settingPagesAdminRouter)
 app.use('/admin/preview', previewAdminRouter)
 app.use('/admin/standard-training', standardTrainingRouter)
+app.use('/admin/seo-index', seoIndexRouter)
 app.use('/admin/standard-programmes', standardProgrammesRouter)
 app.use('/admin/policy-seeds', policySeedsRouter)
 app.use('/admin/audit-seeds', auditSeedsAdminRouter)

@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { Search, Lock, FileText, Users, BookOpen, ClipboardCheck, GraduationCap, HelpCircle, CornerDownLeft, Sparkles, Compass } from 'lucide-react'
+import { Search, Lock, FileText, Users, BookOpen, ClipboardCheck, GraduationCap, HelpCircle, Heart, CornerDownLeft, Sparkles, Compass } from 'lucide-react'
 import { createApiClient, type SearchRecord } from '@/lib/api-client'
 import { usePlanFeatures } from '@/lib/use-plan-features'
 import { FEATURES, PLAN_NOTE, type FeatureEntry } from '@/lib/admin-search/features'
@@ -90,10 +90,11 @@ export function AdminSearch({ account, onLocked }: { account: AccountKind; onLoc
     for (const g of searchGuides(term, guides).slice(0, 5)) {
       out.push({ key: 'g-' + g.guide.id + (g.block ?? ''), group: 'Help and guides', title: g.block ? `${g.guide.title}: ${g.block}` : g.guide.title, sub: g.snippet, href: `/guides#${g.guide.id}`, Icon: HelpCircle })
     }
-    const rec = (k: string, group: string, Icon: React.ElementType, base: string, withQ = false) => (records?.[k] ?? []).forEach(r =>
-      out.push({ key: `${k}-${r.id}`, group, title: r.title, sub: r.sub, href: withQ ? `${base}?q=${encodeURIComponent(r.title)}` : base, locked: lockOf(base), Icon }))
+    const rec = (k: string, group: string, Icon: React.ElementType, base: string, withQ = false, to?: (id: string) => string) => (records?.[k] ?? []).forEach(r =>
+      out.push({ key: `${k}-${r.id}`, group, title: r.title, sub: r.sub, href: to ? to(r.id) : withQ ? `${base}?q=${encodeURIComponent(r.title)}` : base, locked: lockOf(base), Icon }))
     rec('policies', 'Your policies', FileText, '/policies', true)
-    rec('staff', 'Your staff', Users, '/staff')
+    rec('staff', 'Your staff', Users, '/staff', false, id => `/staff/${id}`)
+    rec('residents', 'Your residents', Heart, '/knowledge', false, id => `/knowledge?resident=${id}`)
     rec('knowledge', 'Your knowledge base', BookOpen, '/knowledge')
     rec('audits', 'Audits', ClipboardCheck, '/audits')
     rec('training', 'Training courses', GraduationCap, '/training')

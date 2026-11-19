@@ -308,8 +308,8 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
       {!selfServe && session?.accessToken && (session.user as any)?.tenantId && (
             <SuggestionsButton token={session.accessToken} tenantId={(session.user as any).tenantId} />
           )}
-          {/* Search: pages, features, guides and this account's records. Switched on per account (admin_search flag). */}
-          <AdminSearch account={{ trainingOnly, policiesOnly, freeTier }} onLocked={setLockedFeature} />
+          {/* Search: pages, features, guides and this account's records. On for every account (kill switch: feature flag admin_search = false). */}
+          <AdminSearch account={{ trainingOnly, policiesOnly, freeTier, multiSite }} onLocked={setLockedFeature} />
           </div>
 
           <div className="flex flex-shrink-0 items-center gap-4 md:gap-5">

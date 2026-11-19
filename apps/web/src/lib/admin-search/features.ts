@@ -15,6 +15,7 @@ export type FeatureEntry = {
   words: string[]               // what people type for it
   requires?: { feature: FeatureKey; plan: Plan }
   guide?: string                // id of the guide that explains it (links to /guides#id)
+  only?: 'multisite' | 'training_only'   // shown only to multi site accounts / training only accounts (as in the sidebar)
   action?: boolean              // opens a form to do something (shown first, under Actions and specifics), via ?do= on its page
   cta?: string                  // the button label for an action, a few words
 }
@@ -25,7 +26,7 @@ export const FEATURES: FeatureEntry[] = [
   // Overview
   f('dashboard', 'Overview', 'Dashboard', '/dashboard', 'Your plan, usage, setup checklist and what needs attention.', ['home', 'overview', 'summary', 'checklist', 'usage', 'allowance', 'start']),
   f('queries', 'Overview', 'Query history', '/queries', 'Every question staff asked, who asked it and the answer given.', ['questions', 'chat history', 'what did staff ask', 'conversations', 'chats', 'answers', 'logs']),
-  f('benchmarking', 'Overview', 'Benchmarking (group)', '/group', 'Compare your homes side by side.', ['group', 'multiple homes', 'compare homes', 'sites', 'benchmark'], { guide: 'group' }),
+  f('benchmarking', 'Overview', 'Benchmarking (group)', '/group', 'Compare your homes side by side.', ['group', 'multiple homes', 'compare homes', 'sites', 'benchmark'], { only: 'multisite', guide: 'group' }),
   // Content
   f('policies', 'Content', 'Policies', '/policies', 'Upload, version, review and archive your policies.', ['policy', 'upload', 'documents', 'pdf', 'word', 'version', 'review date', 'archive', 'procedures'], { guide: 'policies' }),
   f('policies-buy', 'Content', 'Policies we write for you', '/policies', 'Buy a ready written policy for your service, adapted to your home.', ['buy policy', 'new policy', 'policy shop', 'write a policy', 'missing policies', 'templates', 'purchase'], { guide: 'policies-written-for-you' }),
@@ -40,7 +41,7 @@ export const FEATURES: FeatureEntry[] = [
   f('staff-records', 'Team', 'Staff records and analytics', '/staff', 'See what each member of staff has done and asked.', ['staff record', 'activity', 'who has signed in', 'last login', 'engagement'], { guide: 'staff-records' }),
   f('agency', 'Team', 'Agency workers', '/staff', 'Add agency staff with an end date and see agency spend.', ['agency', 'temporary staff', 'bank staff', 'locum', 'spend'], { guide: 'agency-workers' }),
   f('role-holders', 'Team', 'Named role holders', '/settings', 'Registered manager, safeguarding lead and other named roles.', ['registered manager', 'safeguarding lead', 'named person', 'nominated individual', 'change a name', 'roles'], { guide: 'role-holders' }),
-  f('incentives', 'Team', 'Staff incentives', '/incentives', 'Rewards and recognition for staff who complete training and meet goals.', ['rewards', 'recognition', 'bonus', 'vouchers', 'points', 'gift', 'motivate'], { guide: 'staff-incentives' }),
+  f('incentives', 'Team', 'Staff incentives', '/incentives', 'Rewards and recognition for staff who complete training and meet goals.', ['rewards', 'recognition', 'bonus', 'vouchers', 'points', 'gift', 'motivate'], { requires: { feature: 'has_cqc_report', plan: 'Professional' }, guide: 'staff-incentives' }),
   f('workforce', 'Team', 'Workforce compliance register', '/workforce', 'DBS, right to work, registration and references in one register.', ['hr', 'human resources', 'personnel', 'dbs', 'right to work', 'registration', 'nmc', 'references', 'credentials', 'expiry', 'compliance register'], { requires: { feature: 'has_workforce_compliance', plan: 'Enterprise' }, guide: 'workforce' }),
   f('supervisions', 'Team', 'Supervisions and appraisals', '/workforce?tab=supervisions', 'Record supervisions and appraisals, set actions and see what is overdue.', ['supervision', 'appraisal', '1 to 1', 'one to one', 'performance review', 'probation', 'overdue'], { requires: { feature: 'has_workforce_compliance', plan: 'Enterprise' }, guide: 'supervisions' }),
   f('translation-review', 'Team', 'Translation review', '/translation-review', 'Check and approve translations of training and policies.', ['translate', 'language', 'translation', 'welsh', 'polish', 'romanian', 'languages']),
@@ -71,7 +72,7 @@ export const FEATURES: FeatureEntry[] = [
   f('guides', 'Admin', 'Help and guides', '/guides', 'Step by step guides for every part of CareStream.', ['help', 'how to', 'guide', 'tutorial', 'support', 'raise support request']),
   f('request-feature', 'Admin', 'Request a new feature', '/guides', 'Tell us what you would like CareStream to do.', ['suggest', 'feature request', 'idea', 'wish']),
   f('support', 'Admin', 'Raise a support request', '/guides', 'Report a problem and send us a screenshot.', ['problem', 'bug', 'error', 'contact', 'support', 'help me', 'broken']),
-  f('licences', 'Admin', 'Training licences', '/licences', 'Allocate the training licences you bought.', ['licence', 'license', 'allocate', 'seats']),
+  f('licences', 'Admin', 'Training licences', '/licences', 'Allocate the training licences you bought.', ['licence', 'license', 'allocate', 'seats'], { only: 'training_only' }),
 ]
 
 
@@ -85,7 +86,7 @@ FEATURES.push(
   a('do-hub-invites', 'Send hub invites to staff', '/staff', 'hub-invites', 'Invite staff to install the CareStream hub on their phone.', ['hub', 'install app', 'download app', 'phone app', 'invite to hub']),
   a('do-upload-policy', 'Upload a policy', '/policies', 'upload-policy', 'Add a policy document (PDF or Word).', ['add policy', 'new policy', 'upload document', 'upload pdf'], { guide: 'policies' }),
   a('do-add-entry', 'Add a knowledge base entry', '/knowledge', 'add-entry', 'Add a question and answer that staff can ask about.', ['new entry', 'add faq', 'new faq', 'add information', 'add answer', 'knowledge entry'], { guide: 'knowledge-base' }),
-  a('do-new-incentive', 'Start a new incentive', '/incentives', 'new-incentive', 'Create a reward campaign for staff.', ['new reward', 'create incentive', 'start incentive', 'new campaign', 'recognition'], { guide: 'staff-incentives' }),
+  a('do-new-incentive', 'Start a new incentive', '/incentives', 'new-incentive', 'Create a reward campaign for staff.', ['new reward', 'create incentive', 'start incentive', 'new campaign', 'recognition'], { requires: { feature: 'has_cqc_report', plan: 'Professional' }, guide: 'staff-incentives' }),
   a('do-new-f2f', 'Create a face to face training session', '/training?tab=face_to_face', 'new-f2f', 'Book a classroom or practical session and invite staff.', ['new session', 'book training', 'schedule training', 'add session', 'create face to face', 'book trainer'], { requires: { feature: 'has_face_to_face', plan: 'Professional' }, guide: 'face-to-face' }),
   a('do-new-flow', 'Create an onboarding flow', '/onboarding', 'new-flow', 'Build an induction flow for new starters.', ['new flow', 'new induction', 'create induction', 'build onboarding'], { guide: 'onboarding' }),
   a('do-build-audit', 'Build your own audit', '/audits', 'build-audit', 'Create an audit template of your own.', ['create audit', 'new audit template', 'own audit', 'design audit'], { requires: { feature: 'has_custom_audits', plan: 'Enterprise' } }),

@@ -1,7 +1,7 @@
 'use client'
 
 // Admin search: one box in the top bar that finds pages, features, guide answers and this account's own records.
-// Only shown to accounts with the admin_search flag (CS-1001 first, then everyone once tested).
+// Shown to every admin account. It can be switched off for one account with feature flag admin_search = false.
 // Locked results are shown, not hidden: they say which plan includes the thing and offer the upgrade.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -13,7 +13,7 @@ import { createApiClient, type SearchRecord } from '@/lib/api-client'
 import { usePlanFeatures } from '@/lib/use-plan-features'
 import { FEATURES, PLAN_NOTE, type FeatureEntry } from '@/lib/admin-search/features'
 import { searchFeatures, searchGuides, tokens, type GuideEntry } from '@/lib/admin-search/search'
-import { tierLock, basePath, type AccountKind } from '@/lib/admin-search/access'
+import { lockFor, visibleTo, type AccountKind } from '@/lib/admin-search/access'
 import { runIntent } from '@/lib/admin-search/intents'
 import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 
@@ -33,10 +33,11 @@ let flagCache: Promise<boolean> | null = null
 export function useAdminSearchEnabled(): boolean {
   const { data: session } = useSession()
   const token = session?.accessToken
-  const [on, setOn] = useState(false)
+  const [on, setOn] = useState(true)   // shown straight away; hidden again only if this account has been switched off
   useEffect(() => {
     if (!token) return
-    if (!flagCache) flagCache = createApiClient(token).settings.get().then(s => !!s.feature_flags?.admin_search).catch(() => false)
+    // On for every account unless it has been switched off for that account (admin_search: false), which is the kill switch.
+    if (!flagCache) flagCache = createApiClient(token).settings.get().then(s => s.feature_flags?.admin_search !== false).catch(() => true)
     let live = true
     flagCache.then(v => { if (live) setOn(v) })
     return () => { live = false }
@@ -44,7 +45,7 @@ export function useAdminSearchEnabled(): boolean {
   return on
 }
 
-export function AdminSearch({ account, onLocked }: { account: AccountKind; onLocked: (feature: string) => void }) {
+export function AdminSearch({ account, onLocked }: { account: AccountKind & { multiSite?: boolean }; onLocked: (feature: string) => void }) {
   const enabled = useAdminSearchEnabled()
   const { data: session } = useSession()
   const { features } = usePlanFeatures()
@@ -84,16 +85,17 @@ export function AdminSearch({ account, onLocked }: { account: AccountKind; onLoc
   }, [q, open, token])
 
   const lockOf = useCallback((href: string, requires?: FeatureEntry['requires']): Item['locked'] => {
-    if (tierLock(href, account)) return { note: 'Part of the full CareStream plans', viaOverlay: true }
-    if (requires && features && !features[requires.feature]) return { note: PLAN_NOTE[requires.plan], plan: requires.plan, viaOverlay: false }
-    return null
+    const l = lockFor(href, requires, account, features)
+    if (!l) return null
+    if (l.kind === 'tier') return { note: 'Part of the full CareStream plans', viaOverlay: true }
+    return { note: PLAN_NOTE[l.plan as 'Professional' | 'Enterprise'], plan: l.plan, viaOverlay: false }
   }, [account, features])
 
   const items = useMemo<Item[]>(() => {
     const term = q.trim()
     if (term.length < 2) return []
     const out: Item[] = []
-    const found = searchFeatures(term, FEATURES)
+    const found = searchFeatures(term, FEATURES.filter(f => visibleTo(f.only, account)))
     for (const { entry } of found.filter(x => x.entry.action).slice(0, 4)) {
       out.push({ key: 'f-' + entry.id, group: 'Do something', title: entry.title, sub: entry.about, href: entry.href, locked: lockOf(entry.href, entry.requires), Icon: PlusCircle, cta: entry.cta })
     }
@@ -115,9 +117,11 @@ export function AdminSearch({ account, onLocked }: { account: AccountKind; onLoc
     rec('knowledge', 'Your knowledge base', BookOpen, '/knowledge')
     rec('audits', 'Audits', ClipboardCheck, '/audits', false, id => `/audits?do=start-audit&template=${encodeURIComponent(id)}`, 'Start this audit', { label: 'Audits page', href: () => '/audits' })
     ;(records?.training ?? []).forEach(r => {
-      const path = r.annual ? '/training/annual' : '/training'
-      const href = r.annual ? `/training/annual?do=assign-cpd&module=${encodeURIComponent(r.id)}&name=${encodeURIComponent(r.title)}` : `/training?do=assign-training&module=${encodeURIComponent(r.id)}`
-      out.push({ key: `training-${r.id}`, group: 'Training courses', title: r.title, sub: r.sub, Icon: GraduationCap, cpdCertified: r.cpd === true, tag: r.cpd ? undefined : r.annual ? 'Standard course' : 'Ad hoc course', locked: lockOf(path), href, cta: 'Assign to staff', alt: { label: r.annual ? 'CPD page' : 'Training page', href: path } })
+      // Free accounts only have the CPD courses, assigned from the CPD page.
+      const cpdPage = r.annual || account.freeTier === true
+      const path = cpdPage ? '/training/annual' : '/training'
+      const href = cpdPage ? `/training/annual?do=assign-cpd&module=${encodeURIComponent(r.id)}&name=${encodeURIComponent(r.title)}` : `/training?do=assign-training&module=${encodeURIComponent(r.id)}`
+      out.push({ key: `training-${r.id}`, group: 'Training courses', title: r.title, sub: r.sub, Icon: GraduationCap, cpdCertified: r.cpd === true, tag: r.cpd ? undefined : r.annual ? 'Standard course' : 'Ad hoc course', locked: lockOf(path), href, cta: 'Assign to staff', alt: { label: cpdPage ? 'CPD page' : 'Training page', href: path } })
     })
     rec('onboarding', 'Staff onboarding flows', UserPlus, '/onboarding', false, id => `/onboarding?do=allocate-flow&flow=${encodeURIComponent(id)}`, 'Allocate to staff', { label: 'Onboarding page', href: () => '/onboarding' })
     // Order: actions and the person's own records first, then pages and features, then help and guides.
@@ -130,7 +134,7 @@ export function AdminSearch({ account, onLocked }: { account: AccountKind; onLoc
     return out
       .map(it => rank(it) === 0 ? { ...it, tag: it.tag ?? (it.cpdCertified ? undefined : TAG[it.group]), group: 'Actions and specifics', _sub: sub(it) } : { ...it, _sub: 9 })
       .sort((a, b) => rank(a) - rank(b) || a._sub - b._sub)
-  }, [q, guides, records, lockOf])
+  }, [q, guides, records, lockOf, account])
 
   useEffect(() => { setActive(0) }, [items.length])
 

@@ -18,7 +18,6 @@ const Chevron = ({ dir }: { dir: 'l' | 'r' }) => (
 
 export function HomeWhy({ slides, eyebrow, heading }: { slides: WhySlide[]; eyebrow: string; heading: string }) {
   const track = useRef<HTMLDivElement>(null)
-  const pills = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(0)
   const many = slides.length > 1
 
@@ -36,14 +35,6 @@ export function HomeWhy({ slides, eyebrow, heading }: { slides: WhySlide[]; eyeb
     el.addEventListener('scroll', onScroll, { passive: true })
     return () => el.removeEventListener('scroll', onScroll)
   }, [])
-
-  // Keep the chosen scenario's button in view inside the scrolling row (without moving the page).
-  useEffect(() => {
-    const row = pills.current
-    const el = row?.children[active] as HTMLElement | undefined
-    if (!row || !el) return
-    row.scrollTo({ left: el.offsetLeft - row.clientWidth / 2 + el.clientWidth / 2, behavior: 'smooth' })
-  }, [active])
 
   return (
     <div className="wrap why-sc">
@@ -73,7 +64,7 @@ export function HomeWhy({ slides, eyebrow, heading }: { slides: WhySlide[]; eyeb
         ))}
       </div>
       {many && (
-        <div className="why-pills" role="tablist" aria-label="Choose a scenario" ref={pills}>
+        <div className="why-pills" role="tablist" aria-label="Choose a scenario">
           {slides.map((s, i) => (
             <button type="button" key={s.slug} role="tab" aria-selected={i === active} title={s.title} className={i === active ? 'on' : ''} onClick={() => go(i)}>{s.title}</button>
           ))}

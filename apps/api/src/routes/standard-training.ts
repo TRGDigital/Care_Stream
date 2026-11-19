@@ -890,3 +890,55 @@ standardTrainingRouter.post('/review-links/:linkId/resolve', async (req: Request
   await (prisma as any).moduleReviewLink.update({ where: { id: link.id }, data: { item_feedback: items } })
   ok(res, { item_feedback: items })
 })
+
+// ─── Move tenant copies onto the regenerated library images ───────────────────────────────────────
+// A tenant's training module is a COPY made at adoption time, so it keeps the image keys it was
+// copied with. When a library picture is regenerated the platform module remembers the key it replaced
+// (learning_content.cover_key_prev and sections[].image_key_prev). That gives an exact old key -> new key
+// map, so any tenant copy still holding an old key is switched to the new one, and nothing else is touched
+// (a tenant's own image, or one that was never regenerated, is left alone). Dry run unless apply is true.
+standardTrainingRouter.post('/sync-tenant-images', async (req: Request, res: Response) => {
+  try {
+    const apply = req.body?.apply === true
+    const platform: any[] = await (prisma as any).trainingModule.findMany({
+      where: { tenant_id: null }, select: { id: true, illustration_key: true, learning_content: true },
+    })
+    const cover = new Map<string, { key: string; alt?: string }>()
+    const section = new Map<string, { key: string; alt?: string }>()
+    for (const p of platform) {
+      const lc: any = p.learning_content || {}
+      if (lc.cover_key_prev && p.illustration_key && lc.cover_key_prev !== p.illustration_key) cover.set(lc.cover_key_prev, { key: p.illustration_key, alt: lc.cover_alt })
+      for (const s of Array.isArray(lc.sections) ? lc.sections : []) {
+        if (s?.image_key_prev && s?.image_key && s.image_key_prev !== s.image_key) section.set(s.image_key_prev, { key: s.image_key, alt: s.image_alt })
+      }
+    }
+    const tenantMods: any[] = await (prisma as any).trainingModule.findMany({
+      where: { tenant_id: { not: null } }, select: { id: true, tenant_id: true, name: true, illustration_key: true, learning_content: true },
+    })
+    let coversChanged = 0, sectionsChanged = 0, modulesChanged = 0
+    const byTenant: Record<string, number> = {}
+    for (const m of tenantMods) {
+      const data: any = {}
+      const c = m.illustration_key ? cover.get(m.illustration_key) ?? section.get(m.illustration_key) : undefined
+      if (c) { data.illustration_key = c.key; coversChanged++ }
+      const lc: any = m.learning_content && typeof m.learning_content === 'object' ? m.learning_content : null
+      if (lc && Array.isArray(lc.sections)) {
+        let touched = false
+        const sections = lc.sections.map((s: any) => {
+          const r = s?.image_key ? section.get(s.image_key) ?? cover.get(s.image_key) : undefined
+          if (!r) return s
+          touched = true; sectionsChanged++
+          return { ...s, image_key: r.key, ...(r.alt ? { image_alt: r.alt } : {}) }
+        })
+        if (touched || c) data.learning_content = { ...lc, sections, ...(c?.alt ? { cover_alt: c.alt } : {}) }
+      }
+      if (Object.keys(data).length) {
+        modulesChanged++; byTenant[m.tenant_id] = (byTenant[m.tenant_id] || 0) + 1
+        if (apply) await (prisma as any).trainingModule.update({ where: { id: m.id }, data })
+      }
+    }
+    ok(res, { applied: apply, library_pairs: { covers: cover.size, sections: section.size }, tenant_modules: tenantMods.length, modules_changed: modulesChanged, covers_changed: coversChanged, sections_changed: sectionsChanged, tenants_affected: Object.keys(byTenant).length })
+  } catch (e: any) {
+    err(res, 'SERVER_ERROR', e?.message ?? 'Could not sync tenant images', 500)
+  }
+})

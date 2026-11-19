@@ -2607,7 +2607,7 @@ auditsRouter.post('/runs/:id/complete', requireAuditAccess, async (req: Request,
   if (approvalRequired) {
     const recommendations = await generateAuditRecommendations(tenantId, run.id)
     const completed = await (prisma as any).auditRun.update({
-      where: { id: run.id }, data: { status: 'completed', completed_at: new Date() },
+      where: { id: run.id }, data: { status: 'completed', completed_at: new Date(), completed_by_user_id: req.user!.sub },
     })
     await submitAuditForApproval(tenantId, run.id, run.auditor_name ?? '').catch(e => console.error('[audits/complete] submit for approval:', e))
     await completeAssignmentsForRun(tenantId, run.id).catch(e => console.error('[audits/complete] assignments:', e))
@@ -2622,7 +2622,7 @@ auditsRouter.post('/runs/:id/complete', requireAuditAccess, async (req: Request,
   // No approval required: generate the recommendations now and finalise.
   const recommendations = await generateAuditRecommendations(tenantId, run.id)
   const completed = await (prisma as any).auditRun.update({
-    where: { id: run.id }, data: { status: 'completed', completed_at: new Date() },
+    where: { id: run.id }, data: { status: 'completed', completed_at: new Date(), completed_by_user_id: req.user!.sub },
   })
   await completeAssignmentsForRun(tenantId, run.id).catch(e => console.error('[audits/complete] assignments:', e))
 

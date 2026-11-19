@@ -44,7 +44,7 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
     select: {
       id: true, name: true, email: true, role: true, job_role: true, specialisms: true, phone_number: true,
       shift_type: true, first_language: true, second_language: true, comms_always_first_language: true,
-      is_active: true, created_at: true, first_login_at: true, last_login_at: true, tenant_id: true,
+      is_active: true, created_at: true, first_login_at: true, last_login_at: true, tenant_id: true, super_user_since: true, super_user_consent_at: true,
     },
   })
   if (!user || user.tenant_id !== tenantId) return null

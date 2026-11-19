@@ -22,6 +22,8 @@ import { buildStaffRecord } from '../lib/staff-record'
 import { getMyActions } from '../services/audits/action-plan'
 import { sendProactiveTrainingQuestions } from '../services/training/proactive'
 import crypto from 'crypto'
+import { tagSuperUser, untagSuperUser } from '../lib/super-user'
+import { sendSuperUserWelcome } from '../services/super-user-email'
 
 export const usersRouter = Router()
 
@@ -53,7 +55,7 @@ usersRouter.get('/', async (req: Request, res: Response) => {
     select:  {
       id: true, name: true, email: true, role: true, job_role: true, specialisms: true, audit_template_ids: true, phone_number: true,
       shift_type: true, training_hourly_rate: true, first_language: true, second_language: true, comms_always_first_language: true, allow_language_switching: true, can_suggest_translations: true,
-      is_active: true, created_at: true, first_login_at: true, last_login_at: true,
+      is_active: true, created_at: true, first_login_at: true, last_login_at: true, super_user_since: true, super_user_consent_at: true,
       is_agency: true, agency_name: true, agency_start: true, agency_end: true, agency_day_rate_pence: true,
     },
     orderBy: { created_at: 'asc' },
@@ -237,6 +239,7 @@ usersRouter.post('/:id/annual-training/:enrollmentId/practical', async (req: Req
 // ─── POST /users/invite ───────────────────────────────────────────────────────
 
 const InviteSchema = z.object({
+  super_user:      z.boolean().optional(),   // tag them as the company's Super User (one per company)
   name:            z.string().min(1).max(100),
   email:           z.string().email(),
   role:            z.enum(['admin', 'staff']).default('staff'),
@@ -495,12 +498,22 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
     }
   }
 
+  // Optionally tag them as the company's Super User straight away. The account is created either way; the reply says if the tag could not be set.
+  let superUser: { ok: boolean; message?: string; existing?: { id: string; name: string } } | null = null
+  if (parsed.data.super_user) {
+    const r = await tagSuperUser(tenantId, user.id as string)
+    superUser = r.ok ? { ok: true } : { ok: false, message: r.message, existing: r.existing }
+    if (r.ok) writeAuditLog({ tenant_id: tenantId, user_id: req.user!.sub, event_type: 'super_user_tagged', entity_type: 'user', entity_id: user.id as string, metadata: { at: 'add_staff' } }).catch(() => {})
+    if (r.ok) (prisma as any).user.findUnique({ where: { id: req.user!.sub }, select: { name: true } }).then((a: any) => sendSuperUserWelcome(tenantId, user.id as string, a?.name ?? null)).catch(() => {})
+  }
+
   const contactTenant = await (prisma as any).tenant.findUnique({
     where:  { id: tenantId },
     select: { slug: true, twilio_whatsapp_number: true },
   })
 
   ok(res, {
+    super_user: superUser,
     user,
     temp_password:      tempPassword,
     login_link_emailed: loginLinkEmailed,
@@ -514,6 +527,8 @@ usersRouter.post('/invite', async (req: Request, res: Response) => {
 // ─── PATCH /users/:id ─────────────────────────────────────────────────────────
 
 const UpdateSchema = z.object({
+  super_user:      z.boolean().optional(),   // true tags them as the company's Super User, false removes the tag
+  replace_super_user: z.boolean().optional(),   // with super_user: true, replace the current Super User
   name:            z.string().min(1).max(100).optional(),
   job_role:        z.string().max(100).nullable().optional(),
   specialisms:     z.array(z.string().max(100)).optional(),
@@ -577,6 +592,18 @@ usersRouter.patch('/:id', async (req: Request, res: Response) => {
       where: { id: tenantId },
       data:  { phone_allowlist: allowlist },
     })
+  }
+
+  // Super User tag: one per company. Setting one while another exists needs replace_super_user.
+  let superUserChange: 'tagged' | 'untagged' | null = null
+  if (parsed.data.super_user !== undefined) {
+    if (parsed.data.super_user) {
+      const r = await tagSuperUser(tenantId, String(id), { replace: !!parsed.data.replace_super_user })
+      if (!r.ok) { res.status(409).json({ error: { code: r.code, message: r.message, existing: r.existing ?? null } }); return }
+      superUserChange = 'tagged'
+    } else if (await untagSuperUser(tenantId, String(id))) superUserChange = 'untagged'
+    if (superUserChange === 'tagged') (prisma as any).user.findUnique({ where: { id: req.user!.sub }, select: { name: true } }).then((a: any) => sendSuperUserWelcome(tenantId, String(id), a?.name ?? null)).catch(() => {})
+    if (superUserChange) writeAuditLog({ tenant_id: tenantId, user_id: req.user!.sub, event_type: superUserChange === 'tagged' ? 'super_user_tagged' : 'super_user_untagged', entity_type: 'user', entity_id: String(id), metadata: { at: 'staff_record' } }).catch(() => {})
   }
 
   const updateData: Record<string, any> = {}

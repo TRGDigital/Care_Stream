@@ -67,6 +67,7 @@ import { contentRoutineRouter } from './routes/content-routine'
 import { publicFamilyRouter } from './routes/residents-public'
 import { residentsRouter } from './routes/residents'
 import { incentivesRouter } from './routes/incentives'
+import { superUserRouter } from './routes/super-user'
 import { standardTrainingRouter } from './routes/standard-training'
 import { seoIndexRouter } from './routes/seo-index'
 import { standardProgrammesRouter } from './routes/standard-programmes'
@@ -250,6 +251,7 @@ app.use('/translation-suggestions', translationSuggestionsRouter)
 app.use('/knowledge', knowledgeRouter)
 app.use('/residents', residentsRouter)
 app.use('/incentives', incentivesRouter)
+app.use('/super-user', superUserRouter)
 app.use('/sites', sitesRouter)
 app.use('/onboarding', onboardingRouter)
 app.use('/training', trainingRouter)

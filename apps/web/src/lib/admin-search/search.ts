@@ -48,7 +48,7 @@ function scoreText(q: string, qt: string[], h: { n: string; t: Set<string> }, we
   for (const w of qt) {
     const wt = weightOf(w); total += wt
     if (h.t.has(w)) hits += wt
-    else if (w.length >= 3 && [...h.t].some(x => x.startsWith(w) || (x.length >= 4 && w.startsWith(x)))) hits += wt * 0.6
+    else if (w.length >= 3 && [...h.t].some(x => x.startsWith(w) || (x.length >= 6 && w.startsWith(x)))) hits += wt * 0.6
     else if (w.length >= 4 && [...h.t].some(x => near(w, x))) hits += wt * 0.5
   }
   if (hits === 0) return 0

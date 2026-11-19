@@ -9,7 +9,7 @@ import {
   FileText, Users, MessageSquare, Mail, ClipboardCheck,
   GraduationCap, BarChart2, BookOpen, ShieldAlert, Settings, Zap, ClipboardList,
   LifeBuoy, Upload, CheckCircle, Info, UserPlus, RefreshCw, CalendarDays, Lightbulb, Loader2, Building2, BadgeCheck,
-  UserRound, BriefcaseBusiness, ListChecks, Sparkles, Gift,
+  UserRound, BriefcaseBusiness, ListChecks, Sparkles, Gift, Award,
 } from 'lucide-react'
 
 function FeatureRequestModal({ open, onClose, token }: { open: boolean; onClose: () => void; token?: string }) {
@@ -2584,6 +2584,61 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={7}><strong>A snapshot in the record.</strong> When a supervision is completed, a short summary of their training at that time is saved in the record, so it shows what was true on the day. It cannot be edited afterwards.</Step>
           </div>
           <div className="mt-3"><Tip>The brief, the training detail and the suggestions are for the supervisor and administrators only. Staff do not see them, but they can see the actions that come out of the supervision in their hub. Tell your staff in your policies that their training results may be discussed in supervisions.</Tip></div>
+        </SectionBlock>
+      </div>
+    ),
+  },
+  {
+    id:      'super-user',
+    icon:    Award,
+    title:   'Super User',
+    summary: 'One champion per service: tag a member of staff, what they are asked to do, what CareStream can see, and the thank you',
+    content: (
+      <div className="space-y-5">
+        <SectionBlock title="What a Super User is">
+          <p className="text-sm text-neutral-mid">
+            A Super User is <strong>one member of staff per service</strong> who champions CareStream: they use the hub properly themselves and help colleagues use it for training and for getting quick answers. It is a tag on a staff member, not a new job. It is on the <strong>Starter, Professional and Enterprise plans</strong>. An administrator can be the Super User if that is your choice.
+          </p>
+          <p className="mt-2 text-sm text-neutral-mid">
+            CareStream says thank you with a <strong>£25 M&amp;S voucher</strong> if the first 60 days go well. There is one voucher per service, and CareStream sends it by hand: nothing is paid automatically.
+          </p>
+        </SectionBlock>
+
+        <SectionBlock title="Choose your Super User">
+          <div className="space-y-3">
+            <Step n={1}>When you <strong>add a staff member</strong>, tick <strong>Make them our Super User</strong>. Or open any member of staff from the <strong>Staff</strong> page and press <strong>Make Super User</strong> under their name.</Step>
+            <Step n={2}>A service has one. If someone already is the Super User, CareStream tells you who and asks if you want to <strong>replace</strong> them. The new person starts their own 60 days.</Step>
+            <Step n={3}>The person gets a short welcome email, and the next time they open the hub they are asked to <strong>agree</strong>. If they say no, the tag is removed and nothing is shared.</Step>
+            <Step n={4}>To remove the tag, open their record and press <strong>Remove</strong>. A <strong>Super User</strong> badge shows beside their name on the Staff page, with &ldquo;not agreed&rdquo; until they have agreed.</Step>
+          </div>
+          <div className="mt-3"><Tip>Pick someone people already turn to: a senior carer, a trainer, a deputy. Tell them in person first, so the email is not a surprise.</Tip></div>
+        </SectionBlock>
+
+        <SectionBlock title="What they are asked to do">
+          <ul className="list-disc space-y-1.5 pl-5 text-sm text-neutral-mid">
+            <li>Use the hub week to week: their own training (ad hoc, CPD and annual), any audits they do, the CQC prep questions, and asking CareStream when they are unsure.</li>
+            <li>Help colleagues get started: show someone how to sign in, point them to a course, mention an answer the hub gave them.</li>
+            <li>Tell you and CareStream what works and what does not.</li>
+          </ul>
+        </SectionBlock>
+
+        <SectionBlock title="Seeing how they are getting on">
+          <p className="text-sm text-neutral-mid">
+            The <strong>Incentives</strong> page shows a <strong>Super User</strong> card at the top, on every paid plan (on Starter the incentive campaigns themselves stay locked, but the card still shows). It covers the 60 days from the day they were tagged:
+          </p>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-neutral-mid">
+            <li><strong>Their own use:</strong> active days, time on the hub, chat questions, CQC prep questions answered, audits completed, policies read, follow-ups closed, logins, and training started and passed (ad hoc, CPD, annual).</li>
+            <li><strong>Colleagues, as counts only:</strong> how many colleagues are active each week compared with the 30 days before the tag, how many are new to the hub, the share who have logged in, and training and questions from colleagues. The card says <em>Rising</em>, <em>Steady</em>, <em>Falling</em> or <em>Too early</em>. Nobody else is named or timed.</li>
+          </ul>
+          <div className="mt-3"><Tip>A small service counts too. There is no minimum number of colleagues: what matters is a noticeable rise in colleagues using the hub, for example two a week becoming four.</Tip></div>
+        </SectionBlock>
+
+        <SectionBlock title="What CareStream can see, and the voucher">
+          <ul className="list-disc space-y-1.5 pl-5 text-sm text-neutral-mid">
+            <li>CareStream sees the <strong>Super User&rsquo;s own</strong> use of the hub, including roughly how long they spend on it, and only <strong>totals</strong> for colleagues. The Super User agrees to this before anything is recorded.</li>
+            <li>Active days count days when they actually did something, and several questions in one minute do not add up. A course counts only when it is passed.</li>
+            <li>After the 60 days CareStream looks at how it went. If their use and their colleagues&rsquo; use have both gone well, CareStream sends the voucher and records that it has been sent. It is not paid for reviews or testimonials.</li>
+          </ul>
         </SectionBlock>
       </div>
     ),

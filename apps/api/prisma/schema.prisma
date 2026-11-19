@@ -359,6 +359,8 @@ model User {
   locked_until           DateTime?                          // lockout after 5 failed attempts
   first_login_at         DateTime?                          // set once on first successful login
   last_login_at          DateTime?                          // updated on every successful login
+  super_user_since       DateTime?                          // tagged as the company's Super User (one per company); null = not one
+  super_user_consent_at  DateTime?                          // the person agreed to be one, and to CareStream seeing their usage figures
   last_login_meta        Json?                              // where the last successful login came from: ip, rough location, device (lib/signup-meta.ts requestOrigin)
   last_followup_email_at DateTime?                          // debounce for the "you have follow-up" email
   shift_type             String         @default("any")     // 'any' | 'day' | 'night'
@@ -2461,6 +2463,7 @@ model AuditRun {
   auditor_signature_key String?                              // drawn signature (PNG in S3) when completed
   auditor_signed_name   String?
   auditor_signed_at     DateTime?
+  completed_by_user_id  String?                              // who pressed complete (auditor_name is only typed text); null on older audits
   manager_signature_key String?                              // drawn signature when the manager approved
   manager_signed_at     DateTime?
   report_pdf_key        String?                              // PDF report saved when completed or signed off
@@ -3464,4 +3467,35 @@ model IncentiveSetting {
   updated_at           DateTime @updatedAt
 
   @@map("incentive_settings")
+}
+
+
+// The one £25 thank-you per company for its Super User. CareStream marks it sent by hand: nothing is paid automatically.
+model SuperUserVoucher {
+  id          String    @id @default(uuid())
+  tenant_id   String    @unique
+  user_id     String
+  status      String    @default("due")      // due | sent
+  eligible_at DateTime  @default(now())
+  sent_at     DateTime?
+  sent_by     String?
+  note        String?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  @@map("super_user_vouchers")
+}
+
+// Seconds of real use of the hub per day. Written only for a Super User who has agreed to it.
+model UserActiveSeconds {
+  id         String   @id @default(uuid())
+  tenant_id  String
+  user_id    String
+  day        DateTime @db.Date
+  seconds    Int      @default(0)
+  updated_at DateTime @updatedAt
+
+  @@unique([user_id, day])
+  @@index([tenant_id, day])
+  @@map("user_active_seconds")
 }

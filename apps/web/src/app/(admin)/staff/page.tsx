@@ -497,6 +497,12 @@ export default function StaffPage() {
                           </button>
                           {/* Agency, and when their access runs out. An admin scanning this
                               list needs to see a booking about to lapse without opening anyone. */}
+                          {u.super_user_since && (
+                            <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-teal/10 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-teal"
+                                  title={u.super_user_consent_at ? 'The company\'s Super User' : 'Tagged as the Super User, has not agreed yet'}>
+                              Super User{u.super_user_consent_at ? '' : ' · not agreed'}
+                            </span>
+                          )}
                           {u.is_agency && (
                             <div className="mt-1 flex flex-wrap items-center gap-1">
                               <span className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-amber-800"

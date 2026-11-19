@@ -391,6 +391,29 @@ workforceRouter.get('/staff/:userId/training-detail', async (req: Request, res: 
   ok(res, { detail })
 })
 
+// Print page and email of the same detail (admins; the email goes to an admin of the account only, the sender by default).
+async function adminDetail(req: Request, res: Response) {
+  const tenantId = getTenantId()
+  const m = await stl()
+  if (!(await m.supervisionTrainingEnabled(tenantId))) { err(res, 'NOT_AVAILABLE', 'Not available for this account.', 404); return null }
+  const userId = String(req.params.userId)
+  if (!(await requireStaff(tenantId, userId))) { err(res, 'NOT_FOUND', 'Staff member not found.', 404); return null }
+  const sid = typeof (req.query.supervision_id ?? req.body?.supervision_id) === 'string' && (req.query.supervision_id ?? req.body?.supervision_id) ? String(req.query.supervision_id ?? req.body?.supervision_id) : null
+  const detail = await m.buildTrainingDetail(tenantId, userId, sid)
+  if (!detail) { err(res, 'NOT_FOUND', 'Not found.', 404); return null }
+  return { detail, tenantId, actorId: (req as any).user.sub as string }
+}
+workforceRouter.get('/staff/:userId/training-detail/print', async (req: Request, res: Response) => {
+  const x = await adminDetail(req, res); if (!x) return
+  ok(res, { html: await (await import('../lib/supervision-training-share')).printPage(x.tenantId, x.actorId, x.detail) })
+})
+workforceRouter.post('/staff/:userId/training-detail/email', async (req: Request, res: Response) => {
+  const x = await adminDetail(req, res); if (!x) return
+  const r = await (await import('../lib/supervision-training-share')).emailDetail(x.tenantId, x.actorId, x.detail, typeof req.body?.to_user_id === 'string' ? req.body.to_user_id : null)
+  if (!r.ok) { err(res, r.code, r.message, r.code === 'NOT_AN_ADMIN' ? 400 : 502); return }
+  ok(res, { sent_to: r.to_name || r.to_email })
+})
+
 // POST /workforce/training-link { user_ids, module_id } — after training is allocated, also add it as an action on each person's next
 // booked supervision. Only after the admin ticks the box on the assign screen: nothing is added automatically.
 workforceRouter.post('/training-link', async (req: Request, res: Response) => {

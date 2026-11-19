@@ -26,6 +26,7 @@ import { getPendingAuditApprovals, getRecentApprovedAudits, managerApproveAudit,
 import { getMyActions, countMyOpenActions, setMyActionStatus, getExternalActions, countOpenExternalActions, setExternalActionStatus } from '../services/audits/action-plan'
 import { allocateFromSupervision, type AllocationType } from '../services/supervision-allocations'
 import { supervisionTrainingEnabled, buildBrief, snapshotOf, buildTrainingDetail } from '../lib/supervision-training'
+import { printPage, emailDetail } from '../lib/supervision-training-share'
 import { sendTrainingCompletionEmail } from '../services/email/outbound'
 import { generateAuditRecommendations } from './audits'
 import { prisma } from '../db/client'
@@ -1844,6 +1845,27 @@ meRouter.get('/conducting/:id/training-detail', async (req: Request, res: Respon
   if (!r) { err(res, 'NOT_FOUND', 'Supervision not found.', 404); return }
   if (!(await supervisionTrainingEnabled(tenantId))) { ok(res, { enabled: false, detail: null }); return }
   ok(res, { enabled: true, detail: await buildTrainingDetail(tenantId, r.user_id, r.id) })
+})
+
+// Print page and email of that detail. The email goes to an admin of the account only (the conductor by default).
+async function conductedDetail(req: Request, res: Response) {
+  const userId = (req as any).user.sub, tenantId = (req as any).user.tenant_id
+  const r = await (prisma as any).staffSupervision.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId, conducted_by_user_id: userId }, select: { id: true, user_id: true } }).catch(() => null)
+  if (!r) { err(res, 'NOT_FOUND', 'Supervision not found.', 404); return null }
+  if (!(await supervisionTrainingEnabled(tenantId))) { err(res, 'NOT_AVAILABLE', 'Not available for this account.', 404); return null }
+  const detail = await buildTrainingDetail(tenantId, r.user_id, r.id)
+  if (!detail) { err(res, 'NOT_FOUND', 'Not found.', 404); return null }
+  return { detail, userId, tenantId }
+}
+meRouter.get('/conducting/:id/training-detail/print', async (req: Request, res: Response) => {
+  const x = await conductedDetail(req, res); if (!x) return
+  ok(res, { html: await printPage(x.tenantId, x.userId, x.detail) })
+})
+meRouter.post('/conducting/:id/training-detail/email', async (req: Request, res: Response) => {
+  const x = await conductedDetail(req, res); if (!x) return
+  const r = await emailDetail(x.tenantId, x.userId, x.detail, typeof req.body?.to_user_id === 'string' ? req.body.to_user_id : null)
+  if (!r.ok) { err(res, r.code, r.message, r.code === 'NOT_AN_ADMIN' ? 400 : 502); return }
+  ok(res, { sent_to: r.to_name || r.to_email })
 })
 
 // Save the recording form + mark the supervision complete. (Agreed-actions → My actions is wired

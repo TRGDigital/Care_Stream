@@ -4,7 +4,7 @@
 // wrongly with the right answer, time spent), other training allocated since the last supervision, and the gaps they went back over.
 // For the supervisor and admins. Plain facts from their training records: nothing here is scored or judged by AI.
 import { useEffect, useState } from 'react'
-import { X, Loader2, CheckCircle2, CircleDashed, PlayCircle, AlertTriangle, Clock, BookOpen, RotateCcw, Printer, Mail } from 'lucide-react'
+import { X, Loader2, CheckCircle2, CircleDashed, PlayCircle, AlertTriangle, Clock, BookOpen, RotateCcw, Printer, Mail, ChevronDown } from 'lucide-react'
 import type { TrainingDetail, TrainingCourseDetail } from '@/lib/api-client'
 import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 
@@ -17,10 +17,9 @@ const STATUS: Record<string, { label: string; cls: string; Icon: React.ElementTy
   expired:     { label: 'Expired',     cls: 'bg-red-50 text-red-700', Icon: AlertTriangle },
 }
 
-function CourseCard({ c, actionStatus, actionText }: { c: TrainingCourseDetail; actionStatus?: string; actionText?: string }) {
+function CourseCard({ c, actionStatus, actionText, collapsible = false, open = true, onToggle }: { c: TrainingCourseDetail; actionStatus?: string; actionText?: string; collapsible?: boolean; open?: boolean; onToggle?: () => void }) {
   const s = STATUS[c.status]
-  return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
+  const header = (
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           {/* The mark is shown exactly as supplied: no border, tint, crop or added text, original proportions. */}
@@ -31,9 +30,21 @@ function CourseCard({ c, actionStatus, actionText }: { c: TrainingCourseDetail; 
             <p className="text-xs text-neutral-mid">{c.kind === 'Annual' ? 'Annual training' : 'Training'}</p>
           </div>
         </div>
-        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${s.cls}`}><s.Icon size={12} /> {s.label}</span>
+        <span className="flex items-center gap-2">
+          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${s.cls}`}><s.Icon size={12} /> {s.label}</span>
+          {collapsible && <ChevronDown size={18} className={`shrink-0 text-neutral-mid transition-transform ${open ? 'rotate-180' : ''}`} />}
+        </span>
       </div>
-
+  )
+  // The one line you can read without opening it: how it is going.
+  const summary = [c.score_pct != null ? `Score ${c.score_pct}%` : c.status === 'not_started' ? 'Nothing opened yet' : 'No score yet', c.incorrect.length ? `${c.incorrect.length} answered incorrectly` : (c.answered > 0 ? 'Nothing wrong so far' : ''), c.overdue ? 'Overdue' : ''].filter(Boolean).join(' · ')
+  return (
+    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+      {collapsible
+        ? <button type="button" onClick={onToggle} aria-expanded={open} className="block w-full p-4 text-left hover:bg-neutral-light/40">{header}<p className={`mt-1.5 text-xs ${c.overdue || c.incorrect.length ? 'font-medium text-red-700' : 'text-neutral-mid'}`}>{summary}</p></button>
+        : <div className="p-4 pb-0">{header}</div>}
+      {(!collapsible || open) && (
+      <div className={collapsible ? 'border-t border-gray-100 p-4 pt-2' : 'px-4 pb-4'}>
       <p className="mt-2 text-xs text-neutral-mid">
         Allocated {d(c.allocated_at)}
         {c.due_date ? <>, <span className={c.overdue ? 'font-semibold text-red-700' : ''}>due {d(c.due_date)}{c.overdue ? ' (overdue)' : ''}</span></> : ''}
@@ -70,6 +81,8 @@ function CourseCard({ c, actionStatus, actionText }: { c: TrainingCourseDetail; 
       )}
       {c.status !== 'not_started' && c.answered > 0 && c.incorrect.length === 0 && <p className="mt-3 flex items-center gap-1.5 text-xs text-green-700"><CheckCircle2 size={13} /> Everything answered so far was right.</p>}
       {c.reflection && <p className="mt-3 rounded-lg bg-teal-light/20 px-3 py-2 text-xs text-neutral-dark"><span className="font-semibold">Their reflection: </span>{c.reflection}</p>}
+      </div>
+      )}
     </div>
   )
 }
@@ -85,21 +98,34 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
 }
 
 export function TrainingDetailView({ detail }: { detail: TrainingDetail }) {
+  // With more than one course the page would be very long, so each course becomes an accordion that starts closed (one line each: status,
+  // score, how many wrong). A single course just shows in full. Print and email always carry everything.
+  const all = [...detail.linked.map(l => l.course?.enrollment_id).filter(Boolean), ...detail.others.map(c => c.enrollment_id)] as string[]
+  const many = all.length > 1
+  const [openIds, setOpenIds] = useState<Set<string>>(new Set())
+  const toggle = (id: string) => setOpenIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+  const allOpen = many && all.every(id => openIds.has(id))
   return (
     <div className="space-y-5">
+      {many && (
+        <div className="flex items-center justify-between text-xs text-neutral-mid">
+          <span>{all.length} courses. Open one to see the questions answered wrongly and the detail.</span>
+          <button type="button" onClick={() => setOpenIds(allOpen ? new Set() : new Set(all))} className="font-medium text-teal hover:underline">{allOpen ? 'Close all' : 'Open all'}</button>
+        </div>
+      )}
       <div>
         <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><BookOpen size={14} className="text-teal" /> Training for this {detail.supervision?.type ?? 'supervision'}</h3>
         {detail.linked.length === 0
           ? <p className="rounded-lg border border-dashed border-gray-300 px-4 py-5 text-center text-sm text-neutral-mid">No training has been allocated against this {detail.supervision?.type ?? 'supervision'} yet. Tick &ldquo;Also add to their next supervision&rdquo; when you assign a course, or choose training against an agreed action.</p>
           : <div className="space-y-3">{detail.linked.map(l => l.course
-              ? <CourseCard key={l.action_id} c={l.course} actionStatus={l.action_status} actionText={l.description} />
+              ? <CourseCard key={l.action_id} c={l.course} actionStatus={l.action_status} actionText={l.description} collapsible={many} open={openIds.has(l.course.enrollment_id)} onToggle={() => toggle(l.course!.enrollment_id)} />
               : <p key={l.action_id} className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-neutral-mid">{l.description}: the course allocation can no longer be found.</p>)}</div>}
       </div>
 
       {detail.others.length > 0 && (
         <div>
           <h3 className="mb-2 text-sm font-semibold text-neutral-dark">Also allocated since {detail.since ? d(detail.since) : 'the last supervision'}</h3>
-          <div className="space-y-3">{detail.others.map(c => <CourseCard key={c.enrollment_id} c={c} />)}</div>
+          <div className="space-y-3">{detail.others.map(c => <CourseCard key={c.enrollment_id} c={c} collapsible={many} open={openIds.has(c.enrollment_id)} onToggle={() => toggle(c.enrollment_id)} />)}</div>
         </div>
       )}
 

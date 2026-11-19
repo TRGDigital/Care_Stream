@@ -15,7 +15,8 @@ export type FeatureEntry = {
   words: string[]               // what people type for it
   requires?: { feature: FeatureKey; plan: Plan }
   guide?: string                // id of the guide that explains it (links to /guides#id)
-  action?: boolean              // opens a form to do something (shown under Do something), via ?do= on its page
+  action?: boolean              // opens a form to do something (shown first, under Actions and specifics), via ?do= on its page
+  cta?: string                  // the button label for an action, a few words
 }
 
 const f = (id: string, group: string, title: string, href: string, about: string, words: string[], extra: Partial<FeatureEntry> = {}): FeatureEntry => ({ id, group, title, href, about, words, ...extra })
@@ -75,8 +76,9 @@ export const FEATURES: FeatureEntry[] = [
 
 
 // Things to DO. Each opens the right form on the right page (see lib/admin-search/intents.ts); nothing is saved or sent by the search.
+const CTA: Record<string, string> = { 'do-add-staff': 'Add staff', 'do-import-staff': 'Import', 'do-hub-invites': 'Send invites', 'do-upload-policy': 'Upload', 'do-add-entry': 'Add entry', 'do-new-incentive': 'Start', 'do-new-f2f': 'Create session', 'do-new-flow': 'Create flow', 'do-build-audit': 'Build audit' }
 const a = (id: string, title: string, path: string, name: string, about: string, words: string[], extra: Partial<FeatureEntry> = {}): FeatureEntry =>
-  ({ id, group: 'Do something', title, href: `${path}${path.includes('?') ? '&' : '?'}do=${name}`, about, words, action: true, ...extra })
+  ({ id, group: 'Do something', title, href: `${path}${path.includes('?') ? '&' : '?'}do=${name}`, about, words, action: true, cta: CTA[id], ...extra })
 FEATURES.push(
   a('do-add-staff', 'Add a staff member', '/staff', 'add-staff', 'Add someone to your team and send their login.', ['new staff', 'new starter', 'add carer', 'add employee', 'invite staff', 'create staff'], { guide: 'staff' }),
   a('do-import-staff', 'Import staff from a spreadsheet', '/staff', 'import-staff', 'Add many staff at once from a CSV file.', ['csv', 'bulk add', 'import staff', 'upload staff', 'spreadsheet']),

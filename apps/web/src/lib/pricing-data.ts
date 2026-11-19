@@ -11,6 +11,7 @@
 // HAND ADDED ROW (17 Nov 2026): "Staff incentives", straight after it, with the same warning.
 // HAND ADDED ROW (19 Nov 2026): "Training linked to supervisions" (Enterprise) straight after "Supervisions and appraisals tracking", and an Enterprise card line. Same warning.
 // Supervisions and appraisals themselves are on Starter, Professional and Enterprise.
+// HAND ADDED ROW (19 Nov 2026): "Super User (one champion per service)" straight after "Staff incentives" (Starter, Professional, Enterprise), linked to its feature page. Same warning.
 
 export interface PricingPlan {
   name: string
@@ -276,6 +277,14 @@ export const PRICING: {
           "label": "Staff incentives",
           "values": [
             false,
+            true,
+            true
+          ]
+        },
+        {
+          "label": "Super User (one champion per service)",
+          "values": [
+            true,
             true,
             true
           ]

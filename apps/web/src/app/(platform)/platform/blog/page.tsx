@@ -1987,6 +1987,29 @@ function SlotEditor({ page, defs, token, onSaved }: {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+// The "New hero: check" tag. Its own component so its hooks run on every render of the row (the page
+// above returns early when there is no token, so hooks must not sit in BlogPage itself).
+function HeroCheckTag({ slug }: { slug: string }) {
+  const [done, setDone] = useState(false)
+  useEffect(() => {
+    try { setDone((JSON.parse(localStorage.getItem(HERO_CHECKED_KEY) || '[]') as string[]).includes(slug)) } catch { /* ignore */ }
+  }, [slug])
+  if (done) return null
+  function markDone() {
+    try {
+      const cur = JSON.parse(localStorage.getItem(HERO_CHECKED_KEY) || '[]') as string[]
+      localStorage.setItem(HERO_CHECKED_KEY, JSON.stringify(Array.from(new Set([...cur, slug]))))
+    } catch { /* ignore */ }
+    setDone(true)
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-fuchsia-100 px-2 py-0.5 text-xs font-semibold text-fuchsia-800">
+      <a href={`/platform/blog/preview/${slug}`} target="_blank" rel="noopener noreferrer" className="hover:underline">New hero: check</a>
+      <button type="button" title="Mark as checked" onClick={markDone} className="rounded-full px-1 text-fuchsia-700 hover:bg-fuchsia-200">Done</button>
+    </span>
+  )
+}
+
 export default function BlogPage() {
   const token = usePlatformAuth()
   const [tab,  setTab]  = useState<'posts' | 'authors' | 'pages' | 'mainsite' | 'policies' | 'audits' | 'training' | 'features' | 'collections' | 'queue' | 'altTags' | 'userCases' | 'careSettings' | 'services'>('posts')
@@ -2434,17 +2457,6 @@ export default function BlogPage() {
     return acc
   }, {} as any)
 
-  const [heroChecked, setHeroChecked] = useState<string[]>([])
-  useEffect(() => {
-    try { setHeroChecked(JSON.parse(localStorage.getItem(HERO_CHECKED_KEY) || '[]')) } catch { /* ignore */ }
-  }, [])
-  function markHeroChecked(slug: string) {
-    setHeroChecked(prev => {
-      const next = Array.from(new Set([...prev, slug]))
-      try { localStorage.setItem(HERO_CHECKED_KEY, JSON.stringify(next)) } catch { /* ignore */ }
-      return next
-    })
-  }
   const publishedCount = posts.filter(p => p.status === 'published').length
   const featuredCount  = posts.filter(p => p.is_featured).length
 
@@ -2674,12 +2686,7 @@ export default function BlogPage() {
                               {post.is_featured && (
                                 <span className="rounded-full bg-teal-light px-2 py-0.5 text-xs font-medium text-teal">Featured</span>
                               )}
-                              {HERO_TO_CHECK.includes(post.slug) && !heroChecked.includes(post.slug) && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-fuchsia-100 px-2 py-0.5 text-xs font-semibold text-fuchsia-800">
-                                  <a href={`/platform/blog/preview/${post.slug}`} target="_blank" rel="noopener noreferrer" className="hover:underline">New hero: check</a>
-                                  <button type="button" title="Mark as checked" onClick={() => markHeroChecked(post.slug)} className="rounded-full px-1 text-fuchsia-700 hover:bg-fuchsia-200">Done</button>
-                                </span>
-                              )}
+                              {HERO_TO_CHECK.includes(post.slug) && <HeroCheckTag slug={post.slug} />}
                             </div>
                             <p className="mt-0.5 text-xs text-neutral-mid">
                               /blog/{post.slug} · {post.category}

@@ -21,7 +21,7 @@ export { DEFAULT_BLOG_IMAGE_PROMPT as DEFAULT_TRAINING_IMAGE_PROMPT } from '../p
 
 const SCENE_SYSTEM = `You write the scene for ONE flat illustration in a UK care home training course.
 Reply with ONE or TWO sentences only, no preamble. Describe ONE ordinary, believable moment that shows the lesson being applied in a care setting. Include the key object or action the section is about (for example the equipment, the call bell, the phone, the folder, the hand wash) so the picture clearly shows the topic: who is there (their roles and what they are doing, one to three people), where, and a few small props.
-Never mention ethnicity, skin tone or age. No text, signs, labels, screens, charts, symbols or icons. Nothing distressing, coercive or undignified: people are calm, engaged and treated with dignity. Do not describe the picture style.`
+Never mention ethnicity, skin tone or age. No text, signs, labels, screens, charts, symbols or icons. Nothing distressing, coercive or undignified: people are calm, engaged and treated with dignity. Everyone is fully clothed and the moment is never intimate. For personal care topics (bathing, washing, continence, toileting, catheter or stoma care, pressure area care, dressing, end of life) show a conversation, a preparation or an equipment moment in a corridor, hallway or sitting room, never a bathroom or bedroom interior with a person undressed or in bed, and no physical contact beyond a supportive hand on an arm. Do not describe the picture style.`
 
 function asText(v: unknown, max: number): string {
   if (!v) return ''
@@ -75,8 +75,25 @@ async function withModuleLock<T>(moduleId: string, fn: (tx: any) => Promise<T>):
   }, { timeout: 30000, maxWait: 30000 })
 }
 
+// OpenAI's safety filter sometimes rejects an innocent care scene (a false positive, mostly on personal care topics).
+// When it does, ask for a plainer scene that avoids bodies, beds and bathrooms, and try again, so one picture never
+// fails or sends an alert email for it.
+const isSafetyReject = (e: any) => /safety system|safety_violations|content_policy|moderation/i.test(String(e?.message ?? e))
+
 async function sceneKey(courseName: string, scene: string, key: string, label: string): Promise<{ key: string; alt: string }> {
-  const buf = await generateSceneBuffer(courseName, scene, key)
+  let buf: Buffer | null = null
+  let lastErr: any
+  for (let attempt = 0; attempt < 3 && !buf; attempt++) {
+    try {
+      const s = attempt === 0 ? scene
+        : await sceneFor(courseName, label, '', '', `SAFER SCENE REQUIRED: the last one was rejected. Show only a calm, fully clothed conversation or an everyday object or equipment moment in a hallway, lounge or office. No bathroom, no bed, no undressing, no body focus. Teaching topic: ${label}`)
+      buf = await generateSceneBuffer(courseName, s, `${key}-${attempt}`)
+    } catch (e: any) {
+      lastErr = e
+      if (!isSafetyReject(e)) throw e
+    }
+  }
+  if (!buf) throw lastErr
   const [stored, alt] = await Promise.all([uploadTrainingImage(buf), altFor(buf, courseName, label)])
   await saveAlt(stored, alt)
   return { key: stored, alt }

@@ -3,6 +3,7 @@
 // explanations + module/flow names + recent activity), so it reads naturally for
 // staff whose first language isn't English.
 
+import { writeAuditLog } from '../lib/audit'
 import { Router, Request, Response } from 'express'
 import { ok, err } from '../lib/response'
 import { buildStaffRecord } from '../lib/staff-record'
@@ -1762,6 +1763,14 @@ meRouter.get('/supervisions', async (req: Request, res: Response) => {
     orderBy: { held_on: 'desc' },
   })
   ok(res, { enabled: true, records })
+})
+
+// POST /me/view-as/end — the admin leaves "view hub as": recorded in the audit log. Works with the view token itself (the only write a view token may make).
+meRouter.post('/view-as/end', async (req: Request, res: Response) => {
+  const imp = (req as any).user?.imp
+  if (!imp) { ok(res, { ended: false }); return }
+  void writeAuditLog({ tenant_id: (req as any).user.tenant_id, user_id: imp.by, event_type: 'admin_view_as_ended', entity_type: 'user', entity_id: (req as any).user.sub, metadata: { mode: imp.mode } })
+  ok(res, { ended: true })
 })
 
 // ─── Conductor: supervisions I'm conducting (complete the recording form here) ─

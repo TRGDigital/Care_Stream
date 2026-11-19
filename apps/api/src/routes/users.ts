@@ -6,6 +6,10 @@ import { prisma } from '../db/client'
 import { archivedEmail, originalEmail, isArchivedEmail } from '../lib/user-email'
 import { hashPassword } from '../services/auth/password'
 import { requireAdmin } from '../middleware/auth'
+import { viewAsAllowed, resolveViewAsMode } from '../lib/view-as'
+import { generateViewAsToken, VIEW_AS_MINUTES } from '../services/auth/tokens'
+import { mintLoginToken, revokeUnusedTokens } from '../lib/login-tokens'
+import { writeAuditLog, writeAuditLogStrict } from '../lib/audit'
 import { ok, err } from '../lib/response'
 import { siteUrl } from '../lib/urls'
 import { sendStaffWelcomeEmail, sendStaffLoginLinkEmail } from '../services/email/outbound'
@@ -686,6 +690,36 @@ usersRouter.post('/:id/reactivate', async (req: Request, res: Response) => {
 // Generate a passwordless sign-in link for a staff member (for the manager to copy,
 // show as a QR, or email). Valid 14 days, single-use. The frictionless way to get a
 // care assistant into the hub the first time — no password to type.
+// POST /users/:id/view-as { mode: 'view' | 'act' } — an admin looks at a staff member's hub. Behind the view_as_hub flag (act mode: view_as_act).
+// Returns a short lived token for that person (no refresh token, so it simply ends) and a one time return token that signs the admin back
+// in. 'view' tokens are read only (see middleware/auth.ts). Every start and end is in the audit log.
+usersRouter.post('/:id/view-as', async (req: Request, res: Response) => {
+  const tenantId = req.user!.tenant_id
+  const adminId  = req.user!.sub
+  if (req.user!.imp) { err(res, 'FORBIDDEN', 'You cannot start a view while viewing as someone.', 403); return }
+  const allowed = await viewAsAllowed(tenantId)
+  if (allowed === 'off') { err(res, 'NOT_AVAILABLE', 'Viewing a staff hub is not available for this account.', 404); return }
+  const mode = resolveViewAsMode(allowed, req.body?.mode)
+  if (!mode) { err(res, 'NOT_ALLOWED', 'Acting as a staff member is only available on test accounts.', 403); return }
+
+  const user = await (prisma as any).user.findUnique({ where: { id: req.params.id }, select: { id: true, name: true, email: true, role: true, tenant_id: true, is_active: true } })
+  if (!user || user.tenant_id !== tenantId) { err(res, 'NOT_FOUND', 'User not found.', 404); return }
+  if (user.is_active === false) { err(res, 'INACTIVE', 'This staff member is deactivated.', 400); return }
+  if (user.role === 'admin') { err(res, 'NOT_ALLOWED', 'You can only view a staff member, not another admin.', 403); return }
+  const me = await (prisma as any).user.findUnique({ where: { id: adminId }, select: { name: true } })
+
+  // The record comes FIRST and is not optional: if it cannot be written, no token is issued.
+  const expiresAt = new Date(Date.now() + VIEW_AS_MINUTES * 60_000).toISOString()
+  try { await writeAuditLogStrict({ tenant_id: tenantId, user_id: adminId, event_type: 'admin_view_as_started', entity_type: 'user', entity_id: user.id, metadata: { mode, target: user.name, expires_at: expiresAt } }) }
+  catch (e) { console.error('[view-as] audit failed, not starting', e); err(res, 'AUDIT_FAILED', 'Could not start the view, please try again.', 500); return }
+  const accessToken = generateViewAsToken({ sub: user.id, tenant_id: tenantId, role: 'staff', imp: { by: adminId, by_name: me?.name ?? 'An admin', mode } })
+  // The way back lasts as long as the view and no longer; starting another view cancels any earlier unused one.
+  await revokeUnusedTokens(adminId, 'view_as_return')
+  const returnToken = await mintLoginToken(adminId, tenantId, (VIEW_AS_MINUTES + 5) * 60_000, 'view_as_return')
+  const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
+  ok(res, { access_token: accessToken, return_token: returnToken, mode, minutes: VIEW_AS_MINUTES, user: { id: user.id, name: user.name, email: user.email }, tenant_name: tenant?.name ?? '', tier: await tierOf(tenantId) })
+})
+
 usersRouter.post('/:id/login-link', async (req: Request, res: Response) => {
   const tenantId = req.user!.tenant_id
   const { id }   = req.params

@@ -886,6 +886,7 @@ model LoginToken {
   tenant_id  String
   expires_at DateTime
   used_at    DateTime?
+  purpose    String?   // view_as_return for the one time token that signs an admin back in after viewing a staff hub; null for ordinary sign in links
   created_at DateTime  @default(now())
 
   @@index([user_id])

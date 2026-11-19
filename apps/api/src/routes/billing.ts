@@ -6,7 +6,7 @@ import { createPortalSession, handleWebhook, createCheckoutSession, getSubscript
 import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
 import { getPlanFeatures } from '../lib/plan-limits'
-import { supervisionTrainingFlagOn } from '../lib/supervision-training'
+import { modeFromFlags } from '../lib/view-as'
 import { needsBillingFor } from '../lib/tiers'
 import { freeEvent } from '../lib/free-events'
 
@@ -121,6 +121,16 @@ billingRouter.post('/close-account', requireAdmin, async (req: Request, res: Res
 // ─── GET /billing/summary ─────────────────────────────────────────────────────
 // Returns current plan + subscription info.
 // DB fields are available now; Stripe fields (next_billing_date, etc.) are
+// Per account switches the screens need, read from the tenant's feature flags in one small query (see lib/supervision-training.ts, lib/view-as.ts).
+async function featureSwitches(tenantId: string, features: { has_workforce_compliance?: boolean }) {
+  let flags: Record<string, unknown> = {}
+  try { flags = ((await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { feature_flags: true } }))?.feature_flags ?? {}) as Record<string, unknown> } catch { /* off */ }
+  return {
+    supervision_training: !!features.has_workforce_compliance && flags.supervision_training === true,
+    view_as: modeFromFlags(flags),
+  }
+}
+
 // stubs returning null — replace with Stripe API calls when integrating.
 
 billingRouter.get('/summary', async (req: Request, res: Response) => {
@@ -168,7 +178,7 @@ billingRouter.get('/summary', async (req: Request, res: Response) => {
     cancel_at_period_end: sub?.cancel_at_period_end ?? false,
     // Whether training is linked to supervisions for this account (Enterprise and the supervision_training flag). The screens read it here
     // so they do not call the Enterprise-only workforce routes on every other plan.
-    features: { ...features, supervision_training: !!features.has_workforce_compliance && (await supervisionTrainingFlagOn(tenantId)) },
+    features: { ...features, ...(await featureSwitches(tenantId, features)) },
   })
 })
 

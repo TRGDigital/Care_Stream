@@ -8,6 +8,7 @@ import { PwaRegister } from '@/components/pwa/pwa-register'
 import { InstallPrompt } from '@/components/pwa/install-prompt'
 import { NotificationsOptIn } from '@/components/pwa/notifications-optin'
 import { HubPrefsApplier } from '@/components/hub/hub-prefs-applier'
+import { ViewAsBanner } from '@/components/view-as/view-as-banner'
 import type { Metadata } from 'next'
 
 // Logged-in app route: never meant for search results. robots.txt already disallows these paths,
@@ -23,10 +24,12 @@ export default async function PortalLayout({ children }: { children: React.React
     <AuthSessionProvider session={session}>
       <HubPrefsApplier />
       <TenantAgentTools />
-      <PwaRegister />
-      <InstallPrompt />
-      <NotificationsOptIn />
+      {/* An admin viewing this hub as the person must not register this browser for their notifications or app install. */}
+      {!session.user.impersonation && <PwaRegister />}
+      {!session.user.impersonation && <InstallPrompt />}
+      {!session.user.impersonation && <NotificationsOptIn />}
       <div className="flex h-[100dvh] flex-col bg-neutral-light">
+        <ViewAsBanner />
         <PortalNav
           userName={session.user.name ?? ''}
           userRole={session.user.role}

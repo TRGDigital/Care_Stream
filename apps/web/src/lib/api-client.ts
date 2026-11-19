@@ -203,6 +203,7 @@ export interface PlanFeatures {
   has_training_impact:    boolean
   has_workforce_compliance: boolean
   supervision_training?: boolean   // training linked to supervisions is on for this account
+  view_as?: 'off' | 'view' | 'act' // an admin can look at a staff member's hub (view), and on test accounts act as them (act)
   has_audit_recommendations?: boolean
   tier?: string
   annual_license:         LicenseUsage
@@ -315,6 +316,8 @@ async function apiFetch<T>(
   if (res.status === 401) {
     // Carry the current location so signing back in returns the user to exactly
     // where they were working, instead of dumping them on the dashboard.
+    // During a "view hub as" the way back is a one time token held in this tab: use it, so the admin is not stranded on a password page.
+    if (typeof window !== 'undefined' && (() => { try { return !!sessionStorage.getItem('cs-view-as-return') } catch { return false } })()) { import('@/lib/view-as-client').then(m => m.endViewAs(undefined)); throw new Error('This view has ended.') }
     if (typeof window !== 'undefined') window.location.href = `/login?callbackUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`
     throw new Error('Session expired. Please sign in again.')
   }
@@ -562,6 +565,8 @@ export function createApiClient(token: string) {
         apiFetch<{ user: { id: string; name: string; email: string }; temp_password: string; contact: StaffContact }>(
           `/users/${id}/reset-password`, token, { method: 'POST' }
         ),
+      viewAs: (id: string, mode: 'view' | 'act') =>
+        apiFetch<{ access_token: string; return_token: string; mode: 'view' | 'act'; minutes: number; user: { id: string; name: string; email: string }; tenant_name: string; tier: string }>(`/users/${id}/view-as`, token, { method: 'POST', body: JSON.stringify({ mode }) }),
       loginLink: (id: string, sendEmail: boolean) =>
         apiFetch<{ url: string; expires_at: string; emailed: boolean }>(`/users/${id}/login-link`, token, {
           method: 'POST', body: JSON.stringify({ send_email: sendEmail }),
@@ -1249,6 +1254,7 @@ export function createApiClient(token: string) {
     },
 
     me: {
+      endViewAs: () => apiFetch<{ ended: boolean }>('/me/view-as/end', token, { method: 'POST' }),
       moduleReviews: () => apiFetch<{ reviews: Array<{ module_id: string; notes: string | null; status: string }> }>('/me/module-reviews', token),
       saveModuleReview: (module_id: string, data: { notes?: string; status?: string }) =>
         apiFetch<{ saved: boolean }>('/me/module-reviews', token, { method: 'POST', body: JSON.stringify({ module_id, ...data }) }),

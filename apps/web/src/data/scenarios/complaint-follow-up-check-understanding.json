@@ -12,10 +12,26 @@
   "title": "After a complaint is closed",
   "pill": "Illustration",
   "rows": [
-   {"label": "Complaint investigated and closed", "note": "Week 1", "done": true},
-   {"label": "Team reminded of the policy", "note": "Week 1", "done": true},
-   {"label": "Understanding checked per person", "note": "Not yet", "done": false},
-   {"label": "Gaps closed with a short lesson", "note": "Not yet", "done": false}
+   {
+    "label": "Complaint investigated and closed",
+    "note": "Week 1",
+    "done": true
+   },
+   {
+    "label": "Team reminded of the policy",
+    "note": "Week 1",
+    "done": true
+   },
+   {
+    "label": "Understanding checked per person",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Gaps closed with a short lesson",
+    "note": "Not yet",
+    "done": false
+   }
   ],
   "meter": 50
  },
@@ -33,27 +49,71 @@
  ],
  "intro": {
   "heading": "The complaint is closed. The learning is not proven.",
-  "sub": "A scenario we see in many care homes.",
+  "sub": "A scenario we see in many care settings.",
   "paragraph": "A relative complained that a call bell went unanswered and that when they raised it with a carer, nobody told them how to complain formally. The manager investigated, replied and closed it. At the next handover the team was reminded that anyone can take a complaint and that it must be passed on. Everyone nodded. Weeks later the manager is asked what has changed, and realises she can say what she told the team but not what each person understood. Here is how that plays out."
  },
  "trail": [
-  {"when": "Week 1", "text": "A relative complains. The manager investigates and replies.", "kind": "ok"},
-  {"when": "Handover", "text": "The team is reminded how to pass on a complaint.", "kind": "ok"},
-  {"when": "Same day", "text": "The complaints policy is pinned to the staff room board.", "kind": "ok"},
-  {"when": "Week 4", "text": "The manager cannot say who could explain the policy in their own words.", "kind": "gap"},
-  {"when": "Who might have missed it", "text": "A new carer who has not yet read it, and a bank carer who missed that handover.", "kind": "gap"},
-  {"when": "What was heard", "text": "Some staff think a verbal grumble is not a complaint.", "kind": "gap"},
-  {"when": "What the manager has", "text": "A closed complaint file and a note saying staff were reminded.", "kind": "gap"},
-  {"when": "Review meeting", "text": "“How do you know staff understood?” A reminder is not an answer.", "kind": "end"}
+  {
+   "when": "Week 1",
+   "text": "A relative complains. The manager investigates and replies.",
+   "kind": "ok"
+  },
+  {
+   "when": "Handover",
+   "text": "The team is reminded how to pass on a complaint.",
+   "kind": "ok"
+  },
+  {
+   "when": "Same day",
+   "text": "The complaints policy is pinned to the staff room board.",
+   "kind": "ok"
+  },
+  {
+   "when": "Week 4",
+   "text": "The manager cannot say who could explain the policy in their own words.",
+   "kind": "gap"
+  },
+  {
+   "when": "Who might have missed it",
+   "text": "A new carer who has not yet read it, and a bank carer who missed that handover.",
+   "kind": "gap"
+  },
+  {
+   "when": "What was heard",
+   "text": "Some staff think a verbal grumble is not a complaint.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "A closed complaint file and a note saying staff were reminded.",
+   "kind": "gap"
+  },
+  {
+   "when": "Review meeting",
+   "text": "“How do you know staff understood?” A reminder is not an answer.",
+   "kind": "end"
+  }
  ],
  "trail_close": "<b>The complaint was handled. What is missing is proof of what changed.</b> The gap sits between telling the team and checking they understood. Here is how CareStream helps fill it, using your own policies, without handling the complaint itself.",
  "why": {
   "heading": "Telling staff is not the same as checking they understood",
   "sub": "Learning from complaints only counts if it reaches the people on the floor.",
   "cards": [
-    {"icon": "chat", "title": "A reminder is one way traffic", "body": "At handover people nod and move on. Nobody is asked to say what they would actually do if a relative raised a concern at the door."},
-    {"icon": "tick", "title": "Not everyone hears it", "body": "Part time, night and new staff miss the briefing. The policy exists, but you cannot tell who has taken it in."},
-    {"icon": "alert", "title": "Proof is hard to build by hand", "body": "Writing questions for each complaint and chasing every carer is work no manager has time for, so the check often never happens."}
+   {
+    "icon": "chat",
+    "title": "A reminder is one way traffic",
+    "body": "At handover people nod and move on. Nobody is asked to say what they would actually do if a relative raised a concern at the door."
+   },
+   {
+    "icon": "tick",
+    "title": "Not everyone hears it",
+    "body": "Part time, night and new staff miss the briefing. The policy exists, but you cannot tell who has taken it in."
+   },
+   {
+    "icon": "alert",
+    "title": "Proof is hard to build by hand",
+    "body": "Writing questions for each complaint and chasing every carer is work no manager has time for, so the check often never happens."
+   }
   ]
  },
  "how": {
@@ -68,8 +128,14 @@
      "Tick the staff you want, add an optional due date, and they complete it in the Staff Hub on their own phone"
     ],
     "tags": [
-     {"label": "Training built from your own policies", "href": "/training-platform"},
-     {"label": "Turn an incident into a lesson", "href": "/uses/adhoc-training"}
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Turn an incident into a lesson",
+      "href": "/uses/adhoc-training"
+     }
     ],
     "mock": {
      "type": "training",
@@ -90,8 +156,14 @@
      "This check for understanding is private to the carer and the manager. Nobody is sent a message about each slip"
     ],
     "tags": [
-     {"label": "Wrong answers become lessons", "href": "/training-platform"},
-     {"label": "How CareStream works", "href": "/how-it-works"}
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
     ],
     "mock": {
      "type": "followup",
@@ -114,10 +186,19 @@
      "Training in different languages is part of the paid plans, and the lessons are machine translated"
     ],
     "tags": [
-     {"label": "Training in 60+ languages", "href": "/languages"},
-     {"label": "Staff Hub in 60+ languages", "href": "/uses/multilingual-staff-hub"}
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
     ],
-    "mock": {"type": "language", "second_language": "Romanian"}
+    "mock": {
+     "type": "language",
+     "second_language": "Romanian"
+    }
    },
    {
     "heading": "See where the policy was misunderstood, and whether it closed",
@@ -127,14 +208,47 @@
      "A Monday digest email brings the picture to you, because nothing alerts you each time someone answers wrongly"
     ],
     "tags": [
-     {"label": "Reporting that runs itself", "href": "/training-platform"},
-     {"label": "CQC and compliance evidence", "href": "/cqc-compliance"}
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
     ],
     "mock": {
      "type": "gaps",
-     "stats": {"open": 6, "affected": 5, "closed": 14, "engaged": 68},
-     "missed": [["Is a spoken complaint a complaint", "5 staff"], ["Who to pass a complaint to", "3 staff"], ["What to say at the door", "2 staff"]],
-     "weak": [["Complaints Handling", "6 gaps"], ["Duty of Candour", "2 gaps"]]
+     "stats": {
+      "open": 6,
+      "affected": 5,
+      "closed": 14,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Is a spoken complaint a complaint",
+       "5 staff"
+      ],
+      [
+       "Who to pass a complaint to",
+       "3 staff"
+      ],
+      [
+       "What to say at the door",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Complaints Handling",
+       "6 gaps"
+      ],
+      [
+       "Duty of Candour",
+       "2 gaps"
+      ]
+     ]
     }
    }
   ]
@@ -143,28 +257,76 @@
   "heading": "The questions managers ask, and how CareStream answers them",
   "sub": "Read this as a conversation. The questions are the ones we hear most.",
   "items": [
-   {"q": "Does CareStream handle the complaint itself?", "a": "No. CareStream does not log, track or investigate complaints. Keep using the system you already have. CareStream is for the step afterwards: checking that staff understand the policy involved."},
-   {"q": "How do I check staff understood the policy after a complaint?", "a": "You allocate short training on the topic, <a href=\"/training-platform\">built from your own policies</a>. Staff complete it in the Staff Hub on their own phone, and their answers show who understood and who did not."},
-   {"q": "What happens when someone gets a question wrong?", "a": "It goes into their Follow-up tab and they get an email, at most once a day. They choose Learn &amp; retry, a short lesson (why it matters, what to remember, a realistic situation) then a fresh question, or Just retry the same one. They can retry as often as they need."},
-   {"q": "Will I be told every time a carer gets one wrong?", "a": "No, and that is deliberate. Nothing alerts you for each wrong answer. You see the pattern in Analytics under Knowledge gaps, and in the Monday digest email."},
-   {"q": "Is the lesson about our complaints policy, or a generic one?", "a": "It is built from your own policies where they cover the point, so it teaches what your home actually does. Where they do not, it falls back on general good practice. That is a useful prompt to tidy the policy, and you can edit and preview everything first."},
-   {"q": "Can I pick one section of the complaints policy?", "a": "No. You pick a topic module, and CareStream searches your policies for that topic. You can edit the lesson and questions before anyone sees them."},
-   {"q": "Does the complaint automatically trigger training?", "a": "No. Nothing starts automatically. You decide to allocate the module, to whom, and when. That keeps you in charge of a sensitive situation."},
-   {"q": "Can I try it, and what does it cost?", "a": "You can create a free account and try the paid plans free for 14 days. It is on the paid plans, and the <a href=\"/pricing\">pricing page</a> has the current details. You can also <a href=\"/demo\">see a demo</a> first."}
+   {
+    "q": "Does CareStream handle the complaint itself?",
+    "a": "No. CareStream does not log, track or investigate complaints. Keep using the system you already have. CareStream is for the step afterwards: checking that staff understand the policy involved."
+   },
+   {
+    "q": "How do I check staff understood the policy after a complaint?",
+    "a": "You allocate short training on the topic, <a href=\"/training-platform\">built from your own policies</a>. Staff complete it in the Staff Hub on their own phone, and their answers show who understood and who did not."
+   },
+   {
+    "q": "What happens when someone gets a question wrong?",
+    "a": "It goes into their Follow-up tab and they get an email, at most once a day. They choose Learn &amp; retry, a short lesson (why it matters, what to remember, a realistic situation) then a fresh question, or Just retry the same one. They can retry as often as they need."
+   },
+   {
+    "q": "Will I be told every time a carer gets one wrong?",
+    "a": "No, and that is deliberate. Nothing alerts you for each wrong answer. You see the pattern in Analytics under Knowledge gaps, and in the Monday digest email."
+   },
+   {
+    "q": "Is the lesson about our complaints policy, or a generic one?",
+    "a": "It is built from your own policies where they cover the point, so it teaches what your home actually does. Where they do not, it falls back on general good practice. That is a useful prompt to tidy the policy, and you can edit and preview everything first."
+   },
+   {
+    "q": "Can I pick one section of the complaints policy?",
+    "a": "No. You pick a topic module, and CareStream searches your policies for that topic. You can edit the lesson and questions before anyone sees them."
+   },
+   {
+    "q": "Does the complaint automatically trigger training?",
+    "a": "No. Nothing starts automatically. You decide to allocate the module, to whom, and when. That keeps you in charge of a sensitive situation."
+   },
+   {
+    "q": "Can I try it, and what does it cost?",
+    "a": "You can create a free account and try the paid plans free for 14 days. It is on the paid plans, and the <a href=\"/pricing\">pricing page</a> has the current details. You can also <a href=\"/demo\">see a demo</a> first."
+   }
   ]
  },
  "limits": {
   "heading": "A check on understanding, not a complaints system",
   "cards": [
-   {"title": "It does not record or manage complaints", "body": "It does not log complaints, track outcomes or write to complainants. It also gives no advice on how to respond to someone who has complained."},
-   {"title": "It does not alert you to every wrong answer", "body": "The picture reaches you through the Knowledge gaps view and the Monday digest. A carer's Follow-up tab is theirs to work through."},
-   {"title": "It does not start training by itself", "body": "A complaint triggers nothing. You allocate the module. Adhoc training and translation are on the paid plans, not the free plan."}
+   {
+    "title": "It does not record or manage complaints",
+    "body": "It does not log complaints, track outcomes or write to complainants. It also gives no advice on how to respond to someone who has complained."
+   },
+   {
+    "title": "It does not alert you to every wrong answer",
+    "body": "The picture reaches you through the Knowledge gaps view and the Monday digest. A carer's Follow-up tab is theirs to work through."
+   },
+   {
+    "title": "It does not start training by itself",
+    "body": "A complaint triggers nothing. You allocate the module. Adhoc training and translation are on the paid plans, not the free plan."
+   }
   ]
  },
  "feature_links": [
-  {"title": "Training built from your own policies", "body": "Training from your policies, and wrong answers that become short lessons.", "action": "See the feature", "href": "/training-platform"},
-  {"title": "Short training after an incident", "body": "Turn something that happened in your home into a short, checked lesson.", "action": "See the use case", "href": "/uses/adhoc-training"},
-  {"title": "CQC and compliance", "body": "Evidence that builds itself, and a readiness report for your next inspection.", "action": "See CQC and compliance", "href": "/cqc-compliance"}
+  {
+   "title": "Training built from your own policies",
+   "body": "Training from your policies, and wrong answers that become short lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Short training after an incident",
+   "body": "Turn something that happened in your home into a short, checked lesson.",
+   "action": "See the use case",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "CQC and compliance",
+   "body": "Evidence that builds itself, and a readiness report for your next inspection.",
+   "action": "See CQC and compliance",
+   "href": "/cqc-compliance"
+  }
  ],
  "read_next": [
   "incident-led-training-in-care",
@@ -177,20 +339,47 @@
    {
     "group": "About learning after a complaint",
     "items": [
-     {"q": "What does learning from complaints mean in a care home?", "a": "It means finding out what caused the complaint and changing something so it is less likely to happen again. Part of that is making sure staff understand the policy involved. The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-16\">CQC guidance on Regulation 16</a> talks about investigating to identify what might have caused a complaint and the actions needed to prevent similar ones."},
-     {"q": "What should a complaints policy in a care home cover?", "a": "Your policy should say how complaints are received, recorded, handled and answered. Regulation 16 requires an accessible system for this, as set out in <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/16\">the regulation text</a>. Your policy is where you describe how your home does it. CareStream does not write the policy for the complaint, but it can build staff training from it."},
-     {"q": "How can learning from mistakes be shown after a complaint?", "a": "Keep a record of what changed. For staff, that can be the questions asked, the lesson given and whether the answer was then right. Learning from mistakes is easier to show when each person has been checked, not only told."},
-     {"q": "What is a check for understanding?", "a": "It is a quick way to find out whether someone has taken something in, such as asking them to say or choose what they would do. In CareStream it is a short set of questions in the Staff Hub, with a lesson if an answer is wrong."},
-     {"q": "How soon after a complaint should staff be checked?", "a": "Soon enough that the issue is fresh, and late enough to show what stuck. A few days to a couple of weeks is a sensible rule. You choose when to allocate it, and can set a due date."},
-     {"q": "Can CareStream log or track my complaints?", "a": "No. It does not log, track or report on complaints. It helps with the training that follows a complaint."}
+     {
+      "q": "What does learning from complaints mean in a care home?",
+      "a": "It means finding out what caused the complaint and changing something so it is less likely to happen again. Part of that is making sure staff understand the policy involved. The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-16\">CQC guidance on Regulation 16</a> talks about investigating to identify what might have caused a complaint and the actions needed to prevent similar ones."
+     },
+     {
+      "q": "What should a complaints policy in a care home cover?",
+      "a": "Your policy should say how complaints are received, recorded, handled and answered. Regulation 16 requires an accessible system for this, as set out in <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/16\">the regulation text</a>. Your policy is where you describe how your home does it. CareStream does not write the policy for the complaint, but it can build staff training from it."
+     },
+     {
+      "q": "How can learning from mistakes be shown after a complaint?",
+      "a": "Keep a record of what changed. For staff, that can be the questions asked, the lesson given and whether the answer was then right. Learning from mistakes is easier to show when each person has been checked, not only told."
+     },
+     {
+      "q": "What is a check for understanding?",
+      "a": "It is a quick way to find out whether someone has taken something in, such as asking them to say or choose what they would do. In CareStream it is a short set of questions in the Staff Hub, with a lesson if an answer is wrong."
+     },
+     {
+      "q": "How soon after a complaint should staff be checked?",
+      "a": "Soon enough that the issue is fresh, and late enough to show what stuck. A few days to a couple of weeks is a sensible rule. You choose when to allocate it, and can set a due date."
+     },
+     {
+      "q": "Can CareStream log or track my complaints?",
+      "a": "No. It does not log, track or report on complaints. It helps with the training that follows a complaint."
+     }
     ]
    },
    {
     "group": "About the training",
     "items": [
-     {"q": "What is adhoc training in a care home?", "a": "Adhoc training is a short module you allocate when a need appears, outside the annual plan. See <a href=\"/uses/adhoc-training\">how CareStream uses it</a>. You pick the topic, review the lesson and questions, and allocate it to the staff you choose."},
-     {"q": "Does the carer get a lesson automatically when they are wrong?", "a": "A wrong answer appears in their Follow-up tab and they get an email. They then open it themselves by choosing Learn &amp; retry, or Just retry. Nothing is pushed to them as a lesson."},
-     {"q": "What would an inspector see?", "a": "They may ask how you learned from a complaint. A record of the topic, the questions, wrong answers, lessons and results supports your answer. It sits alongside the rest of your <a href=\"/cqc-compliance\">CQC evidence</a>."}
+     {
+      "q": "What is adhoc training in a care home?",
+      "a": "Adhoc training is a short module you allocate when a need appears, outside the annual plan. See <a href=\"/uses/adhoc-training\">how CareStream uses it</a>. You pick the topic, review the lesson and questions, and allocate it to the staff you choose."
+     },
+     {
+      "q": "Does the carer get a lesson automatically when they are wrong?",
+      "a": "A wrong answer appears in their Follow-up tab and they get an email. They then open it themselves by choosing Learn &amp; retry, or Just retry. Nothing is pushed to them as a lesson."
+     },
+     {
+      "q": "What would an inspector see?",
+      "a": "They may ask how you learned from a complaint. A record of the topic, the questions, wrong answers, lessons and results supports your answer. It sits alongside the rest of your <a href=\"/cqc-compliance\">CQC evidence</a>."
+     }
     ]
    }
   ]

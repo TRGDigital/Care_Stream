@@ -12,26 +12,26 @@
   "title": "One carer, one question, three tries",
   "pill": "Illustration",
   "rows": [
-    {
-     "label": "First answer wrong",
-     "note": "Follow-up opened",
-     "done": true
-    },
-    {
-     "label": "Second try wrong again",
-     "note": "Gap still open",
-     "done": true
-    },
-    {
-     "label": "Manager notices the open gap",
-     "note": "Not yet",
-     "done": false
-    },
-    {
-     "label": "Supportive conversation held",
-     "note": "Not yet",
-     "done": false
-    }
+   {
+    "label": "First answer wrong",
+    "note": "Follow-up opened",
+    "done": true
+   },
+   {
+    "label": "Second try wrong again",
+    "note": "Gap still open",
+    "done": true
+   },
+   {
+    "label": "Manager notices the open gap",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Supportive conversation held",
+    "note": "Not yet",
+    "done": false
+   }
   ],
   "meter": 50
  },
@@ -69,7 +69,7 @@
  ],
  "intro": {
   "heading": "The retry came back wrong again, and nobody told you.",
-  "sub": "A scenario we see in many care homes.",
+  "sub": "A scenario we see in many care settings.",
   "paragraph": "A manager allocates a short moving and handling module after a team session. One carer gets a question about checking equipment wrong, opens the lesson, retries, and gets it wrong again. The manager hears nothing, because nothing is sent. That is by design, and it has a cost. Three weeks later the manager is writing a supervision plan and realises they have no idea who is still stuck. The gap is not hidden. It is sitting in a report the manager has not opened. Here is how that plays out."
  },
  "trail": [

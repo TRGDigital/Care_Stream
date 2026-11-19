@@ -1,409 +1,409 @@
 {
-  "slug": "whole-team-got-the-same-question-wrong",
-  "status": "draft",
-  "order": 16,
-  "title": "A training needs analysis starts when most of the team miss one question. <em>Fix the session, not the people.</em>",
-  "meta_title": "Training Needs Analysis for Care Homes | CareStreamAI",
-  "meta_description": "When most of a team misses the same question, the gap is in the session or the policy. See how a care manager spots shared gaps and closes them.",
-  "eyebrow": "Scenario",
-  "lede": "In a care home, a training needs analysis often starts with a moment: you notice that half your carers gave the same wrong answer. With <a href=\"/training-platform\">short training built from your own policies</a>, that pattern shows up on its own, and you can fix the session instead of blaming the people.",
-  "fine": "14 day free trial · Set up in a day · UK data residency",
-  "panel": {
-    "title": "After a falls prevention session",
-    "pill": "Illustration",
-    "rows": [
-      {
-        "label": "Session delivered to the day team",
-        "note": "Week 1",
-        "done": true
-      },
-      {
-        "label": "Follow up questions allocated",
-        "note": "Week 1",
-        "done": true
-      },
-      {
-        "label": "Same question missed by most of the team",
-        "note": "Week 2",
-        "done": false
-      },
-      {
-        "label": "Session and policy wording fixed",
-        "note": "Not yet",
-        "done": false
-      }
-    ],
-    "meter": 50
-  },
-  "image": "https://api.carestreamai.com/public/policy-shop/image/1b7d76b0-f27c-4015-a012-9c4e8f8eca41.webp",
-  "image_alt": "A manager at a flip chart in a meeting room pointing at a blank sheet, with a trainer and six carers around a table discussing it, mugs on the table",
-  "card_title": "Six carers gave the same wrong answer. Who needs retraining?",
-  "card_snippet": "When a whole team misses the same question, the problem is usually the session or the policy, not the people. See how a care manager spots shared gaps and fixes the cause.",
-  "primary_keyword": "training needs analysis",
-  "secondary_keywords": [
-    "learning needs analysis",
-    "skills gap analysis",
-    "identify training needs",
-    "training gap analysis",
-    "check for understanding",
-    "training effectiveness"
+ "slug": "whole-team-got-the-same-question-wrong",
+ "status": "draft",
+ "order": 16,
+ "title": "A training needs analysis starts when most of the team miss one question. <em>Fix the session, not the people.</em>",
+ "meta_title": "Training Needs Analysis for Care Homes | CareStreamAI",
+ "meta_description": "When most of a team misses the same question, the gap is in the session or the policy. See how a care manager spots shared gaps and closes them.",
+ "eyebrow": "Scenario",
+ "lede": "In a care home, a training needs analysis often starts with a moment: you notice that half your carers gave the same wrong answer. With <a href=\"/training-platform\">short training built from your own policies</a>, that pattern shows up on its own, and you can fix the session instead of blaming the people.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After a falls prevention session",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Session delivered to the day team",
+    "note": "Week 1",
+    "done": true
+   },
+   {
+    "label": "Follow up questions allocated",
+    "note": "Week 1",
+    "done": true
+   },
+   {
+    "label": "Same question missed by most of the team",
+    "note": "Week 2",
+    "done": false
+   },
+   {
+    "label": "Session and policy wording fixed",
+    "note": "Not yet",
+    "done": false
+   }
   ],
-  "feature_links": [
-    {
-      "title": "Training built from your own policies",
-      "body": "Adhoc training from your policies, with wrong answers that become short lessons and a view of the gaps across the team.",
-      "action": "See the feature",
-      "href": "/training-platform"
-    },
-    {
-      "title": "Policy gap detection",
-      "body": "Screen your policies for gaps and contradictions, so a vague policy is found before it confuses a whole team.",
-      "action": "See policy gap detection",
-      "href": "/policy-gap-detection"
-    },
-    {
-      "title": "Adhoc training after an incident or a session",
-      "body": "Allocate a short module on any topic, to the people who need it, when you need it.",
-      "action": "See adhoc training",
-      "href": "/uses/adhoc-training"
-    }
-  ],
-  "intro": {
-    "heading": "One wrong answer is a person. Six wrong answers is a pattern.",
-    "sub": "A scenario we see in many care homes.",
-    "paragraph": "After a falls prevention session, a manager allocates a short set of questions to the day team. A week later she opens the results expecting the odd slip. Instead, six of the eight carers have chosen the same wrong answer about what to do straight after a resident is found on the floor. Nobody is careless. They all sat the same session and read the same policy. If she treats each carer separately, she will repeat the same conversation six times and the cause will stay put. Here is how that plays out."
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/1b7d76b0-f27c-4015-a012-9c4e8f8eca41.webp",
+ "image_alt": "A manager at a flip chart in a meeting room pointing at a blank sheet, with a trainer and six carers around a table discussing it, mugs on the table",
+ "card_title": "Six carers gave the same wrong answer. Who needs retraining?",
+ "card_snippet": "When a whole team misses the same question, the problem is usually the session or the policy, not the people. See how a care manager spots shared gaps and fixes the cause.",
+ "primary_keyword": "training needs analysis",
+ "secondary_keywords": [
+  "learning needs analysis",
+  "skills gap analysis",
+  "identify training needs",
+  "training gap analysis",
+  "check for understanding",
+  "training effectiveness"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Adhoc training from your policies, with wrong answers that become short lessons and a view of the gaps across the team.",
+   "action": "See the feature",
+   "href": "/training-platform"
   },
-  "trail": [
-    {
-      "when": "Monday",
-      "text": "A trainer runs falls prevention for the day team.",
-      "kind": "ok"
-    },
-    {
-      "when": "Same afternoon",
-      "text": "Everyone joins in and the questions in the room sound confident.",
-      "kind": "ok"
-    },
-    {
-      "when": "Tuesday",
-      "text": "The manager allocates a short knowledge check on falls to eight carers.",
-      "kind": "ok"
-    },
-    {
-      "when": "The following week",
-      "text": "Six of eight chose the same wrong answer about moving a resident after a fall.",
-      "kind": "gap"
-    },
-    {
-      "when": "First instinct",
-      "text": "Book all six in for a retake. Nobody asks why they all went the same way.",
-      "kind": "gap"
-    },
-    {
-      "when": "Buried in the paperwork",
-      "text": "The post fall policy is vague on when to move someone. Nobody has read it side by side with the slides.",
-      "kind": "gap"
-    },
-    {
-      "when": "A month on",
-      "text": "The same wording is in the trainer's slides, so the next team will repeat the answer.",
-      "kind": "gap"
-    },
-    {
-      "when": "After a real fall",
-      "text": "An inspector asks: “What did you change when you found the team did not understand?”",
-      "kind": "end"
-    }
-  ],
-  "trail_close": "<b>The people were not the problem.</b> A shared wrong answer is information about the session or the policy. Here is how CareStream helps you see it and act on it.",
-  "why": {
-    "heading": "A shared wrong answer is a signal about your training, not your staff",
-    "sub": "One person missing a question is a conversation. Most of the team missing it is a different job.",
-    "cards": [
-      {
-        "icon": "alert",
-        "title": "Retraining everyone hides the cause",
-        "body": "If the slides or the policy were unclear, another retake teaches the same unclear thing again."
-      },
-      {
-        "icon": "chat",
-        "title": "Nobody compares the answers side by side",
-        "body": "Each result sits in a separate record. Without a team view, a manager has to read every one to notice that six of them are the same."
-      },
-      {
-        "icon": "tick",
-        "title": "Good managers fix the wording once",
-        "body": "Change the slide, tighten the policy and the whole team benefits. That is faster and more likely to last than chasing six individuals."
-      }
-    ]
+  {
+   "title": "Policy gap detection",
+   "body": "Screen your policies for gaps and contradictions, so a vague policy is found before it confuses a whole team.",
+   "action": "See policy gap detection",
+   "href": "/policy-gap-detection"
   },
-  "how": {
-    "heading": "From a shared wrong answer to a fixed session",
-    "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, followed through to the team view. See also <a href=\"/uses/adhoc-training\">adhoc training after an incident</a> and <a href=\"/uses/policy-gaps\">finding gaps in your policies</a>.",
-    "blocks": [
-      {
-        "heading": "Allocate a falls check to the team that attended",
-        "bullets": [
-          "In the Training screen, pick the topic module that matches the session, such as falls prevention, and tick the staff who attended",
-          "The lessons and questions are built from your own policies where they cover the topic, with general good practice as the fallback, and you can edit and preview them first",
-          "Staff complete it in the Staff Hub on their own phone. This is a simple check for understanding after the session"
-        ],
-        "tags": [
-          {
-            "label": "Training built from your own policies",
-            "href": "/training-platform"
-          },
-          {
-            "label": "How CareStream works",
-            "href": "/how-it-works"
-          }
-        ],
-        "mock": {
-          "type": "training",
-          "module": "Falls Prevention",
-          "questions": [
-            "A resident is found on the floor and says they are fine. What do you do first?",
-            "Who should you tell after a fall, and what should you record?",
-            "Which signs after a fall mean you should call for medical help straight away?"
-          ],
-          "staff_count": 8
-        }
-      },
-      {
-        "heading": "Each wrong answer becomes that carer's short lesson",
-        "bullets": [
-          "A wrong answer goes into the carer's Follow-up tab in the Staff Hub, and they get an email, at most once a day and in English",
-          "They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question, as often as they need",
-          "Each carer is helped on the spot, so you can spend your time on the pattern and not on six separate catch ups"
-        ],
-        "tags": [
-          {
-            "label": "Wrong answers become lessons",
-            "href": "/training-platform"
-          },
-          {
-            "label": "Training in 60+ languages",
-            "href": "/languages"
-          }
-        ],
-        "mock": {
-          "type": "followup",
-          "module": "Falls Prevention",
-          "question": "A resident is found on the floor and says they are fine. What do you do first?",
-          "why": "A person who says they are fine can still be hurt, and moving them too early can make an injury worse.",
-          "remember": [
-            "Stay with the person and keep them calm",
-            "Check for pain and injury before anyone is moved",
-            "Follow your home's post fall procedure and record what you saw"
-          ],
-          "picture": "A resident is sitting on the bathroom floor and insists they just slipped."
-        }
-      },
-      {
-        "heading": "See the shared gaps across the team",
-        "bullets": [
-          "In Analytics, the Knowledge gaps view lists the most missed questions, so a question six people missed stands out",
-          "Weakest topics show where a whole subject needs another look, and a count of staff affected tells you how wide the gap is",
-          "A Monday digest email brings the picture to you. Nothing alerts you on each wrong answer, so look at it weekly"
-        ],
-        "tags": [
-          {
-            "label": "Reporting that runs itself",
-            "href": "/training-platform"
-          },
-          {
-            "label": "CQC and compliance evidence",
-            "href": "/cqc-compliance"
-          }
-        ],
-        "mock": {
-          "type": "gaps",
-          "stats": {
-            "open": 9,
-            "affected": 6,
-            "closed": 14,
-            "engaged": 68
-          },
-          "missed": [
-            [
-              "Moving a resident after a fall",
-              "6 staff"
-            ],
-            [
-              "What to record after a fall",
-              "3 staff"
-            ],
-            [
-              "Who to tell after a fall",
-              "2 staff"
-            ]
-          ],
-          "weak": [
-            [
-              "Falls Prevention",
-              "9 gaps"
-            ],
-            [
-              "Safeguarding Adults",
-              "2 gaps"
-            ]
-          ]
-        }
-      },
-      {
-        "heading": "Trace it back to the policy, then fix it",
-        "bullets": [
-          "Where your policy is vague or silent, the lesson falls back on general good practice, which is a prompt to tighten the policy",
-          "The free policy screening and the out of date scan can show where wording is weak, and gap fixes are on Professional and above",
-          "Once the policy and session are fixed, allocate the check again and watch the same question close across the team"
-        ],
-        "tags": [
-          {
-            "label": "Policy gap detection",
-            "href": "/policy-gap-detection"
-          },
-          {
-            "label": "Out of date policies",
-            "href": "/uses/out-of-date-policies"
-          }
-        ],
-        "mock": {
-          "type": "training",
-          "module": "Falls Prevention (updated)",
-          "questions": [
-            "Our policy now says when a resident may be moved after a fall. What is the first step?",
-            "Who completes the post fall record, and by when?"
-          ],
-          "staff_count": 8
-        }
-      }
-    ]
-  },
-  "talk": {
-    "heading": "The questions managers ask, and how CareStream answers them",
-    "sub": "Read this as a conversation. The questions are the ones we hear most.",
-    "items": [
-      {
-        "q": "How would I even notice that most of my team got the same thing wrong?",
-        "a": "After you allocate the training, the Knowledge gaps view in Analytics lists the most missed questions and the weakest topics, with how many staff each one affects. A question missed by six people sits at the top, and a Monday digest email brings the same picture to you."
-      },
-      {
-        "q": "Is this a training needs analysis?",
-        "a": "Not a formal one, and CareStream does not run one for you. A formal training needs analysis is something you plan and judge. What the product gives you is real evidence from the team's own answers, which is the part most managers lack when they set out to <a href=\"/blog/what-should-a-care-home-training-matrix-actually-contain\">plan training around real needs</a>."
-      },
-      {
-        "q": "A wrong answer goes to the carer. Do I get told?",
-        "a": "Not each time. Nothing alerts you on every wrong answer. You see it in the Knowledge gaps view and the Monday digest, so check it each week after a new session. The carer gets an email, at most once a day and in English, and sees the question in their Follow-up tab."
-      },
-      {
-        "q": "So what do the carers do with a wrong answer?",
-        "a": "They open their Follow-up tab in the Staff Hub and choose Learn &amp; retry, a short lesson with why it matters, what to remember and a realistic situation, then a fresh question. Or they choose Just retry, the same question again. They can retry as often as they need."
-      },
-      {
-        "q": "What if the policy itself is the problem?",
-        "a": "The lessons are built from your own policies where they cover the topic. Where a policy is vague or says nothing, the lesson falls back on general good practice. That difference is a clue. The <a href=\"/policy-gap-detection\">free policy screening</a> can help you find weak wording, and fixing gaps is a Professional and above feature."
-      },
-      {
-        "q": "Does a face to face session set this off by itself?",
-        "a": "No. A session does not trigger anything automatically. After the session, you allocate the adhoc module yourself. On Professional and above, the face to face router can send a catch up module to the people who attended. <a href=\"/uses/face-to-face-training\">Here is how that works</a>."
-      },
-      {
-        "q": "How do I try it, and what does it cost?",
-        "a": "You can start a 14 day free trial by creating a free account at <a href=\"/register\">the sign up page</a>. The adhoc training screen is on the paid plans, so the trial is the way to see the loop with your own policies. Current plans are on the <a href=\"/pricing\">pricing page</a>."
-      }
-    ]
-  },
-  "limits": {
-    "heading": "It shows you the pattern. You still decide what it means.",
-    "cards": [
-      {
-        "title": "It does not decide why the team got it wrong",
-        "body": "The Knowledge gaps view shows what was missed and by how many. Whether the cause is the slides, the policy or the room is your judgement."
-      },
-      {
-        "title": "It does not alert you to each wrong answer",
-        "body": "You see shared gaps in the Knowledge gaps view and the Monday digest. If you want to catch a pattern early, look at the view in the days after a session."
-      },
-      {
-        "title": "It does not fix the policy for you on every plan",
-        "body": "Free policy screening points at weak wording. Gap fixes are Professional and above, and the adhoc training screen and translation are on the paid plans only."
-      }
-    ]
-  },
-  "read_next": [
-    "policy-gap-analysis-for-care-homes",
-    "how-do-you-run-in-house-training-in-a-care-home",
-    "incident-led-training-in-care"
-  ],
-  "faqs": {
-    "heading": "Shared wrong answers and training gaps, answered",
-    "groups": [
-      {
-        "group": "Finding the gap",
-        "items": [
-          {
-            "q": "How do I identify training needs in a care home?",
-            "a": "Start from evidence. Ask short questions after a session, look at which ones people miss, and compare that with incidents, audits and feedback from the floor. CareStream shows the most missed questions and weakest topics across the team, which gives you a starting point to <a href=\"/training-platform\">identify training needs</a> from real answers."
-          },
-          {
-            "q": "What is the difference between a learning needs analysis and a training needs analysis?",
-            "a": "In practice the two terms are used for the same job: working out what people need to learn so you can plan training. A learning needs analysis tends to focus on the person, while a training needs analysis often looks at the whole service. Either way, real answers from your team beat guesswork."
-          },
-          {
-            "q": "Can CareStream do a skills gap analysis for my staff?",
-            "a": "It does not run a formal skills gap analysis. It does show where knowledge is weak, because a wrong answer to a question on a topic is recorded and grouped, so you can see weak topics and who is affected. Hands on skills still need to be observed by a competent person."
-          },
-          {
-            "q": "What is a training gap analysis, and is this one?",
-            "a": "A training gap analysis compares what staff need to know with what they do know. The Knowledge gaps view gives you the second half for the topics you have checked. The first half, deciding what your team needs to know, stays with you and your policies."
-          }
-        ]
-      },
-      {
-        "group": "Acting on it",
-        "items": [
-          {
-            "q": "What is a good way to check for understanding after a session?",
-            "a": "Ask a few short, practical questions within days of the session, in a form people can answer on their phone. Keep them about what to do, not what to recite. Allocating <a href=\"/uses/adhoc-training\">adhoc training</a> on the topic does this, and a wrong answer gives the carer a short lesson."
-          },
-          {
-            "q": "How do I measure training effectiveness without a big project?",
-            "a": "Look at three things: did people answer the checks correctly, did wrong answers close after a lesson, and did practice on the floor improve. CareStream covers the first two in the Knowledge gaps view, including closed gaps in the last 30 days. For the third, use your audits and observation, and see <a href=\"/blog/incident-led-training-in-care\">incident led training</a>."
-          },
-          {
-            "q": "Should I retrain everyone who got it wrong?",
-            "a": "Not before you look at the pattern. If most of the team missed the same question, check the slides and the policy first. Each carer can still use Learn &amp; retry for a short lesson, but the lasting fix is a clearer session."
-          }
-        ]
-      }
-    ]
-  },
-  "guide": {
-    "heading": "A practical way to act on a shared wrong answer",
-    "lede": "When a pattern appears, resist the urge to retrain everyone. Work out the cause first.",
-    "sections": [
-      {
-        "h3": "Why a plain training needs analysis often starts here",
-        "paragraphs": [
-          "Care providers must make sure staff receive the training and support they need, set out in <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">regulation 18 of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014</a>. The same regulations expect providers to assess, monitor and improve the quality and safety of the service, in <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">regulation 17</a>. Looking at what the team actually understood after a session is one practical way to do both."
-        ]
-      },
-      {
-        "h3": "Five questions to ask before you retrain anyone",
-        "checklist": [
-          "Did most of the team choose the same wrong answer, or did the wrong answers vary?",
-          "Does the trainer's wording match what your policy says on that point?",
-          "Is the question itself clear, or could a careful reader take it two ways?",
-          "Were the people who missed it in the same shift, team or training group?"
-        ]
-      },
-      {
-        "h3": "Then fix the cause once",
-        "paragraphs": [
-          "If the slide or the policy was the cause, change it, tell the trainer and allocate the check again to the same group. If only one or two people missed it, a short conversation and the Learn &amp; retry lesson is enough. Keep a note of what you found and what you changed. That note is useful evidence of how you learn from your own training."
-        ]
-      }
-    ],
-    "note": "<b>For the inspector.</b> Keep the questions, the results, what you found and what you changed together, so you can show that you act on what your team tells you."
+  {
+   "title": "Adhoc training after an incident or a session",
+   "body": "Allocate a short module on any topic, to the people who need it, when you need it.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
   }
+ ],
+ "intro": {
+  "heading": "One wrong answer is a person. Six wrong answers is a pattern.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "After a falls prevention session, a manager allocates a short set of questions to the day team. A week later she opens the results expecting the odd slip. Instead, six of the eight carers have chosen the same wrong answer about what to do straight after a resident is found on the floor. Nobody is careless. They all sat the same session and read the same policy. If she treats each carer separately, she will repeat the same conversation six times and the cause will stay put. Here is how that plays out."
+ },
+ "trail": [
+  {
+   "when": "Monday",
+   "text": "A trainer runs falls prevention for the day team.",
+   "kind": "ok"
+  },
+  {
+   "when": "Same afternoon",
+   "text": "Everyone joins in and the questions in the room sound confident.",
+   "kind": "ok"
+  },
+  {
+   "when": "Tuesday",
+   "text": "The manager allocates a short knowledge check on falls to eight carers.",
+   "kind": "ok"
+  },
+  {
+   "when": "The following week",
+   "text": "Six of eight chose the same wrong answer about moving a resident after a fall.",
+   "kind": "gap"
+  },
+  {
+   "when": "First instinct",
+   "text": "Book all six in for a retake. Nobody asks why they all went the same way.",
+   "kind": "gap"
+  },
+  {
+   "when": "Buried in the paperwork",
+   "text": "The post fall policy is vague on when to move someone. Nobody has read it side by side with the slides.",
+   "kind": "gap"
+  },
+  {
+   "when": "A month on",
+   "text": "The same wording is in the trainer's slides, so the next team will repeat the answer.",
+   "kind": "gap"
+  },
+  {
+   "when": "After a real fall",
+   "text": "An inspector asks: “What did you change when you found the team did not understand?”",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The people were not the problem.</b> A shared wrong answer is information about the session or the policy. Here is how CareStream helps you see it and act on it.",
+ "why": {
+  "heading": "A shared wrong answer is a signal about your training, not your staff",
+  "sub": "One person missing a question is a conversation. Most of the team missing it is a different job.",
+  "cards": [
+   {
+    "icon": "alert",
+    "title": "Retraining everyone hides the cause",
+    "body": "If the slides or the policy were unclear, another retake teaches the same unclear thing again."
+   },
+   {
+    "icon": "chat",
+    "title": "Nobody compares the answers side by side",
+    "body": "Each result sits in a separate record. Without a team view, a manager has to read every one to notice that six of them are the same."
+   },
+   {
+    "icon": "tick",
+    "title": "Good managers fix the wording once",
+    "body": "Change the slide, tighten the policy and the whole team benefits. That is faster and more likely to last than chasing six individuals."
+   }
+  ]
+ },
+ "how": {
+  "heading": "From a shared wrong answer to a fixed session",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, followed through to the team view. See also <a href=\"/uses/adhoc-training\">adhoc training after an incident</a> and <a href=\"/uses/policy-gaps\">finding gaps in your policies</a>.",
+  "blocks": [
+   {
+    "heading": "Allocate a falls check to the team that attended",
+    "bullets": [
+     "In the Training screen, pick the topic module that matches the session, such as falls prevention, and tick the staff who attended",
+     "The lessons and questions are built from your own policies where they cover the topic, with general good practice as the fallback, and you can edit and preview them first",
+     "Staff complete it in the Staff Hub on their own phone. This is a simple check for understanding after the session"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Falls Prevention",
+     "questions": [
+      "A resident is found on the floor and says they are fine. What do you do first?",
+      "Who should you tell after a fall, and what should you record?",
+      "Which signs after a fall mean you should call for medical help straight away?"
+     ],
+     "staff_count": 8
+    }
+   },
+   {
+    "heading": "Each wrong answer becomes that carer's short lesson",
+    "bullets": [
+     "A wrong answer goes into the carer's Follow-up tab in the Staff Hub, and they get an email, at most once a day and in English",
+     "They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question, as often as they need",
+     "Each carer is helped on the spot, so you can spend your time on the pattern and not on six separate catch ups"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Falls Prevention",
+     "question": "A resident is found on the floor and says they are fine. What do you do first?",
+     "why": "A person who says they are fine can still be hurt, and moving them too early can make an injury worse.",
+     "remember": [
+      "Stay with the person and keep them calm",
+      "Check for pain and injury before anyone is moved",
+      "Follow your home's post fall procedure and record what you saw"
+     ],
+     "picture": "A resident is sitting on the bathroom floor and insists they just slipped."
+    }
+   },
+   {
+    "heading": "See the shared gaps across the team",
+    "bullets": [
+     "In Analytics, the Knowledge gaps view lists the most missed questions, so a question six people missed stands out",
+     "Weakest topics show where a whole subject needs another look, and a count of staff affected tells you how wide the gap is",
+     "A Monday digest email brings the picture to you. Nothing alerts you on each wrong answer, so look at it weekly"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 9,
+      "affected": 6,
+      "closed": 14,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Moving a resident after a fall",
+       "6 staff"
+      ],
+      [
+       "What to record after a fall",
+       "3 staff"
+      ],
+      [
+       "Who to tell after a fall",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Falls Prevention",
+       "9 gaps"
+      ],
+      [
+       "Safeguarding Adults",
+       "2 gaps"
+      ]
+     ]
+    }
+   },
+   {
+    "heading": "Trace it back to the policy, then fix it",
+    "bullets": [
+     "Where your policy is vague or silent, the lesson falls back on general good practice, which is a prompt to tighten the policy",
+     "The free policy screening and the out of date scan can show where wording is weak, and gap fixes are on Professional and above",
+     "Once the policy and session are fixed, allocate the check again and watch the same question close across the team"
+    ],
+    "tags": [
+     {
+      "label": "Policy gap detection",
+      "href": "/policy-gap-detection"
+     },
+     {
+      "label": "Out of date policies",
+      "href": "/uses/out-of-date-policies"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Falls Prevention (updated)",
+     "questions": [
+      "Our policy now says when a resident may be moved after a fall. What is the first step?",
+      "Who completes the post fall record, and by when?"
+     ],
+     "staff_count": 8
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "How would I even notice that most of my team got the same thing wrong?",
+    "a": "After you allocate the training, the Knowledge gaps view in Analytics lists the most missed questions and the weakest topics, with how many staff each one affects. A question missed by six people sits at the top, and a Monday digest email brings the same picture to you."
+   },
+   {
+    "q": "Is this a training needs analysis?",
+    "a": "Not a formal one, and CareStream does not run one for you. A formal training needs analysis is something you plan and judge. What the product gives you is real evidence from the team's own answers, which is the part most managers lack when they set out to <a href=\"/blog/what-should-a-care-home-training-matrix-actually-contain\">plan training around real needs</a>."
+   },
+   {
+    "q": "A wrong answer goes to the carer. Do I get told?",
+    "a": "Not each time. Nothing alerts you on every wrong answer. You see it in the Knowledge gaps view and the Monday digest, so check it each week after a new session. The carer gets an email, at most once a day and in English, and sees the question in their Follow-up tab."
+   },
+   {
+    "q": "So what do the carers do with a wrong answer?",
+    "a": "They open their Follow-up tab in the Staff Hub and choose Learn &amp; retry, a short lesson with why it matters, what to remember and a realistic situation, then a fresh question. Or they choose Just retry, the same question again. They can retry as often as they need."
+   },
+   {
+    "q": "What if the policy itself is the problem?",
+    "a": "The lessons are built from your own policies where they cover the topic. Where a policy is vague or says nothing, the lesson falls back on general good practice. That difference is a clue. The <a href=\"/policy-gap-detection\">free policy screening</a> can help you find weak wording, and fixing gaps is a Professional and above feature."
+   },
+   {
+    "q": "Does a face to face session set this off by itself?",
+    "a": "No. A session does not trigger anything automatically. After the session, you allocate the adhoc module yourself. On Professional and above, the face to face router can send a catch up module to the people who attended. <a href=\"/uses/face-to-face-training\">Here is how that works</a>."
+   },
+   {
+    "q": "How do I try it, and what does it cost?",
+    "a": "You can start a 14 day free trial by creating a free account at <a href=\"/register\">the sign up page</a>. The adhoc training screen is on the paid plans, so the trial is the way to see the loop with your own policies. Current plans are on the <a href=\"/pricing\">pricing page</a>."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "It shows you the pattern. You still decide what it means.",
+  "cards": [
+   {
+    "title": "It does not decide why the team got it wrong",
+    "body": "The Knowledge gaps view shows what was missed and by how many. Whether the cause is the slides, the policy or the room is your judgement."
+   },
+   {
+    "title": "It does not alert you to each wrong answer",
+    "body": "You see shared gaps in the Knowledge gaps view and the Monday digest. If you want to catch a pattern early, look at the view in the days after a session."
+   },
+   {
+    "title": "It does not fix the policy for you on every plan",
+    "body": "Free policy screening points at weak wording. Gap fixes are Professional and above, and the adhoc training screen and translation are on the paid plans only."
+   }
+  ]
+ },
+ "read_next": [
+  "policy-gap-analysis-for-care-homes",
+  "how-do-you-run-in-house-training-in-a-care-home",
+  "incident-led-training-in-care"
+ ],
+ "faqs": {
+  "heading": "Shared wrong answers and training gaps, answered",
+  "groups": [
+   {
+    "group": "Finding the gap",
+    "items": [
+     {
+      "q": "How do I identify training needs in a care home?",
+      "a": "Start from evidence. Ask short questions after a session, look at which ones people miss, and compare that with incidents, audits and feedback from the floor. CareStream shows the most missed questions and weakest topics across the team, which gives you a starting point to <a href=\"/training-platform\">identify training needs</a> from real answers."
+     },
+     {
+      "q": "What is the difference between a learning needs analysis and a training needs analysis?",
+      "a": "In practice the two terms are used for the same job: working out what people need to learn so you can plan training. A learning needs analysis tends to focus on the person, while a training needs analysis often looks at the whole service. Either way, real answers from your team beat guesswork."
+     },
+     {
+      "q": "Can CareStream do a skills gap analysis for my staff?",
+      "a": "It does not run a formal skills gap analysis. It does show where knowledge is weak, because a wrong answer to a question on a topic is recorded and grouped, so you can see weak topics and who is affected. Hands on skills still need to be observed by a competent person."
+     },
+     {
+      "q": "What is a training gap analysis, and is this one?",
+      "a": "A training gap analysis compares what staff need to know with what they do know. The Knowledge gaps view gives you the second half for the topics you have checked. The first half, deciding what your team needs to know, stays with you and your policies."
+     }
+    ]
+   },
+   {
+    "group": "Acting on it",
+    "items": [
+     {
+      "q": "What is a good way to check for understanding after a session?",
+      "a": "Ask a few short, practical questions within days of the session, in a form people can answer on their phone. Keep them about what to do, not what to recite. Allocating <a href=\"/uses/adhoc-training\">adhoc training</a> on the topic does this, and a wrong answer gives the carer a short lesson."
+     },
+     {
+      "q": "How do I measure training effectiveness without a big project?",
+      "a": "Look at three things: did people answer the checks correctly, did wrong answers close after a lesson, and did practice on the floor improve. CareStream covers the first two in the Knowledge gaps view, including closed gaps in the last 30 days. For the third, use your audits and observation, and see <a href=\"/blog/incident-led-training-in-care\">incident led training</a>."
+     },
+     {
+      "q": "Should I retrain everyone who got it wrong?",
+      "a": "Not before you look at the pattern. If most of the team missed the same question, check the slides and the policy first. Each carer can still use Learn &amp; retry for a short lesson, but the lasting fix is a clearer session."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to act on a shared wrong answer",
+  "lede": "When a pattern appears, resist the urge to retrain everyone. Work out the cause first.",
+  "sections": [
+   {
+    "h3": "Why a plain training needs analysis often starts here",
+    "paragraphs": [
+     "Care providers must make sure staff receive the training and support they need, set out in <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">regulation 18 of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014</a>. The same regulations expect providers to assess, monitor and improve the quality and safety of the service, in <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">regulation 17</a>. Looking at what the team actually understood after a session is one practical way to do both."
+    ]
+   },
+   {
+    "h3": "Five questions to ask before you retrain anyone",
+    "checklist": [
+     "Did most of the team choose the same wrong answer, or did the wrong answers vary?",
+     "Does the trainer's wording match what your policy says on that point?",
+     "Is the question itself clear, or could a careful reader take it two ways?",
+     "Were the people who missed it in the same shift, team or training group?"
+    ]
+   },
+   {
+    "h3": "Then fix the cause once",
+    "paragraphs": [
+     "If the slide or the policy was the cause, change it, tell the trainer and allocate the check again to the same group. If only one or two people missed it, a short conversation and the Learn &amp; retry lesson is enough. Keep a note of what you found and what you changed. That note is useful evidence of how you learn from your own training."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the questions, the results, what you found and what you changed together, so you can show that you act on what your team tells you."
+ }
 }

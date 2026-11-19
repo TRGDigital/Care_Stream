@@ -100,7 +100,7 @@ contentRoutineRouter.post('/collections', async (req: Request, res: Response) =>
 // POST /routine/content/image  { topic, scene, key? }  ->  { url, alt_hint }
 // For when the stock library has nothing that fits a page. The scene is a plain description of one ordinary care moment. The image is
 // generated in the house flat teal style (prompt editable as `blog_image_generation` in Platform Console, AI Prompts), stored, and its
-// public URL returned. Capped so a runaway routine cannot spend: 12 images a day in total, 3 per request.
+// public URL returned. Capped so a runaway routine cannot spend: 24 images a day in total (every blog now has a generated hero, plus inline and collection images), 3 per request.
 let imageDay = ''; let imageCount = 0
 contentRoutineRouter.post('/image', async (req: Request, res: Response) => {
   const topic = String(req.body?.topic ?? '').trim().slice(0, 200)
@@ -108,7 +108,7 @@ contentRoutineRouter.post('/image', async (req: Request, res: Response) => {
   if (topic.length < 3 || scene.length < 15) { err(res, 'VALIDATION_ERROR', 'topic and a scene description (a sentence or two) are required.'); return }
   const today = new Date().toISOString().slice(0, 10)
   if (imageDay !== today) { imageDay = today; imageCount = 0 }
-  if (imageCount >= 12) { err(res, 'DAILY_LIMIT', 'The daily image limit has been reached. Use a stock image or flag [CHECK] new image needed.', 429); return }
+  if (imageCount >= 24) { err(res, 'DAILY_LIMIT', 'The daily image limit has been reached. Flag [CHECK] new image needed. Do not use a stock image as a blog hero.', 429); return }
   imageCount++
   try {
     const url = await generateContentImage(topic, scene, String(req.body?.key || topic))

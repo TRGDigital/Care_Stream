@@ -84,10 +84,13 @@ export async function generateModuleIllustration(moduleId: string): Promise<stri
   const summary = asText((lc as any).summary, 600)
   const scene = await sceneFor(module.name, 'the course cover: a welcoming, representative moment for the whole topic', summary, '', '')
   const { key, alt } = await sceneKey(module.name, scene, `trn-cover-${moduleId}`, 'the course cover')
-  if (alt) (lc as any).cover_alt = alt
-  // keep the first previous cover so the original can always be put back
-  if (module.illustration_key && !(lc as any).cover_key_prev) (lc as any).cover_key_prev = module.illustration_key
-  await (prisma as any).trainingModule.update({ where: { id: moduleId }, data: { illustration_key: key, learning_content: lc } })
+  // Re-read just before writing: several images of one module can finish together, and each write replaces the
+  // whole lesson data, so a stale copy would wipe the others' new pictures.
+  const fresh = await (prisma as any).trainingModule.findUnique({ where: { id: moduleId }, select: { illustration_key: true, learning_content: true } })
+  const flc = (fresh?.learning_content && typeof fresh.learning_content === 'object') ? { ...fresh.learning_content } : {}
+  if (fresh?.illustration_key && !(flc as any).cover_key_prev) (flc as any).cover_key_prev = fresh.illustration_key
+  if (alt) (flc as any).cover_alt = alt
+  await (prisma as any).trainingModule.update({ where: { id: moduleId }, data: { illustration_key: key, learning_content: flc } })
   return key
 }
 
@@ -106,9 +109,15 @@ export async function generateSectionImage(moduleId: string, sectionIndex: numbe
   const scene = await sceneFor(module.name, String(sec.heading || 'a lesson section'), asText(sec.body, 700), asText(sec.scenario, 500), asText(sec.image_prompt, 300))
   const heading = String(sec.heading || 'a lesson section')
   const { key, alt } = await sceneKey(module.name, scene, `trn-${moduleId}-${sectionIndex}`, heading)
-  sections[sectionIndex] = { ...sec, image_key: key, ...(alt ? { image_alt: alt } : {}), ...(sec.image_key && !sec.image_key_prev ? { image_key_prev: sec.image_key } : {}) }
-  ;(lc as any).sections = sections
-  await (prisma as any).trainingModule.update({ where: { id: moduleId }, data: { learning_content: lc } })
+  // Re-read just before writing (see the cover above): only this section's picture and alt change.
+  const fresh = await (prisma as any).trainingModule.findUnique({ where: { id: moduleId }, select: { learning_content: true } })
+  const flc = (fresh?.learning_content && typeof fresh.learning_content === 'object') ? { ...fresh.learning_content } : {}
+  const fsections = Array.isArray((flc as any).sections) ? [...(flc as any).sections] : []
+  const fsec = fsections[sectionIndex]
+  if (!fsec) throw new Error('Section not found')
+  fsections[sectionIndex] = { ...fsec, image_key: key, ...(alt ? { image_alt: alt } : {}), ...(fsec.image_key && !fsec.image_key_prev ? { image_key_prev: fsec.image_key } : {}) }
+  ;(flc as any).sections = fsections
+  await (prisma as any).trainingModule.update({ where: { id: moduleId }, data: { learning_content: flc } })
   return key
 }
 

@@ -229,7 +229,7 @@
     "heading": "See where your set stands, and keep it reviewed",
     "bullets": [
      "The gap view shows how many regulations have a policy behind them, and which still need work",
-     "Run the out of date scan for old terms and overdue review dates. It uses no AI and no tokens",
+     "Run the out of date scan for old terms and overdue review dates. It uses no machine learning and no tokens",
      "Make each policy review easier by working from one place, with suggested changes you adopt or ignore"
     ],
     "tags": [
@@ -374,8 +374,8 @@
     "group": "About CareStream",
     "items": [
      {
-      "q": "Does the missing policy check cost AI tokens?",
-      "a": "Showing the missing policies is read only and free. It relies on a coverage run, which uses AI tokens, so run that first. The separate out of date scan uses none."
+      "q": "Does the missing policy check cost tokens?",
+      "a": "Showing the missing policies is read only and free. It relies on a coverage run, which uses tokens, so run that first. The separate out of date scan uses none."
      },
      {
       "q": "Is the missing policy check on every plan?",

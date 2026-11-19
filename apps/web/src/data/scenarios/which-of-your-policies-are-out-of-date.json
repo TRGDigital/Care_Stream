@@ -4,9 +4,9 @@
  "order": 40,
  "title": "Your next policy review: <em>which of your policies are out of date?</em>",
  "meta_title": "Policy Review for Care Homes: Find Outdated Policies | CareStreamAI",
- "meta_description": "Run a policy review that lists outdated wording, placeholders and overdue review dates in your care home policies. No AI guesswork, no tokens used.",
+ "meta_description": "Run a policy review that lists outdated wording, placeholders and overdue review dates in your care home policies. No guesswork, no tokens used.",
  "eyebrow": "Scenario",
- "lede": "A good policy review starts with knowing which documents have drifted. CareStream <a href=\"/training-platform\">scans your uploaded policies</a> for old names, leftover placeholders and overdue review dates, then gives you a plain list. It is a deterministic check, so there is no AI guesswork in the list itself.",
+ "lede": "A good policy review starts with knowing which documents have drifted. CareStream <a href=\"/training-platform\">scans your uploaded policies</a> for old names, leftover placeholders and overdue review dates, then gives you a plain list. It is a deterministic check, so there is no guesswork in the list itself.",
  "fine": "14 day free trial · Set up in a day · UK data residency",
  "panel": {
   "title": "Before the review",
@@ -38,7 +38,7 @@
  "image": "https://api.carestreamai.com/public/policy-shop/image/85597e52-9496-4ad4-85e7-775008be6142.webp",
  "image_alt": "A manager holds up a policy folder with a few coloured tabs while a deputy beside them checks a printed list, both thoughtful in a bright office",
  "card_title": "Which of your policies are out of date? Get a plain list",
- "card_snippet": "A folder of policies looks complete until someone reads it closely. Scan your uploaded policies for old names, placeholders and overdue review dates, with no AI guesswork in the list.",
+ "card_snippet": "A folder of policies looks complete until someone reads it closely. Scan your uploaded policies for old names, placeholders and overdue review dates, with no guesswork in the list.",
  "primary_keyword": "policy review",
  "secondary_keywords": [
   "policy update",
@@ -144,7 +144,7 @@
    {
     "heading": "Scan for old wording, then brief staff on the change",
     "bullets": [
-     "On the Gaps page, the Out-of-date content step has a Scan policies button. It runs at once and uses none of your AI tokens",
+     "On the Gaps page, the Out-of-date content step has a Scan policies button. It runs at once and uses none of your tokens",
      "It looks for superseded names, pandemic era wording, unfilled placeholders, very thin policies and overdue reviews, each marked high, medium or low",
      "Once you have updated a policy, allocate an adhoc training module on that topic so staff are checked on the new wording. You can edit and preview it first"
     ],
@@ -280,7 +280,7 @@
   "items": [
    {
     "q": "How does CareStream tell me which policies are out of date?",
-    "a": "You upload your policies, then run the Scan policies step on the Gaps page. It checks the text for superseded names, pandemic era wording, unfilled placeholders, thin content and overdue review dates, and gives each policy a severity and a score. It is a fixed check with no AI in it, so you get the same list each time for the same text."
+    "a": "You upload your policies, then run the Scan policies step on the Gaps page. It checks the text for superseded names, pandemic era wording, unfilled placeholders, thin content and overdue review dates, and gives each policy a severity and a score. It is a fixed check with no machine learning in it, so you get the same list each time for the same text."
    },
    {
     "q": "Does it find every outdated point?",
@@ -345,8 +345,8 @@
       "a": "Old names for bodies, laws and frameworks, pandemic era wording, unfilled placeholders such as XXXX, TBC or [insert name], very little content or no purpose or scope, and overdue or missing review dates. Each finding is high, medium or low."
      },
      {
-      "q": "Does the scan use AI?",
-      "a": "No. The out of date scan is a fixed check and uses none of your AI tokens. Some other gap checks, such as example wording, are drafted by our own machine learning and are suggestions for you to review."
+      "q": "Does the scan use machine learning?",
+      "a": "No. The out of date scan is a fixed check and uses none of your tokens. Some other gap checks, such as example wording, are drafted by our own machine learning and are suggestions for you to review."
      },
      {
       "q": "Can I run a policy update check on only a few policies?",

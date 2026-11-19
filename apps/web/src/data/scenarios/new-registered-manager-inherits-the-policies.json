@@ -96,7 +96,7 @@
         "heading": "Screen your first five policies, then brief the team",
         "bullets": [
           "Upload up to five care home policies on the Free plan. All four checks run on them: regulation coverage, out of date wording, contradictions between policies and CQC wording",
-          "The out of date scan is a plain rule based check. It uses no AI and no credits, so run it as often as you like",
+          "The out of date scan is a plain rule based check. It uses no machine learning and no credits, so run it as often as you like",
           "When you know what matters, allocate adhoc training on that topic to staff, built from your own policies. You can edit and preview it first. Adhoc training is on the paid plans"
         ],
         "tags": [
@@ -190,7 +190,7 @@
       },
       {
         "q": "How does it spot outdated policies?",
-        "a": "The out of date scan is a rule based check with no AI. It looks for things such as superseded legislation or bodies, wording from the pandemic, unfilled placeholders like TBC, very thin policies and policies that are overdue for review or have no review date. Each finding comes with a suggested fix you can review."
+        "a": "The out of date scan is a rule based check with no machine learning. It looks for things such as superseded legislation or bodies, wording from the pandemic, unfilled placeholders like TBC, very thin policies and policies that are overdue for review or have no review date. Each finding comes with a suggested fix you can review."
       },
       {
         "q": "What can I do on the Free plan, and what needs a paid plan?",

@@ -121,7 +121,7 @@
    {
     "icon": "chat",
     "title": "Machine translation is a starting point",
-    "body": "CareStream translates with AI, not a professional human translator. Most of it reads well, and some phrases will not suit how your team speaks."
+    "body": "CareStream translates with our own machine learning, not a professional human translator. Most of it reads well, and some phrases will not suit how your team speaks."
    },
    {
     "icon": "alert",
@@ -278,7 +278,7 @@
   "items": [
    {
     "q": "How good is the translation in the first place?",
-    "a": "It is machine translation, done by AI, using your own translation glossary and any wording your team has approved. It is not a professional human translation, and we do not measure quality language by language. That is exactly why the suggestion step exists."
+    "a": "It is machine translation, done by our own machine learning, using your own translation glossary and any wording your team has approved. It is not a professional human translation, and we do not measure quality language by language. That is exactly why the suggestion step exists."
    },
    {
     "q": "How do staff suggest a better translation?",
@@ -340,7 +340,7 @@
     "items": [
      {
       "q": "How accurate is the machine translation in CareStream?",
-      "a": "It is done by AI, with your own glossary and approved staff suggestions, and accuracy is not measured per language. Most text reads well, and some phrases will not suit your team. Treat machine translation accuracy as good, not perfect, and use suggestions to improve it."
+      "a": "It is done by our own machine learning, with your own glossary and approved staff suggestions, and accuracy is not measured per language. Most text reads well, and some phrases will not suit your team. Treat machine translation accuracy as good, not perfect, and use suggestions to improve it."
      },
      {
       "q": "How can I improve translation for my team's language?",

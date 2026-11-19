@@ -300,7 +300,7 @@
    },
    {
     "q": "How does it relate to the rest of the policy checks?",
-    "a": "It is one of four steps on the <a href=\"/policy-gap-detection\">Policy Gap Detection</a> page: regulation coverage, out of date content, consistency and CQC wording. You can run them in any order. The out of date scan is a plain check that uses no AI. The <a href=\"/uses/out-of-date-policies\">out of date policies</a> page covers it."
+    "a": "It is one of four steps on the <a href=\"/policy-gap-detection\">Policy Gap Detection</a> page: regulation coverage, out of date content, consistency and CQC wording. You can run them in any order. The out of date scan is a plain check that uses no machine learning. The <a href=\"/uses/out-of-date-policies\">out of date policies</a> page covers it."
    },
    {
     "q": "How do I make sure staff know about the agreed wording?",

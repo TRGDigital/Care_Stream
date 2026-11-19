@@ -228,7 +228,7 @@
     "heading": "See where the picture is still patchy",
     "bullets": [
      "The Knowledge gaps view shows the most missed questions and the weakest topics once staff have been briefed",
-     "The out of date scan is separate, runs instantly and uses none of your AI tokens",
+     "The out of date scan is separate, runs instantly and uses none of your tokens",
      "Read sessions are recorded, so you can see who has opened a policy, though not a signature"
     ],
     "tags": [
@@ -407,7 +407,7 @@
    {
     "h3": "Check for older wording as you go",
     "paragraphs": [
-     "While you are in the policy, look for terms from older frameworks, including key lines of enquiry, and for placeholder text or a review date that has passed. The out of date scan flags these without using any AI, so it is a quick way to find them."
+     "While you are in the policy, look for terms from older frameworks, including key lines of enquiry, and for placeholder text or a review date that has passed. The out of date scan flags these without using any machine learning, so it is a quick way to find them."
     ]
    }
   ],

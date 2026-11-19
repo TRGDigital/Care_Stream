@@ -116,7 +116,7 @@
     }
    },
    {
-    "heading": "The out of date scan uses no AI at all",
+    "heading": "The out of date scan uses no machine learning at all",
     "bullets": [
      "It looks for replaced legislation, bodies and frameworks, old time bound wording, unfilled placeholders and thin policies",
      "It runs instantly and uses none of your allowance. It is a fixed set of checks, so the same policy gives the same answer",
@@ -180,7 +180,7 @@
    },
    {
     "q": "How does it know a policy is out of date?",
-    "a": "That check is a fixed scan with no AI. It looks for things like replaced legislation, bodies and frameworks, wording from the pandemic era, unfilled placeholders and missing review dates. It uses none of your allowance."
+    "a": "That check is a fixed scan with no machine learning. It looks for things like replaced legislation, bodies and frameworks, wording from the pandemic era, unfilled placeholders and missing review dates. It uses none of your allowance."
    },
    {
     "q": "Will it rewrite my policies for me?",

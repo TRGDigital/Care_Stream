@@ -3,8 +3,8 @@
 // requires: the plan feature (PlanFeatures key) and the plan name that first includes it, for the upgrade message.
 // Plans (checked in the plans table 19 Nov 2026): Starter has none of these; Professional adds analytics, CQC report, face to face,
 // gap detection; Enterprise adds custom audits, effectiveness, training impact and workforce compliance. Free has gap detection.
-export type Plan = 'Professional' | 'Enterprise'
-export type FeatureKey = 'has_advanced_analytics' | 'has_cqc_report' | 'has_gap_detection' | 'has_face_to_face' | 'has_custom_audits' | 'has_effectiveness' | 'has_training_impact' | 'has_workforce_compliance'
+export type Plan = 'Starter' | 'Professional' | 'Enterprise'
+export type FeatureKey = 'has_advanced_analytics' | 'has_cqc_report' | 'has_gap_detection' | 'has_face_to_face' | 'has_custom_audits' | 'has_effectiveness' | 'has_training_impact' | 'has_workforce_compliance' | 'has_supervisions'
 
 export type FeatureEntry = {
   id: string
@@ -43,7 +43,7 @@ export const FEATURES: FeatureEntry[] = [
   f('role-holders', 'Team', 'Named role holders', '/settings', 'Registered manager, safeguarding lead and other named roles.', ['registered manager', 'safeguarding lead', 'named person', 'nominated individual', 'change a name', 'roles'], { guide: 'role-holders' }),
   f('incentives', 'Team', 'Staff incentives', '/incentives', 'Rewards and recognition for staff who complete training and meet goals.', ['rewards', 'recognition', 'bonus', 'vouchers', 'points', 'gift', 'motivate'], { requires: { feature: 'has_cqc_report', plan: 'Professional' }, guide: 'staff-incentives' }),
   f('workforce', 'Team', 'Workforce compliance register', '/workforce', 'DBS, right to work, registration and references in one register.', ['hr', 'human resources', 'personnel', 'dbs', 'right to work', 'registration', 'nmc', 'references', 'credentials', 'expiry', 'compliance register'], { requires: { feature: 'has_workforce_compliance', plan: 'Enterprise' }, guide: 'workforce' }),
-  f('supervisions', 'Team', 'Supervisions and appraisals', '/workforce?tab=supervisions', 'Record supervisions and appraisals, set actions and see what is overdue.', ['supervision', 'appraisal', '1 to 1', 'one to one', 'performance review', 'probation', 'overdue'], { requires: { feature: 'has_workforce_compliance', plan: 'Enterprise' }, guide: 'supervisions' }),
+  f('supervisions', 'Team', 'Supervisions and appraisals', '/workforce?tab=supervisions', 'Record supervisions and appraisals, set actions and see what is overdue.', ['supervision', 'appraisal', '1 to 1', 'one to one', 'performance review', 'probation', 'overdue'], { requires: { feature: 'has_supervisions', plan: 'Starter' }, guide: 'supervisions' }),
   f('supervision-training', 'Team', 'Training brief for a supervision', '/workforce?tab=supervisions', 'See how someone is doing on their training before a supervision: scores, what they got wrong, follow up and suggestions.', ['training brief', 'training detail', 'supervision training', 'wrong answers', 'what did they get wrong', 'suggestions', 'prepare for supervision', 'print training', 'email training', 'link training to supervision', 'follow up training'], { requires: { feature: 'has_workforce_compliance', plan: 'Enterprise' }, guide: 'supervisions' }),
   f('translation-review', 'Team', 'Translation review', '/translation-review', 'Check and approve translations of training and policies.', ['translate', 'language', 'translation', 'welsh', 'polish', 'romanian', 'languages']),
   // Reporting
@@ -95,6 +95,7 @@ FEATURES.push(
 
 // Plans in order, for the upgrade message.
 export const PLAN_NOTE: Record<Plan, string> = {
+  Starter: 'Included in the Starter plan and above.',
   Professional: 'Included in the Professional plan and above.',
   Enterprise: 'Included in the Enterprise plan.',
 }

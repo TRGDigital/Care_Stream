@@ -33,6 +33,7 @@ interface PlanData {
   has_effectiveness:           boolean
   has_training_impact:         boolean
   has_workforce_compliance:    boolean
+  has_supervisions:            boolean
   has_audit_recommendations:   boolean
   monthly_annual_license_limit: number | null
 }
@@ -60,6 +61,7 @@ async function loadTenantPlan(tenantId: string): Promise<{
           has_effectiveness:           true,
           has_training_impact:         true,
           has_workforce_compliance:    true,
+          has_supervisions:            true,
           has_audit_recommendations:   true,
           monthly_annual_license_limit: true,
         },
@@ -278,7 +280,7 @@ export async function checkManualKnowledgeLimit(tenantId: string): Promise<void>
 export type PlanFeature =
   | 'has_gap_detection' | 'has_cqc_report' | 'has_advanced_analytics'
   | 'has_face_to_face' | 'has_custom_audits' | 'has_effectiveness' | 'has_training_impact'
-  | 'has_workforce_compliance' | 'has_audit_recommendations'
+  | 'has_workforce_compliance' | 'has_supervisions' | 'has_audit_recommendations'
 
 // Which plan unlocks each feature — used for the upgrade message.
 const FEATURE_TIER: Record<PlanFeature, string> = {
@@ -290,6 +292,7 @@ const FEATURE_TIER: Record<PlanFeature, string> = {
   has_effectiveness:        'Enterprise',
   has_training_impact:      'Enterprise',
   has_workforce_compliance: 'Enterprise',
+  has_supervisions:         'Starter',
   has_audit_recommendations: 'Starter',
 }
 
@@ -338,6 +341,7 @@ export interface PlanFeatures {
   has_effectiveness:       boolean
   has_training_impact:     boolean
   has_workforce_compliance: boolean
+  has_supervisions:        boolean   // supervisions and appraisals: Starter, Professional and Enterprise (the register above is Enterprise only)
   has_audit_recommendations: boolean
   tier:                    string
   annual_license:          Usage  // monthly annual-module allocation quota
@@ -353,7 +357,7 @@ export async function getPlanFeatures(tenantId: string): Promise<PlanFeatures> {
           name: true, price_monthly_pence: true, price_annual_pence: true,
           has_advanced_analytics: true, has_cqc_report: true, has_gap_detection: true,
           has_face_to_face: true, has_custom_audits: true, has_effectiveness: true, has_training_impact: true,
-          has_workforce_compliance: true, has_audit_recommendations: true,
+          has_workforce_compliance: true, has_supervisions: true, has_audit_recommendations: true,
         },
       },
       tier: true,
@@ -372,6 +376,7 @@ export async function getPlanFeatures(tenantId: string): Promise<PlanFeatures> {
     has_effectiveness:      !!p?.has_effectiveness,
     has_training_impact:    !!p?.has_training_impact,
     has_workforce_compliance: !!p?.has_workforce_compliance,
+    has_supervisions:       !!p?.has_supervisions || !!p?.has_workforce_compliance,
     has_audit_recommendations: p ? p.has_audit_recommendations !== false : true,
     tier:                   tenant?.tier ?? 'full',
     annual_license:         await getAnnualLicenseUsage(tenantId),

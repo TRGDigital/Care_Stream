@@ -224,6 +224,7 @@ export interface PlanFeatures {
   has_effectiveness:      boolean
   has_training_impact:    boolean
   has_workforce_compliance: boolean
+  has_supervisions?: boolean       // supervisions and appraisals: Starter, Professional and Enterprise
   supervision_training?: boolean   // training linked to supervisions is on for this account
   view_as?: 'off' | 'view' | 'act' // an admin can look at a staff member's hub (view), and on test accounts act as them (act)
   has_audit_recommendations?: boolean

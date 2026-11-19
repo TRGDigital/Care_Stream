@@ -32,14 +32,57 @@ function calcReadTime(html = '') {
   return Math.max(1, Math.round(words / 200))
 }
 
-// Posts whose hero image was regenerated in the new house style (open friendly faces) and still needs a
+// Posts whose hero image was regenerated in the new house style (open friendly faces, a varied mix of people) and still needs a
 // look. The tag shows on the post list until you press Done (remembered in this browser).
 const HERO_TO_CHECK = [
-  'gdpr-audit', 'care-certificate-workbook-answers', 'loler-inspection-care-home', 'deprivation-of-liberty-safeguards',
-  'care-home-compliance-software', 'data-protection-certificate', 'health-and-safety-audit', 'care-home-software',
-  'coshh-certificate', 'how-often-should-dbs-be-renewed', 'safeguarding-audit',
+  'business-continuity-plan-care-home', 'care-certificate-assessor',
+  'care-certificate-cpd-certified-course-from-carestream', 'care-certificate-online', 'care-certificate-standards',
+  'care-certificate-vs-level-2', 'care-certificate-workbook-answers', 'care-home-audit-schedule',
+  'care-home-audit-software', 'care-home-compliance-software', 'care-home-policies-the-complete-guide',
+  'care-home-software', 'care-policy-version-control', 'chasing-staff-training-completions', 'coshh-certificate',
+  'coshh-training-for-care-staff-what-should-it-cover',
+  'cpd-accreditation-in-care-what-it-really-means-and-when-it-matters', 'cqc-audit',
+  'cqc-equality-diversity-evidence', 'cqc-evidence-categories-explained',
+  'cqc-inspection-day-what-to-expect-and-how-to-be-ready', 'cqc-quality-single-assessment-framework',
+  'cqc-readiness-report-what-it-is', 'cqc-single-assessment-framework-explained',
+  'cqc-terminology-for-care-providers', 'data-protection-certificate', 'dementia-care-training-in-the-uk',
+  'deprivation-of-liberty-safeguards', 'dnacpr-in-a-care-home', 'domiciliary-care-policies-and-procedures',
+  'end-of-life-care-training-what-should-care-staff-learn',
+  'face-to-face-training-in-care-what-actually-has-to-be-in-the-room', 'gdpr-audit', 'gdpr-training-for-care-staff',
+  'health-and-safety-audit', 'health-and-safety-awareness-course-for-care-staff',
+  'how-do-you-build-a-training-calendar-for-a-care-home',
+  'how-do-you-record-in-person-training-so-it-counts-as-cqc-evidence',
+  'how-do-you-run-in-house-training-in-a-care-home', 'how-do-you-schedule-care-staff-training-around-a-rota',
+  'how-do-you-use-a-training-matrix-for-safe-staffing-not-just-compliance',
+  'how-long-does-the-care-certificate-take', 'how-many-care-workers-in-england-speak-english-as-a-second-language',
+  'how-often-should-care-policies-be-reviewed', 'how-often-should-dbs-be-renewed',
+  'how-to-run-a-care-home-kitchen-audit', 'how-to-run-a-hand-hygiene-audit-in-a-care-home',
+  'incident-led-training-in-care', 'infection-control-audit',
+  'infection-control-training-for-care-staff-a-guide-for-managers', 'infection-prevention-and-control-policy',
+  'is-an-excel-training-matrix-still-safe-for-a-care-home', 'is-the-care-certificate-mandatory',
+  'keeping-care-policies-current-with-cqc-regulation', 'loler-inspection-care-home',
+  'mandatory-training-for-care-staff-the-full-list-and-how-often-to-refresh',
+  'manual-handling-training-courses-uk-regulations', 'mar-charts-explained-for-new-care-staff',
+  'medication-training-for-care-workers', 'mental-health-awareness-training-for-care-staff-a-managers-guide',
+  'micro-learning-for-care-staff-what-works-on-a-12-hour-shift',
+  'moving-and-handling-training-for-carers-what-must-it-include', 'night-shift-policy-access',
+  'onboarding-international-care-staff-4-week-induction-playbook', 'overseas-care-workers-policy-access',
+  'palliative-care-vs-end-of-life-care', 'policies-aligned-to-cqc-quality-statements-a-writers-guide',
+  'policies-required-by-cqc-for-a-care-home',
+  'policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers',
+  'policy-gap-analysis-for-care-homes', 'principles-of-safeguarding', 'riddor-reporting-care-homes',
+  'safeguarding-adults-and-children-training', 'safeguarding-audit', 'safeguarding-policy-care-home',
+  'six-signs-your-policy-set-has-quietly-drifted-out-of-date',
+  'the-annual-training-plan-that-survives-contact-with-the-rota',
+  'the-care-compliance-dashboard-nobody-opens-and-how-to-fix-it', 'the-complete-guide-to-care-certificate-training',
+  'the-complete-guide-to-care-home-digital-audits', 'translating-care-policies',
+  'updating-covid-policies-in-care-homes', 'what-compliant-actually-means-for-one-care-staff-member',
+  'what-food-hygiene-training-do-care-staff-need-each-year',
+  'what-should-a-care-home-training-matrix-actually-contain',
+  'when-two-policies-disagree-staff-follow-the-wrong-one',
+  'why-downloaded-care-policy-templates-create-contradictions',
 ]
-const HERO_CHECKED_KEY = 'blog_hero_checked'
+const HERO_CHECKED_KEY = 'blog_hero_checked_v2'
 
 const STATUS_COLOURS: Record<string, string> = {
   published: 'bg-green-100 text-green-700',

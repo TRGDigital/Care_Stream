@@ -349,7 +349,7 @@
      },
      {
       "q": "Is training in other languages professionally translated?",
-      "a": "No. It is machine translation by Claude, with your own glossary and any improvements your team suggests that an admin approves. Never treat it as certified translation."
+      "a": "No. It is machine translation using our own machine learning, with your own glossary and any improvements your team suggests that an admin approves. Never treat it as certified translation."
      },
      {
       "q": "Which languages does it cover?",

@@ -288,7 +288,7 @@
    },
    {
     "q": "How good is the translation?",
-    "a": "It is machine translation by Claude, with your own translation glossary to keep terms such as drug names and role titles exactly as you write them. Staff you allow can suggest a better translation and you approve it. There is no professional human translator in the loop, so treat it as a strong aid and not a certified translation."
+    "a": "It is machine translation using our own machine learning, with your own translation glossary to keep terms such as drug names and role titles exactly as you write them. Staff you allow can suggest a better translation and you approve it. There is no professional human translator in the loop, so treat it as a strong aid and not a certified translation."
    },
    {
     "q": "Is the whole app in their language?",

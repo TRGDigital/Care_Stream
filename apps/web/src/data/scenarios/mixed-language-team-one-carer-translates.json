@@ -203,7 +203,7 @@
     "bullets": [
      "Your admin sets each person's first language and, if you wish, a second language",
      "With switching allowed, a carer can open one lesson or question set in their second language with Read in their language",
-     "Translation is machine translation by Claude, with your own glossary and approved staff suggestions. It is on the paid plans only, and it is not professional human translation"
+     "Translation is machine translation using our own machine learning, with your own glossary and approved staff suggestions. It is on the paid plans only, and it is not professional human translation"
     ],
     "tags": [
      {
@@ -295,7 +295,7 @@
    },
    {
     "q": "How good is the translation?",
-    "a": "It is machine translation by Claude, with your own translation glossary to keep care terms exact. It is not certified or professional translation. Carers you allow can suggest better wording, and your admin approves it, after which your corrected text is used everywhere that sentence appears. Treat it as a strong aid, and review important content with someone who speaks the language."
+    "a": "It is machine translation using our own machine learning, with your own translation glossary to keep care terms exact. It is not certified or professional translation. Carers you allow can suggest better wording, and your admin approves it, after which your corrected text is used everywhere that sentence appears. Treat it as a strong aid, and review important content with someone who speaks the language."
    },
    {
     "q": "Does CareStream interpret live, for staff or residents?",
@@ -357,7 +357,7 @@
      },
      {
       "q": "Is staff translation certified?",
-      "a": "No. It is machine translation by Claude, with your glossary and approved staff suggestions. There is no professional human translation step, so review anything critical with a speaker of the language."
+      "a": "No. It is machine translation using our own machine learning, with your glossary and approved staff suggestions. There is no professional human translation step, so review anything critical with a speaker of the language."
      },
      {
       "q": "Does CareStream translate the whole Staff Hub?",

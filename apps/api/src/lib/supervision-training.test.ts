@@ -111,3 +111,42 @@ test('on for every account with supervisions; only an explicit false switches it
   assert.equal(trainingLinkOn({ supervision_training: true }, false), false)
   assert.equal(trainingLinkOn({}, false), false)
 })
+
+// ─── Allocated training still to do ─────────────────────────────────────────────────────────────────────────────────────────────
+import { outstandingOf } from './supervision-training'
+{
+  const now = new Date('2026-11-19T12:00:00Z')
+  const enr = (o: any) => ({ id: o.id, module_id: o.module_id ?? o.id, created_at: o.created_at ?? '2026-10-01T00:00:00Z', due_date: o.due_date ?? null, learn_seconds: o.learn_seconds ?? 0, answered: o.answered ?? 0, module: { name: o.name ?? o.id, source: o.source ?? 'manual', cpd_accredited: o.cpd ?? false } })
+  test('outstanding: missed, part done and not started, by kind', () => {
+    const r = outstandingOf({ now, completedModuleIds: new Set(), f2f: [], open: [
+      enr({ id: 'a', name: 'Moving and Handling', cpd: true, due_date: '2026-11-01T00:00:00Z' }),
+      enr({ id: 'b', name: 'Annual Fire', source: 'ai_generated', answered: 3 }),
+      enr({ id: 'c', name: 'Dementia awareness' }),
+      enr({ id: 'd', name: 'Lesson only', learn_seconds: 600 }),
+    ] })
+    const by = Object.fromEntries(r.map(i => [i.title, i]))
+    assert.equal(by['Moving and Handling'].state, 'missed'); assert.equal(by['Moving and Handling'].type, 'cpd'); assert.equal(by['Moving and Handling'].cpd, true)
+    assert.equal(by['Annual Fire'].state, 'partial'); assert.equal(by['Annual Fire'].type, 'annual'); assert.match(by['Annual Fire'].note, /3 questions answered/)
+    assert.equal(by['Dementia awareness'].state, 'not_started'); assert.equal(by['Dementia awareness'].type, 'adhoc')
+    assert.equal(by['Lesson only'].state, 'partial'); assert.match(by['Lesson only'].note, /lesson opened/)
+    assert.deepEqual(r.map(i => i.state), ['missed', 'partial', 'partial', 'not_started'])   // missed first
+  })
+  test('outstanding: a course renewed since is not listed', () => {
+    const r = outstandingOf({ now, completedModuleIds: new Set(['m1']), completedAfter: new Map([['m1', new Date('2026-11-10T00:00:00Z')]]), f2f: [], open: [enr({ id: 'old', module_id: 'm1', created_at: '2026-10-01T00:00:00Z', due_date: '2026-10-20T00:00:00Z' })] })
+    assert.equal(r.length, 0)
+    // but a NEW allocation after that completion still is
+    const r2 = outstandingOf({ now, completedModuleIds: new Set(['m1']), completedAfter: new Map([['m1', new Date('2026-09-01T00:00:00Z')]]), f2f: [], open: [enr({ id: 'new', module_id: 'm1', created_at: '2026-10-01T00:00:00Z' })] })
+    assert.equal(r2.length, 1)
+  })
+  test('outstanding: face to face, absent is missed, passed with no record is not recorded, future and attended are not listed, catch-up clears it', () => {
+    const r = outstandingOf({ now, open: [], completedModuleIds: new Set(['catch']), f2f: [
+      { session_id: 's1', title: 'Fire drill', date: '2026-11-01', status: 'absent', module_id: null },
+      { session_id: 's2', title: 'Manual handling', date: '2026-11-05', status: 'allocated', module_id: null },
+      { session_id: 's3', title: 'Future', date: '2026-12-05', status: 'allocated', module_id: null },
+      { session_id: 's4', title: 'Went', date: '2026-11-02', status: 'attended', module_id: null },
+      { session_id: 's5', title: 'Missed but made up', date: '2026-11-03', status: 'absent', module_id: 'catch' },
+    ] })
+    assert.deepEqual(r.map(i => [i.title, i.state, i.type]), [['Fire drill', 'missed', 'f2f'], ['Manual handling', 'not_recorded', 'f2f']])
+    assert.match(r[1].note, /not been recorded/)
+  })
+}

@@ -3,6 +3,7 @@
 // Sets correct thread headers (In-Reply-To, References) so replies land in the same thread.
 
 import sgMail from '@sendgrid/mail'
+import '../../lib/email-guard'   // never email reserved fictional domains (example.com and similar)
 import { signFeedbackToken } from '../../lib/feedback-token'
 import { siteUrl } from '../../lib/urls'
 

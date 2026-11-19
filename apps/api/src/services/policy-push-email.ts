@@ -2,6 +2,7 @@
 // renderPolicyPushEmail is pure (data in, subject + html + text out); sendPolicyPushEmails finds the admins and sends.
 // House style: friendly, short, plain words, no dashes.
 import sgMail from '@sendgrid/mail'
+import '../lib/email-guard'   // never email reserved fictional domains (example.com and similar)
 import { prisma } from '../db/client'
 import { emailWrapper, emailFooter } from './email/outbound'
 import { siteUrl } from '../lib/urls'

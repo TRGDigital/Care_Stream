@@ -3,6 +3,7 @@
 // audit_updates email preference. Driven by the daily Vercel cron.
 
 import sgMail from '@sendgrid/mail'
+import '../../lib/email-guard'   // never email reserved fictional domains (example.com and similar)
 import { sweepTenants } from '../../lib/tenant-sweep'
 import { prisma } from '../../db/client'
 import { notifyUsers } from '../../lib/notify'

@@ -8,6 +8,7 @@
 //   dryRun    works out who would get what and sends nothing
 import { prisma } from '../../db/client'
 import sgMail from '@sendgrid/mail'
+import '../../lib/email-guard'   // never email reserved fictional domains (example.com and similar)
 import { siteUrl } from '../../lib/urls'
 import { createLoginLink } from '../../lib/login-tokens'
 import { londonWeekStart, planTenant, type TenantFacts, type UserFacts, type StaffPlan, type DigestPlan, type OutstandingItem } from './weeklyReminderLogic'

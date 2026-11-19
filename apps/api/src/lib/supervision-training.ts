@@ -228,12 +228,21 @@ export type CourseDetail = {
   baseline: { score: number; total: number } | null; reflection: string | null
   incorrect: IncorrectAnswer[]
 }
+export type OutstandingItem = {
+  key: string
+  type: 'cpd' | 'annual' | 'adhoc' | 'f2f'                  // CPD certified course, annual training, any other course allocated by hand, face to face session
+  title: string
+  state: 'missed' | 'not_started' | 'partial' | 'not_recorded'   // not_recorded: a face to face session that has passed with no attendance marked
+  note: string                                              // one plain line: why it is on the list
+  allocated_at: string | null; due_date: string | null; overdue: boolean; cpd: boolean
+}
 export type TrainingDetail = {
   person: { id: string; name: string; job_role: string | null }
   supervision: { id: string; type: string; held_on: string; status: string } | null
   linked: Array<{ action_id: string; description: string; action_status: string; added_on: string | null; course: CourseDetail | null }>
   others: CourseDetail[]            // allocated since the previous supervision, not tied to this one
   follow_up: Array<{ method: 'learn' | 'retry'; label: string | null; when: string }>   // gaps they went back over (lesson or retry)
+  outstanding: OutstandingItem[]    // allocated and still not done, of every kind (CPD, annual, ad hoc, face to face): missed, not started or part done
   suggestions: Suggestion[]         // what the supervisor might do, from the scores and answers (rules, no AI)
   since: string | null
   generated_at: string
@@ -274,6 +283,71 @@ export function courseDetailOf(e: { id: string; status: string; created_at: any;
   }
 }
 
+const STATE_ORDER = { missed: 0, partial: 1, not_started: 2, not_recorded: 3 } as const
+const dshort = (x: any) => new Date(x).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+
+/**
+ * Pure: the allocated training that is still not done, of every kind. Open courses (not complete): past due is "missed", nothing opened is
+ * "not started", anything else is "partial". Face to face: "absent" is missed; a session that has passed with no attendance marked is
+ * "not recorded" (we do not say they missed it, because nobody has said so). A face to face miss that was made up with the digital
+ * catch-up course is not listed. A course renewed since (a later complete enrolment of the same module) is not listed either.
+ */
+export function outstandingOf(x: {
+  open: Array<{ id: string; module_id: string; created_at: any; due_date?: any; learn_seconds?: number | null; answered: number; module: { name: string; source?: string | null; cpd_accredited?: boolean | null } }>
+  completedModuleIds: Set<string>   // modules this person has a complete enrolment on (any renewal)
+  completedAfter?: Map<string, Date> // module -> latest completion
+  f2f: Array<{ session_id: string; title: string; date: any; status: string; module_id: string | null }>
+  now?: Date
+}): OutstandingItem[] {
+  const now = x.now ?? new Date()
+  const out: OutstandingItem[] = []
+  for (const e of x.open) {
+    // Renewed: a complete enrolment on the same module that finished after this one was allocated.
+    const done = x.completedAfter?.get(e.module_id)
+    if (done && done.getTime() >= new Date(e.created_at).getTime()) continue
+    const overdue = !!e.due_date && new Date(e.due_date) < now
+    const untouched = e.answered === 0 && (e.learn_seconds ?? 0) === 0
+    const state: OutstandingItem['state'] = overdue ? 'missed' : untouched ? 'not_started' : 'partial'
+    const progress = untouched ? 'nothing opened yet' : e.answered > 0 ? `${e.answered} ${e.answered === 1 ? 'question' : 'questions'} answered so far` : 'lesson opened, no questions answered'
+    const type: OutstandingItem['type'] = e.module.cpd_accredited ? 'cpd' : e.module.source === 'ai_generated' ? 'annual' : 'adhoc'
+    out.push({
+      key: `enr:${e.id}`, type, title: e.module.name, state, cpd: !!e.module.cpd_accredited,
+      note: overdue ? `Was due ${dshort(e.due_date)}, ${progress}.` : e.due_date ? `Due ${dshort(e.due_date)}, ${progress}.` : `Allocated ${dshort(e.created_at)}, ${progress}.`,
+      allocated_at: iso(e.created_at), due_date: iso(e.due_date), overdue,
+    })
+  }
+  for (const f of x.f2f) {
+    const when = new Date(f.date)
+    if (when.getTime() > now.getTime() || f.status === 'attended') continue
+    if (f.module_id && x.completedModuleIds.has(f.module_id)) continue   // made up with the digital catch-up
+    const absent = f.status === 'absent'
+    out.push({
+      key: `f2f:${f.session_id}`, type: 'f2f', title: f.title, state: absent ? 'missed' : 'not_recorded', cpd: false,
+      note: absent ? `Did not attend the session on ${dshort(when)}.` : `The session was on ${dshort(when)} and attendance has not been recorded.`,
+      allocated_at: null, due_date: null, overdue: absent,
+    })
+  }
+  return out.sort((a, b) => STATE_ORDER[a.state] - STATE_ORDER[b.state] || Number(b.overdue) - Number(a.overdue) || a.title.localeCompare(b.title)).slice(0, 60)
+}
+
+async function loadOutstanding(tenantId: string, userId: string): Promise<OutstandingItem[]> {
+  const [open, done, f2f] = await Promise.all([
+    p().trainingEnrollment.findMany({
+      where: { tenant_id: tenantId, user_id: userId, status: { in: ['not_started', 'in_progress'] } }, orderBy: { created_at: 'desc' }, take: 120,
+      select: { id: true, module_id: true, created_at: true, due_date: true, learn_seconds: true, module: { select: { name: true, source: true, cpd_accredited: true } }, _count: { select: { answers: true } } },
+    }),
+    p().trainingEnrollment.findMany({ where: { tenant_id: tenantId, user_id: userId, status: 'complete' }, select: { module_id: true, completed_at: true, created_at: true }, take: 500 }),
+    p().faceToFaceAttendance.findMany({ where: { tenant_id: tenantId, user_id: userId, status: { not: 'attended' } }, select: { status: true, session: { select: { id: true, title: true, session_date: true, module_id: true } } }, take: 100 }).catch(() => []),
+  ])
+  const completedAfter = new Map<string, Date>()
+  for (const d of done as any[]) { const w = new Date(d.completed_at ?? d.created_at); const cur = completedAfter.get(d.module_id); if (!cur || w > cur) completedAfter.set(d.module_id, w) }
+  return outstandingOf({
+    open: (open as any[]).filter(e => e.module).map(e => ({ ...e, answered: e._count?.answers ?? 0 })),
+    completedModuleIds: new Set(completedAfter.keys()), completedAfter,
+    f2f: (f2f as any[]).filter(a => a.session).map(a => ({ session_id: a.session.id, title: a.session.title, date: a.session.session_date, status: a.status, module_id: a.session.module_id ?? null })),
+  })
+}
+
 /** Everything a supervisor needs on the training a supervision is about: each linked course in full, other recent allocations, follow up. */
 export async function buildTrainingDetail(tenantId: string, userId: string, supervisionId?: string | null): Promise<TrainingDetail | null> {
   await syncLinkedActions(tenantId, userId).catch(() => 0)
@@ -285,10 +359,11 @@ export async function buildTrainingDetail(tenantId: string, userId: string, supe
   const since = prev?.held_on ?? new Date(Date.now() - 90 * DAY)
   // Light list first (no questions, no answers), then the full detail only for the few courses that will be shown: a person can have
   // hundreds of enrolments and each module carries its whole question set.
-  const [light, actions, rem] = await Promise.all([
+  const [light, actions, rem, outstanding] = await Promise.all([
     p().trainingEnrollment.findMany({ where: { tenant_id: tenantId, user_id: userId }, orderBy: { created_at: 'desc' }, take: 300, select: { id: true, created_at: true } }),
     p().supervisionAction.findMany({ where: { tenant_id: tenantId, user_id: userId, enrollment_id: { not: null }, ...(sup ? { supervision_id: sup.id } : { status: { not: 'done' } }) }, orderBy: { created_at: 'desc' }, take: 25 }),
     p().remediationAttempt.findMany({ where: { tenant_id: tenantId, user_id: userId, created_at: { gte: since } }, orderBy: { created_at: 'desc' }, take: 20 }).catch(() => []),
+    loadOutstanding(tenantId, userId).catch(() => [] as OutstandingItem[]),
   ])
   const linkedEnrIds = new Set((actions as any[]).map(a => a.enrollment_id as string))
   const otherIds = (light as any[]).filter(e => !linkedEnrIds.has(e.id) && new Date(e.created_at) >= since).slice(0, 12).map(e => e.id as string)
@@ -307,7 +382,7 @@ export async function buildTrainingDetail(tenantId: string, userId: string, supe
     supervision: sup ? { id: sup.id, type: sup.type, held_on: iso(sup.held_on) as string, status: sup.status } : null,
     linked, others,
     follow_up: (rem as any[]).map(r => ({ method: r.method === 'retry' ? 'retry' as const : 'learn' as const, label: r.label ?? null, when: iso(r.created_at) as string })),
-    since: iso(since), generated_at: new Date().toISOString(),
+    outstanding, since: iso(since), generated_at: new Date().toISOString(),
   }
   return { ...base, suggestions: suggestionsFor({ ...base, suggestions: [] }) }
 }

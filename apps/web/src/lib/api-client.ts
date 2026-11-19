@@ -186,7 +186,8 @@ export type TrainingCourseDetail = {
   baseline: { score: number; total: number } | null; reflection: string | null
   incorrect: Array<{ question: string; their_answer: { letter: string; text: string | null } | null; correct_answer: { letter: string; text: string | null } | null }>
 }
-export type TrainingSuggestion = { id: string; tone: 'concern' | 'check' | 'praise'; course: string | null; title: string; evidence: string[]; suggestion: string; action_text: string; low_confidence: boolean }
+export type TrainingSuggestion = { id: string; tone: 'concern' | 'check' | 'praise'; course: string | null; enrollment_id: string | null; title: string; evidence: string[]; suggestion: string; action_text: string; low_confidence: boolean }
+export type TrainingOutstandingItem = { key: string; type: 'cpd' | 'annual' | 'adhoc' | 'f2f'; title: string; state: 'missed' | 'not_started' | 'partial' | 'not_recorded'; note: string; allocated_at: string | null; due_date: string | null; overdue: boolean; cpd: boolean }
 export type TrainingDetail = {
   person: { id: string; name: string; job_role: string | null }
   supervision: { id: string; type: string; held_on: string; status: string } | null
@@ -194,6 +195,7 @@ export type TrainingDetail = {
   others: TrainingCourseDetail[]
   follow_up: Array<{ method: 'learn' | 'retry'; label: string | null; when: string }>
   suggestions: TrainingSuggestion[]
+  outstanding: TrainingOutstandingItem[]
   since: string | null; generated_at: string
 }
 

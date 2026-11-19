@@ -87,6 +87,15 @@ export default function PoliciesPage() {
   const [showBulkUpload, setShowBulkUpload] = useState(false)
   const [versionTarget,  setVersionTarget]  = useState<{ id: string; name: string } | null>(null)
   const [previewPolicy,  setPreviewPolicy]  = useState<{ id: string; name: string } | null>(null)
+  // Admin search opens one policy straight away: /policies?open=<id>&name=<name> on arrival, or an event when this page is already open.
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search)
+    const id = p.get('open')
+    if (id) setPreviewPolicy({ id, name: p.get('name') ?? 'Policy' })
+    const onOpen = (e: Event) => { const d = (e as CustomEvent<{ id: string; name: string }>).detail; if (d?.id) setPreviewPolicy({ id: d.id, name: d.name }) }
+    window.addEventListener('cs-open-policy', onOpen)
+    return () => window.removeEventListener('cs-open-policy', onOpen)
+  }, [])
   const [reviewSummary,  setReviewSummary]  = useState<Array<{ policy_id: string; pending: number; version: string; published_at: string | null; approval_status: string; external_name: string; external_sent_at: string | null }>>([])
   const [dueReview,      setDueReview]       = useState<Array<{ policy_id: string; name: string; next_review_due: string; days_overdue: number }>>([])
   const [reviewTarget,   setReviewTarget]   = useState<{ id: string; name: string } | null>(null)

@@ -48,6 +48,8 @@ export const PRICING_SLOTS: SlotDef[] = [
   { key: 'plans.enterprise.feat6', group: 'Plans · Enterprise', label: 'Feature 6', default: 'Multi-site group console and benchmarking' },
   { key: 'plans.enterprise.feat7', group: 'Plans · Enterprise', label: 'Feature 7', default: 'Workforce compliance register (DBS, right to work, registration, references)' },
   { key: 'plans.enterprise.feat8', group: 'Plans · Enterprise', label: 'Feature 8', default: 'Supervisions and appraisals tracking' },
+  // feat10 shows before feat9 on the card (see featureKeys in the pricing page): it was added after support, and keeping the key stops any saved copy of feat9 moving.
+  { key: 'plans.enterprise.feat10', group: 'Plans · Enterprise', label: 'Feature 10', default: 'Training linked to supervisions: a brief, results and suggestions' },
   { key: 'plans.enterprise.feat9', group: 'Plans · Enterprise', label: 'Feature 9', default: 'Priority support and a dedicated manager' },
 
   // Training-only card

@@ -7,6 +7,7 @@
 // single tenant from the admin settings (manual "send now").
 
 import sgMail from '@sendgrid/mail'
+import '../../lib/email-guard'   // never email reserved fictional domains (example.com and similar)
 import { sweepTenants } from '../../lib/tenant-sweep'
 import { prisma } from '../../db/client'
 import { notifyUsers, isEmailEnabled } from '../../lib/notify'

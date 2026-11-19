@@ -9,6 +9,7 @@
 
 import twilio from 'twilio'
 import sgMail from '@sendgrid/mail'
+import '../../lib/email-guard'   // never email reserved fictional domains (example.com and similar)
 import { prisma } from '../../db/client'
 import { sendPushToUsers } from '../../lib/push'
 import { splitIntoChunks } from '../../utils/htmlToWhatsApp'

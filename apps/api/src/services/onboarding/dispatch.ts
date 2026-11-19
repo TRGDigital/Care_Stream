@@ -3,6 +3,7 @@
 // with open + click tracking. Day 1 can also be sent immediately on signup.
 
 import sgMail from '@sendgrid/mail'
+import '../../lib/email-guard'   // never email reserved fictional domains (example.com and similar)
 import { sweep, cursorFor } from '../../lib/tenant-sweep'
 import crypto from 'crypto'
 import { prisma } from '../../db/client'

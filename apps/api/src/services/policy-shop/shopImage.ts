@@ -111,11 +111,15 @@ const CARE_WORKERS = [
   'a South Asian man in his fifties',
   'a White British woman in her fifties',
   'a Black African man in his twenties',
-  'an East Asian woman in her thirties',
-  'a South Asian woman in her twenties',
-  'a mixed heritage man in his forties',
   'a White British woman in her thirties',
+  'an East Asian woman in her thirties',
+  'a White British man in his forties',
+  'a South Asian woman in her twenties',
+  'a White British woman in her twenties',
+  'a mixed heritage man in his forties',
+  'a White British man in his fifties',
   'a Black Caribbean woman in her fifties',
+  'a White British woman in her forties',
   'an East Asian man in his forties',
   'a South Asian woman in her forties',
 ]
@@ -123,10 +127,12 @@ const CARE_WORKERS = [
 const RESIDENTS = [
   'an older White British woman',
   'an older Black Caribbean man',
-  'an older South Asian woman',
   'an older White British man',
+  'an older South Asian woman',
+  'an older White British woman',
   'an older Black African woman',
   'an older East Asian man',
+  'an older White British man',
   'an older mixed heritage woman',
   'an older South Asian man',
 ]
@@ -139,11 +145,17 @@ function pick<T>(list: T[], key: string, offset = 0): T {
 }
 
 function castFor(key: string): string {
-  return '\n\nThe people in this scene: any member of care staff shown is '
-    + `${pick(CARE_WORKERS, key)}, and anyone receiving care is ${pick(RESIDENTS, key, 5)}. `
+  // One cast for the whole picture, with a DIFFERENT person in each position. The old version gave
+  // every member of staff the same description, so a group of colleagues all came back looking alike.
+  // The steps (5 and 3) are coprime with the list lengths, so the four staff are always distinct.
+  const staff = [0, 1, 2, 3].map(i => pick(CARE_WORKERS, key, i * 5))
+  const residents = [0, 1].map(i => pick(RESIDENTS, key, 3 + i * 3))
+  return '\n\nThe people in this scene are different from one another. Reading across the frame from left to right, '
+    + 'the staff, managers, trainers and other adults who are not receiving care are, in this order: '
+    + `${staff.join('; then ')} (use only as many as the scene needs, in this order). `
+    + `Anyone receiving care is ${residents[0]}${' (and a second person receiving care, if one is shown, is ' + residents[1] + ')'}. `
     + 'Show their skin tone and presentation clearly through the flat illustration style, '
-    + 'without drawing realistic facial detail. If the scene shows two colleagues rather '
-    + 'than a carer and a resident, make them visibly different from one another.'
+    + 'without drawing realistic facial detail. Never show a group of people who all look the same.'
 }
 
 

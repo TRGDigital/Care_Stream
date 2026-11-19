@@ -1474,6 +1474,20 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <p className="text-sm text-neutral-mid">
             Go to <strong>Training → Compliance</strong> to see the live grid of every staff member against every assigned module (complete, in progress, expired), each person&rsquo;s score, and what&rsquo;s overdue. Individual records and the Analytics page give the same detail per person.
           </p>
+          <p className="mt-3 text-sm text-neutral-mid">
+            <strong>Hover for the full name.</strong> Long course names in the column headings are shortened to fit; hold the pointer over one to see the whole name.
+          </p>
+        </SectionBlock>
+        <SectionBlock title="The training record: where it has got to, and a reminder">
+          <p className="text-sm text-neutral-mid">
+            In the grid, a grey clock means the training has been allocated and is not finished. Click it to open the <strong>Training Record</strong>. It shows when the training was <strong>issued</strong>, the <strong>due date</strong> (marked overdue when it has passed), whether it has been <strong>opened</strong>, and its <strong>progress</strong>: not started, or partly started with how many questions they have answered and the time spent on the lesson. It also shows the <strong>last reminder</strong> and how many have been sent.
+          </p>
+          <div className="mt-3 space-y-3">
+            <Step n={1}>Press <strong>Send reminder</strong> to email them and send a <strong>hub notification</strong> in one go.</Step>
+            <Step n={2}>The hub notification reaches devices where they have the hub app installed and notifications switched on. The message after you press the button says exactly what was sent, for example an email and a notification on one device. If someone has not switched notifications on, they still get the email.</Step>
+            <Step n={3}>You can send another reminder after a few minutes. The date and count update on the record.</Step>
+          </div>
+          <div className="mt-3"><Tip>&ldquo;Opened&rdquo; means they have answered a question, spent time on the lesson, or the course is in progress. CareStream does not record the moment a course was first opened.</Tip></div>
         </SectionBlock>
       </div>
     ),
@@ -2281,11 +2295,12 @@ const GUIDE_SECTIONS: GuideSection[] = [
 
         <SectionBlock title="Completing an audit on the web">
           <div className="space-y-3">
-            <Step n={1}>Go to <strong>Monthly Audits</strong> and click <strong>New audit</strong>. Choose the audit and the month, plus the room, resident, staff member or shift if it asks for one. Click <strong>Start audit</strong>.</Step>
-            <Step n={2}>If this audit has been done before, <strong>Actions from the last audit</strong> appear first. Check each one and mark it <strong>Still fixed</strong> or <strong>Not fixed</strong>. Not fixed reopens the action for the person it was assigned to.</Step>
-            <Step n={3}>Work through each section. Conditional questions appear only when they apply. Answers save automatically, and <strong>Save &amp; exit</strong> lets you come back later from <strong>In progress</strong>.</Step>
-            <Step n={4}>Open the <strong>Summary</strong> tab and add strengths, areas for improvement and a target date for actions. Every question that is showing must be answered before you can finish.</Step>
-            <Step n={5}><strong>Sign</strong> with your finger or mouse and type your name. Then click <strong>Complete &amp; get AI recommendations</strong>, or <strong>Send to care manager for approval</strong> if manager approval is switched on.</Step>
+            <Step n={1}>Go to <strong>Monthly Audits</strong> and click <strong>New audit</strong>. Choose the audit and the <strong>date of the audit</strong>, plus the room, resident, staff member or shift if it asks for one. Click <strong>Start audit</strong>.</Step>
+            <Step n={2}><strong>Missed one? Back-date it.</strong> The date defaults to today. If an audit was done on an earlier day, or missed and needs recording, choose that day (never a future one, and no more than two years back). It is recorded in the right month, or on that day for daily audits, and the report shows both <em>Audit carried out on</em> and <em>Entered on CareStream</em>, so the record is honest about when it was done and when it was written up. In the Chat Hub, use the <strong>Date of the audit</strong> box above the list: every Start button uses it, and Start or Resume follows that period.</Step>
+            <Step n={3}>If this audit has been done before, <strong>Actions from the last audit</strong> appear first. Check each one and mark it <strong>Still fixed</strong> or <strong>Not fixed</strong>. Not fixed reopens the action for the person it was assigned to.</Step>
+            <Step n={4}>Work through each section. Conditional questions appear only when they apply. Answers save automatically, and <strong>Save &amp; exit</strong> lets you come back later from <strong>In progress</strong>.</Step>
+            <Step n={5}>Open the <strong>Summary</strong> tab and add strengths, areas for improvement and a target date for actions. Every question that is showing must be answered before you can finish.</Step>
+            <Step n={6}><strong>Sign</strong> with your finger or mouse and type your name. Then click <strong>Complete &amp; get AI recommendations</strong>, or <strong>Send to care manager for approval</strong> if manager approval is switched on.</Step>
           </div>
         </SectionBlock>
 

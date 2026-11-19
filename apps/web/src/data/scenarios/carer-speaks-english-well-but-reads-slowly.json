@@ -1,6 +1,6 @@
 {
  "slug": "carer-speaks-english-well-but-reads-slowly",
- "status": "draft",
+ "status": "published",
  "order": 32,
  "title": "She talks to residents with ease. Reading English as a second language takes her <em>longer on a long page.</em>",
  "meta_title": "Reading English as a Second Language at Work | CareStreamAI",
@@ -12,10 +12,26 @@
   "title": "One lesson, two languages",
   "pill": "Illustration",
   "rows": [
-   { "label": "Safeguarding module allocated", "note": "Day 0", "done": true },
-   { "label": "Question missed, follow up opened", "note": "Day 1", "done": true },
-   { "label": "Lesson read in second language", "note": "Day 2", "done": false },
-   { "label": "Fresh question answered correctly", "note": "Not yet", "done": false }
+   {
+    "label": "Safeguarding module allocated",
+    "note": "Day 0",
+    "done": true
+   },
+   {
+    "label": "Question missed, follow up opened",
+    "note": "Day 1",
+    "done": true
+   },
+   {
+    "label": "Lesson read in second language",
+    "note": "Day 2",
+    "done": false
+   },
+   {
+    "label": "Fresh question answered correctly",
+    "note": "Not yet",
+    "done": false
+   }
   ],
   "meter": 50
  },
@@ -56,14 +72,46 @@
   "paragraph": "Amara has worked on the floor for three years. Residents ask for her by name, and she explains things to relatives clearly and kindly. But when a policy or an online quiz arrives, she reads each line twice, then checks a word on her phone. The manager sets a safeguarding module for the whole team. Amara runs out of time on one question and picks the answer that looks safest. The result says she got it wrong. Nobody asks whether she lacked the knowledge or simply the minutes."
  },
  "trail": [
-  { "when": "Day to day", "text": "Amara talks with residents and families easily and well.", "kind": "ok" },
-  { "when": "Handovers", "text": "She gives clear spoken handovers. Colleagues rely on them.", "kind": "ok" },
-  { "when": "Monday", "text": "The manager allocates a safeguarding module to the whole team.", "kind": "ok" },
-  { "when": "Tuesday, mid shift", "text": "Amara reads each line slowly and runs short of time.", "kind": "gap" },
-  { "when": "The result", "text": "She answers one question wrongly. Was it the idea or the wording?", "kind": "gap" },
-  { "when": "What nobody asks", "text": "The score treats a slow read the same as a gap in knowledge.", "kind": "gap" },
-  { "when": "Next quarter", "text": "She is marked as needing more training on a topic she understands.", "kind": "gap" },
-  { "when": "Supervision or inspection", "text": "“Does she know what to do if a resident discloses abuse?” Nobody can say.", "kind": "end" }
+  {
+   "when": "Day to day",
+   "text": "Amara talks with residents and families easily and well.",
+   "kind": "ok"
+  },
+  {
+   "when": "Handovers",
+   "text": "She gives clear spoken handovers. Colleagues rely on them.",
+   "kind": "ok"
+  },
+  {
+   "when": "Monday",
+   "text": "The manager allocates a safeguarding module to the whole team.",
+   "kind": "ok"
+  },
+  {
+   "when": "Tuesday, mid shift",
+   "text": "Amara reads each line slowly and runs short of time.",
+   "kind": "gap"
+  },
+  {
+   "when": "The result",
+   "text": "She answers one question wrongly. Was it the idea or the wording?",
+   "kind": "gap"
+  },
+  {
+   "when": "What nobody asks",
+   "text": "The score treats a slow read the same as a gap in knowledge.",
+   "kind": "gap"
+  },
+  {
+   "when": "Next quarter",
+   "text": "She is marked as needing more training on a topic she understands.",
+   "kind": "gap"
+  },
+  {
+   "when": "Supervision or inspection",
+   "text": "“Does she know what to do if a resident discloses abuse?” Nobody can say.",
+   "kind": "end"
+  }
  ],
  "trail_close": "<b>Her fluency was not the question.</b> The gap is in how you find out what she knows. Here is how CareStream lets a carer read one lesson in another language, and keeps the record honest.",
  "why": {
@@ -99,8 +147,14 @@
      "Staff complete it in the Staff Hub, an app they install on their own phone"
     ],
     "tags": [
-     { "label": "Training built from your own policies", "href": "/training-platform" },
-     { "label": "How CareStream works", "href": "/how-it-works" }
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
     ],
     "mock": {
      "type": "training",
@@ -121,8 +175,14 @@
      "Short lessons are kinder to a slow reader than a long policy, because each one covers a single point"
     ],
     "tags": [
-     { "label": "Wrong answers become lessons", "href": "/training-platform" },
-     { "label": "Staff training", "href": "/staff-training" }
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Staff training",
+      "href": "/staff-training"
+     }
     ],
     "mock": {
      "type": "followup",
@@ -145,8 +205,14 @@
      "Translation is machine translation, shaped by your own glossary and staff suggestions that an admin approves. It is on the paid plans, and the hub menus and buttons stay in English"
     ],
     "tags": [
-     { "label": "Training in dozens of languages", "href": "/languages" },
-     { "label": "Staff Hub in your carers' languages", "href": "/uses/multilingual-staff-hub" }
+     {
+      "label": "Training in dozens of languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in your carers' languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
     ],
     "mock": {
      "type": "language",
@@ -161,20 +227,46 @@
      "A Monday digest email brings the picture to you. Nothing pings you on each wrong answer"
     ],
     "tags": [
-     { "label": "Reporting that runs itself", "href": "/training-platform" },
-     { "label": "CQC and compliance evidence", "href": "/cqc-compliance" }
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
     ],
     "mock": {
      "type": "gaps",
-     "stats": { "open": 5, "affected": 4, "closed": 11, "engaged": 80 },
+     "stats": {
+      "open": 5,
+      "affected": 4,
+      "closed": 11,
+      "engaged": 80
+     },
      "missed": [
-      ["Keeping a disclosure secret", "3 staff"],
-      ["Who is the safeguarding lead", "2 staff"],
-      ["Where to record a concern", "2 staff"]
+      [
+       "Keeping a disclosure secret",
+       "3 staff"
+      ],
+      [
+       "Who is the safeguarding lead",
+       "2 staff"
+      ],
+      [
+       "Where to record a concern",
+       "2 staff"
+      ]
      ],
      "weak": [
-      ["Safeguarding Adults", "4 gaps"],
-      ["Medication", "1 gap"]
+      [
+       "Safeguarding Adults",
+       "4 gaps"
+      ],
+      [
+       "Medication",
+       "1 gap"
+      ]
      ]
     }
    }

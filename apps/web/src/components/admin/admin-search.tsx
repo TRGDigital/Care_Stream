@@ -188,7 +188,7 @@ export function AdminSearch({ account, onLocked }: { account: AccountKind & { mu
       {open && (
         <div className="fixed inset-0 z-[70] flex items-start justify-center px-3 pt-[10vh]" role="dialog" aria-modal="true" aria-label="Search CareStream">
           <div className="absolute inset-0 bg-black/40" onClick={close} />
-          <div className="relative w-full max-w-2xl overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl">
+          <div className="relative w-full max-w-2xl overflow-hidden rounded-xl md:max-w-4xl xl:max-w-5xl border border-gray-200 bg-white shadow-2xl">
             <div className="flex items-center gap-2 border-b border-gray-100 px-4">
               <Search size={16} className="text-neutral-mid" />
               <input ref={inputRef} value={q} onChange={e => setQ(e.target.value)} placeholder="Search pages, features, guides, policies, staff, residents…"
@@ -201,7 +201,7 @@ export function AdminSearch({ account, onLocked }: { account: AccountKind & { mu
                 }} />
               <button type="button" onClick={close} className="text-xs text-neutral-mid hover:text-neutral-dark">Esc</button>
             </div>
-            <div className="max-h-[60vh] overflow-y-auto py-1">
+            <div className="max-h-[68vh] overflow-y-auto py-1">
               {q.trim().length < 2 && <p className="px-4 py-6 text-sm text-neutral-mid">Type what you are looking for, for example <em>supervisions</em>, <em>invite family</em>, <em>DBS</em> or a policy name.</p>}
               {q.trim().length >= 2 && items.length === 0 && settled && (
                 <div className="px-4 py-6 text-sm text-neutral-mid">

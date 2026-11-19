@@ -230,6 +230,9 @@ model SupervisionAction {
   description    String
   status         String   @default("open")           // open | in_progress | done
   done_at        DateTime?
+  module_id      String?                             // the training course this action asked for (set when allocated from a supervision)
+  enrollment_id  String?                             // that person's enrolment: when it is complete the action closes itself
+  linked_by      String?                             // supervision_form | training_assign
   created_at     DateTime @default(now())
 
   @@index([tenant_id, user_id, status])

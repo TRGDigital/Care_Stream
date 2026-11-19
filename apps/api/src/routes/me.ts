@@ -24,6 +24,7 @@ import { getAuditsDue } from '../services/audits/due'
 import { getPendingAuditApprovals, getRecentApprovedAudits, managerApproveAudit, rejectAudit } from '../services/audits/approval'
 import { getMyActions, countMyOpenActions, setMyActionStatus, getExternalActions, countOpenExternalActions, setExternalActionStatus } from '../services/audits/action-plan'
 import { allocateFromSupervision, type AllocationType } from '../services/supervision-allocations'
+import { supervisionTrainingEnabled, buildBrief, snapshotOf } from '../lib/supervision-training'
 import { sendTrainingCompletionEmail } from '../services/email/outbound'
 import { generateAuditRecommendations } from './audits'
 import { prisma } from '../db/client'
@@ -1796,7 +1797,13 @@ meRouter.get('/conducting/:id', async (req: Request, res: Response) => {
     (prisma as any).onboardingFlow.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { id: true, name: true }, orderBy: { name: 'asc' } }).catch(() => []),
     (prisma as any).cqcStaffQuestion.findMany({ where: { tenant_id: tenantId, is_active: true }, select: { id: true, question: true, domain: true }, orderBy: [{ domain: 'asc' }, { created_at: 'asc' }] }).catch(() => []),
   ])
-  ok(res, { record: {
+  // Training linked to supervisions (flag): actions added from the assign screen sit on this supervision already; the form shows them
+  // so completing the form does not lose them.
+  const trainingLinked = await supervisionTrainingEnabled(tenantId)
+  const linkedActions = trainingLinked
+    ? await (prisma as any).supervisionAction.findMany({ where: { supervision_id: r.id, tenant_id: tenantId, linked_by: 'training_assign' }, select: { description: true, module_id: true } }).catch(() => [])
+    : []
+  ok(res, { training_linked: trainingLinked, linked_actions: linkedActions, record: {
     id: r.id, type: r.type, held_on: iso(r.held_on), next_due: iso(r.next_due), status: r.status, completed_at: iso(r.completed_at),
     form: r.form ?? null, conducted_by: r.conducted_by ?? me?.name ?? null,
     supervisee_id: r.user_id, supervisee: su?.name ?? 'Staff member', supervisee_role: su?.job_role ?? null,
@@ -1805,6 +1812,18 @@ meRouter.get('/conducting/:id', async (req: Request, res: Response) => {
     induction: (flows as any[]).map(f => ({ id: f.id, name: f.name })),
     cqc:       (cqcQs as any[]).map(q => ({ id: q.id, name: q.question, domain: q.domain })),
   } })
+})
+
+// The conductor's training brief for one supervision (flag: supervision_training). Only the person conducting it. When the feature is
+// off for the account this answers enabled:false so the form simply shows nothing.
+meRouter.get('/conducting/:id/brief', async (req: Request, res: Response) => {
+  const userId   = (req as any).user.sub
+  const tenantId = (req as any).user.tenant_id
+  const r = await (prisma as any).staffSupervision.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId, conducted_by_user_id: userId }, select: { user_id: true, type: true } }).catch(() => null)
+  if (!r) { err(res, 'NOT_FOUND', 'Supervision not found.', 404); return }
+  if (!(await supervisionTrainingEnabled(tenantId))) { ok(res, { enabled: false, brief: null }); return }
+  const brief = await buildBrief(tenantId, r.user_id, r.type === 'appraisal' ? 'appraisal' : 'supervision')
+  ok(res, { enabled: true, brief })
 })
 
 // Save the recording form + mark the supervision complete. (Agreed-actions → My actions is wired
@@ -1816,6 +1835,18 @@ meRouter.post('/conducting/:id/complete', async (req: Request, res: Response) =>
   if (!r) { err(res, 'NOT_FOUND', 'Supervision not found.', 404); return }
   const form = (req.body?.form && typeof req.body.form === 'object') ? req.body.form : {}
   const nextDate = req.body?.next_date
+  // Training linked to supervisions (flag): save what the person's training looked like at this meeting into the record. Built here on
+  // the server from live data, never taken from the browser, so it cannot be edited and is a true point in time.
+  delete (form as any).training_snapshot   // never accepted from the browser
+  const trainingLinked = await supervisionTrainingEnabled(tenantId)
+  if (trainingLinked) {
+    const prior = await (prisma as any).staffSupervision.findUnique({ where: { id: r.id }, select: { type: true, form: true, status: true } }).catch(() => null)
+    if (prior?.status === 'completed' && prior?.form?.training_snapshot) (form as any).training_snapshot = prior.form.training_snapshot   // a re-save keeps the original snapshot
+    else {
+      const b = await buildBrief(tenantId, r.user_id, prior?.type === 'appraisal' ? 'appraisal' : 'supervision').catch(() => null)
+      if (b) (form as any).training_snapshot = snapshotOf(b)
+    }
+  }
   await (prisma as any).staffSupervision.update({
     where: { id: r.id },
     data: { form, status: 'completed', completed_at: new Date(), ...(nextDate ? { next_due: new Date(nextDate) } : {}) },
@@ -1835,7 +1866,9 @@ meRouter.post('/conducting/:id/complete', async (req: Request, res: Response) =>
       data: toCreate.map(desc => ({ supervision_id: r.id, tenant_id: tenantId, user_id: r.user_id, description: desc.slice(0, 1000) })),
     }).catch(() => {})
   }
-  const toDelete = (existing as any[]).filter(e => !wantedSet.has(e.description.trim().toLowerCase())).map(e => e.id)
+  // Actions added from the training assign screen stay even if they are not in the form: the form shows them, but a conductor who
+  // saves without them must not silently remove an action somebody added on purpose.
+  const toDelete = (existing as any[]).filter(e => e.linked_by !== 'training_assign' && !wantedSet.has(e.description.trim().toLowerCase())).map(e => e.id)
   if (toDelete.length) await (prisma as any).supervisionAction.deleteMany({ where: { id: { in: toDelete } } }).catch(() => {})
 
   // Allocate any resources chosen against an agreed action (training / induction / CQC prep) to the
@@ -1851,6 +1884,13 @@ meRouter.post('/conducting/:id/complete', async (req: Request, res: Response) =>
         console.error('[conducting/complete] allocation error:', e); return { allocated: false, error: 'Could not allocate.' }
       })
       allocations.push({ description: String(a?.description ?? '').trim(), type: type as AllocationType, item_id: itemId, ...result })
+      // Tie the action to the course it asked for, so it closes when the course is completed (flag).
+      if (trainingLinked && type === 'training' && (result as any).enrollment_id) {
+        await (prisma as any).supervisionAction.updateMany({
+          where: { supervision_id: r.id, tenant_id: tenantId, description: String(a?.description ?? '').trim().slice(0, 1000), enrollment_id: null },
+          data: { module_id: itemId, enrollment_id: (result as any).enrollment_id, linked_by: 'supervision_form' },
+        }).catch(() => {})
+      }
     }
   }
 

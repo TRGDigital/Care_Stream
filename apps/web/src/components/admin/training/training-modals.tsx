@@ -4,6 +4,7 @@
 // (next/dynamic) so this code is only fetched when a user opens a dialog.
 
 import { useEffect, useState } from 'react'
+import { SupervisionLinkCheckbox, useSupervisionLinkEnabled, linkAfterAssign } from './supervision-link'
 import { createApiClient } from '@/lib/api-client'
 import { useSession } from 'next-auth/react'
 import { persistentCache } from '@/lib/page-cache'
@@ -26,9 +27,22 @@ export function AssignModal({ api, staff, modules, onClose, onAssigned }: {
   const [dueDate, setDueDate] = useState('')
   const [saving,  setSaving]  = useState(false)
   const [error,   setError]   = useState('')
+  const linkOn = useSupervisionLinkEnabled(api)
+  const [alsoLink, setAlsoLink] = useState(false)
+  const [linkMsg, setLinkMsg]   = useState<string | null>(null)
 
   const statutory  = modules.filter(m => m.category === 'statutory')
   const specialist = modules.filter(m => m.category === 'specialist')
+
+  if (linkMsg !== null) return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-8">
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <h2 className="font-semibold text-neutral-dark">Training assigned</h2>
+        <p className="mt-3 rounded-lg bg-teal-light/30 px-3 py-2 text-sm text-neutral-dark">{linkMsg}</p>
+        <div className="mt-4 flex justify-end"><button onClick={onAssigned} className="rounded-lg bg-teal px-5 py-2 text-sm font-medium text-white hover:bg-teal/90">Done</button></div>
+      </div>
+    </div>
+  )
 
   function toggleStaff(id: string) {
     setSelectedStaff(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
@@ -48,7 +62,9 @@ export function AssignModal({ api, staff, modules, onClose, onAssigned }: {
         module_ids: [...selectedModules],
         due_date:   dueDate || undefined,
       })
-      onAssigned()
+      // Only for a single course: ticking it across a dozen courses would flood each person's supervision.
+      if (linkOn && alsoLink && selectedModules.size === 1) { setLinkMsg(await linkAfterAssign(api, [...selectedStaff], [...selectedModules][0])); setSaving(false) }
+      else onAssigned()
     } catch (e: any) {
       setError(e.message ?? 'Failed to assign training')
       setSaving(false)
@@ -117,6 +133,7 @@ export function AssignModal({ api, staff, modules, onClose, onAssigned }: {
           </div>
         </div>
 
+        {linkOn && selectedModules.size === 1 && <div className="px-6 pb-2"><SupervisionLinkCheckbox checked={alsoLink} onChange={setAlsoLink} /></div>}
         {error && <p className="px-6 py-2 text-sm text-red-600">{error}</p>}
 
         <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-4">
@@ -286,14 +303,32 @@ export function PerModuleAssignModal({ api, module, staff, alreadyAssigned, onCl
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [saving,   setSaving]   = useState(false)
   const [error,    setError]    = useState('')
+  const linkOn = useSupervisionLinkEnabled(api)
+  const [alsoLink, setAlsoLink] = useState(false)
+  const [linkMsg, setLinkMsg]   = useState<string | null>(null)   // shown after assigning when the box was ticked
   const toggle = (id: string) => setSelected(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })
 
   async function assign() {
     if (selected.size === 0) { setError('Select at least one staff member.'); return }
     setSaving(true); setError('')
-    try { await api.training.enroll({ user_ids: [...selected], module_ids: [module.id] }); onAssigned() }
+    try {
+      await api.training.enroll({ user_ids: [...selected], module_ids: [module.id] })
+      if (linkOn && alsoLink) { setLinkMsg(await linkAfterAssign(api, [...selected], module.id)); setSaving(false) }
+      else onAssigned()
+    }
     catch (e: any) { setError(e.message ?? 'Failed to assign.'); setSaving(false) }
   }
+
+  if (linkMsg !== null) return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-md rounded-card bg-white p-5 shadow-xl">
+        <h2 className="font-semibold text-neutral-dark">Assigned</h2>
+        <p className="mt-1 text-sm text-neutral-mid">{module.name} has been assigned.</p>
+        <p className="mt-3 rounded-lg bg-teal-light/30 px-3 py-2 text-sm text-neutral-dark">{linkMsg}</p>
+        <div className="mt-4 flex justify-end"><button onClick={onAssigned} className="rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark">Done</button></div>
+      </div>
+    </div>
+  )
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -315,6 +350,7 @@ export function PerModuleAssignModal({ api, module, staff, alreadyAssigned, onCl
             </label>
           ))}
         </div>
+        {linkOn && <div className="px-5 pb-2"><SupervisionLinkCheckbox checked={alsoLink} onChange={setAlsoLink} /></div>}
         {error && <p className="px-5 text-xs text-red-500">{error}</p>}
         <div className="flex justify-end gap-2 border-t border-gray-100 px-5 py-3">
           <button onClick={onClose} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:bg-neutral-light">Cancel</button>

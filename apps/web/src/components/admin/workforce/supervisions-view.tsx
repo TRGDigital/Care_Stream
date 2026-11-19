@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react'
 import { createApiClient, type SupRecord } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
+import { AdminTrainingBrief } from './training-brief'
 import { Loader2, X, Trash2, AlertTriangle, Users, Plus, Info, ChevronDown } from 'lucide-react'
 
 // Collapsible "how to use this tab" helper — same style as the rest of the site.
@@ -220,6 +221,9 @@ function SupModal({ token, userId, staff, onClose, onSaved }: { token: string; u
         </div>
 
         <div className="max-h-[70vh] space-y-5 overflow-y-auto px-6 py-5">
+          {/* Training brief (only where training is linked to supervisions) */}
+          <AdminTrainingBrief token={token} userId={staff.id} name={staff.name} />
+
           {/* Log a new session */}
           <div className="rounded-lg border border-gray-200 bg-neutral-light/40 p-4">
             <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><Plus size={14} className="text-teal" /> Log a session</p>

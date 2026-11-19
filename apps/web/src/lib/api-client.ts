@@ -177,6 +177,17 @@ export interface LicenseUsage {
 }
 
 // Plan feature flags + licence usage, used to grey out / unlock features.
+export type TrainingBriefItem = { module_name: string; kind: 'Annual' | 'Training'; due_date: string | null; completed_at: string | null; score_pct: number | null; cpd: boolean }
+export type TrainingBrief = {
+  person: { id: string; name: string; job_role: string | null }; generated_at: string; previous: { type: string; held_on: string } | null; since: string | null
+  totals: { assigned: number; completed: number; overdue: number; avg_score: number | null; cpd_hours: number; cpd_completed: number }
+  training: { overdue: TrainingBriefItem[]; due_soon: TrainingBriefItem[]; in_progress: TrainingBriefItem[]; expired: TrainingBriefItem[]; low_scores: TrainingBriefItem[]; completed_since: TrainingBriefItem[] }
+  cqc: { assigned: number; answered: number; pending: number; avg_score: number | null; weak: Array<{ domain: string; score: number }> }
+  knowledge_gaps: number
+  actions: Array<{ id: string; description: string; status: string; module_name: string | null; set_on: string | null }>
+  topics: string[]
+}
+
 export type SearchRecord = { id: string; title: string; sub: string | null; annual?: boolean; cpd?: boolean }
 
 export interface PlanFeatures {
@@ -191,6 +202,7 @@ export interface PlanFeatures {
   has_effectiveness:      boolean
   has_training_impact:    boolean
   has_workforce_compliance: boolean
+  supervision_training?: boolean   // training linked to supervisions is on for this account
   has_audit_recommendations?: boolean
   tier?: string
   annual_license:         LicenseUsage
@@ -778,6 +790,11 @@ export function createApiClient(token: string) {
     },
 
     workforce: {
+      // Training and supervisions, linked (feature flag supervision_training on the account, Enterprise). Whether it is on comes from billing.summary().features.supervision_training.
+      trainingBrief: (userId: string, type: 'supervision' | 'appraisal' = 'supervision') =>
+        apiFetch<{ brief: TrainingBrief }>(`/workforce/staff/${encodeURIComponent(userId)}/training-brief?type=${type}`, token),
+      linkTraining: (user_ids: string[], module_id: string) =>
+        apiFetch<{ linked: number; results: Array<{ user_id: string; name: string; result: 'linked' | 'already' | 'no_supervision' | 'not_enrolled'; supervision_on?: string }> }>('/workforce/training-link', token, { method: 'POST', body: JSON.stringify({ user_ids, module_id }) }),
       register: () =>
         apiFetch<{
           types: string[]
@@ -1335,7 +1352,8 @@ export function createApiClient(token: string) {
       unsavePolicy: (policyId: string) => apiFetch<{ removed: boolean }>(`/me/saved-policies/${policyId}`, token, { method: 'DELETE' }),
       supervisions: () => apiFetch<{ enabled: boolean; records: SupRecord[] }>('/me/supervisions', token),
       conducting: () => apiFetch<{ records: Array<{ id: string; type: string; held_on: string; status: string; next_due: string | null; completed_at: string | null; supervisee_id: string; supervisee: string; supervisee_role: string | null }> }>('/me/conducting', token),
-      conductingDetail: (id: string) => apiFetch<{ record: { id: string; type: string; held_on: string; next_due: string | null; status: string; completed_at: string | null; form: any; conducted_by: string | null; supervisee_id: string; supervisee: string; supervisee_role: string | null }; libraries: { training: Array<{ id: string; name: string }>; induction: Array<{ id: string; name: string }>; cqc: Array<{ id: string; name: string; domain: string }> } }>(`/me/conducting/${encodeURIComponent(id)}`, token),
+      conductingBrief: (id: string) => apiFetch<{ enabled: boolean; brief: TrainingBrief | null }>(`/me/conducting/${encodeURIComponent(id)}/brief`, token),
+      conductingDetail: (id: string) => apiFetch<{ training_linked?: boolean; linked_actions?: Array<{ description: string; module_id: string | null }>; record: { id: string; type: string; held_on: string; next_due: string | null; status: string; completed_at: string | null; form: any; conducted_by: string | null; supervisee_id: string; supervisee: string; supervisee_role: string | null }; libraries: { training: Array<{ id: string; name: string }>; induction: Array<{ id: string; name: string }>; cqc: Array<{ id: string; name: string; domain: string }> } }>(`/me/conducting/${encodeURIComponent(id)}`, token),
       completeConducting: (id: string, body: { form: any; next_date?: string | null }) => apiFetch<{ ok: boolean }>(`/me/conducting/${encodeURIComponent(id)}/complete`, token, { method: 'POST', body: JSON.stringify(body) }),
     },
 

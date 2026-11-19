@@ -1,6 +1,6 @@
-// Training and supervisions, linked. Everything here is behind two checks: the account is on the plan that has supervisions
-// (Enterprise: has_workforce_compliance) AND the tenant feature flag supervision_training is on. The flag lets us test on one account
-// (CS-1001) before anyone else sees it.
+// Training and supervisions, linked. A feature of every account on the plan that has supervisions (Enterprise: has_workforce_compliance).
+// Released to all of them on 19 Nov 2026 after testing on CS-1001. The tenant flag supervision_training is now only a kill switch: set it to
+// false on one account to turn the feature off there.
 //
 //   brief      what a supervisor should know about a person's training before the meeting (rules, no AI, no credit)
 //   snapshot   the same facts, a few of them, saved into the supervision record when it is completed (a point in time)
@@ -15,16 +15,20 @@ const DAY = 86_400_000
 const p = () => prisma as any
 const iso = (d: any) => (d ? new Date(d).toISOString() : null)
 
-/** Just the tenant flag (one small query). Callers that already hold the plan features combine it with has_workforce_compliance themselves. */
+/** Pure: on for every account that has supervisions, unless switched off for that account (supervision_training = false). */
+export function trainingLinkOn(flags: unknown, hasWorkforceCompliance: boolean): boolean {
+  return hasWorkforceCompliance && (flags as any)?.supervision_training !== false
+}
+
+/** Just the tenant flag (one small query). */
 export async function supervisionTrainingFlagOn(tenantId: string): Promise<boolean> {
-  try { const t = await p().tenant.findUnique({ where: { id: tenantId }, select: { feature_flags: true } }); return (t?.feature_flags as any)?.supervision_training === true } catch { return false }
+  try { const t = await p().tenant.findUnique({ where: { id: tenantId }, select: { feature_flags: true } }); return (t?.feature_flags as any)?.supervision_training !== false } catch { return false }
 }
 
 export async function supervisionTrainingEnabled(tenantId: string): Promise<boolean> {
   try {
     const t = await p().tenant.findUnique({ where: { id: tenantId }, select: { feature_flags: true } })
-    if ((t?.feature_flags as any)?.supervision_training !== true) return false
-    return !!(await getPlanFeatures(tenantId)).has_workforce_compliance
+    return trainingLinkOn(t?.feature_flags, !!(await getPlanFeatures(tenantId)).has_workforce_compliance)
   } catch { return false }
 }
 

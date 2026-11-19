@@ -7,6 +7,7 @@ import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
 import { getPlanFeatures } from '../lib/plan-limits'
 import { modeFromFlags } from '../lib/view-as'
+import { trainingLinkOn } from '../lib/supervision-training'
 import { needsBillingFor } from '../lib/tiers'
 import { freeEvent } from '../lib/free-events'
 
@@ -126,7 +127,7 @@ async function featureSwitches(tenantId: string, features: { has_workforce_compl
   let flags: Record<string, unknown> = {}
   try { flags = ((await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { feature_flags: true } }))?.feature_flags ?? {}) as Record<string, unknown> } catch { /* off */ }
   return {
-    supervision_training: !!features.has_workforce_compliance && flags.supervision_training === true,
+    supervision_training: trainingLinkOn(flags, !!features.has_workforce_compliance),
     view_as: modeFromFlags(flags),
   }
 }

@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { composeBrief, snapshotOf, type BriefInput } from './supervision-training'
+import { composeBrief, snapshotOf, trainingLinkOn, type BriefInput } from './supervision-training'
 
 const now = new Date('2026-11-19T10:00:00Z')
 const day = (n: number) => new Date(now.getTime() + n * 86_400_000)
@@ -101,4 +101,13 @@ test('status: nothing opened is not started; complete is complete; past expiry i
 test('a question that no longer exists still shows, without made up options', () => {
   const c = courseDetailOf({ id: 'e', status: 'in_progress', created_at: day(-1), module: { ...mod, questions: [] }, answers: [{ question_id: 'gone', question_text: 'Old question', answer_text: 'B', is_correct: false }] }, now)
   assert.equal(c.incorrect[0].question, 'Old question'); assert.equal(c.incorrect[0].their_answer?.text, null); assert.equal(c.incorrect[0].correct_answer, null)
+})
+
+test('on for every account with supervisions; only an explicit false switches it off; never on without the plan', () => {
+  assert.equal(trainingLinkOn({}, true), true)
+  assert.equal(trainingLinkOn(null, true), true)
+  assert.equal(trainingLinkOn({ supervision_training: true }, true), true)
+  assert.equal(trainingLinkOn({ supervision_training: false }, true), false)
+  assert.equal(trainingLinkOn({ supervision_training: true }, false), false)
+  assert.equal(trainingLinkOn({}, false), false)
 })

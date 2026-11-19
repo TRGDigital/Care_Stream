@@ -54,7 +54,8 @@ export function AdminSearch({ account, onLocked }: { account: AccountKind; onLoc
   const [q, setQ] = useState('')
   const [active, setActive] = useState(0)
   const [guides, setGuides] = useState<GuideEntry[]>([])
-  const [records, setRecords] = useState<Record<string, SearchRecord[]> | null>(null)
+  type Recs = { topics?: string[] } & Partial<Record<'policies' | 'staff' | 'knowledge' | 'audits' | 'training' | 'residents' | 'onboarding', SearchRecord[]>>
+  const [records, setRecords] = useState<Recs | null>(null)
   const [settled, setSettled] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const token = session?.accessToken
@@ -102,7 +103,7 @@ export function AdminSearch({ account, onLocked }: { account: AccountKind; onLoc
     for (const g of searchGuides(term, guides).slice(0, 5)) {
       out.push({ key: 'g-' + g.guide.id + (g.block ?? ''), group: 'Help and guides', title: g.block ? `${g.guide.title}: ${g.block}` : g.guide.title, sub: g.snippet, href: `/guides#${g.guide.id}`, Icon: HelpCircle })
     }
-    const rec = (k: string, group: string, Icon: React.ElementType, base: string, withQ = false, to?: (id: string) => string, cta?: string, alt?: { label: string; href: (id: string) => string }) => (records?.[k] ?? []).forEach(r =>
+    const rec = (k: string, group: string, Icon: React.ElementType, base: string, withQ = false, to?: (id: string) => string, cta?: string, alt?: { label: string; href: (id: string) => string }) => ((records as any)?.[k] as SearchRecord[] | undefined ?? []).forEach(r =>
       out.push({ key: `${k}-${r.id}`, group, title: r.title, sub: r.sub, href: to ? to(r.id) : withQ ? `${base}?q=${encodeURIComponent(r.title)}` : base, locked: lockOf(base), Icon, cta, alt: alt ? { label: alt.label, href: alt.href(r.id) } : undefined }))
     ;(records?.policies ?? []).forEach(r => out.push({
       key: `policies-${r.id}`, group: 'Your policies', title: r.title, sub: r.sub, Icon: FileText, locked: lockOf('/policies'),
@@ -122,9 +123,13 @@ export function AdminSearch({ account, onLocked }: { account: AccountKind; onLoc
     // Order: actions and the person's own records first, then pages and features, then help and guides.
     const TAG: Record<string, string> = { 'Do something': 'Action', 'Your policies': 'Policy', 'Your staff': 'Staff', 'Your residents': 'Resident', 'Your knowledge base': 'Knowledge', Audits: 'Audit', 'Training courses': 'Course', 'Staff onboarding flows': 'Onboarding flow' }
     const rank = (it: Item) => it.group === 'Pages and features' ? 1 : it.group === 'Help and guides' ? 2 : 0
+    // The kinds of thing the person asked for ("GDPR training" asks for courses) come before the other records.
+    const WANT: Record<string, string> = { training: 'Training courses', audit: 'Audits', policy: 'Your policies', onboarding: 'Staff onboarding flows', staff: 'Your staff', resident: 'Your residents', 'knowledge base': 'Your knowledge base' }
+    const wanted = new Set((records?.topics ?? []).map(x => WANT[x]).filter(Boolean))
+    const sub = (it: Item) => it.group === 'Do something' ? 0 : wanted.has(it.group) ? 1 : 2
     return out
-      .map(it => rank(it) === 0 ? { ...it, tag: it.tag ?? (it.cpdCertified ? undefined : TAG[it.group]), group: 'Actions and specifics' } : it)
-      .sort((a, b) => rank(a) - rank(b))
+      .map(it => rank(it) === 0 ? { ...it, tag: it.tag ?? (it.cpdCertified ? undefined : TAG[it.group]), group: 'Actions and specifics', _sub: sub(it) } : { ...it, _sub: 9 })
+      .sort((a, b) => rank(a) - rank(b) || a._sub - b._sub)
   }, [q, guides, records, lockOf])
 
   useEffect(() => { setActive(0) }, [items.length])

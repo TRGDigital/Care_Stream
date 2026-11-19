@@ -4,7 +4,7 @@
 // wrongly with the right answer, time spent), other training allocated since the last supervision, and the gaps they went back over.
 // For the supervisor and admins. Plain facts from their training records: nothing here is scored or judged by AI.
 import { useEffect, useState } from 'react'
-import { X, Loader2, CheckCircle2, CircleDashed, PlayCircle, AlertTriangle, Clock, BookOpen, RotateCcw } from 'lucide-react'
+import { X, Loader2, CheckCircle2, CircleDashed, PlayCircle, AlertTriangle, Clock, BookOpen, RotateCcw, Printer, Mail } from 'lucide-react'
 import type { TrainingDetail, TrainingCourseDetail } from '@/lib/api-client'
 import { CPD_CERTIFIED_LOGO } from '@/lib/cpd'
 
@@ -121,7 +121,70 @@ export function TrainingDetailView({ detail }: { detail: TrainingDetail }) {
   )
 }
 
-export function TrainingDetailModal({ title, load, onClose }: { title: string; load: () => Promise<TrainingDetail | null>; onClose: () => void }) {
+export type DetailShare = {
+  print: () => Promise<string>                                  // the page to print, as HTML
+  email: (toUserId?: string) => Promise<{ sent_to: string }>   // sends it to an admin of the account (the supervisor by default)
+  admins: () => Promise<Array<{ id: string; name: string }>>   // who it can be sent to
+}
+
+// Print and email. The email goes only to an admin of this account: it holds a member of staff's training records.
+function ShareBar({ share }: { share: DetailShare }) {
+  const [open, setOpen] = useState(false)
+  const [admins, setAdmins] = useState<Array<{ id: string; name: string }>>([])
+  const [to, setTo] = useState('')
+  const [busy, setBusy] = useState<'print' | 'email' | null>(null)
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+
+  async function print() {
+    // The window must be opened by the click itself or a pop-up blocker stops it, so open first and fill it once the page is ready.
+    const w = window.open('', '_blank')
+    if (!w) { setMsg({ ok: false, text: 'Your browser blocked the print window. Allow pop-ups for this site and try again.' }); return }
+    w.document.write('<p style="font-family:Arial,sans-serif;padding:24px">Preparing the page to print&hellip;</p>')
+    setBusy('print'); setMsg(null)
+    try {
+      const html = await share.print()
+      w.document.open(); w.document.write(html); w.document.close(); w.focus()
+      setTimeout(() => { try { w.print() } catch { /* the page is open, they can print it themselves */ } }, 400)
+    } catch { w.close(); setMsg({ ok: false, text: 'Could not prepare the page to print.' }) }
+    finally { setBusy(null) }
+  }
+  async function openEmail() {
+    setOpen(o => !o); setMsg(null)
+    if (!admins.length) share.admins().then(a => setAdmins(a)).catch(() => {})
+  }
+  async function send() {
+    setBusy('email'); setMsg(null)
+    try { const r = await share.email(to || undefined); setMsg({ ok: true, text: `Sent to ${r.sent_to}.` }); setOpen(false) }
+    catch (e: any) { setMsg({ ok: false, text: e?.message ?? 'Could not send the email.' }) }
+    finally { setBusy(null) }
+  }
+  return (
+    <div className="relative flex flex-wrap items-center justify-end gap-2">
+      {msg && <span className={`text-xs font-medium ${msg.ok ? 'text-green-700' : 'text-red-700'}`}>{msg.text}</span>}
+      <button type="button" onClick={print} disabled={!!busy} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal hover:text-teal disabled:opacity-60">
+        {busy === 'print' ? <Loader2 size={13} className="animate-spin" /> : <Printer size={13} />} Print
+      </button>
+      <button type="button" onClick={openEmail} disabled={!!busy} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-dark hover:border-teal hover:text-teal disabled:opacity-60">
+        <Mail size={13} /> Send to email
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full z-10 mt-1 w-72 rounded-lg border border-gray-200 bg-white p-3 text-left shadow-lg">
+          <label className="mb-1 block text-xs font-medium text-neutral-mid">Send to</label>
+          <select value={to} onChange={e => setTo(e.target.value)} className="w-full rounded-md border border-gray-200 bg-white px-2 py-1.5 text-sm focus:border-teal focus:outline-none">
+            <option value="">Me</option>
+            {admins.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+          </select>
+          <p className="mt-1.5 text-[11px] text-neutral-mid">It holds a member of staff&rsquo;s training records, so it can only go to an admin on this account.</p>
+          <button type="button" onClick={send} disabled={busy === 'email'} className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark disabled:opacity-60">
+            {busy === 'email' ? <Loader2 size={13} className="animate-spin" /> : <Mail size={13} />} Send
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export function TrainingDetailModal({ title, load, onClose, share }: { title: string; load: () => Promise<TrainingDetail | null>; onClose: () => void; share?: DetailShare }) {
   const [detail, setDetail] = useState<TrainingDetail | null>(null)
   const [err, setErr] = useState('')
   useEffect(() => {
@@ -139,6 +202,7 @@ export function TrainingDetailModal({ title, load, onClose }: { title: string; l
           </div>
           <button onClick={onClose} className="rounded-md p-1.5 text-neutral-mid hover:bg-neutral-light" aria-label="Close"><X size={18} /></button>
         </div>
+        {share && detail && <div className="border-b border-gray-100 px-6 py-2"><ShareBar share={share} /></div>}
         <div className="max-h-[80vh] overflow-y-auto px-6 py-5">
           {err ? <p className="text-sm text-red-700">{err}</p> : detail ? <TrainingDetailView detail={detail} /> : <Loader2 size={18} className="animate-spin text-neutral-mid" />}
         </div>

@@ -37,7 +37,8 @@ export function AdminTrainingBrief({ token, userId, name, supervisionId }: { tok
           {err ? <p className="text-sm text-red-700">{err}</p> : brief ? <TrainingBriefView brief={brief} onDetail={() => setShowDetail(true)} /> : <Loader2 size={16} className="animate-spin text-neutral-mid" />}
         </div>
       )}
-      {showDetail && <TrainingDetailModal title={`${name}: training`} load={async () => (await createApiClient(token).workforce.trainingDetail(userId, supervisionId)).detail} onClose={() => setShowDetail(false)} />}
+      {showDetail && <TrainingDetailModal title={`${name}: training`} load={async () => (await createApiClient(token).workforce.trainingDetail(userId, supervisionId)).detail} onClose={() => setShowDetail(false)}
+        share={{ print: async () => (await createApiClient(token).workforce.trainingDetailPrint(userId, supervisionId)).html, email: to => createApiClient(token).workforce.trainingDetailEmail(userId, supervisionId, to), admins: async () => ((await createApiClient(token).users.list()).users ?? []).filter((u: any) => u.role === 'admin' && u.is_active !== false && u.name).map((u: any) => ({ id: u.id, name: u.name })) }} />}
     </div>
   )
 }

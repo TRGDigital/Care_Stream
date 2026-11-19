@@ -816,6 +816,10 @@ export function createApiClient(token: string) {
       // Training and supervisions, linked (feature flag supervision_training on the account, Enterprise). Whether it is on comes from billing.summary().features.supervision_training.
       trainingDetail: (userId: string, supervisionId?: string) =>
         apiFetch<{ detail: TrainingDetail }>(`/workforce/staff/${encodeURIComponent(userId)}/training-detail${supervisionId ? `?supervision_id=${encodeURIComponent(supervisionId)}` : ''}`, token),
+      trainingDetailPrint: (userId: string, supervisionId?: string) =>
+        apiFetch<{ html: string }>(`/workforce/staff/${encodeURIComponent(userId)}/training-detail/print${supervisionId ? `?supervision_id=${encodeURIComponent(supervisionId)}` : ''}`, token),
+      trainingDetailEmail: (userId: string, supervisionId: string | undefined, toUserId?: string) =>
+        apiFetch<{ sent_to: string }>(`/workforce/staff/${encodeURIComponent(userId)}/training-detail/email`, token, { method: 'POST', body: JSON.stringify({ supervision_id: supervisionId, to_user_id: toUserId }) }),
       trainingBrief: (userId: string, type: 'supervision' | 'appraisal' = 'supervision') =>
         apiFetch<{ brief: TrainingBrief }>(`/workforce/staff/${encodeURIComponent(userId)}/training-brief?type=${type}`, token),
       linkTraining: (user_ids: string[], module_id: string) =>
@@ -1379,6 +1383,8 @@ export function createApiClient(token: string) {
       supervisions: () => apiFetch<{ enabled: boolean; records: SupRecord[] }>('/me/supervisions', token),
       conducting: () => apiFetch<{ records: Array<{ id: string; type: string; held_on: string; status: string; next_due: string | null; completed_at: string | null; supervisee_id: string; supervisee: string; supervisee_role: string | null }> }>('/me/conducting', token),
       conductingTrainingDetail: (id: string) => apiFetch<{ enabled: boolean; detail: TrainingDetail | null }>(`/me/conducting/${encodeURIComponent(id)}/training-detail`, token),
+      conductingTrainingDetailPrint: (id: string) => apiFetch<{ html: string }>(`/me/conducting/${encodeURIComponent(id)}/training-detail/print`, token),
+      conductingTrainingDetailEmail: (id: string, toUserId?: string) => apiFetch<{ sent_to: string }>(`/me/conducting/${encodeURIComponent(id)}/training-detail/email`, token, { method: 'POST', body: JSON.stringify({ to_user_id: toUserId }) }),
       conductingBrief: (id: string) => apiFetch<{ enabled: boolean; brief: TrainingBrief | null }>(`/me/conducting/${encodeURIComponent(id)}/brief`, token),
       conductingDetail: (id: string) => apiFetch<{ training_linked?: boolean; linked_actions?: Array<{ id: string; description: string; module_id: string | null }>; record: { id: string; type: string; held_on: string; next_due: string | null; status: string; completed_at: string | null; form: any; conducted_by: string | null; supervisee_id: string; supervisee: string; supervisee_role: string | null }; libraries: { training: Array<{ id: string; name: string }>; induction: Array<{ id: string; name: string }>; cqc: Array<{ id: string; name: string; domain: string }> } }>(`/me/conducting/${encodeURIComponent(id)}`, token),
       completeConducting: (id: string, body: { form: any; next_date?: string | null; linked_supported?: boolean }) => apiFetch<{ ok: boolean }>(`/me/conducting/${encodeURIComponent(id)}/complete`, token, { method: 'POST', body: JSON.stringify(body) }),

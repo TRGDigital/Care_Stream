@@ -142,7 +142,8 @@ export function SupervisionForm({ token, supervisionId, onClose, onSaved }: { to
                 <div className="border-t border-gray-100 px-4 py-3"><TrainingBriefView brief={brief} onDetail={() => setShowDetail(true)} /></div>
               </details>
             )}
-            {showDetail && <TrainingDetailModal title={`${rec.supervisee}: training`} load={async () => (await createApiClient(token).me.conductingTrainingDetail(supervisionId)).detail} onClose={() => setShowDetail(false)} />}
+            {showDetail && <TrainingDetailModal title={`${rec.supervisee}: training`} load={async () => (await createApiClient(token).me.conductingTrainingDetail(supervisionId)).detail} onClose={() => setShowDetail(false)}
+              share={{ print: async () => (await createApiClient(token).me.conductingTrainingDetailPrint(supervisionId)).html, email: to => createApiClient(token).me.conductingTrainingDetailEmail(supervisionId, to), admins: async () => ((await createApiClient(token).users.list()).users ?? []).filter((u: any) => u.role === 'admin' && u.is_active !== false && u.name).map((u: any) => ({ id: u.id, name: u.name })) }} />}
 
             {/* Sections 1-9 */}
             {SUP_SECTIONS.map((s, i) => (

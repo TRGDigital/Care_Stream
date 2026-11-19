@@ -29,8 +29,8 @@ export default async function PortalLayout({ children }: { children: React.React
       {!session.user.impersonation && <PwaRegister />}
       {!session.user.impersonation && <InstallPrompt />}
       {!session.user.impersonation && <NotificationsOptIn />}
-      {/* The Super User's agree-or-decline notice and minutes heartbeat. Never for an admin viewing this hub as them. */}
-      {!session.user.impersonation && <SuperUserNotice />}
+      {/* The Super User's agree-or-decline notice and minutes heartbeat. For an admin using View hub as: never in view mode, and in act mode (test accounts only) the notice shows but nothing is timed. */}
+      {(!session.user.impersonation || session.user.impersonation.mode === 'act') && <SuperUserNotice actingAs={!!session.user.impersonation} />}
       <div className="flex h-[100dvh] flex-col bg-neutral-light">
         <ViewAsBanner />
         <PortalNav

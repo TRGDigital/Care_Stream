@@ -2,7 +2,7 @@
 
 // For the company's Super User only. 1) The first time they open the hub after being tagged: what it means, and a choice to agree or decline.
 // 2) Once they have agreed: a small heartbeat that adds seconds of real use (tab visible, used in the last 2 minutes) so CareStream can see
-// how long they spend on the hub. Nobody else is timed, and an admin viewing the hub as them is never counted (the layout does not render this).
+// how long they spend on the hub. Nobody else is timed. An admin viewing the hub as them is never timed, and can only see the notice in act mode on a test account.
 import { useEffect, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { Award, Loader2 } from 'lucide-react'
@@ -11,7 +11,9 @@ import { createApiClient } from '@/lib/api-client'
 const BEAT_MS = 30_000
 const IDLE_MS = 120_000
 
-export function SuperUserNotice() {
+// actingAs: an admin using "View hub as" in act mode (test accounts only) sees the agree notice so the flow can be tried, but nothing is
+// ever timed, because the minutes would be the admin's and not the Super User's.
+export function SuperUserNotice({ actingAs = false }: { actingAs?: boolean }) {
   const { data: session } = useSession()
   const token = session?.accessToken
   const [state, setState] = useState<{ is: boolean; consented: boolean } | null>(null)
@@ -24,7 +26,7 @@ export function SuperUserNotice() {
     createApiClient(token).users.superUserMe().then(r => setState({ is: r.is_super_user, consented: r.consented })).catch(() => setState({ is: false, consented: false }))
   }, [token])
 
-  const timing = !!token && state?.is === true && (state.consented || done === 'accepted')
+  const timing = !actingAs && !!token && state?.is === true && (state.consented || done === 'accepted')
   useEffect(() => {
     if (!timing || !token) return
     const mark = () => { lastActive.current = Date.now() }
@@ -57,6 +59,7 @@ export function SuperUserNotice() {
           <li>To do that, CareStream can see <strong>your own use of the hub</strong>: the days you use it, the training and audits you complete, your questions, and roughly how long you spend on it. We only see counts for your colleagues, never who they are or what they ask.</li>
           <li>You can say no, and you can stop any time. Saying no just means nothing is shared.</li>
         </ul>
+        {actingAs && <p className="mt-3 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">Test account: you are acting as this person. Agreeing here is recorded in the audit log, and nothing you do is timed.</p>}
         <div className="mt-5 flex flex-wrap gap-2">
           <button type="button" onClick={() => answer(true)} disabled={busy} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-semibold text-white hover:bg-teal-dark disabled:opacity-60">{busy && <Loader2 size={14} className="animate-spin" />} Yes, I agree</button>
           <button type="button" onClick={() => answer(false)} disabled={busy} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-neutral-mid hover:border-gray-300 disabled:opacity-60">No thanks</button>

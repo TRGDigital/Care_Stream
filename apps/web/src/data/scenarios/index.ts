@@ -53,9 +53,20 @@ import s51 from './turn-a-policy-into-questions-staff-answer.json'
 import s52 from './carer-unsure-at-3am-what-to-do.json'
 import s53 from './what-are-my-staff-asking.json'
 import s54 from './assistant-could-not-find-an-answer.json'
+import s55 from './first-month-with-100-free-audits.json'
+import s56 from './monthly-audits-that-remind-themselves.json'
+import s57 from './audit-finding-to-action-to-recheck.json'
+import s58 from './weak-audit-result-link-to-training.json'
+import s59 from './infection-prevention-audit-before-winter.json'
+import s60 from './medication-audit-after-an-error.json'
+import s61 from './falls-mealtimes-bed-rails-resident-of-the-day-audits.json'
+import s62 from './environment-and-fire-audit-before-an-assessment.json'
+import s63 from './manager-sign-off-on-audits.json'
+import s64 from './recommendations-after-an-audit.json'
+import s65 from './specialist-service-builds-its-own-audit.json'
 
 // One import per page, sorted by `order`. status 'published' pages are public; 'draft' pages are admin preview only.
-export const ALL_SCENARIOS = [s01, s02, s03, s04, s05, s06, s07, s08, s09, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19, s20, s21, s22, s23, s24, s25, s26, s27, s28, s29, s30, s31, s32, s33, s34, s35, s36, s37, s38, s39, s40, s41, s42, s43, s44, s45, s46, s47, s48, s49, s50, s51, s52, s53, s54] as unknown as Scenario[]
+export const ALL_SCENARIOS = [s01, s02, s03, s04, s05, s06, s07, s08, s09, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19, s20, s21, s22, s23, s24, s25, s26, s27, s28, s29, s30, s31, s32, s33, s34, s35, s36, s37, s38, s39, s40, s41, s42, s43, s44, s45, s46, s47, s48, s49, s50, s51, s52, s53, s54, s55, s56, s57, s58, s59, s60, s61, s62, s63, s64, s65] as unknown as Scenario[]
 
 export const publishedScenarios = () =>
   ALL_SCENARIOS.filter(s => s.status === 'published').sort((a, b) => a.order - b.order)

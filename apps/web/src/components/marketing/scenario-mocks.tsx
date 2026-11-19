@@ -61,6 +61,22 @@ export function ScenarioMockView({ m }: { m: ScenarioMock }) {
       </Win>
     )
   }
+  if (m.type === 'audit') {
+    return (
+      <Win title="Audits" caption={m.caption ?? 'Illustration of an audit screen. Example content.'}>
+        <div className="mk-modhd"><b>{m.audit}</b><span className="mk-lock">Example</span></div>
+        {m.stats && m.stats.length > 0 && (
+          <div className="mk-stats">
+            {m.stats.map(([l, v], i) => <div key={i}><small>{l}</small><b>{v}</b></div>)}
+          </div>
+        )}
+        {m.blocks.map(([title, rows], i) => (
+          <div className="mk-card" key={i}><small>{title}</small>
+            {rows.map(([a, b], j) => <div className="mk-row" key={j}><span>{a}</span>{b ? <em>{b}</em> : null}</div>)}</div>
+        ))}
+      </Win>
+    )
+  }
   return (
     <Win title="Analytics: Knowledge gaps" caption="Illustration based on the Knowledge gaps view. Example figures.">
       <div className="mk-stats">

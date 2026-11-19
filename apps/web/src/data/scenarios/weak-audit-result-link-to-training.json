@@ -1,0 +1,500 @@
+{
+  "slug": "weak-audit-result-link-to-training",
+  "status": "draft",
+  "order": 58,
+  "title": "The audit follow up is done, the score is the same. <em>Fix the cause, not just the result.</em>",
+  "meta_title": "Audit Follow Up: Link a Weak Audit to Training | CareStreamAI",
+  "meta_description": "The same audit keeps scoring low. Link it to training, set audit actions and re-check them at the next audit. Audits are free on every plan.",
+  "eyebrow": "Scenario",
+  "lede": "Your hand hygiene audit has scored low three months running, and doing it again has not changed the answer. A proper audit follow up asks why staff keep missing the same step. CareStream's <a href=\"/training-platform\">training built from your own policies</a> sits next to the audit, so the cause gets fixed and the next audit can show it.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "A weak audit, and what comes next",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Hand hygiene audit completed",
+        "note": "Score 62%",
+        "done": true
+      },
+      {
+        "label": "Audit actions set with owners",
+        "note": "Same week",
+        "done": true
+      },
+      {
+        "label": "Training linked to the audit",
+        "note": "Not yet",
+        "done": false
+      },
+      {
+        "label": "Next audit shows the change",
+        "note": "Not yet",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/6fe61900-d8be-4cdc-8675-6e842433b934.webp",
+  "image_alt": "A senior carer shows a colleague the correct hand washing steps at a sink in a care home kitchenette while a manager watches with a clipboard",
+  "card_title": "The audit keeps scoring low. Doing it again will not fix it.",
+  "card_snippet": "Re-running an audit only tells you the problem is still there. Link the audit to training, give each action an owner, and check at the next audit whether the cause was fixed.",
+  "primary_keyword": "audit follow up",
+  "secondary_keywords": [
+    "quality audit",
+    "care quality audit",
+    "audit actions",
+    "audit report"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, so a weak result can be followed by a short lesson on the exact point.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Over 100 audits, free on every plan",
+      "body": "Scoring, photos, a PDF report, actions and scheduling, ready to use in the Staff Hub.",
+      "action": "See the audit library",
+      "href": "/care-audits"
+    },
+    {
+      "title": "Turn a problem into training",
+      "body": "Allocate a short module on the topic, built from your own policies, editable before anyone sees it.",
+      "action": "See adhoc training",
+      "href": "/uses/adhoc-training"
+    }
+  ],
+  "intro": {
+    "heading": "The audit is done every month. The same line keeps failing.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "A deputy runs the hand hygiene audit on the first Tuesday of every month. Each time, the same questions fail: handwashing steps skipped, gel used on visibly dirty hands, sleeves not rolled up. Each time the manager writes an action, reminds the team at handover and books the next audit. Three months on the score has barely moved. Nobody is careless. Nobody has checked whether the team ever learned the steps properly, or whether the habit has simply drifted. An inspector reading the file will see the pattern straight away."
+  },
+  "trail": [
+    {
+      "when": "First Tuesday",
+      "text": "The hand hygiene audit is done on time, on a phone, with photos.",
+      "kind": "ok"
+    },
+    {
+      "when": "Same day",
+      "text": "The score is recorded and the audit report is saved.",
+      "kind": "ok"
+    },
+    {
+      "when": "That week",
+      "text": "Actions are written and the team is reminded at handover.",
+      "kind": "ok"
+    },
+    {
+      "when": "Next month",
+      "text": "The audit is done again. The same three questions fail.",
+      "kind": "gap"
+    },
+    {
+      "when": "Month after",
+      "text": "Another reminder. The score moves by two points.",
+      "kind": "gap"
+    },
+    {
+      "when": "What nobody knows",
+      "text": "Whether the team ever learned the steps, or when they last practised them.",
+      "kind": "gap"
+    },
+    {
+      "when": "What the file shows",
+      "text": "Three reports, one repeating problem, and no change in what staff were taught.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“You have known about this for three months. What did you change?”",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>Running the audit again is checking, not fixing.</b> The gap is between the weak result and a change in what staff know and do. Here is how CareStream helps close it, step by step, with the limits stated plainly.",
+  "why": {
+    "heading": "A repeated low score is a message about the cause",
+    "sub": "A quality audit tells you where practice slips. It cannot tell you why.",
+    "cards": [
+      {
+        "icon": "alert",
+        "title": "The same question fails again",
+        "body": "When one question fails in consecutive audits, the problem is not bad luck. It usually means a skill, a habit or a piece of knowledge that nobody has revisited."
+      },
+      {
+        "icon": "chat",
+        "title": "A handover reminder is easy to forget",
+        "body": "Reminding people is quick, but it leaves no trace of what they were taught, and the people who were off that day never hear it."
+      },
+      {
+        "icon": "tick",
+        "title": "Evidence of change matters most",
+        "body": "Under the regulations, providers must <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">assess, monitor and improve the quality and safety of the services provided</a>. Improvement is the part a repeated score cannot show."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From a weak audit to a fix you can show.",
+    "sub": "This is the <a href=\"/care-audits\">audit library</a> working alongside <a href=\"/training-platform\">training built from your own policies</a>, in the order a manager meets it. The audit screens below are examples, not a live record.",
+    "blocks": [
+      {
+        "heading": "Run a care quality audit and see exactly what failed",
+        "bullets": [
+          "Pick an audit from the library, such as the <a href=\"/care-audits/infection-control\">infection control audit</a>, and run it in the Staff Hub on a phone, tablet or desktop",
+          "Add photos as evidence, score each question and finish with a PDF audit report that shows what passed and what failed",
+          "Audits are free on every plan, including the Free plan"
+        ],
+        "tags": [
+          {
+            "label": "Infection control audit",
+            "href": "/care-audits/infection-control"
+          },
+          {
+            "label": "All care audits",
+            "href": "/care-audits"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Hand Hygiene Observation",
+          "blocks": [
+            [
+              "Questions",
+              [
+                [
+                  "Did the carer wash hands before and after contact with the resident?",
+                  ""
+                ],
+                [
+                  "Were sleeves rolled up and hands and wrists free of jewellery?",
+                  ""
+                ],
+                [
+                  "Was soap and water used where hands were visibly dirty?",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Set actions, then check them at the next audit",
+        "bullets": [
+          "Write actions with an owner and a due date, and staff see theirs in the hub, mark them done and can add photos as proof",
+          "Recommendations and a drafted action plan, from our own machine learning, are on the paid plans. You can always add actions by hand on any plan",
+          "At the next audit of the same kind, the earlier actions are listed and the auditor marks each one fixed or not fixed. Not fixed reopens it"
+        ],
+        "tags": [
+          {
+            "label": "Audit follow up with actions",
+            "href": "/care-audits"
+          },
+          {
+            "label": "Health and safety audit",
+            "href": "/care-audits/health-and-safety"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Hand hygiene results",
+          "stats": [
+            [
+              "Open actions",
+              "4"
+            ],
+            [
+              "Audits affected",
+              "3"
+            ],
+            [
+              "Actions closed",
+              "9"
+            ],
+            [
+              "Latest score",
+              "62%"
+            ]
+          ],
+          "blocks": [
+            [
+              "Questions that failed",
+              [
+                [
+                  "Handwashing steps skipped",
+                  "3 audits"
+                ],
+                [
+                  "Gel used on dirty hands",
+                  "2 audits"
+                ],
+                [
+                  "Sleeves not rolled up",
+                  "2 audits"
+                ]
+              ]
+            ],
+            [
+              "Section scores",
+              [
+                [
+                  "Hand hygiene observation",
+                  "62% score"
+                ],
+                [
+                  "Infection control",
+                  "74% score"
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Link the audit to training so the cause gets addressed",
+        "bullets": [
+          "On the audits page you can link an audit to the free CPD courses and to your own training modules, up to 20 links. The completed audit then shows a “Train your team on this” panel listing them, with an Assign to staff button",
+          "It offers training. It does not assign it for you. You decide who gets what, and nothing is sent because a score was low",
+          "Linked training is shown against your own plan, so <a href=\"/pricing\">see the pricing page for which plan includes it</a>"
+        ],
+        "tags": [
+          {
+            "label": "Infection prevention course",
+            "href": "/staff-training/infection-prevention-and-control"
+          },
+          {
+            "label": "Training built from your own policies",
+            "href": "/training-platform"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Infection Prevention and Control",
+          "blocks": [
+            [
+              "Linked training",
+              [
+                [
+                  "When must you wash hands with soap and water instead of using gel?",
+                  ""
+                ],
+                [
+                  "At which moments should hands be cleaned when caring for one resident?",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Allocate a short module on the exact topic, then re-check",
+        "bullets": [
+          "On the paid plans, allocate an adhoc training module on hand hygiene from the Training screen. It is built from your own policies where they cover it, with general good practice as the fallback, and you can edit and preview it first",
+          "Staff complete it in the Staff Hub and a wrong answer goes into their Follow-up tab. See <a href=\"/uses/adhoc-training\">how adhoc training works</a>",
+          "At the next audit, repeat failures show on the Insights tab, so you can see whether the same question is still failing"
+        ],
+        "tags": [
+          {
+            "label": "Adhoc training",
+            "href": "/uses/adhoc-training"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Hand hygiene results",
+          "stats": [
+            [
+              "Open actions",
+              "1"
+            ],
+            [
+              "Audits affected",
+              "1"
+            ],
+            [
+              "Actions closed",
+              "11"
+            ],
+            [
+              "Latest score",
+              "78%"
+            ]
+          ],
+          "blocks": [
+            [
+              "Questions that failed",
+              [
+                [
+                  "Handwashing steps skipped",
+                  "1 audit"
+                ],
+                [
+                  "Gel used on dirty hands",
+                  "0 audits"
+                ],
+                [
+                  "Sleeves not rolled up",
+                  "0 audits"
+                ]
+              ]
+            ],
+            [
+              "Section scores",
+              [
+                [
+                  "Hand hygiene observation",
+                  "81% score"
+                ],
+                [
+                  "Infection control",
+                  "85% score"
+                ]
+              ]
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "Our audit keeps scoring low on the same thing. What should we do differently?",
+        "a": "Treat the repeat as a sign of a cause, not a lapse. Set clear audit actions, check them at the next audit, and link the audit to training so staff can refresh the exact knowledge behind the failing questions. Then look at whether the same question still fails."
+      },
+      {
+        "q": "Does a low score automatically give my staff training?",
+        "a": "No. Nothing is assigned on its own. You link an audit to courses or your own modules, and the completed audit offers them with an Assign to staff button. You choose who gets what."
+      },
+      {
+        "q": "Which plan includes linking audits to training?",
+        "a": "The plans differ on this point, so please <a href=\"/pricing\">check the pricing page</a> for which plan includes it. Running the audits themselves, with scoring, photos, a PDF report, actions and scheduling, is free on every plan."
+      },
+      {
+        "q": "Can I build the training from our own policies?",
+        "a": "Yes, on the paid plans. In the Training screen you allocate an adhoc module on the topic, built from your own policies where they cover it, with general good practice as the fallback. You can edit and preview it first. This is a separate step you take, after the audit."
+      },
+      {
+        "q": "How do I know the fix worked?",
+        "a": "At the next audit of the same kind, the earlier actions are listed and the auditor marks each one fixed or not fixed. The Insights tab also shows repeat failures, meaning a question failing in consecutive audits. If the repeat disappears, you can show the change."
+      },
+      {
+        "q": "What do staff see when they get an action?",
+        "a": "They see it under My actions in the Staff Hub, can set it to open, in progress or done, add a note, and attach up to 10 photos as proof. Reminders go to the owner before it is due and when it is overdue."
+      },
+      {
+        "q": "Is the audit score a CQC rating?",
+        "a": "No. The score is CareStream's own measure of how many checks passed. It is useful for your own tracking, but it is not a CQC rating and it is not a record submitted to the regulator."
+      },
+      {
+        "q": "How do I try it?",
+        "a": "Create a free account and run an audit straight away, as audits are free on every plan. The paid plans have a 14 day free trial. See <a href=\"/pricing\">the plans</a> or <a href=\"/register\">register</a> to start."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "A way to link and track the fix, not a way to fix it for you",
+    "cards": [
+      {
+        "title": "A low score does not trigger training",
+        "body": "Linking an audit makes the completed audit offer the training. It never assigns anything automatically, so a manager still decides who needs what."
+      },
+      {
+        "title": "It does not watch practice on the floor",
+        "body": "Training shows what staff know. Whether they wash their hands properly on a busy shift still needs someone to observe, which is what the audit itself is for."
+      },
+      {
+        "title": "Scores are not a CQC rating",
+        "body": "Audit scores are CareStream's own measure, and audits are not a regulator submitted record. Recommendations, action plans and adhoc training are on the paid plans."
+      }
+    ]
+  },
+  "read_next": [
+    "how-to-run-a-hand-hygiene-audit-in-a-care-home",
+    "incident-led-training-in-care",
+    "how-do-you-run-in-house-training-in-a-care-home"
+  ],
+  "faqs": {
+    "heading": "Audit follow up in care, answered",
+    "groups": [
+      {
+        "group": "About audits and actions",
+        "items": [
+          {
+            "q": "What is an audit follow up?",
+            "a": "It is what you do after the audit: record the audit actions, give each an owner and date, check they were done, and look at the next result to see whether the problem went away. A score on its own is only the start."
+          },
+          {
+            "q": "What is a quality audit in a care home?",
+            "a": "A quality audit is a planned check of one area, such as infection control, medicines or the kitchen, against a list of questions. The result shows where practice is strong and where it slips. See the <a href=\"/care-audits\">audit library</a> for examples."
+          },
+          {
+            "q": "What should a care quality audit cover?",
+            "a": "That depends on the service. A care home often starts with infection control, health and safety, medicines and the kitchen. The library suggests a core set based on your care setting, and you can add more over time."
+          },
+          {
+            "q": "What should be in an audit report?",
+            "a": "The date, who did it, the score, which questions passed and failed, any photos, and what you will do about it. CareStream creates a PDF audit report when an audit is completed, and it includes the action plan outcomes and re-check results."
+          },
+          {
+            "q": "How do audit actions get closed?",
+            "a": "The owner marks the action done, adds a note and can attach up to 10 photos. At the next audit of the same kind, the auditor checks it. If it is not fixed, the action reopens and the owner is emailed."
+          },
+          {
+            "q": "Can I schedule the audit so it is not forgotten?",
+            "a": "Yes. Schedule an audit for a named person with a due date and a repeat of daily, weekly, monthly or quarterly. They get reminders, and managers are told if it becomes overdue. Scheduling is available on every plan."
+          }
+        ]
+      },
+      {
+        "group": "About training and inspections",
+        "items": [
+          {
+            "q": "Can I link an audit to training?",
+            "a": "Yes. You can link an audit to the free CPD courses and to your own training, and the completed audit then offers them. Which plan includes this differs, so <a href=\"/pricing\">check the pricing page</a>. A suitable starting point is the <a href=\"/staff-training/infection-prevention-and-control\">infection prevention and control course</a>."
+          },
+          {
+            "q": "What does the law say about monitoring quality?",
+            "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17</a> requires systems to assess, monitor and improve the quality and safety of the services provided, and to assess, monitor and mitigate risks to people using the service. Repeat audits that never change anything are hard to square with that."
+          },
+          {
+            "q": "What does it say about infection control?",
+            "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/12\">Regulation 12</a> includes preventing, detecting and controlling the spread of infections, and requires staff to have the competence and skills to provide care safely. A hand hygiene audit and linked training support both."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A practical way to handle a repeating audit result",
+    "lede": "When an audit keeps failing in the same place, doing the audit again will not help. Use the next result as a test of a change you actually made.",
+    "sections": [
+      {
+        "h3": "Find out what kind of problem it is",
+        "paragraphs": [
+          "Look at the failing questions, not just the total. If one question fails across several staff, it is probably knowledge or habit, and training will help. If it fails because gel is not on the wall or sinks are blocked, it is an equipment problem and an action for an owner. A good audit report separates the two.",
+          "Be honest about the audit too. A staff member who is watched may behave differently, so vary the day and shift. Where it helps, ask a second person to audit the same area once."
+        ]
+      },
+      {
+        "h3": "A short plan for the next four weeks",
+        "checklist": [
+          "Week 1: write each audit action with an owner and a date, and fix any equipment problem straight away.",
+          "Week 1: link the audit to training and assign it to the staff involved.",
+          "Week 3: ask the team how the training landed, and observe one hand wash on the floor.",
+          "Week 4: run the audit again and mark each earlier action fixed or not fixed."
+        ]
+      }
+    ],
+    "note": "<b>For the inspector.</b> Keep the audit report, the actions, the training given and the next score together, so you can show what you changed and whether it worked."
+  }
+}

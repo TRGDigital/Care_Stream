@@ -1,0 +1,482 @@
+{
+  "slug": "medication-audit-after-an-error",
+  "status": "draft",
+  "order": 60,
+  "title": "A medication audit after an error. <em>Look at the system, not only the slip.</em>",
+  "meta_title": "Medication Audit After an Error | CareStreamAI",
+  "meta_description": "Run a medication audit after an error, record audit actions with owners and photo proof, and re-check them next time. Audits are free on every plan.",
+  "eyebrow": "Scenario",
+  "lede": "A medicines error has been found and dealt with. Now you want to know whether it was one slip or a weakness in the system. A medication audit gives you that answer, and <a href=\"/training-platform\">CareStream</a> lets you run it on a phone, record what you find and check later that it was fixed.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "After the medicines error",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Error reported and handled",
+        "note": "Day 0",
+        "done": true
+      },
+      {
+        "label": "Medication audit completed",
+        "note": "Day 2",
+        "done": true
+      },
+      {
+        "label": "Audit actions closed with proof",
+        "note": "Not yet",
+        "done": false
+      },
+      {
+        "label": "Re-checked at the next audit",
+        "note": "Not yet",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/504d512a-7b01-4a36-93ee-d4d8202c7ca2.webp",
+  "image_alt": "A nurse in uniform checks a locked medication trolley in a quiet care home corridor while a manager makes notes on a tablet",
+  "card_title": "A medicines error was found. Was it one slip or the system?",
+  "card_snippet": "Handling the error is only the start. Run an audit on your phone, give every finding an owner and photo proof, and check at the next audit that it was fixed. Audits are free on every plan.",
+  "primary_keyword": "medication audit",
+  "secondary_keywords": [
+    "medication audit care home",
+    "medication errors in care homes",
+    "audit report",
+    "audit actions"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, so a finding about practice can become a short lesson for the team.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Care audits library",
+      "body": "More than 100 audits you can run for free, with scoring, photos, a PDF report and actions.",
+      "action": "Browse the audits",
+      "href": "/care-audits"
+    },
+    {
+      "title": "CQC and compliance",
+      "body": "Evidence that builds itself as you audit, so you can show what you found and what you did.",
+      "action": "See CQC and compliance",
+      "href": "/cqc-compliance"
+    }
+  ],
+  "intro": {
+    "heading": "The error is handled. The question is what it tells you.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "On a Tuesday morning, a senior notices a gap on a MAR chart and finds a dose was given late the night before. The manager speaks to the carer, follows the home's medicines error procedure and makes sure the person is safe. The matter feels closed. Then a quieter worry arrives. Was this the only gap, or just the one that got noticed? Medicines errors in care homes rarely have a single cause, and the manager wants to look at storage, stock, recording and competence together. Here is how that plays out."
+  },
+  "trail": [
+    {
+      "when": "Tuesday morning",
+      "text": "A senior spots a late dose on the MAR chart.",
+      "kind": "ok"
+    },
+    {
+      "when": "Same hour",
+      "text": "The person is checked and the error is reported as the procedure says.",
+      "kind": "ok"
+    },
+    {
+      "when": "That afternoon",
+      "text": "The manager talks it through with the carer, kindly and clearly.",
+      "kind": "ok"
+    },
+    {
+      "when": "A week later",
+      "text": "Nobody has looked at storage, stock or recording across the whole home.",
+      "kind": "gap"
+    },
+    {
+      "when": "Who else",
+      "text": "Is anyone else rushing the night round, or signing before they give?",
+      "kind": "gap"
+    },
+    {
+      "when": "What was promised",
+      "text": "“We will tighten things up.” No owner, no date, no photo of the fix.",
+      "kind": "gap"
+    },
+    {
+      "when": "Next month",
+      "text": "Nobody checks whether the changes were made or held.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“What did you do after the error, and how do you know it has not happened again?”",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>Handling the error was the right first step.</b> The gap is between that and a proper look at the whole system, with the follow through written down. Here is how CareStream helps you do that.",
+  "why": {
+    "heading": "One error is a prompt to check everything around it",
+    "sub": "Looking only at the person misses the trolley, the stock, the handover and the paperwork.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "A slip often has company",
+        "body": "A late dose can sit next to a stock count that is out, a fridge that was not logged or a handover that skips medicines. One audit looks at all of it in one go."
+      },
+      {
+        "icon": "tick",
+        "title": "Promises need owners",
+        "body": "“We will tighten things up” is not a plan. Audit actions with a named owner, a due date and photo proof turn good intentions into something you can show."
+      },
+      {
+        "icon": "alert",
+        "title": "Fixes slip back without a re-check",
+        "body": "Without a second look, a change made in week one can quietly fade by week six. The next audit shows the last actions so you can mark each one fixed or not fixed."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From one error to a checked, recorded fix.",
+    "sub": "This is the audit side of CareStream, in the order a manager and a team meet it. Browse the <a href=\"/care-audits\">audit library</a> or see how <a href=\"/uses/adhoc-training\">ad hoc training</a> can follow a finding. The screens below are examples only.",
+    "blocks": [
+      {
+        "heading": "Run the audit on a phone, tablet or desktop",
+        "bullets": [
+          "Pick a real library audit, such as <a href=\"/care-audits/medicines-management\">Medicines Management</a> for the full monthly picture or the <a href=\"/care-audits/daily-medication-audit\">Daily Medication Audit</a> for a quick daily look",
+          "Staff you have given audit access run it in the Staff Hub, a web app on any device, and add photos from the camera as they go",
+          "Each audit is scored by section, and a signature is needed to finish, so the result is clear"
+        ],
+        "tags": [
+          {
+            "label": "Medicines Management audit",
+            "href": "/care-audits/medicines-management"
+          },
+          {
+            "label": "Care audits library",
+            "href": "/care-audits"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Medicines Management audit",
+          "blocks": [
+            [
+              "Questions",
+              [
+                [
+                  "Are medicines stored in a locked trolley or cabinet when not in use?",
+                  ""
+                ],
+                [
+                  "Do MAR charts match what was given, with no gaps in the signatures?",
+                  ""
+                ],
+                [
+                  "Was the last medicines error recorded and followed up as the home's procedure says?",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Give every finding an owner, a date and proof",
+        "bullets": [
+          "Add actions for what you found, each with an owner, a priority and a due date. The owner can be a staff member or an outside contractor",
+          "Owners see their actions in the hub, mark them done and add up to 10 photos as proof",
+          "Paid plans can also have recommendations drafted from your own audit answers by our own technology, which you edit and approve. Manual actions are on every plan"
+        ],
+        "tags": [
+          {
+            "label": "Audit actions and re-checks",
+            "href": "/care-audits"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "medication audit",
+          "blocks": [
+            [
+              "Action",
+              [
+                [
+                  "Move the controlled drugs count to the start of each night round",
+                  ""
+                ]
+              ]
+            ],
+            [
+              "Why it matters",
+              [
+                [
+                  "The count was not signed on two nights, so the change needs an owner and proof it was made.",
+                  ""
+                ]
+              ]
+            ],
+            [
+              "Details",
+              [
+                [
+                  "Owner: the night senior",
+                  ""
+                ],
+                [
+                  "Due date set by the manager",
+                  ""
+                ],
+                [
+                  "Photo of the updated count sheet",
+                  ""
+                ]
+              ]
+            ],
+            [
+              "Outcome",
+              [
+                [
+                  "The night senior photographs the new count sheet in the trolley and marks the action done.",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Where it fits, allocate a short module on medicines",
+        "bullets": [
+          "If the audit shows a practice gap, you can allocate an ad hoc module on medication from your Training screen. This is a step you take yourself, nothing starts on its own",
+          "It is built from your own medicines policy where that covers the topic, and you can edit and preview it first",
+          "The <a href=\"/care-audits/medication-competency-assessment\">Medication Competency Assessment</a> is a separate audit you can run per staff member, for example after a medicines error"
+        ],
+        "tags": [
+          {
+            "label": "Ad hoc training",
+            "href": "/uses/adhoc-training"
+          },
+          {
+            "label": "Medication competency course",
+            "href": "/staff-training/medication-administration-and-competency"
+          }
+        ],
+        "mock": {
+          "type": "training",
+          "module": "Medication (example ad hoc module)",
+          "questions": [
+            "What should you do before signing the MAR chart?",
+            "A dose looks different from the last one. What do you do next?"
+          ],
+          "staff_count": 12
+        }
+      },
+      {
+        "heading": "Re-check next time and keep the audit report",
+        "bullets": [
+          "At the next audit of the same kind, the earlier actions are listed and the auditor marks each one fixed or not fixed. A not fixed action reopens and the owner is emailed",
+          "Insights show scores by month and repeat failures, so you can see a problem coming back",
+          "Every completed audit has a PDF audit report with scores, photos, actions and signatures, which you can keep with your records"
+        ],
+        "tags": [
+          {
+            "label": "Reporting that runs itself",
+            "href": "/training-platform"
+          },
+          {
+            "label": "CQC and compliance evidence",
+            "href": "/cqc-compliance"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Audit results",
+          "stats": [
+            [
+              "Open actions",
+              "4"
+            ],
+            [
+              "Audits affected",
+              "3"
+            ],
+            [
+              "Actions closed",
+              "9"
+            ],
+            [
+              "Average score",
+              "86%"
+            ]
+          ],
+          "blocks": [
+            [
+              "Questions that failed",
+              [
+                [
+                  "Controlled drugs count signed",
+                  "2 audits"
+                ],
+                [
+                  "Fridge temperature recorded",
+                  "2 audits"
+                ],
+                [
+                  "MAR chart gaps",
+                  "1 audit"
+                ]
+              ]
+            ],
+            [
+              "Where the open actions are",
+              [
+                [
+                  "Storage and stock",
+                  "3 actions"
+                ],
+                [
+                  "Recording",
+                  "1 action"
+                ]
+              ]
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "We handled the error. Why run an audit as well?",
+        "a": "Handling the error deals with the person and the moment. An audit looks at the system around it: storage, stock, recording and practice. It shows whether the slip was alone or one of several, and it leaves a record of what you checked."
+      },
+      {
+        "q": "Which audits would we use?",
+        "a": "Most homes start with <a href=\"/care-audits/medicines-management\">Medicines Management</a> for the monthly view and the <a href=\"/care-audits/weekly-medication-stock-and-storage\">Weekly Medication Stock and Storage</a> check, with the <a href=\"/care-audits/daily-medication-audit\">daily audit</a> for a short daily look. The <a href=\"/care-audits/medication-competency-assessment\">Medication Competency Assessment</a> looks at one staff member at a time."
+      },
+      {
+        "q": "Who can run the audit, and where?",
+        "a": "Admins can run any audit. Staff can run the audits you tick for them. They use the Staff Hub, a web app that works on a phone, tablet or desktop. Admins also have the Audits page. You can schedule an audit to a named person with a due date and a repeat, and they are emailed reminders."
+      },
+      {
+        "q": "What happens to the things we find?",
+        "a": "You add audit actions with an owner, a priority and a due date. Owners see them in the hub, mark them done and add photos as proof. If you are on a paid plan, recommendations can be drafted from your answers for you to edit and approve."
+      },
+      {
+        "q": "How do we know the fixes held?",
+        "a": "At the next audit of the same kind, the earlier actions are listed. The auditor marks each one fixed or not fixed. If it is not fixed it reopens, and the owner is emailed. The Insights view also shows repeat failures across audits."
+      },
+      {
+        "q": "Does the audit train staff as well?",
+        "a": "No, and that is deliberate. If the audit shows a practice gap, you can allocate an <a href=\"/uses/adhoc-training\">ad hoc training module</a> on medication yourself, built from your own policy where it covers the topic. That is a manual step. Nothing is triggered automatically by an audit result."
+      },
+      {
+        "q": "Does this replace our incident report or medicines error procedure?",
+        "a": "No. Reporting the error and following your own procedure still come first. The audit sits alongside them. It looks at the wider system and records what you did next."
+      },
+      {
+        "q": "What does it cost to try?",
+        "a": "The audits are free on every plan, including the Free plan. You can <a href=\"/register\">create a free account</a> and run one today, or look at <a href=\"/pricing\">pricing</a> for the paid plans, which have a 14 day free trial."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "A way to look at the system, not a replacement for your procedure",
+    "cards": [
+      {
+        "title": "It does not replace incident reporting",
+        "body": "An audit does not replace reporting the error or following your own medicines error procedure. Those come first. The audit looks at what sits around the error."
+      },
+      {
+        "title": "The score is not a CQC rating",
+        "body": "Audit scores are CareStream's own and are not a regulator rating. An audit is also not a record submitted to any regulator. It is your own evidence of looking and acting."
+      },
+      {
+        "title": "It does not teach or check hands on practice",
+        "body": "Observing a medicines round still needs a competent person watching. Recommendations and drafted action plans are on the paid plans only, and training after an audit is something you allocate yourself."
+      }
+    ]
+  },
+  "read_next": [
+    "medication-training-for-care-workers",
+    "mar-charts-explained-for-new-care-staff",
+    "the-complete-guide-to-care-home-digital-audits"
+  ],
+  "faqs": {
+    "heading": "Medication audits after an error, answered",
+    "groups": [
+      {
+        "group": "About the audit",
+        "items": [
+          {
+            "q": "What is a medication audit in a care home?",
+            "a": "It is a structured check of how medicines are handled: supply, storage, administration, recording, controlled drugs and disposal. In CareStream, the <a href=\"/care-audits/medicines-management\">Medicines Management audit</a> covers these areas and gives a score by section."
+          },
+          {
+            "q": "How often should a medication audit care home routine run?",
+            "a": "That is for the home to decide. Many use a daily or weekly short check and a fuller monthly audit. After an error you might run an extra audit sooner. You can schedule each one with a repeat and a named person."
+          },
+          {
+            "q": "Do I get an audit report I can keep?",
+            "a": "Yes. A completed audit produces a PDF audit report with scores by section, answers, photos, the action plan and signatures. It is saved against the audit run and emailed to admins."
+          },
+          {
+            "q": "What should we do with audit actions?",
+            "a": "Give each one an owner, a due date and a priority. Ask the owner to add a photo as proof when it is done. At the next audit, check each earlier action and mark it fixed or not fixed."
+          },
+          {
+            "q": "Are the audits free?",
+            "a": "Yes. The audits, scoring, photos, PDF report, actions, scheduling and approval are free on every plan. Drafted recommendations are on the paid plans. <a href=\"/register\">Create a free account</a> to try it."
+          },
+          {
+            "q": "Should we also review training after medication errors in care homes?",
+            "a": "Often it helps. If the audit points to a practice gap, you can allocate a short ad hoc module from your Training screen, or point staff to the <a href=\"/staff-training/medication-administration-and-competency\">medication course</a>. Both are steps you choose to take."
+          }
+        ]
+      },
+      {
+        "group": "About inspections and the rules",
+        "items": [
+          {
+            "q": "What do the regulations say about medicines?",
+            "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/12\">Regulation 12</a> says care and treatment must be provided in a safe way, and its list includes \"the proper and safe management of medicines\". It does not set out an audit routine, so each provider decides how it checks."
+          },
+          {
+            "q": "What does CQC say about learning from medicines incidents?",
+            "a": "The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-12\">CQC guidance on Regulation 12</a> says incidents must be reviewed and thoroughly investigated by competent staff, and should lead to improvements. A recorded audit and its actions can show what you did after an error."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A practical way to audit after a medicines error",
+    "lede": "An audit after an error works best when it is calm, specific and short enough to finish. The aim is to learn from the error, not to look for someone to blame.",
+    "sections": [
+      {
+        "h3": "Look at the system around the error",
+        "paragraphs": [
+          "Start with what happened, then widen out. A late dose may point to the timing of the round, the staffing on that shift, how stock is held or how the MAR chart is laid out. The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-12\">CQC guidance on Regulation 12</a> says incidents should be reviewed and lead to improvements, and that staff involved should be told what was learned.",
+          "Keep the tone fair. Staff who fear blame stop reporting, and then you learn about the next slip later. Read our guide to <a href=\"/blog/mar-charts-explained-for-new-care-staff\">MAR charts for new care staff</a> if you want a plain refresher on recording."
+        ]
+      },
+      {
+        "h3": "Four steps that fit a busy service",
+        "checklist": [
+          "Within a few days: run the Medicines Management audit, and add the Weekly Medication Stock and Storage check if storage is in question.",
+          "For every finding: add an action with an owner, a priority and a due date.",
+          "When an action is done: the owner adds a photo and a short note as proof.",
+          "At the next audit: mark each earlier action fixed or not fixed, and keep the audit report."
+        ]
+      }
+    ],
+    "note": "<b>For the inspector.</b> Keep the error record, the audit report, the actions and the re-check together, so you can show what you found, what you changed and how you know it held."
+  }
+}

@@ -1,0 +1,474 @@
+{
+  "slug": "falls-mealtimes-bed-rails-resident-of-the-day-audits",
+  "status": "draft",
+  "order": 61,
+  "title": "The bed rail risk assessment is on file. <em>Who checks it is still right?</em>",
+  "meta_title": "Bed Rail Risk Assessment and Care Audits | CareStreamAI",
+  "meta_description": "Falls, mealtimes, bed rails and resident of the day: four ready made care audits you can run from the Staff Hub, free on every plan, each with actions.",
+  "eyebrow": "Scenario",
+  "lede": "A bed rail risk assessment is written once, then life moves on. CareStream gives you a monthly check that the paperwork, the rails and the mattress still match, plus ready made audits for falls, mealtimes and resident of the day. Every audit is free to run, and you can browse the <a href=\"/care-audits\">audit library</a> before you sign up.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "A monthly audit rhythm",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Monthly person reviews",
+        "note": "Week 1",
+        "done": true
+      },
+      {
+        "label": "Bed rails and mattress checks",
+        "note": "Week 2",
+        "done": true
+      },
+      {
+        "label": "Mealtime observation",
+        "note": "Week 3",
+        "done": false
+      },
+      {
+        "label": "Falls review, actions re-checked",
+        "note": "Week 4",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/de9b89c5-5efe-4491-a446-1856eae808b4.webp",
+  "image_alt": "A care home manager with a clipboard stands in a bright dining room at lunchtime beside a table of residents eating, with a carer serving in the background",
+  "card_title": "Falls, mealtimes, bed rails, resident of the day: one audit each",
+  "card_snippet": "Ready made monthly audits for the checks every care home worries about. Run them on a phone, score them, photograph the problem and turn every gap into an action. Free on every plan.",
+  "primary_keyword": "bed rail risk assessment",
+  "secondary_keywords": [
+    "resident of the day",
+    "falls audit",
+    "nutrition audit",
+    "care audit"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "When an audit shows a gap, give staff short training built from your own policies.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "The care audit library",
+      "body": "More than 100 ready made audits, labelled by care service, with scoring, photos and actions.",
+      "action": "Browse the audits",
+      "href": "/care-audits"
+    },
+    {
+      "title": "CQC and compliance",
+      "body": "Audit results, actions and re-checks kept together as evidence for your next inspection.",
+      "action": "See CQC and compliance",
+      "href": "/cqc-compliance"
+    }
+  ],
+  "intro": {
+    "heading": "The paperwork is in order. The bedroom may not be.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "A registered manager in a care home has a bed rail risk assessment for everyone who uses rails. It was done carefully, signed and filed. Months later a mattress has been swapped, a rail has loosened and a new carer has never seen the assessment. Meanwhile monthly reviews slip, mealtimes run on habit and falls are counted but not reviewed. Nobody is careless. There is simply no regular, scored check that ties it together. Here is how it plays out."
+  },
+  "trail": [
+    {
+      "when": "Admission",
+      "text": "A bed rail risk assessment is completed and filed.",
+      "kind": "ok"
+    },
+    {
+      "when": "Each month",
+      "text": "Monthly reviews are done for most people.",
+      "kind": "ok"
+    },
+    {
+      "when": "Daily",
+      "text": "Staff work hard and mealtimes run smoothly.",
+      "kind": "ok"
+    },
+    {
+      "when": "Spring",
+      "text": "A mattress is replaced. The rail fit is not looked at again.",
+      "kind": "gap"
+    },
+    {
+      "when": "Summer",
+      "text": "A monthly review is skipped for two people.",
+      "kind": "gap"
+    },
+    {
+      "when": "Autumn",
+      "text": "Falls are logged, but nobody reviews them side by side.",
+      "kind": "gap"
+    },
+    {
+      "when": "What the manager has",
+      "text": "Good intentions and a filing cabinet, with no score and no trend.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“How do you know bed rails and mattresses are still safe?”",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The assessments were never the problem.</b> The gap is the regular check that proves they still hold. Here is how CareStream gives you that check, one audit at a time.",
+  "why": {
+    "heading": "Checks fade when nobody owns the rhythm",
+    "sub": "Inspectors ask how you know. A dated, scored audit with actions is a clear answer.",
+    "cards": [
+      {
+        "icon": "alert",
+        "title": "Equipment changes, paperwork does not",
+        "body": "A new mattress, a loose rail or a changed room can make a good assessment out of date. The <a href=\"https://www.hse.gov.uk/healthservices/bed-rails.htm\">HSE bed rails guidance</a> asks for rails to be regularly inspected and maintained, and for a competent person to assess the whole set up."
+      },
+      {
+        "icon": "chat",
+        "title": "Mealtimes are easy to overlook",
+        "body": "Choice, support and dignity at the table are hard to see from the office. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/14\">Regulation 14</a> says nutritional and hydration needs must be met, so an observed mealtime is worth recording."
+      },
+      {
+        "icon": "tick",
+        "title": "Counting is not reviewing",
+        "body": "Falls and weights are written down, but the pattern only shows when you review them together each month and act on what you find."
+      }
+    ]
+  },
+  "how": {
+    "heading": "One page per audit, run from the library.",
+    "sub": "These four audits sit in the <a href=\"/care-audits\">care audit library</a>, free on every plan. They are run in the Staff Hub, a web app on phone, tablet or desktop. The examples below are illustrations of how an audit looks, not your home's real results.",
+    "blocks": [
+      {
+        "heading": "Bed rails and mattress: the check behind the bed rail risk assessment",
+        "bullets": [
+          "The <a href=\"/care-audits/bed-rails-mattress-safety\">Bed Rails and Mattress Safety Audit</a> is run monthly for each person, with 42 questions from the risk assessment to the gaps, the mattress setting and the servicing record",
+          "It checks that your bed rail risk assessment exists and is current. It is not itself an individual risk assessment, and it does not replace one",
+          "Every failed check becomes an action with an owner and a date, and you can add photos as evidence"
+        ],
+        "tags": [
+          {
+            "label": "Bed Rails and Mattress Safety Audit",
+            "href": "/care-audits/bed-rails-mattress-safety"
+          },
+          {
+            "label": "The care audit library",
+            "href": "/care-audits"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Bed Rails and Mattress Safety",
+          "blocks": [
+            [
+              "Questions",
+              [
+                [
+                  "Is there a bed rail risk assessment on file for this person, and is it in date?",
+                  ""
+                ],
+                [
+                  "Do the rails look secure and does the mattress fit snugly between them?",
+                  ""
+                ],
+                [
+                  "Is the servicing record for the bed and mattress up to date?",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "A monthly review that cannot quietly slip",
+        "bullets": [
+          "The <a href=\"/care-audits/resident-of-the-day\">Resident of the Day Review Audit</a> has 43 questions, run for each person, covering care plan, risks, medicines, nutrition, room and family views",
+          "A senior carer, key worker or deputy manager runs it and the registered manager countersigns, using the optional approval step",
+          "Schedule it to repeat monthly, and the board shows what is done, overdue or missed"
+        ],
+        "tags": [
+          {
+            "label": "Resident of the Day Review Audit",
+            "href": "/care-audits/resident-of-the-day"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Resident of the Day Review",
+          "blocks": [
+            [
+              "Questions",
+              [
+                [
+                  "Has the care plan been read through with the person or their family this month?",
+                  ""
+                ],
+                [
+                  "Have the person's weight and nutrition needs been reviewed?",
+                  ""
+                ],
+                [
+                  "Is the room checked for comfort, and has the person been asked their views?",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Falls, mealtimes and weights: a falls audit and a nutrition audit side by side",
+        "bullets": [
+          "The <a href=\"/care-audits/falls-prevention-and-post-fall-review\">Falls Prevention and Post-Fall Review</a> reviews falls this month, post-fall care and prevention measures. Use it as your monthly falls audit",
+          "The <a href=\"/care-audits/mealtime-experience\">Mealtime Experience</a> audit is an observation of a mealtime: choice, support, dignity and nutrition",
+          "Add the <a href=\"/care-audits/weight-monitoring-malnutrition\">Weight Monitoring and Malnutrition Audit</a> as a nutrition audit that looks at weights, screening and food and fluid charts"
+        ],
+        "tags": [
+          {
+            "label": "Falls Prevention and Post-Fall Review",
+            "href": "/care-audits/falls-prevention-and-post-fall-review"
+          },
+          {
+            "label": "Mealtime Experience",
+            "href": "/care-audits/mealtime-experience"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Mealtime Experience",
+          "blocks": [
+            [
+              "Questions",
+              [
+                [
+                  "Were people offered a choice of meal and drink?",
+                  ""
+                ],
+                [
+                  "Did people who needed help to eat get it, without being rushed?",
+                  ""
+                ],
+                [
+                  "Were people treated with dignity throughout the meal?",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "See the scores, open actions and repeat failures",
+        "bullets": [
+          "Each audit is scored by section. The score is CareStream's own measure of your answers, not a CQC rating",
+          "Actions carry an owner, a due date and up to 10 photos, and the next audit asks you to re-check them",
+          "Insights show score by month and any question that fails in consecutive audits"
+        ],
+        "tags": [
+          {
+            "label": "CQC and compliance evidence",
+            "href": "/cqc-compliance"
+          },
+          {
+            "label": "Audit schedule guide",
+            "href": "/blog/care-home-audit-schedule"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Audit results",
+          "stats": [
+            [
+              "Open actions",
+              "6"
+            ],
+            [
+              "Audits affected",
+              "4"
+            ],
+            [
+              "Actions closed",
+              "11"
+            ],
+            [
+              "Average score",
+              "88%"
+            ]
+          ],
+          "blocks": [
+            [
+              "Questions that failed",
+              [
+                [
+                  "Servicing record not up to date",
+                  "3 residents"
+                ],
+                [
+                  "Review not countersigned",
+                  "2 residents"
+                ],
+                [
+                  "Help to eat not offered",
+                  "1 mealtime"
+                ]
+              ]
+            ],
+            [
+              "Where the open actions are",
+              [
+                [
+                  "Bed Rails and Mattress Safety",
+                  "4 actions"
+                ],
+                [
+                  "Resident of the Day Review",
+                  "2 actions"
+                ]
+              ]
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "Does the bed rail audit replace our individual risk assessments?",
+        "a": "No. A competent person still assesses each individual. The audit checks your home's bed rail safety checks each month, such as whether the assessment is on file and in date, how the rails and mattress look and whether servicing is recorded. It is a check on the system, not a replacement for the assessment."
+      },
+      {
+        "q": "Do we need a special app to run these audits?",
+        "a": "No. Staff run them in the Staff Hub, a web app that works on a phone, tablet or desktop. Admins use the Audits page. You can take photos from the phone camera and finish with a drawn signature."
+      },
+      {
+        "q": "Which plans include audits?",
+        "a": "Every plan, including the free one. The library of more than 100 audits, scoring, photos, PDF reports, actions, scheduling and manager approval are all free to run. Recommendations from our own machine learning are on the paid plans."
+      },
+      {
+        "q": "How would I fit four audits into one month?",
+        "a": "Spread them. You might do the person reviews in week one, bed rails and mattress checks in week two, a mealtime observation in week three and the falls review in week four. <a href=\"/blog/care-home-audit-schedule\">Our audit schedule guide</a> covers how often to audit."
+      },
+      {
+        "q": "Who should run them?",
+        "a": "You decide. Give a staff member Staff + Audits access and tick the audits they can run. The library suggests who usually runs each one, for example a senior carer, key worker or deputy for the person review, and a registered manager, deputy or trained senior for bed rails."
+      },
+      {
+        "q": "What happens when something fails?",
+        "a": "Each failure becomes an action with an owner, a priority and a due date, and owners are emailed reminders. At the next audit of the same kind, you re-check each action and mark it fixed or not fixed. A not fixed action reopens."
+      },
+      {
+        "q": "Can an audit lead to staff training?",
+        "a": "Yes. You can link an audit to the free CPD courses or to your own training, so a finished audit offers them. Where a gap is about knowledge, <a href=\"/training-platform\">short training built from your own policies</a> is on the paid plans."
+      },
+      {
+        "q": "How do I try it?",
+        "a": "Create a free account and open the audit library, or start the 14 day free trial of a paid plan. You can run your first audit the same day."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "A check on your own system, not a substitute for judgement",
+    "cards": [
+      {
+        "title": "It is not an individual risk assessment",
+        "body": "The bed rails audit checks your safety checks. Assessing a person, and deciding whether rails suit them, stays with a competent person."
+      },
+      {
+        "title": "Scores are not a CQC rating",
+        "body": "Scores are CareStream's own, and audits are not a record submitted to a regulator. They are your evidence that you look, find and fix."
+      },
+      {
+        "title": "It gives no clinical advice",
+        "body": "The audits ask questions and track actions. Decisions about falls, nutrition or medicines remain with your clinical staff. Recommendations are on paid plans only."
+      }
+    ]
+  },
+  "read_next": [
+    "the-complete-guide-to-care-home-digital-audits",
+    "care-home-audit-schedule",
+    "care-home-audit-software"
+  ],
+  "faqs": {
+    "heading": "Care audits for falls, mealtimes, bed rails and resident of the day, answered",
+    "groups": [
+      {
+        "group": "About the audits",
+        "items": [
+          {
+            "q": "What is a bed rail risk assessment audit?",
+            "a": "It is a monthly check, for each person, that your bed rail safety measures are still in place: the risk assessment, the fit of the rails and mattress, and the servicing record. It is not the individual assessment itself. See the <a href=\"/care-audits/bed-rails-mattress-safety\">Bed Rails and Mattress Safety Audit</a>."
+          },
+          {
+            "q": "What is a resident of the day review?",
+            "a": "A monthly review of one person's care, risks, medicines, nutrition, room and family views. The <a href=\"/care-audits/resident-of-the-day\">review audit</a> records what you find and turns gaps into actions."
+          },
+          {
+            "q": "What does a falls audit cover?",
+            "a": "The <a href=\"/care-audits/falls-prevention-and-post-fall-review\">Falls Prevention and Post-Fall Review</a> looks at falls this month, post-fall care and prevention measures."
+          },
+          {
+            "q": "Is there a nutrition audit?",
+            "a": "Yes, two. The <a href=\"/care-audits/mealtime-experience\">Mealtime Experience</a> observes a mealtime, and the <a href=\"/care-audits/weight-monitoring-malnutrition\">Weight Monitoring and Malnutrition Audit</a> checks weights, screening, referrals and food and fluid charts."
+          },
+          {
+            "q": "What is a care audit, and how often should I run one?",
+            "a": "A care audit is a structured check of part of your service, scored and followed by actions. These four are monthly in the library. The <a href=\"/blog/the-complete-guide-to-care-home-digital-audits\">guide to digital audits</a> explains how to set a rhythm."
+          },
+          {
+            "q": "Do I need to pay to use them?",
+            "a": "No. Audits are free on every plan. Recommendations from our own machine learning are on paid plans."
+          }
+        ]
+      },
+      {
+        "group": "About inspections",
+        "items": [
+          {
+            "q": "Do bed rails need regular checks?",
+            "a": "The <a href=\"https://www.hse.gov.uk/healthservices/bed-rails.htm\">HSE guidance on bed rails</a> says rails should be correctly fitted, secure, regularly inspected and maintained, and that a competent person should assess the bed, mattress, rails and person together. It gives no set inspection frequency, so decide yours and record it."
+          },
+          {
+            "q": "What does the law say about nutrition in care?",
+            "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/14\">Regulation 14</a> says the nutritional and hydration needs of people using the service must be met, including suitable and nutritious food and help to eat or drink if necessary."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A simple monthly rhythm for four audits",
+    "lede": "You do not need a new process. You need the same checks on the same weeks, owned by named people, with actions that get re-checked.",
+    "sections": [
+      {
+        "h3": "Spread the work across the month",
+        "paragraphs": [
+          "The person review, bed rails and weight monitoring audits are run per person, so schedule them over several days, not all at once. Mealtime Experience and the falls review run once for the home. Set each one to repeat monthly, assign a named person and the reminders and escalation do the chasing."
+        ]
+      },
+      {
+        "h3": "A four week checklist",
+        "checklist": [
+          "Week 1: monthly person reviews, countersigned by the registered manager.",
+          "Week 2: bed rails and mattress checks, with a photo of any rail or mattress problem.",
+          "Week 3: a mealtime observation, then the weight monitoring review.",
+          "Week 4: falls review, then re-check last month's actions and mark each fixed or not fixed."
+        ]
+      },
+      {
+        "h3": "Keep the evidence together",
+        "paragraphs": [
+          "Each completed audit gives a PDF report with scores, answers, photos, actions and signatures. If the staff on the floor need to learn something, link the audit to a course or your own training. See the <a href=\"/staff-training/care-certificate\">Care Certificate course</a> for new starters."
+        ]
+      }
+    ],
+    "note": "<b>For the inspector.</b> Keep dated audits, the actions that followed and the re-check results together, so you can show that you look, find and fix."
+  }
+}

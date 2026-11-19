@@ -1,0 +1,478 @@
+{
+  "slug": "infection-prevention-audit-before-winter",
+  "status": "draft",
+  "order": 59,
+  "title": "Run your infection control audit in autumn. <em>Fix the gaps before winter.</em>",
+  "meta_title": "Infection Control Audit Before Winter | CareStreamAI",
+  "meta_description": "Audit infection control in autumn, in the Staff Hub, with photos, scores by section and actions with owners. Audits are free on every plan.",
+  "eyebrow": "Scenario",
+  "lede": "An infection control audit is only useful if the gaps are found while there is still time to fix them. CareStream gives you more than 100 built in audits, free on every plan, to run on a phone or tablet, with photos, a score for each section and an owner for every action. It sits beside your <a href=\"/training-platform\">training built from your own policies</a>.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "Autumn infection audit",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Audit scheduled with a named person",
+        "note": "Early October",
+        "done": true
+      },
+      {
+        "label": "Run in the Staff Hub with photos",
+        "note": "Mid October",
+        "done": true
+      },
+      {
+        "label": "Every gap given an owner and a date",
+        "note": "Not yet",
+        "done": false
+      },
+      {
+        "label": "Fixes checked at the next audit",
+        "note": "Not yet",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/1fe0c449-be42-428b-9172-224b7487c603.webp",
+  "image_alt": "A cleaner and a senior carer checking an alcohol hand gel dispenser on a bright corridor wall, one holding a phone to record the check, in soft autumn light",
+  "card_title": "Audit infection control in autumn, not after the cold snap",
+  "card_snippet": "Find the gaps while there is still time to fix them. More than 100 audits, free on every plan, run on a phone with photos, scored by section, with an owner for every action.",
+  "primary_keyword": "infection control audit",
+  "secondary_keywords": [
+    "infection prevention audit",
+    "infection control audit tool",
+    "audit checklist"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Short training from your own policies, so the gaps an audit finds can be taught as well as fixed.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Care audits library",
+      "body": "More than 100 built in audits, scored by section, with photos, actions and a PDF report.",
+      "action": "Browse the audits",
+      "href": "/care-audits"
+    },
+    {
+      "title": "CQC and compliance",
+      "body": "Evidence that builds as you work, kept together so it is ready when someone asks.",
+      "action": "See CQC and compliance",
+      "href": "/cqc-compliance"
+    }
+  ],
+  "intro": {
+    "heading": "The last audit was in spring. It is now October.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "A registered manager knows the service looks clean. Cleaning schedules run, hand gel is topped up and staff did their annual refresher in the summer. The last audit was done in spring, on paper, and it scored well. Now the evenings are drawing in and she wants a fresh look before the colder months. The trouble is that a folder of old forms cannot tell her what has changed since, which checks were missed, or who was meant to fix what."
+  },
+  "trail": [
+    {
+      "when": "Spring",
+      "text": "The last audit is done and filed. The score is good.",
+      "kind": "ok"
+    },
+    {
+      "when": "Summer",
+      "text": "Cleaning schedules run, hand gel is topped up and the annual refresher is completed.",
+      "kind": "ok"
+    },
+    {
+      "when": "September",
+      "text": "The manager decides to repeat the audit in autumn, ahead of the colder months.",
+      "kind": "ok"
+    },
+    {
+      "when": "October",
+      "text": "The spring audit is still in a folder. Nobody has looked at it since.",
+      "kind": "gap"
+    },
+    {
+      "when": "Upstairs",
+      "text": "A hand gel dispenser was not refitted on one corridor. Nobody told the manager.",
+      "kind": "gap"
+    },
+    {
+      "when": "Nights",
+      "text": "Two sluice and laundry checks were skipped. No photo, no owner, no date.",
+      "kind": "gap"
+    },
+    {
+      "when": "November",
+      "text": "The weather turns, and the paper audit is still the latest evidence you have.",
+      "kind": "gap"
+    },
+    {
+      "when": "The question",
+      "text": "An inspector asks when you last audited infection control and what you changed.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "Doing the audit was not the hard part. The hard part is finding the gaps early, giving each one an owner and showing that it was fixed.",
+  "why": {
+    "heading": "Why autumn is the time to audit",
+    "sub": "A winter audit finds problems you then have to live with. An autumn audit finds them while you can still act.",
+    "cards": [
+      {
+        "icon": "tick",
+        "title": "Time to fix what you find",
+        "body": "An audit in October leaves weeks to replace a dispenser, retrain a shift or re-order stock. One run in the middle of a busy spell only tells you what has already gone wrong."
+      },
+      {
+        "icon": "chat",
+        "title": "Paper hides the pattern",
+        "body": "A pile of old forms rarely shows whether the same question keeps failing. A saved score for each section shows where the weak spots are, and whether they are moving."
+      },
+      {
+        "icon": "alert",
+        "title": "A score without actions is a number",
+        "body": "Finding a gap helps nobody until someone owns it. Every gap needs a named person, a date and proof that it was done, so the next audit can check it."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From the first check to the fixed gap.",
+    "sub": "This is how the audits in CareStream are used for an autumn check, in the order a manager and the team meet them. See the <a href=\"/care-audits\">full audit library</a> and the <a href=\"/staff-training/infection-prevention-and-control\">infection prevention and control course</a>.",
+    "blocks": [
+      {
+        "heading": "Choose the audit and book it in",
+        "bullets": [
+          "Pick a built in audit, such as the monthly one that checks practice, cleaning, equipment and outbreak readiness, or <a href=\"/care-audits/infection-control\">Infection Control</a> (quarterly, with waste, laundry, pest control and staff health)",
+          "Use Schedule an audit to name the person, set the due date and choose a repeat. They are emailed straight away",
+          "Staff with Staff + Audits access run only the audits you have ticked for them"
+        ],
+        "tags": [
+          {
+            "label": "Infection Control audit",
+            "href": "/care-audits/infection-control"
+          },
+          {
+            "label": "Browse all audits",
+            "href": "/care-audits"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Infection Control",
+          "blocks": [
+            [
+              "Questions",
+              [
+                [
+                  "Are hand gel dispensers in place, working and full at the points of care?",
+                  ""
+                ],
+                [
+                  "Are laundry and waste handled and stored as your policy says?",
+                  ""
+                ],
+                [
+                  "Is the cleaning schedule up to date and signed for this week?",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Run it in the Staff Hub, with photos",
+        "bullets": [
+          "Audits run in the Staff Hub, a web app that works on a phone, tablet or desktop, so the check happens in the corridor and not at a desk afterwards",
+          "Each question can carry a photo, and a No is marked as a genuine gap or as the correct answer, so the score is honest",
+          "Every question has to be answered, and the auditor signs before finishing. The result is scored for the whole audit and for each section"
+        ],
+        "tags": [
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          },
+          {
+            "label": "Free to start",
+            "href": "/register"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Hub audit in progress",
+          "blocks": [
+            [
+              "Answers so far",
+              [
+                [
+                  "Dispenser, upstairs corridor: No, empty. Photo added. Marked as a gap",
+                  ""
+                ],
+                [
+                  "Sluice room: Yes, door closed and cleaning log signed. Photo added",
+                  ""
+                ],
+                [
+                  "Clinical waste store: N/A on this floor",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Give every gap an owner, a date and proof",
+        "bullets": [
+          "Add an action for any gap, with an owner, a due date and a priority. The owner can be a member of staff or an outside contractor",
+          "Owners see their jobs in the hub under My actions, and can add up to 10 photos as proof when the job is done",
+          "On the paid plans, recommendations from our own machine learning draft an action plan for you to edit and approve. On the Free plan you add actions yourself"
+        ],
+        "tags": [
+          {
+            "label": "Care audits",
+            "href": "/care-audits"
+          },
+          {
+            "label": "Pricing",
+            "href": "/pricing"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Actions from the audit",
+          "blocks": [
+            [
+              "Actions",
+              [
+                [
+                  "Refit the dispenser upstairs. Owner: Maintenance lead. Due in 3 days",
+                  ""
+                ],
+                [
+                  "Restock gel and wipes at each station. Owner: Senior carer. Due this week",
+                  ""
+                ],
+                [
+                  "Add the night sluice check to the handover. Owner: Night lead. Due in 7 days",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "See the pattern, and check the fix next time",
+        "bullets": [
+          "At the next audit of the same kind, last time's actions are listed and the auditor marks each one fixed or not fixed. A not fixed action reopens and the owner is emailed",
+          "Your results show the score by month and any question that fails audit after audit",
+          "You can link an audit to the free infection prevention and control course, so a weak section points straight to training"
+        ],
+        "tags": [
+          {
+            "label": "Infection prevention and control course",
+            "href": "/staff-training/infection-prevention-and-control"
+          },
+          {
+            "label": "Training from your policies",
+            "href": "/training-platform"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Infection control results",
+          "stats": [
+            [
+              "Open actions",
+              "4"
+            ],
+            [
+              "Sections below target",
+              "2"
+            ],
+            [
+              "Actions closed",
+              "7"
+            ],
+            [
+              "With photo proof",
+              "5"
+            ]
+          ],
+          "blocks": [
+            [
+              "Questions that failed",
+              [
+                [
+                  "Gel dispensers in place and full at points of care",
+                  "Failed 2 audits in a row"
+                ],
+                [
+                  "Night sluice and laundry check signed",
+                  "Failed 1 audit"
+                ],
+                [
+                  "Cleaning schedule signed for the week",
+                  "Passed"
+                ]
+              ]
+            ],
+            [
+              "Section scores",
+              [
+                [
+                  "Hand hygiene facilities",
+                  "68%"
+                ],
+                [
+                  "Laundry and waste",
+                  "74%"
+                ],
+                [
+                  "Cleaning and equipment",
+                  "91%"
+                ]
+              ]
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "Why audit in autumn and not wait for the next quarter?",
+        "a": "Because you get time to act. An audit in October finds the empty dispenser, the skipped check or the out of date schedule while there are still weeks to put it right. You can keep your normal schedule as well. This is simply a deliberate check before the colder months."
+      },
+      {
+        "q": "Which audit should I use?",
+        "a": "It depends on the service. The Infection Control Audit is monthly and checks practice, cleaning, equipment and outbreak readiness. <a href=\"/care-audits/infection-control\">Infection Control</a> is quarterly and covers general precautions, specimen handling, waste, laundry, pest control, staff health, food safety and MRSA management. For care at home there is the Home Care Infection Prevention and PPE Audit, run once a month for each care worker."
+      },
+      {
+        "q": "Is this really free?",
+        "a": "Yes. Audits are free on every plan, including the Free plan. You get the library, scoring, photos, the PDF report, actions, scheduling and approval. Recommendations from our own machine learning and the drafted action plan are on the paid plans only. You can <a href=\"/register\">create a free account</a> to look around."
+      },
+      {
+        "q": "Do my staff need to sit at a computer to do it?",
+        "a": "No. Audits run in the Staff Hub, a web app that works on a phone, tablet or desktop. The auditor walks the corridor, answers each question and adds a photo where it helps. Staff only see the audits you allocate to them."
+      },
+      {
+        "q": "What does the score tell me?",
+        "a": "It is the share of scored questions that passed, shown for the whole audit and for each section. That points you to the weak section. It is CareStream's own score. It is not a CQC rating, and an audit is not a record that you send to the regulator."
+      },
+      {
+        "q": "What happens to the things we find?",
+        "a": "Each gap becomes an action with an owner and a due date. The owner sees it in the hub, can ask for more time and can add photo proof when it is done. At the next audit of the same kind, the earlier actions are listed and the auditor marks each one fixed or not fixed."
+      },
+      {
+        "q": "Can I link a weak result to training?",
+        "a": "You can link any audit to the free <a href=\"/staff-training/infection-prevention-and-control\">infection prevention and control course</a> or to your own training modules, so the finished audit offers them. A manager still decides who needs what, and nothing is sent automatically. You can also set up short <a href=\"/uses/adhoc-training\">adhoc training</a> on the paid plans."
+      },
+      {
+        "q": "How do I try it?",
+        "a": "Create a free account, open the audit library and schedule your first audit. The paid plans have a 14 day free trial if you want the extra features. See the <a href=\"/pricing\">pricing page</a> for what each plan includes."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "What CareStream does not do here",
+    "cards": [
+      {
+        "title": "It does not replace walking the building",
+        "body": "An audit records what a person sees and answers. Someone still has to look at the dispenser, open the sluice door and watch a colleague wash their hands."
+      },
+      {
+        "title": "The score is not a CQC rating",
+        "body": "Audit scores are CareStream's own, and an audit is not a record submitted to the regulator. Use it to find and fix gaps and to show what you did about them."
+      },
+      {
+        "title": "It cannot give you an outbreak plan",
+        "body": "The audits ask whether your arrangements are in place. They do not write your outbreak plan or give clinical advice. Follow the guidance for your service and your local health protection team."
+      }
+    ]
+  },
+  "read_next": [
+    "infection-control-audit",
+    "how-to-run-a-hand-hygiene-audit-in-a-care-home",
+    "infection-control-training-for-care-staff-a-guide-for-managers"
+  ],
+  "faqs": {
+    "heading": "Autumn audit questions",
+    "groups": [
+      {
+        "group": "Choosing and running the audit",
+        "items": [
+          {
+            "q": "What is an infection prevention audit?",
+            "a": "It is a structured check of how well your service prevents and controls infection, covering practice, cleaning, equipment, waste and laundry. A scored, repeatable audit lets you compare one round with the next. Read more in our <a href=\"/blog/infection-control-audit\">guide to auditing infection control</a>."
+          },
+          {
+            "q": "How often should we audit infection control?",
+            "a": "That is for you to decide from your own risk assessment. In CareStream the Infection Control Audit starts as monthly and Infection Control as quarterly, and you can set a repeat when you schedule it. The Hand Hygiene Observation Audit is monthly too."
+          },
+          {
+            "q": "Is there an infection control audit tool I can use free?",
+            "a": "CareStream's audit library is free on every plan, including the Free plan. It includes scoring, photos, a PDF report, actions and scheduling. Other free tools exist, so choose the one your team will actually use. See the <a href=\"/care-audits\">audit library</a>."
+          },
+          {
+            "q": "Do you have an audit checklist for care at home?",
+            "a": "Yes. The Home Care Infection Prevention and PPE Audit has 44 questions, run monthly for each care worker. It covers PPE use, hand hygiene, waste, laundry, spillages, uniform and training."
+          }
+        ]
+      },
+      {
+        "group": "After the audit",
+        "items": [
+          {
+            "q": "Can staff do the audit on their own phone?",
+            "a": "Yes, if you give them Staff + Audits access and tick the audits they can run. They use the Staff Hub in a browser or as an installed app. Admins can run every audit."
+          },
+          {
+            "q": "Do I get a report I can show someone?",
+            "a": "Yes. A finished audit gives you a PDF report. It can also go through a manager sign off first if you switch that on in Settings. Remember that the score is CareStream's own, not a CQC rating."
+          },
+          {
+            "q": "How do I prove that a gap was fixed?",
+            "a": "The action owner marks it done, adds a note and can attach up to 10 photos. At the next audit of the same kind the auditor checks the earlier actions, and a gap that is not fixed reopens."
+          },
+          {
+            "q": "Where do the rules come from?",
+            "a": "The <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/12\">Regulated Activities Regulations 2014, regulation 12</a> sets out safe care and treatment, including preventing and controlling infection. A <a href=\"https://www.gov.uk/government/publications/the-health-and-social-care-act-2008-code-of-practice-on-the-prevention-and-control-of-infections-and-related-guidance\">government code of practice on preventing and controlling infections</a> also applies to adult social care providers in England. Your audit helps show you are acting on both."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A practical autumn audit of infection control",
+    "lede": "You do not need a big project. You need a date, a person, a good audit checklist and a way to keep the results together.",
+    "sections": [
+      {
+        "h3": "Set it up so it actually happens",
+        "paragraphs": [
+          "Pick one audit and book it in with a named person and a date, rather than leaving it as an intention. If you already audit every month or quarter, treat this round as the one you finish before the colder months. Decide in advance which areas will be walked, so the check does not drift towards the easy ones.",
+          "Under regulation 12, providers must assess the risk of, and prevent, detect and control the spread of, infections. A repeatable audit gives you a dated record of how you did that in your own service."
+        ]
+      },
+      {
+        "h3": "Four steps for the week of the audit",
+        "checklist": [
+          "Schedule the infection prevention audit with a named person and a due date.",
+          "Walk the areas with a phone, answer every question and add a photo for each gap.",
+          "Turn every gap into an action with an owner, a date and a priority.",
+          "Add the next date to your calendar, so last time's actions are checked at the next audit."
+        ]
+      },
+      {
+        "h3": "Make the follow up the habit",
+        "paragraphs": [
+          "The audit finds, but the actions fix. Review open actions in your regular management meeting, ask owners for proof and let the next audit confirm the fix. Where a weak section points to a skills gap, link the audit to the infection prevention and control course so the training is one tap away."
+        ]
+      }
+    ],
+    "note": "<b>For the inspector.</b> Keep each audit, its photos, the actions with owners and the re-check together, so you can show what you found, what you changed and when."
+  }
+}

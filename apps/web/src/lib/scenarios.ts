@@ -9,6 +9,7 @@ export type ScenarioMock =
   | { type: 'training'; module: string; questions: string[]; staff_count?: number }
   | { type: 'followup'; module: string; question: string; why: string; remember: string[]; picture: string }
   | { type: 'language'; second_language: string }
+  | { type: 'audit'; audit: string; stats?: [string, string][]; blocks: [string, [string, string][]][]; caption?: string }
   | { type: 'gaps'; stats: { open: number; affected: number; closed: number; engaged: number }; missed: [string, string][]; weak: [string, string][] }
 
 export interface Scenario {

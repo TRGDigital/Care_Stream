@@ -1,0 +1,502 @@
+{
+  "slug": "recommendations-after-an-audit",
+  "status": "draft",
+  "order": 64,
+  "title": "The audit is done. <em>What happens to the audit recommendations?</em>",
+  "meta_title": "Audit Recommendations for Care Services | CareStreamAI",
+  "meta_description": "Finished an audit and not sure what next? CareStream drafts audit recommendations and an action plan. You edit it, set owners and approve it.",
+  "eyebrow": "Scenario",
+  "lede": "A finished audit gives you a score. It does not give you a list of jobs with names against them. On the paid plans, CareStream turns the answers into audit recommendations you can read, change and approve. Audits themselves are free, and you can see how <a href=\"/training-platform\">training built from your own policies</a> fits alongside them.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "After a monthly audit",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Audit completed and signed",
+        "note": "Day 0",
+        "done": true
+      },
+      {
+        "label": "Audit report saved",
+        "note": "Day 0",
+        "done": true
+      },
+      {
+        "label": "Actions owned and dated",
+        "note": "Not yet",
+        "done": false
+      },
+      {
+        "label": "Fixes checked at the next audit",
+        "note": "Not yet",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/78395bdb-69d2-4812-b180-e4730e82a46e.webp",
+  "image_alt": "A care home manager reading a short list of suggested actions on a laptop and circling one with a pen, while a carer beside her adds a note, in a bright office",
+  "card_title": "The audit is finished. Who does what now?",
+  "card_snippet": "An audit shows what failed, not who fixes it. CareStream drafts a short list of suggested actions from your audit answers. You edit it, name an owner, set a date and approve it.",
+  "primary_keyword": "audit recommendations",
+  "secondary_keywords": [
+    "audit report",
+    "audit action plan",
+    "audit actions",
+    "audit tool"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Short training from your own policies, for when an audit shows a team needs a refresher.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "The care audit library",
+      "body": "More than 100 audits, free on every plan, scored by section with a PDF report.",
+      "action": "Browse the audits",
+      "href": "/care-audits"
+    },
+    {
+      "title": "CQC and compliance",
+      "body": "Evidence that builds itself as you audit, act and re-check.",
+      "action": "See CQC and compliance",
+      "href": "/cqc-compliance"
+    }
+  ],
+  "intro": {
+    "heading": "The audit is signed. The jobs are still on a scrap of paper.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "A senior carer completes the monthly infection control audit on a tablet. Every question is answered, photos are attached and the report is saved. The manager reads it that afternoon and sees eleven answers marked as failed. She jots a few jobs on a pad and goes back to the floor. A week later nobody can say who was meant to replace the sluice room bin. A month later the same question fails again. The score is on file, but the follow through is not. Here is how that plays out."
+  },
+  "trail": [
+    {
+      "when": "Tuesday",
+      "text": "A senior carer completes the monthly infection control audit on a tablet.",
+      "kind": "ok"
+    },
+    {
+      "when": "Same day",
+      "text": "Every question is answered, photos are attached and the audit is signed.",
+      "kind": "ok"
+    },
+    {
+      "when": "Next morning",
+      "text": "The report is saved, with a score for each section.",
+      "kind": "ok"
+    },
+    {
+      "when": "That afternoon",
+      "text": "Eleven answers failed. The manager scribbles a few jobs on a pad.",
+      "kind": "gap"
+    },
+    {
+      "when": "A week later",
+      "text": "Who was meant to replace the sluice room bin? Nobody wrote a name.",
+      "kind": "gap"
+    },
+    {
+      "when": "Next month",
+      "text": "The same question fails again, and nobody notices the pattern.",
+      "kind": "gap"
+    },
+    {
+      "when": "What the manager has",
+      "text": "A score and a pad. No owner, no date, no proof of a fix.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“You found this in March. What did you do about it?”",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The audit itself is not the problem.</b> The gap is between the findings and the fix. Here is how CareStream helps you close it, with you making every decision.",
+  "why": {
+    "heading": "A score tells you what failed, not who will fix it",
+    "sub": "Finding a problem is half the job. The other half is showing it was dealt with.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Notes on a pad get lost",
+        "body": "Jobs written in a hurry have no owner and no date. By the following week, half of them have slipped out of everyone's mind."
+      },
+      {
+        "icon": "tick",
+        "title": "Writing the plan takes time",
+        "body": "Turning sixty answers into a clear audit action plan is a job for a quiet hour. Most managers do not have one, so the plan stays unwritten."
+      },
+      {
+        "icon": "alert",
+        "title": "Repeat failures hide in plain sight",
+        "body": "If the same question fails month after month, that is a finding in itself. It is hard to spot when each report sits in its own file."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From a finished audit to a checked fix.",
+    "sub": "This is how the <a href=\"/care-audits\">care audit library</a> and the <a href=\"/how-it-works\">rest of CareStream</a> work together, in the order a manager and a carer meet it.",
+    "blocks": [
+      {
+        "heading": "Run the audit and get a scored audit report, free",
+        "bullets": [
+          "Pick from more than 100 built in audits. Running an audit, scoring it and saving the PDF report is free on every plan, including the Free plan",
+          "Staff you have given audit access complete it in the Staff Hub, a web app on a phone, tablet or desktop, with photos on each question and a drawn signature",
+          "Every audit is scored by section, so you can see where the answers failed at a glance"
+        ],
+        "tags": [
+          {
+            "label": "Infection control audit",
+            "href": "/care-audits/infection-control"
+          },
+          {
+            "label": "Browse the care audit library",
+            "href": "/care-audits"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Infection Control Audit",
+          "blocks": [
+            [
+              "Questions",
+              [
+                [
+                  "Are bins in the sluice room foot operated and lidded?",
+                  ""
+                ],
+                [
+                  "Is hand hygiene seen being carried out before and after personal care?",
+                  ""
+                ],
+                [
+                  "Are cleaning schedules signed and up to date?",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Recommendations arrive as a draft for you to edit",
+        "bullets": [
+          "On Starter and above, completing an audit generates recommendations from our own machine learning, using the answers and evidence you recorded",
+          "It drafts an audit action plan of up to 12 actions, each marked immediate, priority or monitor. The plan starts as a draft and nothing happens until you approve it",
+          "You edit the wording, name an owner, set a due date and approve. Everyone named in the approved plan is emailed"
+        ],
+        "tags": [
+          {
+            "label": "Plans and prices",
+            "href": "/pricing"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Infection Control Audit (example)",
+          "blocks": [
+            [
+              "Suggested action",
+              [
+                [
+                  "Suggested action: replace the sluice room bin with a foot operated one",
+                  ""
+                ]
+              ]
+            ],
+            [
+              "Why it was drafted",
+              [
+                [
+                  "Three answers in the waste section failed. This one affects every shift, so it is drafted as immediate.",
+                  ""
+                ]
+              ]
+            ],
+            [
+              "Draft status",
+              [
+                [
+                  "Draft only until you approve it",
+                  ""
+                ],
+                [
+                  "You choose the owner and the due date",
+                  ""
+                ],
+                [
+                  "Edit or delete anything that does not fit your service",
+                  ""
+                ]
+              ]
+            ],
+            [
+              "Outcome",
+              [
+                [
+                  "The new bin is fitted and the owner adds a photo to the action.",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Owners close their actions with proof",
+        "bullets": [
+          "Each owner sees their actions in the Staff Hub under My actions, sets them to open, in progress or done and adds a note. An owner can also be an outside contractor, tracked by admins",
+          "They can attach up to 10 photos to an action as proof, or ask for more time with a reason. An admin approves or declines the extension",
+          "Manual actions work on every plan, so a Free account can still record and track its own audit actions"
+        ],
+        "tags": [
+          {
+            "label": "Daily medication audit",
+            "href": "/care-audits/daily-medication-audit"
+          },
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "My actions in the Staff Hub",
+          "blocks": [
+            [
+              "Actions",
+              [
+                [
+                  "Replace the sluice room bin. Due Friday. Photo added.",
+                  ""
+                ],
+                [
+                  "Re-brief night staff on glove use. Due in two weeks. In progress.",
+                  ""
+                ],
+                [
+                  "Order a second sharps bin for the treatment room. Due Monday. Open.",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Check the fix at the next audit, and spot repeat failures",
+        "bullets": [
+          "At the next audit of the same kind, the previous actions are listed and the auditor marks each one fixed or not fixed. Not fixed reopens it and emails the owner",
+          "Insights show your score by month and flag a question that fails in consecutive audits, so a repeat failure cannot hide",
+          "Scores are CareStream's own and are not a CQC rating, but they give you a clear record of what you found and what you did"
+        ],
+        "tags": [
+          {
+            "label": "Complete guide to digital audits",
+            "href": "/blog/the-complete-guide-to-care-home-digital-audits"
+          },
+          {
+            "label": "Audit software explained",
+            "href": "/blog/care-home-audit-software"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Audit results",
+          "stats": [
+            [
+              "Open actions",
+              "6"
+            ],
+            [
+              "Owners",
+              "4"
+            ],
+            [
+              "Actions closed",
+              "14"
+            ],
+            [
+              "Re-checked fixed",
+              "78%"
+            ]
+          ],
+          "blocks": [
+            [
+              "Questions that failed",
+              [
+                [
+                  "Foot operated bins in the sluice room",
+                  "2 audits running"
+                ],
+                [
+                  "Hand hygiene before personal care",
+                  "2 audits running"
+                ],
+                [
+                  "Cleaning schedule signed",
+                  "1 audit"
+                ]
+              ]
+            ],
+            [
+              "Where the open actions are",
+              [
+                [
+                  "Waste handling",
+                  "5 fails"
+                ],
+                [
+                  "Hand hygiene",
+                  "3 fails"
+                ]
+              ]
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "We already complete audits. What would CareStream add?",
+        "a": "If you already use an audit tool, you know the hard part is what comes after. CareStream scores the audit, saves the audit report, and on paid plans drafts audit recommendations and an action plan you edit. Then it tracks who does each job and checks it at the next audit."
+      },
+      {
+        "q": "Is the audit itself free?",
+        "a": "Yes. More than 100 audits are free on every plan, including the Free plan. You get scoring, photos, signatures, the PDF audit report, scheduling and manual actions. The drafted suggestions and action plan are on paid plans."
+      },
+      {
+        "q": "How does it come up with the recommendations?",
+        "a": "When an audit is completed, our own machine learning reads the answers and evidence and drafts up to 12 suggested actions. Each is marked immediate, priority or monitor. It is a starting point, written for you to read, not a finished decision."
+      },
+      {
+        "q": "Can it get it wrong?",
+        "a": "Yes. A machine drafted suggestion can miss context that you know and it does not. That is why the plan starts as a draft. You read every line, edit or delete what does not fit, and only then approve it."
+      },
+      {
+        "q": "What happens after I approve the plan?",
+        "a": "Everyone named in it is emailed. Owners see their jobs in the Staff Hub under My actions, mark progress, add a note and attach up to 10 photos. If someone needs longer, they ask with a reason and an admin decides."
+      },
+      {
+        "q": "How do I know the fix worked?",
+        "a": "At the next audit of the same kind, the earlier actions are listed. The auditor marks each as fixed or not fixed. If it is not fixed, the action reopens and the owner is emailed. Nothing is closed just because someone said so."
+      },
+      {
+        "q": "Does it tell me my CQC rating?",
+        "a": "No. The scores are CareStream's own, they are not a CQC rating, and an audit is not a record sent to the regulator. What you get is a clear, dated record of what you found, what you decided and what you checked."
+      },
+      {
+        "q": "What does it cost, and can I try it?",
+        "a": "You can <a href=\"/register\">create a free account</a> and run audits straight away. Paid plans come with a 14 day free trial, which is where recommendations and the drafted plan are included. See the <a href=\"/pricing\">pricing page</a> for plan details."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "A way to organise your response, not a replacement for your judgement",
+    "cards": [
+      {
+        "title": "Suggestions can be wrong",
+        "body": "Drafted suggestions come from our own machine learning. They can miss local context. You decide what is right for your service, and nothing is assigned until you approve."
+      },
+      {
+        "title": "Recommendations are on paid plans only",
+        "body": "The drafted recommendations and action plan start on Starter. On the Free plan the audit still runs and scores, and you can add and track your own audit actions by hand."
+      },
+      {
+        "title": "It is not a regulator record or a rating",
+        "body": "Audit scores are CareStream's own and are not a CQC rating. Audits are not submitted to the regulator. They are your own evidence that you looked, acted and checked."
+      }
+    ]
+  },
+  "read_next": [
+    "the-complete-guide-to-care-home-digital-audits",
+    "care-home-audit-software",
+    "infection-control-audit"
+  ],
+  "faqs": {
+    "heading": "Recommendations after an audit, answered",
+    "groups": [
+      {
+        "group": "About recommendations and action plans",
+        "items": [
+          {
+            "q": "What are audit recommendations?",
+            "a": "They are suggested next steps drawn from the answers in a completed audit. In CareStream they are drafted for you on paid plans, so you start from a list instead of a blank page."
+          },
+          {
+            "q": "What is an audit action plan?",
+            "a": "It is the list of jobs that follow an audit, each with an owner, a due date and a priority. CareStream drafts up to 12 actions, you edit them, and the plan only takes effect when you approve it."
+          },
+          {
+            "q": "Who owns the audit actions?",
+            "a": "You choose. An owner can be a member of staff or an outside contractor. Staff see their actions in the Staff Hub, and admins track the ones given to contractors."
+          },
+          {
+            "q": "Can I add my own actions without the drafted plan?",
+            "a": "Yes. Manual actions are on every plan, including Free. You can add an action, give it an owner and date, attach photos and close it out, with no drafted recommendations needed."
+          }
+        ]
+      },
+      {
+        "group": "About the audit tool and the audit report",
+        "items": [
+          {
+            "q": "Is CareStream a free audit tool?",
+            "a": "Running audits is free on every plan. You get a library of more than 100 audits, scoring, photos and signatures. The <a href=\"/care-audits\">audit library</a> lists them by care service."
+          },
+          {
+            "q": "What is in the audit report?",
+            "a": "A branded PDF with the overall and section scores, each answer, photos, a summary, the action plan with outcomes and re-check results, and signatures. It is saved against the audit and emailed to admins."
+          },
+          {
+            "q": "Do I need a manager to approve an audit?",
+            "a": "Only if you want it. Manager approval is optional and off by default. When it is on, a completed audit goes to your registered or care manager, who approves it or sends it back."
+          },
+          {
+            "q": "Can an audit lead to staff training?",
+            "a": "Yes. You can link an audit to the free CPD courses or to your own training modules, and the completed audit offers them. For example, an infection control audit can point to the <a href=\"/staff-training/infection-prevention-and-control\">infection prevention and control course</a>. See also <a href=\"/uses/adhoc-training\">adhoc training</a>."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A practical way to turn audit findings into action",
+    "lede": "A good audit is only useful if something changes afterwards. This is a simple way to move from a finished audit to a fix you can show, whatever audit tool you use.",
+    "sections": [
+      {
+        "h3": "What a clear audit action plan needs",
+        "paragraphs": [
+          "Providers of regulated activities must have systems to <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">assess, monitor and improve the quality and safety of the services they provide</a>. An audit is one way to assess. The action plan is how you show you then improved.",
+          "Under <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/12\">regulation 12, care and treatment must be provided in a safe way</a>, which includes assessing and mitigating risks. A fix with an owner, a date and a photo is much easier to stand behind than a line in a meeting note."
+        ]
+      },
+      {
+        "h3": "Four checks after every audit",
+        "checklist": [
+          "Within two days: read the report and the failed answers, and decide what is urgent.",
+          "Within a week: approve an audit action plan where every action has one owner and one due date.",
+          "As actions close: ask for a photo or a short note, so the record shows what was done.",
+          "At the next audit: check each earlier action is fixed, and look for any question that fails twice."
+        ]
+      },
+      {
+        "h3": "Reading drafted suggestions with care",
+        "paragraphs": [
+          "Treat drafted suggestions as a colleague's first pass. Check each one against what you know about your building, your residents and your staff. Remove anything that does not apply, and add anything the draft missed. The decision, and the responsibility, stays with you."
+        ]
+      }
+    ],
+    "note": "<b>For the inspector.</b> Keep the report, the approved plan and the re-check result together. They show what you found, what you decided and whether it worked."
+  }
+}

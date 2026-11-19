@@ -1,0 +1,504 @@
+{
+  "slug": "audit-finding-to-action-to-recheck",
+  "status": "draft",
+  "order": 57,
+  "title": "The audit found it. Can you show it was fixed? <em>Plan the re audit.</em>",
+  "meta_title": "Re Audit and Audit Actions for Care Services | CareStreamAI",
+  "meta_description": "An audit finds a problem, but can you prove it was closed? Track audit actions with owners, photos and a re-check at the next audit. Free on every plan.",
+  "eyebrow": "Scenario",
+  "lede": "A finding on an audit is only half the story. The other half is proof that someone fixed it and that you looked again. CareStream gives every finding an owner, a due date and photos, then shows it back to you at the next re audit. Audits are free on every plan, and the wider <a href=\"/training-platform\">training and compliance toolkit</a> sits alongside them.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "From finding to proof",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Loose handrail found on the audit",
+        "note": "Day 0",
+        "done": true
+      },
+      {
+        "label": "Action given an owner and a due date",
+        "note": "Day 0",
+        "done": true
+      },
+      {
+        "label": "Photo of the repair added as proof",
+        "note": "Not yet",
+        "done": false
+      },
+      {
+        "label": "Checked again at the next audit",
+        "note": "Not yet",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/cbc70e27-d8d5-4eab-8621-ebdc7d20b67c.webp",
+  "image_alt": "A care home manager photographs a corridor handrail on her phone while a maintenance worker stands beside her in a bright corridor",
+  "card_title": "The audit found the problem. Can you prove it was fixed?",
+  "card_snippet": "Every audit finding can become an action with an owner, a due date and photo proof, then be checked again at the next audit. More than 100 audits, free on every plan.",
+  "primary_keyword": "re audit",
+  "secondary_keywords": [
+    "audit action plan",
+    "audit actions",
+    "action tracker",
+    "audit evidence",
+    "audit follow up"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Short training from your own policies, for when an audit shows staff need a refresher.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "More than 100 care audits",
+      "body": "Browse the audit library by care service. Every audit is free to run on every plan.",
+      "action": "See the audits",
+      "href": "/care-audits"
+    },
+    {
+      "title": "CQC and compliance",
+      "body": "Evidence that builds itself as you work, and a clear view of where you stand.",
+      "action": "See CQC and compliance",
+      "href": "/cqc-compliance"
+    }
+  ],
+  "intro": {
+    "heading": "You found the problem. Now you need to show it was fixed.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "During the monthly premises audit, a manager notices that a handrail in the first floor corridor has worked loose. She marks it as a finding and tells maintenance in passing. The repair gets done, or she believes it does. Two months later the same audit comes round and nobody can say when the rail was fixed, who did it or whether it was ever checked. The audit was done properly. What is missing is the trail from the finding to the fix, and the proof that someone looked again."
+  },
+  "trail": [
+    {
+      "when": "Audit day",
+      "text": "The manager walks the premises audit and spots a loose handrail.",
+      "kind": "ok"
+    },
+    {
+      "when": "Same day",
+      "text": "She marks it as a finding and the audit is completed and scored.",
+      "kind": "ok"
+    },
+    {
+      "when": "That afternoon",
+      "text": "She mentions it to the maintenance worker in the corridor.",
+      "kind": "ok"
+    },
+    {
+      "when": "A week later",
+      "text": "Nobody wrote down who owns the repair or when it is due.",
+      "kind": "gap"
+    },
+    {
+      "when": "Two weeks later",
+      "text": "The rail may have been fixed. There is no photo and no note.",
+      "kind": "gap"
+    },
+    {
+      "when": "Next month",
+      "text": "The audit comes round again. Nobody remembers last time's finding.",
+      "kind": "gap"
+    },
+    {
+      "when": "Looking back",
+      "text": "No one can say if it was fixed, or whether anyone checked.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“You found this in March. Show me it was closed.”",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The audit did its job.</b> The gap is what happens after it. Here is how CareStream turns a finding into an action, keeps the audit evidence, and brings it back for a re check.",
+  "why": {
+    "heading": "A finding without proof of closing is only half an audit",
+    "sub": "Finding a problem shows you look. Showing it was fixed shows you act.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Verbal handovers get lost",
+        "body": "A quick word in a corridor feels like action. A week on, nobody is sure who agreed to what, or by when."
+      },
+      {
+        "icon": "tick",
+        "title": "A fixed job needs proof",
+        "body": "Saying a repair was done is not the same as showing it. A dated photo and a note from the person who did it settle the question."
+      },
+      {
+        "icon": "alert",
+        "title": "Fixes can slip back",
+        "body": "A problem can return. Unless the next audit looks at last time's actions, a repeat fault can sit unnoticed for months."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From finding to fix to re check.",
+    "sub": "This is how the <a href=\"/care-audits\">audit library</a> works in the order a manager meets it. The audit features are free on every plan. See also <a href=\"/uses/adhoc-training\">turning a finding into adhoc training</a> when the cause is knowledge, not equipment.",
+    "blocks": [
+      {
+        "heading": "Run the audit in the Staff Hub and record the finding",
+        "bullets": [
+          "Pick an audit from more than 100, such as <a href=\"/care-audits/premises-and-maintenance\">Premises and Maintenance</a>, and run it on a phone, tablet or desktop in the Staff Hub",
+          "Answer each question and add photos from the phone camera as audit evidence for what you see",
+          "Finish with your signature and a scored report, ready for the audit follow up"
+        ],
+        "tags": [
+          {
+            "label": "Browse the audit library",
+            "href": "/care-audits"
+          },
+          {
+            "label": "Premises and Maintenance audit",
+            "href": "/care-audits/premises-and-maintenance"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Premises and Maintenance audit",
+          "blocks": [
+            [
+              "Questions",
+              [
+                [
+                  "Are handrails secure along all corridors? No, loose on the first floor (photo added)",
+                  ""
+                ],
+                [
+                  "Are fire exits clear and unobstructed? Yes",
+                  ""
+                ],
+                [
+                  "Is the call bell system tested and working? Yes",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Turn the finding into an action with an owner",
+        "bullets": [
+          "Add an action with an owner, a priority and a due date. The owner can be a staff member or an outside contractor",
+          "This is your audit action plan for the run. Adding actions by hand is on every plan, including Free",
+          "On the paid plans, recommendations from our own machine learning can draft a plan for you to edit and approve"
+        ],
+        "tags": [
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          },
+          {
+            "label": "Health and Safety audit",
+            "href": "/care-audits/health-and-safety"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Premises and Maintenance",
+          "blocks": [
+            [
+              "Action",
+              [
+                [
+                  "Refix the loose handrail in the first floor corridor",
+                  ""
+                ]
+              ]
+            ],
+            [
+              "Why it matters",
+              [
+                [
+                  "A loose handrail is a risk to anyone who relies on it, so it should have a named owner and a date, not a passing word.",
+                  ""
+                ]
+              ]
+            ],
+            [
+              "Details",
+              [
+                [
+                  "Owner: maintenance lead",
+                  ""
+                ],
+                [
+                  "Priority: immediate",
+                  ""
+                ],
+                [
+                  "Due: within 7 days",
+                  ""
+                ]
+              ]
+            ],
+            [
+              "Outcome",
+              [
+                [
+                  "The owner finishes the repair, photographs the rail and marks the action done with a short note.",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Keep the action tracker moving, with reminders and proof",
+        "bullets": [
+          "The action tracker shows each action as open, in progress or done. Owners update it in the Staff Hub under My actions",
+          "Add up to 10 photos per action as proof. Photos are optional, but they are the strongest audit evidence",
+          "The owner gets an email when an action is due within two days and when it is overdue. Late actions go to admins after your escalation days",
+          "If more time is needed, the owner asks with a reason and an admin approves or declines"
+        ],
+        "tags": [
+          {
+            "label": "Falls Prevention audit",
+            "href": "/care-audits/falls-prevention-and-post-fall-review"
+          },
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "action tracker",
+          "blocks": [
+            [
+              "Actions",
+              [
+                [
+                  "Refix handrail, first floor corridor. Maintenance lead. Done, 2 photos",
+                  ""
+                ],
+                [
+                  "Replace worn corridor sensor light. Contractor. In progress, due Friday",
+                  ""
+                ],
+                [
+                  "Review the trip hazard in the lounge. Deputy. Overdue, escalated",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Re check it at the next audit and see the whole picture",
+        "bullets": [
+          "There is no separate re audit button. The re check happens when you next run that audit, which lists last time's actions",
+          "The auditor marks each one fixed or not fixed. Not fixed reopens it and emails the owner",
+          "The PDF report includes action plan outcomes and re check results, and the Insights view shows repeat failures across audits"
+        ],
+        "tags": [
+          {
+            "label": "Audit software guide",
+            "href": "/blog/care-home-audit-software"
+          },
+          {
+            "label": "CQC and compliance evidence",
+            "href": "/cqc-compliance"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Action tracker",
+          "stats": [
+            [
+              "Open actions",
+              "4"
+            ],
+            [
+              "Audits affected",
+              "3"
+            ],
+            [
+              "Actions closed",
+              "11"
+            ],
+            [
+              "Average score",
+              "85%"
+            ]
+          ],
+          "blocks": [
+            [
+              "Questions that failed",
+              [
+                [
+                  "Handrail secure",
+                  "Failed twice"
+                ],
+                [
+                  "Corridor lighting working",
+                  "Failed once"
+                ]
+              ]
+            ],
+            [
+              "Where the open actions are",
+              [
+                [
+                  "Premises and Maintenance",
+                  "4 open actions"
+                ],
+                [
+                  "Health and Safety",
+                  "2 open actions"
+                ]
+              ]
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "We already do audits. What is missing?",
+        "a": "Usually the middle. The audit finds something, then the fix lives in someone's head or a notebook. CareStream gives each finding an action with an owner, a priority and a due date, so there is a record of who was asked to do what, and when."
+      },
+      {
+        "q": "How do I show that a problem was actually fixed?",
+        "a": "The person who did the work marks the action done and can add up to 10 photos and a short note. Photos are optional, but a dated photo of a repaired handrail is hard to argue with. It all stays with the audit."
+      },
+      {
+        "q": "Is there a re audit button?",
+        "a": "No, and we would rather say so plainly. The re check happens at the next run of that audit. It shows the previous actions, and the auditor marks each one fixed or not fixed. If it is not fixed, the action reopens and the owner is emailed."
+      },
+      {
+        "q": "What if the action is overdue?",
+        "a": "The owner is emailed when it is due within two days and again when it is overdue. After the number of days you set for your service, it is escalated to admins. An owner can also ask for more time with a reason, and an admin decides."
+      },
+      {
+        "q": "Can I use it for a contractor?",
+        "a": "Yes. An action owner can be a staff member or an outside contractor. Actions for contractors are tracked by admins, since a contractor does not use the Staff Hub."
+      },
+      {
+        "q": "Do I have to write the action plan myself?",
+        "a": "You can add actions by hand on every plan. On the paid plans, recommendations from our own machine learning can draft an audit action plan from the evidence. It starts as a draft, and you edit it, set owners and dates, and approve it."
+      },
+      {
+        "q": "What if the finding is a training problem?",
+        "a": "Then fix the knowledge as well as the fault. You can link an audit to our free CPD courses or your own training modules, and the finished audit offers them. For a quick refresher on a topic, see <a href=\"/uses/adhoc-training\">adhoc training</a>."
+      },
+      {
+        "q": "How do I try it, and what does it cost?",
+        "a": "Audits are free on every plan, so you can <a href=\"/register\">create a free account</a> and run one today. The paid plans add things such as drafted action plans, and come with a 14 day free trial. See <a href=\"/pricing\">pricing</a> for the detail."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "A trail from finding to fix, not a regulator's record",
+    "cards": [
+      {
+        "title": "It does not fix anything for you",
+        "body": "CareStream records the action, reminds the owner and keeps the proof. Someone still has to do the repair, the retraining or the review."
+      },
+      {
+        "title": "Scores are ours, not a rating",
+        "body": "Audit scores are CareStream's own measure. They are not a CQC rating, and an audit is not a record submitted to the regulator."
+      },
+      {
+        "title": "Photos and the re check are not forced",
+        "body": "Photo proof is optional, and the re check only happens when you run that audit again. A drafted action plan is on the paid plans only."
+      }
+    ]
+  },
+  "read_next": [
+    "the-complete-guide-to-care-home-digital-audits",
+    "cqc-audit",
+    "care-home-audit-schedule"
+  ],
+  "faqs": {
+    "heading": "Audit actions and re audits, answered",
+    "groups": [
+      {
+        "group": "About audit actions",
+        "items": [
+          {
+            "q": "What is a re audit in a care home?",
+            "a": "It is a second look at something an audit found, to check the fix held. In CareStream the re check happens at the next run of the same audit, which lists last time's actions for the auditor to mark fixed or not fixed."
+          },
+          {
+            "q": "What should an audit action plan include?",
+            "a": "For each finding: what needs to happen, who owns it, how urgent it is and the date it is due. Then the outcome, ideally with a photo or note. CareStream actions carry an owner, a priority and a due date."
+          },
+          {
+            "q": "How do I keep track of audit actions?",
+            "a": "Use one action tracker, not notebooks and emails. Each action shows as open, in progress or done, and owners update it in the Staff Hub. Reminders go out when it is due soon and when it is overdue."
+          },
+          {
+            "q": "What counts as good audit evidence for a closed action?",
+            "a": "A dated photo, a short note from the person who did the work and the sign off at the next audit. CareStream lets you add up to 10 photos per action. Photos are optional, so decide what your service expects."
+          },
+          {
+            "q": "What does audit follow up look like day to day?",
+            "a": "The owner is told, reminded and can ask for more time. An admin sees what is overdue. At the next audit the auditor checks each action. You can browse the <a href=\"/care-audits\">audit library</a> to see what is covered."
+          },
+          {
+            "q": "Does this cost anything?",
+            "a": "Running audits, adding actions by hand, photos, scoring and the PDF report are free on every plan, including Free. Drafted action plans from our own machine learning are on the paid plans. See <a href=\"/pricing\">pricing</a>."
+          }
+        ]
+      },
+      {
+        "group": "About inspections",
+        "items": [
+          {
+            "q": "Do providers have to audit their own services?",
+            "a": "Regulation 17 says systems or processes must be established and operated effectively, including to assess, monitor and improve the quality and safety of the services provided. See <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17 on good governance</a>. It does not say how, so each provider chooses its own method."
+          },
+          {
+            "q": "Why does a repair need a record?",
+            "a": "Regulation 15 says premises and equipment must be, among other things, suitable and properly maintained. See <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/15\">Regulation 15 on premises and equipment</a>. A dated action and photo show you noticed a fault and dealt with it."
+          },
+          {
+            "q": "Will an audit report count as CQC evidence?",
+            "a": "It helps show that you check your own service and act on what you find. Keep it alongside your other <a href=\"/cqc-compliance\">CQC evidence</a>. It is your own record, not a regulator rating or a submission."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A practical way to close the loop on audit findings",
+    "lede": "Most services audit well. The weak point is the stretch between a finding and proof it was closed. A few small habits make that stretch visible.",
+    "sections": [
+      {
+        "h3": "Write the action while the finding is fresh",
+        "paragraphs": [
+          "Do it before you leave the corridor. An action written on the day has an owner and a date, and a verbal word does not. Keep the wording specific: not \"sort the handrail\" but \"refix the first floor corridor handrail by Friday\". If the fault cannot wait, give it the top priority and make the owner aware straight away.",
+          "Decide what proof you expect for each kind of action. A repair suits a photo. A review suits a short note. Agreeing this in advance makes the audit evidence consistent from one audit to the next."
+        ]
+      },
+      {
+        "h3": "Four checks that keep audit follow up honest",
+        "checklist": [
+          "Every finding that needs work has an owner, a priority and a due date.",
+          "Closed actions carry a note, and a photo where one helps.",
+          "Overdue actions are looked at weekly, and extensions are approved or declined with a reason.",
+          "At the next audit, each previous action is marked fixed or not fixed."
+        ]
+      },
+      {
+        "h3": "Look for repeats, not only one-offs",
+        "paragraphs": [
+          "If the same question fails audit after audit, the fix is not holding. That is a prompt to look at the cause: equipment, process or training. The Insights view in CareStream flags repeat failures, which helps you decide where to look first."
+        ]
+      }
+    ],
+    "note": "<b>For the inspector.</b> Keep the finding, the action, the proof and the re check together, so you can show it was found, fixed and checked."
+  }
+}

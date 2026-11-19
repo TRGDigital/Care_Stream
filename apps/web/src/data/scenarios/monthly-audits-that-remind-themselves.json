@@ -1,0 +1,503 @@
+{
+  "slug": "monthly-audits-that-remind-themselves",
+  "status": "draft",
+  "order": 56,
+  "title": "Your audit schedule lives in your head. <em>Let it remind people for you.</em>",
+  "meta_title": "Audit Schedule for Care Services That Reminds | CareStreamAI",
+  "meta_description": "Build an audit schedule where each audit has a named person, a due date and automatic reminders. Free on every plan, with a board that shows what was missed.",
+  "eyebrow": "Scenario",
+  "lede": "Most monthly audits are missed because they depend on one manager remembering. With CareStream you set an audit schedule once: a named person, a due date and a repeat. Reminders then go out by email, and the library of more than 100 audits is free on every plan. See how <a href=\"/training-platform\">the wider platform</a> fits around it.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "A monthly audit, left to memory",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Audit planned for the month",
+        "note": "Day 1",
+        "done": true
+      },
+      {
+        "label": "Mentioned in handover",
+        "note": "Day 3",
+        "done": true
+      },
+      {
+        "label": "Anyone reminded it was due",
+        "note": "Not yet",
+        "done": false
+      },
+      {
+        "label": "Audit completed and signed off",
+        "note": "Not yet",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/e6f5a85e-7799-494b-bd7c-2320286ac4fe.webp",
+  "image_alt": "A senior carer in uniform looks at a wall calendar with coloured stickers in a staff room while a manager points to a date",
+  "card_title": "The monthly audit nobody was reminded about",
+  "card_snippet": "Audits that rely on one person's memory get missed. Give each audit a named person, a due date and a repeat, and reminders and escalation go out by email without you chasing.",
+  "primary_keyword": "audit schedule",
+  "secondary_keywords": [
+    "audit tracker",
+    "audit calendar",
+    "audit management software",
+    "audit app"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Short training from your own policies, so an audit finding can become a lesson as well as an action.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Care audits library",
+      "body": "More than 100 audits for care homes, home care and other services, free on every plan.",
+      "action": "Browse the audits",
+      "href": "/care-audits"
+    },
+    {
+      "title": "CQC and compliance",
+      "body": "Evidence that builds as you work, so you can show what you checked and what you did about it.",
+      "action": "See CQC and compliance",
+      "href": "/cqc-compliance"
+    }
+  ],
+  "intro": {
+    "heading": "The audit was on the list. Nobody was told.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "A registered manager plans the month on a Monday. The kitchen audit and the infection control audit are both due. She mentions them at handover and a senior carer says she will take the kitchen one. Then a sickness absence, a safeguarding call and an admission fill the week. Nothing is written down anywhere that anyone else can see. By the end of the month neither audit has been started, and nobody has been told they are late. Here is how that plays out."
+  },
+  "trail": [
+    {
+      "when": "Monday",
+      "text": "The manager plans the month. Two audits are due.",
+      "kind": "ok"
+    },
+    {
+      "when": "Handover",
+      "text": "She mentions both. A senior carer says she will do the kitchen one.",
+      "kind": "ok"
+    },
+    {
+      "when": "Day 3",
+      "text": "Everyone nods. The intention is real.",
+      "kind": "ok"
+    },
+    {
+      "when": "Week two",
+      "text": "A sickness absence and a safeguarding call take the whole week.",
+      "kind": "gap"
+    },
+    {
+      "when": "Week three",
+      "text": "No one has a due date. No one has been reminded.",
+      "kind": "gap"
+    },
+    {
+      "when": "Month end",
+      "text": "Neither audit has been started, and nothing shows they were late.",
+      "kind": "gap"
+    },
+    {
+      "when": "What the manager has",
+      "text": "A plan in her head and a gap in the file.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“Show me your last three kitchen audits.” There are only two.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The intention was never the problem.</b> The gap is between a plan in someone's head and a reminder in someone's inbox. Here is how CareStream closes it, and where it stops.",
+  "why": {
+    "heading": "Audits only happen if they can be seen and chased",
+    "sub": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17, good governance</a>, says providers must operate systems to “assess, monitor and improve the quality and safety of the services provided”. A missed audit leaves a hole in that.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Verbal plans do not leave a trail",
+        "body": "“I will do it this week” is a good intention. It is not a due date, and it will not remind anyone when the week gets away."
+      },
+      {
+        "icon": "tick",
+        "title": "Busy weeks push audits out first",
+        "body": "Audits rarely feel urgent until they are late. When the day gets full they are the thing that slips, and often nobody notices for a month."
+      },
+      {
+        "icon": "alert",
+        "title": "A spreadsheet only works if you open it",
+        "body": "A hand kept audit tracker needs someone to update it and someone to look. It cannot send a reminder, and it cannot tell you who was late."
+      }
+    ]
+  },
+  "how": {
+    "heading": "Pick the audit, name the person, and let it chase.",
+    "sub": "This is the audit scheduling in CareStream, in the order a manager and an auditor meet it. Browse the <a href=\"/care-audits\">free audit library</a> first, or read how to <a href=\"/blog/care-home-audit-schedule\">plan a care home audit schedule</a>.",
+    "blocks": [
+      {
+        "heading": "Schedule an audit to a named person, with a due date and a repeat",
+        "bullets": [
+          "On the Audits page, choose Schedule an audit, pick the audit from the library, and choose who will do it and when it is due",
+          "Set it to repeat daily, weekly, monthly or quarterly, or leave it as a one off, and the audit is allocated to that person automatically",
+          "The person is emailed straight away, and everyone who looks at the board sees the same plan"
+        ],
+        "tags": [
+          {
+            "label": "Browse the audit library",
+            "href": "/care-audits"
+          },
+          {
+            "label": "Kitchen Audit",
+            "href": "/care-audits/kitchen-audit"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Schedule an audit, Kitchen Audit",
+          "blocks": [
+            [
+              "Schedule an audit",
+              [
+                [
+                  "Who will do it? Senior carer, Priya",
+                  ""
+                ],
+                [
+                  "When is it due? Friday 28th",
+                  ""
+                ],
+                [
+                  "How often? Monthly",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "The auditor runs it in the Staff Hub, on a phone, tablet or desktop",
+        "bullets": [
+          "The audit opens in the Staff Hub, a web app, so the auditor can start, save and complete it on any device",
+          "Each question can carry photos from the phone camera, and the audit finishes with a score and a PDF report, with signatures",
+          "Anything found can become an action with an owner and a due date, which is checked again at the next audit of the same kind"
+        ],
+        "tags": [
+          {
+            "label": "Infection Control Audit",
+            "href": "/care-audits/infection-control"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Infection Control Audit",
+          "blocks": [
+            [
+              "Audit question",
+              [
+                [
+                  "Is the sluice room clean, tidy and free from stored items?",
+                  ""
+                ]
+              ]
+            ],
+            [
+              "Why it matters",
+              [
+                [
+                  "A cluttered sluice is hard to clean and a risk for cross infection, so it is worth a photo as well as an answer.",
+                  ""
+                ]
+              ]
+            ],
+            [
+              "What to do",
+              [
+                [
+                  "Answer from what you can see today",
+                  ""
+                ],
+                [
+                  "Add a photo for any finding",
+                  ""
+                ],
+                [
+                  "Say who will fix it and by when",
+                  ""
+                ]
+              ]
+            ],
+            [
+              "What it looks like",
+              [
+                [
+                  "The auditor stands in the sluice room, phone in hand, photographing a shelf of boxes.",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Reminders go out on time, then escalate if the audit is still open",
+        "bullets": [
+          "A due soon email goes to the assignee when the audit is due within two days, and an overdue email goes once if it passes its date",
+          "After a set number of days overdue, managers are emailed too. The default is 2 and you change it in Settings",
+          "Reminders respect each person's Audit updates email preference, and admins can have a summary daily, weekly or off"
+        ],
+        "tags": [
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          },
+          {
+            "label": "Plan your audits",
+            "href": "/blog/care-home-audit-schedule"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Reminder emails for Kitchen Audit",
+          "blocks": [
+            [
+              "Reminder emails",
+              [
+                [
+                  "Two days before: due soon email to Priya",
+                  ""
+                ],
+                [
+                  "Day after the due date: overdue email to Priya",
+                  ""
+                ],
+                [
+                  "Two days overdue: managers emailed",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "A board shows what is done, overdue and missed, month by month",
+        "bullets": [
+          "The scheduling board works as an audit calendar and audit tracker in one, showing done, in progress, overdue, due and missed for each audit each month",
+          "If a repeating audit is still open when the next one falls due, it is marked missed and the next is created, so a skip stays visible",
+          "Scores and repeat failures sit alongside, and the completed report can be shown to an inspector"
+        ],
+        "tags": [
+          {
+            "label": "CQC and compliance evidence",
+            "href": "/cqc-compliance"
+          },
+          {
+            "label": "Health and Safety audit",
+            "href": "/care-audits/health-and-safety"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Audit board",
+          "stats": [
+            [
+              "Overdue",
+              "2"
+            ],
+            [
+              "Missed",
+              "3"
+            ],
+            [
+              "Done this quarter",
+              "9"
+            ],
+            [
+              "Done on time",
+              "88%"
+            ]
+          ],
+          "blocks": [
+            [
+              "Missed and overdue",
+              [
+                [
+                  "Kitchen Audit, March",
+                  "missed"
+                ],
+                [
+                  "Fire Marshall Checklist, February",
+                  "missed"
+                ],
+                [
+                  "Infection Control Audit",
+                  "overdue"
+                ]
+              ]
+            ],
+            [
+              "By audit",
+              [
+                [
+                  "Infection Control",
+                  "2 overdue"
+                ],
+                [
+                  "Kitchen",
+                  "1 missed"
+                ]
+              ]
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "I already keep an audit tracker in a spreadsheet. Why change?",
+        "a": "A spreadsheet records what you typed into it. It cannot email the person who is meant to do the audit, and it cannot escalate when the date passes. In CareStream the audit, the person, the due date and the reminders live in one place."
+      },
+      {
+        "q": "How do I schedule an audit?",
+        "a": "On the Audits page choose Schedule an audit. Pick the audit, name the person, set the due date and choose whether it repeats: none, daily, weekly, monthly or quarterly. The person is emailed at once, and the audit is allocated to them."
+      },
+      {
+        "q": "What reminders do people get?",
+        "a": "A daily job sends a due soon email when an audit is within two days, and an overdue email once if it passes its date. After a set number of days overdue, managers are emailed as well. The default is two days and you can change it in Settings."
+      },
+      {
+        "q": "What happens if a monthly audit is simply skipped?",
+        "a": "If a repeating audit is still open when the next one falls due, it is marked as missed and the next one is created. The skip stays on the board instead of quietly rolling forward."
+      },
+      {
+        "q": "Can I see everything on one audit calendar?",
+        "a": "Yes. The scheduling board shows each audit by month with its status: done, in progress, overdue, due or missed. It works as an audit calendar and an audit tracker without a spreadsheet."
+      },
+      {
+        "q": "Does it work as an audit app on a phone?",
+        "a": "Audits are run in the Staff Hub, a web app that works on a phone, tablet or desktop. Staff can add photos from the phone camera, then save and finish the audit on whichever device suits them."
+      },
+      {
+        "q": "Does it phone anyone, or sort my rota?",
+        "a": "No. The reminders are emails, and the board shows the picture. Nothing phones anyone, and it does not plan shifts or cover. You still need to make time in someone's week to do the audit."
+      },
+      {
+        "q": "What does it cost to try?",
+        "a": "The audits, scheduling and reminders are free on every plan, including Free. Paid plans have a 14 day free trial, and you can <a href=\"/register\">create a free account</a> to look around first. See <a href=\"/pricing\">pricing</a> for what each plan adds."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Reminders and a board, not a replacement for good management",
+    "cards": [
+      {
+        "title": "It sends emails, not phone calls",
+        "body": "Reminders and escalation go by email, and they respect each person's Audit updates preference. Nothing phones anyone, and it does not plan shifts. Someone still has to be given the time."
+      },
+      {
+        "title": "The score is ours, not the regulator's",
+        "body": "An audit score is CareStream's own measure of how a check went. It is not a CQC rating, and an audit is not a record submitted to the regulator. It is your evidence of checking."
+      },
+      {
+        "title": "Some extras are on paid plans only",
+        "body": "The audits, scheduling and reminders are free on every plan. Recommendations from our own machine learning and the drafted action plan are on paid plans, and building your own audit is Enterprise."
+      }
+    ]
+  },
+  "read_next": [
+    "care-home-audit-schedule",
+    "chasing-staff-training-completions",
+    "the-complete-guide-to-care-home-digital-audits"
+  ],
+  "faqs": {
+    "heading": "Scheduled audits in CareStream, answered",
+    "groups": [
+      {
+        "group": "About the audit schedule",
+        "items": [
+          {
+            "q": "How often should a care home audit repeat?",
+            "a": "It depends on the audit and the risk. Many checks suit a monthly rhythm, some are quarterly and a few are daily or weekly. CareStream lets you choose none, daily, weekly, monthly or quarterly for each scheduled audit. Our guide to a <a href=\"/blog/care-home-audit-schedule\">care home audit plan</a> goes through how to choose."
+          },
+          {
+            "q": "Is there audit management software that is free?",
+            "a": "The audit side of CareStream is free on every plan, including Free: the library of more than 100 audits, scoring, photos, PDF reports, actions, scheduling and optional manager approval. See the <a href=\"/care-audits\">audit library</a>. Paid plans add things like recommendations and the drafted action plan."
+          },
+          {
+            "q": "Can I use a spreadsheet as an audit tracker instead?",
+            "a": "You can, and many services do. The limit is that a spreadsheet cannot remind the person who is due, escalate when something is late or mark a skipped audit as missed. CareStream does those three things for you."
+          },
+          {
+            "q": "Can I have a different person for each audit?",
+            "a": "Yes. Each scheduled audit names one person. Scheduling an audit to someone also allocates it to them, so it appears in their Staff Hub without extra steps."
+          }
+        ]
+      },
+      {
+        "group": "Using it day to day",
+        "items": [
+          {
+            "q": "Is there an audit app for my staff?",
+            "a": "Staff run audits in the Staff Hub, a web app that works on a phone, tablet or desktop. There is nothing extra to install to start, and they can add photos as they go. See <a href=\"/how-it-works\">how CareStream works</a>."
+          },
+          {
+            "q": "What is on the audit calendar view?",
+            "a": "The scheduling board lists each audit by month, with a status of done, in progress, overdue, due or missed. It lets you see at a glance which audits need a nudge."
+          },
+          {
+            "q": "Who gets the overdue and escalation emails?",
+            "a": "The person the audit is scheduled to gets a due soon email and one overdue email. After the number of days you set in Settings, managers are emailed too. Admins can also choose a daily or weekly summary, or turn it off."
+          },
+          {
+            "q": "Does a high audit score mean we are rated well by CQC?",
+            "a": "No. The score is CareStream's own and is not a CQC rating. It shows how a particular check went and how that changes over time. See <a href=\"/cqc-compliance\">CQC and compliance</a> for how the evidence fits together."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A practical way to set up audits that hold",
+    "lede": "A good plan is boring. It names a person, gives a date and repeats without anyone having to remember. The steps below suit any care setting, whatever you use to run it.",
+    "sections": [
+      {
+        "h3": "Start with a small, honest list",
+        "paragraphs": [
+          "Do not schedule every audit in the library in month one. Pick the five or six checks that matter most in your service, such as the <a href=\"/care-audits/health-and-safety\">health and safety audit</a>, infection control and medicines, and put each one on a repeat you can keep.",
+          "Under <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">regulation 17</a>, providers need systems to assess, monitor and improve the quality and safety of their services. A short schedule you keep to shows more than a long one you abandon."
+        ]
+      },
+      {
+        "h3": "Make each audit survive a busy week",
+        "checklist": [
+          "Name one person for each audit, not a team",
+          "Give it a due date, not just a month",
+          "Choose a repeat so the next one appears without you",
+          "Decide in advance who is told after two days overdue"
+        ]
+      },
+      {
+        "h3": "Close the loop on what you find",
+        "paragraphs": [
+          "An audit is only useful if findings lead somewhere. The <a href=\"https://www.hse.gov.uk/simple-health-safety/risk/steps-needed-to-manage-risk.htm\">HSE says you must review the controls</a> you put in place to make sure they are working, and should consider a review after problems, accidents or near misses.",
+          "In CareStream an action has an owner and a due date, and at the next audit of the same kind it is listed so the auditor can mark it fixed or not fixed. Where the finding is about knowledge, you can also set short <a href=\"/uses/adhoc-training\">adhoc training</a> on the topic."
+        ]
+      }
+    ],
+    "note": "This guide is general good practice, not legal advice. Check your own policies and the regulator's current guidance for your service."
+  }
+}

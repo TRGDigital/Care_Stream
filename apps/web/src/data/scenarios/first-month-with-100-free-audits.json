@@ -1,0 +1,503 @@
+{
+  "slug": "first-month-with-100-free-audits",
+  "status": "draft",
+  "order": 55,
+  "title": "More than 100 free care home audits. <em>Which do you run first?</em>",
+  "meta_title": "Care Home Audits: Where to Start in Month One | CareStreamAI",
+  "meta_description": "More than 100 free care home audits, and no idea where to start? Adopt a handful, run them on any device, score them and track the actions.",
+  "eyebrow": "Scenario",
+  "lede": "A library of more than 100 care home audits is a gift and a puzzle on day one. You do not need them all. Pick a handful, adopt them, and let <a href=\"/training-platform\">CareStream</a> keep your due list short. Audits are free on every plan.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "Your first month of audits",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Library browsed, six audits adopted",
+        "note": "Week 1",
+        "done": true
+      },
+      {
+        "label": "Infection control and medicines run and scored",
+        "note": "Week 1 to 2",
+        "done": true
+      },
+      {
+        "label": "Actions given an owner and a date",
+        "note": "Week 3",
+        "done": false
+      },
+      {
+        "label": "Month end: scores and actions reviewed",
+        "note": "Week 4",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/14caaf40-af82-45e3-a64c-240883f42f5e.webp",
+  "image_alt": "A care home manager at a desk looking at a tablet showing a list of checklists, with a wall planner and a cup of tea beside her in a bright, calm office",
+  "card_title": "More than 100 free audits. Which do you run first?",
+  "card_snippet": "A big audit library is only useful if you know where to begin. Adopt a handful, run them on a phone or tablet, get a score and a PDF report, and track every action. Free on every plan.",
+  "primary_keyword": "care home audits",
+  "secondary_keywords": [
+    "free care home audits",
+    "care home audit software",
+    "digital audits",
+    "audit tool",
+    "care audit"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "When an audit shows a gap, link it to a course or your own training module, so the fix reaches the team.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "The audit library",
+      "body": "Browse the free audits by care service and see what each one covers before you adopt it.",
+      "action": "Browse the audits",
+      "href": "/care-audits"
+    },
+    {
+      "title": "CQC and compliance",
+      "body": "Audit scores, actions and policies in one place, ready when you are asked how you check quality.",
+      "action": "See CQC and compliance",
+      "href": "/cqc-compliance"
+    }
+  ],
+  "intro": {
+    "heading": "You open the library and there are more than 100 audits.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "A new manager starts on a Monday. The home has a lever arch file of old audit forms, half of them out of date, and nothing on the calendar. She signs up to CareStream, opens the audit library and finds more than 100 audits, labelled by care service. It is good news, but it is also a lot. She cannot run everything, and she does not want a due list so long that nobody reads it. She needs a sensible order, a way to keep the list short, and a record she can show someone."
+  },
+  "trail": [
+    {
+      "when": "Monday",
+      "text": "A new manager signs up and opens the audit library.",
+      "kind": "ok"
+    },
+    {
+      "when": "Monday afternoon",
+      "text": "She filters by her care service and previews a few audits.",
+      "kind": "ok"
+    },
+    {
+      "when": "Tuesday",
+      "text": "She adopts six audits. Only those appear in her due list.",
+      "kind": "ok"
+    },
+    {
+      "when": "Week 2",
+      "text": "Nobody has been told which audit is theirs, or by when.",
+      "kind": "gap"
+    },
+    {
+      "when": "Week 3",
+      "text": "Two audits are done on paper again, with no photos and no score.",
+      "kind": "gap"
+    },
+    {
+      "when": "Week 3",
+      "text": "Failed questions are noted, but no one owns the fix.",
+      "kind": "gap"
+    },
+    {
+      "when": "Month end",
+      "text": "She cannot say which issues came back from last time.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“How do you check the quality of your service?” A folder of forms is not an answer.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The library was not the problem.</b> The gap is between choosing audits and running them in a way that leaves proof. Here is a calm way through your first month.",
+  "why": {
+    "heading": "A big library does not tell you where to start",
+    "sub": "The aim is not to adopt everything. It is to run a few audits well and keep the record.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "More than 100 is more than one home needs",
+        "body": "The library covers many care services. Your home needs the ones that match your service and your risks. Adopting everything would only bury the due list."
+      },
+      {
+        "icon": "tick",
+        "title": "Paper forms leave little proof",
+        "body": "A tick on a form shows someone looked. A score by section, a photo of the problem and a dated action show what was found and what was done."
+      },
+      {
+        "icon": "alert",
+        "title": "Findings fade without an owner",
+        "body": "A failed question is only useful if someone owns the fix and the next audit checks it. Otherwise the same problem returns each month."
+      }
+    ]
+  },
+  "how": {
+    "heading": "Pick a few, run them, keep the record.",
+    "sub": "This is how <a href=\"/care-audits\">free care home audits</a> work in CareStream, in the order a manager meets them. For ideas on timing, read <a href=\"/blog/care-home-audit-schedule\">how often care home audits should be done</a>.",
+    "blocks": [
+      {
+        "heading": "Adopt a short first list, not the whole library",
+        "bullets": [
+          "Audits are labelled by care service, and each has a default frequency: daily, weekly, monthly, quarterly or periodic",
+          "You adopt only the audits you want, so your due list stays short. A sensible first month is infection control, medicines, health and safety, kitchen, the accident and incident book and care plan review",
+          "That order is a suggestion, not a rule. Preview any audit first, and reword it or add up to 2 questions on any plan"
+        ],
+        "tags": [
+          {
+            "label": "Browse the audit library",
+            "href": "/care-audits"
+          },
+          {
+            "label": "Infection Control audit",
+            "href": "/care-audits/infection-control"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "your first month list",
+          "blocks": [
+            [
+              "This month",
+              [
+                [
+                  "Week 1: Health & Safety, Infection Control Audit, Medicines Management",
+                  ""
+                ],
+                [
+                  "Week 2: Kitchen Audit",
+                  ""
+                ],
+                [
+                  "Week 3 and 4: Accident & Incident Book Audit, Care Plan Review & Update",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Run each audit on a phone or tablet, with photos",
+        "bullets": [
+          "Staff open the audit in the Staff Hub, a web app that works on a phone, tablet or desktop, and answer question by question",
+          "Add a photo to any question, using the phone camera, and mark up the picture before it is saved",
+          "Every question must be answered before the audit can be completed, and the score is worked out by section"
+        ],
+        "tags": [
+          {
+            "label": "Medicines Management audit",
+            "href": "/care-audits/medicines-management"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Infection Control Audit",
+          "blocks": [
+            [
+              "Audit question",
+              [
+                [
+                  "Is the sluice room clean, tidy and free from stored items?",
+                  ""
+                ]
+              ]
+            ],
+            [
+              "Why it matters",
+              [
+                [
+                  "A No here is a finding, so you record what you saw and decide if it is a genuine gap.",
+                  ""
+                ]
+              ]
+            ],
+            [
+              "What to do",
+              [
+                [
+                  "Answer from what you see",
+                  ""
+                ],
+                [
+                  "Add a photo as evidence",
+                  ""
+                ],
+                [
+                  "Note what needs fixing",
+                  ""
+                ]
+              ]
+            ],
+            [
+              "What it looks like",
+              [
+                [
+                  "You open the sluice room door and find boxes stacked on the floor.",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Give each audit an owner, a date and a repeat",
+        "bullets": [
+          "Schedule an audit to a named person, with a due date and an optional repeat, and they get an email straight away",
+          "They are reminded when it is due soon and when it is overdue, and managers are told if it stays open",
+          "Optional manager sign off sends each completed audit to the registered manager before the report is final"
+        ],
+        "tags": [
+          {
+            "label": "Kitchen Audit",
+            "href": "/care-audits/kitchen-audit"
+          },
+          {
+            "label": "Audit schedule guide",
+            "href": "/blog/care-home-audit-schedule"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "scheduled audit, Kitchen Audit",
+          "blocks": [
+            [
+              "Schedule an audit",
+              [
+                [
+                  "Owner: head cook. Due: Friday. Repeat: monthly",
+                  ""
+                ],
+                [
+                  "Reminder email two days before the due date",
+                  ""
+                ],
+                [
+                  "Overdue: the audit shows as overdue and managers are told",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "See scores, open actions and what keeps coming back",
+        "bullets": [
+          "Each completed audit gives a PDF report with the overall score, section scores, photos and the action plan",
+          "Actions have an owner and a date, and can carry up to 10 photos as proof the job was done",
+          "At the next audit of the same kind, last time's actions are listed to re-check, and Insights show repeat failures over time"
+        ],
+        "tags": [
+          {
+            "label": "Reporting that runs itself",
+            "href": "/training-platform"
+          },
+          {
+            "label": "CQC and compliance evidence",
+            "href": "/cqc-compliance"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Audit summary",
+          "stats": [
+            [
+              "Open actions",
+              "6"
+            ],
+            [
+              "Audits affected",
+              "3"
+            ],
+            [
+              "Actions closed",
+              "9"
+            ],
+            [
+              "Average score",
+              "85%"
+            ]
+          ],
+          "blocks": [
+            [
+              "Questions that failed",
+              [
+                [
+                  "Sluice room storage",
+                  "2 audits"
+                ],
+                [
+                  "Fridge temperature record",
+                  "2 audits"
+                ],
+                [
+                  "Medicines count signed",
+                  "1 audit"
+                ]
+              ]
+            ],
+            [
+              "Where the open actions are",
+              [
+                [
+                  "Infection Control Audit",
+                  "3 actions"
+                ],
+                [
+                  "Kitchen Audit",
+                  "2 actions"
+                ]
+              ]
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "There are more than 100 audits. Do I have to run them all?",
+        "a": "No, and you should not try. You adopt only the audits you want, and only those appear in your due list. Most homes need a handful to start with, picked for their care service. Add more once the first few are running smoothly."
+      },
+      {
+        "q": "Which care home audits should I run first?",
+        "a": "A sensible first month might be infection control, medicines, health and safety, the kitchen, the accident and incident book and care plan review. It is a suggestion, not a rule. If your last inspection or an incident points somewhere else, start there."
+      },
+      {
+        "q": "Is this really free, or is there a catch?",
+        "a": "The audit library, scoring, photos, PDF reports, actions and scheduling are free on every plan, including the Free plan. Some extras are on the paid plans: recommendations from our own machine learning, and the drafted action plan. You can <a href=\"/register\">create a free account</a> and start without paying."
+      },
+      {
+        "q": "How do my staff run an audit?",
+        "a": "In the Staff Hub, a web app that works on a phone, tablet or desktop. They answer each question, add photos where they help, and finish the audit when every question is answered. You choose which staff can run which audits."
+      },
+      {
+        "q": "What happens when something fails?",
+        "a": "You add an action with an owner, a priority and a due date. The owner sees it in the hub and can attach up to 10 photos when it is done. At the next audit of the same kind, last time's actions are listed so the auditor can mark each one fixed or not fixed."
+      },
+      {
+        "q": "Can I change an audit to suit my home?",
+        "a": "You can preview any audit, reword questions and add up to 2 of your own, on every plan. Bigger changes, such as building an audit from scratch, are on the Enterprise plan."
+      },
+      {
+        "q": "Is the score a CQC rating?",
+        "a": "No. The score is CareStream's own, worked out from your answers. It helps you spot weak sections and track change over time. It is not a CQC rating, and audits are not a record submitted to the regulator."
+      },
+      {
+        "q": "Can an audit lead to training?",
+        "a": "Yes. You can link an audit to the free CPD courses or to your own training modules, so a finding about infection control, for example, points to the <a href=\"/staff-training/infection-prevention-and-control\">infection prevention and control course</a>. The link works on every plan. Reporting on how training affects audit scores is on Enterprise."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "A tool for running and recording audits, not a verdict on your service",
+    "cards": [
+      {
+        "title": "It does not decide what your home needs",
+        "body": "The library is broad. Choosing the audits that match your service and your risks is still your call, and so is acting on what they show."
+      },
+      {
+        "title": "The score is not a CQC rating",
+        "body": "Scores are CareStream's own and help you track change. They are not a rating, and audits are not a regulator submitted record."
+      },
+      {
+        "title": "Some extras are on the paid plans",
+        "body": "Recommendations and the drafted action plan need a paid plan, and building your own audit from scratch is Enterprise only. Everything else here is free."
+      }
+    ]
+  },
+  "read_next": [
+    "care-home-audit-schedule",
+    "the-complete-guide-to-care-home-digital-audits",
+    "infection-control-audit"
+  ],
+  "faqs": {
+    "heading": "Care home audits and CareStream, answered",
+    "groups": [
+      {
+        "group": "About the audits",
+        "items": [
+          {
+            "q": "Are the care home audits really free?",
+            "a": "Yes. The library, scoring, photos, PDF reports, actions and scheduling are free on every plan, including the Free plan. Recommendations and the drafted action plan are on the paid plans. <a href=\"/pricing\">See the plans</a> for the full list."
+          },
+          {
+            "q": "What is the best care home audit software for a small service?",
+            "a": "The right care home audit software is the one your team will use. Look for audits staff can run on a phone, photos, a score by section, actions with owners and a PDF report. Our <a href=\"/blog/care-home-audit-software\">comparison of care home audit software</a> lists what several vendors publish."
+          },
+          {
+            "q": "How many digital audits should I run each month?",
+            "a": "Few enough that each gets done properly. Many homes begin with three to six, then add as the routine settles. Digital audits help because the due list, the reminders and the results sit in one place. Your <a href=\"/blog/care-home-audit-schedule\">audit schedule</a> should follow your risks."
+          },
+          {
+            "q": "What is an audit tool, and do I need one?",
+            "a": "An audit tool is a checklist plus a way to score it, record evidence and track what needs fixing. You can use paper, but a digital tool keeps photos, scores and actions together, and shows what repeats over time."
+          },
+          {
+            "q": "Can I run a care audit from my phone?",
+            "a": "Yes. Staff open the audit in the Staff Hub on a phone, tablet or desktop. Photos can be taken with the phone camera and marked up before saving."
+          },
+          {
+            "q": "Can I edit a built in audit?",
+            "a": "Yes, lightly. On every plan you can preview an audit, reword its questions and add up to 2 of your own. Building your own audit is on the Enterprise plan."
+          }
+        ]
+      },
+      {
+        "group": "About quality checks and inspections",
+        "items": [
+          {
+            "q": "Do I have to carry out audits?",
+            "a": "The regulations say providers must have systems and processes to assess, monitor and improve the quality and safety of their services. See <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17 on good governance</a>. It does not list particular audits, so each provider chooses how to do it and must be able to show it."
+          },
+          {
+            "q": "Which audits relate to safe care and treatment?",
+            "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/12\">Regulation 12 on safe care and treatment</a> includes the proper and safe management of medicines and the prevention and control of infection. That is why many homes begin with a medicines audit and an infection control audit."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A calm first month with your audit library",
+    "lede": "A first month of audits should leave you with a short due list, a few scored results and a habit. It should not leave you with a backlog.",
+    "sections": [
+      {
+        "h3": "A suggested order for the first month",
+        "paragraphs": [
+          "Start where the risk to people is highest. Most services begin with infection control, medicines and health and safety in the first fortnight, because the findings are concrete and the fixes are usually quick. The kitchen audit, the accident and incident book and care plan review can follow in weeks three and four. If your service has a daily check, such as the Fire Marshall Checklist, add it once the monthly audits are settled.",
+          "Treat this as a starting point. A home with recent falls might begin with the falls audit. A home preparing for an inspection might begin with the audits that match the areas it is least sure of."
+        ]
+      },
+      {
+        "h3": "Make each audit count",
+        "checklist": [
+          "Preview the audit before you adopt it, and reword anything that does not suit your home.",
+          "Give the audit an owner, a due date and a repeat, so it does not depend on memory.",
+          "Add a photo for every finding, so the report shows what was seen.",
+          "At month end, review the scores, the open actions and anything that failed twice."
+        ]
+      },
+      {
+        "h3": "Close the loop",
+        "paragraphs": [
+          "An audit only improves care when its findings are fixed. Give each action an owner and a date, ask for a photo as proof, and let the next audit check it. If a finding points to a training need, link the audit to a course or one of your own training modules."
+        ]
+      }
+    ],
+    "note": "<b>For the inspector.</b> Keep the reports, the photos and the closed actions together, so you can show how you check quality and what you did about what you found."
+  }
+}

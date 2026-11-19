@@ -1,0 +1,501 @@
+{
+  "slug": "environment-and-fire-audit-before-an-assessment",
+  "status": "draft",
+  "order": 62,
+  "title": "The fire safety audit was done. <em>Can you prove it when the assessor asks?</em>",
+  "meta_title": "Fire Safety Audit and Environment Checks | CareStreamAI",
+  "meta_description": "Get dated audit evidence for your fire safety audit and environment checks: photos, scores, signatures and a PDF report. Audits are free on every plan.",
+  "eyebrow": "Scenario",
+  "lede": "An assessment is coming, and the fire and environment checks are done, but they live in a folder, a diary and someone's memory. With a <a href=\"/training-platform\">simple audit trail and training built from your own policies</a>, every fire safety audit leaves a dated, scored record with photos and signatures. You can show it in minutes, not hunt for it.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "Four weeks before the assessment",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Daily fire checks done",
+        "note": "On the floor",
+        "done": true
+      },
+      {
+        "label": "Monthly health and safety walk round done",
+        "note": "On the floor",
+        "done": true
+      },
+      {
+        "label": "Dated record with photos",
+        "note": "Not yet",
+        "done": false
+      },
+      {
+        "label": "One place to show it all",
+        "note": "Not yet",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/9cd7424d-1af6-44b0-97e1-53059fe77cbe.webp",
+  "image_alt": "A care home manager photographs a fire extinguisher and exit sign on her phone while the maintenance lead holds a folder, in a bright, tidy corridor",
+  "card_title": "The fire checks were done. Can you show the dated evidence?",
+  "card_snippet": "Before an assessment, a manager needs proof that fire and environment checks really happen. Run built in audits on a phone, add photos and signatures, and keep a dated PDF report for each one.",
+  "primary_keyword": "fire safety audit",
+  "secondary_keywords": [
+    "environmental audit",
+    "fire risk assessment care home",
+    "health and safety audit",
+    "audit evidence"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Short training from your own policies, so a gap an audit finds can become a lesson your team completes.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Care audits library",
+      "body": "More than 100 built in audits, scored, with photos, signatures and a PDF report. Free on every plan.",
+      "action": "See the audits",
+      "href": "/care-audits"
+    },
+    {
+      "title": "CQC and compliance",
+      "body": "Evidence that builds itself as your team works, ready for the day an assessor asks.",
+      "action": "See CQC and compliance",
+      "href": "/cqc-compliance"
+    }
+  ],
+  "intro": {
+    "heading": "The checks happen. The proof is scattered.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "A manager hears that an assessment is coming in about a month. She is confident the home is safe. The maintenance lead checks the fire panel, the exits and the extinguishers every day, and a fire drill was held last quarter. But the daily checks sit in a spiral book, some pages are undated, and the drill notes are on a loose sheet in a folder. The water temperature checks are in a different diary. Nothing is wrong on the floor. The trouble is that nobody can lay the whole picture on a table in ten minutes."
+  },
+  "trail": [
+    {
+      "when": "Every morning",
+      "text": "The maintenance lead walks the corridors and checks the fire panel, exits and extinguishers.",
+      "kind": "ok"
+    },
+    {
+      "when": "Every month",
+      "text": "The manager does a health and safety walk round and notes the findings.",
+      "kind": "ok"
+    },
+    {
+      "when": "Last quarter",
+      "text": "A fire drill was held and everyone on shift took part.",
+      "kind": "ok"
+    },
+    {
+      "when": "Four weeks out",
+      "text": "The spiral book has gaps, and two pages have no date.",
+      "kind": "gap"
+    },
+    {
+      "when": "In the folder",
+      "text": "The drill notes are on a loose sheet. Nobody is sure which shifts were covered.",
+      "kind": "gap"
+    },
+    {
+      "when": "Water checks",
+      "text": "Temperatures sit in a separate diary, with a few weeks missing.",
+      "kind": "gap"
+    },
+    {
+      "when": "A spotted fault",
+      "text": "A fire door that would not close was fixed, but there is no photo or date.",
+      "kind": "gap"
+    },
+    {
+      "when": "Assessment day",
+      "text": "“Can I see your environment and fire checks for the last six months?”",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The checking was never the problem.</b> The gap is between the check and the evidence. Here is how CareStream closes it, using audits that are free on every plan.",
+  "why": {
+    "heading": "A check you cannot show is hard to count as a check",
+    "sub": "An assessor will not take your word for it. They will ask to see dates, results and what you did about problems.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Memory is not audit evidence",
+        "body": "“We check the exits every day” is true and still not enough. A dated record with a result, a name and a photo is what turns a habit into proof."
+      },
+      {
+        "icon": "tick",
+        "title": "Paper records drift apart",
+        "body": "Spiral books, diaries and loose sheets each tell part of the story. Put together after the event, they rarely line up with each other."
+      },
+      {
+        "icon": "alert",
+        "title": "Fixes need a trail too",
+        "body": "A fault found and mended is only half a story. Without the finding, the owner, the date and a photo of the fix, a good response looks like no response."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From a daily walk round to a record you can show.",
+    "sub": "Audits are built into the Staff Hub and the Audits page, and they are free on every plan. See the <a href=\"/care-audits\">care audits library</a>, and how audits link to <a href=\"/training-platform\">training built from your own policies</a>.",
+    "blocks": [
+      {
+        "heading": "Run the fire checks as a daily audit on a phone",
+        "bullets": [
+          "The Fire Marshall Checklist is a built in daily audit covering the fire panel, exits, doors, extinguishers, combustibles, hazards, signage and emergency lighting",
+          "The Fire Drill Record Audit, a monthly built in audit, checks that drills are held, recorded and followed up, with every shift and every person covered",
+          "Whoever you give audit access to runs it in the Staff Hub, on a phone, tablet or desktop, and finishes by signing on screen"
+        ],
+        "tags": [
+          {
+            "label": "Fire Marshall Checklist",
+            "href": "/care-audits/fire-marshall-checklist"
+          },
+          {
+            "label": "Care audits library",
+            "href": "/care-audits"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Fire Marshall Checklist",
+          "blocks": [
+            [
+              "Questions",
+              [
+                [
+                  "Is the fire panel showing no faults?",
+                  ""
+                ],
+                [
+                  "Are all fire exits clear and unlocked from the inside?",
+                  ""
+                ],
+                [
+                  "Are fire doors closing fully, with nothing wedging them open?",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Add photos and scores to the health and safety audit",
+        "bullets": [
+          "The monthly Health & Safety audit is a full health and safety audit, covering building safety, fire safety, infection control, kitchen and food safety, equipment and more, scored by section",
+          "Water Safety & Legionella is a monthly built in audit for water temperature checks, flushing and Legionella controls",
+          "Attach a photo to any question from your phone camera, and mark it up before it is saved, so the evidence shows what you saw"
+        ],
+        "tags": [
+          {
+            "label": "Health & Safety audit",
+            "href": "/care-audits/health-and-safety"
+          },
+          {
+            "label": "Water Safety & Legionella",
+            "href": "/care-audits/water-safety-and-legionella"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Water Safety & Legionella",
+          "blocks": [
+            [
+              "Questions",
+              [
+                [
+                  "Were hot water temperatures checked at the sentinel outlets this month?",
+                  ""
+                ],
+                [
+                  "Were little used outlets flushed, and was it recorded?",
+                  ""
+                ],
+                [
+                  "Is a photo attached for any outlet that failed?",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Turn every finding into an action with proof",
+        "bullets": [
+          "A No can become an action with an owner and a due date, and the owner can be a staff member or an outside contractor",
+          "The owner closes it with a note and up to 10 photos, so the fix is shown as well as the fault",
+          "At the next audit of the same kind, last time's actions are listed and the auditor marks each one fixed or not fixed"
+        ],
+        "tags": [
+          {
+            "label": "Care audits library",
+            "href": "/care-audits"
+          },
+          {
+            "label": "CQC and compliance evidence",
+            "href": "/cqc-compliance"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "action from the Health & Safety audit",
+          "blocks": [
+            [
+              "Audit finding",
+              [
+                [
+                  "Fire door on the first floor corridor does not close fully. Is it fixed?",
+                  ""
+                ]
+              ]
+            ],
+            [
+              "Why it matters",
+              [
+                [
+                  "A fire door that does not close fully cannot do its job, so a fix needs an owner, a date and proof.",
+                  ""
+                ]
+              ]
+            ],
+            [
+              "What to do",
+              [
+                [
+                  "Give it to one named owner",
+                  ""
+                ],
+                [
+                  "Set a due date",
+                  ""
+                ],
+                [
+                  "Add a photo of the repair",
+                  ""
+                ]
+              ]
+            ],
+            [
+              "Outcome",
+              [
+                [
+                  "The maintenance lead adjusts the closer, takes a photo of the door shut and closes the action.",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "See the scores, the open actions and the repeat failures",
+        "bullets": [
+          "Every completed audit has a score overall and by section, and can produce a PDF report with answers, photos, actions and signatures, saved against that run",
+          "A scheduling board shows what is done, in progress, overdue and missed, so a skipped check stays visible instead of vanishing",
+          "The Insights tab shows score by month and any question that keeps failing, so you can fix a pattern before an assessor spots it"
+        ],
+        "tags": [
+          {
+            "label": "Audit schedule guide",
+            "href": "/blog/care-home-audit-schedule"
+          },
+          {
+            "label": "Digital audits guide",
+            "href": "/blog/the-complete-guide-to-care-home-digital-audits"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Audit results",
+          "stats": [
+            [
+              "Open actions",
+              "4"
+            ],
+            [
+              "Audits affected",
+              "3"
+            ],
+            [
+              "Actions closed",
+              "17"
+            ],
+            [
+              "Average score",
+              "91%"
+            ]
+          ],
+          "blocks": [
+            [
+              "Questions that failed",
+              [
+                [
+                  "Fire doors closing fully",
+                  "3 audits"
+                ],
+                [
+                  "Water temperature recorded",
+                  "2 audits"
+                ],
+                [
+                  "Drill covers night shift",
+                  "2 audits"
+                ]
+              ]
+            ],
+            [
+              "Section scores",
+              [
+                [
+                  "Fire safety section",
+                  "86%"
+                ],
+                [
+                  "Water safety section",
+                  "92%"
+                ]
+              ]
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "We already do our fire checks. Why would I change anything?",
+        "a": "You would not change the checks. You would change where they are recorded. A daily check on a phone leaves a dated, signed record that cannot lose a page, and it is there when the assessment comes."
+      },
+      {
+        "q": "Which audits would I use for fire and the environment?",
+        "a": "A good starting set is the <a href=\"/care-audits/fire-marshall-checklist\">Fire Marshall Checklist</a> (daily), the Fire Drill Record Audit (monthly), <a href=\"/care-audits/health-and-safety\">Health & Safety</a> (monthly) and <a href=\"/care-audits/water-safety-and-legionella\">Water Safety & Legionella</a> (monthly). For a dementia service, the <a href=\"/care-audits/dementia-care-environment\">Dementia Care Environment</a> audit looks at signage and orientation cues, quarterly."
+      },
+      {
+        "q": "Who runs the audits, and where?",
+        "a": "Anyone you give audit access to, for the audits you choose, using the Staff Hub on a phone, tablet or desktop. You can schedule an audit to a named person with a due date and a repeat, and they get an email reminder before it is due."
+      },
+      {
+        "q": "What counts as evidence in the record?",
+        "a": "Each audit has dated answers, a score overall and by section, photos you attach to questions, and an on screen signature from the auditor. If you switch on manager approval, the registered manager can approve it with their own signature. A PDF report is saved against the run."
+      },
+      {
+        "q": "What happens when a check fails?",
+        "a": "The failed item can become an action with an owner and a due date. The owner closes it with a note and photos, and at the next audit of the same kind, the auditor re-checks it. Recommendations drafted by our own machine learning are on the paid plans. You can write actions yourself on any plan."
+      },
+      {
+        "q": "Does this replace our fire risk assessment?",
+        "a": "No. The fire risk assessment is a separate piece of work that a competent person has to do. Audits show that the day to day checks happen and that problems get fixed. They sit alongside the assessment, not instead of it."
+      },
+      {
+        "q": "Does a good audit score mean we will get a good rating?",
+        "a": "No. Scores are CareStream's own, worked out from your answers. They are not a CQC rating and not a record submitted to any regulator. They show you where you stand and give you something to show, which is all they claim to do."
+      },
+      {
+        "q": "What does it cost to try?",
+        "a": "The audits are free on every plan, including the Free plan, so you can <a href=\"/register\">create a free account</a> and run one today. The paid plans add things like drafted recommendations and training from your own policies, with a 14 day free trial. Our <a href=\"/pricing\">pricing page</a> shows the detail."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "A tidy record of your checks, not a replacement for expertise",
+    "cards": [
+      {
+        "title": "It does not replace the fire risk assessment",
+        "body": "A competent person must carry out the fire risk assessment. CareStream records your own checks. It does not tell you whether your assessment is right or complete."
+      },
+      {
+        "title": "A score is not a rating",
+        "body": "Audit scores are CareStream's own and are not a CQC rating. An audit is not a record submitted to a regulator, so treat it as your own evidence."
+      },
+      {
+        "title": "It records the check, it does not do it",
+        "body": "Someone still has to walk the corridor and test the equipment. Drafted recommendations from our own machine learning are on the paid plans, not the Free plan."
+      }
+    ]
+  },
+  "read_next": [
+    "cqc-inspection-day-what-to-expect-and-how-to-be-ready",
+    "care-home-audit-schedule",
+    "the-complete-guide-to-care-home-digital-audits"
+  ],
+  "faqs": {
+    "heading": "Fire and environment audits, answered",
+    "groups": [
+      {
+        "group": "About the audits",
+        "items": [
+          {
+            "q": "What is a fire safety audit in a care home?",
+            "a": "It is a regular, recorded check of fire precautions: the panel, exits, doors, extinguishers, signage and lighting. It is different from the fire risk assessment. The audit shows the checks are being done day to day. The <a href=\"/care-audits/fire-marshall-checklist\">Fire Marshall Checklist</a> is a built in example."
+          },
+          {
+            "q": "What is an environmental audit?",
+            "a": "It is a walk round of the building and its surroundings to check that they are safe, clean and well kept. In CareStream, <a href=\"/care-audits/health-and-safety\">Health & Safety</a> and <a href=\"/care-audits/resident-bedrooms\">Resident Bedrooms</a> cover much of that ground, scored by section."
+          },
+          {
+            "q": "How often should we run a health and safety audit?",
+            "a": "The built in Health & Safety audit is set to monthly, and the Fire Marshall Checklist to daily. You decide what suits your service and can schedule each with a repeat."
+          },
+          {
+            "q": "What audit evidence does CareStream keep?",
+            "a": "The dated answers, scores, photos, signatures, actions and a PDF report, all saved against that audit run. You can open earlier runs and see how scores moved over time."
+          },
+          {
+            "q": "Are the audits really free?",
+            "a": "Yes. The audit library, scoring, photos, PDF report, actions, scheduling and approval are free on every plan, including the Free plan. Recommendations and drafted action plans from our own machine learning need a paid plan."
+          }
+        ]
+      },
+      {
+        "group": "About assessments and the law",
+        "items": [
+          {
+            "q": "What should a fire risk assessment care home need to include?",
+            "a": "The government publishes a <a href=\"https://www.gov.uk/government/publications/fire-safety-risk-assessment-residential-care-premises\">fire safety risk assessment guide for residential care premises</a> for employers, managers, occupiers and owners. Use it, and your competent person, to shape your assessment. Your audits then show the day to day checks around it."
+          },
+          {
+            "q": "Does the law say how often a fire risk assessment is reviewed?",
+            "a": "The Fire Safety Order says the responsible person must make a suitable and sufficient assessment of risks, and must review it regularly to keep it up to date. See <a href=\"https://www.legislation.gov.uk/uksi/2005/1541/article/9\">Article 9 of the Regulatory Reform (Fire Safety) Order 2005</a>. It does not set one fixed interval, so ask your competent person what suits your building."
+          },
+          {
+            "q": "Does the CQC care about the building?",
+            "a": "Yes. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/15\">Regulation 15 on premises and equipment</a> says premises must be clean, secure, suitable, properly used and properly maintained. Dated checks help you show this."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A practical way to get ready with dated evidence",
+    "lede": "Four weeks is enough to turn habits into records, if you start with the checks you already do. The aim is not more work. It is the same work, written down in a way you can show.",
+    "sections": [
+      {
+        "h3": "Start with what you already check",
+        "checklist": [
+          "List the checks done daily, monthly and quarterly, and who does each one.",
+          "Match each to a built in audit, such as the Fire Marshall Checklist or Health & Safety.",
+          "Schedule each audit to a named person, with a repeat that matches how often it is really done.",
+          "After two weeks, open the scheduling board and look for anything overdue or missed."
+        ]
+      },
+      {
+        "h3": "Where the audit sits beside the fire risk assessment",
+        "paragraphs": [
+          "Your fire risk assessment care home paper is the foundation. A competent person writes it, and you review it as things change. The Fire Safety Order says the responsible person must keep it up to date, as in the <a href=\"https://www.legislation.gov.uk/uksi/2005/1541/article/9\">text of Article 9</a>. Audits do a different job. They show the checks happen between reviews, and that findings are fixed."
+        ]
+      },
+      {
+        "h3": "Make the evidence easy to find",
+        "paragraphs": [
+          "Finish each audit with a signature, and attach a photo wherever it helps. For an environmental audit, photograph the thing that failed and the thing once mended. When the assessor asks, open the audit, show the score, the photos and the PDF report, and show the actions closed."
+        ]
+      }
+    ],
+    "note": "<b>For the assessor.</b> Keep the audit, its photos, its signatures and the closed actions together, so you can show the check, the finding and the fix in one place."
+  }
+}

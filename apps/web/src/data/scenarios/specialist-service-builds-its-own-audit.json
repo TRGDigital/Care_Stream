@@ -1,0 +1,475 @@
+{
+  "slug": "specialist-service-builds-its-own-audit",
+  "status": "draft",
+  "order": 65,
+  "title": "The library did not ask your questions. <em>Build a custom audit that does.</em>",
+  "meta_title": "Build a Custom Audit for Your Service | CareStreamAI",
+  "meta_description": "No ready made audit asks what your specialist service needs to know? Build a custom audit with your own questions, run it on a phone and track the actions.",
+  "eyebrow": "Scenario",
+  "lede": "Your service is not like the next one, and a generic checklist can miss what matters most to the people you support. With a <a href=\"/training-platform\">platform built around your own policies and questions</a>, Enterprise services can build a custom audit, run it in the Staff Hub and turn every finding into a tracked action.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "Building the audit your service needs",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Library audits checked",
+        "note": "Week 1",
+        "done": true
+      },
+      {
+        "label": "Gaps in the questions noted",
+        "note": "Week 1",
+        "done": true
+      },
+      {
+        "label": "Own questions drafted and reviewed",
+        "note": "Week 2",
+        "done": false
+      },
+      {
+        "label": "First run, scored, actions set",
+        "note": "Week 3",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/6ad5a337-d4be-4a58-84ce-3c2cfc84d98e.webp",
+  "image_alt": "A senior manager and a colleague at a meeting table drafting a checklist on a tablet and a notepad, with a whiteboard of simple boxes behind them in a bright office",
+  "card_title": "No audit asks the questions your specialist service needs",
+  "card_snippet": "Library audits cover the broad ground. When your service has its own routines and risks, Enterprise lets you build a custom audit, run it on a phone and track every action to the end.",
+  "primary_keyword": "custom audit",
+  "secondary_keywords": [
+    "audit checklist",
+    "digital audits",
+    "audit tool",
+    "care audit"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "The care audit library",
+      "body": "More than 100 ready made audits, free on every plan, labelled by care service.",
+      "action": "Browse the audits",
+      "href": "/care-audits"
+    },
+    {
+      "title": "CQC and compliance",
+      "body": "Evidence that builds itself, and a readiness report for your next inspection.",
+      "action": "See CQC and compliance",
+      "href": "/cqc-compliance"
+    }
+  ],
+  "intro": {
+    "heading": "You audit what the library asks. You need what your people need.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "A registered manager runs a small service supporting adults with learning disabilities and autism. Her team already runs audits every month, and the scores look healthy. But when she reads the questions, none of them ask whether each person's communication passport is followed, whether the sensory space is set up the way each person likes, or whether a planned routine change was explained in the way that person understands. Those are the things that make a good day or a bad day in her service. The audit checklist everyone uses is sound, and it is not hers. Here is how that plays out."
+  },
+  "trail": [
+    {
+      "when": "Monthly",
+      "text": "The team completes its audits on time and the scores are good.",
+      "kind": "ok"
+    },
+    {
+      "when": "Reviews",
+      "text": "Each person has a detailed support plan and a communication passport.",
+      "kind": "ok"
+    },
+    {
+      "when": "Team meeting",
+      "text": "Staff care about how each person likes their day to go.",
+      "kind": "ok"
+    },
+    {
+      "when": "A quiet read",
+      "text": "The manager reads the audit questions and none ask about passports or routines.",
+      "kind": "gap"
+    },
+    {
+      "when": "On shift",
+      "text": "A new carer has never been checked against one person's sensory preferences.",
+      "kind": "gap"
+    },
+    {
+      "when": "The workaround",
+      "text": "A spreadsheet of her own questions sits outside the audit system.",
+      "kind": "gap"
+    },
+    {
+      "when": "The result",
+      "text": "Scores in one place, the questions that matter in another.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“How do you know staff follow each person's plan?” The audits do not say.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The audits were never wrong.</b> They were written for services in general, and yours is particular. Here is how CareStream lets you keep the library and add questions of your own.",
+  "why": {
+    "heading": "A generic checklist cannot know what your service stands for",
+    "sub": "The most useful audit is the one that checks the things you promised the people you support.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Specialist care has specialist questions",
+        "body": "Communication passports, sensory needs, planned routines and positive behaviour support are different in every service. A broad checklist can only ask about them in general terms."
+      },
+      {
+        "icon": "tick",
+        "title": "Good scores can hide a blind spot",
+        "body": "If the questions never touch your highest risk areas, a high score tells you very little about them. It only shows that the questions asked were answered well."
+      },
+      {
+        "icon": "alert",
+        "title": "A side spreadsheet is a risk of its own",
+        "body": "Questions kept outside the audit system have no scores, no photos, no actions and no history. Nobody can see whether the same problem keeps coming back."
+      }
+    ]
+  },
+  "how": {
+    "heading": "Your questions in, the audit out.",
+    "sub": "Audits are free on every plan, and building your own is an Enterprise feature. This is how it works, in the order a manager meets it. See also <a href=\"/care-audits\">the audit library</a> and <a href=\"/training-platform\">training built from your own policies</a>.",
+    "blocks": [
+      {
+        "heading": "Build your own audit, or copy a built in one and make it yours",
+        "bullets": [
+          "On Enterprise, choose Build your own audit, then write each question and pick its type: yes or no, yes, no or N/A, choice, number, rating, date or free text",
+          "Or copy a built in audit such as <a href=\"/care-audits/medicines-management\">medicines management</a> and change it, with the option to hide the original so staff only see yours",
+          "Every structural edit makes a new version, and each run records the version it used, so you can show what was asked and when"
+        ],
+        "tags": [
+          {
+            "label": "The care audit library",
+            "href": "/care-audits"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Communication and routines",
+          "blocks": [
+            [
+              "Questions",
+              [
+                [
+                  "Is this person's communication passport open and used in the room?",
+                  ""
+                ],
+                [
+                  "Was the planned change to today's routine explained in the way this person understands?",
+                  ""
+                ],
+                [
+                  "Is the sensory space set up as described in the support plan?",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Already have an audit on paper? Import it for review",
+        "bullets": [
+          "Upload an existing audit as a PDF, Word file, text file or photo, up to 15 MB",
+          "CareStream drafts the questions for you to check, edit and save, and nothing goes live until you approve it",
+          "Importing uses tokens from your monthly allowance, which is why it sits with the Enterprise plan"
+        ],
+        "tags": [
+          {
+            "label": "Audit software guide",
+            "href": "/blog/care-home-audit-software"
+          },
+          {
+            "label": "Digital audits guide",
+            "href": "/blog/the-complete-guide-to-care-home-digital-audits"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "imported checklist (for review)",
+          "blocks": [
+            [
+              "Imported draft (for review)",
+              [
+                [
+                  "Are staff aware of each person's preferred way to be approached?",
+                  ""
+                ],
+                [
+                  "Is the daily routine board up to date and at a height each person can see?",
+                  ""
+                ],
+                [
+                  "Is there a record that any change in routine was shared with the person?",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Allocate it by ticking the staff who will run it",
+        "bullets": [
+          "Under Staff, set a person's access level to Staff + Audits, then tick the audits they can conduct in the Staff Hub",
+          "Allocation is per person, by ticking, not by group or role, so you choose exactly who runs which audit",
+          "Staff complete it on a phone, tablet or desktop with photos and a signature, and the score and a PDF report follow"
+        ],
+        "tags": [
+          {
+            "label": "Staff Hub audits",
+            "href": "/how-it-works"
+          },
+          {
+            "label": "Training linked to audits",
+            "href": "/training-platform"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "who can run the audit",
+          "blocks": [
+            [
+              "Who can run it",
+              [
+                [
+                  "Deputy manager: allowed to run it, with all questions",
+                  ""
+                ],
+                [
+                  "Senior support worker: allowed to run it on weekends",
+                  ""
+                ],
+                [
+                  "Support worker: not allocated yet",
+                  ""
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "See the scores and the actions, month on month",
+        "bullets": [
+          "Each audit is scored by section, and repeat failures show when a question keeps failing in consecutive audits",
+          "Actions have an owner, a priority and a due date, and carry up to 10 photos as proof. The next audit re-checks them",
+          "Schedule the audit with a due date and a repeat, and reminders and escalation chase it if it is missed"
+        ],
+        "tags": [
+          {
+            "label": "Care audit library",
+            "href": "/care-audits"
+          },
+          {
+            "label": "CQC and compliance evidence",
+            "href": "/cqc-compliance"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Custom audit results",
+          "stats": [
+            [
+              "Open actions",
+              "6"
+            ],
+            [
+              "Audits affected",
+              "4"
+            ],
+            [
+              "Actions closed",
+              "11"
+            ],
+            [
+              "Average score",
+              "78%"
+            ]
+          ],
+          "blocks": [
+            [
+              "Questions that failed",
+              [
+                [
+                  "Communication passport in the room",
+                  "3 runs"
+                ],
+                [
+                  "Routine change explained",
+                  "2 runs"
+                ],
+                [
+                  "Sensory space set up",
+                  "2 runs"
+                ]
+              ]
+            ],
+            [
+              "Where the open actions are",
+              [
+                [
+                  "Communication and routines",
+                  "4 actions"
+                ],
+                [
+                  "Medication",
+                  "2 actions"
+                ]
+              ]
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "Why would I build a custom audit when there are over 100 in the library?",
+        "a": "You might not need to. The library covers a lot of ground, and a small edit can fix many gaps. But if your service has routines, risks or promises that no library audit asks about, building your own lets you ask exactly those questions and still get scores, photos, actions and a PDF report."
+      },
+      {
+        "q": "Can every plan build its own audit?",
+        "a": "No. Building your own audit is on the Enterprise plan. Every other plan can preview any audit and make small edits to a built in one: reword questions, change question types and add up to 2 questions. Anything bigger needs the Enterprise builder."
+      },
+      {
+        "q": "What do I get on the Free plan?",
+        "a": "The whole library of more than 100 audits, with scoring, photos, a PDF report, actions, scheduling and optional manager approval. Recommendations from our own machine learning are paid plans only. The library is a good place to start while you decide."
+      },
+      {
+        "q": "I already have an audit in Word. Do I have to retype it?",
+        "a": "On Enterprise you can import it from a PDF, Word file, text file or photo, up to 15 MB. CareStream drafts the questions and you review and edit before saving. Importing uses tokens from your monthly allowance. Check every question, because a draft is only a draft."
+      },
+      {
+        "q": "Who can run the audit?",
+        "a": "Anyone you allocate it to. In Staff, set the access level to Staff + Audits and tick the audits that person can conduct. It is per person, not by group or role. They run it in the Staff Hub on a phone, tablet or desktop. Scheduling an audit to someone also allocates it to them."
+      },
+      {
+        "q": "What happens when something fails?",
+        "a": "You can add an action with an owner, a priority and a due date, and the owner can add up to 10 photos as proof when it is done. At the next audit of the same kind, the earlier actions come up for the auditor to mark fixed or not fixed. A reopened action goes back to its owner by email."
+      },
+      {
+        "q": "Does the score tell me our CQC rating?",
+        "a": "No. The score is CareStream's own measure of your answers. It is not a CQC rating, and an audit is not a record that goes to the regulator. It helps you spot weak areas and show that you check. See your <a href=\"/cqc-compliance\">CQC evidence</a> for how it fits together."
+      },
+      {
+        "q": "How do I try it?",
+        "a": "Create a free account and run a library audit today. Building your own is on Enterprise, so if you want to test it with your own questions, <a href=\"/demo\">book a demo</a> or start the 14 day free trial on a paid plan and talk to us about Enterprise. See the <a href=\"/pricing\">pricing page</a> for plan details."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "A tool for your questions, not a replacement for your judgement",
+    "cards": [
+      {
+        "title": "Building your own is Enterprise only",
+        "body": "Other plans can make small edits to a built in audit: reword, change types and add up to 2 questions. A full build needs Enterprise."
+      },
+      {
+        "title": "It does not decide what is good practice",
+        "body": "CareStream drafts and scores what you write. Whether the questions match your policy, your regulator's expectations and your people's needs is your call."
+      },
+      {
+        "title": "Scores are ours, not a rating",
+        "body": "An audit score is not a CQC rating and the audit is not a regulator submitted record. Recommendations are on the paid plans, not the Free plan."
+      }
+    ]
+  },
+  "read_next": [
+    "the-complete-guide-to-care-home-digital-audits",
+    "care-home-audit-software",
+    "care-home-audit-schedule"
+  ],
+  "faqs": {
+    "heading": "Custom audits and CareStream, answered",
+    "groups": [
+      {
+        "group": "About building your own",
+        "items": [
+          {
+            "q": "What is a custom audit?",
+            "a": "This is a set of questions you write yourself, instead of using a ready made template. In CareStream it runs like any other audit, with scoring by section, photo evidence, actions and a PDF report."
+          },
+          {
+            "q": "What is an audit checklist?",
+            "a": "An audit checklist is a list of questions an auditor answers while looking at a service, such as yes, no or N/A. A good audit checklist is specific, easy to answer and tied to something you can fix. A digital one adds scores, photos and a history."
+          },
+          {
+            "q": "Are digital audits better than paper?",
+            "a": "They are easier to score, repeat and compare. A <a href=\"/blog/the-complete-guide-to-care-home-digital-audits\">guide to digital audits</a> covers the detail. The real gain is that findings turn into actions that someone owns, and the next audit checks them."
+          },
+          {
+            "q": "Is there an audit tool that is free?",
+            "a": "Audits are free to run on every plan, including the Free plan, with more than 100 to choose from. They have scoring, photos, a PDF report, actions and scheduling. Writing your own questions from scratch is the Enterprise feature."
+          },
+          {
+            "q": "Can I edit a built in audit on a lower plan?",
+            "a": "Yes, in a small way. You can reword questions, change question types and add up to 2 questions. The first edit makes the audit your own copy and hides the built in one."
+          },
+          {
+            "q": "Which library audits suit a learning disability service?",
+            "a": "The library has audits labelled for learning disability and autism services, covering areas such as positive behaviour support, consent and health access. Start with <a href=\"/care-audits/medicines-management\">medicines management</a> or <a href=\"/care-audits/safeguarding-log-review\">the safeguarding log review</a>, and browse the rest at <a href=\"/care-audits\">the audit library</a>."
+          }
+        ]
+      },
+      {
+        "group": "About inspections",
+        "items": [
+          {
+            "q": "Does a care audit satisfy CQC?",
+            "a": "There is no single audit that does. Regulation 17 says systems must be established and operated effectively so you can <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">assess, monitor and improve the quality and safety of the services provided</a>. A care audit is one way to show you do that, alongside action on what it finds."
+          },
+          {
+            "q": "What does the law say about assessing risk?",
+            "a": "Regulation 12 says care and treatment must be provided safely, which includes <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/12\">assessing the risks to the health and safety of service users</a> and doing all that is reasonably practicable to mitigate them. Your own questions can check that your risk controls are being followed."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "How to write a good custom audit",
+    "lede": "Your own audit is only as useful as its questions. Whether you build it from scratch or edit a library audit, a few habits keep it practical.",
+    "sections": [
+      {
+        "h3": "Start from what could go wrong for the people you support",
+        "paragraphs": [
+          "List the five or six things that matter most in your service, such as communication, routines, sensory needs, medicines changes and consent. Then ask what an auditor could see, check or count that would show each one is working. Those observable things become your questions.",
+          "Compare your list with the library first. If a built in audit already asks, copy it and adjust it. Keep your own questions for the gaps, so your audit tool stays short enough to finish."
+        ]
+      },
+      {
+        "h3": "Check each question before it goes live",
+        "checklist": [
+          "Can an auditor answer it by looking, asking or checking a record, without guessing?",
+          "Does it have one clear answer type, such as yes or no, a number or a rating?",
+          "Is it tied to something you can fix, and does a failed answer have an owner?",
+          "Is it ever not relevant? If so, allow N/A or a condition so it does not unfairly lower the score."
+        ]
+      },
+      {
+        "h3": "Run it, then review the audit itself",
+        "paragraphs": [
+          "After the first run, read the answers. Questions everyone passes may be too easy. Questions that confuse auditors need rewording. Each edit creates a new version, so the history shows when and why you changed what you ask."
+        ]
+      }
+    ],
+    "note": "<b>For the inspector.</b> Keep the questions, the scores, the photos and the closed actions together, so you can show that you check the things that matter to your service and that you act on what you find."
+  }
+}

@@ -63,13 +63,6 @@ export function HomeWhy({ slides, eyebrow, heading }: { slides: WhySlide[]; eyeb
           </article>
         ))}
       </div>
-      {many && (
-        <div className="why-pills" role="tablist" aria-label="Choose a scenario">
-          {slides.map((s, i) => (
-            <button type="button" key={s.slug} role="tab" aria-selected={i === active} title={s.title} className={i === active ? 'on' : ''} onClick={() => go(i)}>{s.title}</button>
-          ))}
-        </div>
-      )}
     </div>
   )
 }

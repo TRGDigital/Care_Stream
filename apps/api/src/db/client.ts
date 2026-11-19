@@ -45,8 +45,8 @@ function buildClient() {
         return await next(params)
       } catch (e: any) {
         const connectionFailure = e?.name === 'PrismaClientInitializationError' && SATURATED.test(String(e?.message ?? ''))
-        if (!connectionFailure || attempt >= 3) throw e
-        await new Promise(r => setTimeout(r, 200 * 2 ** attempt + Math.random() * 200))   // about 0.3s, 0.5s, 0.9s
+        if (!connectionFailure || attempt >= 5) throw e
+        await new Promise(r => setTimeout(r, 200 * 2 ** attempt + Math.random() * 200))   // about 0.3s, 0.5s, 0.9s, 1.7s, 3.3s: some 7 seconds in all (a burst on 19 Nov 2026 lasted 47 seconds, so this rides out the short ones)
       }
     }
   })

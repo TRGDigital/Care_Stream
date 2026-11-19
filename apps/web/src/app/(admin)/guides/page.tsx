@@ -2313,7 +2313,24 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={1}>Open <strong>Audits</strong> in the hub. Anything <strong>Assigned to you</strong> is at the top with its due date, then anything in progress, then every audit grouped by how often it runs.</Step>
             <Step n={2}>Answer each question. Where something is wrong, <strong>take a photo</strong> and draw on it to circle or arrow the problem before it is saved to the audit.</Step>
             <Step n={3}>Sign on screen and complete. Hub audits are the same records as the web, so they appear in the repository, reports and trends straight away.</Step>
+            <Step n={4}><strong>Back-dating (administrators).</strong> Administrators see a <strong>Date of the audit</strong> box above the list. Choose an earlier day and every Start button, including the audits allocated to staff, starts the audit for that day; <strong>Back to today</strong> resets it. Inside an audit, an administrator can press <strong>Change date</strong> under the title. Staff always record today. See <em>Back-dating a missed audit</em> below.</Step>
           </div>
+        </SectionBlock>
+
+        <SectionBlock title="Back-dating a missed audit">
+          <p className="text-sm text-neutral-mid">
+            Audits get missed, or done on paper and entered later. Back-dating lets the record show the day the audit was really carried out, without hiding that it was entered afterwards.
+          </p>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-neutral-mid">
+            <li><strong>Who:</strong> administrators only. Staff with audit access, and staff given an audit, always record today. This is enforced on the server, not just hidden on the screen.</li>
+            <li><strong>Where:</strong> the <strong>Date of the audit</strong> box when you start an audit (here under Monthly Audits, and in the Chat Hub), and <strong>Change date</strong> on an audit that is already started or completed.</li>
+            <li><strong>Limits:</strong> never a future day, and no more than two years back.</li>
+            <li><strong>Which period it counts towards:</strong> the month of the chosen day, or that exact day for daily audits. So a missed March audit entered in May fills March on the calendar and the matrix. If there is already an audit of the same kind (and the same room, resident or staff member) for that period, starting another just opens the existing one, and changing a date so that it lands on a taken period is refused with a message.</li>
+            <li><strong>What the report shows:</strong> <em>Audit carried out on</em> with the day you chose and, when it differs from the day it was entered, <em>Entered on CareStream</em> with the real date. The audit is also tagged <strong>Back-dated</strong> on screen.</li>
+            <li><strong>The audit log:</strong> every back-dated start and every date change is recorded with who did it and the old and new dates.</li>
+            <li><strong>Completed audits:</strong> an administrator can still change the date. A PDF report that was saved when the audit was signed off keeps its original date; any report generated afterwards uses the new one.</li>
+          </ul>
+          <div className="mt-3"><Tip>Back-date to the day the audit was actually done, not to make a gap disappear. Inspectors can see both the audit date and the day it was entered.</Tip></div>
         </SectionBlock>
 
         <SectionBlock title="Per-room, per-resident and per-staff audits">

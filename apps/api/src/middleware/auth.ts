@@ -8,6 +8,8 @@ export interface JwtPayload {
   sub: string        // user UUID
   tenant_id: string
   role: 'admin' | 'staff'
+  // Present only on a "view hub as" token: an admin looking at a staff member's hub. mode 'view' can read but never change anything.
+  imp?: { by: string; by_name: string; mode: 'view' | 'act' }
   iat: number
   exp: number
 }
@@ -49,6 +51,12 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   }
 
   req.user = payload
+
+  // A "view hub as" token in view-only mode can read but not change anything. The only write it may make is ending the view.
+  if (payload.imp?.mode === 'view' && !['GET', 'HEAD', 'OPTIONS'].includes(req.method) && req.originalUrl.split('?')[0] !== '/me/view-as/end') {
+    res.status(403).json({ success: false, error: { code: 'VIEW_ONLY', message: 'You are viewing this hub as an admin, so nothing can be changed. Go back to admin to make changes.' } })
+    return
+  }
 
   // Run the rest of the request inside the tenant context (§3.1 isolation)
   tenantContext.run({ tenantId: payload.tenant_id }, next)

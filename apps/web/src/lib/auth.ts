@@ -10,6 +10,9 @@ const API_URL = process.env.API_URL ?? 'http://localhost:4000'
 
 // ─── Type augmentation ────────────────────────────────────────────────────────
 
+// An admin looking at a staff member's hub ("view hub as"). Comes from the claims in the short lived token; ends when it expires.
+export type Impersonation = { by: string; byName: string; mode: 'view' | 'act'; expiresAt: number }
+
 declare module 'next-auth' {
   interface User {
     role:         'admin' | 'staff'
@@ -21,6 +24,7 @@ declare module 'next-auth' {
     auditAccess?: boolean
     isReviewer?: boolean
     tier?: string
+    impersonation?: Impersonation
   }
   interface Session {
     accessToken: string
@@ -36,6 +40,7 @@ declare module 'next-auth' {
       auditAccess?: boolean
       isReviewer?: boolean
       tier?: string
+      impersonation?: Impersonation
     }
   }
 }
@@ -51,6 +56,7 @@ declare module 'next-auth/jwt' {
     auditAccess?: boolean
     isReviewer?: boolean
     tier?: string
+    impersonation?: Impersonation
   }
 }
 
@@ -70,6 +76,7 @@ export const authOptions: NextAuthOptions = {
         tenant_name:   { label: 'Tenant Name',   type: 'text' },
         user_name:     { label: 'User Name',     type: 'text' },
         user_email:    { label: 'User Email',    type: 'text' },
+        tier:          { label: 'Tier',          type: 'text' },
         display_mode:  { label: 'Display mode',  type: 'text' },
       },
       async authorize(credentials, req) {
@@ -93,7 +100,9 @@ export const authOptions: NextAuthOptions = {
               refreshToken: credentials.refresh_token as string,
               needsBilling: false, // site-switch is only for existing active group admins
               auditAccess:  payload.role === 'admin',
-              tier:         'full',
+              tier:         payload.imp && typeof credentials.tier === 'string' && credentials.tier ? credentials.tier : 'full',
+              // A "view hub as" token: the claims say who is looking and how; the API enforces it, this only lets the banner show it.
+              ...(payload.imp ? { impersonation: { by: String(payload.imp.by), byName: String(payload.imp.by_name ?? 'An admin'), mode: payload.imp.mode === 'act' ? 'act' : 'view', expiresAt: Number(payload.exp) * 1000 } } : {}),
             }
           } catch { return null }
         }
@@ -182,12 +191,18 @@ export const authOptions: NextAuthOptions = {
         token.auditAccess  = user.auditAccess ?? false
         token.isReviewer   = user.isReviewer ?? false
         token.tier         = user.tier ?? 'full'
+        token.impersonation = user.impersonation
         // Decode expiry so we can proactively refresh before it hits
         try {
           const payload = JSON.parse(Buffer.from(user.accessToken.split('.')[1], 'base64').toString())
           token.accessTokenExpiry = payload.exp * 1000
         } catch { token.accessTokenExpiry = Date.now() + 55 * 60 * 1000 }
         return token
+      }
+
+      // A "view hub as" session has no refresh token: when its token runs out it simply ends.
+      if (token.impersonation) {
+        return Date.now() < (token.accessTokenExpiry as number) ? token : { ...token, error: 'RefreshAccessTokenError' }
       }
 
       // Force a refresh when the client calls update() (e.g. right after checkout) so
@@ -241,6 +256,7 @@ export const authOptions: NextAuthOptions = {
       session.user.auditAccess   = token.auditAccess
       session.user.isReviewer    = token.isReviewer
       session.user.tier          = token.tier
+      session.user.impersonation = token.impersonation
       return session
     },
   },

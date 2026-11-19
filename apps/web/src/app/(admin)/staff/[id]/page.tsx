@@ -9,6 +9,7 @@ import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
 import { InfoTip } from '@/components/info-tip'
 import { TrainingCertificate } from '@/components/training-certificate'
 import { SignInLinkButton } from '@/components/admin/staff/sign-in-link'
+import { ViewAsButton } from '@/components/admin/staff/view-as-button'
 import { StaffIncentivesSection } from '@/components/admin/staff/incentives-section'
 import { SupervisionRecordModal } from '@/components/admin/supervision-record-modal'
 import { MATRIX_STATUS, MatrixBadge } from '@/components/admin/training/training-matrix-shared'
@@ -265,6 +266,7 @@ export default function StaffRecordPage() {
           <ArrowLeft size={15} /> Back to staff
         </button>
         <div className="flex items-center gap-2 print:hidden">
+          {token && u?.role === 'staff' && <ViewAsButton token={token} userId={id} userName={u?.name ?? ''} />}
           {token && u?.role === 'staff' && <SignInLinkButton token={token} userId={id} userName={u?.name ?? ''} />}
           <button onClick={sendReminder} disabled={busy === 'remind'} className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-neutral-dark hover:bg-neutral-light disabled:opacity-50">
             {busy === 'remind' ? <Loader2 size={14} className="animate-spin" /> : <Bell size={14} />} Send reminder

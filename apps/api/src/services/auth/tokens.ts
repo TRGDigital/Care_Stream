@@ -30,6 +30,12 @@ export function signRefreshToken(userId: string, jti: string): string {
   )
 }
 
+/** A short lived token for an admin to look at a staff member's hub. No refresh token is ever issued for it: it simply ends. */
+export const VIEW_AS_MINUTES = 45
+export function generateViewAsToken(payload: Omit<JwtPayload, 'iat' | 'exp'>): string {
+  return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: `${VIEW_AS_MINUTES}m` })
+}
+
 export function verifyAccessToken(token: string): JwtPayload {
   return jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload
 }

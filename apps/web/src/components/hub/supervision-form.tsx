@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createApiClient, type TrainingBrief } from '@/lib/api-client'
 import { TrainingBriefView } from '@/components/shared/training-brief-view'
+import { TrainingDetailModal } from '@/components/shared/training-detail-view'
 import { Loader2, X, Check, Plus, Trash2, CalendarDays } from 'lucide-react'
 
 // The supervision recording form sections (Skills for Care style). 1-9 are free text; section 10
@@ -50,6 +51,7 @@ export function SupervisionForm({ token, supervisionId, onClose, onSaved }: { to
   const [saving, setSaving]     = useState(false)
   const [err, setErr]           = useState('')
   const [brief, setBrief]       = useState<TrainingBrief | null>(null)   // only where training is linked to supervisions
+  const [showDetail, setShowDetail] = useState(false)
   const [linkedSupported, setLinkedSupported] = useState(false)          // this form knows about actions added from the assign screen, so removing a row removes the action
 
   useEffect(() => {
@@ -137,9 +139,10 @@ export function SupervisionForm({ token, supervisionId, onClose, onSaved }: { to
             {brief && (
               <details open className="rounded-lg border border-teal/25 bg-white">
                 <summary className="cursor-pointer px-4 py-2.5 text-sm font-semibold text-neutral-dark">Training brief for {rec.supervisee.split(' ')[0]} <span className="font-normal text-neutral-mid">({brief.topics.length} {brief.topics.length === 1 ? 'thing' : 'things'} worth raising)</span></summary>
-                <div className="border-t border-gray-100 px-4 py-3"><TrainingBriefView brief={brief} /></div>
+                <div className="border-t border-gray-100 px-4 py-3"><TrainingBriefView brief={brief} onDetail={() => setShowDetail(true)} /></div>
               </details>
             )}
+            {showDetail && <TrainingDetailModal title={`${rec.supervisee}: training`} load={async () => (await createApiClient(token).me.conductingTrainingDetail(supervisionId)).detail} onClose={() => setShowDetail(false)} />}
 
             {/* Sections 1-9 */}
             {SUP_SECTIONS.map((s, i) => (

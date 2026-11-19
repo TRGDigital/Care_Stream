@@ -211,3 +211,96 @@ export async function linkTrainingToNextSupervision(tenantId: string, userIds: s
   }
   return out
 }
+
+// ─── Training detail: the full picture of the courses a supervision is about ──────────────────────────────────────────────────────
+export type IncorrectAnswer = { question: string; their_answer: { letter: string; text: string | null } | null; correct_answer: { letter: string; text: string | null } | null }
+export type CourseDetail = {
+  enrollment_id: string; module_id: string; module_name: string; kind: 'Annual' | 'Training'; cpd: boolean
+  status: 'not_started' | 'started' | 'complete' | 'expired'
+  allocated_at: string | null; due_date: string | null; overdue: boolean; started_at: string | null; completed_at: string | null
+  answered: number; total_questions: number; correct: number; score_pct: number | null
+  attempts: number; learn_minutes: number; relearn_required: boolean
+  baseline: { score: number; total: number } | null; reflection: string | null
+  incorrect: IncorrectAnswer[]
+}
+export type TrainingDetail = {
+  person: { id: string; name: string; job_role: string | null }
+  supervision: { id: string; type: string; held_on: string; status: string } | null
+  linked: Array<{ action_id: string; description: string; action_status: string; added_on: string | null; course: CourseDetail | null }>
+  others: CourseDetail[]            // allocated since the previous supervision, not tied to this one
+  follow_up: Array<{ method: 'learn' | 'retry'; label: string | null; when: string }>   // gaps they went back over (lesson or retry)
+  since: string | null
+  generated_at: string
+}
+
+const letterIndex = (l: string) => { const c = String(l ?? '').trim().toUpperCase().charCodeAt(0) - 65; return c >= 0 && c < 26 ? c : -1 }
+const optionOf = (q: any, idx: number) => (idx >= 0 && Array.isArray(q?.options) && typeof q.options[idx] === 'string' ? q.options[idx] : null)
+
+/** Pure: one enrolment (with its module questions and answers) into what a supervisor needs to read. */
+export function courseDetailOf(e: { id: string; status: string; created_at: any; due_date?: any; completed_at?: any; expires_at?: any; learn_seconds?: number | null; assessment_attempts?: number | null; relearn_required?: boolean | null; baseline_score?: number | null; baseline_total?: number | null; reflection?: string | null
+  module: { id: string; name: string; source?: string | null; cpd_accredited?: boolean | null; questions?: any }
+  answers: Array<{ question_id: string; question_text?: string | null; answer_text: string; is_correct: boolean; answered_at?: any }> }, now: Date = new Date()): CourseDetail {
+  const qs: any[] = Array.isArray(e.module.questions) ? e.module.questions : []
+  const byId = new Map(qs.map(q => [String(q?.id), q]))
+  const incorrect: IncorrectAnswer[] = e.answers.filter(a => a.is_correct === false).map(a => {
+    const q = byId.get(String(a.question_id))
+    const gi = letterIndex(a.answer_text), ci = typeof q?.correct === 'number' ? q.correct : (typeof q?.correct === 'string' ? letterIndex(q.correct) : -1)
+    return {
+      question: (q?.text ?? a.question_text ?? 'Question') as string,
+      their_answer: a.answer_text ? { letter: String(a.answer_text).toUpperCase(), text: optionOf(q, gi) } : null,
+      correct_answer: ci >= 0 ? { letter: String.fromCharCode(65 + ci), text: optionOf(q, ci) } : null,
+    }
+  })
+  const correct = e.answers.filter(a => a.is_correct).length
+  const answered = e.answers.length
+  const started = answered > 0 || (e.learn_seconds ?? 0) > 0 || e.status === 'in_progress' || e.status === 'complete'
+  const expired = e.status === 'expired' || (e.status === 'complete' && !!e.expires_at && new Date(e.expires_at) < now)
+  const firstAnswer = e.answers.map(a => a.answered_at).filter(Boolean).map(d => new Date(d).getTime()).sort((a, b) => a - b)[0]
+  return {
+    enrollment_id: e.id, module_id: e.module.id, module_name: e.module.name, kind: e.module.source === 'ai_generated' ? 'Annual' : 'Training', cpd: !!e.module.cpd_accredited,
+    status: expired ? 'expired' : e.status === 'complete' ? 'complete' : started ? 'started' : 'not_started',
+    allocated_at: iso(e.created_at), due_date: iso(e.due_date), overdue: !!e.due_date && new Date(e.due_date) < now && e.status !== 'complete',
+    started_at: firstAnswer ? new Date(firstAnswer).toISOString() : null, completed_at: iso(e.completed_at),
+    answered, total_questions: qs.length, correct, score_pct: answered > 0 ? Math.round((correct / answered) * 100) : null,
+    attempts: e.assessment_attempts ?? 0, learn_minutes: Math.round((e.learn_seconds ?? 0) / 60), relearn_required: !!e.relearn_required,
+    baseline: e.baseline_total ? { score: e.baseline_score ?? 0, total: e.baseline_total } : null, reflection: e.reflection ?? null,
+    incorrect,
+  }
+}
+
+/** Everything a supervisor needs on the training a supervision is about: each linked course in full, other recent allocations, follow up. */
+export async function buildTrainingDetail(tenantId: string, userId: string, supervisionId?: string | null): Promise<TrainingDetail | null> {
+  await syncLinkedActions(tenantId, userId).catch(() => 0)
+  const user = await p().user.findFirst({ where: { id: userId, tenant_id: tenantId }, select: { id: true, name: true, job_role: true } })
+  if (!user) return null
+  const sup = supervisionId ? await p().staffSupervision.findFirst({ where: { id: supervisionId, tenant_id: tenantId, user_id: userId }, select: { id: true, type: true, held_on: true, status: true } }) : null
+  if (supervisionId && !sup) return null
+  const prev = await p().staffSupervision.findFirst({ where: { tenant_id: tenantId, user_id: userId, type: sup?.type ?? 'supervision', status: 'completed', ...(sup ? { held_on: { lt: sup.held_on } } : {}) }, orderBy: { held_on: 'desc' }, select: { held_on: true } })
+  const since = prev?.held_on ?? new Date(Date.now() - 90 * DAY)
+  // Light list first (no questions, no answers), then the full detail only for the few courses that will be shown: a person can have
+  // hundreds of enrolments and each module carries its whole question set.
+  const [light, actions, rem] = await Promise.all([
+    p().trainingEnrollment.findMany({ where: { tenant_id: tenantId, user_id: userId }, orderBy: { created_at: 'desc' }, take: 300, select: { id: true, created_at: true } }),
+    p().supervisionAction.findMany({ where: { tenant_id: tenantId, user_id: userId, enrollment_id: { not: null }, ...(sup ? { supervision_id: sup.id } : { status: { not: 'done' } }) }, orderBy: { created_at: 'desc' }, take: 25 }),
+    p().remediationAttempt.findMany({ where: { tenant_id: tenantId, user_id: userId, created_at: { gte: since } }, orderBy: { created_at: 'desc' }, take: 20 }).catch(() => []),
+  ])
+  const linkedEnrIds = new Set((actions as any[]).map(a => a.enrollment_id as string))
+  const otherIds = (light as any[]).filter(e => !linkedEnrIds.has(e.id) && new Date(e.created_at) >= since).slice(0, 12).map(e => e.id as string)
+  const enr = await p().trainingEnrollment.findMany({
+    where: { tenant_id: tenantId, user_id: userId, id: { in: [...linkedEnrIds, ...otherIds] } }, orderBy: { created_at: 'desc' },
+    include: { module: { select: { id: true, name: true, source: true, cpd_accredited: true, questions: true } }, answers: { select: { question_id: true, question_text: true, answer_text: true, is_correct: true, answered_at: true } } },
+  })
+  const byId = new Map((enr as any[]).map(e => [e.id, e]))
+  const linked = (actions as any[]).map(a => {
+    const e = byId.get(a.enrollment_id)
+    return { action_id: a.id, description: a.description, action_status: a.status, added_on: iso(a.created_at), course: e ? courseDetailOf(e) : null }
+  })
+  const others = (enr as any[]).filter(e => !linkedEnrIds.has(e.id)).map(e => courseDetailOf(e))
+  return {
+    person: { id: user.id, name: user.name, job_role: user.job_role ?? null },
+    supervision: sup ? { id: sup.id, type: sup.type, held_on: iso(sup.held_on) as string, status: sup.status } : null,
+    linked, others,
+    follow_up: (rem as any[]).map(r => ({ method: r.method === 'retry' ? 'retry' as const : 'learn' as const, label: r.label ?? null, when: iso(r.created_at) as string })),
+    since: iso(since), generated_at: new Date().toISOString(),
+  }
+}

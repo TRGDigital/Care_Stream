@@ -378,6 +378,19 @@ workforceRouter.get('/staff/:userId/training-brief', async (req: Request, res: R
   ok(res, { brief })
 })
 
+// GET /workforce/staff/:userId/training-detail?supervision_id= — the courses a supervision is about, in full (flag supervision_training).
+workforceRouter.get('/staff/:userId/training-detail', async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const m = await stl()
+  if (!(await m.supervisionTrainingEnabled(tenantId))) { err(res, 'NOT_AVAILABLE', 'Not available for this account.', 404); return }
+  const userId = String(req.params.userId)
+  if (!(await requireStaff(tenantId, userId))) { err(res, 'NOT_FOUND', 'Staff member not found.', 404); return }
+  const sid = typeof req.query.supervision_id === 'string' && req.query.supervision_id ? req.query.supervision_id : null
+  const detail = await m.buildTrainingDetail(tenantId, userId, sid)
+  if (!detail) { err(res, 'NOT_FOUND', 'Not found.', 404); return }
+  ok(res, { detail })
+})
+
 // POST /workforce/training-link { user_ids, module_id } — after training is allocated, also add it as an action on each person's next
 // booked supervision. Only after the admin ticks the box on the assign screen: nothing is added automatically.
 workforceRouter.post('/training-link', async (req: Request, res: Response) => {

@@ -25,7 +25,7 @@ import { getAuditsDue } from '../services/audits/due'
 import { getPendingAuditApprovals, getRecentApprovedAudits, managerApproveAudit, rejectAudit } from '../services/audits/approval'
 import { getMyActions, countMyOpenActions, setMyActionStatus, getExternalActions, countOpenExternalActions, setExternalActionStatus } from '../services/audits/action-plan'
 import { allocateFromSupervision, type AllocationType } from '../services/supervision-allocations'
-import { supervisionTrainingEnabled, buildBrief, snapshotOf } from '../lib/supervision-training'
+import { supervisionTrainingEnabled, buildBrief, snapshotOf, buildTrainingDetail } from '../lib/supervision-training'
 import { sendTrainingCompletionEmail } from '../services/email/outbound'
 import { generateAuditRecommendations } from './audits'
 import { prisma } from '../db/client'
@@ -1833,6 +1833,17 @@ meRouter.get('/conducting/:id/brief', async (req: Request, res: Response) => {
   if (!(await supervisionTrainingEnabled(tenantId))) { ok(res, { enabled: false, brief: null }); return }
   const brief = await buildBrief(tenantId, r.user_id, r.type === 'appraisal' ? 'appraisal' : 'supervision')
   ok(res, { enabled: true, brief })
+})
+
+// The full training detail for one supervision (flag: supervision_training): every course allocated against it, what was answered
+// wrongly, started or completed, and follow up. Only the person conducting it.
+meRouter.get('/conducting/:id/training-detail', async (req: Request, res: Response) => {
+  const userId   = (req as any).user.sub
+  const tenantId = (req as any).user.tenant_id
+  const r = await (prisma as any).staffSupervision.findFirst({ where: { id: String(req.params.id), tenant_id: tenantId, conducted_by_user_id: userId }, select: { id: true, user_id: true } }).catch(() => null)
+  if (!r) { err(res, 'NOT_FOUND', 'Supervision not found.', 404); return }
+  if (!(await supervisionTrainingEnabled(tenantId))) { ok(res, { enabled: false, detail: null }); return }
+  ok(res, { enabled: true, detail: await buildTrainingDetail(tenantId, r.user_id, r.id) })
 })
 
 // Save the recording form + mark the supervision complete. (Agreed-actions → My actions is wired

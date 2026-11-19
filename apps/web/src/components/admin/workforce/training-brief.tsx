@@ -18,13 +18,13 @@ export function AdminTrainingBrief({ token, userId, name }: { token: string; use
   const [brief, setBrief] = useState<TrainingBrief | null>(null)
   const [err, setErr] = useState('')
   useEffect(() => {
-    if (!open || brief) return
+    if (!open || brief || err) return
     createApiClient(token).workforce.trainingBrief(userId).then(r => setBrief(r.brief)).catch(() => setErr('Could not load the brief.'))
-  }, [open, brief, token, userId])
+  }, [open, brief, err, token, userId])
   if (!enabled) return null
   return (
     <div className="overflow-hidden rounded-lg border border-teal/25 bg-white">
-      <button type="button" onClick={() => setOpen(o => !o)} className="flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-teal-light/20">
+      <button type="button" onClick={() => { if (open) setErr(''); setOpen(o => !o) }} className="flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-teal-light/20">
         <GraduationCap size={15} className="text-teal" />
         <span className="flex-1 text-sm font-semibold text-neutral-dark">Training brief for {name}</span>
         <span className="text-xs text-neutral-mid">{open ? 'Hide' : 'See before the meeting'}</span>

@@ -1801,7 +1801,7 @@ meRouter.get('/conducting/:id', async (req: Request, res: Response) => {
   // so completing the form does not lose them.
   const trainingLinked = await supervisionTrainingEnabled(tenantId)
   const linkedActions = trainingLinked
-    ? await (prisma as any).supervisionAction.findMany({ where: { supervision_id: r.id, tenant_id: tenantId, linked_by: 'training_assign' }, select: { description: true, module_id: true } }).catch(() => [])
+    ? await (prisma as any).supervisionAction.findMany({ where: { supervision_id: r.id, tenant_id: tenantId, linked_by: 'training_assign' }, select: { id: true, description: true, module_id: true } }).catch(() => [])
     : []
   ok(res, { training_linked: trainingLinked, linked_actions: linkedActions, record: {
     id: r.id, type: r.type, held_on: iso(r.held_on), next_due: iso(r.next_due), status: r.status, completed_at: iso(r.completed_at),
@@ -1839,13 +1839,11 @@ meRouter.post('/conducting/:id/complete', async (req: Request, res: Response) =>
   // the server from live data, never taken from the browser, so it cannot be edited and is a true point in time.
   delete (form as any).training_snapshot   // never accepted from the browser
   const trainingLinked = await supervisionTrainingEnabled(tenantId)
-  if (trainingLinked) {
-    const prior = await (prisma as any).staffSupervision.findUnique({ where: { id: r.id }, select: { type: true, form: true, status: true } }).catch(() => null)
-    if (prior?.status === 'completed' && prior?.form?.training_snapshot) (form as any).training_snapshot = prior.form.training_snapshot   // a re-save keeps the original snapshot
-    else {
-      const b = await buildBrief(tenantId, r.user_id, prior?.type === 'appraisal' ? 'appraisal' : 'supervision').catch(() => null)
-      if (b) (form as any).training_snapshot = snapshotOf(b)
-    }
+  const prior = await (prisma as any).staffSupervision.findUnique({ where: { id: r.id }, select: { type: true, form: true, status: true } }).catch(() => null)
+  if (prior?.status === 'completed' && prior?.form?.training_snapshot) (form as any).training_snapshot = prior.form.training_snapshot   // a re-save keeps the original snapshot, even if the feature is later switched off
+  else if (trainingLinked) {
+    const b = await buildBrief(tenantId, r.user_id, prior?.type === 'appraisal' ? 'appraisal' : 'supervision').catch(() => null)
+    if (b) (form as any).training_snapshot = snapshotOf(b)
   }
   await (prisma as any).staffSupervision.update({
     where: { id: r.id },
@@ -1854,10 +1852,23 @@ meRouter.post('/conducting/:id/complete', async (req: Request, res: Response) =>
 
   // Sync the agreed actions into the supervisee's "My actions" to-do list. Match by description so
   // an action the staff member already started/finished keeps its status when the form is re-saved.
-  const wanted: string[] = Array.isArray(form.agreed_actions)
-    ? [...new Set(form.agreed_actions.map((a: any) => String(a?.description ?? '').trim()).filter(Boolean))] as string[]
-    : []
   const existing = await (prisma as any).supervisionAction.findMany({ where: { supervision_id: r.id, tenant_id: tenantId } }).catch(() => [])
+  // Actions added from the training assign screen are shown in the form carrying their id. A row with that id IS that action: editing the
+  // text edits it, and taking the row out of the form removes it. Only a form that knows about them (linked_supported) can remove them,
+  // so a form opened before this went live cannot delete them by leaving them out.
+  const linkedMode = trainingLinked && req.body?.linked_supported === true
+  const linkedById = new Map((existing as any[]).filter(e => e.linked_by === 'training_assign').map(e => [e.id, e]))
+  const keepLinked = new Set<string>()
+  const formRows: any[] = Array.isArray(form.agreed_actions) ? form.agreed_actions : []
+  for (const a of formRows) {
+    const id = String(a?.action_id ?? '')
+    const row = linkedMode ? linkedById.get(id) : null
+    if (!row) continue
+    keepLinked.add(id)
+    const desc = String(a?.description ?? '').trim().slice(0, 1000)
+    if (desc && desc !== row.description) await (prisma as any).supervisionAction.update({ where: { id }, data: { description: desc } }).catch(() => {})
+  }
+  const wanted: string[] = [...new Set(formRows.filter(a => !keepLinked.has(String(a?.action_id ?? ''))).map((a: any) => String(a?.description ?? '').trim()).filter(Boolean))] as string[]
   const existingByDesc = new Map((existing as any[]).map(e => [e.description.trim().toLowerCase(), e]))
   const wantedSet = new Set(wanted.map(w => w.toLowerCase()))
   const toCreate = wanted.filter(w => !existingByDesc.has(w.toLowerCase()))
@@ -1866,9 +1877,8 @@ meRouter.post('/conducting/:id/complete', async (req: Request, res: Response) =>
       data: toCreate.map(desc => ({ supervision_id: r.id, tenant_id: tenantId, user_id: r.user_id, description: desc.slice(0, 1000) })),
     }).catch(() => {})
   }
-  // Actions added from the training assign screen stay even if they are not in the form: the form shows them, but a conductor who
-  // saves without them must not silently remove an action somebody added on purpose.
-  const toDelete = (existing as any[]).filter(e => e.linked_by !== 'training_assign' && !wantedSet.has(e.description.trim().toLowerCase())).map(e => e.id)
+  // An action added from the training assign screen is removed only when a form that shows it (linked_supported) leaves its row out.
+  const toDelete = (existing as any[]).filter(e => e.linked_by === 'training_assign' ? (linkedMode && !keepLinked.has(e.id)) : !wantedSet.has(e.description.trim().toLowerCase())).map(e => e.id)
   if (toDelete.length) await (prisma as any).supervisionAction.deleteMany({ where: { id: { in: toDelete } } }).catch(() => {})
 
   // Allocate any resources chosen against an agreed action (training / induction / CQC prep) to the
@@ -1887,7 +1897,7 @@ meRouter.post('/conducting/:id/complete', async (req: Request, res: Response) =>
       // Tie the action to the course it asked for, so it closes when the course is completed (flag).
       if (trainingLinked && type === 'training' && (result as any).enrollment_id) {
         await (prisma as any).supervisionAction.updateMany({
-          where: { supervision_id: r.id, tenant_id: tenantId, description: String(a?.description ?? '').trim().slice(0, 1000), enrollment_id: null },
+          where: { supervision_id: r.id, tenant_id: tenantId, description: { equals: String(a?.description ?? '').trim().slice(0, 1000), mode: 'insensitive' }, enrollment_id: null },
           data: { module_id: itemId, enrollment_id: (result as any).enrollment_id, linked_by: 'supervision_form' },
         }).catch(() => {})
       }

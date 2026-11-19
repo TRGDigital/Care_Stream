@@ -29,9 +29,11 @@ async function allocateTraining(tenantId: string, userId: string, moduleId: stri
 
   const existing = await (prisma as any).trainingEnrollment.findFirst({
     where:  { tenant_id: tenantId, user_id: userId, module_id: moduleId, status: { not: 'expired' } },
-    select: { id: true },
+    orderBy: { created_at: 'desc' },
+    select: { id: true, status: true },
   }).catch(() => null)
-  if (existing) return { allocated: false, skipped: true, enrollment_id: existing.id, module_id: moduleId }
+  // An enrolment that is already complete is not linked to the action: there would be nothing left for the action to wait for.
+  if (existing) return { allocated: false, skipped: true, ...(existing.status === 'complete' ? {} : { enrollment_id: existing.id, module_id: moduleId }) }
 
   // AI-generated (annual) modules consume the plan's allocation quota; ad-hoc modules don't.
   if (mod.source === 'ai_generated') {

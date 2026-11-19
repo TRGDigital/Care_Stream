@@ -14,6 +14,11 @@ const DAY = 86_400_000
 const p = () => prisma as any
 const iso = (d: any) => (d ? new Date(d).toISOString() : null)
 
+/** Just the tenant flag (one small query). Callers that already hold the plan features combine it with has_workforce_compliance themselves. */
+export async function supervisionTrainingFlagOn(tenantId: string): Promise<boolean> {
+  try { const t = await p().tenant.findUnique({ where: { id: tenantId }, select: { feature_flags: true } }); return (t?.feature_flags as any)?.supervision_training === true } catch { return false }
+}
+
 export async function supervisionTrainingEnabled(tenantId: string): Promise<boolean> {
   try {
     const t = await p().tenant.findUnique({ where: { id: tenantId }, select: { feature_flags: true } })
@@ -40,7 +45,7 @@ export type Brief = {
 const LOW_SCORE = 70
 const WEAK_CQC = 60
 
-type RecItem = { module_name?: string; source?: string; due_date?: any; completed_at?: any; score?: { pct: number } | null; cpd_accredited?: boolean; cpd_hours?: number | null; status: string; overdue: boolean; due_soon: boolean }
+type RecItem = { module_id?: string; assigned_at?: any; module_name?: string; source?: string; due_date?: any; completed_at?: any; score?: { pct: number } | null; cpd_accredited?: boolean; cpd_hours?: number | null; status: string; overdue: boolean; due_soon: boolean }
 export type BriefInput = {
   person: { id: string; name: string; job_role: string | null }
   items: RecItem[]
@@ -59,11 +64,21 @@ const toItem = (i: RecItem): BriefItem => ({
 /** Pure: facts in, brief out. The rules for "what to raise" live here so they can be tested. */
 export function composeBrief(x: BriefInput): Brief {
   const now = x.now ?? new Date()
+  // One row per course: the latest. A course renewed last month has an old expired row and a new complete one; only the new one counts,
+  // otherwise the brief (and the record it is saved into) would call a renewed course overdue and expired.
+  const latest = new Map<string, RecItem>()
+  const rows: RecItem[] = []
+  for (const i of x.items) {
+    if (!i.module_id) { rows.push(i); continue }
+    const cur = latest.get(i.module_id)
+    if (!cur || new Date(i.assigned_at ?? 0).getTime() >= new Date(cur.assigned_at ?? 0).getTime()) latest.set(i.module_id, i)
+  }
+  x = { ...x, items: [...rows, ...latest.values()] }
   const since = x.previous ? x.previous.held_on : new Date(now.getTime() - 90 * DAY)
   const done = x.items.filter(i => i.status === 'complete')
   const scores = x.items.map(i => i.score?.pct).filter((n): n is number => typeof n === 'number')
   const training = {
-    overdue: x.items.filter(i => i.overdue).map(toItem),
+    overdue: x.items.filter(i => i.overdue && i.status !== 'expired').map(toItem),
     due_soon: x.items.filter(i => i.due_soon && !i.overdue).map(toItem),
     in_progress: x.items.filter(i => i.status === 'in_progress' && !i.overdue).map(toItem),
     expired: x.items.filter(i => i.status === 'expired').map(toItem),
@@ -149,7 +164,7 @@ export function snapshotOf(b: Brief) {
 export async function syncLinkedActions(tenantId: string, userId?: string): Promise<number> {
   const open = await p().supervisionAction.findMany({
     where: { tenant_id: tenantId, ...(userId ? { user_id: userId } : {}), enrollment_id: { not: null }, status: { not: 'done' } },
-    select: { id: true, enrollment_id: true }, take: 500,
+    select: { id: true, enrollment_id: true, created_at: true }, take: 500,
   })
   if (!open.length) return 0
   const enr = await p().trainingEnrollment.findMany({ where: { tenant_id: tenantId, id: { in: (open as any[]).map(a => a.enrollment_id) }, status: 'complete' }, select: { id: true, completed_at: true } })
@@ -157,13 +172,15 @@ export async function syncLinkedActions(tenantId: string, userId?: string): Prom
   let n = 0
   for (const a of open as any[]) {
     if (!doneAt.has(a.enrollment_id)) continue
+    // Only a completion AFTER the action was added counts. A course finished months ago must not tick off a new "do this course" action.
+    if (new Date(doneAt.get(a.enrollment_id)).getTime() < new Date(a.created_at).getTime() - 60_000) continue
     await p().supervisionAction.update({ where: { id: a.id }, data: { status: 'done', done_at: doneAt.get(a.enrollment_id) } })
     n++
   }
   return n
 }
 
-export type LinkResult = { user_id: string; name: string; result: 'linked' | 'already' | 'no_supervision' | 'not_enrolled'; supervision_on?: string }
+export type LinkResult = { user_id: string; name: string; result: 'linked' | 'already' | 'no_supervision' | 'not_enrolled' | 'already_complete'; supervision_on?: string }
 
 /**
  * The "also add to their next supervision" button on the assign screens. For each person: their next BOOKED supervision (not an
@@ -177,14 +194,20 @@ export async function linkTrainingToNextSupervision(tenantId: string, userIds: s
   const startToday = new Date(); startToday.setHours(0, 0, 0, 0)
   const out: LinkResult[] = []
   for (const u of users as any[]) {
-    const enr = await p().trainingEnrollment.findFirst({ where: { tenant_id: tenantId, user_id: u.id, module_id: moduleId, status: { not: 'expired' } }, orderBy: { created_at: 'desc' }, select: { id: true } })
-    if (!enr) { out.push({ user_id: u.id, name: u.name, result: 'not_enrolled' }); continue }
+    // The open enrolment (not started or in progress). If the only one is already complete there is nothing for the supervision to ask for.
+    const enr = await p().trainingEnrollment.findFirst({ where: { tenant_id: tenantId, user_id: u.id, module_id: moduleId, status: { in: ['not_started', 'in_progress'] } }, orderBy: { created_at: 'desc' }, select: { id: true } })
+    if (!enr) {
+      const done = await p().trainingEnrollment.findFirst({ where: { tenant_id: tenantId, user_id: u.id, module_id: moduleId, status: 'complete' }, select: { id: true } })
+      out.push({ user_id: u.id, name: u.name, result: done ? 'already_complete' : 'not_enrolled' }); continue
+    }
     const sup = await p().staffSupervision.findFirst({ where: { tenant_id: tenantId, user_id: u.id, type: 'supervision', status: 'booked', held_on: { gte: startToday } }, orderBy: { held_on: 'asc' }, select: { id: true, held_on: true } })
     if (!sup) { out.push({ user_id: u.id, name: u.name, result: 'no_supervision' }); continue }
     const dup = await p().supervisionAction.findFirst({ where: { supervision_id: sup.id, tenant_id: tenantId, enrollment_id: enr.id }, select: { id: true } })
     if (dup) { out.push({ user_id: u.id, name: u.name, result: 'already', supervision_on: iso(sup.held_on) as string }); continue }
-    await p().supervisionAction.create({ data: { supervision_id: sup.id, tenant_id: tenantId, user_id: u.id, description: `Complete training: ${mod.name}`.slice(0, 1000), module_id: mod.id, enrollment_id: enr.id, linked_by: 'training_assign' } })
-    out.push({ user_id: u.id, name: u.name, result: 'linked', supervision_on: iso(sup.held_on) as string })
+    try {
+      await p().supervisionAction.create({ data: { supervision_id: sup.id, tenant_id: tenantId, user_id: u.id, description: `Complete training: ${mod.name}`.slice(0, 1000), module_id: mod.id, enrollment_id: enr.id, linked_by: 'training_assign' } })
+      out.push({ user_id: u.id, name: u.name, result: 'linked', supervision_on: iso(sup.held_on) as string })
+    } catch { out.push({ user_id: u.id, name: u.name, result: 'already', supervision_on: iso(sup.held_on) as string }) }   // a double click lost the race to the unique index
   }
   return out
 }

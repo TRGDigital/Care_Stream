@@ -6,7 +6,7 @@ import { createPortalSession, handleWebhook, createCheckoutSession, getSubscript
 import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
 import { getPlanFeatures } from '../lib/plan-limits'
-import { supervisionTrainingEnabled } from '../lib/supervision-training'
+import { supervisionTrainingFlagOn } from '../lib/supervision-training'
 import { needsBillingFor } from '../lib/tiers'
 import { freeEvent } from '../lib/free-events'
 
@@ -168,7 +168,7 @@ billingRouter.get('/summary', async (req: Request, res: Response) => {
     cancel_at_period_end: sub?.cancel_at_period_end ?? false,
     // Whether training is linked to supervisions for this account (Enterprise and the supervision_training flag). The screens read it here
     // so they do not call the Enterprise-only workforce routes on every other plan.
-    features: { ...features, supervision_training: await supervisionTrainingEnabled(tenantId).catch(() => false) },
+    features: { ...features, supervision_training: !!features.has_workforce_compliance && (await supervisionTrainingFlagOn(tenantId)) },
   })
 })
 

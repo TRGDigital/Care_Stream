@@ -59,3 +59,19 @@ test('the snapshot keeps only the few facts, with no personal detail beyond cour
   assert.deepEqual(Object.keys(s).sort(), ['assigned', 'avg_score', 'completed', 'completed_since', 'cpd_hours', 'cqc_pending', 'due_soon_courses', 'knowledge_gaps_90d', 'overdue', 'overdue_courses', 'taken_at'])
   assert.deepEqual(s.overdue_courses, ['A'])
 })
+
+test('a renewed course is not called overdue or expired: only the latest row for a course counts', () => {
+  const b = composeBrief(base({ items: [
+    item({ module_id: 'm1', module_name: 'Fire safety', status: 'expired', overdue: true, assigned_at: day(-400), due_date: day(-35) }),
+    item({ module_id: 'm1', module_name: 'Fire safety', status: 'complete', assigned_at: day(-40), completed_at: day(-30), score: { pct: 95 } }),
+  ] }))
+  assert.equal(b.totals.assigned, 1)
+  assert.equal(b.training.overdue.length, 0)
+  assert.equal(b.training.expired.length, 0)
+  assert.doesNotMatch(b.topics.join(' '), /overdue|expired/)
+})
+test('an expired row that is not also overdue is only listed as expired', () => {
+  const b = composeBrief(base({ items: [item({ module_id: 'm2', module_name: 'Medication', status: 'expired', overdue: true, assigned_at: day(-100) })] }))
+  assert.equal(b.training.overdue.length, 0)
+  assert.equal(b.training.expired.length, 1)
+})

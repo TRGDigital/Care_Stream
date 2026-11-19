@@ -23,7 +23,7 @@ const fmtDate = (iso: string | null) => iso ? new Date(iso).toLocaleDateString('
 
 // An agreed action can optionally allocate a resource to the supervisee.
 type AllocType = '' | 'training' | 'induction' | 'cqc'
-type ActionRow = { description: string; alloc_type: AllocType; alloc_id: string }
+type ActionRow = { description: string; alloc_type: AllocType; alloc_id: string; action_id?: string }   // action_id: an action added from the training assign screen
 type LibItem = { id: string; name: string }
 type Libraries = { training: LibItem[]; induction: LibItem[]; cqc: LibItem[] }
 const EMPTY_LIBS: Libraries = { training: [], induction: [], cqc: [] }
@@ -50,8 +50,10 @@ export function SupervisionForm({ token, supervisionId, onClose, onSaved }: { to
   const [saving, setSaving]     = useState(false)
   const [err, setErr]           = useState('')
   const [brief, setBrief]       = useState<TrainingBrief | null>(null)   // only where training is linked to supervisions
+  const [linkedSupported, setLinkedSupported] = useState(false)          // this form knows about actions added from the assign screen, so removing a row removes the action
 
   useEffect(() => {
+    let alive = true
     createApiClient(token).me.conductingDetail(supervisionId)
       .then(d => {
         setRec(d.record)
@@ -59,21 +61,24 @@ export function SupervisionForm({ token, supervisionId, onClose, onSaved }: { to
         const f = d.record.form ?? {}
         setSections(f.sections ?? {})
         const rows: ActionRow[] = Array.isArray(f.agreed_actions) && f.agreed_actions.length
-          ? f.agreed_actions.map((a: any) => ({ description: a.description ?? '', alloc_type: (a.alloc_type ?? '') as AllocType, alloc_id: a.alloc_id ?? '' }))
+          ? f.agreed_actions.map((a: any) => ({ description: a.description ?? '', alloc_type: (a.alloc_type ?? '') as AllocType, alloc_id: a.alloc_id ?? '', action_id: a.action_id ?? undefined }))
           : []
         // Training added to this supervision from the assign screen is shown here as an agreed action, so saving the form keeps it.
-        const have = new Set(rows.map(r => r.description.trim().toLowerCase()))
+        // A row already in the form that stands for the same action (saved before, with its id) is kept; any other linked action is added.
+        const haveIds = new Set(rows.map(r => r.action_id).filter(Boolean))
         for (const la of d.linked_actions ?? []) {
-          if (have.has(la.description.trim().toLowerCase())) continue
+          if (haveIds.has(la.id)) continue
           const inLib = !!la.module_id && (d.libraries?.training ?? []).some(m => m.id === la.module_id)
-          rows.push({ description: la.description, alloc_type: inLib ? 'training' : '', alloc_id: inLib ? (la.module_id as string) : '' })
+          rows.push({ description: la.description, alloc_type: inLib ? 'training' : '', alloc_id: inLib ? (la.module_id as string) : '', action_id: la.id })
         }
+        setLinkedSupported(!!d.training_linked)
         setActions(rows.length ? rows : [{ description: '', alloc_type: '', alloc_id: '' }])
-        if (d.training_linked) createApiClient(token).me.conductingBrief(supervisionId).then(b => { if (b.enabled && b.brief) setBrief(b.brief) }).catch(() => {})
+        if (d.training_linked) createApiClient(token).me.conductingBrief(supervisionId).then(b => { if (alive && b.enabled && b.brief) setBrief(b.brief) }).catch(() => {})
         setNextDate(d.record.next_due ? d.record.next_due.slice(0, 10) : '')
       })
       .catch(e => setErr(e?.message ?? 'Could not load the supervision.'))
       .finally(() => setLoading(false))
+    return () => { alive = false }
   }, [token, supervisionId])
 
   const patchAction = (k: number, patch: Partial<ActionRow>) => setActions(p => p.map((x, j) => j === k ? { ...x, ...patch } : x))
@@ -89,9 +94,11 @@ export function SupervisionForm({ token, supervisionId, onClose, onSaved }: { to
             alloc_type: item ? a.alloc_type : undefined,
             alloc_id:   item ? a.alloc_id : undefined,
             alloc_name: item?.name,          // denormalised for display on the staff record
+            action_id:  a.action_id,         // the action added from the training assign screen, if this row is one
           }
         }) },
         next_date: nextDate || null,
+        ...(linkedSupported ? { linked_supported: true } : {}),
       })
       onSaved?.(); onClose()
     } catch (e: any) { setErr(e?.message ?? 'Could not save the supervision.'); setSaving(false) }

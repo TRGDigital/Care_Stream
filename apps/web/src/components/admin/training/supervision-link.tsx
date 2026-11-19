@@ -8,7 +8,7 @@ import { createApiClient } from '@/lib/api-client'
 import { usePlanFeatures } from '@/lib/use-plan-features'
 
 type Api = ReturnType<typeof createApiClient>
-export type LinkRow = { user_id: string; name: string; result: 'linked' | 'already' | 'no_supervision' | 'not_enrolled'; supervision_on?: string }
+export type LinkRow = { user_id: string; name: string; result: 'linked' | 'already' | 'no_supervision' | 'not_enrolled' | 'already_complete'; supervision_on?: string }
 
 /** On when the account has training linked to supervisions. Read from the plan features the admin pages already load (cached), so no extra call. */
 export function useSupervisionLinkEnabled(_api?: Api | null): boolean {
@@ -33,12 +33,13 @@ const day = (iso?: string) => iso ? new Date(iso).toLocaleDateString('en-GB', { 
 /** Plain words for what happened. Pure, so it can be tested. */
 export function describeLinkResults(rows: LinkRow[]): string {
   const linked = rows.filter(r => r.result === 'linked'), already = rows.filter(r => r.result === 'already')
-  const none = rows.filter(r => r.result === 'no_supervision'), notEnrolled = rows.filter(r => r.result === 'not_enrolled')
+  const none = rows.filter(r => r.result === 'no_supervision'), notEnrolled = rows.filter(r => r.result === 'not_enrolled'), complete = rows.filter(r => r.result === 'already_complete')
   const names = (l: LinkRow[]) => l.length <= 4 ? l.map(r => r.name).join(', ') : `${l.slice(0, 4).map(r => r.name).join(', ')} and ${l.length - 4} more`
   const parts: string[] = []
   if (linked.length) parts.push(`Added to the next supervision for ${linked.length} ${linked.length === 1 ? 'person' : 'people'}${linked.length === 1 ? ` (${day(linked[0].supervision_on)})` : ''}.`)
   if (already.length) parts.push(`Already on their next supervision: ${names(already)}.`)
-  if (none.length) parts.push(`No supervision is booked yet for ${names(none)}. Book one in Workforce, then add it again.`)
+  if (none.length) parts.push(`No upcoming supervision is booked yet for ${names(none)}. Book one in Workforce, then add it again.`)
+  if (complete.length) parts.push(`Already completed the course, so nothing was added for ${names(complete)}.`)
   if (notEnrolled.length) parts.push(`Not enrolled on the course, so nothing was added for ${names(notEnrolled)}.`)
   return parts.join(' ') || 'Nothing was added.'
 }

@@ -70,3 +70,10 @@ test('shorthand, typos and everyday words still find the right thing', () => {
   const wrong = cases.filter(([q, id]) => top(q) !== id).map(([q, id]) => `${q} -> ${top(q)} (wanted ${id})`)
   assert.deepEqual(wrong, [])
 })
+
+test('Super User is found by its name and by champion, and does not steal supervisions', () => {
+  assert.equal(top('super user'), 'super-user')
+  assert.equal(top('champion'), 'super-user')
+  assert.equal(top('supervisions'), 'supervisions')
+  assert.equal(top('supervision'), 'supervisions')
+})

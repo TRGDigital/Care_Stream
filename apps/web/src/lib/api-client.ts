@@ -573,12 +573,20 @@ export function createApiClient(token: string) {
           bookings: number; people: number; days: number; cost_pence: number | null; active_now: number
           by_agency: Array<{ agency: string; bookings: number; days: number; cost_pence: number | null }>
         }>(`/users/agency/spend${since ? `?since=${encodeURIComponent(since)}` : ''}`, token),
-      invite: (data: { send_login_link?: boolean; email: string; name: string; role: string; job_role?: string; specialisms?: string[]; audit_template_ids?: string[]; phone_number?: string; shift_type?: 'any' | 'day' | 'night'; training_hourly_rate?: number | null; first_language?: string; second_language?: string; comms_always_first_language?: boolean; allow_language_switching?: boolean; new_starter?: boolean; is_agency?: boolean; agency_name?: string; agency_start?: string; agency_end?: string; agency_day_rate_pence?: number | null }) =>
-        apiFetch<{ user: any; temp_password: string; contact: StaffContact; onboarding_enrolled?: number; new_starter?: boolean; login_link_emailed?: boolean; login_link_error?: string | null }>('/users/invite', token, {
+      superUserSummary: () =>
+        apiFetch<{ super_user: null | { person: { id: string; name: string; job_role: string | null }; tagged_at: string; consent_at: string | null; window: { days: number; elapsed: number; left: number; ends_on: string }; status: 'active' | 'awaiting_consent'; measures: any; colleagues: any } }>('/super-user/summary', token),
+      superUserMe: () =>
+        apiFetch<{ is_super_user: boolean; consented: boolean; tagged_at: string | null; window_days: number }>('/super-user/me', token),
+      superUserConsent: (accept: boolean) =>
+        apiFetch<{ result: 'accepted' | 'declined' }>('/super-user/consent', token, { method: 'POST', body: JSON.stringify({ accept }) }),
+      superUserActiveTime: (seconds: number) =>
+        apiFetch<{ recorded: boolean }>('/super-user/active-time', token, { method: 'POST', body: JSON.stringify({ seconds }) }),
+      invite: (data: { super_user?: boolean; send_login_link?: boolean; email: string; name: string; role: string; job_role?: string; specialisms?: string[]; audit_template_ids?: string[]; phone_number?: string; shift_type?: 'any' | 'day' | 'night'; training_hourly_rate?: number | null; first_language?: string; second_language?: string; comms_always_first_language?: boolean; allow_language_switching?: boolean; new_starter?: boolean; is_agency?: boolean; agency_name?: string; agency_start?: string; agency_end?: string; agency_day_rate_pence?: number | null }) =>
+        apiFetch<{ user: any; super_user?: { ok: boolean; message?: string; existing?: { id: string; name: string } } | null; temp_password: string; contact: StaffContact; onboarding_enrolled?: number; new_starter?: boolean; login_link_emailed?: boolean; login_link_error?: string | null }>('/users/invite', token, {
           method: 'POST',
           body:   JSON.stringify(data),
         }),
-      update: (id: string, data: { name?: string; job_role?: string | null; specialisms?: string[]; role?: string; audit_template_ids?: string[]; phone_number?: string | null; shift_type?: 'any' | 'day' | 'night'; training_hourly_rate?: number | null; first_language?: string; second_language?: string | null; comms_always_first_language?: boolean; allow_language_switching?: boolean; can_suggest_translations?: boolean }) =>
+      update: (id: string, data: { super_user?: boolean; replace_super_user?: boolean; name?: string; job_role?: string | null; specialisms?: string[]; role?: string; audit_template_ids?: string[]; phone_number?: string | null; shift_type?: 'any' | 'day' | 'night'; training_hourly_rate?: number | null; first_language?: string; second_language?: string | null; comms_always_first_language?: boolean; allow_language_switching?: boolean; can_suggest_translations?: boolean }) =>
         apiFetch<{ user: any }>(`/users/${id}`, token, { method: 'PATCH', body: JSON.stringify(data) }),
       deactivate: (id: string) =>
         apiFetch<{ deactivated: boolean }>(`/users/${id}/deactivate`, token, { method: 'POST' }),

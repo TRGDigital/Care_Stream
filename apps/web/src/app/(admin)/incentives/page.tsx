@@ -15,6 +15,7 @@ import { CampaignBuilder, type StaffOption } from '@/components/admin/incentives
 import { CampaignDetail } from '@/components/admin/incentives/campaign-detail'
 import { CampaignStatusChip, monthLabel } from '@/components/admin/incentives/shared'
 import { btnPrimary, ErrorBox } from '@/components/admin/residents/ui'
+import { SuperUserSection } from '@/components/admin/incentives/super-user-section'
 
 type View = null | { mode: 'detail'; id: string } | { mode: 'builder'; existing: IncentiveCampaignDetail | null }
 
@@ -83,11 +84,12 @@ export default function IncentivesPage() {
   }, [list.data])
 
   if (!token || (meta.loading && !meta.data)) return <p className="py-10 text-center text-sm text-neutral-mid" role="status">Loading...</p>
-  if (planBlocked || (meta.error && (meta.error.toLowerCase().includes('plan') || meta.error.includes('FEATURE_NOT_AVAILABLE')))) return <UpgradePanel />
+  if (planBlocked || (meta.error && (meta.error.toLowerCase().includes('plan') || meta.error.includes('FEATURE_NOT_AVAILABLE')))) return <div className="mx-auto max-w-3xl space-y-6"><SuperUserSection /><UpgradePanel /></div>
   if (!meta.data) return <ErrorBox>{meta.error ?? 'Could not load incentives.'}</ErrorBox>
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
+      <SuperUserSection />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-teal/10"><Gift size={24} className="text-teal" /></div>

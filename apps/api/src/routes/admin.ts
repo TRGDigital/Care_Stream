@@ -675,6 +675,13 @@ adminRouter.get('/tenants', async (_req: Request, res: Response) => {
   })
   const originMap = new Map<string, string>((granted as any[]).map(g => [g.tenant_id, GRANT_SOURCES[String(g.stripe_payment_id).split(':')[1]] ?? 'Partner site']))
 
+  // Super User per company, for the clients list: who, and where the voucher is. One light query each.
+  const [suRows, suVouchers] = await Promise.all([
+    (prisma as any).user.findMany({ where: { super_user_since: { not: null } }, select: { tenant_id: true, name: true, super_user_consent_at: true } }).catch(() => []),
+    (prisma as any).superUserVoucher.findMany({ select: { tenant_id: true, status: true } }).catch(() => []),
+  ])
+  const suBy = new Map<string, any>((suRows as any[]).map(u => [u.tenant_id, u]))
+  const voucherBy = new Map<string, string>((suVouchers as any[]).map(v => [v.tenant_id, v.status]))
   const engagementBy = await loadEngagement(tenants.map((t: any) => t.id)).catch(() => new Map())
   const withStats = tenants.map((t: any) => {
     const p = policyByTenant.get(t.id) ?? { internal: 0, handbook: 0 }
@@ -695,6 +702,7 @@ adminRouter.get('/tenants', async (_req: Request, res: Response) => {
       },
       sub_tenant_count: subTenantMap.get(t.id) ?? 0,
       engagement: engagementBrief(engagementBy.get(t.id)),
+      super_user: suBy.has(t.id) ? { name: suBy.get(t.id).name, agreed: !!suBy.get(t.id).super_user_consent_at, voucher: voucherBy.get(t.id) ?? null } : null,
       private_origin: t.tier === 'training_only' ? (originMap.get(t.id) ?? null) : null,
     }
   })
@@ -3202,6 +3210,43 @@ adminRouter.post('/knowledge-seeds/seed-all', async (_req: Request, res: Respons
 })
 
 // ─── Blog Authors ─────────────────────────────────────────────────────────────
+
+
+// ─── Super User (CareStream side): the card on a client's page, tagging, and the voucher ────────────────────────────────────────────
+// GET /admin/tenants/:id/super-user: the full picture including eligibility and the voucher. Setting "due" happens here, the first time they are eligible.
+adminRouter.get('/tenants/:id/super-user', async (req: Request, res: Response) => {
+  try {
+    const su = await import('../lib/super-user')
+    const result = await su.loadSuperUser(String(req.params.id))
+    const voucher = await su.syncVoucher(String(req.params.id), result)
+    ok(res, { super_user: result, voucher: voucher ? { status: voucher.status, eligible_at: voucher.eligible_at, sent_at: voucher.sent_at, sent_by: voucher.sent_by, note: voucher.note } : null, thresholds: { window_days: su.WINDOW_DAYS, active_days: su.ELIGIBLE_ACTIVE_DAYS, passed_training: su.ELIGIBLE_PASSED_TRAINING } })
+  } catch (e: any) { err(res, 'FAILED', e?.message ?? 'Could not load the Super User.', 500) }
+})
+
+// POST /admin/tenants/:id/super-user/voucher: a person at CareStream records that the £25 voucher has been sent. Nothing is paid automatically.
+adminRouter.post('/tenants/:id/super-user/voucher', async (req: Request, res: Response) => {
+  const su = await import('../lib/super-user')
+  const tenantId = String(req.params.id)
+  const result = await su.loadSuperUser(tenantId)
+  await su.syncVoucher(tenantId, result)
+  const v = await su.markVoucherSent(tenantId, (req as any).user?.email ?? (req as any).user?.sub ?? 'platform', typeof req.body?.note === 'string' ? req.body.note : null)
+  if (!v) { err(res, 'NOT_DUE', 'No voucher is due for this company yet.', 409); return }
+  writeAuditLog({ tenant_id: tenantId, user_id: (req as any).user?.sub ?? null, event_type: 'super_user_voucher_sent', entity_type: 'tenant', entity_id: tenantId, metadata: { note: req.body?.note ?? null } }).catch(() => {})
+  ok(res, { voucher: { status: v.status, sent_at: v.sent_at, sent_by: v.sent_by, note: v.note } })
+})
+
+// POST /admin/tenants/:id/super-user: CareStream tags or untags a company's Super User on their behalf: { user_id, on, replace? }
+adminRouter.post('/tenants/:id/super-user', async (req: Request, res: Response) => {
+  const su = await import('../lib/super-user')
+  const tenantId = String(req.params.id), userId = String(req.body?.user_id ?? '')
+  if (!userId) { err(res, 'VALIDATION_ERROR', 'Choose a staff member.', 400); return }
+  if (req.body?.on === false) { await su.untagSuperUser(tenantId, userId); writeAuditLog({ tenant_id: tenantId, user_id: (req as any).user?.sub ?? null, event_type: 'super_user_untagged', entity_type: 'user', entity_id: userId, metadata: { by: 'platform' } }).catch(() => {}); ok(res, { ok: true }); return }
+  const r = await su.tagSuperUser(tenantId, userId, { replace: !!req.body?.replace })
+  if (!r.ok) { res.status(409).json({ error: { code: r.code, message: r.message, existing: r.existing ?? null } }); return }
+  writeAuditLog({ tenant_id: tenantId, user_id: (req as any).user?.sub ?? null, event_type: 'super_user_tagged', entity_type: 'user', entity_id: userId, metadata: { by: 'platform' } }).catch(() => {})
+  import('../services/super-user-email').then(m => m.sendSuperUserWelcome(tenantId, userId, 'The CareStream team')).catch(() => {})
+  ok(res, { ok: true })
+})
 
 // ─── GET /admin/tenants/:id/audit-stats ──────────────────────────────────────
 

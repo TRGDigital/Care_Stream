@@ -23,7 +23,8 @@ function fmtBytes(n: number): string {
   while (v >= 1024 && i < units.length - 1) { v /= 1024; i++ }
   return `${v.toFixed(v < 10 ? 1 : 0)} ${units[i]}`
 }
-import type { PlanLimits } from '@/lib/platform-api'
+import type { PlanLimits, SuperUserCard as SuperUserCardData } from '@/lib/platform-api'
+import { SuperUserCard } from '@/components/super-user/super-user-card'
 import Link from 'next/link'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -528,6 +529,7 @@ export default function ClientDetailPage() {
 
   const [detail,      setDetail]      = useState<TenantDetail | null>(null)
   const [auditStats,  setAuditStats]  = useState<TenantAuditStats | null>(null)
+  const [superUser,   setSuperUser]   = useState<SuperUserCardData | null>(null)
   const [loading,     setLoading]     = useState(true)
   const [error,       setError]       = useState<string | null>(null)
   const [seeding,     setSeeding]     = useState(false)
@@ -614,6 +616,13 @@ export default function ClientDetailPage() {
       .catch(e => setError(e.message))
       .finally(() => { setLoading(false); setStaffLoading(false) })
   }, [token, id])
+
+  // The Super User card loads on its own so a slow measure never holds up the rest of the page.
+  useEffect(() => {
+    if (!token || !id) return
+    createPlatformClient(token).tenants.superUser(id).then(setSuperUser).catch(() => setSuperUser({ super_user: null, voucher: null, thresholds: { window_days: 60, active_days: 20, passed_training: 1 } }))
+  }, [token, id])
+  async function reloadSuperUser() { if (token && id) setSuperUser(await createPlatformClient(token).tenants.superUser(id)) }
 
   async function handleSeedTenant() {
     if (!token || !id) return
@@ -1219,6 +1228,13 @@ export default function ClientDetailPage() {
               </dl>
               <p className="mt-3 text-xs text-neutral-mid">Visits and first page are only recorded when the visitor accepted cookies, so they are blank for people who declined and for accounts made before 16 November 2026.</p>
             </div>
+
+            {/* Super User: one champion per company, measured over 60 days, with the £25 voucher */}
+            {superUser && (
+              <SuperUserCard variant="platform" data={{ su: superUser.super_user, voucher: superUser.voucher, thresholds: superUser.thresholds }}
+                onMarkSent={async note => { await createPlatformClient(token!).tenants.markSuperUserVoucherSent(id, note); await reloadSuperUser() }}
+                onRemove={async () => { if (superUser.super_user) { await createPlatformClient(token!).tenants.setSuperUser(id, superUser.super_user.person.id, false); await reloadSuperUser() } }} />
+            )}
 
             {/* Engagement: last active and activation score, worked out from what the account has done */}
             {detail.engagement && (

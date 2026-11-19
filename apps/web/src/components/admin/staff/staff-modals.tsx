@@ -515,6 +515,8 @@ export function InviteModal({
   const [onboardingNote, setOnboardingNote] = useState('')
   const [sendLink, setSendLink] = useState(true)          // email them a one-time sign-in link now (ticked by default)
   const [linkNote, setLinkNote] = useState<{ ok: boolean; text: string } | null>(null)
+  const [superUser, setSuperUser] = useState(false)        // tag them as the company's Super User (paid plans, one per company)
+  const [superNote, setSuperNote] = useState<{ ok: boolean; text: string } | null>(null)
 
   function update(k: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
@@ -529,6 +531,7 @@ export function InviteModal({
 
     const res = await createApiClient(token).users.invite({
       send_login_link: sendLink,
+      super_user:      superUser && !isFree ? true : undefined,
       name:            form.name,
       email:           form.email,
       role:            form.role,
@@ -562,6 +565,12 @@ export function InviteModal({
           : 'No onboarding flow matches this role yet — create one on the Onboarding page and they’ll auto-enrol next time.'
       )
     }
+
+    if (superUser && !isFree) {
+      setSuperNote(res.super_user?.ok
+        ? { ok: true, text: 'Tagged as your Super User. They will be asked to agree the next time they open the hub, and CareStream sends them a short welcome.' }
+        : { ok: false, text: `They were added, but not tagged as the Super User. ${res.super_user?.message ?? 'Open their record to tag them.'}` })
+    } else setSuperNote(null)
 
     if (sendLink) {
       setLinkNote(res.login_link_emailed
@@ -798,6 +807,16 @@ export function InviteModal({
               </span>
             </label>
 
+            {!isFree && (
+              <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-gray-200 bg-neutral-light/60 px-3 py-2.5 text-sm text-neutral-dark">
+                <input type="checkbox" className="mt-0.5 h-4 w-4 shrink-0 accent-teal" checked={superUser} onChange={e => setSuperUser(e.target.checked)} />
+                <span>
+                  <span className="font-medium">Make them our Super User</span>
+                  <span className="block text-xs text-neutral-mid">One person per company who champions CareStream and helps colleagues use it. CareStream says thank you with a £25 M&amp;S voucher when it is going well. They are asked to agree first, and you can change this any time on their record.</span>
+                </span>
+              </label>
+            )}
+
             <div className="flex justify-end gap-3 pt-1">
               <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
               <Button type="submit" disabled={loading}>
@@ -807,6 +826,11 @@ export function InviteModal({
           </form>
         ) : step === 'credentials' && creds ? (
           <>
+            {superNote && (
+              <div className={`mb-4 rounded-md border px-4 py-3 text-sm ${superNote.ok ? 'border-green-200 bg-green-50 text-green-800' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
+                {superNote.text}
+              </div>
+            )}
             {linkNote && (
               <div className={`mb-4 rounded-md border px-4 py-3 text-sm ${linkNote.ok ? 'border-green-200 bg-green-50 text-green-800' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
                 {linkNote.text}

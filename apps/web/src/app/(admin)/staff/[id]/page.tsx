@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
 import { usePlanFeatures, hasFeature } from '@/lib/use-plan-features'
+import { useIsFree } from '@/components/admin/free-tier'
 import { InfoTip } from '@/components/info-tip'
 import { TrainingCertificate } from '@/components/training-certificate'
 import { SignInLinkButton } from '@/components/admin/staff/sign-in-link'
@@ -145,6 +146,38 @@ const CQC_DOMAINS: Record<string, string> = {
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
+
+
+// Tag or untag this person as the company's Super User (one per company). Only for paid plans; the API enforces both.
+function SuperUserTag({ user, token, onChanged }: { user: any; token: string; onChanged: () => void }) {
+  const [busy, setBusy] = useState(false); const [msg, setMsg] = useState('')
+  const isFree = useIsFree()
+  const tagged = !!user.super_user_since
+  if (isFree && !tagged) return null
+  async function set(on: boolean, replace = false) {
+    setBusy(true); setMsg('')
+    try { await createApiClient(token).users.update(user.id, { super_user: on, replace_super_user: replace }); onChanged() }
+    catch (e: any) {
+      const m = String(e?.message ?? '')
+      if (on && /already the Super User/i.test(m) && confirm(`${m}\n\nReplace them with ${user.name}? The new Super User starts their own 60 days.`)) { await set(true, true); return }
+      setMsg(m || 'That did not work.')
+    } finally { setBusy(false) }
+  }
+  return (
+    <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
+      {tagged ? (
+        <>
+          <span className="inline-flex items-center gap-1 rounded-full bg-teal/10 px-2 py-0.5 font-semibold text-teal"><Award size={11} /> Super User</span>
+          <span className="text-neutral-mid">{user.super_user_consent_at ? 'Agreed' : 'Has not agreed yet'}</span>
+          <button type="button" disabled={busy} onClick={() => { if (confirm('Remove the Super User tag from this person?')) set(false) }} className="text-red-600 hover:underline disabled:opacity-50">Remove</button>
+        </>
+      ) : (
+        <button type="button" disabled={busy} onClick={() => set(true)} className="inline-flex items-center gap-1 rounded-md border border-teal/40 px-2 py-0.5 font-medium text-teal hover:bg-teal/5 disabled:opacity-50"><Award size={11} /> Make Super User</button>
+      )}
+      {msg && <span className="text-red-600">{msg}</span>}
+    </div>
+  )
+}
 
 export default function StaffRecordPage() {
   const { id }      = useParams<{ id: string }>()
@@ -311,6 +344,7 @@ export default function StaffRecordPage() {
               <div>
                 <h1 className="text-xl font-bold text-neutral-dark">{u.name}</h1>
                 <p className="text-sm text-neutral-mid">{u.job_role || 'No position set'} · {u.email}</p>
+                <SuperUserTag user={u} token={token} onChanged={load} />
                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-mid">
                   <span>{u.shift_type === 'day' ? 'Day shift' : u.shift_type === 'night' ? 'Night shift' : 'Flexible'}</span>
                   <span className="flex items-center gap-1"><Globe size={11} /> {u.first_language?.toUpperCase()}</span>

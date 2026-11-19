@@ -129,6 +129,7 @@ export default function ClientsPage() {
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Last active</th>
                   <th className="px-4 py-3">Activation</th>
+                  <th className="px-4 py-3">Super User</th>
                   <th className="px-4 py-3 text-right">Annual licences (this month)</th>
                   <th className="px-4 py-3 text-right">Queries (this month)</th>
                   <th className="px-4 py-3 text-right">Staff</th>
@@ -197,6 +198,16 @@ export default function ClientsPage() {
                             {t.engagement.upsell_ready && <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-white" title="A free account that is active and either using the plan well, hit a free limit or clicked Upgrade">Upsell ready</span>}
                           </div>
                         ) : <span className="text-xs text-neutral-mid/60">—</span>}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-xs">
+                        {t.super_user ? (
+                          <div className="flex items-center gap-1.5" title={t.super_user.agreed ? 'The company\'s Super User' : 'Tagged, has not agreed yet'}>
+                            <span className="font-medium text-neutral-dark">{t.super_user.name}</span>
+                            {!t.super_user.agreed && <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-neutral-mid">Not agreed</span>}
+                            {t.super_user.voucher === 'due' && <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">Voucher due</span>}
+                            {t.super_user.voucher === 'sent' && <span className="rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] font-semibold text-green-700">Voucher sent</span>}
+                          </div>
+                        ) : <span className="text-neutral-mid/60">None</span>}
                       </td>
                       <td className="px-4 py-3">
                         {t.tier === 'training_only' || t.tier === 'policies_only' ? (

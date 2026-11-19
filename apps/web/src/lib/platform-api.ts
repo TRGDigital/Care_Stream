@@ -160,6 +160,7 @@ export interface TenantSummary {
   plan:                PlanLimits | null
   sub_tenant_count:    number
   engagement?:         EngagementBrief | null
+  super_user?:         { name: string; agreed: boolean; voucher: 'due' | 'sent' | null } | null   // the company's Super User (one per company)
   private_origin?:     string | null  // set for a private learner account created by a partner site's free-course grant, e.g. "Carer Badge"
   stats: {
     policyCount:          number
@@ -696,6 +697,28 @@ export type RegulationChange = {
   notified_count: number
 }
 
+
+/** A company's Super User: measures over the 60 days, colleague engagement, eligibility and the voucher (api lib/super-user.ts). */
+export type SuperUserMeasure = { count: number; days: number }
+export type SuperUserDetail = {
+  person: { id: string; name: string; job_role: string | null }
+  tagged_at: string; consent_at: string | null
+  window: { days: number; elapsed: number; left: number; ends_on: string }
+  measures: {
+    active_days: number; logins: SuperUserMeasure; chat: SuperUserMeasure & { counted: number }; cqc: SuperUserMeasure; audits: SuperUserMeasure; policies: SuperUserMeasure; followups: SuperUserMeasure
+    training: { adhoc: { started: number; completed: number }; cpd: { started: number; completed: number }; annual: { started: number; completed: number }; passed_total: number }
+    minutes: { total: number; per_active_day: number; days_recorded: number }
+  }
+  colleagues: {
+    staff_total: number; ever_logged_in: number; pct_ever_logged_in: number | null; reached: number
+    baseline_per_week: number | null; window_per_week: number; trend: 'rising' | 'steady' | 'falling' | 'too_early'; trend_note: string
+    training_completed: number; questions_asked: number
+  }
+  checks: Array<{ key: string; label: string; ok: boolean; detail: string }>
+  status: 'awaiting_consent' | 'paused' | 'in_window' | 'eligible' | 'not_met'
+}
+export type SuperUserCard = { super_user: SuperUserDetail | null; voucher: { status: 'due' | 'sent'; eligible_at: string; sent_at: string | null; sent_by: string | null; note: string | null } | null; thresholds: { window_days: number; active_days: number; passed_training: number } }
+
 export function createPlatformClient(token: string) {
   return {
     stats: () =>
@@ -1011,6 +1034,13 @@ export function createPlatformClient(token: string) {
 
       auditStats: (id: string) =>
         adminFetch<TenantAuditStats>(`/tenants/${id}/audit-stats`, token),
+
+      superUser: (id: string) =>
+        adminFetch<SuperUserCard>(`/tenants/${id}/super-user`, token),
+      markSuperUserVoucherSent: (id: string, note?: string) =>
+        adminFetch<{ voucher: { status: string; sent_at: string; sent_by: string; note: string | null } }>(`/tenants/${id}/super-user/voucher`, token, { method: 'POST', body: JSON.stringify({ note }) }),
+      setSuperUser: (id: string, userId: string, on: boolean, replace = false) =>
+        adminFetch<{ ok: boolean }>(`/tenants/${id}/super-user`, token, { method: 'POST', body: JSON.stringify({ user_id: userId, on, replace }) }),
 
       analytics: (id: string) =>
         adminFetch<any>(`/tenants/${id}/analytics`, token),

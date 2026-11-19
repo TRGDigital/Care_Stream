@@ -29,6 +29,7 @@ function clean(v: any): string {
     .replace(/[•●]/g, '-').replace(/ /g, ' ')
     .replace(/[^\x09\x0A\x0D\x20-\x7E -ÿ€]/g, '')
 }
+const dayKey = (d: any) => new Date(d).toLocaleDateString('en-CA', { timeZone: 'Europe/London' })
 const dateLong = (d: any) => d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/London' }) : ''
 const monthLong = (d: any) => d ? new Date(d).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'Europe/London' }) : ''
 
@@ -90,6 +91,9 @@ export async function renderAuditReportPdf(tenantId: string, runId: string): Pro
   // ── Details
   const details: Array<[string, string]> = [
     ['Audit period', monthLong(report.audit_month)],
+    ...(report.audit_date ? [['Audit carried out on', dateLong(report.audit_date)] as [string, string]] : []),
+    // Shown only when the audit was back-dated, so the record is honest about when it was done and when it was entered.
+    ...(report.audit_date && report.entered_at && dayKey(report.entered_at) !== dayKey(report.audit_date) ? [['Entered on CareStream', dateLong(report.entered_at)] as [string, string]] : []),
     ['Auditor', [report.auditor_name, report.auditor_role].filter(Boolean).join(', ')],
     ['Completed', report.completed_at ? dateLong(report.completed_at) : 'Not completed'],
     ['Audit version', report.template_version ? `Version ${report.template_version}` : ''],

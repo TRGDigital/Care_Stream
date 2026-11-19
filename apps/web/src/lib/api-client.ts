@@ -931,7 +931,7 @@ export function createApiClient(token: string) {
         }>('/training/compliance', token),
 
       remindEnrollment: (id: string) =>
-        apiFetch<{ last_reminded_at: string; reminder_count: number }>(`/training/enrollments/${id}/remind`, token, { method: 'POST' }),
+        apiFetch<{ last_reminded_at: string; reminder_count: number; emailed?: boolean; push_sent?: number }>(`/training/enrollments/${id}/remind`, token, { method: 'POST' }),
 
       enroll: (data: { user_ids: string[]; module_ids: string[]; due_date?: string }) =>
         apiFetch<{ enrolled: number }>('/training/enroll', token, { method: 'POST', body: JSON.stringify(data) }),
@@ -1216,7 +1216,7 @@ export function createApiClient(token: string) {
         if (params?.template_id) qs.set('template_id', params.template_id)
         return apiFetch<{ runs: any[] }>(`/audits/runs${qs.toString() ? '?' + qs : ''}`, token)
       },
-      createRun: (data: { template_id: string; audit_month: string; auditor_name?: string; auditor_role?: string; room_number?: string; subject?: string; subject_room?: string; assignment_id?: string }) =>
+      createRun: (data: { template_id: string; audit_month: string; audit_date?: string; auditor_name?: string; auditor_role?: string; room_number?: string; subject?: string; subject_room?: string; assignment_id?: string }) =>
         apiFetch<{ run: any }>('/audits/runs', token, { method: 'POST', body: JSON.stringify(data) }),
       getRun: (id: string) => apiFetch<{ run: any; approval_required?: boolean; quality_statements?: Record<string, { name: string; key_question: string }> }>(`/audits/runs/${id}`, token),
       updateRun: (id: string, data: any) => apiFetch<{ run: any }>(`/audits/runs/${id}`, token, { method: 'PUT', body: JSON.stringify(data) }),

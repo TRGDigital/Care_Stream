@@ -153,9 +153,11 @@ export default function AuditsPage() {
     if (templates.some((t: any) => t.id === wantTemplate)) { setSelTemplate(wantTemplate); setShowNew(true) }
     setWantTemplate(null)
   }, [wantTemplate, loading, templates])
-  const [auditMonth,  setAuditMonth]  = useState(() => {
-    const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`
-  })
+  // The day the audit was carried out. Today by default; choose an earlier day to back-date an audit that was missed (never a future day).
+  const todayStr = () => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}` }
+  const [auditDay,    setAuditDay]    = useState(todayStr)
+  const auditMonth = auditDay.slice(0, 7)
+  const isBackdated = auditDay < todayStr()
   const [auditorName, setAuditorName] = useState('')
   const [auditorRole, setAuditorRole] = useState('')
   const [rooms,       setRooms]       = useState<string[]>([])
@@ -262,6 +264,7 @@ export default function AuditsPage() {
       const { run } = await api.audits.createRun({
         template_id:  selTemplate,
         audit_month:  date.toISOString(),
+        audit_date:   auditDay,
         auditor_name: auditorName || undefined,
         auditor_role: auditorRole || undefined,
         ...(needsSubject ? { subject: room.trim() } : {}),
@@ -525,13 +528,15 @@ export default function AuditsPage() {
                   {selTpl && <AuditServiceTags name={selTpl.name} max={5} />}
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-neutral-mid">Audit month</label>
+                  <label className="mb-1 block text-xs font-medium text-neutral-mid">Date of the audit</label>
                   <input
-                    type="month"
-                    value={auditMonth}
-                    onChange={e => setAuditMonth(e.target.value)}
+                    type="date"
+                    value={auditDay}
+                    max={todayStr()}
+                    onChange={e => e.target.value && setAuditDay(e.target.value)}
                     className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-neutral-dark focus:border-teal focus:outline-none"
                   />
+                  <p className="mt-1 text-[11px] text-neutral-mid">Missed one? Choose the day it was actually done. The report also shows when it was entered.</p>
                 </div>
                 {needsSubject && (
                   <div>
@@ -602,8 +607,10 @@ export default function AuditsPage() {
                   {templates.find(t => t.id === selTemplate)?.name ?? 'Audit'}
                 </p>
                 <p className="text-xs text-neutral-mid">
-                  Month: <span className="font-medium text-neutral-dark">{monthLabel(auditMonth + '-01')}</span>
+                  Date: <span className="font-medium text-neutral-dark">{new Date(auditDay + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                  {isBackdated && <span className="ml-1.5 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">Back-dated</span>}
                 </p>
+                {isBackdated && <p className="text-[11px] text-neutral-mid">It will be recorded as carried out on this day, and shown as entered today.</p>}
                 {needsSubject && room.trim() && (
                   <p className="text-xs text-neutral-mid"><span className="capitalize">{subjectWord}</span>: <span className="font-medium text-neutral-dark">{room.trim()}</span>{scope === 'resident' && subjectRoom.trim() ? <> · Room <span className="font-medium text-neutral-dark">{subjectRoom.trim()}</span></> : null}</p>
                 )}

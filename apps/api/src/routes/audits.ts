@@ -2139,10 +2139,23 @@ auditsRouter.post('/runs', requireAuditAccess, async (req: Request, res: Respons
     return err(res, 'MISSING_SUBJECT', `Choose the ${what} this audit is for.`, 400)
   }
 
+  // The day the audit was actually carried out. Optional: a missed audit can be back-dated, never future-dated, and not more than two years back.
+  // The record keeps created_at as well, so it always shows both when it was done and when it was entered.
+  let auditDate: Date | null = null
+  if (req.body.audit_date != null && req.body.audit_date !== '') {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(req.body.audit_date))
+    const d = m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])) : null
+    if (!d || Number.isNaN(d.getTime()) || d.getUTCDate() !== +m![3]) return err(res, 'BAD_DATE', 'That is not a valid audit date.', 400)
+    const todayLondon = new Date(new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' }) + 'T00:00:00Z')
+    if (d.getTime() > todayLondon.getTime()) return err(res, 'FUTURE_DATE', 'The audit date cannot be in the future.', 400)
+    if (todayLondon.getTime() - d.getTime() > 730 * 86_400_000) return err(res, 'DATE_TOO_OLD', 'The audit date cannot be more than two years ago.', 400)
+    auditDate = d
+  }
+
   // Daily audits are tracked per calendar day (one run per day); all other
   // frequencies are tracked per month. The audit_month column stores the run's
-  // period start — today for daily, the first of the month otherwise.
-  const periodDate = template.frequency === 'daily' ? new Date() : new Date(audit_month)
+  // period start: the chosen day (else today) for daily, the first of the month otherwise.
+  const periodDate = template.frequency === 'daily' ? new Date(auditDate ?? new Date()) : new Date(auditDate ?? audit_month)
   if (template.frequency !== 'daily') periodDate.setDate(1)
   periodDate.setHours(0, 0, 0, 0)
 
@@ -2170,6 +2183,7 @@ auditsRouter.post('/runs', requireAuditAccess, async (req: Request, res: Respons
       tenant_id:    tenantId,
       template_id,
       audit_month:  periodDate,
+      audit_date:   auditDate,
       auditor_name: (auditor_name?.trim() || me?.name || null),
       auditor_role: (auditor_role?.trim() || me?.job_role || null),
       room_number:  subjectValue,

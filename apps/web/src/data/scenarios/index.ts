@@ -24,9 +24,16 @@ import s22 from './after-a-safeguarding-concern-check-the-team.json'
 import s23 from './staff-who-guess-their-way-through.json'
 import s24 from './carer-fails-the-retry-again.json'
 import s25 from './proving-a-training-gap-closed.json'
+import s26 from './staff-whose-first-language-is-not-english.json'
+import s27 from './international-recruits-first-weeks-induction.json'
+import s28 from './mixed-language-team-one-carer-translates.json'
+import s29 from './staff-suggest-a-better-translation.json'
+import s30 from './policy-change-understood-in-every-language.json'
+import s31 from './carer-asks-the-assistant-a-question-privately.json'
+import s32 from './carer-speaks-english-well-but-reads-slowly.json'
 
 // One import per page, sorted by `order`. status 'published' pages are public; 'draft' pages are admin preview only.
-export const ALL_SCENARIOS = [s01, s02, s03, s04, s05, s06, s07, s08, s09, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19, s20, s21, s22, s23, s24, s25] as unknown as Scenario[]
+export const ALL_SCENARIOS = [s01, s02, s03, s04, s05, s06, s07, s08, s09, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19, s20, s21, s22, s23, s24, s25, s26, s27, s28, s29, s30, s31, s32] as unknown as Scenario[]
 
 export const publishedScenarios = () =>
   ALL_SCENARIOS.filter(s => s.status === 'published').sort((a, b) => a.order - b.order)

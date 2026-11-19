@@ -1,0 +1,415 @@
+{
+ "slug": "policy-change-understood-in-every-language",
+ "status": "draft",
+ "order": 30,
+ "title": "Your policy translation has gone out. <em>Has every carer understood it?</em>",
+ "meta_title": "Policy Translation for Care Staff in Every Language | CareStreamAI",
+ "meta_description": "A policy changed and you emailed it round. Policies open in each carer's first language, and a short question set checks they understood the change.",
+ "eyebrow": "Scenario",
+ "lede": "Policy translation is only half the job. CareStream opens each policy in the carer's first language, then you allocate a short check on the change, built from your own policies. That is how you see who understood it. <a href=\"/training-platform\">Training built from your own policies</a> does the rest.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After the falls policy changed",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "New falls policy uploaded",
+    "note": "Monday",
+    "done": true
+   },
+   {
+    "label": "Opened in each carer's first language",
+    "note": "This week",
+    "done": true
+   },
+   {
+    "label": "Understanding checked in their language",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Gaps closed with a short lesson",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/7d4c4541-0f05-4447-929d-e661141bd186.webp",
+ "image_alt": "A team leader pins a plain page to a staff room board while a group of carers of different backgrounds gather round and chat",
+ "card_title": "The policy changed. Did everyone understand it, in their own language?",
+ "card_snippet": "Emailing a new policy proves it was sent, not that it was understood. Staff open it in their first language, then a short question set checks they took in the change.",
+ "primary_keyword": "policy translation",
+ "secondary_keywords": [
+  "multilingual workforce",
+  "policy update",
+  "check for understanding",
+  "knowledge check"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Short training from your policies, with wrong answers that become short lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Staff Hub in dozens of languages",
+   "body": "Policies, lessons and questions in the language each carer thinks in.",
+   "action": "See the Staff Hub",
+   "href": "/uses/multilingual-staff-hub"
+  },
+  {
+   "title": "Turning a change into adhoc training",
+   "body": "Allocate a short module on the topic that changed, whenever you need it.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
+  }
+ ],
+ "intro": {
+  "heading": "You sent the new policy. Now you need to know it was understood.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "After a fall on the stairs, a manager rewrites the falls prevention policy. The new version asks for a different response after an unwitnessed fall. She uploads it, emails the team and pins a one page summary in the staff room. The team includes carers whose first language is not English, and the change is detailed. A week later three people have opened it and nobody has said a word. She cannot tell who read it, who understood it, or who is quietly unsure. Here is how that week plays out."
+ },
+ "trail": [
+  {
+   "when": "Monday",
+   "text": "The manager rewrites the falls prevention policy after a fall on the stairs.",
+   "kind": "ok"
+  },
+  {
+   "when": "Monday afternoon",
+   "text": "She uploads it and emails the whole team.",
+   "kind": "ok"
+  },
+  {
+   "when": "Tuesday",
+   "text": "A one page summary goes up on the staff room board.",
+   "kind": "ok"
+  },
+  {
+   "when": "Friday",
+   "text": "Only three carers have opened the new version.",
+   "kind": "gap"
+  },
+  {
+   "when": "In the staff room",
+   "text": "Some carers read English as a second language. A detailed change is easy to half follow.",
+   "kind": "gap"
+  },
+  {
+   "when": "The quiet ones",
+   "text": "Nobody asks questions. Nodding is not the same as knowing.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "An email that was sent and a policy that was opened. Nothing about understanding.",
+   "kind": "gap"
+  },
+  {
+   "when": "Weeks later",
+   "text": "After another fall: “What are you now meant to do first?” Three answers, three versions.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>Sending the policy was never the problem.</b> The gap is between a policy update that went out and proof that each person understood it. Here is how CareStream closes it, in each carer's own language.",
+ "why": {
+  "heading": "Opening a policy does not show it was understood",
+  "sub": "A changed policy only protects people if every carer does the new thing, not the old one.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "A word can hide a whole step",
+    "body": "A carer can know falls prevention well and still miss one phrase in a long document. That is a word gap, not a knowledge gap, and it is easy to confuse the two."
+   },
+   {
+    "icon": "tick",
+    "title": "Emails prove sending, not reading",
+    "body": "An email shows you sent it. CareStream records read sessions, such as time spent and scrolling, and a \"Mark as read\" tap. It does not record a signature or an acknowledgement."
+   },
+   {
+    "icon": "alert",
+    "title": "Old habits survive a change",
+    "body": "People keep doing what they did last month. Without a quick check on the change itself, the old way can carry on until an incident shows it."
+   }
+  ]
+ },
+ "how": {
+  "heading": "The changed policy in, understood in every language out.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a carer meet it. See also <a href=\"/uses/multilingual-staff-hub\">the multilingual Staff Hub</a> and <a href=\"/uses/adhoc-training\">turning a change into adhoc training</a>.",
+  "blocks": [
+   {
+    "heading": "Upload the new version, then allocate a check on the change",
+    "bullets": [
+     "Upload the changed policy, then pick the matching topic module in the Training screen, such as falls prevention",
+     "The lessons and questions are built from your own policies where they cover the topic, and from general good practice where they do not. Edit and preview them first",
+     "Tick who it is for, add an optional due date, and staff complete it in the Staff Hub on their own phone"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Adhoc training",
+      "href": "/uses/adhoc-training"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Falls Prevention",
+     "questions": [
+      "What is the first thing you do after an unwitnessed fall?",
+      "When should you not help a person to stand up?",
+      "Who do you tell, and how do you record it?"
+     ],
+     "staff_count": 22
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson, not a telling off",
+    "bullets": [
+     "A wrong answer goes straight into the carer's Follow-up tab in the Staff Hub, and they get an email to say so, at most once a day",
+     "They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question. They can retry as often as they need",
+     "The email is in English, and the manager is not alerted to each wrong answer"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Falls Prevention",
+     "question": "What is the first thing you do after an unwitnessed fall?",
+     "why": "Moving someone too soon can make an injury worse, so the first step is to check how they are before anything else.",
+     "remember": [
+      "Stay with the person and keep them calm",
+      "Check for pain or injury before any move",
+      "Get help and record what you found"
+     ],
+     "picture": "You find a resident on the floor beside the bed. They say they are fine and want to get up."
+    }
+   },
+   {
+    "heading": "Policies and questions in the language each carer thinks in",
+    "bullets": [
+     "Policy translation happens when a carer opens the policy: it appears in their first language, with an admin setting the first and an optional second language",
+     "With allow switching on, a carer can flip one lesson or question set into their second language with Read in &lt;language&gt;",
+     "Translation is machine translation, shaped by your own glossary and by staff suggestions that your admin approves. It is on the paid plans, and menus and buttons stay English"
+    ],
+    "tags": [
+     {
+      "label": "Training in dozens of languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in other languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish"
+    }
+   },
+   {
+    "heading": "See who understood the change, and whether gaps closed",
+    "bullets": [
+     "The Knowledge gaps view shows the most missed questions and the weakest topics, so you can see whether one person or the whole message needs another look",
+     "See how gaps are being closed, and mark a person's record as reviewed",
+     "A Monday digest email brings the picture to you without you asking"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 6,
+      "affected": 5,
+      "closed": 14,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "First step after an unwitnessed fall",
+       "4 staff"
+      ],
+      [
+       "When not to help someone up",
+       "3 staff"
+      ],
+      [
+       "Recording the fall",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Falls Prevention",
+       "5 gaps"
+      ],
+      [
+       "Moving and Handling",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "We emailed the new policy. Why is that not enough?",
+    "a": "An email shows it was sent. It does not show who opened it, still less who understood it. After a policy update, you can allocate a short <a href=\"/training-platform\">check built from your own policies</a> and see each person's answers."
+   },
+   {
+    "q": "How does a carer read the policy in their own language?",
+    "a": "Your admin sets each person's first language, and an optional second. When they open a policy it is translated into their first language and kept for next time. The first time may show English while it translates, then it appears on the next open. The menus and buttons in the hub stay in English."
+   },
+   {
+    "q": "How good is the translation?",
+    "a": "It is machine translation, not a professional human translator. It uses your own translation glossary, so terms you want kept as they are stay put, and carers can suggest a better wording that your admin approves. Treat it as a strong help for understanding, and do not treat it as a certified translation."
+   },
+   {
+    "q": "How do I check that people understood the change?",
+    "a": "Allocate an adhoc module on the topic, such as falls prevention. Questions come to carers in their own language, and each answer is scored. A wrong answer is information, and it points to a gap in knowledge rather than a gap in vocabulary."
+   },
+   {
+    "q": "What happens when someone gets a question wrong?",
+    "a": "It goes into their Follow-up tab in the Staff Hub and they get an email, at most once a day, in English. They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question. They can retry as often as they need."
+   },
+   {
+    "q": "Will CareStream tell my team when a policy changes?",
+    "a": "Not automatically. You decide who needs to know and allocate the module yourself. That keeps you in charge of who is asked what, and when."
+   },
+   {
+    "q": "Is this a read and sign register?",
+    "a": "No. CareStream records read sessions, such as time spent and scrolling, and a Mark as read tap. It does not record signatures or acknowledgement. The questions are your evidence of understanding. <a href=\"/cqc-compliance\">See the compliance picture</a>."
+   },
+   {
+    "q": "Can I try it, and does it cost anything?",
+    "a": "Yes. Create a free account and try it for 14 days on a paid plan. Adhoc training and translation are on the paid plans, and the free plan is English only. See <a href=\"/pricing\">the pricing page</a> for the plans, or <a href=\"/register\">register</a> to start."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "Honest about what this does and does not do",
+  "cards": [
+   {
+    "title": "It is not professional translation",
+    "body": "Translation is done by machine, with your glossary and approved staff suggestions. Nothing here is certified, and no human translator checks it. Safety critical wording is still worth a conversation."
+   },
+   {
+    "title": "It does not notify staff when a policy changes",
+    "body": "You allocate the module and choose who gets it. Nothing alerts you to each wrong answer either, so the picture comes through the Knowledge gaps view and the Monday digest."
+   },
+   {
+    "title": "Translation and adhoc training are on the paid plans",
+    "body": "The free plan is English only and does not include adhoc training. Hub menus and buttons, and the wrong answer email, stay in English on every plan."
+   }
+  ]
+ },
+ "read_next": [
+  "translating-care-policies",
+  "policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers",
+  "care-policy-version-control"
+ ],
+ "faqs": {
+  "heading": "Policy translation and understanding, answered",
+  "groups": [
+   {
+    "group": "About translation and languages",
+    "items": [
+     {
+      "q": "What is policy translation in CareStream?",
+      "a": "When a carer opens a policy, it appears in their first language and is saved for later. It is machine translation, helped by your own glossary. See <a href=\"/uses/multilingual-staff-hub\">the multilingual Staff Hub</a> for the full picture."
+     },
+     {
+      "q": "How do you support a multilingual workforce in a care service?",
+      "a": "Give people policies, lessons and questions in the language they think in, then check understanding with questions rather than assuming. Your admin sets each person's first language and an optional second, as described on <a href=\"/languages\">the languages page</a>."
+     },
+     {
+      "q": "Can a carer switch to a second language?",
+      "a": "Yes, if your admin turns on allow switching. They can flip one lesson or question set into their second language with Read in their language. Their first language stays the default."
+     },
+     {
+      "q": "Does a wrong answer mean the carer is not good at their job?",
+      "a": "No. It may be a missed word, a long sentence or a rushed read. That is why questions arrive in the person's own language, so a wrong answer points at knowledge and not at vocabulary."
+     },
+     {
+      "q": "Is the translation done by a person?",
+      "a": "No. It is machine translation, with your own glossary and staff suggestions that your admin approves. We do not offer certified or professional translation. Read more in <a href=\"/blog/translating-care-policies\">translating care policies</a>."
+     }
+    ]
+   },
+   {
+    "group": "About checking understanding",
+    "items": [
+     {
+      "q": "What is a good policy update process for a care home?",
+      "a": "Upload the new version, tell people what changed, then run a check for understanding. A short knowledge check on the changed topic shows who has taken it in. The <a href=\"/blog/policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers\">four question framework</a> helps you decide who needs more than a read."
+     },
+     {
+      "q": "What is a knowledge check, and how long should it be?",
+      "a": "A short set of questions on one topic. Keep it to a few questions on the change itself. CareStream builds it from your own policies, and you can edit and preview it first."
+     },
+     {
+      "q": "Does CareStream record that staff signed or acknowledged the new version?",
+      "a": "No. It records read sessions, not signatures or acknowledgement. Your evidence is the questions asked, the answers given and the lessons followed."
+     },
+     {
+      "q": "What do inspectors expect on staff training?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> says staff must receive the support, training, professional development, supervision and appraisal they need to do their jobs. The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-18\">CQC guidance on Regulation 18</a> says completion of training should be monitored, with prompt action when requirements are not met."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to roll out a changed policy to every carer",
+  "lede": "A policy update is only finished when people do the new thing. A good rollout checks understanding in a language each person is comfortable in, and does not rely on goodwill or a reminder email.",
+  "sections": [
+   {
+    "h3": "Keep the change small, then check it",
+    "paragraphs": [
+     "Start by writing down what is actually different, in two or three lines. If the whole policy changed, say so, but a manager usually finds that only one or two steps are new. Questions on those steps tell you far more than questions on the entire document.",
+     "Then decide who needs it. A policy on falls matters to every carer, but a night team, an agency worker and a new starter may all need a different nudge."
+    ]
+   },
+   {
+    "h3": "A rollout that works for a mixed team",
+    "checklist": [
+     "Upload the new version and say plainly what changed.",
+     "Allocate a short module on the topic, with a due date.",
+     "Let carers read in their first language, and offer a second language where it helps.",
+     "Review the most missed questions after a week and talk to the people who need it."
+    ]
+   },
+   {
+    "h3": "Use mistakes as information",
+    "paragraphs": [
+     "A wrong answer after a policy update is a signal that the message did not land, not a mark against the person. If several people miss the same question, change how you explain it. If one person misses it, a quiet conversation is usually enough."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the changed policy, the questions, the answers and the lessons together, so you can show that people understood the change as well as received it."
+ }
+}

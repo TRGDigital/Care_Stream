@@ -1,0 +1,313 @@
+{
+ "slug": "carer-speaks-english-well-but-reads-slowly",
+ "status": "draft",
+ "order": 32,
+ "title": "She talks to residents with ease. Reading English as a second language takes her <em>longer on a long page.</em>",
+ "meta_title": "Reading English as a Second Language at Work | CareStreamAI",
+ "meta_description": "A carer who speaks English well may read it slowly. Let them flip one lesson into their second language, so a wrong answer shows a knowledge gap, not a word gap.",
+ "eyebrow": "Scenario",
+ "lede": "Some of your best carers speak English with confidence and still take far longer to read a long page of it. When reading English as a second language slows someone down, a written quiz can measure vocabulary instead of knowledge. With <a href=\"/training-platform\">training built from your own policies</a>, the carer can read one lesson in their second language, then flip back.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "One lesson, two languages",
+  "pill": "Illustration",
+  "rows": [
+   { "label": "Safeguarding module allocated", "note": "Day 0", "done": true },
+   { "label": "Question missed, follow up opened", "note": "Day 1", "done": true },
+   { "label": "Lesson read in second language", "note": "Day 2", "done": false },
+   { "label": "Fresh question answered correctly", "note": "Not yet", "done": false }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/bb9f6e1b-1717-4f29-9952-f28047b4c4f4.webp",
+ "image_alt": "A carer sitting at a table chatting easily with a colleague, a printed page and a pencil beside her, relaxed and smiling",
+ "card_title": "She speaks English well, but reads it slowly. Is the quiz fair?",
+ "card_snippet": "A carer can be warm and fluent in conversation and still read long English text slowly. Let them open one lesson in their second language, so a wrong answer shows what they know.",
+ "primary_keyword": "reading english as a second language",
+ "secondary_keywords": [
+  "workplace literacy",
+  "literacy at work",
+  "english for care workers",
+  "english as a second language"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Short training from your own policies, with wrong answers that become short lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Staff Hub in your carers' languages",
+   "body": "Policies and lessons in the first language you set for each carer, with a second language to flip to.",
+   "action": "See the multilingual hub",
+   "href": "/uses/multilingual-staff-hub"
+  },
+  {
+   "title": "Training in dozens of languages",
+   "body": "See how translated lessons work and which plans include them.",
+   "action": "See languages",
+   "href": "/languages"
+  }
+ ],
+ "intro": {
+  "heading": "She is brilliant with residents. The page is the slow part.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "Amara has worked on the floor for three years. Residents ask for her by name, and she explains things to relatives clearly and kindly. But when a policy or an online quiz arrives, she reads each line twice, then checks a word on her phone. The manager sets a safeguarding module for the whole team. Amara runs out of time on one question and picks the answer that looks safest. The result says she got it wrong. Nobody asks whether she lacked the knowledge or simply the minutes."
+ },
+ "trail": [
+  { "when": "Day to day", "text": "Amara talks with residents and families easily and well.", "kind": "ok" },
+  { "when": "Handovers", "text": "She gives clear spoken handovers. Colleagues rely on them.", "kind": "ok" },
+  { "when": "Monday", "text": "The manager allocates a safeguarding module to the whole team.", "kind": "ok" },
+  { "when": "Tuesday, mid shift", "text": "Amara reads each line slowly and runs short of time.", "kind": "gap" },
+  { "when": "The result", "text": "She answers one question wrongly. Was it the idea or the wording?", "kind": "gap" },
+  { "when": "What nobody asks", "text": "The score treats a slow read the same as a gap in knowledge.", "kind": "gap" },
+  { "when": "Next quarter", "text": "She is marked as needing more training on a topic she understands.", "kind": "gap" },
+  { "when": "Supervision or inspection", "text": "“Does she know what to do if a resident discloses abuse?” Nobody can say.", "kind": "end" }
+ ],
+ "trail_close": "<b>Her fluency was not the question.</b> The gap is in how you find out what she knows. Here is how CareStream lets a carer read one lesson in another language, and keeps the record honest.",
+ "why": {
+  "heading": "A wrong answer should show what someone knows, not how quickly they read",
+  "sub": "Speaking and reading are different skills, and many people find reading a second language the harder one.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Fluent in speech is not the same as quick on the page",
+    "body": "A carer can handle a tense family conversation in English and still need extra time with a long block of written text, especially policy wording."
+   },
+   {
+    "icon": "alert",
+    "title": "A word gap looks like a knowledge gap",
+    "body": "If a question is missed because of one unfamiliar word, your records say the carer lacks the knowledge. That label is unfair to them and unhelpful to you."
+   },
+   {
+    "icon": "tick",
+    "title": "Workplace literacy support rarely fits a shift pattern",
+    "body": "Offering extra help with literacy at work is kind, but it takes time you may not have. A lesson that meets the carer where they read best costs no extra shift."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Choose the language per lesson, not per person.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, with the <a href=\"/uses/multilingual-staff-hub\">multilingual Staff Hub</a>, in the order a manager and a carer meet it. See also <a href=\"/uses/adhoc-training\">turning a topic into adhoc training</a>.",
+  "blocks": [
+   {
+    "heading": "Allocate the topic, built from your own policies",
+    "bullets": [
+     "In the Training screen, pick the topic module, such as Safeguarding Adults, and tick the staff who should take it",
+     "CareStream builds the lessons and knowledge check from your own policies where they cover the topic, with general good practice as the fallback. You can edit and preview before anyone sees it",
+     "Staff complete it in the Staff Hub, an app they install on their own phone"
+    ],
+    "tags": [
+     { "label": "Training built from your own policies", "href": "/training-platform" },
+     { "label": "How CareStream works", "href": "/how-it-works" }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Safeguarding Adults",
+     "questions": [
+      "A resident tells you something worrying and asks you not to tell anyone. What do you do?",
+      "Who is the safeguarding lead in this service?",
+      "Where do you record a concern?"
+     ],
+     "staff_count": 12
+    }
+   },
+   {
+    "heading": "A wrong answer opens a short lesson, not a verdict",
+    "bullets": [
+     "The wrong answer goes into the carer's Follow-up tab in the Staff Hub, and they get an email to say so (at most once a day, in English)",
+     "They choose Learn &amp; retry, a short lesson on that point with a fresh question, or Just retry the same question. They can retry as often as they need",
+     "Short lessons are kinder to a slow reader than a long policy, because each one covers a single point"
+    ],
+    "tags": [
+     { "label": "Wrong answers become lessons", "href": "/training-platform" },
+     { "label": "Staff training", "href": "/staff-training" }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Safeguarding Adults",
+     "question": "A resident tells you something worrying and asks you not to tell anyone. What do you do?",
+     "why": "You cannot promise to keep a safeguarding concern secret, because the resident may be at risk.",
+     "remember": [
+      "Listen and stay calm",
+      "Explain who you must tell",
+      "Record what was said"
+     ],
+     "picture": "A resident whispers that someone has been rough with them, and asks you to keep it between the two of you."
+    }
+   },
+   {
+    "heading": "Flip one lesson into the second language, then flip back",
+    "bullets": [
+     "Your admin sets each carer's first language and an optional second language, and turns on language switching for the people who want it",
+     "The carer taps Read in their second language on one lesson or question set. That set only changes, and they can go back to their first language",
+     "Translation is machine translation, shaped by your own glossary and staff suggestions that an admin approves. It is on the paid plans, and the hub menus and buttons stay in English"
+    ],
+    "tags": [
+     { "label": "Training in dozens of languages", "href": "/languages" },
+     { "label": "Staff Hub in your carers' languages", "href": "/uses/multilingual-staff-hub" }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Romanian"
+    }
+   },
+   {
+    "heading": "See what people know, and whether the gaps closed",
+    "bullets": [
+     "Knowledge gaps shows open gaps, staff affected, gaps closed in 30 days and how many have engaged with the learning",
+     "Most missed questions and weakest topics show whether one person needs a conversation or the wording of the question needs a look",
+     "A Monday digest email brings the picture to you. Nothing pings you on each wrong answer"
+    ],
+    "tags": [
+     { "label": "Reporting that runs itself", "href": "/training-platform" },
+     { "label": "CQC and compliance evidence", "href": "/cqc-compliance" }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": { "open": 5, "affected": 4, "closed": 11, "engaged": 80 },
+     "missed": [
+      ["Keeping a disclosure secret", "3 staff"],
+      ["Who is the safeguarding lead", "2 staff"],
+      ["Where to record a concern", "2 staff"]
+     ],
+     "weak": [
+      ["Safeguarding Adults", "4 gaps"],
+      ["Medication", "1 gap"]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "One of my carers speaks English really well, but I think she reads it slowly. Is that common?",
+    "a": "Yes. Speaking with confidence and reading long text quickly are different skills, and reading a second language is often the slower one. It says nothing about her ability or the quality of her care. The aim is to make sure your training measures what she knows."
+   },
+   {
+    "q": "How does a carer read a lesson in another language?",
+    "a": "Your admin sets a first language and an optional second language on the carer's record, and turns on language switching. In the Staff Hub the carer then taps <b>Read in</b> their second language on a lesson or question set, and can flip back. See <a href=\"/uses/multilingual-staff-hub\">the multilingual Staff Hub</a>."
+   },
+   {
+    "q": "Does the whole hub change language?",
+    "a": "No. Only the lesson or question set they flip changes, and only for that set. The menus and buttons in the hub stay in English, and so does the reminder email about a wrong answer."
+   },
+   {
+    "q": "Who does the translating? Is it a professional translator?",
+    "a": "No. It is machine translation, shaped by your own translation glossary and by better wordings that staff suggest and an admin approves. It is not certified or professional human translation, so for anything formal you should keep your own checks."
+   },
+   {
+    "q": "What happens when she gets a question wrong?",
+    "a": "It goes into her Follow-up tab and she gets an email. She can choose Learn &amp; retry, a short lesson (why it matters, what to remember, a picture of the situation) then a fresh question, or Just retry the same question. She can retry as often as she needs, and you do not have to chase it."
+   },
+   {
+    "q": "Will I see it when someone gets a question wrong?",
+    "a": "Not as it happens. You see the picture in the Knowledge gaps view of the training reporting, in the weakest topics and most missed questions, and in a Monday digest email. That is enough to spot a pattern without being buzzed all day."
+   },
+   {
+    "q": "Is this a literacy programme?",
+    "a": "No. CareStream is not a course in English and it does not assess anyone's reading. It makes your own training easier to take in. If a carer wants to improve their English, support such as classes is a separate matter for you and them."
+   },
+   {
+    "q": "What does it cost, and can I try it?",
+    "a": "Adhoc training and translation are on the paid plans. You can try it with a 14 day free trial, and you can <a href=\"/register\">create a free account</a> to look around first. Plans are on the <a href=\"/pricing\">pricing page</a>."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "Fairer wording, not a language course",
+  "cards": [
+   {
+    "title": "It does not teach English or assess reading",
+    "body": "CareStream does not test anyone's English or work out why a person reads slowly. It lets a carer read one lesson in another language, and nothing more."
+   },
+   {
+    "title": "Translation is machine translation, and only for what you set up",
+    "body": "It is not certified or professional human translation. Your admin sets the languages, the hub menus stay in English, and the wrong answer email is English only."
+   },
+   {
+    "title": "Adhoc training and translation are on the paid plans",
+    "body": "The free plan is English only and does not include adhoc training. You also still need your own conversation with a carer who wants support."
+   }
+  ]
+ },
+ "read_next": [
+  "translating-care-policies",
+  "overseas-care-workers-policy-access",
+  "how-many-care-workers-in-england-speak-english-as-a-second-language"
+ ],
+ "faqs": {
+  "heading": "Reading a second language at work, answered",
+  "groups": [
+   {
+    "group": "About the training",
+    "items": [
+     {
+      "q": "How can I help a carer who finds reading English as a second language slow?",
+      "a": "Start by asking what would help, and keep it about the task, not the person. Short lessons with one point each are easier to read than long documents. With paid plans in CareStream, an admin can set a second language so the carer can read one lesson in that language, then flip back."
+     },
+     {
+      "q": "Is this the same as English for care workers courses?",
+      "a": "No. English for care workers courses teach the language. CareStream does not. It delivers your own training, and lets a carer read a lesson in a second language when that helps them take it in."
+     },
+     {
+      "q": "Do carers choose their own language?",
+      "a": "An admin sets each person's first language and optional second language. If language switching is on, the carer can then flip one lesson or question set into the second language with <b>Read in</b>, and flip back. They cannot change the settings themselves."
+     },
+     {
+      "q": "Can I use this for workplace literacy support across the team?",
+      "a": "For training content, yes: it can make the same lesson easier to read for people who prefer another language. It is not a workplace literacy programme, so any wider support for literacy at work stays with you. See <a href=\"/languages\">the languages page</a> for how translation works."
+     },
+     {
+      "q": "What if a carer is strong in spoken English but slower on the page?",
+      "a": "That is common and fine. Set their first language to the one they read fastest, or give them a second language to flip to. They keep speaking English with residents exactly as before."
+     },
+     {
+      "q": "Are the translated lessons checked by a person?",
+      "a": "They are machine translations, improved by your own glossary and by staff suggestions that an admin approves. They are not professionally translated, so treat them as a reading aid and not a certified document."
+     }
+    ]
+   },
+   {
+    "group": "About inspections",
+    "items": [
+     {
+      "q": "Does CQC expect training to suit how staff learn?",
+      "a": "The regulation says staff must receive the support, training and development they need to do their job. See <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18 on staffing</a>. It does not name languages, so how you meet it is your decision, and you should be able to show that the training worked."
+     },
+     {
+      "q": "What does the CQC say about staff competence?",
+      "a": "The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-18\">CQC guidance on Regulation 18</a> says providers must have suitably qualified, competent, skilled and experienced staff, and that staff need appropriate supervision to show and keep their competence. A record of answers and lessons shows more than a signature does. See <a href=\"/cqc-compliance\">CQC and compliance</a>."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to support a slow reader without singling anyone out",
+  "lede": "You do not need a new policy to be fair to a carer who reads English slowly. You need a few small habits that make your training measure the right thing.",
+  "sections": [
+   {
+    "h3": "Separate the word from the idea",
+    "paragraphs": [
+     "When a question is missed, ask which it was: the idea or the wording. A quick conversation, in the carer's strongest spoken language if you share one, usually settles it. If the idea is understood, the question may simply have been too long.",
+     "Keep your own written training short and plain. One point per lesson, short sentences and everyday words help every reader, and they cost nothing. Our guide to <a href=\"/blog/translating-care-policies\">translating care policies</a> goes further."
+    ]
+   },
+   {
+    "h3": "Four habits that fit a busy service",
+    "checklist": [
+     "Ask each carer which language they read fastest and note it, without assumptions.",
+     "Give the same training to everyone, then offer a lesson in the second language to anyone who wants it.",
+     "When an answer is wrong, check the idea in conversation before you record a gap.",
+     "Each month, look at the most missed questions to see if the wording is the problem."
+    ]
+   }
+  ],
+  "note": "<b>For supervision and inspection.</b> Keep the questions, the lessons and the results together, so you can show what each carer knows and not only how fast they read. For team wide English learning, see <a href=\"/blog/how-many-care-workers-in-england-speak-english-as-a-second-language\">the numbers behind it</a>."
+ }
+}

@@ -1,0 +1,405 @@
+{
+ "slug": "carer-asks-the-assistant-a-question-privately",
+ "status": "draft",
+ "order": 31,
+ "title": "Asking questions at work should not feel like <em>a risk to your reputation.</em>",
+ "meta_title": "Asking Questions at Work: Staff Hub Assistant | CareStreamAI",
+ "meta_description": "A carer can ask the assistant a question without an audience, and get an answer from your own policies. See how it works and what managers can see.",
+ "eyebrow": "Scenario",
+ "lede": "Many carers will not ask in front of the team. Asking questions at work can feel like admitting a gap. In the Staff Hub, a carer can ask the assistant on their own phone and get an answer from your own documents. It sits alongside <a href=\"/training-platform\">training built from your own policies</a>, and managers can see what is asked.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "A question on a quiet corridor",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Carer unsure about a hoist task",
+    "note": "02:10",
+    "done": true
+   },
+   {
+    "label": "Asks the assistant on her own phone",
+    "note": "02:11",
+    "done": true
+   },
+   {
+    "label": "Answer shown with the policy it came from",
+    "note": "02:11",
+    "done": true
+   },
+   {
+    "label": "Understanding checked later",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/aaee98a4-8075-4a46-b5e6-a02a44876a59.webp",
+ "image_alt": "A carer stands alone in a quiet care home corridor holding a phone with its screen facing away, looking relieved, the lit doorway of a resident's room nearby",
+ "card_title": "A carer is not sure, and does not want to ask in front of everyone",
+ "card_snippet": "Some questions never get asked out loud. In the Staff Hub, carers can ask an assistant that answers from your own policies, with no audience. Managers can see what was asked.",
+ "primary_keyword": "asking questions at work",
+ "secondary_keywords": [
+  "psychological safety at work",
+  "policy chatbot",
+  "check for understanding",
+  "knowledge check"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Short training from your policies, with wrong answers that become short lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Staff Hub in the language each carer thinks in",
+   "body": "Answers, policies and lessons in a carer's first language, on the paid plans.",
+   "action": "See the multilingual Staff Hub",
+   "href": "/uses/multilingual-staff-hub"
+  },
+  {
+   "title": "Find the gaps in your policies",
+   "body": "A question your documents cannot answer shows you where a policy is missing or thin.",
+   "action": "See policy gaps",
+   "href": "/uses/policy-gaps"
+  }
+ ],
+ "intro": {
+  "heading": "The question nobody asks out loud",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "It is two in the morning. A carer has to help a resident back up the bed and the hoist is in use on another floor. She is fairly sure she should wait, but she is new, the senior is busy, and she does not want to look as if she missed it in training. So she does what feels easiest and guesses. Nothing goes wrong this time. Nobody knows she was unsure, and nobody can show what she was told. The question was a good one. It simply never got asked."
+ },
+ "trail": [
+  {
+   "when": "02:10",
+   "text": "A carer is unsure how to reposition a resident while the hoist is in use elsewhere.",
+   "kind": "ok"
+  },
+  {
+   "when": "Her instinct",
+   "text": "She thinks she should wait for the hoist. That instinct is right.",
+   "kind": "ok"
+  },
+  {
+   "when": "On shift",
+   "text": "The senior is busy with a resident and the other carers are on break.",
+   "kind": "ok"
+  },
+  {
+   "when": "The hesitation",
+   "text": "She is new and does not want to look as if she missed it in training.",
+   "kind": "gap"
+  },
+  {
+   "when": "The choice",
+   "text": "She guesses, and gets through the task without telling anyone she was unsure.",
+   "kind": "gap"
+  },
+  {
+   "when": "Next morning",
+   "text": "The day team hear nothing, so the gap stays hidden.",
+   "kind": "gap"
+  },
+  {
+   "when": "A month on",
+   "text": "It happens again with a different carer, and still no one asks.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“How do staff find out what to do when they are unsure?” The manager has no answer.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The carer was not careless. She had nowhere easy to ask.</b> Here is how the Staff Hub gives her one, and what it shows you, honestly, as the manager.",
+ "why": {
+  "heading": "People hold back questions they think will make them look unsure",
+  "sub": "Asking a question is part of doing the job well. The room does not always feel that way.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Asking in front of colleagues has a cost",
+    "body": "A new starter, a quieter carer or someone working in a second language may stay silent rather than be seen not to know. The question does not go away. It turns into a guess."
+   },
+   {
+    "icon": "tick",
+    "title": "Managers want questions, not guesses",
+    "body": "A team where people feel able to say they are not sure is one where problems surface early. That feeling of psychological safety at work is built by leaders, and a quiet place to ask can support it."
+   },
+   {
+    "icon": "alert",
+    "title": "The manager is not always there at 2am",
+    "body": "Nights, weekends and busy mornings mean the person who knows the answer is often not within reach. Waiting for them can mean waiting a long time, or not asking at all."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Ask quietly. Answered from your own documents.",
+  "sub": "This is the Staff Hub assistant, working with <a href=\"/training-platform\">training built from your own policies</a>. See also <a href=\"/uses/multilingual-staff-hub\">the multilingual Staff Hub</a> and <a href=\"/uses/policy-gaps\">finding the gaps in your policies</a>.",
+  "blocks": [
+   {
+    "heading": "A carer asks the assistant on her own phone",
+    "bullets": [
+     "In the Staff Hub chat, the carer picks a topic such as Policies and Procedures and types or speaks her question, with no one looking over her shoulder",
+     "The answer is drawn from your own uploaded documents, and it shows which policy it came from. If nothing matches closely enough, it says it could not find an answer rather than inventing one",
+     "Think of it as a policy chatbot that stays inside your documents, and not a general internet search"
+    ],
+    "tags": [
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     },
+     {
+      "label": "Moving and handling course",
+      "href": "/staff-training/moving-and-handling-of-people"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Moving and Handling (example question the carer might ask)",
+     "questions": [
+      "Can I help someone up the bed on my own if the hoist is being used elsewhere?",
+      "Where in our policy does it say who to call if the equipment is not available?"
+     ],
+     "staff_count": 12
+    }
+   },
+   {
+    "heading": "A short question later checks the answer landed",
+    "bullets": [
+     "Getting an answer is not the same as understanding it, so the manager can allocate short adhoc training on the same topic afterwards",
+     "It works as a check for understanding: a few questions, taken in the Staff Hub, built from your own policies",
+     "A wrong answer goes to the carer's Follow-up tab, where she can choose Learn &amp; retry or Just retry, as often as she needs. She is not marked down for asking, and nothing alerts you each time"
+    ],
+    "tags": [
+     {
+      "label": "Adhoc training from your policies",
+      "href": "/uses/adhoc-training"
+     },
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Moving and Handling (example)",
+     "question": "The hoist is in use elsewhere and a resident needs repositioning. What should you do?",
+     "why": "Moving someone on your own without the right equipment or assessment can injure you both, so you wait for the right help.",
+     "remember": [
+      "Check the person's moving and handling plan",
+      "Do not move them alone if it needs equipment or two people",
+      "Ask a senior or the person in charge"
+     ],
+     "picture": "It is night and the hoist is on another floor. You are tempted to manage alone."
+    }
+   },
+   {
+    "heading": "Answers in the language the carer thinks in",
+    "bullets": [
+     "Your admin sets each carer's first language and, if you wish, a second one. Answers, policies and lessons then arrive in the first",
+     "With switching turned on, a carer can open one lesson or question set in their second language using Read in that language",
+     "Translation is machine translation, with your own glossary and approved staff suggestions, and it is on the paid plans. A wrong answer should show a gap in knowledge, not a gap in words"
+    ],
+    "tags": [
+     {
+      "label": "Staff Hub in dozens of languages",
+      "href": "/uses/multilingual-staff-hub"
+     },
+     {
+      "label": "Languages",
+      "href": "/languages"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Romanian (example)"
+    }
+   },
+   {
+    "heading": "What the manager sees, openly and honestly",
+    "bullets": [
+     "Admins can see what was asked in Recent queries: who asked, when, and whether a matching policy was found. Questions are not anonymous",
+     "A question that finds no match shows you where a policy may be missing, and the Knowledge gaps view shows missed training questions and how gaps are closing",
+     "Use it to improve policies and support people, not to catch anyone out. Tell your team plainly what you can see"
+    ],
+    "tags": [
+     {
+      "label": "Find policy gaps",
+      "href": "/uses/policy-gaps"
+     },
+     {
+      "label": "CQC and compliance",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 6,
+      "affected": 4,
+      "closed": 15,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Repositioning without the hoist",
+       "3 staff"
+      ],
+      [
+       "Who to call when equipment is unavailable",
+       "3 staff"
+      ],
+      [
+       "Recording a moving and handling concern",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Moving and Handling",
+       "4 gaps"
+      ],
+      [
+       "Falls",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most. The figures and examples above are illustrations.",
+  "items": [
+   {
+    "q": "Is a question to the assistant private from me?",
+    "a": "Not from you, no. We would rather say that plainly. Admins can see who asked what in Recent queries, including whether a matching policy was found, and removing a chat from a carer's own history does not remove it from you. Private here means not in front of colleagues."
+   },
+   {
+    "q": "Then why would a carer ask it anything?",
+    "a": "Because asking an assistant on your own phone feels different from asking out loud in the staff room. It works best when you tell the team what you can see and why, and respond to questions with help. If people learn that questions bring support, they keep asking."
+   },
+   {
+    "q": "Where do the answers come from?",
+    "a": "From your own uploaded documents. The assistant looks for a close match to the question, shows the policy it used, and can return the full policy on request. If nothing matches closely enough, it says it could not find an answer and may suggest policies that might be what the carer meant."
+   },
+   {
+    "q": "Can I be sure it never gets anything wrong?",
+    "a": "No, and nobody should promise that. The assistant is designed to stay with your documents and to say when it cannot find an answer, but it is a tool. Carers can mark an answer as unhelpful, and for anything serious they should still check with a senior or the person in charge."
+   },
+   {
+    "q": "What happens when the assistant cannot answer?",
+    "a": "The carer is told it could not find an answer. On your side, the question appears in Recent queries as having no match, which can show that a policy is missing or too thin. That is a prompt to update the policy, and you can use our <a href=\"/uses/policy-gaps\">policy gaps</a> tools to look further."
+   },
+   {
+    "q": "How do I know a carer understood the answer?",
+    "a": "Asking is the first step, not the last. After a question like this, you can allocate short <a href=\"/uses/adhoc-training\">adhoc training</a> on the topic, built from your own policies. The questions check understanding, and a wrong answer becomes a short lesson in the carer's Follow-up tab."
+   },
+   {
+    "q": "Does it work in the carer's own language?",
+    "a": "On the paid plans, yes. Replies come back in the person's first language, and policies are translated when opened. It is machine translation, not a human translator, and the menus and buttons stay in English. See <a href=\"/languages\">languages</a> for more."
+   },
+   {
+    "q": "How do I try it?",
+    "a": "Create a <a href=\"/register\">free account</a> and start the 14 day free trial on a paid plan, then upload your policies. Ask it a few of the questions your staff really ask and see how it answers. You can look at the <a href=\"/pricing\">pricing page</a> for plan details."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "An honest place to ask, with honest limits",
+  "cards": [
+   {
+    "title": "It is not anonymous",
+    "body": "Admins can see who asked what in Recent queries. Staff cannot erase it. If you promise anonymity you will lose trust, so promise only what is true."
+   },
+   {
+    "title": "It does not build a safe culture on its own",
+    "body": "A tool can make asking easier, but leaders create the culture. How you respond to a question matters more than where it was asked."
+   },
+   {
+    "title": "It is only as good as your documents",
+    "body": "If a policy is missing, out of date or vague, the assistant cannot answer well. It does not replace a senior, and it does not replace hands on demonstration of practical skills."
+   }
+  ]
+ },
+ "read_next": [
+  "night-shift-policy-access",
+  "translating-care-policies",
+  "overseas-care-workers-policy-access"
+ ],
+ "faqs": {
+  "heading": "Questions at work and the Staff Hub assistant, answered",
+  "groups": [
+   {
+    "group": "About the assistant",
+    "items": [
+     {
+      "q": "Can staff ask the assistant questions without anyone else seeing?",
+      "a": "Colleagues cannot see a carer's chats. Admins can, in Recent queries, and that cannot be switched off by the carer. We recommend telling your team this when you introduce it."
+     },
+     {
+      "q": "Is this a policy chatbot?",
+      "a": "It works like one, with an important difference. It answers from your own uploaded documents and shows the policy it used, and it says when it cannot find an answer. It is not a general chatbot searching the internet."
+     },
+     {
+      "q": "Is the assistant on every plan?",
+      "a": "The hub assistant is part of the paid plans, with monthly question limits that depend on the plan. Check the <a href=\"/pricing\">pricing page</a> for the current details."
+     }
+    ]
+   },
+   {
+    "group": "About building a speak up culture",
+    "items": [
+     {
+      "q": "What is psychological safety at work in a care service?",
+      "a": "It is the shared sense that you can ask a question, admit you are unsure or raise a concern without being embarrassed or punished. In care it matters because unspoken doubts can lead to unsafe guesses. The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-18\">CQC guidance on Regulation 18</a> says staff must get the support, training and supervision they need to do their jobs safely."
+     },
+     {
+      "q": "How can a manager encourage asking questions at work?",
+      "a": "Thank people for asking, answer without sighing, and share the questions that come up so others learn from them. Ask questions yourself in team meetings. Make clear where people can go with a doubt, whether that is you, a senior or the Staff Hub assistant."
+     },
+     {
+      "q": "What is a good check for understanding after someone asks a question?",
+      "a": "A short, low pressure question on the same point works well, ideally within a few days. A knowledge check taken on the carer's phone does this, and a wrong answer leads to a short lesson, not a telling off."
+     },
+     {
+      "q": "Does the law say staff must be able to ask questions?",
+      "a": "Not in those words. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> requires staff to receive appropriate support, training, professional development, supervision and appraisal as is necessary to carry out their duties. How you meet that is up to you."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "Making it easy to ask: a practical guide",
+  "lede": "Asking questions at work is a habit, and habits follow what leaders do. The tools matter less than how a question is received the first time someone asks one.",
+  "sections": [
+   {
+    "h3": "Be open about what you can see",
+    "paragraphs": [
+     "Tell the team the truth about the assistant: it answers from your documents, and managers can see what is asked. Explain why you look. You want to find missing policies and help people, not to judge them. A clear honest rule earns more trust than a vague promise of privacy."
+    ]
+   },
+   {
+    "h3": "Four habits that make questions welcome",
+    "checklist": [
+     "Thank people when they ask, in front of others where it suits them.",
+     "Share one good question a month, with the answer, so the whole team learns from it.",
+     "Check understanding afterwards with a short knowledge check, not a lecture.",
+     "Update the policy when a question shows it was unclear or missing."
+    ]
+   },
+   {
+    "h3": "Use no match questions to improve your policies",
+    "paragraphs": [
+     "Look in Recent queries for questions marked No match. They tell you what your carers need to know and your documents do not yet say. Add or update the policy, then ask the same question again to see whether the assistant now finds it. Pair this with <a href=\"/uses/adhoc-training\">short adhoc training</a> where the topic is a risk, such as moving and handling."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Be ready to explain how staff find out what to do when they are unsure, and how you know they understood the answer."
+ }
+}

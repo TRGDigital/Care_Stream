@@ -1,0 +1,412 @@
+{
+ "slug": "international-recruits-first-weeks-induction",
+ "status": "draft",
+ "order": 27,
+ "title": "Overseas care workers in their first weeks. <em>Did the induction land, or was it just signed?</em>",
+ "meta_title": "Overseas Care Workers: First Weeks Induction | CareStreamAI",
+ "meta_description": "Induction for overseas care workers that checks understanding, not just signatures. Short knowledge checks from your own policies, in the language they think in.",
+ "eyebrow": "Scenario",
+ "lede": "Your new starters from abroad have signed the induction paperwork. What nobody can yet say is what each of your overseas care workers actually understood. With <a href=\"/training-platform\">short induction checks built from your own policies</a>, a wrong answer shows a gap in knowledge, not a gap in vocabulary.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "The first four weeks",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Welcome and tour",
+    "note": "Day 1",
+    "done": true
+   },
+   {
+    "label": "Policies read and marked as read",
+    "note": "Week 1",
+    "done": true
+   },
+   {
+    "label": "Understanding checked in their own language",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Gaps found and closed before the first review",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/a12ce6c5-bd3c-4111-ba95-0f46a429b2b8.webp",
+ "image_alt": "A manager shaking hands warmly with a new carer at the front door of a care home on their first morning, while a colleague in a lanyard waits in the hallway",
+ "card_title": "New from overseas. Did the induction land, or was it just signed?",
+ "card_snippet": "A signed induction shows a new carer was handed the policies. It does not show what they understood. Short checks built from your own policies, in the language they think in, show the difference.",
+ "primary_keyword": "overseas care workers",
+ "secondary_keywords": [
+  "multilingual training",
+  "training in other languages",
+  "language barriers in healthcare",
+  "knowledge check",
+  "english as a second language"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Short training and knowledge checks from your policies, and wrong answers that become short lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Staff Hub in dozens of languages",
+   "body": "Policies, lessons and induction questions in the language each carer thinks in.",
+   "action": "See the hub in other languages",
+   "href": "/uses/multilingual-staff-hub"
+  },
+  {
+   "title": "Care Certificate course",
+   "body": "The Care Certificate as a course your new starters can work through, alongside your own induction.",
+   "action": "See the course",
+   "href": "/staff-training/care-certificate"
+  }
+ ],
+ "intro": {
+  "heading": "The paperwork is complete. The picture is not.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A care home manager welcomes three new carers who have just arrived from abroad. The first week goes well. Policies are shown, the tour is done, the induction booklet is signed. Everyone is keen and polite, and in group briefings the three nod along. By week three the manager notices small things: a question about the safeguarding lead that gets a hesitant answer, a medication policy that was marked as read in two minutes. Nobody has been careless. The manager simply has a signature for each person and no way to see what is understood. Here is how it plays out."
+ },
+ "trail": [
+  {
+   "when": "Day 1",
+   "text": "A warm welcome at the door and a tour with a colleague in a lanyard.",
+   "kind": "ok"
+  },
+  {
+   "when": "Day 2",
+   "text": "Three new starters are given the policy pack and the induction booklet.",
+   "kind": "ok"
+  },
+  {
+   "when": "End of week 1",
+   "text": "All three sign the induction sheet. Everyone is positive.",
+   "kind": "ok"
+  },
+  {
+   "when": "Week 2",
+   "text": "The group briefing moves fast, and the new starters nod rather than ask.",
+   "kind": "gap"
+  },
+  {
+   "when": "Week 3",
+   "text": "The medication policy is marked as read in two minutes by one carer.",
+   "kind": "gap"
+  },
+  {
+   "when": "Also in week 3",
+   "text": "A carer cannot say who the safeguarding lead is, and is too polite to say so.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "Three signatures. Nothing that shows what each person understood.",
+   "kind": "gap"
+  },
+  {
+   "when": "Week 6 review",
+   "text": "“What did your induction cover, and how do you know it worked?”",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The welcome was never the problem.</b> The gap is between a signed induction and a team member you know has understood it. Here is how CareStream fills that gap using your own policies.",
+ "why": {
+  "heading": "A signature shows the policy was handed over, not understood",
+  "sub": "The aim is simple. A wrong answer should show a knowledge gap, never a word gap.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Language barriers in healthcare cut both ways",
+    "body": "New starters often understand more than they say. Others read policy English that was written for managers, not learners. Language barriers in healthcare settings are easy to miss in a busy first week."
+   },
+   {
+    "icon": "tick",
+    "title": "Skill and language are different things",
+    "body": "A carer may know exactly what to do and still stumble on a policy phrase. A check in their own language tells you which it is, so you do not guess."
+   },
+   {
+    "icon": "alert",
+    "title": "Quiet nods hide gaps",
+    "body": "Polite staff rarely say they have not followed. Without a short knowledge check, a gap can sit unseen until a resident, a relative or a reviewer asks."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, a clearer first month out.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a new carer meet it. See also the <a href=\"/uses/multilingual-staff-hub\">Staff Hub in other languages</a> and how to <a href=\"/uses/adhoc-training\">allocate adhoc training</a> when a gap shows up.",
+  "blocks": [
+   {
+    "heading": "Add the check to the induction, built from your own policies",
+    "bullets": [
+     "New starters are enrolled in your induction flow automatically, with steps to read a policy or answer a question",
+     "Allocate a topic module such as Safeguarding Adults as adhoc training too, and edit and preview it before anyone sees it",
+     "Staff complete it in the Staff Hub on their own phone, with an optional due date"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Safeguarding Adults",
+     "questions": [
+      "Who is the safeguarding lead in this service?",
+      "What should you do if a resident tells you something worrying and asks you to keep it secret?",
+      "Where do you record a concern after you have reported it?"
+     ],
+     "staff_count": 3
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson, not a mark against them",
+    "bullets": [
+     "A wrong answer, in induction or in training, goes into the carer's Follow-up tab in the Staff Hub, and they get an email to say so",
+     "They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question, as often as they need",
+     "The lesson is built from your own policies where they cover the topic, so it teaches what your service does"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Care Certificate standards explained",
+      "href": "/blog/care-certificate-standards"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Safeguarding Adults",
+     "question": "What should you do if a resident asks you to keep something they tell you secret?",
+     "why": "You cannot promise to keep a safeguarding concern secret, because the person may be at risk.",
+     "remember": [
+      "Listen and stay calm",
+      "Explain who you must tell",
+      "Record what was said"
+     ],
+     "picture": "A resident tells you quietly that someone has been unkind to them, and asks you not to tell anyone."
+    }
+   },
+   {
+    "heading": "Induction in the language they think in",
+    "bullets": [
+     "Your admin sets each person's first language and, if you wish, a second one, and induction questions and policies appear in the first",
+     "With switching allowed, a carer can flip one step or question into their second language with Read in Hindi, or whichever they have",
+     "This is multilingual training done by machine translation, with your own glossary for care terms. It is on the paid plans, and the hub menus and wrong answer emails stay in English"
+    ],
+    "tags": [
+     {
+      "label": "Training in other languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in other languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Hindi"
+    }
+   },
+   {
+    "heading": "See the gaps across the new team, and whether they closed",
+    "bullets": [
+     "Knowledge gaps shows the most missed questions and the weakest topics, so you can see whether a gap is one person or the induction itself",
+     "See how gaps are being closed, and mark a person's record as reviewed before their first review",
+     "A Monday digest email brings the picture to you, and the staff record flags an induction not started after seven days"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 5,
+      "affected": 3,
+      "closed": 9,
+      "engaged": 80
+     },
+     "missed": [
+      [
+       "Who the safeguarding lead is",
+       "3 staff"
+      ],
+      [
+       "Keeping a disclosure secret",
+       "2 staff"
+      ],
+      [
+       "Reporting a medication error",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Safeguarding Adults",
+       "4 gaps"
+      ],
+      [
+       "Medication",
+       "3 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "Questions managers ask us",
+  "sub": "Plain answers about onboarding overseas care workers with CareStream.",
+  "items": [
+   {
+    "q": "Our new starters read the policies in week one. What more could we do?",
+    "a": "Reading is a start, and CareStream records that a policy was opened and marked as read. A <b>knowledge check</b> shows whether it was understood. Add short questions on the topics that matter most, built from your own policies."
+   },
+   {
+    "q": "Do the induction questions appear in their own language?",
+    "a": "On the paid plans, yes. Your admin sets each person's first language, and policies, induction steps and questions appear in it. It is machine translation, not professional human translation, so we recommend you review key wording and use the translation glossary."
+   },
+   {
+    "q": "What if a carer prefers to read a step in English?",
+    "a": "If your admin allows switching and sets a second language, a carer can flip one lesson, question set or induction step into the second language with a Read in button. The default stays their first language."
+   },
+   {
+    "q": "What happens when a new starter gets a question wrong?",
+    "a": "It goes into their Follow-up tab in the Staff Hub and they get an email, at most once a day, in English. They choose Learn &amp; retry for a short lesson then a fresh question, or Just retry. They can retry as often as they need."
+   },
+   {
+    "q": "Does that mean I am told each time someone gets one wrong?",
+    "a": "No. Nothing alerts you on each wrong answer. You see the pattern in Analytics, Knowledge gaps, and in a Monday digest email."
+   },
+   {
+    "q": "Will it tell me whether it was the words or the knowledge?",
+    "a": "Not on its own. It shows which questions were missed and whether the carer used the lesson. Looking at the topic and the language setting, then having a conversation, tells you which it was."
+   },
+   {
+    "q": "Does it replace our induction or the Care Certificate?",
+    "a": "No. Keep your welcome, shadow shifts and in person induction. CareStream adds checks of understanding. There is also a <a href=\"/staff-training/care-certificate\">Care Certificate course</a> staff can work through."
+   },
+   {
+    "q": "What does it cost, and can we try it?",
+    "a": "There is a 14 day free trial on the paid plans. Create a free account at <a href=\"/register\">the register page</a>, and see <a href=\"/pricing\">pricing</a> for the plans. Adhoc training and translation are on the paid plans only."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A check on understanding, not a replacement for your induction",
+  "cards": [
+   {
+    "title": "It is not professional translation",
+    "body": "Translation is done by machine, with your glossary and any improvements your team suggests and you approve. It is good for reading and checking, but it is not certified. Review key wording if it matters."
+   },
+   {
+    "title": "It does not tell you why an answer was wrong",
+    "body": "A missed question shows a gap. Whether it came from the topic or the wording is something you find out by talking to the carer, which is the right place for it."
+   },
+   {
+    "title": "Adhoc training and translation are on paid plans",
+    "body": "Both come with the paid plans. The free plan is English only and does not include adhoc training. Hub menus and wrong answer emails are in English on every plan."
+   }
+  ]
+ },
+ "read_next": [
+  "onboarding-international-care-staff-4-week-induction-playbook",
+  "overseas-care-workers-policy-access",
+  "translating-care-policies"
+ ],
+ "faqs": {
+  "heading": "Frequently asked questions",
+  "groups": [
+   {
+    "group": "Induction and language",
+    "items": [
+     {
+      "q": "How can I tell if a new carer has understood their induction?",
+      "a": "Ask them a few short questions on the topics that matter. A <b>knowledge check</b> built from your own policies, in the Staff Hub, does this without a meeting. The result is on their <a href=\"/training-platform\">staff record</a>."
+     },
+     {
+      "q": "How do I support English as a second language in induction?",
+      "a": "Allow time, use plain wording and check understanding rather than assuming it. With CareStream on a paid plan, induction questions and policies show in a carer's first language, with <a href=\"/uses/multilingual-staff-hub\">a second language available</a> on request."
+     },
+     {
+      "q": "Is training in other languages professionally translated?",
+      "a": "No. It is machine translation by Claude, with your own glossary and any improvements your team suggests that an admin approves. Never treat it as certified translation."
+     },
+     {
+      "q": "Which languages does it cover?",
+      "a": "Dozens of languages. See <a href=\"/languages\">the languages page</a>. Hub menus and buttons stay in English."
+     }
+    ]
+   },
+   {
+    "group": "Using CareStream",
+    "items": [
+     {
+      "q": "How are new starters put onto an induction flow?",
+      "a": "They are enrolled automatically in the induction flow for their role. The staff record flags an induction not started after 7 days, so a missed start does not go unnoticed."
+     },
+     {
+      "q": "How do I reduce language barriers in healthcare teams when training?",
+      "a": "Use plain wording, short lessons and a check of understanding rather than a long briefing. Translating the policies and questions helps. Our <a href=\"/blog/translating-care-policies\">guide to translating care policies</a> goes into more detail."
+     },
+     {
+      "q": "What do I see as the manager?",
+      "a": "The Knowledge gaps view in Analytics, with open gaps, staff affected, closed in 30 days and most missed questions, plus a Monday digest email."
+     },
+     {
+      "q": "Does this cover the Care Certificate?",
+      "a": "It supports it. The <a href=\"/blog/care-certificate-standards\">Care Certificate standards</a> number 16, and our <a href=\"/staff-training/care-certificate\">Care Certificate course</a> covers them. Your own induction and observation still matter."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical first month for overseas care workers",
+  "lede": "Where there is a language difference, the aim is to make understanding visible early, kindly and without singling anyone out. Here is a way to plan it.",
+  "sections": [
+   {
+    "h3": "Plan the first weeks around understanding",
+    "paragraphs": [
+     "The <a href=\"https://www.skillsforcare.org.uk/Developing-your-workforce/Care-Certificate/Care-Certificate.aspx\">Care Certificate from Skills for Care</a> has 16 standards, and Skills for Care says the standards can inform what is covered during induction. The regulations also ask providers to make sure staff receive <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">appropriate support, training, professional development, supervision and appraisal</a> as is necessary for their duties.",
+     "So the question for week three is not whether the booklet was signed. It is whether the person can do the job safely and knows where to turn. Our <a href=\"/blog/onboarding-international-care-staff-4-week-induction-playbook\">four week induction playbook</a> sets out a week by week plan, and you can read more on <a href=\"/blog/overseas-care-workers-policy-access\">giving new staff access to policies</a>."
+    ]
+   },
+   {
+    "h3": "A simple routine for each new starter",
+    "checklist": [
+     "Set their first language, and a second if useful, before day one",
+     "Enrol them in induction and check the first step was started within a week",
+     "Add short knowledge checks on safeguarding, medication and reporting",
+     "Review the Knowledge gaps view and talk to anyone with open gaps by week three"
+    ]
+   },
+   {
+    "h3": "Talk about gaps without blame",
+    "paragraphs": [
+     "A missed question is information, not a verdict. Tell new starters that wrong answers lead to a short lesson and that retries are unlimited. Where a gap persists, a short chat, a shadow shift or a supervision will tell you more than any score."
+    ]
+   }
+  ],
+  "note": "CareStream adds checks of understanding. It does not replace shadowing, supervision or your own judgement of competence."
+ }
+}

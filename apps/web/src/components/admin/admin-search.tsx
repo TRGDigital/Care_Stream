@@ -6,7 +6,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Search, Lock, FileText, Users, BookOpen, ClipboardCheck, GraduationCap, HelpCircle, Heart, CornerDownLeft, Sparkles, Compass } from 'lucide-react'
 import { createApiClient, type SearchRecord } from '@/lib/api-client'
@@ -18,6 +18,8 @@ import { tierLock, type AccountKind } from '@/lib/admin-search/access'
 type Item = {
   key: string; group: string; title: string; sub?: string | null; href: string
   locked?: { note: string; plan?: string; viaOverlay: boolean } | null
+  alt?: { label: string; href: string }          // a second action on the row, shown as a small button
+  openPolicy?: { id: string; name: string }       // policies: the main action opens this policy itself
   Icon: React.ElementType
 }
 
@@ -42,6 +44,7 @@ export function AdminSearch({ account, onLocked }: { account: AccountKind; onLoc
   const { data: session } = useSession()
   const { features } = usePlanFeatures()
   const router = useRouter()
+  const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
   const [active, setActive] = useState(0)
@@ -92,7 +95,11 @@ export function AdminSearch({ account, onLocked }: { account: AccountKind; onLoc
     }
     const rec = (k: string, group: string, Icon: React.ElementType, base: string, withQ = false, to?: (id: string) => string) => (records?.[k] ?? []).forEach(r =>
       out.push({ key: `${k}-${r.id}`, group, title: r.title, sub: r.sub, href: to ? to(r.id) : withQ ? `${base}?q=${encodeURIComponent(r.title)}` : base, locked: lockOf(base), Icon }))
-    rec('policies', 'Your policies', FileText, '/policies', true)
+    ;(records?.policies ?? []).forEach(r => out.push({
+      key: `policies-${r.id}`, group: 'Your policies', title: r.title, sub: r.sub, Icon: FileText, locked: lockOf('/policies'),
+      href: `/policies?open=${encodeURIComponent(r.id)}&name=${encodeURIComponent(r.title)}`, openPolicy: { id: r.id, name: r.title },
+      alt: { label: 'Policies page', href: `/policies?q=${encodeURIComponent(r.title)}` },
+    }))
     rec('staff', 'Your staff', Users, '/staff', false, id => `/staff/${id}`)
     rec('residents', 'Your residents', Heart, '/knowledge', false, id => `/knowledge?resident=${id}`)
     rec('knowledge', 'Your knowledge base', BookOpen, '/knowledge')
@@ -117,7 +124,13 @@ export function AdminSearch({ account, onLocked }: { account: AccountKind; onLoc
       if (it.locked.viaOverlay) { onLocked(it.title); close(); return }
       router.push('/billing'); close(); return
     }
+    if (it.openPolicy && pathname === '/policies') { window.dispatchEvent(new CustomEvent('cs-open-policy', { detail: it.openPolicy })); close(); return }
     router.push(it.href); close()
+  }
+
+  function goAlt(it: Item) {
+    if (!it.alt) return
+    router.push(it.alt.href); close()
   }
 
   if (!enabled) return null
@@ -126,7 +139,7 @@ export function AdminSearch({ account, onLocked }: { account: AccountKind; onLoc
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} aria-label="Search CareStream"
-        className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-neutral-light/60 px-2.5 py-1.5 text-sm text-neutral-mid hover:border-teal/40 hover:text-neutral-dark md:w-60">
+        className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-neutral-light/60 px-2.5 py-1.5 text-sm text-neutral-mid hover:border-teal/40 hover:text-neutral-dark md:w-72 lg:w-96 xl:w-[28rem]">
         <Search size={15} />
         <span className="hidden flex-1 text-left md:inline">Search CareStream</span>
         <kbd className="hidden rounded border border-gray-200 bg-white px-1.5 text-[10px] font-medium text-neutral-mid md:inline">Ctrl K</kbd>
@@ -135,10 +148,10 @@ export function AdminSearch({ account, onLocked }: { account: AccountKind; onLoc
       {open && (
         <div className="fixed inset-0 z-[70] flex items-start justify-center px-3 pt-[10vh]" role="dialog" aria-modal="true" aria-label="Search CareStream">
           <div className="absolute inset-0 bg-black/40" onClick={close} />
-          <div className="relative w-full max-w-xl overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl">
+          <div className="relative w-full max-w-2xl overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl">
             <div className="flex items-center gap-2 border-b border-gray-100 px-4">
               <Search size={16} className="text-neutral-mid" />
-              <input ref={inputRef} value={q} onChange={e => setQ(e.target.value)} placeholder="Search pages, features, guides, policies, staff…"
+              <input ref={inputRef} value={q} onChange={e => setQ(e.target.value)} placeholder="Search pages, features, guides, policies, staff, residents…"
                 className="h-12 flex-1 bg-transparent text-sm text-neutral-dark outline-none placeholder:text-neutral-mid"
                 onKeyDown={e => {
                   if (e.key === 'Escape') close()
@@ -162,8 +175,9 @@ export function AdminSearch({ account, onLocked }: { account: AccountKind; onLoc
                 return (
                   <div key={it.key}>
                     {head && <p className="px-4 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-widest text-neutral-mid">{head}</p>}
+                    <div className={`flex items-start ${i === active ? 'bg-teal/5' : ''}`}>
                     <button type="button" onClick={() => go(it)} onMouseEnter={() => setActive(i)}
-                      className={`flex w-full items-start gap-3 px-4 py-2 text-left ${i === active ? 'bg-teal/5' : ''}`}>
+                      className="flex min-w-0 flex-1 items-start gap-3 py-2 pl-4 pr-2 text-left">
                       <it.Icon size={16} className={`mt-0.5 shrink-0 ${it.locked ? 'text-neutral-mid/60' : 'text-teal'}`} />
                       <span className="min-w-0 flex-1">
                         <span className={`flex flex-wrap items-center gap-2 text-sm font-medium ${it.locked ? 'text-neutral-mid' : 'text-neutral-dark'}`}>
@@ -171,10 +185,15 @@ export function AdminSearch({ account, onLocked }: { account: AccountKind; onLoc
                           {it.locked && <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700"><Lock size={9} /> {it.locked.plan ?? 'Upgrade'}</span>}
                         </span>
                         {it.sub && <span className="mt-0.5 line-clamp-2 block text-xs text-neutral-mid">{it.sub}</span>}
+                        {it.openPolicy && !it.locked && <span className="mt-0.5 block text-[11px] font-medium text-teal">Open this policy</span>}
                         {it.locked && <span className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-teal"><Sparkles size={11} /> {it.locked.note}. {it.locked.viaOverlay ? 'See what CareStream adds' : 'See plans'}</span>}
                       </span>
-                      {i === active && <CornerDownLeft size={13} className="mt-1 shrink-0 text-neutral-mid" />}
+                      {i === active && !it.alt && <CornerDownLeft size={13} className="mt-1 shrink-0 text-neutral-mid" />}
                     </button>
+                      {it.alt && !it.locked && (
+                        <button type="button" onClick={() => goAlt(it)} className="mr-3 mt-2 shrink-0 rounded-md border border-gray-200 px-2 py-1 text-[11px] font-medium text-neutral-mid hover:border-teal/40 hover:text-teal">{it.alt.label}</button>
+                      )}
+                    </div>
                   </div>
                 )
               })}

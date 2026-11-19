@@ -91,3 +91,12 @@ test('londonDay uses the London calendar day', () => {
   assert.equal(londonDay(new Date('2026-06-30T23:30:00Z')), '2026-07-01')   // BST
   assert.equal(londonDay(new Date('2026-12-01T23:30:00Z')), '2026-12-01')
 })
+
+test('daily strip: one entry per day so far, active where they did something, with minutes', () => {
+  const day = (n: number) => at(n).toISOString().slice(0, 10)
+  const r = computeSuperUser(base({ now: new Date(tagged.getTime() + 4.5 * DAY), events: { chat: [at(1), at(3)], cqc: [], audit: [], policy: [], followup: [], login: [] }, seconds: [{ day: day(1), seconds: 600 }] }))
+  assert.equal(r.daily.length, 5)                                  // days 0 to 4
+  assert.deepEqual(r.daily.map(d => d.active), [false, true, false, true, false])
+  assert.equal(r.daily[1].minutes, 10)
+  assert.ok(computeSuperUser(base()).daily.length === 60)           // capped at the 60 days
+})

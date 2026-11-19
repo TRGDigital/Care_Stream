@@ -714,6 +714,7 @@ export type SuperUserDetail = {
     baseline_per_week: number | null; window_per_week: number; trend: 'rising' | 'steady' | 'falling' | 'too_early'; trend_note: string
     training_completed: number; questions_asked: number
   }
+  daily?: Array<{ day: string; active: boolean; minutes: number }>
   checks: Array<{ key: string; label: string; ok: boolean; detail: string }>
   status: 'awaiting_consent' | 'paused' | 'in_window' | 'eligible' | 'not_met'
 }

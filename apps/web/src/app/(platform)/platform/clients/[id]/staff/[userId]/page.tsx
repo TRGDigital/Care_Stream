@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 import { usePlatformAuth } from '@/hooks/use-platform-auth'
-import { createPlatformClient } from '@/lib/platform-api'
+import { createPlatformClient, type SuperUserCard as SuperUserCardData } from '@/lib/platform-api'
+import { SuperUserCard } from '@/components/super-user/super-user-card'
 import { PlatformShell } from '@/components/platform-shell'
 
 // The full staff profile: everything we hold about one person, one tab at a time. Platform console only.
@@ -220,6 +221,14 @@ export default function StaffProfilePage() {
   const [loading, setLoading] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [chatPage, setChatPage] = useState(1)
+  // Is this person their company's Super User? If so the card shows how they are doing against everything we monitor.
+  const [superUser, setSuperUser] = useState<SuperUserCardData | null>(null)
+  useEffect(() => {
+    if (!token) return
+    createPlatformClient(token).tenants.superUser(id).then(setSuperUser).catch(() => setSuperUser(null))
+  }, [token, id])
+  async function reloadSuperUser() { if (token) setSuperUser(await createPlatformClient(token).tenants.superUser(id)) }
+  const isSuperUser = !!superUser?.super_user && superUser.super_user.person.id === userId
 
   useEffect(() => {
     if (!token || cache[tab]) return
@@ -251,6 +260,7 @@ export default function StaffProfilePage() {
             <h1 className="text-xl font-semibold text-neutral-dark">{header?.user?.name ?? 'Staff profile'}</h1>
             {header && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${ACTIVITY[header.activity.label] ?? 'bg-gray-100'}`}>{header.activity.label}</span>}
             {header && !header.user.is_active && <Chip>Deactivated</Chip>}
+            {isSuperUser && <Chip tone="purple">Super User{superUser?.super_user?.consent_at ? ': agreed' : ': not agreed yet'}</Chip>}
             {header?.user?.is_agency && <Chip tone="purple">Agency{header.user.agency_name ? `: ${header.user.agency_name}` : ''}</Chip>}
           </div>
           {header && <p className="mt-1 text-sm text-neutral-mid">{header.user.email} · {header.user.role}{header.user.job_role ? ` · ${header.user.job_role}` : ''}{header.user.phone_number ? ` · ${header.user.phone_number}` : ''} · Last active {when(header.activity.last_active_at) || 'never'} · Account added {day(header.user.created_at)}</p>}
@@ -259,6 +269,12 @@ export default function StaffProfilePage() {
         <div className="flex gap-1 overflow-x-auto border-b border-gray-200">
           {TABS.map(([k, l]) => <button key={k} onClick={() => setTab(k)} className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium ${tab === k ? 'border-teal text-teal' : 'border-transparent text-neutral-mid hover:text-neutral-dark'}`}>{l}</button>)}
         </div>
+
+        {isSuperUser && superUser && (
+          <SuperUserCard variant="platform" data={{ su: superUser.super_user, voucher: superUser.voucher, thresholds: superUser.thresholds }}
+            onMarkSent={async note => { await createPlatformClient(token!).tenants.markSuperUserVoucherSent(id, note); await reloadSuperUser() }}
+            onRemove={async () => { await createPlatformClient(token!).tenants.setSuperUser(id, userId, false); await reloadSuperUser() }} />
+        )}
 
         {error && <p className="text-sm text-red-600">{error}</p>}
         {!d && loading && <div className="flex justify-center py-16"><Loader2 size={22} className="animate-spin text-neutral-mid" /></div>}

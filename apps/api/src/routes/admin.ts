@@ -3212,6 +3212,13 @@ adminRouter.post('/knowledge-seeds/seed-all', async (_req: Request, res: Respons
 // ─── Blog Authors ─────────────────────────────────────────────────────────────
 
 
+
+// ─── GET /admin/site-activity?days=7: what visitors do on the public site (visitors who accepted analytics cookies) ───────────────
+adminRouter.get('/site-activity', async (req: Request, res: Response) => {
+  try { ok(res, await (await import('../lib/site-activity')).loadSiteActivity(Number(req.query.days) || 7)) }
+  catch (e: any) { err(res, 'FAILED', e?.message ?? 'Could not load site activity.', 500) }
+})
+
 // ─── Super User (CareStream side): the card on a client's page, tagging, and the voucher ────────────────────────────────────────────
 // GET /admin/tenants/:id/super-user: the full picture including eligibility and the voucher. Setting "due" happens here, the first time they are eligible.
 adminRouter.get('/tenants/:id/super-user', async (req: Request, res: Response) => {

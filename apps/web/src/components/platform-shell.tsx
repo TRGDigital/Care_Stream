@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { clsx } from 'clsx'
 import { clearPlatformToken } from '@/lib/platform-api'
 import {
-  LayoutDashboard, Building2, BarChart2, BookOpen, FileText, LogOut, Sparkles, PoundSterling, Newspaper, ShieldCheck, ClipboardCheck, LineChart, UserPlus, GraduationCap, Mail, Lightbulb, Award, Languages, MessageSquareText, SearchCheck, ListChecks, LifeBuoy, ShoppingCart, Milestone,
+  LayoutDashboard, MousePointerClick, Building2, BarChart2, BookOpen, FileText, LogOut, Sparkles, PoundSterling, Newspaper, ShieldCheck, ClipboardCheck, LineChart, UserPlus, GraduationCap, Mail, Lightbulb, Award, Languages, MessageSquareText, SearchCheck, ListChecks, LifeBuoy, ShoppingCart, Milestone,
   Scale, ImageIcon, FileCheck2,
 } from 'lucide-react'
 
@@ -16,6 +16,7 @@ const NAV_GROUPS: Array<{ title: string | null; items: Array<{ href: string; lab
     title: null,
     items: [
       { href: '/platform/dashboard',       label: 'Dashboard',        Icon: LayoutDashboard },
+      { href: '/platform/site-activity',   label: 'Site activity',    Icon: MousePointerClick },
     ],
   },
   {

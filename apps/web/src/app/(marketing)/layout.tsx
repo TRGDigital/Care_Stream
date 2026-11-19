@@ -8,6 +8,7 @@ import { PopEmbed } from '@/components/marketing/pop-embed'
 import { WebsiteChat } from '@/components/marketing/website-chat'
 import { FunnelInsightsTracker } from '@/components/marketing/funnel-insights-tracker'
 import { FunnelInsightsVisitor } from '@/components/marketing/funnel-insights-visitor'
+import { SiteTracker } from '@/components/marketing/site-tracker'
 import { OffersProvider } from '@/lib/offers'
 import { getActiveOffers } from '@/lib/offers-server'
 import { ShipNowRoot } from '@/components/marketing/ship-now'
@@ -33,6 +34,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
         <main className="flex-1">{children}</main>
         <FunnelInsightsTracker />
         <FunnelInsightsVisitor />
+        <SiteTracker />
         <MarketingFooter />
       </div>
       <WebsiteChat />

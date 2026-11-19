@@ -308,6 +308,44 @@ residentsRouter.post('/:id/invites', async (req: Request, res: Response) => {
   ok(res, inviteDto(invite), 201)
 })
 
+// A link to copy and send yourself (in your own email, a message or a letter) instead of having CareStream email it.
+// Only the hash of a link is stored, so an existing link cannot be shown again: copying a link for someone already
+// invited makes a NEW one, and the one sent before stops working. The email address is optional here.
+const LinkSchema = z.object({ email: z.union([z.literal(''), z.string().trim().toLowerCase().email().max(200)]).optional(), name: z.string().trim().min(1).max(100), relationship: z.string().trim().min(1).max(60) })
+
+residentsRouter.post('/:id/invites/link', async (req: Request, res: Response) => {
+  const p = LinkSchema.safeParse(req.body)
+  if (!p.success) { err(res, 'VALIDATION_ERROR', 'Please give a name and how they know the resident. An email address is optional.'); return }
+  const tenantId = getTenantId()
+  const r = await loadResident(tenantId, String(req.params.id))
+  if (!r) { err(res, 'NOT_FOUND', 'Resident not found.', 404); return }
+  if (r.status !== 'living') { err(res, 'ARCHIVED', 'You cannot invite family for an archived profile.', 409); return }
+  const active = await db.residentInvite.findMany({ where: { tenant_id: tenantId, resident_id: r.id, revoked_at: null } })
+  if (active.length >= 10) { err(res, 'LIMIT', 'You can have up to 10 invitations for one resident.', 403); return }
+  const email = p.data.email ?? ''
+  if (email && active.some((i: any) => i.email === email)) { err(res, 'DUPLICATE', 'That person has already been invited. Use Copy link on their row instead.', 409); return }
+  const a = await actor(req)
+  const { token, hash } = newInviteToken()
+  const invite = await db.residentInvite.create({
+    data: { tenant_id: tenantId, resident_id: r.id, email, name: cleanText(p.data.name, 100), relationship: cleanText(p.data.relationship, 60), token_hash: hash, expires_at: new Date(Date.now() + INVITE_DAYS * 86400000), created_by: a.email },
+  })
+  void writeAuditLog({ tenant_id: tenantId, user_id: a.id, event_type: 'resident_family_link_created', entity_type: 'resident', entity_id: r.id, metadata: { relationship: p.data.relationship, new_person: true } })
+  ok(res, { invite: inviteDto(invite), link: `${siteUrl()}/family/${token}` }, 201)
+})
+
+residentsRouter.post('/:id/invites/:inviteId/link', async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const r = await loadResident(tenantId, String(req.params.id))
+  const inv = r ? await db.residentInvite.findFirst({ where: { id: String(req.params.inviteId), resident_id: r.id, tenant_id: tenantId } }) : null
+  if (!r || !inv || inv.revoked_at) { err(res, 'NOT_FOUND', 'Invitation not found.', 404); return }
+  if (r.status !== 'living') { err(res, 'ARCHIVED', 'You cannot invite family for an archived profile.', 409); return }
+  const a = await actor(req)
+  const { token, hash } = newInviteToken()
+  const updated = await db.residentInvite.update({ where: { id: inv.id }, data: { token_hash: hash, expires_at: new Date(Date.now() + INVITE_DAYS * 86400000), opened_at: null, submitted_at: null } })
+  void writeAuditLog({ tenant_id: tenantId, user_id: a.id, event_type: 'resident_family_link_created', entity_type: 'resident', entity_id: r.id, metadata: { relationship: inv.relationship, new_person: false } })
+  ok(res, { invite: inviteDto(updated), link: `${siteUrl()}/family/${token}` })
+})
+
 residentsRouter.post('/:id/invites/:inviteId/resend', async (req: Request, res: Response) => {
   const tenantId = getTenantId()
   const r = await loadResident(tenantId, String(req.params.id))

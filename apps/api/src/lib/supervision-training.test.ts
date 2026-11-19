@@ -75,3 +75,30 @@ test('an expired row that is not also overdue is only listed as expired', () => 
   assert.equal(b.training.overdue.length, 0)
   assert.equal(b.training.expired.length, 1)
 })
+
+import { courseDetailOf } from './supervision-training'
+const mod = { id: 'm1', name: 'Infection control', source: 'manual', cpd_accredited: false, questions: [
+  { id: 'q1', text: 'When must you wash hands?', options: ['Before and after', 'Only after', 'Never', 'If dirty'], correct: 0 },
+  { id: 'q2', text: 'Which PPE for body fluids?', options: ['Gloves and apron', 'Nothing', 'Mask only', 'Hat'], correct: 0 },
+  { id: 'q3', text: 'Third', options: ['a', 'b', 'c', 'd'], correct: 2 } ] }
+test('what was answered wrongly is shown with their answer and the right one', () => {
+  const c = courseDetailOf({ id: 'e1', status: 'in_progress', created_at: day(-3), learn_seconds: 600, module: mod, answers: [
+    { question_id: 'q1', answer_text: 'B', is_correct: false, answered_at: day(-2) },
+    { question_id: 'q2', answer_text: 'A', is_correct: true, answered_at: day(-2) },
+    { question_id: 'q3', answer_text: 'D', is_correct: false, answered_at: day(-1) } ] }, now)
+  assert.equal(c.status, 'started'); assert.equal(c.answered, 2 + 1); assert.equal(c.correct, 1); assert.equal(c.score_pct, 33); assert.equal(c.total_questions, 3)
+  assert.equal(c.incorrect.length, 2)
+  assert.deepEqual(c.incorrect[0], { question: 'When must you wash hands?', their_answer: { letter: 'B', text: 'Only after' }, correct_answer: { letter: 'A', text: 'Before and after' } })
+  assert.equal(c.incorrect[1].correct_answer?.letter, 'C')
+  assert.equal(c.learn_minutes, 10)
+})
+test('status: nothing opened is not started; complete is complete; past expiry is expired', () => {
+  assert.equal(courseDetailOf({ id: 'e', status: 'not_started', created_at: day(-1), module: mod, answers: [] }, now).status, 'not_started')
+  assert.equal(courseDetailOf({ id: 'e', status: 'complete', created_at: day(-9), completed_at: day(-8), expires_at: day(300), module: mod, answers: [] }, now).status, 'complete')
+  assert.equal(courseDetailOf({ id: 'e', status: 'complete', created_at: day(-900), completed_at: day(-800), expires_at: day(-5), module: mod, answers: [] }, now).status, 'expired')
+  assert.equal(courseDetailOf({ id: 'e', status: 'not_started', created_at: day(-9), due_date: day(-2), module: mod, answers: [] }, now).overdue, true)
+})
+test('a question that no longer exists still shows, without made up options', () => {
+  const c = courseDetailOf({ id: 'e', status: 'in_progress', created_at: day(-1), module: { ...mod, questions: [] }, answers: [{ question_id: 'gone', question_text: 'Old question', answer_text: 'B', is_correct: false }] }, now)
+  assert.equal(c.incorrect[0].question, 'Old question'); assert.equal(c.incorrect[0].their_answer?.text, null); assert.equal(c.incorrect[0].correct_answer, null)
+})

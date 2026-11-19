@@ -222,7 +222,7 @@ function SupModal({ token, userId, staff, onClose, onSaved }: { token: string; u
 
         <div className="max-h-[70vh] space-y-5 overflow-y-auto px-6 py-5">
           {/* Training brief (only where training is linked to supervisions) */}
-          <AdminTrainingBrief token={token} userId={staff.id} name={staff.name} />
+          <AdminTrainingBrief token={token} userId={staff.id} name={staff.name} supervisionId={records.filter(r => r.status === 'booked').sort((a, b) => new Date(a.held_on).getTime() - new Date(b.held_on).getTime())[0]?.id} />
 
           {/* Log a new session */}
           <div className="rounded-lg border border-gray-200 bg-neutral-light/40 p-4">

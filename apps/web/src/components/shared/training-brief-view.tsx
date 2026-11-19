@@ -21,7 +21,7 @@ function Group({ title, tone, items, extra }: { title: string; tone: 'red' | 'am
   )
 }
 
-export function TrainingBriefView({ brief }: { brief: TrainingBrief }) {
+export function TrainingBriefView({ brief, onDetail }: { brief: TrainingBrief; onDetail?: () => void }) {
   const t = brief.training
   return (
     <div className="space-y-4">
@@ -63,6 +63,7 @@ export function TrainingBriefView({ brief }: { brief: TrainingBrief }) {
       {brief.topics.length === 0 && t.overdue.length === 0 && (
         <p className="flex items-center gap-1.5 text-sm text-green-700"><CheckCircle2 size={15} /> Nothing to flag on training.</p>
       )}
+      {onDetail && <button type="button" onClick={onDetail} className="inline-flex items-center gap-1.5 rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-dark">See the training in full: scores, what was answered wrongly, follow up</button>}
       <p className="text-[11px] text-neutral-mid/80">Built from their training records on {d(brief.generated_at)}. Shown to the supervisor and admins only.</p>
     </div>
   )

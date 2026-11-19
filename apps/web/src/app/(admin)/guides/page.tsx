@@ -2447,7 +2447,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Supervisions and appraisals">
           <p className="text-sm text-neutral-mid">
-            The <strong>Supervisions &amp; appraisals</strong> tab on the Compliance page is where you book and track each staff member&rsquo;s 1:1 supervisions and annual appraisals, showing their last session and next booked or due date, colour coded so overdue ones stand out. Unlike the rest of the register, <strong>supervisions are available on every plan</strong>, and they have their own recording form, agreed-action tracking and allocation flow.
+            The <strong>Supervisions &amp; appraisals</strong> tab on the Compliance page is where you book and track each staff member&rsquo;s 1:1 supervisions and annual appraisals, showing their last session and next booked or due date, colour coded so overdue ones stand out. Supervisions and appraisals are part of the <strong>Enterprise plan</strong>, and they have their own recording form, agreed-action tracking and allocation flow. On Enterprise, they also link to training: see <em>Training and supervisions, linked</em>.
           </p>
           <div className="mt-2"><Tip>See the dedicated <strong>Supervisions</strong> guide below for the full flow: booking, choosing who conducts it, completing the recording form, and allocating training, induction or CQC prep off the agreed actions.</Tip></div>
         </SectionBlock>
@@ -2951,7 +2951,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={2}>Under <strong>Upgrade your plan</strong>, the higher tiers available to you are listed with their features and price.</Step>
             <Step n={3}>Click <strong>Upgrade to …</strong> to go to secure Stripe checkout. Upgrades take effect immediately and unlock the new features straight away.</Step>
           </div>
-          <Tip>Locked features (for example Face-to-face training, Build your own audit, or the Effectiveness and Training Impact reports) show an <strong>Upgrade</strong> prompt that takes you to Billing. Your existing data is always kept exactly as it is when you change plan.</Tip>
+          <Tip>Locked features (for example Face-to-face training, Build your own audit, Supervisions and appraisals with training linked to them, or the Effectiveness and Training Impact reports) show an <strong>Upgrade</strong> prompt that takes you to Billing. Your existing data is always kept exactly as it is when you change plan.</Tip>
         </SectionBlock>
 
         <SectionBlock title="Managing payment & invoices">

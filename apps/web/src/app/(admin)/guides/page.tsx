@@ -2462,9 +2462,9 @@ const GUIDE_SECTIONS: GuideSection[] = [
     summary: 'Book supervisions and appraisals, record them on a structured form, and allocate the training, induction or CQC prep that comes out of them',
     content: (
       <div className="space-y-5">
-        <SectionBlock title="What it is, available on every plan">
+        <SectionBlock title="What it is, available on the Enterprise plan">
           <p className="text-sm text-neutral-mid">
-            Supervisions let you book and record each staff member&rsquo;s 1:1 supervisions and annual appraisals, complete a structured recording form, and turn what you agree into actions and allocations that land straight in the staff member&rsquo;s hub. It is available on <strong>every plan</strong>. Every completed session is kept on the staff member&rsquo;s record as CQC evidence.
+            Supervisions let you book and record each staff member&rsquo;s 1:1 supervisions and annual appraisals, complete a structured recording form, and turn what you agree into actions and allocations that land straight in the staff member&rsquo;s hub. It is part of the <strong>Enterprise plan</strong>, in the Compliance area. Every completed session is kept on the staff member&rsquo;s record as CQC evidence.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
             You book and track sessions from <strong>Compliance &rarr; Supervisions &amp; appraisals</strong> in the Team section of the sidebar. The whole flow has three stages: <strong>book</strong> the session and choose who conducts it, the conductor <strong>records</strong> it on the form, and the agreed actions are <strong>allocated</strong> to the staff member.
@@ -2535,6 +2535,21 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Every completed supervision is saved on the staff member&rsquo;s <strong>record page</strong>, listed under their supervisions with a link to <strong>open the full form</strong> and the <strong>next session booked</strong> off it. Any items allocated from an action show a small badge on the record, so you can see at a glance what came out of each session. The register keeps colour-coding the last and next dates so overdue supervisions stand out.
           </p>
           <div className="mt-3"><Tip>Staff can see their own booked and past sessions in their hub under <strong>Supervisions</strong>. You can turn the confirmation and reminder emails on or off under <strong>Settings &rarr; Email communications &rarr; Supervisions &amp; appraisals</strong>.</Tip></div>
+        </SectionBlock>
+
+        <SectionBlock title="Training and supervisions, linked">
+          <p className="text-sm text-neutral-mid">
+            Supervisions are where a manager decides what someone needs, and training is how it gets done. CareStream links the two, so you go into a supervision knowing how the person is doing on their training, and what you agree turns into training that closes itself.
+          </p>
+          <div className="mt-3 space-y-3">
+            <Step n={1}><strong>The training brief.</strong> Before the meeting, open the person from <em>Compliance &rarr; Supervisions &amp; appraisals</em>, or open the recording form in your hub, and expand <strong>Training brief</strong>. It shows what is overdue, due soon or expired, low scores, what they have finished since the last supervision, CQC prep gaps, unanswered questions and open actions, with a short <strong>Worth raising</strong> list.</Step>
+            <Step n={2}><strong>The training in full.</strong> Press <strong>See the training in full</strong> for a card per course: status, dates, score, time on the lesson, the pre-course check, and every question answered wrongly with their answer and the correct one. With more than one course, each is an accordion that starts closed with a one-line summary, and <strong>Open all</strong> opens them together.</Step>
+            <Step n={3}><strong>Suggestions.</strong> At the top of that page, ideas for the conversation based on how they did: for example a low score on a topic, a clear learning gain, a course that is overdue, or all attempts used. Each shows the evidence it is based on. They are worked out from the scores and answers by fixed rules, not by AI, so they cost nothing and are the same every time. They are prompts, not judgements, and short courses are worded as &ldquo;worth checking&rdquo;. <strong>Add as agreed action</strong> puts one on the supervision.</Step>
+            <Step n={4}><strong>Print or email it.</strong> Use <strong>Print</strong> for a clean page with the CareStream logo, or <strong>Send to email</strong> to send it to yourself or another administrator on the account. It can only go to an administrator, because it holds a staff member&rsquo;s training records.</Step>
+            <Step n={5}><strong>Allocate training to a supervision.</strong> When you assign a course, tick <strong>Also add to their next supervision</strong>. It adds an action to each person&rsquo;s next booked supervision, and the action closes by itself when they complete the course. Nothing is added unless you tick it, and nothing is created for someone with no supervision booked.</Step>
+            <Step n={6}><strong>A snapshot in the record.</strong> When a supervision is completed, a short summary of their training at that time is saved in the record, so it shows what was true on the day. It cannot be edited afterwards.</Step>
+          </div>
+          <div className="mt-3"><Tip>The brief, the training detail and the suggestions are for the supervisor and administrators only. Staff do not see them, but they can see the actions that come out of the supervision in their hub. Tell your staff in your policies that their training results may be discussed in supervisions.</Tip></div>
         </SectionBlock>
       </div>
     ),

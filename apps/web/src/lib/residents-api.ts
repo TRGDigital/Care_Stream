@@ -148,6 +148,10 @@ export function createResidentsClient(token: string) {
 
     invite: (id: string, data: { email: string; name: string; relationship: string }) =>
       call<ResidentInvite>(`/residents/${id}/invites`, token, { method: 'POST', body: j(data) }),
+    createInviteLink: (id: string, data: { email?: string; name: string; relationship: string }) =>
+      call<{ invite: ResidentInvite; link: string }>(`/residents/${id}/invites/link`, token, { method: 'POST', body: j(data) }),
+    copyInviteLink: (id: string, inviteId: string) =>
+      call<{ invite: ResidentInvite; link: string }>(`/residents/${id}/invites/${inviteId}/link`, token, { method: 'POST' }),
     resendInvite: (id: string, inviteId: string) => call<ResidentInvite>(`/residents/${id}/invites/${inviteId}/resend`, token, { method: 'POST' }),
     revokeInvite: (id: string, inviteId: string) => call<{ revoked: boolean }>(`/residents/${id}/invites/${inviteId}`, token, { method: 'DELETE' }),
 

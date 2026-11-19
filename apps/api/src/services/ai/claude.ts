@@ -86,6 +86,31 @@ export async function callClaude(
 
 // Streaming variant — emits text deltas via onText as they arrive, and resolves with the
 // full text once complete. Used by the chat to stream the answer paragraph by paragraph.
+/** One short reply about an image (alt text and similar). The image is sent as base64 (png, jpeg or webp). */
+export async function callClaudeWithImage(
+  systemPrompt: string,
+  userMessage:  string,
+  imageBase64:  string,
+  mediaType:    'image/png' | 'image/jpeg' | 'image/webp' = 'image/jpeg',
+  options?:     ClaudeOptions,
+): Promise<string> {
+  const model = options?.model ?? MODEL
+  const response = await client.messages.create({
+    model,
+    max_tokens: options?.maxTokens ?? 300,
+    ...(options?.temperature !== undefined ? { temperature: options.temperature } : {}),
+    system:     withBritishEnglish(systemPrompt),
+    messages:   [{ role: 'user', content: [
+      { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageBase64 } },
+      { type: 'text', text: userMessage },
+    ] }],
+  })
+  recordUsage(model, response.usage)
+  const block = response.content[0]
+  if (!block || block.type !== 'text') throw new Error('Claude returned no text content')
+  return block.text
+}
+
 export async function callClaudeStream(
   systemPrompt: string,
   messages:     Anthropic.Messages.MessageParam[],

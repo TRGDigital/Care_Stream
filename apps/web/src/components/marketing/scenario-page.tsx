@@ -69,9 +69,11 @@ export function ScenarioPageView({ s, readNext }: { s: Scenario; readNext: Scena
 
       <section className="uc-sec">
         <div className="uc-wrap">
-          <div className="uc-head"><span className="uc-eyebrow">The scenario</span><h2>{s.intro.heading}</h2><p className="sub">{s.intro.sub}</p></div>
           <div className="scn-intro">
-            <H as="p" className="uc-intro" html={s.intro.paragraph} />
+            <div className="scn-intro-copy">
+              <div className="uc-head"><span className="uc-eyebrow">The scenario</span><h2>{s.intro.heading}</h2><p className="sub">{s.intro.sub}</p></div>
+              <H as="p" className="uc-intro" html={s.intro.paragraph} />
+            </div>
             <figure className="scn-fig"><SiteImage src={s.image} alt={s.image_alt} /></figure>
           </div>
           <div className="trail" role="list">
@@ -124,15 +126,23 @@ export function ScenarioPageView({ s, readNext }: { s: Scenario; readNext: Scena
       </section>
 
       <section className="uc-sec">
-        <div className="uc-wrap uc-narrow">
+        <div className="uc-wrap">
           <div className="uc-head"><span className="uc-eyebrow">Talk it through</span><h2>{s.talk.heading}</h2><p className="sub">{s.talk.sub}</p></div>
-          <div className="talk">
-            {s.talk.items.map((t, i) => (
-              <div key={i} style={{ display: 'contents' }}>
-                <div className="tq"><span className="who">Manager</span><p>{t.q}</p></div>
-                <div className="ta"><span className="who">CareStream</span><H as="p" html={t.a} /></div>
-              </div>
-            ))}
+          <div className="scn-talk">
+            <div className="talk">
+              {s.talk.items.map((t, i) => (
+                <div key={i} style={{ display: 'contents' }}>
+                  <div className="tq"><span className="who">Manager</span><p>{t.q}</p></div>
+                  <div className="ta"><span className="who">CareStream</span><H as="p" html={t.a} /></div>
+                </div>
+              ))}
+            </div>
+            <aside className="scn-mgr" aria-hidden="true">
+              <figure>
+                <SiteImage src={`/scenarios/manager-${(s.order % 4) + 1}.webp`} alt="" />
+                <figcaption><b>You</b> asking CareStream</figcaption>
+              </figure>
+            </aside>
           </div>
         </div>
       </section>

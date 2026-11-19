@@ -103,8 +103,22 @@
 
 .ucpage.scn .uc-lede a,.ucpage.scn .talk a,.ucpage.scn .uc-sec .sub a{color:#7B3FBF;text-decoration:underline;text-underline-offset:3px}
 
-.ucpage.scn .scn-intro{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:40px;align-items:center;margin:0 0 40px}
-.ucpage.scn .scn-intro .uc-intro{margin:0}
+/* The scenario: the heading and paragraph on the left, the picture level with the heading on the right. */
+.ucpage.scn .scn-intro{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:48px;align-items:start;margin:0 0 44px}
+.ucpage.scn .scn-intro .uc-head{margin-bottom:18px}
+.ucpage.scn .scn-intro .uc-intro{margin:0;max-width:none}
 .ucpage.scn .scn-fig{margin:0;border-radius:16px;overflow:hidden;border:1px solid #E9E5EF;box-shadow:0 2px 4px rgba(23,18,31,.04),0 18px 44px rgba(23,18,31,.08)}
 .ucpage.scn .scn-fig img{display:block;width:100%;height:auto}
-@media(max-width:900px){.ucpage.scn .scn-intro{grid-template-columns:minmax(0,1fr);gap:24px}}
+/* Talk it through: the conversation runs from the left edge, with the manager pinned beside it. */
+.ucpage.scn .scn-talk{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(240px,.7fr);gap:56px;align-items:start}
+.ucpage.scn .scn-talk .talk{min-width:0}
+.ucpage.scn .scn-mgr{position:sticky;top:110px}
+.ucpage.scn .scn-mgr figure{margin:0;border-radius:18px;overflow:hidden;border:1px solid #E9E5EF;background:#F7F5FA;box-shadow:0 2px 4px rgba(23,18,31,.04),0 18px 44px rgba(23,18,31,.08)}
+.ucpage.scn .scn-mgr img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover}
+.ucpage.scn .scn-mgr figcaption{padding:12px 16px;font-size:.84rem;color:#6B6577;border-top:1px solid #E9E5EF;background:#fff}
+.ucpage.scn .scn-mgr figcaption b{color:#17121F}
+@media(max-width:900px){
+  .ucpage.scn .scn-intro{grid-template-columns:minmax(0,1fr);gap:24px}
+  .ucpage.scn .scn-talk{grid-template-columns:minmax(0,1fr);gap:24px}
+  .ucpage.scn .scn-mgr{position:static;order:-1;max-width:220px}
+}

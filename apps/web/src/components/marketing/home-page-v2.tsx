@@ -7,6 +7,8 @@ import { HomeVideo } from './home-video'
 import { FreeBanner } from './free-banner'
 import { HomeAccordion } from './home-accordion'
 import { HomeLines } from './home-lines'
+import { HomeWhy } from './home-why'
+import { publishedScenarios } from '@/data/scenarios'
 import { REVIEWS } from '@/lib/reviews'
 import './home-page-v2.css'
 
@@ -152,6 +154,8 @@ const STEPS: [string, boolean, React.ReactNode][] = [
 ]
 
 export function HomePageV2({ s, showFree = false }: { s: HomeCopy; showFree?: boolean }) {
+  // Published scenario pages, as slides for "Why should I use CareStream?" (nothing renders if there are none).
+  const why = publishedScenarios().map(x => ({ slug: x.slug, title: x.card_title, snippet: x.card_snippet, image: x.image, alt: x.image_alt }))
   const accordion = [1, 2, 3, 4, 5].map(n => ({ title: s(`pi.a${n}.title`), body: s(`pi.a${n}.body`) }))
   const training = [1, 2, 3, 4, 5].map(n => ({ title: s(`training.a${n}.title`), body: s(`training.a${n}.body`) }))
 
@@ -414,6 +418,12 @@ export function HomePageV2({ s, showFree = false }: { s: HomeCopy; showFree?: bo
             <h2><Lines text={s('showcase.h2')} /></h2>
           </>} />
         </section>
+
+        {why.length > 0 && (
+          <section>
+            <HomeWhy slides={why} eyebrow="Scenarios" heading="Why should I use CareStream?" />
+          </section>
+        )}
 
         <section>
           <div className="wrap">

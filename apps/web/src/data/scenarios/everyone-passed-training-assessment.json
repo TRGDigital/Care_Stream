@@ -1,0 +1,414 @@
+{
+ "slug": "everyone-passed-training-assessment",
+ "status": "draft",
+ "order": 13,
+ "title": "Everyone passed. <em>Is knowledge retention as good as the pass mark?</em>",
+ "meta_title": "Knowledge Retention in Care Homes After Training | CareStreamAI",
+ "meta_description": "Everyone passed the assessment, but will they remember it? Check knowledge retention after training with short questions built from your own policies.",
+ "eyebrow": "Scenario",
+ "lede": "Everyone passed on the day, and that is good news. But passing in the room does not show <b>knowledge retention</b> on the floor a month later. CareStream lets you ask again, with short questions built from your own policies, through <a href=\"/training-platform\">adhoc training</a>, and gives anyone who slips a short lesson on that exact point.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After the assessment",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Trainer reports everyone passed",
+    "note": "Day 0",
+    "done": true
+   },
+   {
+    "label": "Certificates filed",
+    "note": "Day 0",
+    "done": true
+   },
+   {
+    "label": "Asked again, away from the room",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Anything forgotten, spotted and fixed",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/51fc0fb2-cb25-4f92-95b4-e90af21756a0.webp",
+ "image_alt": "A manager holding a clipboard talking quietly to a carer who looks unsure, while other carers chat in a lounge behind them",
+ "card_title": "The trainer says everyone passed. Will they remember it next month?",
+ "card_snippet": "Passing a test on the day does not show what a carer still knows weeks later. Ask again with short questions built from your own policies, and turn any wrong answer into a short lesson.",
+ "primary_keyword": "knowledge retention",
+ "secondary_keywords": [
+  "retrieval practice",
+  "knowledge assessment",
+  "learning retention",
+  "training retention",
+  "learning assessment",
+  "assessing competence",
+  "spaced learning",
+  "check for understanding"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Adhoc training from your policies, with wrong answers that become short lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Adhoc training",
+   "body": "Allocate a short topic module after any session, and see who needs another look.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "CQC and compliance",
+   "body": "Evidence that builds itself, and a readiness report for your next inspection.",
+   "action": "See CQC and compliance",
+   "href": "/cqc-compliance"
+  }
+ ],
+ "intro": {
+  "heading": "They passed. Now what will they remember?",
+  "sub": "A scenario we see in many care homes.",
+  "paragraph": "A trainer has run safeguarding for the whole team and phones the manager afterwards. Everyone passed. The certificates arrive, the pass marks are good and the file is tidy. Nobody has done anything wrong. But a test in the room, with the slides fresh, is a different thing from a carer remembering the answer on a busy Tuesday afternoon. The manager is quietly unsure which carers will recall it under pressure, and has no easy way to ask without making it feel like a test. Here is how it plays out."
+ },
+ "trail": [
+  {
+   "when": "Morning",
+   "text": "A trainer delivers safeguarding to the whole team.",
+   "kind": "ok"
+  },
+  {
+   "when": "End of session",
+   "text": "The short assessment is marked. Everyone passes.",
+   "kind": "ok"
+  },
+  {
+   "when": "Next day",
+   "text": "The trainer reports back. The certificates go in the file.",
+   "kind": "ok"
+  },
+  {
+   "when": "Three weeks later",
+   "text": "The manager sees a carer hesitate over who to tell about a worry.",
+   "kind": "gap"
+  },
+  {
+   "when": "What nobody knows",
+   "text": "Whether that is one carer on a bad day, or a few.",
+   "kind": "gap"
+  },
+  {
+   "when": "Why it is hard to ask",
+   "text": "Asking everyone again feels like a test, and there is no time.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "A pass mark from the day. Nothing from the weeks since.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“How do you know your staff still remember their training?”",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The assessment was fine. It just measured one moment.</b> What matters is what staff still know weeks later. Here is how CareStream helps you find out, without replacing the trainer or the pass mark.",
+ "why": {
+  "heading": "A pass on the day shows who understood then, not who remembers now",
+  "sub": "A carer who answered well in the room may still hesitate on the floor, and nobody sees it until it matters.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Passing is not the same as remembering",
+    "body": "Answers given with the slides in view and the trainer in the room come easily. Weeks later, with no prompt and a busy shift, recall is harder."
+   },
+   {
+    "icon": "tick",
+    "title": "Asking again helps people remember",
+    "body": "Being asked to recall something is one of the best ways to keep hold of it. A short question a few weeks on is a check and a memory boost together."
+   },
+   {
+    "icon": "alert",
+    "title": "Nobody has time to re-test everyone",
+    "body": "Writing fresh questions and marking them for every carer is work a manager cannot fit in. So the question mostly goes unasked."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, a second look out.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a carer meet it.",
+  "blocks": [
+   {
+    "heading": "Ask again a few weeks on, with questions from your own policies",
+    "bullets": [
+     "Allocate an adhoc training module on the same topic, such as safeguarding, and tick the staff who sat the session",
+     "Questions are built from your own policies, with general good practice as the fallback. You can edit and preview them first",
+     "Doing this some weeks after the session is a simple form of spaced learning, and it gives you a knowledge assessment away from the room"
+    ],
+    "tags": [
+     {
+      "label": "Adhoc training",
+      "href": "/uses/adhoc-training"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Safeguarding Adults",
+     "questions": [
+      "Who do you tell first if you are worried a person is being abused?",
+      "A resident tells you something in confidence. What do you say?",
+      "Where do you find the safeguarding lead's details?"
+     ],
+     "staff_count": 18
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson, then a fresh question",
+    "bullets": [
+     "A wrong answer goes into the carer's Follow-up tab in the Staff Hub, and they get an email, at most once a day",
+     "They choose Learn &amp; retry, a short lesson (why it matters, remember, picture this) then a fresh question, or Just retry the same one",
+     "Being asked to recall the answer is retrieval practice, and carers can retry as often as they need"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Safeguarding course",
+      "href": "/staff-training/safeguarding-adults-and-children"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Safeguarding Adults",
+     "question": "A resident tells you something in confidence. What do you say?",
+     "why": "You cannot promise to keep a safeguarding concern secret, because the person or others may be at risk.",
+     "remember": [
+      "Stay calm and listen",
+      "Explain who you must tell",
+      "Record what was said"
+     ],
+     "picture": "A resident whispers something worrying after lunch and asks you not to repeat it."
+    }
+   },
+   {
+    "heading": "Staff recall it more easily in the language they think in",
+    "bullets": [
+     "A carer who gets a question wrong because of one missed word can open the lesson in their own language",
+     "Your admin sets their second language, and they switch to it in the hub",
+     "Translation is part of the paid plans, and it helps learning retention for carers who work in a second language"
+    ],
+    "tags": [
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish"
+    }
+   },
+   {
+    "heading": "See what is slipping, and whether the gaps close",
+    "bullets": [
+     "The Knowledge gaps view shows the most missed questions and the weakest topics, which is a clear picture of training retention across the team",
+     "See how gaps are being closed, and how many staff have engaged with the lessons",
+     "A Monday digest email brings the picture to you, so you do not have to go looking"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 6,
+      "affected": 5,
+      "closed": 14,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Who to tell about a concern",
+       "4 staff"
+      ],
+      [
+       "Keeping a disclosure secret",
+       "3 staff"
+      ],
+      [
+       "Finding the safeguarding lead",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Safeguarding Adults",
+       "5 gaps"
+      ],
+      [
+       "Medication",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "My trainer says everyone passed. Why would I check again?",
+    "a": "Because the pass tells you who understood on the day, and the trainer did their job. What it cannot tell you is who still remembers in a month. A short second check shows that, and it does not question the trainer or the pass mark."
+   },
+   {
+    "q": "How does CareStream check what people remember?",
+    "a": "You allocate an <a href=\"/uses/adhoc-training\">adhoc training module</a> on the topic in the Training screen. It is built from your own policies, with general good practice as the fallback, and you can edit and preview it first. Staff complete it in the Staff Hub on their own phone."
+   },
+   {
+    "q": "What happens when a carer gets something wrong?",
+    "a": "It goes into their Follow-up tab and they get an email, at most once a day, in English. They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question. They can retry as often as they like. Being asked to recall the answer is retrieval practice, which is a good way to make it stick."
+   },
+   {
+    "q": "Does CareStream space the questions out for me?",
+    "a": "Not automatically. You choose when to allocate the module, so asking some weeks after the session is up to you. Nothing is triggered by the session itself. Spacing it out is easy to do, but it is a manager decision."
+   },
+   {
+    "q": "Will I be told every time someone gets a question wrong?",
+    "a": "No. Nothing alerts you on each wrong answer, which keeps the check low pressure for staff. You see the picture in <a href=\"/training-platform\">Knowledge gaps</a>, with open gaps, staff affected, the most missed questions and the weakest topics, plus a Monday digest email."
+   },
+   {
+    "q": "Does this prove a carer is competent?",
+    "a": "No. It is a check for understanding and a record of it, not proof of practical skill. For hands on skills a competent person still needs to watch the work. See <a href=\"/blog/what-compliant-actually-means-for-one-care-staff-member\">what compliant means for one staff member</a>."
+   },
+   {
+    "q": "What can I show an inspector?",
+    "a": "A record of what each person was asked, what they got wrong, the lesson they were given and whether it then landed. It sits alongside the rest of your <a href=\"/cqc-compliance\">CQC evidence</a> and answers how you know training is still working."
+   },
+   {
+    "q": "What does it cost, and can I try it?",
+    "a": "There is a 14 day free trial on the paid plans, so you can try adhoc training with your own team. Create a <a href=\"/register\">free account</a> to start, and see <a href=\"/pricing\">pricing</a> for the plans. The adhoc training screen is on the paid plans."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A second look at what people remember, not a replacement for observation",
+  "cards": [
+   {
+    "title": "It does not schedule the follow up for you",
+    "body": "A session does not trigger anything on its own. You decide when to allocate the module, and when to look at the results."
+   },
+   {
+    "title": "It does not prove practical skill",
+    "body": "A multiple choice question shows what someone knows. It does not show how they move a person safely or give medication. That still needs observation."
+   },
+   {
+    "title": "It does not alert you to every wrong answer",
+    "body": "The picture reaches you through Knowledge gaps and the Monday digest. Adhoc training and translation are on the paid plans."
+   }
+  ]
+ },
+ "read_next": [
+  "what-compliant-actually-means-for-one-care-staff-member",
+  "cpd-accreditation-in-care-what-it-really-means-and-when-it-matters",
+  "chasing-staff-training-completions"
+ ],
+ "faqs": {
+  "heading": "Knowledge retention after training, answered",
+  "groups": [
+   {
+    "group": "About checking what people remember",
+    "items": [
+     {
+      "q": "How do you measure knowledge retention after care training?",
+      "a": "Ask the same topic again some weeks later, away from the room, using different questions. A short knowledge assessment shows what people still know. CareStream does this with <a href=\"/uses/adhoc-training\">adhoc training</a> built from your own policies, and records who needed a second look."
+     },
+     {
+      "q": "What is retrieval practice?",
+      "a": "It means recalling something from memory instead of reading it again. Answering a question is retrieval practice, and it helps the answer stick. In CareStream, a wrong answer leads to a short lesson and then a fresh question, which asks the carer to recall it again."
+     },
+     {
+      "q": "What is a good way to check for understanding after training?",
+      "a": "A few short questions on the points that matter most, asked soon enough that it is still fresh and again later. Keep it friendly. A check for understanding is there to help staff, and to show you where the session needs a tweak."
+     },
+     {
+      "q": "Is spaced learning realistic in a busy care home?",
+      "a": "Yes, if it is small. One short module a few weeks after a session is a simple version of spaced learning. CareStream does not schedule it for you, but it makes the follow up quick to allocate."
+     }
+    ]
+   },
+   {
+    "group": "About CareStream and inspections",
+    "items": [
+     {
+      "q": "Is a pass mark enough for assessing competence?",
+      "a": "A pass mark is one piece of evidence. Assessing competence also means watching practical work and noticing how staff act on the floor. CareStream adds a record of what people understood over time, but it does not replace observation."
+     },
+     {
+      "q": "How do I improve learning retention in my care home?",
+      "a": "Keep sessions focused, ask again after a few weeks, and give a short lesson when someone is unsure. Your <a href=\"/blog/chasing-staff-training-completions\">completion rates</a> show who finished, but only a second look shows what stayed. A <a href=\"/staff-training/safeguarding-adults-and-children\">safeguarding course</a> is a good place to start."
+     },
+     {
+      "q": "Does CareStream replace the trainer or the learning assessment?",
+      "a": "No. The trainer's session and their learning assessment stay exactly as they are. CareStream adds a second check later and a short lesson for anything that slipped."
+     },
+     {
+      "q": "Can I try this without committing?",
+      "a": "Yes. There is a 14 day free trial on the paid plans. Create a <a href=\"/register\">free account</a>, or take a look at the <a href=\"/demo\">demo</a>."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to check training retention",
+  "lede": "Training retention is easy to assume and hard to see. A session ends, a pass mark is recorded and the topic is ticked off. The second look is where a manager learns whether it stuck.",
+  "sections": [
+   {
+    "h3": "Why the regulations point to more than attendance",
+    "paragraphs": [
+     "The regulations for care providers in England say staff must receive the support, training and supervision necessary to carry out their duties (see <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">regulation 18, staffing</a>). They also say providers must operate systems to assess, monitor and improve the quality and safety of the service (see <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">regulation 17, good governance</a>). A pass mark shows training was delivered. Checking later helps show it is working."
+    ]
+   },
+   {
+    "h3": "Four checks that fit a busy service",
+    "checklist": [
+     "On the day: keep the trainer's assessment. It tells you who understood in the room.",
+     "A few weeks on: allocate a short module on the same topic, with different questions.",
+     "When an answer is wrong: the carer opens a short lesson, then a fresh question.",
+     "Each month: look at the most missed questions and the weakest topics, and adjust the next session."
+    ]
+   },
+   {
+    "h3": "Keep it kind",
+    "paragraphs": [
+     "Say plainly that this is a check on the training, not on the person. Staff who see the follow up as support are more likely to engage with it. Hands on skills still need someone to watch them done."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the questions, lessons and results together, so you can show what people understood weeks after the session, as well as that they passed."
+ }
+}

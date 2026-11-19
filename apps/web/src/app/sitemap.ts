@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next'
 import { SETTINGS_LIST } from '@/lib/settings/list'
 import { ROLE_PAGES } from '@/lib/role-pages'
 import { AUDIT_PAGES } from '@/lib/audit-pages'
+import { publishedScenarios } from '@/data/scenarios'
 
 // Canonical host is www (the apex 308-redirects to it). The sitemap MUST use www
 // or Google reports every entry as "Page with redirect".
@@ -228,11 +229,21 @@ async function usePages(): Promise<Entry[]> {
   return []
 }
 
+// Scenario pages come from the repository (src/data/scenarios), published ones only, plus their hub.
+function scenarioPages(): Entry[] {
+  const list = publishedScenarios()
+  if (list.length === 0) return []
+  return [
+    { url: '/scenarios', changeFrequency: 'weekly' as const, priority: 0.7 },
+    ...list.map((p) => ({ url: `/scenarios/${p.slug}`, changeFrequency: 'monthly' as const, priority: 0.7 })),
+  ]
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Dedupe by path (some settings also appear in MARKETING), first entry wins.
   const seen = new Set<string>()
   const [training, policies, blog, collections, features, uses, cms] = await Promise.all([trainingPages(), policyPages(), blogPages(), collectionPages(), featurePages(), usePages(), cmsPages()])
-  const entries = [...MARKETING, ...SETTINGS, ...training, ...policies, ...blog, ...collections, ...features, ...uses, ...cms].filter((e) => {
+  const entries = [...MARKETING, ...SETTINGS, ...training, ...policies, ...blog, ...collections, ...features, ...uses, ...scenarioPages(), ...cms].filter((e) => {
     if (seen.has(e.url)) return false
     seen.add(e.url)
     return true

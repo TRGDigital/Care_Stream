@@ -1,0 +1,418 @@
+{
+ "slug": "infection-control-after-outbreak",
+ "status": "draft",
+ "order": 5,
+ "title": "After an outbreak, an infection control quiz shows <em>whether the lessons landed.</em>",
+ "meta_title": "Infection Control Quiz After an Outbreak | CareStreamAI",
+ "meta_description": "After an outbreak, a talk is not proof. Allocate an infection control quiz from your own policies and give wrong answers a short follow up lesson.",
+ "eyebrow": "Scenario",
+ "lede": "The outbreak is over and you have talked it through with the team. Now you need to know it stuck. CareStream does not replace your debrief. It lets you send an infection control quiz built from <a href=\"/training-platform\">your own policies</a>, so a wrong answer becomes a short lesson on that exact point.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After the outbreak",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Outbreak over, team debrief held",
+    "note": "Week 0",
+    "done": true
+   },
+   {
+    "label": "Reminder talk at handover",
+    "note": "Week 1",
+    "done": true
+   },
+   {
+    "label": "Understanding checked for each person",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Gaps closed with a short lesson",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/bb1f30fd-262a-4def-bf9e-6e0fcb81298d.webp",
+ "image_alt": "Two carers wearing plastic aprons and gloves beside a corridor hand wash sink, with the manager chatting to them",
+ "card_title": "The outbreak is over. Did the infection control lessons land?",
+ "card_snippet": "A debrief and a handover reminder do not show what each carer took in. Send a short quiz built from your own policies, and a wrong answer becomes a short follow up lesson.",
+ "primary_keyword": "infection control quiz",
+ "secondary_keywords": [
+  "infection prevention and control training",
+  "check for understanding",
+  "knowledge check",
+  "refresher training"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Turn an incident into adhoc training",
+   "body": "Pick a topic, allocate a short module and see who needs a second look.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "Free infection prevention audits",
+   "body": "Check what is happening on the floor, not only what people know. The audit library is free on every plan.",
+   "action": "See care audits",
+   "href": "/care-audits"
+  }
+ ],
+ "intro": {
+  "heading": "The outbreak is over. The lessons are not yet proven.",
+  "sub": "A scenario we see in many care homes.",
+  "paragraph": "A stomach bug moved through two corridors and the home worked hard to contain it. Once it was over, the manager held a team talk, put a reminder on the handover sheet and thanked everyone. Weeks later a new carer asks where to put soiled laundry, and a long standing carer is unsure when to change gloves. Nobody did anything wrong on purpose. The talk simply reached some people better than others, and the manager has no way to see who. Here is how that plays out."
+ },
+ "trail": [
+  {
+   "when": "During the outbreak",
+   "text": "The team follows the plan and keeps spread to two corridors.",
+   "kind": "ok"
+  },
+  {
+   "when": "Once it ends",
+   "text": "The manager holds a team talk and thanks everyone.",
+   "kind": "ok"
+  },
+  {
+   "when": "That week",
+   "text": "A reminder goes on the handover sheet and is read out.",
+   "kind": "ok"
+  },
+  {
+   "when": "A month later",
+   "text": "The manager cannot say who took in which point.",
+   "kind": "gap"
+  },
+  {
+   "when": "New starter",
+   "text": "A carer who joined after the talk was never in the room.",
+   "kind": "gap"
+  },
+  {
+   "when": "Night team",
+   "text": "Staff on nights got the handover note, not the discussion.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "Meeting notes and a handover sheet. No sign of who understood.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“What changed after the outbreak?” Notes of a talk are not an answer.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The talk was never the problem.</b> The gap is between the talk and knowing it landed. Here is how CareStream fills it, using your own policies, without replacing your debrief.",
+ "why": {
+  "heading": "A talk shows what you said, not what each person took in",
+  "sub": "After an outbreak the question is not whether you told people. It is whether they can do it on a normal Tuesday.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Not everyone heard the talk",
+    "body": "New starters, night staff and agency colleagues often miss the discussion. They get a note, not the conversation."
+   },
+   {
+    "icon": "tick",
+    "title": "Good habits drift back",
+    "body": "Right after an outbreak everyone is careful. A few weeks on, small shortcuts return, and nobody sees which ones."
+   },
+   {
+    "icon": "alert",
+    "title": "Checking person by person is slow",
+    "body": "Asking each carer a question on the floor is useful but takes time you rarely have, and it leaves no record of the answers."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, the follow up out.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a carer meet it. See also <a href=\"/uses/adhoc-training\">turning an incident into adhoc training</a> and the <a href=\"/staff-training/infection-prevention-and-control\">infection prevention and control course</a>.",
+  "blocks": [
+   {
+    "heading": "Allocate an infection control quiz built from your own policies",
+    "bullets": [
+     "In the Training screen, pick the Infection Prevention and Control module and tick the staff you want to check, including new starters and night staff",
+     "CareStream builds short lessons and questions from your own policies where they cover the topic, with general good practice as the fallback",
+     "You can edit and preview everything before anyone sees it, and staff complete it in the Staff Hub on their own phone"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Adhoc training",
+      "href": "/uses/adhoc-training"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Infection Prevention and Control",
+     "questions": [
+      "When should you change your gloves and apron while caring for someone with diarrhoea and vomiting?",
+      "What is the right way to handle soiled laundry?",
+      "When should you wash your hands with soap and water instead of using hand rub?"
+     ],
+     "staff_count": 31
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson on that exact point",
+    "bullets": [
+     "The wrong answer goes into the carer's Follow-up tab in the Staff Hub, and they get an email to say so, at most once a day",
+     "They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question. They can retry as often as they need",
+     "It clears from the tab once they get it right, and the lesson draws on your own policies where they cover it"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Infection prevention and control course",
+      "href": "/staff-training/infection-prevention-and-control"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Infection Prevention and Control",
+     "question": "When should you wash your hands with soap and water instead of using hand rub?",
+     "why": "Your infection control policy sets out when soap and water is needed instead of hand rub, for example after caring for someone with diarrhoea or vomiting.",
+     "remember": [
+      "Wash with soap and water when hands are visibly dirty",
+      "Wash after contact with someone who has a stomach bug",
+      "Follow your own infection control policy"
+     ],
+     "picture": "You have just helped a resident who has been sick and you are about to move to the next room."
+    }
+   },
+   {
+    "heading": "Staff learn in the language they think in",
+    "bullets": [
+     "A carer who gets a question wrong because of a missed word can open the lesson in their own language",
+     "Your admin sets their second language, and they switch to it in the hub",
+     "Training in different languages is part of the paid plans, and the follow up email is in English only"
+    ],
+    "tags": [
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish"
+    }
+   },
+   {
+    "heading": "See the gaps across the team, and whether they closed",
+    "bullets": [
+     "The Knowledge gaps view shows the most missed questions and the weakest topics, so you see which lesson from the outbreak needs saying again",
+     "See how gaps are being closed, so the follow up is a record and not a hunch",
+     "A Monday digest email brings the picture to you, and nothing alerts you on each wrong answer"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 6,
+      "affected": 5,
+      "closed": 14,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Soap and water or hand rub",
+       "4 staff"
+      ],
+      [
+       "Handling soiled laundry",
+       "3 staff"
+      ],
+      [
+       "Changing gloves between tasks",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Infection Prevention and Control",
+       "6 gaps"
+      ],
+      [
+       "Food Hygiene",
+       "1 gap"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "Ask CareStream about this",
+  "sub": "The questions managers ask us most about checking understanding after an outbreak.",
+  "items": [
+   {
+    "q": "We have just had an outbreak. Can CareStream help us manage it?",
+    "a": "No. For the outbreak itself, follow your outbreak and infection control policy and the guidance from your local health protection team. CareStream helps afterwards, by checking that the lessons from the outbreak have reached everyone."
+   },
+   {
+    "q": "What is the first thing I do in CareStream?",
+    "a": "Open the Training screen, go to Adhoc Training, and pick the Infection Prevention and Control module. You generate the lesson and questions, edit and preview them, then choose the staff to send it to."
+   },
+   {
+    "q": "Will it use our own infection control policy?",
+    "a": "Where your policies cover the topic, yes. CareStream searches them by topic, and where they do not cover something it falls back to general good practice. You choose a topic module, not a single policy, so read the preview before you send it."
+   },
+   {
+    "q": "What happens when a carer gets a question wrong?",
+    "a": "It goes into their Follow-up tab in the Staff Hub and they get an email, at most once a day. They choose Learn &amp; retry for a short lesson and a fresh question, or Just retry the same one. They can retry as often as they need."
+   },
+   {
+    "q": "Do I get told every time someone gets one wrong?",
+    "a": "No. You see the picture in Analytics, under Knowledge gaps, and in a Monday digest email. It shows open gaps, staff affected, gaps closed in the last 30 days, the most missed questions and the weakest topics."
+   },
+   {
+    "q": "Can I include new starters and night staff?",
+    "a": "Yes. You tick the staff you want, so people who missed the talk can take the same quiz in their own time on their own phone."
+   },
+   {
+    "q": "Does this replace our infection control audits?",
+    "a": "No. A quiz checks what people know. An audit checks what is happening on the floor. Our <a href=\"/care-audits\">free audit library</a> has infection prevention audits you can run as a separate step."
+   },
+   {
+    "q": "How do I try it, and does it cost anything to start?",
+    "a": "There is a 14 day free trial. You can <a href=\"/register\">create a free account</a> and look around, and the <a href=\"/pricing\">pricing page</a> shows what each plan includes. Adhoc training sits on the paid plans."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A check on understanding, not outbreak management",
+  "cards": [
+   {
+    "title": "It does not manage an outbreak",
+    "body": "There is no outbreak advice in CareStream. Follow your outbreak and infection control policy and your local health protection team."
+   },
+   {
+    "title": "It does not see technique",
+    "body": "A quiz shows what people know, not how they wash their hands. Watching practice and running an audit still need a person on the floor."
+   },
+   {
+    "title": "It does not alert you to every wrong answer",
+    "body": "The picture reaches you through the Knowledge gaps view and the Monday digest. Adhoc training and translation are on the paid plans only."
+   }
+  ]
+ },
+ "read_next": [
+  "infection-control-training-for-care-staff-a-guide-for-managers",
+  "infection-prevention-and-control-policy",
+  "how-to-run-a-hand-hygiene-audit-in-a-care-home"
+ ],
+ "faqs": {
+  "heading": "Questions managers ask",
+  "groups": [
+   {
+    "group": "Checking understanding",
+    "items": [
+     {
+      "q": "How do I check for understanding after an outbreak?",
+      "a": "Use more than one method. Talk to staff on the floor, watch practice, and send a short infection control quiz so every person answers the same questions. CareStream does the quiz part from <a href=\"/training-platform\">your own policies</a> and keeps the results."
+     },
+     {
+      "q": "What is a good knowledge check for infection control?",
+      "a": "Short and practical. Ask what to do in a real situation, such as changing gloves, handling soiled laundry or choosing soap and water over hand rub. Three to five questions on one topic is enough."
+     },
+     {
+      "q": "Is a team talk enough to show staff understood?",
+      "a": "It is a good start, but it records what you said, not what people took in. The <a href=\"https://www.gov.uk/government/publications/infection-prevention-and-control-ipc-in-adult-social-care-asc/managing-outbreaks-in-adult-social-care-settings\">UKHSA guidance on managing outbreaks in adult social care</a> says to make sure all care and support workers understand their role, and to review afterwards what worked well and what was difficult."
+     }
+    ]
+   },
+   {
+    "group": "Training and refreshers",
+    "items": [
+     {
+      "q": "Should we run refresher training after an outbreak?",
+      "a": "Often a short refresher on the points that slipped is more useful than repeating the whole course. A quiz tells you which points those are. For the full course, see our <a href=\"/staff-training/infection-prevention-and-control\">infection prevention and control training</a>."
+     },
+     {
+      "q": "What does the infection control code of practice say?",
+      "a": "The <a href=\"https://www.gov.uk/government/publications/the-health-and-social-care-act-2008-code-of-practice-on-the-prevention-and-control-of-infections-and-related-guidance\">Health and Social Care Act 2008 code of practice on infection prevention and control</a> applies to adult social care providers in England. It is not mandatory, but providers must have regard to it, and the Care Quality Commission must consider it. Read the full code for the detail."
+     },
+     {
+      "q": "Can I send the quiz to agency or new staff?",
+      "a": "You can send it to staff in CareStream, including recent joiners. See <a href=\"/uses/adhoc-training\">adhoc training</a> for how allocation works."
+     }
+    ]
+   },
+   {
+    "group": "Using CareStream",
+    "items": [
+     {
+      "q": "How is this different from a paper quiz?",
+      "a": "A wrong answer does not just get marked. It becomes a short lesson and a fresh question, and you see the pattern across the team without marking anything yourself."
+     },
+     {
+      "q": "Is the adhoc training screen on the free plan?",
+      "a": "No. It is on the paid plans. You can start with a 14 day free trial, and the <a href=\"/pricing\">pricing page</a> has the details."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A simple plan for proving the lessons landed",
+  "lede": "You do not need a big project. A few steps, a few weeks apart, give you a record you can stand behind.",
+  "sections": [
+   {
+    "h3": "Write down what you changed",
+    "paragraphs": [
+     "Before you quiz anyone, list the two or three things that went wrong or were hard during the outbreak. The <a href=\"https://www.gov.uk/government/publications/infection-prevention-and-control-ipc-in-adult-social-care-asc/managing-outbreaks-in-adult-social-care-settings\">UKHSA guidance</a> says providers should review what worked well and what was difficult, and use the findings to update their outbreak plans. Your quiz should test those points first."
+    ]
+   },
+   {
+    "h3": "Send a short check, then a second one later",
+    "paragraphs": [
+     "One quiz straight after the talk shows who heard it. A second a month on shows what stuck. Keep each one short so people finish it between tasks."
+    ],
+    "checklist": [
+     "Pick the topic module and keep it to the points that mattered",
+     "Include new starters, night staff and anyone who missed the talk",
+     "Preview the questions and edit anything that does not match your policy",
+     "Look at Knowledge gaps after a week and again after a month"
+    ]
+   },
+   {
+    "h3": "Pair the quiz with a look at practice",
+    "paragraphs": [
+     "A quiz shows knowledge. An audit shows what happens on the floor. Run a hand hygiene check alongside it, and see our guide on <a href=\"/blog/how-to-run-a-hand-hygiene-audit-in-a-care-home\">how to run a hand hygiene audit</a>."
+    ]
+   }
+  ],
+  "note": "This page is general information, not outbreak or clinical advice. Follow your own infection control policy and the guidance of your local health protection team."
+ }
+}

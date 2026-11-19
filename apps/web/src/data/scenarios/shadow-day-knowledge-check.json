@@ -1,0 +1,403 @@
+{
+ "slug": "shadow-day-knowledge-check",
+ "status": "draft",
+ "order": 14,
+ "title": "Your staff induction includes a shadow day. <em>Did the new starter take it in?</em>",
+ "meta_title": "Staff Induction: Shadow Day Knowledge Check | CareStreamAI",
+ "meta_description": "A new carer shadowed for a day and nodded along. Allocate a short knowledge check from your own policies, and turn wrong answers into short lessons.",
+ "eyebrow": "Scenario",
+ "lede": "A shadow shift is a good start to <a href=\"/training-platform\">staff induction</a>, but watching is not the same as knowing. After the day you allocate a short check built from your own policies. Where a new starter gets a question wrong, they get a short lesson on that exact point.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After the shadow day",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Shadow day completed",
+    "note": "Day 1",
+    "done": true
+   },
+   {
+    "label": "Buddy says it went well",
+    "note": "Day 1",
+    "done": true
+   },
+   {
+    "label": "Understanding checked",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Gaps closed with a short lesson",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/b76deb62-99d5-486b-8b4d-a35e904443f9.webp",
+ "image_alt": "A new carer watching and nodding while an experienced carer helps a smiling resident into an armchair, with a manager at the doorway",
+ "card_title": "New carer shadowed for a day. Did they take it in?",
+ "card_snippet": "Watching a senior shows how your home works, but not what they understood. Allocate a short knowledge check built from your own policies, and a wrong answer becomes a short lesson.",
+ "primary_keyword": "staff induction",
+ "secondary_keywords": [
+  "care home induction",
+  "care home induction checklist",
+  "care certificate induction",
+  "shadow shift care home",
+  "shadowing",
+  "knowledge check",
+  "check for understanding"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Adhoc training from your policies, and wrong answers that become short lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Adhoc training after any session",
+   "body": "Pick a topic, allocate it to the people who need it, and see who understood.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "Care Certificate course",
+   "body": "Work through the standards online, alongside your own induction.",
+   "action": "See the course",
+   "href": "/staff-training/care-certificate"
+  }
+ ],
+ "intro": {
+  "heading": "The shadow day went well. What did she actually learn?",
+  "sub": "A scenario we see in many care homes.",
+  "paragraph": "A new carer spends her first Tuesday shadowing a senior. She sees the morning routines, meets the residents and helps with a transfer under supervision. By the end of the shift she is smiling and the senior says she is a natural. The manager ticks the day off the induction list. A week later she is working shifts, and nobody has checked what she took in. Did she see how to handle a safeguarding worry, or which residents need thickened fluids? Watching is a start, not proof. Here is how that plays out."
+ },
+ "trail": [
+  {
+   "when": "Day 1, morning",
+   "text": "The new carer shadows a senior through the morning routines.",
+   "kind": "ok"
+  },
+  {
+   "when": "Day 1, midday",
+   "text": "She meets residents and helps with a transfer, with the senior beside her.",
+   "kind": "ok"
+  },
+  {
+   "when": "End of shift",
+   "text": "The senior says it went well. The manager ticks the day off the list.",
+   "kind": "ok"
+  },
+  {
+   "when": "A week later",
+   "text": "She is working shifts, and nobody has asked what she understood.",
+   "kind": "gap"
+  },
+  {
+   "when": "What she may have missed",
+   "text": "The senior was busy and explained the fluids chart in a rush.",
+   "kind": "gap"
+  },
+  {
+   "when": "What she may not say",
+   "text": "She is new, shy and keen to impress, so she nods instead of asking.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "A tick and a kind word from the buddy. Nothing that shows understanding.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“How did you learn what to do when you started?” She cannot say.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The shadow day was not the problem.</b> The gap is between watching and knowing. Here is how CareStream fills it, using your own policies, without replacing the shift.",
+ "why": {
+  "heading": "Watching someone work is not the same as understanding the work",
+  "sub": "A manager needs a way to see what each new starter took in, without a long chat for every person.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "New starters nod to fit in",
+    "body": "Many new carers will not say they missed something. They are shy, keen to impress, or English is their second language. A nod is not a check for understanding."
+   },
+   {
+    "icon": "tick",
+    "title": "Every buddy teaches differently",
+    "body": "One senior explains the reasons behind each task. Another just gets on with it. Two new starters can finish the same shadow shift knowing very different things."
+   },
+   {
+    "icon": "alert",
+    "title": "A tick on the list proves little",
+    "body": "A care home induction checklist records that the day happened. It does not show whether the carer understood safeguarding, fluids or what to do in a fire."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, the knowledge check out.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a new carer meet it.",
+  "blocks": [
+   {
+    "heading": "Allocate a short check after the shadow day",
+    "bullets": [
+     "After the shadow shift, pick a topic module that matches what they saw, such as safeguarding or nutrition and hydration, and tick the new starter",
+     "CareStream builds a short lesson and questions from your own policies, and you can edit and preview them before anyone sees them",
+     "They complete it in the Staff Hub on their own phone, with an optional due date, and it sits beside your other staff induction steps"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Adhoc training",
+      "href": "/uses/adhoc-training"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Safeguarding Adults",
+     "questions": [
+      "Who do you tell first if a resident says something that worries you?",
+      "What should you do if a resident asks you to keep a worry secret?",
+      "Where do you find the fire exits on your unit?"
+     ],
+     "staff_count": 3
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson on that point",
+    "bullets": [
+     "The wrong answer goes straight into the carer's Follow-up tab in the Staff Hub, and they get an email, at most once a day, in English",
+     "They choose Learn &amp; retry, a short lesson (why it matters, what to remember, a realistic situation) then a fresh question, or Just retry the same question, as often as they need",
+     "The lesson is built from your own policies, so it teaches what your home actually does"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Safeguarding Adults",
+     "question": "What should you do if a resident asks you to keep a worry secret?",
+     "why": "You cannot promise to keep a safeguarding concern secret, because the person may be at risk.",
+     "remember": [
+      "Listen and stay calm",
+      "Explain who you must tell",
+      "Record what was said"
+     ],
+     "picture": "A resident tells you something worrying during your first week and asks you not to tell anyone."
+    }
+   },
+   {
+    "heading": "Ready-made flows for a full care home induction",
+    "bullets": [
+     "Use an induction flow for the read-a-policy and answer-a-question steps of your care home induction, matched to the new starter's job role",
+     "New starters can be enrolled automatically when you add them to the staff list, and the staff record flags an induction not started after seven days",
+     "Flows do not have a manager sign off step, so your shadow shift and observations stay with you, outside the flow"
+    ],
+    "tags": [
+     {
+      "label": "Staff Hub for new starters",
+      "href": "/uses/multilingual-staff-hub"
+     },
+     {
+      "label": "Care Certificate course",
+      "href": "/staff-training/care-certificate"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish"
+    }
+   },
+   {
+    "heading": "See the gaps across your new starters",
+    "bullets": [
+     "The Knowledge gaps view shows the most missed questions and the weakest topics, so you see where your shadow days need a tweak",
+     "See how gaps are being closed, and mark a person's record as reviewed",
+     "A Monday digest email, so the picture arrives without you asking for it"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 4,
+      "affected": 3,
+      "closed": 9,
+      "engaged": 78
+     },
+     "missed": [
+      [
+       "Keeping a worry secret",
+       "3 staff"
+      ],
+      [
+       "Thickened fluids",
+       "2 staff"
+      ],
+      [
+       "Who to tell about a fall",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Safeguarding Adults",
+       "4 gaps"
+      ],
+      [
+       "Nutrition and hydration",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "We already do a shadow day. Why add anything?",
+    "a": "You would keep it. Watching a senior shows a new starter how your home runs. CareStream adds a short check afterwards, so you know what they took in, not just that the day happened."
+   },
+   {
+    "q": "How does the check work for a new carer?",
+    "a": "After the shadow shift you allocate a short module on a topic, <a href=\"/training-platform\">built from your own policies</a>. They complete it in the Staff Hub on their own phone. Their answers are scored, so you can see who understood and who did not."
+   },
+   {
+    "q": "What happens when a new starter gets a question wrong?",
+    "a": "It goes into their Follow-up tab and they get an email, at most once a day. They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question. They can retry as often as they need. You do not have to write or chase anything."
+   },
+   {
+    "q": "Will I be told every time someone gets an answer wrong?",
+    "a": "No. Nothing alerts you on each wrong answer. You see the picture in the Knowledge gaps view in Analytics, and in a digest email on Monday. That shows whether one person needs a chat or your shadow shift needs a change."
+   },
+   {
+    "q": "Is the lesson generic, or about how we work?",
+    "a": "It is built from your own policies where they cover the topic, with general good practice as the fallback. You can edit and preview the module before you allocate it."
+   },
+   {
+    "q": "Some of our new starters speak English as a second language. Does that help?",
+    "a": "Yes, on the paid plans. A carer can open the lesson in <a href=\"/languages\">their own language</a>, so a wrong answer points to a gap in knowledge and not in vocabulary. The reminder emails stay in English."
+   },
+   {
+    "q": "Does this replace the Care Certificate or my sign off?",
+    "a": "No. The Care Certificate needs a manager's observation and sign off, and CareStream does not do that for you. It checks understanding of your own policies and keeps the record. See our <a href=\"/staff-training/care-certificate\">Care Certificate course</a> if you want the standards online."
+   },
+   {
+    "q": "What does it cost to try?",
+    "a": "There is a 14 day free trial on the paid plans, and you can create a free account to look around first. Adhoc training is on the paid plans, so check <a href=\"/pricing\">the pricing page</a> for what each includes."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A check on understanding, not a replacement for the shift",
+  "cards": [
+   {
+    "title": "It does not replace the shift",
+    "body": "A new starter still needs to work beside an experienced carer and be observed doing hands on tasks. CareStream checks understanding. It does not watch anyone work."
+   },
+   {
+    "title": "It has no manager sign off step",
+    "body": "Induction flows hold read and question steps only. Your observation, your Care Certificate sign off and your own checklist stay with you."
+   },
+   {
+    "title": "It does not alert you to every wrong answer",
+    "body": "Nothing starts automatically after a shadow day either. You allocate the module. Adhoc training and translation are on the paid plans only."
+   }
+  ]
+ },
+ "read_next": [
+  "onboarding-international-care-staff-4-week-induction-playbook",
+  "care-certificate-standards",
+  "how-long-does-the-care-certificate-take"
+ ],
+ "faqs": {
+  "heading": "Staff induction and shadow days, answered",
+  "groups": [
+   {
+    "group": "About the shadow day",
+    "items": [
+     {
+      "q": "Is a shadow shift in a care home a legal requirement?",
+      "a": "No. It is a common and sensible practice, not a rule in itself. What the regulations ask is that staff get the support and training they need to do the job. See <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">regulation 18 on staffing</a>, which says staff must receive appropriate support, training, professional development, supervision and appraisal as is necessary for their duties."
+     },
+     {
+      "q": "How long should a shadow shift last in a care home?",
+      "a": "There is no set length. Many homes use one to three shifts, then increase responsibility step by step. What matters is that the new starter is checked, not that a number of shifts has passed."
+     },
+     {
+      "q": "What is a check for understanding after shadowing?",
+      "a": "It is a short set of questions that shows what the person took in. In CareStream you allocate a module on the topic, built from your own policies, and the new carer answers it in the Staff Hub."
+     }
+    ]
+   },
+   {
+    "group": "About induction and the Care Certificate",
+    "items": [
+     {
+      "q": "What should a care home induction checklist include?",
+      "a": "Typically: a tour, key policies, fire safety, safeguarding, how to report concerns, residents' needs and who to ask. See our <a href=\"/blog/care-certificate-standards\">guide to the Care Certificate standards</a> for the wider picture. CareStream does not replace your checklist, it adds a check on what they understood."
+     },
+     {
+      "q": "How does Care Certificate induction work?",
+      "a": "The Care Certificate has 16 standards, and Skills for Care says they can be used to inform what is covered during induction. A manager or assessor with direct experience observes and signs off. Read <a href=\"/blog/how-long-does-the-care-certificate-take\">how long it takes</a>."
+     },
+     {
+      "q": "Can I use CareStream for agency staff induction?",
+      "a": "Yes. Agency workers get time boxed access with no seat used on your plan, and are enrolled only in flows you mark as suitable for agency staff. See <a href=\"/uses/annual-training\">annual training</a> for what comes later."
+     },
+     {
+      "q": "Does a knowledge check count as evidence for CQC?",
+      "a": "It gives you a record of what each person was asked, what they got wrong and what they then learned. That sits alongside your other <a href=\"/cqc-compliance\">CQC evidence</a>. It is not a substitute for observation."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to check understanding after a shadow day",
+  "lede": "Staff induction is more than the first shift. A shadow day is the moment a new starter sees your home in action, so it is the right moment to check what they saw and understood.",
+  "sections": [
+   {
+    "h3": "Make shadowing structured, not left to chance",
+    "paragraphs": [
+     "Tell the buddy what to cover before the shift, such as the morning routine, how to report a concern and who needs help with fluids. Give the new starter a few minutes at the end to ask questions. The <a href=\"https://www.skillsforcare.org.uk/Developing-your-workforce/Care-Certificate/Care-Certificate.aspx\">Skills for Care Care Certificate page</a> says the 16 standards can be used to inform what is covered during induction, which is a useful guide for what a buddy should show."
+    ]
+   },
+   {
+    "h3": "Four checks that fit a busy home",
+    "checklist": [
+     "Before the shift: brief the buddy on three or four things the new starter must see.",
+     "Within a few days: allocate a short check on those topics, built from your policies.",
+     "When an answer is wrong: the carer opens a short lesson on that point, then a fresh question.",
+     "Each month: look at the most missed questions and adjust what your shadow shift covers."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the shadow day record, the check results and your sign off together, so you can show how each new starter learned the job."
+ }
+}

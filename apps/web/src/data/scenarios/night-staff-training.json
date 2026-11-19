@@ -1,0 +1,404 @@
+{
+ "slug": "night-staff-training",
+ "status": "draft",
+ "order": 12,
+ "title": "Night shift training that matches the day team's. <em>Same learning, any hour.</em>",
+ "meta_title": "Night Shift Training for Care Home Staff | CareStreamAI",
+ "meta_description": "Night staff cannot attend daytime sessions. Allocate the same topic as short training from your own policies, to complete on their own phone, at their own hour.",
+ "eyebrow": "Scenario",
+ "lede": "Night shift training is the part of a training plan that quietly slips. The session runs at two in the afternoon, and the night team is asleep. After the session you can allocate the same topic as <a href=\"/training-platform\">short training built from your own policies</a>, and night staff complete it on their own phone, at an hour that works for them.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After the daytime session",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Day team attends the session",
+    "note": "Tuesday, 2pm",
+    "done": true
+   },
+   {
+    "label": "Same topic allocated to night staff",
+    "note": "Tuesday, 4pm",
+    "done": true
+   },
+   {
+    "label": "Night staff complete it on their phones",
+    "note": "This week",
+    "done": false
+   },
+   {
+    "label": "Wrong answers turned into short lessons",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/40cea079-7308-452d-852c-14a385af0756.webp",
+ "image_alt": "A carer walking along a quiet corridor at night with warm night lights, phone in hand, a lit staff room ahead and a resident seated in a lounge",
+ "card_title": "Your night staff could not come to the session. Now what?",
+ "card_snippet": "Daytime training rarely fits a night rota. Allocate the same topic as short training built from your own policies, and night staff complete it on their own phone, at their own hour.",
+ "primary_keyword": "night shift training",
+ "secondary_keywords": [
+  "microlearning",
+  "refresher training",
+  "spaced learning",
+  "check for understanding"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Adhoc training after any session",
+   "body": "Pick the topic, allocate it to the staff who missed the room, and see who got it.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "Annual training that does not wait for a classroom",
+   "body": "Yearly topics for every member of staff, whatever shift they work.",
+   "action": "See annual training",
+   "href": "/uses/annual-training"
+  }
+ ],
+ "intro": {
+  "heading": "The session was good. Half the team was not there.",
+  "sub": "A scenario we see in many care homes.",
+  "paragraph": "A trainer spends Tuesday afternoon on moving and handling refresher training for the day team. It goes well. The night team of six is asleep, or at home with children, and nobody can ask them to come in on unpaid time. The manager plans a catch up at handover, but handover is rushed and people want to go home. Weeks pass. The night team, who often lift and reposition residents with fewer colleagues around, has a gap nobody can see. Here is how that plays out."
+ },
+ "trail": [
+  {
+   "when": "Tuesday, 2pm",
+   "text": "A trainer runs the session for the day team.",
+   "kind": "ok"
+  },
+  {
+   "when": "Afterwards",
+   "text": "The day team leaves with a clear picture of what good practice looks like.",
+   "kind": "ok"
+  },
+  {
+   "when": "Same evening",
+   "text": "The manager says she will find a way to cover the night team.",
+   "kind": "ok"
+  },
+  {
+   "when": "Next week",
+   "text": "A catch up at 7.45am handover is cut short by a resident who needs help.",
+   "kind": "gap"
+  },
+  {
+   "when": "The weeks after",
+   "text": "Six night carers have not had the session. Nobody has written that down.",
+   "kind": "gap"
+  },
+  {
+   "when": "On the night shift",
+   "text": "A carer is unsure of the correct way to help a resident who has slid down in bed.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "A good session for the day team and no view of what nights know.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“How do you know your night staff are as skilled as your day staff?”",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The night team did nothing wrong.</b> The session was simply held when they were not there. Here is how CareStream gives them the same topic, at an hour that works for them, with a way for you to see what landed.",
+ "why": {
+  "heading": "Nights are part of the service, so nights are part of the training",
+  "sub": "An inspector looks at the service as a whole, and a service does not stop at 8pm.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Daytime sessions favour the day team",
+    "body": "Trainers work office hours. Rotas follow residents' needs. Asking night staff to attend after a long shift, or to come in on a day off, is hard to do fairly and harder to repeat."
+   },
+   {
+    "icon": "tick",
+    "title": "A tired room does not learn well",
+    "body": "A catch up at the end of a twelve hour night is often rushed or half remembered. Fewer people are around to ask on a night."
+   },
+   {
+    "icon": "alert",
+    "title": "Gaps on nights are easy to miss",
+    "body": "Managers work days. Without a way to check what the night team knows, a gap can sit unseen until an incident, an agency shift or an inspector brings it out."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, the same learning out, at any hour.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a night carer meet it.",
+  "blocks": [
+   {
+    "heading": "Allocate the topic from the daytime session to your night team",
+    "bullets": [
+     "In the Training screen, pick the topic module that matches the session, such as moving and handling, and tick the night staff",
+     "CareStream builds the lessons and questions from your own policies where they cover the topic, with general good practice as the fallback. You can edit and preview before anyone sees it",
+     "Staff complete it in the Staff Hub, an installable app on their own phone, with an optional due date"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Adhoc training",
+      "href": "/uses/adhoc-training"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Moving and Handling of People",
+     "questions": [
+      "What should you check before helping a person to move up the bed?",
+      "What do you do if a person starts to slip while you are helping them?",
+      "When should you ask a colleague for help before you start?"
+     ],
+     "staff_count": 6
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson, whenever the carer opens it",
+    "bullets": [
+     "A wrong answer goes straight into the carer's Follow-up tab in the Staff Hub, and they get an email, at most once a day, in English",
+     "They choose Learn &amp; retry, a short lesson (why it matters, what to remember, a realistic situation) then a fresh question, or Just retry the same question, as often as they need",
+     "A short lesson fits a quiet moment on a break, which is microlearning in the plain sense of the word: small, specific and easy to finish"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Night shift reading",
+      "href": "/blog/micro-learning-for-care-staff-what-works-on-a-12-hour-shift"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Moving and Handling of People",
+     "question": "What do you do if a person starts to slip while you are helping them?",
+     "why": "Trying to hold the full weight of a person puts both of you at risk. Safer practice is to guide them down and call for help.",
+     "remember": [
+      "Do not try to take the full weight",
+      "Guide the person to a safe, low position",
+      "Call for help and record what happened"
+     ],
+     "picture": "It is 3am, you are alone with a resident who has begun to slide off the edge of the bed."
+    }
+   },
+   {
+    "heading": "Staff learn in the language they think in",
+    "bullets": [
+     "A carer who answers wrongly because of a missed word can open the lesson in their own language",
+     "Your admin sets their second language, and they switch to it in the hub",
+     "Training in different languages is part of the paid plans, and the reminder emails stay in English"
+    ],
+    "tags": [
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Romanian"
+    }
+   },
+   {
+    "heading": "See what the night team knows, and whether gaps closed",
+    "bullets": [
+     "The Knowledge gaps view shows open gaps, staff affected, the most missed questions and the weakest topics, so it works as a check for understanding across the whole team",
+     "See how gaps are being closed, and mark a person's record as reviewed",
+     "A Monday digest email, so the picture reaches you without you asking. Nothing alerts you each time someone gets an answer wrong"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 5,
+      "affected": 4,
+      "closed": 11,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Slipping while being helped",
+       "3 staff"
+      ],
+      [
+       "Checking equipment first",
+       "2 staff"
+      ],
+      [
+       "When to ask for help",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Moving and Handling of People",
+       "5 gaps"
+      ],
+      [
+       "Fire Safety",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "My night staff cannot come to daytime sessions. What can I do?",
+    "a": "Keep the session for those who can attend. Afterwards, allocate the same topic as short training <a href=\"/training-platform\">built from your own policies</a> to your night staff. They complete it in the Staff Hub on their own phone, at a time that suits them, and you see the results."
+   },
+   {
+    "q": "Is this the same as the session the day team had?",
+    "a": "No, and we do not pretend it is. It teaches the same topic, using your policies, and it checks the answers. It does not replace the discussion in a room or a trainer who answers questions. It gives nights the same learning and gives you a way to see what stuck."
+   },
+   {
+    "q": "What happens when a night carer gets a question wrong?",
+    "a": "It goes into their Follow-up tab in the hub, and they get an email, at most once a day. They choose Learn &amp; retry, a short lesson on that exact point and then a fresh question, or Just retry the same question. They can retry as often as they need. Nobody has to chase them."
+   },
+   {
+    "q": "Do they need to be on shift to do it?",
+    "a": "No. You choose whether to set a due date, and staff open the hub on their own phone when they are ready. It is your call whether that is on shift, on a break or at another agreed time, and how any time spent is paid."
+   },
+   {
+    "q": "Can I use this for yearly refresher training too?",
+    "a": "Yes. Allocate the topic as adhoc training whenever a refresher is due, so the night team is not waiting for a classroom slot. Hands on skills still need a competent person to observe."
+   },
+   {
+    "q": "What if some of my night staff speak English as a second language?",
+    "a": "They can open the lesson in <a href=\"/languages\">their own language</a>, so a wrong answer points to a gap in knowledge and not in vocabulary. Translation is part of the paid plans. The reminder emails are in English."
+   },
+   {
+    "q": "What do I see across the night team?",
+    "a": "The Knowledge gaps view in Analytics shows open gaps, staff affected, the most missed questions and the weakest topics, plus how gaps are being closed. A digest arrives on Monday. It does not message you on each wrong answer."
+   },
+   {
+    "q": "Can I try it before we pay?",
+    "a": "Yes. There is a 14 day free trial on the paid plans, and you can <a href=\"/register\">create a free account</a> to look around. Allocate one topic to a few night staff first, and see whether it fits your rota."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "Same topic, not the same room",
+  "cards": [
+   {
+    "title": "It does not replace the session or hands on practice",
+    "body": "Helping someone to move safely still needs a competent person to show the technique and watch it done. CareStream checks understanding. It does not observe skills."
+   },
+   {
+    "title": "It does not make night staff complete it",
+    "body": "A due date is optional. Whether staff do it on shift, on a break or elsewhere is for you to agree and manage."
+   },
+   {
+    "title": "It does not alert you to every wrong answer",
+    "body": "You see the picture through the Knowledge gaps view and the Monday digest. Adhoc training and translation are on the paid plans, and a face to face session does not trigger anything automatically."
+   }
+  ]
+ },
+ "read_next": [
+  "night-shift-policy-access",
+  "micro-learning-for-care-staff-what-works-on-a-12-hour-shift",
+  "how-do-you-schedule-care-staff-training-around-a-rota"
+ ],
+ "faqs": {
+  "heading": "Night staff training and CareStream, answered",
+  "groups": [
+   {
+    "group": "About training night staff",
+    "items": [
+     {
+      "q": "How do you train night staff who cannot attend daytime sessions?",
+      "a": "Keep the session for those who can attend, then allocate the same topic as short training to the night team. In CareStream this is adhoc training built from your own policies, completed in the Staff Hub on each carer's own phone. See <a href=\"/uses/adhoc-training\">adhoc training</a> for the steps."
+     },
+     {
+      "q": "What is night shift training?",
+      "a": "It is the training your night team needs, delivered so that it fits a night rota: a session at a different hour, a catch up, or short digital training they complete on their own. Cover the same topics and keep some evidence of what was understood."
+     },
+     {
+      "q": "Does short training count as refresher training?",
+      "a": "It can be part of your refresher training, but it does not replace hands on observation or any course your service requires. You decide what each role needs and keep a record. For a full course see the <a href=\"/staff-training\">CPD certified courses</a>."
+     },
+     {
+      "q": "What is microlearning in care training?",
+      "a": "It means breaking a topic into short, focused pieces rather than one long session. A short lesson that a carer can finish on a break suits a twelve hour shift. Our <a href=\"/blog/micro-learning-for-care-staff-what-works-on-a-12-hour-shift\">guide to short learning on a 12 hour shift</a> goes into more detail."
+     },
+     {
+      "q": "How does spaced learning help care staff remember?",
+      "a": "Spaced learning means revisiting a topic after a gap, instead of covering it once. The session comes first, the short training comes a few days later, and a retry after a wrong answer brings it back again. It is a simple way to help knowledge last beyond the day."
+     },
+     {
+      "q": "How do I do a check for understanding with night staff?",
+      "a": "Ask questions that start with the situation, not a definition. In CareStream the questions come from your policies, each carer answers on their phone, and the Knowledge gaps view shows who missed what. It is a quick check for understanding without gathering the team in one room."
+     }
+    ]
+   },
+   {
+    "group": "About inspections",
+    "items": [
+     {
+      "q": "Do night staff need the same training as day staff?",
+      "a": "Regulation 18 says staff must receive the support, training, professional development, supervision and appraisal they need to carry out their duties. It does not say when in the day that happens, so each provider decides what each role needs, including nights. See <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18 on staffing</a> for the wording."
+     },
+     {
+      "q": "What should I be able to show about night staff competence?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/12\">Regulation 12 on safe care and treatment</a> asks that people providing care have the qualifications, competence, skills and experience to do so safely. A record of what each night carer was asked, what they missed and what they then learned is one way to show it, next to your <a href=\"/cqc-compliance\">CQC evidence</a>."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to train a night team",
+  "lede": "A night team works with fewer colleagues and at a different pace. Planning training around that is fairer, and it gives you better evidence.",
+  "sections": [
+   {
+    "h3": "Give nights the same topic, not leftovers",
+    "paragraphs": [
+     "The simplest rule is that every topic the day team gets, the night team gets too, in a form that fits their rota. If a session is held in the afternoon, plan the night version before the session, not after it. That might be a short run at handover, a second session at the start of a night or short digital training on the same topic. Our <a href=\"/blog/night-shift-policy-access\">night shift policy access</a> piece covers finding the policy on the night it matters."
+    ]
+   },
+   {
+    "h3": "Four steps for each topic",
+    "checklist": [
+     "Before the session: note which night staff will not be able to attend.",
+     "Within a few days: allocate the same topic as short training built from your policies.",
+     "When an answer is wrong: the carer opens a short lesson on that point, then a fresh question.",
+     "Each month: look at the most missed questions and decide whether a night team huddle is needed."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the topic, the questions, the lessons and the results together, so you can show that nights were covered as well as days."
+ }
+}

@@ -1,0 +1,411 @@
+{
+ "slug": "missed-training-session-catch-up",
+ "status": "draft",
+ "order": 11,
+ "title": "Someone missed the session, and refresher training is due. <em>How do they catch up?</em>",
+ "meta_title": "Missed Training Catch Up for Care Staff | CareStreamAI",
+ "meta_description": "A carer missed the session through sickness or leave. Allocate catch up training from your own policies, check understanding and skip rebooking the trainer.",
+ "eyebrow": "Scenario",
+ "lede": "A carer was off sick on the day, so their refresher training did not happen. Rebooking the trainer for one person is hard to justify. CareStream lets you allocate <a href=\"/training-platform\">short training built from your own policies</a>, so the person who missed the session can catch up on their own phone.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After a missed session",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Session delivered to the team",
+    "note": "Tuesday",
+    "done": true
+   },
+   {
+    "label": "Absence noted on the sheet",
+    "note": "Tuesday",
+    "done": true
+   },
+   {
+    "label": "Catch up allocated",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Understanding checked",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/3f0cb0f1-a53c-401a-abd6-94b8ecc19b98.webp",
+ "image_alt": "A carer at a kitchen table at home on a day off, holding a phone with a cup of tea beside her and a folded uniform on a chair",
+ "card_title": "Someone missed the training session. How do they catch up?",
+ "card_snippet": "Sickness and leave mean someone misses the session. Allocate short catch up training built from your own policies, check they understood it, and skip rebooking the trainer.",
+ "primary_keyword": "refresher training",
+ "secondary_keywords": [
+  "catch up training",
+  "missed training",
+  "check for understanding",
+  "knowledge check",
+  "face to face training"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Adhoc training from your policies, face to face sessions organised, and wrong answers that become short lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Adhoc training after a session",
+   "body": "How a manager allocates a short module on any topic, to the people who need it.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "Face to face training, followed up",
+   "body": "Keep the room. Add a check on what people took in afterwards.",
+   "action": "See face to face follow up",
+   "href": "/uses/face-to-face-training"
+  }
+ ],
+ "intro": {
+  "heading": "The session happened. One person was not there.",
+  "sub": "A scenario we see in many care homes.",
+  "paragraph": "Every year the home runs refresher training on safeguarding, and every year someone is missing. This time Priya was off sick with a chest infection, and two weeks later she is back at work. The trainer is booked up until spring. The manager could ask for another full session for one person, or hope she picks it up from colleagues. Neither is a plan. The sheet shows a gap, but nothing shows when it closed, or whether Priya understood the topic once it did."
+ },
+ "trail": [
+  {
+   "when": "Tuesday morning",
+   "text": "The trainer delivers the annual safeguarding refresher.",
+   "kind": "ok"
+  },
+  {
+   "when": "Midday",
+   "text": "Most of the team attend and take part.",
+   "kind": "ok"
+  },
+  {
+   "when": "End of session",
+   "text": "The sheet is signed. Priya's line is blank, marked sick.",
+   "kind": "ok"
+  },
+  {
+   "when": "Next week",
+   "text": "Priya returns. Everyone assumes someone will sort her session.",
+   "kind": "gap"
+  },
+  {
+   "when": "The trainer",
+   "text": "Fully booked for months, and a half day for one carer is hard to justify.",
+   "kind": "gap"
+  },
+  {
+   "when": "The workaround",
+   "text": "A colleague says she will “fill her in” on a break. Nobody records it.",
+   "kind": "gap"
+  },
+  {
+   "when": "Two months on",
+   "text": "The blank line is still there. Nobody knows what Priya took in.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“How do you know everyone is up to date?” One blank line is the answer.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The session was not the problem.</b> The gap is what happens to the person who missed it. Here is how CareStream closes that gap, without rebooking anyone.",
+ "why": {
+  "heading": "A missed session is a gap that usually stays open",
+  "sub": "Sickness, leave and shift patterns mean missed training is normal. Leaving it undone should not be.",
+  "cards": [
+   {
+    "icon": "alert",
+    "title": "Nobody owns the catch up",
+    "body": "The trainer has moved on and the manager is busy. Without a clear next step, the blank line on the sheet just sits there."
+   },
+   {
+    "icon": "chat",
+    "title": "A chat on a break is not a record",
+    "body": "Colleagues mean well, but a quick word on the floor cannot show what was covered or whether it stuck."
+   },
+   {
+    "icon": "tick",
+    "title": "Attendance is not the same as understanding",
+    "body": "Even people who were in the room need a check later. For the person who was not, a knowledge check is the only way to know."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, the catch up out.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a carer meet it.",
+  "blocks": [
+   {
+    "heading": "Allocate catch up training on the topic that was missed",
+    "bullets": [
+     "Pick the topic module that matches the session, such as safeguarding, and tick only the person or people who missed it",
+     "CareStream builds the lessons and questions from your own policies where they cover the topic, with general good practice as the fallback. You can edit and preview before anyone sees it",
+     "On Professional and above, you can also use <b>Send digital module</b> in the face to face section to send a session's linked module to the people who missed it. It is manual, so you choose who gets it"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Adhoc training",
+      "href": "/uses/adhoc-training"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Safeguarding Adults",
+     "questions": [
+      "Who do you tell first if you suspect a person is being abused?",
+      "What should you do if a person asks you to keep a worry secret?",
+      "Where do you find the home's safeguarding policy?"
+     ],
+     "staff_count": 1
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson on that point",
+    "bullets": [
+     "The carer completes the module in the Staff Hub, the installable app on their own phone, so it works on a day off or between shifts",
+     "A wrong answer goes into their Follow-up tab and they get an email, at most once a day, in English",
+     "They choose Learn &amp; retry, a short lesson (why it matters, what to remember, a realistic situation) then a fresh question, or Just retry the same question, as often as they need"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Safeguarding Adults",
+     "question": "What should you do if a person asks you to keep a worry secret?",
+     "why": "You cannot promise to keep a safeguarding concern secret, because the person may be at risk.",
+     "remember": [
+      "Listen and stay calm",
+      "Explain who you must tell",
+      "Record what was said"
+     ],
+     "picture": "A resident tells you something worrying and asks you not to tell anyone."
+    }
+   },
+   {
+    "heading": "If English is a second language, the lesson can be in theirs",
+    "bullets": [
+     "A carer who answers wrongly because of a missed word can open the lesson in their own language",
+     "Your admin sets their second language, and they switch to it in the hub",
+     "Translation is on the paid plans only, and the reminder emails stay in English"
+    ],
+    "tags": [
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish"
+    }
+   },
+   {
+    "heading": "See whether the catch up closed the gap",
+    "bullets": [
+     "The Knowledge gaps view shows open gaps, staff affected and gaps closed in the last 30 days",
+     "See the most missed questions and the weakest topics, and how gaps are being closed",
+     "A Monday digest email brings the picture to you. Nothing alerts you on each wrong answer"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 3,
+      "affected": 2,
+      "closed": 9,
+      "engaged": 80
+     },
+     "missed": [
+      [
+       "Keeping a worry secret",
+       "2 staff"
+      ],
+      [
+       "Who is the safeguarding lead",
+       "1 staff"
+      ],
+      [
+       "Reporting a concern",
+       "1 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Safeguarding Adults",
+       "3 gaps"
+      ],
+      [
+       "Medication",
+       "1 gap"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "A carer missed the session. Do I have to rebook the trainer?",
+    "a": "Not necessarily. You can allocate a short module on the same topic to just that person. They complete it in the Staff Hub on their own phone, and you see how they got on. The session in the room still happened. This covers the person who was not in it."
+   },
+   {
+    "q": "Where does the catch up content come from?",
+    "a": "You pick a topic module. CareStream builds the lesson and questions from <a href=\"/training-platform\">your own policies</a> where they cover the topic, and from general good practice where they do not. You can edit and preview it before you assign it. You cannot pick a single policy or section."
+   },
+   {
+    "q": "Does CareStream spot who missed a session?",
+    "a": "No. A session does not trigger anything on its own. You know who was absent, and you allocate the catch up. On Professional and above, the face to face section has a Send digital module action that sends a session's linked module to the people you choose."
+   },
+   {
+    "q": "How do I know they understood it, and did not just click through?",
+    "a": "Each module ends in questions. A wrong answer goes into the carer's Follow-up tab, where they can take a short lesson and answer a fresh question, or retry the same one. You see the result in the Knowledge gaps view, so you check for understanding, not only completion."
+   },
+   {
+    "q": "Will they be told they got something wrong?",
+    "a": "Yes. The wrong answer appears in their Follow-up tab, and they get an email, at most once a day. The email is in English. Nothing is sent to you each time, so the manager picture comes through Analytics and the Monday digest."
+   },
+   {
+    "q": "Can the carer do it from home on a day off?",
+    "a": "They can open the Staff Hub on their own phone whenever they choose. Whether that time is paid is your decision under your own rules, so decide it before you ask."
+   },
+   {
+    "q": "Is it the same as sitting in the room?",
+    "a": "No. A session gives discussion and the chance to ask questions. Catch up training gives you a record that the topic was covered and checked. For skills that need hands on practice, a competent person still needs to watch it done."
+   },
+   {
+    "q": "What does it cost, and can I try it?",
+    "a": "There is a 14 day free trial on the paid plans, and you can <a href=\"/register\">create a free account</a> to look around. Adhoc training is on the paid plans, and the face to face section is on Professional and above. The <a href=\"/pricing\">pricing page</a> has the current details."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A catch up and a check, not a second trainer",
+  "cards": [
+   {
+    "title": "It does not detect who missed the session",
+    "body": "You decide who was absent and allocate the catch up. Nothing is triggered by a session, and the face to face Send digital module action is manual."
+   },
+   {
+    "title": "It does not teach hands on skills",
+    "body": "Moving someone safely or using equipment needs a competent person to show the technique and watch it done. A phone module cannot replace that."
+   },
+   {
+    "title": "It does not alert you to every wrong answer",
+    "body": "You see gaps in Knowledge gaps and the Monday digest. Adhoc training and translation are on the paid plans, and the face to face router is Professional and above."
+   }
+  ]
+ },
+ "read_next": [
+  "how-do-you-schedule-care-staff-training-around-a-rota",
+  "the-annual-training-plan-that-survives-contact-with-the-rota",
+  "chasing-staff-training-completions"
+ ],
+ "faqs": {
+  "heading": "Missed training and catch up, answered",
+  "groups": [
+   {
+    "group": "About catching up",
+    "items": [
+     {
+      "q": "What is the best way to handle missed training in a care home?",
+      "a": "Record who missed the session and why, then give them a short catch up on the same topic within a few weeks. Add a check at the end so you know it landed. With CareStream you <a href=\"/uses/adhoc-training\">allocate adhoc training</a> to that person and see the result."
+     },
+     {
+      "q": "Can catch up training replace refresher training in the room?",
+      "a": "It can cover the person who missed a session. It does not replace sessions where people practise a skill together. Keep your <a href=\"/uses/face-to-face-training\">face to face training</a> for what needs a room, and use catch up for who was absent."
+     },
+     {
+      "q": "What is a knowledge check?",
+      "a": "A short set of questions after a lesson, to see what someone took in. In CareStream a wrong answer goes to the Follow-up tab, and the carer can take a short lesson and answer a fresh question."
+     },
+     {
+      "q": "How soon after the session should the catch up happen?",
+      "a": "Sooner is better, because the rest of the team has just covered the topic. A few weeks is a sensible limit. You choose the timing, and you can set a due date when you assign it."
+     },
+     {
+      "q": "How do I check for understanding after someone catches up?",
+      "a": "Look at their answers and at the Knowledge gaps view. A retry that is eventually right shows the gap closing. Pair it with a quick conversation on the floor. See our <a href=\"/blog/chasing-staff-training-completions\">guide to chasing completions</a>."
+     }
+    ]
+   },
+   {
+    "group": "About inspections",
+    "items": [
+     {
+      "q": "What do the regulations say about staff training?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18 on staffing</a> says staff must receive the appropriate support, training, professional development, supervision and appraisal necessary for their duties. It does not set a course list, so the provider decides and must be able to show it."
+     },
+     {
+      "q": "Does the law say employers must give adequate training?",
+      "a": "The <a href=\"https://www.hse.gov.uk/simple-health-safety/training/index.htm\">HSE guidance on training</a> says employers must give workers clear instructions and information, as well as adequate training and supervision."
+     },
+     {
+      "q": "What could I show an inspector for someone who missed a session?",
+      "a": "A record of the topic, the date the catch up was allocated, what the person was asked, anything they got wrong, the lesson they took and whether they then got it right. It sits alongside your other <a href=\"/cqc-compliance\">CQC evidence</a>."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to handle missed training",
+  "lede": "Every home has people who miss a session. A simple routine means the gap gets closed, not forgotten, and you do not need to rebook a trainer to do it.",
+  "sections": [
+   {
+    "h3": "Record the miss on the day",
+    "paragraphs": [
+     "Write down who was absent and why, on the same sheet you use for attendance. Sickness and leave are normal reasons, and a note takes seconds. Without it, the gap only shows up months later, when someone asks. Your <a href=\"/blog/how-do-you-schedule-care-staff-training-around-a-rota\">training schedule</a> is easier to keep when misses are visible."
+    ]
+   },
+   {
+    "h3": "Four steps for the catch up",
+    "checklist": [
+     "Within a week of their return: allocate a short module on the missed topic.",
+     "Set a due date so it does not drift.",
+     "When an answer is wrong: they take the short lesson, then a fresh question.",
+     "After a few weeks: check the Knowledge gaps view and have a quick chat about the topic on the floor."
+    ]
+   },
+   {
+    "h3": "Know what the catch up cannot do",
+    "paragraphs": [
+     "A module checks knowledge. It does not show that someone can use a hoist or give medicines safely. Those skills still need a competent person to watch them done. Plan a short observation for any practical topic, and note it on the person's record."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the absence note, the catch up, the questions and the results together, so one blank line on a sheet becomes a closed gap with a record."
+ }
+}

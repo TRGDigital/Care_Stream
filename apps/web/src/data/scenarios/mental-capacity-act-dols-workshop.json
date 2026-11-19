@@ -1,0 +1,420 @@
+{
+ "slug": "mental-capacity-act-dols-workshop",
+ "status": "draft",
+ "order": 8,
+ "title": "Mental capacity act training is done. <em>Can your team apply it on a Tuesday?</em>",
+ "meta_title": "Mental Capacity Act Training Follow Up | CareStreamAI",
+ "meta_description": "The workshop was good, but the law is subtle. Check what carers took away with short training built from your own MCA and DoLS policies, and close gaps fast.",
+ "eyebrow": "Scenario",
+ "lede": "You ran a workshop on the Mental Capacity Act and DoLS, and it went well. Mental capacity act training is hard to get right, because the ideas sound simple and are easy to misread. After the session you allocate <a href=\"/training-platform\">short training built from your own policies</a>, and a wrong answer becomes a short lesson on that exact point.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After the MCA and DoLS workshop",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Workshop delivered",
+    "note": "Day 0",
+    "done": true
+   },
+   {
+    "label": "Questions answered in the room",
+    "note": "Day 0",
+    "done": true
+   },
+   {
+    "label": "What each carer took away checked",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Misunderstandings corrected",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/ffb279bd-e7dd-4009-8cd5-ff2337352edd.webp",
+ "image_alt": "A carer kneeling beside an older resident in an armchair, offering a choice between two cardigans, while a manager stands back and observes",
+ "card_title": "The mental capacity workshop went well. What did carers actually take away?",
+ "card_snippet": "Capacity and consent are subtle, and a good session can still leave quiet misunderstandings. Allocate short training from your own policies, and a wrong answer becomes a short follow up lesson.",
+ "primary_keyword": "mental capacity act training",
+ "secondary_keywords": [
+  "dols training",
+  "mca and dols training",
+  "liberty protection safeguards",
+  "deprivation of liberty safeguards training",
+  "mental capacity act quiz",
+  "check for understanding",
+  "knowledge check"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Ad hoc training after a session",
+   "body": "Allocate a short module on any topic when something needs checking or reinforcing.",
+   "action": "See ad hoc training",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "Mental Capacity Act and DoLS course",
+   "body": "A CareStream course on capacity, best interests and deprivation of liberty, for your annual plan.",
+   "action": "See the course",
+   "href": "/staff-training/mental-capacity-act-and-dols"
+  }
+ ],
+ "intro": {
+  "heading": "The workshop went well. The law is still subtle.",
+  "sub": "A scenario we see in many care homes.",
+  "paragraph": "A trainer has spent an afternoon with the team on capacity, best interests and deprivation of liberty. People asked good questions and the feedback was positive. A few weeks later a carer tells a colleague that a resident with dementia \"can't decide anything now\", and another says a resident's choice to skip a meal should simply be overruled because it is unwise. Nobody did anything harmful, and nobody in the room spoke up. The manager realises the workshop covered the ideas, but she cannot say who left with them right. Here is how that plays out."
+ },
+ "trail": [
+  {
+   "when": "Afternoon",
+   "text": "A trainer runs the capacity and DoLS workshop for the team.",
+   "kind": "ok"
+  },
+  {
+   "when": "During the session",
+   "text": "Good questions, lively discussion, warm feedback forms.",
+   "kind": "ok"
+  },
+  {
+   "when": "End of session",
+   "text": "Everyone signs the attendance sheet and says it was useful.",
+   "kind": "ok"
+  },
+  {
+   "when": "Three weeks later",
+   "text": "A carer says a resident \"can't decide anything\" any more.",
+   "kind": "gap"
+  },
+  {
+   "when": "Same week",
+   "text": "Another thinks an unwise choice means the person lacks capacity.",
+   "kind": "gap"
+  },
+  {
+   "when": "Quietly",
+   "text": "A new carer was too shy to say she had not followed the best interests part.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "Signatures and warm feedback. Nothing that shows who understood.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“How do you decide whether a resident can make this choice?”",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The workshop was never the problem.</b> The gap is between a good session and knowing what stuck. Here is how CareStream closes it, using your own policies, without replacing the session.",
+ "why": {
+  "heading": "Subtle ideas are the easiest to misunderstand",
+  "sub": "People rarely say \"I did not get that\". They go back to the floor and act on what they think they heard.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Nodding is not understanding",
+    "body": "Ideas such as capacity being decision specific or an unwise choice not meaning a lack of capacity sound obvious in the room. Under pressure, old habits come back."
+   },
+   {
+    "icon": "alert",
+    "title": "A small misreading has big effects",
+    "body": "Treating someone as unable to decide, or doing something to a person without asking, can affect their rights. Mistakes here are quiet, so nobody notices until later."
+   },
+   {
+    "icon": "tick",
+    "title": "Nobody checks what stuck",
+    "body": "A trainer cannot quiz every carer afterwards, and a manager cannot write extra lessons for every missed point. So the misunderstanding simply stays."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, the follow up out.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a carer meet it.",
+  "blocks": [
+   {
+    "heading": "Allocate a knowledge check on the topic, built from your own policies",
+    "bullets": [
+     "After the workshop, pick the Mental Capacity Act and DoLS topic module in the Training screen and tick the staff who attended",
+     "CareStream builds the lessons and a knowledge check from your own MCA and DoLS policies where they cover it, with general good practice as the fallback. You can edit and preview before anyone sees it",
+     "Staff complete it in the Staff Hub on their own phone, so you have a quick check for understanding rather than another meeting"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Ad hoc training",
+      "href": "/uses/adhoc-training"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Mental Capacity Act and DoLS",
+     "questions": [
+      "A resident makes a choice you think is unwise. What does that tell you about their capacity?",
+      "Before deciding something for a person who lacks capacity, what must you consider?",
+      "Who should you speak to if you think a resident is being restricted in their care?"
+     ],
+     "staff_count": 18
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson on that exact point",
+    "bullets": [
+     "The wrong answer goes into the carer's Follow-up tab in the Staff Hub, and they get an email (at most once a day, in English)",
+     "They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question. They can retry as often as they need",
+     "Because lessons are built from your own policies, they teach what your service does. If your policy wording is old, you will spot it here"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Safeguarding policy guide",
+      "href": "/blog/safeguarding-policy-care-home"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Mental Capacity Act and DoLS",
+     "question": "A resident makes a choice you think is unwise. What does that tell you about their capacity?",
+     "why": "Making an unwise decision does not by itself mean a person lacks capacity to make it.",
+     "remember": [
+      "Assume capacity unless shown otherwise",
+      "Support the person to decide first",
+      "Record how you helped"
+     ],
+     "picture": "A resident declines the meal you chose and asks for toast instead."
+    }
+   },
+   {
+    "heading": "Learn it in the language you think in",
+    "bullets": [
+     "Legal ideas are hard enough in a second language, and a missed word can look like a missed concept",
+     "Your admin sets the carer's second language, and they open the lesson in it from the hub",
+     "Training in different languages is part of the paid plans"
+    ],
+    "tags": [
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish"
+    }
+   },
+   {
+    "heading": "See which ideas did not land, and whether they closed",
+    "bullets": [
+     "The Knowledge gaps view shows the most missed questions and the weakest topics, so you see which part of the workshop needs a second go",
+     "See how gaps are being closed and how many staff engaged with the learning",
+     "A Monday digest email, so the picture arrives without you asking for it"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 9,
+      "affected": 6,
+      "closed": 14,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Unwise choice and capacity",
+       "5 staff"
+      ],
+      [
+       "Capacity is decision specific",
+       "4 staff"
+      ],
+      [
+       "Least restrictive option",
+       "3 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Mental Capacity Act and DoLS",
+       "7 gaps"
+      ],
+      [
+       "Safeguarding Adults",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "We ran a proper workshop. Why add anything on top?",
+    "a": "You would not be replacing the workshop. You would be adding a check afterwards so you know what people took in. The room teaches and discusses. The follow up shows what stuck and gives a short lesson where it did not."
+   },
+   {
+    "q": "How do I check my carers understood capacity and best interests?",
+    "a": "After the session you allocate the Mental Capacity Act and DoLS topic in the Training screen. The questions and lessons are <a href=\"/training-platform\">built from your own policies</a> where they cover it, and from general good practice where they do not. You can edit and preview them first. Carers answer in the Staff Hub on their own phone."
+   },
+   {
+    "q": "What happens when someone gets a question wrong?",
+    "a": "It goes into that carer's Follow-up tab and they get an email, at most once a day and in English. They choose Learn &amp; retry, a short lesson (why this matters, what to remember, a realistic picture) then a fresh question, or Just retry the same question. They can retry as often as they like."
+   },
+   {
+    "q": "Our MCA and DoLS policy might be out of date. Does that matter?",
+    "a": "Yes, and it is worth knowing. The lessons draw on your own wording, so an old policy teaches old wording. Where your policy does not cover a point, the lesson falls back on general good practice, which is a prompt to review it. Check your policy against current guidance and with your local authority, and update it before you allocate."
+   },
+   {
+    "q": "Will it tell me what the law says now about the Liberty Protection Safeguards?",
+    "a": "No. CareStream does not decide which legal scheme applies, and this page does not either. Keep your policy in line with current official guidance and your local authority, and let your policy be the source for the training."
+   },
+   {
+    "q": "Do I get an alert every time someone answers wrongly?",
+    "a": "No. Nothing alerts you on each wrong answer. You see the pattern in Analytics under Knowledge gaps, which shows open gaps, staff affected and the most missed questions, and a digest arrives on Monday."
+   },
+   {
+    "q": "Can staff do this in another language?",
+    "a": "Yes, on the paid plans. A carer whose second language is easier for legal ideas can open the lesson in it, so a wrong answer points to a gap in knowledge and not in vocabulary. Reminder emails stay in English."
+   },
+   {
+    "q": "How do I try it, and what does it show an inspector?",
+    "a": "Create a free account and start the 14 day free trial, then allocate one module after your next session. You can show what each person was asked, what they got wrong, the lesson they were given and whether it then landed. It sits alongside the rest of your <a href=\"/cqc-compliance\">CQC evidence</a>."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A check on understanding, not a legal adviser",
+  "cards": [
+   {
+    "title": "It does not make capacity decisions",
+    "body": "Whether a person has capacity for a particular decision, and what is in their best interests, are assessments made by people. CareStream checks that staff understand the ideas."
+   },
+   {
+    "title": "It does not tell you which scheme applies",
+    "body": "It cannot judge whether a restriction needs an application, or which legal scheme applies. For that, follow current guidance and speak to your local authority."
+   },
+   {
+    "title": "It does not alert you to every wrong answer",
+    "body": "The picture reaches you through the Knowledge gaps view and the Monday digest. Ad hoc training and translation are on the paid plans."
+   }
+  ]
+ },
+ "read_next": [
+  "safeguarding-policy-care-home",
+  "care-certificate-assessor",
+  "incident-led-training-in-care"
+ ],
+ "faqs": {
+  "heading": "Mental capacity training and CareStream, answered",
+  "groups": [
+   {
+    "group": "About the training",
+    "items": [
+     {
+      "q": "What should mental capacity act training cover for care staff?",
+      "a": "At the least, the five principles in <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/1\">section 1 of the Mental Capacity Act 2005</a>: assume capacity, help people decide, an unwise choice is not a lack of capacity, act in best interests, and choose the less restrictive option. Add how your own home records decisions."
+     },
+     {
+      "q": "Where can I find the official guidance on the Act?",
+      "a": "The <a href=\"https://www.gov.uk/government/publications/mental-capacity-act-code-of-practice\">Mental Capacity Act Code of Practice on gov.uk</a> explains what you must do when you act or make decisions on behalf of people who cannot. Your policy should be consistent with it."
+     },
+     {
+      "q": "Is a mental capacity act quiz enough on its own?",
+      "a": "A mental capacity act quiz shows what people can recall, which is a start. Real practice needs conversations, supervision and observation. Use the quiz as a check for understanding and a way to find who needs a conversation."
+     },
+     {
+      "q": "What is the difference between MCA and DoLS training?",
+      "a": "The Act covers capacity and best interests. DoLS training is about deprivation of liberty and when to raise it. Many homes run MCA and DoLS training as one session, so check understanding of both."
+     },
+     {
+      "q": "Does a knowledge check replace the workshop?",
+      "a": "No. A knowledge check after the workshop shows what stuck. For hands on practice and discussion, you still need a competent person in the room."
+     },
+     {
+      "q": "What if a carer gets a question wrong?",
+      "a": "It appears in their Follow-up tab. They can choose Learn &amp; retry, a short lesson on that point followed by a fresh question, or Just retry the same question, as often as they need. Treat it as information, not failure."
+     }
+    ]
+   },
+   {
+    "group": "Policy and the law",
+    "items": [
+     {
+      "q": "Where do I check the current position on DoLS and the Liberty Protection Safeguards?",
+      "a": "Check current official guidance and ask your local authority, as the position has changed over time and we do not state it here. Then make sure your policy and your <a href=\"/staff-training/mental-capacity-act-and-dols\">MCA and DoLS course</a> match it."
+     },
+     {
+      "q": "Do we need deprivation of liberty safeguards training every year?",
+      "a": "How often you refresh deprivation of liberty safeguards training is a decision for your policy and your training plan. Many homes include it in an <a href=\"/uses/annual-training\">annual training plan</a> and add an ad hoc check when practice slips."
+     },
+     {
+      "q": "Does CareStream write our MCA policy?",
+      "a": "No. It builds lessons from the policies you already have and shows where they are silent. See <a href=\"/policy-gap-detection\">policy gap detection</a> for how it highlights missing cover."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "How to follow up an MCA and DoLS workshop",
+  "lede": "A short, practical routine you can run after any session on capacity and deprivation of liberty. It takes a few minutes of your time.",
+  "sections": [
+   {
+    "h3": "Before the workshop",
+    "paragraphs": [
+     "Read your own policy first. If it is old, update it before you teach from it, because staff will follow what is written down. Then decide which three or four ideas matter most for your residents, such as how you support a person to decide and how you record it."
+    ]
+   },
+   {
+    "h3": "After the workshop",
+    "paragraphs": [
+     "Within a few days, allocate a short module on the topic to everyone who attended. Keep it to a handful of questions so it fits into a shift."
+    ],
+    "checklist": [
+     "Update your MCA and DoLS policy against current guidance and your local authority",
+     "Allocate the topic module and preview the questions first",
+     "Give staff a due date a few days after the session",
+     "Open Knowledge gaps after a week and talk to anyone who is stuck"
+    ]
+   },
+   {
+    "h3": "What to do with the results",
+    "paragraphs": [
+     "If one question is missed by many people, the session needs a second go. If one person misses several, have a quiet conversation. For understanding to turn into practice, watch it in the care you see every day, as in the picture of a carer offering a choice and a manager observing."
+    ]
+   }
+  ],
+  "note": "This guide is practical advice, not legal advice. Follow current official guidance and speak to your local authority on legal questions."
+ }
+}

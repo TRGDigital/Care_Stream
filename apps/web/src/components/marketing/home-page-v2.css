@@ -445,3 +445,30 @@
   .hpage-v2 .shot .stepbar{position:static;padding:10px 8px 12px;background:var(--ground-2)}
   .hpage-v2 .shot .stepbar button{padding:6px 10px;font-size:.72rem}
 }
+
+/* "Why should I use CareStream?": scenario carousel. */
+.hpage-v2 .why-sc .why-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:36px}
+.hpage-v2 .why-sc .why-arrows{display:flex;gap:10px;flex:0 0 auto}
+.hpage-v2 .why-sc .why-arrows button{width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--ground);color:var(--ink);display:grid;place-items:center;cursor:pointer;box-shadow:var(--shadow);transition:border-color .18s ease,transform .18s ease}
+.hpage-v2 .why-sc .why-arrows button svg{width:22px;height:22px}
+.hpage-v2 .why-sc .why-arrows button:hover:not(:disabled){border-color:var(--accent);transform:translateY(-1px)}
+.hpage-v2 .why-sc .why-arrows button:disabled{opacity:.35;cursor:default;box-shadow:none}
+.hpage-v2 .why-sc .why-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;border-radius:22px}
+.hpage-v2 .why-sc .why-track::-webkit-scrollbar{display:none}
+.hpage-v2 .why-sc .why-slide{flex:0 0 100%;scroll-snap-align:start;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:48px;align-items:center;background:var(--ground-2);border:1px solid var(--line);border-radius:22px;padding:28px;min-width:0}
+.hpage-v2 .why-sc .why-img{display:block;border-radius:16px;overflow:hidden;box-shadow:var(--shadow-lg);aspect-ratio:3/2;background:var(--plate)}
+.hpage-v2 .why-sc .why-img img{display:block;width:100%;height:100%;object-fit:cover}
+.hpage-v2 .why-sc .why-copy{padding:8px 24px 8px 0;min-width:0}
+.hpage-v2 .why-sc .why-copy h3{font-size:clamp(1.5rem,2.4vw,2.1rem);line-height:1.12;letter-spacing:-.025em;margin:0 0 16px}
+.hpage-v2 .why-sc .why-copy p{font-size:1.04rem;line-height:1.65;color:var(--ink-2);margin:0 0 22px;max-width:34em}
+.hpage-v2 .why-sc .why-link{display:inline-flex;align-items:center;gap:8px;background:var(--btn-ink);color:var(--btn-ink-text);border-radius:999px;padding:13px 22px;font-weight:600;font-size:.92rem;text-decoration:none}
+.hpage-v2 .why-sc .why-link svg{width:14px;height:14px}
+.hpage-v2 .why-sc .why-copy .why-count{margin:20px 0 0;font-size:.8rem;color:var(--muted)}
+.hpage-v2 .why-sc .why-dots{display:flex;justify-content:center;gap:8px;margin-top:22px}
+.hpage-v2 .why-sc .why-dots button{width:9px;height:9px;border-radius:50%;border:0;padding:0;background:#D9D2E6;cursor:pointer}
+.hpage-v2 .why-sc .why-dots button.on{background:var(--accent);width:24px;border-radius:99px}
+@media (max-width:900px){
+  .hpage-v2 .why-sc .why-slide{grid-template-columns:minmax(0,1fr);gap:22px;padding:18px}
+  .hpage-v2 .why-sc .why-copy{padding:0 4px 6px}
+  .hpage-v2 .why-sc .why-head{align-items:flex-start}
+}

@@ -1,0 +1,406 @@
+{
+ "slug": "dementia-awareness-workshop-follow-up",
+ "status": "draft",
+ "order": 7,
+ "title": "The dementia awareness training went well. <em>What did the room take away?</em>",
+ "meta_title": "Dementia Awareness Training Follow Up | CareStreamAI",
+ "meta_description": "The workshop is over and the room nodded. Check understanding afterwards with short training from your own policies and give wrong answers a lesson.",
+ "eyebrow": "Scenario",
+ "lede": "Keep your workshop. After <b>dementia awareness training</b>, the question is what a carer does differently at 3pm on a hard afternoon. CareStream does not replace the session. You allocate <a href=\"/training-platform\">short training built from your own policies</a>, and a wrong answer becomes a short lesson on that exact point.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After the dementia workshop",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Workshop delivered",
+    "note": "Day 0",
+    "done": true
+   },
+   {
+    "label": "Feedback forms collected",
+    "note": "Day 0",
+    "done": true
+   },
+   {
+    "label": "Understanding checked",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Gaps closed with a short lesson",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/08a795b7-2608-4be1-b7b6-b492154a3044.webp",
+ "image_alt": "A carer sitting beside an older resident looking through a photo album and smiling, while a manager watches kindly from across a lounge",
+ "card_title": "The dementia workshop went well. Did it change what carers do?",
+ "card_snippet": "A room that nods is not proof that people understood. Allocate short training built from your own policies after the workshop, and a wrong answer becomes a lesson on that exact point.",
+ "primary_keyword": "dementia awareness training",
+ "secondary_keywords": [
+  "dementia quiz",
+  "dementia care training",
+  "refresher training",
+  "knowledge retention",
+  "check for understanding"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Adhoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Dementia Awareness course",
+   "body": "A CPD certified course your staff can take alongside your own sessions.",
+   "action": "See the course",
+   "href": "/staff-training/dementia-awareness"
+  },
+  {
+   "title": "Adhoc training after a session",
+   "body": "How to follow up any session, topic by topic, without writing new material.",
+   "action": "See how it works",
+   "href": "/uses/adhoc-training"
+  }
+ ],
+ "intro": {
+  "heading": "The workshop was warm. Now what happens on the floor?",
+  "sub": "A scenario we see in many care homes.",
+  "paragraph": "A trainer has spent a morning with the team on dementia awareness. People shared stories, laughed, and a few wiped away a tear. Everyone said it was the best session this year. Three weeks later the manager is on the floor at tea time. A new carer corrects a resident who says she must collect her children, and the resident becomes upset. The manager cannot tell who took the session in and who nodded politely. Feedback forms say people enjoyed it. They do not say who would know what to do. Here is how that plays out."
+ },
+ "trail": [
+  {
+   "when": "Morning",
+   "text": "A trainer runs a dementia workshop for the day and evening team.",
+   "kind": "ok"
+  },
+  {
+   "when": "Midday",
+   "text": "People share stories from the floor. The room is warm and engaged.",
+   "kind": "ok"
+  },
+  {
+   "when": "End of session",
+   "text": "Feedback forms say it was the best session this year.",
+   "kind": "ok"
+  },
+  {
+   "when": "Three weeks later",
+   "text": "A resident asks for her children. A carer corrects her and she becomes upset.",
+   "kind": "gap"
+  },
+  {
+   "when": "Who might have missed it",
+   "text": "A new starter who sat at the back and said little all morning.",
+   "kind": "gap"
+  },
+  {
+   "when": "And another",
+   "text": "A carer on bank hours who left early to start a shift elsewhere.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "Enjoyment scores. Nothing showing who understood what to do differently.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“How do you support someone who is distressed?” Warm feedback is not an answer.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The workshop was never the problem.</b> The gap sits between the session and what each person remembers. Here is how CareStream helps you close it, using your own policies.",
+ "why": {
+  "heading": "A warm room is not the same as a carer who knows what to do",
+  "sub": "Dementia care is learned in the moment. Understanding has to survive until the hard afternoon.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Nodding is not understanding",
+    "body": "Some carers take in every word. Others nod because the session moved quickly, they were tired, or they felt shy about asking in front of colleagues."
+   },
+   {
+    "icon": "tick",
+    "title": "Knowledge retention fades fast",
+    "body": "Without a gentle check, knowledge retention is left to chance. A gap can sit unseen until a resident is upset, a family member complains or an inspector asks."
+   },
+   {
+    "icon": "alert",
+    "title": "Chasing it by hand does not scale",
+    "body": "Writing a follow up for every missed point, for every carer, is work no manager has time for. So the gap often stays open."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, the follow up out.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a carer meet it.",
+  "blocks": [
+   {
+    "heading": "Allocate adhoc training on dementia, built from your own policies",
+    "bullets": [
+     "After the workshop, pick the Dementia Awareness topic module and tick the staff who attended, and the staff who missed it",
+     "CareStream builds the lesson and a short knowledge check from your own policies where they cover the topic, falling back on general good practice, and you can edit and preview it first",
+     "Staff complete it in the Staff Hub on their own phone, with an optional due date"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Adhoc training",
+      "href": "/uses/adhoc-training"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Dementia Awareness",
+     "questions": [
+      "A resident says she must go and collect her children from school. What is a kind first response?",
+      "Why does it help to know a resident's life story?",
+      "What might a resident be telling you when they become upset at mealtimes?"
+     ],
+     "staff_count": 22
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson on that exact point",
+    "bullets": [
+     "The follow up starts by itself. A wrong answer goes into the carer's Follow-up tab in the Staff Hub, and they get an email to say so, at most once a day",
+     "They choose Learn &amp; retry, a short lesson (why it matters, what to remember, a realistic situation) then a fresh question, or Just retry the same question. They can retry as often as they need",
+     "This works as a friendly dementia quiz: a few questions, no pass mark drama, and a lesson when it helps"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Dementia Awareness course",
+      "href": "/staff-training/dementia-awareness"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Dementia Awareness",
+     "question": "A resident says she must go and collect her children from school. What is a kind first response?",
+     "why": "Behind the words is often a feeling, such as worry. Correcting someone sharply can add to their distress.",
+     "remember": [
+      "Listen for the feeling behind the words",
+      "Reassure calmly and avoid arguing",
+      "Check the care plan and tell a senior if it continues"
+     ],
+     "picture": "It is 3pm. A resident stands up in the lounge and says the school bus is due."
+    }
+   },
+   {
+    "heading": "Staff learn in the language they think in",
+    "bullets": [
+     "A carer who answers wrongly because of a missed word can open the lesson in their own language",
+     "Your admin sets their second language, and they switch to it in the hub",
+     "Training in different languages is part of the paid plans"
+    ],
+    "tags": [
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Malayalam"
+    }
+   },
+   {
+    "heading": "See the gaps across the team, and whether they closed",
+    "bullets": [
+     "The Knowledge gaps view shows the most missed questions and the weakest topics, so you see where the workshop needs a tweak",
+     "See how gaps are being closed, and mark a person's record as reviewed",
+     "A Monday digest email, so the picture arrives without you asking for it"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 6,
+      "affected": 4,
+      "closed": 14,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Responding to a distressed resident",
+       "4 staff"
+      ],
+      [
+       "Why life history matters",
+       "3 staff"
+      ],
+      [
+       "Reading signs of pain or thirst",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Dementia Awareness",
+       "5 gaps"
+      ],
+      [
+       "Mental Capacity Act",
+       "1 gap"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "We have just paid for a dementia workshop. Why add anything on top?",
+    "a": "You would not be replacing the trainer. You would be adding a check afterwards, so you know what people took in. The workshop teaches and builds empathy. The follow up shows whether it stuck, and closes the gaps it finds."
+   },
+   {
+    "q": "How would I check for understanding without making carers feel tested?",
+    "a": "After the workshop you allocate a short piece of training on dementia, <a href=\"/training-platform\">built from your own policies</a>. Each carer completes it on their own phone in the Staff Hub. It is a few questions, framed as a chance to learn, and their answers are scored so you can see who understood and who needs another look."
+   },
+   {
+    "q": "What happens when someone gets a question wrong?",
+    "a": "It goes straight into that carer's Follow-up tab, and they get an email, at most once a day and in English only. They choose Learn &amp; retry, a short lesson on that point followed by a fresh question, or Just retry the same question. They can retry as often as they need. You do not write or chase anything."
+   },
+   {
+    "q": "Is the lesson generic or about how we care for people here?",
+    "a": "It is built from your own policies where they cover the topic, so it reflects what your service has written. Where your policies do not cover a point, it falls back on general good practice, which is a useful prompt to improve the policy. It is not clinical advice, and it does not replace your care plans."
+   },
+   {
+    "q": "Can I use this as refresher training later in the year?",
+    "a": "Yes. You can allocate the same topic again whenever you like, as refresher training after a few months, and compare which questions are still being missed. It does not set the refresh schedule for you. See <a href=\"/uses/annual-training\">annual training</a>."
+   },
+   {
+    "q": "What do I see across the team?",
+    "a": "The Knowledge gaps view shows the most missed questions, the weakest topics, and how gaps are being closed, and a digest email arrives on Monday. Nothing alerts you each time someone gets an answer wrong. That tells you whether one person needs a conversation or the workshop needs a tweak."
+   },
+   {
+    "q": "Does this help turn understanding into practice for each resident?",
+    "a": "On Professional and above, you can build “This is me” profiles for residents, which record who a person is, and staff can ask the Staff Hub assistant about approved profile entries. It is about the person, not their care record, and it does not replace the care plan. Training builds understanding, and profiles help carers apply it. See our guide to the <a href=\"/blog/this-is-me-document\">This is me document</a>."
+   },
+   {
+    "q": "Can I try it, and what does it cost?",
+    "a": "You can create a free account and start a 14 day free trial on a paid plan. Adhoc training and translation are on the paid plans, so check the <a href=\"/pricing\">pricing page</a> for what each includes, then <a href=\"/register\">register</a> when you are ready."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A check on understanding, not a replacement for a trainer",
+  "cards": [
+   {
+    "title": "It does not change how someone behaves",
+    "body": "A quiz can show what a carer knows. Warmth, patience and good judgement still have to be seen on the floor, by observation and by supervision."
+   },
+   {
+    "title": "It does not alert you to every wrong answer",
+    "body": "The picture reaches you through the Knowledge gaps view and the Monday digest, not as a message each time someone slips. A workshop does not trigger anything automatically either: you allocate the follow up."
+   },
+   {
+    "title": "Adhoc training and translation are on the paid plans",
+    "body": "Both come with the paid plans. The free plan does not include them. “This is me” profiles are on Professional and above."
+   }
+  ]
+ },
+ "read_next": [
+  "dementia-care-training-in-the-uk",
+  "this-is-me-document",
+  "face-to-face-training-in-care-what-actually-has-to-be-in-the-room"
+ ],
+ "faqs": {
+  "heading": "Dementia awareness training and CareStream, answered",
+  "groups": [
+   {
+    "group": "About the training",
+    "items": [
+     {
+      "q": "Does online follow up replace a dementia awareness training workshop?",
+      "a": "No. A room is good for stories, discussion and building empathy. CareStream sits alongside it and checks what people kept. For a fuller picture of what good dementia care training covers, read our <a href=\"/blog/dementia-care-training-in-the-uk\">guide to dementia care training in the UK</a>."
+     },
+     {
+      "q": "Where does the follow up come from?",
+      "a": "From your own policies where they cover the topic. You pick the Dementia Awareness topic module, and CareStream builds the lesson and questions, with general good practice as the fallback. You can edit and preview it before you allocate it."
+     },
+     {
+      "q": "Can I use a dementia quiz as part of staff training?",
+      "a": "Yes, a short quiz is a fair way to check understanding, as long as it is friendly and followed by a lesson when it helps. In CareStream a wrong answer opens a short lesson on that point, then a fresh question."
+     },
+     {
+      "q": "How soon after the workshop should I check understanding?",
+      "a": "Within a few days is a sensible rule: early enough that the session is fresh, late enough to show what stuck. You choose when to allocate it, and you can set a due date. A second check a few months later works as refresher training."
+     },
+     {
+      "q": "Is there a course I can pair with my own sessions?",
+      "a": "Yes. The <a href=\"/staff-training/dementia-awareness\">Dementia Awareness course</a> is CPD certified, and your own sessions and policy based follow up can sit alongside it."
+     }
+    ]
+   },
+   {
+    "group": "About inspections",
+    "items": [
+     {
+      "q": "What does the law say about staff training?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18 on staffing</a> says staff must receive such appropriate support, training, professional development, supervision and appraisal as is necessary to enable them to carry out the duties they are employed to perform. It does not list courses, so each provider decides what its staff need and must be able to show it."
+     },
+     {
+      "q": "Does the Mental Capacity Act matter in dementia care?",
+      "a": "Yes. <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/1\">Section 1 of the Mental Capacity Act 2005</a> says a person must be assumed to have capacity unless it is established that they lack it, and cannot be treated as unable to decide until all practicable steps to help them have been taken without success. Our <a href=\"/staff-training/mental-capacity-act-and-dols\">Mental Capacity Act and DoLS course</a> covers it in more depth."
+     },
+     {
+      "q": "What could I show an inspector?",
+      "a": "A record of what each person was asked, what they got wrong, the lesson they were given, and whether it then landed. That goes further than a feedback form, and sits alongside the rest of your <a href=\"/cqc-compliance\">CQC evidence</a>."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to follow up dementia awareness training",
+  "lede": "Dementia care is learned in small moments, so the follow up should be small too. A light check after the workshop tells you whether the day worked.",
+  "sections": [
+   {
+    "h3": "What a good check for understanding looks like",
+    "paragraphs": [
+     "A check for understanding does not need to feel like an exam. Ask about situations your carers meet, such as a resident who is anxious at dusk, or who refuses a meal, rather than facts to recall. Two or three questions are enough to show who is confident and who would welcome a second look.",
+     "Treat a wrong answer as information. Often the carer is thoughtful and simply missed a word, so the next step is a short lesson, not a telling off."
+    ]
+   },
+   {
+    "h3": "Four checks that fit a busy service",
+    "checklist": [
+     "Within a week: allocate short training on dementia, built from your policies, to everyone who attended and to anyone who missed it.",
+     "Whenever an answer is wrong: the carer opens a short lesson on that point, then a fresh question.",
+     "Each month: look at the most missed questions and the weakest topics, and tweak the next workshop.",
+     "On the floor: watch real moments, at tea time and in the evening, as part of supervision."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the workshop record, the questions, the lessons and the results together, so you can show understanding as well as attendance."
+ }
+}

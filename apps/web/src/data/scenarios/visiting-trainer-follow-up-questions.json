@@ -1,0 +1,403 @@
+{
+ "slug": "visiting-trainer-follow-up-questions",
+ "status": "draft",
+ "order": 10,
+ "title": "The trainer has gone. How do you <em>check for understanding now?</em>",
+ "meta_title": "Check for Understanding After a Visiting Trainer | CareStreamAI",
+ "meta_description": "The visiting trainer has left and questions went unasked. Allocate short training from your own policies and check for understanding in the Staff Hub.",
+ "eyebrow": "Scenario",
+ "lede": "A visiting trainer finishes at four and drives away, and you cannot ring them back to ask what carers missed. You can still check for understanding. After the session you allocate <a href=\"/training-platform\">short training built from your own policies</a>, and any wrong answer becomes a short lesson on that exact point.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After the visiting trainer leaves",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Trainer delivered the session",
+    "note": "Day 0",
+    "done": true
+   },
+   {
+    "label": "Trainer left, certificates issued",
+    "note": "Day 0",
+    "done": true
+   },
+   {
+    "label": "Unasked questions found",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Gaps closed with a short lesson",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/ff2fe7ca-29b5-4cf9-a184-328597663e83.webp",
+ "image_alt": "A visiting trainer leaving through a door with a bag while three carers stay seated at a table looking thoughtful, and a manager walking over to them",
+ "card_title": "The visiting trainer has left. What did your carers not get to ask?",
+ "card_snippet": "Quiet rooms hide unasked questions, and an outside trainer cannot be called back. Allocate short training built from your own policies, and a wrong answer becomes a short lesson.",
+ "primary_keyword": "check for understanding",
+ "secondary_keywords": [
+  "post training evaluation",
+  "knowledge retention",
+  "learning assessment",
+  "training retention",
+  "training follow up",
+  "face to face training"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Adhoc training after a session",
+   "body": "Pick a topic, tick who was there, and check what stayed with them.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "Face to face training, followed up",
+   "body": "Keep the room. Add a check on what people took away.",
+   "action": "See face to face training",
+   "href": "/uses/face-to-face-training"
+  }
+ ],
+ "intro": {
+  "heading": "The trainer was good. The questions still went unasked.",
+  "sub": "A scenario we see in many care homes.",
+  "paragraph": "An outside trainer spends a day on safeguarding with a mixed group of day and night carers. She is clear, kind and runs to time. At the end she asks, \"Any questions?\" Nobody speaks, so she packs her bag and goes. The next morning, in the office, one carer admits she was not sure who to tell if the manager was the worry. Two others nod in agreement. The trainer is now thirty miles away and the booking is closed. The manager has certificates and a tidy folder, but no idea what else went unsaid."
+ },
+ "trail": [
+  {
+   "when": "9am",
+   "text": "A visiting trainer starts safeguarding for a mixed day and night group.",
+   "kind": "ok"
+  },
+  {
+   "when": "Through the day",
+   "text": "Clear slides, good examples and plenty of nodding.",
+   "kind": "ok"
+  },
+  {
+   "when": "4pm",
+   "text": "\"Any questions?\" Silence. Certificates are handed out.",
+   "kind": "ok"
+  },
+  {
+   "when": "The next morning",
+   "text": "A carer quietly says she was not sure who to tell if the manager was the concern.",
+   "kind": "gap"
+  },
+  {
+   "when": "Who else",
+   "text": "Two colleagues nod. Nobody knows if they feel the same.",
+   "kind": "gap"
+  },
+  {
+   "when": "The trainer",
+   "text": "Booked and paid for one day. Now thirty miles away, and no follow up is on offer.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "Certificates and feedback forms. Nothing on what each carer took in.",
+   "kind": "gap"
+  },
+  {
+   "when": "Six months later",
+   "text": "A visitor asks a carer who she would tell about a concern. She hesitates.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The trainer did the job they were hired for.</b> The gap is what comes after, when the questions that were not asked still need an answer. Here is how CareStream helps you find them.",
+ "why": {
+  "heading": "No questions in the room does not mean no questions",
+  "sub": "Silence at four o'clock is often politeness, tiredness or worry about looking foolish.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "People rarely say it in front of colleagues",
+    "body": "A carer unsure about reporting a concern about a manager may not say so in a group. The question goes home with them, unasked."
+   },
+   {
+    "icon": "tick",
+    "title": "A certificate is not a learning assessment",
+    "body": "It shows a session took place. It does not show who can explain the key points, or who would know what to do on a hard shift."
+   },
+   {
+    "icon": "alert",
+    "title": "The trainer cannot be called back",
+    "body": "A visiting trainer is booked for a day. Chasing them for extra sessions or notes is rarely possible, so the gap is yours to close."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, the follow up out.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a carer meet it. See also <a href=\"/how-it-works\">how CareStream works</a>.",
+  "blocks": [
+   {
+    "heading": "Allocate adhoc training on the topic the trainer covered",
+    "bullets": [
+     "The day after, open the Training screen and pick the topic module that matches the session, such as Safeguarding Adults",
+     "CareStream builds lessons and questions from your own policies where they cover the topic, with general good practice as the fallback. Edit and preview them first",
+     "Tick the staff who attended and add an optional due date. They complete it in the Staff Hub on their own phone"
+    ],
+    "tags": [
+     {
+      "label": "Adhoc training after a session",
+      "href": "/uses/adhoc-training"
+     },
+     {
+      "label": "Safeguarding course",
+      "href": "/staff-training/safeguarding-adults-and-children"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Safeguarding Adults",
+     "questions": [
+      "Who do you tell if the person you are worried about is your manager?",
+      "A resident asks you to keep something secret. What do you say?",
+      "What do you record after a disclosure?"
+     ],
+     "staff_count": 18
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson on that exact point",
+    "bullets": [
+     "The wrong answer goes into the carer's Follow-up tab, and they get an email, at most once a day and in English",
+     "They choose Learn &amp; retry, a short lesson with a fresh question, or Just retry the same question. They can retry as often as they need",
+     "Nothing is sent to you each time. The carer simply gets the point they missed, in their own time"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Safeguarding Adults",
+     "question": "Who do you tell if the person you are worried about is your manager?",
+     "why": "A concern about a manager still has to be raised, so you need to know your service's other route.",
+     "remember": [
+      "Know the second person to tell",
+      "Do not wait until you are certain",
+      "Record what you saw and heard"
+     ],
+     "picture": "You see something worrying and the person in charge is the one involved."
+    }
+   },
+   {
+    "heading": "Staff learn in the language they think in",
+    "bullets": [
+     "A carer who gets a question wrong because of a missed word can open the lesson in their own language",
+     "Your admin sets their second language, and they switch to it in the hub",
+     "Training in different languages is part of the paid plans, and reminder emails stay in English"
+    ],
+    "tags": [
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish"
+    }
+   },
+   {
+    "heading": "See the gaps across the team, and whether they closed",
+    "bullets": [
+     "Knowledge gaps shows your open gaps, how many staff are affected, the most missed questions and the weakest topics",
+     "See how gaps are being closed, so knowledge retention becomes something you can see rather than guess",
+     "A Monday digest email brings the picture to you without you asking"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 6,
+      "affected": 5,
+      "closed": 14,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Who to tell about a manager",
+       "5 staff"
+      ],
+      [
+       "Keeping a disclosure secret",
+       "3 staff"
+      ],
+      [
+       "What to record",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Safeguarding Adults",
+       "6 gaps"
+      ],
+      [
+       "Whistleblowing",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "The trainer has already gone. Is it too late to check for understanding?",
+    "a": "No. You do not need the trainer. After the session you allocate short training on the same topic, <a href=\"/training-platform\">built from your own policies</a>. Carers answer in the Staff Hub, and their answers show what stuck and what did not."
+   },
+   {
+    "q": "How do I find the questions nobody asked?",
+    "a": "You cannot see them directly, but wrong answers point to them. If five carers miss the same question, that is probably a question the room never raised. The Knowledge gaps view shows the most missed questions and the weakest topics."
+   },
+   {
+    "q": "What happens when someone gets a question wrong?",
+    "a": "It goes into their Follow-up tab in the Staff Hub, and they get an email, at most once a day. They choose Learn &amp; retry, a short lesson (why it matters, what to remember, a realistic situation) then a fresh question, or Just retry the same question. They can retry as often as they like."
+   },
+   {
+    "q": "Will you tell me every time someone gets one wrong?",
+    "a": "No. Nothing alerts you on each wrong answer. You see the pattern in Knowledge gaps, and a digest arrives on Mondays. A personal conversation stays your call."
+   },
+   {
+    "q": "Is the lesson about how we work, or generic?",
+    "a": "It is built from your own policies where they cover the topic, so it teaches what your service does. Where they do not, it falls back on general good practice, which is also a hint that the policy needs work."
+   },
+   {
+    "q": "Does the training follow up start by itself after the trainer's session?",
+    "a": "No. A face to face session does not trigger anything automatically. You pick the topic and allocate it. On Professional and above you can also use the face to face router to send a catch up module."
+   },
+   {
+    "q": "Can I check my own edits before staff see it?",
+    "a": "Yes. You can edit and preview the lessons and questions before you allocate them, so nothing reaches carers that you have not read."
+   },
+   {
+    "q": "How do I try it, and what does it cost?",
+    "a": "You can start a 14 day free trial by <a href=\"/register\">creating a free account</a>, and the <a href=\"/pricing\">pricing page</a> shows the plans. Adhoc training sits on the paid plans."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A check on understanding, not a replacement for the trainer",
+  "cards": [
+   {
+    "title": "It cannot ask the trainer for you",
+    "body": "If a carer has a question about the session itself, CareStream cannot reach the trainer. It checks understanding against your own policies and good practice, so a carer with a real question still needs you."
+   },
+   {
+    "title": "It does not start by itself",
+    "body": "A session ending triggers nothing. You choose the topic, tick the staff and allocate it. Wrong answers do not alert you one by one."
+   },
+   {
+    "title": "Adhoc training and translation are on the paid plans",
+    "body": "Both come with the paid plans, and the face to face router starts at Professional. Practical skills still need a competent person to watch them done."
+   }
+  ]
+ },
+ "read_next": [
+  "face-to-face-training-in-care-what-actually-has-to-be-in-the-room",
+  "how-do-you-run-in-house-training-in-a-care-home",
+  "how-do-you-record-in-person-training-so-it-counts-as-cqc-evidence"
+ ],
+ "faqs": {
+  "heading": "Checking understanding after a visiting trainer, answered",
+  "groups": [
+   {
+    "group": "After the session",
+    "items": [
+     {
+      "q": "How do I check for understanding after face to face training?",
+      "a": "Allocate a short topic module the next day and ask a few questions in the Staff Hub. Answers show who understood and who needs another look. Read more on <a href=\"/uses/face-to-face-training\">face to face training follow up</a>."
+     },
+     {
+      "q": "What is a post training evaluation, in practice?",
+      "a": "A post training evaluation asks two things: did people like it, and did they learn it. Feedback forms answer the first. A short knowledge check after the session answers the second."
+     },
+     {
+      "q": "How soon should the training follow up go out?",
+      "a": "Within a few days is sensible. It is soon enough that the session is fresh and late enough to show what stayed. You choose the date and can add a due date."
+     },
+     {
+      "q": "What if a carer gets a question wrong?",
+      "a": "It appears in their Follow-up tab. They can choose Learn &amp; retry or Just retry, as often as they need. Treat it as information, not failure."
+     }
+    ]
+   },
+   {
+    "group": "Retention and evidence",
+    "items": [
+     {
+      "q": "How do I improve knowledge retention after a one day course?",
+      "a": "Ask again within days, in short bursts. A few questions in the Staff Hub, followed by a short lesson on any missed point, do more than another folder of notes. This is also how you watch training retention rather than hope."
+     },
+     {
+      "q": "Is a certificate enough as a learning assessment?",
+      "a": "A certificate shows attendance. A learning assessment shows understanding. Regulation 18 says staff must receive the <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">support, training, professional development, supervision and appraisal</a> needed for their duties, so keeping both is wise."
+     },
+     {
+      "q": "What should I keep as evidence?",
+      "a": "Keep the questions asked, the lessons given and the results, next to the certificate. Regulation 12 requires that people providing care have the <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/12\">qualifications, competence, skills and experience</a> to do so safely, and results help show competence. See <a href=\"/cqc-compliance\">CQC and compliance</a>."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to follow up a visiting trainer",
+  "lede": "Outside trainers are good value, but they leave. The follow up is yours, and it does not have to be big.",
+  "sections": [
+   {
+    "h3": "Why quiet rooms hide questions",
+    "paragraphs": [
+     "A group of colleagues, a trainer they may not see again and a clock on the wall. That is not an easy place to admit you are unsure. Many carers will keep their questions, so silence tells you very little.",
+     "Give them a private way to answer instead. A short check on their own phone asks the same questions without an audience, and it is easier to answer honestly."
+    ]
+   },
+   {
+    "h3": "Four steps after the trainer leaves",
+    "checklist": [
+     "Next day: ask the trainer for the topic list and allocate matching short training from your policies.",
+     "Within the week: look at who has answered and who has not, and nudge the gaps.",
+     "When an answer is wrong: the carer opens a short lesson on that point, then gets a fresh question.",
+     "Monthly: check the most missed questions and the weakest topics, and tell your next trainer what to cover."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the certificate, the questions, the lessons and the results together. It shows what was taught and what was understood."
+ }
+}

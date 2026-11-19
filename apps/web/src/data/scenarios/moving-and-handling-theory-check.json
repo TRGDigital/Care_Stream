@@ -1,0 +1,409 @@
+{
+ "slug": "moving-and-handling-theory-check",
+ "status": "draft",
+ "order": 3,
+ "title": "Beyond the manual handling quiz: <em>do your carers know why they move people that way?</em>",
+ "meta_title": "Manual Handling Quiz for Care Staff Theory | CareStreamAI",
+ "meta_description": "Observe the practical, then check the theory. Allocate a manual handling quiz from your own policies and give wrong answers a short follow up lesson.",
+ "eyebrow": "Scenario",
+ "lede": "A competent person must still watch carers move people. What you can add is a manual handling quiz on the theory, so you know they understood the why as well as the how. With <a href=\"/training-platform\">training built from your own policies</a>, a wrong answer becomes a short lesson on that exact point.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After the hoist practical",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Practical observed by a competent person",
+    "note": "Day 0",
+    "done": true
+   },
+   {
+    "label": "Observation recorded",
+    "note": "Day 0",
+    "done": true
+   },
+   {
+    "label": "Theory understood",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Gaps closed with a short lesson",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/1cdc61d9-2c7a-4c57-a516-7fa29e99e814.webp",
+ "image_alt": "A manager with a clipboard and a carer standing beside an adjustable bed and a hoist in a bright bedroom, the carer thinking a question through, with a folded sling on a chair",
+ "card_title": "They passed the hoist practical. Do they understand the theory behind it?",
+ "card_snippet": "Someone competent watches the technique. A short quiz on your own moving and handling policy checks the thinking behind it, and a wrong answer becomes a lesson on that exact point.",
+ "primary_keyword": "manual handling quiz",
+ "secondary_keywords": [
+  "moving and handling questions",
+  "moving and handling theory",
+  "manual handling competency assessment",
+  "moving and handling refresher",
+  "moving and handling training",
+  "manual handling training",
+  "knowledge check",
+  "check for understanding"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Adhoc training after a session",
+   "body": "Allocate a short module on the topic you have just taught, and see who understood it.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "Moving and Handling of People course",
+   "body": "A CPD certified course for carers, with a manager observation before the certificate is issued.",
+   "action": "See the course",
+   "href": "/staff-training/moving-and-handling-of-people"
+  }
+ ],
+ "intro": {
+  "heading": "The practical went well. The theory is a different question.",
+  "sub": "A scenario we see in many care homes.",
+  "paragraph": "The senior has spent a morning on the unit with two new carers. She walked them through the hoist, the slings and the adjustable bed, then watched each of them move a colleague who was playing the resident. Both did well, and she wrote it up. A week later the manager asks a simple question: do they know why a sling is chosen for one person and not another, or what to do when someone is anxious mid transfer? Watching a technique shows hands. It does not show what is in their heads. Here is how that plays out."
+ },
+ "trail": [
+  {
+   "when": "Morning",
+   "text": "A senior shows two new carers the hoist, slings and bed.",
+   "kind": "ok"
+  },
+  {
+   "when": "Late morning",
+   "text": "Each carer moves a colleague playing the resident, and the senior watches.",
+   "kind": "ok"
+  },
+  {
+   "when": "End of the shift",
+   "text": "The senior writes up what she observed and signs it off.",
+   "kind": "ok"
+  },
+  {
+   "when": "A week later",
+   "text": "The manager wonders what the carers could explain, not just demonstrate.",
+   "kind": "gap"
+  },
+  {
+   "when": "The sling question",
+   "text": "Would they know why one sling suits one person and not another?",
+   "kind": "gap"
+  },
+  {
+   "when": "The unexpected moment",
+   "text": "What would they do if a resident becomes distressed halfway through a transfer?",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "A sound observation record. Nothing about the thinking behind it.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“How do you decide how to move this person?” A demonstration is not an explanation.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The observation was never the problem.</b> The gap is between the practical and what each carer can explain. Here is how CareStream fills it from your own policies, without replacing the person who watches.",
+ "why": {
+  "heading": "A good demonstration does not show the reasoning",
+  "sub": "Technique is observed. Understanding has to be asked about.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Doing it right is not the same as knowing why",
+    "body": "A carer can copy a good transfer on a calm afternoon and still be unsure what to change when the resident, the room or the equipment is different."
+   },
+   {
+    "icon": "tick",
+    "title": "Memory fades once the equipment is put away",
+    "body": "The details of a moving and handling refresher are fresh on the day. A few weeks on, nobody has checked what stuck, so a gap can sit unseen."
+   },
+   {
+    "icon": "alert",
+    "title": "Writing your own questions takes time you do not have",
+    "body": "Few managers can build a fresh set of questions for every carer after every session, so the theory is often assumed rather than checked."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, the theory check out.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a carer meet it.",
+  "blocks": [
+   {
+    "heading": "Allocate a manual handling quiz built from your own policies",
+    "bullets": [
+     "After the practical, pick the Moving and Handling of People module in the Training screen and tick the carers who took part",
+     "CareStream builds the lesson and the moving and handling questions from your own policies, with general good practice as the fallback. You can edit and preview them first",
+     "Staff complete it in the Staff Hub, on their own phone, with an optional due date"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Adhoc training",
+      "href": "/uses/adhoc-training"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Moving and Handling of People",
+     "questions": [
+      "Why must the sling be checked before every use?",
+      "What should you do if a resident becomes distressed during a hoist transfer?",
+      "Who decides which equipment is right for this person?"
+     ],
+     "staff_count": 6
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson on that exact point",
+    "bullets": [
+     "The wrong answer goes straight into the carer's Follow-up tab in the Staff Hub, and they get an email to say so, at most once a day",
+     "They choose Learn &amp; retry, a short lesson (why it matters, what to remember, a realistic situation) then a fresh question, or Just retry the same question. They can retry as often as they need",
+     "Nothing is sent to you each time. It is information for the carer, not a mark against them"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Staff training",
+      "href": "/staff-training"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Moving and Handling of People",
+     "question": "Why must the sling be checked before every use?",
+     "why": "A damaged or wrongly sized sling can fail while someone is being lifted, so it is checked each time.",
+     "remember": [
+      "Look at the stitching and fabric",
+      "Check the label for size and type",
+      "Report anything damaged and do not use it"
+     ],
+     "picture": "The sling for the person you are about to hoist has a frayed loop on one side."
+    }
+   },
+   {
+    "heading": "Staff learn in the language they think in",
+    "bullets": [
+     "A carer who answers wrongly because of one missed word can open the lesson in their own language",
+     "Your admin sets their second language, and they switch to it in the hub",
+     "Translation is part of the paid plans, and the reminder emails stay in English"
+    ],
+    "tags": [
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish"
+    }
+   },
+   {
+    "heading": "See the gaps across the team, and whether they closed",
+    "bullets": [
+     "The Knowledge gaps view shows the most missed questions and the weakest topics, so you see where the moving and handling theory needs more attention",
+     "See how gaps are being closed, and mark a person's record as reviewed",
+     "A Monday digest email, so the picture arrives without you asking for it"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 5,
+      "affected": 4,
+      "closed": 11,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Checking the sling before use",
+       "3 staff"
+      ],
+      [
+       "Choosing the right equipment",
+       "2 staff"
+      ],
+      [
+       "Stopping a transfer safely",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Moving and Handling of People",
+       "5 gaps"
+      ],
+      [
+       "Falls",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "Can CareStream assess whether my carers can move people safely?",
+    "a": "No. Practical competence has to be watched by a competent person who sees the technique done. CareStream checks understanding of the theory only, and keeps a record of it. It sits beside your observation and does not replace it."
+   },
+   {
+    "q": "So what does it actually add?",
+    "a": "A way to find out what each carer can explain. After the practical you allocate a short module on the topic, <a href=\"/training-platform\">built from your own policies</a>. Each carer completes it in the Staff Hub and their answers are scored, so you can see who understood and who did not."
+   },
+   {
+    "q": "What happens when someone gets a question wrong?",
+    "a": "It goes into that carer's Follow-up tab in the hub, and they get an email, at most once a day. They choose Learn &amp; retry, a short lesson on that exact point followed by a fresh question, or Just retry the same question. They can retry as often as they need. Nothing alerts you each time."
+   },
+   {
+    "q": "Is the content generic, or about how we work?",
+    "a": "It is built from your own policies where they cover the topic, so it teaches what your service does. Where your policies do not cover a point, it falls back on general good practice, which is a useful prompt to improve the policy. You can edit and preview everything before anyone sees it."
+   },
+   {
+    "q": "Some of my carers speak English as a second language. Does that matter?",
+    "a": "It can. A carer may understand the technique perfectly and still miss a word in a question about the equipment. They can open the lesson in <a href=\"/languages\">their own language</a>, so a wrong answer points to a gap in knowledge and not in vocabulary. Translation is on the paid plans only."
+   },
+   {
+    "q": "How do I see the picture across the team?",
+    "a": "The Knowledge gaps view in Analytics shows the most missed questions, the weakest topics and how gaps are being closed. A digest arrives on Monday. That tells you whether one person needs a conversation or the session needs a rethink."
+   },
+   {
+    "q": "What could I show an inspector?",
+    "a": "A record of what each carer was asked, what they got wrong, the lesson they were given and whether it then landed, alongside your own observation records. It sits with the rest of your <a href=\"/cqc-compliance\">CQC evidence</a>. It shows understanding, but it is not a promise about inspection outcomes."
+   },
+   {
+    "q": "What does it cost, and can I try it first?",
+    "a": "There is a 14 day free trial on the paid plans, and you can <a href=\"/register\">create a free account</a> to look around. Adhoc training sits on the paid plans, and the <a href=\"/pricing\">pricing page</a> has the current details."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A check on the theory, not a replacement for the person who watches",
+  "cards": [
+   {
+    "title": "It does not assess practical skills",
+    "body": "Using a hoist or helping someone move still needs a competent person to show the technique and watch it done. CareStream cannot see what a carer does on the floor."
+   },
+   {
+    "title": "It does not alert you to every wrong answer",
+    "body": "The picture reaches you through the Knowledge gaps view and the Monday digest, not as a message each time someone slips. The carer gets the follow up, not you."
+   },
+   {
+    "title": "Adhoc training and translation are on the paid plans",
+    "body": "Both come with the paid plans. The free plan does not include them. Nothing is triggered automatically by the practical session, so you allocate the module yourself."
+   }
+  ]
+ },
+ "read_next": [
+  "moving-and-handling-training-for-carers-what-must-it-include",
+  "manual-handling-training-courses-uk-regulations",
+  "face-to-face-training-in-care-what-actually-has-to-be-in-the-room"
+ ],
+ "faqs": {
+  "heading": "Manual handling quizzes and CareStream, answered",
+  "groups": [
+   {
+    "group": "About the theory check",
+    "items": [
+     {
+      "q": "Is a manual handling quiz enough to show a carer is competent?",
+      "a": "No. A quiz checks what someone knows. Practical competence has to be observed by a competent person. Treat a manual handling competency assessment as the hands on part, and the quiz as the check on the thinking behind it."
+     },
+     {
+      "q": "What kind of moving and handling questions does CareStream ask?",
+      "a": "Short multiple choice questions on the topic, built from your own policies, such as why equipment is checked or what to do when a transfer does not go to plan. You can edit and preview them before you assign them."
+     },
+     {
+      "q": "When should I give the quiz after the practical?",
+      "a": "Within a few days is a sensible rule: early enough that the session is fresh, late enough to show what stuck. You choose when to allocate it, and you can set a due date."
+     },
+     {
+      "q": "What if a carer gets a question wrong?",
+      "a": "It appears in their Follow-up tab. They can choose Learn &amp; retry, a short lesson on that point followed by a fresh question, or Just retry the same question, as often as they need. Treat it as information, not failure."
+     },
+     {
+      "q": "Can a knowledge check work as part of a moving and handling refresher?",
+      "a": "Yes. A short knowledge check after a moving and handling refresher shows which carers took in the theory, and where a second look is needed before the next observed session."
+     }
+    ]
+   },
+   {
+    "group": "Practical and legal points",
+    "items": [
+     {
+      "q": "Does online manual handling training replace the practical?",
+      "a": "No. Manual handling training that involves people needs someone competent to demonstrate and observe the technique. CareStream adds a check on understanding afterwards. The CPD certified <a href=\"/staff-training/moving-and-handling-of-people\">Moving and Handling of People course</a> also waits for a manager's observation before the certificate is issued."
+     },
+     {
+      "q": "What does the law say about manual handling?",
+      "a": "Under <a href=\"https://www.legislation.gov.uk/uksi/1992/2793/regulation/4\">regulation 4 of the Manual Handling Operations Regulations 1992</a>, employers must avoid hazardous manual handling so far as reasonably practicable, assess what cannot be avoided, and reduce the risk of injury. The <a href=\"https://www.hse.gov.uk/msd/manual-handling/\">HSE manual handling guidance</a> sets out the same duties in plain terms."
+     },
+     {
+      "q": "How does this link to staff training duties in care?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18 of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014</a> says staff must receive the support and training they need to do their work. How you show that is for you to decide, and a record of observation plus a theory check is one way. Our <a href=\"/blog/moving-and-handling-training-for-carers-what-must-it-include\">guide to what moving and handling training must include</a> goes further."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to check the theory after the practical",
+  "lede": "Moving and handling is a skill, and a skill is first judged by watching it. But the reasoning behind each choice can be checked too, and most homes never do. This is a simple routine that fits a busy service.",
+  "sections": [
+   {
+    "h3": "Keep the two checks separate",
+    "paragraphs": [
+     "The observation answers one question: can this person do it safely in front of me? The knowledge check answers another: can they explain why it is done that way? Both matter, and one cannot stand in for the other.",
+     "Keep your observation record as it is, and add the theory check beside it. If a carer shows good technique but gets several questions wrong, that is a conversation to have, not a mark against them. If a carer knows the theory but fumbles the equipment, you have a different gap to close."
+    ]
+   },
+   {
+    "h3": "Four steps that fit a busy service",
+    "checklist": [
+     "On the day: a competent person observes the technique and records what they saw.",
+     "Within a week: allocate a short module on the topic, built from your policies, to the carers who took part.",
+     "Whenever an answer is wrong: the carer opens a short lesson on that point, then a fresh question.",
+     "Each month: look at the most missed questions and the weakest topics, and decide what to show on the floor next."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the observation record and the theory results together, so you can show what a carer can do and what they can explain."
+ }
+}

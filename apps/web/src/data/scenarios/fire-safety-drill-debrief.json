@@ -1,0 +1,412 @@
+{
+ "slug": "fire-safety-drill-debrief",
+ "status": "draft",
+ "order": 6,
+ "title": "The drill went well. <em>Would a fire safety quiz show what they remember?</em>",
+ "meta_title": "Fire Safety Quiz for Care Staff After a Drill | CareStreamAI",
+ "meta_description": "Run a fire safety quiz a week after the drill. Built from your own policies, with a short lesson for every wrong answer. See what staff really remember.",
+ "eyebrow": "Scenario",
+ "lede": "A drill shows that people moved. It does not show what they understood. A short fire safety quiz after the drill, <a href=\"/training-platform\">built from your own policies</a>, shows what each carer remembers and gives a short lesson on any point they miss.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After the fire drill",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Drill carried out",
+    "note": "Day 0",
+    "done": true
+   },
+   {
+    "label": "Fire drill record filled in",
+    "note": "Day 0",
+    "done": true
+   },
+   {
+    "label": "Understanding checked a week later",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Gaps closed with a short lesson",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/461eec02-acef-420c-8c4e-e72381047987.webp",
+ "image_alt": "A manager and four carers talking together in a corridor beside a fire door and a red fire extinguisher",
+ "card_title": "The fire drill went well. What will staff remember next week?",
+ "card_snippet": "A drill record shows the drill happened, not what each carer understood. A short quiz built from your own fire policies shows what stuck, and a wrong answer becomes a short lesson.",
+ "primary_keyword": "fire safety quiz",
+ "secondary_keywords": [
+  "fire safety awareness training",
+  "fire drill record",
+  "check for understanding",
+  "knowledge check",
+  "refresher training"
+ ],
+ "intro": {
+  "heading": "The drill is done. Now you need to know it landed.",
+  "sub": "A scenario we see in many care homes.",
+  "paragraph": "The alarm sounded at two in the afternoon and the day team met at the assembly point in good time. The manager thanked everyone, filled in the drill form and went back to the office. A week later a new carer, who started the day before the drill, is asked where the nearest fire door is on her corridor and hesitates. The manager realises the form shows when the drill happened and who took part. It does not show who understood what to do, or who was too busy dealing with the alarm to take it in."
+ },
+ "trail": [
+  {
+   "when": "Two o'clock",
+   "text": "The alarm sounds and the day team reaches the assembly point.",
+   "kind": "ok"
+  },
+  {
+   "when": "Afterwards",
+   "text": "The manager thanks everyone and runs a quick talk in the corridor.",
+   "kind": "ok"
+  },
+  {
+   "when": "That afternoon",
+   "text": "The drill form is filled in and filed.",
+   "kind": "ok"
+  },
+  {
+   "when": "One week later",
+   "text": "Nobody has checked what anyone remembers of the talk.",
+   "kind": "gap"
+  },
+  {
+   "when": "Who might have missed it",
+   "text": "A carer who started the day before and followed others out.",
+   "kind": "gap"
+  },
+  {
+   "when": "And another",
+   "text": "A carer who was in a resident's room and only heard part of the briefing.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "A form showing a drill took place. Nothing showing what was understood.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“What would you do if the alarm sounded now?” A form cannot answer for them.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "The drill was real work and it counted. What is missing is a quick, kind way to check what stuck, and a short lesson for anything that did not.",
+ "why": {
+  "heading": "A drill record shows what happened, not what was understood",
+  "sub": "Staff can take part in a drill and still not know the next step on their own.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Following the crowd is not knowing",
+    "body": "In a drill many carers walk out with the group. That is fine on the day, but it does not show they could act alone, or cover a different part of the building."
+   },
+   {
+    "icon": "tick",
+    "title": "New and part time staff see less",
+    "body": "People on different shifts, new starters and agency staff may miss the briefing. Nobody notices until someone is asked a direct question."
+   },
+   {
+    "icon": "alert",
+    "title": "Memory fades without a prompt",
+    "body": "A short talk in a corridor is easy to forget. A quick check a week later is a fair way to see what has stayed and what needs another look."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, the check out.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a carer meet it.",
+  "blocks": [
+   {
+    "heading": "Allocate a fire safety quiz built from your own policies",
+    "bullets": [
+     "A week after the drill, open the Training screen, pick the Fire Safety module and tick the staff who were on shift",
+     "CareStream builds a short lesson and a knowledge check from your own policies where they cover it, and you can edit and preview everything before anyone sees it",
+     "Staff complete it in the Staff Hub, on their own phone, with an optional due date"
+    ],
+    "tags": [
+     {
+      "label": "Fire safety course",
+      "href": "/staff-training/fire-safety"
+     },
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Fire Safety",
+     "questions": [
+      "What should you do first if you discover a fire?",
+      "Why must fire doors not be wedged open?",
+      "Where is your assembly point?"
+     ],
+     "staff_count": 18
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson on that point",
+    "bullets": [
+     "The wrong answer goes straight into the carer's Follow-up tab in the Staff Hub, and they get an email to say so, at most once a day",
+     "They choose Learn &amp; retry, a short lesson (why it matters, what to remember, a realistic situation) then a fresh question, or Just retry the same question, as often as they need",
+     "Lessons draw on your own policies, so they teach what your home does, and general good practice fills any gap"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Adhoc training",
+      "href": "/uses/adhoc-training"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Fire Safety",
+     "question": "Why must fire doors not be wedged open?",
+     "why": "A closed fire door holds back fire and smoke, which protects people and keeps escape routes usable.",
+     "remember": [
+      "Keep fire doors closed",
+      "Do not prop them open",
+      "Report any door that does not close"
+     ],
+     "picture": "It is a warm afternoon and a trolley is blocking a fire door, so you are tempted to wedge it open."
+    }
+   },
+   {
+    "heading": "Staff learn in the language they think in",
+    "bullets": [
+     "A carer who answers wrongly because of a missed word can open the lesson in their own language",
+     "Your admin sets their second language, and they switch to it in the hub",
+     "Training in different languages is part of the paid plans, and follow up emails stay in English"
+    ],
+    "tags": [
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish"
+    }
+   },
+   {
+    "heading": "See the gaps across the team, and whether they closed",
+    "bullets": [
+     "The Knowledge gaps view shows the most missed questions and the weakest topics, so you can see where the next drill briefing needs a tweak",
+     "See how gaps are being closed, and mark a person's record as reviewed",
+     "A Monday digest email, so the picture arrives without you asking for it"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 6,
+      "affected": 5,
+      "closed": 11,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Where the assembly point is",
+       "4 staff"
+      ],
+      [
+       "Why fire doors stay closed",
+       "3 staff"
+      ],
+      [
+       "First action on finding a fire",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Fire Safety",
+       "6 gaps"
+      ],
+      [
+       "Health and Safety",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "Does CareStream keep my fire drill record?",
+    "a": "No. Keep your drill record as you do now. It shows the drill happened. CareStream adds a separate check on what staff understood afterwards, so you have both."
+   },
+   {
+    "q": "How do I check what staff remember after a drill?",
+    "a": "A week or so later you allocate the Fire Safety module in the Training screen. It is a short quiz built from <a href=\"/training-platform\">your own policies</a> where they cover the topic. Staff complete it in the Staff Hub on their own phone."
+   },
+   {
+    "q": "What happens when someone gets a question wrong?",
+    "a": "It goes into their Follow-up tab and they get an email, at most once a day. They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question. They can retry as often as they need."
+   },
+   {
+    "q": "Does it tell me every time someone slips?",
+    "a": "No. Nothing alerts you on each wrong answer. You see the picture in Analytics, Knowledge gaps, and in a Monday digest email."
+   },
+   {
+    "q": "Is the lesson generic, or about how we work?",
+    "a": "It uses your own policies where they cover the topic. Where they do not, it falls back on general good practice, which is a useful hint that the policy needs a look. Check your fire procedures are in place first."
+   },
+   {
+    "q": "Can I change the questions?",
+    "a": "Yes. You can edit and preview the module before you allocate it, so the questions fit your building and your fire procedures."
+   },
+   {
+    "q": "Does this replace the drill or the fire training?",
+    "a": "No. Drills and practical fire training stay as they are. This checks understanding afterwards. It does not teach anyone how to use equipment or lead an evacuation."
+   },
+   {
+    "q": "What does it cost and can I try it?",
+    "a": "There is a 14 day free trial on the paid plans, and you can <a href=\"/register\">create a free account</a> to look around. The adhoc training screen is on the paid plans, and you can see the plans on the <a href=\"/pricing\">pricing page</a>."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A check on understanding, not a replacement for the drill",
+  "cards": [
+   {
+    "title": "It does not keep your fire drill record",
+    "body": "CareStream does not record drills. Keep your own record of when drills happen and who took part. The quiz sits beside it."
+   },
+   {
+    "title": "It does not teach evacuation",
+    "body": "Follow your fire procedures and your fire risk assessment. A quiz can check what people remember. It cannot show someone how to evacuate a building."
+   },
+   {
+    "title": "It does not alert you to every wrong answer",
+    "body": "The picture reaches you through the Knowledge gaps view and the Monday digest, not as a message each time someone slips. Adhoc training and translation are on the paid plans."
+   }
+  ]
+ },
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Adhoc training from your policies, with wrong answers that become short lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Adhoc training",
+   "body": "Allocate short training on any topic, the week it matters.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "Fire safety training",
+   "body": "The Fire Safety course for care staff, with certificates.",
+   "action": "See the course",
+   "href": "/staff-training/fire-safety"
+  }
+ ],
+ "read_next": [
+  "health-and-safety-awareness-course-for-care-staff",
+  "business-continuity-plan-care-home",
+  "micro-learning-for-care-staff-what-works-on-a-12-hour-shift"
+ ],
+ "faqs": {
+  "heading": "Fire safety checks and CareStream, answered",
+  "groups": [
+   {
+    "group": "About the quiz",
+    "items": [
+     {
+      "q": "What is a good fire safety quiz for care home staff?",
+      "a": "A short one, with three to five questions on what a carer would actually do. Ask about the first action, fire doors, the assembly point and how to raise the alarm. CareStream builds one from <a href=\"/training-platform\">your own policies</a>, and you can edit it first."
+     },
+     {
+      "q": "Is a quiz the same as fire safety awareness training?",
+      "a": "No. Fire safety awareness training teaches the topic, and our <a href=\"/staff-training/fire-safety\">Fire Safety course</a> is one way to do that. A quiz afterwards checks what stuck."
+     },
+     {
+      "q": "What is a knowledge check?",
+      "a": "A knowledge check is a few questions asked after training to see what someone remembers. In CareStream, a wrong answer opens a short lesson on that point, then a fresh question."
+     },
+     {
+      "q": "How soon after the drill should I send it?",
+      "a": "About a week later is a sensible rule: late enough to show what stuck. You choose when to allocate it and can set a due date."
+     }
+    ]
+   },
+   {
+    "group": "Records and law",
+    "items": [
+     {
+      "q": "Does a fire drill record show staff understood?",
+      "a": "It shows the drill took place. A quick check for understanding afterwards adds the other half, which is what people remembered. CareStream does not keep drill records."
+     },
+     {
+      "q": "Who is responsible for fire safety in a care home?",
+      "a": "Under the Regulatory Reform (Fire Safety) Order 2005, this sits with the <a href=\"https://www.legislation.gov.uk/uksi/2005/1541/article/3\">responsible person</a>, which is the employer for a workplace under their control. Your fire risk assessment should say who that is for your home."
+     },
+     {
+      "q": "Must employees be given fire safety training?",
+      "a": "The same Order says the responsible person must ensure that <a href=\"https://www.legislation.gov.uk/uksi/2005/1541/article/21\">employees are given adequate safety training</a>, when they start and again where appropriate. A short quiz is one way to see how well it is landing."
+     },
+     {
+      "q": "Does CareStream replace refresher training?",
+      "a": "No. Refresher training stays as you plan it. A quiz after a drill is a small extra check between refreshers, so you can see who needs another look."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to check understanding after a fire drill",
+  "lede": "A drill ends when the last person is back inside and the form is filed. What a manager really wants to know comes later: who could do it again, alone, without following the crowd.",
+  "sections": [
+   {
+    "h3": "Keep the check short and about real actions",
+    "paragraphs": [
+     "Three to five questions is enough. Ask what a carer would do, not what a document says. Cover the first action on finding a fire, why fire doors stay closed, where to go and who to tell. Your own fire procedures decide the right answers, so write or edit the questions to match them.",
+     "Keep the tone kind. A wrong answer is information about where the next briefing needs to be clearer. It is not a mark against the carer."
+    ]
+   },
+   {
+    "h3": "Four checks that fit a busy home",
+    "checklist": [
+     "Same day: a short talk after the drill, and your drill record filled in.",
+     "Within a week: allocate the Fire Safety module so each carer answers a few questions alone.",
+     "Whenever an answer is wrong: the carer opens a short lesson on that point, then a fresh question.",
+     "Each month: look at the most missed questions and use them in the next drill briefing."
+    ]
+   },
+   {
+    "h3": "Know who is responsible",
+    "paragraphs": [
+     "The Regulatory Reform (Fire Safety) Order 2005 puts duties on the <a href=\"https://www.legislation.gov.uk/uksi/2005/1541/article/3\">responsible person</a>, and article 21 covers <a href=\"https://www.legislation.gov.uk/uksi/2005/1541/article/21\">training for employees</a>. Check who that is for your home and keep your fire risk assessment close to hand."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the drill record, the quiz questions and the results together, so you can show understanding as well as that the drill took place."
+ }
+}

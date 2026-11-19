@@ -1,0 +1,413 @@
+{
+ "slug": "medication-training-understanding-check",
+ "status": "draft",
+ "order": 4,
+ "title": "Medication training is done. Now for a <em>medication competency assessment</em> that checks they understood your policy.",
+ "meta_title": "Medication Competency Assessment: Policy Check | CareStreamAI",
+ "meta_description": "Check carers understood your own medication policy after training. Wrong answers become short lessons. An assessor still observes practice.",
+ "eyebrow": "Scenario",
+ "lede": "A medication competency assessment is observed in practice by a competent assessor, and CareStream does not replace that. What it adds is a check that your carers understood your own written procedure. After the training day you allocate <a href=\"/training-platform\">short training built from your own policies</a>, and a wrong answer becomes a short lesson on that exact point.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After the medication training day",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Training day delivered",
+    "note": "Day 0",
+    "done": true
+   },
+   {
+    "label": "Observed practice signed off",
+    "note": "Week 1",
+    "done": true
+   },
+   {
+    "label": "Own policy understanding checked",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Wrong answers closed with a short lesson",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/7ce10aec-188f-4758-86bd-ecf2a2e9babf.webp",
+ "image_alt": "A senior carer at a medication trolley in a care home corridor, with a manager reading a blue folder beside her and a resident seated in a bedroom behind them",
+ "card_title": "Medication training is signed off. Do carers understand your own policy?",
+ "card_snippet": "Observed practice shows a carer can do the round. It does not show they understood your written procedure. Allocate a short check built from your own medication policy, and wrong answers become short lessons.",
+ "primary_keyword": "medication competency assessment",
+ "secondary_keywords": [
+  "medication quiz",
+  "medication policy care home",
+  "medication administration training",
+  "medication training for care staff",
+  "safe handling of medicines training",
+  "knowledge assessment",
+  "check for understanding"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Short training after a session or an incident",
+   "body": "Allocate a topic module to the staff who need it and see who understood.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "Medication administration and competency",
+   "body": "The course page for medication training, with the certificate that waits for a manager observation.",
+   "action": "See the course",
+   "href": "/staff-training/medication-administration-and-competency"
+  }
+ ],
+ "intro": {
+  "heading": "The round was observed. Did they understand the policy behind it?",
+  "sub": "A scenario we see in many care homes.",
+  "paragraph": "A home runs its yearly medication administration training on a Tuesday. The senior carer who leads it watches each new carer complete a supervised round, and the manager signs the observation form. It all looks right. Then a carer asks, in passing, whether a refused dose gets recorded as missed or as refused, and the answers in the room disagree. Your written procedure says one thing. Three people remember another. Observation shows what someone does while watched. It does not show whether they have taken in the wording of your own policy."
+ },
+ "trail": [
+  {
+   "when": "Tuesday morning",
+   "text": "A senior carer runs the medication training day for four carers.",
+   "kind": "ok"
+  },
+  {
+   "when": "Late morning",
+   "text": "Each carer completes a supervised round and the manager observes.",
+   "kind": "ok"
+  },
+  {
+   "when": "End of day",
+   "text": "Observation forms are signed and filed in the staff folders.",
+   "kind": "ok"
+  },
+  {
+   "when": "Next week",
+   "text": "A carer asks how a refused dose is recorded. Two answers are given.",
+   "kind": "gap"
+  },
+  {
+   "when": "Who it affects",
+   "text": "Four carers heard the policy once, at speed, with a round to get through.",
+   "kind": "gap"
+  },
+  {
+   "when": "What was observed",
+   "text": "Practice on one day with the manager watching, not understanding of the wording.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "Signed forms and no record of who understood what the policy says.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“How do you know staff understand your medication policy?”",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>Observed practice was never the problem.</b> The gap is between the observation and the evidence that people understood the policy. Here is how CareStream fills it, without replacing the assessor.",
+ "why": {
+  "heading": "Observation shows what they do. It does not show what they know.",
+  "sub": "Errors often start with a misread policy, so it is worth checking the reading as well as the practice.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "A policy heard once is easy to misremember",
+    "body": "Medication training days are busy. Carers hear your procedure while thinking about the round they are about to do, and details such as refusals or late doses slip."
+   },
+   {
+    "icon": "tick",
+    "title": "A signed form is not a check for understanding",
+    "body": "The form records who was watched and when. A short question set on your own wording records who understood it, and who needs another look."
+   },
+   {
+    "icon": "alert",
+    "title": "Gaps stay hidden until something goes wrong",
+    "body": "If nobody asks, a carer who has misread the policy keeps working to the wrong version. Errors often start there, long before anyone notices."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your medication policy in, the understanding check out.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a carer meet it. See also <a href=\"/uses/adhoc-training\">adhoc training after a session or an incident</a> and <a href=\"/staff-training/medication-administration-and-competency\">the medication administration and competency course</a>.",
+  "blocks": [
+   {
+    "heading": "Allocate a medication quiz built from your own policy",
+    "bullets": [
+     "After the training day, pick the Medication topic module in the Training screen and tick the carers who attended",
+     "CareStream builds the lessons and a knowledge assessment from your own policies where they cover the topic, with general good practice as the fallback. You edit and preview it first",
+     "Staff complete it in the Staff Hub on their own phone, with an optional due date"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Medication",
+     "questions": [
+      "Where does our policy say a refused dose is recorded?",
+      "Who do you tell if a medicine is not in stock at the start of a round?",
+      "What does our policy say you must do before you sign the MAR chart?"
+     ],
+     "staff_count": 14
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson on that exact point",
+    "bullets": [
+     "The wrong answer goes into the carer's Follow-up tab in the Staff Hub, and they get an email to say so, at most once a day and in English",
+     "They choose Learn &amp; retry, a short lesson (why it matters, what to remember, a realistic situation) then a fresh question, or Just retry the same question, as often as they need",
+     "Lessons draw on your own wording, so they teach what your home actually does"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "MAR charts explained",
+      "href": "/blog/mar-charts-explained-for-new-care-staff"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Medication",
+     "question": "A resident refuses their morning tablet. What does the policy say you record?",
+     "why": "A refused dose is a different event from a missed one, and the record needs to show which it was.",
+     "remember": [
+      "Follow the home's own policy for the code",
+      "Record it at the time, not later",
+      "Tell the senior on shift"
+     ],
+     "picture": "A resident turns away from the pot and says they do not want it today."
+    }
+   },
+   {
+    "heading": "Staff learn in the language they think in",
+    "bullets": [
+     "A carer who answers wrongly because one word in the policy was unfamiliar can open the lesson in their own language",
+     "Your admin sets their second language, and they switch to it in the hub",
+     "Training in different languages is part of the paid plans"
+    ],
+    "tags": [
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish"
+    }
+   },
+   {
+    "heading": "See the gaps across the team, and whether they closed",
+    "bullets": [
+     "The Knowledge gaps view shows the most missed questions and the weakest topics, so you see which parts of the policy need another look",
+     "See how gaps are being closed, and mark a person's record as reviewed",
+     "A Monday digest email, so the picture arrives without you asking for it"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 5,
+      "affected": 4,
+      "closed": 11,
+      "engaged": 80
+     },
+     "missed": [
+      [
+       "Recording a refused dose",
+       "3 staff"
+      ],
+      [
+       "Stock not available at the round",
+       "2 staff"
+      ],
+      [
+       "Checks before signing the MAR",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Medication",
+       "5 gaps"
+      ],
+      [
+       "Safeguarding Adults",
+       "1 gap"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "Is this a medication competency assessment?",
+    "a": "No, and we would not want you to treat it as one. Medication competence is observed in practice by a competent assessor, and that stays with you. CareStream checks whether your carers understood your own written policy. It sits alongside the observation, not in place of it."
+   },
+   {
+    "q": "So what does it actually check?",
+    "a": "It checks understanding of your procedure: how your home records a refusal, who you tell about a stock problem, what you check before signing. You allocate a Medication topic module after the training day, and each carer answers short questions in the Staff Hub on their own phone."
+   },
+   {
+    "q": "Where do the questions come from?",
+    "a": "From your own policies where they cover the topic, with general good practice as the fallback. You pick the topic module, not a single policy or section. You can edit and preview the lessons and questions before anyone sees them, so check them against your procedure."
+   },
+   {
+    "q": "What happens when a carer gets one wrong?",
+    "a": "It goes straight into their Follow-up tab in the hub, and they get an email, at most once a day. They choose Learn &amp; retry, a short lesson on that point followed by a fresh question, or Just retry the same question. They can retry as often as they need, and nothing is pushed at them."
+   },
+   {
+    "q": "Will I be told every time someone gets an answer wrong?",
+    "a": "No. Nothing alerts you on each wrong answer. You see the picture in Analytics, under Knowledge gaps, and in a Monday digest email. That shows open gaps, staff affected, the most missed questions and how gaps are being closed."
+   },
+   {
+    "q": "Can staff who speak another first language use it?",
+    "a": "Yes, on the paid plans. A carer's second language can be set by your admin, and they can open the lesson in it. The email about a wrong answer is English only, and hub menus stay in English."
+   },
+   {
+    "q": "Does a carer's medication certificate depend on this?",
+    "a": "No. The free medication course on the <a href=\"/staff-training/medication-administration-and-competency\">course page</a> has a certificate that waits for a manager observation sign off. The understanding check is separate. It is for your own policy, and it does not sign anyone off."
+   },
+   {
+    "q": "How much does it cost, and can I try it first?",
+    "a": "The adhoc training screen is on the paid plans, and you can try those with a 14 day free trial. Create a free account on the <a href=\"/register\">registration page</a> to look around, and see the <a href=\"/pricing\">pricing page</a> for the current plans."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A check on understanding, not a competency sign off",
+  "cards": [
+   {
+    "title": "It does not sign anyone off as competent",
+    "body": "Observed practice by a competent assessor is how medication competence is judged. CareStream checks that carers understood your written policy and cannot replace the assessor or the observation."
+   },
+   {
+    "title": "It does not give clinical medicines advice",
+    "body": "The questions test your own procedure. Decisions about doses, interactions or a particular resident belong with the prescriber, the pharmacist and your own protocols, not with a quiz."
+   },
+   {
+    "title": "It does not alert you to every wrong answer",
+    "body": "The picture reaches you through Knowledge gaps and the Monday digest. Adhoc training and translation are on the paid plans, and the free plan does not include them."
+   }
+  ]
+ },
+ "read_next": [
+  "medication-training-for-care-workers",
+  "mar-charts-explained-for-new-care-staff",
+  "care-certificate-assessor"
+ ],
+ "faqs": {
+  "heading": "Medication training and CareStream, answered",
+  "groups": [
+   {
+    "group": "About the check",
+    "items": [
+     {
+      "q": "What is the difference between a medication competency assessment and a medication quiz?",
+      "a": "A competency assessment looks at what a person does, observed by a competent assessor. A medication quiz asks what they know. You need both ideas, and CareStream only helps with the second: a short check on your own medication policy. It does not sign anyone off."
+     },
+     {
+      "q": "Where does the quiz come from?",
+      "a": "From your own policies. You pick the Medication topic module in the <a href=\"/training-platform\">Training screen</a>, and CareStream builds the lessons and questions from the policy text where it covers the topic, then general good practice. You edit and preview before assigning."
+     },
+     {
+      "q": "Can this replace medication administration training?",
+      "a": "No. Practical medication administration training, including observed rounds, still needs a competent person. The check comes after the training day and shows who understood your policy. See the <a href=\"/staff-training/medication-administration-and-competency\">medication course</a> for the certificate route."
+     },
+     {
+      "q": "What if a carer gets a question wrong?",
+      "a": "It appears in their Follow-up tab. They can choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question, as often as they need. Treat it as information about the policy wording, and not as a mark against the carer."
+     }
+    ]
+   },
+   {
+    "group": "Policy and evidence",
+    "items": [
+     {
+      "q": "Does my medication policy care home wording matter for this?",
+      "a": "Yes. The check is only as good as your policy. If your medication policy care home document is vague on refusals or stock, the questions will reflect that. Use the results to spot where the wording needs to be clearer. You can <a href=\"/uses/out-of-date-policies\">find out-of-date policies</a> too."
+     },
+     {
+      "q": "What does the law say about staff training and competence?",
+      "a": "Regulation 12 of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014 requires that people giving care have <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/12\">the qualifications, competence, skills and experience to do so safely</a>. Regulation 18 requires that staff <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">receive appropriate support, training, professional development, supervision and appraisal</a>. Neither tells you how to run a quiz."
+     },
+     {
+      "q": "What can I show an inspector?",
+      "a": "You can show the questions, the lessons and the results together with your observation forms. That shows attendance, observed practice and understanding. Read about the <a href=\"/cqc-compliance\">compliance side</a> and <a href=\"/cqc-staff-questions\">the questions inspectors put to staff</a>."
+     },
+     {
+      "q": "Do I need a paid plan?",
+      "a": "Adhoc training is on the paid plans, with a 14 day free trial. Create a free account on the <a href=\"/register\">registration page</a> to look around first. Translation is also paid plans only."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to check understanding after medication training",
+  "lede": "Medication training for care staff does not end at the observed round. The round shows what a carer does while watched. The check for understanding shows whether they know what your own policy says.",
+  "sections": [
+   {
+    "h3": "Keep the assessor, add the check",
+    "paragraphs": [
+     "Safe handling of medicines training works best in two parts. First, a competent person watches practice and signs it off. Second, you test the knowledge behind it, in your own words. The two answer different questions, and an inspector is likely to ask about both. The law asks that staff are competent, and that they receive appropriate training and supervision, so a record of each part helps you show how you meet that."
+    ]
+   },
+   {
+    "h3": "Four steps that fit a busy week",
+    "checklist": [
+     "Within a few days of the training day: allocate the Medication topic module to the carers who attended, built from your own policy.",
+     "Before assigning: preview the questions and edit anything that does not match how your home works.",
+     "When an answer is wrong: the carer opens a short lesson on that point, then a fresh question.",
+     "Each month: look at the most missed questions and update the policy wording or your next training day."
+    ]
+   },
+   {
+    "h3": "What to do with the results",
+    "paragraphs": [
+     "If many carers miss the same question, the policy may be unclear and the fix is the document, not the carers. If one carer keeps missing questions, that is a prompt for a supervision conversation and perhaps another observed round. Use the knowledge assessment to start that conversation, not to end it."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the observation forms, the questions, the lessons and the results together. That shows observed practice and understanding."
+ }
+}

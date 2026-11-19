@@ -1,411 +1,411 @@
 {
-  "slug": "care-certificate-for-new-carers-observation-sign-off",
-  "status": "draft",
-  "order": 37,
-  "title": "Your new carer passed the Care Certificate quiz. <em>Have you watched them work?</em>",
-  "meta_title": "New Carer Induction Course and Observation | CareStreamAI",
-  "meta_description": "Finish the course, then record your own observation before the certificate is issued. See how CareStream supports a new carer's first weeks.",
-  "eyebrow": "Scenario",
-  "lede": "This is more than a quiz. Skills for Care says workers are assessed on what they know and what they do. CareStream gives your new carer the course and the follow up, then holds the certificate until you record that you have <a href=\"/training-platform\">watched them work</a>.",
-  "fine": "14 day free trial · Set up in a day · UK data residency",
-  "panel": {
-    "title": "A new carer's first weeks",
-    "pill": "Illustration",
-    "rows": [
-      {
-        "label": "Induction flow started",
-        "note": "Day 1",
-        "done": true
-      },
-      {
-        "label": "Induction course finished",
-        "note": "Week 3",
-        "done": true
-      },
-      {
-        "label": "Observed practical recorded",
-        "note": "Not yet",
-        "done": false
-      },
-      {
-        "label": "Certificate issued with sign off name and date",
-        "note": "Waiting",
-        "done": false
-      }
-    ],
-    "meter": 50
-  },
-  "image": "https://api.carestreamai.com/public/policy-shop/image/8c1d8384-526e-43e4-88e6-d5e9d0e0d0fc.webp",
-  "image_alt": "A senior carer making notes on a clipboard while a new carer helps a resident stand safely from an armchair in a bright lounge",
-  "card_title": "Your new carer finished the course. Have you watched them work?",
-  "card_snippet": "A course score shows what a new carer knows. CareStream holds the certificate until a manager records an observed practical, so the sign off carries a name and a date.",
-  "primary_keyword": "care certificate",
-  "secondary_keywords": [
-    "care certificate 16 standards",
-    "care certificate workbook",
-    "care certificate observation",
-    "care certificate assessor",
-    "free care certificate",
-    "care certificate online"
+ "slug": "care-certificate-for-new-carers-observation-sign-off",
+ "status": "published",
+ "order": 37,
+ "title": "Your new carer passed the Care Certificate quiz. <em>Have you watched them work?</em>",
+ "meta_title": "New Carer Induction Course and Observation | CareStreamAI",
+ "meta_description": "Finish the course, then record your own observation before the certificate is issued. See how CareStream supports a new carer's first weeks.",
+ "eyebrow": "Scenario",
+ "lede": "This is more than a quiz. Skills for Care says workers are assessed on what they know and what they do. CareStream gives your new carer the course and the follow up, then holds the certificate until you record that you have <a href=\"/training-platform\">watched them work</a>.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "A new carer's first weeks",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Induction flow started",
+    "note": "Day 1",
+    "done": true
+   },
+   {
+    "label": "Induction course finished",
+    "note": "Week 3",
+    "done": true
+   },
+   {
+    "label": "Observed practical recorded",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Certificate issued with sign off name and date",
+    "note": "Waiting",
+    "done": false
+   }
   ],
-  "feature_links": [
-    {
-      "title": "Training built from your own policies",
-      "body": "Short training from your policies, with wrong answers turned into short lessons.",
-      "action": "See the feature",
-      "href": "/training-platform"
-    },
-    {
-      "title": "The induction course",
-      "body": "A CPD certified course covering the 16 standards, free on every plan.",
-      "action": "See the course",
-      "href": "/staff-training/care-certificate"
-    },
-    {
-      "title": "Adhoc training after a practical",
-      "body": "Turn what you saw on the floor into a short module for the new carer.",
-      "action": "See adhoc training",
-      "href": "/uses/adhoc-training"
-    }
-  ],
-  "intro": {
-    "heading": "They know the answers. Do they do it safely?",
-    "sub": "A scenario we see in many care settings.",
-    "paragraph": "A new carer joined three weeks ago and has worked through the induction course on her phone between shifts. Her scores are good. Her manager is pleased and busy, and the certificate is the last thing on the induction list. But a score tells you what someone knows, not how they help a resident stand from an armchair. The senior carer has seen her once, in passing, and nothing was written down. Nobody has decided who will watch her properly. Here is how that plays out."
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/8c1d8384-526e-43e4-88e6-d5e9d0e0d0fc.webp",
+ "image_alt": "A senior carer making notes on a clipboard while a new carer helps a resident stand safely from an armchair in a bright lounge",
+ "card_title": "Your new carer finished the course. Have you watched them work?",
+ "card_snippet": "A course score shows what a new carer knows. CareStream holds the certificate until a manager records an observed practical, so the sign off carries a name and a date.",
+ "primary_keyword": "care certificate",
+ "secondary_keywords": [
+  "care certificate 16 standards",
+  "care certificate workbook",
+  "care certificate observation",
+  "care certificate assessor",
+  "free care certificate",
+  "care certificate online"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Short training from your policies, with wrong answers turned into short lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
   },
-  "trail": [
-    {
-      "when": "Day 1",
-      "text": "A new carer is added as a new starter and given her induction.",
-      "kind": "ok"
-    },
-    {
-      "when": "Weeks 1 to 3",
-      "text": "She works through the course on her phone between shifts.",
-      "kind": "ok"
-    },
-    {
-      "when": "Week 3",
-      "text": "Good scores. The manager is pleased.",
-      "kind": "ok"
-    },
-    {
-      "when": "Week 4",
-      "text": "The certificate is the last item on the induction list.",
-      "kind": "gap"
-    },
-    {
-      "when": "On the floor",
-      "text": "A senior carer saw her help a resident once, in passing. Nothing was noted.",
-      "kind": "gap"
-    },
-    {
-      "when": "Who decides",
-      "text": "Nobody has agreed who will observe her, or when.",
-      "kind": "gap"
-    },
-    {
-      "when": "What is on file",
-      "text": "A score and a certificate. No note of anyone watching her work.",
-      "kind": "gap"
-    },
-    {
-      "when": "Inspection day",
-      "text": "“How do you know she is competent?” A quiz result is not an observation.",
-      "kind": "end"
-    }
-  ],
-  "trail_close": "<b>The course was never the problem.</b> The gap is between a good score and a recorded observation. Here is how CareStream closes it, without replacing your own judgement.",
-  "why": {
-    "heading": "A score shows knowledge. Competence is seen on the floor.",
-    "sub": "Skills for Care describes assessment as covering both what a worker knows and what they do.",
-    "cards": [
-      {
-        "icon": "chat",
-        "title": "Quizzes test knowing, not doing",
-        "body": "A carer can answer every question on safe moving and still be hesitant, rushed or unsure with a real resident in front of them."
-      },
-      {
-        "icon": "tick",
-        "title": "A passing glance is not an observation",
-        "body": "If nobody writes down who watched, what they saw and when, the sign off exists only in memory, and memory fades by the next inspection."
-      },
-      {
-        "icon": "alert",
-        "title": "Busy managers let it slip",
-        "body": "Observation needs a diary slot and a senior colleague. Without a prompt, the certificate gets filed as done and the practical never happens."
-      }
-    ]
+  {
+   "title": "The induction course",
+   "body": "A CPD certified course covering the 16 standards, free on every plan.",
+   "action": "See the course",
+   "href": "/staff-training/care-certificate"
   },
-  "how": {
-    "heading": "The course first, your observation before the certificate.",
-    "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature working alongside the <a href=\"/staff-training/care-certificate\">induction course</a>. See also <a href=\"/uses/adhoc-training\">turning what you saw into adhoc training</a>.",
-    "blocks": [
-      {
-        "heading": "Give the new carer the course on their phone",
-        "bullets": [
-          "The course is CPD certified, covers the 16 standards and is free on every plan, in English on the Free plan",
-          "New starters are enrolled automatically in the induction flows that match their job role, so day one is not blank",
-          "They work through it in the Staff Hub, an installable app on their own phone, between shifts"
-        ],
-        "tags": [
-          {
-            "label": "The induction course",
-            "href": "/staff-training/care-certificate"
-          },
-          {
-            "label": "How CareStream works",
-            "href": "/how-it-works"
-          }
-        ],
-        "mock": {
-          "type": "training",
-          "module": "Induction course (CPD certified)",
-          "questions": [
-            "Who should you tell if a resident's needs seem to have changed?",
-            "Why do you explain what you are about to do before you help someone move?"
-          ],
-          "staff_count": 3
-        }
-      },
-      {
-        "heading": "A wrong answer becomes a short lesson on that point",
-        "bullets": [
-          "A wrong answer goes into the carer's Follow-up tab in the Staff Hub, and they get an email, at most once a day, in English",
-          "They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question, as often as they need",
-          "Follow-ups feed the Knowledge gaps view, so you see which standards new carers find hardest"
-        ],
-        "tags": [
-          {
-            "label": "Wrong answers become lessons",
-            "href": "/training-platform"
-          },
-          {
-            "label": "Staff training",
-            "href": "/staff-training"
-          }
-        ],
-        "mock": {
-          "type": "followup",
-          "module": "Induction course (CPD certified)",
-          "question": "A resident says they feel dizzy as they stand. What do you do first?",
-          "why": "Dizziness on standing can mean a fall is close, so the person needs support and a seat straight away.",
-          "remember": [
-            "Stop and keep hold of the person",
-            "Help them sit down again",
-            "Tell the senior on shift and record it"
-          ],
-          "picture": "A resident rises from her armchair, goes pale and says the room is spinning."
-        }
-      },
-      {
-        "heading": "Record your observation, then the certificate is issued",
-        "bullets": [
-          "The certificate is held as pending practical until you record an observed practical assessment, with a note",
-          "For CPD courses it also waits until the short course feedback is completed",
-          "Once issued, the certificate shows the sign off name and date, and it belongs to the carer"
-        ],
-        "tags": [
-          {
-            "label": "Staff records and certificates",
-            "href": "/training-platform"
-          },
-          {
-            "label": "CQC and compliance",
-            "href": "/cqc-compliance"
-          }
-        ],
-        "mock": {
-          "type": "training",
-          "module": "Helping a resident to stand safely",
-          "questions": [
-            "What do you check before you help someone stand?",
-            "How do you tell the person what you are going to do?",
-            "What do you do if the person feels unsteady?"
-          ],
-          "staff_count": 1
-        }
-      },
-      {
-        "heading": "See which standards need another look across new starters",
-        "bullets": [
-          "The Knowledge gaps view shows the most missed questions and the weakest topics",
-          "See how gaps are being closed, and whether new carers engaged with the lessons",
-          "A Monday digest email, so the picture arrives without you asking for it"
-        ],
-        "tags": [
-          {
-            "label": "Reporting that runs itself",
-            "href": "/training-platform"
-          },
-          {
-            "label": "Policy gaps",
-            "href": "/uses/policy-gaps"
-          }
-        ],
-        "mock": {
-          "type": "gaps",
-          "stats": {
-            "open": 5,
-            "affected": 3,
-            "closed": 11,
-            "engaged": 80
-          },
-          "missed": [
-            [
-              "Reporting a change in a resident",
-              "3 staff"
-            ],
-            [
-              "Personal care and dignity",
-              "2 staff"
-            ],
-            [
-              "Safe handling of information",
-              "2 staff"
-            ]
-          ],
-          "weak": [
-            [
-              "Induction course (CPD certified)",
-              "5 gaps"
-            ],
-            [
-              "Moving and handling",
-              "2 gaps"
-            ]
-          ]
-        }
-      }
-    ]
-  },
-  "talk": {
-    "heading": "The questions managers ask, and how CareStream answers them",
-    "sub": "Read this as a conversation. The questions are the ones we hear most.",
-    "items": [
-      {
-        "q": "Is this the qualification?",
-        "a": "It is a CPD certified course that covers the 16 standards, and it is free on every plan. It is not the regulated qualification, and a CareStream certificate shows completion, not competence. Your own observation, and your own judgement, still decide whether a carer is signed off."
-      },
-      {
-        "q": "What stops a certificate being issued on a quiz score alone?",
-        "a": "The certificate is held as pending practical until a manager records an observed practical assessment with a note. For CPD courses it also waits for the short course feedback. Then it shows the sign off name and date."
-      },
-      {
-        "q": "Who does the observing?",
-        "a": "You decide. Many services use a senior carer or a manager who knows the standards. CareStream does not choose or train your assessor, it records the observation you carry out."
-      },
-      {
-        "q": "Does the induction flow include a sign off step?",
-        "a": "No. Induction steps are either read a policy, finished by Mark as read, or answer a question. A wrong answer must be retried and creates a Follow-up item. The observed practical is recorded separately on the course, not as a step inside the flow."
-      },
-      {
-        "q": "What happens when a new carer gets a question wrong?",
-        "a": "It goes into their Follow-up tab and they get an email, at most once a day. They choose <a href=\"/training-platform\">Learn &amp; retry</a>, a short lesson then a fresh question, or Just retry. They can retry as often as they need."
-      },
-      {
-        "q": "How do I know a new starter has not been forgotten?",
-        "a": "New starters are enrolled automatically in induction flows matching their job role. You see an induction progress matrix and an overdue flag, and the staff record flags induction not started after 7 days or more."
-      },
-      {
-        "q": "Does it alert me on every wrong answer?",
-        "a": "No. You see the picture in the Knowledge gaps view and the Monday digest. Nothing messages you each time someone slips."
-      },
-      {
-        "q": "Can I try it, and what does it cost?",
-        "a": "You can create a free account, and the paid plans have a 14 day free trial. The course is free on every plan. See the <a href=\"/pricing\">pricing page</a> for plan details, or <a href=\"/register\">register</a> to start."
-      }
-    ]
-  },
-  "limits": {
-    "heading": "A course and a record, not an assessor",
-    "cards": [
-      {
-        "title": "It does not do the observing",
-        "body": "A person must watch the carer work and judge it. CareStream records that observation, with your note, and holds the certificate until it is done."
-      },
-      {
-        "title": "It is not a regulated qualification",
-        "body": "The certificate evidences completion of a CPD certified course. It does not replace your workbook, your assessor or your own judgement."
-      },
-      {
-        "title": "Adhoc follow up and translation are paid features",
-        "body": "The course is free on every plan. Adhoc training and translation need a paid plan, and the induction flows do not include a manager signature step."
-      }
-    ]
-  },
-  "read_next": [
-    "care-certificate-cpd-certified-course-from-carestream",
-    "care-certificate-standards",
-    "care-certificate-assessor"
-  ],
-  "faqs": {
-    "heading": "The induction course and observation, answered",
-    "groups": [
-      {
-        "group": "About the course",
-        "items": [
-          {
-            "q": "What are the Care Certificate 16 standards?",
-            "a": "Skills for Care says <a href=\"https://www.skillsforcare.org.uk/Developing-your-workforce/Care-Certificate/Care-Certificate.aspx\">there are now 16 standards</a>, including one on awareness of learning disability and autism. Our <a href=\"/blog/care-certificate-standards\">guide to the standards</a> goes through them. The CareStream <a href=\"/staff-training/care-certificate\">course</a> covers all 16."
-          },
-          {
-            "q": "Is there a free Care Certificate?",
-            "a": "The CareStream course is CPD certified and free on every plan, in English on the Free plan. Translation is paid. It is a course that evidences completion, not the regulated qualification."
-          },
-          {
-            "q": "Can new carers do the Care Certificate online?",
-            "a": "Yes, they can work through the course in the Staff Hub on their own phone. The practical side cannot be done online. Someone has to watch them work. See our guide to <a href=\"/blog/care-certificate-online\">doing it online</a>."
-          },
-          {
-            "q": "Where does the Care Certificate workbook fit in?",
-            "a": "Your service may use a workbook as part of its own sign off. CareStream does not replace it. It is a CPD certified course and a record of your observation, and it does not replace workbook or assessor sign off."
-          },
-          {
-            "q": "How long does a new carer's induction take?",
-            "a": "It varies by carer and by service. Our post on <a href=\"/blog/how-long-does-the-care-certificate-take\">how long it takes</a> explains the usual range and what affects it."
-          }
-        ]
-      },
-      {
-        "group": "About observation and sign off",
-        "items": [
-          {
-            "q": "What is a Care Certificate observation?",
-            "a": "It is when a competent person watches a new carer do the work and judges it. <a href=\"https://www.skillsforcare.org.uk/Developing-your-workforce/Care-Certificate/Care-Certificate.aspx\">Skills for Care</a> says workers are assessed on what they know and what they do. In CareStream you record the observation and a note, and the certificate then shows the sign off."
-          },
-          {
-            "q": "Who can be a Care Certificate assessor?",
-            "a": "Skills for Care says the assessor needs a thorough understanding of, and direct experience in, what they are assessing. Your service chooses who. Read more in our post on <a href=\"/blog/care-certificate-assessor\">choosing an assessor</a>."
-          },
-          {
-            "q": "What does the CQC expect for new staff training?",
-            "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> says staff must receive the support, training, professional development, supervision and appraisal they need for their duties. It does not list courses. See <a href=\"/cqc-compliance\">CQC and compliance</a> for how the evidence builds up."
-          }
-        ]
-      }
-    ]
-  },
-  "guide": {
-    "heading": "A practical way to run a new carer's observation",
-    "lede": "A course tells you what a carer knows. The observation tells you how they work. It does not need to be complicated, but it does need to be planned.",
-    "sections": [
-      {
-        "h3": "Plan it before the course ends",
-        "paragraphs": [
-          "Book the observation in week two, not after the last quiz. Choose a task the carer does often, such as helping a resident to stand or giving personal care with dignity. Tell the carer what you will watch, so it feels like support and not a trap. Skills for Care describes assessment as covering both knowledge and practice, so it helps to treat the observation as half of the job."
-        ]
-      },
-      {
-        "h3": "Four checks for a good observation",
-        "checklist": [
-          "Choose a competent colleague who knows the standard being assessed.",
-          "Watch a real task with a real resident, with their consent.",
-          "Write a short note straight away: what you saw, what went well, what to work on.",
-          "If something needs more practice, allocate a short adhoc module on that point and watch again."
-        ]
-      }
-    ],
-    "note": "<b>For the inspector.</b> Keep the course results, any follow up lessons and your dated observation note together, so you can show that a carer was watched as well as tested."
+  {
+   "title": "Adhoc training after a practical",
+   "body": "Turn what you saw on the floor into a short module for the new carer.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
   }
+ ],
+ "intro": {
+  "heading": "They know the answers. Do they do it safely?",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A new carer joined three weeks ago and has worked through the induction course on her phone between shifts. Her scores are good. Her manager is pleased and busy, and the certificate is the last thing on the induction list. But a score tells you what someone knows, not how they help a resident stand from an armchair. The senior carer has seen her once, in passing, and nothing was written down. Nobody has decided who will watch her properly. Here is how that plays out."
+ },
+ "trail": [
+  {
+   "when": "Day 1",
+   "text": "A new carer is added as a new starter and given her induction.",
+   "kind": "ok"
+  },
+  {
+   "when": "Weeks 1 to 3",
+   "text": "She works through the course on her phone between shifts.",
+   "kind": "ok"
+  },
+  {
+   "when": "Week 3",
+   "text": "Good scores. The manager is pleased.",
+   "kind": "ok"
+  },
+  {
+   "when": "Week 4",
+   "text": "The certificate is the last item on the induction list.",
+   "kind": "gap"
+  },
+  {
+   "when": "On the floor",
+   "text": "A senior carer saw her help a resident once, in passing. Nothing was noted.",
+   "kind": "gap"
+  },
+  {
+   "when": "Who decides",
+   "text": "Nobody has agreed who will observe her, or when.",
+   "kind": "gap"
+  },
+  {
+   "when": "What is on file",
+   "text": "A score and a certificate. No note of anyone watching her work.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“How do you know she is competent?” A quiz result is not an observation.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The course was never the problem.</b> The gap is between a good score and a recorded observation. Here is how CareStream closes it, without replacing your own judgement.",
+ "why": {
+  "heading": "A score shows knowledge. Competence is seen on the floor.",
+  "sub": "Skills for Care describes assessment as covering both what a worker knows and what they do.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Quizzes test knowing, not doing",
+    "body": "A carer can answer every question on safe moving and still be hesitant, rushed or unsure with a real resident in front of them."
+   },
+   {
+    "icon": "tick",
+    "title": "A passing glance is not an observation",
+    "body": "If nobody writes down who watched, what they saw and when, the sign off exists only in memory, and memory fades by the next inspection."
+   },
+   {
+    "icon": "alert",
+    "title": "Busy managers let it slip",
+    "body": "Observation needs a diary slot and a senior colleague. Without a prompt, the certificate gets filed as done and the practical never happens."
+   }
+  ]
+ },
+ "how": {
+  "heading": "The course first, your observation before the certificate.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature working alongside the <a href=\"/staff-training/care-certificate\">induction course</a>. See also <a href=\"/uses/adhoc-training\">turning what you saw into adhoc training</a>.",
+  "blocks": [
+   {
+    "heading": "Give the new carer the course on their phone",
+    "bullets": [
+     "The course is CPD certified, covers the 16 standards and is free on every plan, in English on the Free plan",
+     "New starters are enrolled automatically in the induction flows that match their job role, so day one is not blank",
+     "They work through it in the Staff Hub, an installable app on their own phone, between shifts"
+    ],
+    "tags": [
+     {
+      "label": "The induction course",
+      "href": "/staff-training/care-certificate"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Induction course (CPD certified)",
+     "questions": [
+      "Who should you tell if a resident's needs seem to have changed?",
+      "Why do you explain what you are about to do before you help someone move?"
+     ],
+     "staff_count": 3
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson on that point",
+    "bullets": [
+     "A wrong answer goes into the carer's Follow-up tab in the Staff Hub, and they get an email, at most once a day, in English",
+     "They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question, as often as they need",
+     "Follow-ups feed the Knowledge gaps view, so you see which standards new carers find hardest"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Staff training",
+      "href": "/staff-training"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Induction course (CPD certified)",
+     "question": "A resident says they feel dizzy as they stand. What do you do first?",
+     "why": "Dizziness on standing can mean a fall is close, so the person needs support and a seat straight away.",
+     "remember": [
+      "Stop and keep hold of the person",
+      "Help them sit down again",
+      "Tell the senior on shift and record it"
+     ],
+     "picture": "A resident rises from her armchair, goes pale and says the room is spinning."
+    }
+   },
+   {
+    "heading": "Record your observation, then the certificate is issued",
+    "bullets": [
+     "The certificate is held as pending practical until you record an observed practical assessment, with a note",
+     "For CPD courses it also waits until the short course feedback is completed",
+     "Once issued, the certificate shows the sign off name and date, and it belongs to the carer"
+    ],
+    "tags": [
+     {
+      "label": "Staff records and certificates",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Helping a resident to stand safely",
+     "questions": [
+      "What do you check before you help someone stand?",
+      "How do you tell the person what you are going to do?",
+      "What do you do if the person feels unsteady?"
+     ],
+     "staff_count": 1
+    }
+   },
+   {
+    "heading": "See which standards need another look across new starters",
+    "bullets": [
+     "The Knowledge gaps view shows the most missed questions and the weakest topics",
+     "See how gaps are being closed, and whether new carers engaged with the lessons",
+     "A Monday digest email, so the picture arrives without you asking for it"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Policy gaps",
+      "href": "/uses/policy-gaps"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 5,
+      "affected": 3,
+      "closed": 11,
+      "engaged": 80
+     },
+     "missed": [
+      [
+       "Reporting a change in a resident",
+       "3 staff"
+      ],
+      [
+       "Personal care and dignity",
+       "2 staff"
+      ],
+      [
+       "Safe handling of information",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Induction course (CPD certified)",
+       "5 gaps"
+      ],
+      [
+       "Moving and handling",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "Is this the qualification?",
+    "a": "It is a CPD certified course that covers the 16 standards, and it is free on every plan. It is not the regulated qualification, and a CareStream certificate shows completion, not competence. Your own observation, and your own judgement, still decide whether a carer is signed off."
+   },
+   {
+    "q": "What stops a certificate being issued on a quiz score alone?",
+    "a": "The certificate is held as pending practical until a manager records an observed practical assessment with a note. For CPD courses it also waits for the short course feedback. Then it shows the sign off name and date."
+   },
+   {
+    "q": "Who does the observing?",
+    "a": "You decide. Many services use a senior carer or a manager who knows the standards. CareStream does not choose or train your assessor, it records the observation you carry out."
+   },
+   {
+    "q": "Does the induction flow include a sign off step?",
+    "a": "No. Induction steps are either read a policy, finished by Mark as read, or answer a question. A wrong answer must be retried and creates a Follow-up item. The observed practical is recorded separately on the course, not as a step inside the flow."
+   },
+   {
+    "q": "What happens when a new carer gets a question wrong?",
+    "a": "It goes into their Follow-up tab and they get an email, at most once a day. They choose <a href=\"/training-platform\">Learn &amp; retry</a>, a short lesson then a fresh question, or Just retry. They can retry as often as they need."
+   },
+   {
+    "q": "How do I know a new starter has not been forgotten?",
+    "a": "New starters are enrolled automatically in induction flows matching their job role. You see an induction progress matrix and an overdue flag, and the staff record flags induction not started after 7 days or more."
+   },
+   {
+    "q": "Does it alert me on every wrong answer?",
+    "a": "No. You see the picture in the Knowledge gaps view and the Monday digest. Nothing messages you each time someone slips."
+   },
+   {
+    "q": "Can I try it, and what does it cost?",
+    "a": "You can create a free account, and the paid plans have a 14 day free trial. The course is free on every plan. See the <a href=\"/pricing\">pricing page</a> for plan details, or <a href=\"/register\">register</a> to start."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A course and a record, not an assessor",
+  "cards": [
+   {
+    "title": "It does not do the observing",
+    "body": "A person must watch the carer work and judge it. CareStream records that observation, with your note, and holds the certificate until it is done."
+   },
+   {
+    "title": "It is not a regulated qualification",
+    "body": "The certificate evidences completion of a CPD certified course. It does not replace your workbook, your assessor or your own judgement."
+   },
+   {
+    "title": "Adhoc follow up and translation are paid features",
+    "body": "The course is free on every plan. Adhoc training and translation need a paid plan, and the induction flows do not include a manager signature step."
+   }
+  ]
+ },
+ "read_next": [
+  "care-certificate-cpd-certified-course-from-carestream",
+  "care-certificate-standards",
+  "care-certificate-assessor"
+ ],
+ "faqs": {
+  "heading": "The induction course and observation, answered",
+  "groups": [
+   {
+    "group": "About the course",
+    "items": [
+     {
+      "q": "What are the Care Certificate 16 standards?",
+      "a": "Skills for Care says <a href=\"https://www.skillsforcare.org.uk/Developing-your-workforce/Care-Certificate/Care-Certificate.aspx\">there are now 16 standards</a>, including one on awareness of learning disability and autism. Our <a href=\"/blog/care-certificate-standards\">guide to the standards</a> goes through them. The CareStream <a href=\"/staff-training/care-certificate\">course</a> covers all 16."
+     },
+     {
+      "q": "Is there a free Care Certificate?",
+      "a": "The CareStream course is CPD certified and free on every plan, in English on the Free plan. Translation is paid. It is a course that evidences completion, not the regulated qualification."
+     },
+     {
+      "q": "Can new carers do the Care Certificate online?",
+      "a": "Yes, they can work through the course in the Staff Hub on their own phone. The practical side cannot be done online. Someone has to watch them work. See our guide to <a href=\"/blog/care-certificate-online\">doing it online</a>."
+     },
+     {
+      "q": "Where does the Care Certificate workbook fit in?",
+      "a": "Your service may use a workbook as part of its own sign off. CareStream does not replace it. It is a CPD certified course and a record of your observation, and it does not replace workbook or assessor sign off."
+     },
+     {
+      "q": "How long does a new carer's induction take?",
+      "a": "It varies by carer and by service. Our post on <a href=\"/blog/how-long-does-the-care-certificate-take\">how long it takes</a> explains the usual range and what affects it."
+     }
+    ]
+   },
+   {
+    "group": "About observation and sign off",
+    "items": [
+     {
+      "q": "What is a Care Certificate observation?",
+      "a": "It is when a competent person watches a new carer do the work and judges it. <a href=\"https://www.skillsforcare.org.uk/Developing-your-workforce/Care-Certificate/Care-Certificate.aspx\">Skills for Care</a> says workers are assessed on what they know and what they do. In CareStream you record the observation and a note, and the certificate then shows the sign off."
+     },
+     {
+      "q": "Who can be a Care Certificate assessor?",
+      "a": "Skills for Care says the assessor needs a thorough understanding of, and direct experience in, what they are assessing. Your service chooses who. Read more in our post on <a href=\"/blog/care-certificate-assessor\">choosing an assessor</a>."
+     },
+     {
+      "q": "What does the CQC expect for new staff training?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> says staff must receive the support, training, professional development, supervision and appraisal they need for their duties. It does not list courses. See <a href=\"/cqc-compliance\">CQC and compliance</a> for how the evidence builds up."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to run a new carer's observation",
+  "lede": "A course tells you what a carer knows. The observation tells you how they work. It does not need to be complicated, but it does need to be planned.",
+  "sections": [
+   {
+    "h3": "Plan it before the course ends",
+    "paragraphs": [
+     "Book the observation in week two, not after the last quiz. Choose a task the carer does often, such as helping a resident to stand or giving personal care with dignity. Tell the carer what you will watch, so it feels like support and not a trap. Skills for Care describes assessment as covering both knowledge and practice, so it helps to treat the observation as half of the job."
+    ]
+   },
+   {
+    "h3": "Four checks for a good observation",
+    "checklist": [
+     "Choose a competent colleague who knows the standard being assessed.",
+     "Watch a real task with a real resident, with their consent.",
+     "Write a short note straight away: what you saw, what went well, what to work on.",
+     "If something needs more practice, allocate a short adhoc module on that point and watch again."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the course results, any follow up lessons and your dated observation note together, so you can show that a carer was watched as well as tested."
+ }
 }

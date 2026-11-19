@@ -703,6 +703,11 @@
   "free cpd": 260,
   "free care training": 20,
   "annual refresher training": 10,
-  "training certificate": 260
+  "training certificate": 260,
+  "super user": 140,
+  "digital champion": 170,
+  "training in supervision": 10,
+  "supervision training": 320,
+  "care supervision": 70
  }
 }

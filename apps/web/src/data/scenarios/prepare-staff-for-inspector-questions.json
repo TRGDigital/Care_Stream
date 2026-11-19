@@ -1,0 +1,400 @@
+{
+  "slug": "prepare-staff-for-inspector-questions",
+  "status": "draft",
+  "order": 68,
+  "title": "CQC inspection questions for staff: <em>could your team answer them on the day?</em>",
+  "meta_title": "CQC Inspection Questions for Staff: Practise | CareStreamAI",
+  "meta_description": "Help every carer, cook and cleaner practise answering inspector style questions in the hub, with a score and feedback, before an inspection comes.",
+  "eyebrow": "Scenario",
+  "lede": "Your folders may be in order, but could each member of staff explain their own part of safe care out loud? CareStream lets you send practice versions of CQC inspection questions for staff to their phones, and sits alongside your audits, policy checks and <a href=\"/training-platform\">training built from your own policies</a>.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "Getting ready for inspection",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Audits completed, actions tracked",
+        "note": "Done",
+        "done": true
+      },
+      {
+        "label": "Policies checked for gaps",
+        "note": "Done",
+        "done": true
+      },
+      {
+        "label": "Staff practised answering questions",
+        "note": "Not yet",
+        "done": false
+      },
+      {
+        "label": "Weak answers reviewed and retried",
+        "note": "Not yet",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/95c1aa35-7e75-4da7-8f3e-756078bd2cb7.webp",
+  "image_alt": "A care home manager and two carers sit in a bright staff room, each holding a phone and smiling, practising questions with a mug and notepad on the table",
+  "card_title": "The paperwork is ready. Are your staff ready to answer questions?",
+  "card_snippet": "Audits and policies show what the service has written down. Staff answers show what people can say. CareStream sends practice questions to each person's phone, with a score and feedback.",
+  "primary_keyword": "cqc inspection questions for staff",
+  "secondary_keywords": [
+    "cqc inspection questions",
+    "inspection ready",
+    "cqc inspection preparation"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Short training and knowledge checks built from your own policies, with wrong answers turned into lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "CQC Staff Prep",
+      "body": "Practice questions for each job role, answered in the hub, with a score and feedback.",
+      "action": "See CQC Staff Prep",
+      "href": "/cqc-staff-questions"
+    },
+    {
+      "title": "CQC and compliance",
+      "body": "Audits, policy checks and evidence in one place, ready for the day someone asks.",
+      "action": "See CQC and compliance",
+      "href": "/cqc-compliance"
+    }
+  ],
+  "intro": {
+    "heading": "You have prepared the building and the paperwork. Have you prepared the people?",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "A registered manager has spent weeks on cqc inspection preparation. Audits are done and the actions are closed. Policies have been reviewed and the folders are tidy. At handover she tells everyone that someone may stop them and ask how they keep people safe. The team nods. Nobody has said an answer out loud, and she has never heard the new cook or the night carer explain their own job. The files are ready. What the people will say is a guess. Here is how that plays out."
+  },
+  "trail": [
+    {
+      "when": "Last month",
+      "text": "Audits are completed and their actions are closed.",
+      "kind": "ok"
+    },
+    {
+      "when": "This week",
+      "text": "Policies are reviewed, signed off and filed.",
+      "kind": "ok"
+    },
+    {
+      "when": "Handover",
+      "text": "The manager reminds everyone that they may be asked questions.",
+      "kind": "ok"
+    },
+    {
+      "when": "Afterwards",
+      "text": "Nobody has practised an answer. Nobody has been asked one.",
+      "kind": "gap"
+    },
+    {
+      "when": "The new cook",
+      "text": "Knows the allergen sheet. Has never explained it to anyone.",
+      "kind": "gap"
+    },
+    {
+      "when": "The night carer",
+      "text": "Does the right thing every shift, but may struggle to put it into words.",
+      "kind": "gap"
+    },
+    {
+      "when": "What the manager has",
+      "text": "Strong files. No idea how the team would sound.",
+      "kind": "gap"
+    },
+    {
+      "when": "Inspection day",
+      "text": "“Tell me what you would do if you were worried about a colleague.”",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>The paperwork was never the whole picture.</b> The gap is between what the service has written and what each person can say. Here is how CareStream helps you find that gap in good time.",
+  "why": {
+    "heading": "Documents show what you have written. Staff answers show what people know.",
+    "sub": "Good records matter, and so does the person in front of you who has to explain them.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Knowing and saying are different skills",
+        "body": "Many carers do the right thing without thinking. Explaining it to a stranger, calmly and in order, is something people get better at with practice."
+      },
+      {
+        "icon": "tick",
+        "title": "A reminder at handover is not practice",
+        "body": "Telling people to be ready does not show you who can answer. It only works if somebody tries, gets feedback and tries again."
+      },
+      {
+        "icon": "alert",
+        "title": "You cannot sit down with every person",
+        "body": "Quizzing a whole team yourself takes hours you do not have, and kitchen, domestic and night staff are the people you see least."
+      }
+    ]
+  },
+  "how": {
+    "heading": "Practice for the people, checks for the paperwork.",
+    "sub": "This is how <a href=\"/cqc-staff-questions\">CQC Staff Prep</a> works with your audits, policy checks and evidence, in the order a manager meets them. See also <a href=\"/cqc-compliance\">CQC and compliance</a>.",
+    "blocks": [
+      {
+        "heading": "Choose your staff and send each role its own questions",
+        "bullets": [
+          "In CQC Staff Prep you pick who takes part. They are grouped by job role, so a cook is not asked about moving and handling",
+          "Our own machine learning drafts open ended questions for each role, plus a core set that everyone gets, such as safeguarding, whistleblowing and fire",
+          "Each person gets one email or push notification. This is practice, and it does not predict what an inspector will ask"
+        ],
+        "tags": [
+          {
+            "label": "CQC Staff Prep",
+            "href": "/cqc-staff-questions"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "CQC Staff Prep: example round",
+          "stats": [
+            ["Staff chosen", "12"],
+            ["Job roles", "4"],
+            ["Core set", "Everyone"]
+          ],
+          "blocks": [
+            ["Grouped by job role", [["Care assistants", "6 staff"], ["Kitchen and domestic", "3 staff"], ["Seniors and nurses", "2 staff"], ["Maintenance", "1 staff"]]],
+            ["Core set for everyone", [["Safeguarding", "Question"], ["Whistleblowing", "Question"], ["Fire and emergencies", "Question"]]]
+          ],
+          "caption": "Example only. Numbers and roles are illustrative."
+        }
+      },
+      {
+        "heading": "Staff answer in the hub and get a score and feedback",
+        "bullets": [
+          "Staff open the question in the Staff Hub on their own phone and write an answer in their own words",
+          "They get a score and feedback, can review the model answer, and can try again",
+          "Questions are reworded slightly when they are sent, so people learn the idea rather than a fixed reply"
+        ],
+        "tags": [
+          {
+            "label": "Staff Hub in 60+ languages",
+            "href": "/uses/multilingual-staff-hub"
+          },
+          {
+            "label": "Safeguarding course",
+            "href": "/staff-training/safeguarding-adults-and-children"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Staff Hub: example answer",
+          "stats": [
+            ["Role", "Kitchen assistant"],
+            ["Score", "72 out of 100"]
+          ],
+          "blocks": [
+            ["Example question", [["Question", "What would you do if you were unsure whether a meal was safe for someone with an allergy?"]]],
+            ["Example feedback", [["Feedback", "You would stop and check, which is right. Add who you would tell and where the allergy is recorded."]]],
+            ["After the answer", [["Model answer", "Open to review"], ["Retry", "In your own words"]]]
+          ],
+          "caption": "Example only. Questions and feedback are illustrative."
+        }
+      },
+      {
+        "heading": "Check your audits and policies for gaps before anyone asks",
+        "bullets": [
+          "More than 100 built in audits are free on every plan. Actions can carry up to 10 photos and are re-checked at the next audit",
+          "Policy checks look for gaps against regulations, out of date wording, policies that contradict each other and wording that falls short of the CQC quality statements. The Free plan screens up to 5 uploaded policies in total",
+          "Gap fixes are suggestions until an admin adopts them. Adopting them is on Professional and above"
+        ],
+        "tags": [
+          {
+            "label": "Policy gap detection",
+            "href": "/policy-gap-detection"
+          },
+          {
+            "label": "Care audits",
+            "href": "/care-audits"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Policy checks: example results",
+          "stats": [
+            ["Policies checked", "5"],
+            ["Need attention", "2"]
+          ],
+          "blocks": [
+            ["Gaps against regulations", [["Safeguarding policy", "Partly covers"], ["Whistleblowing policy", "Missing a section"]]],
+            ["Out of date wording", [["Review date", "Overdue"], ["Old body name", "Found in 1 policy"]]]
+          ],
+          "caption": "Example only. Results depend on your own policies."
+        }
+      },
+      {
+        "heading": "See where staff stand, and keep your evidence together",
+        "bullets": [
+          "CQC Staff Prep shows the average score, the share of answers scoring 80 or more, and how far scores rise after a retry",
+          "The CQC readiness score is CareStream's own blend of audit performance and policy coverage. It is not a CQC rating",
+          "The CQC Inspection Evidence Report, on Professional and above, shows how staff have used your policies over the period you choose"
+        ],
+        "tags": [
+          {
+            "label": "CQC and compliance evidence",
+            "href": "/cqc-compliance"
+          },
+          {
+            "label": "Readiness report explained",
+            "href": "/blog/cqc-readiness-report-what-it-is"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Readiness and evidence: example",
+          "stats": [
+            ["Average score", "81"],
+            ["Scored 80 or more", "58%"],
+            ["Gain after retry", "+14"]
+          ],
+          "blocks": [
+            ["Readiness by key question", [["Safe", "78"], ["Effective", "70"], ["Caring", "82"], ["Responsive", "66"], ["Well-led", "72"]]],
+            ["Evidence report sections", [["Policy access summary", "Included"], ["Staff engagement evidence", "Included"], ["Knowledge gap log", "Included"]]]
+          ],
+          "caption": "Example only. Figures are illustrative, and the readiness score is not a CQC rating."
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "What does CareStream actually do to get my staff ready?",
+        "a": "It sends each person practice questions in the Staff Hub, grouped by job role, plus a core set for everyone. They answer in their own words and get a score and feedback. You see the results in your analytics. It sits alongside your audits, <a href=\"/policy-gap-detection\">policy checks</a> and evidence, which cover the paperwork side."
+      },
+      {
+        "q": "Will it tell me what an inspector is going to ask?",
+        "a": "No. Nobody can know that in advance, and CareStream does not claim to. The questions are practice questions on the topics that come up in everyday care, such as safeguarding and raising concerns. The point is to help people explain their own work calmly, whatever the actual question turns out to be."
+      },
+      {
+        "q": "Is this a rehearsal of the inspection itself?",
+        "a": "No. There is no inspector character and no simulated visit. It is practice for staff, with a score and feedback on each answer. Think of it as a way to hear how your team sounds before it matters."
+      },
+      {
+        "q": "How does it work for a cook or a cleaner?",
+        "a": "Staff are grouped by job role, so people are asked about their own work, such as allergens in the kitchen or cleaning schedules for domestic staff. Everyone also gets the core questions on safeguarding, whistleblowing and fire. You choose who takes part."
+      },
+      {
+        "q": "What happens when someone gives a weak answer?",
+        "a": "They get feedback on what was missing and can open the model answer, then try again in their own words. Their score can rise on the second go, and you can see the average gain across the team. A weak first answer is useful information, not a mark against anyone."
+      },
+      {
+        "q": "What do I see as the manager?",
+        "a": "The average score, the share of answers scoring 80 or more, and how much scores improve after a retry. That tells you whether the team is confident or whether a topic needs a short team talk. Your audits, <a href=\"/uses/policy-gaps\">policy gaps</a> and readiness score sit in the same place."
+      },
+      {
+        "q": "Can I show this to an inspector as proof we are ready?",
+        "a": "It is not proof of anything, and nothing in CareStream predicts or proves a CQC rating. What it gives you is your own record of preparation: staff practised, weak answers were revisited and the paperwork was checked. The CQC Inspection Evidence Report, on Professional and above, adds evidence of staff using your policies."
+      },
+      {
+        "q": "How do I try it, and what does it cost?",
+        "a": "You can start with a 14 day free trial on the paid plans, or create a free account, which lets you screen up to five policies. Prices are on the <a href=\"/pricing\">pricing page</a>. You can <a href=\"/register\">create a free account</a> and be set up in a day."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Practice for your team, not a prediction of the day",
+    "cards": [
+      {
+        "title": "It does not predict or simulate an inspection",
+        "body": "There is no inspector persona and no forecast of what will be asked. The questions are practice on everyday topics, and the readiness score is our own blend, not a CQC rating."
+      },
+      {
+        "title": "Scores are practice scores",
+        "body": "Each answer is marked by our own technology, giving a score and feedback. It is a prompt for a conversation. It does not replace you listening to people, or watching them work."
+      },
+      {
+        "title": "The evidence report is not a pass",
+        "body": "The CQC Inspection Evidence Report is on Professional and above. It shows staff using your policies over a period you choose. You print it or save it as a PDF from your browser, and it does not combine everything into one download."
+      }
+    ]
+  },
+  "read_next": [
+    "cqc-inspection-day-what-to-expect-and-how-to-be-ready",
+    "cqc-terminology-for-care-providers",
+    "cqc-readiness-report-what-it-is"
+  ],
+  "faqs": {
+    "heading": "Preparing staff for inspection, answered",
+    "groups": [
+      {
+        "group": "About staff questions",
+        "items": [
+          {
+            "q": "Which CQC inspection questions for staff should we practise?",
+            "a": "There is no fixed list to learn, so practise topics rather than scripts. Start with each person's own job, then the topics everyone shares: safeguarding, whistleblowing, fire and how to raise a concern. CareStream drafts questions for each role plus a core set, and you can see how people get on."
+          },
+          {
+            "q": "How does CQC Staff Prep work?",
+            "a": "You choose the staff and they are grouped by job role. Our own machine learning drafts open ended questions for each role plus a core set. Each person gets one email or push notification, answers in the Staff Hub and gets a score and feedback. They can review the model answer and try again. See <a href=\"/cqc-staff-questions\">CQC Staff Prep</a>."
+          },
+          {
+            "q": "Do staff need to be in a particular place to answer?",
+            "a": "No. They answer in the Staff Hub, an installable app that works on their own phone, whenever suits them. You choose when to send a round of questions."
+          },
+          {
+            "q": "Does CareStream simulate an inspection?",
+            "a": "No. It sends practice questions to your staff and shows you how they did. There is no inspector character and no prediction of the outcome."
+          }
+        ]
+      },
+      {
+        "group": "About inspection preparation",
+        "items": [
+          {
+            "q": "What does CQC inspection preparation involve beyond staff questions?",
+            "a": "It covers how well your service checks itself and how well people can explain what they do. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17 on good governance</a> asks for systems and processes that are established and operated effectively, so audits, action tracking and policy checks all belong here. CareStream supports those, alongside staff practice."
+          },
+          {
+            "q": "How do I know we are inspection ready?",
+            "a": "Nothing can tell you for certain. CareStream gives you a readiness score that blends your audit results with how well your policies cover the regulations, shown against the five key questions. It is our own score and not a CQC rating, but it shows you where to look first."
+          },
+          {
+            "q": "What can I check on the Free plan?",
+            "a": "Audits are free on every plan. On the Free plan you can also screen up to five uploaded policies in total, using all four analyses: regulation coverage, out of date content, consistency between policies and CQC wording. Gap fixes and adopting suggestions are on Professional and above."
+          },
+          {
+            "q": "What do the regulations say about staff training and support?",
+            "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18 on staffing</a> says staff must receive appropriate support, training, professional development, supervision and appraisal. It does not list courses, so each service decides what its people need. Practice questions and follow up training help you see whether it landed."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A practical way to get the team ready for questions",
+    "lede": "Preparing for an inspection is partly paperwork and partly people. A short, steady routine works better than a rush the week before, and it helps your service be inspection ready all year.",
+    "sections": [
+      {
+        "h3": "What practice can and cannot do",
+        "paragraphs": [
+          "Practice helps people find the words for work they already do well. It builds confidence, shows who is unsure and gives you something specific to talk through in supervision. It cannot tell you what will be asked, and it does not replace the audits, the policies and the daily care that make up the real picture.",
+          "Keep it kind. Staff who feel tested will freeze. Tell the team it is practice, that a weak first answer is useful, and that you will talk through anything that comes up together."
+        ]
+      },
+      {
+        "h3": "Four steps for the weeks before",
+        "checklist": [
+          "Run your audits and close the actions, with a photo where it helps, then check them again at the next audit.",
+          "Check your policies for gaps and out of date wording, and decide which suggested fixes to adopt.",
+          "Send each role its own practice questions, plus the core set, and ask people to retry after reading the model answer.",
+          "Look at the average scores and the topics that scored lowest, then hold a short team talk on those."
+        ]
+      }
+    ],
+    "note": "<b>For the manager.</b> Keep your results, your actions and your policy checks together, so you can show how you prepared and what you did about the gaps you found."
+  }
+}

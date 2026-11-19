@@ -1,0 +1,444 @@
+{
+ "slug": "commissioner-visit-evidence-in-one-place",
+ "status": "draft",
+ "order": 71,
+ "title": "A quality assurance visit is booked. <em>Where is your evidence?</em>",
+ "meta_title": "Quality Assurance Visit Evidence for Care | CareStreamAI",
+ "meta_description": "A quality assurance visit is booked and your evidence is in six places. See how audits, actions, policy checks and reports help you gather it fast.",
+ "eyebrow": "Scenario",
+ "lede": "A quality assurance visit is booked for next week, and you want your evidence ready. CareStream does not bundle it into one export, but the audit reports, closed actions, policy checks and staff records all sit in <a href=\"/training-platform\">one system</a>, so gathering them takes an afternoon and not a week.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "The week before the visit",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Visit date confirmed",
+    "note": "Day 0",
+    "done": true
+   },
+   {
+    "label": "Audit reports and closed actions found",
+    "note": "Day 1",
+    "done": true
+   },
+   {
+    "label": "Policy and training records gathered",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Folder checked and gaps fixed",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/9ccb1c6d-9140-4933-bfda-0d931306d934.webp",
+ "image_alt": "A care home manager hands a printed report folder across a table to a visitor in smart clothes with a lanyard, both smiling, in a bright meeting room",
+ "card_title": "A visit is booked and your evidence is in six places",
+ "card_snippet": "A local authority or commissioner visitor is coming. Your audits, action photos, policy checks and training records exist, but not in one folder. See how to gather them quickly.",
+ "primary_keyword": "quality assurance visit",
+ "secondary_keywords": [
+  "commissioner visit",
+  "cqc evidence",
+  "cqc inspection checklist"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Short training from your policies, with wrong answers turned into lessons, so staff knowledge closes the gap behind the paperwork.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Digital care audits",
+   "body": "More than 100 audits with scored reports, photo evidence and actions that are checked again at the next audit.",
+   "action": "See the audits",
+   "href": "/care-audits"
+  },
+  {
+   "title": "CQC and compliance",
+   "body": "Policy checks, a readiness view and a report that shows how staff use your policies.",
+   "action": "See CQC and compliance",
+   "href": "/cqc-compliance"
+  }
+ ],
+ "intro": {
+  "heading": "The evidence exists. It is just not in one place.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "The email arrives on a Tuesday. A visitor from the local authority commissioning team will come on the following Thursday for a quality assurance visit. The manager is calm, because the home is run well. Then she starts to list what she might want to show: last month's audits, the medication action that was fixed, the policy review dates, who attended the fire session. They all exist. They sit in a binder, a shared drive, an email thread and a few heads. Nobody has pulled them together, and nobody has checked them against each other."
+ },
+ "trail": [
+  {
+   "when": "Tuesday",
+   "text": "The email arrives. A visit is booked for next Thursday.",
+   "kind": "ok"
+  },
+  {
+   "when": "Tuesday, later",
+   "text": "The manager knows the home is run well and the audits are done.",
+   "kind": "ok"
+  },
+  {
+   "when": "Wednesday",
+   "text": "She writes a list of what she could show, starting with the audit reports.",
+   "kind": "ok"
+  },
+  {
+   "when": "Thursday",
+   "text": "The audit PDFs are in one place. The action photos are in another.",
+   "kind": "gap"
+  },
+  {
+   "when": "Friday",
+   "text": "Nobody is sure which policies are still current or have gone stale.",
+   "kind": "gap"
+  },
+  {
+   "when": "The weekend",
+   "text": "Training sign in sheets are in a folder. Who understood the session is not.",
+   "kind": "gap"
+  },
+  {
+   "when": "Monday",
+   "text": "The list is long, the folder is thin, and time is short.",
+   "kind": "gap"
+  },
+  {
+   "when": "Visit day",
+   "text": "“Can you show me how you know this is working?”",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The care was never the problem.</b> The gap is between what you do and what you can show quickly. Here is how CareStream helps you gather it, and where you still have to do the last step yourself.",
+ "why": {
+  "heading": "A visitor asks how you know, not just what you do",
+  "sub": "Good care and good evidence are two jobs. The second one is the one that gets left until the week before.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Evidence is scattered by habit",
+    "body": "Audit reports, photos, policy files and sign in sheets are created at different times by different people. Nobody planned to find them all in one afternoon."
+   },
+   {
+    "icon": "tick",
+    "title": "Old policies are easy to miss",
+    "body": "A policy that still names a body that has since been replaced, or still has an unfilled placeholder, can sit unnoticed until someone outside reads it."
+   },
+   {
+    "icon": "alert",
+    "title": "Paper shows attendance, not understanding",
+    "body": "A signed sheet shows who was in the room. A visitor may also talk to staff, so what they remember matters as much as what the folder says."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Gather it in the order a manager would, from one system.",
+  "sub": "This works alongside <a href=\"/care-audits\">your audits</a> and the <a href=\"/cqc-compliance\">CQC and compliance tools</a>. For the staff side, see <a href=\"/uses/face-to-face-training\">recording in person sessions</a>.",
+  "blocks": [
+   {
+    "heading": "Start with your audit reports and scores",
+    "bullets": [
+     "Every completed audit has a PDF report with scores, photos and the actions raised, so you can pull the last few months in minutes",
+     "Audits are free on every plan, and the Insights tab shows score trends and questions that keep failing",
+     "Built in audits such as <a href=\"/care-audits/quality-assurance\">quality assurance</a> and <a href=\"/care-audits/monthly-governance-review\">monthly governance review</a> give a ready structure"
+    ],
+    "tags": [
+     {
+      "label": "Digital care audits",
+      "href": "/care-audits"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Monthly governance review",
+     "stats": [
+      ["Score", "88%"],
+      ["Questions", "42"],
+      ["Actions raised", "3"]
+     ],
+     "blocks": [
+      [
+       "Example report sections",
+       [
+        ["Staffing and training", "92%"],
+        ["Safe care and treatment", "85%"],
+        ["Records and policies", "87%"]
+       ]
+      ],
+      [
+       "Example report contents",
+       [
+        ["Photos attached", "6"],
+        ["Action plan", "Included"],
+        ["Signed off", "Registered manager"]
+       ]
+      ]
+     ],
+     "caption": "Example only. Your own audits and scores will differ."
+    }
+   },
+   {
+    "heading": "Show actions that were closed, with proof",
+    "bullets": [
+     "An action can carry up to 10 photos as proof, and the owner adds a note when it is done",
+     "At the next audit of the same kind, each earlier action is marked fixed or not fixed, and a not fixed action reopens",
+     "The audit PDF carries the action outcomes and re-check results, so a visitor sees a problem found and a problem fixed"
+    ],
+    "tags": [
+     {
+      "label": "Audits and action plans",
+      "href": "/care-audits"
+     },
+     {
+      "label": "Evidence that builds itself",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Medicines management",
+     "stats": [
+      ["Actions", "5"],
+      ["Closed", "4"],
+      ["Re-checked", "3"]
+     ],
+     "blocks": [
+      [
+       "Example action list",
+       [
+        ["Fridge log gaps", "Fixed, 2 photos"],
+        ["Storage cupboard label", "Fixed, 1 photo"],
+        ["Stock check sheet", "Not fixed, reopened"]
+       ]
+      ]
+     ],
+     "caption": "Example only. Actions and photos come from your own audits."
+    }
+   },
+   {
+    "heading": "Check your policies for gaps before someone else does",
+    "bullets": [
+     "The out of date scan is a plain scan that flags old terms, unfilled placeholders and overdue reviews, and needs none of your tokens",
+     "Gap detection, consistency checks and wording alignment are on Professional and above, and the Free plan screens up to 5 uploaded policies in total",
+     "Fixes stay suggestions until an admin adopts them, so nothing changes in a policy without your say"
+    ],
+    "tags": [
+     {
+      "label": "Policy gap detection",
+      "href": "/policy-gap-detection"
+     },
+     {
+      "label": "Out of date policies",
+      "href": "/uses/out-of-date-policies"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Policy checks",
+     "stats": [
+      ["Policies scanned", "24"],
+      ["Flagged", "5"],
+      ["Reviewed today", "2"]
+     ],
+     "blocks": [
+      [
+       "Example findings",
+       [
+        ["Old name for a replaced body", "2 policies"],
+        ["Unfilled placeholder text", "1 policy"],
+        ["Review date overdue", "2 policies"]
+       ]
+      ]
+     ],
+     "caption": "Example only. Findings depend on your own policies."
+    }
+   },
+   {
+    "heading": "Add the staff side and the usage report",
+    "bullets": [
+     "The CQC Inspection Evidence Report shows how staff have used your policies over a period you choose, 12 months by default, and you print it or save it as a PDF",
+     "Face to face sessions have a sign in sheet and an evidence log of uploads, on Professional and above",
+     "It is evidence of use, not a pass or a rating, and each item is a separate print or download"
+    ],
+    "tags": [
+     {
+      "label": "CQC and compliance",
+      "href": "/cqc-compliance"
+     },
+     {
+      "label": "CQC staff questions",
+      "href": "/cqc-staff-questions"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Evidence list for the folder",
+     "stats": [
+      ["Items", "6"],
+      ["Period", "12 months"],
+      ["Plan", "Professional"]
+     ],
+     "blocks": [
+      [
+       "Example items to print or save",
+       [
+        ["Audit reports, last 3 months", "PDF each"],
+        ["Closed actions with photos", "From each audit"],
+        ["Policy usage report", "Print or PDF"],
+        ["Fire session sign in sheet", "PDF"],
+        ["Session evidence log", "Uploads by session"]
+       ]
+      ]
+     ],
+     "caption": "Example only. There is no single export, so you gather each item."
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most before a visit.",
+  "items": [
+   {
+    "q": "Is there one button that gives me everything for the visit?",
+    "a": "No, and we would rather say so now. Your evidence sits in a few places: audit reports, closed actions, the policy checks, the policy usage report and the face to face records. What CareStream does is keep them all in one system, so you gather and print them in an afternoon."
+   },
+   {
+    "q": "Does CareStream tell me what the commissioner will ask for?",
+    "a": "No. A commissioner visit is not a CQC inspection, and what a visitor wants to see is up to them. Ask your commissioning contact what they would like in advance, then use CareStream to find it quickly."
+   },
+   {
+    "q": "What can I pull from my audits?",
+    "a": "Each completed audit has a PDF report with its scores, photos and actions. Action owners can add up to 10 photos as proof, and the next audit of the same kind marks earlier actions as fixed or not fixed. Audits are <a href=\"/care-audits\">free on every plan</a>, though the drafted recommendations need a paid plan."
+   },
+   {
+    "q": "Can it check my policies before the visit?",
+    "a": "Yes, in two ways. The out of date scan flags old terms, placeholder text and overdue reviews with no tokens used. <a href=\"/policy-gap-detection\">Gap detection</a> looks for what is missing from your policy set and is on Professional and above, while the Free plan screens up to 5 uploaded policies. Suggestions stay suggestions until an admin adopts them."
+   },
+   {
+    "q": "Will CareStream predict my CQC rating?",
+    "a": "No. The CQC readiness score is our own blend of your audit results and your policy coverage. It is a guide for you, not a CQC rating, and it cannot say how any visit will go."
+   },
+   {
+    "q": "What about staff who get questioned?",
+    "a": "<a href=\"/cqc-staff-questions\">CQC Staff Prep</a> gives staff practice questions by job role, so they can rehearse answering in their own words. It is practice and not a simulation of any visit. You can also allocate short <a href=\"/training-platform\">training from your own policies</a>, and a wrong answer becomes a short lesson in the Staff Hub."
+   },
+   {
+    "q": "What does the policy usage report show?",
+    "a": "The CQC Inspection Evidence Report shows how staff have used your policies over a period you choose, 12 months by default. It is on Professional and above. You print it or save it as a PDF from your browser. It shows use, not a pass or a rating."
+   },
+   {
+    "q": "Can I try it before the visit, and what does it cost?",
+    "a": "Yes. There is a 14 day free trial on the paid plans, and you can create a free account to run audits and screen up to 5 policies. See <a href=\"/pricing\">the pricing page</a> for plans, or <a href=\"/register\">create a free account</a> to start."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A way to gather evidence, not a way to pass a visit",
+  "cards": [
+   {
+    "title": "There is no single evidence export",
+    "body": "Audit reports, action photos, the policy usage report and sign in sheets are separate items. You gather and print each one, and you decide what goes in the folder."
+   },
+   {
+    "title": "It does not predict a visit or a rating",
+    "body": "The readiness score is our own blend of audit and policy results, not a CQC rating. CQC Staff Prep is practice for staff, not a rehearsal of a real visit."
+   },
+   {
+    "title": "Some parts need a paid plan",
+    "body": "The policy usage report, gap detection and face to face records are on Professional and above. Audit recommendations are on paid plans. Audits themselves are free on every plan."
+   }
+  ]
+ },
+ "read_next": [
+  "cqc-evidence-categories-explained",
+  "how-do-you-record-in-person-training-so-it-counts-as-cqc-evidence",
+  "cqc-inspection-day-what-to-expect-and-how-to-be-ready"
+ ],
+ "faqs": {
+  "heading": "Visit evidence and CareStream, answered",
+  "groups": [
+   {
+    "group": "About the visit",
+    "items": [
+     {
+      "q": "What is a quality assurance visit in a care setting?",
+      "a": "It is a visit from outside the service to look at how it is run, often from a local authority or commissioning team. What they look at depends on them, so ask them before the day. It is not the same as a CQC inspection."
+     },
+     {
+      "q": "What happens at a commissioner visit?",
+      "a": "That varies, and we cannot say what any commissioner will require. Ask your contact what they will want to see and who they want to speak to. Then use your audits, policies and staff records to answer quickly."
+     },
+     {
+      "q": "How far ahead should I start gathering evidence?",
+      "a": "As soon as the date is confirmed. A few days lets you find gaps, such as an overdue review or an action that was never re-checked, and fix them before the visit."
+     },
+     {
+      "q": "Is a commissioner visit the same as a CQC inspection?",
+      "a": "No. They are different visits with different purposes. Evidence that supports one often helps with the other, which is why keeping it in one place is useful."
+     },
+     {
+      "q": "What if I find a gap while I gather my evidence?",
+      "a": "Fix it, record that you fixed it and keep the trail. An action closed with a photo and re-checked at the next audit tells a better story than a folder that hides the problem."
+     }
+    ]
+   },
+   {
+    "group": "CQC evidence and checklists",
+    "items": [
+     {
+      "q": "What counts as CQC evidence for a care home?",
+      "a": "It is the record that shows how you assess and improve your service, such as audits, actions, policies and staff records. Our <a href=\"/blog/cqc-evidence-categories-explained\">guide to CQC evidence categories</a> sets out how it is usually grouped."
+     },
+     {
+      "q": "Is there a CQC inspection checklist I can use?",
+      "a": "A checklist helps you find gaps, but it does not replace the record behind it. Our <a href=\"/blog/cqc-inspection-day-what-to-expect-and-how-to-be-ready\">inspection day guide</a> covers what to prepare, and your audits supply the evidence for each point."
+     },
+     {
+      "q": "Does the law say I need to monitor quality?",
+      "a": "Regulation 17 says systems or processes must be established and operated effectively, and that they must let the registered person assess, monitor and improve the quality and safety of the services provided. Read the <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">wording of Regulation 17</a>. Audits are one way to do this."
+     },
+     {
+      "q": "Does CareStream show how I assess risk?",
+      "a": "Audit reports show what you checked and what you did about it. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/12\">Regulation 12</a> requires you to assess the risks to service users and do all that is reasonably practicable to mitigate them, and audit actions are one record of this."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to prepare for a quality assurance visit",
+  "lede": "Preparing for a visit is easier when you treat it as a short project. Pick a day, gather in a set order and check each item before you close the folder.",
+  "sections": [
+   {
+    "h3": "Start by asking the visitor what they want to see",
+    "paragraphs": [
+     "A commissioner visit can look at many things, and no list from us will match theirs. A short email asking what they would like to see, and whether they plan to speak to staff or residents, saves a lot of guessing. Under Regulation 17, services need systems to assess, monitor and improve quality, so most visitors will expect some record of how you do that."
+    ]
+   },
+   {
+    "h3": "A CQC inspection checklist for your evidence folder",
+    "checklist": [
+     "Audit reports: the last three months of PDFs, with action outcomes and re-check results.",
+     "Closed actions: the photos and notes that show each problem was fixed.",
+     "Policies: run the out of date scan and fix flagged terms, placeholders and overdue reviews.",
+     "Staff records: the policy usage report and the sign in sheets for recent sessions, on Professional and above."
+    ]
+   },
+   {
+    "h3": "Check what staff remember, not just what is filed",
+    "paragraphs": [
+     "If the visitor may speak to staff, give them a short practice round. CQC Staff Prep sets practice questions by job role, and a short training module on the home's own policies shows who needs another look. Keep these results with your CQC evidence, and note anything you improved before the day."
+    ]
+   }
+  ],
+  "note": "<b>On the day.</b> Bring the folder, but also know where each item lives in the system. If the visitor asks for something you did not print, you can find it in minutes."
+ }
+}

@@ -1,0 +1,529 @@
+{
+  "slug": "new-registered-manager-first-30-days-know-where-you-stand",
+  "status": "draft",
+  "order": 70,
+  "title": "CQC compliance in your first 30 days: <em>know where you stand</em>",
+  "meta_title": "CQC Compliance: A New Manager’s First 30 Days | CareStreamAI",
+  "meta_description": "New registered manager? Learn where the home stands in 30 days: free audits, a free screen of up to 5 policies, training gaps and evidence.",
+  "eyebrow": "Scenario",
+  "lede": "You have about 30 days to learn where your service really stands on CQC compliance: the audits, the policies, the training and the evidence. CareStream gives you a first picture across all four, and a <a href=\"/training-platform\">training platform built on your own policies</a> for the follow up. It is plain about what it cannot tell you.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "Your first 30 days at a new home",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Walked the home and met the team",
+        "note": "Week 1",
+        "done": true
+      },
+      {
+        "label": "First three audits run",
+        "note": "Week 2",
+        "done": true
+      },
+      {
+        "label": "Policies screened and gaps listed",
+        "note": "Week 3",
+        "done": false
+      },
+      {
+        "label": "One page of findings for the provider",
+        "note": "Day 30",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/76eceb34-4a20-45d7-a2c9-a4d2212f7d33.webp",
+  "image_alt": "A newly started care home manager standing at her office door holding a folder while a senior carer greets her warmly in a bright corridor in the morning light",
+  "card_title": "New manager? Know where the home stands in your first 30 days",
+  "card_snippet": "You have just taken over a service and need a clear view of audits, policies, training gaps and evidence. Run free audits, screen your first policies and see what to do first.",
+  "primary_keyword": "cqc compliance",
+  "secondary_keywords": [
+    "inspection ready",
+    "cqc inspection checklist",
+    "cqc action plan"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Short training from your own policies, with wrong answers turned into short lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Audits for every area of the home",
+      "body": "More than 100 audits, free on every plan, with scores, actions and re-checks.",
+      "action": "See care audits",
+      "href": "/care-audits"
+    },
+    {
+      "title": "Policy gap detection",
+      "body": "Check your policies against the regulations, for outdated wording and for contradictions.",
+      "action": "See policy gap detection",
+      "href": "/policy-gap-detection"
+    }
+  ],
+  "intro": {
+    "heading": "Day one: a kind team, a thick folder and no clear picture.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "A new registered manager has started at a home that runs well on the surface. The team is kind, the residents are settled and the handover notes are thorough. But in the first fortnight the questions pile up. When were the audits last done? Which policies are current? Who is behind on training? Where is the evidence kept? The knowledge simply sits in several heads, folders and spreadsheets. The manager wants a clear view by day 30, and a short list of what to do first."
+  },
+  "trail": [
+    {
+      "when": "Day 1",
+      "text": "A warm welcome, a tour of the home and a thick handover folder.",
+      "kind": "ok"
+    },
+    {
+      "when": "Day 3",
+      "text": "The senior carers explain how each shift really runs.",
+      "kind": "ok"
+    },
+    {
+      "when": "Week 1",
+      "text": "You meet every resident and see the home on a night shift.",
+      "kind": "ok"
+    },
+    {
+      "when": "Week 2",
+      "text": "The audit folder has gaps. Some audits were last done months ago.",
+      "kind": "gap"
+    },
+    {
+      "when": "Week 2",
+      "text": "Policies sit in binders and on a shared drive, with few review dates.",
+      "kind": "gap"
+    },
+    {
+      "when": "Week 3",
+      "text": "Training records live in a spreadsheet that one person updates.",
+      "kind": "gap"
+    },
+    {
+      "when": "Week 3",
+      "text": "Nobody can say which actions from the last audits were closed.",
+      "kind": "gap"
+    },
+    {
+      "when": "Day 30",
+      "text": "The provider, or an inspector, asks: where does the home stand?",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>Learning the position is a proper first job.</b> You do not have to fix everything in a month. Here is how a manager can see the whole home, with the limits stated plainly.",
+  "why": {
+    "heading": "You are accountable for a home whose history you do not yet hold",
+    "sub": "The responsibility starts on day one. The full picture arrives slowly.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "A handover tells the story, not the position",
+        "body": "It is valuable, but it is not the same as knowing which audits are current, which policies are in date and who still needs training."
+      },
+      {
+        "icon": "alert",
+        "title": "Evidence is spread across folders and heads",
+        "body": "Audit sheets, policy binders, training spreadsheets and action lists each live somewhere different. Pulling them together by hand takes weeks."
+      },
+      {
+        "icon": "tick",
+        "title": "A dated, honest baseline is a good first result",
+        "body": "By day 30 you can say what you checked, what you found and what you will do first."
+      }
+    ]
+  },
+  "how": {
+    "heading": "A first 30 days you can follow, step by step.",
+    "sub": "This is how <a href=\"/care-audits\">care audits</a>, <a href=\"/policy-gap-detection\">policy gap detection</a> and <a href=\"/training-platform\">training from your own policies</a> fit together for <a href=\"/cqc-compliance\">CQC compliance</a> work. See also <a href=\"/how-it-works\">how CareStream works</a>.",
+    "blocks": [
+      {
+        "heading": "Weeks 1 and 2: run your first few audits, free on every plan",
+        "bullets": [
+          "Pick three or four audits from a library of more than 100, such as <a href=\"/care-audits/infection-control\">infection control</a>, <a href=\"/care-audits/medicines-management\">medicines management</a> and <a href=\"/care-audits/health-and-safety\">health and safety</a>",
+          "Audits are free on every plan, including Free. Staff you give audit access can complete them in the Staff Hub on a phone or tablet, with photos as evidence",
+          "Each audit scores every section. Schedule it for a named person with a due date and an optional repeat, so the next one is already booked"
+        ],
+        "tags": [
+          {
+            "label": "Care audits",
+            "href": "/care-audits"
+          },
+          {
+            "label": "CQC and compliance evidence",
+            "href": "/cqc-compliance"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Infection control audit (example)",
+          "stats": [
+            [
+              "Overall score",
+              "78%"
+            ],
+            [
+              "Questions asked",
+              "42"
+            ],
+            [
+              "Actions to raise",
+              "6"
+            ]
+          ],
+          "blocks": [
+            [
+              "Section scores",
+              [
+                [
+                  "Hand hygiene",
+                  "92%"
+                ],
+                [
+                  "Waste and laundry",
+                  "81%"
+                ],
+                [
+                  "Cleaning schedules",
+                  "64%"
+                ]
+              ]
+            ],
+            [
+              "Needs a look",
+              [
+                [
+                  "Cleaning schedule signed off for the sluice room",
+                  "Not done"
+                ],
+                [
+                  "Spill kit stocked on both floors",
+                  "Floor 2 empty"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example figures for illustration. Your own audit shows your own results."
+        }
+      },
+      {
+        "heading": "Week 3: screen your policies, up to five on the Free plan",
+        "bullets": [
+          "The Free plan screens up to five uploaded policies in total, with all four analyses: regulation coverage, out of date wording, contradictions between policies and CQC wording",
+          "The out of date scan is a plain rule based check that uses no tokens. It looks for superseded names, pandemic era wording, unfilled placeholders and missing review dates",
+          "The full policy gap view across your whole set is on Professional and above. Fixes stay suggestions until an admin adopts them"
+        ],
+        "tags": [
+          {
+            "label": "Policy gap detection",
+            "href": "/policy-gap-detection"
+          },
+          {
+            "label": "Outdated policies, found early",
+            "href": "/uses/out-of-date-policies"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Policy screening (example)",
+          "stats": [
+            [
+              "Policies screened",
+              "5"
+            ],
+            [
+              "Out of date findings",
+              "7"
+            ],
+            [
+              "No review date",
+              "2"
+            ]
+          ],
+          "blocks": [
+            [
+              "Out of date wording",
+              [
+                [
+                  "Safeguarding policy",
+                  "Names a body that no longer exists"
+                ],
+                [
+                  "Infection control policy",
+                  "Wording from the pandemic period"
+                ]
+              ]
+            ],
+            [
+              "Review currency",
+              [
+                [
+                  "Medication policy",
+                  "No review date"
+                ],
+                [
+                  "Complaints policy",
+                  "Overdue for review"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example findings for illustration. Read the suggestions and adapt them to your service."
+        }
+      },
+      {
+        "heading": "Turn findings into actions with an owner and a date",
+        "bullets": [
+          "Any plan can add actions to an audit by hand. Give each one an owner, who can be a staff member or an outside contractor, and a due date",
+          "An action can hold up to 10 photos as proof it was done. At the next audit of the same kind, the earlier actions are listed to be marked fixed or not fixed",
+          "A drafted action plan from audit results is on the paid plans only. Whatever you use, your <b>CQC action plan</b> is yours to write and approve"
+        ],
+        "tags": [
+          {
+            "label": "Audits and action tracking",
+            "href": "/care-audits"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Action list from the first audits (example)",
+          "stats": [
+            [
+              "Open",
+              "6"
+            ],
+            [
+              "Due this week",
+              "2"
+            ],
+            [
+              "Closed with proof",
+              "3"
+            ]
+          ],
+          "blocks": [
+            [
+              "Open actions",
+              [
+                [
+                  "Restock spill kit, floor 2",
+                  "Owner: Senior carer, due Fri"
+                ],
+                [
+                  "Update the cleaning schedule",
+                  "Owner: Housekeeper, due 14 Dec"
+                ]
+              ]
+            ],
+            [
+              "Closed with proof",
+              [
+                [
+                  "Fridge temperature log restarted",
+                  "Photo added"
+                ],
+                [
+                  "Sluice room signage replaced",
+                  "Photo added"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example actions for illustration."
+        }
+      },
+      {
+        "heading": "Week 4: close the training gaps you found and watch them close",
+        "bullets": [
+          "When the audits point to a topic, allocate an adhoc training module on it. It is built from your own policies where they cover it, and you can edit and preview it first. Adhoc training is on the paid plans",
+          "Staff complete it in the Staff Hub. A wrong answer goes to their Follow-up tab with an email, at most one a day, in English. They choose Learn &amp; retry or Just retry, as often as they need",
+          "Nothing alerts you on each wrong answer. You see open gaps and the weakest topics in the Knowledge gaps view, and in a Monday digest email"
+        ],
+        "tags": [
+          {
+            "label": "Adhoc training",
+            "href": "/uses/adhoc-training"
+          },
+          {
+            "label": "Training built from your own policies",
+            "href": "/training-platform"
+          }
+        ],
+        "mock": {
+          "type": "gaps",
+          "stats": {
+            "open": 8,
+            "affected": 7,
+            "closed": 5,
+            "engaged": 58
+          },
+          "missed": [
+            [
+              "Cleaning the sluice room",
+              "4 staff"
+            ],
+            [
+              "Using the spill kit",
+              "3 staff"
+            ],
+            [
+              "Where the policy is kept",
+              "2 staff"
+            ]
+          ],
+          "weak": [
+            [
+              "Infection control",
+              "6 gaps"
+            ],
+            [
+              "Medication",
+              "2 gaps"
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions new managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "What is the quickest way to see where a home stands on CQC compliance?",
+        "a": "Run a few audits, screen your first policies and look at where staff are unsure. Audits are free on every plan and the Free plan screens up to five uploaded policies in total. That gives you a first picture, not a verdict."
+      },
+      {
+        "q": "Can CareStream tell me we are inspection ready?",
+        "a": "No. It does not simulate an inspection and it cannot predict or prove a CQC rating. On Professional and above there is also a CQC readiness score. It is CareStream’s own blend of audit performance and policy coverage, so treat it as a guide to where to look, not a CQC rating."
+      },
+      {
+        "q": "What do I get on the Free plan?",
+        "a": "Every audit in the library, with reports and action tracking, and screening of up to five uploaded policies in total with all four analyses. The Free plan has no adhoc training and no translation, and audit recommendations are on the paid plans."
+      },
+      {
+        "q": "How does it find outdated policies?",
+        "a": "The out of date scan is a rule based check. It looks for superseded legislation or bodies, pandemic era wording, unfilled placeholders such as TBC, very thin policies and overdue or missing review dates. Nothing changes until an admin adopts a fix."
+      },
+      {
+        "q": "Does it give me a CQC inspection checklist or a CQC action plan?",
+        "a": "Not a ready made one. You choose the audits, and library questions can be tagged to CQC quality statements. Findings become actions with an owner and a due date. You decide what goes into your own plan."
+      },
+      {
+        "q": "Is there a report I can show an inspector?",
+        "a": "On Professional and above, the CQC Inspection Evidence Report shows how staff have used your policies over a period you choose, 12 months by default. You print it or save it as a PDF from your browser. It is evidence of use, not a pass or a rating, and it is not a one click bundle."
+      },
+      {
+        "q": "Can I practise inspector style questions with my staff?",
+        "a": "Yes, with <a href=\"/cqc-staff-questions\">CQC Staff Prep</a>. You pick staff and they get practice questions suited to their job role, plus a core set. They answer in the Staff Hub, get a score and feedback, and can retry. It is practice for staff. It is not an inspection."
+      },
+      {
+        "q": "How do I try it?",
+        "a": "Create a free account and run your first audits and policy screen. The paid plans have a 14 day free trial. See <a href=\"/pricing\">pricing</a> for what each plan includes, or <a href=\"/register\">create your account</a>."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "A first picture, not a prediction",
+    "cards": [
+      {
+        "title": "It does not simulate or predict an inspection",
+        "body": "CareStream cannot tell you what an inspector will find or what rating you will get. The readiness score is its own blend of audit performance and policy coverage, and it is not a CQC rating."
+      },
+      {
+        "title": "It does not do the fixing for you",
+        "body": "Policy suggestions stay suggestions until an admin adopts them. The full policy gap view and fixes are on Professional and above."
+      },
+      {
+        "title": "Evidence shows what staff did, not a ready made bundle",
+        "body": "The Inspection Evidence Report is on Professional and above and shows staff use of policies. Certificates, sign in sheets and audit reports are separate items. Nothing here is a pass."
+      }
+    ]
+  },
+  "read_next": [
+    "care-home-policies-the-complete-guide",
+    "policy-gap-analysis-for-care-homes",
+    "cqc-readiness-report-what-it-is"
+  ],
+  "faqs": {
+    "heading": "Your first 30 days, answered",
+    "groups": [
+      {
+        "group": "Starting at a new home",
+        "items": [
+          {
+            "q": "What should be on a CQC inspection checklist for a new manager?",
+            "a": "List your audits and when each was last done, your policies and their review dates, who has gaps in training, where your evidence is kept and which actions are open. The week by week guide below turns that into a plan, and <a href=\"/care-audits\">care audits</a> give you the first set of answers."
+          },
+          {
+            "q": "How do I get the home inspection ready in 30 days?",
+            "a": "Thirty days is enough to learn the position and fix quick wins, not everything. Aim to be able to say what you checked, what you found and what you are doing about it."
+          },
+          {
+            "q": "What is a CQC action plan and how do I keep one?",
+            "a": "It is your own list of what you will change, who owns each item and by when. In CareStream, audit actions carry an owner, a due date and optional photos, and they are re-checked at the next audit. The wider plan stays yours."
+          }
+        ]
+      },
+      {
+        "group": "Governance and evidence",
+        "items": [
+          {
+            "q": "What does the law say about good governance?",
+            "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17</a> says systems or processes must be established and operated effectively, and that the registered person must be able to assess, monitor and improve the quality and safety of the services provided."
+          },
+          {
+            "q": "What does the law say about safe care and treatment?",
+            "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/12\">Regulation 12</a> says care and treatment must be provided in a safe way. It includes assessing risks to health and safety, the proper and safe management of medicines, and preventing and controlling the spread of infections."
+          },
+          {
+            "q": "Does CareStream give us CQC compliance?",
+            "a": "No tool can. It helps you see your position through audits, policy checks and staff knowledge, and it keeps records you can show. Meeting your duties is down to you and your team."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "Your first 30 days, week by week",
+    "lede": "The aim is not to fix everything. It is to know where the home stands, what is risky and what comes first, so that you can say so with confidence when the provider or an inspector asks.",
+    "sections": [
+      {
+        "h3": "Week 1: listen and look before you change anything",
+        "paragraphs": [
+          "Walk the home at different times, including a night shift. Ask the senior carers what worries them and write it down. Treat gaps as information, not blame. The governance duty in <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17</a> is about systems that work over time, and a dated baseline is a good first step towards showing yours."
+        ]
+      },
+      {
+        "h3": "Week 2: run three or four audits",
+        "checklist": [
+          "Choose audits from different areas, such as infection control, medicines management and health and safety.",
+          "Give each one a named person and a due date.",
+          "Ask for photos where something is not right.",
+          "Note any audit you could not find a recent record of."
+        ]
+      },
+      {
+        "h3": "Week 3: look at policies and training together",
+        "paragraphs": [
+          "Screen your first policies for outdated wording, missing review dates and contradictions. Then ask where staff are unsure. Short checks on the flagged topics show whether policy and practice match. See <a href=\"/blog/policy-gap-analysis-for-care-homes\">policy gap analysis</a>."
+        ]
+      },
+      {
+        "h3": "Day 30: a simple CQC inspection checklist for your own use",
+        "checklist": [
+          "Which audits have a recent, dated result, and which do not.",
+          "Which policies are in date, which are not and which you screened.",
+          "Which topics staff are unsure about, and what you did about them.",
+          "Which actions are open, who owns them and when they are due."
+        ]
+      }
+    ],
+    "note": "<b>For the provider and the inspector.</b> Keep a dated one page note of what you checked in your first month, what you found and what you will do first. It shows a new manager taking the position seriously from day one."
+  }
+}

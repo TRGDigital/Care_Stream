@@ -1,0 +1,220 @@
+{
+ "slug": "inspector-could-arrive-tomorrow-24-hour-check",
+ "status": "draft",
+ "order": 67,
+ "title": "Your CQC inspection checklist for the day before. <em>What can you see in 24 hours?</em>",
+ "meta_title": "CQC Inspection Checklist: The 24 Hour Check | CareStreamAI",
+ "meta_description": "An inspector could arrive tomorrow. Use this CQC inspection checklist to see overdue audits, open actions, policy gaps and training gaps in one day.",
+ "eyebrow": "Scenario",
+ "lede": "You hear that an inspector could arrive tomorrow. This CQC inspection checklist is a calm way to spend the evening: see what is overdue, what is open and what you can show. <a href=\"/training-platform\">CareStream</a> makes those things visible. It cannot give you a year of practice you do not have.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "The evening before",
+  "pill": "Illustration",
+  "rows": [
+   {"label": "Overdue audits found", "note": "6pm", "done": true},
+   {"label": "Open actions listed", "note": "7pm", "done": true},
+   {"label": "Policy gaps and training gaps reviewed", "note": "Not yet", "done": false},
+   {"label": "Evidence of staff using policies printed", "note": "Not yet", "done": false}
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/ab1cb432-8e11-45d5-a30e-cc38a29b55b0.webp",
+ "image_alt": "A care home manager standing at a tidy reception desk in the evening light with a tablet in hand and a checklist beside her, a plant and a visitor signing-in book on the desk",
+ "card_title": "An inspector could arrive tomorrow. What can you see tonight?",
+ "card_snippet": "A 24 hour check for care managers: find overdue audits, open actions, policy gaps and training gaps, and print evidence that staff use your policies. It shows you where you stand. It does not give you a rating.",
+ "primary_keyword": "cqc inspection checklist",
+ "secondary_keywords": ["inspection ready", "cqc inspection preparation", "cqc compliance", "cqc evidence"],
+ "feature_links": [
+  {"title": "Training built from your own policies", "body": "Adhoc training from your policies, and wrong answers that become short lessons.", "action": "See the feature", "href": "/training-platform"},
+  {"title": "CQC and compliance", "body": "Evidence that builds itself as staff use your policies, and a readiness view for your next inspection.", "action": "See CQC and compliance", "href": "/cqc-compliance"},
+  {"title": "Audits for care services", "body": "More than 100 built in audits with scoring, actions and a scheduling board.", "action": "See the audits", "href": "/care-audits"}
+ ],
+ "intro": {
+  "heading": "The phone call that changes your evening.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A registered manager hears from a colleague at another service that inspectors are in the area. Nothing is confirmed, but it could be tomorrow. She stays on after the day shift and sits at the front desk with a tablet and a notebook. She knows the home is run well. What she cannot say quickly is which audits were skipped, which actions are still open, whether any policy still mentions old bodies, and what shows that staff actually read and use the policies. Here is how that evening goes."
+ },
+ "trail": [
+  {"when": "4pm", "text": "A colleague says inspectors are in the area. Maybe tomorrow.", "kind": "ok"},
+  {"when": "6pm", "text": "The manager stays on and opens a short list on her tablet.", "kind": "ok"},
+  {"when": "7pm", "text": "She checks the audit board. Two audits show as missed.", "kind": "ok"},
+  {"when": "8pm", "text": "Three actions from last quarter are still open.", "kind": "gap"},
+  {"when": "Policies", "text": "A safeguarding policy still names a body that no longer exists.", "kind": "gap"},
+  {"when": "Training", "text": "Some staff got a refresher question wrong and nobody has looked.", "kind": "gap"},
+  {"when": "Evidence", "text": "She cannot show quickly that staff open and use the policies.", "kind": "gap"},
+  {"when": "Tomorrow", "text": "“How do you know your staff follow this policy?” The inspector waits for an answer.", "kind": "end"}
+ ],
+ "trail_close": "<b>One evening cannot change how the home has run.</b> It can change what you know. Here is a 24 hour check, step by step, with the limits stated plainly.",
+ "why": {
+  "heading": "Being inspection ready is about knowing where you stand",
+  "sub": "The worst moment is being surprised by something you could have seen.",
+  "cards": [
+   {"icon": "alert", "title": "Gaps hide in different places", "body": "A missed audit, an old policy and a training gap live in three different places. Checking each one by hand takes more than an evening."},
+   {"icon": "chat", "title": "Inspectors ask about how you know", "body": "Having a policy is one thing. Being able to say how you check that staff know it and use it is another."},
+   {"icon": "tick", "title": "Visible is better than perfect", "body": "You may not fix everything by morning. You can know what is open, and have a clear plan to talk through."}
+  ]
+ },
+ "how": {
+  "heading": "The 24 hour check, in the order a manager meets it.",
+  "sub": "This uses the <a href=\"/care-audits\">audits</a>, the <a href=\"/policy-gap-detection\">policy gap view</a> and the <a href=\"/cqc-compliance\">CQC evidence reporting</a>. The figures in the screens below are examples only.",
+  "blocks": [
+   {
+    "heading": "Find the overdue and missed audits",
+    "bullets": [
+     "The scheduling board shows each audit as done, in progress, overdue, due or missed, month by month",
+     "Audits are free on every plan, with scoring by section and the latest scores in view",
+     "An audit that was still open when the next one fell due is marked missed, so skips stay visible"
+    ],
+    "tags": [
+     {"label": "Care home audits", "href": "/care-audits"},
+     {"label": "Health and safety audit", "href": "/care-audits/health-and-safety"}
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Scheduling board (example)",
+     "stats": [["Done this month", "9"], ["Overdue", "2"], ["Missed", "2"]],
+     "blocks": [
+      ["Needs attention first", [["Infection control", "Overdue"], ["Medicines management", "Missed in October"]]],
+      ["Latest scores", [["Health and safety", "88%"], ["Care plan review", "74%"]]]
+     ],
+     "caption": "Example only. Your board shows your own audits."
+    }
+   },
+   {
+    "heading": "List the open actions and repeat failures",
+    "bullets": [
+     "Each audit can carry an action plan with an owner, a due date and up to 10 photos as proof",
+     "Insights shows questions that failed in consecutive audits of the same kind",
+     "Audit recommendations are on the paid plans. You can add your own actions on any plan"
+    ],
+    "tags": [
+     {"label": "Infection control audit", "href": "/care-audits/infection-control"},
+     {"label": "Audit schedule guide", "href": "/blog/care-home-audit-schedule"}
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Open actions (example)",
+     "stats": [["Open", "3"], ["Overdue", "1"], ["Closed with proof", "11"]],
+     "blocks": [
+      ["Still open", [["Replace worn commode seat", "Due last month"], ["Update falls risk wording", "Due Friday"], ["Re-check fridge temperature log", "Due next week"]]]
+     ],
+     "caption": "Example only. Actions are written by your own team."
+    }
+   },
+   {
+    "heading": "Check the policies for gaps and out of date wording",
+    "bullets": [
+     "The out of date scan looks for old bodies, old frameworks, COVID era wording, unfilled placeholders and overdue review dates. It uses no tokens",
+     "Gap detection compares your policies with the regulations that apply to your service. It is on Professional and above",
+     "The Free plan screens up to 5 uploaded policies in total. Suggestions stay suggestions until an admin adopts them"
+    ],
+    "tags": [
+     {"label": "Policy gap detection", "href": "/policy-gap-detection"},
+     {"label": "Out of date policies", "href": "/uses/out-of-date-policies"}
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Policy review (example)",
+     "stats": [["Policies scanned", "28"], ["Flagged", "5"], ["No review date", "3"]],
+     "blocks": [
+      ["Flagged for a look", [["Safeguarding adults", "Old body named"], ["Business continuity", "Placeholder text left in"], ["Complaints", "Review overdue"]]]
+     ],
+     "caption": "Example only. Nothing changes until you adopt a fix."
+    }
+   },
+   {
+    "heading": "See the training gaps, then print the evidence of staff using policies",
+    "bullets": [
+     "Knowledge gaps shows open gaps, staff affected, most missed questions and weakest topics",
+     "The CQC Inspection Evidence Report is on Professional and above. It covers a period you choose, 12 months by default",
+     "You print it or save it as a PDF from the browser. It shows staff use of policies. It is not a pass mark or a rating"
+    ],
+    "tags": [
+     {"label": "CQC and compliance", "href": "/cqc-compliance"},
+     {"label": "What the readiness report is", "href": "/blog/cqc-readiness-report-what-it-is"}
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {"open": 6, "affected": 4, "closed": 15, "engaged": 68},
+     "missed": [["Reporting a safeguarding concern", "3 staff"], ["Fire evacuation steps", "2 staff"], ["Medicines errors", "2 staff"]],
+     "weak": [["Safeguarding Adults", "4 gaps"], ["Fire Safety", "2 gaps"]]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. These are the questions we hear when an inspection looks close.",
+  "items": [
+   {"q": "Can CareStream tell me if I will pass?", "a": "No. Nothing in CareStream is a pass mark or a CQC rating. It shows you what is overdue, open, missing or out of date, so you know where you stand and can talk it through honestly."},
+   {"q": "What can I really do in 24 hours?", "a": "You can see everything that has slipped and decide what to fix first. You can update a policy, close an action or allocate a short training module. You cannot create months of audit history or practice that was not there. Be candid about that with yourself and with the inspector."},
+   {"q": "How do I find audits I have missed?", "a": "Open the scheduling board. It shows each audit as done, in progress, overdue, due or missed, per month. Audits are free on every plan, so you can look at this on the Free plan too."},
+   {"q": "Is there a score I can quote?", "a": "There is a CQC readiness score on Professional and above. It is our own blend of audit results and policy coverage, not a CQC rating. Treat it as a prompt for where to look, and do not quote it as a result."},
+   {"q": "How does it check my policies?", "a": "The out of date scan looks for old terms, placeholder text and overdue reviews. Gap detection, on Professional and above, compares your policies with the regulations for your service and suggests wording. The Free plan screens up to 5 uploaded policies in total. Suggestions are only suggestions until an admin adopts them."},
+   {"q": "What about training?", "a": "The Knowledge gaps view shows open gaps, staff affected and the most missed questions. If a topic is weak, you can allocate an adhoc training module <a href=\"/training-platform\">built from your own policies</a>, on the paid plans. Staff do it in the Staff Hub, and a wrong answer goes to their Follow-up tab."},
+   {"q": "What can I show about staff using our policies?", "a": "The CQC Inspection Evidence Report shows how staff opened and used policies over a period you choose. It is on Professional and above. You print it or save it as a PDF from your browser. It is evidence of use, not a verdict."},
+   {"q": "Can I try this before tomorrow?", "a": "You can create a free account and look at the audits, and screen up to 5 policies, in an evening. The paid plans have a 14 day free trial. Set aside time on a quieter day to set the rest up properly."}
+  ]
+ },
+ "limits": {
+  "heading": "A way to see where you stand, not a way to pass",
+  "cards": [
+   {"title": "It does not simulate or predict an inspection", "body": "CareStream does not give a CQC rating or tell you what an inspector will find. CQC Staff Prep gives staff practice questions, and that is as close as it gets."},
+   {"title": "It does not create history", "body": "A missed audit stays missed. The evidence report reflects what staff have actually done in the period you choose. Twenty four hours fixes visibility, not a year of practice."},
+   {"title": "Several parts are on paid plans", "body": "Gap detection, the readiness score and the Inspection Evidence Report are on Professional and above. Adhoc training and audit recommendations are on paid plans. Audits are free."}
+  ]
+ },
+ "read_next": [
+  "cqc-inspection-day-what-to-expect-and-how-to-be-ready",
+  "care-home-audit-schedule",
+  "cqc-readiness-report-what-it-is"
+ ],
+ "faqs": {
+  "heading": "Inspection preparation, answered",
+  "groups": [
+   {
+    "group": "Getting ready",
+    "items": [
+     {"q": "What should be on a CQC inspection checklist the day before?", "a": "Keep it short and ordered: overdue and missed audits, open actions, policy gaps and out of date wording, training gaps, and evidence that staff use policies. The <a href=\"/blog/cqc-inspection-day-what-to-expect-and-how-to-be-ready\">inspection day guide</a> covers the day itself."},
+     {"q": "How do I make my home inspection ready at short notice?", "a": "Start with what you can see. Find what is overdue, decide what you can close tonight and write down what you cannot. Being inspection ready at short notice means knowing your gaps and having a plan for each one."},
+     {"q": "What does CQC inspection preparation involve for a manager?", "a": "Most of it is routine work done all year: audits, actions, policy reviews and training. Preparation in the last day is mostly checking that the routine has left a trail you can find."},
+     {"q": "Can CareStream make us inspection ready overnight?", "a": "No. It shows you where you stand, so you can fix what can be fixed. It cannot replace the months of practice an inspector looks at."},
+     {"q": "Does CareStream give a CQC rating?", "a": "No. The readiness score is our own blend of audit performance and policy coverage. It is not a CQC rating and does not predict one."}
+    ]
+   },
+   {
+    "group": "Evidence and compliance",
+    "items": [
+     {"q": "What counts as CQC evidence?", "a": "Evidence is whatever shows how you run the service: audits and their actions, policies, training records and how staff use them. Our <a href=\"/blog/cqc-evidence-categories-explained\">guide to evidence categories</a> explains how it is grouped. The Inspection Evidence Report covers one part, staff use of policies."},
+     {"q": "How do I keep CQC compliance evidence up to date?", "a": "Keep the routine going. Audits are scheduled with reminders, actions carry owners and proof, and policy use is recorded as staff open policies. Look at <a href=\"/cqc-compliance\">CQC compliance</a> monthly, not only before an inspection."},
+     {"q": "What does the law say about checking quality?", "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17 on good governance</a> says systems must be established and operated effectively, and must let the provider assess, monitor and improve the quality and safety of the services."},
+     {"q": "What does the law say about staff training?", "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> says staff must receive appropriate support, training, professional development, supervision and appraisal as is necessary for their duties."}
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "An ordered 24 hour check for tomorrow",
+  "lede": "Work from the quickest, most useful look to the slowest. Stop when you run out of time, and write down what is left.",
+  "sections": [
+   {
+    "h3": "The order that works in an evening",
+    "checklist": [
+     "Audits: open the scheduling board and list what is overdue or missed.",
+     "Actions: list open and overdue actions, and decide which you can close tonight with a note or photo.",
+     "Policies: run the out of date scan and note any flagged policy, then look at the gap view if your plan has it.",
+     "Training and evidence: look at Knowledge gaps, then print the Inspection Evidence Report if you are on Professional or above."
+    ]
+   },
+   {
+    "h3": "Be candid, to yourself first",
+    "paragraphs": [
+     "Write a short note for each gap: what it is, why it happened and what you are doing about it. An honest plan with dates is easier to talk through than a surprise. Under <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17</a>, providers must have systems to assess, monitor and improve the quality and safety of their services, so showing that you have found a problem and acted is part of the picture.",
+     "Staff matter too. A short chat about safeguarding and fire steps costs nothing, and the <a href=\"/cqc-staff-questions\">CQC Staff Prep</a> practice questions let staff rehearse their answers. It is practice, not a real inspection."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Show what you found, what you fixed and what you are still working on. Do not hide a gap."
+ }
+}

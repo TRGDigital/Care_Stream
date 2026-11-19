@@ -1,0 +1,445 @@
+{
+ "slug": "cqc-inspection-evidence-report-what-it-contains",
+ "status": "draft",
+ "order": 72,
+ "title": "CQC compliance software: what the inspection evidence report <em>actually contains</em>",
+ "meta_title": "CQC Compliance Software: Evidence Report Contents | CareStreamAI",
+ "meta_description": "See what the CQC Inspection Evidence Report in CareStream shows, section by section, and what it leaves out. Evidence of staff using your policies.",
+ "eyebrow": "Scenario",
+ "lede": "Most managers asking about CQC compliance software want to know one thing: what will it actually show me? This page walks through the CQC Inspection Evidence Report section by section, with its limits. It sits within <a href=\"/training-platform\">training and policies built from your own documents</a>.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "Getting ready for an inspection",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Policies reviewed and current",
+    "note": "This month",
+    "done": true
+   },
+   {
+    "label": "Monthly audits completed",
+    "note": "This month",
+    "done": true
+   },
+   {
+    "label": "Evidence that staff use the policies",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "One report to talk an inspector through",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/9aa9e5c2-442e-4b66-9679-ebf6c12a83f6.webp",
+ "image_alt": "A care home manager at her desk with a printed report booklet open and a highlighter in hand, a laptop beside her in a calm, tidy, bright office",
+ "card_title": "What does a CQC evidence report actually contain?",
+ "card_snippet": "Policies on the shelf are not the same as policies in use. See the nine sections of CareStream's evidence report, what each one shows, and what it does not claim to prove.",
+ "primary_keyword": "cqc compliance software",
+ "secondary_keywords": [
+  "cqc evidence",
+  "cqc inspection preparation",
+  "inspection ready"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Short training and knowledge checks drawn from your own policies, with wrong answers turned into lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "CQC and compliance",
+   "body": "How audits, policies and staff activity fit together as evidence for your next inspection.",
+   "action": "See CQC and compliance",
+   "href": "/cqc-compliance"
+  },
+  {
+   "title": "Policy gap detection",
+   "body": "Check your policies against regulations, spot out of date wording and review suggested fixes.",
+   "action": "See gap detection",
+   "href": "/policy-gap-detection"
+  }
+ ],
+ "intro": {
+  "heading": "The policies are written. Can you show they are used?",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A registered manager has spent the spring tidying up. The policy library is current, the monthly audits are done and the statutory training is up to date. Then she asks herself a harder question: if an inspector asks how she knows staff actually use the policies, what would she put on the table? She has documents and she has sign offs, but nothing that shows a carer opening a policy or asking a question about one. She wants something she can print, read through and talk about calmly. Here is how that week goes."
+ },
+ "trail": [
+  {
+   "when": "Monday",
+   "text": "The manager reviews the policy library. Every policy has a current version.",
+   "kind": "ok"
+  },
+  {
+   "when": "Tuesday",
+   "text": "The monthly infection control audit is finished and its actions are closed.",
+   "kind": "ok"
+  },
+  {
+   "when": "Wednesday",
+   "text": "Statutory training is up to date for the whole team.",
+   "kind": "ok"
+  },
+  {
+   "when": "Thursday",
+   "text": "Two policies were rewritten in the spring. Nobody can say if staff have looked at them.",
+   "kind": "gap"
+  },
+  {
+   "when": "Same day",
+   "text": "Some staff questions have no answer in any policy. Nobody has listed them.",
+   "kind": "gap"
+  },
+  {
+   "when": "Friday",
+   "text": "Night staff and carers who use other languages say little. Is the library reaching them?",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "Folders full of documents and no single view of how they are used.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“How do you know your staff use these policies?” She needs more than a folder.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>Documents show what you wrote. They do not show what happened next.</b> The CQC Inspection Evidence Report fills that part of the picture, and here is exactly what it holds.",
+ "why": {
+  "heading": "Inspection preparation is more than a tidy folder",
+  "sub": "A good folder shows effort. A record of use shows the effort reached the floor.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Policies on a shelf prove very little",
+    "body": "A policy can be current, approved and filed, and still never be opened by the people it was written for. Nobody knows until someone asks."
+   },
+   {
+    "icon": "tick",
+    "title": "Evidence is easier to gather as you go",
+    "body": "Collecting CQC evidence in the week before an inspection is stressful and patchy. A record that builds quietly through the year can simply be generated when you need it."
+   },
+   {
+    "icon": "alert",
+    "title": "Overclaiming is a risk too",
+    "body": "A report that promised a rating would be dishonest. The useful kind states plainly what it counts, so you can describe it accurately to an inspector."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Nine sections, from the first policy to the last training gap.",
+  "sub": "This is how the report is built, in the order it prints. It is part of <a href=\"/cqc-compliance\">CQC and compliance in CareStream</a>. The figures below are examples, not real data.",
+  "blocks": [
+   {
+    "heading": "Start with the header, then Policy Access Summary",
+    "bullets": [
+     "You pick a date range, 12 months by default, press Generate report, and your home's name and logo head the report",
+     "Policy Access Summary lists every active policy with its category, version, total questions, unique staff and last accessed date",
+     "A question here means a member of staff asking the assistant something that was answered from that policy, so the report shows policies in use"
+    ],
+    "tags": [
+     {
+      "label": "CQC and compliance",
+      "href": "/cqc-compliance"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "CQC Inspection Evidence Report",
+     "stats": [
+      ["Period", "12 months"],
+      ["Total queries", "1,284"],
+      ["Staff with activity", "31"]
+     ],
+     "blocks": [
+      [
+       "1. Policy Access Summary",
+       [
+        ["Safeguarding Adults v3", "212 queries, 27 staff"],
+        ["Medication Policy v4", "168 queries, 24 staff"],
+        ["Infection Control v2", "97 queries, 19 staff"]
+       ]
+      ]
+     ],
+     "caption": "Example only. Figures are illustration, not real data."
+    }
+   },
+   {
+    "heading": "Policies Not Accessed and Policy Version History",
+    "bullets": [
+     "Policies Not Accessed lists active policies that got no questions in the period, with the days they have been active, so you know where to raise awareness",
+     "Policy Version History shows each version, its status, upload date, who uploaded it and the questions asked in the 30 days after it went in",
+     "That 30 day count is a useful cue for an updated policy: did anyone look at the new version?"
+    ],
+    "tags": [
+     {
+      "label": "Out of date policies",
+      "href": "/uses/out-of-date-policies"
+     },
+     {
+      "label": "Policy gap detection",
+      "href": "/policy-gap-detection"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "CQC Inspection Evidence Report",
+     "blocks": [
+      [
+       "2. Policies Not Accessed",
+       [
+        ["Lone Working Policy v1", "0 queries, active 214 days"],
+        ["Bed Rails Policy v2", "0 queries, active 96 days"]
+       ]
+      ],
+      [
+       "3. Policy Version History",
+       [
+        ["Medication Policy v4, active", "41 queries in 30 days after upload"],
+        ["Medication Policy v3, superseded", "18 queries in 30 days after upload"]
+       ]
+      ]
+     ],
+     "caption": "Example only. Policy names and counts are illustration."
+    }
+   },
+   {
+    "heading": "Staff engagement, regulatory activity and language access",
+    "bullets": [
+     "Staff Engagement Evidence groups activity by role, such as carer or senior, and keeps individual names out of the report",
+     "Regulatory Framework Activity counts staff questions that mention areas such as safeguarding, fire safety, infection prevention or the Mental Capacity Act",
+     "Multi-Language Access shows the languages staff asked in, with a share of the total, and Staff Handbook Access Summary does the same for handbook sections"
+    ],
+    "tags": [
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     },
+     {
+      "label": "Languages",
+      "href": "/languages"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "CQC Inspection Evidence Report",
+     "blocks": [
+      [
+       "4. Staff Engagement Evidence",
+       [
+        ["Carer", "802 queries, 22 staff"],
+        ["Senior", "310 queries, 7 staff"]
+       ]
+      ],
+      [
+       "5. Regulatory Framework Activity",
+       [
+        ["Safeguarding", "164 queries"],
+        ["Infection Prevention", "88 queries"]
+       ]
+      ],
+      [
+       "6. Multi-Language Access",
+       [
+        ["English", "1,090 queries, 85%"],
+        ["Romanian", "126 queries, 10%"]
+       ]
+      ]
+     ],
+     "caption": "Example only. Roles, frameworks and languages are illustration."
+    }
+   },
+   {
+    "heading": "Knowledge Gap Log and Staff Training Compliance",
+    "bullets": [
+     "Knowledge Gap Log lists the latest questions where no policy matched, with channel, language and date, so you can see what your policies do not yet answer",
+     "Staff Training Compliance shows the share of staff current on statutory modules, answers submitted, the correct answer rate, and what has expired or is due within 90 days",
+     "It also lists training questions that at least 40 percent of respondents got wrong, where at least two people answered"
+    ],
+    "tags": [
+     {
+      "label": "Policy gaps in practice",
+      "href": "/uses/policy-gaps"
+     },
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "CQC Inspection Evidence Report",
+     "stats": [
+      ["Statutory compliance", "88%"],
+      ["Correct answer rate", "91%"],
+      ["Due within 90 days", "4"]
+     ],
+     "blocks": [
+      [
+       "8. Knowledge Gap Log",
+       [
+        ["Who covers the on call phone at weekends?", "Hub chat, English"],
+        ["How long do we keep visitor records?", "Hub chat, English"]
+       ]
+      ],
+      [
+       "9. Staff Training Compliance",
+       [
+        ["Fire Safety question 3", "2 of 5 incorrect, 40%"],
+        ["Medication question 6", "3 of 6 incorrect, 50%"]
+       ]
+      ]
+     ],
+     "caption": "Example only. Questions and rates are illustration."
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "Does the report tell me whether we will pass?",
+    "a": "No. It is not a pass, a score or a rating, and it does not predict one. It is a factual record of how staff have used your policies over a period you choose. How you interpret it, and what you say to an inspector, stays with you."
+   },
+   {
+    "q": "Where does the information in it come from?",
+    "a": "Mostly from questions your staff ask the assistant in the Staff Hub, which are answered from your own policies and handbook. If staff never use the assistant, those sections will be thin. The training section draws on training records and answers."
+   },
+   {
+    "q": "Which plan do I need?",
+    "a": "The CQC Inspection Evidence Report is on Professional and above. On a lower plan the report page asks you to upgrade. Check the <a href=\"/pricing\">pricing page</a> for the current plan details."
+   },
+   {
+    "q": "How do I get it out of CareStream and in front of someone?",
+    "a": "Choose your dates, press Generate report, then use Download PDF, which opens your browser's print dialog so you can save as PDF, or Print. It carries your home's name and logo in the header."
+   },
+   {
+    "q": "Is it one file with every record I might need?",
+    "a": "No. It is one report about staff use of policies and training activity. Audits, sign in sheets and other records stay in their own places. You would bring them together yourself when you prepare."
+   },
+   {
+    "q": "Does it check whether my policies are any good?",
+    "a": "Not by itself. The report shows use, not quality. <a href=\"/policy-gap-detection\">Policy gap detection</a> is separate: it checks policies against regulations, flags out of date wording and suggests fixes, which stay suggestions until an admin adopts them. It is on Professional and above, and the Free plan screens up to 5 uploaded policies in total."
+   },
+   {
+    "q": "Can I practise inspector style questions with staff?",
+    "a": "Yes, in a limited way. <a href=\"/cqc-staff-questions\">CQC Staff Prep</a> sends staff practice questions and gives them feedback. It is practice, not a simulation of an inspection, and it does not predict anything."
+   },
+   {
+    "q": "Can I try it before I commit?",
+    "a": "Yes. There is a 14 day free trial on the paid plans, and you can <a href=\"/register\">create a free account</a> to look around. The report needs some staff activity to be interesting, so the sooner your team starts using the Staff Hub, the more it will show."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "Useful evidence, not a verdict",
+  "cards": [
+   {
+    "title": "It is not a pass or a rating",
+    "body": "The report states that it holds factual data only. It makes no claim about CQC outcomes and cannot tell you how an inspector will judge your service."
+   },
+   {
+    "title": "It does not gather every record",
+    "body": "It covers policy use and training activity. Audits, training sign in sheets and everything else sit elsewhere, and you decide what to bring to an inspection."
+   },
+   {
+    "title": "It depends on staff using the hub",
+    "body": "If few people ask questions, the report will show few. It is on Professional and above, and individual staff are not named in the engagement section."
+   }
+  ]
+ },
+ "read_next": [
+  "cqc-evidence-categories-explained",
+  "how-do-you-record-in-person-training-so-it-counts-as-cqc-evidence",
+  "cqc-readiness-report-what-it-is"
+ ],
+ "faqs": {
+  "heading": "The CQC Inspection Evidence Report, answered",
+  "groups": [
+   {
+    "group": "About the report",
+    "items": [
+     {
+      "q": "What is in a CQC inspection evidence report?",
+      "a": "CareStream's report has up to nine sections: Policy Access Summary, Policies Not Accessed, Policy Version History, Staff Engagement Evidence, Regulatory Framework Activity, Multi-Language Access, Staff Handbook Access Summary, Knowledge Gap Log and Staff Training Compliance. Each covers the date range you choose."
+     },
+     {
+      "q": "What period does the report cover?",
+      "a": "Twelve months by default. You can change the From and To dates before you generate it."
+     },
+     {
+      "q": "Does the report name individual staff?",
+      "a": "The Staff Engagement Evidence section groups activity by role and keeps individual names out. Policy sections show counts of unique staff, not names."
+     },
+     {
+      "q": "Can I print the report or save it as a PDF?",
+      "a": "Yes. Download PDF opens your browser's print dialog, where you choose Save as PDF. Print sends it to a printer. The home's name and logo head the report."
+     },
+     {
+      "q": "Is this the same as the CQC readiness score?",
+      "a": "No. The readiness score is CareStream's own blend of audit performance and policy coverage. It is not a CQC rating. The evidence report is a separate record of staff use of policies."
+     }
+    ]
+   },
+   {
+    "group": "About inspection preparation",
+    "items": [
+     {
+      "q": "What does CQC inspection preparation involve for a care home manager?",
+      "a": "Mostly keeping a steady record: current policies, regular audits, training that staff understand and a way to show how it all gets used. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17 on good governance</a> asks providers to operate systems that assess, monitor and improve the quality and safety of the service, and to keep records about staff and the management of the activity."
+     },
+     {
+      "q": "How can I be inspection ready without a last minute rush?",
+      "a": "Gather CQC evidence as you go. Run <a href=\"/care-audits\">audits</a> on a schedule, keep policies current, and generate the evidence report a few weeks ahead so you have time to act on what it shows, such as policies nobody opens."
+     },
+     {
+      "q": "What does the law say about staff training records?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18 on staffing</a> says staff must receive the support, training, professional development, supervision and appraisal necessary to carry out their duties. Reports like this help you show your own record of it."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to get inspection ready with the evidence you already have",
+  "lede": "CQC inspection preparation works best as a habit. Here is a simple routine that makes a report like this useful instead of a one off scramble.",
+  "sections": [
+   {
+    "h3": "Read the report as a to do list",
+    "paragraphs": [
+     "Start with Policies Not Accessed. A policy nobody asks about may be unknown, unclear or no longer needed. Then read the Knowledge Gap Log: each unmatched question is a hint that a policy is missing a point. Both lists tell you what to improve before anyone else reads the report."
+    ]
+   },
+   {
+    "h3": "Four steps a month before an inspection",
+    "checklist": [
+     "Generate the report for the last 12 months and read every section yourself.",
+     "Pick two policies nobody opens and tell the team where they are and why they matter.",
+     "Turn the top unmatched questions into policy updates, and review any suggested wording before adopting it.",
+     "Gather your recent audits and training records, so you can talk through them alongside the report."
+    ]
+   },
+   {
+    "h3": "Keep the record honest",
+    "paragraphs": [
+     "Describe the report as evidence of staff using policies, and nothing more. A calm, accurate account of what it shows is worth more to an inspector than a large claim."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Bring the report, your latest <a href=\"/care-audits/infection-control\">audit results</a> and your training records, and be ready to say what you did about the gaps they showed."
+ }
+}

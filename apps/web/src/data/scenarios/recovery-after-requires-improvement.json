@@ -1,0 +1,527 @@
+{
+ "slug": "recovery-after-requires-improvement",
+ "status": "draft",
+ "order": 69,
+ "title": "Your report says CQC requires improvement. <em>Build the 90 days from your own data.</em>",
+ "meta_title": "CQC Requires Improvement: A 90 Day Plan | CareStreamAI",
+ "meta_description": "Rated CQC requires improvement? Turn your audits, policy gaps and staff records into a 90 day plan: know where you stand, fix it, then show the proof.",
+ "eyebrow": "Scenario",
+ "lede": "A <b>CQC requires improvement</b> rating is hard to read and harder to act on. CareStream does not write your plan or change your rating. It helps you build a 90 day outline from <a href=\"/training-platform\">your own audits, policies and staff records</a>, so each step has an owner, a date and a record.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "The 90 days after the report",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Days 1 to 30: know where you stand",
+    "note": "Audits and gaps listed",
+    "done": true
+   },
+   {
+    "label": "Days 31 to 60: fix",
+    "note": "Actions with owners",
+    "done": true
+   },
+   {
+    "label": "Days 61 to 90: prove",
+    "note": "Re-checks not yet done",
+    "done": false
+   },
+   {
+    "label": "Evidence ready to show",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/138f5821-1033-4661-9415-2bb94a76ea15.webp",
+ "image_alt": "A care home manager and a deputy standing at a wall board with three columns of paper cards, discussing a plan calmly in a bright office",
+ "card_title": "The report says requires improvement. Where do you start?",
+ "card_snippet": "Turn your own audits, policy gaps and staff records into a 90 day outline: know where you stand, fix it with owners and dates, then keep the proof. CareStream supports the plan. It does not write it.",
+ "primary_keyword": "cqc requires improvement",
+ "secondary_keywords": [
+  "cqc action plan",
+  "cqc improvement plan",
+  "cqc compliance"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Short training on a topic, built from your own policies, and a follow up lesson for every wrong answer.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Audits with owners and re-checks",
+   "body": "More than 100 built in audits, free on every plan, with actions that are checked again at the next audit.",
+   "action": "See the audits",
+   "href": "/care-audits"
+  },
+  {
+   "title": "CQC and compliance",
+   "body": "Policy gaps, a readiness view and a report on staff using your policies, kept in one place.",
+   "action": "See CQC and compliance",
+   "href": "/cqc-compliance"
+  }
+ ],
+ "intro": {
+  "heading": "The rating has landed. The plan has not been written yet.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "The report arrives on a Thursday. The manager reads it twice, then reads it again with the deputy. The team is committed and the residents are cared for, but the home has been rated requires improvement. Some findings the manager expected. Others were a surprise. Last year's audits are in a folder, the policies were updated whenever someone had time, and nobody can say which actions were closed. Everyone wants a plan. Before there can be a plan, someone has to know exactly where the home stands. Here is how that week tends to go."
+ },
+ "trail": [
+  {
+   "when": "Thursday",
+   "text": "The report arrives. The manager and deputy read it together.",
+   "kind": "ok"
+  },
+  {
+   "when": "Friday",
+   "text": "The team is told honestly. Everyone wants to help.",
+   "kind": "ok"
+  },
+  {
+   "when": "Monday",
+   "text": "A wall board goes up with three columns: know, fix, prove.",
+   "kind": "ok"
+  },
+  {
+   "when": "Week two",
+   "text": "Audit results are in folders and spreadsheets. Nobody has one view.",
+   "kind": "gap"
+  },
+  {
+   "when": "Week three",
+   "text": "Which policies cover what the report raised? No one is sure.",
+   "kind": "gap"
+  },
+  {
+   "when": "Week four",
+   "text": "Actions have names on cards, but no dates and no re-check.",
+   "kind": "gap"
+  },
+  {
+   "when": "Day 60",
+   "text": "Staff say they know the changes. The manager cannot yet show it.",
+   "kind": "gap"
+  },
+  {
+   "when": "Day 90",
+   "text": "A senior colleague asks: “What changed, and how do you know?”",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The commitment is not the problem.</b> The gap is between wanting to improve and being able to show it. Here is how CareStream helps you build the outline from your own data, and where its help stops.",
+ "why": {
+  "heading": "A plan needs a starting point, an owner for every action, and proof",
+  "sub": "Good intentions are easy to see. Evidence takes more.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "You cannot fix what you cannot see",
+    "body": "Audit scores sit in different places and policies were reviewed at different times. Until it is in one view, the first month goes on finding things out."
+   },
+   {
+    "icon": "alert",
+    "title": "Actions drift without owners and re-checks",
+    "body": "A card on the wall with a name on it is a start. Without a due date, a reminder and a second look at the next audit, a fix can quietly slip back."
+   },
+   {
+    "icon": "tick",
+    "title": "Staff knowing is not the same as staff showing",
+    "body": "A policy can be rewritten and still not reach the floor. You need to see that people have opened it, understood it and can answer questions on it."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Know, fix, prove, in the order a manager meets it.",
+  "sub": "A 90 day outline for a <a href=\"/cqc-compliance\">CQC action plan</a> built from what the home already holds. The figures in each example screen are illustrations only.",
+  "blocks": [
+   {
+    "heading": "Days 1 to 30: know where you stand",
+    "bullets": [
+     "Run the built in audits that match what the report raised. They are free on every plan, and each one is scored by section so weak spots show up",
+     "Upload your policies and run the policy gap checks. The Free plan screens up to 5 uploaded policies in total, and the out of date scan lists wording that has been superseded",
+     "If you upload your CQC inspection report, the CQC Report Chat topic in the Staff Hub can search it together with your policies and handbook"
+    ],
+    "tags": [
+     {
+      "label": "More than 100 care audits",
+      "href": "/care-audits"
+     },
+     {
+      "label": "Policy gap detection",
+      "href": "/policy-gap-detection"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Example: where we stand, week 3",
+     "stats": [
+      [
+       "Audits completed",
+       "6"
+      ],
+      [
+       "Lowest section score",
+       "58%"
+      ],
+      [
+       "Policies to review",
+       "9"
+      ]
+     ],
+     "blocks": [
+      [
+       "Audit scores by area (example)",
+       [
+        [
+         "Medicines management",
+         "71%"
+        ],
+        [
+         "Infection control",
+         "84%"
+        ],
+        [
+         "Care plan review and update",
+         "58%"
+        ]
+       ]
+      ],
+      [
+       "Policy checks (example)",
+       [
+        [
+         "Superseded wording found",
+         "5 policies"
+        ],
+        [
+         "No review date recorded",
+         "4 policies"
+        ]
+       ]
+      ]
+     ],
+     "caption": "Example only. Scores come from your own completed audits."
+    }
+   },
+   {
+    "heading": "Days 31 to 60: fix, with an owner, a date and a re-check",
+    "bullets": [
+     "After an audit is completed, each action gets an owner, a due date and up to 10 photos as proof. Owners see their actions in the Staff Hub",
+     "On the paid plans, a draft action list is built from the audit answers for you to edit and approve. You decide what goes on it",
+     "At the next audit of the same kind, each earlier action is marked fixed or not fixed. A not fixed action reopens and the owner is emailed"
+    ],
+    "tags": [
+     {
+      "label": "Monthly governance review audit",
+      "href": "/care-audits/monthly-governance-review"
+     },
+     {
+      "label": "Medicines management audit",
+      "href": "/care-audits/medicines-management"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Example: action list, day 45",
+     "stats": [
+      [
+       "Open actions",
+       "11"
+      ],
+      [
+       "Done with a photo",
+       "7"
+      ],
+      [
+       "Overdue",
+       "2"
+      ]
+     ],
+     "blocks": [
+      [
+       "Actions (example)",
+       [
+        [
+         "Update the care plan review schedule",
+         "Deputy, due 14 days"
+        ],
+        [
+         "Re-check medicines storage temperatures",
+         "Senior carer, due 7 days"
+        ],
+        [
+         "Repair the sluice door seal",
+         "Contractor, overdue"
+        ]
+       ]
+      ],
+      [
+       "Re-check at the next audit (example)",
+       [
+        [
+         "Fixed",
+         "4"
+        ],
+        [
+         "Not fixed, reopened",
+         "1"
+        ]
+       ]
+      ]
+     ],
+     "caption": "Example only. Owners and dates are set by you."
+    }
+   },
+   {
+    "heading": "Policy gaps and wording fixes stay suggestions until you approve them",
+    "bullets": [
+     "On Professional and above, the gap check shows which regulations your policies cover, what is missing, example wording and which policy it belongs in",
+     "Nothing changes by itself. An admin adopts a suggestion as a tracked change, then it goes through your approval chain before it is published",
+     "Published changes are re-read by the staff chat, so staff get the new wording. You can also turn a gap into training for staff"
+    ],
+    "tags": [
+     {
+      "label": "Policy gaps",
+      "href": "/uses/policy-gaps"
+     },
+     {
+      "label": "Out of date policies",
+      "href": "/uses/out-of-date-policies"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Example: policy gap fixes",
+     "stats": [
+      [
+       "Suggestions adopted",
+       "6"
+      ],
+      [
+       "With care manager",
+       "2"
+      ],
+      [
+       "Live",
+       "4"
+      ]
+     ],
+     "blocks": [
+      [
+       "Fix status (example)",
+       [
+        [
+         "Safeguarding policy, escalation wording",
+         "Live"
+        ],
+        [
+         "Falls policy, post fall review steps",
+         "With care manager"
+        ],
+        [
+         "Complaints policy, response timescales",
+         "Draft"
+        ]
+       ]
+      ]
+     ],
+     "caption": "Example only. Example wording is for you to review, adapt and approve."
+    }
+   },
+   {
+    "heading": "Days 61 to 90: prove it, and show staff know it",
+    "bullets": [
+     "The CQC readiness score on Professional and above blends your audit results with your policy coverage. It is CareStream's own measure, not a CQC rating",
+     "The CQC Inspection Evidence Report shows staff using your policies over a period you choose. Print it or save it as a PDF from your browser",
+     "CQC Staff Prep sends staff practice questions in the style of an inspector, with a score and feedback. It is practice, not an inspection"
+    ],
+    "tags": [
+     {
+      "label": "CQC Staff Prep",
+      "href": "/cqc-staff-questions"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Example: proving the changes, day 80",
+     "stats": [
+      [
+       "Readiness score (own measure)",
+       "72 Good"
+      ],
+      [
+       "Actions re-checked fixed",
+       "9 of 11"
+      ],
+      [
+       "Staff practice score",
+       "78 average"
+      ]
+     ],
+     "blocks": [
+      [
+       "What we can show (example)",
+       [
+        [
+         "Audit scores, month by month",
+         "Improving"
+        ],
+        [
+         "Policy versions with dates",
+         "Recorded"
+        ],
+        [
+         "Staff reading policies, 12 months",
+         "In the report"
+        ]
+       ]
+      ]
+     ],
+     "caption": "Example only. The readiness score is not a CQC rating."
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "Will CareStream write our CQC improvement plan?",
+    "a": "No. The plan is yours, and so are its priorities. CareStream gives you the material to build it from: audit results, policy gaps, actions with owners and dates, and a record of what changed. Think of it as the wall board that keeps itself up to date."
+   },
+   {
+    "q": "Where do we start in the first 30 days?",
+    "a": "Start with knowing where you stand. Run the <a href=\"/care-audits\">built in audits</a> that match what the report raised, which are free on every plan, and upload your policies for a <a href=\"/policy-gap-detection\">gap check</a>. The Free plan screens up to 5 uploaded policies in total."
+   },
+   {
+    "q": "How do actions get closed and checked?",
+    "a": "After an audit, each action has an owner, a due date and optional photos as proof. The owner is reminded as it falls due, and it is escalated if it goes overdue. At the next audit of the same kind, the auditor marks each earlier action as fixed or not fixed. Not fixed reopens it."
+   },
+   {
+    "q": "Can it rewrite our policies for us?",
+    "a": "It can suggest. On Professional and above, the gap check shows what is missing and offers example wording and where to put it. Those are suggestions until an admin adopts them. Then they go through your approval chain, which can include your care manager and an outside reviewer, before they are published."
+   },
+   {
+    "q": "Is the readiness score our CQC rating?",
+    "a": "No. It is CareStream's own blend of your audit performance and your policy coverage, available on Professional and above. It helps you see movement. It is not a CQC rating and it does not predict one."
+   },
+   {
+    "q": "How do we show the changes reached the floor?",
+    "a": "Staff can be given short training on a topic, built from your own policies, in the Staff Hub. A wrong answer goes into their Follow-up tab with an email, and they can choose a short lesson and retry. You see the weakest topics in the Knowledge gaps view and a Monday digest. Adhoc training is on the paid plans."
+   },
+   {
+    "q": "What can we show to evidence our CQC compliance?",
+    "a": "The CQC Inspection Evidence Report, on Professional and above, shows staff using your policies over a period you choose, with version history and a knowledge gap log. It is evidence of use, not a pass or a rating. You will still want your audit reports and action records alongside it."
+   },
+   {
+    "q": "Can we try this before we commit?",
+    "a": "Yes. You can <a href=\"/register\">create a free account</a> and run audits straight away. The paid plans have a 14 day free trial. Our <a href=\"/pricing\">pricing page</a> explains what each plan includes."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "Support for the plan, not the plan itself",
+  "cards": [
+   {
+    "title": "It does not write or approve your plan",
+    "body": "CareStream is not part of CQC's process and cannot change or predict a rating. The priorities, the words and the decisions stay with you and your team."
+   },
+   {
+    "title": "It does not show what an inspector will find",
+    "body": "Staff Prep is practice questions for staff. It does not simulate an inspection. The readiness score is our own measure, not a rating."
+   },
+   {
+    "title": "Some help is on the paid plans only",
+    "body": "Gap fixes, the readiness score and the Inspection Evidence Report are Professional and above. Audit recommendations and adhoc training need a paid plan too. Audits themselves are free."
+   }
+  ]
+ },
+ "read_next": [
+  "cqc-quality-single-assessment-framework",
+  "policy-gap-analysis-for-care-homes",
+  "cqc-readiness-report-what-it-is"
+ ],
+ "faqs": {
+  "heading": "Recovering from requires improvement, answered",
+  "groups": [
+   {
+    "group": "Building the plan",
+    "items": [
+     {
+      "q": "What is a CQC action plan and who writes it?",
+      "a": "It is your own written list of what you will change, who will do it and by when. You write it, with your team. CareStream does not write it, but your audit actions, owners and dates can feed it. A <a href=\"/care-audits\">completed audit</a> produces exactly that kind of record."
+     },
+     {
+      "q": "What should a CQC improvement plan include?",
+      "a": "Be guided by the report itself and by your provider's own governance. A useful plan names each finding, the action, an owner, a due date and how you will check it worked. Keep your CQC improvement plan short enough that people actually read it."
+     },
+     {
+      "q": "Where do we find out which policies the report affects?",
+      "a": "Run a <a href=\"/policy-gap-detection\">policy gap check</a>. It looks at what your policies say against a regulation checklist and lists what is missing or partial. The Free plan screens up to 5 uploaded policies in total. Gap fixes are on Professional and above."
+     }
+    ]
+   },
+   {
+    "group": "Evidence and the rating",
+    "items": [
+     {
+      "q": "Does CareStream improve our CQC rating?",
+      "a": "No. CareStream cannot change a rating. It helps you see where you stand, close actions with records, and keep evidence that your changes reached staff. A rating is for CQC to decide."
+     },
+     {
+      "q": "What does Regulation 17 say about governance?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17</a> says systems or processes must be established and operated effectively, and they must enable the provider to assess, monitor and improve the quality and safety of the service. Regular audits with recorded actions are one way to show that."
+     },
+     {
+      "q": "What does Regulation 12 say about safe care?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/12\">Regulation 12</a> says care and treatment must be provided in a safe way, which includes assessing the risks to the health and safety of people using the service and doing all that is reasonably practicable to mitigate them. Your risk related audits can help you check this."
+     },
+     {
+      "q": "How do we keep our CQC compliance evidence tidy?",
+      "a": "Keep audit reports, action records, policy version history and training results in one place. On Professional and above the Inspection Evidence Report brings together evidence of staff using your policies. See <a href=\"/cqc-compliance\">CQC and compliance</a> for how the pieces fit."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical 90 day outline after a requires improvement rating",
+  "lede": "This is a way of organising the work, not a CQC process. Adapt it to your service, your report and your own governance.",
+  "sections": [
+   {
+    "h3": "Days 1 to 30: know where you stand",
+    "paragraphs": [
+     "Read the report with your deputy and the senior team, then list each finding in your own words. Next, find what your own records already say about each one: the latest audit, the policy behind it and its last review date."
+    ],
+    "checklist": [
+     "List every finding in the report, one per card.",
+     "Run the audits that match each finding and note the lowest scores.",
+     "Check the policy behind each finding and its last review date.",
+     "Name one person to keep the board up to date."
+    ]
+   },
+   {
+    "h3": "Days 31 to 60: fix",
+    "paragraphs": [
+     "Turn each finding into actions small enough to finish, each with an owner, a due date and a way of checking it worked. Add a photo where the fix can be seen. Update the policy wording behind the finding, then tell staff. A policy that is rewritten but never read has not yet changed anything."
+    ]
+   },
+   {
+    "h3": "Days 61 to 90: prove",
+    "paragraphs": [
+     "Run the same audits again and compare. Mark each earlier action as fixed or not fixed, and reopen what slipped. Ask staff a few practice questions on the changes and look at where answers were weak. Keep the before and after together. Read more about <a href=\"/blog/cqc-quality-single-assessment-framework\">the CQC quality framework</a> to see how the questions are grouped."
+    ]
+   }
+  ],
+  "note": "<b>For the next conversation.</b> Keep the audits, the actions, the policy versions and the staff results together, so you can show what changed and how you checked it."
+ }
+}

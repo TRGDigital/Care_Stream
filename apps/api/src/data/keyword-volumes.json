@@ -655,6 +655,15 @@
   "audit approval": 10,
   "manager sign off": 10,
   "audit recommendations": 10,
-  "custom audit": 10
+  "custom audit": 10,
+  "inspection ready": 30,
+  "cqc compliance": 320,
+  "cqc inspection questions for staff": 10,
+  "cqc inspection questions": 10,
+  "cqc requires improvement": 40,
+  "cqc action plan": 20,
+  "cqc improvement plan": 10,
+  "quality assurance visit": 10,
+  "commissioner visit": 10
  }
 }

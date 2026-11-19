@@ -62,6 +62,7 @@ export const PRICING_FEATURE_LINKS: Record<string, string> = {
   'CQC readiness report': '/features/cqc-readiness-report',
   // Workforce
   'Supervisions and appraisals tracking': '/features/supervisions-and-appraisals-tracking',
+  'Training linked to supervisions': '/features/training-linked-to-supervisions',
   'Workforce compliance register, DBS, right to work, registration, references': '/features/workforce-compliance-register-dbs-right-to-work-registration-references',
   'Credential uploads and expiry alerts': '/features/credential-document-uploads-expiry-alerts',
   'Multi site group console and benchmarking': '/features/multi-site-group-console-and-benchmarking',

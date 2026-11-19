@@ -1,0 +1,218 @@
+{
+ "slug": "free-cpd-for-every-member-of-staff-plus-your-own-policies",
+ "status": "draft",
+ "order": 92,
+ "title": "Free CPD courses for every member of staff. <em>Then training on your own policies.</em>",
+ "meta_title": "Free CPD Courses for Care Staff | CareStreamAI",
+ "meta_description": "Free CPD courses for every member of staff, with a CPD certificate for each learner, plus short training built from your own policies on the paid plans.",
+ "eyebrow": "Scenario",
+ "lede": "Looking for free CPD courses for your whole team? On CareStream the CPD certified courses, including the Care Certificate and the annual refreshers, are free for every member of staff on every plan, in English, with no card. When you want training on how your own service works, that is the paid <a href=\"/training-platform\">training built from your own policies</a>.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "Training the whole team, one step at a time",
+  "pill": "Illustration",
+  "rows": [
+   {"label": "Free account created", "note": "Day 0", "done": true},
+   {"label": "Free courses given to every carer", "note": "Week 1", "done": true},
+   {"label": "Observed sign off recorded where needed", "note": "Not yet", "done": false},
+   {"label": "Training on your own policies", "note": "Not yet", "done": false}
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/ee6122fc-49fb-44d0-88c9-b1177890b459.webp",
+ "image_alt": "Three carers of different ages sit around a laptop in a bright staff room, smiling at a course certificate on the screen, with a plant and mugs on the table",
+ "card_title": "Free CPD courses for every member of staff",
+ "card_snippet": "CPD certified courses, including the Care Certificate and annual refreshers, are free for every carer on every plan. Add training built from your own policies when you are ready.",
+ "primary_keyword": "free cpd courses",
+ "secondary_keywords": ["free cpd", "free care training", "free care certificate", "cpd certificate"],
+ "feature_links": [
+  {"title": "Training built from your own policies", "body": "Short training on how your service works, with questions that show what staff understood.", "action": "See the feature", "href": "/training-platform"},
+  {"title": "Annual training", "body": "Plan the yearly refreshers for the whole team and see who is due.", "action": "See annual training", "href": "/uses/annual-training"},
+  {"title": "Ad hoc training", "body": "Turn a topic, a change or an incident into a short module for your own staff.", "action": "See ad hoc training", "href": "/uses/adhoc-training"}
+ ],
+ "intro": {
+  "heading": "The training budget is thin. The team still needs a certificate.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A registered manager has twenty staff, a tight budget and a long list of mandatory topics. Three new carers need the Care Certificate. The rest are due their annual refreshers. She searches for free CPD courses and finds plenty of pages that turn out to cost money, or that give a certificate nobody can check. She wants something her staff can finish on their own phones, with a certificate each learner can keep. She also knows that a general course cannot tell a carer how her own home does things. Here is how that plays out."
+ },
+ "trail": [
+  {"when": "Monday", "text": "The manager lists who needs which course this year.", "kind": "ok"},
+  {"when": "Tuesday", "text": "She searches for free training and reads three pages.", "kind": "ok"},
+  {"when": "Wednesday", "text": "She creates a free account and gives courses to the team.", "kind": "ok"},
+  {"when": "Two weeks later", "text": "Most carers have a certificate. Two new starters do not.", "kind": "gap"},
+  {"when": "The new starters", "text": "Their Care Certificate is waiting for an observed sign off.", "kind": "gap"},
+  {"when": "Your own way of working", "text": "Nothing yet teaches your hoist rules, your handover or your forms.", "kind": "gap"},
+  {"when": "What the manager has", "text": "Certificates for general topics, and no proof of local knowledge.", "kind": "gap"},
+  {"when": "Inspection day", "text": "“How do you know staff follow your policy?” A general course is not the answer.", "kind": "end"}
+ ],
+ "trail_close": "Free courses cover the general knowledge well. The rest of this page shows what they do, what they wait for, and where training on your own policies fits.",
+ "why": {
+  "heading": "A certificate shows a course was done, not that your policy is followed",
+  "sub": "Both kinds of training matter, and they do different jobs.",
+  "cards": [
+   {"icon": "tick", "title": "General knowledge is the easy part", "body": "Every carer needs the same core topics. CPD certified courses cover them once, properly, so you are not paying to rebuild them."},
+   {"icon": "chat", "title": "Some skills need a person watching", "body": "The Care Certificate, Moving and Handling and Medication include an observed assessment. A manager must record it before the certificate is issued."},
+   {"icon": "alert", "title": "Your own practice is not in a general course", "body": "How your home uses its equipment, records and escalation routes lives in your policies. Staff need to be asked about that too."}
+  ]
+ },
+ "how": {
+  "heading": "Free courses first, your own policies next.",
+  "sub": "This is how a manager uses the free courses, then adds <a href=\"/training-platform\">training built from your own policies</a>. See also <a href=\"/uses/annual-training\">planning annual training</a> and <a href=\"/uses/multilingual-staff-hub\">the multilingual Staff Hub</a>.",
+  "blocks": [
+   {
+    "heading": "Give free CPD courses to every member of staff",
+    "bullets": [
+     "Create a free account, then pick from the ten CPD certified courses, including the <a href=\"/staff-training/care-certificate\">Care Certificate</a> and the annual refreshers",
+     "Add as many staff logins as you need. There is no limit on how many people take the free courses and no card is needed",
+     "Staff learn on their own phones and each learner who passes gets a named, dated CPD certificate"
+    ],
+    "tags": [
+     {"label": "Care Certificate course", "href": "/staff-training/care-certificate"},
+     {"label": "Pricing and plans", "href": "/pricing"}
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Free courses: example team view",
+     "stats": [["Courses given", "10"], ["Staff enrolled", "20"], ["Certificates issued", "14"]],
+     "blocks": [
+      ["Example only: in progress", [["Infection Prevention and Control refresher", "6 staff"], ["Food Hygiene refresher", "4 staff"]]],
+      ["Example only: complete", [["GDPR and Data Protection refresher", "9 staff"], ["Mental Health Awareness", "5 staff"]]]
+     ],
+     "caption": "Illustration with example figures. Every course here is free on every plan."
+    }
+   },
+   {
+    "heading": "Know what the CPD certificate needs before it is issued",
+    "bullets": [
+     "Pass mark is 80 percent, with three attempts. After the third miss the learner revisits the lesson before the assessment reopens",
+     "Each learner completes a short course feedback step before the certificate is available",
+     "For the Care Certificate, Moving and Handling and Medication, the certificate stays pending until a manager records the observed assessment"
+    ],
+    "tags": [
+     {"label": "Moving and handling course", "href": "/staff-training/moving-and-handling-of-people"},
+     {"label": "Medication course", "href": "/staff-training/medication-administration-and-competency"}
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "CPD certificate status: example",
+     "stats": [["Quiz passed", "3"], ["Pending practical", "2"], ["Issued", "1"]],
+     "blocks": [
+      ["Example only: waiting for the manager", [["Care Certificate, new starter A", "Observation to record"], ["Medication refresher, carer B", "Observation to record"]]],
+      ["Example only: issued", [["Care Certificate, new starter C", "Observed and recorded"]]]
+     ],
+     "caption": "Illustration with example names. The certificate is issued once the manager records the observation."
+    }
+   },
+   {
+    "heading": "Add training on your own policies on the paid plans",
+    "bullets": [
+     "The free courses are fixed, certified content. Ad hoc training is different: you pick a topic and it is built from your own policies, with general good practice as the fallback",
+     "Edit and preview the module before staff see it, then allocate it from the Training screen",
+     "Ad hoc training is on the paid plans. The free plan does not include it"
+    ],
+    "tags": [
+     {"label": "Ad hoc training", "href": "/uses/adhoc-training"},
+     {"label": "Training built from your own policies", "href": "/training-platform"}
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Moving and Handling: how we use our hoists",
+     "questions": ["Who checks the sling before it is used with a resident?", "What do you do if the care plan and the hoist label disagree?"],
+     "staff_count": 20
+    }
+   },
+   {
+    "heading": "Free in English, translated on the paid plans",
+    "bullets": [
+     "The free courses are in English on the free plan",
+     "Translation into 60+ languages starts on the Starter plan, so upgrading adds the languages and does not add a charge for the courses",
+     "Translation is machine translation, so check the pricing page for what each plan includes"
+    ],
+    "tags": [
+     {"label": "Languages", "href": "/languages"},
+     {"label": "Multilingual Staff Hub", "href": "/uses/multilingual-staff-hub"}
+    ],
+    "mock": {"type": "language", "second_language": "Polish"}
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {"q": "Are the free courses really free?", "a": "Yes. The CPD certified courses are free for every member of staff on every plan, including the free plan, with no card needed and no limit on learners. A free account is English only."},
+   {"q": "Which courses are included?", "a": "Ten: the Care Certificate, COSHH, End of Life and Palliative Care, Food Hygiene, GDPR and Data Protection, Health and Safety Awareness, Infection Prevention and Control, Medication Administration and Competency, Mental Health Awareness, and Moving and Handling of People. The <a href=\"/cpd-certified\">CPD certified page</a> lists the current set."},
+   {"q": "Is the free Care Certificate the full induction?", "a": "It is a CPD certified course covering all 16 standards. The certificate is issued once a manager has recorded the observed assessment. Read it as part of induction, not a replacement for your own sign off. See <a href=\"/staff-training/care-certificate\">the Care Certificate course</a>."},
+   {"q": "Does every learner get a CPD certificate straight away?", "a": "It depends. They must pass the assessment and complete a short feedback step. For the Care Certificate, Moving and Handling and Medication, the certificate waits until a manager records the observation."},
+   {"q": "What is the catch with the free plan?", "a": "It is English only, and it does not include ad hoc training, translation or the paid plan features. Free also includes every audit template and screening of your first five policies. See <a href=\"/pricing\">the pricing page</a> for which plan includes what."},
+   {"q": "Can I train staff on our own policies as well?", "a": "Yes, on the paid plans. You pick a topic module and it is built from your own policies where they cover it, with general good practice as the fallback. You can edit and preview it first, then staff complete it in the Staff Hub."},
+   {"q": "What happens when a carer gets an answer wrong on that training?", "a": "It goes into their Follow-up tab in the Staff Hub and they get an email, at most once a day, in English. They choose Learn &amp; retry for a short lesson and a fresh question, or Just retry. You see the picture in Knowledge gaps, not as an alert each time."},
+   {"q": "How do I try it?", "a": "Create a free account to start on the free courses with no card. The paid plans have a 14 day free trial, so you can try training on your own policies before you decide. <a href=\"/register\">Create your account</a>."}
+  ]
+ },
+ "limits": {
+  "heading": "Free courses help a lot, and they have limits",
+  "cards": [
+   {"title": "A certificate is not proof of competence", "body": "The certificate shows a learner completed the course and passed the assessment. Where practice must be seen, a manager still observes it and records it."},
+   {"title": "General courses do not know your service", "body": "They are fixed content. They do not replace your policies, so staff still need to be checked on how your service does things."},
+   {"title": "Free is English only, and ad hoc training is paid", "body": "Translation and training built from your own policies are on the paid plans. CareStream is not a pass, a rating or a regulator record."}
+  ]
+ },
+ "read_next": [
+  "cpd-accreditation-in-care-what-it-really-means-and-when-it-matters",
+  "mandatory-training-for-care-staff-the-full-list-and-how-often-to-refresh",
+  "care-certificate-cpd-certified-course-from-carestream"
+ ],
+ "faqs": {
+  "heading": "Free CPD courses for care staff, answered",
+  "groups": [
+   {
+    "group": "About the free courses",
+    "items": [
+     {"q": "Where can I find free CPD courses for care staff?", "a": "CareStream offers ten CPD certified courses free to every member of staff on every plan, with no card. Create a free account, choose the courses and give them to your team."},
+     {"q": "What does free CPD mean here?", "a": "Free CPD means the CPD certified courses cost nothing for any number of staff, on every plan. It does not include translation or ad hoc training, which are on the paid plans."},
+     {"q": "Is there a free care certificate?", "a": "The Care Certificate course is one of the free CPD certified courses. The <a href=\"https://www.skillsforcare.org.uk/Developing-your-workforce/Care-Certificate/Care-Certificate.aspx\">Skills for Care Care Certificate page</a> says workers must be assessed on what they know and what they do, and in CareStream the certificate is issued once a manager records the observed assessment."},
+     {"q": "Is this free care training in other languages?", "a": "Free care training on the free plan is in English. Translation into 60+ languages starts on the Starter plan. See <a href=\"/languages\">languages</a>."}
+    ]
+   },
+   {
+    "group": "About certificates",
+    "items": [
+     {"q": "Does each learner get a CPD certificate?", "a": "Yes, a learner who passes gets a named, dated certificate showing their CPD hours. They also complete a short feedback step first."},
+     {"q": "Why is a certificate pending practical?", "a": "For the Care Certificate, Moving and Handling and Medication, the learner has passed the quiz but a manager has yet to record the observed assessment. Once they do, the certificate is issued."},
+     {"q": "How many attempts do learners get?", "a": "Three. After the third unsuccessful attempt the learner revisits the lesson, then the assessment reopens. The pass mark is 80 percent."},
+     {"q": "Can I check that the courses are certified?", "a": "Yes. Our <a href=\"/cpd-certified\">CPD certified page</a> lists the certified courses, and links to our listing on The CPD Certification Service's own website."}
+    ]
+   },
+   {
+    "group": "About inspections",
+    "items": [
+     {"q": "What does the law say about staff training?", "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> says staff must receive such appropriate support, training, professional development, supervision and appraisal as is necessary to carry out their duties. A course certificate is one part of that evidence."}
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to use free CPD in a care service",
+  "lede": "Free training only helps if it reaches the right people and is followed up. Here is a simple order of work for a busy manager.",
+  "sections": [
+   {
+    "h3": "Plan the year before you give out a course",
+    "paragraphs": [
+     "Start with who needs what. New starters need the Care Certificate. Everyone else needs the yearly refreshers on your mandatory list. The blog on <a href=\"/blog/mandatory-training-for-care-staff-the-full-list-and-how-often-to-refresh\">mandatory training and how often to refresh it</a> sets out a sensible list, and <a href=\"/blog/cpd-accreditation-in-care-what-it-really-means-and-when-it-matters\">what CPD accreditation really means</a> explains the label on the certificate.",
+     "Spread the courses across the year so the team is not off the floor all at once, and record the observed sign offs as you go."
+    ]
+   },
+   {
+    "h3": "Four steps for a new team member",
+    "checklist": [
+     "Week one: give the Care Certificate course and the core refreshers.",
+     "Week two: record the observed assessment where the course needs one.",
+     "Month one: allocate training on your own policies for the topics that matter most here.",
+     "Each year: check the refreshers are renewed and look for gaps."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the CPD certificates, the observation records and the results of your own policy training together, so you can show what staff know as well as what they completed. See <a href=\"/cqc-compliance\">CQC and compliance</a>."
+ }
+}

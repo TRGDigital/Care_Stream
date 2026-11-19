@@ -1,0 +1,531 @@
+{
+  "slug": "insurance-renewal-or-tender-show-your-records",
+  "status": "draft",
+  "order": 84,
+  "title": "The renewal or tender wants proof. <em>Where are your training records?</em>",
+  "meta_title": "Training Records on Demand for Care Homes | CareStreamAI",
+  "meta_description": "Insurance renewal or tender due? Find your training records, audit reports and supervision records fast, with an honest map of what CareStream exports.",
+  "eyebrow": "Scenario",
+  "lede": "An insurance renewal or a tender can ask for proof at short notice. Your training records, audits and policies probably exist, but in several places. <a href=\"/training-platform\">CareStream keeps them in one system</a>, and this page shows where each one lives and what you can export.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "From the request to the folder",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Request arrives",
+        "note": "Day 0",
+        "done": true
+      },
+      {
+        "label": "You decide which records it needs",
+        "note": "Day 0",
+        "done": true
+      },
+      {
+        "label": "Each record found and exported",
+        "note": "Not yet",
+        "done": false
+      },
+      {
+        "label": "Folder checked and sent",
+        "note": "Not yet",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/797d0380-3630-4ef9-8bae-2fedd1cd93bf.webp",
+  "image_alt": "A care home manager at a desk gathering printed documents into a folder, with a laptop open beside her and a tick list, in a bright, tidy office",
+  "card_title": "The renewal or tender wants your records. Can you find them fast?",
+  "card_snippet": "Training, audit, supervision and policy records are often spread across folders and drives. See where each one lives in CareStream, and what you can export as a PDF or CSV.",
+  "primary_keyword": "training records",
+  "secondary_keywords": [
+    "care home compliance",
+    "care home governance",
+    "supervision records"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, checked by questions, with results you can look back on.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "CQC and compliance",
+      "body": "Evidence that builds as your team works, and the CQC Inspection Evidence Report.",
+      "action": "See CQC and compliance",
+      "href": "/cqc-compliance"
+    },
+    {
+      "title": "Digital care audits",
+      "body": "Free audit library with a PDF report for each completed audit and actions tracked to the next check.",
+      "action": "See the audits",
+      "href": "/care-audits"
+    }
+  ],
+  "intro": {
+    "heading": "The records exist. They are just not in one place.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "The email comes from the broker on a Monday. The insurance renewal is in three weeks, and the form asks about staff training, audits and how you keep records. The manager is not worried, because the home is run well. Then she starts a list. Certificates are in a drawer. Audit reports are on a shared drive. Supervision dates are on a spreadsheet. The latest policy versions are in an email. Everything exists, but nobody has gathered it in one go."
+  },
+  "trail": [
+    {
+      "when": "Monday",
+      "text": "The renewal form arrives, with questions about training and audits.",
+      "kind": "ok"
+    },
+    {
+      "when": "Monday, later",
+      "text": "The manager knows the team is trained and the audits are done.",
+      "kind": "ok"
+    },
+    {
+      "when": "Tuesday",
+      "text": "She starts a list of what to show. It runs to nine items.",
+      "kind": "ok"
+    },
+    {
+      "when": "Wednesday",
+      "text": "Certificates are in a drawer, and some are only on a phone.",
+      "kind": "gap"
+    },
+    {
+      "when": "Wednesday, later",
+      "text": "Audit reports sit in two folders, with two naming habits.",
+      "kind": "gap"
+    },
+    {
+      "when": "Thursday",
+      "text": "Supervision dates are on a spreadsheet nobody has checked.",
+      "kind": "gap"
+    },
+    {
+      "when": "Friday",
+      "text": "The policy versions in use are not the ones in the shared drive.",
+      "kind": "gap"
+    },
+    {
+      "when": "Day 19",
+      "text": "The broker asks for it all by tomorrow, as a tidy set.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "Most of the work is finding things, not doing them. Below is where each record lives in CareStream, which ones you can export, and which you will have to copy across by hand.",
+  "why": {
+    "heading": "Why this is harder than it looks",
+    "sub": "Three things trip up a manager who is asked for records at short notice.",
+    "cards": [
+      {
+        "icon": "chat",
+        "title": "Nobody tells you what the request means",
+        "body": "Forms use broad words such as training, governance and records. You decide which records answer each question, so make that choice before you start searching."
+      },
+      {
+        "icon": "alert",
+        "title": "Records live in several places",
+        "body": "Training records, audit reports, policy versions and supervisions are separate. There is no single export for everything, so you build the folder one item at a time."
+      },
+      {
+        "icon": "tick",
+        "title": "Attendance is not understanding",
+        "body": "A certificate shows a course was done. Many managers also want to show how they checked that people understood it, and what they did when they had not."
+      }
+    ]
+  },
+  "how": {
+    "heading": "Find each record, in the order a manager would.",
+    "sub": "This is the evidence side of <a href=\"/cqc-compliance\">CQC and compliance</a>, together with your <a href=\"/care-audits\">audits</a> and <a href=\"/training-platform\">training built from your own policies</a>. Nothing here tells you what an insurer or a tender needs. You decide that.",
+    "blocks": [
+      {
+        "heading": "Start with the audit reports and the evidence report",
+        "bullets": [
+          "Every completed audit has a PDF report with scores, photos and the actions raised. Audits are free on every plan, so you can pull recent months in minutes",
+          "Built in audits such as <a href=\"/care-audits/monthly-governance-review\">monthly governance review</a> give a ready structure for care home governance evidence",
+          "The CQC Inspection Evidence Report (Professional and above) shows policy use, version history, staff engagement and knowledge gaps over a date range you choose. You print it or save it as a PDF from your browser"
+        ],
+        "tags": [
+          {
+            "label": "Digital care audits",
+            "href": "/care-audits"
+          },
+          {
+            "label": "CQC and compliance",
+            "href": "/cqc-compliance"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "CQC Inspection Evidence Report",
+          "stats": [
+            [
+              "Date range",
+              "12 months"
+            ],
+            [
+              "Sections",
+              "9"
+            ],
+            [
+              "Format",
+              "PDF by print"
+            ]
+          ],
+          "blocks": [
+            [
+              "Example sections",
+              [
+                [
+                  "Policy access summary",
+                  "Included"
+                ],
+                [
+                  "Policy version history",
+                  "Included"
+                ],
+                [
+                  "Staff engagement evidence",
+                  "Included"
+                ],
+                [
+                  "Knowledge gap log",
+                  "Included"
+                ]
+              ]
+            ],
+            [
+              "Example audit reports to add",
+              [
+                [
+                  "Monthly governance review",
+                  "PDF per run"
+                ],
+                [
+                  "Medicines management",
+                  "PDF per run"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Your report shows your own policies, staff and audits."
+        }
+      },
+      {
+        "heading": "Pull your training records for the period",
+        "bullets": [
+          "The training report (Professional and above) lists face to face, policy based, pre built and annual training with who, when allocated and when completed, as a PDF or a CSV",
+          "Face to face sessions also give sign in sheets and certificates as PDFs, and you can upload your own evidence files to a session (Professional and above)",
+          "A limit to plan for: the training report covers one month or one week at a time, so a full year means exporting each month. See <a href=\"/uses/face-to-face-training\">recording in person sessions</a> and <a href=\"/blog/how-do-you-record-in-person-training-so-it-counts-as-cqc-evidence\">how to record them as evidence</a>"
+        ],
+        "tags": [
+          {
+            "label": "Face to face training",
+            "href": "/uses/face-to-face-training"
+          },
+          {
+            "label": "Care Certificate course",
+            "href": "/staff-training/care-certificate"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Training report, one month",
+          "stats": [
+            [
+              "Staff",
+              "24"
+            ],
+            [
+              "Records",
+              "61"
+            ],
+            [
+              "Export",
+              "PDF or CSV"
+            ]
+          ],
+          "blocks": [
+            [
+              "Example sections in the report",
+              [
+                [
+                  "Face to face",
+                  "9 records"
+                ],
+                [
+                  "Policy based",
+                  "18 records"
+                ],
+                [
+                  "Pre built",
+                  "22 records"
+                ],
+                [
+                  "Annual training",
+                  "12 records"
+                ]
+              ]
+            ],
+            [
+              "Example columns",
+              [
+                [
+                  "Staff and training",
+                  "Name, course"
+                ],
+                [
+                  "Dates",
+                  "Allocated, completed"
+                ],
+                [
+                  "Face to face cost",
+                  "Hours, rate, cost"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Records come from your own team and sessions."
+        }
+      },
+      {
+        "heading": "Add supervision records and policy versions",
+        "bullets": [
+          "Supervision records and appraisals are kept per person on the Workforce screen, with last and next due dates and full history (Starter and above)",
+          "There is no export button for the supervisions list, so you copy what the request needs. Each staff record page also shows the latest supervision and appraisal",
+          "Policy version history sits in the Policies area and is on every plan. You can print any version. See <a href=\"/uses/out-of-date-policies\">out of date policies</a> for checking review dates first"
+        ],
+        "tags": [
+          {
+            "label": "Supervision and appraisal audit",
+            "href": "/care-audits/staff-supervision-appraisal"
+          },
+          {
+            "label": "Out of date policies",
+            "href": "/uses/out-of-date-policies"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Supervisions and appraisals",
+          "stats": [
+            [
+              "Supervisions overdue",
+              "1"
+            ],
+            [
+              "Appraisals overdue",
+              "0"
+            ],
+            [
+              "No supervision yet",
+              "2"
+            ]
+          ],
+          "blocks": [
+            [
+              "Example staff rows",
+              [
+                [
+                  "Carer A",
+                  "On track"
+                ],
+                [
+                  "Carer B",
+                  "Due soon"
+                ],
+                [
+                  "Carer C",
+                  "Overdue"
+                ]
+              ]
+            ]
+          ],
+          "caption": "Example only. Dates and statuses come from the sessions you log."
+        }
+      },
+      {
+        "heading": "Show how you checked understanding, not just attendance",
+        "bullets": [
+          "After a session you allocate an adhoc training module on the topic, built from your own policies where they cover it. You can edit and preview it first",
+          "A wrong answer goes into the carer's Follow-up tab in the Staff Hub, and they can use Learn &amp; retry as often as they need",
+          "The Knowledge gaps view in Analytics shows open gaps, most missed questions and how gaps are being closed. Adhoc training is on the paid plans. It records checking, not a pass or a rating"
+        ],
+        "tags": [
+          {
+            "label": "Adhoc training",
+            "href": "/uses/adhoc-training"
+          },
+          {
+            "label": "How CareStream works",
+            "href": "/how-it-works"
+          }
+        ],
+        "mock": {
+          "type": "gaps",
+          "stats": {
+            "open": 6,
+            "affected": 5,
+            "closed": 11,
+            "engaged": 9
+          },
+          "missed": [
+            [
+              "Who do you tell first about a concern?",
+              "5 staff"
+            ],
+            [
+              "When is a person's consent needed?",
+              "4 staff"
+            ]
+          ],
+          "weak": [
+            [
+              "Safeguarding adults",
+              "Weakest topic"
+            ],
+            [
+              "Medication",
+              "Second weakest"
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "What managers ask before they trust it",
+    "sub": "Straight answers, including the limits.",
+    "items": [
+      {
+        "q": "Is there one button that exports everything?",
+        "a": "No. Records are in several places. Audit PDFs, the training report, sign in sheets, certificates, the CQC Inspection Evidence Report and policy versions are each produced separately. You decide which ones the request needs and gather them one by one."
+      },
+      {
+        "q": "Which exports exist, and what format are they?",
+        "a": "Audit reports are PDF, one per completed audit. The training report is PDF or CSV. A table of who holds which required course has a CSV and a print to PDF. Sign in sheets and certificates are PDF. The CQC Inspection Evidence Report and the staff record are printed or saved as PDF from your browser. Policy versions can be printed."
+      },
+      {
+        "q": "Which plan do I need?",
+        "a": "Audits and their PDF reports are on every plan, and so is policy version history. Supervisions and appraisals are on Starter and above. The training report, sign in sheets, certificates and the CQC Inspection Evidence Report are on Professional and above. For anything else, <a href=\"/pricing\">see the pricing page</a> for which plan includes it."
+      },
+      {
+        "q": "Can I show a whole year of training records?",
+        "a": "Yes, but in pieces. The training report covers one month or one week, so you export each period you need. The staff record page also shows one person's training, certificates and supervision history in one place, which you can save as a PDF."
+      },
+      {
+        "q": "Can I export my supervisions list?",
+        "a": "Not as a file. The Workforce screen shows each person's supervision and appraisal history, and the staff record shows the latest of each. You copy the details the request asks for."
+      },
+      {
+        "q": "Will it tell me what my insurer or the tender wants?",
+        "a": "No. We do not know what a particular insurer or commissioner asks for, and CareStream is not a pass, a rating or a regulator record. Read the request, decide which records answer each question, then use the map above to find them."
+      },
+      {
+        "q": "How does it help show that staff understood their training?",
+        "a": "You allocate adhoc training on a topic, staff complete it in the Staff Hub, and a wrong answer becomes a short follow up lesson. You then see open gaps and how they are closing in Analytics. Nothing alerts you on each wrong answer, and a face to face session does not trigger anything by itself."
+      },
+      {
+        "q": "Can I try it before the renewal, and what does it cost?",
+        "a": "Yes. There is a 14 day free trial on the paid plans, and you can create a free account to run audits and screen up to 5 policies. See <a href=\"/pricing\">the pricing page</a> for plans, or <a href=\"/register\">create a free account</a> to start."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "A way to find your records fast, not a way to satisfy a request",
+    "cards": [
+      {
+        "title": "There is no single export for everything",
+        "body": "You gather audit PDFs, the training report, certificates, sign in sheets, policy versions and supervision details separately, and you decide what goes in the folder."
+      },
+      {
+        "title": "It does not know what the request needs",
+        "body": "CareStream cannot tell you what an insurer or a commissioner requires, and it is not a pass, a rating or a regulator record. Reading the request and choosing the records stays with you."
+      },
+      {
+        "title": "Some records are held elsewhere",
+        "body": "Staff files, insurance documents and anything you have not entered stay outside CareStream. Some exports need Professional and above, and the training report covers one month at a time."
+      }
+    ]
+  },
+  "read_next": [
+    "how-do-you-record-in-person-training-so-it-counts-as-cqc-evidence",
+    "cqc-evidence-categories-explained"
+  ],
+  "faqs": {
+    "heading": "Records on demand, answered",
+    "groups": [
+      {
+        "group": "Finding your records",
+        "items": [
+          {
+            "q": "How do I find my training records quickly for an insurance renewal?",
+            "a": "Start by reading the request and listing which records answer each question. Then pull the training report for the period, the certificates and sign in sheets for any in person sessions, and the staff record page for individual cases. Our <a href=\"/blog/cqc-evidence-categories-explained\">guide to evidence categories</a> helps with the sorting."
+          },
+          {
+            "q": "What counts as training records for a care home?",
+            "a": "There is no single list. Typical items are who was trained, in what, when, and any certificate or sign in sheet, plus how you checked understanding. Which of these a request needs is your decision."
+          },
+          {
+            "q": "Can I print my audit reports for a tender?",
+            "a": "Yes. Each completed audit has a PDF report you can download, with scores, photos and the actions raised. Audits are free on every plan. See the <a href=\"/care-audits\">audit library</a> for the templates."
+          },
+          {
+            "q": "Does CareStream keep policy version history?",
+            "a": "Yes. Document version history is on every plan, and you can print a version. Admin approval with a full version history is on Professional and above. <a href=\"/uses/out-of-date-policies\">Out of date policies</a> shows how to spot old terms before someone else does."
+          }
+        ]
+      },
+      {
+        "group": "Governance and compliance",
+        "items": [
+          {
+            "q": "What does care home governance evidence look like in practice?",
+            "a": "Usually a set of dated records: audits with actions, policy reviews, training and supervision records. A built in audit such as <a href=\"/care-audits/monthly-governance-review\">monthly governance review</a> gives a regular structure for the governance side."
+          },
+          {
+            "q": "Does CareStream make us compliant?",
+            "a": "No. It helps you keep and find the records of what you do, so care home compliance is easier to show. It is not a pass, a rating or a regulator record."
+          },
+          {
+            "q": "Where are staff supervisions kept, and can I export them?",
+            "a": "On the Workforce screen, per person, on Starter and above, with last and next due dates and the history. There is no file export for the list, so you copy the details you need."
+          },
+          {
+            "q": "Can I show how we followed up training that was not understood?",
+            "a": "Yes, on the paid plans. Adhoc training sets questions from your policies, wrong answers go to the Follow-up tab for a short lesson, and Analytics shows open gaps and how they are closing. See <a href=\"/uses/adhoc-training\">adhoc training</a>."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A practical way to answer a request for records",
+    "lede": "When a request lands, the quickest route is a short, written plan. Decide what you are being asked for, find each record once, and check what you have before you send it.",
+    "sections": [
+      {
+        "h3": "Read the request before you open any system",
+        "paragraphs": [
+          "Work through the request line by line. Write the question, then the record that would answer it. Where a question is vague, ask the person who sent it. This is your decision, and CareStream cannot make it for you.",
+          "Providers have duties around staff training and records. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18 of the 2014 regulations</a> says staff must receive the support, training, professional development, supervision and appraisal they need to do their jobs. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17</a> covers good governance, including assessing and monitoring the quality and safety of the service and keeping securely the records needed about the people employed and the management of the service. Those are the regulations, not what any insurer or tender asks for."
+        ]
+      },
+      {
+        "h3": "Gather in four passes",
+        "checklist": [
+          "Audits: download the PDF for each completed audit in the period, and note any open actions.",
+          "Training: run the training report for each month, add certificates and sign in sheets for in person sessions.",
+          "People: copy the supervision and appraisal dates you need, and check the staff records of anyone named in the request.",
+          "Policies: print the versions in use and check review dates before you send them."
+        ]
+      },
+      {
+        "h3": "Check it before it leaves",
+        "paragraphs": [
+          "Read the folder as the person who asked for it would. Do the dates match, and are the policy versions the ones staff use? Note anything held elsewhere so you can say so."
+        ]
+      }
+    ],
+    "note": "<b>Keep it for next time.</b> Note which records you used and where each came from. The same list will save you hours at the next renewal or tender."
+  }
+}

@@ -1,0 +1,402 @@
+{
+ "slug": "supported-living-training-follow-up",
+ "status": "draft",
+ "order": 89,
+ "title": "Supported living training: the meeting covered it. <em>Who in each house took it in?</em>",
+ "meta_title": "Supported Living Training Follow Up | CareStreamAI",
+ "meta_description": "Staff work alone across several houses and miss the team meeting. Allocate short training from your own policies, and a wrong answer becomes a lesson.",
+ "eyebrow": "Scenario",
+ "lede": "Teams are spread across flats and shared houses, so a team meeting reaches some staff and misses others. After the meeting you allocate short <a href=\"/training-platform\">training built from your own policies</a>, and each support worker completes it on their own phone. Where someone answers wrongly, they get a short lesson on that point. That follows people to wherever they work.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After the team meeting",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Policy update shared at the meeting",
+    "note": "Tuesday",
+    "done": true
+   },
+   {
+    "label": "Short module allocated to all three houses",
+    "note": "Wednesday",
+    "done": true
+   },
+   {
+    "label": "Answers completed on own phones",
+    "note": "This week",
+    "done": false
+   },
+   {
+    "label": "Wrong answers turned into lessons",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/806e7b36-b88f-4b0b-9055-7aa44bbb50b2.webp",
+ "image_alt": "A support worker and a person they support looking at a phone together at a kitchen table in a small flat, relaxed and friendly, in natural light",
+ "card_title": "Your team is spread across houses. Who took the update in?",
+ "card_snippet": "Support workers rarely sit in one room. Allocate a short module built from your own policies, and a wrong answer becomes a short lesson on their own phone.",
+ "primary_keyword": "supported living training",
+ "secondary_keywords": [
+  "supported living cqc",
+  "supported living"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Ad hoc training from your policies, checked by questions, with wrong answers that become short lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Property and tenancy audit",
+   "body": "A quarterly walk round of one property, from the free audit library that comes with every plan.",
+   "action": "See the audit",
+   "href": "/care-audits/supported-living-property-tenancy"
+  },
+  {
+   "title": "Training in over 60 languages",
+   "body": "Lessons in the language each support worker thinks in, on the paid plans.",
+   "action": "See languages",
+   "href": "/languages"
+  }
+ ],
+ "intro": {
+  "heading": "Three houses, one meeting, and a policy that changed",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A registered manager runs a service with three houses and a few people living in their own flats. The decision making policy has been updated, so she gathers the team on a Tuesday evening. Seven of the eleven support workers are there. Two are on lone shifts in the houses and two are off. She talks it through, people nod and one person takes notes. By Friday she cannot say who has understood what changed, and the four who were not in the room have heard it, at best, secondhand."
+ },
+ "trail": [
+  {
+   "when": "Tuesday evening",
+   "text": "The manager walks the team through the updated policy.",
+   "kind": "ok"
+  },
+  {
+   "when": "During the meeting",
+   "text": "Good questions are asked. People say the change makes sense.",
+   "kind": "ok"
+  },
+  {
+   "when": "Afterwards",
+   "text": "Minutes are written up and the policy is saved in the shared folder.",
+   "kind": "ok"
+  },
+  {
+   "when": "Wednesday",
+   "text": "Two support workers who were on lone shifts have not seen any of it.",
+   "kind": "gap"
+  },
+  {
+   "when": "Thursday",
+   "text": "A new starter asks a colleague what changed and gets a quick, partial answer.",
+   "kind": "gap"
+  },
+  {
+   "when": "Friday",
+   "text": "The manager cannot say who has understood the change and who has only heard it.",
+   "kind": "gap"
+  },
+  {
+   "when": "Two weeks on",
+   "text": "Each house has quietly settled on its own way of doing it.",
+   "kind": "gap"
+  },
+  {
+   "when": "Visit day",
+   "text": "“How do you decide whether someone can make this choice?” The answer differs between houses.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The meeting was never the problem.</b> The gap sits between the room and the people who were not in it. Here is how CareStream closes it, using your own policies, without replacing the meeting.",
+ "why": {
+  "heading": "People support others alone, so the update has to reach them alone",
+  "sub": "In a flat or a shared house, nobody is listening over a colleague's shoulder.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "One room cannot hold the whole team",
+    "body": "Shifts, lone working and days off mean a meeting reaches only some of the people it is about. The rest rely on word of mouth."
+   },
+   {
+    "icon": "tick",
+    "title": "Each house drifts on its own",
+    "body": "Without a shared check, a change can mean one thing in one house and something else in the next. Nobody sees it until a person is affected."
+   },
+   {
+    "icon": "alert",
+    "title": "Chasing each person by hand does not scale",
+    "body": "Ringing every support worker to ask what they remember is work no manager has time for, so the gap stays open."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, the follow up out.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a support worker meet it. See also <a href=\"/uses/adhoc-training\">turning an event into ad hoc training</a> and <a href=\"/uses/policy-gaps\">finding gaps in the policies themselves</a>.",
+  "blocks": [
+   {
+    "heading": "Allocate a short module on the topic, built from your own policies",
+    "bullets": [
+     "After the meeting, pick the topic module that matches it and tick the support workers it is for, in the Training screen",
+     "CareStream builds the lessons and questions from your own policies where they cover the topic, with general good practice as the fallback, and you can edit and preview before anyone sees it",
+     "Staff complete it in the Staff Hub, an installable app on their own phone, with an optional due date, so it works in any house or flat"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Mental Capacity Act and DoLS",
+     "questions": [
+      "Someone makes a choice you think is unwise. What does that tell you about their capacity?",
+      "What should you try before deciding a person cannot make a decision?",
+      "Who do you tell if you are worried about a decision someone is making?"
+     ],
+     "staff_count": 11
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson on that point",
+    "bullets": [
+     "The wrong answer goes into the support worker's Follow-up tab in the Staff Hub, and they get an email, at most once a day, in English",
+     "They choose Learn &amp; retry, a short lesson (why it matters, what to remember, a realistic situation) then a fresh question, or Just retry the same question, as often as they need",
+     "Nothing is sent to you each time. You see the pattern, not every slip"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Mental Capacity Act and DoLS course",
+      "href": "/staff-training/mental-capacity-act-and-dols"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Mental Capacity Act and DoLS",
+     "question": "A person decides to spend the afternoon at home instead of going out. You think it is a poor choice. What should you do?",
+     "why": "A person is not to be treated as unable to decide just because they make an unwise decision.",
+     "remember": [
+      "Assume the person can decide",
+      "Give practical help to decide",
+      "Record what you did and why"
+     ],
+     "picture": "A person you support says no to the activity you planned, and you are alone in the flat with them."
+    }
+   },
+   {
+    "heading": "Staff learn in the language they think in",
+    "bullets": [
+     "A support worker who answers wrongly because of a missed word can open the lesson in their own language",
+     "Your admin sets their second language, and they switch to it in the hub",
+     "Training in different languages is part of the paid plans, and the reminder emails stay in English"
+    ],
+    "tags": [
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Romanian"
+    }
+   },
+   {
+    "heading": "See the gaps across every house, and whether they closed",
+    "bullets": [
+     "The Knowledge gaps view shows the most missed questions and the weakest topics, so you see whether one person needs a conversation or the meeting needs a second go",
+     "See how gaps are being closed, and mark a person's record as reviewed",
+     "A Monday digest email brings the picture to you without you asking for it"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 6,
+      "affected": 4,
+      "closed": 11,
+      "engaged": 64
+     },
+     "missed": [
+      [
+       "Unwise is not the same as unable",
+       "4 staff"
+      ],
+      [
+       "Practical steps to help decide",
+       "3 staff"
+      ],
+      [
+       "Who to tell about a concern",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Mental Capacity Act and DoLS",
+       "5 gaps"
+      ],
+      [
+       "Safeguarding Adults",
+       "1 gap"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "Is CareStream built specifically for supported living?",
+    "a": "No, and we would rather say so plainly. CareStream works for many kinds of care service, and our <a href=\"/who-we-serve\">who we serve</a> pages cover supported living services among them. There is no separate setting, library or onboarding template. What you get is the same training loop, built from whatever policies your service has."
+   },
+   {
+    "q": "Half my team were not at the meeting. How do I reach them?",
+    "a": "You allocate a short module on the topic, in the Training screen, and tick the support workers it is for. Each one completes it in the Staff Hub on their own phone, whichever house they work in and whatever shift they are on."
+   },
+   {
+    "q": "What happens when someone gets a question wrong?",
+    "a": "It goes into their Follow-up tab and they get an email, at most once a day. They choose Learn &amp; retry, a short lesson on that exact point followed by a fresh question, or Just retry the same question, as often as they need. You do not write or chase anything."
+   },
+   {
+    "q": "Will the questions reflect how our service works?",
+    "a": "Where your own policies cover the topic, the lesson and questions are built from them. Where they do not, it falls back on general good practice, which is a useful prompt to improve the policy. You can edit and preview everything before it goes out."
+   },
+   {
+    "q": "Some of my support workers speak English as a second language. Does that matter?",
+    "a": "It can. A wrong answer may be a missed word and not a gap in knowledge. On the paid plans they can open the lesson in <a href=\"/languages\">their own language</a>. Reminder emails stay in English."
+   },
+   {
+    "q": "How do I see how the team is doing across houses?",
+    "a": "The Knowledge gaps view in Analytics shows open gaps, who is affected, the most missed questions and the weakest topics, and a digest arrives on Monday. Nothing alerts you each time someone answers wrongly."
+   },
+   {
+    "q": "Does this help with CQC?",
+    "a": "It gives you a record of what people were asked, what they got wrong and the lesson they were given. That sits alongside your wider <a href=\"/cqc-compliance\">CQC evidence</a>. It is not a rating, a pass or a regulator record, and CareStream does not tell you how an inspector will see your service."
+   },
+   {
+    "q": "What does it cost to try?",
+    "a": "There is a 14 day free trial on the paid plans, and you can <a href=\"/register\">create a free account</a> to look around. Ad hoc training is on the paid plans, so see the <a href=\"/pricing\">pricing page</a> for what each plan includes."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A check on understanding, not a replacement for good support",
+  "cards": [
+   {
+    "title": "It is not a dedicated setting",
+    "body": "CareStream has no dedicated library or onboarding template. You use the same training loop, built from your own policies."
+   },
+   {
+    "title": "It does not watch practice in a person's home",
+    "body": "Understanding a policy is not the same as supporting someone well. A manager or senior still needs to observe and talk with staff on the ground."
+   },
+   {
+    "title": "It does not alert you to every wrong answer",
+    "body": "The picture reaches you in the Knowledge gaps view and the Monday digest. Ad hoc training and translation are on the paid plans."
+   }
+  ]
+ },
+ "read_next": [
+  "policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers",
+  "face-to-face-training-in-care-what-actually-has-to-be-in-the-room"
+ ],
+ "faqs": {
+  "heading": "Supported living training and CareStream, answered",
+  "groups": [
+   {
+    "group": "About the training",
+    "items": [
+     {
+      "q": "What does supported living training need to cover?",
+      "a": "It depends on your service and the people you support, so start with the topics your own policies cover and the needs in each person's support plan. The <a href=\"/staff-training/care-certificate\">Care Certificate</a> is a common starting point for new support workers, though what you need is your own call."
+     },
+     {
+      "q": "How do I follow up training for staff who work alone?",
+      "a": "Allocate a short module after the session. Each support worker completes it on their own phone in the Staff Hub, and a wrong answer becomes a short lesson in their Follow-up tab. Read more on <a href=\"/uses/adhoc-training\">ad hoc training</a>."
+     },
+     {
+      "q": "Can I use this after a policy changes?",
+      "a": "Yes. Allocate a module on the topic and see who has understood the change. Our blog sets out <a href=\"/blog/policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers\">a four question framework for who needs retraining</a>."
+     },
+     {
+      "q": "Does a team meeting replace training?",
+      "a": "No. A meeting is good for discussion. A short check afterwards shows what people took in, including those who were not there. See <a href=\"/blog/face-to-face-training-in-care-what-actually-has-to-be-in-the-room\">what has to be in the room</a>."
+     }
+    ]
+   },
+   {
+    "group": "Supported living and CQC",
+    "items": [
+     {
+      "q": "What does supported living CQC evidence look like for training?",
+      "a": "Staff must receive the support, training, professional development, supervision and appraisal they need to do their work, as set out in <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">regulation 18 of the 2014 regulations</a>. A record of what each person was asked and how gaps closed is one piece of that evidence. See <a href=\"/cqc-staff-questions\">the questions CQC may ask staff</a>."
+     },
+     {
+      "q": "Is it a separate setting in the product?",
+      "a": "No. There is no dedicated setting or library for it. The training loop works the same way for any service that has policies and staff, and our <a href=\"/who-we-serve\">who we serve</a> pages describe how services use it."
+     },
+     {
+      "q": "Can staff in different houses see different training?",
+      "a": "You choose which staff to tick for each module. There is no role picker, so you pick the people yourself."
+     },
+     {
+      "q": "Is there an audit for supported living properties?",
+      "a": "Yes. The free audit library includes a <a href=\"/care-audits/supported-living-property-tenancy\">property and tenancy audit</a> for these services, available on every plan. See the full <a href=\"/care-audits\">audit library</a>."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to follow up a team meeting in supported living",
+  "lede": "A supported living team rarely sits in one room. A meeting ends, minutes are filed and everyone returns to a different house. The follow up is where a manager learns whether the update reached everyone.",
+  "sections": [
+   {
+    "h3": "Why the follow up matters for decisions in someone's own home",
+    "paragraphs": [
+     "Support workers often make quick judgement calls, alone, in a person's own home. The Mental Capacity Act sets out that <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/1\">a person must be assumed to have capacity</a> unless it is established that they lack it, and is not to be treated as unable to decide merely because they make an unwise decision. A short check after the meeting shows whether those principles are landing the same way in every house.",
+     "The same goes for the wider picture. CQC lists staffing and <a href=\"https://www.cqc.org.uk/about-us/fundamental-standards\">person-centred care</a> among its fundamental standards, and training that staff can show they understood is part of showing both. For supported living CQC will want to see how a service knows its team is competent, and a signature does not show that."
+    ]
+   },
+   {
+    "h3": "Four checks that fit a spread out team",
+    "checklist": [
+     "Within a few days of the meeting: allocate a short module on the topic, built from your own policies.",
+     "When an answer is wrong: the support worker opens a short lesson on that point, then a fresh question.",
+     "Each month: look at the most missed questions and the weakest topics across houses.",
+     "On the ground: a senior watches real practice and talks it through, since a phone check cannot do that."
+    ]
+   }
+  ],
+  "note": "<b>For the visit.</b> Keep the questions, the lessons and the results together, so you can show understanding as well as attendance, wherever each person works."
+ }
+}

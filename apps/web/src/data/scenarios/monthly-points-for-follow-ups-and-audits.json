@@ -1,0 +1,317 @@
+{
+ "slug": "monthly-points-for-follow-ups-and-audits",
+ "status": "draft",
+ "order": 73,
+ "title": "An employee incentive scheme for finished training. <em>Reward the work people do.</em>",
+ "meta_title": "Employee Incentive Scheme for Care Staff | CareStreamAI",
+ "meta_description": "Run a monthly employee incentive scheme where points follow finished training, CPD courses and practical sign-offs. A care manager approves every reward.",
+ "eyebrow": "Scenario",
+ "lede": "Your carers finish their training, and nobody says a word. With CareStream you can run an <b>employee incentive scheme</b> each month, where points follow evidence that training was done. It sits alongside <a href=\"/training-platform\">training built from your own policies</a>, and you choose the reward.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "One month of recognition",
+  "pill": "Illustration",
+  "rows": [
+   { "label": "Monthly campaign set up", "note": "Day 1", "done": true },
+   { "label": "Care manager approves it", "note": "Day 2", "done": true },
+   { "label": "Staff earn points as they finish training", "note": "All month", "done": false },
+   { "label": "Rewards approved and handed over", "note": "Month end", "done": false }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/860f61c7-c14c-4654-8683-8b582ec3b7cd.webp",
+ "image_alt": "A care home manager hands a small gift bag to a smiling carer in a bright staff room while other carers clap, with a notice board and a simple chart behind them",
+ "card_title": "Staff finish their training. Does anyone say thank you?",
+ "card_snippet": "Set up a monthly points campaign where staff earn points for finished training, CPD courses and practical sign-offs. A care manager approves it, and you pick the reward.",
+ "primary_keyword": "employee incentive scheme",
+ "secondary_keywords": [
+  "staff incentive scheme",
+  "staff rewards",
+  "staff recognition"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Ad hoc training from your policies, and wrong answers that become short lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Ad hoc training after an incident or a session",
+   "body": "Allocate a short module on the topic, then see who finished it.",
+   "action": "See how it works",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "Annual training for every role",
+   "body": "The yearly courses your staff need, allocated and tracked in one place.",
+   "action": "See annual training",
+   "href": "/uses/annual-training"
+  }
+ ],
+ "intro": {
+  "heading": "The training gets done. The thanks never happens.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A manager spends the first week of every month chasing training. Some carers finish the modules the day they are sent. Others need three reminders. The people who do it on time get no more than the people who do not, and the manager is too busy to say well done. A few of the best carers have started to ask why they bother. The manager wants a simple monthly scheme with a real reward, but does not want a spreadsheet of points, a leaderboard that embarrasses anyone, or a cheque that causes a payroll problem. Here is how the month goes."
+ },
+ "trail": [
+  { "when": "Week 1", "text": "The manager sends the monthly training and a reminder.", "kind": "ok" },
+  { "when": "Week 2", "text": "Half the team finishes. The rest say they are busy.", "kind": "ok" },
+  { "when": "Week 3", "text": "A second reminder goes out. A few more finish.", "kind": "ok" },
+  { "when": "Month end", "text": "Nobody has said thank you to the carers who did it first time.", "kind": "gap" },
+  { "when": "In the staff room", "text": "One of the best carers asks why on time does not count for more.", "kind": "gap" },
+  { "when": "Who keeps track", "text": "Nobody. Any points are in someone's head, or a notebook.", "kind": "gap" },
+  { "when": "The idea", "text": "A reward is promised, and then forgotten in the next busy week.", "kind": "gap" },
+  { "when": "Inspection day", "text": "“How do you keep your staff motivated?” There is no record of anything.", "kind": "end" }
+ ],
+ "trail_close": "<b>The training was never the problem.</b> The gap is between the work people do and the recognition they get for it. Here is how CareStream turns that into a scheme you can run in a few minutes a month.",
+ "why": {
+  "heading": "Staff recognition works best when it is fair, visible and tied to real work",
+  "sub": "A reward people do not trust is worse than no reward at all.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Recognition has to be regular",
+    "body": "A thank you once a year does not change what people do in March. A small monthly reward gives carers a reason to start the training early."
+   },
+   {
+    "icon": "tick",
+    "title": "Points must follow evidence",
+    "body": "If people can earn points by clicking through, the scheme loses its meaning. In CareStream, a module with questions only earns points once the pass mark is reached."
+   },
+   {
+    "icon": "alert",
+    "title": "Keeping score by hand does not last",
+    "body": "A notebook of who earned what falls apart by the second month. A scheme that tracks itself is one you can keep running."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Set it once a month. Let the points follow the work.",
+  "sub": "Staff incentives are on the Professional and Enterprise plans. See the <a href=\"/pricing\">pricing page</a> for the plans. They sit next to <a href=\"/training-platform\">training built from your own policies</a> and <a href=\"/staff-training\">annual training</a>.",
+  "blocks": [
+   {
+    "heading": "Build a monthly staff incentive scheme in a few clicks",
+    "bullets": [
+     "Pick a month, name the campaign, and choose which of the five events earn points and how many",
+     "Write the rewards in your own words, add a photo if you like, set a points target, and limit the places if you want to",
+     "Choose everyone, or pick the people who can take part. Agency staff are not included in everyone"
+    ],
+    "tags": [
+     { "label": "Training built from your own policies", "href": "/training-platform" },
+     { "label": "How CareStream works", "href": "/how-it-works" }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Staff incentives: December campaign (example)",
+     "stats": [["Points per module", "10 (example)"], ["On time bonus", "5 (example)"], ["Reward target", "40 (example)"]],
+     "blocks": [
+      ["What earns points (example)", [["Completes a training module", "10 points"], ["Finishes on or before its due date", "5 points"], ["Completes a CPD course", "15 points"], ["Has a practical sign-off recorded", "10 points"]]],
+      ["Rewards (example)", [["A voucher of your choice", "40 points"], ["An extra half day, limited places", "60 points"]]]
+     ],
+     "caption": "Example screen. Rewards and points are your choice."
+    }
+   },
+   {
+    "heading": "A care manager approves it before it goes live",
+    "bullets": [
+     "You submit the campaign for approval. It needs a staff member whose job role is Care Manager or Registered Manager, and it will not go live without one",
+     "The care manager gets an email and approves or rejects the campaign, with a reason, from the Staff Hub",
+     "Later they approve each reward claim, and someone marks it as given. An admin cannot approve in their place"
+    ],
+    "tags": [
+     { "label": "Staff Hub on their own phone", "href": "/uses/multilingual-staff-hub" },
+     { "label": "CQC and compliance", "href": "/cqc-compliance" }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Incentive approvals (example)",
+     "stats": [["Waiting to go live", "1"], ["Rewards waiting", "3"], ["Ready to give", "2"]],
+     "blocks": [
+      ["Rewards waiting for approval (example)", [["Carer A", "Reached the target on 14 Dec"], ["Carer B", "Reached the target on 19 Dec"], ["Carer C", "Reached the target on 21 Dec"]]],
+      ["Approved, ready to give (example)", [["Carer D", "Voucher"], ["Carer E", "Voucher"]]]
+     ],
+     "caption": "Example screen. Every name here is made up."
+    }
+   },
+   {
+    "heading": "Staff see only their own points, and where they stand",
+    "bullets": [
+     "In the Staff Hub, My incentives shows a carer their own points, their history and their progress towards each reward",
+     "Nobody sees anyone else's points, and there is no leaderboard, so nobody is shown up",
+     "Staff get email updates one at a time, with a points summary at most once a day"
+    ],
+    "tags": [
+     { "label": "Staff Hub in 60+ languages", "href": "/uses/multilingual-staff-hub" },
+     { "label": "Annual training", "href": "/uses/annual-training" }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "My incentives, as a carer sees it (example)",
+     "stats": [["My points", "25 (example)"], ["Target", "40 (example)"]],
+     "blocks": [
+      ["My points history (example)", [["Completed Safeguarding Adults", "10 points"], ["Finished Medication on time", "5 points"], ["Completed Fire Safety", "10 points"]]],
+      ["My rewards (example)", [["Voucher", "15 points to go"]]]
+     ],
+     "caption": "Example screen. Only the carer can see their own points."
+    }
+   },
+   {
+    "heading": "Keep an eye on results and cost without a spreadsheet",
+    "bullets": [
+     "The campaign page shows who is on target, and you can download the results as a CSV file",
+     "The dashboard has a Staff incentives card showing the cost this month, with an optional monthly budget",
+     "CareStream records and reports. It never buys vouchers or moves money, so you hand over the reward yourself"
+    ],
+    "tags": [
+     { "label": "Reporting that runs itself", "href": "/training-platform" },
+     { "label": "CQC and compliance evidence", "href": "/cqc-compliance" }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Staff incentives dashboard card (example)",
+     "stats": [["Cost this month", "£60 (example)"], ["Monthly budget", "£100 (example)"], ["On target", "9 (example)"]],
+     "blocks": [
+      ["This month's results (example)", [["Reached the target", "9 staff"], ["Close to the target", "6 staff"], ["Not started", "3 staff"]]]
+     ],
+     "caption": "Example screen. Figures are for illustration only."
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "How does the employee incentive scheme work?",
+    "a": "You set up one campaign for one calendar month. You choose which events earn points and how many, write the rewards and set a target. A care manager approves it, staff earn points as they finish training, and the people who reach the target claim the reward."
+   },
+   {
+    "q": "What actually earns points?",
+    "a": "Five things: completing a training module, finishing it on or before its due date, completing a CPD course, completing an onboarding flow, and having a practical sign-off recorded. You pick which of them count and how many points each is worth."
+   },
+   {
+    "q": "The title says follow ups and audits. Do those earn points?",
+    "a": "Not directly. Completing an audit does not earn points. Points come from training modules, and that includes an ad hoc module you allocate after a session or an incident. Retrying a wrong answer in the Follow-up tab does not earn points on its own. If you allocate a module as a follow up and a carer finishes it, that module counts like any other."
+   },
+   {
+    "q": "Could someone earn points just by clicking through?",
+    "a": "No. A module with questions earns points only once the pass mark is reached. A failed assessment earns nothing, and a module that needs a practical earns nothing until a manager signs it off."
+   },
+   {
+    "q": "Who decides what reward people get?",
+    "a": "You do. A reward is free text, with an optional photo, a points target and an optional limit on places. CareStream never buys vouchers or moves money. Cash and many gift cards can count as pay, so check with your payroll provider."
+   },
+   {
+    "q": "Will staff see how they compare with each other?",
+    "a": "No. Each carer sees only their own points in My incentives. There is no leaderboard. Managers see the results on the campaign page and the Staff incentives card on the dashboard."
+   },
+   {
+    "q": "Why does a care manager have to approve it?",
+    "a": "So that someone senior stands behind every reward. An admin builds the campaign, then a staff member whose job role is Care Manager or Registered Manager approves it and each reward claim. If nobody has that job role, the campaign cannot be submitted."
+   },
+   {
+    "q": "What does it cost to try, and which plan do I need?",
+    "a": "Staff incentives are on the Professional and Enterprise plans. You can create a free account and try CareStream with a 14 day free trial, and the <a href=\"/pricing\">pricing page</a> shows what each plan includes."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A simple monthly scheme, not a full rewards platform",
+  "cards": [
+   {
+    "title": "Audits and follow-up retries do not earn points",
+    "body": "Only five events earn points. Finishing an audit does not, and neither does retrying a wrong answer on its own. Finishing the module that follows up a session does."
+   },
+   {
+    "title": "Monthly and individual only",
+    "body": "Each campaign covers one calendar month and one person at a time. There are no team campaigns, no leaderboard and no spot awards."
+   },
+   {
+    "title": "It does not buy rewards or run payroll",
+    "body": "CareStream records and reports. You buy and give the reward, and you check with your payroll provider if it is paid through pay. It is also on the Professional and Enterprise plans only."
+   }
+  ]
+ },
+ "read_next": [
+  "care-home-staff-incentive-scheme",
+  "chasing-staff-training-completions"
+ ],
+ "faqs": {
+  "heading": "Employee incentive schemes in care, answered",
+  "groups": [
+   {
+    "group": "About the scheme",
+    "items": [
+     {
+      "q": "What is a staff incentive scheme in a care service?",
+      "a": "It is a planned way of rewarding the behaviour you want, such as finishing training on time. In CareStream it runs for one month at a time, and points follow evidence that training was done. Our <a href=\"/blog/care-home-staff-incentive-scheme\">guide to staff incentive schemes</a> goes into more detail."
+     },
+     {
+      "q": "What staff rewards can I offer?",
+      "a": "Anything you choose to write in the reward box, with a photo if you like. Common ones are a voucher, an extra break or a small treat. CareStream does not buy or hand over rewards, so you do that yourself."
+     },
+     {
+      "q": "Does staff recognition have to cost money?",
+      "a": "No. A reward can be a thank you from the owner, a named mention in a team meeting or a small treat in the staff room. The points simply give you a fair, visible way to decide who has earned it."
+     },
+     {
+      "q": "Can I include agency staff?",
+      "a": "No. Everyone means all current staff, with agency staff left out. You can instead choose the individual people who take part."
+     },
+     {
+      "q": "What happens when a limited reward runs out?",
+      "a": "The earliest person to reach the target gets it. People who miss out see a thank-you message that points them back to their training. If two people reach it at exactly the same moment, a care manager is asked to decide."
+     },
+     {
+      "q": "How do I get staff to finish training on time?",
+      "a": "Make it worth their while and make it easy. A small monthly reward helps, and so does allocating short modules with a due date. There is more in our post on <a href=\"/blog/chasing-staff-training-completions\">chasing training completions</a>."
+     }
+    ]
+   },
+   {
+    "group": "About inspections",
+    "items": [
+     {
+      "q": "Is an incentive scheme something the CQC looks at?",
+      "a": "The CQC does not ask for one. It does look at whether staff get the support and training they need. See <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-18\">CQC guidance on Regulation 18</a>. A scheme that encourages people to finish training can help you show that training happens, but it is not a pass or a rating."
+     },
+     {
+      "q": "What does the law say about staff training?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18 on staffing</a> says staff must receive appropriate support, training, professional development, supervision and appraisal as is necessary to enable them to carry out their duties. It does not mention incentives, so how you encourage staff is up to you."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "How to run a fair employee incentive scheme in care",
+  "lede": "A good scheme is small, clear and fair. People should know what earns a reward, believe the points are honest, and see the reward arrive. Everything else is decoration.",
+  "sections": [
+   {
+    "h3": "Start small and keep it honest",
+    "paragraphs": [
+     "Pick one or two behaviours that matter this month, such as finishing the new training by its due date. Resist the urge to reward everything at once. Tell the team the rules in plain words before the month starts, and keep them the same until the month ends.",
+     "Make the reward worth the effort but not so large that people feel pressure to cut corners. Where a reward is paid through pay, check with your payroll provider first. Recognition also costs nothing: a named thank you in a team meeting often lands as well as a voucher."
+    ]
+   },
+   {
+    "h3": "A checklist before you launch",
+    "checklist": [
+     "Is there a staff member with the job role Care Manager or Registered Manager to approve it?",
+     "Have you picked the events that earn points, and the points for each?",
+     "Is the reward written down, with a target and a limit on places if you want one?",
+     "Does everyone know the rules, the month it runs and how to see their own points?"
+    ]
+   },
+   {
+    "h3": "Review it each month",
+    "paragraphs": [
+     "At the end of the month download the results and look at who finished and who did not. If the same people never reach the target, ask whether the training is too long or the due dates are unrealistic before you ask whether they care. Then change one thing and run the next month."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> The scheme is your own choice. What helps is the record underneath it: who was asked to complete training, who passed and when."
+ }
+}

@@ -1,0 +1,324 @@
+{
+ "slug": "supervision-evidence-of-competence-conversations",
+ "status": "draft",
+ "order": 75,
+ "title": "Your staff supervision is a good conversation. <em>Where is the record of what was agreed?</em>",
+ "meta_title": "Staff Supervision Records for Care Services | CareStreamAI",
+ "meta_description": "Staff supervision happens in every care service. Keep a dated record of what was discussed and agreed, with training actions that close themselves.",
+ "eyebrow": "Scenario",
+ "lede": "Good <b>staff supervision</b> is a conversation, and the conversation is the point. What goes missing is the record of what was said and what was agreed. CareStream keeps a dated supervision record for each person, with agreed actions that sit alongside the <a href=\"/training-platform\">training built from your own policies</a>.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "From conversation to record",
+  "pill": "Illustration",
+  "rows": [
+   {"label": "Supervision booked", "note": "Two weeks ahead", "done": true},
+   {"label": "Training checked beforehand", "note": "The day before", "done": true},
+   {"label": "Conversation held and recorded", "note": "Not yet", "done": false},
+   {"label": "Agreed actions closed", "note": "Not yet", "done": false}
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/4fd7f3e1-4a1e-4e60-a077-3dd9e94fd560.webp",
+ "image_alt": "A care home manager and a senior carer sitting side by side at a small table with a notebook, talking calmly, with a window and trees behind them",
+ "card_title": "You talk to staff about their practice. Where is the record?",
+ "card_snippet": "Supervision conversations happen, but what was agreed often lives in a notebook. CareStream keeps a dated record for each person, with agreed actions that follow through.",
+ "primary_keyword": "staff supervision",
+ "secondary_keywords": ["supervision records", "supervision and appraisal", "supervision template", "care staff supervision"],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Allocate short training from your own policies, and let a wrong answer become a lesson.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "A ready made supervision audit",
+   "body": "A ready made audit that checks whether your supervision schedule and your records stand up.",
+   "action": "See the audit",
+   "href": "/care-audits/staff-supervision-appraisal"
+  },
+  {
+   "title": "CQC and compliance",
+   "body": "Evidence that builds itself while the team gets on with the work.",
+   "action": "See CQC and compliance",
+   "href": "/cqc-compliance"
+  }
+ ],
+ "intro": {
+  "heading": "The conversation was good. The notebook is somewhere.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A registered manager sits down with a senior carer, as she does every couple of months. They talk about a hard shift, about a resident who is refusing food, and about a medication course the carer has been meaning to finish. They agree a few things. The manager writes them in a notebook and means to type them up. Three months on, a new deputy asks what was agreed last time. Nobody can say for certain, and the notebook is in a drawer in another building."
+ },
+ "trail": [
+  {"when": "Last quarter", "text": "A supervision is booked and held with a senior carer.", "kind": "ok"},
+  {"when": "In the room", "text": "They talk honestly about a hard shift and about food refusal.", "kind": "ok"},
+  {"when": "Before leaving", "text": "Three things are agreed, including finishing a medication course.", "kind": "ok"},
+  {"when": "That evening", "text": "The notes are in a notebook, to be typed up later.", "kind": "gap"},
+  {"when": "A month on", "text": "Nobody checks whether the course was finished.", "kind": "gap"},
+  {"when": "Three months on", "text": "A new deputy asks what was agreed last time. The notebook is elsewhere.", "kind": "gap"},
+  {"when": "What exists", "text": "A memory of a good chat and a date in a diary.", "kind": "gap"},
+  {"when": "Inspection day", "text": "“How do you support and develop this member of staff?” Which record answers it?", "kind": "end"}
+ ],
+ "trail_close": "<b>The supervision itself was not the problem.</b> The gap is between the conversation and the record. Here is how CareStream keeps that record, without turning a conversation into a form to be filled in.",
+ "why": {
+  "heading": "A diary date shows a meeting was planned, not what came of it",
+  "sub": "Regulation 18 asks that staff receive support, training, professional development, supervision and appraisal. A record is how you show it happened.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "The good bit is hard to write down",
+    "body": "The honest part of supervision is spoken. Managers are busy, so the write up slips, and what was agreed is only in two heads."
+   },
+   {
+    "icon": "tick",
+    "title": "Actions fade without a home",
+    "body": "A promise to finish a course or shadow a colleague has nowhere to live. By the next meeting it has been forgotten, or it is raised again as if new."
+   },
+   {
+    "icon": "alert",
+    "title": "Preparation takes a trawl",
+    "body": "Before each conversation the manager checks what training the person has done, what is overdue and what they scored. Doing that by hand, for every carer, is slow work."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Book it, prepare it, record it, follow it up.",
+  "sub": "This is the supervisions feature of the <a href=\"/how-it-works\">CareStream platform</a>, in the order a manager and a carer meet it. Which plan includes each part is shown on the <a href=\"/pricing\">pricing page</a>.",
+  "blocks": [
+   {
+    "heading": "Book a session and keep every supervision record in one place",
+    "bullets": [
+     "Choose a staff member, pick supervision or appraisal and set a date: a future date books it, and a past date records one already held",
+     "The carer is emailed straight away and reminded the day before, and you add who is conducting it and when the next one is due",
+     "Each person shows their last and next supervision dates, so you see who is on track, due soon or overdue across the team"
+    ],
+    "tags": [
+     {"label": "How CareStream works", "href": "/how-it-works"},
+     {"label": "See the pricing page", "href": "/pricing"}
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Supervisions and appraisals (example)",
+     "stats": [["On track", "14"], ["Due soon", "3"], ["Overdue", "2"]],
+     "blocks": [
+      ["Needs a date first", [["A. Example, senior carer", "Supervision overdue"], ["B. Example, carer", "Appraisal overdue"]]],
+      ["Coming up", [["C. Example, carer", "Supervision on Thursday"]]]
+     ],
+     "caption": "Example only. Your screen shows your own team."
+    }
+   },
+   {
+    "heading": "Look at their training before you sit down",
+    "bullets": [
+     "Before the meeting the supervisor can open a short brief of that person's training, built from the training records already in CareStream",
+     "It lists what is overdue, due soon, in progress or completed since the last meeting, with scores, and a short list of points worth raising",
+     "It is shown to the supervisor and admins only, and a few of its facts are saved into the record when the supervision is completed"
+    ],
+    "tags": [
+     {"label": "Training built from your own policies", "href": "/training-platform"},
+     {"label": "Allocate adhoc training", "href": "/uses/adhoc-training"}
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Training brief for a supervision (example)",
+     "stats": [["Courses allocated", "6"], ["Completed", "4"], ["Overdue", "1"]],
+     "blocks": [
+      ["Worth raising", [["Manual handling refresher", "Overdue"], ["Medication course", "Scored 62%"]]],
+      ["Completed since last time", [["Fire safety", "Passed"]]]
+     ],
+     "caption": "Example only. The brief is built from your own training records."
+    }
+   },
+   {
+    "heading": "Record what was said and what was agreed",
+    "bullets": [
+     "The person conducting it completes a recording form in their own hub, with the same set of headings every time, so it works as a supervision template you do not have to build",
+     "The headings cover actions from last time, achievements, challenges, learning, goals, feedback from the supervisor and other areas of discussion",
+     "Agreed actions are written as rows, and each can allocate a training module, an induction flow or a CQC prep question to the carer"
+    ],
+    "tags": [
+     {"label": "Supervision audit", "href": "/care-audits/staff-supervision-appraisal"},
+     {"label": "CQC and compliance", "href": "/cqc-compliance"}
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Supervision recording form (example)",
+     "stats": [["Headings", "9"], ["Agreed actions", "3"]],
+     "blocks": [
+      ["Headings in the form", [["What learning have I done since my last supervision?", "Free text"], ["What do I want to achieve before my next supervision?", "Free text"], ["Feedback from supervisor", "Free text"]]],
+      ["Agreed actions", [["Finish the medication course", "Training allocated"], ["Shadow a colleague at mealtimes", "No allocation"]]]
+     ],
+     "caption": "Example only. The headings are the same for every person, the answers are yours."
+    }
+   },
+   {
+    "heading": "Agreed actions land with the carer and close themselves",
+    "bullets": [
+     "Agreed actions appear in the carer's own hub under My actions, next to any audit actions they have been given",
+     "Where an action asked for a course, it is tied to that carer's enrolment, and it is marked done when they complete the course",
+     "When you allocate training you can tick a box to add it to each person's next booked supervision, and nothing is added unless you tick it"
+    ],
+    "tags": [
+     {"label": "Allocate adhoc training", "href": "/uses/adhoc-training"},
+     {"label": "Training in person sessions", "href": "/uses/face-to-face-training"}
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "My actions in the Staff Hub (example)",
+     "stats": [["Open", "2"], ["Done", "1"]],
+     "blocks": [
+      ["From the last supervision", [["Finish the medication course", "Done when the course is complete"], ["Shadow a colleague at mealtimes", "Open"]]]
+     ],
+     "caption": "Example only. Actions are agreed by you and the carer."
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "Will this turn my supervision conversations into form filling?",
+    "a": "It should not. The conversation is still yours. CareStream gives the person conducting it a recording form to complete afterwards in their own hub, and the form holds what was said and what was agreed. The headings stay the same, so you are not building a layout each time."
+   },
+   {
+    "q": "What do we record, exactly?",
+    "a": "A dated record of each session: the type (supervision or appraisal), the date, who conducted it, when the next one is due, any notes, and the completed form with its agreed actions. Each person's history sits on their staff record and on the supervisions screen."
+   },
+   {
+    "q": "Can I see who is overdue?",
+    "a": "Yes. The supervisions screen shows each person's last and next dates for both, marked on track, due soon (within 30 days) or overdue, with four summary cards for the whole team. Agency workers are not included."
+   },
+   {
+    "q": "How does training come into it?",
+    "a": "Before a session, you can open a brief of that person's training: what is overdue, due soon, in progress or recently completed, with scores. When you allocate <a href=\"/uses/adhoc-training\">adhoc training</a> you can add it to the person's next booked supervision. Which plan includes the training link is on the <a href=\"/pricing\">pricing page</a>."
+   },
+   {
+    "q": "Does the brief judge my carer?",
+    "a": "No. The suggestions in it are worked out by fixed rules from real scores and answers, and each one shows the evidence it is based on. They are prompts for a conversation, not a verdict. Nothing is saved unless you choose to add one as an agreed action."
+   },
+   {
+    "q": "Does completing a course prove someone is competent?",
+    "a": "No. A completed course and a score show what someone knew when they answered. Competence is about what they do on shift, and that still needs your observation and your judgement. The record shows that the conversation happened and what was agreed."
+   },
+   {
+    "q": "Which plan do I need?",
+    "a": "The supervisions rows are set out on the <a href=\"/pricing\">pricing page</a>, which shows what each plan includes. It is the page to check before you decide, because the training link and the supervisions screen are listed separately."
+   },
+   {
+    "q": "Can I try it before I commit?",
+    "a": "Yes. There is a 14 day free trial on the paid plans, and you can <a href=\"/register\">create a free account</a> to look around. Set up takes about a day, and you can <a href=\"/demo\">book a demo</a> if you would like to see supervisions first."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A record of the conversation, not a verdict on the person",
+  "cards": [
+   {
+    "title": "It does not hold the conversation",
+    "body": "The talking, the listening and the judgement stay with you. CareStream keeps the record and the follow through, and it does not give HR or employment advice."
+   },
+   {
+    "title": "It does not prove competence",
+    "body": "A completed course shows what a carer knew on the day. Whether they are competent in practice is for you to observe and decide, and the record does not replace that."
+   },
+   {
+    "title": "It is not a regulator record or a rating",
+    "body": "The record is yours, held for your own use and to show your inspector. It is not a CQC document, and it does not give you a grade or a pass."
+   }
+  ]
+ },
+ "read_next": [
+  "what-compliant-actually-means-for-one-care-staff-member",
+  "how-do-you-record-in-person-training-so-it-counts-as-cqc-evidence",
+  "cqc-evidence-categories-explained"
+ ],
+ "faqs": {
+  "heading": "Staff supervision and CareStream, answered",
+  "groups": [
+   {
+    "group": "About supervision records",
+    "items": [
+     {
+      "q": "What should supervision records contain?",
+      "a": "At least the date, who took part, what was discussed, what was agreed and when the next session is due. CareStream records each of these, and the completed form and agreed actions stay on the person's staff record."
+     },
+     {
+      "q": "Is there a supervision template I can use?",
+      "a": "The recording form is built in. It has the same headings every time, from actions since last time to goals before the next session, plus rows for agreed actions. You can also look at the <a href=\"/care-audits/staff-supervision-appraisal\">staff supervision and appraisal audit</a> for a check of your own schedule and records."
+     },
+     {
+      "q": "What is the difference between supervision and appraisal?",
+      "a": "Supervision is a regular conversation about the work, and appraisal is usually a yearly look back and forward. <a href=\"https://www.skillsforcare.org.uk/Leadership-management/managing-people/supervision/Supervision.aspx\">Skills for Care describes supervision</a> as a manager meeting regularly with a worker. CareStream tracks both, as two separate types of record."
+     },
+     {
+      "q": "How often should care staff supervision happen?",
+      "a": "That is for your service to set, and <a href=\"https://www.skillsforcare.org.uk/Leadership-management/managing-people/supervision/Supervision.aspx\">Skills for Care does not give a set interval</a>. CareStream lets you set the next due date for each session and marks anyone overdue."
+     }
+    ]
+   },
+   {
+    "group": "Using CareStream",
+    "items": [
+     {
+      "q": "Can I book a supervision and have the carer reminded?",
+      "a": "Yes. Choose a future date and the carer is emailed straight away and reminded the day before. The person conducting it is told to complete the recording form in their own hub."
+     },
+     {
+      "q": "Does a supervision record count as evidence for CQC?",
+      "a": "It can be part of it. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> says staff must receive such appropriate support, training, professional development, supervision and appraisal as is necessary to carry out their duties. A dated record shows you did it, alongside the rest of your <a href=\"/cqc-compliance\">CQC evidence</a>, but it is not a rating."
+     },
+     {
+      "q": "Can I link a new carer's Care Certificate to their supervision?",
+      "a": "You can allocate a course to a person and add it to their next booked supervision. The <a href=\"/staff-training/care-certificate\">Care Certificate course</a> is one a manager can allocate, and it still needs your observation before the certificate is issued."
+     },
+     {
+      "q": "Are agency workers included?",
+      "a": "No. Agency workers do not take a plan seat and are not given supervisions or appraisals in CareStream. Their agency holds their records."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "Keeping supervision records you can stand behind",
+  "lede": "A good record is short, dated and specific. It does not need to be long. It needs to show that the conversation happened and what each of you agreed to do.",
+  "sections": [
+   {
+    "h3": "Before the session",
+    "paragraphs": [
+     "Look at what the person has been asked to do since last time, and at how they got on. A few minutes of preparation changes the conversation, because you arrive with questions and not guesses.",
+     "Take the open actions from the last record and ask about each one first. An action that is raised again every time tells you something is stuck."
+    ],
+    "checklist": [
+     "Open the actions agreed last time",
+     "Check training that is overdue or due soon",
+     "Note any low scores worth asking about",
+     "Decide one thing to praise and one thing to explore"
+    ]
+   },
+   {
+    "h3": "Writing the record",
+    "paragraphs": [
+     "Write it in plain words soon after, while it is fresh. Record what the person said in their own terms where you can, and keep your feedback separate so it is clear whose view is whose.",
+     "Keep each agreed action to one clear task, with an owner and, where it helps, a date. A vague action such as <em>improve confidence</em> cannot be closed. <em>Shadow a colleague at two mealtimes</em> can."
+    ],
+    "checklist": [
+     "Date, type and who conducted it",
+     "What was discussed, briefly",
+     "Each agreed action with an owner",
+     "The next due date"
+    ]
+   },
+   {
+    "h3": "After the session",
+    "paragraphs": [
+     "Check actions at the next supervision, and in between if one is time sensitive. If a course was agreed, see whether it was finished and what the person made of it. You can read more on how this fits with <a href=\"/uses/face-to-face-training\">recording in person training</a>."
+    ]
+   }
+  ],
+  "note": "This page describes how CareStream works. It is not legal, HR or employment advice, and example screens are for illustration only. For what a regulated service must do, read the primary source, such as <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18 of the 2014 Regulations</a>."
+ }
+}

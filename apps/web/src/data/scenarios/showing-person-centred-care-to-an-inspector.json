@@ -1,0 +1,421 @@
+{
+ "slug": "showing-person-centred-care-to-an-inspector",
+ "status": "draft",
+ "order": 80,
+ "title": "Evidence for CQC caring: your staff know people. <em>Can you show it?</em>",
+ "meta_title": "CQC Caring: Showing Person Centred Care | CareStreamAI",
+ "meta_description": "Evidence for CQC caring starts with staff who know each person. Keep life stories in one place, see what carers ask, and run resident focused audits.",
+ "eyebrow": "Scenario",
+ "lede": "Evidence for CQC caring is hard to hold in your hands, because caring is about how people are treated. What you can show is that your staff have the information to treat each person as an individual. CareStream puts resident profiles, the questions staff ask and resident focused audits alongside <a href=\"/training-platform\">training built from your own policies</a>.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "Getting ready to show caring",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Life stories collected",
+    "note": "Over the year",
+    "done": true
+   },
+   {
+    "label": "Staff can find them quickly",
+    "note": "Same week",
+    "done": true
+   },
+   {
+    "label": "Family details checked and added",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Audits that ask people themselves",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/cc7e6138-97a2-4c69-bb27-c1d4aa709b50.webp",
+ "image_alt": "A care home manager shows a printed one page profile to a visitor in smart clothes with a lanyard at a table, while a resident and a carer chat warmly in the lounge behind them",
+ "card_title": "Showing an inspector that your staff know each person",
+ "card_snippet": "Life stories sit in a drawer and nobody can say who has read them. Keep one profile per resident where staff can ask about them, and back it with audits that ask the person themselves.",
+ "primary_keyword": "cqc caring",
+ "secondary_keywords": [
+  "person centred care examples",
+  "this is me document",
+  "life story work"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Short training and knowledge checks that start from what your service has written down.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Resident focused audits",
+   "body": "Resident of the Day, mealtimes and resident feedback, ready to use and free on every plan.",
+   "action": "See the audit library",
+   "href": "/care-audits"
+  },
+  {
+   "title": "CQC and compliance",
+   "body": "Evidence that builds itself, and a readiness report for your next inspection.",
+   "action": "See CQC and compliance",
+   "href": "/cqc-compliance"
+  }
+ ],
+ "intro": {
+  "heading": "You know your residents. Can the whole team show they do?",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A registered manager has spent years collecting life stories. Some sit in care plans, some are on a printed sheet by the bed, and a few live only in the head of a long serving key worker. A new carer on a late shift has read none of them. When a visitor with a lanyard sits down and asks about one resident, the manager can answer. The manager cannot say the same for everyone on shift, and cannot show how anyone found out. Here is how that plays out."
+ },
+ "trail": [
+  {
+   "when": "Over the year",
+   "text": "Key workers gather life stories and likes from residents and families.",
+   "kind": "ok"
+  },
+  {
+   "when": "On admission",
+   "text": "A one page profile is written for each new resident and filed.",
+   "kind": "ok"
+  },
+  {
+   "when": "Every month",
+   "text": "Resident of the Day reviews are done and the staff chat warmly with people.",
+   "kind": "ok"
+  },
+  {
+   "when": "A new carer starts",
+   "text": "They are told the profiles are in the folder. Nobody checks they read them.",
+   "kind": "gap"
+  },
+  {
+   "when": "A late shift",
+   "text": "A resident is upset. The carer does not know what usually calms her.",
+   "kind": "gap"
+  },
+  {
+   "when": "Family visit",
+   "text": "A daughter mentions a detail the file does not hold. It stays in a conversation.",
+   "kind": "gap"
+  },
+  {
+   "when": "Looking back",
+   "text": "The manager cannot show which profiles are current or who has used them.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“Tell me about this person.” The carer shrugs. The resident answers for themselves.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The care may be excellent.</b> The gap is between what the home knows about each person and what each carer can reach. Here is how CareStream helps close it, and where it stops.",
+ "why": {
+  "heading": "A profile shows staff have information. It does not show how people felt.",
+  "sub": "Inspectors speak to residents and watch care. A file cannot stand in for that, so be honest about what each piece of evidence shows.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Knowing a person is not the same as using it",
+    "body": "A life story in a folder helps nobody at 3pm when a resident is anxious. It only helps when a carer can find the answer in a few seconds."
+   },
+   {
+    "icon": "tick",
+    "title": "Good profiles go stale",
+    "body": "Preferences change, family remember more, and people pass away or move on. A profile nobody revisits quietly stops being true."
+   },
+   {
+    "icon": "alert",
+    "title": "Evidence of caring is a mixed picture",
+    "body": "Profiles show staff hold the information. Observation, feedback and audits that ask the person show what it was like to be cared for. You want both."
+   }
+  ]
+ },
+ "how": {
+  "heading": "One profile per person, and a trail around it.",
+  "sub": "This sits beside <a href=\"/training-platform\">training built from your own policies</a>. For the wider picture see <a href=\"/cqc-compliance\">CQC and compliance</a> and <a href=\"/uses/resident-knowledge\">how staff learn about the people they support</a>.",
+  "blocks": [
+   {
+    "heading": "Keep each person's story in one place",
+    "bullets": [
+     "Admins add a profile for each resident with eleven sections, from life story work and interests to what helps when they are upset and how they like to communicate",
+     "You can invite a family member or friend by email to answer a few questions, and nothing they write reaches your team until you approve it",
+     "Resident profiles are on the Professional and Enterprise plans. They record who a person is, not their care record, so dietary needs and clinical detail stay in the care plan"
+    ],
+    "tags": [
+     {
+      "label": "Resident knowledge",
+      "href": "/uses/resident-knowledge"
+     },
+     {
+      "label": "This is me document guide",
+      "href": "/blog/this-is-me-document"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Resident profile",
+     "stats": [
+      ["Sections filled", "8 of 11"],
+      ["Family answers waiting", "2"]
+     ],
+     "blocks": [
+      [
+       "Example sections",
+       [
+        ["Life story and background", "Filled"],
+        ["What helps when they are upset or anxious", "Filled"],
+        ["How they like to communicate", "Filled"],
+        ["Faith, culture and traditions", "Empty"]
+       ]
+      ],
+      [
+       "Example family answers for you to approve",
+       [
+        ["Favourite music", "Waiting for approval"],
+        ["Who visits on Sundays", "Waiting for approval"]
+       ]
+      ]
+     ],
+     "caption": "Example only. Not a real resident."
+    }
+   },
+   {
+    "heading": "Let staff ask, and see what they ask",
+    "bullets": [
+     "In the Staff Hub, carers can use the This is me topic of the assistant to ask about a resident, such as what they like to be called",
+     "It answers only from the approved profiles, keeps answers short and says when something is not recorded yet",
+     "Questions are not private from you. Recent queries shows who asked what, so you can see which residents staff are checking and where a profile has a hole"
+    ],
+    "tags": [
+     {
+      "label": "What are my staff asking",
+      "href": "/scenarios/what-are-my-staff-asking"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Recent queries",
+     "blocks": [
+      [
+       "Example questions from the team",
+       [
+        ["What does she like to be called?", "Answered"],
+        ["What helps when he gets anxious in the evening?", "Answered"],
+        ["Does she have any faith practices we should know about?", "Not recorded yet"]
+       ]
+      ]
+     ],
+     "caption": "Example only. Plans differ, so see the pricing page for which includes Recent queries."
+    }
+   },
+   {
+    "heading": "Add audits that ask the person themselves",
+    "bullets": [
+     "The built in library includes <a href=\"/care-audits/resident-of-the-day\">Resident of the Day</a>, <a href=\"/care-audits/mealtime-experience\">Mealtime Experience</a> and <a href=\"/care-audits/resident-feedback-round\">Resident Feedback Round</a>",
+     "The feedback round records what people said about choice, dignity, food and activities, and whether anything was done about it",
+     "Audits go on a schedule, actions can carry photos and are checked again at the next audit"
+    ],
+    "tags": [
+     {
+      "label": "Care audits",
+      "href": "/care-audits"
+     },
+     {
+      "label": "Monthly audits that remind themselves",
+      "href": "/scenarios/monthly-audits-that-remind-themselves"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Resident Feedback Round",
+     "blocks": [
+      [
+       "Example questions",
+       [
+        ["Are you asked about your care and daily routine?", "Example"],
+        ["Are your choices respected, such as when to get up?", "Example"],
+        ["Do you know how to raise a concern?", "Example"]
+       ]
+      ]
+     ],
+     "caption": "Example wording only. The audit has its own questions."
+    }
+   },
+   {
+    "heading": "See what you are holding, then fill the gaps",
+    "bullets": [
+     "Your admin view shows which profiles have empty sections, so you know where life story work is thin",
+     "Set a monthly rhythm: one profile a week, one audit a month, and a look at the questions staff asked",
+     "Pull it together before an inspection and keep it with the rest of your CQC evidence"
+    ],
+    "tags": [
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     },
+     {
+      "label": "CQC staff questions",
+      "href": "/cqc-staff-questions"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Profile overview",
+     "stats": [
+      ["Residents with a profile", "21 of 24"],
+      ["Sections still empty", "17"],
+      ["Audits this month", "3"]
+     ],
+     "blocks": [
+      [
+       "Example things to follow up",
+       [
+        ["Three residents have no profile yet", "Action"],
+        ["Faith and culture is empty for 9 people", "Action"],
+        ["Feedback round due", "This week"]
+       ]
+      ]
+     ],
+     "caption": "Example figures only."
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "What does CareStream actually give me for the caring side of an inspection?",
+    "a": "It helps you keep and use information about each person, and it keeps a trail around it. Admins write or collect a profile for each resident, staff can ask about them in the hub, and resident focused audits record what you observed and what people said. It supports your evidence. It does not prove how people felt."
+   },
+   {
+    "q": "Is this just a digital This is me document?",
+    "a": "It covers the same ground as a this is me document: life story, likes, routine, what helps when someone is upset, who matters to them. The difference is that staff can ask the Staff Hub assistant about a resident and get a short answer from the approved profile. It is not the Alzheimer's Society leaflet, and it is not linked to it."
+   },
+   {
+    "q": "Can families add to it?",
+    "a": "Yes, by invitation. You enter a name and email, and they get a private link that lasts 14 days. They answer a few questions about the person. Nothing is shown to staff until you have checked and approved it, and you can edit or reject any answer."
+   },
+   {
+    "q": "What can staff do with a profile?",
+    "a": "They can ask the hub assistant, in plain words, things like what a resident likes to be called or what helps when they are upset. It answers only from the approved profiles and says when something is not recorded yet. It does not give clinical advice, so medical questions go back to the care plan and the nurse in charge."
+   },
+   {
+    "q": "Can I see what staff ask about residents?",
+    "a": "Yes. Admins can see who asked what, when and whether an answer was found in Recent queries. Staff cannot hide their questions from you. Use it to see which residents carers check most and where a profile is missing something."
+   },
+   {
+    "q": "Does a completed profile prove we deliver person centred care?",
+    "a": "No, and it is better to say so plainly. A profile shows your staff have information about a person. It does not show how that person was treated. Inspectors speak to residents and watch care, so profiles are one strand, and audits that ask people themselves are another."
+   },
+   {
+    "q": "Which audits help with this?",
+    "a": "Resident of the Day, Mealtime Experience, Resident Feedback Round and Dignity and Respect are all in the built in library, which is free on every plan. See the <a href=\"/care-audits\">audit library</a>. They record what you saw and what you were told, with actions that are checked again next time."
+   },
+   {
+    "q": "What does it cost to try?",
+    "a": "You can create a free account and start a 14 day free trial on a paid plan. Resident profiles are on the Professional and Enterprise plans, so check the <a href=\"/pricing\">pricing page</a> for what each plan includes."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "Evidence that staff know people, not proof of how people were treated",
+  "cards": [
+   {
+    "title": "It is not a pass or a rating",
+    "body": "A full set of profiles does not show a good outcome. CareStream is not a regulator record, and it cannot predict what an inspector will find."
+   },
+   {
+    "title": "It does not show how a person felt",
+    "body": "Only people can tell you that. Talk to residents, watch care and use feedback audits. A profile shows information is held, not that it was used well."
+   },
+   {
+    "title": "It is not a care record",
+    "body": "Profiles hold who a person is. Clinical detail, risks and dietary needs stay in your care plans, and the assistant sends clinical questions back to them. Profiles are on Professional and above."
+   }
+  ]
+ },
+ "read_next": [
+  "this-is-me-document",
+  "cqc-evidence-categories-explained"
+ ],
+ "faqs": {
+  "heading": "Showing caring to an inspector, answered",
+  "groups": [
+   {
+    "group": "About person centred care",
+    "items": [
+     {
+      "q": "What are some person centred care examples a manager can show?",
+      "a": "Examples are small and specific: a carer who knows someone likes their tea in a particular cup, a resident who chooses when to get up, a mealtime with real choice, a room that holds the person's own things. A recorded profile helps staff do these things. Observation and feedback show whether they happened."
+     },
+     {
+      "q": "What is life story work in a care home?",
+      "a": "It means finding out and recording where a person has come from: family, work, places, music, the big moments. It gives staff a way into a conversation. It works best when it is gathered with the person and their family, and kept up to date. The <a href=\"/blog/this-is-me-document\">this is me document guide</a> explains what goes in."
+     },
+     {
+      "q": "What goes in a this is me document?",
+      "a": "CareStream's resident profile has eleven sections: life story and background, interests and hobbies, likes, dislikes, food and drink they enjoy, daily routine, what helps when they are upset or anxious, how they like to communicate, important people and pets, faith, culture and traditions, and anything else."
+     },
+     {
+      "q": "Do staff need training to use resident profiles?",
+      "a": "They need to know the profiles exist and how to ask about a person. The <a href=\"/staff-training/care-certificate\">Care Certificate</a> covers the wider principles, and short training from your own policies can cover how your home uses profiles."
+     },
+     {
+      "q": "Does a profile replace a care plan?",
+      "a": "No. A profile is about who the person is. The care plan is about their care. Keep dietary needs, risks and clinical details in the care plan."
+     }
+    ]
+   },
+   {
+    "group": "About inspections",
+    "items": [
+     {
+      "q": "What does Regulation 10 say about dignity and respect?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">Regulation 10</a> says service users must be treated with dignity and respect. It names ensuring the person's privacy, supporting their autonomy, independence and involvement in the community, and having due regard to protected characteristics."
+     },
+     {
+      "q": "How does CQC explain dignity and respect to providers?",
+      "a": "The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-10\">CQC guidance on Regulation 10</a> covers privacy, supporting independence, respectful communication and personal preferences, and not leaving people in undignified situations. Read it for the full wording."
+     },
+     {
+      "q": "Will CareStream tell me what an inspector will ask about caring?",
+      "a": "No. We do not predict an inspection. The <a href=\"/cqc-staff-questions\">CQC staff questions</a> feature lets you practise open questions with your team, but it is practice and not a mock of any real visit."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to prepare your evidence of caring",
+  "lede": "CQC caring evidence is built up over months, not in the week before a visit. The aim is a home where staff know people, people are asked what they think, and you can show both.",
+  "sections": [
+   {
+    "h3": "Start with what the regulation says",
+    "paragraphs": [
+     "The legal text is short. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/10\">Regulation 10</a> says people must be treated with dignity and respect, and lists privacy, autonomy and independence, and due regard to protected characteristics. Use it to check your own routines, such as knocking before entering a room, offering choice and using the name each person prefers.",
+     "Keep the evidence honest. A profile shows staff hold information, a feedback round shows what people said, and an observation shows what you saw. Note which is which when you file them."
+    ]
+   },
+   {
+    "h3": "A monthly rhythm for life story work",
+    "checklist": [
+     "Each week: complete or refresh one resident profile with the person and their key worker.",
+     "For each family visit: invite one relative or friend to add what they know, then approve it.",
+     "Each month: run Resident of the Day, a mealtime observation and a resident feedback round.",
+     "Each quarter: look at what staff asked about residents and fill the gaps they found."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Be ready to say plainly what each piece of evidence shows, and expect them to speak to residents themselves."
+ }
+}

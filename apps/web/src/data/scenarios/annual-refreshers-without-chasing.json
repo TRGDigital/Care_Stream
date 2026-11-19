@@ -1,0 +1,225 @@
+{
+ "slug": "annual-refreshers-without-chasing",
+ "status": "draft",
+ "order": 93,
+ "title": "One deadline, thirty staff. <em>Annual refresher training without chasing.</em>",
+ "meta_title": "Annual Refresher Training Without Chasing | CareStreamAI",
+ "meta_description": "Annual refresher training for care staff, with reminders at 90, 30 and 7 days and one view of who is overdue. Free CPD refreshers on every plan.",
+ "eyebrow": "Scenario",
+ "lede": "Every refresher falls due at roughly the same time, and you are the one who knows it. CareStream sends each carer their own reminders and shows you who is overdue, so <a href=\"/training-platform\">annual refresher training</a> stops being a month of chasing individuals. Staff still have to do the course. You just stop being the alarm clock.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "Refresher season",
+  "pill": "Illustration",
+  "rows": [
+   {"label": "Refreshers allocated to the team", "note": "Week 1", "done": true},
+   {"label": "Reminders go out at 90, 30 and 7 days", "note": "Automatic", "done": true},
+   {"label": "Most of the team finished", "note": "In progress", "done": false},
+   {"label": "Last few overdue, named in your Monday email", "note": "Not yet", "done": false}
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/7e3d2e45-9310-45d1-bb2c-2180bfc6176f.webp",
+ "image_alt": "A care home manager ticking off a list on a clipboard beside a wall calendar with one circled date, while a relaxed carer sits nearby in a bright staff room",
+ "card_title": "One renewal date, thirty staff, and no more chasing",
+ "card_snippet": "When annual refreshers all fall due together, chasing each carer by hand eats weeks. Allocate the refreshers once, let reminders go out on their own, and see who is overdue in one place.",
+ "primary_keyword": "annual refresher training",
+ "secondary_keywords": ["training certificate", "training records", "free cpd"],
+ "feature_links": [
+  {"title": "Training built from your own policies", "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.", "action": "See the feature", "href": "/training-platform"},
+  {"title": "Annual training that renews itself", "body": "Allocate yearly courses, see renewal dates and who is overdue.", "action": "See annual training", "href": "/uses/annual-training"},
+  {"title": "CQC and compliance", "body": "Evidence that builds itself, and a readiness report for your next inspection.", "action": "See CQC and compliance", "href": "/cqc-compliance"}
+ ],
+ "intro": {
+  "heading": "The deadline is the same for everyone. The chasing is not.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "Most of the team joined within a few months of each other, so their refreshers expire within the same few weeks. The manager has a spreadsheet, a wall calendar and a habit of catching people in the corridor. Some carers finish early. Some say they will do it on their next day off. A few have not opened the course at all. By the time the manager has chased everyone once, the first people are due again. Nobody has been careless. The system just depends on one person remembering. Here is how it tends to go."
+ },
+ "trail": [
+  {"when": "January", "text": "Most of the team did their refreshers within a few weeks of each other.", "kind": "ok"},
+  {"when": "Spring", "text": "Everyone passed. The certificates went into a folder.", "kind": "ok"},
+  {"when": "Summer", "text": "The manager circles one date on the staff room calendar.", "kind": "ok"},
+  {"when": "Eleven months on", "text": "The date is close, and the manager is the only one watching it.", "kind": "gap"},
+  {"when": "Two weeks before", "text": "Eight people are due. Nobody has been told in writing.", "kind": "gap"},
+  {"when": "The week itself", "text": "Three carers say they will do it on their next day off.", "kind": "gap"},
+  {"when": "What the manager has", "text": "A spreadsheet that was right last month and a lot of reminders in their head.", "kind": "gap"},
+  {"when": "Inspection day", "text": "“Can I see who is up to date?” The spreadsheet is a month old.", "kind": "end"}
+ ],
+ "trail_close": "<b>The courses were never the problem.</b> The gap is the reminding, the checking and the keeping track. Here is how CareStream takes that off you, and where it stops.",
+ "why": {
+  "heading": "Chasing is a job that never ends and never shows up in anyone's role",
+  "sub": "Every renewal is a small task. Thirty of them on the same week is a project.",
+  "cards": [
+   {"icon": "alert", "title": "Deadlines bunch together", "body": "Staff who started together renew together. The manager's busiest weeks are also the weeks every refresher lands."},
+   {"icon": "chat", "title": "Reminders depend on memory", "body": "A corridor conversation is easy to forget on both sides. A carer on nights may never hear it at all."},
+   {"icon": "tick", "title": "A folder is not a live picture", "body": "Training records kept in a spreadsheet are only right on the day someone updates them. An inspector will ask about today."}
+  ]
+ },
+ "how": {
+  "heading": "Allocate once. Let the reminders do the nagging.",
+  "sub": "This is the annual side of the <a href=\"/training-platform\">training platform</a>. See also <a href=\"/uses/annual-training\">annual training that tracks itself</a> and <a href=\"/staff-training/care-certificate\">the Care Certificate annual refresher</a>.",
+  "blocks": [
+   {
+    "heading": "Allocate the refreshers to the team",
+    "bullets": [
+     "Pick the annual refresher courses in the Training screen and tick the staff who need them, with an optional due date",
+     "The certified courses are <b>free CPD</b> on every plan, and they do not use up your monthly allowance of annual modules",
+     "Staff see them in their Staff Hub, the installable app on their own phone"
+    ],
+    "tags": [
+     {"label": "Annual training", "href": "/uses/annual-training"},
+     {"label": "Staff training courses", "href": "/staff-training"}
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Example: allocating annual refreshers",
+     "stats": [["Courses picked", "3 (example)"], ["Staff ticked", "28 (example)"], ["Due date", "Set (example)"]],
+     "blocks": [
+      ["Courses (example)", [["Infection Prevention and Control", "Selected"], ["Health and Safety Awareness", "Selected"], ["Food Hygiene", "Selected"]]],
+      ["Staff (example)", [["Day team", "14 ticked"], ["Night team", "9 ticked"], ["Kitchen and housekeeping", "5 ticked"]]]
+     ],
+     "caption": "Example only. Not real data."
+    }
+   },
+   {
+    "heading": "Reminders go out at 90, 30 and 7 days before expiry",
+    "bullets": [
+     "Each course sets its own renewal date when it is passed. The nine annual refreshers renew at 12 months",
+     "Each carer gets a reminder 90, 30 and 7 days before their date, plus a push notification if they have installed the app and allowed it",
+     "Every Monday, anyone with training still to do gets one email with a button into their hub, and you get a team digest"
+    ],
+    "tags": [
+     {"label": "How CareStream works", "href": "/how-it-works"},
+     {"label": "Annual training", "href": "/uses/annual-training"}
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Example: a reminder timeline",
+     "stats": [["90 days before", "Reminder"], ["30 days before", "Reminder"], ["7 days before", "Reminder"]],
+     "blocks": [
+      ["For the carer (example)", [["Reminder", "Course due for renewal"], ["Monday email", "What is still to do"]]],
+      ["For you (example)", [["Renewal digest", "Who is expiring"], ["Needs action now", "Overdue and expired"]]]
+     ],
+     "caption": "Example only. Not real data."
+    }
+   },
+   {
+    "heading": "See who is overdue without asking anyone",
+    "bullets": [
+     "The Staff Progress view shows each person's status: in date, due soon, overdue or expired, with the date it runs to",
+     "Your digest names people who have never signed in, and people who have gone quiet, so you know who needs a conversation",
+     "Reminders can be switched off or trimmed in your training settings if you prefer to run them yourself"
+    ],
+    "tags": [
+     {"label": "CQC and compliance", "href": "/cqc-compliance"},
+     {"label": "Training platform", "href": "/training-platform"}
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Example: staff progress",
+     "stats": [["In date", "21 (example)"], ["Due soon", "5 (example)"], ["Overdue", "2 (example)"]],
+     "blocks": [
+      ["Needs action (example)", [["Carer A", "Overdue by 4 days"], ["Carer B", "Expired 2 days ago"]]],
+      ["Due soon (example)", [["Carer C", "In 21 days"], ["Carer D", "In 6 days"]]]
+     ],
+     "caption": "Example only. Not real data."
+    }
+   },
+   {
+    "heading": "Keep the training records and the certificate in one place",
+    "bullets": [
+     "A pass produces a training certificate for the carer, and the completion date and expiry date sit on their record",
+     "Some courses, such as Moving and Handling, Medication and the Care Certificate, wait for your observation sign off before the certificate is issued",
+     "When a course expires, you allocate it again and the earlier completion stays on file"
+    ],
+    "tags": [
+     {"label": "Care Certificate course", "href": "/staff-training/care-certificate"},
+     {"label": "CQC and compliance", "href": "/cqc-compliance"}
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Example: a staff record",
+     "stats": [["Completed", "12 Mar (example)"], ["Valid until", "12 Mar next year (example)"]],
+     "blocks": [
+      ["Annual courses (example)", [["Food Hygiene", "In date"], ["Moving and Handling", "Awaiting observation sign off"]]],
+      ["Certificates (example)", [["Food Hygiene", "Issued"], ["Care Certificate", "Pending sign off"]]]
+     ],
+     "caption": "Example only. Not real data."
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {"q": "Does it stop me chasing people altogether?", "a": "It stops you being the only reminder. Carers are reminded 90, 30 and 7 days before their date, they get a weekly nudge while training is outstanding, and you get a digest that names who is behind. You may still want a word with the few who have gone quiet."},
+   {"q": "Do my staff still have to do the course?", "a": "Yes. CareStream reminds and records. It cannot do the learning for anyone. A carer completes the course in the Staff Hub and has to pass it."},
+   {"q": "What does it cost to run the refreshers?", "a": "The CPD certified annual refreshers are free on every plan, so you can try them on a free account. Other annual modules use a monthly allowance on paid plans. There is a 14 day free trial on the paid plans (see <a href=\"/pricing\">pricing</a>), and you can <a href=\"/register\">create a free account</a> to look around."},
+   {"q": "How will I know who is overdue?", "a": "Open Staff Progress and each person shows as in date, due soon, overdue or expired. On Mondays your digest also lists overdue and expired training, so standing problems come back to you without you looking."},
+   {"q": "What happens when a course expires?", "a": "It shows as expired and appears in your Monday digest. You allocate the course again, which starts a fresh renewal and keeps the earlier completion on file. It does not renew by itself."},
+   {"q": "Who gets the reminders?", "a": "The carer gets their own, and your managers and admins get the renewal digest. You can switch reminders off, or switch off individual ones, in your training settings. If someone has never signed in, your digest says so."},
+   {"q": "What do I get for the carer to keep?", "a": "When they pass, they get a training certificate. Where a course needs an observed assessment, such as Moving and Handling or Medication, the certificate waits until you record that observation."},
+   {"q": "What could I show an inspector?", "a": "Each person's courses, completion dates and expiry dates, current as of today. That sits alongside the rest of your <a href=\"/cqc-compliance\">CQC evidence</a>. It is your record of training, not a rating and not a regulator document."}
+  ]
+ },
+ "limits": {
+  "heading": "Reminders and records, not a replacement for you",
+  "cards": [
+   {"title": "It does not do the course for anyone", "body": "Reminders reach the carer, but they still have to open the course and pass it. A person who ignores every reminder will still be overdue."},
+   {"title": "It does not renew by itself", "body": "When a course expires you allocate it again. The reminders give you ninety days of warning, not an automatic re-enrolment."},
+   {"title": "A certificate shows completion, not competence", "body": "A training certificate evidences that the course was completed. Hands on skills still need your observation, and the certificate is not a qualification."}
+  ]
+ },
+ "read_next": [
+  "mandatory-training-for-care-staff-the-full-list-and-how-often-to-refresh",
+  "chasing-staff-training-completions",
+  "the-annual-training-plan-that-survives-contact-with-the-rota"
+ ],
+ "faqs": {
+  "heading": "Annual refresher training and CareStream, answered",
+  "groups": [
+   {
+    "group": "About the refreshers",
+    "items": [
+     {"q": "Is annual refresher training free?", "a": "The CPD certified refreshers are free on every plan, including the free plan, and are English only on the free plan. See the <a href=\"/staff-training\">staff training courses</a> for the list."},
+     {"q": "What is free CPD training for care staff?", "a": "These are courses that carry a CPD certified mark. In CareStream the free CPD courses include the Care Certificate annual training and refreshers such as Infection Prevention and Control, Food Hygiene and Health and Safety Awareness. Free CPD courses do not use your monthly allowance."},
+     {"q": "How long does a refresher take?", "a": "Each of the nine refreshers is 60 minutes with a pass mark of 80 percent. The <a href=\"/staff-training/care-certificate\">Care Certificate annual training</a> is 90 minutes. A learner has three attempts at the assessment before they revisit the lesson."},
+     {"q": "How do I get a training certificate for each carer?", "a": "It is issued when they pass and complete the short course feedback. For Moving and Handling, Medication and the Care Certificate it waits for your observation sign off."},
+     {"q": "Where are my training records kept?", "a": "Each person's record shows their courses, completion dates and expiry dates. You can see the team in Staff Progress and the details on the staff record."},
+     {"q": "Can staff do the refreshers on their phone?", "a": "Yes. They use the Staff Hub, an installable app. They log in with email and password or a magic link, and their progress saves as they go."}
+    ]
+   },
+   {
+    "group": "About inspections",
+    "items": [
+     {"q": "What does CQC expect for staff training?", "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> says staff must receive the appropriate support, training, professional development, supervision and appraisal they need to do their jobs. It does not list courses, so each provider decides what its staff need."},
+     {"q": "Do I need to keep training records?", "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17</a> requires providers to keep securely the records that are necessary in relation to the people they employ. Dated training records are one sensible way to meet that. CareStream is your record, not a regulator document."}
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to run refresher season",
+  "lede": "Annual refresher training goes best when the manager decides the plan once and lets the system carry it. Here is a simple routine that suits a busy service.",
+  "sections": [
+   {
+    "h3": "Spread the deadlines if you can",
+    "paragraphs": [
+     "Staff who started together renew together. When you allocate refreshers, consider setting different due dates for the day team, the night team and support staff so that completions, and the next expiry dates, do not all land on the same fortnight. Agency staff have their own time boxed access, so allocate them only what their placement needs.",
+     "Keep the refreshers short. A 60 minute course on a phone is easier to fit in than a half day, and a carer on nights can do it at a quiet moment."
+    ]
+   },
+   {
+    "h3": "A monthly check that takes ten minutes",
+    "checklist": [
+     "Open Staff Progress and look at who is overdue or expired.",
+     "Read your Monday digest for people who have never signed in.",
+     "Allocate any course that has expired, with a due date.",
+     "Record observation sign offs promptly so certificates are issued."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep each person's completion and expiry dates current, and be able to show who is overdue and what you did about it."
+ }
+}

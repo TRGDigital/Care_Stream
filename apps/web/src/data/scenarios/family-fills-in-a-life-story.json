@@ -1,0 +1,327 @@
+{
+ "slug": "family-fills-in-a-life-story",
+ "status": "draft",
+ "order": 78,
+ "title": "A daughter wants to help with <em>life story work.</em> Nothing she writes shows until you approve it.",
+ "meta_title": "Life Story Work With Family Input | CareStreamAI",
+ "meta_description": "Invite a relative to share a resident's life story by private link. You read and approve every answer before the care team sees it.",
+ "eyebrow": "Scenario",
+ "lede": "A relative offers to tell you everything about their mum, and you want it in the care team's hands without it getting lost in an inbox. CareStream sends a private link, collects the answers and holds them until you approve them. It sits alongside <a href=\"/training-platform\">the rest of your training and knowledge tools</a>, and the family never gets a login.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "A relative's answers, step by step",
+  "pill": "Illustration",
+  "rows": [
+   { "label": "Daughter invited by email", "note": "Day 1", "done": true },
+   { "label": "She sends her answers", "note": "Day 3", "done": true },
+   { "label": "Manager reads and approves", "note": "Not yet", "done": false },
+   { "label": "Care team can see the profile", "note": "Not yet", "done": false }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/45935042-1447-4008-b0c2-4520c244f337.webp",
+ "image_alt": "A woman sits at a kitchen table at home with a laptop and a photo album open beside her, typing thoughtfully, with a cup of tea close by in warm afternoon light",
+ "card_title": "A relative wants to share their mum's life story. Where does it go?",
+ "card_snippet": "Invite family by private link to answer simple questions about a resident. You read, edit and approve every answer before the care team can see any of it.",
+ "primary_keyword": "life story work",
+ "secondary_keywords": [
+  "family life story",
+  "life story book",
+  "this is me form"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Resident knowledge for your team",
+   "body": "Give staff quick, short answers about the people they care for, drawn from what you have recorded.",
+   "action": "See resident knowledge",
+   "href": "/uses/resident-knowledge"
+  },
+  {
+   "title": "Dementia awareness training",
+   "body": "A course that helps staff understand the person behind the diagnosis.",
+   "action": "See the course",
+   "href": "/staff-training/dementia-awareness"
+  }
+ ],
+ "intro": {
+  "heading": "The family wants to help. The question is where it all goes.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "Mrs Harlow moved in on Monday. Her daughter, Jan, stayed for tea and said she would happily write down anything that helps. She knows that her mum hums when she is anxious, that she only drinks tea from a china cup and that she was a seamstress for forty years. The key worker is delighted and says to send it over. Jan writes a long, loving email that night. It lands in the manager's inbox between a staffing query and a supplier invoice, and the team never sees any of it."
+ },
+ "trail": [
+  { "when": "Monday", "text": "Mrs Harlow moves in. Her daughter stays for tea.", "kind": "ok" },
+  { "when": "Monday evening", "text": "Jan offers to write down everything that helps.", "kind": "ok" },
+  { "when": "Tuesday", "text": "The key worker says, “Please do. It will really help us.”", "kind": "ok" },
+  { "when": "Tuesday night", "text": "Jan emails three pages to the manager.", "kind": "gap" },
+  { "when": "Wednesday", "text": "It sits in an inbox. Nobody on the floor has read it.", "kind": "gap" },
+  { "when": "Week two", "text": "A night carer does not know the humming means she is worried.", "kind": "gap" },
+  { "when": "Week three", "text": "Jan asks if anyone has used what she wrote. Nobody can say.", "kind": "gap" },
+  { "when": "Inspection day", "text": "“How do you know what matters to her?” An inbox is not an answer.", "kind": "end" }
+ ],
+ "trail_close": "<b>The family did their part.</b> The gap is between a loving email and what the team can use. Here is how CareStream collects it, lets you check it, and puts it where the team can find it.",
+ "why": {
+  "heading": "Good life story work is more than one conversation",
+  "sub": "The people who know a resident best are often the ones outside the building.",
+  "cards": [
+    {
+      "icon": "chat",
+      "title": "Relatives hold the detail",
+      "body": "Her favourite song, the name she answers to, the neighbour she still asks after. A family life story fills in what an admission assessment never quite reaches."
+    },
+    {
+      "icon": "tick",
+      "title": "The law points to the person",
+      "body": "Care must <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">reflect the person's preferences</a>. Where someone cannot decide for themselves, the <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">Mental Capacity Act asks you to consider their past and present wishes, beliefs and values</a>, and to consult people who care about them."
+    },
+    {
+      "icon": "alert",
+      "title": "A long email does not reach the floor",
+      "body": "Typed notes go missing and paper goes in drawers. And what a relative writes may include things you would want to read first, before the whole team does."
+    }
+  ]
+ },
+ "how": {
+  "heading": "From a private link to a profile the team can use.",
+  "sub": "This is the resident profiles feature in the same system as your <a href=\"/training-platform\">policies and training</a>. It is on Professional and above. See <a href=\"/uses/resident-knowledge\">how staff use resident knowledge</a> too.",
+  "blocks": [
+    {
+      "heading": "Invite a friend or relative by name and email",
+      "bullets": [
+        "Open the Residents screen from the Knowledge page, choose the resident and add the person's name, email and how they are related",
+        "They get an email with a private link that works for 14 days, and you can invite up to 10 people for each resident",
+        "You can resend an invitation or cancel it, and nobody has to create an account"
+      ],
+      "tags": [
+        { "label": "Resident knowledge", "href": "/uses/resident-knowledge" },
+        { "label": "How CareStream works", "href": "/how-it-works" }
+      ],
+      "mock": {
+        "type": "audit",
+        "audit": "Residents: Family tab (example)",
+        "stats": [["Invited", "2"], ["Answered", "1"], ["Link valid for", "14 days"]],
+        "blocks": [
+          ["Invitations (example)", [
+            ["Jan, daughter: answers sent", "Done"],
+            ["Ray, neighbour: link opened", "Resend or cancel"]
+          ]]
+        ],
+        "caption": "Example only. Names and figures are illustrative."
+      }
+    },
+    {
+      "heading": "The family answers a few warm, simple questions",
+      "bullets": [
+        "The page opens with “Hello Jan. Your home would love your help getting to know Mrs Harlow”, and asks for their name and how they know her",
+        "There is one question for each part of the profile, from where she grew up and what she did for work to what calms her and what she likes to be called. They can answer as many or as few as they like",
+        "A note tells them that answers go to you first, and asks them not to include medical or private financial details"
+      ],
+      "tags": [
+        { "label": "Book a demo", "href": "/demo" },
+        { "label": "Resident knowledge", "href": "/uses/resident-knowledge" }
+      ],
+      "mock": {
+        "type": "audit",
+        "audit": "Family page (example)",
+        "stats": [["Questions", "11"], ["Login needed", "None"]],
+        "blocks": [
+          ["Questions a relative sees (example wording)", [
+            ["Tell us about their life: where they grew up, what they did for work", ""],
+            ["What do they enjoy doing, or used to love doing?", ""],
+            ["When they are worried or upset, what helps?", ""]
+          ]]
+        ],
+        "caption": "Example only. The family page is a form, not an account."
+      }
+    },
+    {
+      "heading": "You read every answer first, then approve, edit or reject it",
+      "bullets": [
+        "When a relative sends answers, the admin who invited them gets an email, and the answers wait in the Approvals tab",
+        "For each answer you can approve it as written, edit it and then approve it, or reject it",
+        "Only approved text joins the profile, with the person's name and relationship added after it. Staff and the hub assistant see nothing that is still waiting"
+      ],
+      "tags": [
+        { "label": "Care knowledge in one place", "href": "/training-platform" },
+        { "label": "CQC and compliance", "href": "/cqc-compliance" }
+      ],
+      "mock": {
+        "type": "audit",
+        "audit": "Residents: Approvals tab (example)",
+        "stats": [["Waiting", "3"], ["Approved", "8"], ["Rejected", "1"]],
+        "blocks": [
+          ["Waiting for approval (example)", [
+            ["Jan, daughter. Likes: only drinks tea from a china cup", "Approve, Edit then approve, Reject"],
+            ["Jan, daughter. Comfort: hums when she is anxious", "Approve, Edit then approve, Reject"]
+          ]]
+        ],
+        "caption": "Example only. Nothing here has reached the care team."
+      }
+    },
+    {
+      "heading": "The care team finds it in the Staff Hub",
+      "bullets": [
+        "Staff can see profiles for current residents that have something filled in, and can ask the hub assistant a short question such as what helps when she is upset",
+        "It answers only from the profile, keeps answers short, and says “not recorded in their profile yet” when the detail is not there",
+        "Where a detail came from family, the answer can say so, for example “per Jan, her daughter”"
+      ],
+      "tags": [
+        { "label": "Dementia awareness course", "href": "/staff-training/dementia-awareness" },
+        { "label": "Resident knowledge", "href": "/uses/resident-knowledge" }
+      ],
+      "mock": {
+        "type": "audit",
+        "audit": "Staff Hub: ask about a resident (example)",
+        "stats": [["Source", "Approved profile only"]],
+        "blocks": [
+          ["Example question and answer", [
+            ["Staff asks: What helps when Mrs Harlow is anxious?", ""],
+            ["Answer: She hums when worried. Sitting with her and a cup of tea in her china cup helps (per Jan, her daughter)", ""]
+          ]]
+        ],
+        "caption": "Example only. Illustration, not a real resident."
+      }
+    }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+    {
+      "q": "A relative wants to help with our life story work. What do I actually do?",
+      "a": "You add them to the resident's record with their name, email and how they are related, and CareStream emails them a private link. They fill in a short form at their own pace. Nothing they write goes to the team until you have read it."
+    },
+    {
+      "q": "Does the family need to sign up or log in?",
+      "a": "No. The link is the way in. There is no account, no password and no messaging. It works for 14 days, you can resend it or cancel it, and each link is a one off. If they want to add more later, you send a new one."
+    },
+    {
+      "q": "What stops something unsuitable reaching my staff?",
+      "a": "Every answer waits for you in the Approvals tab. You can approve it, edit it and then approve it, or reject it. Staff and the assistant only see approved text. The form also asks relatives not to include medical or private financial details, though you are still the one who checks."
+    },
+    {
+      "q": "Does this make a life story book I can print and give to the family?",
+      "a": "No. CareStream builds a profile with eleven sections, such as life story and background, interests, likes and dislikes, daily routine and what helps when someone is upset. It is not a laid out keepsake. If you want a life story book for a resident to enjoy, you would make that separately."
+    },
+    {
+      "q": "Is it the same as the This is Me form from the Alzheimer's Society?",
+      "a": "No, and we would not want you to think so. Our profile covers similar ground, but it is our own form and sections. If you already use another this is me form for hospital stays, you can carry on."
+    },
+    {
+      "q": "How does my team use it?",
+      "a": "Staff can see the profile in the Staff Hub and can ask the hub assistant a short question. It answers only from the approved profile, keeps it brief, and says so plainly when something has not been recorded yet. It does not give clinical advice."
+    },
+    {
+      "q": "Can I see what we were told and by whom?",
+      "a": "Yes. Approved text carries the person's name and relationship, and there is a tab that groups each person's approved answers so you can check them against the profile."
+    },
+    {
+      "q": "Which plan is it on, and can I try it?",
+      "a": "Resident profiles are on Professional and above. There is a 14 day free trial, and the <a href=\"/pricing\">pricing page</a> shows how it works and which plan includes this. You can <a href=\"/register\">create an account</a> or <a href=\"/demo\">book a demo</a> to see it first."
+    }
+  ]
+ },
+ "limits": {
+  "heading": "Honest limits: a gathering tool, not a family account",
+  "cards": [
+    {
+      "title": "Nothing is automatic",
+      "body": "Answers do not reach staff by themselves. A manager has to read and approve each one, so someone needs to check the Approvals tab. You get an email when answers arrive, but they will wait if nobody acts."
+    },
+    {
+      "title": "It is a form, not a family space",
+      "body": "There is no family login, no messaging and no way for a relative to see the profile. Each link is a one off and cannot be reused once they have sent their answers."
+    },
+    {
+      "title": "It is not your care record",
+      "body": "The profile is about who the person is. It does not replace the care plan, risk assessments or clinical notes, and dietary needs belong in the care plan, not here. It is also on Professional and above."
+    }
+  ]
+ },
+ "read_next": [
+  "this-is-me-document",
+  "care-home-policies-the-complete-guide",
+  "dementia-care-training-in-the-uk"
+ ],
+ "faqs": {
+  "heading": "Life story work and family input, answered",
+  "groups": [
+    {
+      "group": "About life story work",
+      "items": [
+        {
+          "q": "What is life story work in a care home?",
+          "a": "It is the practice of finding out about a person's history, relationships, routines and preferences, so that care feels personal. For someone living with dementia it helps staff understand behaviour and start good conversations. You can read more in our <a href=\"/blog/this-is-me-document\">guide to the this is me document</a>."
+        },
+        {
+          "q": "Why involve a family life story rather than ask the resident alone?",
+          "a": "Relatives can fill gaps, especially where memory or speech is affected. They often know small things, like a favourite chair or a pet's name. Under the <a href=\"https://www.legislation.gov.uk/ukpga/2005/9/section/4\">Mental Capacity Act, section 4</a>, the people who care about someone should be consulted where practicable on what is in their best interests."
+        },
+        {
+          "q": "Is a life story book the same as a profile in CareStream?",
+          "a": "Not quite. A life story book is usually a keepsake with photos and pages that a resident and family enjoy together. A CareStream profile is a set of short written sections for staff to use every day. The two work well side by side."
+        }
+      ]
+    },
+    {
+      "group": "About the family form",
+      "items": [
+        {
+          "q": "Is there a this is me form relatives can fill in online?",
+          "a": "Yes, in the sense that relatives get a short online form with a question for each profile section. It is our own form, not the Alzheimer's Society leaflet. They complete it from a private link without logging in."
+        },
+        {
+          "q": "How long does the family link last?",
+          "a": "The emailed link works for 14 days. You can resend it or cancel it from the Family tab, and you can have up to 10 invitations open for each resident."
+        },
+        {
+          "q": "Can the family see what we approve?",
+          "a": "No. The page they use is only for sending answers, and each link is a one off. If you want to share the approved profile or a keepsake with them, you would do that yourselves."
+        },
+        {
+          "q": "What happens if a resident passes away or moves on?",
+          "a": "Marking them as passed away or moved on removes them from the hub and the assistant straight away, cancels any family links and rejects anything still waiting. The profile is archived for admins, with a retention period set in the system."
+        }
+      ]
+    }
+  ]
+ },
+ "guide": {
+  "heading": "How to do life story work well with families",
+  "lede": "A few habits make the difference between a profile that sits unread and one that changes how the team talks to someone. The first is to ask early, and the second is to ask well.",
+  "sections": [
+    {
+      "h3": "Ask in the first week, then keep it short",
+      "paragraphs": [
+        "Relatives are usually most willing to help soon after a move, when they are worried and want to be useful. Send the invitation within a day or two, and tell them they can answer as few or as many questions as they like.",
+        ""
+      ]
+    },
+    {
+      "h3": "Before you approve an answer",
+      "paragraphs": [
+        "Read each answer as a new night carer would. Edit anything that could upset another relative or reveal something private, and leave out medical or financial detail, which belongs elsewhere. You can read what the regulation expects in <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">regulation 9 on person-centred care</a>."
+      ],
+      "checklist": [
+        "Is it about who the person is, not their clinical care?",
+        "Is the wording respectful, now and in future?",
+        "Would a new carer know what to do with it?",
+        "Does it involve anyone else's private details?"
+      ]
+    },
+    {
+      "h3": "Close the loop with the team and the family",
+      "paragraphs": [
+        "Tell the key worker when a profile has been approved and show them how to ask the hub assistant. Thank the relative personally. A dementia awareness course such as <a href=\"/staff-training/dementia-awareness\">our own</a> helps staff see why these details matter, and the <a href=\"/staff-training/mental-capacity-act-and-dols\">Mental Capacity Act course</a> covers wishes and best interests."
+      ]
+    }
+  ],
+  "note": "This page describes how the software works and is not legal advice. Check your own policies and local guidance for how you share information about residents."
+ }
+}

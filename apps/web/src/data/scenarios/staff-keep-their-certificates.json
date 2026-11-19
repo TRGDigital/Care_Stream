@@ -1,0 +1,436 @@
+{
+ "slug": "staff-keep-their-certificates",
+ "status": "draft",
+ "order": 94,
+ "title": "A training certificate in the carer's name. <em>Theirs to download, yours to evidence.</em>",
+ "meta_title": "Training Certificate for Care Staff, in Their Name | CareStreamAI",
+ "meta_description": "Care staff pass a course and get a named training certificate to download. You keep the training records. See what it shows and what it does not.",
+ "eyebrow": "Scenario",
+ "lede": "A carer passes a course and wants something to show for it. Your inspector wants training records. A named training certificate, issued in the carer's name and kept on their record, serves both. <a href=\"/training-platform\">Training built from your own policies</a> sits alongside it, so the learning is checked as well as certified.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "From passing the course to holding the certificate",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Course completed and assessment passed",
+    "note": "Week 1",
+    "done": true
+   },
+   {
+    "label": "Short course feedback completed",
+    "note": "Week 1",
+    "done": true
+   },
+   {
+    "label": "Manager records the observed practical",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Certificate downloaded and saved by the carer",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/3325d21a-210c-4da9-93ad-e495aab1932c.webp",
+ "image_alt": "A carer proudly holds a printed certificate beside a smiling manager in a bright staff room, with a phone on the table showing a similar certificate",
+ "card_title": "Staff pass the course. What do they walk away with?",
+ "card_snippet": "A carer passes a course and wants proof. You want records for the inspector. CareStream issues a named certificate they can download, and keeps the record on your side.",
+ "primary_keyword": "training certificate",
+ "secondary_keywords": [
+  "cpd certificate",
+  "free care certificate",
+  "training records"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Short training from your policies, checked with questions, with wrong answers turned into short lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "The Care Certificate course",
+   "body": "Knowledge assessment online, then your own observed sign off before the certificate is issued.",
+   "action": "See the course",
+   "href": "/staff-training/care-certificate"
+  },
+  {
+   "title": "CQC and compliance",
+   "body": "Evidence that builds itself as staff train, ready when you are asked for it.",
+   "action": "See CQC and compliance",
+   "href": "/cqc-compliance"
+  }
+ ],
+ "intro": {
+  "heading": "They passed. Now where does the proof live?",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "Amara finished her moving and handling refresher on a quiet Tuesday and asked her manager a fair question. Where is my certificate? Last year it was a photocopy in a folder that nobody could find. This year she passed the assessment on her phone, completed a short feedback form and waited for her manager to watch her use the hoist. Once that was signed off, her named certificate appeared and she saved a copy. The manager has the record. Amara has the document. Here is how that plays out, and where the gaps are."
+ },
+ "trail": [
+  {
+   "when": "Tuesday",
+   "text": "Amara completes the course and passes the assessment on her phone.",
+   "kind": "ok"
+  },
+  {
+   "when": "Same day",
+   "text": "She answers a short feedback form about the course.",
+   "kind": "ok"
+  },
+  {
+   "when": "Thursday",
+   "text": "Her manager watches her use the hoist and records the sign off.",
+   "kind": "ok"
+  },
+  {
+   "when": "Friday",
+   "text": "The certificate is issued. Nobody has yet told Amara to save it.",
+   "kind": "gap"
+  },
+  {
+   "when": "Months later",
+   "text": "She hands in her notice for a job at another service.",
+   "kind": "gap"
+  },
+  {
+   "when": "Last day",
+   "text": "The manager deactivates her account. Her sign in stops that day.",
+   "kind": "gap"
+  },
+  {
+   "when": "Her new employer",
+   "text": "They ask for proof of her training. She has nothing saved.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“Show me the training records for your staff, including people who have left.”",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The certificate is only useful if someone has a copy.</b> The record on your side and the document on theirs are two different things. Here is how both are handled, and where the handover needs a habit.",
+ "why": {
+  "heading": "A training certificate and a training record do different jobs",
+  "sub": "One is for the carer to carry. The other is for you to evidence.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Carers want something of their own",
+    "body": "A named certificate with a date and a score tells a carer the effort counted. It also helps them show a future employer what they have done."
+   },
+   {
+    "icon": "tick",
+    "title": "Managers need the records",
+    "body": "A folder of photocopies is hard to search and easy to lose. Records held in one place are quicker to produce when someone asks."
+   },
+   {
+    "icon": "alert",
+    "title": "A certificate is not competence",
+    "body": "It shows a course was completed and an assessment passed. It does not show how someone works on the floor. That still needs your observation."
+   }
+  ]
+ },
+ "how": {
+  "heading": "From passing the course to holding the document.",
+  "sub": "This is how the certificate works, in the order a carer and a manager meet it. See also <a href=\"/uses/annual-training\">annual training</a> and <a href=\"/uses/face-to-face-training\">recording in person sessions</a>.",
+  "blocks": [
+   {
+    "heading": "A named certificate, issued when the right steps are done",
+    "bullets": [
+     "The carer completes the course and passes the assessment in the Staff Hub, on their own phone",
+     "On CPD courses they also complete a short feedback form before the certificate is available",
+     "Where the course needs an observed practical, such as the Care Certificate, the certificate waits until you record it"
+    ],
+    "tags": [
+     {
+      "label": "The Care Certificate course",
+      "href": "/staff-training/care-certificate"
+     },
+     {
+      "label": "Annual training",
+      "href": "/uses/annual-training"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Certificate, example only",
+     "stats": [
+      ["Score", "92%"],
+      ["Completed", "14 Oct"],
+      ["Renews", "14 Oct next year"]
+     ],
+     "blocks": [
+      [
+       "What the certificate shows, example",
+       [
+        ["Carer name", "Amara Okafor"],
+        ["Course", "Moving and Handling of People"],
+        ["Service", "Your service name and logo"],
+        ["Observed practical", "Signed off by your manager, with the date"]
+       ]
+      ]
+     ],
+     "caption": "Example only. The wording and figures on a real certificate come from the course and the carer's own results."
+    }
+   },
+   {
+    "heading": "The certificate says what it is, and what it is not",
+    "bullets": [
+     "It evidences that the named person completed the course and passed the assessment",
+     "CPD certified courses carry the CPD Certified mark and the CPD hours, as a CPD certificate should",
+     "It is not a government recognised qualification and does not certify competence to do a particular task. The employer remains responsible"
+    ],
+    "tags": [
+     {
+      "label": "CPD certified courses",
+      "href": "/staff-training"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Pending practical, example only",
+     "stats": [
+      ["Quiz", "Passed"],
+      ["Feedback", "Done"],
+      ["Practical", "Waiting"]
+     ],
+     "blocks": [
+      [
+       "What the carer sees, example",
+       [
+        ["Message", "Your certificate is issued once your manager records your observed competency assessment"],
+        ["Who acts next", "Manager"],
+        ["Then", "Certificate ready to view and download"]
+       ]
+      ]
+     ],
+     "caption": "Example only."
+    }
+   },
+   {
+    "heading": "Download it, print it, save it before the last day",
+    "bullets": [
+     "In the Staff Hub the carer opens the certificate and downloads it as a PDF or prints it",
+     "Once an account is deactivated the person can no longer sign in to the Staff Hub, so ask leavers to save their certificates first",
+     "Your own copy stays with the account's history on your side"
+    ],
+    "tags": [
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     },
+     {
+      "label": "Staff training",
+      "href": "/staff-training"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Leaver checklist, example only",
+     "stats": [
+      ["Certificates", "4"],
+      ["Saved by carer", "3"],
+      ["Still to save", "1"]
+     ],
+     "blocks": [
+      [
+       "Before the last day, example",
+       [
+        ["Moving and Handling", "Saved"],
+        ["Infection Prevention and Control", "Saved"],
+        ["Fire Safety", "Saved"],
+        ["Care Certificate", "Still to save"]
+       ]
+      ]
+     ],
+     "caption": "Example only. CareStream does not generate this checklist. It shows a habit we suggest."
+    }
+   },
+   {
+    "heading": "Your records, in one place",
+    "bullets": [
+     "Each completed course sits on the carer's record, with its score and date",
+     "Open a staff record to see their certificates, what is due and what has expired",
+     "Records support your <a href=\"/cqc-compliance\">CQC evidence</a>, alongside the rest of what you keep"
+    ],
+    "tags": [
+     {
+      "label": "CQC and compliance",
+      "href": "/cqc-compliance"
+     },
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Staff record, example only",
+     "stats": [
+      ["Complete", "21"],
+      ["Due soon", "3"],
+      ["Expired", "1"]
+     ],
+     "blocks": [
+      [
+       "Example staff record",
+       [
+        ["Moving and Handling of People", "Complete, renews in 9 months"],
+        ["Fire Safety", "Complete, renews in 4 months"],
+        ["Medication Administration", "Waiting for observation"]
+       ]
+      ]
+     ],
+     "caption": "Example only. Names and figures are illustrations."
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "What does my carer actually get when they pass?",
+    "a": "A named training certificate they open in the Staff Hub and download as a PDF or print. It shows their name, the course, your service's name and logo, the completion date, the renewal date and their score. On CPD certified courses it also shows the CPD Certified mark and the CPD hours."
+   },
+   {
+    "q": "Is it a CPD certificate?",
+    "a": "Our CPD certified courses issue a CPD certificate with the CPD hours on it. Courses you build yourself from your own policies are not CPD certified. They give a certificate of completion for your own records."
+   },
+   {
+    "q": "Are there free CPD certified courses?",
+    "a": "Yes. CPD certified courses, including the Care Certificate course and the annual refreshers, are free on every plan. The free plan is English only. See <a href=\"/staff-training\">the course library</a> for the list."
+   },
+   {
+    "q": "Does the free Care Certificate course give instant certificates?",
+    "a": "Not for every course. Where a course needs an observed practical, such as the Care Certificate, the certificate waits until you record the observation. The carer sees a clear message while they wait. See the <a href=\"/staff-training/care-certificate\">Care Certificate course</a>."
+   },
+   {
+    "q": "What happens to the certificate when someone leaves?",
+    "a": "Once you deactivate the account the person can no longer sign in, so they cannot open the Staff Hub to get the certificate. We do not promise lifetime access. Ask leavers to download their certificates before their last day. You keep the history on your side."
+   },
+   {
+    "q": "Can I email a carer their certificate?",
+    "a": "The certificate is opened by the carer in the Staff Hub, where they can download or print it. We do not send it to them as an attachment. You, as the manager, are emailed when a carer completes a course."
+   },
+   {
+    "q": "Does the certificate show someone is competent?",
+    "a": "No. It shows the course was completed and the assessment passed. For hands on skills, a competent person still observes the work. For some courses we hold the certificate until you have recorded that observation."
+   },
+   {
+    "q": "How do I try it?",
+    "a": "Create a free account at <a href=\"/register\">the sign up page</a>, or start the 14 day free trial on a paid plan. See <a href=\"/pricing\">the pricing page</a> for what each plan includes."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A certificate of completion, not a promise for life",
+  "cards": [
+   {
+    "title": "It does not give leavers lasting access",
+    "body": "The carer opens the certificate in the Staff Hub. When you deactivate the account, sign in stops. We have no public link or leaver account, so the habit of saving a copy is yours to build."
+   },
+   {
+    "title": "It does not prove competence",
+    "body": "The certificate shows a course and an assessment were completed. It is not a regulated qualification and not a pass from any regulator. Practical skills still need your observation."
+   },
+   {
+    "title": "It does not decide what an employer accepts",
+    "body": "A new employer decides what proof they want. A certificate helps, but another service may not accept it in place of its own checks."
+   }
+  ]
+ },
+ "read_next": [
+  "care-certificate-cpd-certified-course-from-carestream",
+  "cpd-accreditation-in-care-what-it-really-means-and-when-it-matters",
+  "how-do-you-record-in-person-training-so-it-counts-as-cqc-evidence"
+ ],
+ "faqs": {
+  "heading": "Certificates and records, answered",
+  "groups": [
+   {
+    "group": "About the certificate",
+    "items": [
+     {
+      "q": "What is a training certificate for care staff?",
+      "a": "It is a document that names the person, the course and the date they completed it. It shows they took part and passed. It does not replace your own check that they can do the task."
+     },
+     {
+      "q": "What is a CPD certificate?",
+      "a": "CPD stands for continuing professional development. A CPD certificate records that the learning came from a course certified as CPD, usually with the hours shown. Ours show the CPD hours on CPD certified courses. See our <a href=\"/blog/cpd-accreditation-in-care-what-it-really-means-and-when-it-matters\">guide to CPD accreditation in care</a>."
+     },
+     {
+      "q": "Is there a free care certificate course?",
+      "a": "Yes. The Care Certificate course is one of our free CPD certified courses and sits on every plan. Because it needs your observed sign off, the certificate comes after you record it. See <a href=\"/blog/care-certificate-cpd-certified-course-from-carestream\">the Care Certificate course explained</a>."
+     },
+     {
+      "q": "Where are the free CPD certified courses?",
+      "a": "In <a href=\"/staff-training\">the staff training library</a>. Every plan includes them, and the free plan is English only. Translation is on the paid plans."
+     },
+     {
+      "q": "Can staff take their certificate to a new job?",
+      "a": "They can download it as a PDF and share it. They need to do that while they can still sign in to the Staff Hub, so ask them before their last day. Each employer decides what it accepts."
+     },
+     {
+      "q": "How long does a certificate last?",
+      "a": "Courses have a renewal date, and the certificate shows it. Staff repeat annual courses once a year, so the training stays current."
+     }
+    ]
+   },
+   {
+    "group": "About records and inspections",
+    "items": [
+     {
+      "q": "What staff records do I have to keep?",
+      "a": "The regulations require records relating to people you employ to be kept securely. See <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17 on good governance</a>. It does not list courses or certificates, so decide what your service needs and keep it consistently."
+     },
+     {
+      "q": "What does the law say about staff training?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> says staff must receive the support, training, professional development, supervision and appraisal they need for their duties. It does not name courses. Your records show how you met it."
+     },
+     {
+      "q": "Will a certificate satisfy an inspector?",
+      "a": "It is one piece of evidence. Inspectors look for staff who are competent in their role, so pair certificates with supervision, observation and the follow up of wrong answers. See <a href=\"/cqc-compliance\">CQC and compliance</a>."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to handle certificates and training records",
+  "lede": "Certificates fail in two quiet ways. They go missing, or they are mistaken for proof of competence. A few habits cover both.",
+  "sections": [
+   {
+    "h3": "Make saving the certificate part of finishing the course",
+    "paragraphs": [
+     "When a carer passes, ask them to download the PDF there and then, or print it. A copy on their own phone or at home is theirs whatever happens to their account later. Do the same when someone gives notice, so nothing is left until the last day."
+    ]
+   },
+   {
+    "h3": "A short leaver routine for certificates",
+    "checklist": [
+     "When notice is given, ask the carer to open the Staff Hub and download every certificate.",
+     "Check their staff record to see which courses are complete and which are pending an observation.",
+     "Record any outstanding observation before the last day, so the certificate can be issued.",
+     "Deactivate the account on the last day, knowing the history stays on your side."
+    ]
+   },
+   {
+    "h3": "Keep the certificate and the observation apart in your head",
+    "paragraphs": [
+     "A certificate shows the course. Your observation shows the person at work. Keep both in your records, and record each in its own place, so you can show the inspector the whole picture."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> A certificate shows completion. Keep your observation, supervision and follow up records beside it, so you can show the person is competent as well as trained."
+ }
+}

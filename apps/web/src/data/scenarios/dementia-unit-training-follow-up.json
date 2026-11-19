@@ -1,0 +1,404 @@
+{
+ "slug": "dementia-unit-training-follow-up",
+ "status": "draft",
+ "order": 91,
+ "title": "The dementia care training went well. <em>Does everyone on the unit know the routines?</em>",
+ "meta_title": "Dementia Care Training Follow Up for Units | CareStreamAI",
+ "meta_description": "Staff briefed on your dementia unit, but did it land? Allocate dementia care training from your own policies and turn wrong answers into short lessons.",
+ "eyebrow": "Scenario",
+ "lede": "Your unit team has been briefed, and the policy has been updated. CareStream does not replace the briefing. It adds <a href=\"/training-platform\">dementia care training built from your own policies</a>, so you can see who understood it, including the carers who only cover the unit now and then.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After the unit briefing",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Unit team briefed on the new routines",
+    "note": "Week 1",
+    "done": true
+   },
+   {
+    "label": "Dementia care policy updated and shared",
+    "note": "Week 1",
+    "done": true
+   },
+   {
+    "label": "Cover staff checked on the same points",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Gaps closed with a short lesson",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/8d9644a8-87d5-4678-b8ca-353d24fc8dc2.webp",
+ "image_alt": "A care assistant sits beside an older resident looking through a photo album in a calm dementia friendly lounge with soft colours and clear signs",
+ "card_title": "New unit routines. Does everyone on the floor know them?",
+ "card_snippet": "You briefed the unit team and updated the policy. Now check it landed, including for cover staff from other floors. Short training from your own policies, with a lesson for every wrong answer.",
+ "primary_keyword": "dementia care training",
+ "secondary_keywords": [
+  "dementia training",
+  "dementia unit",
+  "dementia care home"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Short training from your own policies, with a lesson for every wrong answer.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Training in over 60 languages",
+   "body": "Lessons for carers in the language they think in. Paid plans.",
+   "action": "See languages",
+   "href": "/languages"
+  },
+  {
+   "title": "Care audits",
+   "body": "Built in audits, including Dementia Care Environment, free on every plan.",
+   "action": "See the audits",
+   "href": "/care-audits/dementia-care-environment"
+  }
+ ],
+ "intro": {
+  "heading": "The unit is ready. Is the team?",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "The first floor has been refurbished as a specialist unit, with softer colours, clear signs and a quieter lounge. The unit lead ran two handover huddles on the new routines, and the home's dementia care policy was updated to match. A week later, carers from other floors begin covering shifts there, and a new starter on nights learns the routine from whoever is nearest. The manager has a revised policy and a huddle note. Nothing shows who understood what to do. Here is how that plays out."
+ },
+ "trail": [
+  {
+   "when": "Opening week",
+   "text": "The first floor reopens with new signs and a calmer lounge.",
+   "kind": "ok"
+  },
+  {
+   "when": "Handover",
+   "text": "The unit lead runs two huddles on mealtimes, evenings and what each resident likes.",
+   "kind": "ok"
+  },
+  {
+   "when": "Same week",
+   "text": "The home's dementia care policy is updated and shared with the unit team.",
+   "kind": "ok"
+  },
+  {
+   "when": "A week later",
+   "text": "Carers from other floors start covering shifts on the unit.",
+   "kind": "gap"
+  },
+  {
+   "when": "On nights",
+   "text": "A new starter learns the routine from whoever happens to be nearest.",
+   "kind": "gap"
+  },
+  {
+   "when": "Who read it",
+   "text": "Nobody can say who read the new policy or took in the huddle.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "A policy version and a huddle note. Nothing about what each person understood.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“How do you know staff on the unit can support each person?” A huddle note is not an answer.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The briefing was never the problem.</b> The gap sits between what the unit lead said and what each carer can do on the floor. Here is how CareStream closes it, using your own policies.",
+ "why": {
+  "heading": "A briefing reaches the people in the room, not the people who cover",
+  "sub": "A dementia unit depends on a team that shares the same approach, shift after shift.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Cover staff miss the huddle",
+    "body": "People from other floors, bank hours or an extra shift were not in the room. They meet the unit's routines for the first time on the shift itself."
+   },
+   {
+    "icon": "tick",
+    "title": "A policy update is not a check",
+    "body": "Sending out a revised policy tells people it exists. It does not tell you whether anyone could say what it asks them to do."
+   },
+   {
+    "icon": "alert",
+    "title": "Chasing it by hand does not scale",
+    "body": "Quizzing every carer yourself, one tea round at a time, is a job nobody has time for. So the gaps stay where they are."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, the follow up out.",
+  "sub": "This is the <a href=\"/training-platform\">training built from your own policies</a> feature, in the order a manager and a carer meet it. It is the same loop as <a href=\"/uses/face-to-face-training\">following up a face to face session</a>, set on one unit. See also <a href=\"/uses/adhoc-training\">adhoc training after an incident</a>.",
+  "blocks": [
+   {
+    "heading": "Allocate dementia training to the unit team",
+    "bullets": [
+     "In the Training screen, pick the Dementia Awareness module. Lessons draw on your own dementia policies where they cover a point, and on general good practice where they do not",
+     "Preview and edit it before anyone sees it, then tick the unit team and anyone who covers the unit. There is no unit or role picker, so you choose the people",
+     "Staff complete it in the Staff Hub, on their own phone, with an optional due date"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Dementia awareness course",
+      "href": "/staff-training/dementia-awareness"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Dementia Awareness",
+     "questions": [
+      "A resident on the unit cannot find their room. What is a kind first step?",
+      "Where would you look to find what helps a resident feel settled?",
+      "Why does it matter how you greet a resident before you help them?"
+     ],
+     "staff_count": 18
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson on that exact point",
+    "bullets": [
+     "The wrong answer goes into the carer's Follow-up tab in the Staff Hub, and they get an email, at most once a day, in English",
+     "They choose Learn &amp; retry, a short lesson (why it matters, what to remember, a picture of the situation) then a fresh question, or Just retry the same question, as often as they need",
+     "Nothing is sent to you each time. A carer who slips is not reported, they simply get a second look at the point"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Dementia Awareness",
+     "question": "A resident on the unit cannot find their room. What is a kind first step?",
+     "why": "Being lost in a familiar building can be frightening. A calm, kind response helps the person feel safe, and pointing or correcting rarely does.",
+     "remember": [
+      "Use their name and stay at their side",
+      "Walk with them rather than pointing",
+      "Tell a senior if it keeps happening"
+     ],
+     "picture": "It is mid morning. A resident stands in the corridor looking at three doors that seem the same."
+    }
+   },
+   {
+    "heading": "Staff who read more easily in another language",
+    "bullets": [
+     "A carer who answers wrongly because of a missed word can open the lesson in their second language",
+     "Your admin sets that language on the staff record, and the carer switches to it in the hub",
+     "Translation is on the paid plans only, and the reminder emails stay in English"
+    ],
+    "tags": [
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish"
+    }
+   },
+   {
+    "heading": "See the gaps across the unit, and whether they closed",
+    "bullets": [
+     "The Knowledge gaps view shows open gaps, staff affected, the most missed questions and the weakest topics, so you can see where the briefing needs another look",
+     "See how gaps are being closed, and mark a person's record as reviewed after a conversation",
+     "A Monday digest email brings the picture to you without you asking for it"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 6,
+      "affected": 5,
+      "closed": 14,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Finding what helps a resident settle",
+       "4 staff"
+      ],
+      [
+       "Greeting before helping",
+       "3 staff"
+      ],
+      [
+       "Who to tell about a change",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Dementia Awareness",
+       "6 gaps"
+      ],
+      [
+       "Safeguarding Adults",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "Is a specialist unit a separate setting in CareStream?",
+    "a": "No. A unit sits inside your residential or nursing care home. CareStream does not hold a separate unit or wing for staff, so when you allocate training you tick the people you want, such as the unit team and anyone who covers it."
+   },
+   {
+    "q": "How would I know whether my unit team understood the briefing?",
+    "a": "After the briefing you allocate short training on the topic, <a href=\"/training-platform\">built from your own policies</a>. Each carer completes it in the Staff Hub on their own phone, and their answers are scored, so you see who understood and who needs another look."
+   },
+   {
+    "q": "What happens when someone gets a question wrong?",
+    "a": "It goes into their Follow-up tab in the hub, and they get an email, at most once a day. They choose Learn &amp; retry, a short lesson on that point followed by a fresh question, or Just retry the same question. They can retry as often as they need."
+   },
+   {
+    "q": "Is the lesson generic, or about how our unit works?",
+    "a": "It draws on your own policies where they cover the point. Where they do not, it falls back on general good practice, which is a prompt to improve the policy. You can preview and edit the module before you allocate it."
+   },
+   {
+    "q": "Can I give cover staff the same check?",
+    "a": "Yes. Tick them when you allocate. It does not matter which floor they usually work on. They complete it in the Staff Hub like everyone else, and their answers show in the same view."
+   },
+   {
+    "q": "Will you tell me every time a carer gets one wrong?",
+    "a": "No. Nothing alerts you on each wrong answer. You see the pattern in the Knowledge gaps view, and the Monday digest email brings it to you each week. That shows whether one person needs a conversation or the briefing needs another go."
+   },
+   {
+    "q": "Does this replace dementia training from a trainer?",
+    "a": "No. Keep your sessions and your observation of practice. CareStream checks what people took in afterwards. It also offers a <a href=\"/staff-training/dementia-awareness\">dementia awareness course</a> for the topic itself, and it gives no clinical advice."
+   },
+   {
+    "q": "How do I try it?",
+    "a": "You can start with a 14 day free trial on the paid plans, or <a href=\"/register\">create a free account</a> to look around first. Adhoc training is on the paid plans, so see the <a href=\"/pricing\">pricing page</a> for what each plan includes."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A check on understanding, not a substitute for good care",
+  "cards": [
+   {
+    "title": "It does not give clinical advice",
+    "body": "Lessons teach good practice and your own policies. Decisions about a person's care stay with your care plans, your seniors and the professionals involved."
+   },
+   {
+    "title": "It does not alert you to every wrong answer",
+    "body": "The picture reaches you through the Knowledge gaps view and the Monday digest, not as a message each time someone slips. It also does not assign by unit, so you tick the people."
+   },
+   {
+    "title": "Some parts depend on your plan",
+    "body": "Adhoc training and translation are on the paid plans. The free plan does not include them. Resident profiles are on Professional and above, so see the pricing page for which plan includes what."
+   }
+  ]
+ },
+ "read_next": [
+  "dementia-care-training-in-the-uk",
+  "policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers",
+  "this-is-me-document"
+ ],
+ "faqs": {
+  "heading": "Questions about dementia care training and follow up",
+  "groups": [
+   {
+    "group": "About the training",
+    "items": [
+     {
+      "q": "What should dementia care training for a unit cover?",
+      "a": "That is for you and your policies to decide, and it should fit the people you support. Many homes start with understanding dementia, communication, person centred routines and knowing who to tell about a change. The <a href=\"/staff-training/dementia-awareness\">dementia awareness course</a> is a six lesson course with a scored assessment and a certificate for each learner."
+     },
+     {
+      "q": "Is dementia training for care staff different on a specialist unit?",
+      "a": "The need is the same, but a unit asks more of a team that shares one approach. Your own policies say how your unit does things, and a check after the briefing shows whether each carer, including cover staff, can say what they would do."
+     },
+     {
+      "q": "How does a dementia care home follow up its dementia training?",
+      "a": "A dementia care home, or a unit within a larger home, can allocate short training after a briefing, then watch the Knowledge gaps view for the questions most often missed. Wrong answers become short lessons the carer opens themselves."
+     },
+     {
+      "q": "Can staff do the follow up on their own phones?",
+      "a": "Yes. The Staff Hub is an installable app that works on a carer's own phone. They open the module, answer the questions and see anything to revisit in their Follow-up tab."
+     },
+     {
+      "q": "Does CareStream work for a single unit and not only a whole home?",
+      "a": "CareStream sees your home as one service. You choose which staff to allocate each module to, so a unit team is simply the people you tick. It does not hold units or wings as separate groups."
+     }
+    ]
+   },
+   {
+    "group": "About records and inspections",
+    "items": [
+     {
+      "q": "What does the law say about training for staff?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> says staff must receive the support, training, professional development, supervision and appraisal that is necessary to carry out their duties. It does not list courses, so each provider decides what its staff need."
+     },
+     {
+      "q": "What does CQC say about monitoring training?",
+      "a": "The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-18\">CQC guidance on Regulation 18</a> says that learning and development, and the required training completed, should be monitored. Questions, lessons and results in one place help you do that."
+     },
+     {
+      "q": "What are \"This is me\" profiles and how do they fit in?",
+      "a": "On Professional and above, you can record each resident's life story, likes and what helps when they are upset. Staff can ask the assistant about a resident from that profile. It is about who the person is and is not a care record. See the <a href=\"/blog/this-is-me-document\">guide to the This is me document</a>."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to follow up dementia care training on a dementia unit",
+  "lede": "Dementia care training does not end when the briefing does. A briefing ends, a policy is shared and the shift carries on. The follow up is where a manager learns whether it worked, including for the people who were not in the room.",
+  "sections": [
+   {
+    "h3": "Check the people who were not in the room",
+    "paragraphs": [
+     "On a unit, the team is rarely the same two shifts running. Cover staff, bank hours and new starters meet the routines on the shift itself. Write down who actually works on the unit over a month, not only who is named for the unit, and give each of them the same short check.",
+     "Keep the questions practical. Ask what a carer would do first, where they would find what helps a resident, and who they would tell. Where a policy has changed, ask what the policy now asks. The <a href=\"/blog/policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers\">four question framework</a> can help you decide who needs it."
+    ]
+   },
+   {
+    "h3": "Four checks that fit a busy dementia unit",
+    "checklist": [
+     "Within a week of a briefing or policy change: allocate short training on the topic, built from your own policies.",
+     "Whenever an answer is wrong: the carer opens a short lesson on that point, then answers a fresh question.",
+     "Each month: look at the most missed questions and the weakest topics in the Knowledge gaps view.",
+     "On the floor: watch real practice, such as how staff greet people. The <a href=\"/care-audits/dementia-care-environment\">Dementia Care Environment audit</a> covers signage, lighting and daily experience."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the questions, the lessons and the results together with your policy, so you can show understanding as well as attendance."
+ }
+}

@@ -1,0 +1,391 @@
+{
+ "slug": "domiciliary-care-training-follow-up",
+ "status": "draft",
+ "order": 88,
+ "title": "Domiciliary care training when your carers are never in one room. <em>How do you know it stuck?</em>",
+ "meta_title": "Domiciliary Care Training Follow Up | CareStreamAI",
+ "meta_description": "Your carers work alone across dozens of homes. Follow up domiciliary care training with short checks on their own phones, built from your own policies.",
+ "eyebrow": "Scenario",
+ "lede": "Domiciliary care training is hard to follow up when your carers are out on rounds and rarely in the same room. After a session or a policy change you allocate a short module built from <a href=\"/training-platform\">your own policies</a>. Each carer does it on their own phone, between visits, and a wrong answer becomes a short lesson on that exact point.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After the team briefing",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Briefing held at the office",
+    "note": "Tuesday",
+    "done": true
+   },
+   {
+    "label": "Short module allocated to every carer",
+    "note": "Wednesday",
+    "done": true
+   },
+   {
+    "label": "Answers checked, wrong ones followed up",
+    "note": "This week",
+    "done": false
+   },
+   {
+    "label": "Gaps seen across the whole round list",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/c8e7d24c-c95d-4bd3-8ca4-90998cfd1cd5.webp",
+ "image_alt": "A home carer in uniform standing at a front door in daylight, holding her phone, with her car parked behind her on a residential street",
+ "card_title": "Your carers work alone in other people's homes. How do you follow up their training?",
+ "card_snippet": "Home carers are rarely in one room, so a briefing reaches some and misses others. Allocate a short module from your own policies, and a wrong answer becomes a lesson on their own phone.",
+ "primary_keyword": "domiciliary care training",
+ "secondary_keywords": [
+  "domiciliary care cqc",
+  "domiciliary care compliance"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Ad hoc training from your policies, and wrong answers that become short lessons on the carer's own phone.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Training after a session or an incident",
+   "body": "Turn a briefing, a near miss or a policy change into a short module that every carer can finish between visits.",
+   "action": "See ad hoc training",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "Home care audits",
+   "body": "Audits for infection prevention and PPE, and for the home environment and client risk, ready to use.",
+   "action": "See the audit library",
+   "href": "/care-audits"
+  }
+ ],
+ "intro": {
+  "heading": "You cannot gather carers who are never in the same place.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A home care manager changes how the service records a refused medication visit. She holds two short briefings at the office, one at nine and one at four, to catch as many carers as she can. Eleven come. Nineteen are out on rounds, and five more are on a different patch across the county. She posts the new steps to the team and asks everyone to read them. Weeks later she cannot say who read it, who understood it, or what a carer will actually do when a client says no at the door. Here is how that plays out."
+ },
+ "trail": [
+  {
+   "when": "Monday",
+   "text": "The manager changes the steps for a refused medication visit.",
+   "kind": "ok"
+  },
+  {
+   "when": "Tuesday",
+   "text": "Two office briefings are held, at nine and at four.",
+   "kind": "ok"
+  },
+  {
+   "when": "Tuesday evening",
+   "text": "Eleven carers attend. The new steps go out to everyone else.",
+   "kind": "ok"
+  },
+  {
+   "when": "A week later",
+   "text": "Nineteen carers were on rounds. Nobody can say who has seen the steps.",
+   "kind": "gap"
+  },
+  {
+   "when": "Phone messages",
+   "text": "A few carers replied \"thanks\". A reply is not understanding.",
+   "kind": "gap"
+  },
+  {
+   "when": "Another patch",
+   "text": "Five carers across the county rarely come in. They learn from each other in the car park.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "Eleven signatures and a pile of thumbs up. Nothing about the other nineteen.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“What do you do if a client refuses their medication?” The answer depends on who is asked.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "Domiciliary care is delivered out of sight, one home at a time. The training follow up has to reach a carer where she actually is, which is usually on a doorstep with a phone in her hand.",
+ "why": {
+  "heading": "When nobody shares a room, a briefing only reaches some of the team",
+  "sub": "The follow up has to travel to the carer, because the carer cannot travel to the office.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Lone working means nobody checks the room",
+    "body": "In a residential service a manager can look around a group and see who looks lost. In domiciliary care there is no room, and no colleague beside the carer when she has to put new guidance into practice."
+   },
+   {
+    "icon": "tick",
+    "title": "Reading a message is not understanding it",
+    "body": "A staff message, a newsletter or a signed note shows what was sent. It does not show whether the carer took in the point, or what she would do alone in a client's home."
+   },
+   {
+    "icon": "alert",
+    "title": "Chasing eighty carers by phone does not scale",
+    "body": "Ringing round after a policy change is slow, and it only proves a conversation happened. Without a quick check per carer, gaps stay open until a visit goes wrong."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, the follow up out, on every carer's phone.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a carer meet it. See also <a href=\"/uses/adhoc-training\">turning an incident or a change into ad hoc training</a>.",
+  "blocks": [
+   {
+    "heading": "Allocate a short module on the topic, built from your own policies",
+    "bullets": [
+     "After the briefing or the policy change, pick the topic module in the Training screen and choose which carers should take it",
+     "CareStream builds the lesson and the questions from your own policies where they cover the topic, with general good practice as the fallback. You can edit and preview them first",
+     "Carers complete it in the Staff Hub, on their own phone, with an optional due date, so it fits around their rounds"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Medication Administration",
+     "questions": [
+      "A client refuses their medication at the door. What do you do first?",
+      "Who do you tell, and when, if a dose is refused or missed?",
+      "What do you record before you leave the visit?"
+     ],
+     "staff_count": 30
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson, whenever the carer has a minute",
+    "bullets": [
+     "The wrong answer goes straight into the carer's Follow-up tab in the Staff Hub, and she gets an email to say so, at most once a day and in English",
+     "She chooses Learn &amp; retry, a short lesson (why it matters, what to remember, a realistic situation) then a fresh question, or Just retry the same question",
+     "She can do it in the car between visits, as often as she needs, and the follow up clears once she gets it right"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Medication course",
+      "href": "/staff-training/medication-administration-and-competency"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Medication Administration",
+     "question": "A client refuses their medication at the door. What do you do first?",
+     "why": "You must not force a client to take medication. Respect the refusal, then follow your service's steps for reporting and recording it.",
+     "remember": [
+      "Do not force or hide medication",
+      "Report the refusal as your policy says",
+      "Record what happened and what you did"
+     ],
+     "picture": "You arrive for the evening call. The client turns away and says she does not want her tablets tonight."
+    }
+   },
+   {
+    "heading": "Staff learn in the language they think in",
+    "bullets": [
+     "A carer who gets a question wrong because of a missed word can open the lesson in her own language",
+     "Your admin sets her second language, and she switches to it in the hub",
+     "Translation is part of the paid plans, and the reminder emails stay in English"
+    ],
+    "tags": [
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Romanian"
+    }
+   },
+   {
+    "heading": "See the gaps across every round, and whether they closed",
+    "bullets": [
+     "The Knowledge gaps view shows the most missed questions and the weakest topics, so you see where the guidance needs another look",
+     "See how gaps are being closed, and mark a carer's record as reviewed after a conversation",
+     "A Monday digest email, so the picture reaches you without a round of phone calls"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 9,
+      "affected": 7,
+      "closed": 21,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Refused medication at the door",
+       "5 staff"
+      ],
+      [
+       "Who to call when a client does not answer",
+       "3 staff"
+      ],
+      [
+       "Recording a missed dose",
+       "3 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Medication Administration",
+       "6 gaps"
+      ],
+      [
+       "Lone Working",
+       "3 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions home care managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "My carers are never together. How can I train them at all?",
+    "a": "You do not need them together. You allocate a short module in the Training screen and each carer finishes it in the Staff Hub, an installable app on her own phone. She can do it before a round, in the car between visits or at home, and you set an optional due date."
+   },
+   {
+    "q": "What happens when a carer gets a question wrong?",
+    "a": "It goes into her Follow-up tab in the hub, and she gets an email, at most once a day and in English. She chooses Learn &amp; retry, a short lesson on that exact point followed by a fresh question, or Just retry the same question. She can retry as often as she needs. Nobody has to ring her."
+   },
+   {
+    "q": "Can I send a briefing and then check it landed?",
+    "a": "Yes, but it is a manual step. A briefing or a policy change does not trigger anything on its own. You choose the topic module, tick the carers who need it and allocate it. If the briefing was a face to face session, the face to face router for sending a catch up module is on the Professional plan and above."
+   },
+   {
+    "q": "Some of my carers speak English as a second language. Does that matter?",
+    "a": "It can. A carer may understand the topic well and still miss a word under pressure. She can open the lesson in <a href=\"/languages\">her own language</a>, so a wrong answer points to a knowledge gap and not a vocabulary gap. Translation is on the paid plans only."
+   },
+   {
+    "q": "What do I see across the team?",
+    "a": "The Knowledge gaps view in Analytics shows open gaps, how many carers are affected, gaps closed in the last 30 days, the most missed questions and the weakest topics. A digest arrives on Monday. Nothing alerts you each time a carer gets a question wrong, so it is a picture to review, not a stream of messages."
+   },
+   {
+    "q": "Does this help with domiciliary care compliance and the CQC?",
+    "a": "It gives you a record of what each carer was asked, what she got wrong, the lesson she was given and whether it then landed. That sits alongside the rest of your <a href=\"/cqc-compliance\">CQC evidence</a>. It is not a rating or a regulator record, and it does not replace observing a carer's practice."
+   },
+   {
+    "q": "Can I try it before I commit?",
+    "a": "Yes. There is a 14 day free trial on the paid plans, and you can <a href=\"/register\">create a free account</a> to look around. Ad hoc training is on the paid plans, so check the <a href=\"/pricing\">pricing page</a> for which plan suits your size."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A way to check understanding, not a replacement for watching a carer work",
+  "cards": [
+   {
+    "title": "It cannot observe practice in a client's home",
+    "body": "A carer who uses a hoist, gives medication or supports a transfer still needs a competent person to watch her do it. CareStream checks what she knows and keeps the record. It does not see the visit."
+   },
+   {
+    "title": "It does not alert you to every wrong answer",
+    "body": "The picture reaches you through the Knowledge gaps view and the Monday digest, not as a message each time someone slips. Nothing escalates automatically if a retry is wrong too."
+   },
+   {
+    "title": "Nothing starts on its own, and some parts need a paid plan",
+    "body": "A briefing does not trigger a module, so you allocate it yourself. Ad hoc training and translation are on the paid plans, and the face to face router is Professional and above. The free plan does not include ad hoc training."
+   }
+  ]
+ },
+ "read_next": [
+  "policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers",
+  "face-to-face-training-in-care-what-actually-has-to-be-in-the-room",
+  "domiciliary-care-policies-and-procedures"
+ ],
+ "faqs": {
+  "heading": "Domiciliary care training and CareStream, answered",
+  "groups": [
+   {
+    "group": "About the training",
+    "items": [
+     {
+      "q": "How do you follow up domiciliary care training when staff work alone?",
+      "a": "Allocate a short module on the topic after the session or the policy change. Each carer completes it on her own phone in the Staff Hub, and a wrong answer goes into her Follow-up tab as a short lesson. You do not need to gather anyone in a room."
+     },
+     {
+      "q": "Where does the training come from?",
+      "a": "From your own policies where they cover the topic, with general good practice as the fallback. You pick the topic module, then edit and preview it before you allocate it. You choose the topic, not a single policy or section."
+     },
+     {
+      "q": "How soon after a briefing should the check go out?",
+      "a": "Within a few days is a sensible rule: soon enough that the change is fresh, late enough to show what stuck. You choose when to allocate it and you can set a due date. The <a href=\"/blog/policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers\">four question framework</a> helps you decide who needs it."
+     }
+    ]
+   },
+   {
+    "group": "About the CQC and compliance",
+    "items": [
+     {
+      "q": "What does the CQC expect for domiciliary care training?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> says staff must receive the appropriate support, training, professional development, supervision and appraisal necessary to carry out the duties they are employed to perform. It does not list courses, so each provider decides what its carers need and must be able to show it."
+     },
+     {
+      "q": "How do inspectors look at domiciliary care CQC training evidence?",
+      "a": "The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-18\">CQC guidance on Regulation 18</a> says staff should be supervised until they show the competence their role needs, and training needs should be reviewed over time. A record of questions, lessons and results helps show that. See also our guide to <a href=\"/cqc-staff-questions\">staff questions inspectors ask</a>."
+     },
+     {
+      "q": "Does CareStream make us compliant?",
+      "a": "No. CareStream is not a pass, a rating or a regulator record. It helps you keep organised evidence of training and follow up, so domiciliary care compliance is something you can show and not only describe. The judgement remains with your manager and the inspector."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to follow up training in a home care service",
+  "lede": "Domiciliary care training does not end at the office door. When carers work alone across many homes, the follow up has to be small, quick and easy to do on a phone.",
+  "sections": [
+   {
+    "h3": "Keep the check short and close to the change",
+    "paragraphs": [
+     "A policy change, a near miss or a refresher briefing is the right moment to check understanding. Keep the check to a few questions on one topic, so a carer can finish it between visits.",
+     "Where a point needs hands on practice, such as moving and handling in the home, pair the check with an observed visit. Home specific audits such as <a href=\"/care-audits/home-care-infection-ppe\">home care infection prevention and PPE</a> and <a href=\"/care-audits/home-environment-client-risk\">home environment and client risk</a> give you a structured way to see practice, not only knowledge."
+    ]
+   },
+   {
+    "h3": "Four checks that fit a spread out team",
+    "checklist": [
+     "Within a week: allocate a short module on the topic of the briefing or the change, built from your policies.",
+     "Whenever an answer is wrong: the carer opens a short lesson on that point, then a fresh question.",
+     "Each week: look at the Monday digest and the most missed questions across your rounds.",
+     "On the next spot check or supervision: observe one example for any skill that needs hands on practice."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the questions, the lessons and the results together, so you can show understanding as well as attendance, even for carers who were never in the room."
+ }
+}

@@ -1,0 +1,313 @@
+{
+ "slug": "nursing-home-training-follow-up",
+ "status": "draft",
+ "order": 87,
+ "title": "Nursing home training for nurses and care assistants alike. <em>Did the same message reach everyone?</em>",
+ "meta_title": "Nursing Home Training Follow Up for Your Team | CareStreamAI",
+ "meta_description": "Nurses and care assistants hear the same session but take away different things. Follow up with short training from your own policies and close the gaps.",
+ "eyebrow": "Scenario",
+ "lede": "Good nursing home training reaches the registered nurse on days and the care assistant on nights alike. After a session or a policy change, you allocate <a href=\"/training-platform\">short training built from your own policies</a>, and a wrong answer becomes a short lesson on that exact point. The session stays yours. This is the check that follows it.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After the pressure care refresher",
+  "pill": "Illustration",
+  "rows": [
+   { "label": "Refresher run at handover", "note": "Tuesday", "done": true },
+   { "label": "Names ticked off the list", "note": "Tuesday", "done": true },
+   { "label": "Understanding checked", "note": "Not yet", "done": false },
+   { "label": "Gaps closed, nurses and carers", "note": "Not yet", "done": false }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/d79e259a-c9f8-46a8-ab83-8885371fdbaa.webp",
+ "image_alt": "A registered nurse and a care assistant reviewing a tablet together at a nurses' station in a bright nursing home",
+ "card_title": "Nurses and care assistants heard the same session. Did it land?",
+ "card_snippet": "In a nursing home the team is mixed, the shifts are round the clock and the risk is clinical. Allocate short training from your own policies after a session, and a wrong answer becomes a short lesson.",
+ "primary_keyword": "nursing home training",
+ "secondary_keywords": [
+  "nursing home compliance",
+  "care home compliance"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Ad hoc training from your policies, a check after every session, and wrong answers that become short lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Turn an incident into adhoc training",
+   "body": "When something happens on the floor, allocate a short module on that topic the same week.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "CQC and compliance",
+   "body": "Evidence that builds itself from real use, and a readiness report for your next inspection.",
+   "action": "See CQC and compliance",
+   "href": "/cqc-compliance"
+  }
+ ],
+ "intro": {
+  "heading": "The clinical lead taught it once. Two teams heard it differently.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "The tissue viability lead, a registered nurse, runs a twenty minute refresher on pressure care at the Tuesday handover after the policy was reviewed. Three nurses and five care assistants listen, and the names go on the list. Nights are not there. Over the next fortnight the nurse in charge notices that the care assistants ask her small questions the session covered, and one new nurse has been doing it the way her last employer did. Nothing is wrong yet. But the manager cannot say who took in what, and the team is mixed on purpose."
+ },
+ "trail": [
+  { "when": "Tuesday handover", "text": "The tissue viability lead runs a short pressure care refresher.", "kind": "ok" },
+  { "when": "In the room", "text": "Three nurses and five care assistants listen. Questions are asked.", "kind": "ok" },
+  { "when": "End of session", "text": "The names go on the list. The policy is pinned in the office.", "kind": "ok" },
+  { "when": "Ten days later", "text": "Care assistants keep asking the nurse in charge things the session covered.", "kind": "gap" },
+  { "when": "A new registered nurse", "text": "Joined last month and still follows her old employer's routine.", "kind": "gap" },
+  { "when": "The night team", "text": "Four care assistants and a nurse who were not in the room.", "kind": "gap" },
+  { "when": "What the manager has", "text": "A list of names. No view of who understood what.", "kind": "gap" },
+  { "when": "Inspection day", "text": "“How do you know your nursing and care staff are competent?” A list is not an answer.", "kind": "end" }
+ ],
+ "trail_close": "<b>The refresher was sound. The gap is what follows it.</b> Here is how CareStream follows up the session, for nurses and care assistants, from your own policies.",
+ "why": {
+  "heading": "A mixed team hears one session in two different ways",
+  "sub": "Registered nurses and care assistants carry different duties on the same shift, so the same words land differently.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Different roles, one session",
+    "body": "A nurse hears a clinical routine. A care assistant hears what to notice and who to tell. Nobody checks that each has the part they need."
+   },
+   {
+    "icon": "tick",
+    "title": "Shifts that rarely overlap",
+    "body": "Nights, weekends and new starters miss the room. Without a check, whole parts of the team hold last year's version of the policy."
+   },
+   {
+    "icon": "alert",
+    "title": "Risk is clinical and constant",
+    "body": "A small gap in understanding can sit unseen for weeks on a unit where residents are unwell. That is why nursing home compliance leans so hard on competence, not attendance."
+   }
+  ]
+ },
+ "how": {
+  "heading": "From the session to the evidence, step by step.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a carer meet it. See also <a href=\"/uses/face-to-face-training\">recording in person sessions</a> and <a href=\"/how-it-works\">how CareStream works</a>.",
+  "blocks": [
+   {
+    "heading": "Allocate a short module on the topic, built from your own policies",
+    "bullets": [
+     "In the Training screen, pick the topic module that matches the session, then tick the staff you want to include, nurses and care assistants together",
+     "CareStream builds the lesson and questions from your own policies where they cover the topic, with general good practice as the fallback, and you edit and preview before anyone sees it",
+     "Staff complete it in the Staff Hub, an app on their own phone, with an optional due date"
+    ],
+    "tags": [
+     { "label": "Training built from your own policies", "href": "/training-platform" },
+     { "label": "Adhoc training", "href": "/uses/adhoc-training" }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Pressure care and skin integrity",
+     "questions": [
+      "A resident's skin looks different from yesterday. What do you do first?",
+      "Where is a change to a resident's repositioning routine recorded in our home?",
+      "Who do you tell during a night shift if you are concerned?"
+     ],
+     "staff_count": 14
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson on that exact point",
+    "bullets": [
+     "The wrong answer goes straight into the carer's Follow-up tab in the Staff Hub, and they get an email, at most one a day, in English",
+     "They choose Learn &amp; retry, a short lesson with a fresh question, or Just retry the same one, as often as they need. It is information, not a mark against them",
+     "Nothing is sent to you each time someone slips, and nothing escalates when a retry is wrong"
+    ],
+    "tags": [
+     { "label": "Wrong answers become lessons", "href": "/training-platform" },
+     { "label": "How CareStream works", "href": "/how-it-works" }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Pressure care and skin integrity",
+     "question": "Who do you tell during a night shift if you are concerned about a resident's skin?",
+     "why": "Your policy names who must hear about a change, so that a concern does not stay with one person.",
+     "remember": [
+      "Tell the nurse in charge",
+      "Record what you saw",
+      "Follow the plan in the policy"
+     ],
+     "picture": "Half way through a night round, you notice something you did not see yesterday."
+    }
+   },
+   {
+    "heading": "Staff can learn in the language they are most confident in",
+    "bullets": [
+     "A care assistant who answers wrongly because of one unfamiliar word can open the lesson in their own language",
+     "Your admin sets their second language, and they switch to it in the hub",
+     "Translation is part of the paid plans, and the reminder emails stay in English"
+    ],
+    "tags": [
+     { "label": "Training in 60+ languages", "href": "/languages" },
+     { "label": "Staff Hub in 60+ languages", "href": "/uses/multilingual-staff-hub" }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Romanian"
+    }
+   },
+   {
+    "heading": "See the gaps across nurses and carers, and whether they closed",
+    "bullets": [
+     "The Knowledge gaps view in Analytics shows the most missed questions and the weakest topics, so you see where the session or the policy needs a tweak",
+     "See how gaps are being closed, and how many staff have opened the learning",
+     "A Monday digest email brings the picture to you without you having to look"
+    ],
+    "tags": [
+     { "label": "Reporting that runs itself", "href": "/training-platform" },
+     { "label": "CQC and compliance evidence", "href": "/cqc-compliance" }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": { "open": 6, "affected": 5, "closed": 11, "engaged": 68 },
+     "missed": [
+      ["Who to tell on nights", "4 staff"],
+      ["Where changes are recorded", "3 staff"],
+      ["What to do first", "2 staff"]
+     ],
+     "weak": [
+      ["Pressure care and skin integrity", "5 gaps"],
+      ["Falls", "1 gap"]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions nursing home managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. These are the questions we hear most.",
+  "items": [
+   {
+    "q": "Our clinical lead already trains the team. Why add anything?",
+    "a": "You would not replace her. You would add a check after the session, so you know what people took in. The session teaches. The follow up shows whether it worked, for the nurse and the care assistant alike."
+   },
+   {
+    "q": "How does it work in practice after a session or a policy change?",
+    "a": "A face to face session does not trigger anything by itself, so you allocate the module yourself. You pick the topic, tick the staff, and each person completes it in the Staff Hub on their own phone. Their answers are scored, so you can see who understood and who did not."
+   },
+   {
+    "q": "Where do the questions come from?",
+    "a": "From <a href=\"/training-platform\">your own policies</a> where they cover the topic, with general good practice as the fallback. You pick a topic module, not a single policy or section. You can edit and preview the lesson and questions before you assign them."
+   },
+   {
+    "q": "What happens when someone gets a question wrong?",
+    "a": "It goes into their Follow-up tab in the hub and they get an email, at most once a day, in English. They choose Learn &amp; retry, a short lesson on why it matters, what to remember and a realistic picture, then a fresh question. Or they choose Just retry the same question. Retries are unlimited."
+   },
+   {
+    "q": "Can I set different training for nurses and for care assistants?",
+    "a": "Not by role. You choose the staff to include, so the same module goes to everyone you tick. If nurses need more, allocate a second module to them. A clinical sign off is still yours to make."
+   },
+   {
+    "q": "A lot of my team speak English as a second language. Does that matter?",
+    "a": "It can. A carer who answers wrongly may understand the care perfectly and still miss a word. They can open the lesson in <a href=\"/languages\">their own language</a>, so a wrong answer points to a knowledge gap and not a vocabulary one. Translation is on the paid plans only."
+   },
+   {
+    "q": "What do I see, and when?",
+    "a": "The Knowledge gaps view in Analytics shows open gaps, staff affected, gaps closed in 30 days, and the most missed questions and weakest topics. A Monday digest email arrives by itself. You are not alerted each time someone gets an answer wrong."
+   },
+   {
+    "q": "How do I try it?",
+    "a": "Create a free account and start the 14 day free trial on a paid plan, where adhoc training sits. Most homes set up in a day by uploading policies and inviting staff. See the <a href=\"/pricing\">pricing page</a> for plans, or <a href=\"/register\">create an account</a>."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A check on understanding, not a clinical sign off",
+  "cards": [
+   {
+    "title": "It does not assess clinical competence",
+    "body": "A quiz shows what someone knows. A registered nurse's hands on skills still need a competent person to observe them and you to record the sign off."
+   },
+   {
+    "title": "It does not set training by role",
+    "body": "You tick the staff for each module. There is no role picker, so nurses and care assistants get the same module unless you allocate separately."
+   },
+   {
+    "title": "It will not alert you to every wrong answer",
+    "body": "You see the picture in Knowledge gaps and the Monday digest. Adhoc training and translation are on the paid plans, not the free one."
+   }
+  ]
+ },
+ "read_next": [
+  "policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers",
+  "face-to-face-training-in-care-what-actually-has-to-be-in-the-room",
+  "how-do-you-record-in-person-training-so-it-counts-as-cqc-evidence"
+ ],
+ "faqs": {
+  "heading": "Nursing home training and CareStream, answered",
+  "groups": [
+   {
+    "group": "About the training",
+    "items": [
+     {
+      "q": "What should nursing home training cover?",
+      "a": "That is for you to decide from your residents' needs and your policies. Typical topics include medicines, pressure care, falls, infection control and safeguarding. CareStream builds a module from the topic you choose. For core skills, see the <a href=\"/staff-training/care-certificate\">Care Certificate course</a>."
+     },
+     {
+      "q": "Does this replace clinical training or judgement?",
+      "a": "No. It points staff to your own approved procedures and checks what they remember. Clinical judgement and hands on sign off stay with your people."
+     },
+     {
+      "q": "Can I follow up a policy change as well as a session?",
+      "a": "Yes. After a policy changes, allocate a module on that topic to the staff it affects. The <a href=\"/blog/policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers\">four question framework</a> helps you decide who needs it."
+     },
+     {
+      "q": "Can night staff complete it?",
+      "a": "Yes. The Staff Hub is an app on their own phone, so they can do it on their own shift pattern. You can set an optional due date."
+     },
+     {
+      "q": "Can I check the audit side too?",
+      "a": "Yes, the built in audit library has a <a href=\"/care-audits/pressure-care-and-skin-integrity\">pressure care and skin integrity audit</a>, one of many in the <a href=\"/care-audits\">audit library</a>."
+     }
+    ]
+   },
+   {
+    "group": "About inspections",
+    "items": [
+     {
+      "q": "What does nursing home compliance require of staff training?",
+      "a": "Under <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18 on staffing</a>, staff must receive the support, training, professional development, supervision and appraisal they need to carry out their duties. Regulation 18 does not list courses, so each provider decides what its staff need and must be able to show it."
+     },
+     {
+      "q": "How does care home compliance relate to competence?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/12\">Regulation 12 on safe care and treatment</a> says people providing care must have the qualifications, competence, skills and experience to do so safely. A record of questions, lessons and results helps show understanding, and sits alongside your wider <a href=\"/cqc-compliance\">CQC evidence</a>."
+     },
+     {
+      "q": "Is CareStream a CQC pass or a regulator record?",
+      "a": "No. It keeps your own record of what staff were asked, got wrong and learned. It is evidence for you to show, not a rating."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to follow up nursing home training",
+  "lede": "Nursing home training does not end when the session does. The follow up is where a manager learns whether a mixed team of nurses and care assistants all took the same thing away.",
+  "sections": [
+   {
+    "h3": "Checks that fit a busy unit",
+    "paragraphs": [
+     "Keep it small. One topic, one short module, one week. A manager who tries to follow up everything follows up nothing, so start with the topic your last session or policy change covered and widen from there."
+    ],
+    "checklist": [
+     "Within a week of the session: allocate a short module on that topic, and tick nurses and care assistants.",
+     "Include nights and new starters, who most often miss the room.",
+     "Each month: read the most missed questions and the weakest topics, and note any that point to the policy rather than the person.",
+     "On the floor: keep your own observed sign off for hands on clinical skills."
+    ]
+   },
+   {
+    "h3": "Reading the result without blaming anyone",
+    "paragraphs": [
+     "If one person misses a question, have a conversation. If five people miss it, look at the session or the policy. That is the difference between a training need and a wording problem, and it is why the weakest topics view is worth a look before a team meeting."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the questions, the lessons and the results together, so you can show understanding as well as attendance."
+ }
+}

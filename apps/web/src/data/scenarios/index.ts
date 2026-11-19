@@ -70,9 +70,31 @@ import s69 from './recovery-after-requires-improvement.json'
 import s70 from './new-registered-manager-first-30-days-know-where-you-stand.json'
 import s71 from './commissioner-visit-evidence-in-one-place.json'
 import s72 from './cqc-inspection-evidence-report-what-it-contains.json'
+import s73 from './monthly-points-for-follow-ups-and-audits.json'
+import s74 from './carers-who-feel-unnoticed.json'
+import s75 from './supervision-evidence-of-competence-conversations.json'
+import s76 from './this-is-me-for-a-new-resident.json'
+import s77 from './agency-carer-meets-a-resident-for-the-first-time.json'
+import s78 from './family-fills-in-a-life-story.json'
+import s79 from './night-staff-covering-an-unfamiliar-unit.json'
+import s80 from './showing-person-centred-care-to-an-inspector.json'
+import s81 from './non-clinical-owner-wants-proof-things-are-running.json'
+import s82 from './proving-that-training-works.json'
+import s83 from './several-homes-one-view.json'
+import s84 from './insurance-renewal-or-tender-show-your-records.json'
+import s85 from './training-matrix-before-an-inspection.json'
+import s86 from './residential-care-home-training-follow-up.json'
+import s87 from './nursing-home-training-follow-up.json'
+import s88 from './domiciliary-care-training-follow-up.json'
+import s89 from './supported-living-training-follow-up.json'
+import s90 from './learning-disability-service-training-follow-up.json'
+import s91 from './dementia-unit-training-follow-up.json'
+import s92 from './free-cpd-for-every-member-of-staff-plus-your-own-policies.json'
+import s93 from './annual-refreshers-without-chasing.json'
+import s94 from './staff-keep-their-certificates.json'
 
 // One import per page, sorted by `order`. status 'published' pages are public; 'draft' pages are admin preview only.
-export const ALL_SCENARIOS = [s01, s02, s03, s04, s05, s06, s07, s08, s09, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19, s20, s21, s22, s23, s24, s25, s26, s27, s28, s29, s30, s31, s32, s33, s34, s35, s36, s37, s38, s39, s40, s41, s42, s43, s44, s45, s46, s47, s48, s49, s50, s51, s52, s53, s54, s55, s56, s57, s58, s59, s60, s61, s62, s63, s64, s65, s67, s68, s69, s70, s71, s72] as unknown as Scenario[]
+export const ALL_SCENARIOS = [s01, s02, s03, s04, s05, s06, s07, s08, s09, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19, s20, s21, s22, s23, s24, s25, s26, s27, s28, s29, s30, s31, s32, s33, s34, s35, s36, s37, s38, s39, s40, s41, s42, s43, s44, s45, s46, s47, s48, s49, s50, s51, s52, s53, s54, s55, s56, s57, s58, s59, s60, s61, s62, s63, s64, s65, s67, s68, s69, s70, s71, s72, s73, s74, s75, s76, s77, s78, s79, s80, s81, s82, s83, s84, s85, s86, s87, s88, s89, s90, s91, s92, s93, s94] as unknown as Scenario[]
 
 export const publishedScenarios = () =>
   ALL_SCENARIOS.filter(s => s.status === 'published').sort((a, b) => a.order - b.order)

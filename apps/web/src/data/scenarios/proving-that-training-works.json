@@ -1,0 +1,422 @@
+{
+  "slug": "proving-that-training-works",
+  "status": "draft",
+  "order": 82,
+  "title": "You can show who attended. Can you show <em>training effectiveness?</em>",
+  "meta_title": "Training Effectiveness in Care: Show It Works | CareStreamAI",
+  "meta_description": "Attendance is not proof. See how Effectiveness of Training and Training Impact show what staff learned and whether audit scores moved. Enterprise plan.",
+  "eyebrow": "Scenario",
+  "lede": "Training effectiveness is the question behind every training budget: did it change anything? A completion rate cannot answer that. With <a href=\"/training-platform\">training built from your own policies</a>, the answers staff give, the gaps they close and your audit scores can sit side by side, so you can show a trend and say honestly what it does and does not prove.",
+  "fine": "14 day free trial · Set up in a day · UK data residency",
+  "panel": {
+    "title": "From attendance to effect",
+    "pill": "Illustration",
+    "rows": [
+      {
+        "label": "Training delivered and completed",
+        "note": "Quarter 1",
+        "done": true
+      },
+      {
+        "label": "Wrong answers followed up and put right",
+        "note": "Ongoing",
+        "done": true
+      },
+      {
+        "label": "Audit scores set beside the training",
+        "note": "Not yet",
+        "done": false
+      },
+      {
+        "label": "Trend shown to the director",
+        "note": "Not yet",
+        "done": false
+      }
+    ],
+    "meter": 50
+  },
+  "image": "https://api.carestreamai.com/public/policy-shop/image/e213bab4-fe07-4397-ae4f-bfb97b1ed32e.webp",
+  "image_alt": "A care home director and a manager look together at a laptop showing a simple rising line chart, with a training folder and a mug on the table in a bright office",
+  "card_title": "The training is done. Did it make any difference?",
+  "card_snippet": "Completion rates show who finished, not what changed. See how knowledge checks, closed gaps and audit scores can be read together, with the limits stated plainly.",
+  "primary_keyword": "training effectiveness",
+  "secondary_keywords": [
+    "training evaluation",
+    "evaluating training effectiveness",
+    "training impact"
+  ],
+  "feature_links": [
+    {
+      "title": "Training built from your own policies",
+      "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+      "action": "See the feature",
+      "href": "/training-platform"
+    },
+    {
+      "title": "Audits that run themselves",
+      "body": "Monthly audits with actions and re-checks, so there is practice to measure the training against.",
+      "action": "See the audit library",
+      "href": "/care-audits"
+    },
+    {
+      "title": "CQC and compliance",
+      "body": "Evidence that builds itself, and a readiness report for your next inspection.",
+      "action": "See CQC and compliance",
+      "href": "/cqc-compliance"
+    }
+  ],
+  "intro": {
+    "heading": "The training budget is spent. The director asks what it changed.",
+    "sub": "A scenario we see in many care settings.",
+    "paragraph": "It is the end of the year and a director sits down with the registered manager. Every course has been delivered and the completion figure looks healthy. Then comes the fair question: what did all that training change? The manager knows the team feels more confident, and the last two infection control audits looked better, but none of it is written down together. There is a spreadsheet of dates and a folder of certificates. There is no line that connects what was taught to what is now done differently on the floor."
+  },
+  "trail": [
+    {
+      "when": "January to June",
+      "text": "Infection control and moving and handling are delivered to every team.",
+      "kind": "ok"
+    },
+    {
+      "when": "July",
+      "text": "Completion sits at 96 per cent. The spreadsheet is up to date.",
+      "kind": "ok"
+    },
+    {
+      "when": "Autumn",
+      "text": "The monthly infection audits start to look better.",
+      "kind": "ok"
+    },
+    {
+      "when": "Year end review",
+      "text": "The director asks: what did the training change?",
+      "kind": "gap"
+    },
+    {
+      "when": "What the manager has",
+      "text": "Completion dates and certificates. Nothing on what staff understood.",
+      "kind": "gap"
+    },
+    {
+      "when": "The audit scores",
+      "text": "They improved, but nobody linked them to the training that preceded them.",
+      "kind": "gap"
+    },
+    {
+      "when": "The honest worry",
+      "text": "Is it the training working, or just a good few months?",
+      "kind": "gap"
+    },
+    {
+      "when": "Next inspection",
+      "text": "“How do you know your training is effective?” A folder of dates is not an answer.",
+      "kind": "end"
+    }
+  ],
+  "trail_close": "<b>Completion tells you who finished.</b> It does not tell you whether anyone understood, or whether practice changed. Here is how CareStream lets you build that picture, and where it stops.",
+  "why": {
+    "heading": "Completion is easy to count and easy to mistake for effect",
+    "sub": "Evaluating training effectiveness means asking what people understood and what changed, not only who finished.",
+    "cards": [
+      {
+        "icon": "tick",
+        "title": "Finished is not the same as understood",
+        "body": "A carer can click through a module and still be unsure what to do. Only a check on understanding, and what happens after a wrong answer, shows the difference."
+      },
+      {
+        "icon": "chat",
+        "title": "Feelings and facts need separate evidence",
+        "body": "Staff may say a session was useful and still miss key points. Training evaluation works best when how people felt, what they know and what they do are looked at separately."
+      },
+      {
+        "icon": "alert",
+        "title": "A good trend can be a coincidence",
+        "body": "Audit scores rise for many reasons: a new team lead, a quieter month, a stricter auditor. Without the training data beside them, you cannot even ask the question properly."
+      }
+    ]
+  },
+  "how": {
+    "heading": "From a completed module to a measured trend.",
+    "sub": "Measuring effect starts with the <a href=\"/training-platform\">Training built from your own policies</a> feature, and builds up in three layers. The first two are covered in <a href=\"/uses/adhoc-training\">adhoc training</a>. The last two layers below are on the Enterprise plan.",
+    "blocks": [
+      {
+        "heading": "Start with a check on understanding, not a tick for attendance",
+        "bullets": [
+          "Pick a topic module in the Training screen. It is built from your own policies where they cover the topic, with general good practice as the fallback",
+          "Edit and preview the lessons and questions, then allocate them to staff, with an optional due date",
+          "Staff complete it in the Staff Hub, and every answer is kept, so there is a record of what was understood"
+        ],
+        "tags": [
+          {
+            "label": "Training built from your own policies",
+            "href": "/training-platform"
+          },
+          {
+            "label": "Infection prevention and control course",
+            "href": "/staff-training/infection-prevention-and-control"
+          }
+        ],
+        "mock": {
+          "type": "training",
+          "module": "Infection Prevention and Control",
+          "questions": [
+            "When must you wash your hands before and after contact with a resident?",
+            "What should you do with a soiled uniform at the end of a shift?",
+            "Who do you tell if you suspect an outbreak?"
+          ],
+          "staff_count": 31
+        }
+      },
+      {
+        "heading": "A wrong answer is followed up, and the follow up is counted",
+        "bullets": [
+          "A wrong answer goes into the carer's Follow-up tab in the Staff Hub, and they get an email, at most once a day, in English",
+          "They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question, as often as they need",
+          "CareStream counts each gap put right and whether the carer used the lesson, which feeds the effectiveness figures. A short, optional rating of confidence and usefulness can follow"
+        ],
+        "tags": [
+          {
+            "label": "Wrong answers become lessons",
+            "href": "/training-platform"
+          },
+          {
+            "label": "Annual training",
+            "href": "/uses/annual-training"
+          }
+        ],
+        "mock": {
+          "type": "followup",
+          "module": "Infection Prevention and Control",
+          "question": "When must you wash your hands before and after contact with a resident?",
+          "why": "Hands carry germs between residents, so they are cleaned at the key moments, not only when they look dirty.",
+          "remember": [
+            "Clean hands before contact",
+            "Clean hands after contact",
+            "Gloves do not replace hand hygiene"
+          ],
+          "picture": "You finish helping one resident and a call bell rings in the next room."
+        }
+      },
+      {
+        "heading": "Effectiveness of Training: learning, reaction and closed gaps in one view",
+        "bullets": [
+          "In Analytics, the Effectiveness of Training tab shows questions put right, the share of gaps resolved, and how many were closed with a lesson rather than a simple retry",
+          "It also shows assessment accuracy, training completed, confidence to apply and how useful staff rated the training, plus gaps closed week by week over eight weeks",
+          "This tab is on the Enterprise plan. It reflects knowledge checks and ratings, not resident outcomes"
+        ],
+        "tags": [
+          {
+            "label": "Reporting that runs itself",
+            "href": "/training-platform"
+          },
+          {
+            "label": "See the pricing page",
+            "href": "/pricing"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Effectiveness of Training (example figures)",
+          "stats": [
+            ["Questions put right", "46"],
+            ["Gaps resolved", "81%"],
+            ["Engaged with learning", "68%"],
+            ["Put right, 30 days", "19"]
+          ],
+          "blocks": [
+            [
+              "How gaps get closed (example)",
+              [
+                ["Learn & retry", "31"],
+                ["Just retry", "15"]
+              ]
+            ],
+            [
+              "Knowledge and reaction (example)",
+              [
+                ["Assessment accuracy", "88%"],
+                ["Training completed", "96%"],
+                ["Confidence to apply", "84%"]
+              ]
+            ]
+          ],
+          "caption": "Example screen with made up figures, for illustration only."
+        }
+      },
+      {
+        "heading": "Training Impact: audit scores set beside training completion",
+        "bullets": [
+          "Link an audit to the training modules it relates to, using Linked training on the audit",
+          "The impact view then shows, month by month, the audit score next to the share of allocated staff who had completed the linked training",
+          "It is a trend, not proof of cause, and it needs several monthly audit runs to mean anything. It is on the Enterprise plan"
+        ],
+        "tags": [
+          {
+            "label": "Monthly audit library",
+            "href": "/care-audits"
+          },
+          {
+            "label": "CQC and compliance evidence",
+            "href": "/cqc-compliance"
+          }
+        ],
+        "mock": {
+          "type": "audit",
+          "audit": "Training Impact: Infection control audit (example figures)",
+          "stats": [
+            ["First audit", "72%"],
+            ["Latest audit", "89%"],
+            ["Change", "+17"]
+          ],
+          "blocks": [
+            [
+              "Month by month (example)",
+              [
+                ["March: audit 72%", "Trained 20%"],
+                ["May: audit 78%", "Trained 64%"],
+                ["July: audit 84%", "Trained 96%"],
+                ["September: audit 89%", "Trained 96%"]
+              ]
+            ]
+          ],
+          "caption": "Example screen with made up figures, for illustration only."
+        }
+      }
+    ]
+  },
+  "talk": {
+    "heading": "The questions managers ask, and how CareStream answers them",
+    "sub": "Read this as a conversation. The questions are the ones we hear most.",
+    "items": [
+      {
+        "q": "What do you mean by training effectiveness?",
+        "a": "Whether the training changed anything. That means more than who finished it. It covers how staff felt about it, what they understood, and whether the practice you audit has moved. CareStream gives you evidence for the middle two and a trend for the last one."
+      },
+      {
+        "q": "What does Effectiveness of Training actually show me?",
+        "a": "In Analytics it shows how many wrong answers were put right, the share of gaps resolved, how many were closed with a lesson, assessment accuracy and training completed. It also shows confidence and usefulness ratings, and gaps closed week by week."
+      },
+      {
+        "q": "Where does the confidence and usefulness rating come from?",
+        "a": "After a piece of training, staff are offered a short optional rating in the Staff Hub, a score of one to five for how confident they feel and how useful it was. Treat it as a guide."
+      },
+      {
+        "q": "What does the audit comparison show?",
+        "a": "You link an audit to the training modules it relates to. It then shows the audit score each month next to the share of allocated staff who had completed that training. If both rise, that is encouraging evidence. It is not proof of cause."
+      },
+      {
+        "q": "So can you prove the training caused the improvement?",
+        "a": "No, and we would not say so. Audit scores can move for other reasons. What you get is a clear trend with the training beside it, which is a far stronger position than an unsupported claim."
+      },
+      {
+        "q": "Does it show whether residents are better off?",
+        "a": "No. The measures are knowledge checks, ratings and audit scores. Linking training to outcomes such as falls is not something CareStream does. Those outcomes would need recording and analysing separately."
+      },
+      {
+        "q": "Which plan is it on, and how do I try it?",
+        "a": "Both are on the Enterprise plan, as the <a href=\"/pricing\">pricing page</a> shows. You can start a 14 day free trial by <a href=\"/register\">creating an account</a>, and the pricing page shows what each plan includes."
+      },
+      {
+        "q": "What could I show an inspector?",
+        "a": "The questions staff were asked, what they got wrong, the lessons they used, and the audit trend beside the training. It sits with the rest of your <a href=\"/cqc-compliance\">CQC evidence</a>. It shows you check your training works. It is not a rating, a pass or a regulator record."
+      }
+    ]
+  },
+  "limits": {
+    "heading": "Measuring an effect is not the same as proving it",
+    "cards": [
+      {
+        "title": "It shows a trend, not a cause",
+        "body": "It sets audit scores beside completion. If they rise together, that is useful evidence. It cannot rule out a new team lead, a quiet month or a change in who does the audit."
+      },
+      {
+        "title": "It does not measure resident outcomes",
+        "body": "What you see is knowledge checks, optional ratings and audit scores. It does not track falls, infections or any other outcome for residents."
+      },
+      {
+        "title": "Both reports are Enterprise features and need data",
+        "body": "Both are on the Enterprise plan. The impact view also needs a linked audit and several monthly runs before the trend means much."
+      }
+    ]
+  },
+  "read_next": [
+    "what-compliant-actually-means-for-one-care-staff-member",
+    "incident-led-training-in-care",
+    "the-care-compliance-dashboard-nobody-opens-and-how-to-fix-it"
+  ],
+  "faqs": {
+    "heading": "Training effectiveness in care, answered",
+    "groups": [
+      {
+        "group": "Measuring the effect",
+        "items": [
+          {
+            "q": "How do you measure training effectiveness in a care service?",
+            "a": "Look at four things: how staff reacted, what they learned, whether they act differently, and whether results improve. Knowledge checks and follow ups cover learning, observation covers behaviour, and <a href=\"/care-audits\">audits</a> show practice over time. CareStream handles the knowledge checks, the follow up and the audit comparison."
+          },
+          {
+            "q": "What is the difference between training evaluation and a completion report?",
+            "a": "A completion report records who finished. Training evaluation asks what they understood and what changed. A short check after the module, and a follow up on wrong answers, are the first steps from one to the other."
+          },
+          {
+            "q": "What is the best way of evaluating training effectiveness with a small team?",
+            "a": "Keep it simple. Check understanding after each module, look at the weakest topics each month, and compare one or two audits with the related training."
+          },
+          {
+            "q": "What does training impact mean in practice?",
+            "a": "It is the change in what your audits find after staff are trained. In CareStream, <a href=\"/care-audits/staff-training-and-compliance\">audits linked to training</a> let you see the audit score month by month beside training completion."
+          },
+          {
+            "q": "Can I measure the effect of face to face training too?",
+            "a": "Yes, once you allocate a short module on the same topic afterwards. See <a href=\"/uses/face-to-face-training\">face to face training</a> for how that works. A session does not trigger anything by itself, so you allocate the follow up."
+          },
+          {
+            "q": "Which plan includes these reports?",
+            "a": "Both reports are Enterprise plan features. The <a href=\"/pricing\">pricing page</a> lists every plan, and you can try CareStream free for 14 days."
+          }
+        ]
+      },
+      {
+        "group": "About inspections",
+        "items": [
+          {
+            "q": "Does CQC expect me to show my training works?",
+            "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18 on staffing</a> says staff must receive the support, training, professional development, supervision and appraisal necessary to carry out their duties. <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-18\">CQC guidance on Regulation 18</a> says providers should monitor training completion and act where requirements are not being met. It does not name a particular way of measuring effect."
+          },
+          {
+            "q": "Is a high completion rate enough?",
+            "a": "CQC guidance on Regulation 18 also talks about staff being supervised until they can show they are competent, and ongoing supervision to make sure competence is maintained. Completion alone does not show that, so it helps to have evidence of understanding as well."
+          }
+        ]
+      }
+    ]
+  },
+  "guide": {
+    "heading": "A practical way to evaluate your training",
+    "lede": "You do not need a research project to evaluate training. You need a few honest measures, looked at regularly and read with caution.",
+    "sections": [
+      {
+        "h3": "Four questions to ask of any training",
+        "paragraphs": [
+          "A widely used way to evaluate training separates four things: did people find it useful, did they learn it, do they do things differently, and did results improve. Each needs a different kind of evidence, and the further down the list, the harder it is to prove. ",
+          "Be clear about which question each of your figures answers. A completion rate answers none of them. A knowledge check answers the second. An audit score answers the third and, loosely, the fourth."
+        ]
+      },
+      {
+        "h3": "A simple routine for the registered manager",
+        "checklist": [
+          "After each module: look at the questions most often missed, and at who still has an open gap.",
+          "Each month: check how many gaps were put right, and how many with a lesson rather than a retry.",
+          "Each quarter: choose one audit that relates to a topic you trained on, link it, and read the trend.",
+          "Before you present it: write down one other thing that changed in the same period, so you do not overclaim."
+        ]
+      },
+      {
+        "h3": "How to word it for a director or an inspector",
+        "paragraphs": [
+          "Say what you measured and what you did not. For example: staff answered knowledge checks, gaps were followed up, and our infection control audit score rose as completion rose. Then add what it does not show. That balance is what makes the evidence believable."
+        ]
+      }
+    ],
+    "note": "<b>For the inspector.</b> Keep the questions, the follow ups and the audit trend together, and be open about what they do not prove."
+  }
+}

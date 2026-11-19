@@ -1,0 +1,529 @@
+{
+ "slug": "training-matrix-before-an-inspection",
+ "status": "draft",
+ "order": 85,
+ "title": "Your training matrix is a spreadsheet of guesses. <em>Is it true today?</em>",
+ "meta_title": "Training Matrix Before an Inspection | CareStreamAI",
+ "meta_description": "See who is in date, due soon or expired in one grid built from your staff's real training records. Export to CSV or print to PDF.",
+ "eyebrow": "Scenario",
+ "lede": "A coloured spreadsheet is only as true as the last person who edited it. CareStream builds your <a href=\"/training-platform\">training matrix</a> from completions recorded in the system, so it shows who is in date, due soon or expired today. You can open it before an inspection, not after.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "The week before an inspection",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Certificates filed in staff folders",
+    "note": "Done",
+    "done": true
+   },
+   {
+    "label": "Spreadsheet of coloured squares",
+    "note": "Updated by hand",
+    "done": true
+   },
+   {
+    "label": "Who is in date, today",
+    "note": "Not sure",
+    "done": false
+   },
+   {
+    "label": "Renewals due in the next 60 days",
+    "note": "Not sure",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/f7d394e0-20ff-4533-8e11-4b6816e9ac3d.webp",
+ "image_alt": "A care home manager points to a printed grid of coloured squares pinned beside a laptop while a senior carer looks on in a clear, tidy, bright office",
+ "card_title": "Who is in date? Your grid should answer in a minute",
+ "card_snippet": "A hand coloured spreadsheet goes out of date the day after you edit it. See who is in date, due soon or expired from real training records, then export it or print it to PDF.",
+ "primary_keyword": "training matrix",
+ "secondary_keywords": [
+  "training matrix template",
+  "staff training matrix",
+  "training records"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Short training from your own policies, checked with questions, and a wrong answer becomes a short lesson.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Annual training that tracks itself",
+   "body": "Allocate yearly training to your team and see who has completed it and who is behind.",
+   "action": "See annual training",
+   "href": "/uses/annual-training"
+  },
+  {
+   "title": "Record in person sessions",
+   "body": "Log who attended a face to face session so it counts on the staff record and in the matrix.",
+   "action": "See face to face training",
+   "href": "/uses/face-to-face-training"
+  }
+ ],
+ "intro": {
+  "heading": "The inspector's question is simple. The answer is not.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "Asha manages a care home. Training certificates sit in each staff folder, and she keeps a spreadsheet with a coloured square for every person and every course. It looked fine in March. Then three carers joined, a fire safety certificate ran out and nobody changed a colour. A visit could come any week. Asha does not need a prettier grid. She needs a staff training matrix that is true today, and a way to hand it over without a scramble."
+ },
+ "trail": [
+  {
+   "when": "Last spring",
+   "text": "Everyone completes the mandatory courses and certificates go into staff folders.",
+   "kind": "ok"
+  },
+  {
+   "when": "The same week",
+   "text": "Asha builds a spreadsheet with a coloured square for each person and course.",
+   "kind": "ok"
+  },
+  {
+   "when": "Spring",
+   "text": "The squares are green and the team feels well prepared.",
+   "kind": "ok"
+  },
+  {
+   "when": "Summer",
+   "text": "Three new carers join. Nobody adds their rows to the sheet.",
+   "kind": "gap"
+  },
+  {
+   "when": "Autumn",
+   "text": "A fire safety certificate expires. The square stays green.",
+   "kind": "gap"
+  },
+  {
+   "when": "Each month",
+   "text": "Colours change by hand, when someone remembers to open the file.",
+   "kind": "gap"
+  },
+  {
+   "when": "This week",
+   "text": "Nobody can say who is due for renewal in the next two months.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "\"Can I see who is in date for safeguarding and moving and handling?\"",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The training happened. The record of it drifted.</b> A grid that is edited by hand cannot tell you what is true today. Here is how CareStream builds it from the records themselves, and where it stops.",
+ "why": {
+  "heading": "A matrix you maintain by hand is a matrix you cannot trust",
+  "sub": "The question is not whether training took place. It is whether you can show it, today, without a scramble.",
+  "cards": [
+   {
+    "icon": "alert",
+    "title": "Colours go stale the day after you edit",
+    "body": "A spreadsheet does not know a certificate has expired or that a new carer has started. Someone has to notice, and busy managers do not notice everything."
+   },
+   {
+    "icon": "chat",
+    "title": "The questions come fast and in pieces",
+    "body": "Who has not done safeguarding? Who is due next month? Which seniors are missing moving and handling? Answering from folders and a spreadsheet takes far longer than the question did."
+   },
+   {
+    "icon": "tick",
+    "title": "Good records help staffing, not only inspections",
+    "body": "A clear matrix shows who is safe to put on a shift and who needs a refresher booked. The <a href=\"/blog/how-do-you-use-a-training-matrix-for-safe-staffing-not-just-compliance\">staffing use of a matrix</a> matters every week, not once a year."
+   }
+  ]
+ },
+ "how": {
+  "heading": "From role requirements to a grid you can hand over.",
+  "sub": "This is the matrix in CareStream, in the order a manager meets it. For what a good grid should hold, read <a href=\"/blog/what-should-a-care-home-training-matrix-actually-contain\">what a care home should put in one</a>. For plans, see the <a href=\"/pricing\">pricing page</a>.",
+  "blocks": [
+   {
+    "heading": "Say which training each job role needs",
+    "bullets": [
+     "Open Training, then the Matrix tab, and choose Required training by role",
+     "Pick a job role, or All staff for training everyone needs, and tick the courses it must hold",
+     "Staff are matched by the job role on their profile, so set roles on the Staff page first"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Annual training",
+      "href": "/uses/annual-training"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Required training by role (example)",
+     "stats": [
+      [
+       "Job roles",
+       "3"
+      ],
+      [
+       "Courses ticked",
+       "11"
+      ]
+     ],
+     "blocks": [
+      [
+       "All staff",
+       [
+        [
+         "Safeguarding adults",
+         "Ticked"
+        ],
+        [
+         "Fire safety",
+         "Ticked"
+        ]
+       ]
+      ],
+      [
+       "Senior carer",
+       [
+        [
+         "Medication",
+         "Ticked"
+        ],
+        [
+         "Moving and handling",
+         "Ticked"
+        ]
+       ]
+      ]
+     ],
+     "caption": "Example only. You choose your own roles and courses."
+    }
+   },
+   {
+    "heading": "See who is in date, due soon or expired",
+    "bullets": [
+     "One row per staff member, one column per course that some role requires, so the grid is your requirement and not the whole library",
+     "Each square says In date, Renewal due soon (within 60 days), Expired, Overdue, In progress or Assigned, not started",
+     "A red ! means the training is required but has not been assigned yet, so you know what to allocate first"
+    ],
+    "tags": [
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     },
+     {
+      "label": "Monthly compliance audit",
+      "href": "/care-audits/training-matrix-compliance"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Who is in date (example)",
+     "stats": [
+      [
+       "Fully compliant staff",
+       "9 of 14"
+      ],
+      [
+       "Required, not assigned",
+       "3"
+      ],
+      [
+       "Expired or overdue",
+       "2"
+      ],
+      [
+       "Renewals due in 60 days",
+       "4"
+      ]
+     ],
+     "blocks": [
+      [
+       "Needs attention first",
+       [
+        [
+         "Moving and handling, carer",
+         "Expired"
+        ],
+        [
+         "Fire safety, senior carer",
+         "Renewal due soon"
+        ],
+        [
+         "Safeguarding, new carer",
+         "Required, not assigned"
+        ]
+       ]
+      ],
+      [
+       "Each person",
+       [
+        [
+         "Compliance percentage",
+         "Share of required training in date"
+        ],
+        [
+         "Gaps only filter",
+         "Shows people with a gap"
+        ]
+       ]
+      ]
+     ],
+     "caption": "Example only. Your matrix shows your own staff."
+    }
+   },
+   {
+    "heading": "Export it or print it, and check the staff record",
+    "bullets": [
+     "Download a CSV to open in your own spreadsheet, or use Print / PDF for a clean landscape page of the grid",
+     "Search by name, filter by job role or show gaps only before you export",
+     "The same information shows under Required training on each person's staff record, so the grid and the record agree"
+    ],
+    "tags": [
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     },
+     {
+      "label": "Audit library",
+      "href": "/care-audits"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Print or export (example)",
+     "stats": [
+      [
+       "Staff shown",
+       "14"
+      ],
+      [
+       "Format",
+       "CSV or PDF"
+      ]
+     ],
+     "blocks": [
+      [
+       "What the page carries",
+       [
+        [
+         "Staff member and job role",
+         "Listed"
+        ],
+        [
+         "Compliance percentage",
+         "Per person"
+        ],
+        [
+         "Valid until dates",
+         "Where a course renews"
+        ]
+       ]
+      ],
+      [
+       "Key printed underneath",
+       [
+        [
+         "In date",
+         "Green"
+        ],
+        [
+         "Expired or overdue",
+         "Red"
+        ]
+       ]
+      ]
+     ],
+     "caption": "Example only. The print page lists your own staff and courses."
+    }
+   },
+   {
+    "heading": "In date is not the same as understood",
+    "bullets": [
+     "The matrix tells you who completed a course and when it renews, not how well they understood it",
+     "After a refresher, allocate a short adhoc module on the same topic and see the most missed questions in Analytics, Knowledge gaps",
+     "Adhoc training is on the paid plans; see the pricing page for which plan suits your service"
+    ],
+    "tags": [
+     {
+      "label": "Adhoc training",
+      "href": "/uses/adhoc-training"
+     },
+     {
+      "label": "Policy gap detection",
+      "href": "/uses/policy-gaps"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 6,
+      "affected": 5,
+      "closed": 14,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Who to tell about a safeguarding concern",
+       "4 staff"
+      ],
+      [
+       "Safe moving of a person after a fall",
+       "3 staff"
+      ],
+      [
+       "Fire evacuation routes",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Safeguarding Adults",
+       "4 gaps"
+      ],
+      [
+       "Fire Safety",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "I already have a spreadsheet. Why change?",
+    "a": "Your spreadsheet only changes when someone edits it. The CareStream matrix reads completions recorded in the system, so a certificate that passes its date shows as Expired without anyone touching a colour."
+   },
+   {
+    "q": "Is this a training matrix template I can download?",
+    "a": "Not as a blank file. A template is empty and you fill it in. Here you set the training each job role needs and the grid fills itself from what staff complete. You can still export the result to CSV and use your own spreadsheet."
+   },
+   {
+    "q": "What does each colour or symbol mean?",
+    "a": "In date, Renewal due soon (within 60 days), Expired, Overdue, Practical to sign off, In progress, Assigned, not started, Required, not assigned, and Not required. A legend sits under the grid, and the same labels are printed on the PDF."
+   },
+   {
+    "q": "Does it include training my staff did somewhere else?",
+    "a": "Only what is recorded in CareStream. That means courses staff complete in the Staff Hub and face to face sessions you log with who attended. A certificate sitting in a folder, or a course done elsewhere, does not appear unless it is recorded."
+   },
+   {
+    "q": "Will it enrol my staff on the training they are missing?",
+    "a": "No. A red ! tells you a course is required but not assigned. You then allocate it. Setting requirements by role changes what the grid expects, it does not enrol anyone for you."
+   },
+   {
+    "q": "Can I hand it to an inspector?",
+    "a": "You can download a CSV or print the grid to PDF, so you have something to show. It is a view of your own records. It is not a rating and it is not a regulator record."
+   },
+   {
+    "q": "What if a person has no job role set?",
+    "a": "They only match the training you ticked for All staff. The role screen warns you how many staff have no job role, so you can set them on the Staff page."
+   },
+   {
+    "q": "Can I try it, and which plan has it?",
+    "a": "Yes. There is a 14 day free trial, and you can create a free account to look around. Plans differ, so see the <a href=\"/pricing\">pricing page</a> for which plan includes the matrix and required training by role."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A clear view of your records, not a substitute for the training",
+  "cards": [
+   {
+    "title": "It only knows what is recorded",
+    "body": "The matrix reflects courses completed in CareStream and face to face sessions you log. Training done elsewhere shows up only if it is recorded, so a gap on the grid may be a gap in the recording."
+   },
+   {
+    "title": "It does not enrol anyone for you",
+    "body": "Required, not assigned tells you what to allocate. You still allocate it. A role requirement tells the grid what to expect, nothing more."
+   },
+   {
+    "title": "It is not a rating or a regulator record",
+    "body": "A full green grid does not mean a pass, and the matrix is not a CQC document. It also cannot tell you whether the training changed what someone does on the floor."
+   }
+  ]
+ },
+ "read_next": [
+  "what-should-a-care-home-training-matrix-actually-contain",
+  "how-do-you-use-a-training-matrix-for-safe-staffing-not-just-compliance",
+  "is-an-excel-training-matrix-still-safe-for-a-care-home"
+ ],
+ "faqs": {
+  "heading": "Questions about the matrix, answered",
+  "groups": [
+   {
+    "group": "About the matrix",
+    "items": [
+     {
+      "q": "What is a matrix of staff training in a care home?",
+      "a": "A grid of staff against the training their job needs, showing what is complete, what is due and what has lapsed. CareStream builds it from your own <b>training records</b> in the system and your required training by role."
+     },
+     {
+      "q": "What should a staff training matrix show?",
+      "a": "Each person, their job role, each required course and its status, with renewal dates where a course expires. See <a href=\"/blog/what-should-a-care-home-training-matrix-actually-contain\">what a care home training matrix should contain</a> for a fuller list."
+     },
+     {
+      "q": "Can I use a training matrix template instead?",
+      "a": "You can, but a template is only as accurate as the last edit. If you want to compare approaches first, read <a href=\"/blog/is-an-excel-training-matrix-still-safe-for-a-care-home\">whether an Excel matrix is still safe</a>."
+     },
+     {
+      "q": "Where are the training records for one person?",
+      "a": "On their staff record, under Required training for their role. It uses the same rules as the grid, so the two agree."
+     }
+    ]
+   },
+   {
+    "group": "Using it in CareStream",
+    "items": [
+     {
+      "q": "How do I set which courses each role needs?",
+      "a": "In Training, open the Matrix tab and choose Required training by role. Pick a job role or All staff, tick the courses and save. The grid then shows only courses that some role requires."
+     },
+     {
+      "q": "Can I export the matrix?",
+      "a": "Yes. Download a CSV, or use Print / PDF for a clean landscape page. Both follow your filters for name, job role and gaps only."
+     },
+     {
+      "q": "How does it treat face to face training?",
+      "a": "Topics marked mandatory for a role on the Face-to-face tab appear in the grid, using attendance and renewal dates. Read more about <a href=\"/uses/face-to-face-training\">recording in person sessions</a>."
+     },
+     {
+      "q": "Which plan includes the matrix?",
+      "a": "Please check the <a href=\"/pricing\">pricing page</a> for which plan includes the matrix and required training by role, as plans change."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to get your matrix ready before an inspection",
+  "lede": "Start with what you are asked for, then work backwards to the records. These steps take an afternoon, and they make the grid worth trusting.",
+  "sections": [
+   {
+    "h3": "Start from the rules that apply to you",
+    "paragraphs": [
+     "Regulation 18 of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014 says staff must <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">receive such appropriate support, training, professional development, supervision and appraisal as is necessary</a> to carry out their duties. Regulation 17 on good governance includes <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">keeping securely the records that are necessary in relation to persons employed</a>.",
+     "Those two lines are why a manager keeps training records at all. They do not give you a list of courses. Decide the list yourself, by job role, using your service and your policies. Then see the <a href=\"/care-audits/training-matrix-compliance\">monthly compliance audit</a> for a regular check."
+    ]
+   },
+   {
+    "h3": "Before the visit, work through this list",
+    "checklist": [
+     "Check every staff member has a job role set, so the right requirements apply to them",
+     "Tick the courses each role needs, and All staff for training everyone holds",
+     "Assign anything marked Required, not assigned, then chase Expired and Overdue first",
+     "Export a CSV or print to PDF, and check a few rows against the certificates in staff folders"
+    ]
+   },
+   {
+    "h3": "Keep it true after the visit",
+    "paragraphs": [
+     "Open the grid on the same day each month and filter to gaps only. Book renewals for anyone in the 60 day window, and record in person sessions on the day they happen. Our guide to <a href=\"/staff-training/care-certificate\">the Care Certificate course</a> shows where new starters begin."
+    ]
+   }
+  ],
+  "note": "CareStream gives you a view of your own records. It does not decide what training your service needs, and it does not promise any inspection outcome."
+ }
+}

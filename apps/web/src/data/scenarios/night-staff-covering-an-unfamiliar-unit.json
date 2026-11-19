@@ -1,0 +1,448 @@
+{
+ "slug": "night-staff-covering-an-unfamiliar-unit",
+ "status": "draft",
+ "order": 79,
+ "title": "A night shift carer moved to a unit they do not know has nobody to ask. <em>Let them ask the profiles.</em>",
+ "meta_title": "Night Shift Carer on an Unfamiliar Unit | CareStreamAI",
+ "meta_description": "A night shift carer covering a unit they do not know needs to know the people fast. Let staff ask your own resident profiles from their phone, at any hour.",
+ "eyebrow": "Scenario",
+ "lede": "A night shift carer is moved to a unit they have never worked on, and the senior is on another floor. They can follow the care plan, but they cannot learn the people in one handover. With <a href=\"/training-platform\">CareStream</a>, staff can ask the resident profiles your home has written, from their own phone.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "One night on an unfamiliar unit",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Handover given",
+    "note": "7.30pm",
+    "done": true
+   },
+   {
+    "label": "Quick tour of the unit",
+    "note": "8pm",
+    "done": true
+   },
+   {
+    "label": "Knows what calms each person",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Someone to ask at 3am",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/04b072cb-50a4-4024-8e0c-be058132af8c.webp",
+ "image_alt": "A night carer in uniform stands in a softly lit lounge corridor reading her phone, with a night lamp and a plant nearby",
+ "card_title": "Moved to a unit they do not know, with nobody to ask",
+ "card_snippet": "Sickness leaves a gap and a night carer is moved to a unit they have never worked. The care plan tells them the risks. The resident profile tells them who the person is, if they can reach it.",
+ "primary_keyword": "night shift carer",
+ "secondary_keywords": [
+  "resident profile",
+  "person centred care examples",
+  "this is me form"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Ad hoc training from your policies, an assistant staff can ask, and wrong answers that become lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "What residents are like, ready when staff need it",
+   "body": "Resident profiles that staff can ask about, answered only from what your home has written.",
+   "action": "See resident knowledge",
+   "href": "/uses/resident-knowledge"
+  },
+  {
+   "title": "Audits that check the night too",
+   "body": "A built in library of audits, including a night shift walkround, on every plan.",
+   "action": "See the audit library",
+   "href": "/care-audits"
+  }
+ ],
+ "intro": {
+  "heading": "Sickness leaves a gap. Someone who does not know the unit fills it.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "At 6pm a carer rings in sick on the dementia unit. The manager moves an experienced night shift carer over from the ground floor, which is the sensible call. The handover is given, the unit is toured and the care plans are where they should be. But the people are strangers. Mr Hughes is awake at 11pm asking for someone called Annie, and nobody on the unit that night knows who Annie is. The home knows. It is just not written anywhere a carer can reach with one hand and a torch."
+ },
+ "trail": [
+  {
+   "when": "7.30pm",
+   "text": "A carer is moved to the dementia unit. Handover is given in ten minutes.",
+   "kind": "ok"
+  },
+  {
+   "when": "8pm",
+   "text": "A quick tour. Fire exits, the drug trolley and the call bells are all pointed out.",
+   "kind": "ok"
+  },
+  {
+   "when": "9pm",
+   "text": "Care plans and the medication charts are where they should be.",
+   "kind": "ok"
+  },
+  {
+   "when": "11pm",
+   "text": "Mr Hughes is up asking for Annie. Nobody on the unit tonight knows who she is.",
+   "kind": "gap"
+  },
+  {
+   "when": "1am",
+   "text": "Another resident is unsettled. What calms her is in a daughter's head, not on file.",
+   "kind": "gap"
+  },
+  {
+   "when": "3am",
+   "text": "The other carer is on a break. The senior is on another floor.",
+   "kind": "gap"
+  },
+  {
+   "when": "Morning",
+   "text": "The notes say “unsettled, refused tea”. Nothing about what would have helped.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“How do staff who cover other units get to know people?” The manager has no answer.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The cover was never the problem.</b> The gap is between knowing the risks and knowing the person. Here is how CareStream helps, with its limits stated plainly.",
+ "why": {
+  "heading": "A care plan tells you what is safe. It does not tell you who someone is",
+  "sub": "A good handover covers risks. The small things that settle a person are usually missing from it.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Handover does not carry people",
+    "body": "Ten minutes cannot hold what the day team has learned over months. The night shift carer is left to guess."
+   },
+   {
+    "icon": "tick",
+    "title": "Night teams cover more units",
+    "body": "When days are short staffed, nights move people around, and each move means more people to learn in a hurry."
+   },
+   {
+    "icon": "alert",
+    "title": "The people who know are asleep",
+    "body": "The family, the day team and the manager are not available at 3am. If the knowledge is not written down and reachable, it might as well not exist."
+   }
+  ]
+ },
+ "how": {
+  "heading": "From the profile to the person, at 3am.",
+  "sub": "This is the <a href=\"/uses/resident-knowledge\">resident knowledge</a> part of CareStream, alongside <a href=\"/training-platform\">training built from your own policies</a>. It is available on the Professional and Enterprise plans. Every screen below is an example.",
+  "blocks": [
+   {
+    "heading": "Write a resident profile for each person, in their own words",
+    "bullets": [
+     "Managers add a profile with 11 sections, from life story and daily routine to what helps when they are upset or anxious",
+     "It is about who the person is, not their care record. Dietary needs and risks stay in the care plan",
+     "It works as a living this is me form, and you can keep the one you already use alongside it. See our guide to the <a href=\"/blog/this-is-me-document\">This Is Me document</a>"
+    ],
+    "tags": [
+     {
+      "label": "Resident knowledge",
+      "href": "/uses/resident-knowledge"
+     },
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Resident profile (example)",
+     "stats": [
+      ["Sections written", "7 of 11"],
+      ["Last updated", "Example"]
+     ],
+     "blocks": [
+      [
+       "Example: Mr Edward Hughes, known as Ted",
+       [
+        ["Important people and pets: his daughter Annie phones on Sunday evenings", ""],
+        ["Daily routine: likes to be up by 6am and to sit by the window", ""]
+       ]
+      ],
+      [
+       "Example: what helps when he is upset or anxious",
+       [
+        ["Radio 2 on low. A cup of tea with two sugars. Being asked about his years on the buses", ""]
+       ]
+      ]
+     ],
+     "caption": "Example only. Your profiles are written by your team, and only what is written can be found."
+    }
+   },
+   {
+    "heading": "A night carer asks, and gets a short answer from the profile",
+    "bullets": [
+     "In the Staff Hub, on their own phone, the carer opens the “This is me” chat and asks about a person by name",
+     "Answers come only from the resident profiles your home has written and approved, and they are kept short for a busy shift",
+     "If it is not recorded, the answer says so, and suggests asking the person, their family or the team. The manager can then add it"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Policy answers at night",
+      "href": "/blog/night-shift-policy-access"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "“This is me” chat (example)",
+     "blocks": [
+      [
+       "A carer asks",
+       [
+        ["Mr Hughes keeps asking for Annie. Who is she?", ""]
+       ]
+      ],
+      [
+       "The answer, from his profile",
+       [
+        ["Annie is his daughter and she phones on Sunday evenings", ""],
+        ["Ted settles with Radio 2 on low", ""],
+        ["For medicines, mobility or risks, check the care plan and handover", ""]
+       ]
+      ],
+      [
+       "When the profile does not say",
+       [
+        ["It is not recorded in his profile yet. Ask the person, his family or the team. The manager can add it", ""]
+       ]
+      ]
+     ],
+     "caption": "Example only. The chat does not give clinical advice."
+    }
+   },
+   {
+    "heading": "Ask families for what only they know, and approve it first",
+    "bullets": [
+     "A manager can invite a family member or friend to answer a few questions about the person by email, with a private link that lasts 14 days",
+     "Their answers wait for you. Staff only see an answer after an admin has approved it, and you can edit or reject it first",
+     "Person centred care examples are often small: the name they like, the song, the chair. This is where those details are gathered"
+    ],
+    "tags": [
+     {
+      "label": "Resident knowledge",
+      "href": "/uses/resident-knowledge"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Family answers (example)",
+     "stats": [
+      ["Invitations sent", "3"],
+      ["Answers waiting", "2"]
+     ],
+     "blocks": [
+      [
+       "Waiting for approval",
+       [
+        ["Sally, daughter: “Dad settles with the radio on low.” Approve, edit or reject", ""],
+        ["Mo, friend: “He loves talking about the buses.” Approve, edit or reject", ""]
+       ]
+      ],
+      [
+       "What staff see",
+       [
+        ["Only approved answers, marked with who gave them", ""]
+       ]
+      ]
+     ],
+     "caption": "Example only. The family page is a form, not a login or a portal."
+    }
+   },
+   {
+    "heading": "Check the night as well as the day",
+    "bullets": [
+     "The built in audit library includes a night shift walkround, an unannounced visit that records staffing, call bells, night checks and fire exits",
+     "One question is whether staff knew who was in charge and how to contact the on-call manager, a good check after a move",
+     "The audit library is on every plan, and a finding can become an action to follow up"
+    ],
+    "tags": [
+     {
+      "label": "Night shift walkround audit",
+      "href": "/care-audits/night-shift-walkround"
+     },
+     {
+      "label": "All audits",
+      "href": "/care-audits"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Night Shift Walkround (example)",
+     "stats": [
+      ["Staff on duty", "5"],
+      ["Findings", "1 action"]
+     ],
+     "blocks": [
+      [
+       "Staffing",
+       [
+        ["Staff were awake, alert and in uniform with ID. Yes", ""],
+        ["Staff knew who was in charge and how to contact the on-call manager. Yes", ""]
+       ]
+      ],
+      [
+       "Care and safety",
+       [
+        ["Call bells were within reach and answered promptly. Yes", ""],
+        ["Observation: the carer covering the unit did not know two residents by name", ""]
+       ]
+      ]
+     ],
+     "caption": "Example only. The observation line is typed by the person doing the visit."
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "What does a carer actually do when they are covering a unit they do not know?",
+    "a": "They open the Staff Hub on their phone, choose “This is me” and ask about a person by name, such as what helps when they are upset. The answer comes only from the profile your home has written for that person, and they are kept short."
+   },
+   {
+    "q": "What if the answer is not in the profile?",
+    "a": "The chat says it is not recorded in the profile yet and suggests asking the person, their family or the team. It does not guess. Not recorded means not recorded, and the manager can add it afterwards, so the next night shift carer finds it."
+   },
+   {
+    "q": "Does it replace the care plan or the handover?",
+    "a": "No. The profile is about who the person is, not their care record. For medicines, diet texture, mobility, risks or safeguarding the chat points the carer back to the care plan and the senior. Follow the care plan and handover for care and risk."
+   },
+   {
+    "q": "Who writes the profiles?",
+    "a": "Your team does. A manager adds each resident and fills in up to 11 sections. You can also invite family and friends to answer a few questions by email, and nothing they write reaches staff until an admin approves it."
+   },
+   {
+    "q": "Can I see what my night staff are asking?",
+    "a": "Yes. Questions staff ask the assistant are recorded against their name and visible to admins under Recent queries. A question with no match shows where a profile needs more detail. Staff should know their questions are not private."
+   },
+   {
+    "q": "Is this the same as a This Is Me form?",
+    "a": "It covers the same ground, but it is built into the hub so it can be searched at 3am rather than found in a folder. If you already use a this is me form, keep it. The <a href=\"/blog/this-is-me-document\">This Is Me document guide</a> explains what goes in one."
+   },
+   {
+    "q": "Will it tell me which units my staff have covered?",
+    "a": "No. CareStream does not know where anyone worked that night, and it will not warn you that a carer is on an unfamiliar unit. It makes the information available when they ask for it."
+   },
+   {
+    "q": "What does it cost and can I try it?",
+    "a": "Resident profiles are on the Professional and Enterprise plans, and you can start with a 14 day free trial. The <a href=\"/pricing\">pricing page</a> shows what each plan includes, and you can <a href=\"/register\">create a free account</a> to look around."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "Who a person is, not a substitute for the plan",
+  "cards": [
+   {
+    "title": "It only knows what has been written",
+    "body": "If a profile is thin, the answer is thin. It does not fill a gap with a guess. The value comes from your team and families writing the details down."
+   },
+   {
+    "title": "It is not clinical and not a handover",
+    "body": "It does not give clinical advice or replace the care plan, risk assessments or a proper handover. Those stay the source for care and risk."
+   },
+   {
+    "title": "It does not know who is covering where",
+    "body": "CareStream does not know where anyone is working, so nothing warns you when a carer moves unit. Resident profiles are on Professional and Enterprise."
+   }
+  ]
+ },
+ "read_next": [
+  "this-is-me-document",
+  "night-shift-policy-access",
+  "care-home-software"
+ ],
+ "faqs": {
+  "heading": "Night staff, resident profiles and CareStream, answered",
+  "groups": [
+   {
+    "group": "About the feature",
+    "items": [
+     {
+      "q": "How does a night shift carer find out about a resident they do not know?",
+      "a": "They ask the “This is me” chat in the Staff Hub, which answers only from the resident profile your home has written and approved. For care and risk they still follow the care plan and handover."
+     },
+     {
+      "q": "What is in a CareStream profile for a resident?",
+      "a": "It is a short, living record of who the person is. It has 11 sections, including life story, likes and dislikes, daily routine and what helps when they are upset. It is not a clinical record. More in <a href=\"/uses/resident-knowledge\">resident knowledge</a>."
+     },
+     {
+      "q": "Do I still need a this is me form?",
+      "a": "You can keep whichever form you already use. The profile does the same job in a form staff can ask questions of, on their own phone, at any hour."
+     },
+     {
+      "q": "Who can see the profiles?",
+      "a": "Admins manage them. Signed in staff can ask about living residents who have at least one section filled in. Family answers stay hidden until an admin approves them."
+     },
+     {
+      "q": "Which plans include resident profiles?",
+      "a": "Professional and Enterprise. The <a href=\"/pricing\">pricing page</a> has the full comparison."
+     },
+     {
+      "q": "What are some person centred care examples for night staff?",
+      "a": "Small things: calling someone by the name they like, keeping the radio or the lamp they are used to, knowing when they like to settle and what helps when they wake anxious. Each one is a detail a profile can hold."
+     }
+    ]
+   },
+   {
+    "group": "About inspections and training",
+    "items": [
+     {
+      "q": "What does the law say about person centred care?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/9\">Regulation 9</a> says the care and treatment of service users must be appropriate, meet their needs and reflect their preferences. Knowing a person's preferences is the first step to meeting them."
+     },
+     {
+      "q": "What does the law say about supporting staff?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> says staff must receive the appropriate support, training, professional development, supervision and appraisal they need to carry out their duties. It does not say how, so each provider decides what its staff need."
+     },
+     {
+      "q": "What training does a night shift carer need?",
+      "a": "The same as the day team, plus the practical knowledge of the people they support. The <a href=\"/staff-training/care-certificate\">Care Certificate course</a> covers the basics, and <a href=\"/uses/annual-training\">annual training</a> keeps it current."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to prepare for cover on an unfamiliar unit",
+  "lede": "Moving a carer at short notice will happen. What you can control is how much they know about the people when they get there.",
+  "sections": [
+   {
+    "h3": "Start with the details nights need most",
+    "paragraphs": [
+     "Start with the residents most likely to be awake, unsettled or distressed at night. For each one, write the name they like to be called, what settles them, who matters to them and what a good night looks like. Those details are what a carer who has never met them needs most."
+    ]
+   },
+   {
+    "h3": "Make it a habit, not a project",
+    "checklist": [
+     "Write a profile for the residents who are most often awake or anxious at night first.",
+     "Invite one family member or friend per resident to add what only they know.",
+     "When a night note says “unsettled”, add what helped to the profile the next morning.",
+     "Ask the night team once a month what they could not find out, and write it down."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Be ready to show how staff who cover other units get to know people. Keep the profiles current, and keep the care plan as the source for care and risk."
+ }
+}

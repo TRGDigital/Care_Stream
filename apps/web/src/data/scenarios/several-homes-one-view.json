@@ -1,0 +1,306 @@
+{
+ "slug": "several-homes-one-view",
+ "status": "draft",
+ "order": 83,
+ "title": "Running a care home group, and needing one view of <em>every home at once</em>",
+ "meta_title": "Care Home Group: One View of Every Home | CareStreamAI",
+ "meta_description": "Run a care home group and cannot see how each home is doing? Compare audit scores, repeat failures and overdue actions side by side, home by home.",
+ "eyebrow": "Scenario",
+ "lede": "When you run a care home group, each manager keeps their own records and the picture is only as current as the last phone call. CareStream gives every home its own site, and the group view puts audit results side by side. It sits alongside <a href=\"/training-platform\">training built from your own policies</a>.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "A regional director, four homes",
+  "pill": "Illustration",
+  "rows": [
+   {"label": "Each home runs its own audits", "note": "Every month", "done": true},
+   {"label": "Each manager reports by phone or email", "note": "Every month", "done": true},
+   {"label": "Homes compared on the same audits", "note": "Not yet", "done": false},
+   {"label": "Repeat failures and late actions spotted early", "note": "Not yet", "done": false}
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/24c434be-ca17-4362-ab63-a6f40d457d90.webp",
+ "image_alt": "Two managers from different homes and a regional director standing around a table in a bright meeting room, looking at a laptop that shows a simple comparison chart",
+ "card_title": "Several homes, and no single picture of how they are doing",
+ "card_snippet": "Each home keeps its own records, so the group picture is built from phone calls and spreadsheets. See audit scores, repeat failures and overdue actions for every home side by side.",
+ "primary_keyword": "care home group",
+ "secondary_keywords": [
+  "care home governance",
+  "care home compliance",
+  "care home compliance software"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Ad hoc training from each home's own policies, and wrong answers that become short lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Care audits",
+   "body": "A library of ready made audits that every home can run, with actions that are re-checked at the next audit.",
+   "action": "See the audit library",
+   "href": "/care-audits"
+  },
+  {
+   "title": "CQC and compliance",
+   "body": "Evidence that builds itself, and a readiness report for your next inspection.",
+   "action": "See CQC and compliance",
+   "href": "/cqc-compliance"
+  }
+ ],
+ "intro": {
+  "heading": "Four homes, four managers, and one regional director who is always catching up",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A regional director looks after four homes. Every manager is capable, and every home runs its audits. But the results sit in four different places, in four different formats. Before each monthly review the director rings round, asks how things are going and hears that all is fine. Then a failed medicines check turns up for the third month running in one home, and nobody had joined the dots. The director is not short of effort. They are short of one view, and a care home group cannot be governed from memory."
+ },
+ "trail": [
+  {"when": "Monday", "text": "Each home manager runs the monthly audits as agreed.", "kind": "ok"},
+  {"when": "Mid month", "text": "Actions are raised and given to named people in each home.", "kind": "ok"},
+  {"when": "Month end", "text": "Managers send a summary to the regional director.", "kind": "ok"},
+  {"when": "The review meeting", "text": "Each summary is written differently, so nothing lines up.", "kind": "gap"},
+  {"when": "In one home", "text": "The same medicines check has failed three audits running.", "kind": "gap"},
+  {"when": "In another", "text": "Actions are past their due date and the scheduled audit is late.", "kind": "gap"},
+  {"when": "What the director has", "text": "Four reassuring summaries and no way to compare them.", "kind": "gap"},
+  {"when": "A board or inspector asks", "text": "“How do you know all your homes are doing what you expect?”", "kind": "end"}
+ ],
+ "trail_close": "<b>The audits were never the problem.</b> The gap is between four sets of results and one clear picture. Here is how CareStream closes it, and where it stops.",
+ "why": {
+  "heading": "Good care home governance needs the same question asked of every home",
+  "sub": "A group is only as well led as its quietest home is well seen.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Summaries are not comparable",
+    "body": "One manager writes three lines and another writes three pages. Without the same measures, a regional director cannot tell a good month from a polite one."
+   },
+   {
+    "icon": "tick",
+    "title": "Problems repeat quietly",
+    "body": "A check that fails in one audit may be bad luck. The same check failing again and again is a pattern, and it is easy to miss when the results live in separate places."
+   },
+   {
+    "icon": "alert",
+    "title": "Late actions hide until they matter",
+    "body": "An overdue action or a late scheduled audit rarely makes it into a summary. It tends to surface when someone external asks about it."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Every home on its own, all of them in one view.",
+  "sub": "This is how a group is set up and read in CareStream, in the order a regional director meets it. See also <a href=\"/care-audits\">the audit library</a> and <a href=\"/how-it-works\">how CareStream works</a>.",
+  "blocks": [
+   {
+    "heading": "Each home is its own site, with its own policies and staff",
+    "bullets": [
+     "An admin adds a site under Settings, then Sites, then Add a site. The new home has its own policies, staff, questions and settings",
+     "Staff accounts belong to one home. An admin who looks after several homes switches between them from the top bar",
+     "Nothing is shared between homes by accident, so one home's policies and staff records stay with that home"
+    ],
+    "tags": [
+     {"label": "How CareStream works", "href": "/how-it-works"},
+     {"label": "Training built from your own policies", "href": "/training-platform"}
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Sites in your group (example)",
+     "stats": [["Homes", "4"], ["Staff accounts", "Per home"]],
+     "blocks": [
+      ["Homes in this group", [["Elm Court", "Policies, staff and settings of its own"], ["Birch House", "Policies, staff and settings of its own"], ["Mill Lane", "Policies, staff and settings of its own"], ["Park View", "Policies, staff and settings of its own"]]]
+     ],
+     "caption": "Example only. Names and layout are illustrative."
+    }
+   },
+   {
+    "heading": "A group console ranks the homes on the same measures",
+    "bullets": [
+     "Once an account has more than one site, a Benchmarking page appears at the top of the Overview menu",
+     "It lists the homes with their staff numbers, training, onboarding, audits, hub use over 30 days, an eight week trend and an overall figure",
+     "A regional admin can open any home straight from the list. See the pricing page for which plan includes the group console"
+    ],
+    "tags": [
+     {"label": "See the pricing page", "href": "/pricing"},
+     {"label": "CQC and compliance", "href": "/cqc-compliance"}
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Benchmarking (example)",
+     "stats": [["Homes", "4"], ["Staff", "112"], ["Overall", "78%"]],
+     "blocks": [
+      ["Homes, ranked by overall compliance", [["Elm Court", "88%"], ["Park View", "81%"], ["Birch House", "74%"], ["Mill Lane", "63%"]]],
+      ["Needs attention", [["Mill Lane", "6 overdue items"], ["Birch House", "2 overdue items"]]]
+     ],
+     "caption": "Example figures. Your own homes and numbers will differ."
+    }
+   },
+   {
+    "heading": "Compare audit results across homes, and spot repeat failures",
+    "bullets": [
+     "On the Audits page, an Across your homes table shows each home's score, audits done, repeat failures, open actions, overdue actions and overdue scheduled audits",
+     "A second table lines up the same audit in each home, so a weak home stands out in one glance",
+     "It needs two or more homes in the group, and it covers the last three months"
+    ],
+    "tags": [
+     {"label": "Care audits", "href": "/care-audits"},
+     {"label": "Monthly governance review audit", "href": "/care-audits/monthly-governance-review"}
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Across your homes, last 3 months (example)",
+     "stats": [["Repeat failures", "3"], ["Overdue actions", "5"], ["Overdue audits", "1"]],
+     "blocks": [
+      ["Each home", [["Elm Court", "Score 91%, 0 repeat failures, 0 overdue"], ["Mill Lane", "Score 68%, 2 repeat failures, 4 overdue"]]],
+      ["Same audit in each home: Medicines management", [["Elm Court", "92%"], ["Birch House", "81%"], ["Mill Lane", "64%"]]]
+     ],
+     "caption": "Example figures only. Not a rating and not a regulator record."
+    }
+   },
+   {
+    "heading": "Open a home and see what sits behind the number",
+    "bullets": [
+     "From the console, open the home that worries you and you land in its own dashboard as an admin",
+     "In that home, the Knowledge gaps view shows its most missed questions and weakest topics, if the home uses ad hoc training",
+     "Staff learning stays with the home that owns it, so the regional picture does not need a spreadsheet"
+    ],
+    "tags": [
+     {"label": "Ad hoc training", "href": "/uses/adhoc-training"},
+     {"label": "Policy gaps", "href": "/uses/policy-gaps"}
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {"open": 9, "affected": 6, "closed": 14, "engaged": 65},
+     "missed": [["Safe storage of medicines", "5 staff"], ["Reporting a concern", "3 staff"], ["Who the safeguarding lead is", "2 staff"]],
+     "weak": [["Medication", "6 gaps"], ["Safeguarding Adults", "3 gaps"]]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions group managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "We already audit every month. What does CareStream add?",
+    "a": "It puts the results of every home in one place, measured the same way. You keep your audits. You gain a side by side view of scores, repeat failures, overdue actions and late scheduled audits, so you can see which home needs a conversation before a review meeting, not during it."
+   },
+   {
+    "q": "How do I set up a care home group in CareStream?",
+    "a": "An admin goes to Settings, then Sites, then Add a site. Each home becomes its own site with its own policies, staff and settings. Admins who look after more than one home switch between them from the top bar, and the group views appear once there are two or more homes."
+   },
+   {
+    "q": "Can one home see another home's staff or policies?",
+    "a": "No. Staff accounts belong to a single home and each home keeps its own policies. What a group admin can do is compare results across the homes and open any home they have access to."
+   },
+   {
+    "q": "What exactly can I compare?",
+    "a": "On the Audits page you can compare each home's audit score, repeat failures, open and overdue actions and overdue scheduled audits, plus the same audit across homes. The Benchmarking page adds staff numbers, training, onboarding, audits completed, hub use and a trend."
+   },
+   {
+    "q": "Does a high score on the console mean a home is compliant?",
+    "a": "No. It is a way to see where to look, not a verdict. The audits figure on the console shows how many audits have been completed, and the overall figure is an average of a few measures. Judging the quality of care still takes a person who knows the home."
+   },
+   {
+    "q": "Which plan includes the group console?",
+    "a": "Please see the <a href=\"/pricing\">pricing page</a> for which plan includes it, and talk to us if you run several services. We would rather you check than rely on a summary here."
+   },
+   {
+    "q": "Does it help with care home governance and inspections?",
+    "a": "It gives you a regular, written way to see how every home is doing and what has been done about it. That supports the systems the regulations expect you to run. It sits alongside your <a href=\"/cqc-compliance\">CQC evidence</a>, and it does not replace your own judgement or visits."
+   },
+   {
+    "q": "Can we try it before we commit?",
+    "a": "Yes. There is a 14 day free trial on the paid plans, and you can <a href=\"/register\">create a free account</a> to look around. Add two homes and you will see the group views for yourself."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A clear view of your homes, not a judgement of them",
+  "cards": [
+   {
+    "title": "It is not a rating or a regulator record",
+    "body": "The scores and rankings are your own audit results and activity, shown side by side. They are not a CQC rating, a pass or a prediction of one."
+   },
+   {
+    "title": "Each home keeps its own staff and policies",
+    "body": "Staff accounts and policies belong to one home. The group view compares results. It does not merge teams or create one shared policy set."
+   },
+   {
+    "title": "It will not tell you why a home is struggling",
+    "body": "A weak score or a repeat failure shows where to look. Visiting the home and talking to the manager still has to explain it. Check the pricing page for which plan includes the group features."
+   }
+  ]
+ },
+ "read_next": [
+  "the-complete-guide-to-care-home-digital-audits",
+  "the-care-compliance-dashboard-nobody-opens-and-how-to-fix-it"
+ ],
+ "faqs": {
+  "heading": "Running several homes with CareStream, answered",
+  "groups": [
+   {
+    "group": "About the group view",
+    "items": [
+     {
+      "q": "What is a care home group view?",
+      "a": "It is one place where a regional director or owner sees how each home is doing on the same measures. In CareStream that means audit results, repeat failures, overdue actions and the group console, with each home opened separately for the detail."
+     },
+     {
+      "q": "How many homes do I need before the group views appear?",
+      "a": "Two or more. A single home does not see the group comparison, because there is nothing to compare."
+     },
+     {
+      "q": "Do managers in each home need to do anything different?",
+      "a": "No. They run their audits and training as usual. The group view reads what each home has already recorded."
+     },
+     {
+      "q": "What does repeat failures mean?",
+      "a": "It means the same check has failed in consecutive audits. One miss can be chance. A repeat is worth a conversation."
+     },
+     {
+      "q": "Is this care home compliance software for a single home too?",
+      "a": "Yes. A single home gets the audits, training and evidence. The group views only add something once you have two or more homes. See the <a href=\"/staff-training/care-certificate\">Care Certificate course</a> for one example of the training each home can use."
+     },
+     {
+      "q": "Which plan do I need for care home compliance across several homes?",
+      "a": "Please check the <a href=\"/pricing\">pricing page</a> for which plan includes the group console. If you run several services, talk to us about your set up."
+     }
+    ]
+   },
+   {
+    "group": "About governance and inspection",
+    "items": [
+     {
+      "q": "What does care home governance mean in practice?",
+      "a": "In plain terms, it is how a provider checks that its services are safe and good, and acts on what it finds. Regulation 17 asks providers to run systems that <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">assess, monitor and improve the quality and safety of the services provided</a>. Regular audits and acting on them are part of that."
+     },
+     {
+      "q": "What does CQC say about audits and good governance?",
+      "a": "The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-17\">CQC guidance on Regulation 17</a> expects providers to use regular audits, monitor progress against improvement plans and show how what they learn leads to improvements. It does not describe a particular tool."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to keep a view across several homes",
+  "lede": "Care home compliance across a group does not fail for lack of effort. It fails when each home measures things its own way. A short, steady routine does more than a big review twice a year.",
+  "sections": [
+   {
+    "h3": "Choose a small set of measures and keep them the same",
+    "paragraphs": [
+     "Agree a handful of audits that every home runs on the same schedule. A monthly governance review, medicines, infection control and health and safety are common starting points. The <a href=\"/care-audits\">audit library</a> has ready made versions you can use as they are. Then read the results together, not home by home. For more on making results useful, see our guide to <a href=\"/blog/the-complete-guide-to-care-home-digital-audits\">digital audits</a> and why <a href=\"/blog/the-care-compliance-dashboard-nobody-opens-and-how-to-fix-it\">a compliance dashboard nobody opens</a> fails."
+    ]
+   },
+   {
+    "h3": "A monthly rhythm for the regional director",
+    "checklist": [
+     "Open the group comparison and look at repeat failures first, because they show what has not been fixed.",
+     "Check overdue actions and late scheduled audits for each home, and ask the manager what is in the way.",
+     "Open the lowest scoring home and look at its detail before you pick up the phone.",
+     "Write down what you agreed with each manager, and look at the same measures next month."
+    ]
+   }
+  ],
+  "note": "<b>For the board or inspector.</b> Keep the monthly comparison and your notes of what you agreed, so you can show how you know each home is doing what you expect."
+ }
+}

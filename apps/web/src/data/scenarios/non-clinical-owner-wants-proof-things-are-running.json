@@ -1,0 +1,503 @@
+{
+ "slug": "non-clinical-owner-wants-proof-things-are-running",
+ "status": "draft",
+ "order": 81,
+ "title": "Care home compliance software for an owner who is not clinical. <em>Plain proof, every week.</em>",
+ "meta_title": "Care Home Compliance Software for Owners | CareStreamAI",
+ "meta_description": "Not clinical, but accountable? See what a care home owner can check each week: audit scores, overdue audits, open actions and knowledge gaps.",
+ "eyebrow": "Scenario",
+ "lede": "You own the service, you are accountable for it, and you are not a nurse. Good <a href=\"/training-platform\">care home compliance software</a> should give you a plain weekly picture of what is running, what is late and what is stuck, without asking you to read clinical records. Here is what CareStream shows an owner, and where you still need your own eyes.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "What an owner can check on a Monday",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Audit summary email read",
+    "note": "Monday 8am",
+    "done": true
+   },
+   {
+    "label": "Scores by month looked at",
+    "note": "Monday 8am",
+    "done": true
+   },
+   {
+    "label": "Overdue and missed audits asked about",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Visit and questions on the floor",
+    "note": "This week",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/28ead08b-cf0a-40c6-a77b-1df882957916.webp",
+ "image_alt": "A care home owner in a smart jacket sits at a desk reading a one page summary on a laptop while the manager stands beside her, relaxed and trusting, in a bright office",
+ "card_title": "I am not clinical. How do I know things are running?",
+ "card_snippet": "A care home owner who does not work on the floor still needs plain proof. See the weekly emails, audit scores, overdue audits, open actions and knowledge gaps you can check yourself.",
+ "primary_keyword": "care home compliance software",
+ "secondary_keywords": [
+  "care home owner",
+  "care home governance",
+  "care home compliance"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Audits you can score and schedule",
+   "body": "A library of audits with scores, trends, schedules and action plans, free on every plan.",
+   "action": "See the audits",
+   "href": "/care-audits"
+  },
+  {
+   "title": "CQC and compliance",
+   "body": "Evidence that builds itself, and a readiness report for your next inspection.",
+   "action": "See CQC and compliance",
+   "href": "/cqc-compliance"
+  }
+ ],
+ "intro": {
+  "heading": "The manager says it is all fine. How would you know?",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "You bought the business, or inherited it, and your background is finance, property or running other companies. Your registered manager is capable and works hard. When you ask how things are, the answer is \"fine\", and you have no way to test it. You are not being nosy. You are the person the regulator will look to, and you want a few plain numbers you can read in ten minutes, the same way every week, without needing a clinical vocabulary. Here is how that usually plays out."
+ },
+ "trail": [
+  {
+   "when": "Monthly meeting",
+   "text": "The manager reports that audits are on track and staff are doing well.",
+   "kind": "ok"
+  },
+  {
+   "when": "Same meeting",
+   "text": "You trust her, and you have no reason not to.",
+   "kind": "ok"
+  },
+  {
+   "when": "After the meeting",
+   "text": "You ask for a copy of the audits and receive a folder of forms.",
+   "kind": "ok"
+  },
+  {
+   "when": "Weeks later",
+   "text": "Nobody has added up the scores, so you cannot see whether they are rising or falling.",
+   "kind": "gap"
+  },
+  {
+   "when": "Which audits",
+   "text": "You cannot tell which are late, which were skipped and which repeat the same failure.",
+   "kind": "gap"
+  },
+  {
+   "when": "Actions",
+   "text": "Actions were raised, but you cannot see which are still open or who owns them.",
+   "kind": "gap"
+  },
+  {
+   "when": "Staff knowledge",
+   "text": "No one can tell you which questions staff keep getting wrong.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "An inspector asks how you, as owner, know the service is safe.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>Trust is fine. Trust with nothing to check is the risk.</b> Here is what CareStream puts in front of an owner each week, and what it deliberately does not claim to tell you.",
+ "why": {
+  "heading": "Governance is about how you know, not what you hope",
+  "sub": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17 of the 2014 regulations</a> requires systems or processes that assess, monitor and improve the quality and safety of the service. Owners need to see those systems working.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "\"Fine\" is not a figure",
+    "body": "A manager can be right and still unable to prove it. A score by month, or a list of overdue audits, turns a feeling into something you can both discuss."
+   },
+   {
+    "icon": "tick",
+    "title": "You need a rhythm, not a login habit",
+    "body": "A weekly email that arrives on its own is easier to keep up than a dashboard you have to remember to open."
+   },
+   {
+    "icon": "alert",
+    "title": "Late and missed work hides in the gaps",
+    "body": "A skipped audit leaves no paperwork behind it. It only shows up when something records that it was due and did not happen."
+   }
+  ]
+ },
+ "how": {
+  "heading": "What an owner can look at, step by step",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature alongside the audit tools, in the order an owner meets them. For a deeper read on the audit side, see <a href=\"/blog/care-home-audit-schedule\">how often care home audits should be done</a>.",
+  "blocks": [
+   {
+    "heading": "Audit scores by month, in plain percentages",
+    "bullets": [
+     "Run audits from the built in library, which is free on every plan, and each completed audit is scored as the share of checks met",
+     "The Insights panel on the admin Audits page shows the score for each audit by month, and flags a check that failed in consecutive audits",
+     "Insights is for admins, so an owner needs an \"Admin, full access\" login, which your manager can set up under Staff"
+    ],
+    "tags": [
+     {
+      "label": "Care audits library",
+      "href": "/care-audits"
+     },
+     {
+      "label": "Monthly governance review audit",
+      "href": "/care-audits/monthly-governance-review"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Audits, Insights (example)",
+     "stats": [
+      [
+       "Completed audits",
+       "14"
+      ],
+      [
+       "Checks met",
+       "86%"
+      ],
+      [
+       "Repeat failures",
+       "2"
+      ]
+     ],
+     "blocks": [
+      [
+       "Score by month, example",
+       [
+        [
+         "Medicines Management",
+         "Aug 81%, Sep 84%, Oct 90%"
+        ],
+        [
+         "Infection Control",
+         "Aug 92%, Sep 88%, Oct 79%"
+        ],
+        [
+         "Kitchen Audit",
+         "Aug 95%, Sep 96%, Oct 94%"
+        ]
+       ]
+      ],
+      [
+       "Repeat failures, example",
+       [
+        [
+         "Sluice room door left unlocked",
+         "Failed 2 audits running"
+        ]
+       ]
+      ]
+     ],
+     "caption": "Example figures only. Illustration, not real data."
+    }
+   },
+   {
+    "heading": "Which audits are done, late or missed",
+    "bullets": [
+     "Schedule an audit for a named person with a due date and an optional repeat, and they are reminded before it is due and when it is overdue",
+     "A repeating audit that is still open when the next one falls due is marked missed, so a skip stays visible",
+     "The scheduling board shows done, in progress, overdue, due and missed for each audit by month, and it is on every plan"
+    ],
+    "tags": [
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     },
+     {
+      "label": "Audit schedule guide",
+      "href": "/blog/care-home-audit-schedule"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Scheduling board (example)",
+     "stats": [
+      [
+       "Overdue",
+       "1"
+      ],
+      [
+       "Missed",
+       "1"
+      ],
+      [
+       "Done this month",
+       "6"
+      ]
+     ],
+     "blocks": [
+      [
+       "Month by month, example",
+       [
+        [
+         "Hand hygiene observation",
+         "Sep Done, Oct Done, Nov Overdue"
+        ],
+        [
+         "Medicines Management",
+         "Sep Done, Oct Missed, Nov Done"
+        ],
+        [
+         "Health and Safety",
+         "Sep Done, Oct Done, Nov Due"
+        ]
+       ]
+      ]
+     ],
+     "caption": "Example screen. Illustration, not real data."
+    }
+   },
+   {
+    "heading": "Open actions, and whether they were really fixed",
+    "bullets": [
+     "Actions can have an owner, a due date and up to 10 photos as proof when they are closed",
+     "An owner can ask for more time with a reason, and an admin approves or declines it, so the extension is on record",
+     "At the next audit of the same kind the auditor marks each earlier action fixed or not fixed, and a not fixed action is reopened"
+    ],
+    "tags": [
+     {
+      "label": "CQC and compliance",
+      "href": "/cqc-compliance"
+     },
+     {
+      "label": "Care audits library",
+      "href": "/care-audits"
+     }
+    ],
+    "mock": {
+     "type": "audit",
+     "audit": "Action plan (example)",
+     "stats": [
+      [
+       "Open actions",
+       "5"
+      ],
+      [
+       "Overdue",
+       "1"
+      ],
+      [
+       "Reopened",
+       "1"
+      ]
+     ],
+     "blocks": [
+      [
+       "Actions, example",
+       [
+        [
+         "Replace worn bedroom call bell cord",
+         "Owner: maintenance lead, due 28 Nov"
+        ],
+        [
+         "Label opened thickener tubs",
+         "Owner: senior carer, closed with photo"
+        ],
+        [
+         "Fix sluice door lock",
+         "Reopened at re-check"
+        ]
+       ]
+      ]
+     ],
+     "caption": "Example figures only. Illustration, not real data."
+    }
+   },
+   {
+    "heading": "Knowledge gaps and the Monday digest email",
+    "bullets": [
+     "Admins receive a weekly knowledge gaps digest on Mondays: open gaps, staff affected, gaps closed this week and the share engaged with the learning",
+     "It lists the most missed questions and weakest topics, so you can ask the manager about a topic instead of a person",
+     "It sends when there is something to report, and it is switched on or off in Settings, Email preferences"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Policy gap detection",
+      "href": "/policy-gap-detection"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 9,
+      "affected": 6,
+      "closed": 14,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Reporting a safeguarding concern",
+       "4 staff"
+      ],
+      [
+       "When to use a pressure relieving cushion",
+       "3 staff"
+      ],
+      [
+       "Who is the fire safety officer",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Safeguarding Adults",
+       "5 gaps"
+      ],
+      [
+       "Moving and Handling",
+       "3 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions owners ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "I am not clinical. What can I actually look at?",
+    "a": "Four things, in plain words: audit scores by month, which audits are overdue or missed, which actions are still open, and the knowledge gaps digest on Mondays. None of them need clinical knowledge. They answer \"is the routine running, and is it getting better or worse?\""
+   },
+   {
+    "q": "What do I need to do to see it?",
+    "a": "Ask your manager to give you an \"Admin, full access\" login under Staff. Insights and the scheduling controls are for admins. Then check your email preferences in Settings, so the Monday digest and the audit summary reach you."
+   },
+   {
+    "q": "Does the Monday email cover everything?",
+    "a": "No, and it is worth knowing. The Monday digest is about <a href=\"/uses/policy-gaps\">knowledge gaps</a> only: open gaps, staff affected, closed this week and engaged with learning. Audit information comes in a separate summary email, which you can set to daily, weekly or off in Settings."
+   },
+   {
+    "q": "How does a knowledge gap get there in the first place?",
+    "a": "Your manager allocates <a href=\"/uses/adhoc-training\">adhoc training</a> built from your policies. A carer who answers wrongly gets a follow up in the Staff Hub, and chooses Learn &amp; retry or Just retry. The gap closes when they get it right, and you see the totals."
+   },
+   {
+    "q": "Will I be told every time someone gets a question wrong?",
+    "a": "No. Nothing alerts you on each wrong answer. You see the pattern in the digest and in the Knowledge gaps view. That keeps the picture calm and useful rather than noisy."
+   },
+   {
+    "q": "Can I trust a score of 90 per cent?",
+    "a": "Trust it as what it is: the share of checks met in the audits that were completed. It shows activity and results. It cannot tell you whether care feels kind. For that you still visit, sit with residents and ask staff what they would do."
+   },
+   {
+    "q": "Is this a rating or a CQC record?",
+    "a": "No. CareStream is software your service uses to run audits, training and follow up. It is not a pass, a rating or a regulator record. Think of it as your own paper trail, tidier and easier to read."
+   },
+   {
+    "q": "How do I try it?",
+    "a": "There is a <a href=\"/register\">14 day free trial</a>. Create a free account, add your manager as an admin, and run one audit from the library. Audits are included on every plan, so you can see the owner view quickly. See <a href=\"/pricing\">the pricing page</a> for what each plan includes."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A window onto the routine, not a replacement for you",
+  "cards": [
+   {
+    "title": "It shows activity, not quality of care",
+    "body": "Scores, overdue lists and gaps show what was done and what was found. They do not show how a resident felt at lunch. You still need to visit and talk to staff."
+   },
+   {
+    "title": "Some views are for admins only",
+    "body": "Insights and scheduling controls need an admin login. The Monday digest goes to admins, and the audit summary email goes to admins, so an owner who wants either needs that access."
+   },
+   {
+    "title": "No alert for every slip, and some emails hold back",
+    "body": "Nothing tells you each time a carer gets a question wrong, and the digest only sends when there is something to report. Check which plan includes adhoc training and translation on the pricing page."
+   }
+  ]
+ },
+ "read_next": [
+  "the-care-compliance-dashboard-nobody-opens-and-how-to-fix-it",
+  "what-compliant-actually-means-for-one-care-staff-member",
+  "care-home-audit-schedule"
+ ],
+ "faqs": {
+  "heading": "Owner questions about care home compliance, answered",
+  "groups": [
+   {
+    "group": "For the owner",
+    "items": [
+     {
+      "q": "What should a care home owner check each week?",
+      "a": "Keep it to a few things: audit scores by month, overdue and missed audits, open actions and the knowledge gaps digest. The <a href=\"/blog/the-care-compliance-dashboard-nobody-opens-and-how-to-fix-it\">dashboard nobody opens</a> is a common trap, so pick a small list and stick to it."
+     },
+     {
+      "q": "What is care home governance in plain words?",
+      "a": "It is the set of checks and routines that let the people in charge know how the service is doing and act on it. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17</a> expects systems that assess, monitor and improve quality and safety. CareStream gives you a visible record of that routine."
+     },
+     {
+      "q": "Do directors have their own duties?",
+      "a": "Yes. For example, <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/5\">regulation 5</a> deals with the fit and proper person requirements for directors of a provider. Software does not meet that duty for you, but it can help you stay informed."
+     },
+     {
+      "q": "Can an owner see the data without being a manager?",
+      "a": "Yes, with an \"Admin, full access\" login. Your manager sets the access level under Staff. See <a href=\"/how-it-works\">how CareStream works</a> for the wider picture."
+     }
+    ]
+   },
+   {
+    "group": "About the product",
+    "items": [
+     {
+      "q": "Is care home compliance software the same as a rating?",
+      "a": "No. It helps you run and record your own checks. It is not a pass, a rating or a regulator record. See <a href=\"/cqc-compliance\">CQC and compliance</a> for what it helps you evidence."
+     },
+     {
+      "q": "Are audits free?",
+      "a": "The built in audit library, scoring, scheduling and action tracking are included on every plan. Some extras, such as draft recommendations and the action plan draft, are on paid plans. See <a href=\"/pricing\">the pricing page</a>."
+     },
+     {
+      "q": "How does CareStream help with care home compliance across staff knowledge?",
+      "a": "Your manager allocates <a href=\"/uses/adhoc-training\">adhoc training</a> from your policies, and wrong answers become short follow up lessons that you see as knowledge gaps."
+     },
+     {
+      "q": "Does it cover several homes?",
+      "a": "Group views exist for accounts with more than one site, but plan details differ. See <a href=\"/pricing\">the pricing page</a> for which plan includes them."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A ten minute Monday routine for an owner who is not clinical",
+  "lede": "You do not need clinical language to practise good care home governance. You need the same few questions, asked at the same time, with something in front of you.",
+  "sections": [
+   {
+    "h3": "Start with the things that arrive on their own",
+    "paragraphs": [
+     "Open the Monday digest and the audit summary email first. They come to you, so the routine does not depend on remembering a login. Note the numbers and compare them with last week. Is the open gaps figure down? Is anything overdue? Write one question for your manager from what you see, and ask it with curiosity rather than suspicion."
+    ],
+    "checklist": [
+     "Read the Monday knowledge gaps digest and note open gaps and staff affected",
+     "Read the audit summary email: what is overdue, due soon and completed",
+     "Open the Audits page, Insights, and look at the score by month for two audits",
+     "Write one question for your manager, about a topic or an audit, not a person"
+    ]
+   },
+   {
+    "h3": "Then go and look",
+    "paragraphs": [
+     "A weekly picture is a prompt, not a verdict. Once a month, walk the home, sit with a resident, and ask a carer what they would do if someone told them something worrying. If the answers match what the figures suggest, you have learned something. If they do not, you have found the question to ask. For the legal side, <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">regulation 17</a> is the place to start reading about governance duties."
+    ]
+   }
+  ],
+  "note": "Example screens and figures on this page are illustrations only. Check the pricing page for which plan includes each feature."
+ }
+}

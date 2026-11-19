@@ -1,0 +1,408 @@
+{
+ "slug": "learning-disability-service-training-follow-up",
+ "status": "draft",
+ "order": 90,
+ "title": "Learning disability training for your team. <em>Did the new approach reach everyone?</em>",
+ "meta_title": "Learning Disability Training Follow Up | CareStreamAI",
+ "meta_description": "Support workers heard the new approach in a team meeting. Allocate short training from your own policies and turn wrong answers into a quick lesson.",
+ "eyebrow": "Scenario",
+ "lede": "In learning disability and autism services, good support depends on every worker knowing how each person likes things done. After a team meeting or a session, you allocate short learning disability training <a href=\"/training-platform\">built from your own policies</a>. A wrong answer then becomes a short lesson, so you can see who has the new approach and who needs another look.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After the team meeting on a changed support plan",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Plan changed and discussed",
+    "note": "Tuesday",
+    "done": true
+   },
+   {
+    "label": "Easy read sheet shared",
+    "note": "Tuesday",
+    "done": true
+   },
+   {
+    "label": "Each worker checked on the new approach",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Misunderstandings closed with a short lesson",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/de1254ec-67be-48be-b1dc-a6f6f018c572.webp",
+ "image_alt": "A support worker and a colleague review a short easy read sheet at a table in a bright community house",
+ "card_title": "The support plan changed. Has every worker got the new approach?",
+ "card_snippet": "A team meeting and an easy read sheet do not show who understood. Allocate short training built from your own policies, and a wrong answer becomes a quick lesson on that exact point.",
+ "primary_keyword": "learning disability training",
+ "secondary_keywords": [
+  "learning disability care",
+  "autism training"
+ ],
+ "intro": {
+  "heading": "The plan changed on Tuesday. By Friday, who knows what is different?",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A manager of a small supported living service has just changed how the team supports a man who becomes distressed at busy mealtimes. The team met on Tuesday, talked it through and passed round an easy read sheet. Nobody raised a concern. Three days later the weekend staff arrive, including two who rarely attend meetings, and a relief worker who has never met him. The manager cannot say who has taken in the new approach. It is a worry in any learning disability care service, because the person feels the difference first. Here is how it plays out."
+ },
+ "trail": [
+  {
+   "when": "Tuesday",
+   "text": "The team meets about a changed approach to mealtimes.",
+   "kind": "ok"
+  },
+  {
+   "when": "In the meeting",
+   "text": "Everyone nods. The reasons are explained clearly.",
+   "kind": "ok"
+  },
+  {
+   "when": "After the meeting",
+   "text": "An easy read sheet goes round and the notes are filed.",
+   "kind": "ok"
+  },
+  {
+   "when": "Friday",
+   "text": "The weekend team starts. Two were not at the meeting.",
+   "kind": "gap"
+  },
+  {
+   "when": "Who might have missed it",
+   "text": "A relief worker who has never supported him and relies on a quick handover.",
+   "kind": "gap"
+  },
+  {
+   "when": "And another",
+   "text": "A confident worker who reads the sheet and carries on as before.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager has",
+   "text": "Meeting notes and a filed sheet. Nothing showing what each worker understood.",
+   "kind": "gap"
+  },
+  {
+   "when": "Review day",
+   "text": "“How do you know your staff support him the agreed way?”",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "The meeting was good and the sheet was clear. What is missing is a quiet way to check, worker by worker, that the approach has landed. The rest of this page shows how.",
+ "why": {
+  "heading": "A meeting shows who was there, not who understood",
+  "sub": "A reviewer will not ask who attended. They will ask a worker what they would do.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Support is personal",
+    "body": "In a learning disability service, the right approach differs for each person. A general memory of the training is not enough. Workers need to know what was agreed for this person and why."
+   },
+   {
+    "icon": "alert",
+    "title": "A meeting reaches only those in it",
+    "body": "Part time staff, relief workers and night teams often miss the discussion. A sheet in a folder does not show whether anyone has read it or understood it."
+   },
+   {
+    "icon": "tick",
+    "title": "A short check is gentle",
+    "body": "A few questions on a phone feel kinder than a test. A wrong answer is treated as a prompt to learn, not a mark against the worker."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, the follow up out.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a support worker meet it. See also <a href=\"/uses/adhoc-training\">allocating adhoc training after a change</a> and <a href=\"/uses/annual-training\">annual training</a>.",
+  "blocks": [
+   {
+    "heading": "Allocate adhoc training on the topic, built from your own policies",
+    "bullets": [
+     "Open the Training screen and pick the topic module closest to what the team discussed, then tick the workers who need it",
+     "CareStream builds lessons and questions from your own policies where they cover the topic, with general good practice as the fallback. You can edit and preview them first",
+     "Workers complete it in the Staff Hub, on their own phone, with an optional due date"
+    ],
+    "tags": [
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     },
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Learning Disability & Autism",
+     "questions": [
+      "A person you support becomes distressed at a busy mealtime. What should you do first?",
+      "Why is it important to follow the agreed approach in someone's support plan?",
+      "How can you check a person has understood what you have said?"
+     ],
+     "staff_count": 9
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson on that exact point",
+    "bullets": [
+     "The wrong answer goes straight into the worker's Follow-up tab in the Staff Hub, and they get an email, at most once a day, in English",
+     "They choose Learn &amp; retry, a short lesson (why it matters, what to remember, a realistic situation) then a fresh question, or Just retry the same question, as often as they need",
+     "Because lessons draw on your own policies, they teach how your service supports people, not a general script"
+    ],
+    "tags": [
+     {
+      "label": "Wrong answers become lessons",
+      "href": "/training-platform"
+     },
+     {
+      "label": "Staff training",
+      "href": "/staff-training"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Learning Disability & Autism",
+     "question": "A person you support becomes distressed at a busy mealtime. What should you do first?",
+     "why": "Distress is often communication. Reducing noise and demands and staying calm usually helps more than correcting the behaviour.",
+     "remember": [
+      "Stay calm and give space",
+      "Reduce noise and demands",
+      "Follow the person's agreed plan"
+     ],
+     "picture": "The dining room is loud. He covers his ears and pushes his plate away."
+    }
+   },
+   {
+    "heading": "A second look at the same weak point, in the language a worker thinks in",
+    "bullets": [
+     "A worker who answers wrongly because of a missed word can open the lesson in their own language",
+     "Your admin sets their second language, and they switch to it in the hub",
+     "Training in different languages is part of the paid plans, and reminder emails stay in English"
+    ],
+    "tags": [
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish"
+    }
+   },
+   {
+    "heading": "See the gaps across the team, and whether they closed",
+    "bullets": [
+     "The Knowledge gaps view shows open gaps, staff affected, most missed questions and weakest topics",
+     "See how gaps are being closed, so a quiet worker is not missed",
+     "A Monday digest email brings the picture to you, with nothing alerting you on each wrong answer"
+    ],
+    "tags": [
+     {
+      "label": "Reporting that runs itself",
+      "href": "/training-platform"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 5,
+      "affected": 4,
+      "closed": 11,
+      "engaged": 68
+     },
+     "missed": [
+      [
+       "Reducing demands when distressed",
+       "3 staff"
+      ],
+      [
+       "Checking understanding",
+       "2 staff"
+      ],
+      [
+       "Following the agreed plan",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Learning Disability & Autism",
+       "4 gaps"
+      ],
+      [
+       "Safeguarding Adults",
+       "1 gap"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "Is CareStream set up for learning disability and autism services?",
+    "a": "Honestly, it is not one of the care settings with its own page on our site. The loop works the same in any service, though, and your own policies, such as positive behaviour support, are what the training is built from. You allocate it in the Training screen and workers complete it in the Staff Hub."
+   },
+   {
+    "q": "Is there a CareStream course on learning disability and autism?",
+    "a": "Not as a standalone course in our free CPD library. The <a href=\"/staff-training/care-certificate\">Care Certificate course</a> includes a standard on awareness of learning disability and autism. For your own service, you allocate adhoc training on the topic, built from your own policies."
+   },
+   {
+    "q": "How would I know whether the team took in a changed approach?",
+    "a": "You allocate short training on the topic after the meeting. Each worker answers on their own phone, and the answers are scored. You can see who understood and who needs another look."
+   },
+   {
+    "q": "What happens when someone gets a question wrong?",
+    "a": "It goes into that worker's Follow-up tab and they get an email, at most once a day. They choose Learn &amp; retry, a short lesson then a fresh question, or Just retry the same question. They can retry as often as they need."
+   },
+   {
+    "q": "Will the lessons match how we support people?",
+    "a": "Where your policies cover the point, the lesson draws on them, so it teaches what your service does. Where they do not, it falls back on general good practice, which is a useful prompt to improve the policy."
+   },
+   {
+    "q": "What do I see across the team?",
+    "a": "The Knowledge gaps view shows open gaps, staff affected, the questions most often missed and the weakest topics. A digest email arrives on Monday. Nothing alerts you each time someone gets a question wrong."
+   },
+   {
+    "q": "Does this replace our own training for supporting a person?",
+    "a": "No. Knowing a person well, shadowing and observed practice cannot be done on a phone. CareStream checks understanding of what was agreed and keeps the record, alongside the supervision and shadowing you already do."
+   },
+   {
+    "q": "How do we try it?",
+    "a": "Create a free account and start the 14 day free trial. Adhoc training and translation are on the paid plans, so see the <a href=\"/pricing\">pricing page</a> for which plan suits you, or <a href=\"/register\">register</a> to look around."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A check on understanding, not a replacement for knowing the person",
+  "cards": [
+   {
+    "title": "It does not replace person centred practice",
+    "body": "Getting to know someone, shadowing and observed support cannot be learned from a question. CareStream checks what people understood and keeps the record."
+   },
+   {
+    "title": "It is not a dedicated learning disability course",
+    "body": "Learning disability and autism services are not one of our named care settings, and there is no standalone course on the topic in the free library. Your training is built from your own policies."
+   },
+   {
+    "title": "It does not alert you to every wrong answer",
+    "body": "The picture reaches you through the Knowledge gaps view and the Monday digest. Adhoc training and translation are on the paid plans."
+   }
+  ]
+ },
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Adhoc training from your policies, and wrong answers that become short lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Adhoc training",
+   "body": "Turn a change, a meeting or an incident into short training your team completes on their phones.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "Care audits",
+   "body": "A free library of audits, including a monthly positive behaviour support and restrictive practice review.",
+   "action": "See care audits",
+   "href": "/care-audits"
+  }
+ ],
+ "read_next": [
+  "policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers",
+  "face-to-face-training-in-care-what-actually-has-to-be-in-the-room"
+ ],
+ "faqs": {
+  "heading": "Learning disability training and CareStream, answered",
+  "groups": [
+   {
+    "group": "About the training",
+    "items": [
+     {
+      "q": "What is learning disability training for care staff?",
+      "a": "It helps workers understand how to support people with a learning disability and autistic people, including communication, person centred planning and positive behaviour support. The best versions combine learning with practice. CareStream adds a follow up check, built from your own policies."
+     },
+     {
+      "q": "Does CareStream offer autism training?",
+      "a": "There is no standalone autism course in the free CPD library. The <a href=\"/staff-training/care-certificate\">Care Certificate course</a> includes a standard on awareness of learning disability and autism. You can also allocate adhoc training on the topic from your own policies, to check that a team has understood your approach."
+     },
+     {
+      "q": "What if a worker gets a question wrong?",
+      "a": "It appears in their Follow-up tab. They can choose Learn &amp; retry, a short lesson followed by a fresh question, or Just retry the same question, as often as they need. Treat it as information, not failure."
+     },
+     {
+      "q": "Can I use it for learning disability care in supported living?",
+      "a": "Yes. It works the same in supported living, residential and community services. Workers use the Staff Hub on their own phone, so a relief or weekend worker is checked as well as the core team."
+     },
+     {
+      "q": "How soon after a team meeting should the check go out?",
+      "a": "Within a few days is sensible: early enough that the meeting is fresh, late enough to show what stuck. You choose when to allocate it, and you can set a due date."
+     },
+     {
+      "q": "Does this check practical skills?",
+      "a": "No. Practical support and communication need observation by someone who knows the person. Pair a knowledge check with <a href=\"/uses/face-to-face-training\">face to face sessions</a> and supervision."
+     }
+    ]
+   },
+   {
+    "group": "About inspections",
+    "items": [
+     {
+      "q": "What does the law say about learning disability and autism training?",
+      "a": "<a href=\"https://www.skillsforcare.org.uk/Funding/Oliver-McGowan-Mandatory-Training.aspx\">Skills for Care</a> says all CQC registered providers must ensure staff have training on learning disability and autism, appropriate to their role, under the Health and Care Act 2022. The CQC page on <a href=\"https://www.cqc.org.uk/guidance-providers/training-staff-support-autistic-people-and-people-learning-disability\">training staff to support autistic people and people with a learning disability</a> explains what it expects."
+     },
+     {
+      "q": "What does CQC expect providers to show?",
+      "a": "CQC says it expects providers to assess each person's training needs, keep a record if someone is judged not to need the training, monitor how effective training is, and check staff are competent and applying what they learned. A record of questions, lessons and results is one way to show the last two."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to follow up a change in how you support someone",
+  "lede": "Learning disability training does not end with the session or the meeting. The follow up is where a manager learns whether the approach reached the whole team, including the people who were not in the room.",
+  "sections": [
+   {
+    "h3": "Why the follow up matters for CQC",
+    "paragraphs": [
+     "The <a href=\"https://www.cqc.org.uk/guidance-providers/training-staff-support-autistic-people-and-people-learning-disability\">CQC guidance on training staff to support autistic people and people with a learning disability</a> says it expects providers to monitor how effective their training is, and to check that staff are competent and applying what they learned. A signature on a meeting sheet does not show either.",
+     "This applies to the training you buy and to the learning you do in house, such as a changed support plan. CareStream does not decide what your staff need. It gives you a record of what each person was asked, what they got wrong and whether the gap closed."
+    ]
+   },
+   {
+    "h3": "Four checks that fit a busy service",
+    "checklist": [
+     "Within a week: allocate short training on the topic of the meeting, and set a due date",
+     "Include relief, part time and night workers, not just the core team",
+     "Look at the Knowledge gaps view and the Monday digest, and note any question most people missed",
+     "Pair it with a short conversation or observed shift for anyone still unsure"
+    ]
+   },
+   {
+    "h3": "Keep the tone kind",
+    "paragraphs": [
+     "Tell the team why you are checking. In learning disability care, the person feels the difference when a worker gets it wrong, and workers want to get it right. Say the questions are there to help, not to catch anyone out. For a deeper review of restrictive practice, see the <a href=\"/care-audits/positive-behaviour-support-restrictive-practice\">positive behaviour support audit</a>, and for health checks the <a href=\"/care-audits/health-action-plan-health-access\">health action plan audit</a>. Our blog on <a href=\"/blog/policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers\">who needs retraining</a> helps decide who to include."
+    ]
+   }
+  ],
+  "note": "Illustration only. CareStream is a way to check understanding and keep a record, not a regulator record, a rating or a pass."
+ }
+}

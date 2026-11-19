@@ -1,0 +1,322 @@
+{
+ "slug": "residential-care-home-training-follow-up",
+ "status": "draft",
+ "order": 86,
+ "title": "Your residential care home training ran on one shift. <em>Who on the other team took it in?</em>",
+ "meta_title": "Residential Care Home Training Follow Up | CareStreamAI",
+ "meta_description": "Only one shift team heard the session. Allocate short training from your own policies, and wrong answers become a lesson. Built for residential homes.",
+ "eyebrow": "Scenario",
+ "lede": "Residential care home training usually reaches whoever is on shift that day. After the session, you can allocate a <a href=\"/training-platform\">short module built from your own policies</a> to the whole team. Each carer does it on their own phone, and a wrong answer turns into a short lesson on that exact point.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "After the falls session",
+  "pill": "Illustration",
+  "rows": [
+   { "label": "Session held in the lounge", "note": "Wednesday", "done": true },
+   { "label": "Wednesday team briefed", "note": "Wednesday", "done": true },
+   { "label": "Other team's understanding checked", "note": "Not yet", "done": false },
+   { "label": "Gaps closed with a short lesson", "note": "Not yet", "done": false }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/a32e673c-84bf-4dfa-ba05-179e7a73f39c.webp",
+ "image_alt": "A care assistant and a senior carer chatting in a bright residential care home lounge while residents enjoy tea in the background",
+ "card_title": "Only half the team heard the training. How do you reach the rest?",
+ "card_snippet": "On 12 hour shifts, a session reaches whoever is on that day. Allocate a short module from your own policies to everyone, and a wrong answer becomes a lesson on that point.",
+ "primary_keyword": "residential care home training",
+ "secondary_keywords": [
+  "residential care home policies",
+  "care home compliance",
+  "residential care compliance"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Ad hoc training from your policies, face to face training organised, and wrong answers that become lessons.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Adhoc training after an event",
+   "body": "Turn a fall, a near miss or a policy change into short training for the right people.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
+  },
+  {
+   "title": "CQC and compliance",
+   "body": "Evidence that builds itself, and a readiness report for your next inspection.",
+   "action": "See CQC and compliance",
+   "href": "/cqc-compliance"
+  }
+ ],
+ "intro": {
+  "heading": "The session went well. Half the team was off.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "After a resident's second fall in a month, the manager of a residential home holds a thirty minute session in the lounge on what to do in the first ten minutes. The senior who runs it is clear and calm. The carers on shift that Wednesday listen and ask good questions. But the home runs 12 hour days on a rota, and the carers who work the other days were at home. The manager means to brief them at handover. Then a busy week arrives, and the second session never quite happens. Here is how that plays out."
+ },
+ "trail": [
+  { "when": "Wednesday, 2pm", "text": "A senior carer runs a falls session in the lounge.", "kind": "ok" },
+  { "when": "Same afternoon", "text": "The carers on shift ask good questions and leave knowing the steps.", "kind": "ok" },
+  { "when": "Wednesday evening", "text": "The manager notes the session and promises the others a catch up.", "kind": "ok" },
+  { "when": "Thursday to Sunday", "text": "The other team is on shift. The catch up is squeezed out by a hospital appointment.", "kind": "gap" },
+  { "when": "The following week", "text": "A new agency carer starts, and nobody mentions the falls session.", "kind": "gap" },
+  { "when": "Who might be unsure", "text": "A carer who thinks you can help a fallen resident up to check they are fine.", "kind": "gap" },
+  { "when": "What the manager has", "text": "A session note for one team. No view of what the rest of the home knows.", "kind": "gap" },
+  { "when": "Inspection day", "text": "“A resident falls at the weekend. What do you do?” The carer hesitates.", "kind": "end" }
+ ],
+ "trail_close": "<b>The session was never the problem.</b> The gap is between one team and the whole home. Here is how CareStream closes it using your own policies, without replacing the session.",
+ "why": {
+  "heading": "On a rota, a session reaches a slice of the home",
+  "sub": "Residential care home training only works if it reaches everyone, and you can see that it did.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Twelve hour days split the team",
+    "body": "Whoever is on shift hears the session. Everyone else relies on a retelling at handover, and each retelling drops a detail."
+   },
+   {
+    "icon": "tick",
+    "title": "New starters and agency cover miss it",
+    "body": "Homes with high turnover and regular agency carers keep meeting people who joined after the session and were never told what it covered."
+   },
+   {
+    "icon": "alert",
+    "title": "Checking by hand never gets done",
+    "body": "A manager cannot quiz every carer on every topic between medication rounds. Without something that does it for you, the gap stays unseen."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Your policies in, the whole home covered.",
+  "sub": "This is the <a href=\"/training-platform\">Training built from your own policies</a> feature, in the order a manager and a carer meet it. See also <a href=\"/uses/face-to-face-training\">recording in person sessions</a> and <a href=\"/uses/adhoc-training\">adhoc training after an incident</a>.",
+  "blocks": [
+   {
+    "heading": "Allocate a short module on the topic to the whole home",
+    "bullets": [
+     "In the Training screen, pick the topic module that matches the session and tick every carer who should have it, whichever shift they work",
+     "CareStream builds the lesson and questions from your own policies where they cover the topic, with general good practice as the fallback, and you can edit and preview before anyone sees it",
+     "Carers complete it in the Staff Hub, an installable app on their own phone, with an optional due date"
+    ],
+    "tags": [
+     { "label": "Training built from your own policies", "href": "/training-platform" },
+     { "label": "How CareStream works", "href": "/how-it-works" }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Falls Prevention",
+     "questions": [
+      "A resident is on the floor and says they are fine. What do you do first?",
+      "Who do you call to help before anyone moves the resident?",
+      "What do you record after a fall, and where?"
+     ],
+     "staff_count": 18
+    }
+   },
+   {
+    "heading": "A wrong answer becomes a short lesson on that point",
+    "bullets": [
+     "A wrong answer goes straight into the carer's Follow-up tab in the Staff Hub, and they get an email to say so, at most once a day and in English",
+     "They choose Learn &amp; retry, a short lesson (why it matters, what to remember, a realistic situation) then a fresh question, or Just retry the same question, as often as they need",
+     "Nothing is written or chased by you, and the lesson draws on your own residential care home policies where they cover the point"
+    ],
+    "tags": [
+     { "label": "Wrong answers become lessons", "href": "/training-platform" },
+     { "label": "Staff training courses", "href": "/staff-training" }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Falls Prevention",
+     "question": "A resident is on the floor and says they are fine. What do you do first?",
+     "why": "A resident may be hurt even if they say they are fine, and moving them too soon can make an injury worse.",
+     "remember": [
+      "Stay with the resident and keep them calm",
+      "Call the senior before anyone moves them",
+      "Record what you saw and did"
+     ],
+     "picture": "You find a resident on the floor by their bed. They wave you away and say they just slipped."
+    }
+   },
+   {
+    "heading": "Lessons in the language each carer thinks in",
+    "bullets": [
+     "A carer who answered wrongly because of one unfamiliar word can open the lesson in their own language",
+     "Your admin sets their second language, and they switch to it in the hub",
+     "Translation is part of the paid plans, and the reminder emails stay in English"
+    ],
+    "tags": [
+     { "label": "Training in 60+ languages", "href": "/languages" },
+     { "label": "Staff Hub in 60+ languages", "href": "/uses/multilingual-staff-hub" }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Romanian"
+    }
+   },
+   {
+    "heading": "See which carers and topics need a second look",
+    "bullets": [
+     "The Knowledge gaps view shows open gaps, staff affected, gaps closed in the last 30 days, and the most missed questions",
+     "Weakest topics and how gaps are being closed show whether the session needs a tweak or one carer needs a chat",
+     "A Monday digest email, so the picture reaches you on the first day of the working week"
+    ],
+    "tags": [
+     { "label": "Reporting that runs itself", "href": "/training-platform" },
+     { "label": "CQC and compliance evidence", "href": "/cqc-compliance" }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": { "open": 6, "affected": 4, "closed": 15, "engaged": 75 },
+     "missed": [
+      ["Not moving a resident after a fall", "4 staff"],
+      ["Who to call first", "3 staff"],
+      ["Where to record a fall", "2 staff"]
+     ],
+     "weak": [
+      ["Falls Prevention", "6 gaps"],
+      ["Moving and Handling", "2 gaps"]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "Half my team missed the session. Do I have to run it twice?",
+    "a": "You can keep running it as you do now. What you add is a short module on the same topic that every carer completes in the Staff Hub, whichever days they work. The session teaches. The module shows what each person took in, including the ones who were never in the room."
+   },
+   {
+    "q": "Where does the content come from?",
+    "a": "From <a href=\"/training-platform\">your own policies</a>. You pick a topic module, and CareStream builds the lesson and questions from what your home has written, with general good practice as the fallback where a policy is silent. You can edit it and preview it before anyone is given it."
+   },
+   {
+    "q": "What happens when a carer gets a question wrong?",
+    "a": "It goes into their Follow-up tab in the hub, and they get an email, at most once a day and in English. They choose Learn &amp; retry, a short lesson on that point followed by a fresh question, or Just retry the same question. They can retry as often as they need."
+   },
+   {
+    "q": "Do carers need to be on shift to do it?",
+    "a": "No. It sits in the hub on their own phone, so they can open it when they have a few quiet minutes. You can set a due date when you allocate it. You decide how it fits their hours."
+   },
+   {
+    "q": "A lot of my carers speak English as a second language. Does that matter?",
+    "a": "It matters. A carer may know exactly what to do and still miss one word in a question. On the paid plans they can open the lesson in <a href=\"/languages\">their own language</a>, so a wrong answer points to a gap in knowledge and not in vocabulary."
+   },
+   {
+    "q": "What do I see across the home?",
+    "a": "The Knowledge gaps view in Analytics shows open gaps, how many staff are affected, gaps closed in the last 30 days, and the most missed questions and weakest topics. A digest email arrives each Monday. Nothing messages you every time someone gets an answer wrong."
+   },
+   {
+    "q": "Does this replace watching someone do the task?",
+    "a": "No. A competent person still needs to observe hands on skills, such as helping a resident up safely. CareStream checks understanding and keeps the record. It does not replace the observation, and it is not a pass or a rating."
+   },
+   {
+    "q": "How do I try it?",
+    "a": "Create a free account and start the 14 day free trial. Adhoc training is on the paid plans, so the trial is where you try it, and the <a href=\"/pricing\">pricing page</a> shows which plan includes what."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A way to reach the whole home, not a replacement for the floor",
+  "cards": [
+   {
+    "title": "It does not teach hands on skills",
+    "body": "Helping a resident up after a fall, or using a hoist, needs a competent person to show the technique and watch it done."
+   },
+   {
+    "title": "It does not alert you to every wrong answer",
+    "body": "The picture reaches you through the Knowledge gaps view and the Monday digest. A face to face session does not trigger anything by itself either, so you allocate the module."
+   },
+   {
+    "title": "Adhoc training and translation are on the paid plans",
+    "body": "Both come with the paid plans, and the free plan does not include them. Emails to carers are in English only."
+   }
+  ]
+ },
+ "read_next": [
+  "policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers",
+  "face-to-face-training-in-care-what-actually-has-to-be-in-the-room",
+  "micro-learning-for-care-staff-what-works-on-a-12-hour-shift"
+ ],
+ "faqs": {
+  "heading": "Residential care home training and CareStream, answered",
+  "groups": [
+   {
+    "group": "About the training",
+    "items": [
+     {
+      "q": "How do I follow up residential care home training after a session?",
+      "a": "Within a few days, allocate a short module on the same topic to everyone who needs it. Carers complete it on their phone, and a wrong answer becomes a short lesson and a fresh question. You then see the pattern in the Knowledge gaps view."
+     },
+     {
+      "q": "Can CareStream build training from our residential care home policies?",
+      "a": "Yes. You pick a topic module and the lesson and questions draw on your own policies where they cover it. Where your policies do not, it falls back on general good practice, which is a sign a policy may need work. See <a href=\"/uses/policy-gaps\">policy gaps</a>."
+     },
+     {
+      "q": "What should residential care home policies say about falls?",
+      "a": "That is for your home to decide, based on your residents and your own risk assessments. Training only helps if it matches what your policy says, so the module is built from your wording rather than a generic script."
+     },
+     {
+      "q": "Does this cover induction and the Care Certificate?",
+      "a": "It sits alongside them. New starters can be given short modules on topics from your policies. For the Care Certificate itself, see the <a href=\"/staff-training/care-certificate\">Care Certificate course</a>."
+     },
+     {
+      "q": "Does online follow up replace practical training?",
+      "a": "No. Skills such as <a href=\"/staff-training/moving-and-handling-of-people\">moving and handling</a> need a competent person to show and observe the technique. The follow up checks that people understood and remembered."
+     },
+     {
+      "q": "What if a carer keeps getting the same question wrong?",
+      "a": "They can keep retrying. If the same point keeps appearing in the Knowledge gaps view, treat it as information: it may need a conversation or clearer policy wording."
+     }
+    ]
+   },
+   {
+    "group": "About compliance",
+    "items": [
+     {
+      "q": "What does care home compliance mean for staff training?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> says staff must receive the support, training, professional development, supervision and appraisal they need to carry out their duties. It does not list courses, so each provider decides what its staff need and must be able to show it."
+     },
+     {
+      "q": "What does CQC look for in residential care compliance?",
+      "a": "The <a href=\"https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers/health-social-care-act/regulation-18\">CQC guidance on Regulation 18</a> says training needs should be assessed at the start of employment and reviewed periodically, and that staff should be monitored with action taken when training is not completed. See also our guide to <a href=\"/cqc-compliance\">CQC evidence</a>."
+     },
+     {
+      "q": "Will CareStream make us compliant?",
+      "a": "No product can. CareStream gives you a record of what was asked, what was missed and what was learned. That is evidence you can use, and it sits alongside observation, supervision and your audits. It is not a pass, a rating or a regulator record."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to run training across a rota",
+  "lede": "Residential care home training has to work for people who are never in the same room at once. The aim is simple: everyone gets the same message, and you find out who did not take it in.",
+  "sections": [
+   {
+    "h3": "Make the session the start, not the end",
+    "paragraphs": [
+     "A session is strongest when it has a clear single topic and a named senior who can answer questions. Treat it as the first of two steps. The second is a short check, within a few days, for everyone who needs to know, including the people who were not there.",
+     "Keep a note of who was in the room. That becomes your allocation list. Our guide to <a href=\"/blog/how-do-you-run-in-house-training-in-a-care-home\">running in house training</a> and <a href=\"/blog/micro-learning-for-care-staff-what-works-on-a-12-hour-shift\">short learning on a 12 hour shift</a> go further."
+    ]
+   },
+   {
+    "h3": "A weekly rhythm that fits a busy home",
+    "checklist": [
+     "Same day: note who attended and who was off, so you know who needs the follow up.",
+     "Within a few days: allocate a short module on the topic to everyone on that list.",
+     "When an answer is wrong: the carer opens a short lesson on that point, then a fresh question.",
+     "Each Monday: read the digest and look at the most missed questions and weakest topics."
+    ]
+   },
+   {
+    "h3": "Keep your policies and your training saying the same thing",
+    "paragraphs": [
+     "Training that contradicts the policy on the shelf is worse than none. If the same question keeps being missed, check the wording of the policy first. It is often a sign the policy is long, vague or out of date. Our <a href=\"/blog/policy-changed-who-needs-retraining-a-four-question-framework-for-care-managers\">four question framework</a> helps you decide who needs retraining when a policy changes, which also supports your wider care home compliance."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep the questions, the lessons and the results together with your session notes, so you can show who understood, not only who attended."
+ }
+}

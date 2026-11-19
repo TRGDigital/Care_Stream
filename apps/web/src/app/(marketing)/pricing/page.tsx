@@ -62,7 +62,7 @@ export const metadata = {
 const PLANS = [
   { id: 'starter',      slot: 'plans.starter',      price: '£85',   highlight: false, hasBadge: false, featureKeys: ['feat1', 'feat2', 'feat3', 'feat4', 'feat5'] },
   { id: 'professional', slot: 'plans.professional', price: '£230',  highlight: true,  hasBadge: true,  featureKeys: ['feat1', 'feat2', 'feat3', 'feat4', 'feat5', 'feat6', 'feat7', 'feat8', 'feat9'] },
-  { id: 'enterprise',   slot: 'plans.enterprise',   price: '£385',  highlight: false, hasBadge: true,  featureKeys: ['feat1', 'feat2', 'feat3', 'feat4', 'feat5', 'feat6', 'feat7', 'feat8', 'feat9'] },
+  { id: 'enterprise',   slot: 'plans.enterprise',   price: '£385',  highlight: false, hasBadge: true,  featureKeys: ['feat1', 'feat2', 'feat3', 'feat4', 'feat5', 'feat6', 'feat7', 'feat8', 'feat10', 'feat9'] },
 ]
 
 // ─── Comparison matrix ────────────────────────────────────────────────────────
@@ -163,7 +163,11 @@ const MATRIX: Group[] = [
       { label: 'Multi-site group console and benchmarking', values: [false, false, true] },
       { label: 'Workforce compliance register (DBS, right to work, registration, references)', values: [false, false, true] },
       { label: 'Credential document uploads + expiry alerts', values: [false, false, true] },
-      { label: 'Supervisions and appraisals tracking', values: [true, true, true] },
+      // Supervisions are an Enterprise feature (the whole Compliance area is gated on the plan, and the Enterprise card above lists it), so
+      // the old all-plans tick was wrong. Corrected 19 Nov 2026 with the launch of training linked to supervisions.
+      { label: 'Supervisions and appraisals tracking', values: [false, false, true] },
+      // The label must equal the feature page slug (training-linked-to-supervisions) for the link icon to appear.
+      { label: 'Training linked to supervisions', values: [false, false, true] },
     ],
   },
   {

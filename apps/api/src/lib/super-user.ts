@@ -56,6 +56,7 @@ export type SuperUserResult = {
     baseline_per_week: number | null; window_per_week: number; trend: 'rising' | 'steady' | 'falling' | 'too_early'; trend_note: string
     training_completed: number; questions_asked: number
   }
+  daily: Array<{ day: string; active: boolean; minutes: number }>   // one entry per day of the window so far, for the progress strip
   checks: Array<{ key: string; label: string; ok: boolean; detail: string }>
   status: 'awaiting_consent' | 'paused' | 'in_window' | 'eligible' | 'not_met'
 }
@@ -139,6 +140,14 @@ export function computeSuperUser(f: SuperUserFacts): SuperUserResult {
     { key: 'colleagues', label: 'Colleagues using the hub more', ok: trend === 'rising', detail: note },
   ]
 
+  // One entry per day since they were tagged (up to the 60), so progress can be seen at a glance.
+  const minutesBy = new Map(secs.map(s => [s.day, Math.round(s.seconds / 60)]))
+  const daily: SuperUserResult['daily'] = []
+  for (let i = 0; i < Math.min(WINDOW_DAYS, elapsed + 1); i++) {
+    const day = londonDay(new Date(start.getTime() + i * DAY))
+    daily.push({ day, active: days.has(day), minutes: minutesBy.get(day) ?? 0 })
+  }
+
   let status: SuperUserResult['status']
   if (!f.consentAt) status = 'awaiting_consent'
   else if (!f.planActive) status = 'paused'
@@ -160,7 +169,7 @@ export function computeSuperUser(f: SuperUserFacts): SuperUserResult {
       baseline_per_week: baseline, window_per_week: windowPerWeek, trend, trend_note: note,
       training_completed: colleagueTraining, questions_asked: colleagueQs,
     },
-    checks, status,
+    daily, checks, status,
   }
 }
 

@@ -33,7 +33,8 @@ superUserRouter.post('/consent', async (req: Request, res: Response) => {
   const accept = req.body?.accept === true
   const r = await answerConsent(req.user!.tenant_id, req.user!.sub, accept)
   if (r === 'not_super_user') { err(res, 'NOT_FOUND', 'You are not the Super User.', 404); return }
-  writeAuditLog({ tenant_id: req.user!.tenant_id, user_id: req.user!.sub, event_type: accept ? 'super_user_consent' : 'super_user_untagged', entity_type: 'user', entity_id: req.user!.sub, metadata: { accepted: accept, by: 'self' } }).catch(() => {})
+  // An admin acting as the person (test accounts only) is recorded as such, not as the person.
+  writeAuditLog({ tenant_id: req.user!.tenant_id, user_id: req.user!.sub, event_type: accept ? 'super_user_consent' : 'super_user_untagged', entity_type: 'user', entity_id: req.user!.sub, metadata: { accepted: accept, by: (req.user as any)?.imp ? `admin acting as them (${(req.user as any).imp.by_name ?? 'admin'})` : 'self' } }).catch(() => {})
   ok(res, { result: r })
 })
 

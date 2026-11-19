@@ -71,6 +71,20 @@ export function SuperUserCard({ variant, data, onMarkSent, onRemove }: {
         <div className="mt-1 h-2 overflow-hidden rounded-full bg-gray-100"><div className="h-full rounded-full bg-teal" style={{ width: `${Math.min(100, pct)}%` }} /></div>
       </div>
 
+      {su.daily && su.daily.length > 0 && (
+        <div className="mt-4">
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Day by day since they were tagged</p>
+          <div className="flex flex-wrap gap-[3px]" role="img" aria-label={`${su.measures.active_days} active days of ${su.daily.length} so far`}>
+            {su.daily.map((x, i) => (
+              <span key={x.day} title={`Day ${i + 1}, ${d(x.day)}: ${x.active ? `active${x.minutes ? `, ${x.minutes} min on the hub` : ''}` : 'no activity'}`}
+                className={`h-3.5 w-3.5 rounded-[3px] ${x.active ? (x.minutes >= 20 ? 'bg-teal' : 'bg-teal/60') : 'bg-gray-200'}`} />
+            ))}
+            {Array.from({ length: Math.max(0, su.window.days - su.daily.length) }).map((_, i) => <span key={`f${i}`} className="h-3.5 w-3.5 rounded-[3px] border border-dashed border-gray-200" />)}
+          </div>
+          <p className="mt-1 text-[11px] text-neutral-mid">Filled squares are days they did something on the hub (darker when they spent 20 minutes or more). Dashed squares are days still to come.</p>
+        </div>
+      )}
+
       <p className="mb-1.5 mt-4 text-xs font-semibold uppercase tracking-wide text-neutral-mid">Their own use of the hub</p>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Tile label="Active days" value={m.active_days} sub={`of ${su.window.days}`} />

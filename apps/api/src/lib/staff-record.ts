@@ -448,6 +448,7 @@ export async function buildStaffRecord(tenantId: string, userId: string, opts: S
       first_language: user.first_language, second_language: user.second_language,
       comms_always_first_language: user.comms_always_first_language, is_active: user.is_active,
       created_at: user.created_at, first_login_at: user.first_login_at, last_login_at: user.last_login_at,
+      super_user_since: user.super_user_since ?? null, super_user_consent_at: user.super_user_consent_at ?? null,
     },
     training: { items: training, summary: trainingSummary },
     annual_training: { items: annualTraining, summary: annualSummary },

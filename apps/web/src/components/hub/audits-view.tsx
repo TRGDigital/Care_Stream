@@ -5,6 +5,7 @@
 // runs appear in the site's Audit section automatically.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { AuditDateEditor } from '@/components/audits/audit-date-editor'
 import { createApiClient } from '@/lib/api-client'
 import { AuditRecs } from '@/components/audit-recs'
 import { AuditActionPlan } from '@/components/admin/audit-action-plan'
@@ -45,14 +46,14 @@ export function AuditsView({ token, userId, isAdmin = false }: { token: string; 
   if (activeRunId) {
     return <AuditRunner token={token} runId={activeRunId} isAdmin={isAdmin} onExit={() => setActiveRunId(null)} />
   }
-  return <AuditList api={api} token={token} userId={userId} onOpen={setActiveRunId} />
+  return <AuditList api={api} token={token} userId={userId} isAdmin={isAdmin} onOpen={setActiveRunId} />
 }
 
 // ─── List: templates to start, in-progress to resume, recent completed ─────────
 
 const SUBJECT_LABEL: Record<string, string> = { resident: 'Resident', staff: 'Staff', room: 'Room' }
 
-function AuditList({ api, token, userId, onOpen }: { api: ReturnType<typeof createApiClient>; token: string; userId: string; onOpen: (runId: string) => void }) {
+function AuditList({ api, token, userId, isAdmin, onOpen }: { api: ReturnType<typeof createApiClient>; token: string; userId: string; isAdmin: boolean; onOpen: (runId: string) => void }) {
   const ck = hubKey('audits', userId)
   const cached = persistentCache.get<{ templates: any[]; runs: any[]; rooms: string[]; staff: string[]; recentSubjects: Record<string, string[]>; stats: any }>(ck)
   const [templates, setTemplates] = useState<any[]>(cached?.templates ?? [])
@@ -83,8 +84,8 @@ function AuditList({ api, token, userId, onOpen }: { api: ReturnType<typeof crea
     if (starting) return
     setStarting(assignmentId ?? templateId)
     try {
-      const month = `${auditDay.slice(0, 7)}-01`
-      const { run } = await api.audits.createRun({ template_id: templateId, audit_month: month, audit_date: auditDay, ...(subject ? { subject } : {}), ...(subjectRoom ? { subject_room: subjectRoom } : {}), ...(assignmentId ? { assignment_id: assignmentId } : {}) })
+      const month = `${(isAdmin ? auditDay : todayStr()).slice(0, 7)}-01`
+      const { run } = await api.audits.createRun({ template_id: templateId, audit_month: month, ...(isAdmin ? { audit_date: auditDay } : {}), ...(subject ? { subject } : {}), ...(subjectRoom ? { subject_room: subjectRoom } : {}), ...(assignmentId ? { assignment_id: assignmentId } : {}) })
       onOpen(run.id)
     } catch { /* ignore */ } finally { setStarting(null) }
   }
@@ -98,8 +99,8 @@ function AuditList({ api, token, userId, onOpen }: { api: ReturnType<typeof crea
   const inProgress = runs.filter(r => r.status === 'in_progress')
   const completed  = runs.filter(r => r.status === 'completed').slice(0, 6)
   // The current period's run for a template — today for daily audits, this month otherwise.
-  const now = new Date(auditDay + 'T12:00:00')   // the chosen day (today unless back-dating), so Start/Resume match that period
-  const backdated = auditDay < todayStr()
+  const now = new Date((isAdmin ? auditDay : todayStr()) + 'T12:00:00')   // the chosen day (today unless back-dating), so Start/Resume match that period
+  const backdated = isAdmin && auditDay < todayStr()
   const sameMonth = (d: Date) => d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
   const sameDay   = (d: Date) => sameMonth(d) && d.getDate() === now.getDate()
   const currentRunFor = (t: any) => runs.find(r => r.template_id === t.id && ((t.frequency ?? 'monthly') === 'daily' ? sameDay(new Date(r.audit_month)) : sameMonth(new Date(r.audit_month))))
@@ -181,12 +182,12 @@ function AuditList({ api, token, userId, onOpen }: { api: ReturnType<typeof crea
           </div>
         )}
 
-        <div className={`mb-5 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border px-4 py-3 ${backdated ? 'border-amber-200 bg-amber-50' : 'border-gray-200 bg-white'}`}>
+        {isAdmin && <div className={`mb-5 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border px-4 py-3 ${backdated ? 'border-amber-200 bg-amber-50' : 'border-gray-200 bg-white'}`}>
           <label htmlFor="audit-day" className="text-sm font-semibold text-neutral-dark">Date of the audit</label>
           <input id="audit-day" type="date" value={auditDay} max={todayStr()} onChange={e => e.target.value && setAuditDay(e.target.value)} className="rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-neutral-dark focus:border-teal focus:outline-none" />
           {backdated && <button type="button" onClick={() => setAuditDay(todayStr())} className="text-xs font-medium text-teal hover:underline">Back to today</button>}
           <p className="basis-full text-xs text-neutral-mid">{backdated ? 'Audits you start now are recorded as carried out on this day, and shown as entered today.' : 'Missed an audit? Choose the day it was actually done before you start it. The record shows both dates.'}</p>
-        </div>
+        </div>}
 
         {byFreq.map(group => (
           <div key={group.freq} className="mb-6">
@@ -391,6 +392,7 @@ function AuditRunner({ token, runId, isAdmin, onExit }: { token: string; runId: 
           <div className="min-w-0">
             <h2 className="truncate text-lg font-bold text-neutral-dark">{run.template?.name}{run.room_number ? ` · ${SUBJECT_LABEL[run.template?.subject_scope ?? 'none'] ? SUBJECT_LABEL[run.template?.subject_scope ?? 'none'] + ' ' : ''}${run.room_number}${run.subject_room ? ` (Room ${run.subject_room})` : ''}` : ''}</h2>
             <p className="text-xs text-neutral-mid">{periodLabel(run.audit_month)}{isCompleted ? ' · Completed' : ''}</p>
+            <AuditDateEditor run={run} isAdmin={isAdmin} save={d => api.audits.updateRun(runId, { audit_date: d })} onChanged={r => setRun((cur: any) => ({ ...cur, audit_date: r.audit_date, audit_month: r.audit_month }))} />
           </div>
           {saving && <span className="shrink-0 text-xs text-neutral-mid">Saving…</span>}
         </div>

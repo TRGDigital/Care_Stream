@@ -6,6 +6,7 @@ import { persistentCache } from '@/lib/page-cache'
 import { useSession } from 'next-auth/react'
 import { useParams, useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
+import { AuditDateEditor } from '@/components/audits/audit-date-editor'
 import { AuthedImage } from '@/components/authed-image'
 import { AuditRecs } from '@/components/audit-recs'
 import { LockedRecommendations } from '@/components/admin/free-tier'
@@ -376,6 +377,7 @@ export default function AuditRunPage() {
               {run.auditor_name && ` · ${run.auditor_name}`}
               {run.auditor_role && ` (${run.auditor_role})`}
             </p>
+            {api && <AuditDateEditor run={run} isAdmin={(session?.user as any)?.role === 'admin'} save={d => api.audits.updateRun(id, { audit_date: d })} onChanged={r => setRun((cur: any) => ({ ...cur, audit_date: r.audit_date, audit_month: r.audit_month }))} />}
           </div>
 
           <div className="flex items-center gap-3">

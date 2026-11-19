@@ -1,4 +1,6 @@
 import { Router, Request, Response } from 'express'
+import { writeAuditLog } from '../lib/audit'
+import { parseAuditDate, periodFor } from '../lib/audit-date'
 import { randomUUID } from 'crypto'
 import { facilityTypeToSetting, SETTING_LABELS } from '../lib/care-setting'
 import { AUDIT_SERVICES } from '../data/audit-services'
@@ -2112,6 +2114,8 @@ auditsRouter.get('/runs', requireAuditAccess, async (req: Request, res: Response
   ok(res, { runs })
 })
 
+const todayLondonStr = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' })
+
 // ─── POST /audits/runs ────────────────────────────────────────────────────────
 
 auditsRouter.post('/runs', requireAuditAccess, async (req: Request, res: Response) => {
@@ -2143,21 +2147,17 @@ auditsRouter.post('/runs', requireAuditAccess, async (req: Request, res: Respons
   // The record keeps created_at as well, so it always shows both when it was done and when it was entered.
   let auditDate: Date | null = null
   if (req.body.audit_date != null && req.body.audit_date !== '') {
-    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(req.body.audit_date))
-    const d = m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])) : null
-    if (!d || Number.isNaN(d.getTime()) || d.getUTCDate() !== +m![3]) return err(res, 'BAD_DATE', 'That is not a valid audit date.', 400)
-    const todayLondon = new Date(new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' }) + 'T00:00:00Z')
-    if (d.getTime() > todayLondon.getTime()) return err(res, 'FUTURE_DATE', 'The audit date cannot be in the future.', 400)
-    if (todayLondon.getTime() - d.getTime() > 730 * 86_400_000) return err(res, 'DATE_TOO_OLD', 'The audit date cannot be more than two years ago.', 400)
-    auditDate = d
+    const p = parseAuditDate(req.body.audit_date)
+    if ('error' in p) return err(res, p.code, p.error, 400)
+    // Only an administrator can choose a day other than today. Staff with audit access always record today.
+    if (req.user!.role !== 'admin' && String(req.body.audit_date) !== todayLondonStr()) return err(res, 'ADMIN_ONLY', 'Only an administrator can change the audit date.', 403)
+    auditDate = p.date
   }
 
   // Daily audits are tracked per calendar day (one run per day); all other
   // frequencies are tracked per month. The audit_month column stores the run's
   // period start: the chosen day (else today) for daily, the first of the month otherwise.
-  const periodDate = template.frequency === 'daily' ? new Date(auditDate ?? new Date()) : new Date(auditDate ?? audit_month)
-  if (template.frequency !== 'daily') periodDate.setDate(1)
-  periodDate.setHours(0, 0, 0, 0)
+  const periodDate = periodFor(template.frequency, auditDate ?? (template.frequency === 'daily' ? new Date() : new Date(audit_month)))
 
   const existing = await (prisma as any).auditRun.findFirst({
     where: { tenant_id: tenantId, template_id, audit_month: periodDate, ...(scoped ? { room_number: subjectValue } : {}) },
@@ -2193,6 +2193,7 @@ auditsRouter.post('/runs', requireAuditAccess, async (req: Request, res: Respons
   })
 
   await linkRunToAssignment(tenantId, run, req.body.assignment_id ?? null).catch(e => console.error('[audits] link assignment:', e))
+  if (auditDate && auditDate.toISOString().slice(0, 10) < todayLondonStr()) writeAuditLog({ tenant_id: tenantId, user_id: req.user!.sub, event_type: 'audit_run_backdated', entity_type: 'audit_run', entity_id: run.id, metadata: { audit_date: auditDate.toISOString().slice(0, 10), template_id } }).catch(() => {})
 
   // Remember typed room names for the room picker (residents and staff are picked elsewhere).
   if (subjectValue && scope === 'room') {
@@ -2237,15 +2238,30 @@ auditsRouter.put('/runs/:id', requireAuditAccess, async (req: Request, res: Resp
 
   const existing = await (prisma as any).auditRun.findFirst({
     where: { id: req.params.id, tenant_id: tenantId },
+    include: { template: { select: { frequency: true, subject_scope: true, name: true } } },
   })
   if (!existing || !auditTemplateAllowed(req, existing.template_id)) return err(res, 'NOT_FOUND', 'Audit run not found', 404)
   if (actions_deadline !== undefined && actions_deadline !== null && actions_deadline !== '' && actions_deadline !== existing.actions_deadline && !/^\d{4}-\d{2}-\d{2}$/.test(String(actions_deadline))) {
     return err(res, 'INVALID_DEADLINE', 'Choose the deadline for actions as a date.', 400)
   }
 
+  // Changing the date of an audit (in progress or completed): administrators only. The period follows the date, and two audits of the
+  // same kind for the same subject cannot share a period. The change is recorded in the audit log with the old and new dates.
+  let newDate: { audit_date: Date; audit_month: Date } | null = null
+  if (req.body.audit_date !== undefined) {
+    if (req.user!.role !== 'admin') return err(res, 'ADMIN_ONLY', 'Only an administrator can change the audit date.', 403)
+    const p = parseAuditDate(req.body.audit_date)
+    if ('error' in p) return err(res, p.code, p.error, 400)
+    const period = periodFor(existing.template?.frequency, p.date)
+    const clash = await (prisma as any).auditRun.findFirst({ where: { tenant_id: tenantId, template_id: existing.template_id, audit_month: period, id: { not: existing.id }, ...(existing.room_number ? { room_number: existing.room_number } : {}) }, select: { id: true } })
+    if (clash) return err(res, 'PERIOD_TAKEN', 'There is already an audit of this kind for that period. Open that one, or choose a different date.', 409)
+    newDate = { audit_date: p.date, audit_month: period }
+  }
+
   const run = await (prisma as any).auditRun.update({
     where: { id: req.params.id },
     data: {
+      ...(newDate ?? {}),
       ...(auditor_name      !== undefined && { auditor_name:    auditor_name?.trim() ?? null }),
       ...(auditor_role      !== undefined && { auditor_role:    auditor_role?.trim() ?? null }),
       ...(strengths         !== undefined && { strengths }),
@@ -2254,6 +2270,7 @@ auditsRouter.put('/runs/:id', requireAuditAccess, async (req: Request, res: Resp
     },
   })
 
+  if (newDate) writeAuditLog({ tenant_id: tenantId, user_id: req.user!.sub, event_type: 'audit_run_date_changed', entity_type: 'audit_run', entity_id: existing.id, metadata: { from: (existing.audit_date ?? existing.audit_month)?.toISOString?.().slice(0, 10) ?? null, to: newDate.audit_date.toISOString().slice(0, 10), audit: existing.template?.name ?? null } }).catch(() => {})
   ok(res, { run })
 })
 

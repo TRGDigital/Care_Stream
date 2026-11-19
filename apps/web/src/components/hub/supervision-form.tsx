@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createApiClient } from '@/lib/api-client'
+import { createApiClient, type TrainingBrief } from '@/lib/api-client'
+import { TrainingBriefView } from '@/components/shared/training-brief-view'
 import { Loader2, X, Check, Plus, Trash2, CalendarDays } from 'lucide-react'
 
 // The supervision recording form sections (Skills for Care style). 1-9 are free text; section 10
@@ -22,7 +23,7 @@ const fmtDate = (iso: string | null) => iso ? new Date(iso).toLocaleDateString('
 
 // An agreed action can optionally allocate a resource to the supervisee.
 type AllocType = '' | 'training' | 'induction' | 'cqc'
-type ActionRow = { description: string; alloc_type: AllocType; alloc_id: string }
+type ActionRow = { description: string; alloc_type: AllocType; alloc_id: string; action_id?: string }   // action_id: an action added from the training assign screen
 type LibItem = { id: string; name: string }
 type Libraries = { training: LibItem[]; induction: LibItem[]; cqc: LibItem[] }
 const EMPTY_LIBS: Libraries = { training: [], induction: [], cqc: [] }
@@ -48,21 +49,36 @@ export function SupervisionForm({ token, supervisionId, onClose, onSaved }: { to
   const [nextDate, setNextDate] = useState('')
   const [saving, setSaving]     = useState(false)
   const [err, setErr]           = useState('')
+  const [brief, setBrief]       = useState<TrainingBrief | null>(null)   // only where training is linked to supervisions
+  const [linkedSupported, setLinkedSupported] = useState(false)          // this form knows about actions added from the assign screen, so removing a row removes the action
 
   useEffect(() => {
+    let alive = true
     createApiClient(token).me.conductingDetail(supervisionId)
       .then(d => {
         setRec(d.record)
         setLibs(d.libraries ?? EMPTY_LIBS)
         const f = d.record.form ?? {}
         setSections(f.sections ?? {})
-        setActions(Array.isArray(f.agreed_actions) && f.agreed_actions.length
-          ? f.agreed_actions.map((a: any) => ({ description: a.description ?? '', alloc_type: (a.alloc_type ?? '') as AllocType, alloc_id: a.alloc_id ?? '' }))
-          : [{ description: '', alloc_type: '', alloc_id: '' }])
+        const rows: ActionRow[] = Array.isArray(f.agreed_actions) && f.agreed_actions.length
+          ? f.agreed_actions.map((a: any) => ({ description: a.description ?? '', alloc_type: (a.alloc_type ?? '') as AllocType, alloc_id: a.alloc_id ?? '', action_id: a.action_id ?? undefined }))
+          : []
+        // Training added to this supervision from the assign screen is shown here as an agreed action, so saving the form keeps it.
+        // A row already in the form that stands for the same action (saved before, with its id) is kept; any other linked action is added.
+        const haveIds = new Set(rows.map(r => r.action_id).filter(Boolean))
+        for (const la of d.linked_actions ?? []) {
+          if (haveIds.has(la.id)) continue
+          const inLib = !!la.module_id && (d.libraries?.training ?? []).some(m => m.id === la.module_id)
+          rows.push({ description: la.description, alloc_type: inLib ? 'training' : '', alloc_id: inLib ? (la.module_id as string) : '', action_id: la.id })
+        }
+        setLinkedSupported(!!d.training_linked)
+        setActions(rows.length ? rows : [{ description: '', alloc_type: '', alloc_id: '' }])
+        if (d.training_linked) createApiClient(token).me.conductingBrief(supervisionId).then(b => { if (alive && b.enabled && b.brief) setBrief(b.brief) }).catch(() => {})
         setNextDate(d.record.next_due ? d.record.next_due.slice(0, 10) : '')
       })
       .catch(e => setErr(e?.message ?? 'Could not load the supervision.'))
       .finally(() => setLoading(false))
+    return () => { alive = false }
   }, [token, supervisionId])
 
   const patchAction = (k: number, patch: Partial<ActionRow>) => setActions(p => p.map((x, j) => j === k ? { ...x, ...patch } : x))
@@ -78,9 +94,11 @@ export function SupervisionForm({ token, supervisionId, onClose, onSaved }: { to
             alloc_type: item ? a.alloc_type : undefined,
             alloc_id:   item ? a.alloc_id : undefined,
             alloc_name: item?.name,          // denormalised for display on the staff record
+            action_id:  a.action_id,         // the action added from the training assign screen, if this row is one
           }
         }) },
         next_date: nextDate || null,
+        ...(linkedSupported ? { linked_supported: true } : {}),
       })
       onSaved?.(); onClose()
     } catch (e: any) { setErr(e?.message ?? 'Could not save the supervision.'); setSaving(false) }
@@ -115,6 +133,13 @@ export function SupervisionForm({ token, supervisionId, onClose, onSaved }: { to
             </div>
 
             {rec.status === 'completed' && <p className="rounded-md bg-green-50 px-3 py-2 text-xs text-green-800">This supervision is recorded. You can update it and save again.</p>}
+
+            {brief && (
+              <details open className="rounded-lg border border-teal/25 bg-white">
+                <summary className="cursor-pointer px-4 py-2.5 text-sm font-semibold text-neutral-dark">Training brief for {rec.supervisee.split(' ')[0]} <span className="font-normal text-neutral-mid">({brief.topics.length} {brief.topics.length === 1 ? 'thing' : 'things'} worth raising)</span></summary>
+                <div className="border-t border-gray-100 px-4 py-3"><TrainingBriefView brief={brief} /></div>
+              </details>
+            )}
 
             {/* Sections 1-9 */}
             {SUP_SECTIONS.map((s, i) => (

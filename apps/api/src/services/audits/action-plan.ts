@@ -3,6 +3,7 @@
 // The tenant reviews it, edits actions, assigns them to staff and sets due dates, then approves
 // it — after which it is a tracked list worked to completion.
 
+import { syncLinkedActions } from '../../lib/supervision-training'
 import { prisma } from '../../db/client'
 import { callClaude } from '../ai/claude'
 import { sendActionPlanStaffEmail, sendActionPlanExternalEmail } from '../email/outbound'
@@ -228,6 +229,8 @@ const STATUS_RANK: Record<string, number> = { in_progress: 0, open: 1, done: 2 }
 
 export async function getMyActions(tenantId: string, staffName: string, userId?: string) {
   const name = (staffName ?? '').trim()
+  // A supervision action that asked for a course closes itself once the course is complete (does nothing when none are linked).
+  if (userId) await syncLinkedActions(tenantId, userId).catch(() => 0)
   const [auditRows, supRows] = await Promise.all([
     (name || userId) ? (prisma as any).auditAction.findMany({
       where: {

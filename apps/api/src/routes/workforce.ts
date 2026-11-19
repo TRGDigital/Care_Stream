@@ -20,6 +20,8 @@ import { scanBuffer, scannerConfigured } from '../services/security/malware-scan
 import { detectEvidenceType, SAFE_EVIDENCE_TYPES } from '../lib/evidence-file'
 import { notifyUsers } from '../lib/notify'
 import { sendTrainingUpdateEmail } from '../services/email/outbound'
+// Loaded when needed: lib/supervision-training reaches training-matrix, which imports this file, so a top level import would be a cycle.
+const stl = () => import('../lib/supervision-training')
 
 function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
@@ -360,6 +362,33 @@ workforceRouter.post('/staff/:userId/supervisions', async (req: Request, res: Re
   }
 
   ok(res, { record })
+})
+
+// ─── Training and supervisions, linked (behind the supervision_training flag; see lib/supervision-training.ts) ───
+// GET /workforce/staff/:userId/training-brief?type=supervision|appraisal — what to know about this person's training before the meeting.
+workforceRouter.get('/staff/:userId/training-brief', async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const m = await stl()
+  if (!(await m.supervisionTrainingEnabled(tenantId))) { err(res, 'NOT_AVAILABLE', 'Not available for this account.', 404); return }
+  const userId = String(req.params.userId)
+  if (!(await requireStaff(tenantId, userId))) { err(res, 'NOT_FOUND', 'Staff member not found.', 404); return }
+  const type = req.query.type === 'appraisal' ? 'appraisal' : 'supervision'
+  const brief = await m.buildBrief(tenantId, userId, type)
+  if (!brief) { err(res, 'NOT_FOUND', 'Staff member not found.', 404); return }
+  ok(res, { brief })
+})
+
+// POST /workforce/training-link { user_ids, module_id } — after training is allocated, also add it as an action on each person's next
+// booked supervision. Only after the admin ticks the box on the assign screen: nothing is added automatically.
+workforceRouter.post('/training-link', async (req: Request, res: Response) => {
+  const tenantId = getTenantId()
+  const m = await stl()
+  if (!(await m.supervisionTrainingEnabled(tenantId))) { err(res, 'NOT_AVAILABLE', 'Not available for this account.', 404); return }
+  const ids = Array.isArray(req.body?.user_ids) ? [...new Set<string>(req.body.user_ids.map((x: unknown) => String(x)))].slice(0, 300) : []
+  const moduleId = String(req.body?.module_id ?? '').trim()
+  if (!ids.length || !moduleId) { err(res, 'VALIDATION_ERROR', 'user_ids and module_id are required.'); return }
+  const results = await m.linkTrainingToNextSupervision(tenantId, ids, moduleId)
+  ok(res, { results, linked: results.filter(r => r.result === 'linked').length })
 })
 
 // DELETE /workforce/supervisions/:id — remove a supervision/appraisal record.

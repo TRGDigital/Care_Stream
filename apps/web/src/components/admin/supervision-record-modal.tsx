@@ -47,6 +47,19 @@ export function SupervisionRecordModal({ record, supervisee, onClose }: {
             </div>
           ))}
 
+          {record.form?.training_snapshot && (() => {
+            const s = record.form.training_snapshot as { taken_at: string; assigned: number; completed: number; overdue: number; avg_score: number | null; cpd_hours: number; overdue_courses?: string[]; due_soon_courses?: string[]; completed_since?: Array<{ name: string; score_pct: number | null }>; cqc_pending?: number; knowledge_gaps_90d?: number }
+            return (
+              <div className="rounded-lg border border-teal/25 bg-teal-light/20 px-4 py-3">
+                <p className="text-sm font-medium text-neutral-dark">Training at the time of this {record.type}</p>
+                <p className="mt-1 text-sm text-neutral-dark">{s.assigned} courses allocated, {s.completed} completed, {s.overdue} overdue{s.avg_score != null ? `, average score ${s.avg_score}%` : ''}{s.cpd_hours ? `, ${s.cpd_hours} CPD hours` : ''}.</p>
+                {(s.overdue_courses?.length ?? 0) > 0 && <p className="mt-1 text-xs text-neutral-mid">Overdue: {s.overdue_courses!.join(', ')}</p>}
+                {(s.completed_since?.length ?? 0) > 0 && <p className="mt-1 text-xs text-neutral-mid">Completed since the previous one: {s.completed_since!.map(c => c.name + (c.score_pct != null ? ` (${c.score_pct}%)` : '')).join(', ')}</p>}
+                <p className="mt-1 text-[11px] text-neutral-mid/80">Saved on {fmtDate(s.taken_at)} from their training records. It does not change afterwards.</p>
+              </div>
+            )
+          })()}
+
           <div>
             <p className="flex items-center gap-1.5 text-sm font-medium text-neutral-dark"><ListChecks size={14} className="text-teal" /> 10. Agreed actions</p>
             {actions.length === 0 ? (

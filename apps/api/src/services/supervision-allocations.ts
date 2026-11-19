@@ -17,7 +17,7 @@ import { checkAnnualLicenseLimit, PlanLimitError } from '../lib/plan-limits'
 import { siteUrl } from '../lib/urls'
 
 export type AllocationType = 'training' | 'induction' | 'cqc'
-export type AllocationResult = { allocated: boolean; skipped?: boolean; error?: string }
+export type AllocationResult = { allocated: boolean; skipped?: boolean; error?: string; enrollment_id?: string; module_id?: string }
 
 // Enrol the staff member on an ad-hoc training module (creates a TrainingEnrollment).
 async function allocateTraining(tenantId: string, userId: string, moduleId: string, assignedByUserId: string): Promise<AllocationResult> {
@@ -29,9 +29,11 @@ async function allocateTraining(tenantId: string, userId: string, moduleId: stri
 
   const existing = await (prisma as any).trainingEnrollment.findFirst({
     where:  { tenant_id: tenantId, user_id: userId, module_id: moduleId, status: { not: 'expired' } },
-    select: { id: true },
+    orderBy: { created_at: 'desc' },
+    select: { id: true, status: true },
   }).catch(() => null)
-  if (existing) return { allocated: false, skipped: true }
+  // An enrolment that is already complete is not linked to the action: there would be nothing left for the action to wait for.
+  if (existing) return { allocated: false, skipped: true, ...(existing.status === 'complete' ? {} : { enrollment_id: existing.id, module_id: moduleId }) }
 
   // AI-generated (annual) modules consume the plan's allocation quota; ad-hoc modules don't.
   if (mod.source === 'ai_generated') {
@@ -39,13 +41,14 @@ async function allocateTraining(tenantId: string, userId: string, moduleId: stri
     catch (e: any) { if (e instanceof PlanLimitError) return { allocated: false, error: e.message }; throw e }
   }
 
-  await (prisma as any).trainingEnrollment.create({
+  const created = await (prisma as any).trainingEnrollment.create({
     data: { tenant_id: tenantId, user_id: userId, module_id: moduleId, status: 'not_started', assigned_by: assignedByUserId },
+    select: { id: true },
   })
   const kind = mod.source === 'ai_generated' ? 'annual_training' : 'training'
   notifyStaffAllocation(tenantId, [userId], kind as any).catch(e => console.error('[sup-alloc] training email:', e))
   sendProactiveTrainingQuestions(tenantId, [userId], [moduleId]).catch(e => console.error('[sup-alloc] proactive:', e))
-  return { allocated: true }
+  return { allocated: true, enrollment_id: created.id, module_id: moduleId }
 }
 
 // Enrol the staff member on an induction (onboarding) flow.

@@ -1,5 +1,6 @@
 'use client'
 
+import { SupervisionLinkCheckbox, useSupervisionLinkEnabled, linkAfterAssign } from '@/components/admin/training/supervision-link'
 import { useEffect, useState } from 'react'
 import { useSearchIntent } from '@/lib/admin-search/intents'
 import Link from 'next/link'
@@ -496,6 +497,9 @@ function AssignModule({ api, moduleId, moduleName, onBack }: { api: ReturnType<t
   const [due, setDue] = useState('')
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(0)
+  const linkOn = useSupervisionLinkEnabled(api)
+  const [alsoLink, setAlsoLink] = useState(false)
+  const [linkMsg, setLinkMsg] = useState('')
 
   useEffect(() => { api.users.list().then((d: any) => { const u = d.users ?? d ?? []; setUsersState(u); persistentCache.set(usersKey, u) }).catch(() => {}).finally(() => setLoading(false)) }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -508,7 +512,11 @@ function AssignModule({ api, moduleId, moduleName, onBack }: { api: ReturnType<t
   async function assign() {
     if (!sel.size || saving) return
     setSaving(true)
-    try { const r = await api.training.enroll({ user_ids: [...sel], module_ids: [moduleId], ...(due ? { due_date: new Date(due).toISOString() } : {}) }); setDone(r.enrolled || sel.size) }
+    try {
+      const r = await api.training.enroll({ user_ids: [...sel], module_ids: [moduleId], ...(due ? { due_date: new Date(due).toISOString() } : {}) })
+      if (linkOn && alsoLink) setLinkMsg(await linkAfterAssign(api, [...sel], moduleId))
+      setDone(r.enrolled || sel.size)
+    }
     catch { /* ignore */ } finally { setSaving(false) }
   }
 
@@ -517,6 +525,7 @@ function AssignModule({ api, moduleId, moduleName, onBack }: { api: ReturnType<t
       <CheckCircle2 size={36} className="mx-auto mb-3 text-green-500" />
       <p className="text-lg font-semibold text-neutral-dark">Assigned to {done} staff member{done === 1 ? '' : 's'}</p>
       <p className="mt-1 text-sm text-neutral-mid">They&apos;ll see &ldquo;{moduleName}&rdquo; in their hub under Annual Training, in their first language.</p>
+      {linkMsg && <p className="mx-auto mt-3 max-w-md rounded-lg bg-teal-light/30 px-3 py-2 text-sm text-neutral-dark">{linkMsg}</p>}
       <Button onClick={onBack} size="md" className="mt-5">Back to catalogue</Button>
     </div>
   )
@@ -542,6 +551,7 @@ function AssignModule({ api, moduleId, moduleName, onBack }: { api: ReturnType<t
         </div>
       )}
 
+      {linkOn && <SupervisionLinkCheckbox checked={alsoLink} onChange={setAlsoLink} className="mb-3" />}
       <div className="flex flex-wrap items-center gap-3">
         <div>
           <label className="mb-1 block text-xs font-medium text-neutral-mid">Due date (optional)</label>

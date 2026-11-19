@@ -2,6 +2,7 @@
 
 // "This is me" resident profiles: the admin overlay opened from the Knowledge base page.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchIntent } from '@/lib/admin-search/intents'
 import Link from 'next/link'
 import { ArrowLeft, Archive, Loader2, Lock, Plus, Search, Users, X } from 'lucide-react'
 import { createResidentsClient, type Resident } from '@/lib/residents-api'
@@ -18,12 +19,12 @@ type Tab = 'profile' | 'family' | 'approvals' | 'from-family'
 const displayName = (r: Resident) => `${r.preferred_name || r.first_name} ${r.last_name}`
 const STATUS_LABEL: Record<string, string> = { deceased: 'Passed away', left: 'Moved on', living: 'Living' }
 
-export function ResidentsOverlay({ token, userId, onClose, initialResidentId = null }: { token: string; userId: string; onClose: () => void; initialResidentId?: string | null }) {
+export function ResidentsOverlay({ token, userId, onClose, initialResidentId = null, initialTab = null }: { token: string; userId: string; onClose: () => void; initialResidentId?: string | null; initialTab?: Tab | null }) {
   const client = useMemo(() => createResidentsClient(token), [token])
   const dialogRef = useRef<HTMLDivElement>(null)
   const [scope, setScope] = useState<'current' | 'archived'>('current')
   const [selected, setSelected] = useState<string | 'new' | null>(initialResidentId)
-  const [tab, setTab] = useState<Tab>('profile')
+  const [tab, setTab] = useState<Tab>(initialTab ?? 'profile')
   const [search, setSearch] = useState('')
   const [statusFor, setStatusFor] = useState<Resident | null>(null)
 
@@ -58,7 +59,7 @@ export function ResidentsOverlay({ token, userId, onClose, initialResidentId = n
     if (openedInitial.current || !initialResidentId || !current.data) return
     openedInitial.current = true
     const r = current.data.residents.find(x => x.id === initialResidentId)
-    if (r && r.pending_count > 0) setTab('approvals')
+    if (!initialTab && r && r.pending_count > 0) setTab('approvals')
   }, [initialResidentId, current.data])
 
   const refreshAll = useCallback(() => { current.reload(); if (canArchive) archived.reload(); detail.reload() }, [current, archived, detail, canArchive])

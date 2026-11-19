@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import { useSearchIntent } from '@/lib/admin-search/intents'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
@@ -211,6 +212,13 @@ function ModulesTab({ api, modules, staff, enrollments, onAssigned }: {
   onAssigned: () => void
 }) {
   const [assignFor,  setAssignFor]  = useState<Module | null>(null)  // individual-assign modal
+  const [wantAssign, setWantAssign] = useState<string | null>(null)   // from admin search: assign this course once the list is there
+  useSearchIntent({ 'assign-training': p => { if (p.module) setWantAssign(p.module) } })
+  useEffect(() => {
+    if (!wantAssign) return
+    const m = modules.find(x => x.id === wantAssign)
+    if (m) { setAssignFor(m); setWantAssign(null) }
+  }, [wantAssign, modules])
   const [assignBusy, setAssignBusy] = useState<string | null>(null)  // module id during "assign all"
   const [assignMsg,  setAssignMsg]  = useState<Record<string, string>>({})
   const [search,     setSearch]     = useState('')   // filter the (now large) adhoc module list
@@ -2195,6 +2203,8 @@ export default function TrainingPage() {
   const initialCache = persistentCache.get<{ staff: Staff[]; modules: Module[]; enrollments: Enrollment[] }>(`admin-training-${userId}`)
   const [staff,       setStaff]       = useState<Staff[]>(initialCache?.staff ?? [])
   const [modules,     setModules]     = useState<Module[]>(initialCache?.modules ?? [])
+  // Admin search: these two open a form inside a tab, so switch tab and let that tab finish the job.
+  useSearchIntent({ 'assign-training': () => { setTab('modules'); return 'keep' }, 'new-f2f': () => { setTab('face_to_face'); return 'keep' } })
   const [enrollments, setEnrollments] = useState<Enrollment[]>(initialCache?.enrollments ?? [])
   const [loading,     setLoading]     = useState(!initialCache)
   const [error,       setError]       = useState('')

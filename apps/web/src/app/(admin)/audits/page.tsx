@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchIntent } from '@/lib/admin-search/intents'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { createApiClient } from '@/lib/api-client'
@@ -85,6 +86,7 @@ export default function AuditsPage() {
   const [starting,    setStarting]    = useState(false)
   const [showNew,     setShowNew]     = useState(false)
   const [showBuilder, setShowBuilder] = useState(false)
+  const [wantTemplate, setWantTemplate] = useState<string | null>(null)   // from admin search: open this audit ready to start, once the list has loaded
   const [editingId,   setEditingId]   = useState<string | null>(null)
   const [previewId,   setPreviewId]   = useState<string | null>(null)
   const [versionsOf,  setVersionsOf]  = useState<any>(null)
@@ -142,6 +144,15 @@ export default function AuditsPage() {
   const [deleting,    setDeleting]    = useState<string | null>(null)
   const [confirming,  setConfirming]  = useState(false)
   const [selTemplate, setSelTemplate] = useState('')
+  useSearchIntent({
+    'start-audit': p => { if (p.template) setWantTemplate(p.template) },
+    'build-audit': () => { if (canCustomAudits) setShowBuilder(true); else router.push('/billing') },
+  })
+  useEffect(() => {
+    if (!wantTemplate || loading) return
+    if (templates.some((t: any) => t.id === wantTemplate)) { setSelTemplate(wantTemplate); setShowNew(true) }
+    setWantTemplate(null)
+  }, [wantTemplate, loading, templates])
   const [auditMonth,  setAuditMonth]  = useState(() => {
     const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`
   })

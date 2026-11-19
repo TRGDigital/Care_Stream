@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { useSearchIntent } from '@/lib/admin-search/intents'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
 import { persistentCache } from '@/lib/page-cache'
@@ -36,6 +37,7 @@ export function FaceToFaceManager({ token }: { token?: string }) {
   const [loading,  setLoading]  = useState(!cached)
   const [editing,  setEditing]  = useState<{ mode: 'new'; date?: string } | { mode: 'edit'; session: Session } | null>(null)
   const [viewingId, setViewingId] = useState<string | null>(null)
+  useSearchIntent({ 'new-f2f': () => setEditing({ mode: 'new' }) })
   // Past/today sessions with staff still not marked attended or absent.
   const [unmarked, setUnmarked] = useState<any[]>(cached?.unmarked ?? [])
   const [markBusy, setMarkBusy] = useState<string | null>(null)  // `${sessionId}:${userId}` in flight

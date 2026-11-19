@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchIntent } from '@/lib/admin-search/intents'
 import dynamic from 'next/dynamic'
 import { useSession } from 'next-auth/react'
 import { createApiClient } from '@/lib/api-client'
@@ -246,6 +247,16 @@ export default function OnboardingPage() {
   const [adoptingPolicyId, setAdoptingPolicyId] = useState<string | null>(null)
   const [adoptNote, setAdoptNote] = useState('')
   const [tab, setTab] = useState<'active' | 'ready'>('active')
+  const [wantAllocate, setWantAllocate] = useState<string | null>(null)   // from admin search: allocate this flow once the list has loaded
+  useSearchIntent({
+    'new-flow': () => { setSelected(null); setShowForm(true) },
+    'allocate-flow': p => { if (p.flow) setWantAllocate(p.flow) },
+  })
+  useEffect(() => {
+    if (!wantAllocate) return
+    const f = flows.find(x => x.id === wantAllocate)
+    if (f) { setSelected(f); setShowForm(false); setWantAllocate(null) }
+  }, [wantAllocate, flows])
 
   const api = session?.accessToken ? createApiClient(session.accessToken) : null
 

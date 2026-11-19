@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useSearchIntent } from '@/lib/admin-search/intents'
 import dynamic from 'next/dynamic'
 import { useSession } from 'next-auth/react'
 import { createApiClient, type KnowledgeEntry } from '@/lib/api-client'
@@ -93,14 +94,16 @@ export default function KnowledgePage() {
   const [loading, setLoading]       = useState(!k0)
   const [generating, setGenerating] = useState(false)
   const [showAdd, setShowAdd]       = useState(false)
+  useSearchIntent({ 'add-entry': () => setShowAdd(true) })
   const [showResidents, setShowResidents] = useState(false)
   const [openResidentId, setOpenResidentId] = useState<string | null>(null)
+  const [openResidentTab, setOpenResidentTab] = useState<'family' | null>(null)
   const [editId, setEditId]         = useState<string | null>(null)
   const [error, setError]           = useState<string | null>(null)
   // /knowledge?resident=<id> (from admin search) opens that resident's profile.
   useEffect(() => {
     const id = new URLSearchParams(window.location.search).get('resident')
-    if (id) { setOpenResidentId(id); setShowResidents(true) }
+    if (id) { setOpenResidentId(id); setOpenResidentTab(new URLSearchParams(window.location.search).get('tab') === 'family' ? 'family' : null); setShowResidents(true) }
   }, [])
 
   // Hydrate from the persistent (localStorage) cache after mount — never during
@@ -309,7 +312,7 @@ export default function KnowledgePage() {
       )}
 
       {showResidents && session?.accessToken && (
-        <ResidentsOverlay token={session.accessToken} userId={userId} initialResidentId={openResidentId} onClose={() => { setShowResidents(false); setOpenResidentId(null) }} />
+        <ResidentsOverlay token={session.accessToken} userId={userId} initialResidentId={openResidentId} initialTab={openResidentTab} onClose={() => { setShowResidents(false); setOpenResidentId(null); setOpenResidentTab(null) }} />
       )}
 
       {showAdd && (

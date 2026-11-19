@@ -2432,7 +2432,8 @@ model AuditRun {
   id                 String        @id @default(uuid())
   tenant_id          String
   template_id        String
-  audit_month        DateTime                           // first day of the audit month
+  audit_month        DateTime                           // first day of the audit month (the day itself for daily audits)
+  audit_date         DateTime?     @db.Date             // the day the audit was actually carried out, when the user chose one (back-dating a missed audit); null = the day it was started
   auditor_name       String?
   auditor_role       String?
   shift              String?                                // 'day' | 'night' — for shift-based daily templates

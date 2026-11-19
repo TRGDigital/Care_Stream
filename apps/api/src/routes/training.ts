@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express'
+import { sendPushToUsers } from '../lib/push'
 import { randomUUID } from 'crypto'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
@@ -605,23 +606,34 @@ trainingRouter.post('/enrollments/:id/remind', requireAdmin, async (req: Request
   })
   if (!enr) { err(res, 'NOT_FOUND', 'Allocation not found.', 404); return }
   if (enr.status === 'complete') { err(res, 'ALREADY_COMPLETE', 'This course is already complete.', 400); return }
-  if (!enr.user?.is_active || !enr.user?.email) { err(res, 'NO_EMAIL', 'This staff member has no active email address.', 400); return }
+  if (!enr.user?.is_active) { err(res, 'NO_USER', 'This staff member is not active.', 400); return }
   if (enr.last_reminded_at && Date.now() - new Date(enr.last_reminded_at).getTime() < REMIND_COOLDOWN_MS) {
     err(res, 'TOO_SOON', 'A reminder was sent in the last few minutes.', 429); return
   }
   try {
     const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
-    await sendTrainingReminderEmail({
-      to: enr.user.email, name: enr.user.name, orgName: tenant?.name ?? '',
-      courseName: enr.module.name, dueDate: enr.due_date ? new Date(enr.due_date) : null,
-      kind: enr.module.source === 'ai_generated' ? 'annual_training' : 'training', portalUrl: siteUrl(),
-    })
+    // Two channels: an email, and a hub notification (a push to the devices where they have the hub app and have allowed notifications).
+    // Either can be missing (no email on file, or no app installed), so the reply says what actually went where.
+    let emailed = false
+    if (enr.user.email) {
+      await sendTrainingReminderEmail({
+        to: enr.user.email, name: enr.user.name, orgName: tenant?.name ?? '',
+        courseName: enr.module.name, dueDate: enr.due_date ? new Date(enr.due_date) : null,
+        kind: enr.module.source === 'ai_generated' ? 'annual_training' : 'training', portalUrl: siteUrl(),
+      })
+      emailed = true
+    }
+    const pushSent = await sendPushToUsers([enr.user_id as string], {
+      title: 'Training reminder', body: `${enr.module.name}${enr.due_date ? `, due ${new Date(enr.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}. Tap to open it in your hub.`,
+      url: '/chat', tag: `remind-${enr.id}`,
+    }).catch(() => 0)
+    if (!emailed && !pushSent) { err(res, 'NO_CHANNEL', 'There is no email address on file and no device with hub notifications switched on, so there is nowhere to send it.', 400); return }
     const updated = await (prisma as any).trainingEnrollment.update({
       where:  { id: enr.id },
       data:   { last_reminded_at: new Date(), reminder_count: { increment: 1 } },
       select: { last_reminded_at: true, reminder_count: true },
     })
-    ok(res, updated)
+    ok(res, { ...updated, emailed, push_sent: pushSent })
   } catch (e: any) {
     err(res, 'REMIND_FAILED', e?.message ?? 'Could not send the reminder.', 500)
   }

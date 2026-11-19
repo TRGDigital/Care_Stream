@@ -39,6 +39,8 @@ export async function buildAuditReport(tenantId: string, runId: string) {
     auditor_name:      run.auditor_name,
     auditor_role:      run.auditor_role,
     audit_month:       run.audit_month,
+    audit_date:        run.audit_date ?? null,
+    entered_at:        run.created_at ?? null,
     status:            run.status,
     completed_at:      run.completed_at,
     approval_status:   run.approval_status,

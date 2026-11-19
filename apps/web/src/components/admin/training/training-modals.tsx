@@ -8,7 +8,7 @@ import { SupervisionLinkCheckbox, useSupervisionLinkEnabled, linkAfterAssign } f
 import { createApiClient } from '@/lib/api-client'
 import { useSession } from 'next-auth/react'
 import { persistentCache } from '@/lib/page-cache'
-import { AlertCircle, CheckCircle2, ExternalLink, Loader2, Save, X } from 'lucide-react'
+import { AlertCircle, Bell, CheckCircle2, ExternalLink, Loader2, Save, X } from 'lucide-react'
 import { fmt, DAY_NAMES, type Module, type Staff } from './training-shared'
 
 // ─── Assign modal ─────────────────────────────────────────────────────────────
@@ -162,6 +162,8 @@ export function EnrollmentModal({ api, enrollmentId, onClose, onUpdated }: {
   const [loading,    setLoading]    = useState(() => persistentCache.get<any>(encKey) === undefined)
   const [completing, setCompleting] = useState(false)
   const [removing,   setRemoving]   = useState(false)
+  const [reminding,  setReminding]  = useState(false)
+  const [remindMsg,  setRemindMsg]  = useState<{ ok: boolean; text: string } | null>(null)
 
   useEffect(() => {
     api.training.getEnrollment(enrollmentId)
@@ -175,6 +177,18 @@ export function EnrollmentModal({ api, enrollmentId, onClose, onUpdated }: {
       await api.training.complete(enrollmentId)
       onUpdated()
     } finally { setCompleting(false) }
+  }
+
+  // Email plus a hub notification. The reply says what actually went where, because either can be missing.
+  async function sendReminder() {
+    setReminding(true); setRemindMsg(null)
+    try {
+      const r = await api.training.remindEnrollment(enrollmentId)
+      const how = [r.emailed ? 'an email' : '', r.push_sent ? `a hub notification (${r.push_sent} ${r.push_sent === 1 ? 'device' : 'devices'})` : ''].filter(Boolean)
+      setRemindMsg({ ok: true, text: `Reminder sent: ${how.join(' and ') || 'done'}.${r.emailed && !r.push_sent ? ' No hub notification, as they have not switched them on in the hub app.' : ''}` })
+      setData((d: any) => d ? { ...d, last_reminded_at: r.last_reminded_at, reminder_count: r.reminder_count } : d)
+    } catch (e: any) { setRemindMsg({ ok: false, text: e?.message ?? 'Could not send the reminder.' }) }
+    finally { setReminding(false) }
   }
 
   async function remove() {
@@ -226,6 +240,45 @@ export function EnrollmentModal({ api, enrollmentId, onClose, onUpdated }: {
                 </p>
               </div>
             </div>
+
+            {/* Where it has got to: issued, opened, part done, and the last reminder. */}
+            {(() => {
+              const answered = (data.answers ?? []).length
+              const total = Array.isArray(data.module?.questions) ? data.module.questions.length : 0
+              const mins = Math.round((data.learn_seconds ?? 0) / 60)
+              const opened = answered > 0 || (data.learn_seconds ?? 0) > 0 || data.status !== 'not_started'
+              const partial = data.status !== 'complete' && data.status !== 'expired' && opened
+              const overdue = data.due_date && data.status !== 'complete' && new Date(data.due_date) < new Date()
+              return (
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="rounded-lg bg-gray-50 px-3 py-2">
+                    <p className="font-medium text-neutral-mid">Issued</p>
+                    <p className="mt-0.5 font-semibold text-neutral-dark">{fmt(data.created_at)}</p>
+                  </div>
+                  <div className="rounded-lg bg-gray-50 px-3 py-2">
+                    <p className="font-medium text-neutral-mid">Due</p>
+                    <p className={`mt-0.5 font-semibold ${overdue ? 'text-red-500' : 'text-neutral-dark'}`}>{data.due_date ? fmt(data.due_date) : 'No due date'}{overdue ? ' (overdue)' : ''}</p>
+                  </div>
+                  <div className="rounded-lg bg-gray-50 px-3 py-2">
+                    <p className="font-medium text-neutral-mid">Opened</p>
+                    <p className="mt-0.5 font-semibold text-neutral-dark">{opened ? 'Yes' : 'Not yet'}</p>
+                  </div>
+                  <div className="rounded-lg bg-gray-50 px-3 py-2">
+                    <p className="font-medium text-neutral-mid">Progress</p>
+                    <p className="mt-0.5 font-semibold text-neutral-dark">
+                      {data.status === 'complete' || data.status === 'expired' ? 'Finished' : partial ? 'Partly started' : 'Not started'}
+                    </p>
+                    {partial && <p className="mt-0.5 text-[11px] text-neutral-mid">{total ? `${answered} of ${total} questions answered` : `${answered} ${answered === 1 ? 'question' : 'questions'} answered`}{mins ? `, ${mins} min on the lesson` : ''}</p>}
+                  </div>
+                  <div className="col-span-2 rounded-lg bg-gray-50 px-3 py-2">
+                    <p className="font-medium text-neutral-mid">Last reminder</p>
+                    <p className="mt-0.5 font-semibold text-neutral-dark">
+                      {data.last_reminded_at ? `${fmt(data.last_reminded_at)}${data.reminder_count > 1 ? ` (${data.reminder_count} sent in all)` : ''}` : 'None sent yet'}
+                    </p>
+                  </div>
+                </div>
+              )
+            })()}
 
             {data.certificate_url && (
               <a href={data.certificate_url} target="_blank" rel="noopener noreferrer"
@@ -279,11 +332,20 @@ export function EnrollmentModal({ api, enrollmentId, onClose, onUpdated }: {
                   Mark complete
                 </button>
               )}
+              {(data.status === 'not_started' || data.status === 'in_progress') && (
+                <button onClick={sendReminder} disabled={reminding}
+                  className="flex items-center gap-1.5 rounded-lg border border-teal/40 px-4 py-2 text-sm font-medium text-teal hover:bg-teal/5 disabled:opacity-50">
+                  {reminding ? <Loader2 size={13} className="animate-spin" /> : <Bell size={13} />}
+                  Send reminder
+                </button>
+              )}
               <button onClick={remove} disabled={removing}
                 className="ml-auto text-xs text-red-500 hover:underline disabled:opacity-50">
                 {removing ? 'Removing…' : 'Remove assignment'}
               </button>
             </div>
+            {remindMsg && <p className={`text-xs font-medium ${remindMsg.ok ? 'text-green-700' : 'text-red-600'}`}>{remindMsg.text}</p>}
+            {(data.status === 'not_started' || data.status === 'in_progress') && !remindMsg && <p className="text-[11px] text-neutral-mid">Send reminder emails them and sends a hub notification to any device where they have the hub app and notifications switched on.</p>}
           </div>
         )}
       </div>

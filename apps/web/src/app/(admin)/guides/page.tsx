@@ -1475,7 +1475,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             Go to <strong>Training → Compliance</strong> to see the live grid of every staff member against every assigned module (complete, in progress, expired), each person&rsquo;s score, and what&rsquo;s overdue. Individual records and the Analytics page give the same detail per person.
           </p>
           <p className="mt-3 text-sm text-neutral-mid">
-            <strong>Hover for the full name.</strong> Long course names in the column headings are shortened to fit; hold the pointer over one to see the whole name.
+            <strong>Full course names.</strong> Each column heading shows the whole name of the training, wrapped onto more than one line when it is long. Hold the pointer over one to see it as a tooltip too.
           </p>
         </SectionBlock>
         <SectionBlock title="The training record: where it has got to, and a reminder">

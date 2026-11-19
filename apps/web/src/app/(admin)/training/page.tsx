@@ -132,7 +132,7 @@ function F2FComplianceMatrix({ token, enabled, userId }: { token: string; enable
       title="Face-to-face training"
       count={`${data.staff.length} staff · ${data.topics.length} topic${data.topics.length === 1 ? '' : 's'}`}
       head={data.topics.map((t: any) => (
-        <th key={t.key} title={t.label} className="px-3 py-3 text-center text-xs font-medium text-neutral-mid min-w-[80px] max-w-[110px]"><span className="block leading-tight">{t.label.length > 16 ? t.label.slice(0, 14) + '…' : t.label}</span></th>
+        <th key={t.key} title={t.label} className="px-3 py-3 text-center text-xs font-medium text-neutral-mid min-w-[100px] max-w-[140px]"><span className="block break-words leading-tight">{t.label}</span></th>
       ))}
       legend={<>
         {(['in_date', 'due_soon', 'overdue', 'missing', 'none'] as const).map(k => (
@@ -180,7 +180,7 @@ function OnboardingComplianceMatrix({ token, userId }: { token: string; userId: 
       title="Staff onboarding"
       count={`${data.staff.length} staff · ${data.flows.length} flow${data.flows.length === 1 ? '' : 's'}`}
       head={data.flows.map((f: any) => (
-        <th key={f.id} title={f.name} className="px-3 py-3 text-center text-xs font-medium text-neutral-mid min-w-[90px] max-w-[130px]"><span className="block leading-tight">{f.name.length > 18 ? f.name.slice(0, 16) + '…' : f.name}</span></th>
+        <th key={f.id} title={f.name} className="px-3 py-3 text-center text-xs font-medium text-neutral-mid min-w-[110px] max-w-[150px]"><span className="block break-words leading-tight">{f.name}</span></th>
       ))}
       legend={<>
         <span className="flex items-center gap-1.5"><span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-100 text-green-600"><CheckCircle2 size={11} /></span> Complete</span>
@@ -2451,12 +2451,12 @@ export default function TrainingPage() {
                   Staff member
                 </th>
                 {gridModules.map(m => (
-                  <th key={m.id} title={m.name} className="px-3 py-3 text-center text-xs font-medium text-neutral-mid min-w-[90px] max-w-[120px]">
+                  <th key={m.id} title={m.name} className="px-3 py-3 text-center text-xs font-medium text-neutral-mid min-w-[110px] max-w-[150px]">
                     <div className="flex flex-col items-center gap-1">
                       <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${m.category === 'statutory' ? 'bg-teal/10 text-teal' : 'bg-indigo-50 text-indigo-500'}`}>
                         {m.category === 'statutory' ? 'S' : 'Sp'}
                       </span>
-                      <span className="leading-tight">{m.name.length > 16 ? m.name.slice(0, 14) + '…' : m.name}</span>
+                      <span className="break-words leading-tight">{m.name}</span>
                     </div>
                   </th>
                 ))}
@@ -2528,10 +2528,10 @@ export default function TrainingPage() {
                 <tr className="border-b border-gray-100">
                   <th className="sticky left-0 z-10 bg-white px-5 py-3 text-left text-xs font-medium text-neutral-mid min-w-[180px]">Staff member</th>
                   {g.modules.map(m => (
-                    <th key={m.id} title={m.name} className="px-3 py-3 text-center text-xs font-medium text-neutral-mid min-w-[90px] max-w-[120px]">
+                    <th key={m.id} title={m.name} className="px-3 py-3 text-center text-xs font-medium text-neutral-mid min-w-[110px] max-w-[150px]">
                       <div className="flex flex-col items-center gap-1">
                         {m.requires_practical && <span className="rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600">+ prac</span>}
-                        <span className="leading-tight">{m.name.length > 16 ? m.name.slice(0, 14) + '…' : m.name}</span>
+                        <span className="break-words leading-tight">{m.name}</span>
                       </div>
                     </th>
                   ))}

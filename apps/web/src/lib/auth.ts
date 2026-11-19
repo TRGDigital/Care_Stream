@@ -89,6 +89,11 @@ export const authOptions: NextAuthOptions = {
           if (!credentials.access_token || !credentials.refresh_token || !credentials.tenant_name) return null
           try {
             const payload = JSON.parse(Buffer.from((credentials.access_token as string).split('.')[1], 'base64').toString())
+            // The token is only decoded here, not verified, so ask the API to vouch for it before building a session from it. Without this
+            // anyone could hand-make a token and get an admin-looking session shell (the API would refuse every call, but the shell is
+            // not something to hand out). One small call, only when switching site or viewing a hub.
+            const vouch = await fetch(`${API_URL}/me/profile`, { headers: { Authorization: `Bearer ${credentials.access_token}` } }).catch(() => null)
+            if (!vouch || !vouch.ok) return null
             return {
               id:           payload.sub,
               name:         (credentials.user_name as string) || '',

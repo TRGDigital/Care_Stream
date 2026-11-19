@@ -6,6 +6,7 @@ import { authRouter } from './routes/auth'
 import { feedbackRouter } from './routes/feedback'
 import { policiesRouter } from './routes/policies'
 import { adminSearchRouter } from './routes/admin-search'
+import { viewAsGuard } from './lib/view-as'
 import { queryRouter } from './routes/query'
 import { usersRouter } from './routes/users'
 import { meRouter } from './routes/me'
@@ -227,6 +228,8 @@ app.use('/routine/content', contentRoutineRouter)
 // tenantGuard: rejects requests where any supplied tenant_id ≠ JWT claim.
 app.use(apiLimiter)
 app.use(requireAuth)
+// A "view hub as" token is re-checked against the account on every request (switched off means it stops at once); acting is logged.
+app.use(viewAsGuard)
 app.use(tenantGuard)
 // Free tenants are default closed on the API (a no op for every other tier).
 app.use(freeTierGuard)

@@ -8,8 +8,8 @@ import { hashPassword } from '../services/auth/password'
 import { requireAdmin } from '../middleware/auth'
 import { viewAsAllowed, resolveViewAsMode } from '../lib/view-as'
 import { generateViewAsToken, VIEW_AS_MINUTES } from '../services/auth/tokens'
-import { mintLoginToken } from '../lib/login-tokens'
-import { writeAuditLog } from '../lib/audit'
+import { mintLoginToken, revokeUnusedTokens } from '../lib/login-tokens'
+import { writeAuditLog, writeAuditLogStrict } from '../lib/audit'
 import { ok, err } from '../lib/response'
 import { siteUrl } from '../lib/urls'
 import { sendStaffWelcomeEmail, sendStaffLoginLinkEmail } from '../services/email/outbound'
@@ -708,10 +708,15 @@ usersRouter.post('/:id/view-as', async (req: Request, res: Response) => {
   if (user.role === 'admin') { err(res, 'NOT_ALLOWED', 'You can only view a staff member, not another admin.', 403); return }
   const me = await (prisma as any).user.findUnique({ where: { id: adminId }, select: { name: true } })
 
+  // The record comes FIRST and is not optional: if it cannot be written, no token is issued.
+  const expiresAt = new Date(Date.now() + VIEW_AS_MINUTES * 60_000).toISOString()
+  try { await writeAuditLogStrict({ tenant_id: tenantId, user_id: adminId, event_type: 'admin_view_as_started', entity_type: 'user', entity_id: user.id, metadata: { mode, target: user.name, expires_at: expiresAt } }) }
+  catch (e) { console.error('[view-as] audit failed, not starting', e); err(res, 'AUDIT_FAILED', 'Could not start the view, please try again.', 500); return }
   const accessToken = generateViewAsToken({ sub: user.id, tenant_id: tenantId, role: 'staff', imp: { by: adminId, by_name: me?.name ?? 'An admin', mode } })
-  const returnToken = await mintLoginToken(adminId, tenantId, 3 * 60 * 60 * 1000)
+  // The way back lasts as long as the view and no longer; starting another view cancels any earlier unused one.
+  await revokeUnusedTokens(adminId, 'view_as_return')
+  const returnToken = await mintLoginToken(adminId, tenantId, (VIEW_AS_MINUTES + 5) * 60_000, 'view_as_return')
   const tenant = await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { name: true } })
-  void writeAuditLog({ tenant_id: tenantId, user_id: adminId, event_type: 'admin_view_as_started', entity_type: 'user', entity_id: user.id, metadata: { mode, target: user.name } })
   ok(res, { access_token: accessToken, return_token: returnToken, mode, minutes: VIEW_AS_MINUTES, user: { id: user.id, name: user.name, email: user.email }, tenant_name: tenant?.name ?? '', tier: await tierOf(tenantId) })
 })
 

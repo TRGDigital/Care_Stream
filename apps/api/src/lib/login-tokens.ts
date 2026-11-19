@@ -13,12 +13,17 @@ function hashToken(token: string): string {
 // Mint a one-time sign-in token for a user. Returns the raw token (only ever lives
 // in the link / response — it's hashed at rest). Used directly for auto-login after
 // email verification, or wrapped into a link by createLoginLink.
-export async function mintLoginToken(userId: string, tenantId: string, ttlMs: number): Promise<string> {
+export async function mintLoginToken(userId: string, tenantId: string, ttlMs: number, purpose?: string): Promise<string> {
   const token = crypto.randomBytes(24).toString('base64url')
   await (prisma as any).loginToken.create({
-    data: { token_hash: hashToken(token), user_id: userId, tenant_id: tenantId, expires_at: new Date(Date.now() + ttlMs) },
+    data: { token_hash: hashToken(token), user_id: userId, tenant_id: tenantId, expires_at: new Date(Date.now() + ttlMs), ...(purpose ? { purpose } : {}) },
   })
   return token
+}
+
+/** Cancel every unused token of one purpose for a user, so only the newest can ever be redeemed. */
+export async function revokeUnusedTokens(userId: string, purpose: string): Promise<void> {
+  await (prisma as any).loginToken.deleteMany({ where: { user_id: userId, purpose, used_at: null } })
 }
 
 // Mint a one-time sign-in link for a user. Returns the full URL to send/show.

@@ -25,7 +25,7 @@ type AuditEventType =
   | 'platform_viewed_staff_record'
   | 'resident_created' | 'resident_updated' | 'resident_archived' | 'resident_archive_confirmed' | 'resident_retention_changed'
   | 'resident_exported' | 'resident_deleted' | 'resident_family_invited' | 'resident_family_link_created' | 'resident_contribution_decided' | 'resident_archive_viewed'
-  | 'admin_view_as_started' | 'admin_view_as_ended'   // an admin looked at a staff member's hub (view or act mode)
+  | 'admin_view_as_started' | 'admin_view_as_ended' | 'admin_view_as_action'   // an admin looked at a staff member's hub (view or act mode)
   | 'platform_pushed_policy_gaps'      // TRG pushed missing policies to a client's /policies page
   | 'platform_viewed_staff_chats'      // TRG opened a staff member's chats (full text) in the platform console   // TRG looked at a staff member's activity record from the platform console
 
@@ -38,6 +38,13 @@ interface AuditParams {
   entity_type: AuditEntityType
   entity_id: string
   metadata?: Record<string, unknown>
+}
+
+/** Like writeAuditLog, but a failure is thrown. For actions that must not happen without a record (an admin viewing a staff hub). */
+export async function writeAuditLogStrict(params: AuditParams): Promise<void> {
+  await (prisma as any).auditLog.create({
+    data: { tenant_id: params.tenant_id ?? null, user_id: params.user_id ?? null, event_type: params.event_type, entity_type: params.entity_type, entity_id: params.entity_id, metadata: params.metadata ?? {} },
+  })
 }
 
 export async function writeAuditLog(params: AuditParams): Promise<void> {

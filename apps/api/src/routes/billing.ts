@@ -6,6 +6,7 @@ import { createPortalSession, handleWebhook, createCheckoutSession, getSubscript
 import { requireAdmin } from '../middleware/auth'
 import { ok, err } from '../lib/response'
 import { getPlanFeatures } from '../lib/plan-limits'
+import { modeFromFlags } from '../lib/view-as'
 import { needsBillingFor } from '../lib/tiers'
 import { freeEvent } from '../lib/free-events'
 
@@ -126,7 +127,7 @@ async function featureSwitches(tenantId: string, features: { has_workforce_compl
   try { flags = ((await (prisma as any).tenant.findUnique({ where: { id: tenantId }, select: { feature_flags: true } }))?.feature_flags ?? {}) as Record<string, unknown> } catch { /* off */ }
   return {
     supervision_training: !!features.has_workforce_compliance && flags.supervision_training === true,
-    view_as: (flags.view_as_hub === true ? (flags.view_as_act === true ? 'act' : 'view') : 'off') as 'off' | 'view' | 'act',
+    view_as: modeFromFlags(flags),
   }
 }
 

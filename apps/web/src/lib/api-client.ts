@@ -316,6 +316,8 @@ async function apiFetch<T>(
   if (res.status === 401) {
     // Carry the current location so signing back in returns the user to exactly
     // where they were working, instead of dumping them on the dashboard.
+    // During a "view hub as" the way back is a one time token held in this tab: use it, so the admin is not stranded on a password page.
+    if (typeof window !== 'undefined' && (() => { try { return !!sessionStorage.getItem('cs-view-as-return') } catch { return false } })()) { import('@/lib/view-as-client').then(m => m.endViewAs(undefined)); throw new Error('This view has ended.') }
     if (typeof window !== 'undefined') window.location.href = `/login?callbackUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`
     throw new Error('Session expired. Please sign in again.')
   }

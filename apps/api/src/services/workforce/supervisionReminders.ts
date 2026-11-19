@@ -23,7 +23,7 @@ export async function runSupervisionReminders(): Promise<{ sessions: number; sta
   const tenantIds = [...new Set(records.map((r: any) => r.tenant_id))] as string[]
   const userIds   = [...new Set(records.map((r: any) => r.user_id))] as string[]
   const [tenants, users] = await Promise.all([
-    (prisma as any).tenant.findMany({ where: { id: { in: tenantIds } }, select: { id: true, name: true, plan: { select: { has_workforce_compliance: true } } } }),
+    (prisma as any).tenant.findMany({ where: { id: { in: tenantIds } }, select: { id: true, name: true, plan: { select: { has_workforce_compliance: true, has_supervisions: true } } } }),
     (prisma as any).user.findMany({ where: { id: { in: userIds } }, select: { id: true, name: true, email: true } }),
   ])
   const tenantMap = new Map<string, any>(tenants.map((t: any) => [t.id, t]))
@@ -34,7 +34,7 @@ export async function runSupervisionReminders(): Promise<{ sessions: number; sta
 
   for (const r of records) {
     const tenant = tenantMap.get(r.tenant_id)
-    if (!tenant?.plan?.has_workforce_compliance) continue
+    if (!tenant?.plan?.has_supervisions && !tenant?.plan?.has_workforce_compliance) continue
     if (!(await isEmailEnabled(r.tenant_id, 'supervision_updates'))) continue
     sessions++
     const label   = r.type === 'appraisal' ? 'appraisal' : 'supervision'

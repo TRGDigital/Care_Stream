@@ -5,8 +5,8 @@ import { lockFor, visibleTo, type PlanFlags, type AccountKind } from './access'
 
 // The plan flags as they are in the plans table (checked 19 Nov 2026).
 const FREE: PlanFlags = { has_gap_detection: true }
-const STARTER: PlanFlags = {}
-const PRO: PlanFlags = { has_advanced_analytics: true, has_cqc_report: true, has_gap_detection: true, has_face_to_face: true }
+const STARTER: PlanFlags = { has_supervisions: true }
+const PRO: PlanFlags = { has_supervisions: true, has_advanced_analytics: true, has_cqc_report: true, has_gap_detection: true, has_face_to_face: true }
 const ENT: PlanFlags = { ...PRO, has_custom_audits: true, has_effectiveness: true, has_training_impact: true, has_workforce_compliance: true }
 
 const accounts: Record<string, { a: AccountKind; f: PlanFlags }> = {
@@ -37,12 +37,14 @@ test('Starter: no paid extras, and each says which plan includes it', () => {
   assert.equal(plan('starter', 'face-to-face'), 'Professional')
   assert.equal(plan('starter', 'do-new-f2f'), 'Professional')
   assert.equal(plan('starter', 'custom-audits'), 'Enterprise')
-  assert.equal(plan('starter', 'supervisions'), 'Enterprise')
+  assert.equal(kind('starter', 'supervisions'), 'open')   // supervisions and appraisals are on Starter and above
+  assert.equal(plan('starter', 'supervision-training'), 'Enterprise')   // linking training to them is Enterprise
   for (const id of ['audits', 'policies', 'staff', 'knowledge', 'onboarding', 'training', 'cpd', 'do-add-staff']) assert.equal(kind('starter', id), 'open', id)
 })
 test('Professional: has incentives, residents, CQC reports and face to face; not the Enterprise parts', () => {
   for (const id of ['incentives', 'residents', 'cqc-report', 'analytics', 'face-to-face', 'do-new-f2f', 'do-new-incentive']) assert.equal(kind('professional', id), 'open', id)
-  for (const id of ['supervisions', 'workforce', 'custom-audits', 'training-impact', 'do-build-audit']) assert.equal(plan('professional', id), 'Enterprise', id)
+  assert.equal(kind('professional', 'supervisions'), 'open')
+  for (const id of ['supervision-training', 'workforce', 'custom-audits', 'training-impact', 'do-build-audit']) assert.equal(plan('professional', id), 'Enterprise', id)
 })
 test('Training only and policies only accounts see only their own parts', () => {
   assert.equal(kind('training_only', 'training'), 'open')
@@ -69,6 +71,6 @@ test('never lock on a guess while the plan is still loading', () => {
   assert.equal(lockFor(e.href, e.requires, {}, null), null)
 })
 test('every entry that needs a plan feature names the plan that first has it', () => {
-  const firstPlan: Record<string, string> = { has_advanced_analytics: 'Professional', has_cqc_report: 'Professional', has_gap_detection: 'Professional', has_face_to_face: 'Professional', has_custom_audits: 'Enterprise', has_effectiveness: 'Enterprise', has_training_impact: 'Enterprise', has_workforce_compliance: 'Enterprise' }
+  const firstPlan: Record<string, string> = { has_advanced_analytics: 'Professional', has_cqc_report: 'Professional', has_gap_detection: 'Professional', has_face_to_face: 'Professional', has_custom_audits: 'Enterprise', has_effectiveness: 'Enterprise', has_training_impact: 'Enterprise', has_workforce_compliance: 'Enterprise', has_supervisions: 'Starter' }
   for (const e of FEATURES) if (e.requires) assert.equal(e.requires.plan, firstPlan[e.requires.feature], `${e.id}: ${e.requires.feature} first appears in ${firstPlan[e.requires.feature]}`)
 })

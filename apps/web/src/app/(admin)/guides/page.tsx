@@ -2463,7 +2463,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
         </SectionBlock>
         <SectionBlock title="Supervisions and appraisals">
           <p className="text-sm text-neutral-mid">
-            The <strong>Supervisions &amp; appraisals</strong> tab on the Compliance page is where you book and track each staff member&rsquo;s 1:1 supervisions and annual appraisals, showing their last session and next booked or due date, colour coded so overdue ones stand out. Supervisions and appraisals are part of the <strong>Enterprise plan</strong>, and they have their own recording form, agreed-action tracking and allocation flow. On Enterprise, they also link to training: see <em>Training and supervisions, linked</em>.
+            The <strong>Supervisions &amp; appraisals</strong> tab on the Compliance page is where you book and track each staff member&rsquo;s 1:1 supervisions and annual appraisals, showing their last session and next booked or due date, colour coded so overdue ones stand out. Supervisions and appraisals are on the <strong>Starter, Professional and Enterprise plans</strong>, and they have their own recording form, agreed-action tracking and allocation flow. On Enterprise they also link to training: see <em>Training and supervisions, linked</em>. The credentials register on the other tab (DBS, right to work, registration, references) is Enterprise only.
           </p>
           <div className="mt-2"><Tip>See the dedicated <strong>Supervisions</strong> guide below for the full flow: booking, choosing who conducts it, completing the recording form, and allocating training, induction or CQC prep off the agreed actions.</Tip></div>
         </SectionBlock>
@@ -2480,7 +2480,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
       <div className="space-y-5">
         <SectionBlock title="What it is, available on the Enterprise plan">
           <p className="text-sm text-neutral-mid">
-            Supervisions let you book and record each staff member&rsquo;s 1:1 supervisions and annual appraisals, complete a structured recording form, and turn what you agree into actions and allocations that land straight in the staff member&rsquo;s hub. It is part of the <strong>Enterprise plan</strong>, in the Compliance area. Every completed session is kept on the staff member&rsquo;s record as CQC evidence.
+            Supervisions let you book and record each staff member&rsquo;s 1:1 supervisions and annual appraisals, complete a structured recording form, and turn what you agree into actions and allocations that land straight in the staff member&rsquo;s hub. It is on the <strong>Starter, Professional and Enterprise plans</strong>, in the Compliance area. Every completed session is kept on the staff member&rsquo;s record as CQC evidence.
           </p>
           <p className="mt-2 text-sm text-neutral-mid">
             You book and track sessions from <strong>Compliance &rarr; Supervisions &amp; appraisals</strong> in the Team section of the sidebar. The whole flow has three stages: <strong>book</strong> the session and choose who conducts it, the conductor <strong>records</strong> it on the form, and the agreed actions are <strong>allocated</strong> to the staff member.
@@ -2556,7 +2556,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
         <SectionBlock title="Training and supervisions, linked">
           <p className="text-sm text-neutral-mid">
             Supervisions are where a manager decides what someone needs, and training is how it gets done. CareStream links the two, so you go into a supervision knowing how the person is doing on their training, and what you agree turns into training that closes itself.
-          </p>
+           Supervisions themselves are on Starter, Professional and Enterprise; linking them to training is on the <strong>Enterprise plan</strong>.</p>
           <div className="mt-3 space-y-3">
             <Step n={1}><strong>The training brief.</strong> Before the meeting, open the person from <em>Compliance &rarr; Supervisions &amp; appraisals</em>, or open the recording form in your hub, and expand <strong>Training brief</strong>. It shows what is overdue, due soon or expired, low scores, what they have finished since the last supervision, CQC prep gaps, unanswered questions and open actions, with a short <strong>Worth raising</strong> list.</Step>
             <Step n={2}><strong>The training in full.</strong> Press <strong>See the training in full</strong> for a card per course: status, dates, score, time on the lesson, the pre-course check, and every question answered wrongly with their answer and the correct one. With more than one course, each is an accordion that starts closed with a one-line summary, and <strong>Open all</strong> opens them together.</Step>
@@ -2967,7 +2967,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             <Step n={2}>Under <strong>Upgrade your plan</strong>, the higher tiers available to you are listed with their features and price.</Step>
             <Step n={3}>Click <strong>Upgrade to …</strong> to go to secure Stripe checkout. Upgrades take effect immediately and unlock the new features straight away.</Step>
           </div>
-          <Tip>Locked features (for example Face-to-face training, Build your own audit, Supervisions and appraisals with training linked to them, or the Effectiveness and Training Impact reports) show an <strong>Upgrade</strong> prompt that takes you to Billing. Your existing data is always kept exactly as it is when you change plan.</Tip>
+          <Tip>Locked features (for example Face-to-face training, Build your own audit, the workforce credentials register, training linked to supervisions, or the Effectiveness and Training Impact reports) show an <strong>Upgrade</strong> prompt that takes you to Billing. Your existing data is always kept exactly as it is when you change plan.</Tip>
         </SectionBlock>
 
         <SectionBlock title="Managing payment & invoices">

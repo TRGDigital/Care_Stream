@@ -8,6 +8,7 @@
 // pipeline) and stored in S3.
 
 import { Router, Request, Response } from 'express'
+import { isSupervisionRoute } from '../lib/supervision-routes'
 import { randomUUID } from 'crypto'
 import { prisma } from '../db/client'
 import { ok, err } from '../lib/response'
@@ -32,11 +33,12 @@ function fmtLong(d: Date): string {
 
 export const workforceRouter = Router()
 
-// Admin-only, and gated to plans that include the workforce compliance register
-// (Enterprise). requireAuth is applied globally before this router is mounted.
+// Admin-only. Supervisions and appraisals are on Starter, Professional and Enterprise (has_supervisions); everything else here, the
+// credentials register and the training and supervision link, stays on Enterprise (has_workforce_compliance).
+// requireAuth is applied globally before this router is mounted.
 workforceRouter.use(requireAdmin)
 workforceRouter.use(async (req: Request, res: Response, next) => {
-  try { await checkFeature((req as any).user.tenant_id, 'has_workforce_compliance'); next() }
+  try { await checkFeature((req as any).user.tenant_id, isSupervisionRoute(req.path) ? 'has_supervisions' : 'has_workforce_compliance'); next() }
   catch (e: any) { if (e instanceof PlanLimitError) { err(res, e.code, e.message, 402); return } next(e) }
 })
 

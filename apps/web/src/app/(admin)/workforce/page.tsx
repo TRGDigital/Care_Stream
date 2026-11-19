@@ -77,7 +77,10 @@ function SummaryCard({ label, value, cls, Icon }: { label: string; value: number
 export default function WorkforcePage() {
   const { data: session } = useSession()
   const { features, loading: planLoading } = usePlanFeatures()
+  // Two plan levels in one page: supervisions and appraisals are on Starter, Professional and Enterprise; the credentials register (DBS, right
+  // to work, registration, references) is Enterprise only. `enabled` is the register; `supEnabled` is supervisions.
   const enabled = hasFeature(features, 'has_workforce_compliance')
+  const supEnabled = enabled || hasFeature(features, 'has_supervisions')
 
   const userId = session?.user?.email ?? 'guest'
   const regKey = `admin-workforce-register-${userId}`
@@ -86,10 +89,12 @@ export default function WorkforcePage() {
   const [editing, setEditing] = useState<StaffRow | null>(null)
   // Deep-linkable: /workforce?tab=supervisions opens straight on that tab
   // (used by CareStream Suggestions and anywhere else that links to a tab).
-  const [tab, setTab] = useState<'credentials' | 'supervisions'>(() =>
+  const [tabWanted, setTab] = useState<'credentials' | 'supervisions'>(() =>
     typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('tab') === 'supervisions'
       ? 'supervisions' : 'credentials'
   )
+  // Without the register (Starter and Professional) the only tab is supervisions.
+  const tab: 'credentials' | 'supervisions' = enabled ? tabWanted : 'supervisions'
   const [alertState, setAlertState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [alertMsg, setAlertMsg] = useState('')
 
@@ -119,25 +124,25 @@ export default function WorkforcePage() {
   }, [regKey])
   useEffect(() => { if (enabled) load() }, [session?.accessToken, enabled])
 
-  // ── Enterprise gate ─────────────────────────────────────────────────────────
-  if (!planLoading && !enabled) {
+  // ── Plan gate: neither supervisions nor the register (the Free plan) ────────────────────────────────────────────
+  if (!planLoading && !supEnabled) {
     return (
       <div className="rounded-card border border-dashed border-gray-200 bg-white px-6 py-16 text-center">
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-teal/10"><Lock size={22} className="text-teal" /></div>
-        <p className="font-semibold text-neutral-dark">Workforce compliance register</p>
-        <span className="mt-1 inline-block rounded-full bg-teal/10 px-2 py-0.5 text-xs font-medium text-teal">Enterprise feature</span>
+        <p className="font-semibold text-neutral-dark">Supervisions, appraisals and the workforce register</p>
+        <span className="mt-1 inline-block rounded-full bg-teal/10 px-2 py-0.5 text-xs font-medium text-teal">Supervisions from Starter, the register on Enterprise</span>
         <p className="mx-auto mt-3 max-w-md text-sm text-neutral-mid">
-          Keep every staff member&rsquo;s DBS, right to work, professional registration and references in one place,
-          with expiry tracking and a live Red/Amber/Green view for CQC. Available on the Enterprise plan.
+          Record supervisions and appraisals and turn what you agree into actions, on Starter, Professional and Enterprise. Enterprise also keeps every
+          staff member&rsquo;s DBS, right to work, professional registration and references in one place, with expiry tracking and a live Red/Amber/Green view for CQC.
         </p>
         <Link href="/billing" className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal/90">
-          Upgrade to Enterprise
+          See plans
         </Link>
       </div>
     )
   }
 
-  if ((loading || planLoading) && !data) {
+  if ((loading || planLoading) && !data && enabled) {
     return (
       <div className="space-y-4">
         <div className="h-8 w-64 animate-pulse rounded bg-gray-100" />
@@ -157,7 +162,7 @@ export default function WorkforcePage() {
           <h1 className="text-xl font-bold text-neutral-dark">Workforce compliance</h1>
           <p className="mt-0.5 text-sm text-neutral-mid">Safe-recruitment credentials, supervisions and appraisals for every staff member.</p>
         </div>
-        {tab === 'credentials' && (
+        {tab === 'credentials' && enabled && (
           <div className="flex flex-col items-end gap-1">
             <button onClick={sendAlerts} disabled={alertState === 'sending'}
               title="Email your admins a digest of credentials that are expired or expiring within 30 days"
@@ -171,7 +176,7 @@ export default function WorkforcePage() {
 
       {/* Tabs */}
       <div className="flex w-fit gap-1 rounded-lg border border-gray-100 bg-gray-50 p-1">
-        {([['credentials', 'Credentials'], ['supervisions', 'Supervisions & appraisals']] as const).map(([key, label]) => (
+        {(enabled ? [['credentials', 'Credentials'], ['supervisions', 'Supervisions & appraisals']] as const : [['supervisions', 'Supervisions & appraisals']] as const).map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)}
             className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${tab === key ? 'bg-white text-neutral-dark shadow-sm' : 'text-neutral-mid hover:text-neutral-dark'}`}>
             {label}
@@ -179,9 +184,13 @@ export default function WorkforcePage() {
         ))}
       </div>
 
+      {!enabled && supEnabled && (
+        <p className="flex flex-wrap items-center gap-2 text-xs text-neutral-mid"><Lock size={12} className="text-teal" /> The credentials register (DBS, right to work, registration, references) is on the Enterprise plan. <Link href="/billing" className="font-medium text-teal hover:underline">See plans</Link></p>
+      )}
+
       {tab === 'supervisions' && session?.accessToken && <SupervisionsView token={session.accessToken} userId={userId} />}
 
-      {tab === 'credentials' && (<>
+      {tab === 'credentials' && enabled && (<>
       <HelpAccordion title="How to use the Credentials register">
         <p>This register is your single view of the safe-recruitment documents CQC expects for every member of staff: <strong>DBS check</strong>, <strong>right to work</strong>, <strong>passport</strong> (important for overseas staff), <strong>professional registration</strong> (e.g. NMC) and <strong>references</strong>.</p>
         <p>Each staff member is a row and each credential a column, colour-coded so you can see status at a glance: <span className="font-medium text-green-700">Valid</span> (in date), <span className="font-medium text-amber-700">Expiring</span> (within 30 days), <span className="font-medium text-red-600">Expired / Missing</span> (action needed).</p>

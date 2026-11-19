@@ -1750,14 +1750,14 @@ meRouter.get('/progress', async (req: Request, res: Response) => {
 })
 
 // ─── GET /me/supervisions ─────────────────────────────────────────────────────
-// The signed-in staff member's own supervisions & appraisals (Enterprise). Used
+// The signed-in staff member's own supervisions & appraisals (Starter and above). Used
 // by the hub "Supervisions" view. enabled=false when the plan doesn't include it.
 
 meRouter.get('/supervisions', async (req: Request, res: Response) => {
   const userId   = (req as any).user.sub
   const tenantId = (req as any).user.tenant_id
   const features = await getPlanFeatures(tenantId).catch(() => null)
-  if (!features?.has_workforce_compliance) { ok(res, { enabled: false, records: [] }); return }
+  if (!features?.has_supervisions) { ok(res, { enabled: false, records: [] }); return }
   const records = await (prisma as any).staffSupervision.findMany({
     where:   { tenant_id: tenantId, user_id: userId },
     select:  { id: true, type: true, held_on: true, conducted_by: true, next_due: true, notes: true },

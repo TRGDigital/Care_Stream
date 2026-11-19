@@ -375,7 +375,7 @@ function ChatPageInner() {
   const canF2F                                         = isAdmin && (planFeatures == null || planFeatures.has_face_to_face)
   // Supervisions & appraisals is an Enterprise feature — staff see their own.
   // Until the plan loads, fall back to the cached flag so the nav item is stable.
-  const canSupervisions                                = planFeatures ? planFeatures.has_workforce_compliance === true : superCached
+  const canSupervisions                                = planFeatures ? (planFeatures as any).has_supervisions === true || planFeatures.has_workforce_compliance === true : superCached
   // Training-only tenants: Annual Training + Follow-up are their working areas; the
   // rest of the hub stays visible but greyed out (locked) so they can see the full
   // product without being able to open sections that don't apply to their package.
@@ -520,8 +520,9 @@ function ChatPageInner() {
   // Remember the plan's Supervisions entitlement for an instant, stable nav on reload.
   useEffect(() => {
     if (!planFeatures) return
-    setSuperCached(planFeatures.has_workforce_compliance === true)
-    try { localStorage.setItem(`cs_super_${userId}`, JSON.stringify(planFeatures.has_workforce_compliance === true)) } catch { /* ignore */ }
+    const sup = (planFeatures as any).has_supervisions === true || planFeatures.has_workforce_compliance === true
+    setSuperCached(sup)
+    try { localStorage.setItem(`cs_super_${userId}`, JSON.stringify(sup)) } catch { /* ignore */ }
   }, [planFeatures, userId])
 
   // Hydrate the whole sidebar from localStorage in ONE pre-paint pass, so the

@@ -150,6 +150,7 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
           select: {
             has_face_to_face:             true,
             has_workforce_compliance:     true,
+            has_supervisions:             true,
             monthly_annual_license_limit: true,
             monthly_ai_credit_limit:      true,
           },
@@ -161,6 +162,8 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
     const trainingOnly = tenant.tier === 'training_only'
     const plan         = tenant.plan ?? null
     const hasWorkforce = !trainingOnly && !!plan?.has_workforce_compliance
+    // Supervisions and appraisals are on Starter, Professional and Enterprise; the credentials register (DBS and so on) is Enterprise only.
+    const hasSupervisions = !trainingOnly && (!!plan?.has_supervisions || !!plan?.has_workforce_compliance)
     const hasF2F       = !trainingOnly && !!plan?.has_face_to_face
     const hasAllocation = plan?.monthly_annual_license_limit != null
     const hasCreditLimit = !trainingOnly && plan?.monthly_ai_credit_limit != null
@@ -278,10 +281,10 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
       }),
       hasF2F ? (prisma as any).faceToFaceSession.count({ where: { tenant_id: tenantId } }) : null,
       hasCreditLimit ? getAiCreditUsage(tenantId) : null,
-      hasWorkforce ? (prisma as any).user.findMany({
+      hasSupervisions ? (prisma as any).user.findMany({
         where: { tenant_id: tenantId, is_active: true }, orderBy: { name: 'asc' }, select: { id: true, name: true },
       }) : null,
-      hasWorkforce ? (prisma as any).staffSupervision.findMany({
+      hasSupervisions ? (prisma as any).staffSupervision.findMany({
         where:  { tenant_id: tenantId },
         select: { user_id: true, type: true, held_on: true, next_due: true },
       }) : null,
@@ -494,8 +497,8 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
         }
       }
 
-      // Rules 19-21 — workforce compliance (Enterprise plans only)
-      if (hasWorkforce && workforceUsers) {
+      // Rules 19-20 — supervisions and appraisals (Starter and above); rule 21: the credentials register (Enterprise only)
+      if (hasSupervisions && workforceUsers) {
         const users = workforceUsers as any[]
         const byUserType = new Map<string, any[]>()
         for (const r of (supervisionRows as any[]) ?? []) {
@@ -549,6 +552,7 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
         }
 
         // Rule 21 — workforce register: expired / expiring / missing documents
+        if (hasWorkforce) {
         const credByUser = new Map<string, Map<string, any>>()
         for (const c of (credentialRows as any[]) ?? []) {
           if (!credByUser.has(c.user_id)) credByUser.set(c.user_id, new Map())
@@ -590,6 +594,7 @@ suggestionsRouter.get('/', requireAdmin, async (_req: Request, res: Response) =>
           push('workforce_records', 'compliance', 'Workforce records need attention',
             `${list} ${tail}.`, 'Open Workforce Compliance', '/workforce',
             credItems.slice(0, 5).map(i => ({ label: i.label, href: i.href })), expired + expiring + missing)
+        }
         }
       }
 

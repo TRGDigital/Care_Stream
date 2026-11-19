@@ -174,6 +174,8 @@ export default function StaffRecordPage() {
   // Compliance credentials (Enterprise only) — shown as a read-only section.
   const { features } = usePlanFeatures()
   const hasWorkforce = hasFeature(features, 'has_workforce_compliance')
+  // Supervisions and appraisals are on Starter and above; the credentials register is Enterprise only.
+  const hasSupervisions = hasFeature(features, 'has_workforce_compliance') || hasFeature(features, 'has_supervisions')
   const compKey = `admin-staff-compliance-${uid}-${id}`
   const supKey = `admin-staff-supervisions-${uid}-${id}`
   const actKey = `admin-staff-actions-${uid}-${id}`
@@ -182,11 +184,11 @@ export default function StaffRecordPage() {
   const [viewSup, setViewSup] = useState<any>(null)
   const [actions, setActions] = useState<any>(() => persistentCache.get<any>(actKey) ?? null)
   useEffect(() => {
-    if (!token || !hasWorkforce) return
+    if (!token) return
     const api = createApiClient(token)
-    api.workforce.staff(id).then(r => { setCompliance(r); persistentCache.set(compKey, r) }).catch(() => {})
-    api.workforce.staffSupervisions(id).then(r => { setSupervisions(r); persistentCache.set(supKey, r) }).catch(() => {})
-  }, [token, id, hasWorkforce, compKey, supKey])
+    if (hasWorkforce) api.workforce.staff(id).then(r => { setCompliance(r); persistentCache.set(compKey, r) }).catch(() => {})
+    if (hasSupervisions) api.workforce.staffSupervisions(id).then(r => { setSupervisions(r); persistentCache.set(supKey, r) }).catch(() => {})
+  }, [token, id, hasWorkforce, hasSupervisions, compKey, supKey])
   useEffect(() => {
     if (!token) return
     createApiClient(token).users.actions(id).then(r => { setActions(r); persistentCache.set(actKey, r) }).catch(() => {})
@@ -710,7 +712,7 @@ export default function StaffRecordPage() {
         )}
 
         {/* Supervisions & appraisals (Enterprise) */}
-        {hasWorkforce && supervisions && (
+        {hasSupervisions && supervisions && (
           <div className="pdf-card rounded-card border border-gray-100 bg-white shadow-card">
             <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
               <p className="flex items-center gap-1.5 text-sm font-semibold text-neutral-dark"><ListChecks size={15} className="text-teal" /> Supervisions &amp; appraisals <InfoTip text="The latest supervision and appraisal recorded for this staff member, with the next due date. Manage these on the Workforce compliance page." /></p>

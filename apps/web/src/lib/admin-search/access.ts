@@ -29,7 +29,7 @@ export function tierLock(href: string, a: AccountKind): 'tier' | null {
 }
 
 // ── Search: what an account may open, and what is shown to it at all ──────────────────────────────────────────────────────────
-export type PlanFlags = Partial<Record<'has_advanced_analytics' | 'has_cqc_report' | 'has_gap_detection' | 'has_face_to_face' | 'has_custom_audits' | 'has_effectiveness' | 'has_training_impact' | 'has_workforce_compliance', boolean>>
+export type PlanFlags = Partial<Record<'has_advanced_analytics' | 'has_cqc_report' | 'has_gap_detection' | 'has_face_to_face' | 'has_custom_audits' | 'has_effectiveness' | 'has_training_impact' | 'has_workforce_compliance' | 'has_supervisions', boolean>>
 export type Lock = { kind: 'tier' } | { kind: 'plan'; plan: string } | null
 
 /** Is this entry shown to this account at all? Benchmarking is for multi site accounts and Licences for training only accounts: elsewhere they are simply not there. */

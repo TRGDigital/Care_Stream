@@ -103,7 +103,8 @@ export function AdminShell({ userName, tenantName, children }: AdminShellProps) 
   const selfServe = trainingOnly || policiesOnly || freeTier
   const [lockedFeature, setLockedFeature] = useState<string | null>(null)
   const { features } = usePlanFeatures()
-  const hasWorkforce = hasFeature(features, 'has_workforce_compliance')
+  // The Compliance area opens for the register (Enterprise) or for supervisions (Starter and above); the page itself locks the register tab.
+  const hasWorkforce = hasFeature(features, 'has_workforce_compliance') || hasFeature(features, 'has_supervisions')
 
   const [sites,      setSites]      = useState<any[]>([])
   const [tourSignal, setTourSignal] = useState(0)

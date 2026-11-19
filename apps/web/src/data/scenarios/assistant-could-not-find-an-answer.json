@@ -1,0 +1,284 @@
+{
+ "slug": "assistant-could-not-find-an-answer",
+ "status": "draft",
+ "order": 54,
+ "title": "The assistant could not find an answer. <em>Look for policy gaps, not staff gaps.</em>",
+ "meta_title": "Policy Gaps: When the Assistant Finds No Match | CareStreamAI",
+ "meta_description": "A carer asks the assistant and it finds no matching policy. See how No match shows you possible policy gaps in your own documents, and what to do next.",
+ "eyebrow": "Scenario",
+ "lede": "A carer asks a fair question and the assistant says it could not find a matching policy. That is not a failure. It may be one of your policy gaps, showing up before an inspector spots it. CareStream shows you the question and points you back to <a href=\"/training-platform\">your own policies</a>.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "A question with no matching policy",
+  "pill": "Illustration",
+  "rows": [
+   { "label": "Carer asks about a family dog visiting", "note": "Tue 14:20", "done": true },
+   { "label": "Assistant finds no matching policy", "note": "Tue 14:20", "done": true },
+   { "label": "Manager sees No match in Recent queries", "note": "Wed 09:00", "done": true },
+   { "label": "Policy checked, written or reworded", "note": "Not yet", "done": false }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/d63a4387-0dad-49cc-9704-8c3498a9d01a.webp",
+ "image_alt": "A care home manager and a senior carer sit at a table with an open policy folder, one of them pointing at a blank page, thoughtful and constructive, in a bright office",
+ "card_title": "The assistant could not find an answer. Is a policy missing?",
+ "card_snippet": "When staff ask a question your documents do not cover, the assistant says so instead of guessing. You see it as No match, and can check whether a policy is missing, unclear or worded differently.",
+ "primary_keyword": "policy gaps",
+ "secondary_keywords": [
+  "missing policy",
+  "policy gap analysis",
+  "care home policy",
+  "policy finder"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Policies you approve become the source for short training and for the answers staff get in the Staff Hub.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Policy gap detection",
+   "body": "Check your policy set against regulations, then adopt suggested fixes through your own approval steps.",
+   "action": "See gap detection",
+   "href": "/policy-gap-detection"
+  },
+  {
+   "title": "Find the policy you did not know you needed",
+   "body": "See how missing, out of date and conflicting policies come to light, and what to do about each.",
+   "action": "See the use case",
+   "href": "/uses/policy-gaps"
+  }
+ ],
+ "intro": {
+  "heading": "A fair question, and no page to point to",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "On a quiet Tuesday afternoon, a carer hears that a resident's daughter would like to bring the family dog in on Sunday. The carer is happy to help but is not sure what the home allows. She asks the assistant in the Staff Hub. It does not guess. It says it could not find a matching policy and offers a few documents she might have meant. None of them covers visiting animals. She checks with the senior, who says yes, and the day goes well. Nothing was written down, so the next shift will have to ask all over again."
+ },
+ "trail": [
+  { "when": "Tue 14:20", "text": "A carer asks the assistant whether a family dog can visit on Sunday.", "kind": "ok" },
+  { "when": "Straight away", "text": "The assistant does not make up an answer. It says it found no matching policy.", "kind": "ok" },
+  { "when": "Her next step", "text": "She asks the senior, as she should, and the visit goes ahead safely.", "kind": "ok" },
+  { "when": "Wed morning", "text": "The question sits in Recent queries as No match. Nobody has looked yet.", "kind": "gap" },
+  { "when": "Next fortnight", "text": "Two more carers ask the same thing and each gets a different answer from a different senior.", "kind": "gap" },
+  { "when": "One month on", "text": "Staff keep asking. The home still has no written view on visiting animals.", "kind": "gap" },
+  { "when": "Unwritten rule", "text": "The rule now lives in the senior's head, and the senior is on leave next week.", "kind": "gap" },
+  { "when": "Inspection day", "text": "“Where is your policy on visiting animals?” The manager has no page to show.", "kind": "end" }
+ ],
+ "trail_close": "<b>The carer did the right thing, and so did the assistant.</b> The gap is that nobody read the No match. Here is what it shows you, and how to turn a missing policy into a written one.",
+ "why": {
+  "heading": "No match is a clue, so treat it like one",
+  "sub": "A question your documents cannot answer tells you something about your documents.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Staff ask what they really need",
+    "body": "Questions come from real shifts, not from a policy review meeting. When the assistant has nothing to match, you hear about the topic from the people who met it."
+   },
+   {
+    "icon": "tick",
+    "title": "An honest no beats a confident guess",
+    "body": "The assistant answers only from your own documents. If nothing matches closely enough, it says so and suggests documents they might have meant, so staff are not given an invented answer."
+   },
+   {
+    "icon": "alert",
+    "title": "A no match is not proof of a gap",
+    "body": "The policy may exist but be worded differently, or sit in a file that was never uploaded. Check first. If it truly is missing, you have found a gap early."
+   }
+  ]
+ },
+ "how": {
+  "heading": "From a No match to a written policy, step by step",
+  "sub": "This is part of <a href=\"/training-platform\">training built from your own policies</a>. The first two steps are the assistant and Recent queries. The rest are what you may do next.",
+  "blocks": [
+   {
+    "heading": "Staff ask in the Staff Hub, and get an answer or an honest no",
+    "bullets": [
+     "Staff ask on their own phone. It works like a policy finder for your documents, and answers show which policy they came from.",
+     "If nothing in your uploaded documents matches closely enough, the assistant says it could not find a matching policy.",
+     "It then offers “Did you mean one of these?” so a carer who used different words can reach the right document."
+    ],
+    "tags": [
+     { "label": "Languages", "href": "/languages" },
+     { "label": "Staff Hub in 60+ languages", "href": "/uses/multilingual-staff-hub" }
+    ],
+    "mock": { "type": "language", "second_language": "Polish" }
+   },
+   {
+    "heading": "You see it as No match in Recent queries",
+    "bullets": [
+     "Open Recent queries to see who asked, when, in which area and whether a policy was found. Results show as Matched, Partial or No match.",
+     "Filter to No match. CareStream adds a hint to consider uploading a policy that covers this topic.",
+     "Open the conversation to read exactly what was asked. Staff cannot hide their questions, so this is an honest view of what people wonder about."
+    ],
+    "tags": [
+     { "label": "How CareStream works", "href": "/how-it-works" },
+     { "label": "Policy gap detection", "href": "/policy-gap-detection" }
+    ],
+    "mock": { "type": "training", "module": "Recent queries: filtered to No match", "questions": ["Can a resident's family bring a dog in to visit?", "Who do I tell if a visitor brings food in for a resident?", "Can I take a resident to the garden if it is cold?"], "staff_count": 3 }
+   },
+   {
+    "heading": "Decide: reword, upload or write the missing policy",
+    "bullets": [
+     "Check whether the policy exists. If it does, upload the file or reword it so staff words match yours.",
+     "If nothing exists, write it, or run policy gap analysis to see what else is missing and get suggested wording to adopt.",
+     "Suggestions are drafts for your admin to review and approve. Nothing is written or published for you automatically."
+    ],
+    "tags": [
+     { "label": "Policy gap detection", "href": "/uses/policy-gaps" },
+     { "label": "CQC and compliance", "href": "/cqc-compliance" }
+    ],
+    "mock": { "type": "followup", "module": "Visiting Animals", "question": "A family member arrives with a small dog for a planned visit. What do you do first?", "why": "A new policy only helps if staff know what it says, including who to tell and what to check before the visit.", "remember": ["Check the visit was planned and agreed", "Tell the senior on shift", "Keep other residents and their wishes in mind"], "picture": "A resident's daughter walks in with a dog on a lead while a resident nearby is nervous of dogs." }
+   },
+   {
+    "heading": "Once the policy is live, check staff understood it",
+    "bullets": [
+     "When the new policy is approved, you can allocate a short adhoc module on that topic. This is a next step, not part of the assistant.",
+     "Staff who get a question wrong see it in their Follow-up tab and can learn and retry.",
+     "Knowledge gaps in Analytics shows most missed questions and weakest topics, built from missed training questions."
+    ],
+    "tags": [
+     { "label": "Adhoc training", "href": "/uses/adhoc-training" },
+     { "label": "Care Certificate course", "href": "/staff-training/care-certificate" }
+    ],
+    "mock": { "type": "gaps", "stats": { "open": 3, "affected": 4, "closed": 9, "engaged": 71 }, "missed": [["Who to tell before a visit", "3 staff"], ["Checking other residents' wishes", "2 staff"]], "weak": [["Visiting Animals", "3 gaps"], ["Visitors", "1 gap"]] }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "What does the assistant do when it has no answer?",
+    "a": "It says it could not find a matching policy and offers “Did you mean one of these?”. It answers from your own uploaded documents, plus any knowledge entries you add. It is built not to invent an answer when nothing matches closely enough."
+   },
+   {
+    "q": "Where do I see those questions?",
+    "a": "In Recent queries. Each row shows the staff member, the first question, the area, the language and a result of Matched, Partial or No match. You can filter to No match and open the full conversation."
+   },
+   {
+    "q": "So a No match means I am missing a policy?",
+    "a": "Not necessarily. The policy might exist but use different words, or the file might not be uploaded. Or it really is absent. A No match tells you to check, and that check is yours to make."
+   },
+   {
+    "q": "Will I be alerted when someone gets a No match?",
+    "a": "Please do not rely on that. We can only say that No match questions appear in Recent queries, with a hint to consider uploading a policy that covers the topic. Build a quick look at that filter into your week."
+   },
+   {
+    "q": "Does the assistant tell staff what to do in an emergency?",
+    "a": "No. It is not a clinical adviser and does not replace you or your seniors. Staff should follow your home's own policy and escalate as that policy says. If there is no policy, they should ask a senior."
+   },
+   {
+    "q": "Can CareStream write the missing policy for me?",
+    "a": "Policy gap detection can suggest wording for gaps it finds. Your admin has to review and adopt it, and it then goes through your own approval steps. It does not publish anything to staff by itself."
+   },
+   {
+    "q": "Is policy gap detection on every plan?",
+    "a": "Gap detection is on Professional and above. The Free plan can screen up to 5 uploaded policies in total, so you can see how it works on a small set first. Check the <a href=\"/pricing\">pricing page</a> for current plan details."
+   },
+   {
+    "q": "How do I try it, and what does it cost?",
+    "a": "Create a free account at <a href=\"/register\">the registration page</a>. The paid plans have a 14 day free trial, and the <a href=\"/pricing\">pricing page</a> shows current plan details. You can also <a href=\"/demo\">ask for a demo</a>."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "What this does not do",
+  "cards": [
+   {
+    "title": "It does not prove a gap",
+    "body": "A No match may be a wording difference or an unuploaded file. The assistant cannot tell you which. You or your admin has to look."
+   },
+   {
+    "title": "It does not alert you on each one",
+    "body": "We can only claim that No match shows in Recent queries with a hint to upload a policy. It is not a live alarm, and it is not the same view as Knowledge gaps, which comes from missed training questions."
+   },
+   {
+    "title": "It does not decide for you",
+    "body": "It is not legal or clinical advice and cannot guarantee compliance or a CQC rating. Suggested wording needs admin adoption, and nothing writes or publishes a policy by itself."
+   }
+  ]
+ },
+ "read_next": [
+  "policy-gap-analysis-for-care-homes",
+  "policies-required-by-cqc-for-a-care-home",
+  "care-home-policies-the-complete-guide"
+ ],
+ "faqs": {
+  "heading": "Policy gaps and the assistant, answered",
+  "groups": [
+   {
+    "group": "Finding policy gaps",
+    "items": [
+     {
+      "q": "What are policy gaps in a care service?",
+      "a": "They are topics your staff meet that your written policies do not cover, or cover unclearly. One kind is a topic with no policy at all. Others are out of date or contradictory policies. See <a href=\"/uses/policy-gaps\">how policy gaps come to light</a>."
+     },
+     {
+      "q": "How do I know if I have a missing policy?",
+      "a": "Start with the questions staff ask. If the assistant finds no matching policy, check whether it exists under other words. For a wider check, run <a href=\"/policy-gap-detection\">policy gap detection</a> across your uploaded set."
+     },
+     {
+      "q": "What is a policy gap analysis?",
+      "a": "It is a structured check of your policies against what you need to cover. In CareStream it looks at coverage, out of date content, consistency between policies and wording. Read our guide to <a href=\"/blog/policy-gap-analysis-for-care-homes\">policy gap analysis for care homes</a>."
+     },
+     {
+      "q": "Which policies should a care home policy set include?",
+      "a": "That depends on your service and the regulations that apply to it. Our guide to <a href=\"/blog/policies-required-by-cqc-for-a-care-home\">policies required by CQC for a care home</a> is a useful starting point."
+     }
+    ]
+   },
+   {
+    "group": "How the assistant works",
+    "items": [
+     {
+      "q": "Is the assistant a policy finder for staff?",
+      "a": "In effect, yes. Staff ask in plain words and it looks through your uploaded documents. It shows which policy an answer came from, and says so when nothing matches closely enough."
+     },
+     {
+      "q": "Can I see what my staff asked?",
+      "a": "Yes. Admins see every chat in Recent queries, with who asked, when, and whether a policy was found. Staff can remove a chat from their own history, but the record stays for admins."
+     },
+     {
+      "q": "Does the assistant work in other languages?",
+      "a": "On paid plans, content and answers can be translated using our own machine learning. Hub menus stay in English. See <a href=\"/languages\">languages</a>."
+     },
+     {
+      "q": "What if staff need a quick answer for an emergency?",
+      "a": "The assistant is not for emergencies. Staff should follow the home's own policy and escalate as it says. Training on emergencies is better handled through <a href=\"/staff-training\">staff training</a>."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A practical way to deal with a No match",
+  "lede": "You do not need a big project. You need a short routine and a place to write down what you decided.",
+  "sections": [
+   {
+    "h3": "Look at No match once a week",
+    "paragraphs": [
+     "Set ten minutes aside in the week to filter Recent queries to No match. Group similar questions, because three carers asking about visiting animals is one topic, not three.",
+     "Why it matters. Under <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17 of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014</a>, systems or processes must be established and operated effectively, including to assess, monitor and improve the quality and safety of the services provided. Reading what staff cannot find is one simple way to do that for your care home policy set. Staff also need support and training to do their jobs, which <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> covers."
+    ]
+   },
+   {
+    "h3": "Four steps for each No match",
+    "checklist": [
+     "Check: search your uploaded documents for the topic in other words.",
+     "Decide: is it absent, unclear or a wording difference?",
+     "Act: upload, reword or write the policy and put it through your approval steps.",
+     "Brief: once it is live, tell staff, and allocate a short adhoc module on the topic if you want to check understanding."
+    ]
+   },
+   {
+    "h3": "Keep a short note of what you decided",
+    "paragraphs": [
+     "Write one line for each No match you looked at, with the date and what you did. If an inspector asks how you find out what staff are unsure about, you can show the question, the check and the outcome."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> A short log of questions, decisions and new policy versions shows the home listens to its staff and closes gaps. For the wider picture, see <a href=\"/cqc-compliance\">CQC and compliance</a>."
+ }
+}

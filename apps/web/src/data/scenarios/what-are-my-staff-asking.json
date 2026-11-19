@@ -1,0 +1,404 @@
+{
+ "slug": "what-are-my-staff-asking",
+ "status": "draft",
+ "order": 53,
+ "title": "Your staff are asking questions. <em>Do you know where the knowledge gaps are?</em>",
+ "meta_title": "Knowledge Gaps: See What Your Staff Ask | CareStreamAI",
+ "meta_description": "See what staff ask the assistant, which questions found no policy, and where your knowledge gaps are, before an inspector asks them for you.",
+ "eyebrow": "Scenario",
+ "lede": "Staff ask questions on shift all the time, and most do not reach you. With CareStream they ask an assistant that answers from your own documents, and you see every question in Recent queries. That is how you spot knowledge gaps early. It is part of the <a href=\"/training-platform\">training platform</a>, alongside your policies.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "A week of staff questions",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Staff ask on shift",
+    "note": "Every day",
+    "done": true
+   },
+   {
+    "label": "Answers come from your policies",
+    "note": "Where one matches",
+    "done": true
+   },
+   {
+    "label": "Manager reads Recent queries",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Missing policy written or fixed",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/3db50d56-ebd0-47b1-82b8-c522e0698a3f.webp",
+ "image_alt": "A care home manager at a tidy office desk reading a list of questions on a laptop screen with a thoughtful look, a mug and a notepad beside her, daylight from a window",
+ "card_title": "What are your staff unsure about? Read the questions they ask.",
+ "card_snippet": "Staff ask the assistant questions all day. Recent queries shows who asked what, whether your own policies had an answer, and where a policy is missing.",
+ "primary_keyword": "knowledge gaps",
+ "secondary_keywords": [
+  "staff questions",
+  "care home questions",
+  "staff training needs",
+  "policy gap"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Short training from your policies, checked by questions, plus the assistant staff can ask.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Find the gaps in your policies",
+   "body": "See where your policy set has holes, before staff and inspectors find them.",
+   "action": "See policy gaps",
+   "href": "/uses/policy-gaps"
+  },
+  {
+   "title": "Adhoc training on any topic",
+   "body": "Turn a pattern of questions into a short module for the staff who need it.",
+   "action": "See adhoc training",
+   "href": "/uses/adhoc-training"
+  }
+ ],
+ "intro": {
+  "heading": "You hear the questions staff ask you. What about the ones they do not?",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "A home manager is preparing for an inspection and wants to know what her team is unsure about. She hears the questions that reach her door, mostly about holidays and shift swaps. She hears far less about the quiet doubts: a night carer unsure what to do when a resident refuses a medicine, a new starter who is not certain who the safeguarding lead is. Those get answered by a colleague, by a guess, or not at all. Nobody writes them down. If an inspector finds the worry before she does, she hears about it in the room."
+ },
+ "trail": [
+  {
+   "when": "Night shift",
+   "text": "A carer is unsure what to do when a resident refuses a medicine.",
+   "kind": "ok"
+  },
+  {
+   "when": "Same shift",
+   "text": "She asks the assistant on her phone and gets an answer from the home's own policy.",
+   "kind": "ok"
+  },
+  {
+   "when": "Next day",
+   "text": "A new starter asks who the safeguarding lead is, and is told.",
+   "kind": "ok"
+  },
+  {
+   "when": "Same week",
+   "text": "A third carer asks about lone working. The home has no policy on it, so nothing is found.",
+   "kind": "gap"
+  },
+  {
+   "when": "What she does next",
+   "text": "She asks a colleague, who gives an answer that is slightly different.",
+   "kind": "gap"
+  },
+  {
+   "when": "What the manager knows",
+   "text": "Nothing. The questions were asked, but nobody has read them.",
+   "kind": "gap"
+  },
+  {
+   "when": "Meanwhile",
+   "text": "Other staff have the same doubt and have not said so.",
+   "kind": "gap"
+  },
+  {
+   "when": "Inspection day",
+   "text": "“How do you know what your staff are unsure about?” There is no good answer.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The questions were asked. They just were not read.</b> Here is how Recent queries puts them in front of you, and what it does and does not show.",
+ "why": {
+  "heading": "Unasked questions are where gaps hide",
+  "sub": "A training record shows what people were taught. It does not show what they are still wondering.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "Doubts rarely reach the manager",
+    "body": "Staff often work something out alone rather than admit they are unsure. New starters and people working in a second language are the most likely to stay quiet."
+   },
+   {
+    "icon": "tick",
+    "title": "Questions point to staff training needs",
+    "body": "When several people ask about the same topic, you know where a refresher would help. That is better than finding out after an incident."
+   },
+   {
+    "icon": "alert",
+    "title": "A question with no answer is a policy gap",
+    "body": "If staff ask about something your documents do not cover, the assistant finds nothing. You have found a hole in your policies, and the people who needed the answer found it for you."
+   }
+  ]
+ },
+ "how": {
+  "heading": "From a question on a phone to a fix on your desk",
+  "sub": "This is part of the <a href=\"/training-platform\">training platform</a>. For the training side, see <a href=\"/uses/adhoc-training\">adhoc training built from your own policies</a>.",
+  "blocks": [
+   {
+    "heading": "Staff ask the assistant, and answers come from your own documents",
+    "bullets": [
+     "Staff open Chat in the Staff Hub and pick a topic, such as Policies &amp; Procedures, Staff Handbook or CQC Compliance",
+     "The assistant answers from the documents your home has uploaded, shows which policies it used, and can give the whole policy on request",
+     "If nothing is a close enough match, it says so and offers “Did you mean one of these?” instead of guessing"
+    ],
+    "tags": [
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     },
+     {
+      "label": "Staff Hub questions and CQC",
+      "href": "/cqc-staff-questions"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Chat topic: Policies & Procedures (example)",
+     "questions": [
+      "What do I do if a resident refuses their medicine?",
+      "What is our rule on working alone at night?"
+     ]
+    }
+   },
+   {
+    "heading": "Recent queries lists every chat your staff started",
+    "bullets": [
+     "Each row shows Staff member, First question, Area, Language, Status, Result and Last active",
+     "Filter by area, by matched or no match, and by language, then click a row to read the whole conversation",
+     "Result shows Matched, Partial or No match, with a hint to consider uploading a policy that covers the topic"
+    ],
+    "tags": [
+     {
+      "label": "Policy gaps found by staff",
+      "href": "/uses/policy-gaps"
+     },
+     {
+      "label": "Out of date policies",
+      "href": "/uses/out-of-date-policies"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Recent queries, example rows",
+     "questions": [
+      "Staff member A: What do I do if a resident refuses their medicine? Result: Matched",
+      "Staff member B: What is our rule on working alone at night? Result: No match"
+     ]
+    }
+   },
+   {
+    "heading": "See which language staff are asking in",
+    "bullets": [
+     "The Language column shows the language detected for each chat, and you can filter by it",
+     "A run of questions in one language can show where a policy needs explaining differently",
+     "Translation is part of the paid plans, and the hub menus stay in English"
+    ],
+    "tags": [
+     {
+      "label": "Training in 60+ languages",
+      "href": "/languages"
+     },
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish (example)"
+    }
+   },
+   {
+    "heading": "A separate view: knowledge gaps from training answers",
+    "bullets": [
+     "The Knowledge gaps view in Analytics is built from wrong answers in training and induction, not from chat",
+     "Recent queries shows what staff ask. The Analytics view shows what they got wrong. The two answer different questions and work well together",
+     "When a question shows you need training, allocate adhoc training on that topic from the Training screen (paid plans)"
+    ],
+    "tags": [
+     {
+      "label": "Adhoc training",
+      "href": "/uses/adhoc-training"
+     },
+     {
+      "label": "CQC and compliance evidence",
+      "href": "/cqc-compliance"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 5,
+      "affected": 4,
+      "closed": 12,
+      "engaged": 70
+     },
+     "missed": [
+      [
+       "Who to tell about a refused medicine",
+       "3 staff"
+      ],
+      [
+       "Working alone at night",
+       "3 staff"
+      ],
+      [
+       "Recording a concern",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Medication",
+       "4 gaps"
+      ],
+      [
+       "Safeguarding Adults",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. The questions are the ones we hear most.",
+  "items": [
+   {
+    "q": "Can I really see what my staff ask?",
+    "a": "Yes. Recent queries lists every chat session your staff started: who asked, the first question, the area, the language, the status, the result and when it was last active. You can click through to read the full conversation."
+   },
+   {
+    "q": "Is that fair on staff? Do they know?",
+    "a": "Staff cannot hide their questions from you, so be open about it. We suggest telling the team up front that you read them, and why: to find missing policies and training needs, not to catch anyone out. That is advice, not a setting in the product."
+   },
+   {
+    "q": "Can staff delete their questions?",
+    "a": "Staff can delete a chat from their own history, so it disappears from their side. The record is kept for you. In Recent queries it is marked Removed instead of Live, and it still appears in your reporting. Deleting a chat does not erase what the manager sees."
+   },
+   {
+    "q": "Where do the answers come from?",
+    "a": "From your own uploaded documents, plus any knowledge entries you add and a regulatory reference base. The assistant is not a substitute for you, and it is not clinical advice. Staff should follow your policy and escalate as it says. If you want to check an answer, open the conversation and read it."
+   },
+   {
+    "q": "What does a No match tell me?",
+    "a": "The assistant could not find anything close enough in your documents. Either you have no policy on that point, or it is worded in a way staff do not recognise. The page hints that you consider uploading a policy that covers the topic. Our <a href=\"/policy-gap-detection\">policy gap detection</a> helps you look for holes more widely."
+   },
+   {
+    "q": "Is this the Analytics view I keep hearing about?",
+    "a": "No. Knowledge gaps in Analytics is built from wrong answers in training and induction, not from chat. Recent queries is built from what staff ask. Both help you see what people are unsure about, and they cover different ground. <a href=\"/training-platform\">The training platform</a> explains the training side."
+   },
+   {
+    "q": "I can see a pattern. What happens then?",
+    "a": "You decide. You might brief the team, fix or add a policy, or allocate adhoc training on the topic. Nothing happens automatically, and nothing alerts you when a question finds no match, so it works best as a weekly habit."
+   },
+   {
+    "q": "How do I try it, and what does it cost?",
+    "a": "Paid plans start with a 14 day free trial, and you can <a href=\"/register\">create a free account</a> to look around. See <a href=\"/pricing\">pricing</a> for what each plan includes, including how many questions staff can ask each month."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A window onto what staff ask, not an alarm or an answer to everything",
+  "cards": [
+   {
+    "title": "It does not alert you",
+    "body": "Nothing pings you when a question finds no match. You need to open Recent queries and read it, so build it into a weekly routine."
+   },
+   {
+    "title": "It cannot show what people do not ask",
+    "body": "Recent queries shows the questions asked, not the ones avoided. A quiet carer who guesses stays invisible, so keep talking to your team."
+   },
+   {
+    "title": "It does not replace you or give clinical advice",
+    "body": "Answers come from your own documents. Staff follow your policy and escalate as it says. If your documents are thin or out of date, the answers will be too."
+   }
+  ]
+ },
+ "read_next": [
+  "six-signs-your-policy-set-has-quietly-drifted-out-of-date",
+  "chasing-staff-training-completions",
+  "policy-gap-analysis-for-care-homes"
+ ],
+ "faqs": {
+  "heading": "Staff questions and Recent queries, answered",
+  "groups": [
+   {
+    "group": "About Recent queries",
+    "items": [
+     {
+      "q": "Can I see what staff ask the assistant?",
+      "a": "Yes. Recent queries in the admin console lists every chat staff started, with the staff member, first question, area, language, status and result. You can filter by area, matched or no match, and language, and open the whole conversation."
+     },
+     {
+      "q": "Can staff hide or delete questions from the manager?",
+      "a": "No. Staff can delete a chat from their own chat history, but the record is kept for you and marked as removed by the staff member. It still shows in your reporting. We suggest telling staff this up front."
+     },
+     {
+      "q": "What do care home questions with no match mean?",
+      "a": "It means nothing in your documents was close enough to the question. It may be that you have no policy on that point, or that staff phrase it differently from your policy. Read the conversation, then decide whether to upload or reword a policy."
+     },
+     {
+      "q": "What kinds of care home questions can staff ask?",
+      "a": "Staff pick a topic: Policies &amp; Procedures, Staff Handbook, CQC Compliance, Business Continuity, or This is me for the people they support. A topic is greyed out if nothing has been uploaded for it."
+     },
+     {
+      "q": "Does the assistant give clinical advice?",
+      "a": "No. It answers from your own documents and shows which policies it used. Staff should follow your policy and escalate as it says, and the assistant does not replace a senior or a clinician."
+     }
+    ]
+   },
+   {
+    "group": "About training and inspections",
+    "items": [
+     {
+      "q": "How do staff questions show staff training needs?",
+      "a": "Repeated questions on one topic suggest staff are not sure of it. That is a prompt to brief the team or allocate <a href=\"/uses/adhoc-training\">adhoc training</a> on the topic. Check the staff record too, since it shows how many questions each person has asked."
+     },
+     {
+      "q": "What is the difference between Recent queries and Knowledge gaps?",
+      "a": "Recent queries shows what staff ask in chat. The Analytics view shows the questions staff got wrong in training and induction. Use both to build the picture."
+     },
+     {
+      "q": "Is monitoring staff questions part of what CQC expects?",
+      "a": "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17</a> requires providers to assess, monitor and improve the quality and safety of their services. Reading what staff are unsure about is one way to do that. It sits alongside your <a href=\"/cqc-compliance\">CQC evidence</a>."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "A simple weekly routine for reading what staff ask",
+  "lede": "Recent queries only helps if someone reads it. A short, regular habit beats a big review once a year, and it keeps the tone friendly.",
+  "sections": [
+   {
+    "h3": "Tell your team before you look",
+    "paragraphs": [
+     "Say plainly that managers can see who asked what, that staff can delete a chat from their own view but the record stays with you, and that you are reading for gaps in the policies, not for mistakes. People ask more honestly when they know the rules. New starters are often the quietest, so their questions are worth reading first. The <a href=\"/staff-training/care-certificate\">Care Certificate course</a> covers the basics they will be asking about."
+    ]
+   },
+   {
+    "h3": "Ten minutes, once a week",
+    "checklist": [
+     "Filter to No match only and read each question.",
+     "Open any conversation that looks worrying and read the whole thing.",
+     "Note topics that come up more than once.",
+     "Decide for each: upload or fix a policy, brief the team, or allocate adhoc training."
+    ]
+   },
+   {
+    "h3": "Link it to what inspectors look for",
+    "paragraphs": [
+     "<a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> says staff must receive the support, training and supervision they need for their role, and Regulation 17 covers monitoring quality. A note of what staff asked and what you changed in response is a practical way to show both. See also <a href=\"/blog/six-signs-your-policy-set-has-quietly-drifted-out-of-date\">six signs your policy set has drifted</a>."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Keep a short note each week: what staff asked, what you changed, and when. It shows you listen to your team."
+ }
+}

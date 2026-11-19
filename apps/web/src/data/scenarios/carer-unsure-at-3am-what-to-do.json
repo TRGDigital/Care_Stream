@@ -1,0 +1,412 @@
+{
+ "slug": "carer-unsure-at-3am-what-to-do",
+ "status": "draft",
+ "order": 52,
+ "title": "A carer is unsure at 3am. <em>A policy assistant that answers from your own policies.</em>",
+ "meta_title": "Policy Assistant for Care Staff at Night | CareStreamAI",
+ "meta_description": "No manager on site and the policy folder is hard to search. A policy assistant answers carers from your own documents and names the policy it used.",
+ "eyebrow": "Scenario",
+ "lede": "It is the middle of the night, a resident needs something, and the carer cannot find the right page in the folder. A policy assistant in the Staff Hub answers in plain words from the documents you uploaded and names the policy it used. It sits inside <a href=\"/training-platform\">training built from your own policies</a>, and it does not replace you.",
+ "fine": "14 day free trial · Set up in a day · UK data residency",
+ "panel": {
+  "title": "A night shift question",
+  "pill": "Illustration",
+  "rows": [
+   {
+    "label": "Carer unsure what to do",
+    "note": "03:05",
+    "done": true
+   },
+   {
+    "label": "Question asked in plain words",
+    "note": "03:06",
+    "done": true
+   },
+   {
+    "label": "Answer taken from your policy",
+    "note": "Not yet",
+    "done": false
+   },
+   {
+    "label": "Manager sees the question next day",
+    "note": "Not yet",
+    "done": false
+   }
+  ],
+  "meter": 50
+ },
+ "image": "https://api.carestreamai.com/public/policy-shop/image/4b281751-6ce5-4369-addb-d7d1f389e8df.webp",
+ "image_alt": "A care worker in uniform stands in a quiet night-time corridor of a care home, looking at her phone with a calm, focused expression, soft warm lamp light, a resident's door ajar behind her",
+ "card_title": "A carer is unsure at 3am and no manager is on site",
+ "card_snippet": "Your policies are in a folder nobody can search at night. The Staff Hub assistant answers carers from your own documents, names the policy it used, and says so when it finds nothing.",
+ "primary_keyword": "policy assistant",
+ "secondary_keywords": [
+  "care home policy",
+  "care home policies and procedures",
+  "policy search",
+  "document search",
+  "policy chatbot"
+ ],
+ "feature_links": [
+  {
+   "title": "Training built from your own policies",
+   "body": "Your policies power short training and the Staff Hub assistant, so staff learn and ask from the same source.",
+   "action": "See the feature",
+   "href": "/training-platform"
+  },
+  {
+   "title": "Staff Hub in the language each carer thinks in",
+   "body": "Answers and policies in a carer's first language, on the paid plans.",
+   "action": "See the multilingual Staff Hub",
+   "href": "/uses/multilingual-staff-hub"
+  },
+  {
+   "title": "Find the gaps in your policies",
+   "body": "A question your documents cannot answer shows you where a policy is missing or thin.",
+   "action": "See policy gaps",
+   "href": "/uses/policy-gaps"
+  }
+ ],
+ "intro": {
+  "heading": "Nobody is on site, and the answer is somewhere in a folder.",
+  "sub": "A scenario we see in many care settings.",
+  "paragraph": "It is ten past three. A carer on a quiet night shift finds a resident who has refused their medication, or who is sitting on the floor and says they are fine. The registered manager is at home asleep. The senior is busy on another floor. The carer knows your service has a policy for this, but the paper folder is a metre of plastic wallets and the shared drive has four files with similar names. She does not want to guess, and she does not want to wake someone over something she could have looked up."
+ },
+ "trail": [
+  {
+   "when": "Evening",
+   "text": "Your care home policies are reviewed, signed off and filed.",
+   "kind": "ok"
+  },
+  {
+   "when": "Induction",
+   "text": "New carers are shown where the policies are kept.",
+   "kind": "ok"
+  },
+  {
+   "when": "Handover",
+   "text": "Night staff start the shift briefed and well meaning.",
+   "kind": "ok"
+  },
+  {
+   "when": "03:05",
+   "text": "A carer is unsure what the policy says about the situation in front of her.",
+   "kind": "gap"
+  },
+  {
+   "when": "The search",
+   "text": "The folder is thick and the shared drive search returns six files.",
+   "kind": "gap"
+  },
+  {
+   "when": "The choice",
+   "text": "She guesses, or waits for a call back, or rings someone out of hours.",
+   "kind": "gap"
+  },
+  {
+   "when": "Next morning",
+   "text": "Nobody knows what she did or which version she read.",
+   "kind": "gap"
+  },
+  {
+   "when": "Months later",
+   "text": "An inspector asks how night staff find the right policy.",
+   "kind": "end"
+  }
+ ],
+ "trail_close": "<b>The policies exist. Finding the right one at the right moment is the gap.</b> Here is how a carer can ask in plain words and get an answer from your own documents, with the limits said plainly.",
+ "why": {
+  "heading": "A folder full of policies is not much use at 3am",
+  "sub": "Staff do not need a perfect memory. They need a quick, reliable way to look things up.",
+  "cards": [
+   {
+    "icon": "chat",
+    "title": "People ask in their own words",
+    "body": "A carer does not know the title of the policy she needs. She knows what is in front of her. A plain question works better than a filename."
+   },
+   {
+    "icon": "tick",
+    "title": "Search should name its source",
+    "body": "A carer needs to see which policy the answer came from, so she can trust it, open the full policy, and tell the manager what she relied on."
+   },
+   {
+    "icon": "alert",
+    "title": "A guess is worse than a call",
+    "body": "If the documents do not cover the question, the right outcome is to say so and escalate as your policy says. It must never be a confident invention."
+   }
+  ]
+ },
+ "how": {
+  "heading": "Ask in plain words. Answered from your own policies.",
+  "sub": "This is the Staff Hub assistant, part of <a href=\"/training-platform\">training built from your own policies</a>. See also <a href=\"/uses/policy-gaps\">finding the gaps in your policies</a> and <a href=\"/how-it-works\">how CareStream works</a>.",
+  "blocks": [
+   {
+    "heading": "The carer picks a topic and asks, on her own phone",
+    "bullets": [
+     "In the Staff Hub, she opens Chat and picks a topic such as Policies &amp; Procedures, then types her question or speaks it, depending on what her browser supports",
+     "Topics with nothing uploaded are greyed out, and each topic suggests starter questions to get her going",
+     "It works like a policy chatbot that stays inside your documents, and it is not a general internet search"
+    ],
+    "tags": [
+     {
+      "label": "How CareStream works",
+      "href": "/how-it-works"
+     },
+     {
+      "label": "Training built from your own policies",
+      "href": "/training-platform"
+     }
+    ],
+    "mock": {
+     "type": "training",
+     "module": "Policies & Procedures (example questions a carer might ask)",
+     "questions": [
+      "A resident has refused their evening medication. What does our policy say I should do?",
+      "I have found a resident on the floor and they say they are not hurt. Who do I call and what do I record?",
+      "Where does our policy say what to do if I cannot reach the senior on call?"
+     ],
+     "staff_count": 14
+    }
+   },
+   {
+    "heading": "The answer comes from your policy, and names it",
+    "bullets": [
+     "The answer is taken from your own uploaded documents, and it shows which policy it used, so she can ask for the full policy if she wants it",
+     "Each answer comes back with suggested follow up questions, and she can give a thumbs up or down",
+     "If nothing matches closely enough, it says it could not find a matching policy and offers a list headed Did you mean one of these? It does not make something up"
+    ],
+    "tags": [
+     {
+      "label": "Your care home policies and procedures",
+      "href": "/blog/care-home-policies-the-complete-guide"
+     },
+     {
+      "label": "Safeguarding adults and children course",
+      "href": "/staff-training/safeguarding-adults-and-children"
+     }
+    ],
+    "mock": {
+     "type": "followup",
+     "module": "Answer from your own policy (example layout)",
+     "question": "A resident has refused their evening medication. What does our policy say I should do?",
+     "why": "Your Medication Policy says a refusal must not be forced or hidden, and that it is recorded and passed on as the policy sets out.",
+     "remember": [
+      "Do not pressure or hide medication",
+      "Record the refusal as your policy says",
+      "Tell the person in charge as your policy says"
+     ],
+     "picture": "It is 3am, nobody senior is on the floor, and the carer has the policy in her pocket."
+    }
+   },
+   {
+    "heading": "Answers in the language the carer thinks in",
+    "bullets": [
+     "Your admin sets each carer's first language, and chat answers then come back in it, with a Reply in picker in the chat",
+     "Policies are translated when she opens them, so she can read your care home policy in her own language",
+     "Translation is machine translation and is on the paid plans, so a Free account's staff are English only"
+    ],
+    "tags": [
+     {
+      "label": "Staff Hub in 60+ languages",
+      "href": "/uses/multilingual-staff-hub"
+     },
+     {
+      "label": "Languages",
+      "href": "/languages"
+     }
+    ],
+    "mock": {
+     "type": "language",
+     "second_language": "Polish (example)"
+    }
+   },
+   {
+    "heading": "What the manager sees, openly and honestly",
+    "bullets": [
+     "Admins see every question in Recent queries: who asked, when, and whether the result was Matched, Partial or No match. Staff cannot hide it",
+     "A No match is a hint that a policy may be missing, and the screen suggests uploading one that covers the topic",
+     "The Knowledge gaps view shown here is separate. It is built from missed training questions, so allocate a short adhoc module afterwards if you want to check the team understood"
+    ],
+    "tags": [
+     {
+      "label": "Find policy gaps",
+      "href": "/uses/policy-gaps"
+     },
+     {
+      "label": "Adhoc training",
+      "href": "/uses/adhoc-training"
+     }
+    ],
+    "mock": {
+     "type": "gaps",
+     "stats": {
+      "open": 5,
+      "affected": 4,
+      "closed": 12,
+      "engaged": 66
+     },
+     "missed": [
+      [
+       "Refusing medication at night",
+       "3 staff"
+      ],
+      [
+       "Who to call out of hours",
+       "3 staff"
+      ],
+      [
+       "Recording a fall",
+       "2 staff"
+      ]
+     ],
+     "weak": [
+      [
+       "Medication",
+       "4 gaps"
+      ],
+      [
+       "Falls",
+       "2 gaps"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "talk": {
+  "heading": "The questions managers ask, and how CareStream answers them",
+  "sub": "Read this as a conversation. These are the questions we hear most.",
+  "items": [
+   {
+    "q": "What does a carer actually do?",
+    "a": "She opens the Staff Hub on her phone, taps Chat, picks a topic such as Policies &amp; Procedures and asks in plain words. She can speak the question if her browser supports it, and every answer has a Listen button that reads it aloud."
+   },
+   {
+    "q": "Where do the answers come from?",
+    "a": "From the documents you uploaded, and from any knowledge entries you added by hand. The answer names the policy it used. Where we have a regulatory reference base, it can also be used as a source."
+   },
+   {
+    "q": "What if the policy does not cover it?",
+    "a": "The assistant only answers when the match is close enough. Below that it says it could not find a matching policy and offers a list headed Did you mean one of these? Then she follows your escalation route."
+   },
+   {
+    "q": "Does it give clinical advice or replace my senior?",
+    "a": "No. It tells the carer what your own policy says. She must still follow the policy, use her judgement and escalate to the person your policy names. If a resident is in danger, she calls for help first."
+   },
+   {
+    "q": "Can I see what my staff asked?",
+    "a": "Yes. Recent queries lists who asked, when, the first question, the language and whether it matched. You can open the whole conversation. If a carer deletes a chat from her own history, the record stays for you, so tell your team that plainly."
+   },
+   {
+    "q": "Is it only as good as my policies?",
+    "a": "Yes. If a policy is missing, out of date or vague, the answer will be too. A No match is useful because it points at the gap. You can also run a <a href=\"/policy-gap-detection\">policy gap check</a>."
+   },
+   {
+    "q": "Can I be sure it never gets it wrong?",
+    "a": "We do not promise that. Answers are drawn from your documents and checked against a minimum match, and staff can mark an answer down. Treat it as a fast way to find your policy, not as the final word."
+   },
+   {
+    "q": "How do I try it?",
+    "a": "Create a free account at <a href=\"/register\">the registration page</a> and start the 14 day free trial on a paid plan, then upload your policies. Look at <a href=\"/pricing\">pricing</a> for what each plan includes."
+   }
+  ]
+ },
+ "limits": {
+  "heading": "A quick way to look things up, not a substitute for judgement",
+  "cards": [
+   {
+    "title": "It is only as good as your uploaded policies",
+    "body": "It answers from your own documents. Missing, outdated or contradictory policies give weak answers, and it cannot invent a procedure you never wrote."
+   },
+   {
+    "title": "It does not give clinical advice or replace a senior",
+    "body": "It reports what your policy says. Carers must follow the policy and escalate to the people it names. It does not call anyone, and it does not alert you to each question."
+   },
+   {
+    "title": "Questions are not private from you",
+    "body": "Admins can see who asked what and when in Recent queries, and staff cannot erase it. Do not promise anonymity. Tell your team what you can see and why."
+   }
+  ]
+ },
+ "read_next": [
+  "care-home-policies-the-complete-guide",
+  "when-two-policies-disagree-staff-follow-the-wrong-one",
+  "translating-care-policies"
+ ],
+ "faqs": {
+  "heading": "Policy assistant questions, answered",
+  "groups": [
+   {
+    "group": "How it works",
+    "items": [
+     {
+      "q": "What is a policy assistant for care staff?",
+      "a": "It is a chat tool that answers a carer's question from your own policies and names the policy it used. In CareStream it lives in the Staff Hub, in <a href=\"/training-platform\">training built from your own policies</a>."
+     },
+     {
+      "q": "Is it the same as a policy chatbot?",
+      "a": "In everyday words, yes. It is a policy chatbot that stays inside your documents. If it cannot find a close enough match, it says so instead of guessing."
+     },
+     {
+      "q": "How is it different from document search on a shared drive?",
+      "a": "Ordinary document search needs the right filename or keyword and gives back a list of files. The assistant takes a plain question and gives a short answer with the policy named, and lets her open the full policy."
+     },
+     {
+      "q": "Can staff do a policy search in their own language?",
+      "a": "Yes, on the paid plans. Chat answers come back in the carer's first language and policies are translated when opened. See the <a href=\"/uses/multilingual-staff-hub\">multilingual Staff Hub</a>."
+     }
+    ]
+   },
+   {
+    "group": "Your policies and the law",
+    "items": [
+     {
+      "q": "Do our care home policies and procedures need to be uploaded first?",
+      "a": "Yes. The assistant answers from what you upload, so start with the policies staff need most at night, such as medication, falls and safeguarding. Our <a href=\"/blog/care-home-policies-the-complete-guide\">complete guide to care home policies</a> helps with the list."
+     },
+     {
+      "q": "What does the law say about staff and policies?",
+      "a": "The regulations do not mention policies by name. <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/17\">Regulation 17</a> requires systems or processes to be established and operated effectively, and <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a> requires staff to receive appropriate support and training. Easy access to your policy is one practical way to support that."
+     },
+     {
+      "q": "What should one care home policy cover for night staff?",
+      "a": "Say who to call, in what order, and what to record, because a carer alone at night needs those three things. Check that your wording does not disagree with another policy, as <a href=\"/blog/when-two-policies-disagree-staff-follow-the-wrong-one\">staff follow the wrong one</a> when it does."
+     },
+     {
+      "q": "What happens after the carer gets an answer?",
+      "a": "Nothing is triggered automatically. You can see the question in Recent queries, and you can then allocate a short <a href=\"/uses/adhoc-training\">adhoc training module</a> on the topic if you want to check understanding."
+     }
+    ]
+   }
+  ]
+ },
+ "guide": {
+  "heading": "How to make your policies findable at 3am",
+  "lede": "A good assistant cannot rescue a policy nobody can read. These steps help whether or not you use one.",
+  "sections": [
+   {
+    "h3": "Write for a person standing in a corridor",
+    "paragraphs": [
+     "Put the first action at the top of each policy: who to call, and what to do while waiting. Use headings that match the words carers use, such as refusing medication or found on the floor, rather than internal titles.",
+     "Under <a href=\"https://www.legislation.gov.uk/uksi/2014/2936/regulation/18\">Regulation 18</a>, staff must receive the support and training they need to do their job. A policy a carer can find and follow in a minute is part of that support, alongside your supervision and training."
+    ]
+   },
+   {
+    "h3": "Check your night time policies before you upload",
+    "checklist": [
+     "Medication: refusals, missed doses and who to call out of hours.",
+     "Falls: what to do before moving anyone, and what to record.",
+     "Safeguarding: who to tell and how to reach them at night.",
+     "Escalation: a named person to call if the first one does not answer."
+    ]
+   },
+   {
+    "h3": "Tell your team what you can see",
+    "paragraphs": [
+     "Explain that Recent queries shows who asked what. Say you use it to fix policies and support staff, not to catch anyone out. People ask more honest questions when they know the rules."
+    ]
+   }
+  ],
+  "note": "<b>For the inspector.</b> Be ready to show where staff find policies out of hours, and what you changed when a question found no match. See the <a href=\"https://www.cqc.org.uk/\">Care Quality Commission</a> for its own guidance."
+ }
+}
